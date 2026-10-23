@@ -3,7 +3,7 @@
 Generated from the engine-supported card pool.
 This is an interpreter-support inventory. Card behavior verification is tracked separately in the card verification manifest.
 
-**Total**: 5802 modeled non-land cards
+**Total**: 6487 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -15,14 +15,18 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Abbey Gargoyles
 - Abbey Griffin
 - Abbey Matron
+- Abomination of Gudul
 - Abrade
 - Abrupt Decay
 - Absorb
 - Absorb Vis
+- Abyssal Gorestalker
 - Abzan Ascendancy
 - Abzan Banner
 - Abzan Battle Priest
 - Abzan Falconer
+- Abzan Guide
+- Abzan Skycaptain
 - Accelerate
 - Accelerated Evolution
 - Accorder's Shield
@@ -33,6 +37,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Acrobatic Leap
 - Action News Crew
 - Adamant Will
+- Adaptive Omnitool
 - Adaptive Shimmerer
 - Adaptive Sporesinger
 - Adarkar Sentinel
@@ -53,14 +58,20 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Aerie Mystics
 - Aeronaut's Wings
 - Aesi, Tyrant of Gyre Strait
+- Aesthir Glider
 - Aether Adept
 - Aether Channeler
 - Aether Helix
 - Aether Spellbomb
+- Aether Sting
 - Aetherflux Conduit
+- Aetheric Amplifier
+- Aethershield Artificer
+- Aetherspouts
 - Aethersquall Ancient
 - Aethertide Whale
 - Aetherwind Basker
+- Aetherworks Marvel
 - Affa Guard Hound
 - Affa Protector
 - Afflict
@@ -75,31 +86,38 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Aggravated Assault
 - Aggressive Mammoth
 - Aggressive Urge
+- Agitator Ant
 - Agonizing Syphon
 - Agony Warp
 - Aid the Fallen
 - Ainok Bond-Kin
 - Ainok Guide
 - Ainok Strike Leader
+- Ainok Tracker
 - Air Elemental
 - Air Response Unit
 - Air-Cult Elemental
 - Ajani, Caller of the Pride
+- Ajani's Chosen
 - Ajani's Comrade
 - Ajani's Sunstriker
 - Ajani's Welcome
 - Akki Avalanchers
 - Akki Coalflinger
 - Akki Drillmaster
+- Akki Raider
 - Akki Rockspeaker
 - Akoum Battlesinger
 - Akoum Hellhound
 - Akoum Hellkite
+- Akroan Horse
 - Akroan Phalanx
+- Akroma, Angel of Fury
 - Akroma, Angel of Wrath
 - Akroma's Devoted
 - Akroma's Memorial
 - Akroma's Will
+- Alabaster Host Intercessor
 - Alabaster Host Sanctifier
 - Alabaster Kirin
 - Alaborn Grenadier
@@ -109,7 +127,10 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Alchemist's Apprentice
 - Alert Shu Infantry
 - Alexi's Cloak
+- Alexios, Deimos of Kosmos
 - Algae Gharial
+- Alicia Masters, Skilled Sculptor
+- Alley Evasion
 - Alley Strangler
 - Allied Reinforcements
 - Allied Teamwork
@@ -127,6 +148,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Ambassador Oak
 - Ambition's Cost
 - Ambush
+- Ambush Gigapede
 - Ambush Paratrooper
 - Ambush Party
 - Ambush Viper
@@ -140,6 +162,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Anaba Bodyguard
 - Anaba Shaman
 - Anaba Spirit Crafter
+- Anafenza, Kin-Tree Spirit
 - Anarchist
 - Anarchy
 - Anathemancer
@@ -165,6 +188,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Angelfire Crusader
 - Angelfire Ignition
 - Angelic Blessing
+- Angelic Destiny
 - Angelic Edict
 - Angelic Gift
 - Angelic Purge
@@ -174,12 +198,14 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Angler Turtle
 - Angry Rabble
 - Anguished Unmaking
+- Animate Dead
 - Ankle Biter
 - Ankle Shanker
 - Annoyed Altisaur
 - Anodet Lurker
 - Anointed Chorister
 - Anointed Procession
+- Anrakyr the Traveller
 - Ant Queen
 - Ant-Man, Scott Lang
 - Ant-Man's Army
@@ -187,6 +213,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Anthem of Champions
 - Anvilwrought Raptor
 - Apex Devastator
+- Apostle of Purifying Light
 - Apothecary Geist
 - Apothecary Stomper
 - Appa, the Vigilant
@@ -213,17 +240,21 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Arcane Signet
 - Arcane Spyglass
 - Arcanis the Omnipotent
+- Arcbond
 - Archaeomancer
 - Archaeomender
 - Archangel
 - Archers of Qarsi
 - Archers' Parapet
+- Archfiend of Ifnir
 - Archfiend of Sorrows
 - Architect of the Untamed
 - Archive Dragon
 - Archivist
 - Archmage Emeritus
 - Archmage of Runes
+- Archon of Absolution
+- Archon of Emeria
 - Archon of Falling Stars
 - Archon of Justice
 - Archon of Sun's Grace
@@ -247,6 +278,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Armored Griffin
 - Armored Pegasus
 - Armored Skaab
+- Armored Skyhunter
 - Armored Warhorse
 - Armored Whirl Turtle
 - Armored Wolf-Rider
@@ -255,24 +287,28 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Arms Dealer
 - Army Ants
 - Army of Allah
-- Arni, Humble Scribe
 - Aron, Benalia's Ruin
 - Arrogant Vampire
 - Artful Dodge
 - Artful Maneuver
 - Artificer's Dragon
-- Artifist Acumen
 - Artillerize
 - Artisan's Sorrow
 - Arvad the Cursed
 - Arwen, Weaver of Hope
 - Ascended Lawmage
+- Ash Zealot
 - Asha's Favor
 - Ashcoat Bear
 - Ashen Firebeast
+- Ashenmoor Gouger
+- Ashenmoor Liege
+- Ashiok's Reaper
 - Ashnod's Altar
+- Ashnod's Harvester
 - Aspect of Gorgon
 - Aspect of Manticore
+- Aspect of Mongoose
 - Aspiring Aeronaut
 - Assassin's Trophy
 - Assault Griffin
@@ -293,6 +329,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Attune with Aether
 - Atzocan Seer
 - Audacious Thief
+- Audacity
 - Auger Spree
 - Augmenting Automaton
 - Augury Owl
@@ -304,8 +341,10 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Auramancer
 - Auramancer's Guise
 - Auron's Inspiration
+- Aurora Phoenix
 - Auroral Procession
 - Austere Command
+- Authority of the Consuls
 - Autochthon Wurm
 - Automatic Librarian
 - Avacyn, Angel of Hope
@@ -313,6 +352,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Avacyn's Pilgrim
 - Avatar Enthusiasts
 - Avatar of Slaughter
+- Avatar of the Resolute
 - Aven Battle Priest
 - Aven Brigadier
 - Aven Cloudchaser
@@ -322,12 +362,14 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Aven Fleetwing
 - Aven Flock
 - Aven Fogbringer
+- Aven Interrupter
 - Aven of Enduring Hope
 - Aven Reedstalker
 - Aven Sentry
 - Aven Skirmisher
 - Aven Smokeweaver
 - Aven Surveyor
+- Aven Tactician
 - Aven Trooper
 - Aven Wind Mage
 - Avenger of Zendikar
@@ -353,6 +395,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Azure Mage
 - Azusa, Lost but Seeking
 - Back to Nature
+- Backlash
 - Backup Agent
 - Bad Moon
 - Badlands Revival
@@ -363,6 +406,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Balduvian Bears
 - Baleful Ammit
 - Baleful Beholder
+- Baleful Eidolon
 - Baleful Force
 - Baleful Strix
 - Balloon Peddler
@@ -371,9 +415,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Baloth Woodcrasher
 - Balshan Collaborator
 - Balshan Griffin
+- Bandit's Talent
 - Bane Alley Blackguard
 - Banehound
+- Banisher Priest
 - Banishing Betrayal
+- Banishing Light
 - Bankrupt in Blood
 - Banners Raised
 - Bant Battlemage
@@ -383,6 +430,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Barbary Apes
 - Barbed Battlegear
 - Barbtooth Wurm
+- Barkform Harvester
 - Barkhide Mauler
 - Barktooth Warbeard
 - Barony Vampire
@@ -391,10 +439,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Barrier of Bones
 - Barrin, Master Wizard
 - Barrow Witches
+- Barter in Blood
 - Bartizan Bats
 - Basal Thrull
 - Basandra, Battle Seraph
 - Bash to Bits
+- Basilica Skullbomb
 - Basilisk Collar
 - Basri's Solidarity
 - Bassara Tower Archer
@@ -403,9 +453,11 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Bastion of Remembrance
 - Bathe in Dragonfire
 - Batterhorn
+- Battering Craghorn
 - Battershield Warrior
 - Battle Hurda
 - Battle Mastery
+- Battle Plan
 - Battle Rampart
 - Battle Sliver
 - Battle Squadron
@@ -421,6 +473,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Beacon of Creation
 - Beacon of Destruction
 - Beacon of Unrest
+- Beaming Defiance
 - Bear Cub
 - Bear's Companion
 - Beast Attack
@@ -429,6 +482,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Beast-Kin Ranger
 - Beastcaller Savant
 - Bebop, Warthog Warrior
+- Beckon Apparition
 - Bedevil
 - Bedhead Beastie
 - Bee Sting
@@ -438,6 +492,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Behemoth Sledge
 - Belbe's Portal
 - Beledros Witherbloom
+- Belladonna Took
 - Belle of the Brawl
 - Belligerent Sliver
 - Bellowing Crier
@@ -447,13 +502,15 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Benalish Knight
 - Benalish Marshal
 - Beneath the Sands
+- Benevolent Offering
 - Benthic Giant
 - Bequeathal
 - Beregond of the Guard
 - Berserkers' Onslaught
 - Beskir Shieldmate
+- Bespoke Battlewagon
 - Bespoke Bō
-- Bestial Incursion
+- Bess, Soul Nourisher
 - Bestial Menace
 - Bestow Greatness
 - Betrayal
@@ -465,6 +522,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Big Score
 - Bilbo Baggins, Burglar // Take a Glance
 - Bilbo's Deadly Slice
+- Bilbo's Gambit
 - Bile Urchin
 - Biogenic Ooze
 - Biomathematician
@@ -476,6 +534,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Bitterbloom Bearer
 - Bitterbow Sharpshooters
 - Bituminous Blast
+- Black Dragon
 - Black Knight
 - Black Market Connections
 - Black Panther, Vanguard
@@ -495,6 +554,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Blanchwood Treefolk
 - Blanket of Night
 - Blasphemous Act
+- Blasphemous Edict
 - Blasting Station
 - Blazing Hellhound
 - Blazing Volley
@@ -503,6 +563,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Blessed Orator
 - Blessed Spirits
 - Blessing
+- Blight Keeper
 - Blight Mound
 - Blight Rot
 - Blighted Agent
@@ -540,6 +601,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Bloodbraid Challenger
 - Bloodbraid Elf
 - Bloodbriar
+- Bloodcrazed Paladin
 - Bloodcrusher of Khorne
 - Bloodfire Colossus
 - Bloodfire Dwarf
@@ -551,6 +613,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Bloodhunter Bat
 - Bloodied Ghost
 - Bloodline Culling
+- Bloodline Keeper // Lord of Lineage
 - Bloodline Necromancer
 - Bloodlust Inciter
 - Bloodmark Mentor
@@ -571,6 +634,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Boar-q-pine
 - Boarding Party
 - Boartusk Liege
+- Body Launderer
 - Bog Imp
 - Bog Initiate
 - Bog Witch
@@ -583,9 +647,11 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Boil
 - Boiling Blood
 - Boiling Seas
+- Bojuka Brigand
 - Bold Biochemist
 - Bold Impaler
 - Boldwyr Aggressor
+- Bolrac-Clan Crusher
 - Bolt Hound
 - Bolt of Keranos
 - Boltwave
@@ -610,6 +676,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Boon of Safety
 - Boon of the Spirit Realm
 - Boon of the Wish-Giver
+- Boon Satyr
 - Bootleggers' Stash
 - Boots of Speed
 - Borborygmos
@@ -627,9 +694,11 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Boros Signet
 - Boros Swiftblade
 - Borough Backup
+- Borrowed Time
 - Borrowing 100,000 Arrows
 - Boss's Chauffeur
 - Bottle Gnomes
+- Bottomless Pit
 - Boulderborn Dragon
 - Bounding Wolf
 - Bounty of Might
@@ -642,6 +711,9 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Bramblesnap
 - Brambleweft Behemoth
 - Bramblewood Paragon
+- Branchsnap Lorian
+- Brandywine Farmer
+- Brash Taunter
 - Brass Secretary
 - Braulios of Pheres Band
 - Bravado
@@ -656,14 +728,18 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Breath of Life
 - Breath of Malfegor
 - Breathstealer
+- Bred for the Hunt
+- Breena, the Demagogue
 - Briarpack Alpha
 - Brightblade Stoat
 - Brigid, Clachan's Heart // Brigid, Doun's Mind
+- Brilliant Halo
 - Brilliant Plan
 - Brimstone Dragon
 - Brimstone Trebuchet
 - Brindle Boar
 - Brindle Shoat
+- Brinebarrow Intruder
 - Broadcast Rambler
 - Broken Bond
 - Brokers Veteran
@@ -689,17 +765,20 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Bull's Strength
 - Bulwark Giant
 - Bumbleflower's Sharepot
+- Bump in the Night
 - Buoyancy
 - Burden of Guilt
 - Buried Alive
 - Burlfist Oak
 - Burn Bright
+- Burner Rocket
 - Burning Prophet
 - Burning-Fist Minotaur
 - Burning-Tree Emissary
 - Burnished Hart
 - Burrenton Shield-Bearers
 - Burrog Banemaker
+- Burrog Befuddler
 - Burrowguard Mentor
 - Burrowing Razormaw
 - Burst of Energy
@@ -707,16 +786,19 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Burst of Strength
 - Bushmaster, Coiled Henchman
 - Bushwhack
+- Butcher Ghoul
 - Butcher of Malakir
 - Buzz Bots
 - Cabal Archon
 - Cabal Evangel
 - Cabal Trainee
+- Cached Defenses
 - Cackling Imp
 - Cactusfolk Sureshot
 - Cadaver Imp
 - Cadira, Caller of the Small
 - Caelorna, Coral Tyrant
+- Call Forth the Tempest
 - Call of the Conclave
 - Call of the Herd
 - Call the Bloodline
@@ -732,11 +814,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Campus Guide
 - Canal Monitor
 - Cancel
+- Candlekeep Sage
 - Candlelight Vigil
 - Candy Trail
 - Cankerbloom
 - Canoptek Scarab Swarm
 - Canoptek Spyder
+- Canoptek Tomb Sentinel
 - Canoptek Wraith
 - Canopy Baloth
 - Canopy Gorger
@@ -744,11 +828,15 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Canopy Tactician
 - Canyon Crawler
 - Canyon Jerboa
+- Canyon Lurkers
 - Canyon Minotaur
 - Capashen Knight
 - Capashen Templar
 - Capashen Unicorn
 - Capital Guard
+- Captain America, Skybound
+- Captain America, Wings of Freedom
+- Captain America's Shield
 - Captain of the Watch
 - Captain of Umbar
 - Captain's Call
@@ -766,6 +854,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Carrion Ants
 - Carrion Call
 - Carrion Crow
+- Carrion Feeder
 - Carrion Howler
 - Carrion Screecher
 - Cartographer
@@ -773,6 +862,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Cartouche of Knowledge
 - Cartouche of Solidarity
 - Carven Caryatid
+- Cast Out
 - Casualties of War
 - Catacomb Crocodile
 - Catacomb Slug
@@ -780,6 +870,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Catalyst Elemental
 - Cateran Summons
 - Cathar Commando
+- Cathar's Call
 - Cathar's Shield
 - Cathars' Crusade
 - Cathartic Reunion
@@ -793,8 +884,10 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Cavalry Pegasus
 - Cave-In
 - Cavern Thoctar
+- Celebrate the Mountain-king
 - Celebrity Fencer
 - Celestial Ancient
+- Celestial Archon
 - Celestial Force
 - Celestial Prism
 - Cemetery Gate
@@ -816,31 +909,34 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Chainbreaker
 - Chains of Custody
 - Champion of Arashin
+- Champion of Lambholt
 - Champion of the Parish
 - Champion of the Perished
 - Chandra, Novice Pyromancer
 - Chandra's Embercat
-- Chandra's Emberling
 - Changeling Sentinel
 - Changeling Wayfinder
+- Changing Loyalty
 - Channel the Suns
 - Chant of the Skifsang
 - Chaos Maw
+- Chaos Warp
 - Chapel Geist
 - Chaplain's Blessing
 - Char-Rumbler
 - Charcoal Diamond
 - Chardalyn Dragon
 - Charge
-- Charge the Sanctum
 - Charge Through
 - Charging Badger
 - Charging Monstrosaur
+- Charging Slateback
 - Charging Strifeknight
 - Chariot of Victory
 - Charismatic Vanguard
 - Charity Extractor
 - Chartooth Cougar
+- Chase Inspiration
 - Chasm Guide
 - Chatter of the Squirrel
 - Chief of the Edge
@@ -850,14 +946,18 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Child of Alara
 - Child of Night
 - Child of Thorns
+- Chimil, the Inner Sun
 - Chimney Rabble
 - Chitinous Cloak
 - Chitinous Graspling
 - Chocobo Racetrack
 - Choking Fumes
+- Chomping Changeling
 - Chorus of Woe
 - Chosen by Heliod
+- Chromanticore
 - Chromatic Lantern
+- Chromatic Star
 - Chrome Cat
 - Chronicle of Victory
 - Chronomancer
@@ -868,10 +968,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Circle of Dreams Druid
 - Circle of Power
 - Circle of the Land Druid
+- Circuit Mender
 - Circuitous Route
 - Cirith Ungol Patrol
 - Citanul Druid
 - Citanul Hierophants
+- Citizen's Arrest
+- City Pigeon
 - Citywatch Sphinx
 - Citywide Bust
 - Civic Stalwart
@@ -889,6 +992,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Cleanfall
 - Cleansing Nova
 - Cleansing Screech
+- Cleanup Crew
 - Clear
 - Cleaver Riot
 - Cleaving Sliver
@@ -898,6 +1002,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Cliffside Lookout
 - Clinging Darkness
 - Clinquant Skymage
+- Cloak of Confusion
 - Cloak of Feathers
 - Cloak of the Bat
 - Cloaked Siren
@@ -922,6 +1027,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Cobblebrute
 - Cobbled Wings
 - Coercive Impetus
+- Coffin Purge
+- Cogwork Wrestler
 - Cogworker's Puzzleknot
 - Coiled Tinviper
 - Cold-Water Snapper
@@ -941,9 +1048,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Colossapede
 - Colossification
 - Colossodon Yearling
+- Combat Calligrapher
 - Combat Courier
+- Combat Professor
 - Combine Chrysalis
 - Combustible Gearhulk
+- Comeuppance
 - Coming In Hot
 - Command the Storm
 - Commander's Authority
@@ -961,6 +1071,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Conclave Equenaut
 - Conclave Guildmage
 - Conclave Naturalists
+- Conclave Tribunal
 - Conclave's Blessing
 - Concordia Pegasus
 - Condescend
@@ -975,6 +1086,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Constricting Tendrils
 - Consulate Dreadnought
 - Consulate Skygate
+- Consume Strength
 - Consumptive Goo
 - Contagion Clasp
 - Contagious Nim
@@ -984,12 +1096,14 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Contraband Kingpin
 - Contract Killing
 - Contradict
+- Convergence of Dominion
 - Convolute
 - Coordinated Charge
 - Copper Gnomes
 - Copper Host Crusher
 - Copper Longlegs
 - Copper Myr
+- Copper Tablet
 - Coppercoat Vanguard
 - Coral Commando
 - Coral Eel
@@ -999,16 +1113,17 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Core Prowler
 - Cori Mountain Stalwart
 - Corpse Connoisseur
-- Corpse Hauler
 - Corpse Knight
 - Corroding Dragonstorm
 - Corrosive Gale
 - Corrupted Conviction
 - Corsair Captain
+- Cosmic Cube
 - Cosmic Spider-Man
 - Cosmogrand Zenith
 - Costly Plunder
 - Council of Advisors
+- Council's Judgment
 - Counsel of the Soratami
 - Counterspell
 - Courageous Goblin
@@ -1025,16 +1140,21 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Crackling Cyclops
 - Crackling Doom
 - Cradle of Safety
+- Cranial Plating
 - Crash of Rhinos
 - Crash the Ramparts
 - Crash Through
 - Crashing Drawbridge
 - Craterize
+- Craven Giant
+- Craven Knight
 - Craw Wurm
 - Crazed Skirge
+- Creakwood Ghoul
 - Creakwood Liege
 - Creeping Corrosion
 - Creeping Mold
+- Cremate
 - Crenellated Wall
 - Crescendo of War
 - Crested Herdcaller
@@ -1053,6 +1173,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Crowned Ceratok
 - Crucible of Fire
 - Crucible of Worlds
+- Crude Rampart
 - Cruel Finality
 - Cruel Truths
 - Cruel Tutor
@@ -1061,8 +1182,11 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Crusading Knight
 - Crush Contraband
 - Crush of Wurms
+- Crustacean Commando
 - Crux of Fate
+- Crypt Creeper
 - Crypt Ripper
+- Cryptek
 - Cryptic Annelid
 - Cryptolith Rite
 - Cryptothrall
@@ -1072,7 +1196,9 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Crystal Chimes
 - Crystal Seer
 - Crystal Slipper
+- Crystal, Inhuman Princess
 - Crystalline Armor
+- Cuboid Colony
 - Culling the Weak
 - Cultbrand Cinder
 - Cultist's Staff
@@ -1086,10 +1212,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Curiosity Crafter
 - Curious Altisaur
 - Curious Pair // Treats to Share
+- Curse of Bounty
 - Curse of Chains
+- Curse of Disturbance
 - Cursebreak
 - Cursed Minotaur
 - Custodian of the Trove
+- Cut a Deal
 - Cutthroat Centurion
 - Cutthroat Contender
 - Cyclonic Rift
@@ -1097,8 +1226,10 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Cyclops of One-Eyed Pass
 - Cylian Elf
 - Cystbearer
+- Cytoplast Manipulator
 - Dack's Duplicate
 - Daggerback Basilisk
+- Daggerclaw Imp
 - Daggerdrome Imp
 - Daggerfang Duo
 - Daggermaw Megalodon
@@ -1106,6 +1237,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Daily Bugle Newspaper
 - Dakkon Blackblade
 - Dakmor Bat
+- Dakmor Ghoul
 - Dakmor Plague
 - Dakmor Scorpion
 - Dakmor Sorceress
@@ -1118,6 +1250,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Daring Apprentice
 - Daring Escape
 - Daring Thunder-Thief
+- Dark Confidant
 - Dark Deed
 - Dark Favor
 - Dark Heart of the Wood
@@ -1144,6 +1277,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Darkwater Egg
 - Darling of the Masses
 - Darting Merfolk
+- Daru Lancer
 - Daru Warchief
 - Dauntless Escort
 - Dauntless Survivor
@@ -1152,11 +1286,14 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Dawn of Hope
 - Dawn to Dusk
 - Dawn's Light Archer
+- Dawn's Truce
+- Dawnbringer Cleric
 - Dawnfeather Eagle
 - Dawnhart Disciple
 - Dawnhart Geist
 - Dawnhart Rejuvenator
 - Dawning Angel
+- Dawning Purist
 - Dawnstrike Paladin
 - Dawntreader Elk
 - Dawnwing Marshal
@@ -1179,6 +1316,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Deadly Rollick
 - Deadly Visit
 - Deafening Clarion
+- Deafening Silence
 - Death by Dragons
 - Death Cultist
 - Death in the Family
@@ -1201,6 +1339,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Dedicated Martyr
 - Deep Analysis
 - Deep Reconnaissance
+- Deepglow Skate
 - Deeproot Champion
 - Deeproot Waters
 - Deepwood Drummer
@@ -1214,12 +1353,15 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Defiant Salvager
 - Defiant Strike
 - Defile
+- Deflecting Palm
 - Deft Duelist
 - Defy Gravity
 - Dega Disciple
 - Déjà Vu
 - Deliberate
 - Delighted Halfling
+- Delirium
+- Delusions of Mediocrity
 - Demanding Dragon
 - Dematerialize
 - Demolish
@@ -1232,6 +1374,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Depths of Desire
 - Deranged Outcast
 - Deranged Whelp
+- Desecrated Tomb
 - Desecration Plague
 - Desert Cerodon
 - Desert Drake
@@ -1243,6 +1386,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Desperate Farmer // Depraved Harvester
 - Desperate Lunge
 - Desperate Ravings
+- Despondency
 - Devastate
 - Devastation
 - Devil Dinosaur
@@ -1250,6 +1394,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Devkarin Dissident
 - Devoted Duelist
 - Devoted Hero
+- Devoted Paladin
 - Devotee of Strength
 - Devouring Light
 - Devouring Swarm
@@ -1270,6 +1415,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Dire Fleet Hoarder
 - Dire Fleet Neckbreaker
 - Dire Wolf Prowler
+- Diregraf Captain
+- Diregraf Colossus
 - Diregraf Ghoul
 - Diresight
 - Disallow
@@ -1297,10 +1444,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Dispersing Orb
 - Displacer Kitten
 - Disrupt Decorum
+- Disruptive Pitmage
 - Disruptive Student
 - Disruptor of Currents
 - Dissenter's Deliverance
 - Dissolve
+- Dive Down
 - Divination
 - Divine Favor
 - Divine Transformation
@@ -1319,6 +1468,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Doomed Traveler
 - Doomwake Giant
 - Door of Destinies
+- Doorkeeper Thrull
 - Dori, Bearer of Friends
 - Dosan's Oldest Chant
 - Double Cleave
@@ -1341,11 +1491,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Dragon Moose
 - Dragon Roost
 - Dragon Sniper
+- Dragon Tempest
 - Dragon Trainer
 - Dragon's Eye Sentry
 - Dragon's Hoard
 - Dragonborn Looter
 - Dragonfly Suit
+- Dragonkin Berserker
 - Dragonlair Spider
 - Dragonlord Dromoka
 - Dragonlord's Servant
@@ -1358,6 +1510,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Drake Hatchling
 - Drake-Skull Cameo
 - Drakewing Krasis
+- Drakuseth, Maw of Flames
 - Dramatic Rescue
 - Dramatic Reversal
 - Drana, Liberator of Malakir
@@ -1366,10 +1519,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Dread of Night
 - Dread Presence
 - Dread Reaper
+- Dread Return
 - Dread Shade
 - Dreadbore
 - Dreadwing
 - Dream Beavers
+- Dream Devourer
+- Dream Pillager
 - Dreams of Laguna
 - Dreamscape Artist
 - Dreamstone Hedron
@@ -1385,7 +1541,11 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Drogskol Shieldmate
 - Dromar's Attendant
 - Dromar's Charm
+- Dromoka Captain
 - Dromoka Warrior
+- Dromoka, the Eternal
+- Dromoka's Gift
+- Drooling Groodion
 - Dross Crocodile
 - Dross Harvester
 - Dross Ripper
@@ -1395,6 +1555,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Drown in Shapelessness
 - Drowned Rusalka
 - Druid Lyrist
+- Druid of Purification
 - Druid of the Anima
 - Druid of the Cowl
 - Druids' Repository
@@ -1404,20 +1565,25 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Dryad of the Ilysian Grove
 - Dryad's Revival
 - Dual-Sun Adepts
+- Dub
 - Dueling Coach
+- Duelist's Heritage
 - Duergar Hedge-Mage
 - Dundoolin Weaver
 - Dune Beetle
 - Dune-Brood Nephilim
 - Dungeon Shade
 - Dungrove Elder
+- Duress
 - Durkwood Boars
 - Dusk Imp
 - Dusk Legion Dreadnought
+- Dusk Legion Duelist
 - Dusk Legion Zealot
 - Duskdale Wurm
 - Duskrider Falcon
 - Duskshell Crawler
+- Duskwielder
 - Dutiful Return
 - Dutiful Servants
 - Duty Beyond Death
@@ -1446,13 +1612,18 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Ebon Drake
 - Ebony Rhino
 - Ebony Treefolk
+- Echoes of the Kin Tree
 - Ecologist's Terrarium
 - Ecstatic Awakener // Awoken Demon
 - Edgewalker
+- Eel-Hounds
 - Eerie Procession
 - Efficient Construction
 - Eidolon of Blossoms
+- Eidolon of Countless Battles
+- Eidolon of Inspiration
 - Eidolon of Philosophy
+- Eidolon of the Great Revel
 - Eject
 - Ekundu Griffin
 - Eladamri's Call
@@ -1461,6 +1632,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Elder Gargaroth
 - Elderfang Venom
 - Elderleaf Mentor
+- Eldrazi Conscription
 - Eldrazi Devastator
 - Electric Revelation
 - Electrify
@@ -1480,6 +1652,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Eliminate
 - Elite Guardmage
 - Elite Instructor
+- Elite Scaleguard
 - Elite Vanguard
 - Elixir of Vitality
 - Elturgard Ranger
@@ -1492,6 +1665,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Elvish Aberration
 - Elvish Archdruid
 - Elvish Archers
+- Elvish Archivist
 - Elvish Farmer
 - Elvish Handservant
 - Elvish Harbinger
@@ -1507,6 +1681,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Elvish Scrapper
 - Elvish Vanguard
 - Elvish Visionary
+- Elvish Warmaster
 - Elvish Warrior
 - Ember Shot
 - Ember-Eye Wolf
@@ -1526,6 +1701,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Enchantress's Presence
 - Encroaching Dragonstorm
 - End-Raze Forerunners
+- Endless Atlas
+- Endless Cockroaches
 - Endless Foot Assault
 - Endless One
 - Energizer
@@ -1556,10 +1733,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Epic Downfall
 - Epic Proportions
 - Epiphany Storm
+- Epitaph Golem
 - Era of Innovation
 - Erase
 - Erdwal Ripper
 - Erebor Flamesmith
+- Eriette of the Charmed Apple
 - Erkenbrand, Lord of Westfold
 - Erode
 - Erratic Visionary
@@ -1574,7 +1753,9 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Essence Extraction
 - Essence Infusion
 - Essence Warden
+- Etali, Primal Conqueror // Etali, Primal Sickness
 - Etched Familiar
+- Eternal Thirst
 - Eternal Warrior
 - Eternal Witness
 - Ethereal Armor
@@ -1591,6 +1772,9 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Eureka Moment
 - Evacuation
 - Evangel of Heliod
+- Ever-Watching Threshold
+- Everdawn Champion
+- Evernight Shade
 - Eviscerate
 - Eviscerator
 - Eviscerator's Insight
@@ -1615,12 +1799,14 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Explosive Shot
 - Explosive Vegetation
 - Expose to Daylight
+- Expressive Iteration
 - Exsanguinate
-- Extended Absence
 - Exultant Cultist
 - Exultant Skymarcher
+- Eye of Nidhogg
 - Eye of Nowhere
 - Eye of Ramos
+- Eyeblight Assassin
 - Eyeblight Cullers
 - Eyeblight Massacre
 - Eyes of the Beholder
@@ -1628,9 +1814,11 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Fabricate
 - Facet Reader
 - Facevaulter
+- Fade from Memory
 - Fade into Antiquity
 - Fae Flight
 - Faeburrow Elder
+- Faerie Duelist
 - Faerie Formation
 - Faerie Guidemother // Gift of the Fae
 - Faerie Harbinger
@@ -1641,6 +1829,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Faerie Vandal
 - Failed Conversion
 - Failed Inspection
+- Fairgrounds Warden
+- Faith Unbroken
 - Faithbearer Paladin
 - Faithful Watchdog
 - Faithless Looting
@@ -1652,6 +1842,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Fallaji Vanguard
 - Fallen Angel
 - Fallen Ferromancer
+- Fallen Ideal
 - Fallowsage
 - False Defeat
 - False Prophet
@@ -1672,6 +1863,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Farseek
 - Fatal Fumes
 - Fate Forgotten
+- Fate Unraveler
 - Fateful Discovery
 - Fateful End
 - Fathom Fleet Firebrand
@@ -1685,6 +1877,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Fearless Pup
 - Feast of the Unicorn
 - Feather of Flight
+- Featherbrained Filcher
 - Feebleness
 - Feed the Serpent
 - Feed the Swarm
@@ -1696,6 +1889,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Fell
 - Fell the Profane // Fell Mire
 - Fellwar Stone
+- Femeref Enchantress
 - Femeref Scouts
 - Fencer Clique
 - Fencing Ace
@@ -1722,6 +1916,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Festival Crasher
 - Fetid Horror
 - Fevered Convulsions
+- Feywild Visitor
 - Field Creeper
 - Field Marshal
 - Fierce Guardianship
@@ -1732,7 +1927,9 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Fiery Finish
 - Fiery Hellhound
 - Fiery Intervention
+- Fiery Mantle
 - Fight On!
+- Fight or Flight
 - Fighting Drake
 - Filigree Attendant
 - Filigree Crawler
@@ -1742,6 +1939,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Final Judgment
 - Final Reward
 - Finishing Blow
+- Finneas, Ace Archer
 - Fire Ambush
 - Fire Ants
 - Fire Diamond
@@ -1764,11 +1962,14 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Firebreathing
 - Firefly
 - Firehoof Cavalry
+- Firemane Commando
 - Firemantle Mage
 - Fires of Undeath
 - Fires of Yavimaya
 - Firescreamer
 - Fireshrieker
+- Firkraag, Cunning Instigator
+- First Family
 - First-Sphere Gargantua
 - Fissure
 - Fists of Ironwood
@@ -1782,17 +1983,24 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Flame Spirit
 - Flame-Chain Mauler
 - Flame-Kin Zealot
+- Flameblast Dragon
 - Flameborn Viron
 - Flamekin Brawler
 - Flamekin Gildweaver
 - Flamekin Harbinger
 - Flamekin Spitfire
+- Flaming Fist Officer
 - Flaming Sword
+- Flare of Cultivation
+- Flare of Denial
+- Flare of Malice
 - Flashfires
 - Flatten
 - Flawless Maneuver
 - Flayed One
+- Flayer of the Hatebound
 - Fledgling Djinn
+- Fledgling Mawcor
 - Fleetfeather Sandals
 - Fleetfoot Dancer
 - Fleeting Distraction
@@ -1804,10 +2012,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Fleshtaker
 - Flick a Coin
 - Flickering Ward
+- Flickerwisp
 - Flight
 - Flight of Equenauts
 - Flight of Fancy
 - Flock Impostor
+- Flood of Recollection
 - Flora Colossus
 - Flowstone Blade
 - Flowstone Channeler
@@ -1820,6 +2030,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Flowstone Mauler
 - Flowstone Overseer
 - Flowstone Shambler
+- Flowstone Slide
 - Flowstone Strike
 - Flowstone Surge
 - Flowstone Thopter
@@ -1831,6 +2042,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Flying Carpet
 - Flying Dolphin-Fish
 - Flying Men
+- Flying Octobot
 - Fodder Cannon
 - Foe-Razer Regent
 - Folk of the Pines
@@ -1839,6 +2051,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Font of Fortunes
 - Font of Return
 - Font of Vigor
+- Food Coma
+- Foot Elite
 - Foot Soldiers
 - For the Emperor!
 - Foratog
@@ -1848,6 +2062,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Force of Will
 - Force Spike
 - Forceful Denial
+- Forebear's Blade
 - Forerunner of the Coalition
 - Forerunner of the Empire
 - Forerunner of the Heralds
@@ -1855,6 +2070,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Foresee
 - Forest Bear
 - Forgeborn Oreads
+- Forgotten Ancient
 - Forgotten Sentinel
 - Forsake the Worldly
 - Forsaken Drifters
@@ -1863,9 +2079,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Fortifying Provisions
 - Fortress Crab
 - Fortuitous Find
+- Forum Filibuster
+- Foul Familiar
 - Foul Imp
 - Foulmire Knight // Profane Insight
 - Foundry Assembler
+- Foundry Hornet
 - Foundry Inspector
 - Fountain of Renewal
 - Fountain of Youth
@@ -1873,6 +2092,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Foxfire Oak
 - Fracture
 - Fragmentize
+- Franklin Richards, Ascendant
 - Frantic Search
 - Frantic Strength
 - Freed from the Real
@@ -1885,6 +2105,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Frenzied Raptor
 - Frenzied Tilling
 - Fresh Volunteers
+- Fretwork Colony
 - Friendly Ghost
 - Frilled Mystic
 - Frilled Oculus
@@ -1893,8 +2114,10 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Frog-Squirrels
 - Frogmite
 - Frolicking Familiar // Blow Off Steam
+- Front Porch Sentries
 - Frontier Guide
 - Frontier Siege
+- Frontier Warmonger
 - Frost Ogre
 - Frostburn Weird
 - Frostwind Invoker
@@ -1928,10 +2151,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Gaea's Bounty
 - Gaea's Gift
 - Gaea's Skyfolk
+- Galactus, Devourer of Worlds
 - Galadhrim Guide
 - Galazeth Prismari
 - Gale Force
 - Gale Swooper
+- Galepowder Mage
 - Galerider Sliver
 - Galewind Moose
 - Galina's Knight
@@ -1941,6 +2166,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Galvanic Key
 - Galvanizing Sawship
 - Game-Trail Changeling
+- Gandalf, White Rider
 - Gangly Stompling
 - Garenbrig Carver // Shield's Might
 - Garrison Cat
@@ -1950,11 +2176,11 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Garruk's Horde
 - Garruk's Packleader
 - Garruk's Uprising
+- Gatekeeper Gargoyle
 - Gather Courage
 - Gather the White Lotus
 - Gavony Unhallowed
 - Gaze of Adamaro
-- Geist of Saint Thalia
 - Geist of the Archives
 - Geist of the Moors
 - Geist-Honored Monk
@@ -1962,35 +2188,47 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Gelatinous Genesis
 - Gelectrode
 - Gemstone Array
+- General Thunderbolt Ross
+- Generator Servant
 - Generous Ent
 - Generous Gift
+- Generous Pup
 - Generous Stray
 - Generous Visitor
+- Genesis Ultimatum
+- Genghis Frog
+- Geralf's Messenger
 - Gerrard's Battle Cry
 - Gerrard's Irregulars
 - Get the Point
+- Geth's Grimoire
 - Gev, Scaled Scorch
 - Geyserfield Stalker
 - Ghalta and Mavren
 - Ghalta, Primal Hunger
 - Ghalta, Stampede Tyrant
+- Ghave, Guru of Spores
 - Ghirapur Aether Grid
 - Ghirapur Gearcrafter
 - Ghirapur Osprey
 - Ghitu War Cry
 - Ghor-Clan Bloodscale
 - Ghor-Clan Wrecker
+- Ghost Ark
 - Ghost Tactician
 - Ghost Warden
 - Ghost-Lit Nourisher
 - Ghost-Lit Redeemer
 - Ghost-Lit Warder
 - Ghost, Spectral Saboteur
+- Ghostblade Eidolon
 - Ghostly Changeling
 - Ghostly Flicker
 - Ghostly Prison
 - Ghostly Sentinel
 - Ghosts of the Damned
+- Ghoulish Impetus
+- Giant Ankheg
 - Giant Cockroach
 - Giant Fly
 - Giant Growth
@@ -2010,6 +2248,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Gideon's Avenger
 - Gift of Fangs
 - Gift of Granite
+- Gift of Immortality
 - Gift of Orzhova
 - Gift of Strands
 - Gift of Strength
@@ -2026,14 +2265,18 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Gitaxian Raptor
 - Give In to Violence
 - Gixian Infiltrator
+- Glacial Stalker
 - Glacial Wall
 - Gladecover Scout
+- Gladiolus Amicitia
 - Glaive of the Guildpact
 - Glamorous Grapplers
 - Glass Golem
 - Glaze Fiend
 - Gleam of Battle
 - Gleaming Barrier
+- Gleeful Arsonist
+- Glen Elendra Archmage
 - Glen Elendra Liege
 - Glidedive Duo
 - Glider Kids
@@ -2042,7 +2285,9 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Glimmerbell
 - Glimmerburst
 - Glimmerlight
+- Glimmerpoint Stag
 - Glimpse of Freedom
+- Glint
 - Glint-Eye Nephilim
 - Glintwing Invoker
 - Glissa, the Traitor
@@ -2081,6 +2326,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Goblin Gang Leader
 - Goblin Gardener
 - Goblin General
+- Goblin Glider
 - Goblin Hero
 - Goblin Instigator
 - Goblin Lookout
@@ -2091,6 +2337,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Goblin Outlander
 - Goblin Picker
 - Goblin Piker
+- Goblin Raider
 - Goblin Rally
 - Goblin Replica
 - Goblin Roughrider
@@ -2099,6 +2346,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Goblin Sledder
 - Goblin Soothsayer
 - Goblin Spy
+- Goblin Spymaster
 - Goblin Striker
 - Goblin Surprise
 - Goblin Trailblazer
@@ -2108,6 +2356,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Goblin War Paint
 - Goblin Warchief
 - Goblin Warrens
+- God-Eternal Oketra
+- God-Eternal Rhonas
 - Godtracker of Jund
 - Goggles of Night
 - Gold Myr
@@ -2127,6 +2377,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Golgari Guildmage
 - Golgari Locket
 - Golgari Longlegs
+- Golgari Raiders
 - Golgari Rotwurm
 - Golgari Signet
 - Goliath Beetle
@@ -2139,6 +2390,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Gorgon's Head
 - Gorilla Warrior
 - Goring Ceratops
+- Graceblade Artisan
 - Graceful Adept
 - Grand Abolisher
 - Grand Crescendo
@@ -2154,6 +2406,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Grave Titan
 - Gravedigger
 - Gravel-Hide Goblin
+- Gravelgill Axeshark
 - Graveshifter
 - Gravpack Monoist
 - Gray Merchant of Asphodel
@@ -2177,29 +2430,36 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Greedy Freebooter
 - Greel's Caress
 - Greenbelt Guardian
-- Greenhouse Propagator
 - Greenseeker
 - Greenweaver Druid
 - Greenwood Sentinel
 - Grendel, Spawn of Knull
+- Grenzo, Havoc Raiser
 - Gretchen Titchwillow
 - Grey Havens Navigator
 - Griffin Dreamfinder
 - Griffin Guide
 - Griffin Protector
 - Griffin Sentinel
+- Grim Bauble
 - Grim Bounty
 - Grim Discovery
 - Grim Guardian
+- Grim Haruspex
+- Grim Physician
 - Grim Tutor
 - Grimclaw Bats
+- Grinning Demon
 - Gristle Grinner
 - Grixis Charm
+- Grixis Slavedriver
 - Grizzled Leotau
 - Grizzled Outrider
 - Grizzly Bears
+- Grizzly Ghoul
 - Grotesque Mutation
 - Groundshaker Sliver
+- Group Project
 - Grove Rumbler
 - Growth Spiral
 - Gruesome Realization
@@ -2210,6 +2470,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Gryff Vanguard
 - Guac & Marshmallow Pizza
 - Guard Duty
+- Guard Gomazoa
 - Guarded Heir
 - Guardian Automaton
 - Guardian Gladewalker
@@ -2224,6 +2485,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Guided Strike
 - Guidelight Synergist
 - Guma
+- Gurmag Rakshasa
 - Gurmag Swiftwing
 - Gustrider Exuberant
 - Gut Shot
@@ -2235,15 +2497,18 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Gyre Engineer
 - Gysahl Greens
 - H.E.R.B.I.E., Lovable Robot
+- Haazda Officer
 - Hada Freeblade
 - Hagi Mob
 - Hagra Constrictor
+- Hagra Crocodile
 - Hagra Sharpshooter
 - Hajar, Loyal Bodyguard
 - Hakoda, Selfless Commander
 - Halberdier
 - Halo Hopper
 - Hamato Guardian Stance
+- Hamlet Vanguard
 - Hammer of Purphoros
 - Hammerfist Giant
 - Hampering Snare
@@ -2254,9 +2519,11 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Hanweir Militia Captain // Westvale Cult Leader
 - Hapless Researcher
 - Happy Hogan, Dauntless Driver
+- Haradrim Spearmaster
 - Harbinger of Night
 - Harbinger of the Hunt
 - Hard-Won Jitte
+- Hardened Escort
 - Hardened Scales
 - Hardened Tactician
 - Hardened-Scale Armor
@@ -2272,6 +2539,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Harvest Season
 - Harvester of Misery
 - Harvester of Souls
+- Hatching Plans
+- Hateful Eidolon
 - Haunted Cloak
 - Haunted Guardian
 - Haunter of Nightveil
@@ -2293,6 +2562,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Healer of the Pride
 - Healer's Flock
 - Healer's Hawk
+- Heap Doll
 - Heart of Ramos
 - Heart Warden
 - Hearthfire Hobgoblin
@@ -2302,6 +2572,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Hedron Crawler
 - Hedron Rover
 - Hedron Scrabbler
+- Heidar, Rimewind Master
 - Heir of Falkenrath // Heir to the Night
 - Heirloom Auntie
 - Helionaut
@@ -2310,12 +2581,17 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Helm of the Gods
 - Helpful Hunter
 - Hematite Golem
+- Herald of Amity
 - Herald of Dromoka
 - Herald of Faith
 - Herald of Secret Streams
+- Herald of Slaanesh
+- Herald of the Fair
 - Herald of the Pantheon
+- Herald of Torment
 - Herald's Horn
 - Heralds of Tzeentch
+- Herd Baloth
 - Herd Gnarr
 - Herd Heirloom
 - Hermetic Study
@@ -2326,9 +2602,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Hero's Resolve
 - Heroic Intervention
 - Heron's Grace Champion
+- Hexmark Destroyer
 - Hexplate Golem
 - Hibernation
 - Hieroglyphic Illumination
+- Hieromancer's Cage
+- Hierophant's Chalice
 - High Sentinels of Arashin
 - High Stride
 - Highborn Vampire
@@ -2336,6 +2615,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Highland Game
 - Highland Giant
 - Highspire Mantis
+- Highway Robber
 - Hill Giant
 - Hill Giant Herdgorger
 - Hill Gigas
@@ -2362,11 +2642,15 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Honed Khopesh
 - Honest Rutstein
 - Honey Mammoth
+- Honeymoon Hearse
 - Honor
 - Honor Guard
 - Honor of the Pure
+- Honor's Reward
+- Honored Heirloom
 - Hoodwink
 - Hop to It
+- Hopeful Eidolon
 - Hopping Automaton
 - Horde of Boggarts
 - Hordeling Outburst
@@ -2375,6 +2659,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Horizon Seeker
 - Horn of Ramos
 - Horn of Valhalla // Ysgard's Call
+- Horned Helm
 - Horned Turtle
 - Hornet Cobra
 - Hornet Harasser
@@ -2384,8 +2669,10 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Horseshoe Crab
 - Hostile Minotaur
 - Hot Dog Cart
+- Hound of Griselbrand
 - Hour of Defeat
 - Hour of Promise
+- Hour of Reckoning
 - Hover Barrier
 - Hoverguard Sweepers
 - Hovermyr
@@ -2397,18 +2684,25 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Huatli's Snubhorn
 - Hulk, Bruce Banner
 - Hulking Bugbear
+- Hulking Cyclops
 - Hulking Devil
+- Hulking Goblin
+- Hulking Ogre
 - Hulking Raptor
 - Hull Breach
 - Hullbreaker Horror
 - Hullcarver
 - Hulldrifter
+- Human Torch
 - Humble Budoka
+- Humble Defector
 - Humble Naturalist
 - Humbler of Mortals
+- Humbling Elder
 - Humongulus
 - Hundroog
 - Hungry Ghoul
+- Hungry Graffalon
 - Hungry Megasloth
 - Hunted Lammasu
 - Hunted Phantasm
@@ -2421,14 +2715,19 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Hurly-Burly
 - Hurricane
 - Hush
+- Hushbringer
 - Hussar Patrol
 - Hyalopterous Lemure
 - Hydro-Channeler
 - Hydrolash
 - Hydrosurge
 - Hyena Pack
+- Hymn to Tourach
+- Hypnotic Grifter
+- Hypnotic Specter
 - Hyrax Tower Scout
 - Hysterical Blindness
+- Hystrodon
 - Icatian Crier
 - Icatian Priest
 - Icatian Scout
@@ -2438,32 +2737,44 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Icecave Crasher
 - Icetill Explorer
 - Icewind Elemental
+- Idol of Oblivion
 - Idyllic Tutor
 - Igneous Cur
 - Ignite the Beacon
 - Ihsan's Shade
 - Il Mheg Pixie
 - Illness in the Ranks
+- Illuminor Szeras
+- Illusionist's Gambit
 - Illvoi Galeblade
 - Illvoi Operative
 - Ilysian Caryatid
 - Immolating Souleater
 - Immolation
+- Immortal Phoenix
 - Imodane's Recruiter // Train Troops
+- Imotekh the Stormlord
+- Imp's Mischief
 - Impact Tremors
 - Impale
 - Impassioned Orator
+- Imperial Aerosaur
 - Imperial Oath
 - Imperial Outrider
 - Imperial Seal
 - Imperious Inkmage
 - Imperious Perfect
 - Impervious Greatwurm
+- Implement of Examination
+- Implement of Ferocity
+- Implement of Improvement
+- Implements of Sacrifice
 - Implode
 - Imposing Vantasaur
 - Imposing Visage
 - Impostor of the Sixth Pride
 - Improbable Alliance
+- Improvisation Capstone
 - Improvised Armor
 - Improvised Club
 - Improvised Weaponry
@@ -2498,8 +2809,10 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Inkshield
 - Inner Demons Gangsters
 - Inordinate Rage
+- Inquisitor Exarch
 - Insatiable Avarice
 - Insatiable Harpy
+- Insidious Roots
 - Insolent Neonate
 - Inspiration
 - Inspired Charge
@@ -2518,6 +2831,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Intangible Virtue
 - Interjection
 - Into the Maw of Hell
+- Into the Time Vortex
 - Into Thin Air
 - Intrepid Tenderfoot
 - Introduction to Prophecy
@@ -2525,15 +2839,18 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Invasion Tactics
 - Invisible Force Field
 - Invisible Stalker
+- Invisible Woman
 - Invoke the Divine
 - Iona's Judgment
 - Ioreth of the Healing House
 - Irencrag Pyromancer
 - Iridescent Angel
 - Iridescent Blademaster
+- Iridescent Tiger
 - Iroas's Champion
 - Iroh, Firebending Instructor
 - Iroh's Demonstration
+- Iron Apprentice
 - Iron Bully
 - Iron Giant
 - Iron Lad, Young Avenger
@@ -2541,6 +2858,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Iron Myr
 - Iron Tusk Elephant
 - Iron Will
+- Iron-Barb Hellion
 - Ironclad Krovod
 - Ironhoof Boar
 - Ironpaw Aspirant
@@ -2551,6 +2869,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Ironwright's Cleansing
 - Irregular Cohort
 - Isamaru, Hound of Konda
+- Isolation Zone
 - It'll Quench Ya!
 - It's Clobberin' Time!
 - Ithilien Kingfisher
@@ -2580,6 +2899,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Jaspera Sentinel
 - Jaya's Greeting
 - Jayemdae Tome
+- Jazal Goldmane
 - Jedit Ojanen
 - Jedit's Dragoons
 - Jenara, Asura of War
@@ -2596,7 +2916,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Jhessian Lookout
 - Jhovall Queen
 - Jhovall Rider
-- Jiang Yanggu, Never Alone
 - Jibbirik Omnivore
 - Join the Dance
 - Join the Ranks
@@ -2612,6 +2931,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Jund Battlemage
 - Jungle Barrier
 - Jungle Delver
+- Jungle Lion
 - Jungle Weaver
 - Jungleborn Pioneer
 - Juzám Djinn
@@ -2627,9 +2947,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Kalonian Behemoth
 - Kalonian Tusker
 - Kamahl, Pit Fighter
+- Kambal, Consul of Allocation
 - Kami of Ancient Law
 - Kami of Old Stone
 - Kami of Twisted Reflection
+- Karametra's Favor
+- Kardur, Doomscourge
 - Kargan Warleader
 - Karok Wrangler
 - Karoo Meerkat
@@ -2638,15 +2961,18 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Kasimir the Lone Wolf
 - Katara, Heroic Healer
 - Kathari Screecher
+- Kavaron Turbodrone
 - Kavu Climber
 - Kavu Monarch
 - Kaysa
 - Kazandu Blademaster
 - Kazandu Nectarpot
 - Kazuul Warlord
+- Kazuul, Tyrant of the Cliffs
 - Kederekt Creeper
 - Kederekt Leviathan
 - Keen Buccaneer
+- Keen Duelist
 - Keen Glidemaster
 - Keen-Eyed Archers
 - Keeneye Aven
@@ -2654,6 +2980,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Keening Banshee
 - Keep Watch
 - Keeper of Fables
+- Keeper of Secrets
 - Keepers of the Faith
 - Keldon Arsonist
 - Keldon Warlord
@@ -2665,6 +2992,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Khalni Ambush // Khalni Territory
 - Khenra Charioteer
 - Killer Bees
+- Killian, Decisive Mentor
+- Killian, Ink Duelist
 - Kiln Fiend
 - Kilo, Apogee Mind
 - Kinbinding
@@ -2675,25 +3004,29 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - King Cheetah
 - King of the Pride
 - Kingfisher
+- Kingpin, Wilson Fisk
 - Kingpin's Enforcers
 - Kinjalli's Caller
 - Kinsbaile Cavalier
 - Kinsbaile Skirmisher
-- Kiora of Fire and Ashes
 - Kiora, Behemoth Beckoner
 - Kiora's Dambreaker
 - Kiora's Follower
+- Kitchen Finks
 - Kite Shield
 - Kitesail
 - Kitesail Scout
 - Kithkin Billyrider
 - Kithkin Harbinger
 - Kithkin Rabble
+- Kithkin Spellduster
 - Kjeldoran Outrider
 - Klauth, Unrivaled Ancient
+- Klothys's Design
 - Knight Errant
 - Knight Exemplar
 - Knight of Autumn
+- Knight of Doves
 - Knight of Meadowgrain
 - Knight of New Benalia
 - Knight of the Keep
@@ -2708,6 +3041,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Knights of Dol Amroth
 - Knights' Charge
 - Knotvine Mystic
+- Knucklebone Witch
 - Koala-Sheep
 - Kobold Drill Sergeant
 - Kobold Overlord
@@ -2715,6 +3049,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Kobolds of Kher Keep
 - Kodama of the North Tree
 - Kodama's Reach
+- Kogla and Yidaro
 - Kogla, the Titan Ape
 - Kokusho, the Evening Star
 - Komodo Rhino
@@ -2724,8 +3059,9 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Kor Cartographer
 - Kor Celebrant
 - Kor Halberd
+- Kor Spiritdancer
 - Korlessa, Scale Singer
-- Koth of the Homestead
+- Korozda Gorgon
 - Kozilek's Channeler
 - Kraken Hatchling
 - Krang, Utrom Warlord
@@ -2746,25 +3082,31 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Kris Mage
 - Kronch Wrangler
 - Krosan Archer
+- Krosan Colossus
 - Krosan Wayfarer
 - Krovikan Scoundrel
 - Kruin Striker
+- Krumar Bond-Kin
 - Kujar Seedsculptor
 - Kuldotha Forgemaster
 - Kuldotha Rebirth
 - Kulrath Mystic
 - Kurgadon
+- Kutzil, Malamet Exemplar
 - Kykar, Wind's Fury
 - Kyoshi Warrior Exemplars
 - Kyoshi Warrior Guard
 - Kyoshi Warriors
+- Kyren Glider
 - Laboratory Brute
 - Lace with Moonglove
 - Lady Orca
 - Lagac Lizard
 - Lagonna-Band Elder
+- Laid to Rest
 - Lakeshore Apothecary
 - Lampad of Death's Vigil
+- Lamplighter of Selhoff
 - Lance
 - Lancer Sliver
 - Land Leeches
@@ -2790,10 +3132,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Lathliss, Dragon Queen
 - Lathnu Sailback
 - Laughing Mad
+- Launch
 - Lava Flow
 - Lava Hounds
 - Lava Serpent
 - Lavafume Invoker
+- Lavaspur Boots
 - Lavastep Raider
 - Lawless Broker
 - Lay of the Land
@@ -2802,6 +3146,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Lead Pipe
 - Leaden Myr
 - Leaf Gilder
+- Leafcrown Dryad
 - Leafkin Druid
 - Leap
 - Leaping Ambush
@@ -2810,6 +3155,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Leatherhead, Iron Gator
 - Leave in the Dust
 - Ledev Guardian
+- Leeching Bite
 - Leering Emblem
 - Legion Lieutenant
 - Leonin Abunas
@@ -2824,9 +3170,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Lethal Protection
 - Letter of Acceptance
 - Levitation
+- Leyline of the Void
 - Leyline Prowler
 - Library Larcenist
+- Library of Leng
 - Lich's Caress
+- Life of the Party
 - Lifeblood
 - Lifecreed Duo
 - Lifelink
@@ -2842,11 +3191,15 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Lightning Helix
 - Lightning Hounds
 - Lightning Javelin
+- Lightning Prowess
+- Lightning Runner
 - Lightning Stormkin
 - Lightning Strike
 - Lightning Talons
 - Lightning-Rig Crew
 - Lightshield Parry
+- Liliana of the Veil
+- Liliana, Waker of the Dead
 - Liliana's Elite
 - Liliana's Mastery
 - Liliana's Shade
@@ -2856,9 +3209,11 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Lithatog
 - Liturgy of Blood
 - Live or Die
+- Living Death
 - Living Hive
 - Living Lies of Loki
 - Living Lightning
+- Living Lightning, Charged Up
 - Living Tempest
 - Lizard Warrior
 - Llanowar Behemoth
@@ -2878,6 +3233,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Loaming Shaman
 - Loch Korrigan
 - Locke Cole
+- Lockjaw, Slobbering Teleporter
 - Locthwain Gargoyle
 - Locthwain Lancer
 - Locust Spray
@@ -2893,13 +3249,16 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Longshot, Rebel Bowman
 - Looming Altisaur
 - Looming Shade
+- Loot, the Pathfinder
 - Loporrit Scout
 - Loran of the Third Path
+- Lord of Change
 - Lord of the Undead
 - Lord of the Unreal
 - Lorehold Pledgemage
 - Lorescale Coatl
 - Lórien Revealed
+- Lose Focus
 - Lose Hope
 - Lost in a Labyrinth
 - Lost in the Mist
@@ -2918,7 +3277,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Loxodon Wayfarer
 - Loyal Apprentice
 - Loyal Guardian
-- Loyal Tutor
 - Lozhan, Dragons' Legacy
 - Lucent Liminid
 - Lucky Offering
@@ -2931,9 +3289,11 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Lumengrid Warden
 - Luminarch Aspirant
 - Luminous Angel
+- Lumithread Field
 - Lunatic Pandora
 - Lurching Rotbeast
 - Lurking Lizards
+- Lurking Predators
 - Lux Cannon
 - Lychguard
 - Lyla, Holographic Assistant
@@ -2957,6 +3317,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Magefire Wings
 - Mageta's Boon
 - Maggot Therapy
+- Magic Damper
+- Magic Pot
 - Magitek Armor
 - Magma Giant
 - Magma Jet
@@ -2970,12 +3332,14 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Magus of the Bazaar
 - Magus of the Coffers
 - Magus of the Moon
+- Magus of the Wheel
 - Mahadi, Emporium Master
 - Mahamoti Djinn
 - Maja, Bretagard Protector
 - Major Teroh
 - Make a Stand
 - Make Obsolete
+- Makeshift Binding
 - Makeshift Munitions
 - Makindi Aeronaut
 - Makindi Griffin
@@ -3004,14 +3368,18 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Mandible Justiciar
 - Mandroid Squadron
 - Maned Serval
+- Mangara, the Diplomat
 - Manhole Cover
 - Manic Vandal
 - Manifold Key
 - Mantis Rider
 - Mantle of Leadership
+- Mantle of the Wolf
+- Mantle of Tides
 - Mantle of Webs
 - Many Partings
 - Map the Frontier
+- Map the Wastes
 - Maraleaf Pixie
 - Marauder's Axe
 - Marauding Brinefang
@@ -3036,13 +3404,15 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Marshaling Cry
 - Marshmist Titan
 - Martial Glory
+- Martial Impetus
 - Martyr for the Cause
 - Martyr of Dusk
 - Marvelous Melee
-- Marwyn, the Preserver
+- Mary Jane Watson
 - Mascot Exhibition
 - Mask of Avacyn
 - Mask of Law and Grace
+- Mask of Memory
 - Masked Blackguard
 - Masked Meower
 - Mass of Ghouls
@@ -3052,7 +3422,9 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Master of Etherium
 - Master of Waves
 - Master Splicer
+- Master Warcraft
 - Master's Call
+- Masterful Flourish
 - Maul Splicer
 - Mausoleum Guard
 - Maverick Thopterist
@@ -3062,7 +3434,9 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Mawcor
 - Maximum Overdrive
 - Mayhem Devil
+- Maze Skullbomb
 - Mazirek, Kraul Death Priest
+- Mechan Assembler
 - Mechan Navigator
 - Mechanized Ninja Cavalry
 - Meditation Puzzle
@@ -3071,6 +3445,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Megantic Sliver
 - Megatog
 - Melesse Spirit
+- Meltstrider Eulogist
 - Memnite
 - Memory Drain
 - Memory Guardian
@@ -3109,6 +3484,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Meteor Sword
 - Meteoric Mace
 - Metropolis Sprite
+- Michelangelo, Weirdness to 11
+- Michiko Konda, Truth Seeker
 - Midnight Assassin
 - Midnight Clock
 - Midnight Covenant
@@ -3118,6 +3495,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Midnight Mayhem
 - Midnight Reaper
 - Might of Oaks
+- Might of the Ancestors
 - Mightstone
 - Mighty Emergence
 - Mighty Leap
@@ -3126,10 +3504,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Migration Path
 - Migratory Route
 - Miirym, Sentinel Wyrm
+- Mikey & Leo, Chaos & Order
 - Military Discipline
 - Millennial Gargoyle
 - Mind Spring
 - Mind Stone
+- Mind's Dilation
 - Mindful Biomancer
 - Mindspring Merfolk
 - Mindstatic
@@ -3164,6 +3544,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Mist-Cloaked Herald
 - Mistcutter Hydra
 - Mister Fantastic, Reed Richards
+- Mistmeadow Witch
 - Mistral Charger
 - Mistwalker
 - Mm'menon, Uthros Exile
@@ -3174,14 +3555,17 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Moaning Wall
 - Moat Piranhas
 - Mob
+- Mob Rule
 - Mobilization
 - Mobilize
 - Mocking Sprite
 - Mogg Raider
 - Mogg Sentry
 - Mogis's Favor
+- Molder Beast
 - Moldering Karok
 - Moldervine Reclamation
+- Molecular Modifier
 - Molimo, Maro-Sorcerer
 - Molten Gatekeeper
 - Molten Ravager
@@ -3190,14 +3574,19 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Moment of Defiance
 - Moment of Heroism
 - Moment of Triumph
+- Momo, Playful Pet
+- Mona Lisa, Ever Adaptable
+- Monastery Flock
 - Mondrak, Glory Dominus
 - Monk Idealist
+- Monk of the Open Hand
 - Monk Realist
 - Monoist Sentry
 - Monologue Tax
 - Mons's Goblin Raiders
 - Monster Mashup
 - Monstrous Growth
+- Monstrous Vortex
 - Moon Heron
 - Moon Sprite
 - Moon-Blessed Cleric
@@ -3212,6 +3601,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Moonwing Moth
 - Moorish Cavalry
 - Morale
+- Moraug, Fury of Akoum
 - Morbid Hunger
 - Morbid Plunder
 - Mordant Dragon
@@ -3220,6 +3610,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Morgue Toad
 - Moriok Reaver
 - Moriok Replica
+- Moriok Rigger
 - Morningtide
 - Moroii
 - Morophon, the Boundless
@@ -3227,6 +3618,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Mortal's Resolve
 - Mortician Beetle
 - Mortify
+- Mortiphobia
+- Mortus Strider
 - Moss Diamond
 - Moss Kami
 - Moss Monster
@@ -3236,6 +3629,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Mossdog
 - Mossfire Egg
 - Most Wanted
+- Mother of Runes
 - Mountain Bandit
 - Mouser Attack!
 - Mox Amber
@@ -3243,13 +3637,14 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Mox Opal
 - Muck Rats
 - Muldrotha, the Gravetide
+- Multani's Harmony
 - Multiversal Recruitment
 - Mummy Paramount
 - Murasa Brute
 - Murder
+- Murder of Crows
 - Murmuring Mystic
 - Murmuring Phantasm
-- Murmuring Volume
 - Muse Drake
 - Muse's Encouragement
 - Mutagenic Growth
@@ -3257,6 +3652,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Mutilate
 - Mwonvuli Acid-Moss
 - Mycologist
+- Myconid Spore Tender
 - Myr Enforcer
 - Myr Kinsmith
 - Myr Matrix
@@ -3268,17 +3664,21 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Mysterio's Phantasm
 - Mystic Archaeologist
 - Mystic Confluence
+- Mystic Forge
+- Mystic of the Hidden Way
 - Mystic Retrieval
 - Mystic Skull // Mystic Monstrosity
 - Mystic Snake
 - Mystical Tutor
 - Mythic Proportions
 - Nacatl Outlander
+- Nadier's Nightblade
 - Naga Eternal
 - Naga Oracle
 - Naga Vitalist
 - Namor, Atlantean King
 - Namora, the Sea Queen
+- Nanoform Sentinel
 - Nantuko Disciple
 - Nantuko Elder
 - Nantuko Husk
@@ -3295,9 +3695,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Naturalize
 - Nature's Chant
 - Nature's Lore
+- Nature's Ruin
 - Nature's Spiral
 - Navigation Orb
+- Nearheath Stalker
 - Necrogen Censer
+- Necrogen Mists
 - Necrogen Scudder
 - Necromancer's Assistant
 - Necromantic Thirst
@@ -3325,7 +3728,10 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Neurok Hoversail
 - Neurok Invisimancer
 - Neurok Replica
+- Neurok Stealthsuit
 - Neutralize
+- Neva, Stalked by Nightmares
+- New Generation's Technique
 - News Helicopter
 - Nexus Wardens
 - Night Market Lookout
@@ -3338,10 +3744,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Nightscape Familiar
 - Nightscape Master
 - Nightshade Dryad
+- Nightshade Stinger
 - Nightveil Predator
 - Nightveil Sprite
 - Nightwind Glider
 - Nightwing Shade
+- Nils, Discipline Enforcer
 - Nim Grotesque
 - Nim Lasher
 - Nim Replica
@@ -3350,11 +3758,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Nimble Birdsticker
 - Nimble Innovator
 - Nimble Thopterist
+- Nimbus Naiad
 - Nimbus of the Isles
 - Nimbus Swimmer
 - Nimbus Wings
 - Nine-Tail White Fox
 - Ninja's Kunai
+- Ninth Bridge Patrol
 - Nip Gwyllion
 - Nissa, Worldsoul Speaker
 - Nissa's Expedition
@@ -3380,14 +3790,18 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Nourish
 - Nova Cleric
 - Nova Flame
+- Novablast Wurm
 - Novice Dissector
 - Novice Occultist
 - Noxious Dragon
 - Noxious Groodion
 - Noxious Newt
 - Nuisance Engine
+- Nullmage Shepherd
 - Nurturing Bristleback
 - Nurturing Presence
+- Nutrient Block
+- Nylea's Emissary
 - Nylea's Forerunner
 - Nyx Infusion
 - Nyx Lotus
@@ -3395,8 +3809,14 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Nyxborn Brute
 - Nyxborn Colossus
 - Nyxborn Courser
+- Nyxborn Eidolon
+- Nyxborn Hydra
 - Nyxborn Marauder
+- Nyxborn Rollicker
 - Nyxborn Seaguard
+- Nyxborn Shieldmate
+- Nyxborn Triton
+- Nyxborn Wolf
 - Oakenform
 - Oakgnarl Warrior
 - Oakhame Ranger // Bring Back
@@ -3413,6 +3833,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Obelisk of Naya
 - Obelisk of Urd
 - Oblivion Crown
+- Observant Alseid
 - Obsessive Stitcher
 - Obsianus Golem
 - Obsidian Giant
@@ -3420,6 +3841,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Obyra's Attendants // Desperate Parry
 - Obzedat's Aid
 - Octoprophet
+- Octopus Form
 - Ocular Halo
 - Oculus
 - Odric's Outrider
@@ -3431,6 +3853,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Ogre Resister
 - Ogre Sentry
 - Ogre Slumlord
+- Ogre Taskmaster
 - Ogre Warrior
 - Ogre's Cleaver
 - Ohran Frostfang
@@ -3440,6 +3863,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Okoye, Dora Milaje Leader
 - Old Ghastbark
 - Old Gnawbone
+- Oliphaunt
+- Olórin's Searing Light
 - Oltec Archaeologists
 - Oltec Cloud Guard
 - Omega Myr
@@ -3463,11 +3888,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Oneirophage
 - Onulet
 - Onyx Goblet
+- Ooze Spill
 - Opal Lake Gatekeepers
 - Opaline Unicorn
 - Open Fire
 - Open the Graves
 - Opportunity
+- Oppression
 - Opt
 - Oracle of Mul Daya
 - Oracle's Insight
@@ -3478,11 +3905,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Orazca Frillback
 - Orazca Raptor
 - Orb of Dragonkind
+- Orc Sureshot
 - Orchard Strider
 - Orcish Bloodpainter
 - Orcish Mechanics
 - Orcish Oriflamme
 - Orcish Vandal
+- Order of Midnight // Alter Fate
 - Order of the Sacred Bell
 - Ordinary Bear
 - Oread of Mountain's Blaze
@@ -3518,6 +3947,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Pack's Favor
 - Pactdoll Terror
 - Painful Lesson
+- Painful Quandary
 - Palace Familiar
 - Paladin en-Vec
 - Paladin of the Bloodstained
@@ -3528,6 +3958,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Panicked Altisaur
 - Panther Robot
 - Panther Warriors
+- Paradise Mantle
 - Parallel Lives
 - Parapet Watchers
 - Parasitic Impetus
@@ -3539,7 +3970,9 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Patchwork Automaton
 - Patchwork Banner
 - Path of Anger's Flame
+- Path of Discovery
 - Path to Exile
+- Patriot, Shield Wielder
 - Patron of the Valiant
 - Pavel Maliki
 - Pawn of Ulamog
@@ -3549,6 +3982,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Pearl-Ear, Imperial Advisor
 - Pearled Unicorn
 - Peema Aether-Seer
+- Peema Trailblazer
 - Pegasus Charger
 - Pegasus Refuge
 - Pelakka Wurm
@@ -3557,10 +3991,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Pendulum of Patterns
 - Pennon Blade
 - Pensive Minotaur
+- Pensive Professor
 - Penumbra Bobcat
 - Penumbra Kavu
 - Penumbra Spider
 - Penumbra Wurm
+- Perch Protection
 - Peregrine Drake
 - Peregrine Griffin
 - Peregrine Mask
@@ -3568,6 +4004,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Perilous Shadow
 - Perimeter Patrol
 - Perimeter Sergeant
+- Perish
 - Perplexing Test
 - Personal Tutor
 - Pest Control
@@ -3576,12 +4013,14 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Pestered Wellguard
 - Pestilence Demon
 - Pet Avengers
+- Phalanx Tactics
 - Phalanx Vanguard
 - Phantom General
 - Phantom Interference
 - Phantom Monster
 - Phantom Ninja
 - Phantom Warrior
+- Pharaoh Rama-Tut
 - Pharika's Chosen
 - Pharika's Cure
 - Pharika's Mender
@@ -3614,6 +4053,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Pia Nalaar, Chief Mechanic
 - Pianna, Nomad Captain
 - Pick Your Poison
+- Pierce Strider
 - Piety
 - Piggy Bank
 - Pile On
@@ -3626,6 +4066,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Pillarfield Ox
 - Pin to the Earth
 - Pincher Beetles
+- Pious Evangel // Wayward Disciple
 - Pious Wayfarer
 - Piranha Fly
 - Pirate Peddlers
@@ -3645,6 +4086,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Planar Cleansing
 - Planar Gate
 - Planar Portal
+- Planar Void
 - Plasma Elemental
 - Plasmancer
 - Plated Crusher
@@ -3679,8 +4121,10 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Pouncing Cheetah
 - Power Boost
 - Power of Fire
+- Power Pack
 - Powerstone Fracture
 - Prakhata Club Security
+- Pramikon, Sky Rampart
 - Precinct Captain
 - Precise Strike
 - Precision Bolt
@@ -3725,6 +4169,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Prismatic Lens
 - Prismatic Omen
 - Prismite
+- Prison Realm
 - Pristine Talisman
 - Privileged Position
 - Prized Griffin
@@ -3738,9 +4183,11 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Professor's Warning
 - Profound Journey
 - Prologue to Phyresis
+- Promise of Loyalty
 - Propaganda
 - Prophet of the Peak
 - Prophetic Prism
+- Prophetic Ravings
 - Prosperous Innkeeper
 - Prosperous Partnership
 - Prosperous Pirates
@@ -3750,6 +4197,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Proud Pack-Rhino
 - Provoke the Trolls
 - Prowcatcher Specialist
+- Prowler, Clawed Thief
 - Prowling Caracal
 - Prowling Felidar
 - Prowling Serpopard
@@ -3758,6 +4206,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Psemilla, Meletian Poet
 - Pseudodragon Familiar
 - Psionic Gift
+- Psychomancer
 - Psychotrope Thallid
 - Pterafractyl
 - Pull from the Grave
@@ -3766,19 +4215,28 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Pulsating Illusion
 - Pulse Tracker
 - Punk Frogs
+- Puppeteer Clique
 - Purify
+- Purify the Grave
+- Purphoros's Emissary
 - Purple-Crystal Crab
 - Pursue Glory
 - Putrefy
+- Putrid Goblin
 - Putrid Leech
+- Pygmy Pyrosaur
 - Pygmy Razorback
 - Pyre Charger
 - Pyre Hound
+- Pyreheart Wolf
 - Pyretic Ritual
 - Pyroceratops
 - Pyroclasm
+- Pyrogoyf
 - Pyromancer's Assault
 - Pyromantic Pilgrim
+- Pyromatics
+- Pyrostatic Pillar
 - Python
 - Qasali Slingers
 - Qilin's Blessing
@@ -3797,6 +4255,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Queen's Bay Soldier
 - Queen's Commission
 - Quench
+- Queza, Augur of Agonies
 - Quick Study
 - Quicksilver Amulet
 - Quicksilver Fisher
@@ -3807,9 +4266,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Quirion Explorer
 - Quirion Trailblazer
 - Qumulox
+- Rabble Rousing
+- Rabid Wombat
 - Radha, Heir to Keld
+- Raffine's Guidance
 - Rage Nimbus
 - Rage Reflection
+- Rage-Scarred Berserker
 - Rageblood Shaman
 - Ragefire
 - Ragemonger
@@ -3852,20 +4315,25 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Rampaging Baloths
 - Rampaging Hippo
 - Rampaging Rendhorn
+- Rampaging Spiketail
 - Rampant Growth
-- Rampart Hunter
 - Ramunap Excavator
+- Rancor
+- Ranger's Guile
 - Ranger's Longbow
 - Ranger's Path
 - Rank and File
+- Rankle, Master of Pranks
 - Rapacious Dragon
 - Rapid Hybridization
 - Raptor Companion
 - Rapturous Moment
+- Rat King, Pale Piper
 - Rats of Rath
 - Raugrin Crystal
 - Ravages of War
 - Ravaging Horde
+- Raven Wings
 - Ravenhill Flock
 - Ravening Warg
 - Ravenous Amulet
@@ -3878,6 +4346,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Ravenous Lindwurm
 - Ravenous Robots
 - Ravine Raider
+- Ray Fillet, Man Ray
 - Ray of Dissolution
 - Ray of Distortion
 - Ray of Revelation
@@ -3888,6 +4357,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Razorfield Thresher
 - Razorfin Hunter
 - Razorfoot Griffin
+- Reach for the Sky
 - Reach the Horizon
 - Reach Through Mists
 - Read the Bones
@@ -3896,6 +4366,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Reap the Seagraf
 - Rearing Embermare
 - Rebellious Strike
+- Rebuff the Wicked
 - Rebuild
 - Reckless Abandon
 - Reckless Assault
@@ -3916,6 +4387,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Recurring Insight
 - Red Ghost, Intangible Genius
 - Redcap Thief
+- Redemption Arc
 - Redrock Sentinel
 - Reduce to Dreams
 - Redwood Treefolk
@@ -3934,6 +4406,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Regress
 - Regrowth
 - Reinforced Ronin
+- Reins of Power
 - Rejuvenate
 - Relearn
 - Release the Dogs
@@ -3941,6 +4414,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Relic of Legends
 - Relic Sloth
 - Reliquary Monk
+- Reluctant Role Model
 - Remember the Fallen
 - Remnant Elemental
 - Renegade Demon
@@ -3949,6 +4423,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Renowned Weaver
 - Repentant Blacksmith
 - Replenish
+- Reprieve
 - Repulse
 - Repulsor Rays
 - Rescind
@@ -3960,15 +4435,19 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Resistance Squad
 - Resolute Blademaster
 - Resolute Reinforcements
+- Rest in Peace
+- Restless Apparition
 - Restoration Gearsmith
-- Restore with Empathy
+- Restoration Magic
 - Resupply
 - Resurrection
+- Resurrection Orb
 - Retreat to Emeria
 - Retreat to Hagra
 - Retreat to Kazandu
 - Retribution of the Meek
 - Retrieval Agent
+- Retrofitter Foundry
 - Return from the Wilds
 - Return of the Wildspeaker
 - Return to Battle
@@ -3994,6 +4473,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Rhystic Study
 - Rhythm of the Wild
 - Rib Cage Spider
+- Riddlesmith
 - Ridge Rannet
 - Ridged Kusite
 - Ridgeline Rager
@@ -4003,8 +4483,10 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Righteous Charge
 - Righteous Confluence
 - Righteous War
+- Riling Dawnbreaker // Signaling Roar
 - Rimekin Recluse
 - Rimeshield Frost Giant
+- Rimrock Knight // Boulder Rush
 - Ring of Renewal
 - Ring of Three Wishes
 - Riot Devils
@@ -4026,6 +4508,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Rising of the Day
 - Risky Research
 - Rite of the Dragoncaller
+- Rite of the Raging Storm
+- Rites of Reaping
 - Rith, Liberated Primeval
 - Rith's Attendant
 - Ritual of Rejuvenation
@@ -4035,6 +4519,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Riven Turnbull
 - River Hoopoe
 - River Kaijin
+- River Kelpie
 - River Sneak
 - Riverguard's Reflexes
 - Riverwise Augur
@@ -4045,6 +4530,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Roc Hunter
 - Roc of Kher Ridges
 - Rockcaster Platoon
+- Rockshard Elemental
 - Rockslide Elemental
 - Rocky Rebuke
 - Rod of Ruin
@@ -4056,6 +4542,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Romantic Rendezvous
 - Ronom Unicorn
 - Rooftop Bypass
+- Rook Turret
+- Roon of the Hidden Realm
 - Root-Kin Ally
 - Rootborn Defenses
 - Rootbreaker Wurm
@@ -4065,6 +4553,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Rootwater Hunter
 - Rorix Bladewing
 - Rosemane Centaur
+- Rot Farm Mortipede
 - Rot Shambler
 - Rotlung Reanimator
 - Rotted Hulk
@@ -4092,10 +4581,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Ruinous Rampage
 - Ruinous Ultimatum
 - Ruins Recluse
+- Rule of Law
 - Rumbling Baloth
 - Rumbling Sentry
 - Rummaging Goblin
 - Rummaging Wizard
+- Rumor Gatherer
 - Rune-Cervin Rider
 - Rune-Scarred Demon
 - Rune-Sealed Wall
@@ -4127,17 +4618,21 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Sacred Nectar
 - Sacred Wolf
 - Sadistic Obsession
+- Safehold Elite
 - Safewright Quest
 - Sage Aven
 - Sage of Epityr
+- Sage of Fables
 - Sage of Lat-Nam
 - Sage of the Inward Eye
 - Sage Owl
+- Sage-Eye Harrier
 - Sage's Knowledge
 - Sage's Reverie
 - Sage's Row Savant
+- Sagu Archer
+- Sagu Mauler
 - Sagu Wildling // Roost Seek
-- Saheeli, Jewel of Avishkar
 - Sai, Master Thopterist
 - Sailor of Means
 - Sakura-Tribe Elder
@@ -4150,7 +4645,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Salvager of Secrets
 - Salvation Engine
 - Samite Herbalist
-- Samut, Hazoret's Champion
 - Samut, Tyrant Smasher
 - Samut's Sprint
 - Sanctify
@@ -4159,7 +4653,10 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Sanctum Seeker
 - Sandbar Merfolk
 - Sandbar Serpent
+- Sandcrafter Mage
+- Sandsteppe Mastodon
 - Sandsteppe Outcast
+- Sandsteppe Scavenger
 - Sandstone Warrior
 - Sandstorm
 - Sangrite Backlash
@@ -4173,11 +4670,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Sarkhan's Triumph
 - Saruli Caretaker
 - Saruli Gatekeepers
+- Satoru, the Infiltrator
 - Satyr Enchanter
 - Satyr Grovedancer
 - Satyr Hedonist
 - Satyr Rambler
 - Saurian Symbiote
+- Sautekh Immortal
 - Savage Gorilla
 - Savage Hunger
 - Savage Land Dinosaur
@@ -4188,8 +4687,11 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Savai Sabertooth
 - Savannah Lions
 - Savannah Sage
+- Savior of the Sleeping
 - Savor
 - Sazh's Chocobo
+- Scalding Viper // Steam Clean
+- Scale Blessing
 - Scale of Chiss-Goria
 - Scalebane's Elite
 - Scaled Behemoth
@@ -4211,8 +4713,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Scavenged Weaponry
 - Scavenger Drake
 - Scavenger Folk
+- Scavenging Ooze
+- Scavenging Scarab
 - Scepter of Celebration
 - Scepter of Insight
+- Sceptre of Eternal Glory
+- Scheming Symmetry
+- Schismotivate
 - Scholar of Athreos
 - Scholar of Stars
 - School Daze
@@ -4224,6 +4731,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Scorching Shot
 - Scorching Spear
 - Scoria Elemental
+- Scornful Egotist
 - Scorpion's Sting
 - Scour All Possibilities
 - Scour for Scrap
@@ -4231,6 +4739,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Scourge Devil
 - Scourge of Geier Reach
 - Scourge of Kher Ridges
+- Scourge of Valkas
 - Scourge Servant
 - Scourgemark
 - Scouring Sands
@@ -4243,6 +4752,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Screamer-Killer
 - Screaming Fury
 - Screaming Phantom
+- Screams from Within
 - Screeching Drake
 - Screeching Phoenix
 - Screeching Skaab
@@ -4254,6 +4764,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Scryb Sprites
 - Sculpting Steel
 - Scute Mob
+- Scuzzback Marauders
 - Scythe Leopard
 - Sea Eagle
 - Sea Gate Banneret
@@ -4264,6 +4775,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Seacoast Drake
 - Seafloor Oracle
 - Seagraf Skaab
+- Seal from Existence
 - Seal of Cleansing
 - Seal of Primordium
 - Seal of Removal
@@ -4296,6 +4808,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Seize the Day
 - Seize the Initiative
 - Seize the Spoils
+- Sejiri Shelter // Sejiri Glacier
 - Sek'Kuar, Deathkeeper
 - Selenia, Dark Angel
 - Selesnya Cluestone
@@ -4306,6 +4819,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Self-Assembler
 - Selfless Cathar
 - Selfless Spirit
+- Selfless Squire
 - Sell-Sword Brute
 - Seller of Songbirds
 - Senate Griffin
@@ -4324,6 +4838,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Seraph of Dawn
 - Seraph of the Masses
 - Seraph of the Suns
+- Seraph of the Sword
 - Serendib Efreet
 - Serenity
 - Serpent Specialist
@@ -4354,18 +4869,27 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Shadow Summoning
 - Shadowbeast Sighting
 - Shadowblood Egg
+- Shadowfeed
+- Shadrix Silverquill
 - Shake the Foundations
 - Shaman of Spring
 - Shamanic Revelation
+- Shambling Ghast
 - Shambling Ghoul
+- Shambling Goblin
+- Shambling Remains
 - Shambling Strider
 - Shape the Sands
 - Shaper Guildmage
+- Shapers of Nature
 - Shapers' Sanctuary
 - Shard of Broken Glass
+- Shard of the Nightbringer
+- Shard of the Void Dragon
 - Shard Volley
 - Shardless Agent
 - Shardless Outlander
+- Shared Discovery
 - Shared Roots
 - Shared Summons
 - Shared Triumph
@@ -4373,12 +4897,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Shatter
 - Shattered Acolyte
 - Shattering Blow
+- Shattering Spree
 - Shatterskull Giant
 - Shatterskull Recruit
 - Shatterstorm
-- Shatterwing Pegasus
 - She-Hulk, Jennifer Walters
 - Shelob's Ambush
+- Sheltered by Ghosts
 - Sheltering Boughs
 - Sheltering Light
 - Sheoldred's Edict
@@ -4388,6 +4913,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Shield Mate
 - Shield of Duty and Reason
 - Shield Wall
+- Shielded by Faith
 - Shifting Wall
 - Shimmering Barrier
 - Shimmerscale Drake
@@ -4403,12 +4929,15 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Shivan Devastator
 - Shivan Dragon
 - Shivan Hellkite
+- Shivan Phoenix
 - Shivan Zombie
+- Shoal Kraken
 - Shock
 - Shocking Grasp
 - Shopkeeper's Bane
 - Shore Keeper
 - Shore Lurker
+- Shore Up
 - Shorecomber Crab
 - Shoreline Ranger
 - Shoreline Salvager
@@ -4420,6 +4949,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Shrike Force
 - Shrink
 - Shroofus Sproutsire
+- Shrouded Shepherd // Cleave Shadows
 - Shroudstomper
 - Shu Elite Infantry
 - Shu Foot Soldiers
@@ -4429,6 +4959,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Shuri, Vibranium Technologist
 - Sicken
 - Sidequest: Raise a Chocobo // Black Chocobo
+- Sidisi's Pet
 - Siege Mastodon
 - Siege Rhino
 - Siege Veteran
@@ -4437,6 +4968,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Siege-Gang Commander
 - Siegecraft
 - Sift
+- Sightless Ghoul
 - Sigil of the Empty Throne
 - Sigil of the Nayan Gods
 - Sigiled Skink
@@ -4450,11 +4982,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Silent Sentinel
 - Silk Net
 - Silkwing Scout
+- Silkwrap
 - Silumgar's Command
 - Silver Erne
 - Silver Knight
 - Silver Myr
 - Silver Raven
+- Silver Surfer, Galactus's Herald
 - Silverback Ape
 - Silverback Elder
 - Silverback Shaman
@@ -4471,17 +5005,18 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Simian Simulacrum
 - Simic Charm
 - Simic Cluestone
+- Simic Initiate
 - Simic Locket
 - Simic Ragworm
 - Simic Signet
 - Simic Sky Swallower
-- Simulacrum Shaper
 - Sinister Monolith
 - Sinister Sabotage
 - Sinister Starfish
 - Sink into Stupor // Soporific Springs
 - Sinkhole
 - Sir Shandlar of Eberyn
+- Siren's Call
 - Sisay's Ring
 - Sisters of the Flame
 - Sivitri Scarzam
@@ -4517,6 +5052,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Skyblade of the Legion
 - Skybox Ferry
 - Skyclave Geopede
+- Skyclave Shadowcat
 - Skycloud Egg
 - Skycrash
 - Skyhunter Patrol
@@ -4525,6 +5061,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Skyknight Legionnaire
 - Skylasher
 - Skyline Predator
+- Skymarch Bloodletter
 - Skyraker Giant
 - Skyscanner
 - Skyshaper
@@ -4536,6 +5073,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Skysnare Spider
 - Skyspear Cavalry
 - Skystreak Engineer
+- Skyswimmer Koi
 - Skyswirl Harrier
 - Skywing Aven
 - Slag Strider
@@ -4552,15 +5090,18 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Slimefoot, the Stowaway
 - Sling-Gang Lieutenant
 - Slinking Skirge
+- Slinza, the Spiked Stampede
 - Slippery Bogle
 - Sliptide Serpent
 - Slith Ascendant
 - Slith Firewalker
 - Slith Predator
 - Slither Blade
+- Slithering Cryptid
 - Sliver Construct
 - Sliver Hivelord
 - Sliver Queen
+- Sly Requisitioner
 - Smash
 - Smaug, the Great Calamity // Spew Flame
 - Smelt
@@ -4580,12 +5121,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Snarling Wolf
 - Sneering Shadewriter
 - Snow Villiers
+- Snowhorn Rider
 - Soaring Drake
 - Soaring Sandwing
 - Social Climber
 - Sokka, Wolf Cove's Protector
 - Sol Ring
-- Solarium Sentry
+- Solar Transformer
 - Soldier of the Grey Host
 - Soldier On
 - Solemn Offering
@@ -4595,17 +5137,24 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Solve the Equation
 - Somber Hoverguard
 - Somberwald Beastmaster
+- Somberwald Sage
 - Song of the Dryads
+- Songbirds' Blessing
 - Sonic Screwdriver
+- Sootfeather Flock
 - Soothsayer Adept
 - Sorin's Thirst
+- Soul Enervation
 - Soul Feast
 - Soul of the Harvest
 - Soul of the Rapids
 - Soul Read
 - Soul Salvage
+- Soul Shatter
+- Soul Snare
 - Soul Snuffers
 - Soul Warden
+- Soul-Guide Lantern
 - Soulblade Djinn
 - Soulbound Guardians
 - Souldrinker
@@ -4619,10 +5168,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Spark Double
 - Spark Jolt
 - Spark Spray
+- Sparring Collar
 - Sparring Construct
 - Sparring Mummy
 - Spatial Contortion
 - Spawning Pit
+- Spearpoint Oread
+- Specter of the Fens
 - Spectral Flight
 - Spectral Hunt-Caller
 - Spectral Reserves
@@ -4631,9 +5183,11 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Spell Satchel
 - Spell Snip
 - Spellbook
+- Spellgorger Barbarian
 - Spellgorger Weird
 - Spellgyre
 - Spellkeeper Weird
+- Spellshock
 - Sphinx of Jwar Isle
 - Sphinx of Magosi
 - Sphinx of the Final Word
@@ -4651,10 +5205,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Spiketail Drakeling
 - Spiketail Hatchling
 - Spinal Centipede
+- Spine of Ish Sah
+- Spined Basher
 - Spined Karok
 - Spined Megalodon
 - Spined Thopter
 - Spined Wurm
+- Spineless Thug
 - Spire Monitor
 - Spire Owl
 - Spirit of Malevolence
@@ -4667,7 +5224,9 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Spiteful Motives
 - Spitfire Lagac
 - Spitting Drake
+- Spitting Gourna
 - Spitting Spider
+- Splatter Goblin
 - Spontaneous Combustion
 - Spore Crawler
 - Spore Swarm
@@ -4683,6 +5242,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Sprite Dragon
 - Sprout
 - Sprouting Thrinax
+- Squad Captain
 - Squall
 - Squall Line
 - Squelching Leeches
@@ -4694,6 +5254,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Sram, Senior Edificer
 - Sram's Expertise
 - Stab
+- Stadium Tidalmage
 - Staff of Nin
 - Staff of the Storyteller
 - Staff of Titania
@@ -4720,6 +5281,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Starstorm
 - Start from Scratch
 - Starved Rusalka
+- Stasis Snare
 - Staunch Defenders
 - Staunch Shieldmate
 - Steadfast Guard
@@ -4727,9 +5289,11 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Steadfast Sentry
 - Steadfastness
 - Steady Progress
+- Steal Strength
 - Stealer of Secrets
 - Steam Blast
 - Steam Spitter
+- Steamclaw
 - Steel Hellkite
 - Steel Wall
 - Steelfin Whale
@@ -4742,9 +5306,11 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Sterling Hound
 - Stern Proctor
 - Steward of Valeron
+- Sticky Fingers
 - Stickytongue Sentinel
 - Stinging Barrier
 - Stinkdrinker Daredevil
+- Stirge
 - Stockman, Mad Fly-entist
 - Stoic Builder
 - Stoke the Flames
@@ -4753,6 +5319,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Stone Golem
 - Stone Haven Medic
 - Stone Kavu
+- Stone of Erech
 - Stone Rain
 - Stonehands
 - Stoneskin
@@ -4773,11 +5340,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Stormcloud Spirit
 - Stormfront Pegasus
 - Stormkeld Prowler
+- Stormplain Detainment
 - Stormrider Spirit
 - Stormwatch Eagle
 - Story Seeker
 - Storyteller Pixie
 - Strands of Night
+- Strangleroot Geist
 - Strangling Spores
 - Stratosoarer
 - Straw Soldiers
@@ -4821,16 +5390,19 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Sultai Skullkeeper
 - Summit Prowler
 - Summit Sentinel
+- Summoning Station
 - Sun Sentinel
 - Sun-Collared Raptor
 - Sun-Dappled Celebrant
 - Sunastian Falconer
 - Sunbeam Spellbomb
+- Sunbird's Invocation
 - Sunblade Angel
 - Sunder
 - Sunder from Within
 - Sundering Vitae
 - Sundial, Dawn Tyrant
+- Sunforger
 - Sungrace Pegasus
 - Sungrass Egg
 - Sunhome Guildmage
@@ -4843,8 +5415,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Sunspire Griffin
 - Sunstar Lightsmith
 - Suntail Hawk
+- Super Combo
+- Super Shredder
 - Super Speed
+- Super Strength
 - Super-Skrull
+- Supply Drop
 - Supply Runners
 - Supply-Line Cranes
 - Supportive Parents
@@ -4854,10 +5430,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Surge Conductor
 - Surge Node
 - Surgical Skullbomb
+- Surly Farrier
 - Surrak and Goreclaw
 - Surrak Dragonclaw
 - Surveilling Sprite
 - Survey the Wreckage
+- Survivors' Bond
 - Suspicious Bookcase
 - Sustenance
 - Swab Goblin
@@ -4897,13 +5475,16 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Symbiotic Elf
 - Symbol of Unsummoning
 - Syphon Fuel
+- Syphon Mind
 - Syphon Sliver
 - Syr Alin, the Lion's Claw
 - Syr Vondam, the Lucent
 - Sythis, Harvest's Hand
+- Szarekh, the Silent King
 - Tahngarth's Rage
 - Taigam's Scheming
 - Tainted Strike
+- Tajic, Blade of the Legion
 - Tajuru Beastmaster
 - Tajuru Blightblade
 - Tajuru Pathwarden
@@ -4925,6 +5506,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Talisman of Progress
 - Talisman of Resilience
 - Talisman of Unity
+- Tall as a Beanstalk
 - Talon Trooper
 - Talonrend
 - Talons of Falkenrath
@@ -4944,12 +5526,15 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Tarmogoyf
 - Tarpan
 - Tasseled Dromedary
+- Taste of Death
 - Tattered Apparition
 - Tattered Mummy
 - Tatyova, Benthic Druid
+- Taunt from the Rampart
 - Taurean Mauler
 - Taxi Driver
 - Team Transmitter
+- Technomancer
 - Teeming Dragonstorm
 - Teeterpeak Ambusher
 - Teferi's Protege
@@ -4971,13 +5556,18 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Tenderize
 - Tenement Crasher
 - Tenth District Guard
+- Tenuous Truce
+- Tenured Inkcaster
 - Tenza, Godo's Maul
+- Tergrid, God of Fright // Tergrid's Lantern
 - Terminate
 - Teroh's Faithful
 - Terra Stomper
 - Terrain Elemental
 - Terramorph
+- Terrarion
 - Terrian, World Tyrant
+- Territorial Aetherkite
 - Territorial Baloth
 - Territorial Boar
 - Territorial Roc
@@ -4985,7 +5575,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Terror of Mount Velus
 - Terror of the Fairgrounds
 - Terror of the Peaks
-- Tethermage's Advantage
+- Textbook Tabulator
+- Teyo, Geometric Tactician
 - Teyo's Lightshield
 - Tezzeret's Gambit
 - Thalia's Lieutenant
@@ -4998,9 +5589,14 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Thaumaturge's Familiar
 - The Fabulous Frog-Man
 - The Falcon, Sam Wilson
+- The Fantasticar
+- The Haunt of Hightower
 - The Howling Commandos
 - The Lady of the Mountain
+- The Meathook Massacre
+- The Ooze
 - The Terror of Serpent's Pass
+- The Thing
 - The Underworld Cookbook
 - The Unspeakable
 - The Ur-Dragon
@@ -5009,8 +5605,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - The Whizzer, Classic Speedster
 - Theft of Dreams
 - Their Name Is Death
+- Their Number Is Legion
 - Théoden, King of Rohan
-- Theorix Charm
 - Thermal Glider
 - Thermo-Alchemist
 - Thicket Crasher
@@ -5024,6 +5620,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Thirsting Shade
 - Thistledown Liege
 - Thopter Architect
+- Thopter Arrest
 - Thopter Engineer
 - Thopter Fabricator
 - Thopter Mechanic
@@ -5039,12 +5636,15 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Thought Vessel
 - Thoughtcast
 - Thoughtflare
+- Thoughtseize
+- Thoughtweft Lieutenant
 - Thraben Gargoyle // Stonewing Antagonizer
 - Thraben Purebloods
 - Thraben Sentry // Thraben Militia
 - Thraben Standard Bearer
 - Thraben Valiant
 - Thraben Watcher
+- Thragtusk
 - Thrakkus the Butcher
 - Thran Dynamo
 - Thran Power Suit
@@ -5066,6 +5666,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Thunder Spirit
 - Thunder Strike
 - Thunder Wall
+- Thunderbreak Regent
 - Thunderfoot Baloth
 - Thunderhawk Gunship
 - Thunderhead Squadron
@@ -5074,11 +5675,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Thundering Giant
 - Thundering Spineback
 - Thundering Tanadon
+- Thundermaw Hellkite
 - Thunderous Snapper
 - Thunderscape Apprentice
 - Thunderscape Master
 - Thundersteel Colossus
 - Thunderwolf Cavalry
+- Tibalt's Trickery
 - Ticked Off
 - Tidal Kraken
 - Tidehollow Strix
@@ -5095,26 +5698,36 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Timid Shieldbearer
 - Tine Shrike
 - Tinker's Tote
+- Tinybones Joins Up
+- Tinybones, Trinket Thief
 - Tireless Missionaries
 - Tireless Provisioner
 - Tireless Tribe
 - Titan Forge
 - Titan's Strength
+- Titania, Protector of Argoth
 - Titania's Boon
+- Titanic Bulvox
 - Titanic Growth
 - Tithebearer Giant
 - Tivadar's Crusade
 - To Arms!
 - Toadstool Admirer
 - Tobias Andrion
+- Toby, Beastie Befriender
+- Tocasia's Onulet
+- Tokka & Rahzar, Unsupervised
 - Tolarian Scholar
 - Tolarian Sentinel
 - Tolarian Serpent
 - Tolsimir Wolfblood
 - Tomakul Honor Guard
+- Tomb Blade
+- Tomb Trawler
 - Tombstone, Career Criminal
 - Tome Blast
 - Tome Raider
+- Tomik, Wielder of Law
 - Tooth of Chiss-Goria
 - Tooth of Ramos
 - Topan Ascetic
@@ -5131,6 +5744,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Torpor Dust
 - Torsten Von Ursus
 - Tortoise Formation
+- Toucan-Puffin
 - Touch of Brilliance
 - Touch of Invisibility
 - Towashi Songshaper
@@ -5141,12 +5755,17 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Tower of Champions
 - Tower of Eons
 - Tower of Fortunes
+- Towering Baloth
 - Towering Indrik
+- Towering Viewpoint
 - Toxic Abomination
+- Toxic Deluge
 - Tradewind Rider
 - Trading Post
+- Tragic Arrogance
 - Tragic Poet
 - Trailblazer
+- Train of Thought
 - Trained Armodon
 - Trained Caracal
 - Trained Jackal
@@ -5156,8 +5775,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Tranquility
 - Transcendent Envoy
 - Transcendent Message
+- Transdimensional Bovine
 - Transmogrant Altar
+- Transplant Theorist
+- Trapjaw Kelpie
 - Trapmaker's Snare
+- Trapped in the Screen
 - Trash for Treasure
 - Traumatic Visions
 - Traveler's Amulet
@@ -5168,14 +5791,18 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Treasure Dredger
 - Treasure Hunter
 - Treasure Trove
+- Treasured Find
 - Tree Monkey
 - Treefolk Harbinger
+- Treespring Lorian
 - Treetop Freedom Fighters
 - Treetop Sentinel
 - Treetop Snarespinner
 - Tremor
 - Trenching Steed
 - Treva's Attendant
+- Triarch Praetorian
+- Triarch Stalker
 - Tribute Mage
 - Triclopean Sight
 - Trigon of Corruption
@@ -5196,6 +5823,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - True Love's Kiss
 - Trufflesnout
 - Trumpet Blast
+- Trumpeting Carnosaur
 - Trumpeting Herd
 - Trusty Machete
 - Trusty Packbeast
@@ -5231,11 +5859,14 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Two-Headed Hellkite
 - Two-Headed Hunter // Twice the Rage
 - Two-Headed Zombie
+- Tymora's Invoker
 - Typhoid Rats
 - Tyranid Harridan
+- Tyrant's Familiar
 - Tyrant's Scorn
 - Tyrox, Saurid Tyrant
 - Tyrranax
+- Ubul Sar Gatekeepers
 - Uktabi Faerie
 - Uktabi Orangutan
 - Ukud Cobra
@@ -5252,12 +5883,14 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Umezawa's Charm
 - Unauthorized Exit
 - Unbender Tine
+- Unbreakable Formation
 - Unburial Rites
 - Unburied Earthcarver
 - Uncaged Fury
 - Uncanny Speed
 - Uncomfortable Chill
 - Undead Augur
+- Undead Hand Ninja
 - Undead Leotau
 - Undead Minotaur
 - Undead Warchief
@@ -5267,8 +5900,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Undersea Invader
 - Undertaker
 - Underworld Coinsmith
+- Underworld Dreams
 - Underworld Hermit
-- Undulating Witness
 - Unexpected Assistance
 - Unexpected Windfall
 - Unexplained Disappearance
@@ -5312,6 +5945,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Urborg Uprising
 - Ureni of the Unwritten
 - Ureni, the Song Unending
+- Uril, the Miststalker
 - Urn of Godfire
 - Ursapine
 - Usher of the Fallen
@@ -5320,6 +5954,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Utrom Monitor
 - Utter End
 - Utvara Hellkite
+- Vacuumelt
 - Vaevictis Asmadi, the Dire
 - Valakut Invoker
 - Valakut Predator
@@ -5331,17 +5966,22 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Valkyrie Aerial Unit
 - Valkyrior Skyrider
 - Valor in Akros
+- Valor of the Worthy
+- Valor Singer
 - Valorous Charge
 - Valorous Steed
 - Vampire Aristocrat
 - Vampire Champion
 - Vampire Envoy
+- Vampire Interloper
 - Vampire Neonate
 - Vampire Nighthawk
 - Vampire Noble
 - Vampire of the Dire Moon
 - Vampire Opportunist
 - Vampire Revenant
+- Vampire Soulcaller
+- Vampire Sovereign
 - Vampire Spawn
 - Vampiric Feast
 - Vampiric Fury
@@ -5353,33 +5993,41 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Vanishing Verse
 - Vanquisher's Axe
 - Vanquisher's Banner
+- Varchild, Betrayer of Kjeldor
 - Vassal Soul
 - Vastwood Fortification // Vastwood Thicket
 - Vastwood Gorger
 - Vastwood Surge
+- Vault Guardsman
 - Vault Plunderer
 - Vault Skirge
 - Vault Skyward
 - Vedalken Archmage
 - Vedalken Infuser
 - Vedalken Mastermind
+- Vedalken Mesmerist
 - Vedalken Outlander
+- Vega, the Watcher
+- Veil of Assimilation
 - Veiled Shade
 - Veloheart Bike
 - Venerable Lammasu
 - Venerable Monk
 - Vengeant Vampire
+- Vengeful Bloodwitch
 - Vengeful Dead
+- Vengeful Vampire
 - Venom Sliver
+- Venomcrawler
 - Venomized Cat
 - Venomous Changeling
 - Venomous Hierophant
 - Venomthrope
+- Venser, the Sojourner
 - Venser's Sliver
 - Verdant Automaton
 - Verdant Confluence
 - Verdant Force
-- Verdant Kraken
 - Verdigris
 - Verduran Enchantress
 - Verix Bladewing
@@ -5409,9 +6057,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Vibranium Energy Daggers
 - Vicious Conquistador
 - Vicious Hunger
+- Vicious Rumors
 - Vicious Shadows
+- Victimize
 - Victory's Envoy
 - Victory's Herald
+- Vigean Graftmage
 - Vigilance
 - Vigilant Baloth
 - Vigilant Drake
@@ -5423,9 +6074,9 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Village Cannibals
 - Village Rites
 - Vindicate
+- Vindictive Lich
 - Vindictive Vampire
 - Vine Trellis
-- Vinelasher Adept
 - Vinelasher Kudzu
 - Vines of the Recluse
 - Violent Impact
@@ -5438,6 +6089,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Viridian Longbow
 - Viridian Shaman
 - Viridian Zealot
+- Virtue's Ruin
 - Virtuous Charge
 - Virtuous Variant
 - Virulent Emissary
@@ -5451,6 +6103,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Vitaspore Thallid
 - Vithian Renegades
 - Vithian Stinger
+- Vito, Fanatic of Aclazotz
 - Vivisection
 - Vivisurgeon's Insight
 - Vizkopa Vampire
@@ -5473,6 +6126,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Void Rend
 - Void Snare
 - Void Squall
+- Voidmage Prodigy
 - Voidwielder
 - Volcanic Dragon
 - Volcanic Fallout
@@ -5489,6 +6143,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Volunteer Militia
 - Voracious Null
 - Voracious Varmint
+- Vorapede
 - Vorstclaw
 - Vote Out
 - Voyage's End
@@ -5529,6 +6184,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Wall of Spears
 - Wall of Stone
 - Wall of Swords
+- Wall of Tears
 - Wall of Torches
 - Wall of Vines
 - Wall of Water
@@ -5541,12 +6197,15 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Wandering Musicians
 - Wandering Ones
 - Wandering Tombshell
+- Wanderwine Distracter
 - Wanted Scoundrels
+- War Behemoth
 - War Chariot
 - War Horn
 - War Mammoth
 - War Priest of Thune
 - War Screecher
+- War's Toll
 - Warclamp Mastiff
 - Warded Battlements
 - Warden of Geometries
@@ -5569,7 +6228,9 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Wary Okapi
 - Wasp Lancer
 - Waste Away
+- Waste Not
 - Wasteland Scorpion
+- Watcher for Tomorrow
 - Watcher in the Mist
 - Watchful Automaton
 - Watchful Giant
@@ -5590,23 +6251,29 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Weakstone
 - Weaponize the Monsters
 - Weaselback Redcap
+- Weathered Wayfarer
 - Weatherseed Faeries
+- Weatherseed Treefolk
 - Weave Fate
 - Weaver of Currents
 - Web
 - Web of Life and Destiny
+- Web Up
 - Web-Warriors
 - Wee Dragonauts
 - Wei Infantry
 - Weight of the Underworld
 - Weirding Shaman
 - Welder Automaton
+- Weldfast Engineer
 - Welkin Guide
 - Well-Worn Spatula
 - Westfold Rider
 - Wetland Sambar
+- Wheel of Fortune
 - Where Ancients Tread
 - Whip Sergeant
+- Whip-Spine Drake
 - Whiptail Wurm
 - Whirler Rogue
 - Whirler Virtuoso
@@ -5617,17 +6284,21 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Whisper of the Dross
 - Whisper, Blood Liturgist
 - Whisperer of the Wilds
+- Whispers of Emrakul
 - Whispersilk Cloak
+- White Auracite
 - White Knight
 - White Lotus Reinforcements
 - White Sun's Zenith
 - Whitesun's Passage
 - Whitewater Naiads
 - Wicked Reward
+- Wicked Visitor
 - Wicker Witch
 - Wielding the Green Dragon
 - Wight of the Reliquary
 - Wild Aesthir
+- Wild Beastmaster
 - Wild Cantor
 - Wild Celebrants
 - Wild Ceratok
@@ -5649,6 +6320,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Wildwood Rebirth
 - Will of the Mardu
 - Will-Forged Golem
+- Willie Lumpkin, Postman
 - Willow Elf
 - Willow Faerie
 - Willow-Wind
@@ -5667,18 +6339,20 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Windreaper Falcon
 - Windrider Eel
 - Windrider Patrol
+- Winds of Abandon
 - Winds of Rath
 - Windseeker Centaur
 - Windstorm
 - Wing Splicer
 - Wingblade Disciple
+- Winged Boots
 - Winged Coatl
 - Winged Shepherd
 - Wings of Aesthir
 - Wings of Hope
 - Wings of the Cosmos
+- Winter Eladrin
 - Winter Soldier, Bucky Barnes
-- Winter, Team Player
 - Winter's Grasp
 - Winter's Intervention
 - Wipe Clean
@@ -5687,6 +6361,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Wirewood Herald
 - Wirewood Hivemaster
 - Wirewood Savage
+- Wishclaw Talisman
 - Wishcoin Crab
 - Wistful Selkie
 - Witch's Cauldron
@@ -5696,8 +6371,10 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Witching Well
 - Witherbloom Apprentice
 - Witherbloom Pledgemage
+- Withered Wretch
 - Withering Torment
 - Withstand Death
+- Witness of the Ages
 - Witness of Tomorrows
 - Witty Roastmaster
 - Wizard Replica
@@ -5708,11 +6385,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Wolfsbane, Highland Hero
 - Wondrous Revival
 - Wood Elves
+- Woodcutter's Grit
 - Woodland Changeling
 - Woodland Druid
 - Woodland Liege
 - Woodland Mystic
 - Woodland Patrol
+- Woolly Loxodon
 - Woolly Thoctar
 - World Map
 - World-Weary
@@ -5722,6 +6401,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Worn Powerstone
 - Worthy Cost
 - Worthy Knight
+- Wose Pathfinder
 - Wraith, Vicious Vigilante
 - Wrath of God
 - Wreak Havoc
@@ -5730,7 +6410,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Wrecking Ball
 - Wrecking Beast
 - Wrecking Crew
-- Wrecking Gecko
 - Wretched Anurid
 - Wretched Confluence
 - Wretched Doll
@@ -5747,18 +6426,19 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Xira Arien
 - Yargle and Multani
 - Yargle, Glutton of Urborg
-- Yargle, Goliath of Otaria
 - Yavimaya Ancients
 - Yavimaya Barbarian
 - Yavimaya Elder
 - Yavimaya Sapherd
 - Yavimaya Wurm
 - Yawning Fissure
+- Yellow Scarves Troops
 - Yellowjacket, Heartless Marauder
 - Yeva's Forcemage
 - Yoked Ox
 - Yoked Plowbeast
 - Yotian Dissident
+- Yotian Frontliner
 - Yotian Medic
 - Yotian Soldier
 - Yotian Tactician
@@ -5768,10 +6448,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - You're Ambushed on the Road
 - Young Blue Dragon // Sand Augury
 - Young Pyromancer
-- Your Fate Ends Here
+- Young Red Dragon // Bathe in Gold
+- Young Wei Recruits
+- Young Wolf
 - Youthful Knight
 - Youthful Scholar
 - Youthful Valkyrie
+- Zacama, Primal Calamity
 - Zagoth Crystal
 - Zap
 - Zarichi Tiger
@@ -5800,6 +6483,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Zombie Infestation
 - Zombie Outlander
 - Zombify
+- Zoo Escapees
+- Zookeeper Mechan
 - Zopandrel, Hunger Dominus
 - Zuberi, Golden Feather
 - Zuko's Offense

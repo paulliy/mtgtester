@@ -28,4 +28,3 @@ Read these only when the task needs them:
 - **Test requirements and change discipline:** [testing discipline](docs/guides/testing-discipline.md)
 - **All `bun` and PowerShell commands:** [project commands](docs/guides/project-commands.md)
 - **Rules, banned list, and Scryfall data files:** [reference data](docs/guides/reference-data.md)
-

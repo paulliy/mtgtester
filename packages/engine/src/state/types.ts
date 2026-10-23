@@ -21,6 +21,7 @@ import type {
   ObjectId,
   OracleCard,
   OracleId,
+  Phase,
   PermanentState,
   PlayerId,
   PlayerState,
@@ -35,6 +36,7 @@ import type {
   KeywordAbility,
 } from '../cards/definition';
 import type { ObjectFacts } from '../cards/source-identity';
+import type { Selector, SelectorCandidate } from '../cards/selector';
 import type { TriggerScope } from '../cards/value';
 import type { Prng } from '../rng/prng';
 
@@ -46,10 +48,146 @@ export interface GoadRequirement {
   goaderId: PlayerId;
   /** Global turn number on which this requirement was created. */
   appliedTurn: number;
+  /**
+   * "Goaded for the rest of the game" (Life of the Party's tokens): never expires at the goader's
+   * next turn. It still ends when the creature leaves the battlefield; it outlasts a goader who
+   * leaves the game.
+   */
+  permanent?: true;
+  /**
+   * Set when the goader leaves the game: the goad lasts until their next turn would have begun
+   * (CR 800.4m), which is when the turn of `afterTurnOf`, seated before them, taken on or after
+   * turn `fromTurn` ends.
+   */
+  departed?: { afterTurnOf: PlayerId; fromTurn: number };
+}
+
+/**
+ * When an attack requirement made by a spell or ability ends. Both kinds count turns of one
+ * player from the turn the effect was made, so "your next turn" is the first of that player's
+ * turns after `setTurn`.
+ */
+export type EffectExpiry =
+  /** "Until your next turn": ends as that player's next turn begins (the untap step). */
+  | { kind: 'untilNextTurn'; playerId: PlayerId; setTurn: number }
+  /** "Until the end of your next turn": ends in the cleanup step of that player's next turn. */
+  | { kind: 'endOfNextTurn'; playerId: PlayerId; setTurn: number }
+  /**
+   * "During their next turn": applies only while `playerId` is the active player in their first
+   * turn after `setTurn`, and ends in that turn's cleanup step (Willie Lumpkin).
+   */
+  | { kind: 'theirNextTurn'; playerId: PlayerId; setTurn: number }
+  /**
+   * "Until [a departed player's] next turn" or a point in it: when that player leaves the game, the
+   * effect lasts until that turn would have begun (CR 800.4m), which is when the turn of
+   * `afterTurnOf`, the player seated before them, taken on or after turn `fromTurn` ends.
+   */
+  | { kind: 'departedNextTurn'; afterTurnOf: PlayerId; fromTurn: number }
+  /** "This turn": ends in the cleanup step of the turn it was made (Siren's Call). */
+  | { kind: 'thisTurn'; turn: number }
+  /** "That combat": ends as the named combat phase ends (Illusionist's Gambit). */
+  | { kind: 'combat'; combatId: string };
+
+/** What an attack requirement entry forbids: attacking a player or the planeswalkers they control. */
+export type AttackRestrictionRule =
+  | { kind: 'cantAttackPlayer'; playerId: PlayerId }
+  /** "Only creatures in the chosen pile can attack": nothing outside these objects may attack at all. */
+  | { kind: 'cantAttackExcept'; objectIds: ObjectId[] };
+
+/** What attacking must achieve to obey one attack requirement (CR 508.1d). */
+export type AttackRequirementRule =
+  /** "Attacks each combat if able": attacking anything, a planeswalker included. */
+  | { kind: 'anyAttack' }
+  /** "Attacks a player other than P if able" (the goad's second half): a player, not a planeswalker. */
+  | { kind: 'notPlayer'; playerId: PlayerId }
+  /** "Attacks P each combat if able": that player, not one of their planeswalkers. */
+  | { kind: 'player'; playerId: PlayerId };
+
+/**
+ * A requirement made by a resolving spell or ability that is not a goad or a status of one
+ * permanent (Kardur, Silver Surfer). It is a rules modification, not a change to characteristics
+ * (CR 611.2c): a fixed set of objects, or, when the text names no fixed set, a selector read live
+ * so creatures that come under the affected players' control later are covered too.
+ */
+export interface AttackRequirementEntry {
+  id: string;
+  /** "You": the player who made the effect, and the point of view the selector is read from. */
+  controllerId: PlayerId;
+  sourceCardId?: CardId;
+  affects:
+    | { kind: 'objects'; objectIds: ObjectId[] }
+    /**
+     * Read live (CR 611.2c) from `viewpointId`'s point of view when it names a player other than
+     * the effect's controller: "creatures the active player controls" (Siren's Call).
+     */
+    | { kind: 'selector'; selector: Selector; viewpointId?: PlayerId };
+  requirements: AttackRequirementRule[];
+  /** What the affected creatures can't attack while it lasts; it beats the requirements (CR 508.1c). */
+  restrictions?: AttackRestrictionRule[];
+  expires: EffectExpiry;
+}
+
+/**
+ * "Until your next turn, those creatures can't block" (Taunt from the Rampart): a fixed set of
+ * objects named when the effect resolved (CR 611.2c) that can't be declared as blockers until the
+ * effect ends.
+ */
+export interface BlockRestrictionEntry {
+  id: string;
+  controllerId: PlayerId;
+  objectIds: ObjectId[];
+  expires: EffectExpiry;
+}
+
+/**
+ * "You choose which creatures attack this turn" and "which creatures block this turn and how"
+ * (Master Warcraft): until the end of the turn `casterId` makes the attack and block declarations
+ * that the attacking and the defending players would. A newer one overrides an older one.
+ */
+export interface CombatChoiceEntry {
+  id: string;
+  casterId: PlayerId;
+  sourceCardId: CardId;
+  turn: number;
+}
+
+/**
+ * "Until your next turn, each player may attack only the nearest opponent in the last chosen
+ * direction and planeswalkers controlled by that opponent" (Teyo, Geometric Tactician). A newer
+ * effect from the same card replaces the older one, so only the last choice is ever in force.
+ */
+export interface AttackDirectionEntry {
+  id: string;
+  controllerId: PlayerId;
+  /** The Teyo object that made it; a newer choice by the same object replaces its older one. */
+  sourceObjectId: string;
+  direction: 'left' | 'right';
+  expires: EffectExpiry;
+}
+
+/**
+ * "After this phase, there is an additional combat phase" (Lightning Runner, Moraug, Illusionist's
+ * Gambit): a combat phase inserted directly after the phase that was current when it was created.
+ * No main phase comes with it unless the text says so (`additionalMain`).
+ */
+export interface ExtraCombat {
+  id: string;
+  /** The phase it was created in; it runs as that phase ends. */
+  after: Phase;
+  controllerId: PlayerId;
+  sourceCardId: CardId;
+  sourceOracleId: OracleId;
+  sourceName: string;
+  /** "At the beginning of that combat, untap all creatures you control" (Moraug). */
+  untapAllAtBeginning?: true;
+  /** "…followed by an additional main phase" (Seize the Day). */
+  additionalMain?: true;
 }
 
 export interface EngineObject extends GameObject {
   cardId: CardId;
+  /** Copy of a card created in exile (CR 707.12); ceases outside stack/battlefield at SBAs. */
+  isCardCopy?: true;
   /** The active face while a modal DFC is on the battlefield. Non-battlefield cards use front. */
   face?: 'front' | 'back';
   /** Tokens cease to exist when they leave the battlefield (CR 704.5d). */
@@ -60,6 +198,24 @@ export interface EngineObject extends GameObject {
   escaped?: boolean;
 }
 
+/**
+ * How long one control-changing effect keeps hold of a permanent. `permanent` is the default;
+ * `untilEndOfTurn` ends at the cleanup step (CR 514.2); `whileSourceOnBattlefield` tracks the
+ * effect's source by its exact `ObjectId` — a blink is a NEW object id, so it never restores
+ * an expired one (CR 400.7, 611.2b).
+ */
+export type ControlChangeDuration =
+  | { kind: 'permanent' }
+  | { kind: 'untilEndOfTurn' }
+  | { kind: 'whileSourceOnBattlefield'; sourceObjectId: ObjectId };
+
+/** One recorded control-changing effect, timestamped so ordering and expiry stay decidable. */
+export interface ControlChange {
+  controllerId: PlayerId;
+  timestamp: number;
+  duration: ControlChangeDuration;
+}
+
 export interface EnginePermanent extends PermanentState, EngineObject, CastRecord {
   /** Departure facts belong to this old object only; reincarnation never copies them. */
   lastKnownFacts?: ObjectFacts;
@@ -68,12 +224,49 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
   zone: 'battlefield';
   /** Controller established by entering, distinct from later control-changing effects. */
   defaultControllerId?: PlayerId;
-  /** Control-changing effects in resolution order; the recipient leaving ends their effects. */
-  controlChanges?: PlayerId[];
+  /** Control-changing effects in resolution order; recipients leave, sources leave, EOT ends. */
+  controlChanges?: ControlChange[];
   /** Whether a transforming double-faced permanent currently uses its back face. */
   transformed: boolean;
-  /** Player this creature is attacking, while in combat. */
+  /**
+   * A bestowed Aura (CR 702.103b): an Aura enchantment with enchant creature, not a creature,
+   * until it becomes unattached or attached to an illegal object (CR 702.103f).
+   */
+  bestowed?: boolean;
+  /**
+   * Animate Dead's enchant swap: once its enters trigger resolves, it enchants only the creature
+   * put onto the battlefield with it (that object's id), or nothing (`null`) if none was.
+   */
+  reanimatedHostId?: ObjectId | null;
+  /**
+   * The DEFENDING PLAYER while in combat: the player this creature attacks, or the controller of
+   * the planeswalker it attacks (CR 508.1b). Non-null exactly when this is an attacking creature.
+   */
   attacking: PlayerId | null;
+  /** The planeswalker this attacker attacks (CR 508.1b); null when it attacks the player. */
+  attackingPlaneswalker: ObjectId | null;
+  /**
+   * Sticky: the attacked planeswalker has been removed from combat (CR 506.4) — it left the
+   * battlefield, changed controller, or stopped being a planeswalker. The creature stays an
+   * attacking creature and can be blocked, but attacks nothing and deals no combat damage
+   * (CR 506.4c, 510.1b); the planeswalker returning later does not put it back into combat.
+   */
+  attackedPlaneswalkerRemoved: boolean;
+  /**
+   * Private identity of the attack this creature made most recently: the defending player
+   * (attacked player, or the controller of the planeswalker it attacked, CR 508.1b) as that
+   * attack stood when combat assignment for it ended. Retained at every path that clears
+   * `attacking` so a CR 603.4 recheck over the exact original attacker (Kazuul) can still name
+   * the last defending player of a removed-from-combat or departed attacker; a new declaration
+   * overwrites it through the retain-then-clear order, so only the latest attack survives.
+   * Never copied into `SelectorCandidate.attackingDefendingPlayerId`, which stays strictly
+   * current-combat. Facts only for the engine; the public projections never see it.
+   */
+  lastAttackingDefendingPlayerId?: PlayerId;
+  /** A chosen assignment prohibition lasts through all combats of this turn. */
+  assignsNoCombatDamageTurn?: number;
+  /** A resolved effect's fixed attack prohibition, active while the named counter remains. */
+  cantAttackPlayerWhileCounter?: Array<{ playerId: PlayerId; counter: string }>;
   /** Attacker this creature is blocking, while in combat. */
   blocking: ObjectId | null;
   /** For attackers: blockers in damage-assignment order (CR 509.2). */
@@ -89,6 +282,10 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
   dealtFirstStrikeDamage: boolean;
   /** Timestamp assigned on entry (CR 613.7 ordering of continuous effects). */
   timestamp: number;
+  /** CR 613.7c: all counters of a kind use the most recent placement timestamp. */
+  counterTimestamps?: Record<string, number>;
+  /** Class levels are object state, not counters or copiable characteristics (CR 716). */
+  classLevel?: number;
   /** `state.turnNumber` when this object entered the battlefield — "entered this turn" (Neriv). */
   enteredTurnNumber: number;
   /**
@@ -111,6 +308,8 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
   cantBeBlocked?: boolean;
   /** Boast (CR 702.146): "activate only if this creature attacked this turn". */
   attackedThisTurn?: boolean;
+  /** How many times it was declared as an attacker this turn; tokens put onto the battlefield attacking never count. */
+  timesAttackedThisTurn?: number;
   /**
    * Indices into this permanent's `activatedAbilities` used this turn, for "activate only once
    * each turn" (CR 602.5f).
@@ -119,6 +318,11 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
    * activation, and a permanent that leaves and returns is a new object with a clean slate.
    */
   activationsThisTurn: number[];
+  /**
+   * Indexes (into its triggered abilities) of "This ability triggers only once each turn"
+   * abilities that have triggered this turn. Cleared every turn; a new object starts empty.
+   */
+  triggeredOnceThisTurn?: number[];
   /** Exhaust abilities (by index) this object has already activated (CR 702.177). */
   exhaustedAbilities?: number[];
   /**
@@ -176,6 +380,14 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
 }
 
 /** Non-battlefield engine object living in graveyard/exile with 903.9a bookkeeping. */
+/** One spell a player cast this turn (see `EnginePlayerState.spellsCastThisTurnRecords`). */
+export interface CastSpellRecord {
+  /** The spell's object id on the stack, so "other spells" can leave out exactly this one. */
+  objectId: ObjectId;
+  candidate: SelectorCandidate;
+  manaValue: number;
+}
+
 /**
  * How a spell was cast (CR 601.2): who cast it, the zone it was cast from and the mana spent on
  * it. Carried by the spell's card and by the permanent that spell becomes, and by nothing after
@@ -217,20 +429,31 @@ export interface EngineCardObject extends EngineObject, CastRecord {
    * which player may cast this exiled card, and only until the cleanup step clears the grant.
    */
   playableUntilEotBy?: PlayerId;
+  /** A temporary cast permission never permits playing a land face. */
+  castOnlyUntilEot?: true;
+  /** Grenzo: only mana spent casting this exact exiled object receives this permission. */
+  spendAsAnyColorUntilEot?: true;
   /** Rebound's one-shot permission to cast this card from exile at the next upkeep. */
   reboundCastBy?: PlayerId;
+  /** Power Pack replaces only a move from the spell’s stack object to a graveyard. */
+  exileIfGraveyardFromStack?: true;
   /**
    * Foretold (CR 702.143a): exiled face down on turn `turn`, castable by its owner on a later
    * turn for `cost`, which it keeps even if the effect that granted foretell is gone (Dream
    * Devourer). Hidden from every other player until it is cast.
    */
   foretold?: { turn: number; cost: import('../mana/cost').ParsedManaCost };
+  /** A public exile incarnation plotted by an effect (CR 702.170c–d). */
+  plottedTurn?: number;
 }
 
 /** The keywords that change how a source's damage is dealt (CR 702.2, 702.15, 702.90). */
 export type DamageKeyword = 'deathtouch' | 'lifelink' | 'infect';
 
 export interface EngineStackObject extends StackObject {
+  giftRecipientId?: PlayerId;
+  /** Addendum (Unbreakable Formation): cast during a main phase of its caster's own turn. */
+  castDuringOwnMainPhase?: true;
   /** Last known rules facts of this ability's source incarnation. */
   sourceFacts?: ObjectFacts;
   /** Internal CR 601 proposal; never triggers a cast until payment finalizes. */
@@ -261,7 +484,15 @@ export interface EngineStackObject extends StackObject {
   sourceDamageKeywords?: DamageKeyword[];
   /** Kind of alternative cast used, if any (overload, adventure, omen). */
   alternativeCastKind?:
-    'overload' | 'adventure' | 'omen' | 'nonMana' | 'energy' | 'commanderFree' | 'faceDown';
+    | 'overload'
+    | 'adventure'
+    | 'omen'
+    | 'mdfc'
+    | 'nonMana'
+    | 'energy'
+    | 'commanderFree'
+    | 'faceDown'
+    | 'bestow';
   altIndex?: number;
   /** Triggered abilities: the object whose event fired this — the `'triggerObject'` referent. */
   triggerObjectCardId?: CardId;
@@ -359,6 +590,17 @@ export interface EnginePlayerState extends PlayerState {
   spellsCastThisTurn: number;
   /** Of those, the ones that were not creature spells ("you've cast a noncreature spell"). */
   noncreatureSpellsCastThisTurn: number;
+  /** Discard actions this turn, irrespective of a replacement's destination. */
+  discardedCardsThisTurn?: number;
+  /**
+   * Those spells in cast order, by their characteristics as cast: "your fourth noncreature spell
+   * each turn" (The Fantasticar), "the total mana value of other spells you've cast this turn"
+   * (Call Forth the Tempest), "colors among … spells you've cast this turn" (First Family).
+   * Cleared at the start of each turn.
+   */
+  spellsCastThisTurnRecords?: CastSpellRecord[];
+  /** Names of spells this player has resolved this game, for Paradigm (CR 702.192). */
+  resolvedSpellNames?: string[];
   /** Muldrotha-style graveyard play uses, keyed by the permanent type spent. */
   playFromZoneTypeUsesThisTurn: Record<string, number>;
   mulligansTaken: number;
@@ -485,7 +727,7 @@ export interface DelayedTrigger {
    * is removed only once it has fired, which is what a delayed trigger waiting for a LATER turn
    * (Rebound's "at the beginning of your next upkeep") needs.
    */
-  expiry: 'endStep' | 'cleanup' | 'onFire';
+  expiry: 'endStep' | 'cleanup' | 'onFire' | 'permanent';
   /** Player affected by/deciding the delayed effect, independent of controller and step owner. */
   affectedPlayerId?: PlayerId;
   /**
@@ -494,6 +736,52 @@ export interface DelayedTrigger {
    * turn's upkeep" or "the next end step", wrong for "your next upkeep".
    */
   player?: 'you';
+}
+
+/** "Prevent all damage that would be dealt to you this turn" and its relatives (CR 615). */
+export interface DamageShield {
+  id: string;
+  /** The spell or ability that created it, as last known information. */
+  effectSource: import('../effects/resolve').EffectSource;
+  /** The player whose damage it prevents; absent for a shield on one permanent (`object`). */
+  playerId?: PlayerId;
+  /**
+   * A shield on one permanent, by object id (Delirium): damage dealt to it, by it, or both. It
+   * stops covering the permanent when it leaves, since a new object is not the same one (CR 400.7).
+   */
+  object?: { id: ObjectId; dealtTo: boolean; dealtBy: boolean };
+  /** Only combat damage is prevented. */
+  combatOnly?: true;
+  /**
+   * Only damage from this one object: a permanent or a spell on the stack, by its object id. A
+   * source that changes zones is a new object and no longer matches (CR 400.7).
+   */
+  sourceObjectId?: ObjectId;
+  /** "The next time ... would deal damage": removed as soon as it prevents damage. */
+  oneShot?: true;
+  /** Also covers damage to planeswalkers its player controls, checked as the damage would be dealt. */
+  andPlaneswalkersTheyControl?: true;
+  /** Only damage from sources that this player does not control, checked as it would be dealt. */
+  sourceNotControlledBy?: PlayerId;
+  /**
+   * "If damage is prevented this way, <the effect source> deals that much damage to ...": to that
+   * source's controller, or (Comeuppance) to the source itself when it is a creature as the damage
+   * would be dealt and otherwise to its controller.
+   */
+  reflect?: 'toSourceController' | 'toSourceCreatureElseController';
+}
+
+/** Damage an effect owes because it prevented damage, dealt right after the prevented event. */
+export interface DamageReflection {
+  effectSource: import('../effects/resolve').EffectSource;
+  /** A player or a permanent (object id) to deal the damage to. */
+  toId: string;
+  amount: number;
+  /**
+   * The (shield, recipient, amount) steps that led here from the original damage event. A step
+   * that repeats is a mandatory loop with no choice in it (CR 104.4b).
+   */
+  chain: string[];
 }
 
 export interface EngineState extends GameState {
@@ -509,6 +797,8 @@ export interface EngineState extends GameState {
   nextDecisionNum: number;
   /** Monotonic timestamp for continuous-effect ordering (CR 613.7). */
   nextTimestamp: number;
+  /** Ordinal main phase begun this turn, including extra main phases. */
+  mainPhasesStartedThisTurn?: number;
   combat: CombatState | null;
   /**
    * Board states for action-by-action replay, keyed by the `GameEvent.sequence` they are the
@@ -539,14 +829,45 @@ export interface EngineState extends GameState {
   createdTokenThisTurn: Record<PlayerId, boolean>;
   /** Number of creatures put into graveyards this turn. */
   creaturesDiedThisTurn: number;
+  /**
+   * "If this is the second time this ability has resolved this turn" (Rumor Gatherer): how many
+   * times each counted ability has resolved this turn, keyed by the source's battlefield object
+   * id and the ability's key. A source that changes zones is a new object with a fresh count
+   * (CR 400.7). Cleared at the start of each turn.
+   */
+  abilityResolutionsThisTurn?: Record<string, number>;
   /** Combat-damage replacement shields used by Darkness-style effects this turn. */
   combatDamagePrevention: {
     all: boolean;
     players: Record<PlayerId, boolean>;
     tokenSpecs?: Record<PlayerId, import('../cards/ability').TokenSpec>;
   };
+  /**
+   * Damage prevention shields created by resolving spells and abilities, oldest first, cleared as
+   * the turn's "until end of turn" effects end (CR 514.2). Each is collected by the damage modifier
+   * pipeline (`effects/damage-modifiers.ts`) for the damage it covers.
+   */
+  damageShields: DamageShield[];
+  /** Reflections queued by prevention, drained by `flushDamageReflections` (transient). */
+  damageReflections: DamageReflection[];
+  /** The chain of the reflection being dealt right now, empty for an original damage event. */
+  damageChain: string[];
   /** Players protected from dropping below 1 life until the end of the turn (Angel's Grace). */
   lifeFloorPlayers: Record<PlayerId, boolean>;
+  spellsProhibitedTurn?: number;
+  playerHexproofTurn?: Record<PlayerId, number>;
+  extraTurns?: PlayerId[];
+  phasedOut?: { permanent: EnginePermanent; phaseInPlayerId: PlayerId }[];
+  playerProtectionUntilNextTurn?: Record<PlayerId, number>;
+  /** Attack requirements made by resolved spells and abilities, until they expire (CR 508.1d). */
+  attackRequirements?: AttackRequirementEntry[];
+  /** Creatures that can't block because of a resolved spell or ability, until it expires. */
+  blockRestrictions?: BlockRestrictionEntry[];
+  /** Whoever chooses this turn's attackers and blockers in place of the usual players (Master Warcraft). */
+  combatChoices?: CombatChoiceEntry[];
+  /** Seat-direction limits on whom players may attack, until they expire (Teyo). */
+  attackDirections?: AttackDirectionEntry[];
+  normalTurnResumeAfter?: PlayerId;
   /**
    * "Creatures can't be blocked this turn" (Venser, the Sojourner). A rule, not a characteristic,
    * so it covers creatures that arrive after it resolved too (CR 611.2c). Reset each turn.
@@ -558,7 +879,10 @@ export interface EngineState extends GameState {
    * leaves (CR 610.3c — they return under their owners' control). The exiled
    * object itself lives in `exile`; this only records which one to look for and who gets it.
    */
-  exiledUntilLeaves: Record<CardId, { cardId: CardId; controllerId: PlayerId }[]>;
+  exiledUntilLeaves: Record<
+    CardId,
+    { cardId: CardId; controllerId: PlayerId; objectId?: ObjectId }[]
+  >;
   /**
    * Which players were dealt COMBAT damage by each source THIS TURN, keyed by source card id
    * (Steel Hellkite's "whose controller was dealt combat damage by this creature this turn") —
@@ -567,8 +891,16 @@ export interface EngineState extends GameState {
   combatDamagePlayersBySource: Record<CardId, PlayerId[]>;
   /** Safety cap: exceeding this halts the game as a probable bug (brief §4). */
   turnCap: number;
-  /** Number of additional combat phases to run after the current combat. */
-  extraCombatPhases: number;
+  /**
+   * Additional combat phases waiting to run, most recently inserted first (CR 500.8): each runs
+   * directly after the phase it was created in, ahead of anything scheduled after that phase
+   * earlier. Emptied at the end of the turn.
+   */
+  extraCombats: ExtraCombat[];
+  /** Has this turn reached the declare attackers step of a combat phase yet? Reset each turn. */
+  declareAttackersReachedThisTurn?: boolean;
+  /** The combat phase being run: `regular`, or the id of the `ExtraCombat` it is. */
+  currentCombatId?: string;
   /** The player who is currently the monarch, or null before the mechanic appears. */
   monarchPlayerId: PlayerId | null;
   /** Until-end-of-turn activated abilities temporarily granted to cards in graveyards. */

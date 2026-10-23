@@ -5565,70 +5565,70 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "uniqueOracleIds": 29,
+      "uniqueOracleIds": 24,
       "reviewedOracleIds": 32,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
-      "uniqueOracleIds": 53,
+      "uniqueOracleIds": 49,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 27,
+      "uniqueOracleIds": 21,
       "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 38,
+      "uniqueOracleIds": 32,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 40,
+      "uniqueOracleIds": 20,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
-      "uniqueOracleIds": 12,
+      "uniqueOracleIds": 11,
       "reviewedOracleIds": 12,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
-      "uniqueOracleIds": 42,
+      "uniqueOracleIds": 21,
       "reviewedOracleIds": 45,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "uniqueOracleIds": 53,
+      "uniqueOracleIds": 27,
       "reviewedOracleIds": 57,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
-      "uniqueOracleIds": 26,
+      "uniqueOracleIds": 23,
       "reviewedOracleIds": 31,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/urdragon.ts",
-      "uniqueOracleIds": 6,
+      "uniqueOracleIds": 4,
       "reviewedOracleIds": 6,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5652,6 +5652,131 @@
       "uniqueOracleIds": 3,
       "status": "unreviewed",
       "note": "Explicit support exclusions for three confirmed omitted or substituted spell faces. Pinned Oracle and negative engine evidence are recorded in the verification manifest; no completed-card claim."
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-aven.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-bandit.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-cloak.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-curse.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-defenders.ts",
+      "uniqueOracleIds": 2,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-discard-choices.ts",
+      "uniqueOracleIds": 3,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-discard.ts",
+      "uniqueOracleIds": 7,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-entry.ts",
+      "uniqueOracleIds": 5,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-gifts.ts",
+      "uniqueOracleIds": 2,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-graveyard-triggers.ts",
+      "uniqueOracleIds": 2,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-graveyard.ts",
+      "uniqueOracleIds": 2,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-hand.ts",
+      "uniqueOracleIds": 3,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-imp.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-leyline.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-library.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-liliana.ts",
+      "uniqueOracleIds": 2,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-payoffs.ts",
+      "uniqueOracleIds": 3,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-perch.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-promise.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-protection-stack.ts",
+      "uniqueOracleIds": 4,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-restoration.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-role-model.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-stax.ts",
+      "uniqueOracleIds": 2,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-tergrid.ts",
+      "uniqueOracleIds": 0,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-tinybones.ts",
+      "uniqueOracleIds": 2,
+      "status": "unreviewed"
     }
   ],
   "interpreterRestored": [
@@ -6123,6 +6248,706 @@
       "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "restoredIn": "coverage-pr03",
       "note": "Containment removed: the interpreter reads connive (new connive op, CR 701.50) and the dies return, whose target filter compares against Body Launderer's last-known power through the new powerAtMostSource selector (CR 608.2h)."
+    },
+    {
+      "oracleId": "7388a797-d40d-4783-a281-d17bc159b856",
+      "name": "Sautekh Immortal",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr04",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in necron-dynasties.ts): the interpreter reads 'enters with a +1/+1 counter on it for each creature that died this turn' as an enters-with replacement effect (CR 614.1c, entersWithCounters creaturesDiedThisTurn) rather than an enters trigger; engine and Card Test Lab evidence in packages/engine/tests/pr04-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "7388a797-d40d-4783-a281-d17bc159b856",
+      "name": "Sautekh Immortal",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr04",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "cd0c8db0-67ee-483b-8298-455cce35fef7",
+      "name": "Iron Apprentice",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr04",
+      "note": "Registration deleted: the interpreter reads the dies trigger with an intervening-if on the creature's last-known counters (CR 603.10a, sourceMatches hasAnyCounter) and the transferCountersFromSource effect, which puts every kind and number of those counters on the target creature through addCounters so counter replacements apply; engine and Card Test Lab evidence in packages/engine/tests/pr04-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "4c209165-a159-4cd7-8e99-1e533d3a22a6",
+      "name": "Vigean Graftmage",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr04",
+      "note": "Registration deleted: the interpreter reads Graft 2 (CR 702.58a) as an enters-with +1/+1 replacement plus an optional trigger on another creature entering, with the intervening-if that this creature has a +1/+1 counter, whose moveCounters effect removes the counter and puts it on the entering creature through addCounters so counter replacements apply (CR 122.5), and reads the untap ability's hasCounter target filter; engine and Card Test Lab evidence in packages/engine/tests/pr04-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "4b8736e2-fc41-4a25-bb6c-7351afc40981",
+      "name": "Pensive Professor",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr04",
+      "note": "Registration deleted: the interpreter reads Increment (a castsSpell trigger with an intervening-if that the mana spent is greater than this creature's power or toughness, rechecked on resolution, CR 603.4) and a countersPut trigger on this creature that draws a card once per batch of +1/+1 counters."
+    },
+    {
+      "oracleId": "295cd8e1-0830-46c1-9957-556afd4bcee6",
+      "name": "Aetheric Amplifier",
+      "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
+      "restoredIn": "coverage-pr04",
+      "note": "Registration deleted: the interpreter reads the any-color mana ability and the choose-one activation as one modal sorcery-speed ability (CR 700.2), offered once per mode, whose permanent mode targets a permanent and whose player mode has no target; the doubleCountersTarget and doublePlayerCounters effects double every counter kind through the counter-adding path. Engine and Card Test Lab evidence in packages/engine/tests/pr04-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "75564721-e4e9-463a-b49e-f0c7cd6f53a7",
+      "name": "Cranial Plating",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted: the interpreter reads {B}{B}: Attach this Equipment to target creature you control as an instant-speed activated ability beside the sorcery-speed Equip {1}, both with a creature-you-control target and an attachSelfTo effect, plus the layer 7d +1/+0 per artifact you control on the equipped creature. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "d6b2c998-a226-426c-a40d-6e6007041bfe",
+      "name": "Mask of Memory",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard and the shadowed unimplemented placeholder in necron-dynasties.ts): the interpreter reads Whenever equipped creature deals combat damage to a player as a dealsCombatDamageToPlayer trigger on the creature this Equipment is attached to (attachedToSource), not any equipped creature, and reads the optional body draw two cards. If you do, discard a card as one optional trigger whose single yes draws two cards and then discards one, plus the sorcery-speed Equip {1} onto a creature you control. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "d6b2c998-a226-426c-a40d-6e6007041bfe",
+      "name": "Mask of Memory",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in necron-dynasties-remaining.ts is also gone): the interpreter reads Whenever equipped creature deals combat damage to a player as a dealsCombatDamageToPlayer trigger on the creature this Equipment is attached to (attachedToSource), not any equipped creature, and reads the optional body draw two cards. If you do, discard a card as one optional trigger whose single yes draws two cards and then discards one, plus the sorcery-speed Equip {1} onto a creature you control. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "b410f294-cbb6-4016-981f-808fd9b7bbae",
+      "name": "Resurrection Orb",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that returned the card under the equipment controller): the interpreter reads Equipped creature has lifelink as a layer 6 keyword grant to the creature this Equipment is attached to (attachedToSource), reads Whenever equipped creature dies as a dies trigger on that creature only, and returns the exact graveyard card the creature became (CR 400.7e) through a delayed beginning-of-end-step trigger that lasts until the next end step to begin (CR 603.7) and puts it onto the battlefield under its OWNER's control, returning nothing if the card left the graveyard first, plus the sorcery-speed Equip {4} onto a creature you control. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "b410f294-cbb6-4016-981f-808fd9b7bbae",
+      "name": "Resurrection Orb",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in necron-dynasties-remaining.ts is also gone): the interpreter reads Equipped creature has lifelink as a layer 6 keyword grant to the creature this Equipment is attached to (attachedToSource), reads Whenever equipped creature dies as a dies trigger on that creature only, and returns the exact graveyard card the creature became (CR 400.7e) through a delayed beginning-of-end-step trigger that lasts until the next end step to begin (CR 603.7) and puts it onto the battlefield under its OWNER's control, returning nothing if the card left the graveyard first, plus the sorcery-speed Equip {4} onto a creature you control. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "d1421070-a3cc-4af3-bf91-0f97372f4161",
+      "name": "Sunforger",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard for the stale Equip {2}): the interpreter reads Equipped creature gets +4/+0 as a layer 7d power modification of the creature this Equipment is attached to (attachedToSource), reads {R}{W}, Unattach this Equipment as an instant-speed activation whose unattachSelf cost is payable only while attached and unattaches as a cost, searches the library for a red or white instant card with mana value 4 or less and casts the found card without paying its mana cost (searchLibraryCastFree, so it is cast and cast triggers fire), then shuffles through the generic then-shuffle sentence, plus the sorcery-speed Equip {3} onto a creature you control. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "a3b3b9ae-1e48-481d-80a5-7e2a26cf2f50",
+      "name": "Screams from Within",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that required an attach target for the return): the interpreter reads Enchanted creature gets -1/-1 as a layer 7d modification of the creature this Aura is attached to (attachedToSource), reads When enchanted creature dies as a dies trigger on that creature only, and returns the exact graveyard card this Aura became (CR 400.7e) from the controller's own graveyard to the battlefield with no target, the controller choosing a creature to enchant as it enters (CR 303.4f, so a hexproof opponent's creature is choosable) and the card staying in the graveyard when there is none (CR 303.4i) or when it is not in that graveyard. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "a3b3b9ae-1e48-481d-80a5-7e2a26cf2f50",
+      "name": "Screams from Within",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Enchanted creature gets -1/-1 as a layer 7d modification of the creature this Aura is attached to (attachedToSource), reads When enchanted creature dies as a dies trigger on that creature only, and returns the exact graveyard card this Aura became (CR 400.7e) from the controller's own graveyard to the battlefield with no target, the controller choosing a creature to enchant as it enters (CR 303.4f, so a hexproof opponent's creature is choosable) and the card staying in the graveyard when there is none (CR 303.4i) or when it is not in that graveyard. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "276eccd6-4a76-46e8-b604-94472e618115",
+      "name": "Ghoulish Impetus",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard for the delayed Aura return that did not attach): the interpreter reads Enchanted creature gets +1/+1, has deathtouch, and is goaded as a layer 7d +1/+1, a layer 6 deathtouch keyword and a layer 6 goad on the creature this Aura is attached to (attachedToSource), reads When enchanted creature dies as a dies trigger on that creature only, and returns the exact graveyard card this Aura became (CR 400.7e) through a delayed beginning-of-end-step trigger that lasts until the next end step to begin (CR 603.7), the controller choosing a creature to enchant as it enters (CR 303.4f) and the card staying in the graveyard when there is none (CR 303.4i) or when it left the graveyard first. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "276eccd6-4a76-46e8-b604-94472e618115",
+      "name": "Ghoulish Impetus",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Enchanted creature gets +1/+1, has deathtouch, and is goaded as a layer 7d +1/+1, a layer 6 deathtouch keyword and a layer 6 goad on the creature this Aura is attached to (attachedToSource), reads When enchanted creature dies as a dies trigger on that creature only, and returns the exact graveyard card this Aura became (CR 400.7e) through a delayed beginning-of-end-step trigger that lasts until the next end step to begin (CR 603.7), the controller choosing a creature to enchant as it enters (CR 303.4f) and the card staying in the graveyard when there is none (CR 303.4i) or when it left the graveyard first. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "2c11c72f-5b04-47d8-bdf8-8d9d197ebc1b",
+      "name": "Gift of Immortality",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that omitted the delayed Aura return): the interpreter reads When enchanted creature dies, return that card to the battlefield under its owner's control as an immediate return of the exact graveyard card the creature became (CR 400.7e) under its OWNER's control, then reads Return this card to the battlefield attached to that creature at the beginning of the next end step as a delayed beginning-of-end-step trigger (CR 603.7) that returns the exact graveyard card this Aura became attached to the returned creature under the Aura's controller with no host choice, staying in the graveyard if that creature left the battlefield or became a new object first, if the Aura card left the graveyard, or if the creature card never returned. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "2c11c72f-5b04-47d8-bdf8-8d9d197ebc1b",
+      "name": "Gift of Immortality",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads When enchanted creature dies, return that card to the battlefield under its owner's control as an immediate return of the exact graveyard card the creature became (CR 400.7e) under its OWNER's control, then reads Return this card to the battlefield attached to that creature at the beginning of the next end step as a delayed beginning-of-end-step trigger (CR 603.7) that returns the exact graveyard card this Aura became attached to the returned creature under the Aura's controller with no host choice, staying in the graveyard if that creature left the battlefield or became a new object first, if the Aura card left the graveyard, or if the creature card never returned. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "9c77eb0a-543a-41db-ba1f-aa0163837ae0",
+      "name": "Ajani's Chosen",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that omitted the Aura attach from the Cat trigger): the interpreter reads Whenever an enchantment you control enters, create a 2/2 white Cat creature token as an enters trigger on a permanent you control with the Enchantment type that creates the Cat, then reads If that enchantment is an Aura, you may attach it to the token as an optional attach of the entering Aura (the trigger object) to the token this trigger created, moving it with a new timestamp (CR 701.3c) and leaving it where it is when it declines, cannot enchant the Cat or has left the battlefield (CR 701.3b). Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "9c77eb0a-543a-41db-ba1f-aa0163837ae0",
+      "name": "Ajani's Chosen",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Whenever an enchantment you control enters, create a 2/2 white Cat creature token as an enters trigger on a permanent you control with the Enchantment type that creates the Cat, then reads If that enchantment is an Aura, you may attach it to the token as an optional attach of the entering Aura (the trigger object) to the token this trigger created, moving it with a new timestamp (CR 701.3c) and leaving it where it is when it declines, cannot enchant the Cat or has left the battlefield (CR 701.3b). Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "79085dea-8daa-41c0-a975-61e3e6da2e26",
+      "name": "Shielded by Faith",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that implemented the optional attach as mandatory): the interpreter reads Enchanted creature has indestructible as a layer 6 indestructible keyword on the creature this Aura is attached to (attachedToSource), and reads Whenever a creature enters, you may attach this Aura to that creature as an optional trigger on any entering creature that, when its controller says yes, moves the Aura onto that creature with a new timestamp (CR 701.3c) and otherwise leaves it, never moving it to a creature that left the battlefield or when the Aura itself has left (CR 701.3b). Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "79085dea-8daa-41c0-a975-61e3e6da2e26",
+      "name": "Shielded by Faith",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Enchanted creature has indestructible as a layer 6 indestructible keyword on the creature this Aura is attached to (attachedToSource), and reads Whenever a creature enters, you may attach this Aura to that creature as an optional trigger on any entering creature that, when its controller says yes, moves the Aura onto that creature with a new timestamp (CR 701.3c) and otherwise leaves it, never moving it to a creature that left the battlefield or when the Aura itself has left (CR 701.3b). Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "6a9cc11b-a223-46f0-bf58-c1e08ad1253d",
+      "name": "Forum Filibuster",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that omitted the reflexive return attached to the token): the interpreter reads At the beginning of your upkeep, create a 2/1 white and black Inkling creature token with flying as an upkeep trigger for its controller, then reads When you do, return up to one target Aura or Equipment card from your graveyard to the battlefield attached to that token as a reflexive ability (CR 603.12) with up to one target Aura or Equipment card in the controller's own graveyard, which returns the chosen card under the controller attached to the Inkling, leaving an Aura in the graveyard when the Inkling is gone or cannot be enchanted (CR 303.4i) and putting an Equipment onto the battlefield unattached when the Inkling is gone (CR 301.5e). Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "6a9cc11b-a223-46f0-bf58-c1e08ad1253d",
+      "name": "Forum Filibuster",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads At the beginning of your upkeep, create a 2/1 white and black Inkling creature token with flying as an upkeep trigger for its controller, then reads When you do, return up to one target Aura or Equipment card from your graveyard to the battlefield attached to that token as a reflexive ability (CR 603.12) with up to one target Aura or Equipment card in the controller's own graveyard, which returns the chosen card under the controller attached to the Inkling, leaving an Aura in the graveyard when the Inkling is gone or cannot be enchanted (CR 303.4i) and putting an Equipment onto the battlefield unattached when the Inkling is gone (CR 301.5e). Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "fc3e48c9-e303-435c-bdb1-7dc7881a9858",
+      "name": "Karametra's Favor",
+      "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that dropped the enchanted creature's printed statics when its mana ability replaced them): the interpreter reads When this Aura enters, draw a card as an enters trigger on the Aura itself, and reads Enchanted creature has \"{T}: Add one mana of any color.\" as a layer 6 grant of a one-mana any-color mana ability to the creature this Aura is attached to (attachedToSource), so that creature taps for mana through the normal cast path and is bound by summoning sickness (CR 302.6). Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "c22e5fc6-9b4e-4197-b472-70d168eb4330",
+      "name": "Redemption Arc",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the exile activation without an implementation): the interpreter reads Enchanted creature has indestructible and is goaded as a layer 6 indestructible keyword and a layer 6 goad on the creature this Aura is attached to (attachedToSource), and reads {1}{W}: Exile enchanted creature as an instant-speed activated ability of the Aura with no target that exiles the attached creature, so hexproof does not stop it and the Aura then falls off. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "c22e5fc6-9b4e-4197-b472-70d168eb4330",
+      "name": "Redemption Arc",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Enchanted creature has indestructible and is goaded as a layer 6 indestructible keyword and a layer 6 goad on the creature this Aura is attached to (attachedToSource), and reads {1}{W}: Exile enchanted creature as an instant-speed activated ability of the Aura with no target that exiles the attached creature, so hexproof does not stop it and the Aura then falls off. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3",
+      "name": "Fallen Ideal",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the granted sacrifice ability was authored on the Aura): the interpreter reads Enchanted creature has flying and \"Sacrifice a creature: This creature gets +2/+1 until end of turn.\" as a layer 6 flying grant and a layer 6 grant of a no-mana sacrifice-a-creature activated ability (the enchanted creature may sacrifice itself) to the creature this Aura is attached to (attachedToSource), and reads When this Aura is put into a graveyard from the battlefield, return it to its owner's hand as a graveyard-only leave trigger that returns the departed card to its owner's hand. The same trigger head makes the interpreter read Starfield Mystic's line, so that card's handled-lines entry and fix were dropped with no behavior change. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3",
+      "name": "Fallen Ideal",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Enchanted creature has flying and \"Sacrifice a creature: This creature gets +2/+1 until end of turn.\" as a layer 6 flying grant and a layer 6 grant of a no-mana sacrifice-a-creature activated ability to the creature this Aura is attached to (attachedToSource), and reads When this Aura is put into a graveyard from the battlefield, return it to its owner's hand as a graveyard-only leave trigger that returns the departed card to its owner's hand. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "2bfc7467-1316-43d3-9ca6-ff36cc2de607",
+      "name": "Kor Spiritdancer",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the attached-Aura pump counted every Aura you control): the interpreter reads This creature gets +2/+2 for each Aura attached to it as a layer 7d +2/+2 per Aura attached to the source (any controller, aurasAttachedToSource), and reads Whenever you cast an Aura spell, you may draw a card as an optional cast trigger filtered to the Aura subtype. The new Aura-spell filter also makes the interpreter read Transcendent Envoy's cost line, so that card's handled-lines entry was dropped with no behavior change. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "2bfc7467-1316-43d3-9ca6-ff36cc2de607",
+      "name": "Kor Spiritdancer",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads This creature gets +2/+2 for each Aura attached to it as a layer 7d +2/+2 per Aura attached to the source (any controller, aurasAttachedToSource), and reads Whenever you cast an Aura spell, you may draw a card as an optional cast trigger filtered to the Aura subtype. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "a3b39590-34b7-4fd0-877f-748e6df30e88",
+      "name": "Hateful Eidolon",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the dies trigger drew one card instead of one per Aura): the interpreter reads Whenever an enchanted creature dies as a dies trigger on any creature with an Aura attached, and reads draw a card for each Aura you controlled that was attached to it as a draw of the dying creature's last-known Auras controlled by the trigger's controller (aurasYouControlledAttachedToTriggerObject, captured as the creature left, CR 603.10a). Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "a3b39590-34b7-4fd0-877f-748e6df30e88",
+      "name": "Hateful Eidolon",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Whenever an enchanted creature dies as a dies trigger on any creature with an Aura attached, and reads draw a card for each Aura you controlled that was attached to it as a draw of the dying creature's last-known Auras controlled by the trigger's controller (aurasYouControlledAttachedToTriggerObject, captured as the creature left, CR 603.10a). Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "c8decfdf-1421-4649-acde-5215e7f08bb9",
+      "name": "Martial Impetus",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the other-attacking-your-opponents pump was implemented as all creatures in combat): the interpreter reads Enchanted creature gets +1/+1 and is goaded as a layer 7d +1/+1 and a layer 6 goad on the creature this Aura is attached to (attachedToSource), and reads Whenever enchanted creature attacks, each other creature that's attacking one of your opponents gets +1/+1 until end of turn as an attack trigger that pumps each creature attacking a player other than the Aura's controller (attackingOpponent), excluding the attacking trigger object. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "c8decfdf-1421-4649-acde-5215e7f08bb9",
+      "name": "Martial Impetus",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Enchanted creature gets +1/+1 and is goaded as a layer 7d +1/+1 and a layer 6 goad on the creature this Aura is attached to (attachedToSource), and reads Whenever enchanted creature attacks, each other creature that's attacking one of your opponents gets +1/+1 until end of turn as an attack trigger that pumps each creature attacking a player other than the Aura's controller (attackingOpponent), excluding the attacking trigger object. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "9c54bd34-667d-415c-ad26-82e0eb0ff409",
+      "name": "Killian, Decisive Mentor",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the attack trigger scoped to creatures enchanted by your Auras was unimplemented): the interpreter reads Whenever an enchantment you control enters, tap up to one target creature and goad it as an enters trigger with an up-to-one creature target and a tap-and-goad effect, and reads Whenever one or more creatures that are enchanted by an Aura you control attack, draw a card as one aggregated attack trigger per batch whose subject is a creature enchanted by an Aura you control (enchantedByAuraYouControl). Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "9c54bd34-667d-415c-ad26-82e0eb0ff409",
+      "name": "Killian, Decisive Mentor",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Whenever an enchantment you control enters, tap up to one target creature and goad it as an enters trigger with an up-to-one creature target and a tap-and-goad effect, and reads Whenever one or more creatures that are enchanted by an Aura you control attack, draw a card as one aggregated attack trigger per batch whose subject is a creature enchanted by an Aura you control (enchantedByAuraYouControl). Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "8ba36878-0816-44c7-b543-8ebfc28c2ecd",
+      "name": "Angelic Destiny",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the Angel type-changing clause was claimed without a type-changing static): the interpreter reads Enchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to its other types as a layer 4 Angel subtype addition, layer 6 flying and first strike grants and a layer 7d +4/+4 on the creature this Aura is attached to (attachedToSource), and reads When enchanted creature dies, return this card to its owner's hand as an attached-creature dies trigger that returns the Aura card from the graveyard to its owner's hand. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "8ba36878-0816-44c7-b543-8ebfc28c2ecd",
+      "name": "Angelic Destiny",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Enchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to its other types as a layer 4 Angel subtype addition, layer 6 flying and first strike grants and a layer 7d +4/+4 on the creature this Aura is attached to (attachedToSource), and reads When enchanted creature dies, return this card to its owner's hand as an attached-creature dies trigger that returns the Aura card from the graveyard to its owner's hand. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "d13fc657-c6fc-4394-bc70-691050550226",
+      "name": "Sheltered by Ghosts",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed Ward {2} was claimed without a ward static): the interpreter reads When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield as an enters trigger with an opponent-controlled nonland permanent target whose exile lasts only while this Aura stays on the battlefield, and reads Enchanted creature gets +1/+0 and has lifelink and ward {2} as a layer 7c +1/+0, a layer 6 lifelink grant and a layer 6 ward {2} grant on the creature this Aura is attached to (attachedToSource). The same until-this-Aura-leaves wording also makes the interpreter read Chains of Custody's enters line, so that card's handled-lines entry was dropped and the unused Sheltered by Ghosts handled-lines fix removed, with no behavior change. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "d13fc657-c6fc-4394-bc70-691050550226",
+      "name": "Sheltered by Ghosts",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield as an enters trigger with an opponent-controlled nonland permanent target whose exile lasts only while this Aura stays on the battlefield, and reads Enchanted creature gets +1/+0 and has lifelink and ward {2} as a layer 7c +1/+0, a layer 6 lifelink grant and a layer 6 ward {2} grant on the creature this Aura is attached to (attachedToSource). The same until-this-Aura-leaves wording also makes the interpreter read Chains of Custody's enters line, so that card's handled-lines entry was dropped and the unused Sheltered by Ghosts handled-lines fix removed, with no behavior change. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "3635e4e5-e655-45f4-a444-39756f55129a",
+      "name": "Eldrazi Conscription",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed annihilator 2 was claimed without an annihilator implementation): the interpreter reads Enchanted creature gets +10/+10 and has trample and annihilator 2 as a layer 7d +10/+10, a layer 6 trample grant and a layer 6 grant of an annihilator 2 attack trigger (the defending player sacrifices two permanents of their choice, or all of them if they control two or fewer) on the creature this Aura is attached to (attachedToSource), and accepts the Kindred card type on Auras (CR 308), so it is cast as a Kindred Enchantment — Eldrazi Aura. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "3635e4e5-e655-45f4-a444-39756f55129a",
+      "name": "Eldrazi Conscription",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Enchanted creature gets +10/+10 and has trample and annihilator 2 as a layer 7d +10/+10, a layer 6 trample grant and a layer 6 grant of an annihilator 2 attack trigger (the defending player sacrifices two permanents of their choice, or all of them if they control two or fewer) on the creature this Aura is attached to (attachedToSource), and accepts the Kindred card type on Auras (CR 308), so it is cast as a Kindred Enchantment — Eldrazi Aura. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "b6689782-08d8-48e1-a05d-cd040dfe85bc",
+      "name": "Curse of Bounty",
+      "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed only the attacking player untaps and the curse controller should always untap): the interpreter reads Enchant player as an Aura spell with a player target whose host is that player (CR 303.4a), and reads Whenever enchanted player is attacked, untap all nonland permanents you control. Each opponent attacking that player untaps all nonland permanents they control as an enchanted-player-attacked trigger of the Aura whose effects untap the nonland permanents of the Aura's controller and of the attacking player when that player is an opponent. A player host is checked as a state-based action, so the Aura goes to the graveyard when the enchanted player leaves the game. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "441b51b0-ecd0-466d-9ca8-e754eb563aec",
+      "name": "Eidolon of Countless Battles",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed Bestow was claimed and the Aura-count buff was overwritten by a creature-count self pump): the interpreter reads Bestow {2}{W}{W} as a bestow alternative cost that casts the card as a bestowed Aura spell with enchant creature (CR 702.103a-b), which enters attached as a noncreature Enchantment — Aura and becomes a creature again when it is not attached (CR 702.103f), and reads This creature and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control as two additive layer 7d statics on the source and the creature it is attached to, counting creatures and Auras you control. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "441b51b0-ecd0-466d-9ca8-e754eb563aec",
+      "name": "Eidolon of Countless Battles",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Bestow {2}{W}{W} as a bestow alternative cost that casts the card as a bestowed Aura spell with enchant creature (CR 702.103a-b), which enters attached as a noncreature Enchantment — Aura and becomes a creature again when it is not attached (CR 702.103f), and reads This creature and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control as two additive layer 7d statics on the source and the creature it is attached to, counting creatures and Auras you control. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "c0d8fef4-65f4-4769-982d-b397d2b7e977",
+      "name": "Animate Dead",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the graveyard Aura attach and the leave-the-battlefield sacrifice were omitted): the interpreter reads Enchant creature card in a graveyard as an Aura spell whose target is a creature card in any graveyard that stays a legal host while it remains there, and reads the enters trigger as one effect that, if the Aura is still on the battlefield, swaps its host to the creature returned from that graveyard under its controller's control, attaches with a new timestamp (CR 613.7e) and sets up a delayed trigger on the Aura object that makes that creature's controller sacrifice it when the Aura leaves the battlefield. A creature with protection from black returns but cannot be enchanted (CR 702.16c), so the Aura goes to the graveyard and the creature is sacrificed. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "c0d8fef4-65f4-4769-982d-b397d2b7e977",
+      "name": "Animate Dead",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Enchant creature card in a graveyard as an Aura spell whose target is a creature card in any graveyard that stays a legal host while it remains there, and reads the enters trigger as one effect that, if the Aura is still on the battlefield, swaps its host to the creature returned from that graveyard under its controller's control, attaches with a new timestamp (CR 613.7e) and sets up a delayed trigger on the Aura object that makes that creature's controller sacrifice it when the Aura leaves the battlefield. A creature with protection from black returns but cannot be enchanted (CR 702.16c), so the Aura goes to the graveyard and the creature is sacrificed. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "b9bacb46-fd1d-459b-81c2-d7d08fe73848",
+      "name": "Dragon Tempest",
+      "sourceFile": "packages/engine/src/cards/overrides/urdragon.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the damage came from the enchantment): the interpreter reads Whenever a creature you control with flying enters, it gains haste until end of turn, and reads Whenever a Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control, as damage dealt by the entering Dragon itself (last known information if it has left the battlefield, CR 608.2h) with X counted as the trigger resolves. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "0a147009-a57c-4ac1-ab81-d8bd8b737631",
+      "name": "Scourge of Valkas",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the damage came from Scourge): the interpreter reads Whenever this creature or another Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control, as an enters trigger on this creature or another Dragon you control whose any-target damage is dealt by the entering creature itself (last known information if it left the battlefield, CR 608.2h) with X counted as the trigger resolves, plus Flying and the {R} +1/+0 pump. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "c857de66-f4e0-4e97-ad01-fac623af8225",
+      "name": "Tomb Blade",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the shadowed unimplemented placeholder; the fail-closed unsupportedCard in necron-dynasties-remaining.ts is replaced by an executable override): the combat-damage rider is authored as an untargeted dealsCombatDamageToPlayer trigger whose effect acts on the event player, the player this creature dealt combat damage to, who chooses to sacrifice a creature they control or lose life equal to the number of creatures they control as it resolves. Flying and Unearth stay interpreted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "bb04f927-0348-4a14-9e74-381f18083f6a",
+      "name": "Thunderbreak Regent",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed eventPlayer was unset on becomes-targeted events): the targeting spell or ability's controller is now bound as the event player of becomes-targeted triggers, and the interpreter reads Whenever a Dragon you control becomes the target of a spell or ability an opponent controls, this creature deals 3 damage to that player as a becomesTargeted trigger on a Dragon you control whose dealDamage goes to the event player, dealt by the Regent. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "3180ee4f-66d7-4b73-bc10-9ee0c790ec18",
+      "name": "Flameblast Dragon",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the damage target is chosen before you decide to pay X; a misreading, because \"If you do\" is not a reflexive trigger and only \"when you do\" is, CR 603.12): the executable override in coverage-pr06.ts is an attack trigger on this creature with an any-target slot chosen when the trigger goes on the stack (CR 603.3d), whose effect offers the {X}{R} payment as it resolves, deals X damage as this creature, and offers paying X=0 separately from declining. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "4f63d306-cc14-405c-8424-d8990c670c74",
+      "name": "Territorial Aetherkite",
+      "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the damage is a reflexive trigger implemented as the same resolution): the executable override in coverage-pr06.ts gets {E}{E} on entering, then offers paying any amount of energy from one up to all of it, and paying creates a separate reflexive trigger (CR 603.12) that goes on the stack with its own priority window and carries the energy paid, so that as it resolves this creature deals that much damage to each other creature, as last known if it has left the battlefield. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "01790829-cc03-430f-a899-2f274b7dbf62",
+      "name": "Arcbond",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the delayed damage is dealt by Arcbond): the executable override in coverage-pr06.ts registers a this-turn delayed trigger keyed to the chosen creature object, and each time it is dealt damage that creature, with last known information if it has left the battlefield, deals that much damage to each other creature and each player; damageEach and damageEachPlayer now resolve an explicit source that way, and the bespoke arcbond and arcbondDamage ops are deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "e958144e-01bc-46ff-8f56-ddf2eb098630",
+      "name": "Thundermaw Hellkite",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the tap applies to all opposing fliers rather than the damaged set; a misreading, because Gatherer ruling 2017-11-17 says \"those creatures\" are the creatures with flying your opponents control, not the creatures dealt damage, so a flier whose damage is prevented is still tapped): the executable override in coverage-pr06.ts damages and taps the same opposing-fliers selector as the enter trigger resolves, with this creature as the damage source. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c",
+      "name": "Backlash",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed untapped-creature targeting is implemented as any creature): the executable override in coverage-pr06.ts targets a creature with the new tapState untapped restriction, honored when the target is chosen and again on resolution (CR 608.2b), taps it, and has that creature deal damage equal to its power to the new controllerOf reference, the player who controls it as Backlash resolves. The bespoke tapAndDamageController op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "7d079c78-b2a9-444f-ab54-c61c041baa6d",
+      "name": "Selfless Squire",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed all-damage prevention and the prevented-damage counters are implemented as preventCombatDamageToController on enter): the executable override in coverage-pr06.ts creates a damage shield on enter that prevents all damage, combat and noncombat, from every source to you for the rest of the turn through the damage modifier pipeline (CR 615), and a second trigger, queued once per prevention applied to damage to you from any source, puts that many +1/+1 counters on this creature. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "dc5dffc8-fac5-4956-bac4-1ad2cc16f6be",
+      "name": "Deflecting Palm",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed source choice and reflection are implemented as unscoped combat-damage prevention): the executable override in coverage-pr06.ts has its controller choose a permanent or spell as it resolves (CR 609.7a) and creates a one-shot damage shield for damage from exactly that object to you, any damage and not only combat, which ends when it first prevents damage; a source that changes zones is a new object (CR 400.7). The prevented amount is queued and dealt by Deflecting Palm to that source's controller right after the prevented damage event, after all combat damage in the step, through the same damage pipeline. The bespoke deflectingPalm op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "01f29158-2dc9-4b9d-b726-add5d3fd5782",
+      "name": "Comeuppance",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed all-damage prevention and reflection are implemented as preventCombatDamageToController): the executable override in coverage-pr06.ts creates a damage shield for the turn that prevents all damage, combat and noncombat, to you and to the planeswalkers you control as the damage would be dealt, from sources you do not control, through the damage modifier pipeline. Each prevented amount is dealt by Comeuppance right after the prevented damage event to the source itself when it is a creature as the damage would be dealt (only while it is still that object on the battlefield) and otherwise to the source's controller. Reflections that prevent each other forever, with no choice in between, are an unbreakable mandatory loop and end the game as a draw (CR 104.4b). The bespoke preventCombatDamageToController op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "fbe190eb-fd4b-40e7-9a17-48c96b60f653",
+      "name": "Michiko Konda, Truth Seeker",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed damage to you is implemented as damage to permanents you control): the executable override in coverage-pr06.ts watches damage dealt to you with the new playerDealtDamage event, queued from the shared player-damage path once per source's damage event when damage was actually dealt (prevented damage queues nothing, infect counts), only for sources an opponent controls, and the event player is the source's controller, who sacrifices a permanent of their choice among all their permanents. The bespoke sacrificePermanentOnDamage op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "a00e5eb6-b916-4cd6-8ff2-c02f4929abc7",
+      "name": "Delirium",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the cast-only-during-an-opponent's-turn restriction is omitted): the executable override in coverage-pr06.ts adds a castRestriction condition to the spell definition, notYourTurn, enforced both when the cast is offered and as it is cast; its target is a creature controlled by the player whose turn it is (the new activePlayer target controller, checked when chosen and on resolution); the creature taps and itself deals damage equal to its power to the player who controls it, and a shield on that one object, not on its controller, prevents combat damage dealt to it and by it for the rest of the turn, so a creature that leaves and returns is a new object and not covered (CR 400.7). The bespoke delirium op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "ac675899-25bb-4f06-9c8c-bf188024495f",
+      "name": "Firemane Commando",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the shadowed unimplemented placeholder; the fail-closed unsupportedCard in silverquill-influence-remaining.ts is replaced by an executable override): both abilities are authored on the new attackDeclared event, queued once as an attack is declared for each player who declared attackers, with the attackers as a group whose size (two or more) is checked when the event happens and which is remembered by object. The first draws for you when you attack; the second draws for the attacking player, another player, as it resolves unless any creature of that attack attacked you, the player and not your planeswalkers, as declared. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "ac675899-25bb-4f06-9c8c-bf188024495f",
+      "name": "Firemane Commando",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, replaced together with the fail-closed unsupportedCard in silverquill-influence-remaining.ts by the executable override in coverage-pr06.ts); see the silverquill-influence-remaining.ts entry."
+    },
+    {
+      "oracleId": "d11e627b-8a48-411d-a261-2c9a02a758ba",
+      "name": "Breena, the Demagogue",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the life comparison is defender versus attacker, and the shadowed unimplemented placeholder): the executable override in coverage-pr06.ts uses the attackDeclared event with per-defender grouping, so it triggers once for each opponent of yours attacked by at least one creature of any player's attack, yours included, and an attack on a planeswalker is not an attack on its controller. The intervening-if, checked at the declaration and as it resolves, is that the attacked opponent has more life than at least one other opponent of yours; the attacking player draws and you choose, as it resolves, a creature you control for the two +1/+1 counters. The bespoke breenaAttack op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "d11e627b-8a48-411d-a261-2c9a02a758ba",
+      "name": "Breena, the Demagogue",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the shadowed placeholder, replaced together with the other registration by the executable override in coverage-pr06.ts); see the queen-marchesa-queens-gambit-remaining.ts entry."
+    },
+    {
+      "oracleId": "cbcb6d9a-6ae5-4bcd-8013-2b657553764a",
+      "name": "Mangara, the Diplomat",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard and the shadowed unimplemented placeholder): the interpreter reads lifelink and the second-spell trigger (castsSpell, ordinal 2) from the card, so the stored blocker about the second-spell trigger was a misreading of the Oracle text, and the override in coverage-pr06.ts extends it with the attack ability on the attackDeclared event. It triggers once per declaration by an opponent with the intervening-if (CR 603.4) that two or more of that player's attackers are attacking you or planeswalkers you control, checked at the declaration and again on resolution against the creatures still attacking you and the planeswalkers still in combat. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "cbcb6d9a-6ae5-4bcd-8013-2b657553764a",
+      "name": "Mangara, the Diplomat",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the shadowed placeholder, replaced together with the other registration by the executable override in coverage-pr06.ts); see the queen-marchesa-queens-gambit-remaining.ts entry."
+    },
+    {
+      "oracleId": "2ef0961a-0543-4371-8c2a-333881b735e5",
+      "name": "Tomik, Wielder of Law",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed a self-attack drain, and the shadowed unimplemented placeholder): the interpreter's affinity parse is generalized from artifacts to artifacts and planeswalkers (a costReduction of generic mana for each planeswalker you control, CR 702.41a), and the override in coverage-pr06.ts extends the card with the attack ability on the attackDeclared event: once per declaration by an opponent, with the intervening-if (CR 603.4) that two or more of that player's attackers are attacking you or planeswalkers you control, checked at the declaration and again on resolution; that opponent, the event player, loses 3 life and you draw a card. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "2ef0961a-0543-4371-8c2a-333881b735e5",
+      "name": "Tomik, Wielder of Law",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the shadowed placeholder, replaced together with the other registration by the executable override in coverage-pr06.ts); see the silverquill-influence-remaining.ts entry."
+    },
+    {
+      "oracleId": "eab71e4e-27c3-4c41-b95f-259c1d14b97a",
+      "name": "Dragon Mage",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "combat-trigger-parser-regressions",
+      "note": "Fixed-count wheel grammar corrected; the interpreter now reads the printed combat-damage trigger and discard-then-draw-seven effect. Remove the obsolete handled-line override. Existing pinned Draconic engine evidence and the new parser regressions cover the generic path; historical review labels are unchanged."
+    },
+    {
+      "oracleId": "e1d294e8-67b1-4a4a-86b8-f98f28a327d9",
+      "name": "Promise of Loyalty",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registrations deleted (the fail-closed unsupportedCard that claimed the keep-one sacrifice, vow counters and attack restriction were unimplemented, and the shadowed unimplemented placeholder): the authored override in white-black-control-promise.ts already carried the behavior (APNAP keep-one choice, vow counters, a counter-bound attack restriction against the caster and their planeswalkers), and the dead registrations are gone. The restriction still ends when the creature phases out: the vow counter stays, but a \"for as long as\" duration tracking the permanent ends at phasing out (CR 702.26f). Engine evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "e1d294e8-67b1-4a4a-86b8-f98f28a327d9",
+      "name": "Promise of Loyalty",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the shadowed or fail-closed registration, replaced together with the other registration); see the silverquill-influence-remaining.ts entry."
+    },
+    {
+      "oracleId": "2f82b232-21ff-44cc-bc35-0999a1d1c52f",
+      "name": "Lightning Runner",
+      "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the untap was applied to every permanent you control): the authored override in coverage-pr07.ts gains two energy, then lets you pay eight; paying untaps only creatures you control and creates one additional combat phase after the current one. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "81dad7c5-5950-4c45-adb0-cf1a15a74250",
+      "name": "Firkraag, Cunning Instigator",
+      "sourceFile": "packages/engine/src/cards/overrides/urdragon.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the fail-closed unsupportedCard that said the intervening-if checks Firkraag rather than the damaging creature, and the stale name-keyed interpreter branch that did not clear its own reasons): the authored override in coverage-pr07.ts triggers once for each opponent attacked by Dragons you control and goads a creature that opponent controls, and puts the intervening-if on the creature that dealt the damage (it had to attack this combat and the damaged player is one of your opponents), checked as it triggers and resolves. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "f43f5855-f297-4433-984b-18263b734cfc",
+      "name": "Eriette of the Charmed Apple",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registrations deleted (the fail-closed unsupportedCard that said the cannot-attack-you static was omitted, and the shadowed unimplemented placeholder): the authored override in coverage-pr07.ts uses the new attack-restriction rule static with an enchanted-by-an-Aura-you-control filter (no attack on you or your planeswalkers, CR 508.1c) and an end-step trigger that counts every Aura you control once as it resolves. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "f43f5855-f297-4433-984b-18263b734cfc",
+      "name": "Eriette of the Charmed Apple",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the shadowed or fail-closed registration, replaced together with the other registration); see the silverquill-influence-remaining.ts entry."
+    },
+    {
+      "oracleId": "ff6b52b7-ae3c-465b-b10e-901160e5230e",
+      "name": "Nils, Discipline Enforcer",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registrations deleted (the fail-closed unsupportedCard that said the end-step trigger put counters on every creature and the attack-tax static was omitted, and the shadowed unimplemented placeholder): the authored override in coverage-pr07.ts has a per-player target spec expanded into one optional slot for each player in the game as the trigger goes on the stack, and the attack-restriction rule static with a per-counter cost. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "ff6b52b7-ae3c-465b-b10e-901160e5230e",
+      "name": "Nils, Discipline Enforcer",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the shadowed or fail-closed registration, replaced together with the other registration); see the queen-marchesa-queens-gambit-remaining.ts entry."
+    },
+    {
+      "oracleId": "ee7ebbc1-2f9e-4867-a522-424869b6d772",
+      "name": "Combat Calligrapher",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registrations deleted (the fail-closed unsupportedCard that said the Inklings-cannot-attack-you static was omitted and the token trigger unscoped, and the shadowed unimplemented placeholder): the authored override in coverage-pr07.ts uses the attack-restriction rule static with an Inkling filter and a per-opponent attack trigger whose createTokenAttacking effect now makes the token for the attacking player, tapped and attacking exactly the attacked opponent. The bespoke combatCalligrapher op, which attacked whatever its trigger object attacked, is removed. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "ee7ebbc1-2f9e-4867-a522-424869b6d772",
+      "name": "Combat Calligrapher",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the shadowed or fail-closed registration, replaced together with the other registration); see the queen-marchesa-queens-gambit-remaining.ts entry."
+    },
+    {
+      "oracleId": "bc14356c-3a1a-47af-9a6e-2b449de0331f",
+      "name": "Kardur, Doomscourge",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the fail-closed unsupportedCard that said goad snapshots current creatures and the death trigger fires for blockers as well as attackers): the authored override in coverage-pr07.ts uses the new attack-requirement store (every creature your opponents control, live, attacks each combat if able and attacks a player other than you if able, until your next turn) and a death trigger whose subject must have been attacking as it died. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "b3329240-c812-45ea-a7f8-4d79cd4ed515",
+      "name": "Hexmark Destroyer",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the fail-closed unsupportedCard that said except-six-or-more was implemented as cantBeBlocked): the authored override in coverage-pr07.ts uses the new minBlockers rule static, so it is blocked by none or by six or more creatures, a violation otherwise rejected and repaired by dropping all its blockers. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "b3329240-c812-45ea-a7f8-4d79cd4ed515",
+      "name": "Hexmark Destroyer",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, replaced together with the other registration); see the necron-dynasties-remaining.ts entry."
+    },
+    {
+      "oracleId": "c549b0fd-1e08-4873-952e-a14dc45a0fd2",
+      "name": "Champion of Lambholt",
+      "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the fail-closed unsupportedCard that said the can't-block static was hardcoded by card name, so copies lacked it and lost abilities still applied it): the authored override in coverage-pr07.ts uses the new cantBlockCreatures rule static, a static of the Champion itself read against its current power, and the name check in combat.ts is removed. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "0dfdf1a1-a3a9-490f-bd9d-dcba088c6785",
+      "name": "Teyo, Geometric Tactician",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the fail-closed unsupportedCard that said the −2 directional attack restriction was claimed without an implementation): the authored override in coverage-pr07.ts reads the Wall line through the interpreter and authors the +1 and a −2 that asks left or right and records an attack-direction limit in game state until the controller's next turn, replaced by a newer −2 of the same Teyo (another Teyo's limit applies beside it) and read at the attack restriction choke point beside Pramikon's static. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "0dfdf1a1-3a9a-490f-bd9d-dcba088c6785",
+      "name": "Teyo, Geometric Tactician",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (an orphan typo'd Oracle id that no card has); see the entry for the real id."
+    },
+    {
+      "oracleId": "1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3",
+      "name": "Triarch Stalker",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the fail-closed unsupportedCard that said menace for attackers of the chosen opponent was implemented as all creatures in combat): the authored override in coverage-pr07.ts chooses an opponent at the beginning of combat on its controller's turn, stores it on the Stalker, and grants menace through a layer 6 static to creatures attacking that player (the new attackingChosenPlayer selector). Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3",
+      "name": "Triarch Stalker",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, replaced together with the other registration); see the necron-dynasties-remaining.ts entry."
+    },
+    {
+      "oracleId": "acca2128-6ebb-48a5-a6a2-1bc5e4aa86ce",
+      "name": "Mob Rule",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The fail-closed registration is replaced by coverage-pr08.ts. Mob Rule uses timestamped temporary control with a frozen affected set for its untap and haste riders. Required normal-cast and real-viewer scenarios are declared in the verification manifest; historical audit rows remain as history."
+    },
+    {
+      "oracleId": "8b5cffd5-5db3-4151-9275-d91387554412",
+      "name": "Cut a Deal",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The fail-closed registration is replaced by coverage-pr08.ts. The resolving spell counts actual successful draws, including empty-library and replacement cases; historical audit rows remain as history."
+    },
+    {
+      "oracleId": "026ef98e-4f0a-4a6d-b74f-d17ac8b10e37",
+      "name": "Cytoplast Manipulator",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The fail-closed registration is replaced by coverage-pr08.ts. Existing Graft replacement and optional transfer are retained. Control lasts while the exact source object remains on the battlefield, including source departure and phasing; losing the target counter after resolution does not end it. Historical audit rows remain as history."
+    },
+    {
+      "oracleId": "1582e16d-4825-4cc5-b12c-449c45e4e449",
+      "name": "Humble Defector",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The fail-closed registration is replaced by coverage-pr08.ts. The activated ability has real your-turn timing, draws before transferring its exact source to a targeted opponent, and fizzles wholly if its sole target is illegal. Source departure and blink do not suppress the draw or transfer another incarnation. Historical audit rows remain as history."
+    },
+    {
+      "oracleId": "5bb32efd-9e58-4021-bbda-4ffccfa1d601",
+      "name": "Druid of Purification",
+      "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "Replaced by coverage-pr08.ts: every chooser excludes permanents controlled by the ability controller, including when a chooser owns the chosen permanent. Current Oracle says you do not control; the historical containment note reverses that rule. Choices are public, ordered and complete before one simultaneous destruction of each distinct chosen permanent. Historical audit rows remain as history."
+    },
+    {
+      "oracleId": "81c70ae7-3c18-4c9b-8505-e4db9e0e6518",
+      "name": "Wishclaw Talisman",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The containment is replaced by coverage-pr08.ts. The artifact enters with three wish counters, pays {1}, tap and one wish only on its controller’s turn, searches and shuffles before a nontargeting living-opponent choice, then permanently gives that exact source object away. Empty library and source departure do not stop the remaining applicable instructions. Historical audit rows remain as history."
+    },
+    {
+      "oracleId": "6dfb50d7-359b-4644-90e3-7ecdacee7c12",
+      "name": "Scheming Symmetry",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The containment is replaced by coverage-pr08.ts. Exactly two player targets privately search their own libraries in APNAP order; found cards are excluded from the seeded remainder shuffles, then returned on top without changing object identity. Empty libraries still shuffle. Historical audit rows remain as history."
+    },
+    {
+      "oracleId": "6dc7f837-158f-4ccf-86a5-a07a20891ec5",
+      "name": "Vindictive Lich",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The former choose-one containment is replaced by nonrepeatable one-to-three modes with distinct opponent targets, a genuine death trigger, and normal cast evidence. Historical audit rows remain as history; current verification is in the card manifest."
+    },
+    {
+      "oracleId": "e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe",
+      "name": "Olórin's Searing Light",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The former omitted-damage containment is replaced by greatest-power simultaneous exile and conditional simultaneous player damage using pre-exile power. Historical audit rows remain as history; current verification is in the card manifest."
+    },
+    {
+      "oracleId": "2143f413-7baa-4fd6-a7ca-32f52bfa553f",
+      "name": "Shadrix Silverquill",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The former modal containment is replaced by optional choose-two nonrepeatable modes and different player targets. Historical audit rows remain as history; current verification is in the card manifest."
+    },
+    {
+      "oracleId": "2143f413-7baa-4fd6-a7ca-32f52bfa553f",
+      "name": "Shadrix Silverquill",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The earlier duplicate unsupported registration is removed; coverage-pr08.ts authors the optional distinct-player modes. Historical audit rows remain as history; current verification is in the card manifest."
     }
   ]
 }

@@ -21,7 +21,6 @@ import type {
 } from '@mtg/shared';
 import {
   effectivePT,
-  gatherRuleStatics,
   isCreaturePermanent,
   manaSourcesFor,
   playersInApnapOrder,
@@ -29,6 +28,7 @@ import {
 import { computeCharacteristics } from '../effects/continuous';
 import { playerById } from '../state/objects';
 import type { EngineCardObject, EnginePlayerState, GameContext } from '../state/types';
+import { visibleLibraryTops } from './library-top';
 
 /** Full card view — for zones where oracle text is relevant (brief §7.4). */
 function fullCardView(obj: EngineCardObject, ctx?: GameContext): CardView {
@@ -172,6 +172,10 @@ function visibleEvent(e: GameEvent, viewer: PlayerId): GameEvent | null {
     const to = e.payload['to'];
     if (from === 'library' || to === 'library') return null;
   }
+  if (e.type === 'lookAtTop' && e.payload['player'] !== viewer && e.payload['revealed'] !== true) {
+    const { took: _privateName, ...publicPayload } = e.payload;
+    return { ...e, payload: publicPayload };
+  }
   if (e.type === 'searchFound') {
     const searcher = e.payload['player'];
     const destination = e.payload['to'];
@@ -269,15 +273,10 @@ export function buildPlayerView(ctx: GameContext, playerId: PlayerId): PlayerVie
     .filter((event): event is GameEvent => event !== null)
     .slice(-15)
     .map(formatEvent);
-  const revealedLibraryTops = s.players.flatMap((player) => {
-    const top = player.library[0];
-    const revealed = gatherRuleStatics(ctx).some(
-      (entry) => entry.controllerId === player.id && entry.static.kind === 'revealTopLibrary',
-    );
-    return top !== undefined && revealed
-      ? [{ player: player.id, card: fullCardView(top, ctx) }]
-      : [];
-  });
+  const revealedLibraryTops = visibleLibraryTops(ctx, playerId).map(({ player, card }) => ({
+    player,
+    card: fullCardView(card, ctx),
+  }));
 
   return {
     seat: playerId,

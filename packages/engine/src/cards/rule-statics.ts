@@ -12,10 +12,25 @@
 
 import type { Color } from '@mtg/shared';
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
+import type { Condition } from './condition';
 import type { Selector } from './selector';
 import type { Value } from './value';
 
 export type RuleStatic =
+  | { kind: 'cantBlockMatching'; filter: Selector }
+  | { kind: 'cantBeSacrificed' }
+  | { kind: 'cantAttackOwner' }
+  | { kind: 'opponentNonHandSpellCostIncrease'; amount: number }
+  | { kind: 'beginOnBattlefieldFromOpeningHand' }
+  | { kind: 'effectDiscardMayGoToLibraryTop' }
+  /** Redirect a matching graveyard move before any zone-change or dies event. */
+  | {
+      kind: 'graveyardToExile';
+      scope: 'all' | 'opponents';
+      basis: 'owner' | 'controller';
+      includeTokens: boolean;
+      creatureFromBattlefieldOnly?: true;
+    }
   /** "Spells you cast cost {1} less to cast" (Temur Battlecrier) / Eminence (The Ur-Dragon). */
   | {
       kind: 'costReduction';
@@ -78,8 +93,14 @@ export type RuleStatic =
       yourTurnOnly: boolean;
       duringCombatOnly?: boolean;
     }
+  /** Each player's own cast tally applies, including spells cast before the source entered. */
+  | { kind: 'spellCastLimit'; category: 'any' | 'noncreature'; limit: number }
+  | { kind: 'otherPermanentsEnterTapped'; filter: Selector }
+  | { kind: 'suppressObjectTriggers'; events: ('enters' | 'dies')[]; filter: Selector }
   /** "You may cast Dragon spells from the top of your library" (Korlessa, Scale Singer). */
   | { kind: 'castFromZone'; zone: 'libraryTop'; filter?: Selector }
+  /** Private permission to look, without revealing the library top to other players. */
+  | { kind: 'lookTopLibrary' }
   /** "You may play lands from the top of your library/your graveyard." */
   | {
       kind: 'playFromZone';
@@ -120,6 +141,11 @@ export type RuleStatic =
   | { kind: 'damageDoubledToOpponents'; sourceControllerOnly?: true }
   /** "Sources would deal damage to you or your permanents" (Gisela). */
   | { kind: 'damageHalvedToYou' }
+  /**
+   * "Prevent all combat damage that would be dealt to this creature" (Guard Gomazoa) — a CR 615
+   * prevention effect of the permanent itself, so it stops with the permanent's abilities.
+   */
+  | { kind: 'preventCombatDamageToSelf' }
   /** "If an effect would create one or more tokens under your control, it creates twice that many instead." */
   | { kind: 'tokenCountMultiplier'; multiplier: number }
   /** A CR 616 replacement for counters placed on a matching permanent. */
@@ -130,8 +156,70 @@ export type RuleStatic =
       multiplier: number;
       addition: number;
     }
-  /** "Creatures can't attack you unless their controller pays {N} per creature" (Ghostly Prison). */
-  | { kind: 'attackTax'; amount: number; phyrexianColor?: Color }
+  /**
+   * "Creatures can't attack you unless their controller pays {N} per creature" (Ghostly Prison):
+   * taxes attacks on this permanent's controller only. `includePlaneswalkers` also taxes attacks
+   * on planeswalkers they control ("you or planeswalkers you control", Norn's Annex).
+   */
+  | { kind: 'attackTax'; amount: number; phyrexianColor?: Color; includePlaneswalkers?: boolean }
+  /**
+   * "Creatures matching `filter` can't attack you or planeswalkers you control" (Combat
+   * Calligrapher, Eriette, Rite of the Raging Storm), or, with `cost`, "… unless their controller
+   * pays {X}" (Nils, Discipline Enforcer: X is the number of counters of all kinds on that
+   * creature). `filter` is read against the creature as it would attack, from this permanent's
+   * controller's point of view, and the restriction is about attacks on that controller only. A
+   * restriction always wins over an attack requirement (CR 508.1c), and a cost is paid per
+   * creature, never forced (CR 508.1d, 508.1g-h).
+   */
+  | {
+      kind: 'attackRestriction';
+      filter: Selector;
+      includePlaneswalkers: true;
+      cost?: { perCounterOnCreature: true };
+    }
+  /**
+   * "Each player may attack only the nearest opponent in the chosen direction and planeswalkers
+   * controlled by that opponent" (Pramikon, Sky Rampart): the direction is the source's chosen
+   * option, `left` or `right`, made as it entered. It applies to every player, the source's
+   * controller included, and several such statics intersect.
+   */
+  | { kind: 'attackOnlyNearestOpponent' }
+  /**
+   * "If a creature an opponent controls attacks, all creatures that opponent controls attack if
+   * able" (War's Toll): a requirement on the whole declaration of each opponent of the source's
+   * controller. Either nothing attacks or every creature that can attack without paying a cost
+   * does (CR 508.1d); declaring no attack at all stays legal.
+   */
+  | { kind: 'opponentsAttackWithAll' }
+  /**
+   * "This creature can't attack alone" / "can't block alone" (Toby's Beast token). The creature
+   * is this permanent itself. Attacking alone means being the only creature declared as an
+   * attacker; blocking alone means being the only creature its controller declares as a blocker
+   * (CR 506.5). Such a creature may be declared only together with another one.
+   */
+  | { kind: 'cantAttackAlone' }
+  | { kind: 'cantBlockAlone' }
+  /**
+   * "~ attacks an opponent with the most life among your opponents each combat if able, unless
+   * <condition>" (Galactus): a requirement of THIS creature, lost with its abilities. Attacking a
+   * player with the most life among its controller's opponents (any of them, on a tie) obeys it;
+   * a planeswalker never does. It is read as attackers are declared and does not apply while
+   * `unless` holds.
+   */
+  | { kind: 'attackRequirement'; target: 'opponentWithMostLife'; unless?: Condition }
+  /**
+   * "This creature can't be blocked except by N or more creatures" (Hexmark Destroyer). The
+   * attacker is this permanent itself. Either none block it or at least `minimum` do (CR 509.1b),
+   * as menace is the case of two.
+   */
+  | { kind: 'minBlockers'; minimum: number }
+  /**
+   * "Creatures with power less than this creature's power can't block creatures you control"
+   * (Champion of Lambholt): attackers matching `attackerFilter`, read from this permanent's
+   * controller's point of view, can't be blocked by a creature whose power is less than this
+   * permanent's CURRENT power. Lost with its abilities; copies have it.
+   */
+  | { kind: 'cantBlockCreatures'; attackerFilter: Selector; blockerPowerLessThanSource: true }
   /** Opposing spells that target this permanent cost life during announcement. */
   | { kind: 'targetLifeTax'; amount: number }
   | { kind: 'convoke' }

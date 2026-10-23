@@ -1,16 +1,12 @@
 /** Executable authored overrides for the Ur-Dragon fixture. */
 
-import { defineCard, unsupportedCard } from './index';
+import { defineCard } from './index';
 import { constant } from '../value';
 import { manaCost } from '../templates';
 import { allOf, anyOf, IS_COMMANDER, not, ofSubtype, ofType, SELF, YOURS } from '../selector';
 
 export function registerURDRAGONOverrides(): void {
-  unsupportedCard(
-    'b9bacb46-fd1d-459b-81c2-d7d08fe73848',
-    'Dragon Tempest',
-    'Dragon-dealt damage is implemented as damage from this enchantment.',
-  );
+  // Dragon Tempest: restored in coverage PR06 (no override remains).
 
   const iymrithDef = {
     staticEffects: [
@@ -121,12 +117,7 @@ export function registerURDRAGONOverrides(): void {
     lozhanDef,
   );
 
-  // Catalog audit urdragon-batch-2: intervening-if reads Firkraag, not the damaging creature.
-  unsupportedCard(
-    '81dad7c5-5950-4c45-adb0-cf1a15a74250',
-    'Firkraag, Cunning Instigator',
-    'The intervening-if checks whether Firkraag had to attack, not the creature that dealt damage.',
-  );
+  // Firkraag, Cunning Instigator: restored in coverage PR07 (see coverage-pr07.ts).
   const thrakkusDef = {
     triggers: [
       {

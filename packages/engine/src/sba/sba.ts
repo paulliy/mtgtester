@@ -8,6 +8,7 @@
  */
 
 import type { LossReason, ObjectId, PlayerId } from '@mtg/shared';
+import { playerLifeLocked } from '../state/phasing';
 import { queueBecomesTargetedTriggers, queueWardTriggers } from '../actions/apply';
 import {
   abilityForModes,
@@ -23,18 +24,30 @@ import { computeCharacteristics } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
 import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
+import { expandPerPlayerTargets } from '../targets/per-player';
 import { breakYieldsForStop } from '../turn/stops';
 import {
   consumeRegenerationShield,
+  controlledBy,
+  enchantAllows,
   moveObject,
   movePermanentsToGraveyard,
+  refreshControlEffects,
+  retainAttackDefender,
   returnExiledUntilLeaves,
 } from '../state/objects';
-import { isCreaturePermanent, playersInApnapOrder, sourceColorsOf } from '../state/queries';
+import {
+  getDefByOracleId,
+  hasProtectionFrom,
+  isCreaturePermanent,
+  playersInApnapOrder,
+  sourceColorsOf,
+} from '../state/queries';
 import type {
   EngineCardObject,
   EnginePermanent,
   EnginePlayerState,
+  EffectExpiry,
   EngineStackObject,
   GameContext,
   PendingTrigger,
@@ -46,6 +59,58 @@ function markLoss(ctx: GameContext, player: EnginePlayerState, reason: LossReaso
   player.hasLost = true;
   player.lossReason = reason;
   debug(ctx, 'sba', `${player.id} loses: ${reason}`);
+}
+
+/**
+ * CR 800.4m: when `departedId` leaves, a continuous effect lasting until their next turn, or until
+ * a point in it, lasts until that turn would have begun: neither ending now nor lasting forever.
+ * Their turn would begin as the turn of the player seated before them ends, so each such expiry
+ * (goad included, CR 701.15a) moves to the end of that player's next turn. An expiry already
+ * waiting on the departed player's own seat moves to the seat before theirs, unless this is that
+ * seat's normal turn: then the earlier player's turn would begin as this turn ends, and the
+ * expiry stays on it for the aborted turn's end (`expireDepartedPlayerEffects`).
+ */
+function outlastDepartedPlayer(s: GameContext['state'], departedId: PlayerId): void {
+  const seat = s.turnOrder.indexOf(departedId);
+  if (seat < 0) return;
+  let afterTurnOf: PlayerId | undefined;
+  for (let step = 1; step < s.turnOrder.length; step++) {
+    const id = s.turnOrder[(seat - step + s.turnOrder.length) % s.turnOrder.length] as PlayerId;
+    if (!s.players.find((p) => p.id === id)?.hasLost) {
+      afterTurnOf = id;
+      break;
+    }
+  }
+  if (afterTurnOf === undefined) return;
+  const departed = { afterTurnOf, fromTurn: s.turnNumber };
+  const keepsBoundary = departedId === s.currentTurnPlayer && s.normalTurnResumeAfter === undefined;
+  const remap = <T extends { expires: EffectExpiry }>(entries: T[] | undefined): void => {
+    for (const entry of entries ?? []) {
+      const expires = entry.expires;
+      if (
+        (expires.kind === 'untilNextTurn' || expires.kind === 'endOfNextTurn') &&
+        expires.playerId === departedId
+      )
+        entry.expires = { kind: 'departedNextTurn', ...departed };
+      else if (
+        expires.kind === 'departedNextTurn' &&
+        expires.afterTurnOf === departedId &&
+        !keepsBoundary
+      )
+        entry.expires = { ...expires, afterTurnOf };
+    }
+  };
+  remap(s.attackRequirements);
+  remap(s.attackDirections);
+  remap(s.blockRestrictions);
+  for (const perm of [...s.battlefield, ...(s.phasedOut ?? []).map((record) => record.permanent)]) {
+    for (const goad of perm.goadedBy ?? []) {
+      if (goad.permanent === true) continue;
+      if (goad.departed === undefined && goad.goaderId === departedId) goad.departed = departed;
+      else if (goad.departed?.afterTurnOf === departedId && !keepsBoundary)
+        goad.departed = { ...goad.departed, afterTurnOf };
+    }
+  }
 }
 
 /**
@@ -61,34 +126,40 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
     emit(ctx, 'playerEliminated', { player: player.id, reason: player.lossReason }, player.id);
 
     // Objects owned by the player leave the battlefield and the stack (CR 800.4a).
-    const leaving = s.battlefield.filter((p) => p.ownerId === player.id);
+    const leaving = [
+      ...s.battlefield,
+      ...(s.phasedOut ?? []).map((record) => record.permanent),
+    ].filter((p) => p.ownerId === player.id);
+    s.phasedOut = (s.phasedOut ?? []).filter((record) => record.permanent.ownerId !== player.id);
     s.battlefield = s.battlefield.filter((p) => p.ownerId !== player.id);
     for (const perm of leaving) {
       debug(ctx, 'zoneChange', `${perm.name} leaves the game with its owner ${player.id}`);
     }
-    // End effects giving a departed player control. A permanent put onto the
-    // battlefield under that player's control has no such effect to end (CR 800.4a).
-    for (const perm of [...s.battlefield]) {
-      if (perm.controllerId !== player.id) continue;
-      perm.controlChanges = (perm.controlChanges ?? []).filter(
-        (id) => !s.players.find((p) => p.id === id)?.hasLost,
-      );
-      const controller = perm.controlChanges.at(-1) ?? perm.defaultControllerId ?? perm.ownerId;
+    // Control-change effects end here too, with the shared refresh: entries naming a departed
+    // player expire (even underneath newer records), and source-bound entries expire because the
+    // sources the departing player owned just left the battlefield (all CR 800.4a durations).
+    for (const perm of [
+      ...s.battlefield,
+      ...(s.phasedOut ?? []).map((record) => record.permanent),
+    ]) {
+      refreshControlEffects(ctx, perm);
+      const controller = controlledBy(perm);
       if (s.players.find((p) => p.id === controller)?.hasLost) {
+        // Its initial controller is gone as well: it leaves the game (CR 800.4a) — no die
+        // triggers, no reversion to a player no longer playing.
         leaving.push(perm);
+        s.phasedOut = (s.phasedOut ?? []).filter((record) => record.permanent !== perm);
         yield* moveObject(ctx, perm, { zone: 'exile' });
-        continue;
       }
-      perm.controllerId = controller;
-      perm.timestamp = s.nextTimestamp++;
-      perm.summoningSick = true;
-      perm.attacking = null;
-      perm.blocking = null;
-      perm.statuses = perm.statuses.filter((st) => st !== 'attacking' && st !== 'blocking');
     }
     // Leaving the game ends linked-exile durations too, although it queues no dies triggers.
     for (const perm of leaving) yield* returnExiledUntilLeaves(ctx, perm.cardId);
     s.delayedTriggers = s.delayedTriggers.filter((t) => t.controllerId !== player.id);
+    // Effects they made that last until their next turn, or a point in it, last until that turn
+    // would have begun (CR 800.4m); every other duration runs as written.
+    outlastDepartedPlayer(s, player.id);
+    if (s.combatChoices !== undefined)
+      s.combatChoices = s.combatChoices.filter((entry) => entry.casterId !== player.id);
     s.stack = s.stack.filter(
       (so) => so.controllerId !== player.id && so.card?.ownerId !== player.id,
     );
@@ -107,7 +178,12 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
     // An attacker whose blocker left stays blocked (CR 509.1h); the departed blocker just no
     // longer exists to receive damage, so `blockedByOrdered` keeps its id.
     for (const perm of s.battlefield) {
-      if (perm.attacking === player.id) perm.attacking = null;
+      if (perm.attacking === player.id) {
+        retainAttackDefender(perm);
+        perm.attacking = null;
+        perm.attackingPlaneswalker = null;
+        perm.attackedPlaneswalkerRemoved = false;
+      }
       if (perm.blocking !== null && leavingIds.has(perm.blocking)) perm.blocking = null;
     }
 
@@ -154,6 +230,23 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
 function* sbaPass(ctx: GameContext): GameGen<boolean> {
   const s = ctx.state;
   let acted = false;
+
+  // CR 704.5e: copies of cards can be cast during the creating effect, then cease if
+  // they remain in exile or have left the stack. This is not a zone change.
+  const removeCopies = (cards: EngineCardObject[]): EngineCardObject[] =>
+    cards.filter((card) => {
+      if (card.isCardCopy !== true) return true;
+      emit(ctx, 'cardCopyCeased', { name: card.name, cardId: card.cardId });
+      acted = true;
+      return false;
+    });
+  s.exile = removeCopies(s.exile);
+  for (const player of s.players) {
+    player.hand = removeCopies(player.hand);
+    player.library = removeCopies(player.library);
+    player.graveyard = removeCopies(player.graveyard);
+    player.commandZone = removeCopies(player.commandZone);
+  }
 
   // --- Player checks ---
   for (const player of s.players) {
@@ -229,12 +322,61 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
     if (!s.battlefield.includes(perm)) continue;
     const chars = computeCharacteristics(ctx, perm);
 
-    // An Aura must remain attached to a permanent allowed by its enchant restriction (CR 704.5m).
+    // A bestowed Aura that is unattached or attached to an illegal object, by its enchant
+    // restriction or protection, becomes unattached and ceases to be bestowed, staying on the
+    // battlefield as the creature it is printed as (CR 702.103f, an exception to 704.5m).
+    if (perm.bestowed === true) {
+      const host =
+        perm.attachedTo === null ? undefined : s.battlefield.find((p) => p.id === perm.attachedTo);
+      if (host === undefined || enchantAllows(ctx, perm, host) !== true) {
+        debug(ctx, 'sba', `bestowed ${perm.name} unattached — it is a creature again`);
+        emit(ctx, 'bestowEnded', { name: perm.name });
+        perm.attachedTo = null;
+        delete perm.bestowed;
+        return true;
+      }
+    }
+
+    // An Aura must remain attached to a permanent allowed by its enchant restriction for its
+    // current controller, without protection from it (CR 704.5m, 303.4d, 702.16c).
     if (chars.subtypes.includes('Aura')) {
       const host =
         perm.attachedTo === null ? undefined : s.battlefield.find((p) => p.id === perm.attachedTo);
-      if (host === undefined) {
-        debug(ctx, 'sba', `aura ${perm.name} attached to nothing — to graveyard`);
+      // An Aura enchanting a player (Curse of Bounty) stays while that player is still one its
+      // enchant ability allows ("enchant opponent" of its current controller), CR 303.4d.
+      const playerHostLegal =
+        perm.attachedTo !== null &&
+        s.players.some((p) => p.id === perm.attachedTo) &&
+        auraPlayerHostIsLegal(ctx, perm, perm.attachedTo);
+      // Animate Dead before its enters trigger resolves: "enchant creature card in a graveyard"
+      // is satisfied by that card while it stays there.
+      const graveyardHostLegal =
+        perm.attachedTo !== null &&
+        perm.reanimatedHostId === undefined &&
+        auraGraveyardHostIsLegal(ctx, perm, perm.attachedTo);
+      // After it: only the creature put onto the battlefield with it, while it is a creature
+      // without protection from the Aura (CR 702.16c).
+      const reanimatedHostIllegal =
+        perm.reanimatedHostId !== undefined &&
+        (host === undefined ||
+          host.id !== perm.reanimatedHostId ||
+          !isCreaturePermanent(ctx, host) ||
+          hasProtectionFrom(ctx, host, chars.colors));
+      // Any other permanent host must satisfy the enchant restriction.
+      const hostIllegal =
+        host !== undefined &&
+        perm.reanimatedHostId === undefined &&
+        enchantAllows(ctx, perm, host) === false;
+      if (
+        (host === undefined && !playerHostLegal && !graveyardHostLegal) ||
+        reanimatedHostIllegal ||
+        hostIllegal
+      ) {
+        debug(
+          ctx,
+          'sba',
+          `aura ${perm.name} attached to nothing or an illegal host — to graveyard`,
+        );
         emit(ctx, 'sbaAuraDies', { name: perm.name });
         yield* moveObject(ctx, perm, { zone: 'graveyard' });
         return true;
@@ -389,6 +531,11 @@ function* placePendingTriggers(ctx: GameContext): GameGen<boolean> {
 function describeTargetForLog(ctx: GameContext, id: ObjectId): string {
   const perm = ctx.state.battlefield.find((p) => p.id === id);
   if (perm !== undefined) return perm.name;
+  // A card target in a graveyard or exile (Victimize, Forum Filibuster) is named, not its id.
+  const card = [...ctx.state.players.flatMap((p) => p.graveyard), ...ctx.state.exile].find(
+    (candidate) => candidate.id === id,
+  );
+  if (card !== undefined) return card.name;
   return ctx.state.players.find((p) => p.id === id)?.id ?? id;
 }
 
@@ -412,20 +559,18 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
   let modeLabel: string | undefined;
   const modes = trigger.ability.modes;
   if (modes !== undefined) {
-    const selections = legalAbilityModeSelections(
-      trigger.ability,
-      (spec) =>
-        computeTargetOptions(
-          ctx,
-          spec,
-          trigger.controllerId,
-          sourceColors,
-          trigger.scope?.eventPlayerId,
-          undefined,
-          trigger.sourceCardId,
-          true,
-          trigger.sourceFacts,
-        ).length,
+    const selections = legalAbilityModeSelections(trigger.ability, (spec) =>
+      computeTargetOptions(
+        ctx,
+        spec,
+        trigger.controllerId,
+        sourceColors,
+        trigger.scope?.eventPlayerId,
+        undefined,
+        trigger.sourceCardId,
+        true,
+        trigger.sourceFacts,
+      ),
     );
     if (selections.length === 0) {
       emit(
@@ -458,6 +603,8 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
     activeSlots = abilityModeTargetSlots(modes, selection);
     modeLabel = abilityModeLabel(modes, selection);
   }
+  // "For each player, up to one target …" (Nils): one optional slot per player in the game now.
+  ability = expandPerPlayerTargets(ctx, ability, trigger.controllerId);
   const specs = ability.targets;
   const chosen: ObjectId[] = [];
   const countTargets: Record<number, ObjectId[]> = {};
@@ -495,10 +642,51 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
       );
       return;
     }
-    ordinarySlots.push({ slot: i, options });
+    if (spec.random === true) {
+      chosen[i] = options[ctx.rng.nextInt(options.length)]!;
+      emit(
+        ctx,
+        'randomTarget',
+        { source: trigger.sourceName, target: chosen[i] },
+        trigger.controllerId,
+      );
+    } else ordinarySlots.push({ slot: i, options });
   }
 
-  if (ordinarySlots.length > 0) {
+  if (ordinarySlots.some(({ slot }) => specs[slot]?.differentPlayerTargetSlots !== undefined)) {
+    for (const { slot } of ordinarySlots) {
+      const options = computeTargetOptions(
+        ctx,
+        specs[slot]!,
+        trigger.controllerId,
+        sourceColors,
+        trigger.scope?.eventPlayerId,
+        chosen,
+        trigger.sourceCardId,
+        true,
+        trigger.sourceFacts,
+      );
+      if (options.length === 0)
+        throw new Error('engine bug: modal distinct-player targets have no assignment');
+      const targetSlots = [{ slot, options }];
+      const outcome = yield {
+        decisionType: 'chooseTargets',
+        player: trigger.controllerId,
+        prompt: `Choose target player for ${trigger.sourceName}: ${modes?.options.find((option) => option.targetSlots?.includes(slot))?.description ?? 'ability'}`,
+        options: [
+          {
+            type: 'chooseTargets',
+            description: `Target player for ${trigger.sourceName}`,
+            targets: targetSlots,
+            interaction: { kind: 'choice', targetSlots },
+          },
+        ],
+      };
+      const picked = outcome.targets.get(slot) ?? options[0]!;
+      if (!options.includes(picked)) throw new Error('engine bug: invalid distinct-player target');
+      chosen[slot] = picked;
+    }
+  } else if (ordinarySlots.length > 0) {
     // `trigger.sourceCardId` is the STABLE card identity (`EnginePermanent.cardId`), which
     // survives zone changes — it is NOT the battlefield object id the web UI keys permanents by
     // (`EnginePermanent.id`, freshly minted every zone change, incl. entering the battlefield;
@@ -589,6 +777,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
         player: trigger.controllerId,
         prompt:
           `${trigger.sourceName}: choose ${picked.length > 0 ? 'another' : 'a'} target ` +
+          (spec.controllerPlayer === undefined ? '' : `controlled by ${spec.controllerPlayer} `) +
           // "Any number of" has no upper bound to show.
           `(${picked.length}${Number.isFinite(effectiveMax) ? `/${effectiveMax}` : ''} chosen)` +
           `${canStop ? ', or stop choosing' : ''}.`,
@@ -711,4 +900,42 @@ export function* priorityCheckpoint(ctx: GameContext): GameGen<boolean> {
     if (sbaActed || placed) anything = true;
     if (!placed && !sbaActed) return anything;
   }
+}
+
+/** Whether a player is still a legal host for `aura`'s enchant ability (CR 303.4d, 704.5m). */
+function auraPlayerHostIsLegal(ctx: GameContext, aura: EnginePermanent, playerId: string): boolean {
+  // Protection forbids enchantment; hexproof only forbids targeting, not attachment.
+  if (playerLifeLocked(ctx, playerId)) return false;
+  const enchant = getDefByOracleId(ctx, aura.oracleId, aura.name).spellAbility?.targets[0];
+  if (enchant === undefined || enchant.kind !== 'player') return false;
+  return computeTargetOptions(
+    ctx,
+    enchant,
+    aura.controllerId,
+    computeCharacteristics(ctx, aura).colors,
+    undefined,
+    undefined,
+    aura.cardId,
+    false,
+  ).includes(playerId);
+}
+
+/** Whether a graveyard card is still a legal host for `aura`'s enchant ability (Animate Dead). */
+function auraGraveyardHostIsLegal(
+  ctx: GameContext,
+  aura: EnginePermanent,
+  cardId: string,
+): boolean {
+  const enchant = getDefByOracleId(ctx, aura.oracleId, aura.name).spellAbility?.targets[0];
+  if (enchant === undefined || enchant.kind !== 'cardInGraveyard') return false;
+  return computeTargetOptions(
+    ctx,
+    enchant,
+    aura.controllerId,
+    computeCharacteristics(ctx, aura).colors,
+    undefined,
+    undefined,
+    aura.cardId,
+    false,
+  ).includes(cardId);
 }

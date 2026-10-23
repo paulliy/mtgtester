@@ -16,6 +16,8 @@ const abilityFields = {
   functionsInGraveyard: 'unsupported',
 } satisfies Record<keyof Ability, FieldRole>;
 const targetFields = {
+  random: 'unsupported',
+  differentPlayerTargetSlots: 'unsupported',
   kind: 'lower',
   controller: 'lower',
   filter: 'unsupported',
@@ -23,6 +25,12 @@ const targetFields = {
   totalManaValueAtMost: 'unsupported',
   graveyardOwnerSlot: 'unsupported',
   graveyardOwnerScope: 'unsupported',
+  tapState: 'unsupported',
+  perPlayer: 'unsupported',
+  controllerPlayer: 'unsupported',
+  slotGroup: 'unsupported',
+  spellTargetsPermanentYouControl: 'unsupported',
+  spellHasSingleTarget: 'unsupported',
 } satisfies Record<keyof TargetSpec, FieldRole>;
 const returnFields = { op: 'lower', target: 'lower' } satisfies Record<
   keyof Extract<Effect, { op: 'returnToHand' }>,
@@ -30,6 +38,10 @@ const returnFields = { op: 'lower', target: 'lower' } satisfies Record<
 >;
 const destroyFields = { op: 'lower', target: 'lower', cantRegenerate: 'copy' } satisfies Record<
   keyof Extract<Effect, { op: 'destroy' }>,
+  FieldRole
+>;
+const exileSearchFields = { op: 'lower', target: 'lower' } satisfies Record<
+  keyof Extract<Effect, { op: 'exileCreatureAndControllerSearchBasicLand' }>,
   FieldRole
 >;
 function withinFields(value: object, fields: Record<string, FieldRole>): boolean {
@@ -52,6 +64,24 @@ export function deriveOverloadAbility(ability: Ability | null): Ability | null {
   const target = ability.targets[0]!;
   const effect = ability.effects[0]!;
   if (!withinFields(target, targetFields)) return null;
+  if (
+    effect.op === 'exileCreatureAndControllerSearchBasicLand' &&
+    withinFields(effect, exileSearchFields) &&
+    effect.target === 0 &&
+    target.kind === 'creature' &&
+    target.controller === 'opponent'
+  ) {
+    return {
+      ...ability,
+      targets: [],
+      effects: [
+        {
+          op: 'exileEachCreatureAndControllersSearchBasicLands',
+          selector: allOf(ofType('Creature'), OPPONENTS),
+        },
+      ],
+    };
+  }
   if (
     effect.op === 'returnToHand' &&
     withinFields(effect, returnFields) &&

@@ -2,6 +2,8 @@ name: CI
 
 on:
   pull_request:
+    # ready_for_review starts the full run when a draft is marked ready.
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
 
@@ -18,11 +20,16 @@ jobs:
   # no test, script, or build reads. Files that code does read (docs/rules, docs/plans, docs/reviews,
   # docs/modelled-cards.md, README.md, data/) are deliberately absent. The format job always runs,
   # because prettier also checks Markdown. Pushes to main always run everything.
+  #
+  # Actions minutes: the two slow jobs (full test suite, about 18 minutes, and Playwright, about 29)
+  # also skip while a pull request is a draft (`full` below). They run when it is marked ready for
+  # review, on every push after that, and on main. A skipped job still satisfies a required check.
   changes:
     name: Changes / Classify
     runs-on: ubuntu-latest
     outputs:
       code: ${{ steps.classify.outputs.code }}
+      full: ${{ steps.classify.outputs.full }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,12 +39,20 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          DRAFT: ${{ github.event.pull_request.draft }}
         shell: bash
         run: |
           set -euo pipefail
           if [[ "$EVENT_NAME" != "pull_request" ]]; then
             echo "code=true" >> "$GITHUB_OUTPUT"
+            echo "full=true" >> "$GITHUB_OUTPUT"
             exit 0
+          fi
+          if [[ "$DRAFT" == "true" ]]; then
+            echo "Draft pull request: skipping the full test suite and Playwright."
+            echo "full=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "full=true" >> "$GITHUB_OUTPUT"
           fi
           # On any diff failure, fail open: run everything.
           # Three-dot diff: files changed on the PR branch since its merge base, not base-branch drift.
@@ -104,7 +119,7 @@ jobs:
   engine-tests:
     name: Engine / Full test suite
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.code == 'true' && needs.changes.outputs.full == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -170,8 +185,14 @@ jobs:
             echo "::warning::Push base unavailable; comparing promotions with HEAD's first parent."
           fi
           bun run primitive-promotions --base "$PROMOTION_BASE" --primitive-evidence test-results/primitive-contracts
+      # The upload tolerates artifact-quota errors, which also mutes its if-no-files-found check,
+      # so the evidence is required here instead.
+      - name: Require primitive contract evidence
+        if: always()
+        run: test -n "$(find test-results/primitive-contracts test-results/primitive-impact.json -type f -print -quit 2>/dev/null)"
       - uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
         with:
           name: primitive-contract-evidence
           path: |
@@ -182,7 +203,7 @@ jobs:
   viewer-evidence:
     name: Viewer / Card Test Lab evidence
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.code == 'true' && needs.changes.outputs.full == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -200,9 +221,16 @@ jobs:
       # Real frontend + real DB-backed server on the committed Oracle fixture: Play my deck setup
       # and a seeded player game against built-in bots.
       - run: bun run test:e2e:setup
-      # Traces are the retained viewer evidence (trace: 'on', preserveOutput: 'always').
-      - uses: actions/upload-artifact@v4
+      # The specs record a trace for every test (trace: 'on', preserveOutput: 'always'); this checks
+      # tracing is still on. Actions storage is limited, so CI uploads the traces only when a step
+      # fails; a passing run's viewer evidence comes from a local run, which keeps its traces. The
+      # upload tolerates artifact-quota errors, which also mutes its if-no-files-found check.
+      - name: Require viewer traces
         if: always()
+        run: test -n "$(find test-results -name trace.zip -print -quit 2>/dev/null)"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        continue-on-error: true
         with:
           name: card-test-lab-traces
           path: test-results/

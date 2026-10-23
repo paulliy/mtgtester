@@ -86,7 +86,12 @@ interface SocketData {
 }
 
 /** Local UI only. Validate Host too so DNS rebinding cannot turn a foreign origin into local access. */
-export function isAllowedLocalRequest(request: Request, port: number): boolean {
+export function isAllowedLocalRequest(
+  request: Request,
+  port: number,
+  cardTestLab = false,
+  configuredLabWebPort?: string,
+): boolean {
   const local = (url: URL): boolean => ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
   const target = new URL(request.url);
   if (!local(target)) return false;
@@ -94,9 +99,18 @@ export function isAllowedLocalRequest(request: Request, port: number): boolean {
   if (origin === null) return true; // local CLI / same-origin GET
   try {
     const source = new URL(origin);
-    return (
-      source.protocol === 'http:' && local(source) && [String(port), '5173'].includes(source.port)
-    );
+    const labWebPort = Number(configuredLabWebPort);
+    const allowedPorts = [String(port), '5173'];
+    if (
+      cardTestLab &&
+      configuredLabWebPort !== undefined &&
+      Number.isInteger(labWebPort) &&
+      labWebPort >= 1 &&
+      labWebPort <= 65535
+    ) {
+      allowedPorts.push(String(labWebPort));
+    }
+    return source.protocol === 'http:' && local(source) && allowedPorts.includes(source.port);
   } catch {
     return false;
   }
@@ -162,7 +176,14 @@ export class GameServer {
       hostname: '127.0.0.1',
       fetch: async (request, srv) => {
         const url = new URL(request.url);
-        if (!isAllowedLocalRequest(request, port))
+        if (
+          !isAllowedLocalRequest(
+            request,
+            port,
+            this.deps.cardTestLab === true,
+            process.env['CARD_TEST_LAB_WEB_PORT'],
+          )
+        )
           return new Response('Forbidden origin or host', { status: 403 });
         if (url.pathname === '/ws') {
           const upgraded = srv.upgrade(request, { data: { clientId: crypto.randomUUID() } });

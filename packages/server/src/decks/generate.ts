@@ -48,6 +48,40 @@ function shuffled<T>(items: readonly T[], rng: Prng): T[] {
   return out;
 }
 
+interface DeckPlan {
+  commander: PoolCard;
+  lands: OracleCard[];
+  spellPool: PoolCard[];
+  needed: number;
+}
+
+/** The basics and the nonland candidates a deck for `commander` would draw from. */
+function planDeck(
+  pool: SupportedPool,
+  basics: Map<Color, PoolCard>,
+  commander: PoolCard,
+  landCount: number,
+): DeckPlan {
+  const identity = commander.identity;
+  // Mana base: basics only. They are singleton-exempt (CR 903.5b), so they can fill any
+  // amount, and a colorless commander still needs lands — fall back to Wastes-less mono-white
+  // is not possible, so a colorless identity uses no basics and leans on the nonland pool.
+  const colors = [...identity] as Color[];
+  const lands: OracleCard[] = [];
+  if (colors.length > 0) {
+    for (let i = 0; i < landCount; i++) {
+      const color = colors[i % colors.length] as Color;
+      const basic = basics.get(color);
+      if (basic !== undefined) lands.push(basic.card);
+    }
+  }
+  // The rest: distinct nonland cards inside the identity, excluding the commander itself.
+  const spellPool = poolForIdentity(pool, identity).filter(
+    (c) => !c.isLand && c.card.oracleId !== commander.card.oracleId,
+  );
+  return { commander, lands, spellPool, needed: DECK_SIZE - 1 - lands.length };
+}
+
 /**
  * Build one legal Commander deck.
  *
@@ -66,43 +100,30 @@ export function generateCommanderDeck(
     throw new Error('the supported pool contains no legendary creature to use as a commander');
   }
 
-  const commander =
+  const basics = basicLandsByColor(pool);
+  const order =
     options.commanderName === undefined
-      ? (shuffled(candidates, rng)[0] as PoolCard)
-      : candidates.find((c) => c.card.name === options.commanderName);
-  if (commander === undefined) {
+      ? shuffled(candidates, rng)
+      : candidates.filter((c) => c.card.name === options.commanderName);
+  if (order.length === 0) {
     throw new Error(
       `"${options.commanderName}" is not a modeled legendary creature in the supported pool`,
     );
   }
-
-  const identity = commander.identity;
-
-  // Mana base: basics only. They are singleton-exempt (CR 903.5b), so they can fill any
-  // amount, and a colorless commander still needs lands — fall back to Wastes-less mono-white
-  // is not possible, so a colorless identity uses no basics and leans on the nonland pool.
-  const basics = basicLandsByColor(pool);
-  const colors = [...identity] as Color[];
-  const lands: OracleCard[] = [];
-  if (colors.length > 0) {
-    for (let i = 0; i < landCount; i++) {
-      const color = colors[i % colors.length] as Color;
-      const basic = basics.get(color);
-      if (basic !== undefined) lands.push(basic.card);
-    }
-  }
-
-  // The rest: distinct nonland cards inside the identity, excluding the commander itself.
-  const spellPool = poolForIdentity(pool, identity).filter(
-    (c) => !c.isLand && c.card.oracleId !== commander.card.oracleId,
-  );
-  const needed = DECK_SIZE - 1 - lands.length;
-  if (spellPool.length < needed) {
+  // A drawn commander whose identity cannot fill the 99 is passed over for the next one in the
+  // seeded order (a newly modeled commander can have a thin identity pool). A requested
+  // commander has no fallback, and when no commander can fill a deck the first one's shortfall
+  // is the error.
+  const plans = order.map((commander) => planDeck(pool, basics, commander, landCount));
+  const plan = plans.find((candidate) => candidate.spellPool.length >= candidate.needed);
+  if (plan === undefined) {
+    const first = plans[0] as DeckPlan;
     throw new Error(
-      `pool for identity {${identity || 'C'}} has ${spellPool.length} nonland cards, ` +
-        `need ${needed} — lower landCount or widen the pool`,
+      `pool for identity {${first.commander.identity || 'C'}} has ${first.spellPool.length} nonland cards, ` +
+        `need ${first.needed} — lower landCount or widen the pool`,
     );
   }
+  const { commander, lands, spellPool, needed } = plan;
 
   const spells = shuffled(spellPool, rng)
     .slice(0, needed)

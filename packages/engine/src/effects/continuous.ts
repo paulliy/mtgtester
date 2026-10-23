@@ -32,7 +32,10 @@
  */
 
 import type { Color } from '@mtg/shared';
+import { selectedPermanentDefinition } from '../cards/spell-faces';
+import { counterCount, KEYWORD_COUNTERS } from '../state/counters';
 import { evaluateCondition } from '../cards/condition';
+import type { Condition } from '../cards/condition';
 import type { ManaAbilitySpec } from '../cards/ability';
 import type { Characteristics, ContinuousOp, StaticEffect } from '../cards/continuous-types';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
@@ -69,6 +72,12 @@ interface LayerEffect {
   applies: Applicability;
   op: ContinuousOp;
   timestamp: number;
+  /**
+   * "As long as you control four or more creature tokens" (Toby): a count of permanents, judged on
+   * the characteristics the layers have produced so far (CR 613.8a: it can change whether this
+   * effect exists), so it cannot be read before the pass the way other static conditions are.
+   */
+  condition?: Extract<Condition, { kind: 'countPermanents' }>;
 }
 
 /** Mutable per-permanent state threaded through the layers. */
@@ -95,9 +104,27 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
   const out: LayerEffect[] = [];
 
   for (const source of ctx.state.battlefield) {
+    for (const [counter, keyword] of Object.entries(KEYWORD_COUNTERS)) {
+      if (counterCount(source.counters, counter) <= 0) continue;
+      out.push({
+        applies: { kind: 'fixed', cardIds: [source.cardId], objectIds: [source.id] },
+        op: { layer: 6, addKeyword: keyword },
+        timestamp: source.counterTimestamps?.[counter] ?? source.timestamp,
+      });
+    }
     if (source.faceDown) continue;
-    const def = ctx.defs.get(source.oracleId);
-    if (def === undefined) continue;
+    const printed = ctx.defs.get(source.oracleId);
+    if (printed === undefined) continue;
+    const def = selectedPermanentDefinition(printed, source.face);
+    // A bestowed Aura "becomes an Aura enchantment" (CR 702.103b): a type-changing effect that
+    // replaces its card types and the creature types that went with them (CR 205.1a), in its
+    // own timestamp order.
+    if (source.bestowed === true)
+      out.push({
+        applies: { kind: 'fixed', cardIds: [source.cardId], objectIds: [source.id] },
+        op: { layer: 4, setTypes: ['Enchantment'], setSubtypes: ['Aura'] },
+        timestamp: source.timestamp,
+      });
     const printedStatics =
       source.transformed && def.backFace !== undefined
         ? def.backFace.staticEffects
@@ -112,8 +139,10 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
           `engine bug: ${def.name} has a static effect whose selector reads power or keywords — event-only selectors cannot be a continuous effect's affected set`,
         );
       }
+      const boardCondition = s.condition?.kind === 'countPermanents' ? s.condition : undefined;
       if (
         s.condition !== undefined &&
+        boardCondition === undefined &&
         !evaluateCondition(ctx, s.condition, {
           cardId: source.cardId,
           controllerId: source.controllerId,
@@ -137,6 +166,7 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
           },
           op: { layer: 6, addProtection: [source.chosenOption as Color] },
           timestamp: source.timestamp,
+          ...(boardCondition !== undefined ? { condition: boardCondition } : {}),
         });
         continue;
       }
@@ -154,6 +184,7 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
         },
         op: s.op,
         timestamp: source.timestamp,
+        ...(boardCondition !== undefined ? { condition: boardCondition } : {}),
       });
     }
     if (!source.transformed && def.artifactGraveyardAbilities === true) {
@@ -236,11 +267,20 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
  * Moon is a Mountain with nothing but "{T}: Add {R}". This is the hinge of CR 613.8: it lets
  * one layer-4 effect delete another's, so the deleted one is *dependent* and must wait.
  */
-function effectExists(work: WorkMap, effect: LayerEffect): boolean {
+function effectExists(ctx: GameContext, work: WorkMap, effect: LayerEffect): boolean {
   // CR 611.2c: a resolved spell's effect is independent of its source, which may be long gone.
   if (effect.applies.kind === 'fixed') return true;
   const source = work.get(effect.applies.source.cardId);
-  return source !== undefined && !source.chars.loseAbilities;
+  if (source === undefined || source.chars.loseAbilities) return false;
+  if (effect.condition === undefined) return true;
+  const count = scopeOf(ctx, work, effect)?.countPermanents?.(
+    effect.condition.selector,
+    effect.condition.scope,
+  );
+  return (
+    count !== undefined &&
+    (effect.condition.cmp === '>=' ? count >= effect.condition.n : count <= effect.condition.n)
+  );
 }
 
 /**
@@ -268,7 +308,7 @@ function printedManaValue(ctx: GameContext, perm: EnginePermanent): number | und
   // target's front-face `oracleId` but its CURRENT cost, which for a transformed target is the
   // back face's — so a copy of a back face reads 0 (CR 712.8e).
   if (perm.copyOriginal !== undefined) return manaValueOf(parseManaCost(perm.manaCost).cost);
-  return manaValueOf(def.manaCost);
+  return manaValueOf(selectedPermanentDefinition(def, perm.face).manaCost);
 }
 
 /** The one place a `SelectorCandidate` is built, so every selector reads the same fields. */
@@ -276,14 +316,19 @@ export function candidateOf(
   ctx: GameContext,
   perm: EnginePermanent,
   chars: Characteristics,
+  includeCombatDefender = false,
 ): SelectorCandidate {
   let isEnchanted = false;
   let isEquipped = false;
+  const auraControllerIds: string[] = [];
   for (const other of ctx.state.battlefield) {
     if (other.attachedTo === perm.id) {
       const def = ctx.defs.get(other.oracleId);
       if (def !== undefined) {
-        if (def.subtypes.includes('Aura') || def.types.includes('Enchantment')) {
+        // A bestowed permanent is an Aura while bestowed (CR 702.103b), though printed a creature.
+        const isAura = def.subtypes.includes('Aura') || other.bestowed === true;
+        if (isAura) auraControllerIds.push(other.controllerId);
+        if (isAura || def.types.includes('Enchantment')) {
           isEnchanted = true;
         }
         if (def.subtypes.includes('Equipment') || def.types.includes('Artifact')) {
@@ -296,6 +341,24 @@ export function candidateOf(
   // correctly never match rather than matching everything as mana value 0. Off the battlefield,
   // `cardZoneCandidate` applies the same rule via `spellManaValue(def, undefined)`.
   const manaValue = printedManaValue(ctx, perm);
+  // The defending player when this attacks the player, or a planeswalker that is still in combat
+  // (CR 506.4). Only event-time selector matching asks (`includeCombatDefender`): reading another
+  // permanent's characteristics here would recurse while the layers are being computed.
+  const attackedWalker =
+    perm.attackingPlaneswalker === null
+      ? undefined
+      : ctx.state.battlefield.find((permanent) => permanent.id === perm.attackingPlaneswalker);
+  const defendingPlayer =
+    perm.attacking === null
+      ? undefined
+      : perm.attackingPlaneswalker === null ||
+          (includeCombatDefender &&
+            !perm.attackedPlaneswalkerRemoved &&
+            attackedWalker !== undefined &&
+            attackedWalker.controllerId === perm.attacking &&
+            computeCharacteristics(ctx, attackedWalker).types.includes('Planeswalker'))
+        ? perm.attacking
+        : undefined;
 
   return {
     cardId: perm.cardId,
@@ -306,17 +369,28 @@ export function candidateOf(
     colors: chars.colors,
     power: chars.power,
     toughness: chars.toughness,
+    ...(chars.basePower === undefined ? {} : { basePower: chars.basePower }),
+    ...(chars.baseToughness === undefined ? {} : { baseToughness: chars.baseToughness }),
     keywords: chars.keywords,
     ...(manaValue === undefined ? {} : { manaValue }),
     isToken: perm.isToken,
     enteredThisTurn: perm.enteredTurnNumber === ctx.state.turnNumber,
     isCommander: perm.isCommander,
     ownerId: perm.ownerId,
+    // A face-down permanent has no name (CR 708.2); otherwise this is the current name, which a
+    // copy effect has already rewritten (CR 707.2).
+    ...(perm.faceDown ? {} : { name: perm.name }),
     isEnchanted,
+    ...(auraControllerIds.length === 0 ? {} : { auraControllerIds }),
     isEquipped,
     inCombat: perm.attacking !== null || perm.blocking !== null,
     combatRole: perm.attacking !== null ? 'attacking' : perm.blocking !== null ? 'blocking' : null,
-    attackingDefenderId: perm.attacking,
+    // The player attacked itself: null when it attacks a planeswalker, so "attacking you / an
+    // opponent / that player" selectors don't match an attack on their planeswalker.
+    attackedThisTurn: perm.attackedThisTurn === true,
+    controlledSinceTurnStart: !perm.summoningSick,
+    attackingDefenderId: perm.attackingPlaneswalker === null ? perm.attacking : null,
+    ...(defendingPlayer === undefined ? {} : { attackingDefendingPlayerId: defendingPlayer }),
     hasAnyCounter: Object.values(perm.counters).some((c) => c > 0),
     counters: perm.counters,
   };
@@ -333,7 +407,11 @@ export function matchesSelector(
   selector: Selector,
   source: SelectorSource,
 ): boolean {
-  return selectMatches(candidateOf(ctx, perm, computeCharacteristics(ctx, perm)), selector, source);
+  return selectMatches(
+    candidateOf(ctx, perm, computeCharacteristics(ctx, perm), true),
+    selector,
+    source,
+  );
 }
 
 function affects(ctx: GameContext, effect: LayerEffect, entry: Working): boolean {
@@ -382,6 +460,15 @@ function scopeOf(
           (candidate) => candidate.perm.id === entry.perm.attachedTo,
         );
         if (attached?.chars.types.includes('Creature') === true) count += 1;
+      }
+      return count;
+    },
+    countAurasAttachedToSource: () => {
+      const host = work.get(source.cardId)?.perm;
+      if (host === undefined) return 0;
+      let count = 0;
+      for (const entry of work.values()) {
+        if (entry.perm.attachedTo === host.id && entry.chars.subtypes.includes('Aura')) count += 1;
       }
       return count;
     },
@@ -469,10 +556,25 @@ function applyOpTo(
 }
 
 function applyOne(ctx: GameContext, work: WorkMap, effect: LayerEffect): void {
-  if (!effectExists(work, effect)) return;
+  if (!effectExists(ctx, work, effect)) return;
   const scope = scopeOf(ctx, work, effect);
+  // "For each time it has attacked this turn" reads the affected object, not the source.
+  const op = effect.op;
+  const perObject =
+    scope !== undefined &&
+    op.layer === 7 &&
+    ((typeof op.power !== 'number' && op.power.kind === 'timesAttackedThisTurn') ||
+      (typeof op.toughness !== 'number' && op.toughness.kind === 'timesAttackedThisTurn'));
   for (const entry of work.values()) {
-    if (affects(ctx, effect, entry)) applyOpTo(ctx, entry.chars, effect.op, scope);
+    if (!affects(ctx, effect, entry)) continue;
+    applyOpTo(
+      ctx,
+      entry.chars,
+      effect.op,
+      perObject
+        ? { ...scope, affectedTimesAttacked: entry.perm.timesAttackedThisTurn ?? 0 }
+        : scope,
+    );
   }
 }
 
@@ -482,7 +584,7 @@ function applyOne(ctx: GameContext, work: WorkMap, effect: LayerEffect): void {
  * effect's behavior changed.
  */
 function fingerprint(ctx: GameContext, work: WorkMap, effect: LayerEffect): string {
-  if (!effectExists(work, effect)) return '<nonexistent>';
+  if (!effectExists(ctx, work, effect)) return '<nonexistent>';
   const targets: string[] = [];
   for (const entry of work.values()) {
     if (affects(ctx, effect, entry)) targets.push(entry.perm.cardId);
@@ -650,8 +752,9 @@ function runLayers(
 ): { map: Map<string, Characteristics>; usedGraveyards: boolean } {
   const work: WorkMap = new Map();
   for (const perm of perms) {
-    const def = ctx.defs.get(perm.oracleId);
-    if (def === undefined) throw new Error(`engine bug: no def for ${perm.name}`);
+    const printed = ctx.defs.get(perm.oracleId);
+    if (printed === undefined) throw new Error(`engine bug: no def for ${perm.name}`);
+    const def = selectedPermanentDefinition(printed, perm.face);
     const landFace =
       perm.face === 'back'
         ? def.alternativeCasts?.find((alt) => alt.kind === 'mdfc')?.landFace
@@ -699,12 +802,6 @@ function runLayers(
           toughness = exiledDef.toughness ?? 0;
         }
       }
-    }
-    // Ability counters modify the current object after copiable/face-down characteristics are
-    // established. In particular, turning a permanent face down must not erase an existing
-    // indestructible counter's rules effect.
-    if ((perm.counters['indestructible'] ?? 0) > 0 && !keywords.includes('indestructible')) {
-      keywords.push('indestructible');
     }
     work.set(perm.cardId, {
       perm,
@@ -766,6 +863,10 @@ function runLayers(
   applyGroup(ctx, work, group('6'));
   applyGroup(ctx, work, group('7a'));
   applyGroup(ctx, work, group('7b'));
+  for (const entry of work.values()) {
+    entry.chars.basePower = entry.chars.power;
+    entry.chars.baseToughness = entry.chars.toughness;
+  }
   applyCounters(work); // 7c
   applyGroup(ctx, work, group('7d'), false);
 

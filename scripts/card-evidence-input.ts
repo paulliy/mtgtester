@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { Readable } from 'node:stream';
 import ts from 'typescript';
 import { dirname, extname, isAbsolute, relative, resolve, sep, win32 } from 'node:path';
@@ -353,6 +354,11 @@ async function validateZip(bytes: Buffer) {
     );
   }
 }
+
+/** Validate a retained trace for another bounded, source-bound verification runner. */
+export async function validateViewerTraceZip(bytes: Buffer): Promise<void> {
+  await validateZip(Buffer.from(bytes));
+}
 // JSON.parse supplies the full grammar check; token inspection adds duplicate-key rejection.
 function uniqueJson(text: string): unknown {
   const value: unknown = JSON.parse(text);
@@ -412,6 +418,7 @@ function reportTargets(
   reportPath: string,
 ) {
   const expected = new Set(VIEWER_CATALOG.map(catalogKey));
+  const expectedFiles = new Set(VIEWER_CATALOG.map((spec) => spec.file));
   requireInput(
     catalog.length === expected.size &&
       new Set(catalog.map(catalogKey)).size === expected.size &&
@@ -431,7 +438,7 @@ function reportTargets(
   const seen = new Set<string>();
   const targets: Record<string, string> = {};
   let project: string | undefined;
-  function walk(suites: unknown[], parents: string[], top: boolean) {
+  function walk(suites: unknown[], parents: string[], top: boolean, rootFile?: string) {
     for (const value of suites) {
       const suite = record(value);
       noErrors(suite);
@@ -439,7 +446,9 @@ function reportTargets(
         typeof suite['title'] === 'string' && typeof suite['file'] === 'string',
         'malformed catalog suite',
       );
-      requireInput(suite['file'] === 'card-test-lab.spec.ts', 'catalog file');
+      requireInput(expectedFiles.has(suite['file']), 'catalog file');
+      const catalogFile = top ? (suite['file'] as string) : rootFile;
+      requireInput(suite['file'] === catalogFile, 'catalog suite file');
       if (top) requireInput(suite['title'] === suite['file'], 'catalog file suite title');
       const titles = top ? parents : [...parents, suite['title']];
       for (const raw of array(suite['specs'] ?? [], 'specs')) {
@@ -509,7 +518,7 @@ function reportTargets(
           targets[id] = traces[0]!['path'] as string;
         }
       }
-      walk(array(suite['suites'] ?? [], 'suites'), titles, false);
+      walk(array(suite['suites'] ?? [], 'suites'), titles, false, catalogFile);
     }
   }
   walk(array(report['suites'], 'suites'), [], true);
@@ -536,6 +545,8 @@ interface DiscoveryState {
   resolutionCache: ts.ModuleResolutionCache;
   installed: Map<string, { path: string; realpath: string }>;
 }
+/** Parsed sources, keyed by repository path and content hash. Bounded by distinct file contents. */
+const parsedSources = new Map<string, ts.SourceFile>();
 function discoveryState(root: string): DiscoveryState {
   return {
     parsed: new Map(),
@@ -594,6 +605,20 @@ function sourceIdentity(root: string, paths: string[]): string {
 export function discoverGeneratorSourceFiles(repoRoot: string, generatorPath: string): string[] {
   return discoverGeneratorSources(repoRoot, generatorPath, discoveryState(repoRoot)).files;
 }
+/** Share resolution work within one capture; every call starts with fresh routing and source state. */
+export function discoverGeneratorSourceFilesForEntries(
+  repoRoot: string,
+  entryPaths: readonly string[],
+): string[] {
+  const state = discoveryState(repoRoot);
+  return [
+    ...new Set(
+      [...new Set(entryPaths)].flatMap(
+        (path) => discoverGeneratorSources(repoRoot, path, state).files,
+      ),
+    ),
+  ].sort();
+}
 function discoverGeneratorSources(
   repoRoot: string,
   generatorPath: string,
@@ -625,12 +650,15 @@ function discoverGeneratorSources(
     if (extname(path) === '.json') continue;
     let source = parsed.get(path);
     if (!source) {
-      source = ts.createSourceFile(
-        path,
-        readFileSync(absolute, 'utf8'),
-        ts.ScriptTarget.Latest,
-        true,
-      );
+      // Every discovery pass re-reads the same sources; parsing is the expensive part. Keying on
+      // the bytes keeps drift detection exact: an edited file gets a fresh AST.
+      const text = readFileSync(absolute, 'utf8');
+      const key = `${path}\0${hash(Buffer.from(text))}`;
+      source = parsedSources.get(key);
+      if (!source) {
+        source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true);
+        parsedSources.set(key, source);
+      }
       parsed.set(path, source);
     }
     const ast = source;
@@ -793,15 +821,36 @@ function discoverGeneratorSources(
             argument.arguments.length === 1
               ? argument.arguments[0]
               : argument;
+          const moduleRelative =
+            literal &&
+            ts.isNewExpression(literal) &&
+            ts.isIdentifier(literal.expression) &&
+            literal.expression.text === 'URL' &&
+            literal.arguments?.length === 2 &&
+            ts.isStringLiteralLike(literal.arguments[0]!) &&
+            /^(\.\/|\.\.\/)/.test(literal.arguments[0]!.text) &&
+            ts.isPropertyAccessExpression(literal.arguments[1]!) &&
+            literal.arguments[1]!.name.text === 'url' &&
+            ts.isMetaProperty(literal.arguments[1]!.expression) &&
+            literal.arguments[1]!.expression.keywordToken === ts.SyntaxKind.ImportKeyword &&
+            literal.arguments[1]!.expression.name.text === 'meta'
+              ? relative(
+                  root,
+                  fileURLToPath(new URL(literal.arguments[0]!.text, pathToFileURL(absolute))),
+                )
+                  .split(sep)
+                  .join('/')
+              : undefined;
           requireInput(
-            literal && ts.isStringLiteralLike(literal),
+            moduleRelative !== undefined || (literal && ts.isStringLiteralLike(literal)),
             `unresolved consumed data path: ${path}`,
           );
-          canonicalSourcePath(literal.text);
-          const input = resolve(root, literal.text);
+          const dataPath = moduleRelative ?? (literal as ts.StringLiteralLike).text;
+          canonicalSourcePath(dataPath);
+          const input = resolve(root, dataPath);
           const actual = confinedFile(root, input);
-          data.push([generatorPath, absolute, name, String(node.pos), literal.text, input, actual]);
-          inputs.add(literal.text);
+          data.push([generatorPath, absolute, name, String(node.pos), dataPath, input, actual]);
+          inputs.add(dataPath);
         }
       }
       ts.forEachChild(node, visit);
@@ -835,7 +884,7 @@ function discoverViewerEvidenceSources(repoRoot: string) {
     );
     requireInput(
       consumed.files.every((path) => paths.includes(path)),
-      `incomplete generator source binding: ${card}`,
+      `incomplete generator source binding: ${card}; missing: ${consumed.files.filter((path) => !paths.includes(path)).join(', ')}`,
     );
     const order = (a: string[], b: string[]) => JSON.stringify(a).localeCompare(JSON.stringify(b));
     closures.push({
@@ -856,6 +905,7 @@ function discoverViewerEvidenceSources(repoRoot: string) {
     'packages/shared/src',
     'apps/web/src',
     'apps/web/public',
+    'apps/web/e2e',
   ];
   const runtimeRouting: string[][] = [];
   const visitedRuntimeDirectories = new Set<string>();
@@ -1739,6 +1789,336 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Sautekh Immortal: two creatures died this turn, so it enters as a 4/4'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Iron Apprentice: it dies and its +1/+1 counter moves to Lab Bird'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Vigean Graftmage: graft a counter, then untap a creature that has one'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Pensive Professor: Increment grows it, then the counter draws a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Elite Scaleguard: bolster the smallest creature, then tap a blocker as it attacks',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Forgotten Ancient: grow when a spell is cast, then move counters at your upkeep'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['The Thing: four counters after a noncreature spell, then pay to double counters'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Lockjaw, Slobbering Teleporter: a noncreature spell grows it and makes two creatures unblockable',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Belladonna Took: three tokens give life, then a card, then a counter on each creature',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Rumor Gatherer: scry 1, then draw instead on the second creature, then scry again',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Crystal, Inhuman Princess: a two-color spell deals 2 to each opponent'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Call Forth the Tempest: damage equals the mana value of your other spells this turn',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['First Family: draw and gain life for each color among your permanents and spells'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Unbreakable Formation: cast in your main phase, your creatures also get counters and vigilance',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'The Fantasticar: become a creature, then sacrifice it on your fourth noncreature spell',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Kutzil, Malamet Exemplar: one grown creature connecting draws a card, and opponents cannot cast spells',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Finneas, Ace Archer: attacking grows your tokens and Rabbits, and total power 10 draws a card',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Captain America, Skybound: battalion grows each attacker and makes them indestructible',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Aetheric Amplifier: double the counters on a target permanent'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Cranial Plating: equip, then move it with {B}{B}'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Cranial Plating: attach it with a spell on the stack, and its bonus tracks your artifacts',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mask of Memory: equip it, connect, then draw two and discard a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Resurrection Orb: equip a stolen creature, gain life, lose it, and it returns home',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Sunforger: equip it, then unattach it to cast a red instant from your library for free',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Screams from Within: its creature dies and it returns onto a hexproof opposing creature',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Ghoulish Impetus: its creature dies and it returns at the next end step'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Ghoulish Impetus: the goaded creature must attack, an unenchanted one may stay home',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Ghoulish Impetus: P2’s goaded creature cannot attack you, their other creature can',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Gift of Immortality: the creature returns to its owner, then the Aura returns onto it',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Ajani's Chosen: an Aura you cast moves onto the Cat it makes"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Ajani's Chosen: a non-Aura enchantment you cast makes a Cat with nothing to attach",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Shielded by Faith: it moves onto a creature that enters and keeps it indestructible',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Shielded by Faith: an opponent’s creature entering offers you the attach'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Forum Filibuster: at your upkeep the Inkling gets an Aura from your graveyard'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Forum Filibuster: at your upkeep the Inkling gets an Equipment from your graveyard',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Karametra's Favor: draw a card, then tap the enchanted creature for mana to cast a spell",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Redemption Arc: enchant your creature, then pay {1}{W} to exile it with no target',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Redemption Arc: Lab Doom cannot destroy the creature, which must attack'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Redemption Arc: P2’s goaded creature cannot attack you, their other creature can'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Fallen Ideal: sacrifice for a pump, then sacrifice the creature to get the Aura back',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Fallen Ideal: the enchanted creature flies over Lab Ox and attacks unblocked'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Kor Spiritdancer: cast an Aura on it, draw a card, and it grows by +2/+2 for the Aura',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Kor Spiritdancer: a second attached Aura adds another +2/+2 to the pump'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Hateful Eidolon: your Aura on an opponent’s creature, then it dies and you draw'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Hateful Eidolon: two of your Auras on a creature that dies draw you two cards'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Hateful Eidolon: its combat damage gains life, Lab Ox’s does not'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Martial Impetus: the enchanted creature attacks and pumps your other attacker'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Martial Impetus: P2’s goaded creature cannot attack you, their other creature can',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Killian, Decisive Mentor: an enchantment taps and goads, then the enchanted attacker draws',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Killian, Decisive Mentor: P2’s goaded creature cannot attack you, their other creature can',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Angelic Destiny: a 6/6 flying Angel, then it dies and the Aura returns to your hand',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Angelic Destiny: a 7/7 flying first-striking Angel attacks past Lab Ox and kills Lab Titan unharmed',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Sheltered by Ghosts: exile an opposing permanent, then attack with lifelink'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Sheltered by Ghosts: ward {2} counters an opponent’s Lab Shock aimed at the creature',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Eldrazi Conscription: a 12/12 trampler attacks and the defending player sacrifices two permanents',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Eldrazi Conscription: a blocked 12/12 trampler tramples over to the defending player',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Curse of Bounty: enchant a player, then attacking them untaps your nonland permanents',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Curse of Bounty: an opponent attacking the enchanted player untaps their nonland permanents',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Eidolon of Countless Battles: bestow onto a creature, then it becomes a creature again',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Eidolon of Countless Battles: the host grows by one per creature and one per Aura you control',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Animate Dead: return an opponent’s creature, then it dies and the Aura goes with it',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Animate Dead: destroy the Aura and the returned creature is sacrificed'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mikey & Leo, Chaos & Order: the first counter you put each turn draws a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Satoru, the Infiltrator: a free creature draws, a paid one does not'],
   },
   {
@@ -1836,6 +2216,416 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   {
     file: 'card-test-lab.spec.ts',
     titlePath: ['Body Launderer: it dies and returns Lab Servo, not Lab Ox'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Dragon Tempest: the entering Dragon deals the damage'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Scourge of Valkas: it and another Dragon each deal X damage as they enter'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Tyrant's Familiar: lieutenant attack hits a creature of the player it attacks"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Brash Taunter: fight Lab Ox, then reflect the damage at P3'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tomb Blade: the damaged player sacrifices a creature or loses life'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Duelist's Heritage: one trigger per attack, double strike for the attacker you pick",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Thunderbreak Regent: the opponent who targets your Dragon takes 3'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Invisible Woman: pay {R}{G}{W}{U} when you attack, then pump and evade'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Flameblast Dragon: choose the target, then pay {X}{R} for X damage'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Territorial Aetherkite: pay energy and damage each other creature'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Arcbond: the chosen creature reflects the damage it is dealt'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Thundermaw Hellkite: damage and tap the fliers your opponents control'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Backlash: tap an untapped creature and it hits its controller'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Guard Gomazoa: blocks Lab Ox and takes no combat damage'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Selfless Squire: prevent the damage to you and grow by that much'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Deflecting Palm: prevent a chosen creature's damage and reflect it"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Comeuppance: prevent the damage and deal it back to the creature and the controller',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Michiko Konda: each opposing source that damages you makes its controller sacrifice',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Delirium: during an opponent's attack, tap its creature, hit it back and stop its combat damage",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Planeswalker attack: Lab Ox attacks Lab Walker through the player board and its loyalty drops',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Firemane Commando: attacking with two creatures draws you a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Firemane Commando: another player attacking someone else draws a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Firemane Commando: another player who attacked you draws nothing'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Breena: attacking the opponent with the most life draws you a card and grows a creature',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Ever-Watching Threshold: an opponent attacking you draws you a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Ever-Watching Threshold: an opponent attacking your planeswalker draws you a card',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Ever-Watching Threshold: an opponent attacking someone else draws nothing'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mangara: an opponent attacking you with two creatures draws you a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mangara: an opponent attacking you with one creature draws nothing'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tomik: affinity for planeswalkers makes it cost {W}{B} with one planeswalker'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tomik: an opponent attacking you with two creatures loses 3 life and you draw'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Frontier Warmonger: the creatures attacking an opponent gain menace'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tenuous Truce: at the enchanted opponent’s end step you and they each draw'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tenuous Truce: attacking the enchanted opponent sacrifices the Aura'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tenuous Truce: the enchanted opponent attacking you sacrifices the Aura'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Wall of Tears: the creature it blocks returns to its owner’s hand at end of combat',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Human Torch: a noncreature spell grants flying, double strike and haste, and paying copies its damage',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Promise of Loyalty: a vowed creature cannot attack its caster but can attack others',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Lightning Runner: paying eight energy untaps your creatures and adds a combat phase',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Firkraag: attacking an opponent with a Dragon goads one of that opponent’s creatures',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Firkraag: a goaded creature that deals combat damage to an opponent grows Firkraag and draws a card',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Eriette of the Charmed Apple: a creature enchanted by your Aura cannot attack you',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Eriette of the Charmed Apple: at your end step each opponent loses X life and you gain X',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Rite of the Raging Storm: a creature named Lightning Rager cannot attack you'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Rite of the Raging Storm: each player's upkeep makes them a Lightning Rager that is sacrificed at the end step",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Nils, Discipline Enforcer: at your end step put a +1/+1 counter on up to one creature for each player',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Nils, Discipline Enforcer: a creature with counters must pay to attack you'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Combat Calligrapher: an Inkling cannot attack you'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Combat Calligrapher: a player attacking an opponent of yours creates a tapped attacking Inkling',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Goblin Spymaster: at an opponent's end step that player creates a Goblin token"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Toby, Beastie Befriender: the Beast token cannot block alone'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Toby, Beastie Befriender: creature tokens have flying while you control four or more',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Life of the Party: the attacker gets +X/+0 for the creatures you control'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Life of the Party: each opponent creates a goaded copy of it'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Kardur, Doomscourge: opponents' creatures must attack, and not you, until your next turn",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Kardur, Doomscourge: whenever an attacking creature dies, each opponent loses 1 and you gain 1',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Galactus, Devourer of Worlds: it must attack the opponent with the most life'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Galactus, Devourer of Worlds: no requirement while you control Silver Surfer, Galactus's Herald",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Silver Surfer: search your library for Galactus when it enters'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Silver Surfer: the target creature must attack the player it damaged'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Taunt from the Rampart: opponents' creatures are goaded and can't block until your next turn",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Hexmark Destroyer: three blockers are not enough'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Champion of Lambholt: weaker creatures can't block your creatures"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Pramikon, Sky Rampart: each player may attack only the nearest opponent in the chosen direction',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Teyo, Geometric Tactician: the -2 limits attacks to the nearest opponent in the chosen direction',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Teyo, Geometric Tactician: the Wall token and the +1 draw for you and a target opponent',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Triarch Stalker: creatures attacking the chosen player have menace'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Illusionist's Gambit: remove the attackers, then an additional combat they cannot use against you",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Moraug, Fury of Akoum: landfall adds a combat phase and untaps your creatures, and each attack grows them',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Siren's Call: the active player's creatures must attack, and the ones that did not are destroyed",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "War's Toll: an opponent's mana taps all their lands, and an attack by one creature is an attack by all",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Willie Lumpkin: both players draw, then the one who drew cannot attack you on their next turn',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Fight or Flight: you separate P2’s creatures into two piles and only the pile P2 chooses can attack',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Fight or Flight: P2 separates your creatures and only the pile you choose can attack',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Master Warcraft: you choose which of P2’s creatures attack, and how P3’s creatures block them',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Master Warcraft: P2 chooses which of your creatures attack and you choose what they attack',
+    ],
+  },
+  {
+    file: 'combat-trigger-regressions.spec.ts',
+    titlePath: ['Marchesa: keep dethrone after a life-total response'],
+  },
+  {
+    file: 'combat-trigger-regressions.spec.ts',
+    titlePath: ['Marchesa: ignore a non-leading defender'],
+  },
+  {
+    file: 'combat-trigger-regressions.spec.ts',
+    titlePath: ['Namor: boost allies attacking the defender'],
+  },
+  {
+    file: 'combat-trigger-regressions.spec.ts',
+    titlePath: ['Namor: keep the bonus after source removal'],
+  },
+  {
+    file: 'combat-trigger-regressions.spec.ts',
+    titlePath: ['Scriv: no life loss after the attacker dies'],
+  },
+  {
+    file: 'combat-trigger-regressions.spec.ts',
+    titlePath: ['Scriv: lose life when attacking the Contract controller'],
+  },
+  {
+    file: 'combat-trigger-regressions.spec.ts',
+    titlePath: ['Marchesa: grant dethrone after a normal cast'],
+  },
+  {
+    file: 'combat-trigger-regressions.spec.ts',
+    titlePath: ['Dragon Mage: cast normally and resolve the combat wheel'],
+  },
+  {
+    file: 'combat-trigger-regressions.spec.ts',
+    titlePath: ['Hunted Phantasm: cast normally and give an opponent five Goblins'],
   },
 ];
 for (const spec of VIEWER_CATALOG) {

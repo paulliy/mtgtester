@@ -67,6 +67,35 @@ import { registerUnsupportedSpellFaces } from './unsupported-spell-faces';
 import { registerCoveragePr01Overrides } from './coverage-pr01';
 import { registerCoveragePr02Overrides } from './coverage-pr02';
 import { registerCoveragePr03Overrides } from './coverage-pr03';
+import { registerCoveragePr06Overrides } from './coverage-pr06';
+import { registerCoveragePr07Overrides } from './coverage-pr07';
+import { registerCoveragePr08Overrides } from './coverage-pr08';
+import { registerCoveragePr09Overrides } from './coverage-pr09';
+import { registerWhiteBlackControlHandOverrides } from './white-black-control-hand';
+import { registerWhiteBlackControlStaxOverrides } from './white-black-control-stax';
+import { registerWhiteBlackControlDiscardOverrides } from './white-black-control-discard';
+import { registerWhiteBlackControlEntryOverrides } from './white-black-control-entry';
+import { registerWhiteBlackControlPayoffOverrides } from './white-black-control-payoffs';
+import { registerWhiteBlackControlDiscardChoiceOverrides } from './white-black-control-discard-choices';
+import { registerWhiteBlackControlGraveyardOverrides } from './white-black-control-graveyard';
+import { registerWhiteBlackControlTinybonesOverrides } from './white-black-control-tinybones';
+import { registerWhiteBlackControlProtectionStackOverrides } from './white-black-control-protection-stack';
+import { registerWhiteBlackControlGraveyardTriggerOverrides } from './white-black-control-graveyard-triggers';
+import { registerWhiteBlackControlLibraryOverrides } from './white-black-control-library';
+import { registerWhiteBlackControlLeylineOverrides } from './white-black-control-leyline';
+import { registerWhiteBlackControlLilianaOverrides } from './white-black-control-liliana';
+import { registerWhiteBlackControlDefenderOverrides } from './white-black-control-defenders';
+import { registerWhiteBlackControlCurseOverrides } from './white-black-control-curse';
+import { registerWhiteBlackControlPromiseOverrides } from './white-black-control-promise';
+import { registerWhiteBlackControlImpOverrides } from './white-black-control-imp';
+import { registerWhiteBlackControlRestorationOverrides } from './white-black-control-restoration';
+import { registerWhiteBlackControlRoleModelOverrides } from './white-black-control-role-model';
+import { registerWhiteBlackControlCloakOverrides } from './white-black-control-cloak';
+import { registerWhiteBlackControlBanditOverrides } from './white-black-control-bandit';
+import { registerWhiteBlackControlTergridOverrides } from './white-black-control-tergrid';
+import { registerWhiteBlackControlAvenOverrides } from './white-black-control-aven';
+import { registerWhiteBlackControlGiftOverrides } from './white-black-control-gifts';
+import { registerWhiteBlackControlPerchOverrides } from './white-black-control-perch';
 
 export interface CardOverride {
   oracleId: OracleId;
@@ -166,6 +195,44 @@ registerDeck('reviewed-five', registerReviewedFiveOverrides);
 registerDeck('coverage-pr01', registerCoveragePr01Overrides);
 registerDeck('coverage-pr02', registerCoveragePr02Overrides);
 registerDeck('coverage-pr03', registerCoveragePr03Overrides);
+registerDeck('coverage-pr06', registerCoveragePr06Overrides);
+registerDeck('coverage-pr07', registerCoveragePr07Overrides);
+registerDeck('coverage-pr08', registerCoveragePr08Overrides);
+registerDeck('white-black-control-hand', registerWhiteBlackControlHandOverrides);
+registerDeck('white-black-control-stax', registerWhiteBlackControlStaxOverrides);
+registerDeck('white-black-control-discard', registerWhiteBlackControlDiscardOverrides);
+registerDeck('white-black-control-entry', registerWhiteBlackControlEntryOverrides);
+registerDeck('white-black-control-payoffs', registerWhiteBlackControlPayoffOverrides);
+registerDeck(
+  'white-black-control-discard-choices',
+  registerWhiteBlackControlDiscardChoiceOverrides,
+);
+registerDeck('white-black-control-graveyard', registerWhiteBlackControlGraveyardOverrides);
+registerDeck('white-black-control-tinybones', registerWhiteBlackControlTinybonesOverrides);
+registerDeck(
+  'white-black-control-protection-stack',
+  registerWhiteBlackControlProtectionStackOverrides,
+);
+registerDeck(
+  'white-black-control-graveyard-triggers',
+  registerWhiteBlackControlGraveyardTriggerOverrides,
+);
+registerDeck('white-black-control-library', registerWhiteBlackControlLibraryOverrides);
+registerDeck('white-black-control-leyline', registerWhiteBlackControlLeylineOverrides);
+registerDeck('white-black-control-liliana', registerWhiteBlackControlLilianaOverrides);
+registerDeck('white-black-control-defenders', registerWhiteBlackControlDefenderOverrides);
+registerDeck('white-black-control-curse', registerWhiteBlackControlCurseOverrides);
+registerDeck('white-black-control-promise', registerWhiteBlackControlPromiseOverrides);
+registerDeck('white-black-control-imp', registerWhiteBlackControlImpOverrides);
+registerDeck('white-black-control-restoration', registerWhiteBlackControlRestorationOverrides);
+registerDeck('white-black-control-role-model', registerWhiteBlackControlRoleModelOverrides);
+registerDeck('white-black-control-cloak', registerWhiteBlackControlCloakOverrides);
+registerDeck('white-black-control-bandit', registerWhiteBlackControlBanditOverrides);
+registerDeck('white-black-control-tergrid', registerWhiteBlackControlTergridOverrides);
+registerDeck('white-black-control-aven', registerWhiteBlackControlAvenOverrides);
+registerDeck('white-black-control-gifts', registerWhiteBlackControlGiftOverrides);
+registerDeck('white-black-control-perch', registerWhiteBlackControlPerchOverrides);
+registerDeck('coverage-pr09', registerCoveragePr09Overrides);
 registerDeck('unsupported-spell-faces', registerUnsupportedSpellFaces);
 
 /** Register an override. Exported for the per-card modules and for tests. */

@@ -27,10 +27,24 @@
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import type { CombatRejection, DecisionRequest, ObjectId, TargetChoice } from '@mtg/shared';
-import { NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
+import { ATTACKS_TARGET, NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
 
 export type CombatPlanMode = 'idle' | 'composing' | 'replaying';
 export type CombatPlanKind = 'attackers' | 'blockers';
+
+/**
+ * Who the declaration is for when it is split between players (Master Warcraft): `chooseAttackers`
+ * is the one picking WHICH creatures attack (no defender is chosen), `assignChosen` the attacking
+ * player picking what each chosen creature attacks, `blockersFor` someone choosing another
+ * player's blocks. Absent for an ordinary declaration.
+ */
+export interface CombatPlanSplit {
+  variant: 'chooseAttackers' | 'assignChosen' | 'blockersFor';
+  /** The attacking player (attackers) or the defending player (blockers) the creatures belong to. */
+  owner: string;
+  /** For `assignChosen`: who chose the attackers. */
+  chosenBy: string | null;
+}
 
 export interface CombatPlanEntry {
   subjectId: ObjectId;
@@ -59,6 +73,8 @@ export const useCombatPlanStore = defineStore('combatPlan', () => {
   const assignment = ref<Map<ObjectId, string>>(new Map());
   /** Why the last proposal was rejected, shown alongside the still-editable tray. */
   const rejectionMessage = ref<string | null>(null);
+  /** Set when someone else is choosing part of this declaration; null for an ordinary one. */
+  const split = ref<CombatPlanSplit | null>(null);
   let lastRequestId: string | null = null;
 
   const isActive = computed(() => mode.value === 'composing' || mode.value === 'replaying');
@@ -69,6 +85,7 @@ export const useCombatPlanStore = defineStore('combatPlan', () => {
     order.value = [];
     assignment.value = new Map();
     rejectionMessage.value = null;
+    split.value = null;
     lastRequestId = null;
   }
 
@@ -114,15 +131,27 @@ export const useCombatPlanStore = defineStore('combatPlan', () => {
 
     const attackDeclaration = request.presentation?.attackDeclaration;
     if (attackDeclaration !== undefined) {
+      const choosing = attackDeclaration.mode === 'chooseAttackers';
       startOrRetry(
         'attackers',
         attackDeclaration.subjects.map((s) => ({
           subjectId: s.subjectId,
-          optionIds: s.defenders.map((d) => d.playerId),
+          // Choosing only WHICH creatures attack: "attacks" is the one option (no defender yet).
+          optionIds: choosing
+            ? [ATTACKS_TARGET]
+            : [...s.defenders.map((d) => d.playerId), ...s.planeswalkers.map((p) => p.objectId)],
           mustAct: s.mustAttack,
         })),
         attackDeclaration.rejection,
       );
+      split.value =
+        attackDeclaration.mode === undefined
+          ? null
+          : {
+              variant: attackDeclaration.mode,
+              owner: attackDeclaration.attackingPlayer ?? '',
+              chosenBy: attackDeclaration.chosenBy ?? null,
+            };
       return;
     }
 
@@ -137,6 +166,10 @@ export const useCombatPlanStore = defineStore('combatPlan', () => {
         })),
         blockDeclaration.rejection,
       );
+      split.value =
+        blockDeclaration.blockingPlayer === undefined
+          ? null
+          : { variant: 'blockersFor', owner: blockDeclaration.blockingPlayer, chosenBy: null };
       return;
     }
 
@@ -180,7 +213,11 @@ export const useCombatPlanStore = defineStore('combatPlan', () => {
       const targets: TargetChoice[] = decl.subjects.map((subject, slot) => {
         const chosen = assignment.value.get(subject.subjectId);
         const fallback = subject.mustAttack
-          ? (subject.defenders[0]?.playerId ?? NO_ATTACK_TARGET)
+          ? decl.mode === 'chooseAttackers'
+            ? ATTACKS_TARGET
+            : (subject.defenders[0]?.playerId ??
+              subject.planeswalkers[0]?.objectId ??
+              NO_ATTACK_TARGET)
           : NO_ATTACK_TARGET;
         return { slot, choice: chosen ?? fallback };
       });
@@ -225,6 +262,7 @@ export const useCombatPlanStore = defineStore('combatPlan', () => {
     order,
     assignment,
     rejectionMessage,
+    split,
     isActive,
     onRequest,
     assign,

@@ -53,7 +53,22 @@ function firstTargets(action: LegalAction): TargetChoice[] {
  * refinement, not yet built — see the ADR's scoring-model section.
  */
 function attackDeclarationTargets(action: LegalAction, view: PlayerView): TargetChoice[] {
+  // Choosing only WHICH of another player's creatures attack (Master Warcraft): the attacking
+  // player picks the targets, so no defender is chosen here. Keep every creature home that the
+  // rules let stay, which leaves only the ones that are required to attack.
+  if (action.data?.['chooseAttackers'] === true) {
+    return (action.targets ?? []).map((slot) => ({
+      slot: slot.slot,
+      choice: slot.options.includes(NO_ATTACK_TARGET)
+        ? NO_ATTACK_TARGET
+        : (slot.options[0] as string),
+    }));
+  }
   const lifeBySeat = new Map(view.opponents.map((o) => [o.seat, o.life]));
+  for (const permanent of view.battlefield) {
+    const life = lifeBySeat.get(permanent.controller);
+    if (life !== undefined) lifeBySeat.set(permanent.id, life);
+  }
   return (action.targets ?? []).map((slot) => {
     const real = slot.options.filter((o) => o !== NO_ATTACK_TARGET);
     if (real.length === 0) {
@@ -87,6 +102,17 @@ function blockDeclarationTargets(
   opts: CombatSearchOptions | undefined,
 ): TargetChoice[] {
   const slots = action.targets ?? [];
+  // Choosing blocks for another player's creatures (Master Warcraft): this seat's board and
+  // life are not at stake in them, so it blocks with none that it is free not to.
+  const blockingPlayer = action.data?.['blockingPlayer'];
+  if (typeof blockingPlayer === 'string' && blockingPlayer !== view.seat) {
+    return slots.map((slot) => ({
+      slot: slot.slot,
+      choice: slot.options.includes(NO_BLOCK_TARGET)
+        ? NO_BLOCK_TARGET
+        : (slot.options[0] as string),
+    }));
+  }
   const choices = searchBlockAssignment(action, view, opts) ?? staticBlockChoices(action, view);
   return slots.map((slot, i) => ({
     slot: slot.slot,

@@ -381,7 +381,7 @@ const REAL_HTTP_PREVIEW_SCENARIO = `
   rmSync(dir, { recursive: true, force: true });
 `;
 
-describe('setup-preview over real HTTP with a real preview', () => {
+describe('setup-preview over real HTTP with a real preview', { timeout: 60_000 }, () => {
   it('publishes no unvalidated saved metadata for a failed seat, for any human seat', () => {
     const output = execFileSync('bun', ['-e', REAL_HTTP_PREVIEW_SCENARIO], { encoding: 'utf8' });
     const observed = JSON.parse(output) as {

@@ -33,7 +33,12 @@ import { emit, debug } from '../log/log';
 
 import { emptyCost, subtractGeneric, totalPips, withX } from '../mana/cost';
 import { manualManaPlan } from '../mana/manual';
-import { makePermanent, moveObject, queuePlayerTriggersForEvent } from '../state/objects';
+import {
+  discardCard,
+  makePermanent,
+  moveObject,
+  queuePlayerTriggersForEvent,
+} from '../state/objects';
 import {
   activatingAbilitiesBlockedFor,
   colorsOf,
@@ -142,6 +147,10 @@ export function* applyPriorityAction(
       throw new Error('engine bug: pass is not applied via applyPriorityAction');
 
     case 'playLand': {
+      const temporaryExileCard = ctx.state.exile.find((card) => card.id === payload.objectId);
+      if (payload.fromExile === true && temporaryExileCard?.castOnlyUntilEot === true) {
+        throw new Error('a cast-only permission does not allow playing a land');
+      }
       const sourceZone =
         payload.fromLibraryTop === true
           ? player.library
@@ -239,7 +248,7 @@ export function* applyPriorityAction(
         const manaCost = handActivationCost(ctx, def, activated.costs, player.id, card.cardId);
 
         if (activated.costs.some((c) => c.kind === 'discardSelf')) {
-          yield* moveObject(ctx, card, { zone: 'graveyard' });
+          yield* discardCard(ctx, card, player.id, 'cost');
         }
         if (totalPips(manaCost) > 0) {
           yield* payManaCost(ctx, player, manaCost, {

@@ -201,12 +201,6 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBITOverrides(): void {
     ],
     RAKDOS_CHARM,
   );
-  // Catalog audit queen-main-batch-1: gainControl has no until-end-of-turn duration.
-  unsupportedCard(
-    'acca2128-6ebb-48a5-a6a2-1bc5e4aa86ce',
-    'Mob Rule',
-    'Until-end-of-turn steal is implemented as permanent gainControl.',
-  );
   defineCard(
     'd7ac4be1-dcca-49b6-8ddb-d1b0e6cf2dcf',
     'Queen Marchesa',

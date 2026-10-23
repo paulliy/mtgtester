@@ -55,6 +55,9 @@ export interface SelectorCandidate {
   powerUnknown?: boolean;
   /** Current toughness. Only `toughnessAtLeast` reads it — see the module comment. */
   toughness?: number;
+  /** Power and toughness after layer 7b (CR 613.4b), for `basePowerToughness`. */
+  basePower?: number;
+  baseToughness?: number;
   /** Current keywords. Only `hasKeyword` reads them — see the module comment. */
   keywords: readonly string[];
   /** Mana value (CR 202.3), read by `manaValueAtMost`/`manaValueAtLeast`. Absent when the
@@ -71,14 +74,26 @@ export interface SelectorCandidate {
   ownerId?: string;
   /** Is this permanent enchanted by an Aura? */
   isEnchanted?: boolean;
+  /** The controller of each Aura attached to it, one entry per Aura. */
+  auraControllerIds?: readonly string[];
   /** Is this permanent equipped by an Equipment? */
   isEquipped?: boolean;
   /** EVENT-ONLY: currently attacking or blocking. */
   inCombat?: boolean;
   /** Combat status is independent of layers, so continuous statics may read it. */
   combatRole?: 'attacking' | 'blocking' | null;
-  /** The player or planeswalker this permanent is attacking, when it is an attacker. */
+  /** The player this permanent is attacking, when it attacks a player (not a planeswalker). */
   attackingDefenderId?: string | null;
+  attackingDefendingPlayerId?: string;
+  /** Declared as an attacker this turn. */
+  attackedThisTurn?: boolean;
+  /** Not summoning sick: controlled continuously since its controller's turn began (CR 302.6). */
+  controlledSinceTurnStart?: boolean;
+  /**
+   * Its current name (CR 201.2): the name a copy effect gave it, and none at all for a face-down
+   * permanent (CR 708.2). Absent when a builder does not know it, which never matches `name`.
+   */
+  name?: string;
   /** Does this permanent have any counter of any kind on it (Rishkar, Peema Renegade)? */
   hasAnyCounter?: boolean;
   /**
@@ -91,6 +106,7 @@ export interface SelectorCandidate {
 
 /** The object a relative selector ("self", "you control") is resolved against. */
 export interface SelectorSource {
+  giftPromised?: boolean;
   /** Exact identities/facts when evaluating a resolving triggered ability. */
   objectId?: string;
   sourceFacts?: import('./source-identity').ObjectFacts;
@@ -106,6 +122,13 @@ export interface SelectorSource {
   triggerObjectCardId?: string;
   /** Player whose action caused the event, for event-relative conditions. */
   eventPlayerId?: string;
+  /** `attackDeclared` firing: the group's attackers by object, and the attacked player, if any. */
+  attackGroupIds?: readonly string[];
+  attackedPlayerId?: string;
+  /** `attackDeclared` firing: whether any attacker of the whole attack attacked the watcher. */
+  attackedWatcher?: boolean;
+  /** Mana spent to cast the spell a cast trigger is about, for `compareValues` (Increment). */
+  manaSpent?: number;
   /** The source's `chosenOption` (Caged Sun's color, …), for the `chosenColor` selector. */
   chosenOption?: string;
   /** The source's power, or its last-known power once it has left, for `powerAtMostSource`. */
@@ -122,6 +145,12 @@ export type Selector =
   | { kind: 'type'; value: string }
   | { kind: 'subtype'; value: string }
   | { kind: 'supertype'; value: string }
+  /**
+   * "named Lightning Rager", "a card named Galactus, Devourer of Worlds": its current name,
+   * exactly (CR 201.2). Not event-only: a copy effect changes a name as game state, not through
+   * a layer this selector would be read inside.
+   */
+  | { kind: 'name'; value: string }
   | { kind: 'color'; value: Color }
   /**
    * "of the chosen color" (Caged Sun) — the color is per-permanent state
@@ -139,12 +168,23 @@ export type Selector =
    */
   | { kind: 'chosenSubtype' }
   /** Controlled by the source's controller, or by any of their opponents. */
-  | { kind: 'controller'; who: 'you' | 'opponents' }
+  | { kind: 'controller'; who: 'you' | 'opponents' | 'eventPlayer' }
   /** EVENT-ONLY (see the module comment): "with power 4 or greater". */
   | { kind: 'powerAtLeast'; n: number }
   /** EVENT-ONLY (see the module comment): "with power 2 or less". */
   | { kind: 'powerAtMost'; n: number }
   | { kind: 'toughnessAtLeast'; n: number }
+  /**
+   * EVENT-ONLY: "with base power and toughness 1/1" (Bess, Soul Nourisher) — power and toughness
+   * after characteristic-defining and setting effects (layers 7a-7b), before counters and
+   * modifications (CR 208.1, 613.4).
+   */
+  | { kind: 'basePowerToughness'; power: number; toughness: number }
+  /**
+   * EVENT-ONLY: "with power greater than its base power" (Kutzil, Malamet Exemplar) — current
+   * power above the layer 7b value (CR 613.4b), so counters or a pump raised it.
+   */
+  | { kind: 'powerGreaterThanBase' }
   /**
    * EVENT-ONLY: "with equal or lesser power" than the ability's source (Body Launderer) — its
    * current power, or its last-known power once it has left the battlefield (CR 608.2h). An
@@ -183,11 +223,36 @@ export type Selector =
   | { kind: 'owner'; who: 'you' }
   | { kind: 'isMonocolored' }
   | { kind: 'isEnchanted' }
+  /** "enchanted by an Aura you control" (Killian, Decisive Mentor). */
+  | { kind: 'enchantedByAuraYouControl' }
   | { kind: 'isEquipped' }
   | { kind: 'inCombat' }
   | { kind: 'combatRole'; role: 'attacking' | 'blocking' }
   /** A resolving attack trigger's "that player": compare against the event's defender. */
   | { kind: 'attackingEventPlayer' }
+  /**
+   * "that's attacking one of your opponents" (Martial Impetus): attacking a player other than the
+   * source's controller. Attack assignment is game state, like `combatRole`.
+   */
+  | { kind: 'attackingOpponent' }
+  | { kind: 'attackingYouOrYourPlaneswalker' }
+  /**
+   * "Attacking the last chosen player" (Triarch Stalker): attacking the player stored in the
+   * source's `chosenOption`, not one of that player's planeswalkers. Combat assignment is game
+   * state, so a static may read it like `combatRole`.
+   */
+  | { kind: 'attackingChosenPlayer' }
+  /**
+   * EVENT-ONLY: it was declared as an attacker this turn (never true of a token put onto the
+   * battlefield attacking) — "creatures that didn't attack this turn" (Siren's Call).
+   */
+  | { kind: 'attackedThisTurn' }
+  /**
+   * EVENT-ONLY: its controller has controlled it continuously since their turn began (CR 302.6),
+   * read during that controller's own turn — "each creature they didn't control continuously
+   * since the beginning of the turn" (Siren's Call).
+   */
+  | { kind: 'controlledSinceTurnStart' }
   | { kind: 'allOf'; of: Selector[] }
   | { kind: 'anyOf'; of: Selector[] }
   | { kind: 'not'; of: Selector };
@@ -201,6 +266,7 @@ export const ofType = (value: string): Selector => ({ kind: 'type', value });
 export const ofSubtype = (value: string): Selector => ({ kind: 'subtype', value });
 export const ofSupertype = (value: string): Selector => ({ kind: 'supertype', value });
 export const ofColor = (value: Color): Selector => ({ kind: 'color', value });
+export const named = (value: string): Selector => ({ kind: 'name', value });
 export const CHOSEN_COLOR: Selector = { kind: 'chosenColor' };
 export const CHOSEN_TYPE: Selector = { kind: 'chosenType' };
 export const CHOSEN_SUBTYPE: Selector = { kind: 'chosenSubtype' };
@@ -246,9 +312,14 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'powerAtMost':
     case 'powerAtMostSource':
     case 'toughnessAtLeast':
+    case 'basePowerToughness':
+    case 'powerGreaterThanBase':
     case 'hasKeyword':
     case 'inCombat':
     case 'attackingEventPlayer':
+    case 'attackingYouOrYourPlaneswalker':
+    case 'attackedThisTurn':
+    case 'controlledSinceTurnStart':
       return true;
     case 'allOf':
     case 'anyOf':
@@ -256,6 +327,8 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'not':
       return selectorIsEventOnly(selector.of);
     case 'combatRole':
+    case 'attackingOpponent':
+    case 'attackingChosenPlayer':
       // Attack/block assignment is game state, not output from a continuous-effect layer.
       // Static effects such as attacking-creature anthems may therefore use this selector.
       return false;
@@ -265,6 +338,7 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'type':
     case 'subtype':
     case 'supertype':
+    case 'name':
     case 'color':
     case 'chosenColor':
     case 'chosenType':
@@ -280,6 +354,7 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'owner':
     case 'isMonocolored':
     case 'isEnchanted':
+    case 'enchantedByAuraYouControl':
     case 'isEquipped':
       return false;
     default:
@@ -308,6 +383,8 @@ export function selectMatches(
       return candidate.subtypes.includes(selector.value);
     case 'supertype':
       return candidate.supertypes.includes(selector.value);
+    case 'name':
+      return candidate.name !== undefined && candidate.name === selector.value;
     case 'color':
       return candidate.colors.includes(selector.value);
     case 'chosenColor':
@@ -319,9 +396,17 @@ export function selectMatches(
     case 'chosenSubtype':
       return source.chosenOption !== undefined && candidate.subtypes.includes(source.chosenOption);
     case 'controller':
+      if (selector.who === 'eventPlayer')
+        return (
+          source.eventPlayerId !== undefined && candidate.controllerId === source.eventPlayerId
+        );
       return selector.who === 'you'
         ? candidate.controllerId === source.controllerId
         : candidate.controllerId !== source.controllerId;
+    case 'attackedThisTurn':
+      return candidate.attackedThisTurn === true;
+    case 'controlledSinceTurnStart':
+      return candidate.controlledSinceTurnStart === true;
     case 'powerAtLeast':
       return candidate.power >= selector.n;
     case 'powerAtMost':
@@ -340,6 +425,12 @@ export function selectMatches(
       return (candidate.counters?.[selector.counter] ?? 0) > 0;
     case 'toughnessAtLeast':
       return candidate.toughness !== undefined && candidate.toughness >= selector.n;
+    case 'basePowerToughness':
+      return (
+        candidate.basePower === selector.power && candidate.baseToughness === selector.toughness
+      );
+    case 'powerGreaterThanBase':
+      return candidate.basePower !== undefined && candidate.power > candidate.basePower;
     case 'manaValueAtMost':
       return candidate.manaValue !== undefined && candidate.manaValue <= selector.n;
     case 'manaValueAtLeast':
@@ -358,12 +449,26 @@ export function selectMatches(
       return candidate.colors.length === 1;
     case 'isEnchanted':
       return candidate.isEnchanted === true;
+    case 'enchantedByAuraYouControl':
+      return candidate.auraControllerIds?.includes(source.controllerId) === true;
     case 'isEquipped':
       return candidate.isEquipped === true;
     case 'inCombat':
       return candidate.inCombat === true;
     case 'combatRole':
       return candidate.combatRole === selector.role;
+    case 'attackingOpponent':
+      return (
+        candidate.attackingDefenderId != null &&
+        candidate.attackingDefenderId !== source.controllerId
+      );
+    case 'attackingChosenPlayer':
+      return (
+        source.chosenOption !== undefined && candidate.attackingDefenderId === source.chosenOption
+      );
+    case 'attackingYouOrYourPlaneswalker':
+      // The defending player when the attack is on that player, or on a planeswalker still in combat.
+      return candidate.attackingDefendingPlayerId === source.controllerId;
     case 'attackingEventPlayer':
       return (
         source.eventPlayerId !== undefined && candidate.attackingDefenderId === source.eventPlayerId

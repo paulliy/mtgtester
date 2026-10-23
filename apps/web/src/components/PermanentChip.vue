@@ -130,8 +130,11 @@ const statusLines = computed(() => {
   const out: string[] = [];
   if (p.tapped) out.push('Tapped');
   if (p.summoningSick && isCreature.value) out.push('Summoning sick');
-  if (p.attacking !== null)
-    out.push(`Attacking ${props.nameById?.get(p.attacking) ?? p.attacking}`);
+  if (p.attacking !== null) {
+    // An attack on a planeswalker names the planeswalker, not its controller.
+    const target = p.attackingPlaneswalker ?? p.attacking;
+    out.push(`Attacking ${props.nameById?.get(target) ?? target}`);
+  }
   if (p.blocking !== null) out.push(`Blocking ${props.nameById?.get(p.blocking) ?? p.blocking}`);
   return out;
 });

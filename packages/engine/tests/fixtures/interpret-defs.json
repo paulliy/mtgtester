@@ -504,7 +504,7 @@
         "optional": true,
         "targets": [],
         "trigger": {
-          "aggregate": true,
+          "aggregate": "byEventPlayer",
           "subject": {
             "kind": "permanent",
             "selector": {
@@ -3446,7 +3446,7 @@
       "colorless": 0,
       "generic": 3
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Firkraag, Cunning Instigator",
     "oracleId": "81dad7c5-5950-4c45-adb0-cf1a15a74250",
     "power": 3,
@@ -3463,7 +3463,7 @@
     "toughness": 3,
     "triggers": [
       {
-        "description": "Dragon attack goad",
+        "description": "Whenever one or more Dragons you control attack an opponent, goad target creature that player controls",
         "effects": [
           {
             "op": "goad",
@@ -3473,12 +3473,12 @@
         "kind": "triggered",
         "targets": [
           {
-            "controller": "opponent",
+            "controller": "eventPlayer",
             "kind": "creature"
           }
         ],
         "trigger": {
-          "aggregate": true,
+          "aggregate": "byEventPlayer",
           "subject": {
             "kind": "permanent",
             "selector": {
@@ -3499,36 +3499,38 @@
         }
       },
       {
-        "description": "Combat damage draw & counter",
+        "description": "Whenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on Firkraag and you draw a card",
         "effects": [
           {
-            "condition": {
-              "kind": "hadToAttackThisCombat"
+            "count": 1,
+            "counter": "+1/+1",
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "self"
+            }
+          },
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
             },
-            "else": [],
-            "op": "conditionalEffect",
-            "then": [
-              {
-                "count": 1,
-                "counter": "+1/+1",
-                "op": "putCountersEach",
-                "selector": {
-                  "kind": "self"
-                }
-              },
-              {
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "op": "draw"
-              }
-            ]
+            "op": "draw"
           }
         ],
         "kind": "triggered",
         "targets": [],
         "trigger": {
+          "condition": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "triggerObjectHadToAttackThisCombat"
+              },
+              {
+                "kind": "triggerObjectAttackingOpponent"
+              }
+            ]
+          },
           "subject": {
             "kind": "permanent",
             "selector": {
@@ -3544,11 +3546,7 @@
     "types": [
       "Creature"
     ],
-    "unmodeledReasons": [
-      "unrecognized rules text: \"Whenever one or more Dragons you control attack an opponent, goad target creature that player controls.\"",
-      "unrecognized rules text: \"Whenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on ~ and you draw a card.\"",
-      "explicitly unsupported: The intervening-if checks whether Firkraag had to attack, not the creature that dealt damage."
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [],
@@ -5402,7 +5400,7 @@
       "colorless": 0,
       "generic": 1
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Dragon Tempest",
     "oracleId": "b9bacb46-fd1d-459b-81c2-d7d08fe73848",
     "power": null,
@@ -5450,22 +5448,33 @@
         }
       },
       {
-        "description": "Dragon ETB damage equal to Dragon count",
+        "description": "Whenever a Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.",
         "effects": [
           {
             "amount": {
               "kind": "countPermanents",
               "scope": "you",
               "selector": {
-                "kind": "subtype",
-                "value": "Dragon"
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Dragon"
+                  }
+                ]
               }
             },
             "op": "dealDamage",
+            "source": "triggerObject",
             "target": 0
           }
         ],
         "kind": "triggered",
+        "optional": false,
         "targets": [
           {
             "kind": "anyTarget"
@@ -5478,12 +5487,12 @@
               "kind": "allOf",
               "of": [
                 {
-                  "kind": "subtype",
-                  "value": "Dragon"
-                },
-                {
                   "kind": "controller",
                   "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
                 }
               ]
             }
@@ -5496,11 +5505,7 @@
     "types": [
       "Enchantment"
     ],
-    "unmodeledReasons": [
-      "unrecognized rules text: \"Whenever a creature you control with flying enters, it gains haste until end of turn.\"",
-      "unrecognized rules text: \"Whenever a Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.\"",
-      "explicitly unsupported: Dragon-dealt damage is implemented as damage from this enchantment."
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [],

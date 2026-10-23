@@ -90,6 +90,24 @@ export const SOLDIER_1_1: TokenSpec = creatureToken({
   toughness: 1,
 });
 
+/** Recruit creates a Human Soldier, distinct from a plain Soldier. */
+export const HUMAN_SOLDIER_1_1_WHITE: TokenSpec = creatureToken({
+  name: 'Human Soldier',
+  subtypes: ['Human', 'Soldier'],
+  colors: ['W'],
+  power: 1,
+  toughness: 1,
+});
+
+/** Rabble Rousing creates green and white Citizens. */
+export const CITIZEN_1_1_GREEN_WHITE: TokenSpec = creatureToken({
+  name: 'Citizen',
+  subtypes: ['Citizen'],
+  colors: ['G', 'W'],
+  power: 1,
+  toughness: 1,
+});
+
 export const SOLDIER_1_1_LIFELINK: TokenSpec = creatureToken({
   name: 'Soldier',
   subtypes: ['Soldier'],
@@ -117,6 +135,14 @@ export const ASSASSIN_1_1: TokenSpec = creatureToken({
   keywords: ['deathtouch', 'haste'],
 });
 
+export const ZOMBIE_2_2_BLACK: TokenSpec = creatureToken({
+  name: 'Zombie',
+  subtypes: ['Zombie'],
+  colors: ['B'],
+  power: 2,
+  toughness: 2,
+});
+
 export const NECRON_WARRIOR_2_2: TokenSpec = creatureToken({
   name: 'Necron Warrior',
   subtypes: ['Necron'],
@@ -124,6 +150,15 @@ export const NECRON_WARRIOR_2_2: TokenSpec = creatureToken({
   power: 2,
   toughness: 2,
   artifact: true,
+});
+
+export const SPIRIT_1_1_FLYING: TokenSpec = creatureToken({
+  name: 'Spirit',
+  subtypes: ['Spirit'],
+  colors: ['W'],
+  power: 1,
+  toughness: 1,
+  keywords: ['flying'],
 });
 
 export const BIRD_1_1_FLYING: TokenSpec = creatureToken({
@@ -151,6 +186,18 @@ export const BEAST_3_3_GREEN: TokenSpec = creatureToken({
   power: 3,
   toughness: 3,
 });
+
+/** Toby's Beast: "This token can't attack or block alone." (CR 506.5) */
+export const BEAST_4_4_WHITE_CANT_ACT_ALONE: TokenSpec = {
+  ...creatureToken({
+    name: 'Beast',
+    subtypes: ['Beast'],
+    colors: ['W'],
+    power: 4,
+    toughness: 4,
+  }),
+  ruleStatics: [{ kind: 'cantAttackAlone' }, { kind: 'cantBlockAlone' }],
+};
 
 export const THOPTER_1_1_FLYING: TokenSpec = creatureToken({
   name: 'Thopter',
@@ -244,6 +291,15 @@ export const WARRIOR_1_1_RED: TokenSpec = creatureToken({
   colors: ['R'],
   power: 1,
   toughness: 1,
+});
+
+/** Kazuul, Tyrant of the Cliffs' paid-in tax refund: "create a 3/3 red Ogre creature token". */
+export const OGRE_3_3_RED: TokenSpec = creatureToken({
+  name: 'Ogre',
+  subtypes: ['Ogre'],
+  colors: ['R'],
+  power: 3,
+  toughness: 3,
 });
 
 export const NINJA_1_1_BLACK: TokenSpec = creatureToken({
@@ -486,12 +542,23 @@ export const FOOD: TokenSpec = {
  * printed Treasure once did across `overrides/`. `interpret.ts` canonicalizes its parsed spec
  * against this list (by deep structural equality) so a match returns the SAME object, not a copy.
  */
+export const SURVIVOR_1_1_RED = creatureToken({
+  name: 'Survivor',
+  subtypes: ['Survivor'],
+  colors: ['R'],
+  power: 1,
+  toughness: 1,
+});
+
 export const ALL_TOKENS: TokenSpec[] = [
+  SURVIVOR_1_1_RED,
+  ZOMBIE_2_2_BLACK,
   SOLDIER_1_1_LIFELINK,
   INKLING_2_1_FLYING,
   ASSASSIN_1_1,
   NECRON_WARRIOR_2_2,
   BIRD_1_1_FLYING,
+  SPIRIT_1_1_FLYING,
   DRAGON_5_5_FLYING,
   BEAST_3_3_GREEN,
   THOPTER_1_1_FLYING,
@@ -504,6 +571,7 @@ export const ALL_TOKENS: TokenSpec[] = [
   VAMPIRE_1_1_LIFELINK_WHITE,
   SKELETON_4_1_MENACE_BLACK,
   WARRIOR_1_1_RED,
+  OGRE_3_3_RED,
   NINJA_1_1_BLACK,
   RABBIT_1_1_WHITE,
   SPIDER_2_2_REACH_GREEN,

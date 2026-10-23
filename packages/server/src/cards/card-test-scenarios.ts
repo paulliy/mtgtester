@@ -17,11 +17,116 @@ import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import { choose, Engine, ScriptedDecisionProvider } from '@mtg/engine';
 import type { DecisionProvider, EnginePlayerConfig, PreparedScenarioSpec } from '@mtg/engine';
+import { NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
 import type { CardTestScenarioMetadata, Color, GameId, OracleCard, PlayerId } from '@mtg/shared';
 import type { SeatSetup } from '../match/setup';
 import { BUG_HUNT_SCENARIO_IDS, bugHuntScenario } from './bug-hunt-scenarios';
 import { TARGET_UNTAP_SCENARIO_IDS, targetUntapScenario } from './target-untap-scenarios';
+import {
+  WHITE_BLACK_COMBAT_SCENARIO_IDS,
+  whiteBlackControlCombatScenario,
+} from './white-black-control-combat-scenarios';
+import {
+  WHITE_BLACK_HAND_SCENARIO_IDS,
+  whiteBlackControlHandScenario,
+} from './white-black-control-hand-scenarios';
+import {
+  WHITE_BLACK_ENTRY_SCENARIO_IDS,
+  whiteBlackControlEntryScenario,
+} from './white-black-control-entry-scenarios';
+import {
+  WHITE_BLACK_DISCARD_EXTENSION_SCENARIO_IDS,
+  whiteBlackControlDiscardExtensionScenario,
+} from './white-black-control-discard-extension-scenarios';
+import {
+  WHITE_BLACK_DEFENDER_SCENARIO_IDS,
+  whiteBlackControlDefenderScenario,
+} from './white-black-control-defender-scenarios';
+import {
+  WHITE_BLACK_SPELL_SCENARIO_IDS,
+  whiteBlackControlSpellScenario,
+} from './white-black-control-spell-scenarios';
+import {
+  WHITE_BLACK_COUNTER_CLASS_SCENARIO_IDS,
+  whiteBlackControlCounterClassScenario,
+} from './white-black-control-counter-class-scenarios';
+import {
+  WHITE_BLACK_FINAL_SCENARIO_IDS,
+  whiteBlackControlFinalScenario,
+} from './white-black-control-final-scenarios';
+import {
+  WHITE_BLACK_CONTROL_PERCH_SCENARIO_IDS,
+  whiteBlackControlPerchScenario,
+} from './white-black-control-perch-scenarios';
+import {
+  WHITE_BLACK_PROTECTION_SCENARIO_IDS,
+  whiteBlackControlProtectionScenario,
+} from './white-black-control-protection-scenarios';
+import {
+  WHITE_BLACK_DISCARD_CORE_SCENARIO_IDS,
+  whiteBlackControlDiscardCoreScenario,
+} from './white-black-control-discard-core-scenarios';
+import {
+  WHITE_BLACK_GRAVEYARD_SCENARIO_IDS,
+  whiteBlackControlGraveyardScenario,
+} from './white-black-control-graveyard-scenarios';
+import {
+  WHITE_BLACK_CONTROL_STAX_SCENARIO_IDS,
+  whiteBlackControlStaxScenario,
+} from './white-black-control-stax-scenarios';
+import {
+  WHITE_BLACK_REPLACEMENTS_SCENARIO_IDS,
+  whiteBlackControlReplacementsScenario,
+} from './white-black-control-replacements-scenarios';
+import {
+  WHITE_BLACK_CONTROL_LILIANA_SCENARIO_IDS,
+  whiteBlackControlLilianaScenario,
+} from './white-black-control-liliana-scenarios';
+import {
+  WHITE_BLACK_REMAINING_COMBAT_SCENARIO_IDS,
+  whiteBlackControlRemainingCombatScenario,
+} from './white-black-control-remaining-combat-scenarios';
+import {
+  WHITE_BLACK_TERGRID_SCENARIO_IDS,
+  whiteBlackControlTergridScenario,
+} from './white-black-control-tergrid-scenarios';
+import {
+  WHITE_BLACK_HAND_LIMIT_SCENARIO_IDS,
+  whiteBlackControlHandLimitScenario,
+} from './white-black-control-hand-limit-scenarios';
+import {
+  WHITE_BLACK_KEYWORD_SCENARIO_IDS,
+  whiteBlackControlKeywordScenario,
+} from './white-black-control-keyword-scenarios';
 import { PR02_FOLLOW_UP_SCENARIO_IDS, pr02FollowUpScenario } from './pr02-follow-up-scenarios';
+import { PR09_SCENARIO_IDS } from './pr09-scenario-catalog';
+import { pr09Scenario } from './pr09-scenarios';
+import { PR09_LIBRARY_SCENARIOS, pr09LibraryScenario } from './pr09-library-scenarios';
+import { PR09_PERMANENT_SCENARIOS, pr09PermanentScenario } from './pr09-permanent-scenarios';
+import { PR09_CHOICE_SCENARIOS, pr09ChoiceScenario } from './pr09-choice-scenarios';
+import { PR08_SCENARIO_IDS } from './pr08-scenario-catalog';
+import {
+  PR08_REMAINING_SCENARIO_IDS,
+  pr08TragicArroganceScenario,
+  AETHERSPOUTS_SCENARIO_IDS,
+  pr08AetherspoutsScenario,
+} from './pr08-remaining-scenarios';
+import {
+  PR08_MODAL_PLAYER_SCENARIO_IDS,
+  pr08ModalPlayerScenario,
+} from './pr08-modal-player-scenarios';
+import {
+  ROTATING_SURVIVOR_SCENARIO_IDS,
+  pr08RotatingSurvivorScenario,
+} from './pr08-rotating-survivor-scenarios';
+import {
+  WINDS_OF_ABANDON_SCENARIO_IDS,
+  pr08WindsOfAbandonScenario,
+} from './pr08-winds-of-abandon-scenarios';
+import { OLORIN_SCENARIO_IDS, pr08OlorinScenario } from './pr08-olorin-scenarios';
+import { BOSEIJU_SCENARIO_IDS, pr08BoseijuScenario } from './pr08-boseiju-scenarios';
+import { PR08_CUT_A_DEAL_SCENARIO_IDS, pr08CutADealScenario } from './pr08-cut-a-deal-scenarios';
+import { COMBAT_TRIGGER_SCENARIO_IDS, combatTriggerScenario } from './combat-trigger-scenarios';
 
 export interface CardTestScenario {
   metadata: CardTestScenarioMetadata;
@@ -227,6 +332,30 @@ const COVERAGE_PR02: PinnedOracleFile = JSON.parse(
 /** Coverage PR03 cards that had no earlier pinned fixture. */
 const COVERAGE_PR03: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr03-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
+/** Coverage PR04 cards that had no earlier pinned fixture. */
+const COVERAGE_PR04: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr04-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
+/** Coverage PR05 cards that had no earlier pinned fixture. */
+const COVERAGE_PR05: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr05-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
+/** Coverage PR06 cards (combat and damage events) that had no earlier pinned fixture. */
+const COVERAGE_PR06: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr06-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
+/** Coverage PR07 cards (combat requirements, restrictions and extra combats). */
+const COVERAGE_PR07: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr07-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
+const COVERAGE_PR08: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr08-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
 
 const HIDEAWAY_CASTING: PinnedOracleFile = JSON.parse(
@@ -5466,25 +5595,29 @@ function sweetGumRecluseFlashCascadeScenario(gameId: GameId): CardTestScenario {
 }
 
 /** P2's seat in the reach scenario: attack P1 with every creature, otherwise pass. */
-const attackP1WithEverything: DecisionProvider = {
-  decide(request) {
-    const attack = request.legalActions.find((action) =>
-      action.description.startsWith('Declare attackers'),
-    );
-    if (attack !== undefined) {
-      return {
-        requestId: request.requestId,
-        actionId: attack.id,
-        targets: (attack.targets ?? []).map((slot) => ({
-          slot: slot.slot,
-          choice: slot.options.includes('P1') ? 'P1' : (slot.options[0] as string),
-        })),
-      };
-    }
-    const pass = request.legalActions.find((action) => action.type === 'pass');
-    return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
-  },
-};
+/** An opponent's seat that attacks `defender` with every creature, otherwise passes. */
+function attackPlayerWithEverything(defender: PlayerId): DecisionProvider {
+  return {
+    decide(request) {
+      const attack = request.legalActions.find((action) =>
+        action.description.startsWith('Declare attackers'),
+      );
+      if (attack !== undefined) {
+        return {
+          requestId: request.requestId,
+          actionId: attack.id,
+          targets: (attack.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: slot.options.includes(defender) ? defender : (slot.options[0] as string),
+          })),
+        };
+      }
+      const pass = request.legalActions.find((action) => action.type === 'pass');
+      return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+    },
+  };
+}
+const attackP1WithEverything = attackPlayerWithEverything('P1');
 
 function sweetGumRecluseReachScenario(gameId: GameId): CardTestScenario {
   const recluse = pinnedFrom(COVERAGE_PR01, 'Sweet-Gum Recluse');
@@ -7651,6 +7784,2650 @@ function shardOfTheNightbringerScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function sautekhImmortalScenario(gameId: GameId): CardTestScenario {
+  const sautekh = pinnedFrom(MARCHESA_BATCH1, 'Sautekh Immortal');
+  const swamps = Array.from({ length: 7 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'sautekh-immortal-viewer-flash-counters',
+    title: 'Sautekh Immortal: two creatures died this turn, so it enters as a 4/4',
+    instructions: [
+      'Sautekh Immortal and two Lab Doom are in your hand; seven Swamps are on your battlefield, and P2 controls Lab Ox and Lab Servo.',
+      'Cast Lab Doom on Lab Ox and let it resolve, then cast the other Lab Doom on Lab Servo and let it resolve.',
+      'Then cast Sautekh Immortal.',
+    ],
+    expectedOutcome:
+      'Two creatures died this turn, so Sautekh Immortal enters with two +1/+1 counters and is a 4/4.',
+    oracleSha256: sautekh.sha256,
+    clauseIds: ['sautekh-immortal-flash', 'sautekh-immortal-elite-troops'],
+    decks: {
+      P1: [sautekh.card, LAB_DOOM, LAB_DOOM, ...swamps],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom', 'Lab Doom', 'Sautekh Immortal'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: swamps.map((swamp) => swamp.name) },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+    },
+  });
+}
+
+function ironApprenticeScenario(gameId: GameId): CardTestScenario {
+  const apprentice = pinnedFrom(MARCHESA_BATCH1, 'Iron Apprentice');
+  const swamps = Array.from({ length: 3 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'iron-apprentice-viewer-dies-moves-counters',
+    title: 'Iron Apprentice: it dies and its +1/+1 counter moves to Lab Bird',
+    instructions: [
+      'Iron Apprentice and Lab Doom are in your hand; three Swamps and Lab Bird are on your battlefield, and P2 controls Lab Ox.',
+      'Cast Iron Apprentice: it enters as a 1/1 with a +1/+1 counter on it.',
+      'Cast Lab Doom on Iron Apprentice. When it dies, its trigger can only target a creature you control (not Lab Ox), so choose Lab Bird.',
+    ],
+    expectedOutcome:
+      'Iron Apprentice dies with a +1/+1 counter on it, and that counter is put on Lab Bird, which becomes a 2/2.',
+    oracleSha256: apprentice.sha256,
+    clauseIds: ['iron-apprentice-enters-with-counter', 'iron-apprentice-dies-move-counters'],
+    decks: {
+      P1: [apprentice.card, LAB_DOOM, LAB_BIRD, ...swamps],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Iron Apprentice', 'Lab Doom'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Bird', ...swamps.map((swamp) => swamp.name)] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+    },
+  });
+}
+
+function vigeanGraftmageScenario(gameId: GameId): CardTestScenario {
+  const graftmage = pinnedFrom(MARCHESA_BATCH1, 'Vigean Graftmage');
+  const islands = Array.from({ length: 6 }, () => ISLAND);
+  return pr01Scenario(gameId, {
+    id: 'vigean-graftmage-viewer-graft-and-untap',
+    title: 'Vigean Graftmage: graft a counter, then untap a creature that has one',
+    instructions: [
+      'Vigean Graftmage and Lab Servo are in your hand; six Islands and a tapped Lab Ox carrying a +1/+1 counter are on your battlefield.',
+      'Cast Vigean Graftmage: it enters as a 2/2 with two +1/+1 counters on it.',
+      'Cast Lab Servo. When another creature enters, Graft asks whether to use this ability: say Yes to move one +1/+1 counter from Vigean Graftmage onto Lab Servo.',
+      'Activate Vigean Graftmage ({1}{U}) and target the tapped Lab Ox, which has a +1/+1 counter on it.',
+    ],
+    expectedOutcome:
+      'Vigean Graftmage is a 1/1 with one +1/+1 counter, Lab Servo is a 2/2 with one, and Lab Ox is untapped.',
+    oracleSha256: graftmage.sha256,
+    clauseIds: ['vigean-graftmage-graft', 'vigean-graftmage-untap'],
+    decks: {
+      P1: [graftmage.card, LAB_SERVO, LAB_OX, ...islands],
+      P2: [LAB_BIRD, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Vigean Graftmage', 'Lab Servo'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: islands.map((island) => island.name) },
+        { playerId: 'P1', cardNames: ['Lab Ox'], tapped: true, counters: { '+1/+1': 1 } },
+      ],
+    },
+  });
+}
+
+function eliteScaleguardScenario(gameId: GameId): CardTestScenario {
+  const scaleguard = pinnedFrom(COVERAGE_PR04, 'Elite Scaleguard');
+  const forests = Array.from({ length: 4 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'elite-scaleguard-viewer-bolster-and-tap',
+    title: 'Elite Scaleguard: bolster the smallest creature, then tap a blocker as it attacks',
+    instructions: [
+      'Elite Scaleguard is in your hand; Lab Servo (a 1/1) and five lands are on your battlefield, and P2 controls Lab Ox.',
+      'Cast Elite Scaleguard. When it enters, bolster 2 puts two +1/+1 counters on Lab Servo, the creature with the least toughness among your creatures.',
+      'Attack P2 with Lab Servo (Elite Scaleguard is summoning sick). Because Lab Servo has +1/+1 counters, its attack trigger taps target creature defending player controls: target Lab Ox.',
+    ],
+    expectedOutcome:
+      'Lab Servo is a 3/3 with two +1/+1 counters and Elite Scaleguard has none. Lab Ox is tapped by the attack trigger.',
+    oracleSha256: scaleguard.sha256,
+    clauseIds: ['elite-scaleguard-bolster', 'elite-scaleguard-attack-tap'],
+    decks: {
+      P1: [scaleguard.card, LAB_SERVO, PLAINS, ...forests],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Elite Scaleguard'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Servo', 'Plains', ...forests.map((forest) => forest.name)],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function bessScenario(gameId: GameId): CardTestScenario {
+  const bess = pinnedFrom(COVERAGE_PR04, 'Bess, Soul Nourisher');
+  return pr01Scenario(gameId, {
+    id: 'bess-soul-nourisher-viewer-counter-and-pump',
+    title: 'Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s',
+    instructions: [
+      'Bess (a 1/1) and a Forest are on your battlefield; Lab Servo (a 1/1 artifact creature) is in your hand.',
+      'Cast Lab Servo for {1}. Another creature you control with base power and toughness 1/1 entered, so Bess gets a +1/+1 counter.',
+      'Attack P2 with Bess (Lab Servo is summoning sick). Her attack trigger gives each other base-1/1 creature you control +X/+X until end of turn, where X is her one counter: Lab Servo becomes a 2/2.',
+    ],
+    expectedOutcome:
+      'Bess has one +1/+1 counter and hits P2 as a 2/2 for 2. Lab Servo gets +1/+1 until end of turn from her attack trigger.',
+    oracleSha256: bess.sha256,
+    clauseIds: ['bess-soul-nourisher-enters-counter', 'bess-soul-nourisher-attack-pump'],
+    decks: {
+      P1: [bess.card, LAB_SERVO, FOREST, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Servo'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Bess, Soul Nourisher', 'Forest'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function aethericAmplifierScenario(gameId: GameId): CardTestScenario {
+  const amplifier = pinnedFrom(MARCHESA_BATCH1, 'Aetheric Amplifier');
+  const forests = Array.from({ length: 4 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'aetheric-amplifier-viewer-double-counters',
+    title: 'Aetheric Amplifier: double the counters on a target permanent',
+    instructions: [
+      'Aetheric Amplifier, four Forests and Lab Servo (carrying two +1/+1 counters and one charge counter) are on your battlefield, and you have three energy.',
+      'Activate Aetheric Amplifier with the mode that doubles the counters on a target permanent, and target Lab Servo. The other mode, which doubles the counters you have, is offered as its own action.',
+      'Let the ability resolve. The energy is not doubled, because this mode only affects the target.',
+    ],
+    expectedOutcome:
+      'Lab Servo ends with four +1/+1 counters (a 5/5) and two charge counters. You still have three energy.',
+    oracleSha256: amplifier.sha256,
+    clauseIds: ['aetheric-amplifier-mana', 'aetheric-amplifier-modal-double'],
+    decks: {
+      P1: [amplifier.card, LAB_SERVO, ...forests],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Aetheric Amplifier', ...forests.map((f) => f.name)] },
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Servo'],
+          counters: { '+1/+1': 2, charge: 1 },
+        },
+      ],
+      hand: [],
+      energy: [{ playerId: 'P1', amount: 3 }],
+    },
+  });
+}
+
+function cranialPlatingScenario(gameId: GameId): CardTestScenario {
+  const plating = pinnedFrom(COVERAGE_PR05, 'Cranial Plating');
+  const swamps = Array.from({ length: 3 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'cranial-plating-viewer-instant-attach',
+    title: 'Cranial Plating: equip, then move it with {B}{B}',
+    instructions: [
+      'Cranial Plating, three Swamps, Lab Green Bear (2/2) and Lab Ox (4/4) are on your battlefield, and an opponent controls Lab Bird. Plating is not attached to anything.',
+      'Activate Equip {1} targeting Lab Green Bear and let it resolve: Plating is the only artifact you control, so Lab Green Bear becomes a 3/2. (How the bonus follows your artifact count is shown in the spell-on-the-stack scenario.)',
+      'Activate the {B}{B} ability, targeting Lab Ox, and let it resolve. The rules allow targeting the creature Plating is already attached to, but the move would do nothing (CR 701.3b), so this engine leaves Lab Green Bear out of the targets while it carries Plating. The opponent’s Lab Bird is never offered. (The instant-speed timing of this ability is shown in the spell-on-the-stack scenario.)',
+    ],
+    expectedOutcome:
+      'Cranial Plating ends attached to Lab Ox, which is a 5/4. Lab Green Bear is back to 2/2. All three Swamps are tapped.',
+    oracleSha256: plating.sha256,
+    clauseIds: ['cranial-plating-attach', 'cranial-plating-equip'],
+    decks: {
+      P1: [plating.card, LAB_GREEN_BEAR, LAB_OX, ...swamps],
+      P2: [LAB_BIRD, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Cranial Plating', 'Lab Green Bear', 'Lab Ox', ...swamps.map((s) => s.name)],
+        },
+        { playerId: 'P2', cardNames: ['Lab Bird'] },
+      ],
+      hand: [],
+    },
+  });
+}
+
+/**
+ * Cranial Plating at instant speed: with a spell on the stack Equip {1} is not offered but the {B}{B}
+ * attach is, and the equipped creature's bonus follows the artifacts its controller controls.
+ */
+function cranialPlatingStackScenario(gameId: GameId): CardTestScenario {
+  const plating = pinnedFrom(COVERAGE_PR05, 'Cranial Plating');
+  const swamps = Array.from({ length: 3 }, () => SWAMP);
+  const forests = Array.from({ length: 2 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'cranial-plating-viewer-spell-on-stack-artifact-count',
+    title:
+      'Cranial Plating: attach it with a spell on the stack, and its bonus tracks your artifacts',
+    instructions: [
+      'Cranial Plating, Lab Green Bear (2/2), two Forests and three Swamps are on your battlefield; Lab Token Forge and Lab Doom are in your hand. P2 controls Lab Servo, an artifact. Plating is not attached to anything, so with an empty stack both Equip {1} and the {B}{B} attach are offered.',
+      'Cast Lab Token Forge and leave it on the stack. Equip {1} is a sorcery-speed ability and is no longer offered, but the {B}{B} attach still is.',
+      'Activate the {B}{B} attach targeting Lab Green Bear, with Lab Token Forge still on the stack, and let it resolve: Plating is the only artifact you control, so Lab Green Bear becomes a 3/2. P2’s Lab Servo is not counted.',
+      'Let Lab Token Forge resolve. The Servo artifact token you create is a second artifact you control, so Lab Green Bear becomes a 4/2.',
+      'Cast Lab Doom on the Servo token and let it resolve. You control one artifact again, so Lab Green Bear is back to a 3/2.',
+    ],
+    expectedOutcome:
+      'Cranial Plating is attached to Lab Green Bear, which is a 3/2 (it was a 3/2 with Plating alone, a 4/2 while your Servo token was on the battlefield, and P2’s Lab Servo never counted). The Servo token is gone and Lab Doom is in your graveyard. All five lands are tapped.',
+    oracleSha256: plating.sha256,
+    clauseIds: ['cranial-plating-pump', 'cranial-plating-attach'],
+    decks: {
+      P1: [plating.card, LAB_GREEN_BEAR, LAB_TOKEN_FORGE, LAB_DOOM, ...forests, ...swamps],
+      P2: [LAB_SERVO, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [
+            'Cranial Plating',
+            'Lab Green Bear',
+            ...forests.map((forest) => forest.name),
+            ...swamps.map((swamp) => swamp.name),
+          ],
+        },
+        { playerId: 'P2', cardNames: ['Lab Servo'] },
+      ],
+      hand: [{ playerId: 'P1', cardNames: ['Lab Token Forge', 'Lab Doom'] }],
+    },
+  });
+}
+
+function maskOfMemoryScenario(gameId: GameId): CardTestScenario {
+  const mask = pinnedFrom(COVERAGE_PR05, 'Mask of Memory');
+  const plating = pinnedFrom(COVERAGE_PR05, 'Cranial Plating');
+  const forests = Array.from({ length: 4 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'mask-of-memory-viewer-draw-discard',
+    title: 'Mask of Memory: equip it, connect, then draw two and discard a card',
+    instructions: [
+      'Mask of Memory, Cranial Plating, Lab Green Bear (2/2), Lab Ox (4/4) and two Swamps are on your battlefield, and Lab Hex is in your hand. Your library holds only Forests. Neither Equipment is attached to anything and P2 and P3 control no creatures.',
+      'Activate the Mask’s Equip {1} targeting Lab Green Bear and let it resolve. Then activate Cranial Plating’s Equip {1} targeting Lab Ox and let it resolve: Lab Ox carries a different Equipment, and with the Mask and Plating you control two artifacts, so it becomes a 6/4.',
+      'Attack P2 with Lab Green Bear and P3 with Lab Ox. Both are unblocked and both deal combat damage to a player, but only the Mask’s creature triggers it: choose Yes once to draw two cards.',
+      'Choose Lab Hex as the card to discard from your hand of Lab Hex and the two drawn Forests. Lab Ox’s damage does not ask for another draw.',
+    ],
+    expectedOutcome:
+      'Mask of Memory is attached to Lab Green Bear and Cranial Plating to Lab Ox. P2 took 2 combat damage and is at 38 life; P3 took 6 and is at 34. You were asked about the Mask once, drew two Forests and discarded Lab Hex, so you hold two Forests and Lab Hex is in your graveyard.',
+    oracleSha256: mask.sha256,
+    clauseIds: ['mask-of-memory-trigger', 'mask-of-memory-equip'],
+    decks: {
+      P1: [mask.card, plating.card, LAB_GREEN_BEAR, LAB_OX, SWAMP, SWAMP, LAB_HEX, ...forests],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [
+            'Mask of Memory',
+            'Cranial Plating',
+            'Lab Green Bear',
+            'Lab Ox',
+            'Swamp',
+            'Swamp',
+          ],
+        },
+      ],
+      hand: [{ playerId: 'P1', cardNames: ['Lab Hex'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function resurrectionOrbScenario(gameId: GameId): CardTestScenario {
+  const orb = pinnedFrom(COVERAGE_PR05, 'Resurrection Orb');
+  const swamps = Array.from({ length: 6 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'resurrection-orb-viewer-lifelink-and-return',
+    title: 'Resurrection Orb: equip a stolen creature, gain life, lose it, and it returns home',
+    instructions: [
+      'Resurrection Orb, six Swamps and Lab Green Bear (2/2) are on your battlefield, and Lab Doom is in your hand. P2 owns Lab Green Bear but you control it. The Orb is not attached to anything.',
+      'Activate Equip {4} targeting Lab Green Bear and let it resolve.',
+      'Attack P2 with Lab Green Bear. It is unblocked and has lifelink from the Orb, so P2 takes 2 and you gain 2.',
+      'In your second main phase cast Lab Doom on Lab Green Bear. It dies into P2\u2019s graveyard and the Orb sets up its return.',
+      'Pass to the end step: Lab Green Bear returns to the battlefield under P2\u2019s control, its owner, not yours.',
+    ],
+    expectedOutcome:
+      'Lab Green Bear is on the battlefield under P2\u2019s control and is not attached to the Orb, which is unattached. P2 took 2 combat damage and is at 38 life; you gained 2 and are at 42. Lab Doom is in your graveyard and P2\u2019s graveyard is empty.',
+    oracleSha256: orb.sha256,
+    clauseIds: ['resurrection-orb-lifelink', 'resurrection-orb-trigger', 'resurrection-orb-equip'],
+    decks: {
+      P1: [orb.card, ...swamps, LAB_DOOM],
+      P2: [LAB_GREEN_BEAR, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Resurrection Orb', ...swamps.map((swamp) => swamp.name)] },
+        { playerId: 'P2', cardNames: ['Lab Green Bear'], controllerId: 'P1' },
+      ],
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom'] }],
+      continueThroughCombat: true,
+      continueToPostcombatMain: true,
+      continueToEndStep: true,
+    },
+  });
+}
+
+const LAB_SUN_BLUE_INSTANT = card({
+  oracleId: 'lab-sun-blue-instant',
+  name: 'Lab Sun Blue Instant',
+  typeLine: 'Instant',
+  manaCost: '{1}{U}',
+  cmc: 2,
+  colors: ['U'],
+  colorIdentity: ['U'],
+  oracleText: 'You gain 2 life.',
+});
+const LAB_SUN_RED_SORCERY = card({
+  oracleId: 'lab-sun-red-sorcery',
+  name: 'Lab Sun Red Sorcery',
+  typeLine: 'Sorcery',
+  manaCost: '{1}{R}',
+  cmc: 2,
+  colors: ['R'],
+  colorIdentity: ['R'],
+  oracleText: 'You gain 3 life.',
+});
+
+const LAB_SUN_WHITE_INSTANT = card({
+  oracleId: 'lab-sun-white-instant',
+  name: 'Lab Sun White Instant',
+  typeLine: 'Instant',
+  manaCost: '{2}{W}',
+  cmc: 3,
+  colors: ['W'],
+  colorIdentity: ['W'],
+  oracleText: 'You gain 4 life.',
+});
+const LAB_SUN_RED_BIG_INSTANT = card({
+  oracleId: 'lab-sun-red-big-instant',
+  name: 'Lab Sun Red Big Instant',
+  typeLine: 'Instant',
+  manaCost: '{4}{R}',
+  cmc: 5,
+  colors: ['R'],
+  colorIdentity: ['R'],
+  oracleText: 'You gain 5 life.',
+});
+
+function sunforgerScenario(gameId: GameId): CardTestScenario {
+  const sunforger = pinnedFrom(COVERAGE_PR05, 'Sunforger');
+  const forests = Array.from({ length: 3 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'sunforger-viewer-unattach-search-and-cast',
+    title: 'Sunforger: equip it, then unattach it to cast a red instant from your library for free',
+    instructions: [
+      'Sunforger, Lab Green Bear (2/2), three Forests, a Mountain and a Plains are on your battlefield. Your library holds Lab Quick Gain (a red instant, mana value 1), Lab Sun White Instant (a white instant, mana value 3), Lab Sun Red Big Instant (a red instant, mana value 5), Lab Sun Blue Instant (a blue instant) and Lab Sun Red Sorcery (a red sorcery). Sunforger is not attached to anything, so its {R}{W} ability is not offered yet.',
+      'Activate Equip {3} targeting Lab Green Bear, paying with the Forests, and let it resolve: Lab Green Bear becomes a 6/2.',
+      'Activate {R}{W}, Unattach this Equipment, paying with the Mountain and the Plains. Sunforger comes off Lab Green Bear as a cost, which is a 2/2 again before the ability resolves.',
+      'Let the ability resolve. Only the two instants that are red or white with mana value 4 or less are offered, Lab Quick Gain and Lab Sun White Instant; the mana value 5 red instant, the blue instant and the red sorcery are not. Choose Lab Quick Gain; no mana is paid for it.',
+      'Let Lab Quick Gain resolve.',
+    ],
+    expectedOutcome:
+      'Sunforger is on the battlefield, unattached, and Lab Green Bear is a 2/2. Lab Quick Gain was cast without paying for it and is in your graveyard, so you gained 1 life and are at 41. Your library still holds Lab Sun White Instant, Lab Sun Red Big Instant, Lab Sun Blue Instant and Lab Sun Red Sorcery, reshuffled. All five lands are tapped.',
+    oracleSha256: sunforger.sha256,
+    clauseIds: ['sunforger-pump', 'sunforger-search', 'sunforger-equip'],
+    decks: {
+      P1: [
+        sunforger.card,
+        LAB_GREEN_BEAR,
+        ...forests,
+        MOUNTAIN,
+        PLAINS,
+        LAB_QUICK_GAIN,
+        LAB_SUN_WHITE_INSTANT,
+        LAB_SUN_RED_BIG_INSTANT,
+        LAB_SUN_BLUE_INSTANT,
+        LAB_SUN_RED_SORCERY,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [
+            'Sunforger',
+            'Lab Green Bear',
+            ...forests.map((forest) => forest.name),
+            'Mountain',
+            'Plains',
+          ],
+        },
+      ],
+      hand: [],
+    },
+  });
+}
+
+const LAB_HEXPROOF_ELF = card({
+  oracleId: 'lab-hexproof-elf',
+  name: 'Lab Hexproof Elf',
+  typeLine: 'Creature — Elf',
+  manaCost: '{G}',
+  cmc: 1,
+  colors: ['G'],
+  colorIdentity: ['G'],
+  power: '2',
+  toughness: '2',
+  oracleText: 'Hexproof',
+});
+
+function screamsFromWithinScenario(gameId: GameId): CardTestScenario {
+  const screams = pinnedFrom(COVERAGE_PR05, 'Screams from Within');
+  const swamps = Array.from({ length: 5 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'screams-from-within-viewer-return-and-enchant',
+    title:
+      'Screams from Within: its creature dies and it returns onto a hexproof opposing creature',
+    instructions: [
+      'Screams from Within and Lab Doom are in your hand. Five Swamps, Lab Green Bear (2/2) and Lab Ox (4/4) are on your battlefield, and P2 controls Lab Hexproof Elf (2/2, hexproof).',
+      'Cast Screams from Within targeting Lab Green Bear and let it resolve: Lab Green Bear becomes a 1/1. Lab Hexproof Elf is not a legal target for the Aura spell.',
+      'Cast Lab Doom on Lab Green Bear. It dies, Screams from Within goes to your graveyard with it, and its trigger puts the Aura card back onto the battlefield.',
+      'Choose Lab Hexproof Elf as the creature to enchant. Nothing is targeted, so hexproof does not stop it.',
+    ],
+    expectedOutcome:
+      'Screams from Within is on the battlefield under your control enchanting Lab Hexproof Elf, which is a 1/1. Lab Green Bear and Lab Doom are in your graveyard, Screams from Within is not, and Lab Ox is still a 4/4. All five Swamps are tapped.',
+    oracleSha256: screams.sha256,
+    clauseIds: [
+      'screams-from-within-enchant',
+      'screams-from-within-pump',
+      'screams-from-within-return',
+    ],
+    decks: {
+      P1: [screams.card, LAB_DOOM, ...swamps, LAB_GREEN_BEAR, LAB_OX],
+      P2: [LAB_HEXPROOF_ELF, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Screams from Within', 'Lab Doom'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [...swamps.map((swamp) => swamp.name), 'Lab Green Bear', 'Lab Ox'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Hexproof Elf'] },
+      ],
+    },
+  });
+}
+
+function ghoulishImpetusScenario(gameId: GameId): CardTestScenario {
+  const impetus = pinnedFrom(COVERAGE_PR05, 'Ghoulish Impetus');
+  const swamps = Array.from({ length: 5 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'ghoulish-impetus-viewer-return-at-end-step',
+    title: 'Ghoulish Impetus: its creature dies and it returns at the next end step',
+    instructions: [
+      'Ghoulish Impetus and Lab Doom are in your hand. Five Swamps, Lab Green Bear (2/2) and Lab Ox (4/4) are on your battlefield, and P2 controls Lab Hexproof Elf (2/2, hexproof).',
+      'Cast Ghoulish Impetus targeting Lab Green Bear and let it resolve: Lab Green Bear becomes a 3/3 with deathtouch and is goaded.',
+      'Cast Lab Doom on Lab Green Bear. It dies and Ghoulish Impetus goes to your graveyard with it. Nothing returns yet.',
+      'Pass priority until the beginning of the end step. Ghoulish Impetus returns then, and you choose Lab Ox as the creature to enchant.',
+    ],
+    expectedOutcome:
+      'Ghoulish Impetus is on the battlefield under your control enchanting Lab Ox, which is a 5/5 with deathtouch. Lab Green Bear and Lab Doom are in your graveyard and Ghoulish Impetus is not. All five Swamps are tapped.',
+    oracleSha256: impetus.sha256,
+    clauseIds: ['ghoulish-impetus-enchant', 'ghoulish-impetus-statics', 'ghoulish-impetus-return'],
+    decks: {
+      P1: [impetus.card, LAB_DOOM, ...swamps, LAB_GREEN_BEAR, LAB_OX],
+      P2: [LAB_HEXPROOF_ELF, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Ghoulish Impetus', 'Lab Doom'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [...swamps.map((swamp) => swamp.name), 'Lab Green Bear', 'Lab Ox'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Hexproof Elf'] },
+      ],
+      continueToEndStep: true,
+    },
+  });
+}
+
+/** Ghoulish Impetus goads its creature: the attack is mandatory, while an unenchanted one is free. */
+function ghoulishImpetusGoadScenario(gameId: GameId): CardTestScenario {
+  const impetus = pinnedFrom(COVERAGE_PR05, 'Ghoulish Impetus');
+  const swamps = Array.from({ length: 3 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'ghoulish-impetus-viewer-goaded-attack',
+    title: 'Ghoulish Impetus: the goaded creature must attack, an unenchanted one may stay home',
+    instructions: [
+      'Ghoulish Impetus is in your hand. Three Swamps, Lab Green Bear (2/2) and Lab Ox (4/4) are on your battlefield. Your opponents control no creatures.',
+      'Cast Ghoulish Impetus targeting Lab Green Bear and let it resolve: Lab Green Bear becomes a 3/3 with deathtouch and is goaded.',
+      'Declare attackers. Lab Green Bear is goaded, so it has no "Stay home" choice; Lab Ox does. Leave Lab Green Bear unassigned and keep Lab Ox at home, then confirm: Lab Green Bear attacks anyway. Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Lab Green Bear, a 3/3 with deathtouch, attacked P2 although you never chose to attack, and hit for 3, leaving P2 at 37. Lab Ox stayed home untapped. P3 and P4 are untouched.',
+    oracleSha256: impetus.sha256,
+    clauseIds: ['ghoulish-impetus-statics'],
+    decks: {
+      P1: [impetus.card, ...swamps, LAB_GREEN_BEAR, LAB_OX],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Ghoulish Impetus'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [...swamps.map((swamp) => swamp.name), 'Lab Green Bear', 'Lab Ox'],
+        },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+/**
+ * Ghoulish Impetus on an opponent's creature: on that opponent's turn the goaded creature cannot
+ * attack the Aura's controller, while an unenchanted creature of theirs can.
+ */
+function ghoulishImpetusOpponentAttackScenario(gameId: GameId): CardTestScenario {
+  const impetus = pinnedFrom(COVERAGE_PR05, 'Ghoulish Impetus');
+  return pr01Scenario(gameId, {
+    id: 'ghoulish-impetus-viewer-goaded-opponent-attack',
+    title: 'Ghoulish Impetus: P2’s goaded creature cannot attack you, their other creature can',
+    instructions: [
+      'It is P2’s turn. Your Ghoulish Impetus is already attached to P2’s Lab Green Bear, which is a 3/3 with deathtouch and goaded by you. P2 also controls Lab Ox (4/4), which is not enchanted. You control no creatures.',
+      'P2 attacks you with everything it is allowed to. Lab Green Bear is goaded, so it must attack and may not attack you, the Aura’s controller; Lab Ox may attack you or stay home.',
+      'Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Lab Ox attacked you and Lab Green Bear attacked another opponent: you took 4 and are at 36, not 39 or 33. P3 took 3 from Lab Green Bear and is at 37, and P4 is untouched at 40.',
+    oracleSha256: impetus.sha256,
+    clauseIds: ['ghoulish-impetus-statics'],
+    decks: {
+      P1: [impetus.card, FOREST, FOREST],
+      P2: [LAB_GREEN_BEAR, LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Ghoulish Impetus'],
+          attachedToCard: { playerId: 'P2', cardName: 'Lab Green Bear' },
+        },
+        { playerId: 'P2', cardNames: ['Lab Green Bear', 'Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') },
+  });
+}
+
+function giftOfImmortalityScenario(gameId: GameId): CardTestScenario {
+  const gift = pinnedFrom(COVERAGE_PR05, 'Gift of Immortality');
+  const swamps = Array.from({ length: 4 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'gift-of-immortality-viewer-owner-return-then-aura',
+    title: 'Gift of Immortality: the creature returns to its owner, then the Aura returns onto it',
+    instructions: [
+      'Gift of Immortality and Lab Doom are in your hand. A Plains, four Swamps and Lab Green Bear (2/2) are on your battlefield. P2 owns Lab Green Bear but you control it.',
+      'Cast Gift of Immortality targeting Lab Green Bear and let it resolve.',
+      'Cast Lab Doom on Lab Green Bear. It dies into P2\u2019s graveyard and Gift of Immortality goes to your graveyard with it. Its trigger puts Lab Green Bear straight back onto the battlefield, under P2\u2019s control as its owner. The Aura does not return yet.',
+      'Pass priority to the beginning of the end step: Gift of Immortality returns to the battlefield attached to that Lab Green Bear, under your control.',
+    ],
+    expectedOutcome:
+      'Lab Green Bear is on the battlefield under P2\u2019s control, a new object, and Gift of Immortality is on the battlefield under your control attached to it. Lab Doom is your only graveyard card and P2\u2019s graveyard is empty. All five lands are tapped.',
+    oracleSha256: gift.sha256,
+    clauseIds: [
+      'gift-of-immortality-enchant',
+      'gift-of-immortality-creature-return',
+      'gift-of-immortality-aura-return',
+    ],
+    decks: {
+      P1: [gift.card, LAB_DOOM, PLAINS, ...swamps],
+      P2: [LAB_GREEN_BEAR, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Gift of Immortality', 'Lab Doom'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Plains', ...swamps.map((swamp) => swamp.name)],
+        },
+        { playerId: 'P2', cardNames: ['Lab Green Bear'], controllerId: 'P1' },
+      ],
+      continueToEndStep: true,
+    },
+  });
+}
+
+const LAB_AEGIS = card({
+  oracleId: 'lab-aegis',
+  name: 'Lab Aegis',
+  typeLine: 'Enchantment — Aura',
+  manaCost: '{W}',
+  cmc: 1,
+  colors: ['W'],
+  colorIdentity: ['W'],
+  oracleText: 'Enchant creature\nEnchanted creature gets +2/+2.',
+});
+
+/** A second Aura beside Lab Aegis, so a scenario can attach a different number of Auras. */
+const LAB_MANTLE = card({
+  oracleId: 'lab-mantle',
+  name: 'Lab Mantle',
+  typeLine: 'Enchantment — Aura',
+  manaCost: '{W}',
+  cmc: 1,
+  colors: ['W'],
+  colorIdentity: ['W'],
+  oracleText: 'Enchant creature\nEnchanted creature gets +1/+1.',
+});
+
+function ajanisChosenScenario(gameId: GameId): CardTestScenario {
+  const chosen = pinnedFrom(COVERAGE_PR05, "Ajani's Chosen");
+  return pr01Scenario(gameId, {
+    id: 'ajanis-chosen-viewer-aura-moves-to-cat',
+    title: "Ajani's Chosen: an Aura you cast moves onto the Cat it makes",
+    instructions: [
+      "Lab Aegis is in your hand. Ajani's Chosen, Lab Green Bear (2/2) and a Plains are on your battlefield.",
+      'Cast Lab Aegis targeting Lab Green Bear and let it resolve: Lab Green Bear becomes a 4/4.',
+      "Ajani's Chosen triggers because an enchantment you control entered. Let the trigger resolve: a 2/2 white Cat token is created and you are asked whether to attach Lab Aegis to it.",
+      'Choose to attach Lab Aegis to the Cat.',
+    ],
+    expectedOutcome:
+      'Lab Aegis is on the battlefield attached to the Cat token, which is a 4/4, and Lab Green Bear is a 2/2 again. There is exactly one Cat. The Plains is tapped.',
+    oracleSha256: chosen.sha256,
+    clauseIds: ['ajanis-chosen-cat', 'ajanis-chosen-attach'],
+    decks: {
+      P1: [chosen.card, LAB_AEGIS, PLAINS, LAB_GREEN_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Aegis'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ["Ajani's Chosen", 'Lab Green Bear', 'Plains'] }],
+    },
+  });
+}
+
+/** Ajani's Chosen makes a Cat for any enchantment, not only an Aura: Lab Hex has nothing to attach. */
+function ajanisChosenEnchantmentScenario(gameId: GameId): CardTestScenario {
+  const chosen = pinnedFrom(COVERAGE_PR05, "Ajani's Chosen");
+  return pr01Scenario(gameId, {
+    id: 'ajanis-chosen-viewer-enchantment-makes-cat',
+    title: "Ajani's Chosen: a non-Aura enchantment you cast makes a Cat with nothing to attach",
+    instructions: [
+      "Lab Hex (an enchantment that is not an Aura) is in your hand. Ajani's Chosen and three Plains are on your battlefield.",
+      "Cast Lab Hex and let it resolve. Ajani's Chosen triggers because an enchantment you control entered. Let the trigger resolve: a 2/2 white Cat token is created.",
+      'Lab Hex is not an Aura, so you are not asked to attach anything.',
+    ],
+    expectedOutcome:
+      "Lab Hex is on the battlefield and there is exactly one Cat, a 2/2. You were never offered an attach choice. Ajani's Chosen is still a 3/3.",
+    oracleSha256: chosen.sha256,
+    clauseIds: ['ajanis-chosen-cat'],
+    decks: {
+      P1: [chosen.card, LAB_HEX, PLAINS, PLAINS, PLAINS],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Hex'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ["Ajani's Chosen", 'Plains', 'Plains', 'Plains'] },
+      ],
+    },
+  });
+}
+
+function shieldedByFaithScenario(gameId: GameId): CardTestScenario {
+  const shielded = pinnedFrom(COVERAGE_PR05, 'Shielded by Faith');
+  return pr01Scenario(gameId, {
+    id: 'shielded-by-faith-viewer-attach-to-entering-creature',
+    title: 'Shielded by Faith: it moves onto a creature that enters and keeps it indestructible',
+    instructions: [
+      'Shielded by Faith, Lab Green Bear and Lab Doom are in your hand. Two Plains, two Swamps, two Forests and Lab Ox (4/4) are on your battlefield.',
+      'Cast Shielded by Faith targeting Lab Ox and let it resolve: Lab Ox is indestructible.',
+      'Cast Lab Green Bear and let it resolve. Shielded by Faith triggers because a creature entered.',
+      'Choose Yes to attach Shielded by Faith to Lab Green Bear. It leaves Lab Ox, which is no longer indestructible.',
+      'Cast Lab Doom on Lab Green Bear and let it resolve. It is indestructible now, so it survives.',
+    ],
+    expectedOutcome:
+      'Shielded by Faith is on the battlefield attached to Lab Green Bear, which is still on the battlefield after Lab Doom. Lab Doom is in your graveyard and Lab Ox is on the battlefield. All six lands are tapped.',
+    oracleSha256: shielded.sha256,
+    clauseIds: ['shielded-by-faith-indestructible', 'shielded-by-faith-attach'],
+    decks: {
+      P1: [
+        shielded.card,
+        LAB_GREEN_BEAR,
+        LAB_DOOM,
+        PLAINS,
+        PLAINS,
+        SWAMP,
+        SWAMP,
+        FOREST,
+        FOREST,
+        LAB_OX,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Shielded by Faith', 'Lab Green Bear', 'Lab Doom'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Plains', 'Plains', 'Swamp', 'Swamp', 'Forest', 'Forest', 'Lab Ox'],
+        },
+      ],
+    },
+  });
+}
+
+/**
+ * Shielded by Faith's "whenever a creature enters" is not limited to your creatures: after the
+ * Aura is on Lab Ox, P2 flashes in Lab Flash Wolf and you are offered the attach.
+ */
+function shieldedByFaithOpponentCreatureScenario(gameId: GameId): CardTestScenario {
+  const shielded = pinnedFrom(COVERAGE_PR05, 'Shielded by Faith');
+  const wolf = card({
+    oracleId: 'lab-flash-wolf',
+    name: 'Lab Flash Wolf',
+    typeLine: 'Creature — Wolf',
+    manaCost: '{1}{G}',
+    cmc: 2,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '2',
+    toughness: '2',
+    oracleText: 'Flash',
+  });
+  const watched: { engine?: Engine } = {};
+  const scenario = pr01Scenario(gameId, {
+    id: 'shielded-by-faith-viewer-opponent-creature-enters',
+    title: 'Shielded by Faith: an opponent’s creature entering offers you the attach',
+    instructions: [
+      'Shielded by Faith is in your hand. Two Plains, a Swamp and Lab Ox (4/4) are on your battlefield. P2 holds Lab Flash Wolf (2/2 with flash) and has two Forests.',
+      'Cast Shielded by Faith targeting Lab Ox and let it resolve: Lab Ox is indestructible.',
+      'Pass priority with an empty stack. P2 casts Lab Flash Wolf. Let it resolve: a creature entered under P2’s control, and Shielded by Faith asks you whether to attach it.',
+      'Choose Yes to attach Shielded by Faith to P2’s Lab Flash Wolf. It leaves Lab Ox.',
+    ],
+    expectedOutcome:
+      'Shielded by Faith, which you still control, is attached to P2’s Lab Flash Wolf, which is indestructible. Lab Ox is no longer indestructible.',
+    oracleSha256: shielded.sha256,
+    clauseIds: ['shielded-by-faith-attach'],
+    decks: {
+      P1: [shielded.card, PLAINS, PLAINS, SWAMP, LAB_OX],
+      P2: [wolf, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        { playerId: 'P1', cardNames: ['Shielded by Faith'] },
+        { playerId: 'P2', cardNames: ['Lab Flash Wolf'] },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Plains', 'Plains', 'Swamp', 'Lab Ox'] },
+        { playerId: 'P2', cardNames: ['Forest', 'Forest'] },
+      ],
+    },
+    decisionProviderOverrides: {
+      P2: castAtEnchantedCreature(() => watched.engine!, 'Lab Flash Wolf', 'Shielded by Faith'),
+    },
+  });
+  watched.engine = scenario.engine;
+  return scenario;
+}
+
+function forumFilibusterScenario(gameId: GameId): CardTestScenario {
+  const filibuster = pinnedFrom(COVERAGE_PR05, 'Forum Filibuster');
+  return pr01Scenario(gameId, {
+    id: 'forum-filibuster-viewer-inkling-and-aura',
+    title: 'Forum Filibuster: at your upkeep the Inkling gets an Aura from your graveyard',
+    instructions: [
+      'Forum Filibuster is on your battlefield. Lab Aegis (an Aura) and Lab Green Bear (a creature) are in your graveyard. Pass until your upkeep.',
+      'At the beginning of your upkeep, Forum Filibuster creates a 2/1 white and black Inkling with flying, then its reflexive ability asks for up to one target Aura or Equipment card in your graveyard. Only Lab Aegis is offered, not Lab Green Bear.',
+      'Choose Lab Aegis as the target and let the ability resolve.',
+    ],
+    expectedOutcome:
+      'Lab Aegis returns to the battlefield attached to the Inkling, which is a 4/3 with flying; the Inkling is white and black. Lab Green Bear is the only card left in your graveyard.',
+    oracleSha256: filibuster.sha256,
+    clauseIds: ['forum-filibuster-inkling', 'forum-filibuster-reflexive-return'],
+    decks: {
+      P1: [filibuster.card, LAB_AEGIS, LAB_GREEN_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P4',
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Forum Filibuster'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Aegis', 'Lab Green Bear'] }],
+      continueToNextUpkeep: true,
+    },
+  });
+}
+
+/** Forum Filibuster's reflexive return with an Equipment card: it enters attached to the Inkling. */
+function forumFilibusterEquipmentScenario(gameId: GameId): CardTestScenario {
+  const filibuster = pinnedFrom(COVERAGE_PR05, 'Forum Filibuster');
+  const sunforger = pinnedFrom(COVERAGE_PR05, 'Sunforger');
+  return pr01Scenario(gameId, {
+    id: 'forum-filibuster-viewer-equipment-return',
+    title: 'Forum Filibuster: at your upkeep the Inkling gets an Equipment from your graveyard',
+    instructions: [
+      'Forum Filibuster is on your battlefield. Sunforger (an Equipment), Lab Aegis (an Aura) and Lab Green Bear (a creature) are in your graveyard. Pass until your upkeep.',
+      'At the beginning of your upkeep, Forum Filibuster creates a 2/1 white and black Inkling with flying, then its reflexive ability asks for up to one target Aura or Equipment card in your graveyard. Sunforger and Lab Aegis are offered, not Lab Green Bear.',
+      'Choose Sunforger as the target and let the ability resolve.',
+    ],
+    expectedOutcome:
+      'Sunforger returns to the battlefield attached to the Inkling, which is a 6/1 with flying (Sunforger gives +4/+0). Lab Aegis and Lab Green Bear are the only cards left in your graveyard.',
+    oracleSha256: filibuster.sha256,
+    clauseIds: ['forum-filibuster-reflexive-return'],
+    decks: {
+      P1: [filibuster.card, sunforger.card, LAB_AEGIS, LAB_GREEN_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P4',
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Forum Filibuster'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Sunforger', 'Lab Aegis', 'Lab Green Bear'] }],
+      continueToNextUpkeep: true,
+    },
+  });
+}
+
+function karametrasFavorScenario(gameId: GameId): CardTestScenario {
+  const favor = pinnedFrom(COVERAGE_PR05, "Karametra's Favor");
+  const forests = Array.from({ length: 2 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'karametras-favor-viewer-granted-mana-pays-spell',
+    title:
+      "Karametra's Favor: draw a card, then tap the enchanted creature for mana to cast a spell",
+    instructions: [
+      "Karametra's Favor and Lab Shock are in your hand. Two Forests and Lab Green Bear (2/2) are on your battlefield, and a Plains is on top of your library.",
+      "Cast Karametra's Favor targeting Lab Green Bear, paying with the two Forests, and let it resolve.",
+      'Its enters trigger resolves: you draw the Plains.',
+      'Cast Lab Shock at P2. Both Forests are tapped, so the only mana source left is Lab Green Bear, which now has "{T}: Add one mana of any color": it pays {R}.',
+      'Let Lab Shock resolve.',
+    ],
+    expectedOutcome:
+      "Karametra's Favor is attached to Lab Green Bear, which is tapped and still a 2/2. You drew the Plains, so it is in your hand. Lab Shock is in your graveyard and P2 took 2, so P2 is at 38.",
+    oracleSha256: favor.sha256,
+    clauseIds: ['karametras-favor-enters-draw', 'karametras-favor-mana'],
+    decks: {
+      P1: [favor.card, LAB_SHOCK, ...forests, LAB_GREEN_BEAR, PLAINS],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ["Karametra's Favor", 'Lab Shock'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: [...forests.map((forest) => forest.name), 'Lab Green Bear'] },
+      ],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Plains'] }],
+    },
+  });
+}
+
+function redemptionArcScenario(gameId: GameId): CardTestScenario {
+  const arc = pinnedFrom(COVERAGE_PR05, 'Redemption Arc');
+  return pr01Scenario(gameId, {
+    id: 'redemption-arc-viewer-exile-enchanted-creature',
+    title: 'Redemption Arc: enchant your creature, then pay {1}{W} to exile it with no target',
+    instructions: [
+      'Redemption Arc is in your hand. Two Plains, three Swamps and Lab Green Bear (2/2) are on your battlefield.',
+      'Cast Redemption Arc targeting Lab Green Bear and let it resolve: Lab Green Bear is indestructible and goaded.',
+      'Activate Redemption Arc’s {1}{W} ability. It asks for no target: it exiles the creature the Aura is attached to.',
+      'Let the ability resolve.',
+    ],
+    expectedOutcome:
+      'Lab Green Bear is in exile, not your graveyard, and Redemption Arc is in your graveyard because nothing is left to enchant. All five lands are tapped.',
+    oracleSha256: arc.sha256,
+    clauseIds: ['redemption-arc-statics', 'redemption-arc-exile'],
+    decks: {
+      P1: [arc.card, PLAINS, SWAMP, SWAMP, SWAMP, PLAINS, LAB_GREEN_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Redemption Arc'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Plains', 'Swamp', 'Swamp', 'Swamp', 'Plains', 'Lab Green Bear'],
+        },
+      ],
+    },
+  });
+}
+
+/** Redemption Arc's grants: a real destroy spell cannot kill its creature, which is also goaded. */
+function redemptionArcGrantsScenario(gameId: GameId): CardTestScenario {
+  const arc = pinnedFrom(COVERAGE_PR05, 'Redemption Arc');
+  return pr01Scenario(gameId, {
+    id: 'redemption-arc-viewer-indestructible-goaded-attack',
+    title: 'Redemption Arc: Lab Doom cannot destroy the creature, which must attack',
+    instructions: [
+      'Redemption Arc and Lab Doom are in your hand. Two Plains, three Swamps, Lab Green Bear (2/2) and Lab Ox (4/4) are on your battlefield. Your opponents control no creatures.',
+      'Cast Redemption Arc targeting Lab Green Bear and let it resolve: Lab Green Bear is indestructible and goaded.',
+      'Cast Lab Doom targeting Lab Green Bear and let it resolve: the destroy effect does nothing, because Lab Green Bear is indestructible.',
+      'Declare attackers. Lab Green Bear is goaded, so it has no "Stay home" choice; Lab Ox does. Leave Lab Green Bear unassigned and keep Lab Ox at home, then confirm: Lab Green Bear attacks anyway. Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Lab Green Bear survived Lab Doom, which is in your graveyard, and Redemption Arc is still attached to it. It attacked P2 although you never chose to attack, and hit for 2, leaving P2 at 38. Lab Ox stayed home untapped. All five lands are tapped.',
+    oracleSha256: arc.sha256,
+    clauseIds: ['redemption-arc-statics'],
+    decks: {
+      P1: [arc.card, LAB_DOOM, PLAINS, PLAINS, SWAMP, SWAMP, SWAMP, LAB_GREEN_BEAR, LAB_OX],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Redemption Arc', 'Lab Doom'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Plains', 'Plains', 'Swamp', 'Swamp', 'Swamp', 'Lab Green Bear', 'Lab Ox'],
+        },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+/**
+ * Redemption Arc on an opponent's creature: on that opponent's turn the goaded creature cannot
+ * attack the Aura's controller, while an unenchanted creature of theirs can.
+ */
+function redemptionArcOpponentAttackScenario(gameId: GameId): CardTestScenario {
+  const arc = pinnedFrom(COVERAGE_PR05, 'Redemption Arc');
+  return pr01Scenario(gameId, {
+    id: 'redemption-arc-viewer-goaded-opponent-attack',
+    title: 'Redemption Arc: P2’s goaded creature cannot attack you, their other creature can',
+    instructions: [
+      'It is P2’s turn. Your Redemption Arc is already attached to P2’s Lab Green Bear (2/2), which is indestructible and goaded by you. P2 also controls Lab Ox (4/4), which is not enchanted. You control no creatures and no lands.',
+      'P2 attacks you with everything it is allowed to. Lab Green Bear is goaded, so it must attack and may not attack you, the Aura’s controller; Lab Ox may attack you or stay home.',
+      'Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Lab Ox attacked you and Lab Green Bear attacked another opponent: you took 4 and are at 36, not 38 or 34. P3 took 2 from Lab Green Bear and is at 38, and P4 is untouched at 40.',
+    oracleSha256: arc.sha256,
+    clauseIds: ['redemption-arc-statics'],
+    decks: {
+      P1: [arc.card, FOREST, FOREST],
+      P2: [LAB_GREEN_BEAR, LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Redemption Arc'],
+          attachedToCard: { playerId: 'P2', cardName: 'Lab Green Bear' },
+        },
+        { playerId: 'P2', cardNames: ['Lab Green Bear', 'Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') },
+  });
+}
+
+function fallenIdealScenario(gameId: GameId): CardTestScenario {
+  const ideal = pinnedFrom(COVERAGE_PR05, 'Fallen Ideal');
+  const swamps = Array.from({ length: 3 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'fallen-ideal-viewer-sacrifice-then-return',
+    title: 'Fallen Ideal: sacrifice for a pump, then sacrifice the creature to get the Aura back',
+    instructions: [
+      'Fallen Ideal is in your hand. Three Swamps, Lab Green Bear (2/2) and Lab Ox (4/4) are on your battlefield.',
+      'Cast Fallen Ideal targeting Lab Green Bear and let it resolve: Lab Green Bear has flying and the Aura’s sacrifice ability.',
+      'Activate the sacrifice ability, sacrificing Lab Ox, and let it resolve: Lab Green Bear gets +2/+1 until end of turn.',
+      'Activate the sacrifice ability again, sacrificing Lab Green Bear itself, and let it resolve. Fallen Ideal is put into your graveyard and returns to your hand.',
+    ],
+    expectedOutcome:
+      'Fallen Ideal is back in your hand, not your graveyard. Lab Green Bear and Lab Ox are in your graveyard, and the battlefield holds only your lands.',
+    oracleSha256: ideal.sha256,
+    clauseIds: ['fallen-ideal-grants', 'fallen-ideal-return'],
+    decks: {
+      P1: [ideal.card, LAB_GREEN_BEAR, LAB_OX, ...swamps],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Fallen Ideal'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Green Bear', 'Lab Ox', ...swamps.map((s) => s.name)],
+        },
+      ],
+    },
+  });
+}
+
+/**
+ * Fallen Ideal's flying: the enchanted Lab Green Bear attacks and the opposing Lab Ox, which has
+ * neither flying nor reach, is not offered as a blocker, so P2 is never asked to declare blocks.
+ */
+function fallenIdealFlyingScenario(gameId: GameId): CardTestScenario {
+  const ideal = pinnedFrom(COVERAGE_PR05, 'Fallen Ideal');
+  const swamps = Array.from({ length: 3 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'fallen-ideal-viewer-flying-attack',
+    title: 'Fallen Ideal: the enchanted creature flies over Lab Ox and attacks unblocked',
+    instructions: [
+      'Fallen Ideal is in your hand. Three Swamps and Lab Green Bear (2/2) are on your battlefield. P2 controls Lab Ox (4/4, no flying or reach) and blocks with every creature it can.',
+      'Cast Fallen Ideal targeting Lab Green Bear and let it resolve: Lab Green Bear has flying.',
+      'Attack P2 with Lab Green Bear. Lab Ox cannot block a flier, so nobody can block it.',
+    ],
+    expectedOutcome:
+      'Lab Green Bear is unblocked and survives, hitting P2 for 2, leaving P2 at 38. Lab Ox is undamaged.',
+    oracleSha256: ideal.sha256,
+    clauseIds: ['fallen-ideal-grants'],
+    decks: {
+      P1: [ideal.card, LAB_GREEN_BEAR, ...swamps],
+      P2: [LAB_OX, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Fallen Ideal'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Green Bear', ...swamps.map((s) => s.name)] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: blockWithEverything },
+  });
+}
+
+function korSpiritdancerScenario(gameId: GameId): CardTestScenario {
+  const kor = pinnedFrom(COVERAGE_PR05, 'Kor Spiritdancer');
+  return pr01Scenario(gameId, {
+    id: 'kor-spiritdancer-viewer-aura-cast-draw-and-pump',
+    title: 'Kor Spiritdancer: cast an Aura on it, draw a card, and it grows by +2/+2 for the Aura',
+    instructions: [
+      'Kor Spiritdancer (0/2) and a Plains are on your battlefield, Lab Aegis (an Aura that gives +2/+2) is in your hand, and Lab Green Bear is on top of your library.',
+      'Cast Lab Aegis targeting Kor Spiritdancer. Kor Spiritdancer’s trigger asks whether to draw a card: choose Yes.',
+      'Let the trigger and then Lab Aegis resolve.',
+    ],
+    expectedOutcome:
+      'Lab Aegis is attached to Kor Spiritdancer, which is a 4/6: +2/+2 from Lab Aegis and +2/+2 more for the Aura attached to it. You drew Lab Green Bear, so it is in your hand.',
+    oracleSha256: kor.sha256,
+    clauseIds: ['kor-spiritdancer-pump', 'kor-spiritdancer-aura-draw'],
+    decks: {
+      P1: [kor.card, LAB_AEGIS, PLAINS, LAB_GREEN_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Aegis'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Kor Spiritdancer', 'Plains'] }],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Lab Green Bear'] }],
+    },
+  });
+}
+
+/**
+ * Kor Spiritdancer's pump counts every attached Aura: a second Aura adds another +2/+2 on top of
+ * its own bonus. Both draw triggers are declined, so the only change is the Auras'.
+ */
+function korSpiritdancerSecondAuraScenario(gameId: GameId): CardTestScenario {
+  const kor = pinnedFrom(COVERAGE_PR05, 'Kor Spiritdancer');
+  return pr01Scenario(gameId, {
+    id: 'kor-spiritdancer-viewer-second-aura-grows-it',
+    title: 'Kor Spiritdancer: a second attached Aura adds another +2/+2 to the pump',
+    instructions: [
+      'Kor Spiritdancer (0/2) and two Plains are on your battlefield. Lab Aegis (an Aura that gives +2/+2) and Lab Mantle (an Aura that gives +1/+1) are in your hand.',
+      'Cast Lab Aegis targeting Kor Spiritdancer. Kor Spiritdancer’s trigger asks whether to draw a card: choose No. Let Lab Aegis resolve: Kor Spiritdancer is a 4/6 (+2/+2 from Lab Aegis and +2/+2 for the one Aura attached to it).',
+      'Cast Lab Mantle targeting Kor Spiritdancer, choose No again and let it resolve: with two Auras attached, Kor Spiritdancer is a 7/9 (+2/+2 and +1/+1 from the Auras, and +4/+4 for the two of them).',
+    ],
+    expectedOutcome:
+      'Lab Aegis and Lab Mantle are both attached to Kor Spiritdancer, a 7/9. You declined both draws, so your hand is empty.',
+    oracleSha256: kor.sha256,
+    clauseIds: ['kor-spiritdancer-pump'],
+    decks: {
+      P1: [kor.card, LAB_AEGIS, LAB_MANTLE, PLAINS, PLAINS, LAB_GREEN_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Aegis', 'Lab Mantle'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Kor Spiritdancer', 'Plains', 'Plains'] }],
+    },
+  });
+}
+
+function hatefulEidolonScenario(gameId: GameId): CardTestScenario {
+  const eidolon = pinnedFrom(COVERAGE_PR05, 'Hateful Eidolon');
+  return pr01Scenario(gameId, {
+    id: 'hateful-eidolon-viewer-enchanted-creature-dies-draw',
+    title: 'Hateful Eidolon: your Aura on an opponent’s creature, then it dies and you draw',
+    instructions: [
+      'Hateful Eidolon, a Plains and two Swamps are on your battlefield. Lab Aegis and Lab Doom are in your hand, an opponent controls Lab Bird (1/1), and Lab Green Bear is on top of your library.',
+      'Cast Lab Aegis targeting Lab Bird and let it resolve: Lab Bird is enchanted by an Aura you control.',
+      'Cast Lab Doom targeting Lab Bird and let it resolve. Lab Bird dies, so Hateful Eidolon’s trigger draws a card for each Aura you controlled that was attached to it.',
+    ],
+    expectedOutcome:
+      'Lab Bird is in its owner’s graveyard and Lab Aegis is in yours. You drew exactly one card, Lab Green Bear, because one Aura you controlled was attached to Lab Bird.',
+    oracleSha256: eidolon.sha256,
+    clauseIds: ['hateful-eidolon-draw'],
+    decks: {
+      P1: [eidolon.card, LAB_AEGIS, LAB_DOOM, PLAINS, SWAMP, SWAMP, LAB_GREEN_BEAR],
+      P2: [LAB_BIRD, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Aegis', 'Lab Doom'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Hateful Eidolon', 'Plains', 'Swamp', 'Swamp'] },
+        { playerId: 'P2', cardNames: ['Lab Bird'] },
+      ],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Lab Green Bear'] }],
+    },
+  });
+}
+
+/** Hateful Eidolon draws one card per attached Aura you control, so two Auras draw two cards. */
+function hatefulEidolonTwoAurasScenario(gameId: GameId): CardTestScenario {
+  const eidolon = pinnedFrom(COVERAGE_PR05, 'Hateful Eidolon');
+  return pr01Scenario(gameId, {
+    id: 'hateful-eidolon-viewer-two-auras-draw-two',
+    title: 'Hateful Eidolon: two of your Auras on a creature that dies draw you two cards',
+    instructions: [
+      'Hateful Eidolon, two Plains and two Swamps are on your battlefield. Lab Aegis, Lab Mantle and Lab Doom are in your hand, an opponent controls Lab Bird (1/1), and Lab Green Bear and then Lab Ox are on top of your library.',
+      'Cast Lab Aegis targeting Lab Bird and let it resolve, then cast Lab Mantle targeting Lab Bird and let it resolve: Lab Bird is enchanted by two Auras you control.',
+      'Cast Lab Doom targeting Lab Bird and let it resolve. Lab Bird dies, so Hateful Eidolon’s trigger draws a card for each Aura you controlled that was attached to it.',
+    ],
+    expectedOutcome:
+      'Lab Bird is in its owner’s graveyard and Lab Aegis and Lab Mantle are in yours. You drew exactly two cards, Lab Green Bear and Lab Ox, one for each Aura you controlled that was attached to Lab Bird.',
+    oracleSha256: eidolon.sha256,
+    clauseIds: ['hateful-eidolon-draw'],
+    decks: {
+      P1: [
+        eidolon.card,
+        LAB_AEGIS,
+        LAB_MANTLE,
+        LAB_DOOM,
+        PLAINS,
+        PLAINS,
+        SWAMP,
+        SWAMP,
+        LAB_GREEN_BEAR,
+        LAB_OX,
+      ],
+      P2: [LAB_BIRD, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Aegis', 'Lab Mantle', 'Lab Doom'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Hateful Eidolon', 'Plains', 'Plains', 'Swamp', 'Swamp'] },
+        { playerId: 'P2', cardNames: ['Lab Bird'] },
+      ],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Lab Green Bear', 'Lab Ox'] }],
+    },
+  });
+}
+
+/** Hateful Eidolon's lifelink: its own combat damage gains life, and another attacker's does not. */
+function hatefulEidolonLifelinkScenario(gameId: GameId): CardTestScenario {
+  const eidolon = pinnedFrom(COVERAGE_PR05, 'Hateful Eidolon');
+  return pr01Scenario(gameId, {
+    id: 'hateful-eidolon-viewer-combat-lifelink',
+    title: 'Hateful Eidolon: its combat damage gains life, Lab Ox’s does not',
+    instructions: [
+      'Hateful Eidolon (1/2 with lifelink) and Lab Ox (4/4, no lifelink) are on your battlefield. Your opponents control no creatures.',
+      'Attack P2 with Hateful Eidolon and P3 with Lab Ox. Nobody blocks.',
+      'Let combat damage be dealt.',
+    ],
+    expectedOutcome:
+      'Hateful Eidolon dealt 1 damage to P2, leaving P2 at 39, and lifelink raised you from 40 to 41. Lab Ox dealt 4 to P3, leaving P3 at 36, and gained you nothing. P4 is untouched.',
+    oracleSha256: eidolon.sha256,
+    clauseIds: ['hateful-eidolon-lifelink'],
+    decks: {
+      P1: [eidolon.card, LAB_OX],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Hateful Eidolon', 'Lab Ox'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+/**
+ * Martial Impetus on an opponent's creature: on that opponent's turn the goaded creature cannot
+ * attack the Aura's controller, while an unenchanted creature of theirs can and is not pumped.
+ */
+function martialImpetusOpponentAttackScenario(gameId: GameId): CardTestScenario {
+  const impetus = pinnedFrom(COVERAGE_PR05, 'Martial Impetus');
+  return pr01Scenario(gameId, {
+    id: 'martial-impetus-viewer-goaded-opponent-attack',
+    title: 'Martial Impetus: P2’s goaded creature cannot attack you, their other creature can',
+    instructions: [
+      'It is P2’s turn. Your Martial Impetus is already attached to P2’s Lab Green Bear, which is a 3/3 goaded by you. P2 also controls Lab Ox (4/4), which is not enchanted. You control no creatures.',
+      'P2 attacks you with everything it is allowed to. Lab Green Bear is goaded, so it must attack and may not attack you, the Aura’s controller; Lab Ox may attack you or stay home.',
+      'Martial Impetus pumps each other creature attacking one of your opponents. Lab Ox attacks you, not an opponent of yours, so it is not pumped. Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Lab Ox attacked you and Lab Green Bear attacked another opponent: you took 4 from the unpumped Lab Ox and are at 36, not 33. P3 took 3 from Lab Green Bear and is at 37, and P4 is untouched at 40.',
+    oracleSha256: impetus.sha256,
+    clauseIds: ['martial-impetus-statics'],
+    decks: {
+      P1: [impetus.card, FOREST, FOREST],
+      P2: [LAB_GREEN_BEAR, LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Martial Impetus'],
+          attachedToCard: { playerId: 'P2', cardName: 'Lab Green Bear' },
+        },
+        { playerId: 'P2', cardNames: ['Lab Green Bear', 'Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') },
+  });
+}
+
+function martialImpetusScenario(gameId: GameId): CardTestScenario {
+  const impetus = pinnedFrom(COVERAGE_PR05, 'Martial Impetus');
+  return pr01Scenario(gameId, {
+    id: 'martial-impetus-viewer-attack-pump',
+    title: 'Martial Impetus: the enchanted creature attacks and pumps your other attacker',
+    instructions: [
+      'Martial Impetus is in your hand. A Plains, two Swamps, Lab Green Bear (2/2) and Lab Ox (4/4) are on your battlefield, and your library holds only Forests.',
+      'Cast Martial Impetus targeting Lab Green Bear and let it resolve: Lab Green Bear is a 3/3 and is goaded by you.',
+      'Attack P2 with Lab Green Bear and P3 with Lab Ox. When Lab Green Bear attacks, Martial Impetus gives each other creature attacking one of your opponents +1/+1 until end of turn: Lab Ox becomes a 5/5.',
+      'Let combat damage be dealt. Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Lab Green Bear is a 3/3 and Lab Ox is a 5/5 until end of turn. P2 took 3 combat damage and is at 37, and P3 took 5 and is at 35.',
+    oracleSha256: impetus.sha256,
+    clauseIds: ['martial-impetus-statics', 'martial-impetus-attack-pump'],
+    decks: {
+      P1: [impetus.card, PLAINS, SWAMP, SWAMP, LAB_GREEN_BEAR, LAB_OX, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Martial Impetus'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Plains', 'Swamp', 'Swamp', 'Lab Green Bear', 'Lab Ox'],
+        },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function killianDecisiveMentorScenario(gameId: GameId): CardTestScenario {
+  const killian = pinnedFrom(COVERAGE_PR05, 'Killian, Decisive Mentor');
+  return pr01Scenario(gameId, {
+    id: 'killian-decisive-mentor-viewer-tap-goad-and-attack-draw',
+    title:
+      'Killian, Decisive Mentor: an enchantment taps and goads, then the enchanted attacker draws',
+    instructions: [
+      'Killian, Decisive Mentor, a Plains and Lab Green Bear (2/2) are on your battlefield, and Lab Aegis is in your hand. An opponent controls Lab Bird. Lab Ox is on top of your library.',
+      'Cast Lab Aegis targeting Lab Green Bear and let it resolve. Killian’s enters trigger asks for up to one target creature: choose Lab Bird, which becomes tapped and goaded.',
+      'Attack P2 with Lab Green Bear only. It is enchanted by Lab Aegis, an Aura you control, so Killian’s attack trigger draws you a card.',
+    ],
+    expectedOutcome:
+      'Lab Bird is tapped and goaded by you, and you drew Lab Ox. Lab Aegis is attached to Lab Green Bear, a 4/4 that hit P2 for 4, leaving P2 at 36.',
+    oracleSha256: killian.sha256,
+    clauseIds: ['killian-enchantment-enters', 'killian-attack-draw'],
+    decks: {
+      P1: [killian.card, PLAINS, LAB_GREEN_BEAR, LAB_AEGIS, LAB_OX, FOREST, FOREST],
+      P2: [LAB_BIRD, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Aegis'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Killian, Decisive Mentor', 'Plains', 'Lab Green Bear'] },
+        { playerId: 'P2', cardNames: ['Lab Bird'] },
+      ],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Lab Ox'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+/**
+ * The combat half of Killian's goad, on the goaded creature's controller's turn. Lab Green Bear
+ * STARTS goaded by you (arranged with goadedBy, as if Killian's trigger had goaded it on your last
+ * turn); the trigger that taps and goads is shown by the scenario where it fires. Everything from
+ * the untap step and the declare-attackers menu to the damage runs through production code.
+ */
+function killianOpponentAttackScenario(gameId: GameId): CardTestScenario {
+  const killian = pinnedFrom(COVERAGE_PR05, 'Killian, Decisive Mentor');
+  return pr01Scenario(gameId, {
+    id: 'killian-decisive-mentor-viewer-goaded-opponent-attack',
+    title:
+      'Killian, Decisive Mentor: P2’s goaded creature cannot attack you, their other creature can',
+    instructions: [
+      'It is P2’s turn. Your tapped Killian, Decisive Mentor is on the battlefield. P2’s Lab Green Bear (2/2) starts goaded by you, as if Killian’s trigger had goaded it on your last turn; this position is arranged for the scenario. P2 also controls Lab Ox (4/4), which is not goaded.',
+      'P2 attacks you with everything it is allowed to. Lab Green Bear is goaded, so it must attack and may not attack you, the goading player; Lab Ox may attack you or stay home.',
+      'Nobody blocks: Killian is tapped.',
+    ],
+    expectedOutcome:
+      'Lab Ox attacked you and Lab Green Bear attacked another opponent: you took 4 and are at 36, not 38 or 34. P3 took 2 from Lab Green Bear and is at 38, and P4 is untouched at 40.',
+    oracleSha256: killian.sha256,
+    clauseIds: ['killian-enchantment-enters'],
+    decks: {
+      P1: [killian.card, FOREST, FOREST],
+      P2: [LAB_GREEN_BEAR, LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Killian, Decisive Mentor'], tapped: true },
+        { playerId: 'P2', cardNames: ['Lab Green Bear'], goadedBy: 'P1' },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') },
+  });
+}
+
+function angelicDestinyScenario(gameId: GameId): CardTestScenario {
+  const destiny = pinnedFrom(COVERAGE_PR05, 'Angelic Destiny');
+  return pr01Scenario(gameId, {
+    id: 'angelic-destiny-viewer-angel-then-return',
+    title: 'Angelic Destiny: a 6/6 flying Angel, then it dies and the Aura returns to your hand',
+    instructions: [
+      'Angelic Destiny and Lab Doom are in your hand. Two Plains, four Swamps and Lab Green Bear (2/2) are on your battlefield.',
+      'Cast Angelic Destiny targeting Lab Green Bear and let it resolve: Lab Green Bear is a 6/6 flying, first-striking Angel Bear.',
+      'Cast Lab Doom targeting Lab Green Bear and let it resolve. Lab Green Bear dies, and Angelic Destiny’s trigger returns the Aura from your graveyard to your hand.',
+    ],
+    expectedOutcome:
+      'Angelic Destiny is back in your hand, not in your graveyard. Lab Green Bear and Lab Doom are in your graveyard.',
+    oracleSha256: destiny.sha256,
+    clauseIds: ['angelic-destiny-buff', 'angelic-destiny-return'],
+    decks: {
+      P1: [destiny.card, LAB_DOOM, LAB_GREEN_BEAR, PLAINS, PLAINS, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Angelic Destiny', 'Lab Doom'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Green Bear', 'Plains', 'Plains', 'Swamp', 'Swamp', 'Swamp', 'Swamp'],
+        },
+      ],
+    },
+  });
+}
+
+/** An opponent seat that blocks with every creature it is offered, each on the first attacker offered. */
+const blockWithEverything: DecisionProvider = {
+  decide(request) {
+    const block = request.legalActions.find((action) =>
+      action.description.startsWith('Declare blockers'),
+    );
+    if (block !== undefined) {
+      return {
+        requestId: request.requestId,
+        actionId: block.id,
+        targets: (block.targets ?? []).map((slot) => ({
+          slot: slot.slot,
+          choice: slot.options.find((option) => option !== '__no_block__') ?? '__no_block__',
+        })),
+      };
+    }
+    const pass = request.legalActions.find((action) => action.type === 'pass');
+    return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+  },
+};
+
+/**
+ * Angelic Destiny's whole "gets +4/+4, has flying and first strike, and is an Angel" clause. Lab
+ * Choir ("Angels you control get +1/+1") makes the Angel subtype observable, Lab Titan (7/7
+ * flying) is the only legal blocker of a flier, and Lab Ox (no flying or reach) is not offered.
+ */
+function angelicDestinyCombatScenario(gameId: GameId): CardTestScenario {
+  const destiny = pinnedFrom(COVERAGE_PR05, 'Angelic Destiny');
+  const choir = card({
+    oracleId: 'lab-choir',
+    name: 'Lab Choir',
+    typeLine: 'Enchantment',
+    manaCost: '{W}',
+    cmc: 1,
+    colors: ['W'],
+    colorIdentity: ['W'],
+    oracleText: 'Angels you control get +1/+1.',
+  });
+  const titan = card({
+    oracleId: 'lab-titan',
+    name: 'Lab Titan',
+    typeLine: 'Creature — Giant',
+    manaCost: '{5}{U}',
+    cmc: 6,
+    colors: ['U'],
+    colorIdentity: ['U'],
+    power: '7',
+    toughness: '7',
+    oracleText: 'Flying',
+  });
+  return pr01Scenario(gameId, {
+    id: 'angelic-destiny-viewer-flying-first-strike-angel-combat',
+    title:
+      'Angelic Destiny: a 7/7 flying first-striking Angel attacks past Lab Ox and kills Lab Titan unharmed',
+    instructions: [
+      'Angelic Destiny is in your hand. Two Plains, two Swamps, Lab Choir (Angels you control get +1/+1) and Lab Green Bear (2/2) are on your battlefield. P2 controls Lab Ox (4/4, no flying or reach) and Lab Titan (7/7, flying) and blocks with every creature it can.',
+      'Cast Angelic Destiny targeting Lab Green Bear and let it resolve: Lab Green Bear is an Angel Bear with flying and first strike, 7/7 (2/2, +4/+4 from the Aura, +1/+1 from Lab Choir because it is now an Angel).',
+      'Attack P2 with Lab Green Bear. Only Lab Titan can block a flier: first strike deals 7 to Lab Titan before it deals any damage.',
+    ],
+    expectedOutcome:
+      'Lab Titan died blocking and is in P2’s graveyard. Lab Green Bear has no damage on it and Lab Ox never blocked, so P2 stays at 40 and Lab Ox is undamaged.',
+    oracleSha256: destiny.sha256,
+    clauseIds: ['angelic-destiny-buff'],
+    decks: {
+      P1: [destiny.card, choir, LAB_GREEN_BEAR, PLAINS, PLAINS, SWAMP, SWAMP],
+      P2: [LAB_OX, titan, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Angelic Destiny'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Choir', 'Lab Green Bear', 'Plains', 'Plains', 'Swamp', 'Swamp'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Titan'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: blockWithEverything },
+  });
+}
+
+function shelteredByGhostsScenario(gameId: GameId): CardTestScenario {
+  const ghosts = pinnedFrom(COVERAGE_PR05, 'Sheltered by Ghosts');
+  return pr01Scenario(gameId, {
+    id: 'sheltered-by-ghosts-viewer-exile-and-lifelink',
+    title: 'Sheltered by Ghosts: exile an opposing permanent, then attack with lifelink',
+    instructions: [
+      'Sheltered by Ghosts is in your hand. A Plains, a Forest and Lab Green Bear (2/2) are on your battlefield. An opponent controls Lab Bird, Lab Hex and a Forest.',
+      'Cast Sheltered by Ghosts targeting Lab Green Bear and let it resolve. Its enters trigger asks for a target nonland permanent an opponent controls: choose Lab Bird, which is exiled until Sheltered by Ghosts leaves the battlefield.',
+      'Attack P2 with Lab Green Bear, now a 3/2 with lifelink and ward {2}. Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Lab Bird is in exile while Lab Hex and the Forest stay on the battlefield. Lab Green Bear hit P2 for 3, leaving P2 at 37, and lifelink raised you to 43.',
+    oracleSha256: ghosts.sha256,
+    clauseIds: ['sheltered-by-ghosts-exile', 'sheltered-by-ghosts-grants'],
+    decks: {
+      P1: [ghosts.card, PLAINS, FOREST, LAB_GREEN_BEAR, FOREST],
+      P2: [LAB_BIRD, LAB_HEX, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Sheltered by Ghosts'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Green Bear', 'Plains', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Lab Bird', 'Lab Hex', 'Forest'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+/**
+ * An opponent seat that waits until `aura` is attached to a creature and the stack is empty, then
+ * casts `spell` once at that creature. It declines any optional payment (a ward tax) and otherwise
+ * passes. `engine` is read lazily because the seat is built before the engine it watches.
+ */
+function castAtEnchantedCreature(
+  engine: () => Engine,
+  spell: string,
+  aura: string,
+): DecisionProvider {
+  let cast = false;
+  return {
+    decide(request) {
+      const state = engine().getState();
+      const hostId = state.battlefield.find((perm) => perm.name === aura)?.attachedTo;
+      const action =
+        cast || hostId === undefined || hostId === null || state.stack.length > 0
+          ? undefined
+          : request.legalActions.find((candidate) =>
+              candidate.description.startsWith(`Cast ${spell}`),
+            );
+      if (action !== undefined) {
+        cast = true;
+        return {
+          requestId: request.requestId,
+          actionId: action.id,
+          targets: (action.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: slot.options.includes(hostId as string)
+              ? (hostId as string)
+              : (slot.options[0] as string),
+          })),
+        };
+      }
+      const decline = request.legalActions.find((candidate) => candidate.type === 'decline');
+      const pass = request.legalActions.find((candidate) => candidate.type === 'pass');
+      return {
+        requestId: request.requestId,
+        actionId: (decline ?? pass ?? request.legalActions[0]!).id,
+      };
+    },
+  };
+}
+
+/** Sheltered by Ghosts's ward {2}: an opponent's targeted spell is countered when it cannot pay. */
+function shelteredByGhostsWardScenario(gameId: GameId): CardTestScenario {
+  const ghosts = pinnedFrom(COVERAGE_PR05, 'Sheltered by Ghosts');
+  const watched: { engine?: Engine } = {};
+  const scenario = pr01Scenario(gameId, {
+    id: 'sheltered-by-ghosts-viewer-ward-counters-opponent-spell',
+    title: 'Sheltered by Ghosts: ward {2} counters an opponent’s Lab Shock aimed at the creature',
+    instructions: [
+      'Sheltered by Ghosts is in your hand. A Plains, a Forest and Lab Green Bear (2/2) are on your battlefield. P2 controls two Mountains and holds Lab Shock; your opponents control no nonland permanents.',
+      'Cast Sheltered by Ghosts targeting Lab Green Bear and let it resolve: Lab Green Bear is a 3/2 with lifelink and ward {2}. Its enters trigger has no target to exile.',
+      'Pass priority with an empty stack. P2 casts Lab Shock at Lab Green Bear, which would be lethal, and ward {2} triggers.',
+      'Let the ward trigger resolve. P2 has only one untapped Mountain, so it cannot pay {2} and Lab Shock is countered.',
+    ],
+    expectedOutcome:
+      'Lab Shock is countered and is in P2’s graveyard. Lab Green Bear is still a 3/2 with no damage on it, with Sheltered by Ghosts attached, and you are still at 40.',
+    oracleSha256: ghosts.sha256,
+    clauseIds: ['sheltered-by-ghosts-grants'],
+    decks: {
+      P1: [ghosts.card, PLAINS, FOREST, LAB_GREEN_BEAR],
+      P2: [LAB_SHOCK, MOUNTAIN, MOUNTAIN],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        { playerId: 'P1', cardNames: ['Sheltered by Ghosts'] },
+        { playerId: 'P2', cardNames: ['Lab Shock'] },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Green Bear', 'Plains', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Mountain', 'Mountain'] },
+      ],
+    },
+    decisionProviderOverrides: {
+      P2: castAtEnchantedCreature(() => watched.engine!, 'Lab Shock', 'Sheltered by Ghosts'),
+    },
+  });
+  watched.engine = scenario.engine;
+  return scenario;
+}
+
+function eldraziConscriptionScenario(gameId: GameId): CardTestScenario {
+  const conscription = pinnedFrom(COVERAGE_PR05, 'Eldrazi Conscription');
+  const forests = Array.from({ length: 8 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'eldrazi-conscription-viewer-annihilator',
+    title:
+      'Eldrazi Conscription: a 12/12 trampler attacks and the defending player sacrifices two permanents',
+    instructions: [
+      'Eldrazi Conscription is in your hand. Eight Forests and Lab Green Bear (2/2) are on your battlefield. An opponent controls Lab Bird and Lab Hex.',
+      'Cast Eldrazi Conscription targeting Lab Green Bear and let it resolve: Lab Green Bear is a 12/12 with trample and annihilator 2.',
+      'Attack P2 with Lab Green Bear. Annihilator 2 triggers: P2, the defending player, sacrifices two permanents. They control exactly two, so both are sacrificed. Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Lab Bird and Lab Hex are in P2’s graveyard and P2 controls nothing. P3 and P4 are untouched. Lab Green Bear dealt 12 to P2, leaving P2 at 28, and Eldrazi Conscription stays on Lab Green Bear.',
+    oracleSha256: conscription.sha256,
+    clauseIds: ['eldrazi-conscription-annihilator'],
+    decks: {
+      P1: [conscription.card, LAB_GREEN_BEAR, ...forests],
+      P2: [LAB_BIRD, LAB_HEX, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Eldrazi Conscription'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Green Bear', ...forests.map((forest) => forest.name)] },
+        { playerId: 'P2', cardNames: ['Lab Bird', 'Lab Hex'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+/**
+ * Eldrazi Conscription's trample is observed by a real block: P2 enchants its own Lab Green Bear and
+ * attacks you; annihilator takes two of your Forests, Lab Ox blocks, and only the excess damage
+ * tramples over to you. The viewer cannot split an attacker's damage, so P2's seat divides it.
+ */
+function eldraziConscriptionTrampleScenario(gameId: GameId): CardTestScenario {
+  const conscription = pinnedFrom(COVERAGE_PR05, 'Eldrazi Conscription');
+  const forests = Array.from({ length: 8 }, () => FOREST);
+  const seated: { engine?: Engine } = {};
+  const nameOf = (id: string): string | undefined =>
+    seated.engine?.getState().battlefield.find((perm) => perm.id === id)?.name;
+  const attackerSeat: DecisionProvider = {
+    decide(request) {
+      const cast = request.legalActions.find((action) =>
+        action.description.startsWith('Cast Eldrazi Conscription'),
+      );
+      if (cast !== undefined) {
+        return {
+          requestId: request.requestId,
+          actionId: cast.id,
+          targets: (cast.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: slot.options.find((id) => nameOf(id) === 'Lab Green Bear') ?? slot.options[0]!,
+          })),
+        };
+      }
+      const attack = request.legalActions.find((action) =>
+        action.description.startsWith('Declare attackers'),
+      );
+      if (attack !== undefined) {
+        return {
+          requestId: request.requestId,
+          actionId: attack.id,
+          targets: (attack.targets ?? []).map((slot) => ({ slot: slot.slot, choice: 'P1' })),
+        };
+      }
+      const division = request.combatDamageSplit;
+      if (division !== undefined && seated.engine !== undefined) {
+        // Lethal damage to the blocker, the rest to the defending player (CR 702.19b).
+        const [blockerId, ...rest] = division.targets;
+        const blocker = seated.engine.getState().battlefield.find((perm) => perm.id === blockerId);
+        const toughness = seated.engine
+          .view('P2')
+          .battlefield.find((perm) => perm.id === blockerId)?.toughness;
+        const lethal = Number(toughness ?? 0) - (blocker?.damageMarked ?? 0);
+        return {
+          requestId: request.requestId,
+          actionId: request.legalActions[0]!.id,
+          combatDamageSplit: { [blockerId!]: lethal, [rest.at(-1)!]: division.amount - lethal },
+        };
+      }
+      const pass = request.legalActions.find((action) => action.type === 'pass');
+      return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+    },
+  };
+  const scenario = pr01Scenario(gameId, {
+    id: 'eldrazi-conscription-viewer-trample',
+    title: 'Eldrazi Conscription: a blocked 12/12 trampler tramples over to the defending player',
+    instructions: [
+      "It is P2's turn. P2 controls Lab Green Bear (2/2) and eight Forests, with Eldrazi Conscription in hand. You control Lab Ox (4/4) and three Forests.",
+      'P2 casts Eldrazi Conscription on Lab Green Bear and attacks you with it, a 12/12 with trample and annihilator 2. Let the Aura resolve.',
+      'Annihilator 2 triggers: choose two Forests to sacrifice, keeping Lab Ox.',
+      'Block Lab Green Bear with Lab Ox. It assigns lethal damage (4) to Lab Ox and, because of trample, the other 8 to you.',
+    ],
+    expectedOutcome:
+      'Lab Ox and two Forests are in your graveyard and you keep one Forest. Lab Green Bear survived and, trampling over Lab Ox, dealt 8 to you, leaving you at 32.',
+    oracleSha256: conscription.sha256,
+    clauseIds: ['eldrazi-conscription-buff'],
+    decks: {
+      P1: [LAB_OX, FOREST, FOREST, FOREST],
+      P2: [conscription.card, LAB_GREEN_BEAR, ...forests],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [{ playerId: 'P2', cardNames: ['Eldrazi Conscription'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox', 'Forest', 'Forest', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Lab Green Bear', ...forests.map((forest) => forest.name)] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackerSeat },
+  });
+  seated.engine = scenario.engine;
+  return scenario;
+}
+
+function curseOfBountyScenario(gameId: GameId): CardTestScenario {
+  const curse = pinnedFrom(COVERAGE_PR05, 'Curse of Bounty');
+  return pr01Scenario(gameId, {
+    id: 'curse-of-bounty-viewer-untap-on-attack',
+    title: 'Curse of Bounty: enchant a player, then attacking them untaps your nonland permanents',
+    instructions: [
+      'Curse of Bounty is in your hand. A Forest, a Plains, Lab Green Bear (2/2) and a tapped Lab Ox (4/4) are on your battlefield.',
+      'Cast Curse of Bounty targeting P2 and let it resolve: it enters attached to P2, not to a permanent.',
+      'Attack P2 with Lab Green Bear. Whenever the enchanted player is attacked, you untap all nonland permanents you control: Lab Ox and the attacking Lab Green Bear untap, while the Forest and Plains you tapped for the Curse stay tapped.',
+    ],
+    expectedOutcome:
+      'Curse of Bounty stays attached to P2. Lab Ox and Lab Green Bear are untapped, the Forest and the Plains are tapped, and Lab Green Bear hit P2 for 2, leaving P2 at 38.',
+    oracleSha256: curse.sha256,
+    clauseIds: ['curse-of-bounty-enchant-player', 'curse-of-bounty-controller-untaps'],
+    decks: {
+      P1: [curse.card, FOREST, PLAINS, LAB_GREEN_BEAR, LAB_OX],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Curse of Bounty'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Forest', 'Plains', 'Lab Green Bear'] },
+        { playerId: 'P1', cardNames: ['Lab Ox'], tapped: true },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+/** An opponent of the Curse's controller attacks the enchanted player: the attacker untaps too. */
+function curseOfBountyOpponentAttackScenario(gameId: GameId): CardTestScenario {
+  const curse = pinnedFrom(COVERAGE_PR05, 'Curse of Bounty');
+  return pr01Scenario(gameId, {
+    id: 'curse-of-bounty-viewer-opponent-attacks',
+    title:
+      'Curse of Bounty: an opponent attacking the enchanted player untaps their nonland permanents',
+    instructions: [
+      "It is P3's turn. Your Curse of Bounty already enchants P2. Your Lab Ox and Forest are tapped; P2's Lab Servo, P3's Lab Thrull and Plains, and P4's Lab Bird and Swamp are tapped too. P3's Lab Green Bear is untapped.",
+      'P3 attacks P2 with Lab Green Bear. The Curse triggers: you untap all nonland permanents you control, and P3, an opponent attacking the enchanted player, untaps all nonland permanents they control, including the attacking Lab Green Bear.',
+      'Lands stay tapped, and neither P2 (the enchanted player) nor P4 untaps anything.',
+    ],
+    expectedOutcome:
+      'Your Lab Ox and P3’s Lab Green Bear and Lab Thrull are untapped. Your Forest, P3’s Plains, P2’s Lab Servo and P4’s Lab Bird and Swamp stay tapped. Lab Green Bear hit P2 for 2, leaving P2 at 38.',
+    oracleSha256: curse.sha256,
+    clauseIds: ['curse-of-bounty-attacker-untaps'],
+    decks: {
+      P1: [curse.card, LAB_OX, FOREST, FOREST],
+      P2: [LAB_SERVO, FOREST, FOREST],
+      P3: [LAB_GREEN_BEAR, LAB_THRULL, PLAINS, FOREST],
+      P4: [LAB_BIRD, SWAMP, FOREST, FOREST],
+    },
+    prepared: {
+      currentTurnPlayer: 'P3',
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Curse of Bounty'], enchantedPlayerId: 'P2' },
+        { playerId: 'P1', cardNames: ['Lab Ox', 'Forest'], tapped: true },
+        { playerId: 'P2', cardNames: ['Lab Servo'], tapped: true },
+        { playerId: 'P3', cardNames: ['Lab Green Bear'] },
+        { playerId: 'P3', cardNames: ['Lab Thrull', 'Plains'], tapped: true },
+        { playerId: 'P4', cardNames: ['Lab Bird', 'Swamp'], tapped: true },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P3: attackPlayerWithEverything('P2') },
+  });
+}
+
+function eidolonOfCountlessBattlesScenario(gameId: GameId): CardTestScenario {
+  const eidolon = pinnedFrom(COVERAGE_PR05, 'Eidolon of Countless Battles');
+  const swamps = Array.from({ length: 4 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'eidolon-of-countless-battles-viewer-bestow',
+    title: 'Eidolon of Countless Battles: bestow onto a creature, then it becomes a creature again',
+    instructions: [
+      'Eidolon of Countless Battles and Lab Doom are in your hand. Two Plains, four Swamps and Lab Green Bear (2/2) are on your battlefield.',
+      'Cast Eidolon of Countless Battles for its bestow cost targeting Lab Green Bear and let it resolve: it enters as an Aura attached to Lab Green Bear, which gets +1/+1 for the one creature you control and +1/+1 for the one Aura you control and becomes a 4/4.',
+      'Cast Lab Doom targeting Lab Green Bear and let it resolve. Lab Green Bear dies, and Eidolon of Countless Battles stays on the battlefield as a creature again, a 1/1.',
+    ],
+    expectedOutcome:
+      'Lab Green Bear and Lab Doom are in your graveyard. Eidolon of Countless Battles is still on the battlefield, not attached to anything, and is a creature.',
+    oracleSha256: eidolon.sha256,
+    clauseIds: ['eidolon-of-countless-battles-bestow', 'eidolon-of-countless-battles-buff'],
+    decks: {
+      P1: [eidolon.card, LAB_DOOM, LAB_GREEN_BEAR, PLAINS, PLAINS, ...swamps],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Eidolon of Countless Battles', 'Lab Doom'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Green Bear', 'Plains', 'Plains', ...swamps.map((swamp) => swamp.name)],
+        },
+      ],
+    },
+  });
+}
+
+/**
+ * Eidolon of Countless Battles's buff counts creatures and Auras you control independently: a
+ * second creature adds one, a second Aura adds one more, and losing both takes them away again.
+ * P2's Lab Ox adds nothing.
+ */
+function eidolonOfCountlessBattlesCountsScenario(gameId: GameId): CardTestScenario {
+  const eidolon = pinnedFrom(COVERAGE_PR05, 'Eidolon of Countless Battles');
+  const plains = Array.from({ length: 6 }, () => PLAINS);
+  const swamps = Array.from({ length: 2 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'eidolon-of-countless-battles-viewer-creature-and-aura-counts',
+    title:
+      'Eidolon of Countless Battles: the host grows by one per creature and one per Aura you control',
+    instructions: [
+      'Eidolon of Countless Battles, Lab Bird, Lab Aegis and Lab Doom are in your hand. Six Plains, two Swamps and Lab Green Bear (2/2) are on your battlefield. P2 controls Lab Ox (4/4).',
+      'Cast Eidolon of Countless Battles for its bestow cost targeting Lab Green Bear and let it resolve: Lab Green Bear is a 4/4 (+1/+1 for the one creature you control and +1/+1 for the one Aura you control). P2’s Lab Ox adds nothing.',
+      'Cast Lab Bird and let it resolve: with two creatures and one Aura you control, Lab Green Bear is a 5/5.',
+      'Cast Lab Aegis targeting Lab Bird and let it resolve: with two creatures and two Auras, Lab Green Bear is a 6/6.',
+      'Cast Lab Doom targeting Lab Bird and let it resolve. Lab Bird dies and Lab Aegis goes with it, so you control one creature and one Aura again and Lab Green Bear is a 4/4.',
+    ],
+    expectedOutcome:
+      'Lab Green Bear is a 4/4 enchanted by Eidolon of Countless Battles. Lab Bird and Lab Aegis are in your graveyard with Lab Doom, and P2’s Lab Ox is untouched.',
+    oracleSha256: eidolon.sha256,
+    clauseIds: ['eidolon-of-countless-battles-buff'],
+    decks: {
+      P1: [eidolon.card, LAB_BIRD, LAB_AEGIS, LAB_DOOM, LAB_GREEN_BEAR, ...plains, ...swamps],
+      P2: [LAB_OX, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: ['Eidolon of Countless Battles', 'Lab Bird', 'Lab Aegis', 'Lab Doom'],
+        },
+      ],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [
+            'Lab Green Bear',
+            ...plains.map((plain) => plain.name),
+            ...swamps.map((swamp) => swamp.name),
+          ],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+    },
+  });
+}
+
+function animateDeadScenario(gameId: GameId): CardTestScenario {
+  const animate = pinnedFrom(COVERAGE_PR05, 'Animate Dead');
+  return pr01Scenario(gameId, {
+    id: 'animate-dead-viewer-reanimate',
+    title: 'Animate Dead: return an opponent’s creature, then it dies and the Aura goes with it',
+    instructions: [
+      'Animate Dead and Lab Doom are in your hand. Four Swamps are on your battlefield. Lab Ox (4/4) is in P2’s graveyard.',
+      'Cast Animate Dead targeting Lab Ox in P2’s graveyard and let it resolve. Its enters trigger returns Lab Ox to the battlefield under your control and attaches the Aura to it: Lab Ox is a 3/4.',
+      'Cast Lab Doom targeting Lab Ox and let it resolve. Lab Ox dies, so Animate Dead is put into your graveyard.',
+    ],
+    expectedOutcome:
+      'Lab Ox is back in P2’s graveyard and Animate Dead is in yours, together with Lab Doom. Nothing is on the battlefield but your lands.',
+    oracleSha256: animate.sha256,
+    clauseIds: ['animate-dead-enchant', 'animate-dead-shrink'],
+    decks: {
+      P1: [animate.card, LAB_DOOM, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: [LAB_OX, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Animate Dead', 'Lab Doom'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Swamp', 'Swamp', 'Swamp', 'Swamp'] }],
+      graveyard: [{ playerId: 'P2', cardNames: ['Lab Ox'] }],
+    },
+  });
+}
+
+/** A fully interpreted enchantment-removal instant, so an Aura can leave play on a normal spell path. */
+const LAB_UPROOT = card({
+  oracleId: 'lab-uproot',
+  name: 'Lab Uproot',
+  typeLine: 'Instant',
+  manaCost: '{1}{B}',
+  cmc: 2,
+  colors: ['B'],
+  colorIdentity: ['B'],
+  oracleText: 'Destroy target enchantment.',
+});
+
+/** Animate Dead is destroyed while the creature lives: leaving the battlefield sacrifices it. */
+function animateDeadLeavesScenario(gameId: GameId): CardTestScenario {
+  const animate = pinnedFrom(COVERAGE_PR05, 'Animate Dead');
+  return pr01Scenario(gameId, {
+    id: 'animate-dead-viewer-aura-leaves-sacrifices',
+    title: 'Animate Dead: destroy the Aura and the returned creature is sacrificed',
+    instructions: [
+      'Animate Dead and Lab Uproot are in your hand. Four Swamps are on your battlefield. Lab Ox (4/4) is in P2’s graveyard.',
+      'Cast Animate Dead targeting Lab Ox in P2’s graveyard and let it resolve: Lab Ox returns under your control, a 3/4 with the Aura attached.',
+      'Cast Lab Uproot targeting Animate Dead and let it resolve. The Aura is destroyed while Lab Ox is still alive, so its leaves-the-battlefield trigger makes you sacrifice Lab Ox.',
+    ],
+    expectedOutcome:
+      'Animate Dead and Lab Uproot are in your graveyard and Lab Ox is back in P2’s graveyard, sacrificed rather than destroyed. Nothing is on the battlefield but your lands.',
+    oracleSha256: animate.sha256,
+    clauseIds: ['animate-dead-reanimate-attach'],
+    decks: {
+      P1: [animate.card, LAB_UPROOT, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: [LAB_OX, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Animate Dead', 'Lab Uproot'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Swamp', 'Swamp', 'Swamp', 'Swamp'] }],
+      graveyard: [{ playerId: 'P2', cardNames: ['Lab Ox'] }],
+    },
+  });
+}
+
+function forgottenAncientScenario(gameId: GameId): CardTestScenario {
+  const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
+  return pr01Scenario(gameId, {
+    id: 'forgotten-ancient-viewer-cast-and-move',
+    title: 'Forgotten Ancient: grow when a spell is cast, then move counters at your upkeep',
+    instructions: [
+      "During P4's turn, Forgotten Ancient (already carrying two +1/+1 counters) is on your battlefield with Lab Servo; P2 controls Lab Ox. Cast Lab Shock at P2.",
+      'Forgotten Ancient triggers on the cast; choose Yes to put a third +1/+1 counter on it.',
+      'At the beginning of your upkeep, move one counter onto Lab Servo, one onto Lab Ox (any player controls it), then choose Move no more counters.',
+    ],
+    expectedOutcome:
+      'Forgotten Ancient ends with one +1/+1 counter, and Lab Servo and Lab Ox each have one.',
+    oracleSha256: ancient.sha256,
+    clauseIds: ['forgotten-ancient-cast-counter', 'forgotten-ancient-upkeep-move'],
+    decks: {
+      P1: [ancient.card, LAB_SERVO, LAB_SHOCK, MOUNTAIN],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P4',
+      hand: [{ playerId: 'P1', cardNames: ['Lab Shock'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Forgotten Ancient'],
+          counters: { '+1/+1': 2 },
+        },
+        { playerId: 'P1', cardNames: ['Lab Servo', 'Mountain'] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueToNextUpkeep: true,
+    },
+  });
+}
+
+/** A one-mana instant with no target: casting it is all the Increment scenario needs. */
+const LAB_RIPPLE = card({
+  oracleId: 'lab-ripple',
+  name: 'Lab Ripple',
+  typeLine: 'Instant',
+  manaCost: '{U}',
+  cmc: 1,
+  colors: ['U'],
+  colorIdentity: ['U'],
+  oracleText: 'You gain 1 life.',
+});
+
+function pensiveProfessorScenario(gameId: GameId): CardTestScenario {
+  const professor = pinnedFrom(MARCHESA_BATCH1, 'Pensive Professor');
+  return pr01Scenario(gameId, {
+    id: 'pensive-professor-viewer-increment-draw',
+    title: 'Pensive Professor: Increment grows it, then the counter draws a card',
+    instructions: [
+      'Pensive Professor (a 0/2) and an Island are on your battlefield; Lab Ripple is in your hand.',
+      'Cast Lab Ripple for {U}. One mana is more than the Professor’s power of 0, so Increment triggers.',
+      'Let Increment resolve to put a +1/+1 counter on the Professor, then let the draw trigger resolve.',
+    ],
+    expectedOutcome:
+      'Pensive Professor has one +1/+1 counter and is a 1/3, and you drew a card for the counter.',
+    oracleSha256: professor.sha256,
+    clauseIds: ['pensive-professor-increment', 'pensive-professor-counters-draw'],
+    decks: {
+      P1: [professor.card, LAB_RIPPLE, ISLAND, ISLAND, ISLAND],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Ripple'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Pensive Professor', 'Island'] }],
+    },
+  });
+}
+
+/** A one-mana instant that puts a +1/+1 counter on a target creature: Mikey & Leo's trigger source. */
+const LAB_GRAFT = card({
+  oracleId: 'lab-graft',
+  name: 'Lab Graft',
+  typeLine: 'Instant',
+  manaCost: '{G}',
+  cmc: 1,
+  colors: ['G'],
+  colorIdentity: ['G'],
+  oracleText: 'Put a +1/+1 counter on target creature.',
+});
+
+function mikeyAndLeoScenario(gameId: GameId): CardTestScenario {
+  const mikey = pinnedFrom(COVERAGE_PR04, 'Mikey & Leo, Chaos & Order');
+  return pr01Scenario(gameId, {
+    id: 'mikey-and-leo-viewer-counter-draw',
+    title: 'Mikey & Leo, Chaos & Order: the first counter you put each turn draws a card',
+    instructions: [
+      'Mikey & Leo and Lab Servo are on your battlefield with two Forests; two Lab Grafts are in your hand.',
+      'Cast Lab Graft targeting Lab Servo. You put a counter on a creature you control, so Mikey & Leo draws you a card.',
+      'Cast the second Lab Graft on Lab Servo. The ability triggers only once each turn, so you draw nothing more.',
+    ],
+    expectedOutcome:
+      'Lab Servo has two +1/+1 counters and you drew exactly one card, from the first Lab Graft.',
+    oracleSha256: mikey.sha256,
+    clauseIds: ['mikey-and-leo-counter-draw'],
+    decks: {
+      P1: [mikey.card, LAB_GRAFT, LAB_GRAFT, LAB_SERVO, FOREST, FOREST, LAB_OX, LAB_HEX],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Graft', 'Lab Graft'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Mikey & Leo, Chaos & Order', 'Lab Servo', 'Forest', 'Forest'],
+        },
+      ],
+    },
+  });
+}
+
+function theThingScenario(gameId: GameId): CardTestScenario {
+  const thing = pinnedFrom(COVERAGE_PR04, 'The Thing');
+  return pr01Scenario(gameId, {
+    id: 'the-thing-viewer-counters-and-double',
+    title: 'The Thing: four counters after a noncreature spell, then pay to double counters',
+    instructions: [
+      'The Thing, Lab Hex (an enchantment with one charge counter), a Mountain, a Forest, a Plains and two Islands are on your battlefield; Lab Ripple is in your hand.',
+      'Cast Lab Ripple with one Island, then pass priority to move to combat. You cast a noncreature spell this turn, so at the beginning of combat The Thing gets four +1/+1 counters.',
+      'Attack P2 with The Thing. When it attacks, pay {R}{G}{W}{U} with the other four lands, then choose The Thing and Lab Hex as targets of the reflexive trigger.',
+    ],
+    expectedOutcome:
+      'The Thing has eight +1/+1 counters (a 13/13) and Lab Hex has two charge counters. P2 takes 13 combat damage.',
+    oracleSha256: thing.sha256,
+    clauseIds: ['the-thing-trample', 'the-thing-combat-counters', 'the-thing-paid-double'],
+    decks: {
+      P1: [thing.card, LAB_HEX, LAB_RIPPLE, MOUNTAIN, FOREST, PLAINS, ISLAND, ISLAND],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Ripple'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['The Thing', 'Mountain', 'Forest', 'Plains', 'Island', 'Island'],
+        },
+        { playerId: 'P1', cardNames: ['Lab Hex'], counters: { charge: 1 } },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function lockjawScenario(gameId: GameId): CardTestScenario {
+  const lockjaw = pinnedFrom(COVERAGE_PR04, 'Lockjaw, Slobbering Teleporter');
+  return pr01Scenario(gameId, {
+    id: 'lockjaw-viewer-counter-and-unblockable',
+    title:
+      'Lockjaw, Slobbering Teleporter: a noncreature spell grows it and makes two creatures unblockable',
+    instructions: [
+      'Lockjaw, Lab Servo and two Islands are on your battlefield; P2 controls Lab Ox; Lab Ripple is in your hand.',
+      'Cast Lab Ripple, then pass priority to move to combat. You cast a noncreature spell this turn, so at the beginning of combat Lockjaw gets a +1/+1 counter.',
+      'When you do, choose Lab Servo as the other target creature you control. Then attack P2 with both creatures: neither can be blocked this turn, so Lab Ox cannot block.',
+    ],
+    expectedOutcome:
+      'Lockjaw has one +1/+1 counter and is a 2/2. Both creatures connect for 3 damage and Lab Ox is never asked to block.',
+    oracleSha256: lockjaw.sha256,
+    clauseIds: ['lockjaw-vigilance', 'lockjaw-combat-unblockable'],
+    decks: {
+      P1: [lockjaw.card, LAB_SERVO, LAB_RIPPLE, ISLAND, ISLAND],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Ripple'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lockjaw, Slobbering Teleporter', 'Lab Servo', 'Island', 'Island'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+/** A one-mana instant that makes one token: each cast is one "token you control enters" event. */
+const LAB_TOKEN_FORGE = card({
+  oracleId: 'lab-token-forge',
+  name: 'Lab Token Forge',
+  typeLine: 'Instant',
+  manaCost: '{G}',
+  cmc: 1,
+  colors: ['G'],
+  colorIdentity: ['G'],
+  oracleText: 'Create a 1/1 colorless Servo artifact creature token.',
+});
+
+function belladonnaTookScenario(gameId: GameId): CardTestScenario {
+  const belladonna = pinnedFrom(COVERAGE_PR04, 'Belladonna Took');
+  const forests = Array.from({ length: 3 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'belladonna-took-viewer-three-tokens',
+    title: 'Belladonna Took: three tokens give life, then a card, then a counter on each creature',
+    instructions: [
+      'Belladonna Took, Lab Ox and three Forests are on your battlefield; three Lab Token Forges are in your hand.',
+      'Cast Lab Token Forge and let the Servo token and then Belladonna’s trigger resolve: the first resolution gains you 1 life.',
+      'Cast a second Lab Token Forge: the second resolution draws a card.',
+      'Cast the third: the third resolution puts a +1/+1 counter on each creature you control, including the three Servo tokens.',
+    ],
+    expectedOutcome:
+      'You gained 1 life (41) and drew 1 card, and Belladonna Took, Lab Ox and all three Servo tokens each have one +1/+1 counter.',
+    oracleSha256: belladonna.sha256,
+    clauseIds: ['belladonna-took-token-resolutions'],
+    decks: {
+      P1: [
+        belladonna.card,
+        LAB_OX,
+        LAB_TOKEN_FORGE,
+        LAB_TOKEN_FORGE,
+        LAB_TOKEN_FORGE,
+        ...forests,
+        LAB_HEX,
+        LAB_SERVO,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        { playerId: 'P1', cardNames: ['Lab Token Forge', 'Lab Token Forge', 'Lab Token Forge'] },
+      ],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Belladonna Took', 'Lab Ox', ...forests.map((forest) => forest.name)],
+        },
+      ],
+    },
+  });
+}
+
+function rumorGathererScenario(gameId: GameId): CardTestScenario {
+  const gatherer = pinnedFrom(COVERAGE_PR04, 'Rumor Gatherer');
+  const forests = Array.from({ length: 3 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'rumor-gatherer-viewer-scry-then-draw',
+    title: 'Rumor Gatherer: scry 1, then draw instead on the second creature, then scry again',
+    instructions: [
+      'Rumor Gatherer and three Forests are on your battlefield; three Lab Token Forges are in your hand.',
+      'Cast Lab Token Forge. The Servo token entering is another creature you control, so the first resolution scries 1: keep the card on top.',
+      'Cast a second Lab Token Forge. This is the second resolution this turn, so you draw a card instead of scrying.',
+      'Cast the third. The third resolution scries 1 again.',
+    ],
+    expectedOutcome:
+      'You scried twice (first and third tokens) and drew exactly one card (second token), with three Servo tokens on the battlefield.',
+    oracleSha256: gatherer.sha256,
+    clauseIds: ['rumor-gatherer-alliance'],
+    decks: {
+      P1: [
+        gatherer.card,
+        LAB_TOKEN_FORGE,
+        LAB_TOKEN_FORGE,
+        LAB_TOKEN_FORGE,
+        ...forests,
+        LAB_OX,
+        LAB_HEX,
+        LAB_SERVO,
+        LAB_SHOCK,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        { playerId: 'P1', cardNames: ['Lab Token Forge', 'Lab Token Forge', 'Lab Token Forge'] },
+      ],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Rumor Gatherer', ...forests.map((forest) => forest.name)],
+        },
+      ],
+    },
+  });
+}
+
+/** A two-color instant with a trivial effect: Crystal counts its colors, not its mana value. */
+const LAB_GRUUL_CHARM = card({
+  oracleId: 'lab-gruul-charm',
+  name: 'Lab Gruul Charm',
+  typeLine: 'Instant',
+  manaCost: '{R}{G}',
+  cmc: 2,
+  colors: ['R', 'G'],
+  colorIdentity: ['R', 'G'],
+  oracleText: 'You gain 1 life.',
+});
+
+function crystalScenario(gameId: GameId): CardTestScenario {
+  const crystal = pinnedFrom(COVERAGE_PR04, 'Crystal, Inhuman Princess');
+  return pr01Scenario(gameId, {
+    id: 'crystal-inhuman-princess-viewer-colors-damage',
+    title: 'Crystal, Inhuman Princess: a two-color spell deals 2 to each opponent',
+    instructions: [
+      'Crystal, a Mountain and a Forest are on your battlefield; Lab Gruul Charm (a red-green instant) is in your hand.',
+      'Cast Lab Gruul Charm. You cast a noncreature spell that is two colors, so Crystal deals 2 damage to each opponent.',
+      'Pass priority to resolve Crystal’s trigger, then the spell.',
+    ],
+    expectedOutcome:
+      'Each of P2, P3 and P4 lost exactly 2 life (38), and you gained 1 life from Lab Gruul Charm (41).',
+    oracleSha256: crystal.sha256,
+    clauseIds: [
+      'crystal-inhuman-princess-flying',
+      'crystal-inhuman-princess-colors-damage',
+      'crystal-inhuman-princess-mana',
+    ],
+    decks: {
+      P1: [crystal.card, LAB_GRUUL_CHARM, MOUNTAIN, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Gruul Charm'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Crystal, Inhuman Princess', 'Mountain', 'Forest'] },
+      ],
+    },
+  });
+}
+
+/** Two cheap instants for Call Forth the Tempest's cascades to find; they gain life and need no target. */
+const LAB_CASCADE_TWO = card({
+  oracleId: 'lab-cascade-two',
+  name: 'Lab Cascade Two',
+  typeLine: 'Instant',
+  manaCost: '{2}',
+  cmc: 2,
+  oracleText: 'You gain 1 life.',
+});
+const LAB_CASCADE_THREE = card({
+  oracleId: 'lab-cascade-three',
+  name: 'Lab Cascade Three',
+  typeLine: 'Instant',
+  manaCost: '{3}',
+  cmc: 3,
+  oracleText: 'You gain 1 life.',
+});
+const LAB_TOWER = card({
+  oracleId: 'lab-tower',
+  name: 'Lab Tower',
+  typeLine: 'Creature — Wall',
+  manaCost: '{3}',
+  cmc: 3,
+  power: '0',
+  toughness: '10',
+});
+
+function callForthTheTempestScenario(gameId: GameId): CardTestScenario {
+  const callForth = pinnedFrom(COVERAGE_PR04, 'Call Forth the Tempest');
+  const mountains = Array.from({ length: 3 }, () => MOUNTAIN);
+  const forests = Array.from({ length: 5 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'call-forth-the-tempest-viewer-other-spells-damage',
+    title: 'Call Forth the Tempest: damage equals the mana value of your other spells this turn',
+    instructions: [
+      'Lab Servo, three Mountains and five Forests are on your battlefield; P2 controls Lab Ox (4/4) and Lab Tower (0/10). Call Forth the Tempest is in your hand, and Lab Cascade Two and Lab Cascade Three are on top of your library.',
+      'Cast Call Forth the Tempest for {5}{R}{R}{R}. Each cascade exiles until a cheaper spell: cast Lab Cascade Two for free, then Lab Cascade Three for free.',
+      'Pass priority until everything resolves. Call Forth deals 2 + 3 = 5 to each creature P2 controls: the total mana value of your other spells cast this turn, not counting its own 8.',
+    ],
+    expectedOutcome:
+      'Lab Ox (4/4) dies, Lab Tower (0/10) survives with 5 damage, and your Lab Servo takes none.',
+    oracleSha256: callForth.sha256,
+    clauseIds: ['call-forth-the-tempest-cascade', 'call-forth-the-tempest-other-spells-damage'],
+    decks: {
+      P1: [
+        callForth.card,
+        LAB_SERVO,
+        ...mountains,
+        ...forests,
+        LAB_CASCADE_TWO,
+        LAB_CASCADE_THREE,
+        FOREST,
+        FOREST,
+      ],
+      P2: [LAB_OX, LAB_TOWER, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Call Forth the Tempest'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [
+            'Lab Servo',
+            ...mountains.map((mountain) => mountain.name),
+            ...forests.map((forest) => forest.name),
+          ],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Tower'] },
+      ],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Lab Cascade Two', 'Lab Cascade Three'] }],
+    },
+  });
+}
+
+function firstFamilyScenario(gameId: GameId): CardTestScenario {
+  const family = pinnedFrom(COVERAGE_PR04, 'First Family');
+  return pr01Scenario(gameId, {
+    id: 'first-family-viewer-colors-draw-gain',
+    title: 'First Family: draw and gain life for each color among your permanents and spells',
+    instructions: [
+      'Lab Red Bear (red), two Forests, an Island and a Mountain are on your battlefield; First Family is in your hand.',
+      'Cast First Family for {2}{G}{U}. It is green and blue and you control a red permanent, so X is 3.',
+      'Pass priority to resolve it: you draw three cards and gain three life.',
+    ],
+    expectedOutcome: 'You drew exactly three cards and gained 3 life (43).',
+    oracleSha256: family.sha256,
+    clauseIds: ['first-family-draw-gain-colors'],
+    decks: {
+      P1: [
+        family.card,
+        LAB_RED_BEAR,
+        FOREST,
+        FOREST,
+        ISLAND,
+        MOUNTAIN,
+        LAB_OX,
+        LAB_HEX,
+        LAB_SERVO,
+        LAB_SHOCK,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['First Family'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Red Bear', 'Forest', 'Forest', 'Island', 'Mountain'] },
+      ],
+    },
+  });
+}
+
+function unbreakableFormationScenario(gameId: GameId): CardTestScenario {
+  const formation = pinnedFrom(COVERAGE_PR04, 'Unbreakable Formation');
+  return pr01Scenario(gameId, {
+    id: 'unbreakable-formation-viewer-addendum-main-phase',
+    title:
+      'Unbreakable Formation: cast in your main phase, your creatures also get counters and vigilance',
+    instructions: [
+      'Lab Red Bear (a 2/2), Lab Servo (a 1/1) and three Plains are on your battlefield; P2 controls Lab Ox. Unbreakable Formation is in your hand.',
+      'Cast Unbreakable Formation for {2}{W} during your main phase, then pass priority to resolve it.',
+      'Your creatures gain indestructible until end of turn, and because you cast it in your main phase each also gets a +1/+1 counter and vigilance. Lab Ox gets nothing.',
+    ],
+    expectedOutcome:
+      'Lab Red Bear is a 3/3 and Lab Servo a 2/2, each with a +1/+1 counter, indestructible and vigilance. Lab Ox is unchanged.',
+    oracleSha256: formation.sha256,
+    clauseIds: ['unbreakable-formation-indestructible', 'unbreakable-formation-addendum'],
+    decks: {
+      P1: [formation.card, LAB_RED_BEAR, LAB_SERVO, PLAINS, PLAINS, PLAINS],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Unbreakable Formation'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Red Bear', 'Lab Servo', 'Plains', 'Plains', 'Plains'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+    },
+  });
+}
+
+/** A one-mana instant that gains 1 life: four of them make the Fantasticar's fourth noncreature spell. */
+const LAB_QUICK_GAIN = card({
+  oracleId: 'lab-quick-gain',
+  name: 'Lab Quick Gain',
+  typeLine: 'Instant',
+  manaCost: '{R}',
+  cmc: 1,
+  colors: ['R'],
+  colorIdentity: ['R'],
+  oracleText: 'You gain 1 life.',
+});
+
+function theFantasticarScenario(gameId: GameId): CardTestScenario {
+  const car = pinnedFrom(COVERAGE_PR04, 'The Fantasticar');
+  const mountains = Array.from({ length: 4 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: 'the-fantasticar-viewer-fourth-noncreature',
+    title: 'The Fantasticar: become a creature, then sacrifice it on your fourth noncreature spell',
+    instructions: [
+      'The Fantasticar (a 4/4 flying Vehicle) and four Mountains are on your battlefield; four Lab Quick Gains are in your hand.',
+      'Cast the first Lab Quick Gain and choose Yes to have The Fantasticar become an artifact creature until end of turn: it is a 4/4 flying creature.',
+      'Cast the second and third Lab Quick Gains and choose No for the creature trigger.',
+      'Cast the fourth. Choose No to become a creature again, then Yes to sacrifice The Fantasticar: you create four 4/4 Construct artifact creature tokens with flying and haste.',
+    ],
+    expectedOutcome:
+      'The Fantasticar is in your graveyard and you control four 4/4 flying, haste Construct tokens.',
+    oracleSha256: car.sha256,
+    clauseIds: [
+      'the-fantasticar-flying',
+      'the-fantasticar-animate',
+      'the-fantasticar-fourth-noncreature-sacrifice',
+    ],
+    decks: {
+      P1: [car.card, LAB_QUICK_GAIN, LAB_QUICK_GAIN, LAB_QUICK_GAIN, LAB_QUICK_GAIN, ...mountains],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Quick Gain', 'Lab Quick Gain', 'Lab Quick Gain', 'Lab Quick Gain'],
+        },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['The Fantasticar', ...mountains.map((m) => m.name)] },
+      ],
+    },
+  });
+}
+
+function kutzilScenario(gameId: GameId): CardTestScenario {
+  const kutzil = pinnedFrom(COVERAGE_PR04, 'Kutzil, Malamet Exemplar');
+  return pr01Scenario(gameId, {
+    id: 'kutzil-malamet-exemplar-viewer-above-base-draw',
+    title:
+      'Kutzil, Malamet Exemplar: one grown creature connecting draws a card, and opponents cannot cast spells',
+    instructions: [
+      'Kutzil, Lab Servo (carrying a +1/+1 counter, so its power is above its base power) and Lab Red Bear (no counters) are on your battlefield. P2 has a Mountain and a Lab Shock in hand but controls no creatures.',
+      'Attack P2 with all three creatures. Kutzil’s first ability stops P2 from casting Lab Shock during your turn.',
+      'Combat damage is dealt: only Lab Servo has power greater than its base power, so Kutzil’s trigger draws you exactly one card.',
+    ],
+    expectedOutcome:
+      'P2 takes 7 combat damage (33) and cannot cast Lab Shock, and you drew exactly one card, from the single trigger.',
+    oracleSha256: kutzil.sha256,
+    clauseIds: ['kutzil-malamet-exemplar-cast-lock', 'kutzil-malamet-exemplar-above-base-draw'],
+    decks: {
+      P1: [kutzil.card, LAB_SERVO, LAB_RED_BEAR, FOREST, FOREST, FOREST],
+      P2: [LAB_SHOCK, MOUNTAIN, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Kutzil, Malamet Exemplar', 'Lab Red Bear'] },
+        { playerId: 'P1', cardNames: ['Lab Servo'], counters: { '+1/+1': 1 } },
+        { playerId: 'P2', cardNames: ['Mountain'] },
+      ],
+      hand: [{ playerId: 'P2', cardNames: ['Lab Shock'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+const LAB_RABBIT = card({
+  oracleId: 'lab-rabbit',
+  name: 'Lab Rabbit',
+  typeLine: 'Creature — Rabbit',
+  manaCost: '{1}',
+  cmc: 1,
+  power: '2',
+  toughness: '2',
+});
+
+function finneasScenario(gameId: GameId): CardTestScenario {
+  const finneas = pinnedFrom(COVERAGE_PR04, 'Finneas, Ace Archer');
+  return pr01Scenario(gameId, {
+    id: 'finneas-ace-archer-viewer-counters-then-draw',
+    title:
+      'Finneas, Ace Archer: attacking grows your tokens and Rabbits, and total power 10 draws a card',
+    instructions: [
+      'Finneas (2/2), Lab Rabbit (a 2/2 Rabbit), Lab Ox (a 4/4 that is neither a token nor a Rabbit) and a Forest are on your battlefield; Lab Token Forge is in your hand.',
+      'Cast Lab Token Forge to create a 1/1 Servo token. Your creatures have total power 2 + 2 + 4 + 1 = 9.',
+      'Attack P2 with Finneas (Lab Rabbit and Lab Ox attack too). Its trigger puts a +1/+1 counter on the Servo token and on Lab Rabbit, bringing total power to 11, so you draw a card.',
+    ],
+    expectedOutcome:
+      'The Servo token and Lab Rabbit each have one +1/+1 counter; Finneas and Lab Ox have none. You drew exactly one card.',
+    oracleSha256: finneas.sha256,
+    clauseIds: ['finneas-ace-archer-keywords', 'finneas-ace-archer-attack-counters-draw'],
+    decks: {
+      P1: [finneas.card, LAB_RABBIT, LAB_OX, LAB_TOKEN_FORGE, FOREST, LAB_HEX, LAB_SHOCK],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Token Forge'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Finneas, Ace Archer', 'Lab Rabbit', 'Lab Ox', 'Forest'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function captainAmericaScenario(gameId: GameId): CardTestScenario {
+  const captain = pinnedFrom(COVERAGE_PR04, 'Captain America, Skybound');
+  return pr01Scenario(gameId, {
+    id: 'captain-america-skybound-viewer-battalion',
+    title: 'Captain America, Skybound: battalion grows each attacker and makes them indestructible',
+    instructions: [
+      'Captain America, Lab Ox, Lab Red Bear and Lab Servo are on your battlefield, none summoning sick.',
+      'Attack P2 with Captain America, Lab Ox and Lab Red Bear, and keep Lab Servo at home. Captain America and two other creatures attack, so battalion triggers.',
+      'Each of the three attackers gets a +1/+1 counter and gains indestructible until end of turn. Lab Servo, which stayed home, gets neither.',
+    ],
+    expectedOutcome:
+      'Captain America, Lab Ox and Lab Red Bear each have one +1/+1 counter and are indestructible. Lab Servo has no counter.',
+    oracleSha256: captain.sha256,
+    clauseIds: ['captain-america-skybound-keywords', 'captain-america-skybound-battalion'],
+    decks: {
+      P1: [captain.card, LAB_OX, LAB_RED_BEAR, LAB_SERVO, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Captain America, Skybound', 'Lab Ox', 'Lab Red Bear', 'Lab Servo'],
+        },
+      ],
+      hand: [],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -8635,10 +11412,3757 @@ export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'harmonic-viewer-cast-and-double-trigger',
 ] as const;
 
+// Coverage PR06 (docs/plans/card-coverage-chunks.md).
+
+const LAB_SKYDRAKE = card({
+  oracleId: 'lab-skydrake',
+  name: 'Lab Skydrake',
+  typeLine: 'Creature — Dragon',
+  manaCost: '{R}',
+  cmc: 1,
+  colors: ['R'],
+  power: '3',
+  toughness: '3',
+  oracleText: 'Flying, lifelink',
+});
+
+function dragonTempestScenario(gameId: GameId): CardTestScenario {
+  const tempest = pinnedFrom(COVERAGE_PR06, 'Dragon Tempest');
+  return pr01Scenario(gameId, {
+    id: 'dragon-tempest-viewer-dragon-deals-damage',
+    title: 'Dragon Tempest: the entering Dragon deals the damage',
+    instructions: [
+      'Dragon Tempest and a Mountain are on your battlefield; Lab Skydrake (a 3/3 red Dragon with flying and lifelink) is in your hand.',
+      'Cast Lab Skydrake. Put the Dragon damage trigger on P2 when asked, then let both triggers resolve.',
+    ],
+    expectedOutcome:
+      'Lab Skydrake gains haste and deals 1 damage to P2 (you control one Dragon). It is the Dragon that deals the damage, so its lifelink gains you 1 life: you are at 41 and P2 is at 39.',
+    oracleSha256: tempest.sha256,
+    clauseIds: ['dragon-tempest-flying-haste', 'dragon-tempest-dragon-damage'],
+    decks: {
+      P1: [tempest.card, LAB_SKYDRAKE, MOUNTAIN, MOUNTAIN],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Skydrake'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Dragon Tempest', 'Mountain'] }],
+    },
+  });
+}
+
+function scourgeOfValkasScenario(gameId: GameId): CardTestScenario {
+  const scourge = pinnedFrom(COVERAGE_PR06, 'Scourge of Valkas');
+  const mountains = Array.from({ length: 7 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: 'scourge-of-valkas-viewer-dragons-deal-damage',
+    title: 'Scourge of Valkas: it and another Dragon each deal X damage as they enter',
+    instructions: [
+      'Scourge of Valkas and Lab Skydrake (a 3/3 red Dragon with flying and lifelink) are in your hand, and seven Mountains are on your battlefield.',
+      'Cast Scourge of Valkas and aim its enters trigger at P2. Then cast Lab Skydrake and aim the trigger it causes at P2 as well.',
+      'Finally pay {R} for Scourge of Valkas’s pump with your last Mountain and let it resolve.',
+    ],
+    expectedOutcome:
+      'Scourge deals 1 damage to P2 as it enters (you control one Dragon). Lab Skydrake entering then deals 2 damage to P2 (you control two Dragons), and because the Dragon that enters is the source, its lifelink gains you 2 life: you are at 42 and P2 is at 37.',
+    oracleSha256: scourge.sha256,
+    clauseIds: ['scourge-of-valkas-flying', 'scourge-of-valkas-enters-damage'],
+    decks: {
+      P1: [scourge.card, LAB_SKYDRAKE, ...mountains],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Scourge of Valkas', 'Lab Skydrake'] }],
+      battlefield: [{ playerId: 'P1', cardNames: mountains.map((mountain) => mountain.name) }],
+    },
+  });
+}
+
+function tyrantsFamiliarScenario(gameId: GameId): CardTestScenario {
+  const familiar = pinnedFrom(COVERAGE_PR06, "Tyrant's Familiar");
+  const general = card({
+    oracleId: 'lab-familiar-general',
+    name: 'Lab General',
+    typeLine: 'Legendary Creature — Elf Warrior',
+    manaCost: '{2}{G}',
+    cmc: 3,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '2',
+    toughness: '2',
+  });
+  return pr01Scenario(gameId, {
+    id: 'tyrants-familiar-viewer-lieutenant-attack',
+    title: "Tyrant's Familiar: lieutenant attack hits a creature of the player it attacks",
+    instructions: [
+      "Tyrant's Familiar and your commander, Lab General, are on your battlefield. P2 controls Lab Servo and Lab Ox, and P3 controls Lab Bird.",
+      "Attack P2 with Tyrant's Familiar. When its attack trigger asks for a target, notice that only P2's creatures can be chosen, then choose Lab Ox.",
+    ],
+    expectedOutcome:
+      "With your commander out, Tyrant's Familiar is a 7/7 flier. Its trigger deals 7 damage to Lab Ox, which dies, while Lab Servo, Lab Bird and your own creatures are untouched. The Familiar then connects for 7: P2 is at 33.",
+    oracleSha256: familiar.sha256,
+    clauseIds: [
+      'tyrants-familiar-keywords',
+      'tyrants-familiar-lieutenant-pump',
+      'tyrants-familiar-lieutenant-trigger',
+    ],
+    decks: {
+      P1: [familiar.card, FOREST, FOREST],
+      P2: [LAB_SERVO, LAB_OX, FOREST],
+      P3: [LAB_BIRD, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    commanders: { P1: [general] },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ["Tyrant's Familiar", 'Lab General'] },
+        { playerId: 'P2', cardNames: ['Lab Servo', 'Lab Ox'] },
+        { playerId: 'P3', cardNames: ['Lab Bird'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function brashTaunterScenario(gameId: GameId): CardTestScenario {
+  const taunter = pinnedFrom(COVERAGE_PR06, 'Brash Taunter');
+  const mountains = Array.from({ length: 3 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: 'brash-taunter-viewer-fight-and-reflect',
+    title: 'Brash Taunter: fight Lab Ox, then reflect the damage at P3',
+    instructions: [
+      'Brash Taunter and three Mountains are on your battlefield. P2 controls Lab Ox (4/4) and P3 controls Lab Servo (1/1).',
+      'Activate {2}{R}, {T}: Brash Taunter fights another target creature. Notice the Taunter itself is not offered, then choose Lab Ox.',
+      'When the Taunter is dealt damage in the fight, aim its reflection at P3.',
+    ],
+    expectedOutcome:
+      'Brash Taunter deals 1 damage to Lab Ox and Lab Ox deals 4 to the indestructible Taunter, which survives. The trigger then deals 4 damage to P3, who is at 36; P2, P4 and you are untouched at 40.',
+    oracleSha256: taunter.sha256,
+    clauseIds: [
+      'brash-taunter-indestructible',
+      'brash-taunter-reflect-damage',
+      'brash-taunter-fight',
+    ],
+    decks: {
+      P1: [taunter.card, ...mountains],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: [LAB_SERVO, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Brash Taunter', ...mountains.map((m) => m.name)] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+        { playerId: 'P3', cardNames: ['Lab Servo'] },
+      ],
+    },
+  });
+}
+
+/** Pass priority, and fill a declaration's slots with "no block" (or the first choice). */
+function passOrNoBlock(request: Parameters<DecisionProvider['decide']>[0]) {
+  const pass = request.legalActions.find((candidate) => candidate.type === 'pass');
+  const fallback = pass ?? request.legalActions[0]!;
+  return {
+    requestId: request.requestId,
+    actionId: fallback.id,
+    targets: (fallback.targets ?? []).map((slot) => ({
+      slot: slot.slot,
+      choice: slot.options.includes('__no_block__') ? '__no_block__' : (slot.options[0] as string),
+    })),
+  };
+}
+
+/** An opponent seat that never blocks and otherwise passes. */
+function neverBlocks(): DecisionProvider {
+  return { decide: passOrNoBlock };
+}
+
+/**
+ * An opponent seat that votes for one named permanent whenever Council's Judgment asks it to, and
+ * otherwise passes. It answers exactly the vote it is offered — by the printed option's own
+ * description — so a seat that is never asked falls through to the ordinary pass.
+ */
+function votesFor(name: string): DecisionProvider {
+  return {
+    decide(request) {
+      const vote = request.legalActions.find(
+        (candidate) => candidate.description === `Vote for ${name}`,
+      );
+      if (vote !== undefined) return { requestId: request.requestId, actionId: vote.id };
+      return passOrNoBlock(request);
+    },
+  };
+}
+
+/**
+ * An opponent seat that answers a sacrifice-or-lose prompt with `answer` ('decline' takes the
+ * loss, otherwise the option whose description contains it), never blocks, and otherwise passes.
+ */
+function sacrificeOrLose(answer: 'decline' | string): DecisionProvider {
+  return {
+    decide(request) {
+      const action = request.legalActions.find((candidate) =>
+        answer === 'decline'
+          ? candidate.type === 'decline'
+          : candidate.type !== 'decline' && candidate.description.includes(answer),
+      );
+      if (action !== undefined) return { requestId: request.requestId, actionId: action.id };
+      return passOrNoBlock(request);
+    },
+  };
+}
+
+function tombBladeScenario(gameId: GameId): CardTestScenario {
+  const blade = pinnedFrom(COVERAGE_PR06, 'Tomb Blade');
+  const swamps = Array.from({ length: 8 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'tomb-blade-viewer-sacrifice-or-lose',
+    title: 'Tomb Blade: the damaged player sacrifices a creature or loses life',
+    instructions: [
+      'You control Tomb Blade and eight Swamps, and a second Tomb Blade is in your graveyard. P2 controls Lab Servo, Lab Ox and Lab Bird, and P3 controls Lab Servo and Lab Ox; P4 controls nothing.',
+      'Unearth the second Tomb Blade from your graveyard for {6}{B}{B} and let it resolve: it returns with haste.',
+      'Attack P2 with one Tomb Blade and P3 with the other. P2 declines to sacrifice; P3 sacrifices Lab Servo.',
+    ],
+    expectedOutcome:
+      'Each Tomb Blade deals 5 combat damage. P2 declines and loses 3 more life (one per creature it controls): it is at 32 and keeps all three creatures. P3 sacrifices Lab Servo and loses no extra life: it is at 35 with Lab Ox only. P4 and you are untouched at 40.',
+    oracleSha256: blade.sha256,
+    clauseIds: ['tomb-blade-flying', 'tomb-blade-combat-damage-rider', 'tomb-blade-unearth'],
+    decks: {
+      P1: [blade.card, blade.card, ...swamps],
+      P2: [LAB_SERVO, LAB_OX, LAB_BIRD, FOREST],
+      P3: [LAB_SERVO, LAB_OX, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Tomb Blade', ...swamps.map((swamp) => swamp.name)] },
+        { playerId: 'P2', cardNames: ['Lab Servo', 'Lab Ox', 'Lab Bird'] },
+        { playerId: 'P3', cardNames: ['Lab Servo', 'Lab Ox'] },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Tomb Blade'] }],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: sacrificeOrLose('decline'), P3: sacrificeOrLose('Lab Servo') },
+  });
+}
+
+function duelistsHeritageScenario(gameId: GameId): CardTestScenario {
+  const heritage = pinnedFrom(COVERAGE_PR06, "Duelist's Heritage");
+  return pr01Scenario(gameId, {
+    id: 'duelists-heritage-viewer-double-strike-attacker',
+    title: "Duelist's Heritage: one trigger per attack, double strike for the attacker you pick",
+    instructions: [
+      "Duelist's Heritage, Lab Ox (4/4) and Lab Servo (1/1) are on your battlefield; P2 controls Lab Bird and P3 controls Lab Servo.",
+      'Attack P2 with both Lab Ox and Lab Servo. The Heritage triggers once for the whole attack: target Lab Servo, and say yes to the "you may".',
+    ],
+    expectedOutcome:
+      'Only the two attackers were offered as targets (not Lab Bird or the other Lab Servo). Lab Servo gains double strike and deals 1 damage in each damage step, and Lab Ox deals 4: P2 is at 40 - 4 - 2 = 34.',
+    oracleSha256: heritage.sha256,
+    clauseIds: ['duelists-heritage-attack-trigger'],
+    decks: {
+      P1: [heritage.card, LAB_OX, LAB_SERVO],
+      P2: [LAB_BIRD, FOREST, FOREST],
+      P3: [LAB_SERVO, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ["Duelist's Heritage", 'Lab Ox', 'Lab Servo'] },
+        { playerId: 'P2', cardNames: ['Lab Bird'] },
+        { playerId: 'P3', cardNames: ['Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: neverBlocks(), P3: neverBlocks() },
+  });
+}
+
+function thunderbreakRegentScenario(gameId: GameId): CardTestScenario {
+  const regent = pinnedFrom(COVERAGE_PR06, 'Thunderbreak Regent');
+  return pr01Scenario(gameId, {
+    id: 'thunderbreak-regent-viewer-opponent-targets-dragon',
+    title: 'Thunderbreak Regent: the opponent who targets your Dragon takes 3',
+    instructions: [
+      'Thunderbreak Regent, your only Dragon, is on your battlefield and a Forest is in your hand. P2 has two Swamps and Lab Doom in hand; P3 and P4 do nothing.',
+      'Pass priority. P2 casts Lab Doom on Thunderbreak Regent, and the Regent triggers because an opponent’s spell targeted a Dragon you control.',
+    ],
+    expectedOutcome:
+      'Thunderbreak Regent deals 3 damage to P2, the player who controls the spell, before Lab Doom resolves: P2 is at 37 while P3, P4 and you stay at 40. Lab Doom then destroys the Regent.',
+    oracleSha256: regent.sha256,
+    clauseIds: ['thunderbreak-regent-flying', 'thunderbreak-regent-targeted-trigger'],
+    decks: {
+      P1: [regent.card, FOREST],
+      P2: [LAB_DOOM, SWAMP, SWAMP],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        { playerId: 'P1', cardNames: ['Forest'] },
+        { playerId: 'P2', cardNames: ['Lab Doom'] },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Thunderbreak Regent'] },
+        { playerId: 'P2', cardNames: ['Swamp', 'Swamp'] },
+      ],
+    },
+    decisionProviderOverrides: { P2: castWhenAble('Lab Doom') },
+  });
+}
+
+const LAB_FREE_TRINKET = card({
+  oracleId: 'lab-free-trinket',
+  name: 'Lab Free Trinket',
+  typeLine: 'Artifact',
+  manaCost: '{0}',
+  cmc: 0,
+});
+
+function invisibleWomanScenario(gameId: GameId): CardTestScenario {
+  const woman = pinnedFrom(COVERAGE_PR06, 'Invisible Woman');
+  const lands = [MOUNTAIN, FOREST, PLAINS, ISLAND];
+  return pr01Scenario(gameId, {
+    id: 'invisible-woman-viewer-pay-pump-unblockable',
+    title: 'Invisible Woman: pay {R}{G}{W}{U} when you attack, then pump and evade',
+    instructions: [
+      'Invisible Woman, Lab Ox (4/4), Lab Servo (1/1) and a Mountain, Forest, Plains and Island are on your battlefield, and Lab Free Trinket (a noncreature spell costing {0}) is in your hand. P2 controls Lab Bird.',
+      'Cast Lab Free Trinket and let it resolve, then move to combat: Invisible Woman makes a 0/3 Wall at the beginning of combat because you cast a noncreature spell.',
+      'Then attack P2 with Lab Ox alone. Pay {R}{G}{W}{U} when asked, then choose Lab Ox as the target of the reflexive trigger.',
+    ],
+    expectedOutcome:
+      'A 0/3 Wall with defender and reach joins your battlefield. Lab Ox gets +1/+0 for each of the four creatures you control, the Wall included (an 8/4), and cannot be blocked this turn, so Lab Bird cannot stop it: P2 is at 32. The four lands are tapped.',
+    oracleSha256: woman.sha256,
+    clauseIds: ['invisible-woman-wall-token', 'invisible-woman-attack-payment'],
+    decks: {
+      P1: [woman.card, LAB_OX, LAB_SERVO, LAB_FREE_TRINKET, ...lands],
+      P2: [LAB_BIRD, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Free Trinket'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Invisible Woman', 'Lab Ox', 'Lab Servo', ...lands.map((land) => land.name)],
+        },
+        { playerId: 'P2', cardNames: ['Lab Bird'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: neverBlocks() },
+  });
+}
+
+function flameblastDragonScenario(gameId: GameId): CardTestScenario {
+  const dragon = pinnedFrom(COVERAGE_PR06, 'Flameblast Dragon');
+  const mountains = Array.from({ length: 4 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: 'flameblast-dragon-viewer-target-then-pay-x',
+    title: 'Flameblast Dragon: choose the target, then pay {X}{R} for X damage',
+    instructions: [
+      'Flameblast Dragon and four Mountains are on your battlefield. P2 controls Lab Bird; P3 and P4 control nothing relevant.',
+      'Attack P2 with Flameblast Dragon. Its trigger asks for the target first: choose P3. When the trigger resolves it offers the payment: pay X=3 for {3}{R}.',
+    ],
+    expectedOutcome:
+      'The trigger had its target (P3) before any payment was asked. Paying X=3 taps all four Mountains and Flameblast Dragon deals 3 damage to P3, who is at 37. The Dragon also deals 5 combat damage to P2, who is at 35. P4 and you are at 40.',
+    oracleSha256: dragon.sha256,
+    clauseIds: ['flameblast-dragon-flying', 'flameblast-dragon-attack-payment'],
+    decks: {
+      P1: [dragon.card, ...mountains],
+      P2: [LAB_BIRD, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Flameblast Dragon', ...mountains.map((mountain) => mountain.name)],
+        },
+        { playerId: 'P2', cardNames: ['Lab Bird'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: neverBlocks() },
+  });
+}
+
+function territorialAetherkiteScenario(gameId: GameId): CardTestScenario {
+  const kite = pinnedFrom(COVERAGE_PR06, 'Territorial Aetherkite');
+  const mountains = Array.from({ length: 6 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: 'territorial-aetherkite-viewer-pay-energy-damage',
+    title: 'Territorial Aetherkite: pay energy and damage each other creature',
+    instructions: [
+      'Territorial Aetherkite is in your hand and you control six Mountains and Lab Ox (4/4). P2 controls Lab Servo (1/1) and Lab Bird (1/1); P3 controls Lab Servo.',
+      'Cast Territorial Aetherkite for {4}{R}{R} and let it resolve. Its enter trigger gives you {E}{E}; when it resolves, choose to pay 2 energy.',
+      'The "when you do" damage is a separate trigger: it goes on the stack, and you pass priority to let it resolve.',
+    ],
+    expectedOutcome:
+      'You paid both energy, so the Aetherkite dealt 2 damage to each other creature: all three 1/1 creatures (both Lab Servos and Lab Bird) died, Lab Ox survived with 2 damage and the Aetherkite itself took none. No player lost life.',
+    oracleSha256: kite.sha256,
+    clauseIds: ['territorial-aetherkite-flying-haste', 'territorial-aetherkite-energy-damage'],
+    decks: {
+      P1: [kite.card, LAB_OX, ...mountains],
+      P2: [LAB_SERVO, LAB_BIRD, FOREST, FOREST],
+      P3: [LAB_SERVO, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Territorial Aetherkite'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox', ...mountains.map((mountain) => mountain.name)] },
+        { playerId: 'P2', cardNames: ['Lab Servo', 'Lab Bird'] },
+        { playerId: 'P3', cardNames: ['Lab Servo'] },
+      ],
+    },
+  });
+}
+
+function arcbondScenario(gameId: GameId): CardTestScenario {
+  const arcbond = pinnedFrom(COVERAGE_PR06, 'Arcbond');
+  const mountains = Array.from({ length: 4 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: 'arcbond-viewer-reflect-damage',
+    title: 'Arcbond: the chosen creature reflects the damage it is dealt',
+    instructions: [
+      'Arcbond and Lab Shock are in your hand; you control Lab Ox (4/4) and four Mountains. P2 controls Lab Servo and Lab Bird (both 1/1) and P3 controls Lab Servo.',
+      'Cast Arcbond targeting Lab Ox and let it resolve. Then cast Lab Shock targeting Lab Ox.',
+    ],
+    expectedOutcome:
+      'Lab Ox is dealt 2 damage, so Lab Ox itself deals 2 damage to each other creature and each player: both Lab Servos and Lab Bird die, Lab Ox survives with only the 2 from Lab Shock, and all four players (you included) are at 38.',
+    oracleSha256: arcbond.sha256,
+    clauseIds: ['arcbond-delayed-reflection'],
+    decks: {
+      P1: [arcbond.card, LAB_SHOCK, LAB_OX, ...mountains],
+      P2: [LAB_SERVO, LAB_BIRD, FOREST, FOREST],
+      P3: [LAB_SERVO, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Arcbond', 'Lab Shock'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox', ...mountains.map((mountain) => mountain.name)] },
+        { playerId: 'P2', cardNames: ['Lab Servo', 'Lab Bird'] },
+        { playerId: 'P3', cardNames: ['Lab Servo'] },
+      ],
+    },
+  });
+}
+
+const LAB_STURDY_FLIER = card({
+  oracleId: 'lab-sturdy-flier',
+  name: 'Lab Sturdy Flier',
+  typeLine: 'Creature — Bird',
+  manaCost: '{1}',
+  cmc: 1,
+  power: '1',
+  toughness: '3',
+  oracleText: 'Flying',
+});
+const LAB_RED_GUARD = card({
+  oracleId: 'lab-red-guard',
+  name: 'Lab Red Guard',
+  typeLine: 'Creature — Bird',
+  manaCost: '{1}',
+  cmc: 1,
+  power: '1',
+  toughness: '3',
+  oracleText: 'Flying\nProtection from red',
+});
+
+function thundermawHellkiteScenario(gameId: GameId): CardTestScenario {
+  const kite = pinnedFrom(COVERAGE_PR06, 'Thundermaw Hellkite');
+  const mountains = Array.from({ length: 5 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: 'thundermaw-hellkite-viewer-damage-and-tap-fliers',
+    title: 'Thundermaw Hellkite: damage and tap the fliers your opponents control',
+    instructions: [
+      'Thundermaw Hellkite is in your hand with five Mountains and your own Lab Bird (1/1 flier) on the battlefield. P2 controls Lab Sturdy Flier, Lab Red Guard (a flier with protection from red) and Lab Ox; P3 controls a Lab Sturdy Flier.',
+      'Cast Thundermaw Hellkite for {3}{R}{R} and let it resolve; its enter trigger resolves after you pass priority.',
+    ],
+    expectedOutcome:
+      'Both Lab Sturdy Fliers take 1 damage and are tapped. Lab Red Guard takes no damage (protection from red) but is still tapped. Lab Ox and your own Lab Bird are untouched and untapped.',
+    oracleSha256: kite.sha256,
+    clauseIds: [
+      'thundermaw-hellkite-flying',
+      'thundermaw-hellkite-haste',
+      'thundermaw-hellkite-enters-damage-tap',
+    ],
+    decks: {
+      P1: [kite.card, LAB_BIRD, ...mountains],
+      P2: [LAB_STURDY_FLIER, LAB_RED_GUARD, LAB_OX, FOREST],
+      P3: [LAB_STURDY_FLIER, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Thundermaw Hellkite'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Bird', ...mountains.map((mountain) => mountain.name)] },
+        { playerId: 'P2', cardNames: ['Lab Sturdy Flier', 'Lab Red Guard', 'Lab Ox'] },
+        { playerId: 'P3', cardNames: ['Lab Sturdy Flier'] },
+      ],
+    },
+  });
+}
+
+function backlashScenario(gameId: GameId): CardTestScenario {
+  const backlash = pinnedFrom(COVERAGE_PR06, 'Backlash');
+  const lands = [SWAMP, MOUNTAIN, MOUNTAIN];
+  return pr01Scenario(gameId, {
+    id: 'backlash-viewer-tap-and-reflect',
+    title: 'Backlash: tap an untapped creature and it hits its controller',
+    instructions: [
+      'Backlash is in your hand with a Swamp and two Mountains on your battlefield. P2 controls Lab Ox (4/4) and P3 controls Lab Servo (1/1).',
+      "Cast Backlash targeting Lab Ox (P2's creature) and let it resolve.",
+    ],
+    expectedOutcome:
+      'Lab Ox becomes tapped and deals 4 damage, equal to its power, to its controller P2, who is at 36. Lab Servo stays untapped and P3, P4 and you are at 40.',
+    oracleSha256: backlash.sha256,
+    clauseIds: ['backlash-tap-and-damage'],
+    decks: {
+      P1: [backlash.card, ...lands],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: [LAB_SERVO, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Backlash'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: lands.map((land) => land.name) },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+        { playerId: 'P3', cardNames: ['Lab Servo'] },
+      ],
+    },
+  });
+}
+
+function guardGomazoaScenario(gameId: GameId): CardTestScenario {
+  const gomazoa = pinnedFrom(COVERAGE_PR06, 'Guard Gomazoa');
+  return pr01Scenario(gameId, {
+    id: 'guard-gomazoa-viewer-blocks-and-takes-no-damage',
+    title: 'Guard Gomazoa: blocks Lab Ox and takes no combat damage',
+    instructions: [
+      'You control Lab Ox (4/4). P2 controls Guard Gomazoa (1/3) and blocks with every creature it can.',
+      'Attack P2 with Lab Ox. Guard Gomazoa blocks it.',
+    ],
+    expectedOutcome:
+      'Lab Ox deals 4 combat damage to Guard Gomazoa, but all of it is prevented, so Guard Gomazoa has no damage and survives. Guard Gomazoa deals 1 damage to Lab Ox. P2 is still at 40.',
+    oracleSha256: gomazoa.sha256,
+    clauseIds: ['guard-gomazoa-keywords', 'guard-gomazoa-prevent-combat-damage'],
+    decks: {
+      P1: [LAB_OX, ...PR01_FILLER],
+      P2: [gomazoa.card, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox'] },
+        { playerId: 'P2', cardNames: ['Guard Gomazoa'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: blockWithEverything },
+  });
+}
+
+/**
+ * An opponent seat that casts `spell` (aimed at P1 when legal) at the `nth` priority window where
+ * it can, so a scenario can let P1's own spell and trigger resolve before the opponent acts.
+ */
+function castOnNthWindow(spell: string, nth: number): DecisionProvider {
+  let windows = 0;
+  return {
+    decide(request) {
+      const action = request.legalActions.find((candidate) =>
+        candidate.description.startsWith(`Cast ${spell}`),
+      );
+      if (action !== undefined && ++windows === nth) {
+        return {
+          requestId: request.requestId,
+          actionId: action.id,
+          targets: (action.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: slot.options.includes('P1') ? 'P1' : (slot.options[0] as string),
+          })),
+        };
+      }
+      const pass = request.legalActions.find((candidate) => candidate.type === 'pass');
+      return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+    },
+  };
+}
+
+function selflessSquireScenario(gameId: GameId): CardTestScenario {
+  const squire = pinnedFrom(COVERAGE_PR06, 'Selfless Squire');
+  const plains = Array.from({ length: 4 }, () => PLAINS);
+  return pr01Scenario(gameId, {
+    id: 'selfless-squire-viewer-prevent-and-grow',
+    title: 'Selfless Squire: prevent the damage to you and grow by that much',
+    instructions: [
+      'Selfless Squire is in your hand with four Plains on your battlefield. P2 holds Lab Shock with a Mountain.',
+      'Cast Selfless Squire and let its enter trigger resolve. Once it has, P2 casts Lab Shock at you; let it resolve, and then the Squire trigger.',
+    ],
+    expectedOutcome:
+      'Lab Shock deals no damage to you, so you are still at 40, and Selfless Squire gets two +1/+1 counters and is a 3/3.',
+    oracleSha256: squire.sha256,
+    clauseIds: ['selfless-squire-flash', 'selfless-squire-shield', 'selfless-squire-counters'],
+    decks: {
+      P1: [squire.card, ...plains],
+      P2: [LAB_SHOCK, MOUNTAIN, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        { playerId: 'P1', cardNames: ['Selfless Squire'] },
+        { playerId: 'P2', cardNames: ['Lab Shock'] },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: plains.map((p) => p.name) },
+        { playerId: 'P2', cardNames: ['Mountain'] },
+      ],
+    },
+    decisionProviderOverrides: { P2: castOnNthWindow('Lab Shock', 3) },
+  });
+}
+
+function deflectingPalmScenario(gameId: GameId): CardTestScenario {
+  const palm = pinnedFrom(COVERAGE_PR06, 'Deflecting Palm');
+  const lands = [MOUNTAIN, PLAINS];
+  return pr01Scenario(gameId, {
+    id: 'deflecting-palm-viewer-chosen-source-reflects',
+    title: "Deflecting Palm: prevent a chosen creature's damage and reflect it",
+    instructions: [
+      "It is P2's turn and Deflecting Palm is in your hand with a Mountain and a Plains on your battlefield. P2 controls Lab Ox (4/4) and Lab Servo (1/1) and attacks you with both.",
+      'When you get priority, cast Deflecting Palm and choose Lab Ox as the source. Nobody blocks.',
+    ],
+    expectedOutcome:
+      "Lab Ox's 4 combat damage to you is prevented and Deflecting Palm deals 4 damage to P2, the controller of Lab Ox, after combat damage: P2 is at 36. Lab Servo's 1 damage is not prevented, so you are at 39. P3 and P4 are at 40.",
+    oracleSha256: palm.sha256,
+    clauseIds: ['deflecting-palm-chosen-source', 'deflecting-palm-reflection'],
+    decks: {
+      P1: [palm.card, ...lands],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [{ playerId: 'P1', cardNames: ['Deflecting Palm'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: lands.map((land) => land.name) },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') },
+  });
+}
+
+/** `castOnNthWindow` for the spell, and attacking `defender` with everything when asked to. */
+function castOnNthWindowThenAttack(
+  spell: string,
+  nth: number,
+  defender: PlayerId,
+): DecisionProvider {
+  const cast = castOnNthWindow(spell, nth);
+  const attack = attackPlayerWithEverything(defender);
+  return {
+    decide(request) {
+      const attacking = request.legalActions.some((action) =>
+        action.description.startsWith('Declare attackers'),
+      );
+      return attacking ? attack.decide(request) : cast.decide(request);
+    },
+  };
+}
+
+function comeuppanceScenario(gameId: GameId): CardTestScenario {
+  const comeuppance = pinnedFrom(COVERAGE_PR06, 'Comeuppance');
+  const plains = Array.from({ length: 4 }, () => PLAINS);
+  return pr01Scenario(gameId, {
+    id: 'comeuppance-viewer-prevent-and-reflect',
+    title: 'Comeuppance: prevent the damage and deal it back to the creature and the controller',
+    instructions: [
+      "It is P2's turn. Comeuppance is in your hand with four Plains on your battlefield. P2 controls Lab Ox (4/4) and holds Lab Shock with a Mountain.",
+      'When you get priority, cast Comeuppance and let it resolve. P2 then casts Lab Shock at you and attacks you with Lab Ox. Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Comeuppance prevents all of it, so you are still at 40. Lab Shock is a noncreature source, so Comeuppance deals 2 to its controller P2, who is at 38. Lab Ox is a creature source, so Comeuppance deals its 4 combat damage back to Lab Ox itself, which dies; P2 takes nothing more. P3 and P4 are at 40.',
+    oracleSha256: comeuppance.sha256,
+    clauseIds: [
+      'comeuppance-prevention',
+      'comeuppance-creature-reflection',
+      'comeuppance-noncreature-reflection',
+    ],
+    decks: {
+      P1: [comeuppance.card, ...plains],
+      P2: [LAB_OX, LAB_SHOCK, MOUNTAIN, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [
+        { playerId: 'P1', cardNames: ['Comeuppance'] },
+        { playerId: 'P2', cardNames: ['Lab Shock'] },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: plains.map((p) => p.name) },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Mountain'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: castOnNthWindowThenAttack('Lab Shock', 3, 'P1') },
+  });
+}
+
+/**
+ * An opponent seat that casts `spell` the first time it may (aimed at P1), attacks `defender` with
+ * everything, and answers any sacrifice choice by sacrificing a permanent whose name contains
+ * `sacrifice`, passing otherwise.
+ */
+function castAttackAndSacrifice(
+  spell: string,
+  defender: PlayerId,
+  sacrifice: string,
+): DecisionProvider {
+  const cast = castWhenAble(spell);
+  const attack = attackPlayerWithEverything(defender);
+  return {
+    decide(request) {
+      const pick = request.legalActions.find(
+        (action) => action.type === 'sacrifice' && action.description.includes(sacrifice),
+      );
+      if (pick !== undefined) return { requestId: request.requestId, actionId: pick.id };
+      const attacking = request.legalActions.some((action) =>
+        action.description.startsWith('Declare attackers'),
+      );
+      return attacking ? attack.decide(request) : cast.decide(request);
+    },
+  };
+}
+
+function michikoKondaScenario(gameId: GameId): CardTestScenario {
+  const michiko = pinnedFrom(COVERAGE_PR06, 'Michiko Konda, Truth Seeker');
+  return pr01Scenario(gameId, {
+    id: 'michiko-konda-viewer-damage-makes-opponent-sacrifice',
+    title: 'Michiko Konda: each opposing source that damages you makes its controller sacrifice',
+    instructions: [
+      "It is P2's turn. Michiko Konda is on your battlefield. P2 controls Lab Ox, a Mountain and two Forests, holds Lab Shock, and chooses to sacrifice a Forest whenever it must sacrifice.",
+      'Pass priority. P2 casts Lab Shock at you, then attacks you with Lab Ox. When asked to declare blockers, do not block with Michiko Konda.',
+    ],
+    expectedOutcome:
+      "Each of the two sources that dealt damage to you triggers Michiko Konda: Lab Shock's 2 damage makes P2 sacrifice a Forest, and Lab Ox's 4 combat damage makes P2 sacrifice the other Forest. You are at 34 and P2 keeps Lab Ox and the Mountain. P3 and P4 are at 40.",
+    oracleSha256: michiko.sha256,
+    clauseIds: ['michiko-konda-damage-sacrifice'],
+    decks: {
+      P1: [michiko.card, FOREST, FOREST],
+      P2: [LAB_OX, LAB_SHOCK, MOUNTAIN, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [{ playerId: 'P2', cardNames: ['Lab Shock'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Michiko Konda, Truth Seeker'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Mountain', 'Forest', 'Forest'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: castAttackAndSacrifice('Lab Shock', 'P1', 'Forest') },
+  });
+}
+
+function deliriumScenario(gameId: GameId): CardTestScenario {
+  const delirium = pinnedFrom(COVERAGE_PR06, 'Delirium');
+  const lands = [SWAMP, MOUNTAIN, PLAINS];
+  return pr01Scenario(gameId, {
+    id: 'delirium-viewer-tap-damage-and-prevent',
+    title:
+      "Delirium: during an opponent's attack, tap its creature, hit it back and stop its combat damage",
+    instructions: [
+      "It is P2's turn. Delirium is in your hand with a Swamp, a Mountain and a Plains on your battlefield. P2 controls Lab Ox (4/4) and Lab Servo (1/1) and attacks you with both.",
+      'Pass priority until the declare attackers step, then cast Delirium targeting Lab Ox and let it resolve. Do not block.',
+    ],
+    expectedOutcome:
+      "Delirium was only castable on P2's turn. Lab Ox is tapped and deals 4 damage, its power, to P2, who is at 36. Lab Ox's 4 combat damage to you is prevented, while Lab Servo's 1 is not, so you are at 39. P3 and P4 are at 40.",
+    oracleSha256: delirium.sha256,
+    clauseIds: ['delirium-cast-restriction', 'delirium-tap-damage-and-prevent'],
+    decks: {
+      P1: [delirium.card, ...lands],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [{ playerId: 'P1', cardNames: ['Delirium'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: lands.map((land) => land.name) },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') },
+  });
+}
+
+/**
+ * Engine capability (no card): a creature attacks an opponent's planeswalker through the real
+ * declare-attackers UI, and the unblocked combat damage removes loyalty instead of hitting the player.
+ */
+const LAB_WALKER = {
+  ...card({
+    oracleId: 'lab-walker',
+    name: 'Lab Walker',
+    typeLine: 'Planeswalker — Lab',
+    manaCost: '{3}',
+    cmc: 3,
+  }),
+  loyalty: '5',
+};
+function planeswalkerAttackScenario(gameId: GameId): CardTestScenario {
+  return pr01Scenario(gameId, {
+    id: 'planeswalker-attack-viewer-loyalty',
+    title: 'Attacking a planeswalker: unblocked combat damage removes loyalty, not life',
+    instructions: [
+      'You control Lab Ox (4/4). P2 controls Lab Walker, a planeswalker with 5 loyalty, and nothing that can block.',
+      'Pass priority until the declare attackers step, then declare Lab Ox attacking Lab Walker (not P2) and confirm.',
+    ],
+    expectedOutcome:
+      'Lab Ox dealt 4 combat damage to Lab Walker, which is at 1 loyalty. P2 is still at 40 life.',
+    oracleSha256: createHash('sha256')
+      .update('Planeswalker attack (CR 506.2, 508.1b, 510.1)')
+      .digest('hex'),
+    clauseIds: ['planeswalker-attack-loyalty'],
+    decks: {
+      P1: [LAB_OX, FOREST, FOREST],
+      P2: [LAB_WALKER, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox'] },
+        { playerId: 'P2', cardNames: ['Lab Walker'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function firemaneOwnAttackScenario(gameId: GameId): CardTestScenario {
+  const commando = pinnedFrom(COVERAGE_PR06, 'Firemane Commando');
+  return pr01Scenario(gameId, {
+    id: 'firemane-commando-viewer-own-attack',
+    title: 'Firemane Commando: attacking with two creatures draws you a card',
+    instructions: [
+      'Firemane Commando, Lab Ox (4/4) and Lab Servo (1/1) are on your battlefield. Your library holds Forests.',
+      'Pass priority until the declare attackers step, then attack P2 with both Lab Ox and Lab Servo and confirm. Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Attacking with two creatures triggered Firemane Commando once and you drew a card: your library is one card smaller. P2 took 5 and is at 35, and P3 and P4 are at 40.',
+    oracleSha256: commando.sha256,
+    clauseIds: ['firemane-commando-you-attack'],
+    decks: {
+      P1: [commando.card, LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Firemane Commando', 'Lab Ox', 'Lab Servo'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function firemaneOtherAttackScenario(gameId: GameId, defender: PlayerId): CardTestScenario {
+  const commando = pinnedFrom(COVERAGE_PR06, 'Firemane Commando');
+  const atYou = defender === 'P1';
+  return pr01Scenario(gameId, {
+    id: atYou
+      ? 'firemane-commando-viewer-other-attack-at-you'
+      : 'firemane-commando-viewer-other-attack-elsewhere',
+    title: atYou
+      ? 'Firemane Commando: another player who attacked you draws nothing'
+      : 'Firemane Commando: another player attacking someone else draws a card',
+    instructions: [
+      atYou
+        ? 'It is P2’s turn. You control Firemane Commando; P2 controls Lab Ox (4/4) and Lab Servo (1/1) and attacks you with both. Do not block.'
+        : 'It is P2’s turn. You control Firemane Commando; P2 controls Lab Ox (4/4) and Lab Servo (1/1) and attacks P3 with both.',
+      'Pass priority and let the attack play out.',
+    ],
+    expectedOutcome: atYou
+      ? 'P2 attacked with two creatures, but they attacked you, so Firemane Commando’s ability resolved and P2 drew nothing: P2’s library is unchanged. You took 5 and are at 35.'
+      : 'P2 attacked with two creatures and none attacked you, so P2 drew a card: P2’s library is one card smaller. P3 took 5 and is at 35, and you are untouched at 40.',
+    oracleSha256: commando.sha256,
+    clauseIds: ['firemane-commando-other-attack'],
+    decks: {
+      P1: [commando.card, FOREST, FOREST],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Firemane Commando'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything(defender) },
+  });
+}
+
+function breenaScenario(gameId: GameId): CardTestScenario {
+  const breena = pinnedFrom(COVERAGE_PR06, 'Breena, the Demagogue');
+  return pr01Scenario(gameId, {
+    id: 'breena-viewer-attack-more-life',
+    title:
+      'Breena: attacking the opponent with the most life draws you a card and grows a creature',
+    instructions: [
+      'Breena, the Demagogue and Lab Ox (4/4) are on your battlefield. P2 is at 40 life, P3 at 30 and P4 at 30.',
+      'Pass priority until the declare attackers step, then attack P2 with Lab Ox and confirm. When Breena’s ability resolves, put the counters on Lab Ox. Nobody blocks.',
+    ],
+    expectedOutcome:
+      'You attacked P2, an opponent of yours with more life than another of your opponents, so Breena’s ability drew you a card (your library is one card smaller) and put two +1/+1 counters on Lab Ox, which dealt 6 combat damage: P2 is at 34 and P3 and P4 are at 30.',
+    oracleSha256: breena.sha256,
+    clauseIds: ['breena-attack-more-life'],
+    decks: {
+      P1: [breena.card, LAB_OX, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Breena, the Demagogue', 'Lab Ox'] }],
+      lifeTotals: [
+        { playerId: 'P2', life: 40 },
+        { playerId: 'P3', life: 30 },
+        { playerId: 'P4', life: 30 },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+/** P2's attack declaration: every creature at the first opponent option that is a planeswalker. */
+const attackPlaneswalkerWithEverything: DecisionProvider = {
+  decide(request) {
+    const attack = request.legalActions.find((action) =>
+      action.description.startsWith('Declare attackers'),
+    );
+    if (attack !== undefined) {
+      return {
+        requestId: request.requestId,
+        actionId: attack.id,
+        targets: (attack.targets ?? []).map((slot) => ({
+          slot: slot.slot,
+          choice:
+            slot.options.find((id) => !/^P\d$/.test(id) && id !== '__no_attack__') ??
+            (slot.options[0] as string),
+        })),
+      };
+    }
+    const pass = request.legalActions.find((action) => action.type === 'pass');
+    return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+  },
+};
+
+function everWatchingThresholdScenario(
+  gameId: GameId,
+  kind: 'attacked-you' | 'attacked-planeswalker' | 'attacked-elsewhere',
+): CardTestScenario {
+  const threshold = pinnedFrom(COVERAGE_PR06, 'Ever-Watching Threshold');
+  const titles = {
+    'attacked-you': 'Ever-Watching Threshold: an opponent attacking you draws you a card',
+    'attacked-planeswalker':
+      'Ever-Watching Threshold: an opponent attacking your planeswalker draws you a card',
+    'attacked-elsewhere':
+      'Ever-Watching Threshold: an opponent attacking someone else draws nothing',
+  } as const;
+  const walker = kind === 'attacked-planeswalker';
+  return pr01Scenario(gameId, {
+    id: `ever-watching-threshold-viewer-${kind}`,
+    title: titles[kind],
+    instructions: [
+      walker
+        ? 'It is P2’s turn. You control Ever-Watching Threshold and Lab Walker, a planeswalker with 5 loyalty. P2 controls Lab Ox (4/4) and attacks Lab Walker, not you. You control no creatures.'
+        : 'It is P2’s turn. You control Ever-Watching Threshold. P2 controls Lab Ox (4/4) and ' +
+          (kind === 'attacked-you' ? 'attacks you with it. Do not block.' : 'attacks P3 with it.'),
+      'Pass priority and let the attack play out.',
+    ],
+    expectedOutcome:
+      kind === 'attacked-elsewhere'
+        ? 'P2 did not attack you or a planeswalker you control, so the ability did not trigger and you drew nothing. P3 took 4 and is at 36.'
+        : walker
+          ? 'P2 attacked a planeswalker you control, so the ability triggered and you drew a card: your library is one card smaller. Lab Walker took 4 and is at 1 loyalty, and you are at 40.'
+          : 'P2 attacked you, so the ability triggered and you drew a card: your library is one card smaller. You took 4 and are at 36.',
+    oracleSha256: threshold.sha256,
+    clauseIds: ['ever-watching-threshold-attacked'],
+    decks: {
+      P1: [threshold.card, ...(walker ? [LAB_WALKER] : []), FOREST, FOREST],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Ever-Watching Threshold', ...(walker ? ['Lab Walker'] : [])],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: {
+      P2: walker
+        ? attackPlaneswalkerWithEverything
+        : attackPlayerWithEverything(kind === 'attacked-you' ? 'P1' : 'P3'),
+    },
+  });
+}
+
+function mangaraScenario(gameId: GameId, attackers: 1 | 2): CardTestScenario {
+  const mangara = pinnedFrom(COVERAGE_PR06, 'Mangara, the Diplomat');
+  const two = attackers === 2;
+  return pr01Scenario(gameId, {
+    id: two ? 'mangara-viewer-two-attackers' : 'mangara-viewer-one-attacker',
+    title: two
+      ? 'Mangara: an opponent attacking you with two creatures draws you a card'
+      : 'Mangara: an opponent attacking you with one creature draws nothing',
+    instructions: [
+      two
+        ? 'It is P2’s turn. You control Mangara, the Diplomat. P2 controls Lab Ox (4/4) and Lab Servo (1/1) and attacks you with both. Do not block.'
+        : 'It is P2’s turn. You control Mangara, the Diplomat. P2 controls Lab Ox (4/4) and attacks you with it. Do not block.',
+      'Pass priority and let the attack play out.',
+    ],
+    expectedOutcome: two
+      ? 'Two creatures attacked you, so Mangara’s ability triggered and you drew a card: your library is one card smaller. You took 5 and are at 35.'
+      : 'Only one creature attacked you, so the ability did not trigger and you drew nothing. You took 4 and are at 36.',
+    oracleSha256: mangara.sha256,
+    clauseIds: ['mangara-attack-draw'],
+    decks: {
+      P1: [mangara.card, FOREST, FOREST],
+      P2: [LAB_OX, ...(two ? [LAB_SERVO] : []), FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Mangara, the Diplomat'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', ...(two ? ['Lab Servo'] : [])] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') },
+  });
+}
+
+function tomikAffinityScenario(gameId: GameId): CardTestScenario {
+  const tomik = pinnedFrom(COVERAGE_PR06, 'Tomik, Wielder of Law');
+  return pr01Scenario(gameId, {
+    id: 'tomik-viewer-affinity-for-planeswalkers',
+    title: 'Tomik: affinity for planeswalkers makes it cost {W}{B} with one planeswalker',
+    instructions: [
+      'Tomik, Wielder of Law ({1}{W}{B}) is in your hand. A Plains, a Swamp and Lab Walker, a planeswalker, are on your battlefield.',
+      'Cast Tomik, paying with the Plains and the Swamp only, and let it resolve.',
+    ],
+    expectedOutcome:
+      'Affinity for planeswalkers made the spell cost {W}{B}: Tomik is on your battlefield and both lands are tapped.',
+    oracleSha256: tomik.sha256,
+    clauseIds: ['tomik-affinity-for-planeswalkers'],
+    decks: {
+      P1: [tomik.card, PLAINS, SWAMP, LAB_WALKER, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Tomik, Wielder of Law'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Plains', 'Swamp', 'Lab Walker'] }],
+    },
+  });
+}
+
+function tomikAttackScenario(gameId: GameId): CardTestScenario {
+  const tomik = pinnedFrom(COVERAGE_PR06, 'Tomik, Wielder of Law');
+  return pr01Scenario(gameId, {
+    id: 'tomik-viewer-attack-drain-and-draw',
+    title: 'Tomik: an opponent attacking you with two creatures loses 3 life and you draw',
+    instructions: [
+      'It is P2’s turn. You control Tomik, Wielder of Law. P2 controls Lab Ox (4/4) and Lab Servo (1/1) and attacks you with both. Do not block.',
+      'Pass priority and let the attack play out.',
+    ],
+    expectedOutcome:
+      'Two creatures attacked you, so Tomik’s ability triggered: P2 lost 3 life and is at 37, and you drew a card (your library is one card smaller). You took 5 and are at 35.',
+    oracleSha256: tomik.sha256,
+    clauseIds: ['tomik-attack-drain-and-draw'],
+    decks: {
+      P1: [tomik.card, FOREST, FOREST],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Tomik, Wielder of Law'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') },
+  });
+}
+
+function warmongerScenario(gameId: GameId): CardTestScenario {
+  const warmonger = pinnedFrom(COVERAGE_PR06, 'Frontier Warmonger');
+  return pr01Scenario(gameId, {
+    id: 'frontier-warmonger-viewer-menace',
+    title: 'Frontier Warmonger: the creatures attacking an opponent gain menace',
+    instructions: [
+      'Frontier Warmonger, Lab Ox (4/4) and Lab Servo (1/1) are on your battlefield.',
+      'Pass priority until the declare attackers step, then attack P2 with Lab Ox only, leaving Lab Servo and Frontier Warmonger at home, and confirm.',
+    ],
+    expectedOutcome:
+      'The ability triggered for the creatures attacking P2: Lab Ox has menace until end of turn, while Lab Servo, which did not attack, does not. Lab Ox dealt 4 to P2, who is at 36.',
+    oracleSha256: warmonger.sha256,
+    clauseIds: ['frontier-warmonger-menace'],
+    decks: {
+      P1: [warmonger.card, LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Frontier Warmonger', 'Lab Ox', 'Lab Servo'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function tenuousTruceScenario(
+  gameId: GameId,
+  kind: 'end-step' | 'you-attack' | 'they-attack',
+): CardTestScenario {
+  const truce = pinnedFrom(COVERAGE_PR06, 'Tenuous Truce');
+  const titles = {
+    'end-step': 'Tenuous Truce: at the enchanted opponent’s end step you and they each draw',
+    'you-attack': 'Tenuous Truce: attacking the enchanted opponent sacrifices the Aura',
+    'they-attack': 'Tenuous Truce: the enchanted opponent attacking you sacrifices the Aura',
+  } as const;
+  const theirTurn = kind !== 'you-attack';
+  return pr01Scenario(gameId, {
+    id: `tenuous-truce-viewer-${kind}`,
+    title: titles[kind],
+    instructions:
+      kind === 'end-step'
+        ? [
+            'It is P2’s turn. Your Tenuous Truce already enchants P2.',
+            'Pass priority until P2’s end step and let the trigger resolve.',
+          ]
+        : kind === 'you-attack'
+          ? [
+              'Your Tenuous Truce already enchants P2, and you control Lab Ox (4/4).',
+              'Pass priority until the declare attackers step, then attack P2 with Lab Ox and confirm. Nobody blocks.',
+            ]
+          : [
+              'It is P2’s turn. Your Tenuous Truce already enchants P2. P2 controls Lab Ox (4/4) and attacks you with it. You control no creatures.',
+              'Pass priority and let the attack play out.',
+            ],
+    expectedOutcome:
+      kind === 'end-step'
+        ? 'At the enchanted opponent’s end step you drew a card and P2 drew a card: each library is one card smaller, and Tenuous Truce is still attached.'
+        : kind === 'you-attack'
+          ? 'You attacked the enchanted opponent, so Tenuous Truce was sacrificed: it is in your graveyard. P2 took 4 and is at 36.'
+          : 'The enchanted opponent attacked you, so Tenuous Truce was sacrificed: it is in your graveyard. You took 4 and are at 36.',
+    oracleSha256: truce.sha256,
+    clauseIds:
+      kind === 'end-step' ? ['tenuous-truce-end-step-draw'] : ['tenuous-truce-attack-sacrifice'],
+    decks: {
+      P1: [truce.card, ...(kind === 'you-attack' ? [LAB_OX] : []), FOREST, FOREST],
+      P2: [...(kind === 'they-attack' ? [LAB_OX] : []), FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      ...(theirTurn ? { currentTurnPlayer: 'P2' as const } : {}),
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Tenuous Truce'], enchantedPlayerId: 'P2' },
+        ...(kind === 'you-attack' ? [{ playerId: 'P1' as const, cardNames: ['Lab Ox'] }] : []),
+        ...(kind === 'they-attack' ? [{ playerId: 'P2' as const, cardNames: ['Lab Ox'] }] : []),
+      ],
+      ...(kind === 'end-step' ? { continueToEndStep: true } : { continueThroughCombat: true }),
+    },
+    ...(kind === 'they-attack'
+      ? { decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') } }
+      : {}),
+  });
+}
+
+/** The seat blocks the first attacker offered with every creature able, declining nothing. */
+const blockEverything: DecisionProvider = {
+  decide(request) {
+    const block = request.legalActions.find((action) =>
+      action.description.startsWith('Declare blockers'),
+    );
+    if (block !== undefined) {
+      return {
+        requestId: request.requestId,
+        actionId: block.id,
+        targets: (block.targets ?? []).map((slot) => ({
+          slot: slot.slot,
+          choice: slot.options.find((id) => id !== '__no_block__') ?? (slot.options[0] as string),
+        })),
+      };
+    }
+    const pass = request.legalActions.find((action) => action.type === 'pass');
+    return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+  },
+};
+
+function wallOfTearsScenario(gameId: GameId): CardTestScenario {
+  const wall = pinnedFrom(COVERAGE_PR06, 'Wall of Tears');
+  return pr01Scenario(gameId, {
+    id: 'wall-of-tears-viewer-blocked-creature-returns',
+    title: 'Wall of Tears: the creature it blocks returns to its owner’s hand at end of combat',
+    instructions: [
+      'You control Lab Servo (1/1). P2 controls Wall of Tears (0/4), which blocks whatever you attack with.',
+      'Pass priority until the declare attackers step, then attack P2 with Lab Servo and confirm.',
+    ],
+    expectedOutcome:
+      'Wall of Tears blocked Lab Servo, took 1 damage from it, and at end of combat Lab Servo was returned to your hand: it is no longer on the battlefield. P2 is still at 40.',
+    oracleSha256: wall.sha256,
+    clauseIds: ['wall-of-tears-block-return'],
+    decks: {
+      P1: [LAB_SERVO, FOREST, FOREST],
+      P2: [wall.card, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Servo'] },
+        { playerId: 'P2', cardNames: ['Wall of Tears'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: blockEverything },
+  });
+}
+
+function humanTorchScenario(gameId: GameId): CardTestScenario {
+  const torch = pinnedFrom(COVERAGE_PR06, 'Human Torch');
+  const lands = [MOUNTAIN, FOREST, PLAINS, ISLAND];
+  return pr01Scenario(gameId, {
+    id: 'human-torch-viewer-keywords-and-damage-copy',
+    title:
+      'Human Torch: a noncreature spell grants flying, double strike and haste, and paying copies its damage',
+    instructions: [
+      'Human Torch (3/2), a Mountain, Forest, Plains and Island are on your battlefield, and Lab Free Trinket (a noncreature spell costing {0}) is in your hand.',
+      'Cast Lab Free Trinket and let it resolve, then move to combat: Human Torch gains flying, double strike and haste until end of turn at the beginning of combat.',
+      'Attack P2 with Human Torch. Pay {R}{G}{W}{U} when asked.',
+    ],
+    expectedOutcome:
+      'Human Torch dealt 3 combat damage to P2 in each of the two damage steps, and each time it dealt 3 more damage to each other opponent: P2, P3 and P4 are all at 34. The four lands are tapped.',
+    oracleSha256: torch.sha256,
+    clauseIds: ['human-torch-combat-keywords', 'human-torch-attack-payment'],
+    decks: {
+      P1: [torch.card, LAB_FREE_TRINKET, ...lands],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Free Trinket'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Human Torch', ...lands.map((land) => land.name)] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+// Coverage PR07 (docs/plans/card-coverage-chunks.md).
+
+/** Keeps `keep` when asked which creature to put a vow counter on; attacks `defender` otherwise. */
+function keepThenAttack(keep: string, defender: PlayerId): DecisionProvider {
+  const attackWithEverything = attackPlayerWithEverything(defender);
+  return {
+    decide(request) {
+      if (request.prompt === 'Choose a creature to keep and put a vow counter on.') {
+        const action = request.legalActions.find((candidate) =>
+          candidate.description.includes(keep),
+        );
+        if (action === undefined) throw new Error(`No option to keep ${keep}`);
+        return { requestId: request.requestId, actionId: action.id };
+      }
+      return attackWithEverything.decide(request);
+    },
+  };
+}
+
+function kazuulScenario(
+  gameId: GameId,
+  mode: 'decline' | 'pay' | 'other-defender',
+): CardTestScenario {
+  const kazuul = pinnedFrom(COVERAGE_PR08, 'Kazuul, Tyrant of the Cliffs');
+  const witness = card({
+    oracleId: 'lab-kazuul-priority-witness',
+    name: 'Lab Kazuul Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    oracleText: 'You gain 1 life.',
+  });
+  const lands = [FOREST, FOREST, FOREST, MOUNTAIN, MOUNTAIN];
+  const attacker = attackPlayerWithEverything(mode === 'other-defender' ? 'P3' : 'P1');
+  return pr01Scenario(gameId, {
+    id: 'kazuul-viewer-' + mode,
+    title:
+      'Kazuul: ' +
+      (mode === 'decline'
+        ? 'an attacking opponent declines and you create an Ogre before blockers'
+        : mode === 'pay'
+          ? 'the attacking creature controller pays three and you create no Ogre'
+          : 'an attack on another player creates no Ogre'),
+    instructions: [
+      'Cast Kazuul for {3}{R}{R}. Keep the priority witness in hand and pass to P2 combat.',
+      mode === 'other-defender'
+        ? 'P2 attacks P3, so Kazuul must not trigger.'
+        : 'P2 attacks you and ' +
+          (mode === 'pay'
+            ? 'pays {3} using three Forests.'
+            : 'declines to pay {3}; you create an Ogre before blockers.'),
+    ],
+    expectedOutcome:
+      mode === 'decline'
+        ? 'P1 controls a 3/3 red Ogre before declaring blockers; P2 has paid no mana.'
+        : mode === 'pay'
+          ? 'P2 tapped three Forests to pay {3}. P1 controls no Ogre.'
+          : 'P2 attacked P3. Kazuul did not trigger and no Ogre exists.',
+    oracleSha256: kazuul.sha256,
+    clauseIds: [
+      'kazuul-opponent-attack-defending-player',
+      'kazuul-event-creature-controller-payment',
+    ],
+    decks: {
+      P1: [kazuul.card, witness, ...lands],
+      P2: [LAB_SERVO, FOREST, FOREST, FOREST, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: [kazuul.card.name, witness.name] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: lands.map((land) => land.name) },
+        { playerId: 'P2', cardNames: ['Lab Servo', 'Forest', 'Forest', 'Forest'] },
+      ],
+      continueThroughNextCombat: true,
+    },
+    decisionProviderOverrides: {
+      P2: {
+        decide(request) {
+          const payment = request.legalActions.find(
+            (action) => action.description === (mode === 'pay' ? 'Pay {3}' : "Don't pay {3}"),
+          );
+          return payment === undefined
+            ? attacker.decide(request)
+            : { requestId: request.requestId, actionId: payment.id };
+        },
+      },
+    },
+  });
+}
+
+function akroanHorseScenario(
+  gameId: GameId,
+  mode: 'cast-and-gift' | 'recipient-upkeep',
+): CardTestScenario {
+  const horse = pinnedFrom(COVERAGE_PR08, 'Akroan Horse');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const upkeep = mode === 'recipient-upkeep';
+  const swamps = Array.from({ length: 4 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'akroan-horse-viewer-' + mode,
+    title:
+      'Akroan Horse: ' +
+      (upkeep
+        ? 'the recipient upkeep gives each opponent a Soldier'
+        : 'cast and choose an opponent to gain control'),
+    instructions: [
+      'Cast Akroan Horse with four Swamps, then choose P2 without targeting.',
+      ...(upkeep
+        ? ['Pass to P2’s upkeep. P1, P3 and P4 each create a Soldier; P2 does not.']
+        : ['P2 controls the untapped Horse with defender.']),
+    ],
+    expectedOutcome: upkeep
+      ? 'P2 controls Akroan Horse. P1, P3 and P4 each own and control an untapped 1/1 white Soldier.'
+      : 'P2 controls the untapped 0/4 Horse with defender; P1 still owns it.',
+    oracleSha256: horse.sha256,
+    clauseIds: upkeep
+      ? ['akroan-defender', 'akroan-enter-opponent-control', 'akroan-current-controller-upkeep']
+      : ['akroan-defender', 'akroan-enter-opponent-control'],
+    decks: {
+      P1: [horse.card, witness, ...swamps],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Akroan Horse', 'Lab Priority Witness'] }],
+      battlefield: [{ playerId: 'P1', cardNames: swamps.map((p) => p.name) }],
+      ...(upkeep ? { continueThroughPrecombatMains: 1 } : {}),
+    },
+  });
+}
+
+/**
+ * An opponent seat that privately searches: it takes only its own named library card when asked
+ * to choose, and passes every ordinary priority window otherwise. The name it searches for is
+ * private to that seat, so this only ever answers the searcher's own decision.
+ */
+function searchOwnRelic(chosenName: string): DecisionProvider {
+  return {
+    decide(request) {
+      const pick = request.legalActions.find(
+        (action) => action.type === 'search' && action.description === `Choose ${chosenName}`,
+      );
+      if (pick !== undefined) return { requestId: request.requestId, actionId: pick.id };
+      const pass = request.legalActions.find((action) => action.type === 'pass');
+      return {
+        requestId: request.requestId,
+        actionId: (pass ?? request.legalActions[0]!).id,
+      };
+    },
+  };
+}
+
+/**
+ * Coverage PR08.04 Scheming Symmetry. Both targets search their OWN library, so the seat names are
+ * the privacy boundary: P1's panel only ever offers P1's own relics, and no P2/P3 relic name may
+ * reach P1's wire, log or DOM.
+ */
+function schemingSymmetryScenario(
+  gameId: GameId,
+  mode: 'you-and-opponent' | 'two-opponents-empty-library',
+): CardTestScenario {
+  const symmetry = pinnedFrom(COVERAGE_PR08, 'Scheming Symmetry');
+  const drawWitness = card({
+    oracleId: 'lab-pr08-symmetry-draw-witness',
+    name: 'Lab Symmetry Draw Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'Draw a card.',
+  });
+  const priorityWitness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  /** Distinct plain artifacts per seat, so a leaked identity names the seat that leaked it. */
+  const relics = (seat: string) =>
+    (['Alpha', 'Beta'] as const).map((suffix) =>
+      card({
+        oracleId: `lab-pr08-symmetry-${seat.toLowerCase()}-${suffix.toLowerCase()}`,
+        name: `Lab Symmetry ${seat} ${suffix}`,
+        typeLine: 'Artifact',
+        manaCost: '{0}',
+        cmc: 0,
+      }),
+    );
+  const p1Relics = relics('P1');
+  const p2Relics = relics('P2');
+  const p3Relics = relics('P3');
+  const you = mode === 'you-and-opponent';
+  // P2's library is empty here: every card P2 owns is arranged onto the battlefield, so the search
+  // has nothing to find while P3's still has two cards. P1 is not a target in either mode.
+  const p2Deck = you ? p2Relics : [FOREST];
+  return pr01Scenario(gameId, {
+    id: `scheming-symmetry-viewer-${mode}`,
+    title: `Scheming Symmetry: ${you ? 'you and an opponent each search their own library' : 'two opponents search, one with an empty library'}`,
+    instructions: you
+      ? [
+          'Cast Scheming Symmetry with the Swamp, then pick P1 as target 1 and P2 as target 2.',
+          'Choose your own Lab Symmetry P1 Alpha; P2’s search is P2’s own private choice.',
+          'Both libraries shuffle and each chosen card sits on its owner’s top.',
+          'Cast Lab Symmetry Draw Witness to draw the card your own search put on top.',
+        ]
+      : [
+          'Cast Scheming Symmetry with the Swamp, then pick P2 as target 1 and P3 as target 2.',
+          'P1 is not a target, so P1 is never asked to search and P1’s library is untouched.',
+          'P2’s empty library needs no choice, but P2 still shuffles; P3 searches privately.',
+          'Lab Symmetry Draw Witness stays in hand so the final priority window is yours.',
+        ],
+    expectedOutcome: you
+      ? 'Each target’s own chosen card is on top of its own shuffled library, and drawing proves P1 chose from P1’s library only.'
+      : 'P2’s empty library is still shuffled, P3’s chosen card is on top of P3’s own shuffled library, and P1’s library never moved.',
+    // No opponent library card name may appear in this metadata: the lab ships it to every seat
+    // over the wire and renders it in the DOM, which is exactly the boundary under test.
+    oracleSha256: symmetry.sha256,
+    clauseIds: ['scheming-symmetry-two-target-players', 'scheming-symmetry-search-shuffle-top'],
+    decks: {
+      P1: [symmetry.card, drawWitness, priorityWitness, SWAMP, ...p1Relics],
+      P2: p2Deck,
+      P3: you ? PR01_FILLER : p3Relics,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: ['Scheming Symmetry', 'Lab Symmetry Draw Witness', 'Lab Priority Witness'],
+        },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Swamp'] },
+        ...(you ? [] : [{ playerId: 'P2' as const, cardNames: ['Forest'] }]),
+      ],
+    },
+    decisionProviderOverrides: {
+      ...(you
+        ? { P2: searchOwnRelic('Lab Symmetry P2 Alpha') }
+        : { P3: searchOwnRelic('Lab Symmetry P3 Alpha') }),
+    },
+  });
+}
+
+function wishclawScenario(
+  gameId: GameId,
+  mode: 'cast-search-and-gift' | 'empty-library' | 'off-turn',
+): CardTestScenario {
+  const talisman = pinnedFrom(COVERAGE_PR08, 'Wishclaw Talisman');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const alpha = card({
+    oracleId: 'lab-pr08-wishclaw-alpha',
+    name: 'Lab Wishclaw Alpha',
+    typeLine: 'Artifact',
+    manaCost: '{0}',
+    cmc: 0,
+  });
+  const beta = card({
+    oracleId: 'lab-pr08-wishclaw-beta',
+    name: 'Lab Wishclaw Beta',
+    typeLine: 'Artifact',
+    manaCost: '{0}',
+    cmc: 0,
+  });
+  const cast = mode === 'cast-search-and-gift';
+  const swamps = Array.from({ length: cast ? 3 : 1 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: `wishclaw-talisman-viewer-${mode}`,
+    title: `Wishclaw Talisman: ${cast ? 'cast, search, then choose the recipient' : mode === 'empty-library' ? 'empty library still gives control' : 'cannot activate off your turn'}`,
+    instructions:
+      mode === 'off-turn'
+        ? ['It is P2’s turn. Your instant can be cast, but Wishclaw cannot activate.']
+        : [
+            ...(cast
+              ? ['Cast Wishclaw Talisman with two Swamps; it enters with three wish counters.']
+              : []),
+            'Activate, paying one mana, tapping the artifact and removing one wish counter.',
+            cast
+              ? 'Find Lab Wishclaw Beta. The unrestricted search has no Find nothing option.'
+              : 'The empty library offers no search choice.',
+            'After the search and shuffle, choose P3 to gain control. This choice has no target.',
+          ],
+    expectedOutcome:
+      mode === 'off-turn'
+        ? 'Wishclaw stays untapped with three wish counters and cannot activate.'
+        : `P3 controls the tapped artifact with two wish counters. ${cast ? 'Lab Wishclaw Beta is in your hand.' : 'Your hand remains unchanged.'}`,
+    oracleSha256: talisman.sha256,
+    clauseIds: cast
+      ? [
+          'wishclaw-enters-three-wish',
+          'wishclaw-search-then-opponent-control',
+          'wishclaw-your-turn-timing',
+        ]
+      : mode === 'off-turn'
+        ? ['wishclaw-your-turn-timing']
+        : ['wishclaw-search-then-opponent-control'],
+    decks: {
+      P1: [talisman.card, witness, ...swamps, ...(cast ? [alpha, beta] : [])],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: mode === 'off-turn' ? 'P2' : 'P1',
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: cast
+            ? ['Wishclaw Talisman', 'Lab Priority Witness']
+            : ['Lab Priority Witness'],
+        },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: swamps.map((p) => p.name) },
+        ...(cast
+          ? []
+          : [{ playerId: 'P1' as const, cardNames: ['Wishclaw Talisman'], counters: { wish: 3 } }]),
+      ],
+    },
+  });
+}
+
+function druidPurificationScenario(
+  gameId: GameId,
+  mode: 'duplicates' | 'decline' | 'shroud',
+): CardTestScenario {
+  const druid = pinnedFrom(COVERAGE_PR08, 'Druid of Purification');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const own = card({
+    oracleId: 'lab-pr08-own-artifact',
+    name: 'Lab Own Artifact',
+    typeLine: 'Artifact',
+  });
+  const chosen = card({
+    oracleId: `lab-pr08-${mode}-artifact`,
+    name: mode === 'shroud' ? 'Lab Shrouded Artifact' : 'Lab Shared Artifact',
+    typeLine: 'Artifact',
+    ...(mode === 'shroud' ? { oracleText: 'Shroud' } : {}),
+  });
+  const choose: DecisionProvider = {
+    decide(request) {
+      const action = request.legalActions.some((a) => a.description === `Destroy ${chosen.name}`)
+        ? request.legalActions.find((a) =>
+            mode === 'decline' ? a.type === 'decline' : a.description === `Destroy ${chosen.name}`,
+          )
+        : (request.legalActions.find((a) => a.type === 'pass') ?? request.legalActions[0]);
+      if (!action) throw new Error('Druid lab has no scripted legal choice');
+      return { requestId: request.requestId, actionId: action.id };
+    },
+  };
+  return pr01Scenario(gameId, {
+    id: `druid-of-purification-viewer-${mode}`,
+    title: `Druid of Purification: ${mode === 'duplicates' ? 'choose the same permanent four times' : mode === 'decline' ? 'each player chooses none' : 'choose a permanent with shroud'}`,
+    instructions: [
+      'Cast Druid of Purification using four Forests and resolve its enters trigger.',
+      mode === 'decline'
+        ? 'Choose none. Each opponent also declines.'
+        : `Choose ${chosen.name}. Each opponent chooses that same permanent, including its controller.`,
+      'Earlier choices are public. Your own artifact is excluded from every choice menu.',
+    ],
+    expectedOutcome:
+      mode === 'decline'
+        ? 'Four public choices of no permanent; both artifacts remain.'
+        : 'Four public choices of the same permanent, followed by one destruction. Your own artifact remains.',
+    oracleSha256: druid.sha256,
+    clauseIds: ['druid-purification-ordered-choices-and-destruction'],
+    decks: {
+      P1: [druid.card, witness, own, FOREST, FOREST, FOREST, FOREST],
+      P2: [chosen, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Druid of Purification', 'Lab Priority Witness'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Forest', 'Forest', 'Forest', 'Forest', own.name] },
+        { playerId: 'P2', cardNames: [chosen.name] },
+      ],
+    },
+    decisionProviderOverrides: { P2: choose, P3: choose, P4: choose },
+  });
+}
+
+function humbleDefectorScenario(gameId: GameId, offTurn: boolean): CardTestScenario {
+  const humble = pinnedFrom(COVERAGE_PR08, 'Humble Defector');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  return pr01Scenario(gameId, {
+    id: offTurn
+      ? 'humble-defector-viewer-off-turn'
+      : 'humble-defector-viewer-draw-then-opponent-takes-control',
+    title: offTurn
+      ? 'Humble Defector: cannot activate off your turn'
+      : 'Humble Defector: draw two and give it to the chosen opponent',
+    instructions: offTurn
+      ? [
+          "It is P2's turn. You have priority and can cast Lab Priority Witness, an instant.",
+          'Humble Defector is untapped, but its ability is unavailable because it is not your turn.',
+        ]
+      : [
+          'Activate Humble Defector, pay the tap cost, and target P3.',
+          'Resolve the ability: you draw two cards, then P3 gains control of the same tapped creature.',
+        ],
+    expectedOutcome: offTurn
+      ? 'The instant is available, but Humble Defector has no legal activation.'
+      : 'Your hand grows by two and P3 controls Humble Defector, still tapped. No opponent draws.',
+    oracleSha256: humble.sha256,
+    clauseIds: offTurn
+      ? ['humble-defector-your-turn-timing']
+      : ['humble-defector-draw-then-transfer', 'humble-defector-your-turn-timing'],
+    decks: {
+      P1: [humble.card, witness, FOREST, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: offTurn ? 'P2' : 'P1',
+      hand: [{ playerId: 'P1', cardNames: ['Lab Priority Witness'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Humble Defector'] }],
+    },
+  });
+}
+
+function cytoplastScenario(
+  gameId: GameId,
+  mode: 'graft-yes' | 'graft-no' | 'control-duration',
+): CardTestScenario {
+  const manipulator = pinnedFrom(COVERAGE_PR08, 'Cytoplast Manipulator');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const recall = card({
+    oracleId: 'lab-pr08-source-recall',
+    name: 'Lab Source Recall',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: "Return target creature you control to its owner's hand.",
+  });
+  const control = mode === 'control-duration';
+  const islands = Array.from({ length: control ? 1 : 5 }, () => ISLAND);
+  return pr01Scenario(gameId, {
+    id: `cytoplast-manipulator-viewer-${mode}`,
+    title: `Cytoplast Manipulator: ${control ? 'steal a countered creature until the source leaves' : mode === 'graft-yes' ? 'cast with two counters and graft one' : 'decline graft and keep two counters'}`,
+    instructions: control
+      ? [
+          'Activate Cytoplast Manipulator, paying blue and tapping it. Target the tapped Lab Ox with a +1/+1 counter; the uncountered Lab Servo is not legal.',
+          'The Ox changes control without untapping or gaining haste. Cast Lab Source Recall on Cytoplast Manipulator; the Ox returns to P2 when the source leaves.',
+        ]
+      : [
+          'Cast Cytoplast Manipulator using four Islands. It enters with two +1/+1 counters.',
+          `Cast Lab Servo with the remaining Island, then ${mode === 'graft-yes' ? 'accept' : 'decline'} the optional Graft trigger.`,
+        ],
+    expectedOutcome: control
+      ? 'The tapped Lab Ox is controlled by you until Cytoplast Manipulator leaves, then returns to P2 still tapped.'
+      : mode === 'graft-yes'
+        ? 'Cytoplast Manipulator has one counter and Lab Servo has one.'
+        : 'Cytoplast Manipulator keeps two counters and Lab Servo has none.',
+    oracleSha256: manipulator.sha256,
+    clauseIds: control ? ['cytoplast-control-duration'] : ['cytoplast-graft'],
+    decks: {
+      P1: [manipulator.card, witness, ...(control ? [recall] : [LAB_SERVO]), ...islands],
+      P2: control ? [LAB_OX, LAB_SERVO, ...PR01_FILLER] : PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: control
+            ? ['Lab Source Recall', 'Lab Priority Witness']
+            : ['Cytoplast Manipulator', 'Lab Servo', 'Lab Priority Witness'],
+        },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: islands.map((land) => land.name) },
+        ...(control
+          ? [
+              {
+                playerId: 'P1' as const,
+                cardNames: ['Cytoplast Manipulator'],
+                counters: { '+1/+1': 2 },
+              },
+              {
+                playerId: 'P2' as const,
+                cardNames: ['Lab Ox'],
+                tapped: true,
+                counters: { '+1/+1': 1 },
+              },
+              { playerId: 'P2' as const, cardNames: ['Lab Servo'] },
+            ]
+          : []),
+      ],
+    },
+  });
+}
+
+function mobRuleScenario(gameId: GameId, mode: 'large' | 'small' | 'cleanup'): CardTestScenario {
+  const mob = pinnedFrom(COVERAGE_PR08, 'Mob Rule');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const mountains = Array.from({ length: 6 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: `mob-rule-viewer-${mode}`,
+    title: `Mob Rule: ${mode === 'cleanup' ? 'temporary control ends at cleanup' : mode === 'large' ? 'steal power 4 or greater' : 'steal power 3 or less'}`,
+    instructions: [
+      'Cast Mob Rule using your six Mountains and choose the indicated power range.',
+      'Your own and opposing Lab Ox (4/4) and Lab Servo (1/1) are tapped before the spell.',
+      mode === 'cleanup'
+        ? 'Choose power 4 or greater and pass through cleanup to see control return.'
+        : 'Resolve the spell and verify only the chosen range untaps, gains haste, and is controlled by you.',
+    ],
+    expectedOutcome:
+      mode === 'cleanup'
+        ? 'P2 controls its Lab Ox again after cleanup; the temporary haste is gone.'
+        : `You control and untap both ${mode === 'large' ? 'Lab Oxen' : 'Lab Servos'}, and they have haste. The other creatures remain tapped under their original controllers.`,
+    oracleSha256: mob.sha256,
+    clauseIds: [
+      'mob-rule-mode-announcement',
+      mode === 'small' ? 'mob-rule-small-mode' : 'mob-rule-large-mode',
+    ],
+    decks: {
+      P1: [mob.card, witness, ...mountains, LAB_OX, LAB_SERVO, FOREST],
+      P2: [LAB_OX, LAB_SERVO, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Mob Rule', 'Lab Priority Witness'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: mountains.map((land) => land.name) },
+        { playerId: 'P1', cardNames: ['Lab Ox', 'Lab Servo'], tapped: true },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'], tapped: true },
+      ],
+      ...(mode === 'cleanup' ? { continueThroughPrecombatMains: 1 } : {}),
+    },
+  });
+}
+
+/**
+ * Coverage PR08.17: Reins of Power. The two scenarios differ ONLY in whether the caster starts
+ * with a creature of their own, because "all creatures you control" may legitimately be an empty
+ * set — neither group is all-or-nothing.
+ *
+ * Both arrange the same tapped creatures and the same four Islands, cast the printed {2}{U}{U}
+ * through the production cast/priority stack, and target P2. Only the caster's own creature and
+ * the target opponent's creature swap; the third player's creature never enters either set, so it
+ * stays tapped under its own controller in both.
+ */
+const LAB_TRADER = card({
+  oracleId: 'lab-pr08-trader',
+  name: 'Lab Trader',
+  typeLine: 'Creature — Trader',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '2',
+  toughness: '2',
+});
+/** Deliberately not named "Lab Servo": the uninvolved third player's creature must be nameable. */
+const LAB_UNINVOLVED_SERVO = card({
+  oracleId: 'lab-pr08-uninvolved-servo',
+  name: 'Lab Uninvolved Servo',
+  typeLine: 'Artifact Creature — Servo',
+  manaCost: '{1}',
+  cmc: 1,
+  power: '1',
+  toughness: '1',
+});
+
+function reinsOfPowerScenario(
+  gameId: GameId,
+  mode: 'swap-and-cleanup' | 'empty-caster',
+): CardTestScenario {
+  const reins = pinnedFrom(COVERAGE_PR08, 'Reins of Power');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const cleanup = mode === 'swap-and-cleanup';
+  const islands = Array.from({ length: 4 }, () => ISLAND);
+  return pr01Scenario(gameId, {
+    id: `reins-of-power-viewer-${mode}`,
+    title: `Reins of Power: ${cleanup ? 'both groups swap, then control returns at cleanup' : 'only the opponent group exists when the caster has no creatures'}`,
+    instructions: [
+      'Cast Reins of Power with your four Islands, target P2, and let it resolve.',
+      cleanup
+        ? 'Your Lab Trader (2/2) and P2’s Lab Ox (4/4) change controllers untapped with haste; P3’s Lab Uninvolved Servo is untouched.'
+        : 'You control no creatures, so only P2’s Lab Ox moves: it becomes yours, untapped and with haste. P3’s Lab Uninvolved Servo is untouched.',
+      cleanup
+        ? 'Pass to the cleanup step: both creatures return to their original controllers, lose haste, and stay untapped.'
+        : 'P3’s Lab Uninvolved Servo stays tapped under P3 because neither player’s group ever included it.',
+    ],
+    expectedOutcome: cleanup
+      ? 'After cleanup P1 controls Lab Trader and P2 controls Lab Ox again, none of them has haste, all stay untapped, and P3’s Lab Uninvolved Servo never moved.'
+      : 'P1 controls the untapped, hasty Lab Ox; P3’s Lab Uninvolved Servo remains tapped under P3.',
+    oracleSha256: reins.sha256,
+    clauseIds: [
+      'reins-untap-both-groups',
+      'reins-swap-until-end-of-turn',
+      'reins-haste-the-affected-creatures',
+    ],
+    decks: {
+      P1: [reins.card, witness, ...islands, ...(cleanup ? [LAB_TRADER] : [])],
+      P2: [LAB_OX, ...PR01_FILLER],
+      P3: [LAB_UNINVOLVED_SERVO, ...PR01_FILLER],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Reins of Power', 'Lab Priority Witness'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: islands.map((land) => land.name) },
+        ...(cleanup ? [{ playerId: 'P1' as const, cardNames: ['Lab Trader'], tapped: true }] : []),
+        { playerId: 'P2', cardNames: ['Lab Ox'], tapped: true },
+        { playerId: 'P3', cardNames: ['Lab Uninvolved Servo'], tapped: true },
+      ],
+      ...(cleanup ? { continueThroughPrecombatMains: 1 } : {}),
+    },
+  });
+}
+
+/**
+ * Coverage PR08.14: Alicia Masters, Skilled Sculptor. Two prepared states of ONE board, so the
+ * only difference between them is whether P1 casts a noncreature spell before combat.
+ *
+ * The board is the part "Sense the Good" is about, and it is arranged so that every sentence can
+ * be observed rather than assumed: one creature P1 owns is held by P2, one creature P2 owns is
+ * held by P1, one NONCREATURE artifact P3 owns is held by P1, and P3 keeps a bystander creature
+ * nobody is holding. Ownership is arranged with `playerId` and only the holder with `controllerId`;
+ * nothing pokes the state afterwards, so both scenarios start from the same authoritative facts.
+ *
+ * All four fixture creatures are 0-power defenders. That is a real modeled card shape (the generic
+ * interpreter reads the printed power/toughness and the `Defender` keyword line), and it is what
+ * keeps `continueThroughCombat` free of attacker and blocker choosers: the combat that witnesses
+ * the intervening if is a combat with no combat in it.
+ */
+const LAB_RECLAIMED_OX = card({
+  oracleId: 'lab-pr08-reclaimed-ox',
+  name: 'Lab Reclaimed Ox',
+  typeLine: 'Creature — Ox',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender',
+});
+const LAB_BORROWED_GOLEM = card({
+  oracleId: 'lab-pr08-borrowed-golem',
+  name: 'Lab Borrowed Golem',
+  typeLine: 'Creature — Golem',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender',
+});
+const LAB_PLEDGED_RELIC = card({
+  oracleId: 'lab-pr08-pledged-relic',
+  name: 'Lab Pledged Relic',
+  typeLine: 'Artifact',
+  manaCost: '{2}',
+  cmc: 2,
+});
+const LAB_BYSTANDER_GOLEM = card({
+  oracleId: 'lab-pr08-bystander-golem',
+  name: 'Lab Bystander Golem',
+  typeLine: 'Creature — Golem',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender',
+});
+
+function aliciaMastersScenario(
+  gameId: GameId,
+  mode: 'combat-treasure-and-owner-control' | 'no-noncreature-spell',
+): CardTestScenario {
+  const alicia = pinnedFrom(COVERAGE_PR08, 'Alicia Masters, Skilled Sculptor');
+  /**
+   * The cast-history witness for the intervening if. A real, fully interpreter-modeled {0} instant
+   * rather than a blank placeholder: a blank spell would have to be force-declared `modeled: true`
+   * with no interpretable effect at all, which is exactly the fake support
+   * docs/guides/card-modeling-and-testing.md forbids. Casting it gains real life, so the scenarios
+   * can prove the cast happened rather than assume it.
+   */
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const mountains = [MOUNTAIN, MOUNTAIN];
+  const castWitness = mode === 'combat-treasure-and-owner-control';
+  return pr01Scenario(gameId, {
+    id: `alicia-masters-viewer-${mode}`,
+    title: castWitness
+      ? 'Alicia Masters: a noncreature spell this turn makes a Treasure, then each player reclaims their own creatures'
+      : 'Alicia Masters: no noncreature spell this turn makes no Treasure, but creatures still return to their owners',
+    instructions: [
+      'Cast Alicia Masters, Skilled Sculptor with your two Mountains and let it resolve.',
+      castWitness
+        ? "Cast Lab Priority Witness before combat: it is the noncreature spell this turn that Alicia's intervening if reads."
+        : 'Do not cast Lab Priority Witness. Only a creature spell has been cast this turn.',
+      'Pass through combat: the Treasure, if any, is created at the beginning of combat, before the end step.',
+      'Pass through your end step: each player takes back every creature they own.',
+    ],
+    expectedOutcome: castWitness
+      ? 'Exactly one Treasure you own appears when combat begins, and at your end step your Lab Reclaimed Ox and P2’s Lab Borrowed Golem each return to their owner. P3’s noncreature Lab Pledged Relic stays yours, and P3’s Lab Bystander Golem never moves.'
+      : 'No Treasure is ever created, because no noncreature spell was cast this turn. Your end step still returns your Lab Reclaimed Ox and P2’s Lab Borrowed Golem to their owners, leaves P3’s Lab Pledged Relic with you, and leaves P3’s bystander alone.',
+    oracleSha256: alicia.sha256,
+    clauseIds: [
+      'alicia-masters-begin-combat-treasure-if-noncreature-spell-this-turn',
+      'alicia-masters-end-step-each-player-reclaims-own-creatures',
+    ],
+    decks: {
+      P1: [alicia.card, witness, ...mountains, LAB_RECLAIMED_OX, ...PR01_FILLER],
+      P2: [LAB_BORROWED_GOLEM, ...PR01_FILLER],
+      P3: [LAB_BYSTANDER_GOLEM, LAB_PLEDGED_RELIC, ...PR01_FILLER],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      // Pinned so the witness's printed life gain is a real, scenario-owned number rather than a
+      // function of the 40-life default.
+      lifeTotals: [
+        { playerId: 'P1', life: 20 },
+        { playerId: 'P2', life: 40 },
+        { playerId: 'P3', life: 40 },
+        { playerId: 'P4', life: 40 },
+      ],
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: ['Alicia Masters, Skilled Sculptor', 'Lab Priority Witness'],
+        },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: mountains.map((land) => land.name) },
+        { playerId: 'P1', cardNames: [LAB_RECLAIMED_OX.name], controllerId: 'P2' },
+        {
+          playerId: 'P2',
+          cardNames: [LAB_BORROWED_GOLEM.name],
+          controllerId: 'P1',
+          tapped: true,
+        },
+        { playerId: 'P3', cardNames: [LAB_PLEDGED_RELIC.name], controllerId: 'P1' },
+        { playerId: 'P3', cardNames: [LAB_BYSTANDER_GOLEM.name] },
+      ],
+      continueThroughCombat: true,
+      continueToEndStep: true,
+    },
+    decisionProviderOverrides: { P2: neverBlocks(), P3: neverBlocks(), P4: neverBlocks() },
+  });
+}
+
+/**
+ * Coverage PR08.22: Benevolent Offering. Two prepared states of ONE board, so the only difference
+ * the runs are allowed to have is the second opponent choice the rules explicitly allow to repeat.
+ *
+ * The board is arranged so both printed sentences are arithmetic rather than prose. P1 holds one
+ * creature, P2 holds one, P3 holds two, and P4 holds a NONCREATURE artifact: "for each creature you
+ * control" and "for each creature they control" therefore read four different numbers over the
+ * course of one resolution — 4, 4, 2 and 0 — and an artifact owner who never gains anything proves
+ * the count is over creatures, not permanents.
+ *
+ * Every fixture creature is a printed 0/3 with the printed `Defender` keyword line, so the generic
+ * interpreter models each of them completely. That also keeps the run out of combat entirely: the
+ * scenarios never advance past the precombat priority window the spell resolves in.
+ */
+const LAB_OFFERING_SENTINEL = card({
+  oracleId: 'lab-pr08-offering-sentinel',
+  name: 'Lab Offering Sentinel',
+  typeLine: 'Creature — Golem',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender',
+});
+const LAB_OFFERING_WALL = card({
+  oracleId: 'lab-pr08-offering-wall',
+  name: 'Lab Offering Wall',
+  typeLine: 'Creature — Golem',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender',
+});
+const LAB_OFFERING_GOLEM = card({
+  oracleId: 'lab-pr08-offering-golem',
+  name: 'Lab Offering Golem',
+  typeLine: 'Creature — Golem',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender',
+});
+const LAB_OFFERING_RELIC = card({
+  oracleId: 'lab-pr08-offering-relic',
+  name: 'Lab Silent Relic',
+  typeLine: 'Artifact',
+  manaCost: '{2}',
+  cmc: 2,
+});
+
+function benevolentOfferingScenario(
+  gameId: GameId,
+  mode: 'different-opponents' | 'same-opponent',
+): CardTestScenario {
+  const offering = pinnedFrom(COVERAGE_PR08, 'Benevolent Offering');
+  /**
+   * A real, fully interpreter-modeled {0} instant rather than a blank placeholder: a blank spell
+   * would have to be force-declared `modeled: true` with nothing to resolve, which is the fake
+   * support docs/guides/card-modeling-and-testing.md forbids. It is never cast. It stays in hand,
+   * and it is castable, so the board still offers P1 a real action after the spell resolves — which
+   * is what makes "priority is still open, nothing else has to happen" an observation rather than
+   * an assumption.
+   */
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const plains = [PLAINS, PLAINS, PLAINS, PLAINS];
+  const sameOpponent = mode === 'same-opponent';
+  return pr01Scenario(gameId, {
+    id: `benevolent-offering-viewer-${mode}`,
+    title: sameOpponent
+      ? 'Benevolent Offering: choose the same opponent twice, for the Spirits and for the life'
+      : 'Benevolent Offering: choose P2 for the Spirits and P3 for the life',
+    instructions: [
+      'Cast Benevolent Offering with your four Plains and let it resolve. It asks twice, and only you are ever asked.',
+      sameOpponent
+        ? 'Choose P2 both times: the second question is fresh, so the same opponent may answer it again.'
+        : 'Choose P2 for the Spirits, then choose P3 for the life. The two instructions are independent.',
+      'The second question arrives only after all six Spirits already exist, and each creature is then counted at 2 life to its own controller.',
+      'Stop there: the run ends on the precombat priority window the spell resolved in, with Lab Priority Witness still in hand.',
+    ],
+    expectedOutcome: sameOpponent
+      ? 'You and P2 each control three new 1/1 white Spirit tokens with flying, and then you and P2 each gain 8 life — 2 for each of the four creatures you control, and 2 for each of P2’s four. P3 and P4 are untouched at 40.'
+      : 'You and P2 each control three new 1/1 white Spirit tokens with flying, and then you gain 8 life (2 for each of your four creatures) while P3 gains 4 (2 for each of its two). P2 and P4 stay at 40.',
+    oracleSha256: offering.sha256,
+    clauseIds: ['benevolent-offering-spirit-sharing', 'benevolent-offering-creature-life-sharing'],
+    decks: {
+      P1: [offering.card, witness, ...plains, LAB_OFFERING_SENTINEL, ...PR01_FILLER],
+      P2: [LAB_OFFERING_WALL, ...PR01_FILLER],
+      P3: [LAB_OFFERING_GOLEM, LAB_OFFERING_GOLEM, ...PR01_FILLER],
+      P4: [LAB_OFFERING_RELIC, ...PR01_FILLER],
+    },
+    prepared: {
+      // Pinned so every printed "+2 per creature" is a scenario-owned number and never a function
+      // of an incidental default. Nobody starts on a life total the counts could not distinguish.
+      lifeTotals: [
+        { playerId: 'P1', life: 40 },
+        { playerId: 'P2', life: 40 },
+        { playerId: 'P3', life: 40 },
+        { playerId: 'P4', life: 40 },
+      ],
+      hand: [{ playerId: 'P1', cardNames: ['Benevolent Offering', 'Lab Priority Witness'] }],
+      // No continuation flag: the run is meant to stop in this very priority window, with the
+      // source in the graveyard and the unused witness still castable in hand.
+      battlefield: [
+        { playerId: 'P1', cardNames: plains.map((land) => land.name) },
+        { playerId: 'P1', cardNames: [LAB_OFFERING_SENTINEL.name] },
+        { playerId: 'P2', cardNames: [LAB_OFFERING_WALL.name] },
+        { playerId: 'P3', cardNames: [LAB_OFFERING_GOLEM.name, LAB_OFFERING_GOLEM.name] },
+        { playerId: 'P4', cardNames: [LAB_OFFERING_RELIC.name] },
+      ],
+    },
+  });
+}
+
+/**
+ * Coverage PR08.15: Council's Judgment. One board, two runs, and the ONLY difference is how the
+ * four votes land.
+ *
+ * Printed: {1}{W}{W} Sorcery — "Will of the council — Starting with you, each player votes for a
+ * nonland permanent you don't control. Exile each permanent with the most votes or tied for most
+ * votes."
+ *
+ * The board is arranged so every printed instruction is arithmetic rather than prose:
+ *
+ *  - P1 controls a NONLAND permanent of their own (Lab Council Relic) plus three Plains, so the
+ *    pool has something to exclude and `{1}{W}{W}` has exactly three real white sources.
+ *  - P2, P3 and P4 each control exactly ONE opponent nonland permanent, so the vote menu is three
+ *    options in a fixed order and "a permanent you don't control" cannot be satisfied by a land.
+ *  - P2 also controls a Forest, which is a land and therefore never on the menu — the exclusion is
+ *    by printed type, not by who holds the permanent.
+ *
+ * In the tied run the tally is 2:2:0, so "the most votes OR TIED FOR MOST votes" has to exile TWO
+ * permanents and spare the one nobody voted for. In the unanimous run the tally is 4:0:0, so
+ * exactly ONE leaves — and the object it names is a printed 0/3 with `Defender` and `Hexproof`,
+ * which the generic interpreter models completely. A vote is not a target, so hexproof removes no
+ * option and saves nothing: that is the printed sentence under test, not an accident of the board.
+ *
+ * The {0} instant witness is a real, fully interpreter-modeled card rather than a blank
+ * placeholder. It is never cast; it stays in hand, castable, so the run stops in the post-resolution
+ * priority window and "priority is still open" is an observation rather than an assumption.
+ */
+const LAB_COUNCIL_ALPHA = card({
+  oracleId: 'lab-pr08-council-alpha',
+  name: 'Lab Council Alpha',
+  typeLine: 'Artifact',
+  manaCost: '{2}',
+  cmc: 2,
+});
+const LAB_COUNCIL_BETA = card({
+  oracleId: 'lab-pr08-council-beta',
+  name: 'Lab Council Beta',
+  typeLine: 'Artifact',
+  manaCost: '{2}',
+  cmc: 2,
+});
+const LAB_COUNCIL_GAMMA = card({
+  oracleId: 'lab-pr08-council-gamma',
+  name: 'Lab Council Gamma',
+  typeLine: 'Artifact',
+  manaCost: '{2}',
+  cmc: 2,
+});
+const LAB_COUNCIL_RELIC = card({
+  oracleId: 'lab-pr08-council-relic',
+  name: 'Lab Council Relic',
+  typeLine: 'Artifact',
+  manaCost: '{2}',
+  cmc: 2,
+});
+/**
+ * A printed 0/3 with two printed keyword lines. `Hexproof` is what makes the unanimous run's
+ * negative observable: the ability is non-targeting, so the keyword must cost the creature nothing.
+ */
+const LAB_COUNCIL_SENTINEL = card({
+  oracleId: 'lab-pr08-council-warded-sentinel',
+  name: 'Lab Council Warded Sentinel',
+  typeLine: 'Creature — Golem',
+  manaCost: '{3}',
+  cmc: 3,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender\nHexproof',
+});
+
+function councilsJudgmentScenario(
+  gameId: GameId,
+  mode: 'tied-votes' | 'unanimous-hexproof',
+): CardTestScenario {
+  const council = pinnedFrom(COVERAGE_PR08, "Council's Judgment");
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const plains = [PLAINS, PLAINS, PLAINS];
+  const hexproofRun = mode === 'unanimous-hexproof';
+  // The two runs share every other element, so nothing but the vote pattern differs.
+  const p2Permanent = hexproofRun ? LAB_COUNCIL_SENTINEL : LAB_COUNCIL_ALPHA;
+  const unanimousTarget = LAB_COUNCIL_SENTINEL.name;
+  return pr01Scenario(gameId, {
+    id: `councils-judgment-viewer-${mode}`,
+    title: hexproofRun
+      ? "Council's Judgment: unanimous votes exile a creature with hexproof"
+      : "Council's Judgment: tied votes exile both winners and spare the unvoted permanent",
+    instructions: [
+      `Cast Council's Judgment from your hand with your three Plains and let it resolve.`,
+      hexproofRun
+        ? 'Every player votes for Lab Council Warded Sentinel, including P2 — its hexproof removes no option and spares it nothing.'
+        : 'Vote for Lab Council Alpha; P2 also votes for Lab Council Alpha, P3 and P4 both vote for Lab Council Beta.',
+      'The votes are cast in turn order starting with you, and every one of them is public before anything leaves.',
+      'Stop there: the run ends in the priority window the spell resolved in, with Lab Priority Witness still in hand.',
+    ],
+    expectedOutcome: hexproofRun
+      ? 'The four public votes name Lab Council Warded Sentinel, so it alone has the most votes and it alone is exiled. Lab Council Beta, Lab Council Gamma, your own Lab Council Relic and your three Plains stay where they are, and P2’s Forest is never a legal vote.'
+      : 'The four public votes tie 2:2 between Lab Council Alpha and Lab Council Beta, and both are exiled together as the tied highest counts. Lab Council Gamma got no vote and stays, as do your own Lab Council Relic, your three Plains and P2’s Forest.',
+    oracleSha256: council.sha256,
+    clauseIds: ['councils-judgment-public-voting', 'councils-judgment-most-votes-exile'],
+    decks: {
+      P1: [council.card, witness, ...plains, LAB_COUNCIL_RELIC, ...PR01_FILLER],
+      P2: [p2Permanent, FOREST, ...PR01_FILLER],
+      P3: [LAB_COUNCIL_BETA, ...PR01_FILLER],
+      P4: [LAB_COUNCIL_GAMMA, ...PR01_FILLER],
+    },
+    prepared: {
+      // Pinned so the unused {0} witness's printed "+1 life" would be a scenario-owned 40 -> 41
+      // rather than a function of an incidental default.
+      lifeTotals: [
+        { playerId: 'P1', life: 40 },
+        { playerId: 'P2', life: 40 },
+        { playerId: 'P3', life: 40 },
+        { playerId: 'P4', life: 40 },
+      ],
+      hand: [{ playerId: 'P1', cardNames: ["Council's Judgment", 'Lab Priority Witness'] }],
+      // No continuation flag: the run is meant to stop in this very priority window.
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [...plains.map((land) => land.name), LAB_COUNCIL_RELIC.name],
+        },
+        { playerId: 'P2', cardNames: [p2Permanent.name, FOREST.name] },
+        { playerId: 'P3', cardNames: [LAB_COUNCIL_BETA.name] },
+        { playerId: 'P4', cardNames: [LAB_COUNCIL_GAMMA.name] },
+      ],
+    },
+    // Only the three opponent seats are scripted; P1 is the human seat in the real lab, and the
+    // replay test answers every vote itself, so neither seat's choice is injected into an outcome.
+    decisionProviderOverrides: {
+      P2: votesFor(hexproofRun ? unanimousTarget : LAB_COUNCIL_ALPHA.name),
+      P3: votesFor(hexproofRun ? unanimousTarget : LAB_COUNCIL_BETA.name),
+      P4: votesFor(hexproofRun ? unanimousTarget : LAB_COUNCIL_BETA.name),
+    },
+  });
+}
+
+function promiseOfLoyaltyScenario(gameId: GameId): CardTestScenario {
+  const promise = pinnedFrom(COVERAGE_PR07, 'Promise of Loyalty');
+  const plains = [PLAINS, PLAINS, PLAINS, PLAINS, PLAINS];
+  return pr01Scenario(gameId, {
+    id: 'promise-of-loyalty-viewer-vowed-creature-cant-attack-you',
+    title: 'Promise of Loyalty: a vowed creature cannot attack its caster but can attack others',
+    instructions: [
+      'Promise of Loyalty and five Plains are in play for you; you control Lab Ox and Lab Servo, and so does P2.',
+      'Cast Promise of Loyalty and keep Lab Ox (P2 keeps its own Lab Ox).',
+      "On P2's turn P2's vowed Lab Ox may not attack you; it attacks P3 instead.",
+    ],
+    expectedOutcome:
+      'Each of you and P2 keeps one Lab Ox with a vow counter and sacrifices the Lab Servo. P2 was not offered you as a defender, so you stay at 40 life, and the vowed Lab Ox dealt 4 to P3, who is at 36.',
+    oracleSha256: promise.sha256,
+    clauseIds: ['promise-of-loyalty-c01'],
+    decks: {
+      P1: [promise.card, ...plains, LAB_OX, LAB_SERVO],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Promise of Loyalty'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: [...plains.map((land) => land.name), 'Lab Ox', 'Lab Servo'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+      continueThroughNextCombat: true,
+    },
+    decisionProviderOverrides: { P2: keepThenAttack('Lab Ox', 'P3') },
+  });
+}
+
+function lightningRunnerScenario(gameId: GameId): CardTestScenario {
+  const runner = pinnedFrom(COVERAGE_PR07, 'Lightning Runner');
+  return pr01Scenario(gameId, {
+    id: 'lightning-runner-viewer-pay-energy-extra-combat',
+    title: 'Lightning Runner: paying eight energy untaps your creatures and adds a combat phase',
+    instructions: [
+      'Lightning Runner (2/2 double strike, haste) and a tapped Lab Ox (4/4) are on your battlefield, and you have six energy.',
+      'Pass priority to the declare attackers step and attack P2 with Lightning Runner. Its trigger gives you {E}{E}; pay eight energy when asked.',
+      'Lab Ox untaps and an additional combat phase follows this one. Attack P2 with both Lightning Runner and Lab Ox.',
+    ],
+    expectedOutcome:
+      'Lightning Runner dealt 4 damage in the first combat (double strike) and, with Lab Ox, 8 more in the additional combat: P2 is at 28. You paid all eight energy and gained two more when Lightning Runner attacked again, so you have 2.',
+    oracleSha256: runner.sha256,
+    clauseIds: ['lightning-runner-attack-trigger'],
+    decks: {
+      P1: [runner.card, LAB_OX, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lightning Runner'] },
+        { playerId: 'P1', cardNames: ['Lab Ox'], tapped: true },
+      ],
+      energy: [{ playerId: 'P1', amount: 6 }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function firkraagScenario(gameId: GameId, kind: 'goad' | 'damage'): CardTestScenario {
+  const firkraag = pinnedFrom(COVERAGE_PR07, 'Firkraag, Cunning Instigator');
+  const titles = {
+    goad: 'Firkraag: attacking an opponent with a Dragon goads one of that opponent’s creatures',
+    damage:
+      'Firkraag: a goaded creature that deals combat damage to an opponent grows Firkraag and draws a card',
+  } as const;
+  return pr01Scenario(gameId, {
+    id: `firkraag-viewer-${kind === 'goad' ? 'dragon-attack-goads' : 'goaded-damage-draws'}`,
+    title: titles[kind],
+    instructions:
+      kind === 'goad'
+        ? [
+            'Firkraag, Cunning Instigator (3/3 flying Dragon) is on your battlefield. P2 controls Lab Ox (4/4) and Lab Servo (1/1).',
+            'Pass priority to the declare attackers step and attack P2 with Firkraag. Put its trigger on Lab Ox and let it resolve.',
+          ]
+        : [
+            'It is P2’s turn. Firkraag, Cunning Instigator is on your battlefield, and P2 controls Lab Ox (4/4), which you have goaded.',
+            'Pass priority and let the attack play out: Lab Ox must attack, and cannot attack you, so it attacks P3.',
+          ],
+    expectedOutcome:
+      kind === 'goad'
+        ? 'The goad trigger resolved on Lab Ox, which is now goaded by you; Lab Servo is not goaded. Firkraag dealt 3 damage to P2, who is at 37.'
+        : 'Lab Ox, which had to attack, dealt 4 combat damage to P3, one of your opponents, so Firkraag has a +1/+1 counter and you drew a card. P3 is at 36.',
+    oracleSha256: firkraag.sha256,
+    clauseIds:
+      kind === 'goad' ? ['firkraag-dragon-attack-goad'] : ['firkraag-forced-attack-damage'],
+    decks: {
+      P1: [firkraag.card, FOREST, FOREST, FOREST],
+      P2: [LAB_OX, ...(kind === 'goad' ? [LAB_SERVO] : []), FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      ...(kind === 'damage' ? { currentTurnPlayer: 'P2' as const } : {}),
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Firkraag, Cunning Instigator'] },
+        {
+          playerId: 'P2',
+          cardNames: kind === 'goad' ? ['Lab Ox', 'Lab Servo'] : ['Lab Ox'],
+          ...(kind === 'damage' ? { goadedBy: 'P1' as const } : {}),
+        },
+      ],
+      continueThroughCombat: true,
+    },
+    ...(kind === 'damage'
+      ? { decisionProviderOverrides: { P2: attackPlayerWithEverything('P3') } }
+      : {}),
+  });
+}
+
+function erietteScenario(gameId: GameId, kind: 'restriction' | 'drain'): CardTestScenario {
+  const eriette = pinnedFrom(COVERAGE_PR07, 'Eriette of the Charmed Apple');
+  const restriction = kind === 'restriction';
+  return pr01Scenario(gameId, {
+    id: `eriette-viewer-${restriction ? 'enchanted-cant-attack-you' : 'end-step-drain'}`,
+    title: restriction
+      ? 'Eriette of the Charmed Apple: a creature enchanted by your Aura cannot attack you'
+      : 'Eriette of the Charmed Apple: at your end step each opponent loses X life and you gain X',
+    instructions: restriction
+      ? [
+          'It is P2’s turn. Eriette of the Charmed Apple and a Lab Aegis (your Aura) are on your battlefield, and Lab Aegis enchants P2’s Lab Ox (6/6 with the Aura).',
+          'Pass priority and let P2’s attack play out: Lab Ox cannot attack you, so it attacks P3.',
+        ]
+      : [
+          'Eriette, Lab Aegis (enchanting P2’s Lab Ox) and Lab Mantle (enchanting your Lab Servo) are on your battlefield.',
+          'Pass priority until your end step and let Eriette’s trigger resolve.',
+        ],
+    expectedOutcome: restriction
+      ? 'P2 was not offered you as a defender for the enchanted Lab Ox, so you are still at 40 life; it dealt 6 to P3, who is at 34.'
+      : 'You control two Auras, so each opponent lost 2 life and you gained 2: you are at 42 and P2, P3 and P4 are at 38.',
+    oracleSha256: eriette.sha256,
+    clauseIds: restriction ? ['eriette-enchanted-cant-attack-you'] : ['eriette-end-step-drain'],
+    decks: {
+      P1: [
+        eriette.card,
+        LAB_AEGIS,
+        ...(restriction ? [] : [LAB_MANTLE, LAB_SERVO]),
+        FOREST,
+        FOREST,
+      ],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      ...(restriction ? { currentTurnPlayer: 'P2' as const } : {}),
+      hand: [],
+      battlefield: [
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+        ...(restriction ? [] : [{ playerId: 'P1' as const, cardNames: ['Lab Servo'] }]),
+        { playerId: 'P1', cardNames: ['Eriette of the Charmed Apple'] },
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Aegis'],
+          attachedToCard: { playerId: 'P2', cardName: 'Lab Ox' },
+        },
+        ...(restriction
+          ? []
+          : [
+              {
+                playerId: 'P1' as const,
+                cardNames: ['Lab Mantle'],
+                attachedToCard: { playerId: 'P1' as const, cardName: 'Lab Servo' },
+              },
+            ]),
+      ],
+      ...(restriction ? { continueThroughCombat: true } : { continueToEndStep: true }),
+    },
+    ...(restriction ? { decisionProviderOverrides: { P2: attackPlayerWithEverything('P3') } } : {}),
+  });
+}
+
+const LAB_RAGER = card({
+  oracleId: 'lab-lightning-rager',
+  name: 'Lightning Rager',
+  typeLine: 'Creature — Elemental',
+  manaCost: '{2}{R}',
+  cmc: 3,
+  colors: ['R'],
+  colorIdentity: ['R'],
+  power: '5',
+  toughness: '1',
+});
+
+function riteOfTheRagingStormScenario(
+  gameId: GameId,
+  kind: 'restriction' | 'token',
+): CardTestScenario {
+  const rite = pinnedFrom(COVERAGE_PR07, 'Rite of the Raging Storm');
+  const restriction = kind === 'restriction';
+  return pr01Scenario(gameId, {
+    id: `rite-of-the-raging-storm-viewer-${restriction ? 'named-cant-attack-you' : 'upkeep-token'}`,
+    title: restriction
+      ? 'Rite of the Raging Storm: a creature named Lightning Rager cannot attack you'
+      : "Rite of the Raging Storm: each player's upkeep makes them a Lightning Rager that is sacrificed at the end step",
+    instructions: restriction
+      ? [
+          'It is P2’s turn. Rite of the Raging Storm is on your battlefield, and P2 controls Lightning Rager (a 5/1 creature, not a token) and Lab Servo.',
+          'Pass priority and let P2’s attack play out: Lightning Rager cannot attack you, so it attacks P3 along with Lab Servo.',
+        ]
+      : [
+          'Rite of the Raging Storm is on your battlefield and it is your turn. Pass priority all the way through your turn.',
+          'At P2’s upkeep P2, not you, creates a 5/1 red Elemental token named Lightning Rager with trample and haste. It cannot attack you, so it attacks P3, and it is sacrificed at the beginning of P2’s end step.',
+        ],
+    expectedOutcome: restriction
+      ? 'Lightning Rager was not offered you as a defender, while Lab Servo, which is not named Lightning Rager, was. P2 attacked P3 with both: 5 and 1 damage, so P3 is at 34 and you are still at 40.'
+      : 'P2 had a Lightning Rager token with haste for its turn, attacked P3 with it for 5 (P3 is at 35, you are at 40), and no Lightning Rager is left on the battlefield after P2’s end step.',
+    oracleSha256: rite.sha256,
+    clauseIds: restriction
+      ? ['rite-of-the-raging-storm-named-cant-attack-you']
+      : ['rite-of-the-raging-storm-upkeep-token'],
+    decks: {
+      P1: [rite.card, FOREST, FOREST],
+      P2: restriction ? [LAB_RAGER, LAB_SERVO, FOREST, FOREST] : [FOREST, FOREST, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      ...(restriction ? { currentTurnPlayer: 'P2' as const } : {}),
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Rite of the Raging Storm'] },
+        ...(restriction
+          ? [{ playerId: 'P2' as const, cardNames: ['Lightning Rager', 'Lab Servo'] }]
+          : []),
+      ],
+      ...(restriction
+        ? { continueThroughCombat: true }
+        : {
+            continueThroughCombat: true,
+            continueToPostcombatMain: true,
+            continueToEndStep: true,
+            continueThroughNextTurn: true,
+          }),
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P3') },
+  });
+}
+
+function nilsScenario(gameId: GameId, kind: 'counters' | 'tax'): CardTestScenario {
+  const nils = pinnedFrom(COVERAGE_PR07, 'Nils, Discipline Enforcer');
+  const counters = kind === 'counters';
+  return pr01Scenario(gameId, {
+    id: `nils-viewer-${counters ? 'end-step-counters' : 'counters-attack-tax'}`,
+    title: counters
+      ? 'Nils, Discipline Enforcer: at your end step put a +1/+1 counter on up to one creature for each player'
+      : 'Nils, Discipline Enforcer: a creature with counters must pay to attack you',
+    instructions: counters
+      ? [
+          'Nils, Discipline Enforcer and Lab Servo (1/1) are on your battlefield. P2 controls Lab Ox (4/4) and Lab Bird (1/1).',
+          'Pass priority until your end step. Nils’s trigger asks for up to one creature for each player in turn: choose Lab Servo for yourself and Lab Ox for P2, and none for anyone else.',
+        ]
+      : [
+          'It is P2’s turn. Nils is on your battlefield. P2 controls Lab Ox (4/4) with two +1/+1 counters and two untapped Forests.',
+          'Pass priority and let P2’s attack play out: Lab Ox can attack you only if P2 pays {2}, one for each counter on it. Declare no blockers when asked.',
+        ],
+    expectedOutcome: counters
+      ? 'Lab Servo is a 2/2 and Lab Ox a 5/5, each with one +1/+1 counter; Nils and Lab Bird got none.'
+      : 'P2 paid {2} (both Forests are tapped) and Lab Ox, a 6/6, attacked you: you took 6 and are at 34.',
+    oracleSha256: nils.sha256,
+    clauseIds: counters ? ['nils-end-step-counters'] : ['nils-counters-attack-tax'],
+    decks: {
+      P1: [nils.card, ...(counters ? [LAB_SERVO] : []), FOREST, FOREST],
+      P2: [LAB_OX, ...(counters ? [LAB_BIRD] : []), FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      ...(counters ? {} : { currentTurnPlayer: 'P2' as const }),
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: counters
+            ? ['Nils, Discipline Enforcer', 'Lab Servo']
+            : ['Nils, Discipline Enforcer'],
+        },
+        counters
+          ? { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Bird'] }
+          : { playerId: 'P2', cardNames: ['Lab Ox'], counters: { '+1/+1': 2 } },
+        ...(counters ? [] : [{ playerId: 'P2' as const, cardNames: ['Forest', 'Forest'] }]),
+      ],
+      ...(counters ? { continueToEndStep: true } : { continueThroughCombat: true }),
+    },
+    ...(counters ? {} : { decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') } }),
+  });
+}
+
+const LAB_INKLING = card({
+  oracleId: 'lab-inkling',
+  name: 'Lab Inkling',
+  typeLine: 'Creature — Inkling',
+  manaCost: '{1}{W}',
+  cmc: 2,
+  colors: ['W'],
+  colorIdentity: ['W'],
+  power: '2',
+  toughness: '1',
+});
+
+function combatCalligrapherScenario(
+  gameId: GameId,
+  kind: 'restriction' | 'token',
+): CardTestScenario {
+  const calligrapher = pinnedFrom(COVERAGE_PR07, 'Combat Calligrapher');
+  const restriction = kind === 'restriction';
+  return pr01Scenario(gameId, {
+    id: `combat-calligrapher-viewer-${restriction ? 'inkling-cant-attack-you' : 'attacker-creates-inkling'}`,
+    title: restriction
+      ? 'Combat Calligrapher: an Inkling cannot attack you'
+      : 'Combat Calligrapher: a player attacking an opponent of yours creates a tapped attacking Inkling',
+    instructions: restriction
+      ? [
+          'It is P2’s turn. Combat Calligrapher is on your battlefield, and P2 controls Lab Inkling (2/1).',
+          'Pass priority and let P2’s attack play out: Lab Inkling cannot attack you, so it attacks P3. P3 is an opponent of yours, so Combat Calligrapher then makes P2 an Inkling token attacking P3.',
+        ]
+      : [
+          'Combat Calligrapher (3/3 flier) and Lab Ox (4/4) are on your battlefield.',
+          'Pass priority to the declare attackers step and attack P2 with Lab Ox, leaving Combat Calligrapher at home, and confirm.',
+        ],
+    expectedOutcome: restriction
+      ? 'Lab Inkling was not offered you as a defender, so you are still at 40 life. P2 attacked P3 and got a tapped 2/1 Inkling attacking P3: with Lab Inkling that is 4 damage, so P3 is at 36.'
+      : 'P2 is an opponent of yours, so you created a tapped 2/1 white and black flying Inkling attacking P2. Lab Ox dealt 4 and the Inkling 2: P2 is at 34.',
+    oracleSha256: calligrapher.sha256,
+    clauseIds: restriction
+      ? ['combat-calligrapher-inklings-cant-attack-you']
+      : ['combat-calligrapher-attacker-creates-inkling'],
+    decks: {
+      P1: [calligrapher.card, ...(restriction ? [] : [LAB_OX]), FOREST, FOREST],
+      P2: [...(restriction ? [LAB_INKLING] : []), FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      ...(restriction ? { currentTurnPlayer: 'P2' as const } : {}),
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: restriction ? ['Combat Calligrapher'] : ['Combat Calligrapher', 'Lab Ox'],
+        },
+        ...(restriction ? [{ playerId: 'P2' as const, cardNames: ['Lab Inkling'] }] : []),
+      ],
+      continueThroughCombat: true,
+    },
+    ...(restriction ? { decisionProviderOverrides: { P2: attackPlayerWithEverything('P3') } } : {}),
+  });
+}
+
+function goblinSpymasterScenario(gameId: GameId): CardTestScenario {
+  const spymaster = pinnedFrom(COVERAGE_PR07, 'Goblin Spymaster');
+  return pr01Scenario(gameId, {
+    id: 'goblin-spymaster-viewer-opponent-end-step-token',
+    title: "Goblin Spymaster: at an opponent's end step that player creates a Goblin token",
+    instructions: [
+      'It is P2’s turn and Goblin Spymaster is on your battlefield.',
+      'Pass priority through P2’s turn. At the beginning of P2’s end step, P2 (not you) creates a 1/1 red Goblin creature token with “Creatures you control attack each combat if able.”',
+    ],
+    expectedOutcome:
+      'P2 controls a Goblin token; you do not. From P2’s next combat on, every creature P2 controls must attack if able.',
+    oracleSha256: spymaster.sha256,
+    clauseIds: ['goblin-spymaster-opponent-end-step-token'],
+    decks: {
+      P1: [spymaster.card, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Goblin Spymaster'] }],
+      continueToEndStep: true,
+    },
+  });
+}
+
+function tobyScenario(gameId: GameId, kind: 'block' | 'flying'): CardTestScenario {
+  const toby = pinnedFrom(COVERAGE_PR07, 'Toby, Beastie Befriender');
+  const block = kind === 'block';
+  return pr01Scenario(gameId, {
+    id: block ? 'toby-viewer-beast-cant-block-alone' : 'toby-viewer-flying-with-four-tokens',
+    title: block
+      ? 'Toby, Beastie Befriender: the Beast token cannot block alone'
+      : 'Toby, Beastie Befriender: creature tokens have flying while you control four or more',
+    instructions: block
+      ? [
+          'Toby is in your hand with a Plains and two Forests on your battlefield; P2 controls Lab Ox (4/4). Cast Toby and let it resolve: its enters trigger creates a 4/4 white Beast token.',
+          'Pass priority to P2’s turn. P2 attacks you with Lab Ox. Declare the Beast as the only blocker and confirm: the engine rejects it because the Beast can’t block alone.',
+          'Then also block with Toby and confirm: now the Beast may block.',
+        ]
+      : [
+          'Toby and three Lab Token Forges are in your hand, with a Plains and five Forests on your battlefield.',
+          'Cast Toby: its Beast token is your first creature token. Then cast a Lab Token Forge three times, each making a 1/1 Servo token.',
+          'Once you control four creature tokens, every one of them has flying.',
+        ],
+    expectedOutcome: block
+      ? 'The first declaration was rejected with “Beast can’t block alone”. Beast and Toby then blocked Lab Ox together: you took no damage and are at 40.'
+      : 'With four creature tokens (the Beast and three Servos) the Beast and the Servos have flying; with three they did not.',
+    oracleSha256: toby.sha256,
+    clauseIds: block
+      ? ['toby-beast-token-cant-attack-or-block-alone']
+      : ['toby-creature-tokens-have-flying'],
+    decks: {
+      P1: block
+        ? [toby.card, PLAINS, FOREST, FOREST]
+        : [
+            toby.card,
+            LAB_TOKEN_FORGE,
+            LAB_TOKEN_FORGE,
+            LAB_TOKEN_FORGE,
+            PLAINS,
+            FOREST,
+            FOREST,
+            FOREST,
+            FOREST,
+            FOREST,
+          ],
+      P2: block ? [LAB_OX, FOREST, FOREST] : PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: block
+            ? ['Toby, Beastie Befriender']
+            : ['Toby, Beastie Befriender', 'Lab Token Forge', 'Lab Token Forge', 'Lab Token Forge'],
+        },
+      ],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: block
+            ? ['Plains', 'Forest', 'Forest']
+            : ['Plains', 'Forest', 'Forest', 'Forest', 'Forest', 'Forest'],
+        },
+        ...(block ? [{ playerId: 'P2' as const, cardNames: ['Lab Ox'] }] : []),
+      ],
+      ...(block
+        ? {
+            continueThroughCombat: true,
+            continueToPostcombatMain: true,
+            continueToEndStep: true,
+            continueThroughNextTurn: true,
+          }
+        : {}),
+    },
+    ...(block ? { decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') } } : {}),
+  });
+}
+
+function lifeOfThePartyScenario(gameId: GameId, kind: 'pump' | 'copies'): CardTestScenario {
+  const party = pinnedFrom(COVERAGE_PR07, 'Life of the Party');
+  const pump = kind === 'pump';
+  return pr01Scenario(gameId, {
+    id: pump ? 'life-of-the-party-viewer-attack-pump' : 'life-of-the-party-viewer-goaded-copies',
+    title: pump
+      ? 'Life of the Party: the attacker gets +X/+0 for the creatures you control'
+      : 'Life of the Party: each opponent creates a goaded copy of it',
+    instructions: pump
+      ? [
+          'Life of the Party, Lab Servo and Lab Bird are on your battlefield. Pass priority to the declare attackers step and attack P2 with Life of the Party alone, then confirm.',
+          'Its attack trigger resolves: it gets +X/+0 where X is the three creatures you control.',
+        ]
+      : [
+          'Life of the Party is in your hand with a Mountain and three Forests on your battlefield. Cast it and let it and its enters trigger resolve.',
+          'Each opponent creates a token copy of it under their own control, goaded by you for the rest of the game. Declare no attackers in your own combat; then on P2’s turn P2’s copy must attack, and can’t attack you.',
+        ],
+    expectedOutcome: pump
+      ? 'Life of the Party attacked as a 3/1 (0 power plus 3): P2 took 3 and is at 37.'
+      : 'P2, P3 and P4 each control a Life of the Party token. P2’s goaded copy attacked another player, not you, so you are still at 40.',
+    oracleSha256: party.sha256,
+    clauseIds: pump ? ['life-of-the-party-attack-pump'] : ['life-of-the-party-goaded-copies'],
+    decks: {
+      P1: pump
+        ? [party.card, LAB_SERVO, LAB_BIRD, FOREST, FOREST]
+        : [party.card, MOUNTAIN, FOREST, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: pump
+      ? {
+          hand: [],
+          battlefield: [
+            { playerId: 'P1', cardNames: ['Life of the Party', 'Lab Servo', 'Lab Bird'] },
+          ],
+          continueThroughCombat: true,
+        }
+      : {
+          hand: [{ playerId: 'P1', cardNames: ['Life of the Party'] }],
+          battlefield: [{ playerId: 'P1', cardNames: ['Mountain', 'Forest', 'Forest', 'Forest'] }],
+          continueThroughCombat: true,
+          continueToPostcombatMain: true,
+          continueToEndStep: true,
+          continueThroughNextTurn: true,
+        },
+    ...(pump
+      ? {}
+      : {
+          decisionProviderOverrides: {
+            P2: attackPlayerWithEverything('P1'),
+            P3: neverBlocks(),
+            P4: neverBlocks(),
+          },
+        }),
+  });
+}
+
+function kardurScenario(gameId: GameId, kind: 'requirement' | 'drain'): CardTestScenario {
+  const kardur = pinnedFrom(COVERAGE_PR07, 'Kardur, Doomscourge');
+  const requirement = kind === 'requirement';
+  return pr01Scenario(gameId, {
+    id: requirement ? 'kardur-viewer-must-attack-not-you' : 'kardur-viewer-attacker-dies-drain',
+    title: requirement
+      ? "Kardur, Doomscourge: opponents' creatures must attack, and not you, until your next turn"
+      : 'Kardur, Doomscourge: whenever an attacking creature dies, each opponent loses 1 and you gain 1',
+    instructions: requirement
+      ? [
+          'Kardur is in your hand with a Swamp, a Mountain and two Forests on your battlefield; P2 controls Lab Ox (4/4). Cast Kardur and let it and its enters trigger resolve.',
+          'Pass priority to P2’s turn. Until your next turn Lab Ox attacks each combat if able and attacks a player other than you if able: it is not offered you as a defender and must attack P3 or P4.',
+        ]
+      : [
+          'Kardur and Lab Servo (1/1) are on your battlefield; P2 controls Lab Ox (4/4), which blocks whatever you attack with.',
+          'Pass priority to the declare attackers step and attack P2 with Lab Servo, leaving Kardur at home, and confirm. Lab Ox blocks and kills it: an attacking creature died.',
+        ],
+    expectedOutcome: requirement
+      ? 'Lab Ox was not offered you and had to attack: it hit P3 for 4 (P3 is at 36) and you are still at 40.'
+      : 'Lab Servo died while attacking: each opponent lost 1 life (P2, P3 and P4 are at 39) and you gained 1 (41). Lab Ox, a blocker, would not have triggered it.',
+    oracleSha256: kardur.sha256,
+    clauseIds: requirement
+      ? ['kardur-opponents-attack-not-you']
+      : ['kardur-attacking-creature-dies-drain'],
+    decks: {
+      P1: requirement
+        ? [kardur.card, SWAMP, MOUNTAIN, FOREST, FOREST]
+        : [kardur.card, LAB_SERVO, FOREST, FOREST],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: requirement
+      ? {
+          hand: [{ playerId: 'P1', cardNames: ['Kardur, Doomscourge'] }],
+          battlefield: [
+            { playerId: 'P1', cardNames: ['Swamp', 'Mountain', 'Forest', 'Forest'] },
+            { playerId: 'P2', cardNames: ['Lab Ox'] },
+          ],
+          continueThroughCombat: true,
+          continueToPostcombatMain: true,
+          continueToEndStep: true,
+          continueThroughNextTurn: true,
+        }
+      : {
+          hand: [],
+          battlefield: [
+            { playerId: 'P1', cardNames: ['Kardur, Doomscourge', 'Lab Servo'] },
+            { playerId: 'P2', cardNames: ['Lab Ox'] },
+          ],
+          continueThroughCombat: true,
+        },
+    decisionProviderOverrides: requirement
+      ? { P2: attackPlayerWithEverything('P1'), P3: neverBlocks(), P4: neverBlocks() }
+      : { P2: blockWithEverything },
+  });
+}
+
+const LAB_HERALD = card({
+  oracleId: 'lab-silver-surfer-herald',
+  name: "Silver Surfer, Galactus's Herald",
+  typeLine: 'Creature — Alien Hero',
+  manaCost: '{1}',
+  cmc: 1,
+  power: '1',
+  toughness: '1',
+});
+
+function galactusScenario(gameId: GameId, kind: 'hunger' | 'herald'): CardTestScenario {
+  const galactus = pinnedFrom(COVERAGE_PR07, 'Galactus, Devourer of Worlds');
+  const hunger = kind === 'hunger';
+  return pr01Scenario(gameId, {
+    id: hunger ? 'galactus-viewer-attacks-most-life' : 'galactus-viewer-herald-lifts-requirement',
+    title: hunger
+      ? 'Galactus, Devourer of Worlds: it must attack the opponent with the most life'
+      : "Galactus, Devourer of Worlds: no requirement while you control Silver Surfer, Galactus's Herald",
+    instructions: hunger
+      ? [
+          'Galactus is on your battlefield. P2 is at 20 life, P3 at 40 and P4 at 30.',
+          'Pass priority to the declare attackers step. Galactus must attack an opponent with the most life: P3 is its only choice, and it cannot stay home.',
+        ]
+      : [
+          'Galactus and a creature named Silver Surfer, Galactus’s Herald are on your battlefield. P2 is at 20 life, P3 at 40 and P4 at 30.',
+          'Pass priority to the declare attackers step. While you control the Herald, Galactus has no requirement: attack P2 with it and confirm.',
+        ],
+    expectedOutcome: hunger
+      ? 'Galactus attacked P3, the opponent with the most life, for 12: P3 is at 28.'
+      : 'Galactus was free to attack P2, who is not the opponent with the most life: P2 is at 8.',
+    oracleSha256: galactus.sha256,
+    clauseIds: ['galactus-insatiable-hunger'],
+    decks: {
+      P1: hunger ? [galactus.card, FOREST, FOREST] : [galactus.card, LAB_HERALD, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      lifeTotals: [
+        { playerId: 'P2', life: 20 },
+        { playerId: 'P3', life: 40 },
+        { playerId: 'P4', life: 30 },
+      ],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: hunger
+            ? ['Galactus, Devourer of Worlds']
+            : ['Galactus, Devourer of Worlds', "Silver Surfer, Galactus's Herald"],
+        },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function silverSurferScenario(gameId: GameId, kind: 'search' | 'requirement'): CardTestScenario {
+  const surfer = pinnedFrom(COVERAGE_PR07, "Silver Surfer, Galactus's Herald");
+  const galactus = pinnedFrom(COVERAGE_PR07, 'Galactus, Devourer of Worlds');
+  const search = kind === 'search';
+  return pr01Scenario(gameId, {
+    id: search ? 'silver-surfer-viewer-search-galactus' : 'silver-surfer-viewer-attack-that-player',
+    title: search
+      ? 'Silver Surfer: search your library for Galactus when it enters'
+      : 'Silver Surfer: the target creature must attack the player it damaged',
+    instructions: search
+      ? [
+          'Silver Surfer is in your hand with five Forests on your battlefield, and Galactus, Devourer of Worlds is in your library. Cast Silver Surfer and let it resolve.',
+          'Accept its enters trigger and put Galactus into your hand: the card is revealed and your library is shuffled.',
+        ]
+      : [
+          'Silver Surfer is on your battlefield and P2 controls Lab Ox (4/4). Pass priority to the declare attackers step and attack P3 with Silver Surfer, then confirm.',
+          'Its combat damage trigger asks for a target creature: choose Lab Ox. On P2’s turn Lab Ox must attack P3, the player Silver Surfer damaged, and not you.',
+        ],
+    expectedOutcome: search
+      ? 'Galactus, Devourer of Worlds moved from your library to your hand (revealed) and the library was shuffled.'
+      : 'Silver Surfer hit P3 for 4. Lab Ox was required to attack P3 on P2’s turn and hit it for 4: P3 is at 32 and you are at 40.',
+    oracleSha256: surfer.sha256,
+    clauseIds: search ? ['silver-surfer-search-galactus'] : ['silver-surfer-attack-that-player'],
+    decks: {
+      P1: search
+        ? [surfer.card, FOREST, FOREST, FOREST, FOREST, FOREST, galactus.card, LAB_SERVO]
+        : [surfer.card, FOREST, FOREST],
+      P2: search ? PR01_FILLER : [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: search
+      ? {
+          hand: [{ playerId: 'P1', cardNames: ["Silver Surfer, Galactus's Herald"] }],
+          battlefield: [
+            { playerId: 'P1', cardNames: ['Forest', 'Forest', 'Forest', 'Forest', 'Forest'] },
+          ],
+        }
+      : {
+          hand: [],
+          battlefield: [
+            { playerId: 'P1', cardNames: ["Silver Surfer, Galactus's Herald"] },
+            { playerId: 'P2', cardNames: ['Lab Ox'] },
+          ],
+          continueThroughCombat: true,
+          continueToPostcombatMain: true,
+          continueToEndStep: true,
+          continueThroughNextTurn: true,
+        },
+    ...(search
+      ? {}
+      : {
+          decisionProviderOverrides: {
+            P2: attackPlayerWithEverything('P1'),
+            P3: neverBlocks(),
+            P4: neverBlocks(),
+          },
+        }),
+  });
+}
+
+function tauntScenario(gameId: GameId): CardTestScenario {
+  const taunt = pinnedFrom(COVERAGE_PR07, 'Taunt from the Rampart');
+  return pr01Scenario(gameId, {
+    id: 'taunt-viewer-goad-and-cant-block',
+    title:
+      "Taunt from the Rampart: opponents' creatures are goaded and can't block until your next turn",
+    instructions: [
+      'Taunt from the Rampart is in your hand with a Mountain, a Plains and three Forests on your battlefield, along with Lab Bird (1/1 flier). P2 controls Lab Ox (4/4).',
+      'Cast Taunt and let it resolve: Lab Ox is goaded and can’t block until your next turn. Then attack P2 with Lab Bird and confirm: Lab Ox is not offered as a blocker.',
+      'On P2’s turn Lab Ox must attack, and it can’t attack you: it attacks P3.',
+    ],
+    expectedOutcome:
+      'Lab Bird was unblocked: P2 is at 39. On P2’s turn the goaded Lab Ox attacked P3 for 4 (P3 is at 36) and you are at 40.',
+    oracleSha256: taunt.sha256,
+    clauseIds: ['taunt-goad-and-cant-block'],
+    decks: {
+      P1: [taunt.card, LAB_BIRD, MOUNTAIN, PLAINS, FOREST, FOREST, FOREST],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Taunt from the Rampart'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Bird', 'Mountain', 'Plains', 'Forest', 'Forest', 'Forest'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+      continueToPostcombatMain: true,
+      continueToEndStep: true,
+      continueThroughNextTurn: true,
+    },
+    decisionProviderOverrides: {
+      P2: attackPlayerWithEverything('P1'),
+      P3: neverBlocks(),
+      P4: neverBlocks(),
+    },
+  });
+}
+
+function hexmarkScenario(gameId: GameId): CardTestScenario {
+  const hexmark = pinnedFrom(COVERAGE_PR07, 'Hexmark Destroyer');
+  return pr01Scenario(gameId, {
+    id: 'hexmark-viewer-needs-six-blockers',
+    title: 'Hexmark Destroyer: three blockers are not enough',
+    instructions: [
+      'Hexmark Destroyer is on your battlefield. P2 controls three Lab Servos and blocks with everything it can.',
+      'Pass priority to the declare attackers step and attack P2 with Hexmark Destroyer, then confirm.',
+    ],
+    expectedOutcome:
+      'Three blockers are fewer than the six it needs, so P2’s block was rejected and the engine dropped it: Hexmark Destroyer was unblocked and P2 took 6 and is at 34, with all three Servos alive.',
+    oracleSha256: hexmark.sha256,
+    clauseIds: ['hexmark-destroyer-six-blockers'],
+    decks: {
+      P1: [hexmark.card, FOREST, FOREST],
+      P2: [LAB_SERVO, LAB_SERVO, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Hexmark Destroyer'] },
+        { playerId: 'P2', cardNames: ['Lab Servo', 'Lab Servo', 'Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: blockWithEverything },
+  });
+}
+
+function championScenario(gameId: GameId): CardTestScenario {
+  const champion = pinnedFrom(COVERAGE_PR07, 'Champion of Lambholt');
+  return pr01Scenario(gameId, {
+    id: 'champion-of-lambholt-viewer-weaker-cant-block',
+    title: "Champion of Lambholt: weaker creatures can't block your creatures",
+    instructions: [
+      'Champion of Lambholt (a 3/3 with two +1/+1 counters) and Lab Servo (1/1) are on your battlefield. P2 controls Lab Ox (4/4) and Lab Bird (1/1) and blocks with everything it is offered.',
+      'Pass priority to the declare attackers step and attack P2 with Lab Servo, leaving the Champion at home, and confirm. Lab Bird has less power than the Champion, so it can’t block.',
+    ],
+    expectedOutcome:
+      'Only Lab Ox could block Lab Servo, and it killed it. Lab Bird, with power less than the Champion’s 3, was never offered the block and is untouched.',
+    oracleSha256: champion.sha256,
+    clauseIds: ['champion-of-lambholt-weaker-cant-block'],
+    decks: {
+      P1: [champion.card, LAB_SERVO, FOREST, FOREST],
+      P2: [LAB_OX, LAB_BIRD, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Champion of Lambholt'], counters: { '+1/+1': 2 } },
+        { playerId: 'P1', cardNames: ['Lab Servo'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Bird'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: blockWithEverything },
+  });
+}
+
+function pramikonScenario(gameId: GameId): CardTestScenario {
+  const pramikon = pinnedFrom(COVERAGE_PR07, 'Pramikon, Sky Rampart');
+  return pr01Scenario(gameId, {
+    id: 'pramikon-viewer-nearest-opponent',
+    title:
+      'Pramikon, Sky Rampart: each player may attack only the nearest opponent in the chosen direction',
+    instructions: [
+      'Pramikon is in your hand with an Island, a Mountain and a Plains on your battlefield, next to Lab Servo (1/1). The seats are P1 (you), P2, P3 and P4.',
+      'Cast Pramikon and choose Right as it enters. Pass priority to the declare attackers step: Lab Servo may attack only P4, the nearest opponent to your right. Attack P4 with it and confirm.',
+    ],
+    expectedOutcome:
+      'Lab Servo was offered only P4 (not P2 or P3) and hit it for 1: P4 is at 39 and P2 and P3 are untouched at 40.',
+    oracleSha256: pramikon.sha256,
+    clauseIds: ['pramikon-choose-direction', 'pramikon-attack-only-nearest'],
+    decks: {
+      P1: [pramikon.card, LAB_SERVO, ISLAND, MOUNTAIN, PLAINS],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Pramikon, Sky Rampart'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Island', 'Mountain', 'Plains', 'Lab Servo'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function teyoScenario(gameId: GameId): CardTestScenario {
+  const teyo = pinnedFrom(COVERAGE_PR07, 'Teyo, Geometric Tactician');
+  return pr01Scenario(gameId, {
+    id: 'teyo-viewer-minus-two-direction',
+    title:
+      'Teyo, Geometric Tactician: the -2 limits attacks to the nearest opponent in the chosen direction',
+    instructions: [
+      'Teyo, Geometric Tactician and Lab Servo (1/1) are on your battlefield. The seats are P1 (you), P2, P3 and P4.',
+      'Activate Teyo’s −2 and choose Right. Pass priority to the declare attackers step: Lab Servo may attack only P4, the nearest opponent to your right. Attack P4 with it and confirm.',
+    ],
+    expectedOutcome:
+      'Lab Servo was offered only P4 (not P2 or P3) and hit it for 1: P4 is at 39 and P2 and P3 are untouched at 40.',
+    oracleSha256: teyo.sha256,
+    clauseIds: ['teyo-minus-two-direction'],
+    decks: {
+      P1: [teyo.card, LAB_SERVO, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Teyo, Geometric Tactician', 'Lab Servo'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function teyoDrawScenario(gameId: GameId): CardTestScenario {
+  const teyo = pinnedFrom(COVERAGE_PR07, 'Teyo, Geometric Tactician');
+  return pr01Scenario(gameId, {
+    id: 'teyo-viewer-wall-and-plus-one',
+    title:
+      'Teyo, Geometric Tactician: the Wall token and the +1 draw for you and a target opponent',
+    instructions: [
+      'Teyo is in your hand with a Plains and two Forests on your battlefield. Your hand and P2’s hand are otherwise empty, and your library holds only Lab Servos so the drawn card is not a land.',
+      'Cast Teyo: a 0/4 Wall token with defender and flying arrives. Then activate Teyo’s +1 targeting P2.',
+    ],
+    expectedOutcome:
+      'The Wall token is on your battlefield, and you and P2 each drew one card (one card in each hand) while P3 and P4 drew none.',
+    oracleSha256: teyo.sha256,
+    clauseIds: ['teyo-etb-wall', 'teyo-plus-one-draw'],
+    decks: {
+      P1: [teyo.card, PLAINS, FOREST, FOREST, LAB_SERVO, LAB_SERVO],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Teyo, Geometric Tactician'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Plains', 'Forest', 'Forest'] }],
+    },
+  });
+}
+
+function stalkerScenario(gameId: GameId): CardTestScenario {
+  const stalker = pinnedFrom(COVERAGE_PR07, 'Triarch Stalker');
+  return pr01Scenario(gameId, {
+    id: 'triarch-stalker-viewer-menace',
+    title: 'Triarch Stalker: creatures attacking the chosen player have menace',
+    instructions: [
+      'Triarch Stalker and Lab Servo (1/1) are on your battlefield. P2 controls one Lab Servo and blocks with everything it can.',
+      'Pass priority to the beginning of combat and choose P2 for Targeting Relay. Then attack P2 with your Lab Servo, leaving the Stalker home, and confirm.',
+    ],
+    expectedOutcome:
+      'Your attacking Lab Servo had menace, so P2’s lone Lab Servo could not block it alone: the block was rejected and dropped, your Servo was unblocked and P2 took 1 and is at 39, with its Servo alive.',
+    oracleSha256: stalker.sha256,
+    clauseIds: ['triarch-stalker-choose-opponent', 'triarch-stalker-menace'],
+    decks: {
+      P1: [stalker.card, LAB_SERVO, SWAMP, SWAMP],
+      P2: [LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Triarch Stalker', 'Lab Servo'] },
+        { playerId: 'P2', cardNames: ['Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: blockWithEverything },
+  });
+}
+
+function gambitScenario(gameId: GameId): CardTestScenario {
+  const gambit = pinnedFrom(COVERAGE_PR07, "Illusionist's Gambit");
+  return pr01Scenario(gameId, {
+    id: 'illusionists-gambit-viewer-remove-and-redirect',
+    title:
+      "Illusionist's Gambit: remove the attackers, then an additional combat they cannot use against you",
+    instructions: [
+      "It is P2's turn. Illusionist's Gambit is in your hand with four Islands on your battlefield. P2 controls Lab Ox and Lab Servo and attacks you with both.",
+      'Pass priority until the declare blockers step, when you may cast Illusionist’s Gambit, and cast it. Then keep passing priority through the additional combat.',
+    ],
+    expectedOutcome:
+      'The attackers were removed from combat and untapped before any damage, so you are still at 40. In the additional combat Lab Ox and Lab Servo had to attack but could not attack you, so they hit P3: P3 is at 35.',
+    oracleSha256: gambit.sha256,
+    clauseIds: [
+      'illusionists-gambit-cast-timing',
+      'illusionists-gambit-remove-untap',
+      'illusionists-gambit-extra-combat-requirement',
+    ],
+    decks: {
+      P1: [gambit.card, ISLAND, ISLAND, ISLAND, ISLAND],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [{ playerId: 'P1', cardNames: ["Illusionist's Gambit"] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Island', 'Island', 'Island', 'Island'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackP1WithEverything },
+  });
+}
+
+function moraugScenario(gameId: GameId): CardTestScenario {
+  const moraug = pinnedFrom(COVERAGE_PR07, 'Moraug, Fury of Akoum');
+  return pr01Scenario(gameId, {
+    id: 'moraug-viewer-landfall-extra-combat',
+    title:
+      'Moraug, Fury of Akoum: landfall adds a combat phase and untaps your creatures, and each attack grows them',
+    instructions: [
+      'Moraug (6/6) and a tapped Lab Ox (4/4) are on your battlefield and a Forest is in your hand.',
+      'Play the Forest in your first main phase: landfall adds an additional combat phase right after it, and at its beginning your creatures untap.',
+      'Pass priority to the declare attackers step and attack P2 with Moraug and Lab Ox, then confirm.',
+    ],
+    expectedOutcome:
+      'The additional combat came before the regular one and untapped Lab Ox. Each has attacked once this turn, so Moraug hit for 7 and Lab Ox for 5: P2 is at 28. Both are tapped for the regular combat, so no second declaration was offered.',
+    oracleSha256: moraug.sha256,
+    clauseIds: ['moraug-pump-per-attack', 'moraug-landfall-extra-combat'],
+    decks: {
+      P1: [moraug.card, LAB_OX, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Forest'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Moraug, Fury of Akoum'] },
+        { playerId: 'P1', cardNames: ['Lab Ox'], tapped: true },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function sirensCallScenario(gameId: GameId): CardTestScenario {
+  const siren = pinnedFrom(COVERAGE_PR07, "Siren's Call");
+  return pr01Scenario(gameId, {
+    id: 'sirens-call-viewer-attack-or-die',
+    title:
+      "Siren's Call: the active player's creatures must attack, and the ones that did not are destroyed",
+    instructions: [
+      "It is P2's turn, before combat. Siren's Call is in your hand with an Island on your battlefield. P2 controls Lab Ox, Lab Servo and a tapped Lab Bird, and attacks P3 with everything it can.",
+      "Cast Siren's Call now, before attackers are declared, and pass priority through the turn to P2's end step.",
+    ],
+    expectedOutcome:
+      'Lab Ox and Lab Servo had to attack and did (P3 took 5 and is at 35). At the end step Lab Bird, which was tapped and did not attack, was destroyed; Lab Ox and Lab Servo, which attacked, were not.',
+    oracleSha256: siren.sha256,
+    clauseIds: [
+      'sirens-call-cast-timing',
+      'sirens-call-must-attack',
+      'sirens-call-end-step-destruction',
+    ],
+    decks: {
+      P1: [siren.card, ISLAND, ISLAND],
+      P2: [LAB_OX, LAB_SERVO, LAB_BIRD, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [{ playerId: 'P1', cardNames: ["Siren's Call"] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Island'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+        { playerId: 'P2', cardNames: ['Lab Bird'], tapped: true },
+      ],
+      continueThroughCombat: true,
+      continueToEndStep: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P3') },
+  });
+}
+
+/** An opponent's seat that casts the first spell it can, then proposes attacking with one creature only. */
+const castThenAttackWithOne: DecisionProvider = {
+  decide(request) {
+    const cast = request.legalActions.find((action) => action.type === 'castSpell');
+    if (cast !== undefined) return { requestId: request.requestId, actionId: cast.id };
+    const attack = request.legalActions.find((action) =>
+      action.description.startsWith('Declare attackers'),
+    );
+    if (attack !== undefined) {
+      return {
+        requestId: request.requestId,
+        actionId: attack.id,
+        targets: (attack.targets ?? []).map((slot, index) => ({
+          slot: slot.slot,
+          choice:
+            index === 0 && slot.options.includes('P1')
+              ? 'P1'
+              : slot.options.includes('__no_attack__')
+                ? '__no_attack__'
+                : (slot.options[0] as string),
+        })),
+      };
+    }
+    const pass = request.legalActions.find((action) => action.type === 'pass');
+    return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+  },
+};
+
+function warsTollScenario(gameId: GameId): CardTestScenario {
+  const toll = pinnedFrom(COVERAGE_PR07, "War's Toll");
+  return pr01Scenario(gameId, {
+    id: 'wars-toll-viewer-taps-lands-and-forces-attack',
+    title:
+      "War's Toll: an opponent's mana taps all their lands, and an attack by one creature is an attack by all",
+    instructions: [
+      "War's Toll is on your battlefield. It is P2's turn: P2 has three Forests, Lab Ox, Lab Servo and Lab Green Bear in hand. It casts the Bear, then proposes attacking you with just one creature.",
+      'Keep passing priority and watch the log: the Forest P2 taps for the Bear triggers War’s Toll, and the attack with one creature is not allowed to stand alone.',
+    ],
+    expectedOutcome:
+      'P2 tapped one Forest for mana and War’s Toll tapped all three. P2’s attack with one creature (Lab Ox, at you) was rejected for leaving Lab Servo home, so the engine added it, aimed at P3: you took 4 and are at 36, and P3 took 1 and is at 39. The summoning-sick Lab Green Bear was not required to attack.',
+    oracleSha256: toll.sha256,
+    clauseIds: ['wars-toll-taps-lands', 'wars-toll-attack-with-all'],
+    decks: {
+      P1: [toll.card, FOREST, FOREST],
+      P2: [LAB_OX, LAB_SERVO, LAB_GREEN_BEAR, FOREST, FOREST, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [{ playerId: 'P2', cardNames: ['Lab Green Bear'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ["War's Toll"] },
+        { playerId: 'P2', cardNames: ['Forest', 'Forest', 'Forest', 'Lab Ox', 'Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: castThenAttackWithOne },
+  });
+}
+
+/** An opponent's seat that draws when offered the optional draw, otherwise attacks P1 with everything. */
+const drawThenAttackP1: DecisionProvider = {
+  decide(request) {
+    const draw = request.legalActions.find((action) => action.description === 'Draw a card');
+    if (draw !== undefined) return { requestId: request.requestId, actionId: draw.id };
+    return attackP1WithEverything.decide(request);
+  },
+};
+
+function willieScenario(gameId: GameId): CardTestScenario {
+  const willie = pinnedFrom(COVERAGE_PR07, 'Willie Lumpkin, Postman');
+  return pr01Scenario(gameId, {
+    id: 'willie-lumpkin-viewer-draw-then-cant-attack',
+    title:
+      'Willie Lumpkin: both players draw, then the one who drew cannot attack you on their next turn',
+    instructions: [
+      'Willie Lumpkin (1/3, can’t be blocked) is on your battlefield; P2 controls Lab Ox (4/4).',
+      'Pass priority to the declare attackers step and attack P2 with Willie, then confirm. You draw a card and P2 accepts its optional draw.',
+      'Keep passing priority through P2’s next turn: Lab Ox may not attack you, so it attacks P3 instead.',
+    ],
+    expectedOutcome:
+      'Willie dealt 1 to P2 (P2 is at 39), you and P2 each drew a card, and on P2’s next turn Lab Ox was not offered you as a defender: it hit P3 for 4 (P3 is at 36) and you are still at 40.',
+    oracleSha256: willie.sha256,
+    clauseIds: ['willie-lumpkin-draws-and-restricts'],
+    decks: {
+      P1: [willie.card, FOREST, FOREST, FOREST],
+      P2: [LAB_OX, FOREST, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Willie Lumpkin, Postman'] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+      continueThroughNextCombat: true,
+    },
+    decisionProviderOverrides: { P2: drawThenAttackP1 },
+  });
+}
+
+/**
+ * The seat that owns Fight or Flight or has the creatures in the Fight or Flight scenarios: it
+ * puts the named creatures in pile 1 (all others in pile 2), takes pile 1 when it chooses, and
+ * otherwise attacks `defender` with everything it is offered.
+ */
+function pileScript(pileOne: string[], defender: PlayerId): DecisionProvider {
+  const attack = attackPlayerWithEverything(defender);
+  return {
+    decide(request) {
+      const separating = request.prompt.match(/^Put (.*) in a pile\.$/);
+      if (separating !== null) {
+        const wanted = pileOne.includes(separating[1]!) ? 'Put it in pile 1' : 'Put it in pile 2';
+        const action = request.legalActions.find((candidate) => candidate.description === wanted);
+        if (action !== undefined) return { requestId: request.requestId, actionId: action.id };
+      }
+      const choosing = request.legalActions.find((candidate) =>
+        candidate.description.startsWith('Attack with pile 1'),
+      );
+      if (choosing !== undefined) return { requestId: request.requestId, actionId: choosing.id };
+      return attack.decide(request);
+    },
+  };
+}
+
+function fightOrFlightSeparateScenario(gameId: GameId): CardTestScenario {
+  const fight = pinnedFrom(COVERAGE_PR07, 'Fight or Flight');
+  return pr01Scenario(gameId, {
+    id: 'fight-or-flight-viewer-separate',
+    title:
+      'Fight or Flight: you separate P2’s creatures into two piles and only the pile P2 chooses can attack',
+    instructions: [
+      'It is P2’s turn. You control Fight or Flight; P2 controls Lab Ox and Lab Servo.',
+      'Pass priority to the beginning of combat. Put Lab Ox in pile 2 and Lab Servo in pile 1 when asked.',
+      'P2 chooses pile 1 and attacks you with what it can.',
+    ],
+    expectedOutcome:
+      'Only Lab Servo, in the chosen pile, attacked: you took 1 and are at 39. Lab Ox, in the other pile, could not attack and stayed untapped.',
+    oracleSha256: fight.sha256,
+    clauseIds: ['fight-or-flight-separate-and-choose', 'fight-or-flight-pile-attacks'],
+    decks: {
+      P1: [fight.card, FOREST, FOREST],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      currentTurnPlayer: 'P2',
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Fight or Flight'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: pileScript(['Lab Servo'], 'P1') },
+  });
+}
+
+function fightOrFlightChooseScenario(gameId: GameId): CardTestScenario {
+  const fight = pinnedFrom(COVERAGE_PR07, 'Fight or Flight');
+  return pr01Scenario(gameId, {
+    id: 'fight-or-flight-viewer-choose',
+    title: 'Fight or Flight: P2 separates your creatures and only the pile you choose can attack',
+    instructions: [
+      'It is your turn. You control Lab Ox and Lab Servo; P2 controls Fight or Flight.',
+      'Pass priority to the beginning of combat. P2 puts Lab Ox in pile 1 and Lab Servo in pile 2, and you choose a pile.',
+      'Choose pile 2, then declare attackers: only Lab Servo can attack.',
+    ],
+    expectedOutcome:
+      'Lab Ox, in the pile you did not choose, was not offered as an attacker; Lab Servo attacked P2, which is at 39.',
+    oracleSha256: fight.sha256,
+    clauseIds: ['fight-or-flight-separate-and-choose', 'fight-or-flight-pile-attacks'],
+    decks: {
+      P1: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P2: [fight.card, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox', 'Lab Servo'] },
+        { playerId: 'P2', cardNames: ['Fight or Flight'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: pileScript(['Lab Ox'], 'P1') },
+  });
+}
+
+/** An opponent's seat that sends everything it is offered at `defender` and blocks nothing it need not. */
+const attackOnlyAndNeverBlock = (defender: PlayerId): DecisionProvider => {
+  const attack = attackPlayerWithEverything(defender);
+  return {
+    decide(request) {
+      const block = request.legalActions.find((action) =>
+        action.description.startsWith('Declare blockers'),
+      );
+      if (block !== undefined)
+        return {
+          requestId: request.requestId,
+          actionId: block.id,
+          targets: (block.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: slot.options.includes('__no_block__')
+              ? '__no_block__'
+              : (slot.options[0] as string),
+          })),
+        };
+      return attack.decide(request);
+    },
+  };
+};
+
+function masterWarcraftChooseScenario(gameId: GameId): CardTestScenario {
+  const warcraft = pinnedFrom(COVERAGE_PR07, 'Master Warcraft');
+  return pr01Scenario(gameId, {
+    id: 'master-warcraft-viewer-choose-attackers-and-blocks',
+    title:
+      'Master Warcraft: you choose which of P2’s creatures attack, and how P3’s creatures block them',
+    instructions: [
+      'It is P2’s turn, before combat. Master Warcraft is in your hand with four lands on your battlefield. P2 controls Lab Ox and Lab Servo; P3 controls Lab Ox.',
+      'Cast Master Warcraft before attackers are declared and pass priority to the declare attackers step.',
+      'Choose only Lab Servo to attack. P2 then chooses what it attacks (P3). Then block it with P3’s Lab Ox.',
+    ],
+    expectedOutcome:
+      'P2’s Lab Ox stayed home. Lab Servo, the creature you chose, attacked P3 and was blocked by P3’s Lab Ox, which you chose: it died and P3 stayed at 40 life.',
+    oracleSha256: warcraft.sha256,
+    clauseIds: [
+      'master-warcraft-cast-timing',
+      'master-warcraft-attackers',
+      'master-warcraft-blockers',
+    ],
+    decks: {
+      P1: [warcraft.card, MOUNTAIN, MOUNTAIN, FOREST, FOREST],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: [LAB_OX, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [{ playerId: 'P1', cardNames: ['Master Warcraft'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Mountain', 'Mountain', 'Forest', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+        { playerId: 'P3', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackOnlyAndNeverBlock('P3') },
+  });
+}
+
+/** The seat that casts Master Warcraft when it can, then chooses Lab Servo alone to attack. */
+const warcraftCasterChoosingServo: DecisionProvider = {
+  decide(request) {
+    const cast = request.legalActions.find(
+      (action) => action.type === 'castSpell' && action.description.includes('Master Warcraft'),
+    );
+    if (cast !== undefined) return { requestId: request.requestId, actionId: cast.id };
+    const choose = request.legalActions.find(
+      (action) => action.type === 'attackDeclaration' && action.data?.['chooseAttackers'] === true,
+    );
+    if (choose !== undefined) {
+      const subjects = request.presentation?.attackDeclaration?.subjects ?? [];
+      return {
+        requestId: request.requestId,
+        actionId: choose.id,
+        targets: (choose.targets ?? []).map((slot) => ({
+          slot: slot.slot,
+          choice:
+            subjects[slot.slot]?.name === 'Lab Servo' || !slot.options.includes('__no_attack__')
+              ? '__attacks__'
+              : '__no_attack__',
+        })),
+      };
+    }
+    return attackOnlyAndNeverBlock('P1').decide(request);
+  },
+};
+
+function masterWarcraftAssignScenario(gameId: GameId): CardTestScenario {
+  const warcraft = pinnedFrom(COVERAGE_PR07, 'Master Warcraft');
+  return pr01Scenario(gameId, {
+    id: 'master-warcraft-viewer-assign-chosen-attackers',
+    title:
+      'Master Warcraft: P2 chooses which of your creatures attack and you choose what they attack',
+    instructions: [
+      'It is your turn. You control Lab Ox and Lab Servo; P2 holds Master Warcraft and has four lands.',
+      'Pass priority: P2 casts Master Warcraft before attackers are declared. Pass priority again to let it resolve and move to combat.',
+      'P2 chooses that only Lab Servo attacks. You then choose what it attacks: send it at P3.',
+    ],
+    expectedOutcome:
+      'Only Lab Servo attacked (P2 chose it), at the player you picked: P3 took 1 and is at 39. Lab Ox stayed home.',
+    oracleSha256: warcraft.sha256,
+    clauseIds: [
+      'master-warcraft-cast-timing',
+      'master-warcraft-attackers',
+      'master-warcraft-blockers',
+    ],
+    decks: {
+      P1: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P2: [warcraft.card, MOUNTAIN, MOUNTAIN, FOREST, FOREST],
+      P3: [LAB_OX, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P2', cardNames: ['Master Warcraft'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox', 'Lab Servo'] },
+        { playerId: 'P2', cardNames: ['Mountain', 'Mountain', 'Forest', 'Forest'] },
+        { playerId: 'P3', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: warcraftCasterChoosingServo },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
+  ...PR09_SCENARIO_IDS,
+  ...PR09_LIBRARY_SCENARIOS.map((scenario) => scenario.id),
+  ...PR09_PERMANENT_SCENARIOS.map((scenario) => scenario.id),
+  ...PR09_CHOICE_SCENARIOS.map((scenario) => scenario.id),
+  ...PR08_REMAINING_SCENARIO_IDS,
+  ...AETHERSPOUTS_SCENARIO_IDS,
+  ...BOSEIJU_SCENARIO_IDS,
+  ...OLORIN_SCENARIO_IDS,
+  ...WINDS_OF_ABANDON_SCENARIO_IDS,
+  ...ROTATING_SURVIVOR_SCENARIO_IDS,
+  ...PR08_MODAL_PLAYER_SCENARIO_IDS,
+  ...PR08_SCENARIO_IDS,
+  ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
+  ...WHITE_BLACK_HAND_SCENARIO_IDS,
+  ...WHITE_BLACK_ENTRY_SCENARIO_IDS,
+  ...WHITE_BLACK_DISCARD_EXTENSION_SCENARIO_IDS,
+  ...WHITE_BLACK_DEFENDER_SCENARIO_IDS,
+  ...WHITE_BLACK_SPELL_SCENARIO_IDS,
+  ...WHITE_BLACK_COUNTER_CLASS_SCENARIO_IDS,
+  ...WHITE_BLACK_FINAL_SCENARIO_IDS,
+  ...WHITE_BLACK_CONTROL_PERCH_SCENARIO_IDS,
+  ...WHITE_BLACK_PROTECTION_SCENARIO_IDS,
+  ...WHITE_BLACK_DISCARD_CORE_SCENARIO_IDS,
+  ...WHITE_BLACK_GRAVEYARD_SCENARIO_IDS,
+  ...WHITE_BLACK_CONTROL_STAX_SCENARIO_IDS,
+  ...WHITE_BLACK_REPLACEMENTS_SCENARIO_IDS,
+  ...WHITE_BLACK_CONTROL_LILIANA_SCENARIO_IDS,
+  ...WHITE_BLACK_REMAINING_COMBAT_SCENARIO_IDS,
+  ...WHITE_BLACK_TERGRID_SCENARIO_IDS,
+  ...WHITE_BLACK_HAND_LIMIT_SCENARIO_IDS,
+  ...WHITE_BLACK_KEYWORD_SCENARIO_IDS,
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
   ...ZONE_CHANGE_TRIGGER_SCENARIO_IDS,
+  ...COMBAT_TRIGGER_SCENARIO_IDS,
   'mosswort-viewer-free-adventure-face',
   'mosswort-viewer-free-cast-stack',
   'mosswort-viewer-land-play-limit',
@@ -8815,6 +15339,146 @@ export const CARD_TEST_SCENARIO_IDS = [
   'kambal-viewer-opponent-noncreature-spell',
   'gleeful-arsonist-viewer-burn-and-undying',
   'shard-of-the-nightbringer-viewer-cast-drain',
+  'sautekh-immortal-viewer-flash-counters',
+  'iron-apprentice-viewer-dies-moves-counters',
+  'vigean-graftmage-viewer-graft-and-untap',
+  'pensive-professor-viewer-increment-draw',
+  'elite-scaleguard-viewer-bolster-and-tap',
+  'forgotten-ancient-viewer-cast-and-move',
+  'captain-america-skybound-viewer-battalion',
+  'finneas-ace-archer-viewer-counters-then-draw',
+  'kutzil-malamet-exemplar-viewer-above-base-draw',
+  'the-fantasticar-viewer-fourth-noncreature',
+  'unbreakable-formation-viewer-addendum-main-phase',
+  'first-family-viewer-colors-draw-gain',
+  'call-forth-the-tempest-viewer-other-spells-damage',
+  'crystal-inhuman-princess-viewer-colors-damage',
+  'rumor-gatherer-viewer-scry-then-draw',
+  'belladonna-took-viewer-three-tokens',
+  'lockjaw-viewer-counter-and-unblockable',
+  'the-thing-viewer-counters-and-double',
+  'aetheric-amplifier-viewer-double-counters',
+  'cranial-plating-viewer-instant-attach',
+  'cranial-plating-viewer-spell-on-stack-artifact-count',
+  'mask-of-memory-viewer-draw-discard',
+  'resurrection-orb-viewer-lifelink-and-return',
+  'sunforger-viewer-unattach-search-and-cast',
+  'screams-from-within-viewer-return-and-enchant',
+  'ghoulish-impetus-viewer-return-at-end-step',
+  'ghoulish-impetus-viewer-goaded-attack',
+  'ghoulish-impetus-viewer-goaded-opponent-attack',
+  'gift-of-immortality-viewer-owner-return-then-aura',
+  'ajanis-chosen-viewer-aura-moves-to-cat',
+  'ajanis-chosen-viewer-enchantment-makes-cat',
+  'shielded-by-faith-viewer-attach-to-entering-creature',
+  'shielded-by-faith-viewer-opponent-creature-enters',
+  'forum-filibuster-viewer-inkling-and-aura',
+  'forum-filibuster-viewer-equipment-return',
+  'karametras-favor-viewer-granted-mana-pays-spell',
+  'redemption-arc-viewer-exile-enchanted-creature',
+  'redemption-arc-viewer-indestructible-goaded-attack',
+  'redemption-arc-viewer-goaded-opponent-attack',
+  'fallen-ideal-viewer-sacrifice-then-return',
+  'fallen-ideal-viewer-flying-attack',
+  'kor-spiritdancer-viewer-aura-cast-draw-and-pump',
+  'kor-spiritdancer-viewer-second-aura-grows-it',
+  'hateful-eidolon-viewer-enchanted-creature-dies-draw',
+  'hateful-eidolon-viewer-two-auras-draw-two',
+  'hateful-eidolon-viewer-combat-lifelink',
+  'martial-impetus-viewer-attack-pump',
+  'martial-impetus-viewer-goaded-opponent-attack',
+  'killian-decisive-mentor-viewer-tap-goad-and-attack-draw',
+  'killian-decisive-mentor-viewer-goaded-opponent-attack',
+  'angelic-destiny-viewer-angel-then-return',
+  'angelic-destiny-viewer-flying-first-strike-angel-combat',
+  'sheltered-by-ghosts-viewer-exile-and-lifelink',
+  'sheltered-by-ghosts-viewer-ward-counters-opponent-spell',
+  'eldrazi-conscription-viewer-annihilator',
+  'eldrazi-conscription-viewer-trample',
+  'curse-of-bounty-viewer-untap-on-attack',
+  'curse-of-bounty-viewer-opponent-attacks',
+  'eidolon-of-countless-battles-viewer-bestow',
+  'eidolon-of-countless-battles-viewer-creature-and-aura-counts',
+  'animate-dead-viewer-reanimate',
+  'animate-dead-viewer-aura-leaves-sacrifices',
+  'dragon-tempest-viewer-dragon-deals-damage',
+  'scourge-of-valkas-viewer-dragons-deal-damage',
+  'tyrants-familiar-viewer-lieutenant-attack',
+  'brash-taunter-viewer-fight-and-reflect',
+  'tomb-blade-viewer-sacrifice-or-lose',
+  'duelists-heritage-viewer-double-strike-attacker',
+  'thunderbreak-regent-viewer-opponent-targets-dragon',
+  'invisible-woman-viewer-pay-pump-unblockable',
+  'flameblast-dragon-viewer-target-then-pay-x',
+  'territorial-aetherkite-viewer-pay-energy-damage',
+  'arcbond-viewer-reflect-damage',
+  'thundermaw-hellkite-viewer-damage-and-tap-fliers',
+  'backlash-viewer-tap-and-reflect',
+  'guard-gomazoa-viewer-blocks-and-takes-no-damage',
+  'selfless-squire-viewer-prevent-and-grow',
+  'deflecting-palm-viewer-chosen-source-reflects',
+  'comeuppance-viewer-prevent-and-reflect',
+  'michiko-konda-viewer-damage-makes-opponent-sacrifice',
+  'delirium-viewer-tap-damage-and-prevent',
+  'planeswalker-attack-viewer-loyalty',
+  'firemane-commando-viewer-own-attack',
+  'firemane-commando-viewer-other-attack-elsewhere',
+  'firemane-commando-viewer-other-attack-at-you',
+  'breena-viewer-attack-more-life',
+  'ever-watching-threshold-viewer-attacked-you',
+  'ever-watching-threshold-viewer-attacked-planeswalker',
+  'ever-watching-threshold-viewer-attacked-elsewhere',
+  'mangara-viewer-two-attackers',
+  'mangara-viewer-one-attacker',
+  'tomik-viewer-affinity-for-planeswalkers',
+  'tomik-viewer-attack-drain-and-draw',
+  'frontier-warmonger-viewer-menace',
+  'tenuous-truce-viewer-end-step',
+  'tenuous-truce-viewer-you-attack',
+  'tenuous-truce-viewer-they-attack',
+  'wall-of-tears-viewer-blocked-creature-returns',
+  'human-torch-viewer-keywords-and-damage-copy',
+  'promise-of-loyalty-viewer-vowed-creature-cant-attack-you',
+  'lightning-runner-viewer-pay-energy-extra-combat',
+  'firkraag-viewer-dragon-attack-goads',
+  'firkraag-viewer-goaded-damage-draws',
+  'eriette-viewer-enchanted-cant-attack-you',
+  'eriette-viewer-end-step-drain',
+  'rite-of-the-raging-storm-viewer-named-cant-attack-you',
+  'rite-of-the-raging-storm-viewer-upkeep-token',
+  'nils-viewer-end-step-counters',
+  'nils-viewer-counters-attack-tax',
+  'combat-calligrapher-viewer-inkling-cant-attack-you',
+  'combat-calligrapher-viewer-attacker-creates-inkling',
+  'goblin-spymaster-viewer-opponent-end-step-token',
+  'toby-viewer-beast-cant-block-alone',
+  'toby-viewer-flying-with-four-tokens',
+  'life-of-the-party-viewer-attack-pump',
+  'life-of-the-party-viewer-goaded-copies',
+  'kardur-viewer-must-attack-not-you',
+  'kardur-viewer-attacker-dies-drain',
+  'galactus-viewer-attacks-most-life',
+  'galactus-viewer-herald-lifts-requirement',
+  'silver-surfer-viewer-search-galactus',
+  'silver-surfer-viewer-attack-that-player',
+  'taunt-viewer-goad-and-cant-block',
+  'hexmark-viewer-needs-six-blockers',
+  'champion-of-lambholt-viewer-weaker-cant-block',
+  'pramikon-viewer-nearest-opponent',
+  'teyo-viewer-minus-two-direction',
+  'teyo-viewer-wall-and-plus-one',
+  'triarch-stalker-viewer-menace',
+  'illusionists-gambit-viewer-remove-and-redirect',
+  'moraug-viewer-landfall-extra-combat',
+  'sirens-call-viewer-attack-or-die',
+  'wars-toll-viewer-taps-lands-and-forces-attack',
+  'willie-lumpkin-viewer-draw-then-cant-attack',
+  'fight-or-flight-viewer-separate',
+  'fight-or-flight-viewer-choose',
+  'master-warcraft-viewer-choose-attackers-and-blocks',
+  'master-warcraft-viewer-assign-chosen-attackers',
+  'bess-soul-nourisher-viewer-counter-and-pump',
+  'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
   'keeper-of-secrets-viewer-flashback',
   'river-kelpie-viewer-flashback-and-persist',
@@ -8842,7 +15506,288 @@ export const CARD_TEST_SCENARIO_IDS = [
   'body-launderer-viewer-return',
 ] as const;
 
+// --- Coverage PR08.13: Agitator Ant (each player may put counters; goad what got them) ---
+//
+// ONE board, two runs. The clause is a single APNAP instruction, so the board is arranged to make
+// every half of it observable: P1 casts the printed {2}{R} creature normally and is asked first;
+// P2 controls one ordinary 2/2 and is asked next; P3 controls another and is asked last; P4
+// controls NO creature, so it is never asked at all. A player is only ever offered the creatures
+// THEY control, so P1's single menu naming only Agitator Ant is itself a result.
+//
+// Both runs finish P1's turn, so the counters and the goad must survive a real cleanup step, and
+// then run P2's real turn: in the accepting run P2's scripted seat sends its goaded Bear at P3,
+// which is the only place the viewer can SEE the goad (the published board projection carries no
+// goad field). In the declining run P1, P2 and P3 all decline, nothing is placed and nothing is
+// goaded — including on P2's own end step, which is not "your end step".
+const LAB_ANT_BEAR = card({
+  oracleId: 'lab-pr08-ant-bear',
+  name: 'Lab Ant Bear',
+  typeLine: 'Creature — Bear',
+  manaCost: '{1}{G}',
+  cmc: 2,
+  colors: ['G'],
+  colorIdentity: ['G'],
+  power: '2',
+  toughness: '2',
+});
+
+const LAB_ANT_CUB = card({
+  oracleId: 'lab-pr08-ant-cub',
+  name: 'Lab Ant Cub',
+  typeLine: 'Creature — Bear',
+  manaCost: '{1}{G}',
+  cmc: 2,
+  colors: ['G'],
+  colorIdentity: ['G'],
+  power: '2',
+  toughness: '2',
+});
+
+/**
+ * A seat answering the Ant's per-player counter menu, then playing the rest of its turn. `pick` is
+ * the creature this seat puts counters on (or null to decline); `attack` is the player its own
+ * creatures are sent at, or null to stay home. Everything else passes.
+ */
+function antEndStepSeat(pick: string | null, attack: PlayerId | null): DecisionProvider {
+  return {
+    decide(request) {
+      const antMenu = request.legalActions.some((action) =>
+        action.description.startsWith('Put 2 +1/+1 counters on '),
+      );
+      if (antMenu) {
+        const wanted = pick === null ? 'Put no counters' : `Put 2 +1/+1 counters on ${pick}`;
+        const action = request.legalActions.find((entry) => entry.description === wanted);
+        if (action === undefined)
+          throw new Error(
+            `No "${wanted}" among [${request.legalActions.map((entry) => entry.description).join(', ')}]`,
+          );
+        return { requestId: request.requestId, actionId: action.id };
+      }
+      if (attack !== null) {
+        const declare = request.legalActions.find((action) =>
+          action.description.startsWith('Declare attackers'),
+        );
+        if (declare !== undefined) {
+          return {
+            requestId: request.requestId,
+            actionId: declare.id,
+            targets: (declare.targets ?? []).map((slot) => ({
+              slot: slot.slot,
+              choice: slot.options.includes(attack) ? attack : (slot.options[0] as string),
+            })),
+          };
+        }
+      }
+      // A creature that is NOT goaded may legally stay home, so the declining run still reaches a
+      // real attack declaration; answer it with the engine's own "attack with nothing" choice.
+      const declares = request.legalActions.find((action) => action.type === 'attackDeclaration');
+      if (declares !== undefined) {
+        return {
+          requestId: request.requestId,
+          actionId: declares.id,
+          targets: (declares.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: slot.options.includes(NO_ATTACK_TARGET)
+              ? NO_ATTACK_TARGET
+              : (slot.options[0] as string),
+          })),
+        };
+      }
+      // Nothing scripted here blocks: a block declaration is still a real decision, and answering
+      // it with the engine's own "no block" choice is what the viewer's "Confirm blocks" sends.
+      const blocks = request.legalActions.find((action) => action.type === 'blockDeclaration');
+      if (blocks !== undefined) {
+        return {
+          requestId: request.requestId,
+          actionId: blocks.id,
+          targets: (blocks.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: slot.options.includes(NO_BLOCK_TARGET)
+              ? NO_BLOCK_TARGET
+              : (slot.options[0] as string),
+          })),
+        };
+      }
+      const pass = request.legalActions.find((action) => action.type === 'pass');
+      return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+    },
+  };
+}
+
+function agitatorAntScenario(gameId: GameId, mode: 'accept' | 'decline'): CardTestScenario {
+  const ant = pinnedFrom(COVERAGE_PR08, 'Agitator Ant');
+  /**
+   * A real, fully interpreter-modeled {0} instant rather than a blank placeholder (see the Benevolent
+   * Offering board): it is never cast, but it stays in hand and is castable, so the last priority
+   * window is a real one rather than an assumption.
+   */
+  const witness = card({
+    oracleId: 'lab-pr08-ant-priority-witness',
+    name: 'Lab Ant Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const accept = mode === 'accept';
+  return pr01Scenario(gameId, {
+    id: `agitator-ant-viewer-${mode}`,
+    title: accept
+      ? 'Agitator Ant: accepting counters goads the chosen creatures'
+      : 'Agitator Ant: declining counters leaves its creature ungoaded',
+    instructions: [
+      'Cast Agitator Ant from your hand with the Mountain and the two Forests. The spell has no targets.',
+      accept
+        ? 'At your end step, choose Agitator Ant for your own two +1/+1 counters. P2 then chooses its own Bear and P3 declines.'
+        : 'At your end step, decline: you put no counters, and P2 and P3 decline too. P4 controls no creature and is never asked.',
+      accept
+        ? 'On P2’s next turn the goaded Bear attacks P3 instead of you, and the counters and the goad both survive the cleanup step.'
+        : 'Agitator Ant is still a 2/2 with no counters, and P2’s end step triggers nothing.',
+    ],
+    expectedOutcome: accept
+      ? 'Agitator Ant is a 4/4 and P2’s Lab Ant Bear is a 4/4, both goaded by you; P3’s Lab Ant Cub stays 2/2. On P2’s turn the Bear attacks P3, who drops to 36, and never you.'
+      : 'Nothing is placed and nothing is goaded: Agitator Ant is a 2/2, P2’s Lab Ant Bear and P3’s Lab Ant Cub are untouched 2/2s, and only P1, P2 and P3 were ever asked.',
+    oracleSha256: ant.sha256,
+    clauseIds: ['agitator-ant-end-step-counter-choice', 'agitator-ant-goad-positive-placements'],
+    decks: {
+      P1: [ant.card, witness, MOUNTAIN, FOREST, FOREST, ...PR01_FILLER],
+      P2: [LAB_ANT_BEAR, ...PR01_FILLER],
+      P3: [LAB_ANT_CUB, ...PR01_FILLER],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      lifeTotals: [
+        { playerId: 'P1', life: 40 },
+        { playerId: 'P2', life: 40 },
+        { playerId: 'P3', life: 40 },
+        { playerId: 'P4', life: 40 },
+      ],
+      hand: [{ playerId: 'P1', cardNames: ['Agitator Ant', 'Lab Ant Priority Witness'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Mountain', 'Forest', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Lab Ant Bear'] },
+        { playerId: 'P3', cardNames: ['Lab Ant Cub'] },
+        // P4 deliberately starts with no creature: it is never asked for a choice.
+      ],
+      // P1's combat, postcombat main and end step, the cleanup step, then P2's whole turn.
+      continueThroughCombat: true,
+      continueToPostcombatMain: true,
+      continueToEndStep: true,
+      continueThroughNextTurn: true,
+    },
+    decisionProviderOverrides: {
+      // P1 answers in the viewer; these two are the seats whose own menus the browser never sees.
+      P2: antEndStepSeat(accept ? 'Lab Ant Bear' : null, accept ? 'P3' : null),
+      P3: antEndStepSeat(null, null),
+    },
+  });
+}
+
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
+  ...Object.fromEntries(
+    PR09_CHOICE_SCENARIOS.map(({ id }) => [id, (gameId: GameId) => pr09ChoiceScenario(id, gameId)]),
+  ),
+  ...Object.fromEntries(
+    PR09_PERMANENT_SCENARIOS.map(({ id }) => [
+      id,
+      (gameId: GameId) => pr09PermanentScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    PR09_LIBRARY_SCENARIOS.map(({ id }) => [
+      id,
+      (gameId: GameId) => pr09LibraryScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    PR09_SCENARIO_IDS.map((id) => [id, (gameId: GameId) => pr09Scenario(id, gameId)]),
+  ),
+  'kazuul-viewer-decline': (gameId) => kazuulScenario(gameId, 'decline'),
+  'kazuul-viewer-pay': (gameId) => kazuulScenario(gameId, 'pay'),
+  'kazuul-viewer-other-defender': (gameId) => kazuulScenario(gameId, 'other-defender'),
+  'akroan-horse-viewer-cast-and-gift': (gameId) => akroanHorseScenario(gameId, 'cast-and-gift'),
+  'akroan-horse-viewer-recipient-upkeep': (gameId) =>
+    akroanHorseScenario(gameId, 'recipient-upkeep'),
+  'scheming-symmetry-viewer-you-and-opponent': (gameId) =>
+    schemingSymmetryScenario(gameId, 'you-and-opponent'),
+  'scheming-symmetry-viewer-two-opponents-empty-library': (gameId) =>
+    schemingSymmetryScenario(gameId, 'two-opponents-empty-library'),
+  'agitator-ant-viewer-accept': (gameId) => agitatorAntScenario(gameId, 'accept'),
+  'agitator-ant-viewer-decline': (gameId) => agitatorAntScenario(gameId, 'decline'),
+  ...Object.fromEntries(
+    PR08_CUT_A_DEAL_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr08CutADealScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    PR08_REMAINING_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr08TragicArroganceScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    PR08_MODAL_PLAYER_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr08ModalPlayerScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    ROTATING_SURVIVOR_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr08RotatingSurvivorScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WINDS_OF_ABANDON_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr08WindsOfAbandonScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    OLORIN_SCENARIO_IDS.map((id) => [id, (gameId: GameId) => pr08OlorinScenario(id, gameId)]),
+  ),
+  ...Object.fromEntries(
+    BOSEIJU_SCENARIO_IDS.map((id) => [id, (gameId: GameId) => pr08BoseijuScenario(id, gameId)]),
+  ),
+  ...Object.fromEntries(
+    AETHERSPOUTS_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr08AetherspoutsScenario(id, gameId),
+    ]),
+  ),
+  'wishclaw-talisman-viewer-cast-search-and-gift': (gameId) =>
+    wishclawScenario(gameId, 'cast-search-and-gift'),
+  'wishclaw-talisman-viewer-empty-library': (gameId) => wishclawScenario(gameId, 'empty-library'),
+  'wishclaw-talisman-viewer-off-turn': (gameId) => wishclawScenario(gameId, 'off-turn'),
+  'druid-of-purification-viewer-duplicates': (gameId) =>
+    druidPurificationScenario(gameId, 'duplicates'),
+  'druid-of-purification-viewer-decline': (gameId) => druidPurificationScenario(gameId, 'decline'),
+  'druid-of-purification-viewer-shroud': (gameId) => druidPurificationScenario(gameId, 'shroud'),
+  'humble-defector-viewer-draw-then-opponent-takes-control': (gameId) =>
+    humbleDefectorScenario(gameId, false),
+  'humble-defector-viewer-off-turn': (gameId) => humbleDefectorScenario(gameId, true),
+  'cytoplast-manipulator-viewer-graft-yes': (gameId) => cytoplastScenario(gameId, 'graft-yes'),
+  'cytoplast-manipulator-viewer-graft-no': (gameId) => cytoplastScenario(gameId, 'graft-no'),
+  'cytoplast-manipulator-viewer-control-duration': (gameId) =>
+    cytoplastScenario(gameId, 'control-duration'),
+  'mob-rule-viewer-large': (gameId) => mobRuleScenario(gameId, 'large'),
+  'mob-rule-viewer-small': (gameId) => mobRuleScenario(gameId, 'small'),
+  'mob-rule-viewer-cleanup': (gameId) => mobRuleScenario(gameId, 'cleanup'),
+  'reins-of-power-viewer-swap-and-cleanup': (gameId) =>
+    reinsOfPowerScenario(gameId, 'swap-and-cleanup'),
+  'reins-of-power-viewer-empty-caster': (gameId) => reinsOfPowerScenario(gameId, 'empty-caster'),
+  'alicia-masters-viewer-combat-treasure-and-owner-control': (gameId) =>
+    aliciaMastersScenario(gameId, 'combat-treasure-and-owner-control'),
+  'alicia-masters-viewer-no-noncreature-spell': (gameId) =>
+    aliciaMastersScenario(gameId, 'no-noncreature-spell'),
+  'benevolent-offering-viewer-different-opponents': (gameId) =>
+    benevolentOfferingScenario(gameId, 'different-opponents'),
+  'benevolent-offering-viewer-same-opponent': (gameId) =>
+    benevolentOfferingScenario(gameId, 'same-opponent'),
+  'councils-judgment-viewer-tied-votes': (gameId) => councilsJudgmentScenario(gameId, 'tied-votes'),
+  'councils-judgment-viewer-unanimous-hexproof': (gameId) =>
+    councilsJudgmentScenario(gameId, 'unanimous-hexproof'),
   ...Object.fromEntries(
     TRANSFORMED_DFC_SCENARIO_IDS.map((id) => [
       id,
@@ -8862,6 +15807,12 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     ]),
   ),
   ...Object.fromEntries(
+    COMBAT_TRIGGER_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => combatTriggerScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
     SPELL_FACE_SCENARIO_IDS.map((id) => [id, (gameId: GameId) => spellFaceScenario(id, gameId)]),
   ),
   ...Object.fromEntries(
@@ -8874,6 +15825,120 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     TARGET_UNTAP_SCENARIO_IDS.map((id) => [
       id,
       (gameId: GameId) => targetUntapScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_COMBAT_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlCombatScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_HAND_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlHandScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_ENTRY_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlEntryScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_DISCARD_EXTENSION_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlDiscardExtensionScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_DEFENDER_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlDefenderScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_SPELL_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlSpellScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_COUNTER_CLASS_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlCounterClassScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_FINAL_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlFinalScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_CONTROL_PERCH_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlPerchScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_PROTECTION_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlProtectionScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_DISCARD_CORE_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlDiscardCoreScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_GRAVEYARD_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlGraveyardScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_CONTROL_STAX_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlStaxScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_REPLACEMENTS_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlReplacementsScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_CONTROL_LILIANA_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlLilianaScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_REMAINING_COMBAT_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlRemainingCombatScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_TERGRID_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlTergridScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_HAND_LIMIT_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlHandLimitScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_KEYWORD_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlKeywordScenario(id, gameId),
     ]),
   ),
   ...Object.fromEntries(
@@ -9059,6 +16124,157 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'kambal-viewer-opponent-noncreature-spell': kambalScenario,
   'gleeful-arsonist-viewer-burn-and-undying': gleefulArsonistScenario,
   'shard-of-the-nightbringer-viewer-cast-drain': shardOfTheNightbringerScenario,
+  'sautekh-immortal-viewer-flash-counters': sautekhImmortalScenario,
+  'iron-apprentice-viewer-dies-moves-counters': ironApprenticeScenario,
+  'vigean-graftmage-viewer-graft-and-untap': vigeanGraftmageScenario,
+  'pensive-professor-viewer-increment-draw': pensiveProfessorScenario,
+  'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
+  'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
+  'captain-america-skybound-viewer-battalion': captainAmericaScenario,
+  'finneas-ace-archer-viewer-counters-then-draw': finneasScenario,
+  'kutzil-malamet-exemplar-viewer-above-base-draw': kutzilScenario,
+  'the-fantasticar-viewer-fourth-noncreature': theFantasticarScenario,
+  'unbreakable-formation-viewer-addendum-main-phase': unbreakableFormationScenario,
+  'first-family-viewer-colors-draw-gain': firstFamilyScenario,
+  'call-forth-the-tempest-viewer-other-spells-damage': callForthTheTempestScenario,
+  'crystal-inhuman-princess-viewer-colors-damage': crystalScenario,
+  'rumor-gatherer-viewer-scry-then-draw': rumorGathererScenario,
+  'belladonna-took-viewer-three-tokens': belladonnaTookScenario,
+  'lockjaw-viewer-counter-and-unblockable': lockjawScenario,
+  'the-thing-viewer-counters-and-double': theThingScenario,
+  'aetheric-amplifier-viewer-double-counters': aethericAmplifierScenario,
+  'cranial-plating-viewer-instant-attach': cranialPlatingScenario,
+  'cranial-plating-viewer-spell-on-stack-artifact-count': cranialPlatingStackScenario,
+  'mask-of-memory-viewer-draw-discard': maskOfMemoryScenario,
+  'resurrection-orb-viewer-lifelink-and-return': resurrectionOrbScenario,
+  'sunforger-viewer-unattach-search-and-cast': sunforgerScenario,
+  'screams-from-within-viewer-return-and-enchant': screamsFromWithinScenario,
+  'ghoulish-impetus-viewer-return-at-end-step': ghoulishImpetusScenario,
+  'ghoulish-impetus-viewer-goaded-attack': ghoulishImpetusGoadScenario,
+  'ghoulish-impetus-viewer-goaded-opponent-attack': ghoulishImpetusOpponentAttackScenario,
+  'gift-of-immortality-viewer-owner-return-then-aura': giftOfImmortalityScenario,
+  'ajanis-chosen-viewer-aura-moves-to-cat': ajanisChosenScenario,
+  'ajanis-chosen-viewer-enchantment-makes-cat': ajanisChosenEnchantmentScenario,
+  'shielded-by-faith-viewer-attach-to-entering-creature': shieldedByFaithScenario,
+  'shielded-by-faith-viewer-opponent-creature-enters': shieldedByFaithOpponentCreatureScenario,
+  'forum-filibuster-viewer-inkling-and-aura': forumFilibusterScenario,
+  'forum-filibuster-viewer-equipment-return': forumFilibusterEquipmentScenario,
+  'karametras-favor-viewer-granted-mana-pays-spell': karametrasFavorScenario,
+  'redemption-arc-viewer-exile-enchanted-creature': redemptionArcScenario,
+  'redemption-arc-viewer-indestructible-goaded-attack': redemptionArcGrantsScenario,
+  'redemption-arc-viewer-goaded-opponent-attack': redemptionArcOpponentAttackScenario,
+  'fallen-ideal-viewer-sacrifice-then-return': fallenIdealScenario,
+  'fallen-ideal-viewer-flying-attack': fallenIdealFlyingScenario,
+  'kor-spiritdancer-viewer-aura-cast-draw-and-pump': korSpiritdancerScenario,
+  'kor-spiritdancer-viewer-second-aura-grows-it': korSpiritdancerSecondAuraScenario,
+  'hateful-eidolon-viewer-enchanted-creature-dies-draw': hatefulEidolonScenario,
+  'hateful-eidolon-viewer-two-auras-draw-two': hatefulEidolonTwoAurasScenario,
+  'hateful-eidolon-viewer-combat-lifelink': hatefulEidolonLifelinkScenario,
+  'martial-impetus-viewer-attack-pump': martialImpetusScenario,
+  'martial-impetus-viewer-goaded-opponent-attack': martialImpetusOpponentAttackScenario,
+  'killian-decisive-mentor-viewer-tap-goad-and-attack-draw': killianDecisiveMentorScenario,
+  'killian-decisive-mentor-viewer-goaded-opponent-attack': killianOpponentAttackScenario,
+  'angelic-destiny-viewer-angel-then-return': angelicDestinyScenario,
+  'angelic-destiny-viewer-flying-first-strike-angel-combat': angelicDestinyCombatScenario,
+  'sheltered-by-ghosts-viewer-exile-and-lifelink': shelteredByGhostsScenario,
+  'sheltered-by-ghosts-viewer-ward-counters-opponent-spell': shelteredByGhostsWardScenario,
+  'eldrazi-conscription-viewer-annihilator': eldraziConscriptionScenario,
+  'eldrazi-conscription-viewer-trample': eldraziConscriptionTrampleScenario,
+  'curse-of-bounty-viewer-untap-on-attack': curseOfBountyScenario,
+  'curse-of-bounty-viewer-opponent-attacks': curseOfBountyOpponentAttackScenario,
+  'eidolon-of-countless-battles-viewer-bestow': eidolonOfCountlessBattlesScenario,
+  'eidolon-of-countless-battles-viewer-creature-and-aura-counts':
+    eidolonOfCountlessBattlesCountsScenario,
+  'animate-dead-viewer-reanimate': animateDeadScenario,
+  'animate-dead-viewer-aura-leaves-sacrifices': animateDeadLeavesScenario,
+  'dragon-tempest-viewer-dragon-deals-damage': dragonTempestScenario,
+  'scourge-of-valkas-viewer-dragons-deal-damage': scourgeOfValkasScenario,
+  'tyrants-familiar-viewer-lieutenant-attack': tyrantsFamiliarScenario,
+  'brash-taunter-viewer-fight-and-reflect': brashTaunterScenario,
+  'tomb-blade-viewer-sacrifice-or-lose': tombBladeScenario,
+  'duelists-heritage-viewer-double-strike-attacker': duelistsHeritageScenario,
+  'thunderbreak-regent-viewer-opponent-targets-dragon': thunderbreakRegentScenario,
+  'invisible-woman-viewer-pay-pump-unblockable': invisibleWomanScenario,
+  'flameblast-dragon-viewer-target-then-pay-x': flameblastDragonScenario,
+  'territorial-aetherkite-viewer-pay-energy-damage': territorialAetherkiteScenario,
+  'arcbond-viewer-reflect-damage': arcbondScenario,
+  'thundermaw-hellkite-viewer-damage-and-tap-fliers': thundermawHellkiteScenario,
+  'backlash-viewer-tap-and-reflect': backlashScenario,
+  'guard-gomazoa-viewer-blocks-and-takes-no-damage': guardGomazoaScenario,
+  'selfless-squire-viewer-prevent-and-grow': selflessSquireScenario,
+  'deflecting-palm-viewer-chosen-source-reflects': deflectingPalmScenario,
+  'comeuppance-viewer-prevent-and-reflect': comeuppanceScenario,
+  'michiko-konda-viewer-damage-makes-opponent-sacrifice': michikoKondaScenario,
+  'delirium-viewer-tap-damage-and-prevent': deliriumScenario,
+  'planeswalker-attack-viewer-loyalty': planeswalkerAttackScenario,
+  'firemane-commando-viewer-own-attack': firemaneOwnAttackScenario,
+  'firemane-commando-viewer-other-attack-elsewhere': (gameId) =>
+    firemaneOtherAttackScenario(gameId, 'P3'),
+  'firemane-commando-viewer-other-attack-at-you': (gameId) =>
+    firemaneOtherAttackScenario(gameId, 'P1'),
+  'breena-viewer-attack-more-life': breenaScenario,
+  'ever-watching-threshold-viewer-attacked-you': (gameId) =>
+    everWatchingThresholdScenario(gameId, 'attacked-you'),
+  'ever-watching-threshold-viewer-attacked-planeswalker': (gameId) =>
+    everWatchingThresholdScenario(gameId, 'attacked-planeswalker'),
+  'ever-watching-threshold-viewer-attacked-elsewhere': (gameId) =>
+    everWatchingThresholdScenario(gameId, 'attacked-elsewhere'),
+  'mangara-viewer-two-attackers': (gameId) => mangaraScenario(gameId, 2),
+  'mangara-viewer-one-attacker': (gameId) => mangaraScenario(gameId, 1),
+  'tomik-viewer-affinity-for-planeswalkers': tomikAffinityScenario,
+  'tomik-viewer-attack-drain-and-draw': tomikAttackScenario,
+  'frontier-warmonger-viewer-menace': warmongerScenario,
+  'tenuous-truce-viewer-end-step': (gameId) => tenuousTruceScenario(gameId, 'end-step'),
+  'tenuous-truce-viewer-you-attack': (gameId) => tenuousTruceScenario(gameId, 'you-attack'),
+  'tenuous-truce-viewer-they-attack': (gameId) => tenuousTruceScenario(gameId, 'they-attack'),
+  'wall-of-tears-viewer-blocked-creature-returns': wallOfTearsScenario,
+  'human-torch-viewer-keywords-and-damage-copy': humanTorchScenario,
+  'promise-of-loyalty-viewer-vowed-creature-cant-attack-you': promiseOfLoyaltyScenario,
+  'lightning-runner-viewer-pay-energy-extra-combat': lightningRunnerScenario,
+  'firkraag-viewer-dragon-attack-goads': (gameId) => firkraagScenario(gameId, 'goad'),
+  'firkraag-viewer-goaded-damage-draws': (gameId) => firkraagScenario(gameId, 'damage'),
+  'eriette-viewer-enchanted-cant-attack-you': (gameId) => erietteScenario(gameId, 'restriction'),
+  'eriette-viewer-end-step-drain': (gameId) => erietteScenario(gameId, 'drain'),
+  'rite-of-the-raging-storm-viewer-named-cant-attack-you': (gameId) =>
+    riteOfTheRagingStormScenario(gameId, 'restriction'),
+  'rite-of-the-raging-storm-viewer-upkeep-token': (gameId) =>
+    riteOfTheRagingStormScenario(gameId, 'token'),
+  'nils-viewer-end-step-counters': (gameId) => nilsScenario(gameId, 'counters'),
+  'nils-viewer-counters-attack-tax': (gameId) => nilsScenario(gameId, 'tax'),
+  'combat-calligrapher-viewer-inkling-cant-attack-you': (gameId) =>
+    combatCalligrapherScenario(gameId, 'restriction'),
+  'combat-calligrapher-viewer-attacker-creates-inkling': (gameId) =>
+    combatCalligrapherScenario(gameId, 'token'),
+  'goblin-spymaster-viewer-opponent-end-step-token': goblinSpymasterScenario,
+  'toby-viewer-beast-cant-block-alone': (gameId) => tobyScenario(gameId, 'block'),
+  'toby-viewer-flying-with-four-tokens': (gameId) => tobyScenario(gameId, 'flying'),
+  'life-of-the-party-viewer-attack-pump': (gameId) => lifeOfThePartyScenario(gameId, 'pump'),
+  'life-of-the-party-viewer-goaded-copies': (gameId) => lifeOfThePartyScenario(gameId, 'copies'),
+  'kardur-viewer-must-attack-not-you': (gameId) => kardurScenario(gameId, 'requirement'),
+  'kardur-viewer-attacker-dies-drain': (gameId) => kardurScenario(gameId, 'drain'),
+  'galactus-viewer-attacks-most-life': (gameId) => galactusScenario(gameId, 'hunger'),
+  'galactus-viewer-herald-lifts-requirement': (gameId) => galactusScenario(gameId, 'herald'),
+  'silver-surfer-viewer-search-galactus': (gameId) => silverSurferScenario(gameId, 'search'),
+  'silver-surfer-viewer-attack-that-player': (gameId) =>
+    silverSurferScenario(gameId, 'requirement'),
+  'taunt-viewer-goad-and-cant-block': tauntScenario,
+  'hexmark-viewer-needs-six-blockers': hexmarkScenario,
+  'champion-of-lambholt-viewer-weaker-cant-block': championScenario,
+  'pramikon-viewer-nearest-opponent': pramikonScenario,
+  'teyo-viewer-minus-two-direction': teyoScenario,
+  'teyo-viewer-wall-and-plus-one': teyoDrawScenario,
+  'triarch-stalker-viewer-menace': stalkerScenario,
+  'illusionists-gambit-viewer-remove-and-redirect': gambitScenario,
+  'moraug-viewer-landfall-extra-combat': moraugScenario,
+  'sirens-call-viewer-attack-or-die': sirensCallScenario,
+  'wars-toll-viewer-taps-lands-and-forces-attack': warsTollScenario,
+  'willie-lumpkin-viewer-draw-then-cant-attack': willieScenario,
+  'fight-or-flight-viewer-separate': fightOrFlightSeparateScenario,
+  'fight-or-flight-viewer-choose': fightOrFlightChooseScenario,
+  'master-warcraft-viewer-choose-attackers-and-blocks': masterWarcraftChooseScenario,
+  'master-warcraft-viewer-assign-chosen-attackers': masterWarcraftAssignScenario,
+  'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
+  'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,
   'keeper-of-secrets-viewer-flashback': keeperOfSecretsScenario,
   'river-kelpie-viewer-flashback-and-persist': riverKelpieScenario,

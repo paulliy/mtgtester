@@ -52,7 +52,7 @@ function playRandomGame(seed: string): {
   return { engine, result };
 }
 
-describe('full four-player game (brief §14.1 Phase 2 done-criterion)', () => {
+describe('full four-player game (brief §14.1 Phase 2 done-criterion)', { timeout: 60_000 }, () => {
   // A full random-fuzzed game; see determinism.test.ts's note on why these need headroom past
   // vitest's 5s default under full-suite parallel load (ADR 0023 items 13/14/18's added
   // decision points — batched attack declarations occasionally add a rejection/retry cycle on
@@ -90,5 +90,5 @@ describe('full four-player game (brief §14.1 Phase 2 done-criterion)', () => {
       expect(result.halted).toBe(false);
       expect(result.winnerSeat).not.toBeNull();
     }
-  }, 30_000);
+  }, 60_000);
 });

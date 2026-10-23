@@ -1,7 +1,7 @@
 /** Authored overrides for marchesa-the-black-rose.txt. */
 
 import type { CardDefinition } from '../definition';
-import { TAP, spell, targetSlots } from '../templates';
+import { TAP, spell, targetSlots, triggered } from '../templates';
 import { counterSpellTarget } from '../target-builders';
 import type { Ability } from '../ability';
 import { constant } from '../value';
@@ -9,21 +9,18 @@ import { allOf, anyOf, hasCounter, IS_TOKEN, OTHER, not, ofType, YOURS } from '.
 import { BIRD_1_1_FLYING, ELDRAZI_SPAWN_0_1, TREASURE } from '../tokens';
 import { defineCard, unsupportedCard } from './index';
 
-// Dethrone (CR 702.103) has no generic keyword representation in this engine — every carrier
+// Dethrone (CR 702.105) has no generic keyword representation in this engine — every carrier
 // (Marchesa's own trigger, the static ability she grants other creatures) is this same
 // bespoke trigger. Dack's Duplicate needs it as an "enters as a copy, except it also has
 // dethrone" addition, which is why it is exported here rather than inlined in MARCHESA.
-const DETHRONE_TRIGGER: Ability = {
-  kind: 'triggered',
-  trigger: {
-    when: 'attacks',
-    subject: { kind: 'self' },
-    condition: { kind: 'attackingPlayerHasMoreLife' },
+const DETHRONE_TRIGGER: Ability = triggered(
+  { when: 'attacks', subject: { kind: 'self' } },
+  {
+    eventCondition: { kind: 'attackingPlayerHasMoreLife' },
+    effects: [{ op: 'putCounters', target: 'source', counter: '+1/+1', count: 1 }],
+    description: 'Dethrone — put a +1/+1 counter on this creature',
   },
-  targets: [],
-  effects: [{ op: 'putCounters', target: 'source', counter: '+1/+1', count: 1 }],
-  description: 'Dethrone — put a +1/+1 counter on this creature',
-};
+);
 
 const MARCHESA: Partial<CardDefinition> = {
   staticEffects: [
@@ -39,45 +36,40 @@ const MARCHESA: Partial<CardDefinition> = {
     },
   ],
   triggers: [
-    {
-      kind: 'triggered',
-      trigger: {
-        when: 'attacks',
-        subject: { kind: 'self' },
-        condition: { kind: 'attackingPlayerHasMoreLife' },
+    triggered(
+      { when: 'attacks', subject: { kind: 'self' } },
+      {
+        eventCondition: { kind: 'attackingPlayerHasMoreLife' },
+        effects: [{ op: 'putCounters', target: 'source', counter: '+1/+1', count: 1 }],
+        description: 'Dethrone — put a +1/+1 counter on Marchesa',
       },
-      targets: [],
-      effects: [{ op: 'putCounters', target: 'source', counter: '+1/+1', count: 1 }],
-      description: 'Dethrone — put a +1/+1 counter on Marchesa',
-    },
-    {
-      kind: 'triggered',
-      trigger: {
+    ),
+    triggered(
+      {
         when: 'dies',
         subject: {
           kind: 'permanent',
           selector: allOf(ofType('Creature'), YOURS, hasCounter('+1/+1')),
         },
       },
-      targets: [],
-      effects: [
-        {
-          op: 'registerDelayedTrigger',
-          when: 'endStep',
-          expiry: 'endStep',
-          target: 'triggerObject',
-          controller: 'source',
-          ability: {
-            kind: 'triggered',
-            targets: [],
-            effects: [{ op: 'graveyardToBattlefield', target: 'triggerObject' }],
-            description: 'Return that creature to the battlefield',
+      {
+        effects: [
+          {
+            op: 'registerDelayedTrigger',
+            when: 'endStep',
+            expiry: 'endStep',
+            target: 'triggerObject',
+            controller: 'source',
+            ability: triggered(undefined, {
+              effects: [{ op: 'graveyardToBattlefield', target: 'triggerObject' }],
+              description: 'Return that creature to the battlefield',
+            }),
           },
-        },
-      ],
-      description:
-        'Whenever a countered creature you control dies — return it at the next end step',
-    },
+        ],
+        description:
+          'Whenever a countered creature you control dies — return it at the next end step',
+      },
+    ),
   ],
 };
 
@@ -158,12 +150,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   );
   // Carrion Feeder: restored in coverage PR02. The interpreter reads "can't block" and the
   // sacrifice-a-creature cost, which may sacrifice Carrion Feeder itself (allowSelf).
-  // Catalog audit batch 3: control change is permanent, not "for as long as this remains".
-  unsupportedCard(
-    '026ef98e-4f0a-4a6d-b74f-d17ac8b10e37',
-    'Cytoplast Manipulator',
-    'Gain-control duration is omitted; gainControlTarget is a permanent steal.',
-  );
+  // Cytoplast Manipulator: restored in coverage PR08.06. The interpreter retains Graft 2;
+  // coverage-pr08.ts binds the activated control duration to this exact battlefield object.
   defineCard(
     '724767ca-bd84-4137-9133-4ad2e96b8428',
     "Dack's Duplicate",
@@ -318,12 +306,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
       ],
     },
   );
-  // Catalog audit marchesa-batch-10: dies intervening-if never sees the dead creature.
-  unsupportedCard(
-    'cd0c8db0-67ee-483b-8298-455cce35fef7',
-    'Iron Apprentice',
-    "The dies intervening-if checks the battlefield, so it never sees this creature's counters.",
-  );
+  // Iron Apprentice: restored in coverage PR04. The interpreter reads the dies trigger gated on
+  // the creature's last-known counters and moves those counters, so no override remains.
   defineCard(
     '4fca09ac-8134-43d9-a84b-686db5e2bf69',
     'Kalain, Reclusive Painter',
@@ -340,13 +324,7 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
       ],
     },
   );
-  // Catalog audit batch 8: snapshot goad is not a until-next-turn continuous, and inCombat
-  // includes blockers.
-  unsupportedCard(
-    'bc14356c-3a1a-47af-9a6e-2b449de0331f',
-    'Kardur, Doomscourge',
-    'Goad snapshots current creatures, and the death trigger fires for blockers as well as attackers.',
-  );
+  // Kardur, Doomscourge: restored in coverage PR07 (see coverage-pr07.ts).
   defineCard(
     '73413bd5-8c40-4d45-8f05-c20c39ee4017',
     'Madame Null, Power Broker',
@@ -433,12 +411,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
       ],
     },
   );
-  // Catalog audit batch 7: Increment is claimed; the draw fires on damage, not counters.
-  unsupportedCard(
-    '4b8736e2-fc41-4a25-bb6c-7351afc40981',
-    'Pensive Professor',
-    'Increment is claimed, and the draw trigger fires on damage instead of counters being placed.',
-  );
+  // Pensive Professor: restored in coverage PR04. The interpreter reads Increment and the
+  // counters-put draw trigger, so no override remains.
   // Puppeteer Clique: restored in coverage PR03. The interpreter reads the reanimation with haste
   // and its bound end-step exile, and Persist, so no override remains.
   // River Kelpie: restored in coverage PR03. The interpreter reads both graveyard-origin triggers
@@ -483,18 +457,11 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
     'Twilight Diviner',
     'Graveyard-origin and once-each-turn restrictions are omitted from the enter trigger.',
   );
-  // Catalog audit batch 8: Graft is claimed and is not an implemented keyword.
-  unsupportedCard(
-    '4c209165-a159-4cd7-8e99-1e533d3a22a6',
-    'Vigean Graftmage',
-    'Graft is claimed without enters-with-counters or move-counter behavior.',
-  );
+  // Vigean Graftmage: restored in coverage PR04. The interpreter reads Graft 2 as its
+  // enters-with counters and its move-a-counter trigger, so no override remains.
   // Catalog audit batch 8: one mode and one opponent, not one-or-more different players.
-  unsupportedCard(
-    '6dc7f837-158f-4ccf-86a5-a07a20891ec5',
-    'Vindictive Lich',
-    'Modes are choose-one rather than one-or-more targeting different players.',
-  );
+  // Vindictive Lich: restored in coverage PR08.
+
   // Watcher for Tomorrow: restored in coverage PR03. The interpreter reads Hideaway, the
   // leaves-the-battlefield trigger and its linked exiled card, so no override remains.
 }

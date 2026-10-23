@@ -95,13 +95,21 @@ export function smartYieldContexts(state: PlayerBoardState, action?: LegalAction
         slots.some(
           (slot) =>
             slot.options.includes(p.id) ||
-            (p.attacking !== null && slot.options.includes(p.attacking)),
+            (p.attacking !== null && slot.options.includes(p.attacking)) ||
+            (p.attackingPlaneswalker != null && slot.options.includes(p.attackingPlaneswalker)),
         ),
     );
     if ((utility || slots.length > 0) && !relevant) return contexts;
   }
   const combat = participants
-    .map((p) => [p.id, p.attacking, p.blocking, p.blockedBy, p.damageMarked])
+    .map((p) => [
+      p.id,
+      p.attacking,
+      p.attackingPlaneswalker ?? null,
+      p.blocking,
+      p.blockedBy,
+      p.damageMarked,
+    ])
     .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
   contexts.push(
     `combat:${state.turnNumber}:${state.activePlayer}:${state.step}:${JSON.stringify(combat)}`,

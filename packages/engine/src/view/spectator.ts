@@ -24,6 +24,7 @@ import type {
 import { computeCharacteristics } from '../effects/continuous';
 import { manaSourcesFor, scryfallIdOf } from '../state/queries';
 import { copyImageFace, playerById } from '../state/objects';
+import { visibleLibraryTops } from './library-top';
 import type {
   EngineCardObject,
   EnginePermanent,
@@ -64,9 +65,20 @@ function permanentView(ctx: GameContext, perm: EnginePermanent): SpectatorPerman
     summoningSick: perm.summoningSick && isCreature,
     attachedTo: perm.attachedTo,
     attacking: perm.attacking,
+    attackingPlaneswalker: perm.attackedPlaneswalkerRemoved ? null : perm.attackingPlaneswalker,
     blocking: perm.blocking,
     blockedBy: [...perm.blockedByOrdered],
-    keywords: [...chars.keywords],
+    keywords: [
+      ...new Set([
+        ...chars.keywords,
+        ...chars.protectionFrom.map(
+          (color) =>
+            `protection from ${
+              ({ W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green' } as const)[color]
+            }`,
+        ),
+      ]),
+    ],
     isToken: perm.isToken,
     colors: [...chars.colors],
     imageFace: copyImageFace(ctx, perm),
@@ -277,6 +289,10 @@ export function buildPlayerBoardState(ctx: GameContext, playerId: string): Playe
     ...spectator,
     viewerSeat: playerId,
     viewerMana: viewerMana(ctx, playerId),
+    revealedLibraryTops: visibleLibraryTops(ctx, playerId).map(({ player, card }) => ({
+      player,
+      card: cardView(ctx, card),
+    })),
     seats: spectator.seats.map((seat) => ({
       ...seat,
       handSize: seat.hand.length,
@@ -364,6 +380,20 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
       if (/^Play\s/.test(description)) return null;
       return { ...base, text: description };
     }
+
+    case 'permanentChoice':
+      return {
+        ...base,
+        text: `${str(p, 'source') ?? 'An ability'}: chooses ${str(p, 'name') ?? 'no permanent'}`,
+      };
+
+    // A council vote names a battlefield permanent, so it is public like every other board fact —
+    // and the log says who voted for what, not just that someone voted.
+    case 'vote':
+      return {
+        ...base,
+        text: `${str(p, 'source') ?? 'An ability'}: ${str(p, 'voter') ?? 'a player'} votes for ${str(p, 'name') ?? 'a permanent'}`,
+      };
 
     case 'castSpell':
       return p['duringResolution'] === true
@@ -475,9 +505,12 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
     // Only an explicitly revealed search result is narrated: CR 701.16a makes it public, while an
     // unrevealed find bound for a hidden zone must stay private to the searcher.
     case 'searchFound':
+    case 'revealCard':
       return p['revealed'] === true
         ? { ...base, text: `reveals ${str(p, 'name') ?? 'a card'}` }
         : null;
+    case 'returnSpell':
+      return { ...base, text: `${str(p, 'name') ?? 'a spell'} returns to its owner's hand` };
     case 'lifeLoss':
       return { ...base, text: `loses ${num(p, 'amount') ?? 0} life` };
 

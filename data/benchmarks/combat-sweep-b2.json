@@ -1,0 +1,61 @@
+{
+  "args": {
+    "games": 600,
+    "seed": "sweepB",
+    "topK": [],
+    "maxAttackers": [],
+    "maxPermanents": [],
+    "turnCap": 200,
+    "gameTimeoutMs": 30000,
+    "verbose": false,
+    "json": "data/benchmarks/combat-sweep-b2.json"
+  },
+  "results": [
+    {
+      "label": "shipped defaults",
+      "options": {},
+      "search": {
+        "wins": 312,
+        "combatDecisionMs": 8280.869000000013,
+        "combatDecisions": 12620,
+        "totalMs": 32165.773000000023,
+        "totalDecisions": 68516,
+        "blockSearched": 3444,
+        "blockDeclined": 158,
+        "splitSearched": 336,
+        "splitDeclined": 10
+      },
+      "control": {
+        "wins": 262,
+        "combatDecisionMs": 5267.688800000006,
+        "combatDecisions": 11706,
+        "totalMs": 27175.264500000027,
+        "totalDecisions": 64034,
+        "blockSearched": 0,
+        "blockDeclined": 0,
+        "splitSearched": 0,
+        "splitDeclined": 0
+      },
+      "games": 600,
+      "halted": 1,
+      "drawn": 1,
+      "errored": 24,
+      "timedOut": 1,
+      "errors": [
+        "error: engine bug: Bladewing the Risen — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object",
+        "TypeError: undefined is not an object (evaluating 'perm.name')",
+        "error: engine bug: Iron Lad, Young Avenger — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object",
+        "error: engine bug: payment source vanished",
+        "error: engine bug: Twinscroll Shaman — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object",
+        "error: engine bug: cost for P3 became unpayable at application time",
+        "error: engine bug: Dockside Chef — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object",
+        "error: engine bug: value \"xValue\" needs a resolving ability's scope — use evaluateValueIn",
+        "error: engine bug: value \"countersOnSelf\" needs a resolving ability's scope — use evaluateValueIn",
+        "error: engine bug: land to play not in hand",
+        "error: engine bug: additional tap cost became unpayable",
+        "error: engine bug: sacrifice cost became unpayable"
+      ],
+      "totalTurns": 28877
+    }
+  ]
+}

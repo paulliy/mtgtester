@@ -1,0 +1,61 @@
+{
+  "args": {
+    "games": 600,
+    "seed": "sweepA",
+    "topK": [],
+    "maxAttackers": [],
+    "maxPermanents": [],
+    "turnCap": 200,
+    "gameTimeoutMs": 30000,
+    "verbose": false,
+    "json": "data/benchmarks/combat-sweep-b.json"
+  },
+  "results": [
+    {
+      "label": "shipped defaults",
+      "options": {},
+      "search": {
+        "wins": 311,
+        "combatDecisionMs": 9442.74029999999,
+        "combatDecisions": 12406,
+        "totalMs": 35202.22549999998,
+        "totalDecisions": 66268,
+        "blockSearched": 3322,
+        "blockDeclined": 154,
+        "splitSearched": 283,
+        "splitDeclined": 8
+      },
+      "control": {
+        "wins": 266,
+        "combatDecisionMs": 6144.138700000013,
+        "combatDecisions": 12060,
+        "totalMs": 32100.544100000003,
+        "totalDecisions": 64282,
+        "blockSearched": 0,
+        "blockDeclined": 0,
+        "splitSearched": 0,
+        "splitDeclined": 0
+      },
+      "games": 600,
+      "halted": 0,
+      "drawn": 0,
+      "errored": 21,
+      "timedOut": 2,
+      "errors": [
+        "error: engine bug: Granitic Titan — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object",
+        "error: engine bug: Glory Seeker — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object",
+        "error: engine bug: cost for P4 became unpayable at application time",
+        "error: engine bug: sacrifice cost became unpayable",
+        "TypeError: undefined is not an object (evaluating 'perm.name')",
+        "error: engine bug: Voltaic Servant — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object",
+        "error: engine bug: payment source vanished",
+        "error: engine bug: value \"xValue\" needs a resolving ability's scope — use evaluateValueIn",
+        "error: engine bug: cost for P1 became unpayable at application time",
+        "error: engine bug: Villain — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object",
+        "error: engine bug: spell to cast not found",
+        "error: engine bug: value \"countersOnSelf\" needs a resolving ability's scope — use evaluateValueIn"
+      ],
+      "totalTurns": 28928
+    }
+  ]
+}

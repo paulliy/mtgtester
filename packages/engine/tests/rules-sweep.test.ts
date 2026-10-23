@@ -19,7 +19,7 @@ import { priorityCheckpoint } from '../src/sba/sba';
 import { createGame } from '../src/state/game';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { runTurn } from '../src/turn/turn';
-import { createToken, moveObject } from '../src/state/objects';
+import { changeController, createToken, moveObject } from '../src/state/objects';
 import { ofSubtype } from '../src/cards/selector';
 import { evaluateValueIn } from '../src/effects/values';
 import { cardTypesInAllGraveyards } from '../src/cards/value';
@@ -501,7 +501,7 @@ describe('a player leaving the game (CR 800.4a)', () => {
   it("returns permanents they controlled but didn't own to their owners", () => {
     const ctx = pod();
     const stolen = spawn(ctx, 'P1', keywordCreature('Sweep Stolen Bear', '', '{1}{G}'));
-    stolen.controllerId = 'P2';
+    changeController(ctx, stolen, 'P2');
     ctx.state.players[1]!.life = 0;
     pump(priorityCheckpoint(ctx));
     expect(ctx.state.eliminatedPlayers).toContain('P2');

@@ -6,12 +6,13 @@
     "types": ["node", "bun"]
   },
   "include": ["src"],
-  // Test suites and the `test-cards-*` harnesses import engine test helpers from
-  // `packages/engine/tests/`, which is outside this project's `rootDir`. They are checked by
+  // Test suites, their shared fixtures and the `test-cards-*` harnesses import helpers from
+  // `packages/engine/tests/` or `scripts/`, outside this project's `rootDir`. They are checked by
   // `tsconfig.test.json` instead — the same production/test split `packages/engine` uses.
   // See docs/guides/testing-and-typechecking.md.
   "exclude": [
     "src/**/*.test.ts",
+    "src/cards/card-evidence-input.fixtures.ts",
     "src/cli/test-cards-l4-l6.ts",
     "src/cli/test-cards-l7-coverage.ts"
   ],

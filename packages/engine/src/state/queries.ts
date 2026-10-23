@@ -1,3 +1,4 @@
+import { playerLifeLocked } from './phasing';
 import { counterCount } from './counters';
 import { assertNever } from '../utils/assert-never';
 import { assertManaRiders } from '../cards/mana-riders';
@@ -41,6 +42,7 @@ import type {
   GameContext,
 } from './types';
 import { spellManaValue } from './objects';
+import { selectedPermanentDefinition } from '../cards/spell-faces';
 
 export function getDefByOracleId(
   ctx: GameContext,
@@ -73,6 +75,49 @@ export function requireModeled(def: CardDefinition, situation: string): void {
 
 export function findPermanent(ctx: GameContext, id: ObjectId): EnginePermanent | undefined {
   return ctx.state.battlefield.find((p) => p.id === id);
+}
+
+/**
+ * The planeswalker this attacker is attacking, or null when it attacks the player or attacks
+ * nothing. CR 506.4: an attacked planeswalker is removed from combat when it leaves the
+ * battlefield, changes controller (away from the defending player), or stops being a planeswalker;
+ * that is recorded on the attacker (sticky), so a planeswalker that comes back is not attacked
+ * again. The creature stays an attacking creature either way (CR 506.4c).
+ */
+export function attackedPlaneswalker(
+  ctx: GameContext,
+  perm: EnginePermanent,
+): EnginePermanent | null {
+  if (perm.attackingPlaneswalker === null || perm.attackedPlaneswalkerRemoved) return null;
+  const walker = findPermanent(ctx, perm.attackingPlaneswalker);
+  if (
+    walker === undefined ||
+    walker.controllerId !== perm.attacking ||
+    !computeCharacteristics(ctx, walker).types.includes('Planeswalker')
+  ) {
+    perm.attackedPlaneswalkerRemoved = true;
+    return null;
+  }
+  return walker;
+}
+
+/** Is this creature attacking `playerId` itself, not a planeswalker that player controls? */
+export function isAttackingPlayer(perm: EnginePermanent, playerId: PlayerId): boolean {
+  return perm.attacking === playerId && perm.attackingPlaneswalker === null;
+}
+
+/**
+ * Is this creature attacking `playerId` or a planeswalker `playerId` controls ("attacking you
+ * and/or planeswalkers you control")? One whose planeswalker was removed from combat attacks
+ * neither (CR 506.4c).
+ */
+export function isAttackingPlayerOrTheirPlaneswalker(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  playerId: PlayerId,
+): boolean {
+  if (perm.attacking !== playerId) return false;
+  return perm.attackingPlaneswalker === null || attackedPlaneswalker(ctx, perm) !== null;
 }
 
 /** Current card types include Creature after the layer system (Mutavault, etc.). */
@@ -169,6 +214,33 @@ export function playersInApnapOrder(ctx: GameContext): EnginePlayerState[] {
   return order;
 }
 
+/** A direction around the table (CR 101.4: turn order passes to the left). */
+export type SeatDirection = 'left' | 'right';
+
+/**
+ * The nearest opponent of `playerId` in `direction`, skipping players who have left the game:
+ * the next player in turn order to the left, the previous one to the right. With two players it
+ * is the other one either way. Undefined when `playerId` has no opponent left.
+ */
+export function nearestOpponentInDirection(
+  ctx: GameContext,
+  playerId: PlayerId,
+  direction: SeatDirection,
+): EnginePlayerState | undefined {
+  const order = ctx.state.turnOrder;
+  const start = order.indexOf(playerId);
+  if (start < 0) return undefined;
+  const step = direction === 'left' ? 1 : -1;
+  for (let i = 1; i < order.length; i++) {
+    const id = order[
+      (((start + step * i) % order.length) + order.length) % order.length
+    ] as PlayerId;
+    const candidate = ctx.state.players.find((p) => p.id === id);
+    if (candidate !== undefined && !candidate.hasLost) return candidate;
+  }
+  return undefined;
+}
+
 export function activePlayer(ctx: GameContext): EnginePlayerState {
   const id = ctx.state.turnOrder[ctx.state.activePlayerIndex] as PlayerId;
   const p = ctx.state.players.find((pl) => pl.id === id);
@@ -196,8 +268,9 @@ export function cardZoneCandidate(
   ctx: GameContext,
   card: EngineCardObject,
   ownerId: PlayerId,
+  definition?: CardDefinition,
 ): SelectorCandidate {
-  const def = getDefByOracleId(ctx, card.oracleId, card.name);
+  const def = definition ?? getDefByOracleId(ctx, card.oracleId, card.name);
   return {
     cardId: card.cardId,
     controllerId: ownerId,
@@ -216,6 +289,7 @@ export function cardZoneCandidate(
     enteredThisTurn: false,
     isCommander: card.isCommander,
     ownerId: card.ownerId,
+    name: card.name,
   };
 }
 
@@ -522,12 +596,21 @@ export function resolveConditionalUnits(
  */
 /** May `candidate` pay `cost` (a sacrifice) for an ability of `source`? */
 export function sacrificeCandidateAllowed(
+  ctx: GameContext,
   cost: { allowSelf?: boolean; onlyCardId?: string },
   source: EnginePermanent,
   candidate: EnginePermanent,
 ): boolean {
+  if (!canBeSacrificed(ctx, candidate)) return false;
   if (cost.onlyCardId !== undefined && candidate.cardId !== cost.onlyCardId) return false;
   return cost.allowSelf === true || candidate.id !== source.id;
+}
+
+/** Rules prohibition applies to both costs and effects, and disappears with the ability. */
+export function canBeSacrificed(ctx: GameContext, permanent: EnginePermanent): boolean {
+  return !gatherRuleStatics(ctx).some(
+    (entry) => entry.sourceCardId === permanent.cardId && entry.static.kind === 'cantBeSacrificed',
+  );
 }
 
 /**
@@ -552,7 +635,7 @@ function expandSacrificedManaValue<T extends ManaAbilitySpec>(
     .filter(
       (candidate) =>
         candidate.controllerId === perm.controllerId &&
-        sacrificeCandidateAllowed(sacrifice, perm, candidate) &&
+        sacrificeCandidateAllowed(ctx, sacrifice, perm, candidate) &&
         matchesSelector(ctx, candidate, sacrifice.selector, {
           cardId: perm.cardId,
           controllerId: perm.controllerId,
@@ -603,6 +686,7 @@ export function canPayNonManaCosts(
         }
         break;
       case 'sacrificeSelf':
+        if (!canBeSacrificed(ctx, perm)) return false;
         break;
       case 'exileSelf':
         break;
@@ -613,7 +697,7 @@ export function canPayNonManaCosts(
         const count = cost.count ?? 1;
         const payable = ctx.state.battlefield.filter(
           (candidate) =>
-            sacrificeCandidateAllowed(cost, perm, candidate) &&
+            sacrificeCandidateAllowed(ctx, cost, perm, candidate) &&
             candidate.controllerId === perm.controllerId &&
             matchesSelector(ctx, candidate, cost.selector, {
               cardId: perm.cardId,
@@ -688,14 +772,22 @@ export function canPayNonManaCosts(
       case 'payLife': {
         // CR 119.4 / 119.4b: positive life payments need enough life; zero is always payable.
         const controller = ctx.state.players.find((p) => p.id === perm.controllerId);
-        if (controller === undefined || (cost.amount > 0 && controller.life < cost.amount))
+        if (
+          controller === undefined ||
+          (cost.amount > 0 &&
+            (controller.life < cost.amount || playerLifeLocked(ctx, controller.id)))
+        )
           return false;
         break;
       }
       case 'payLifeValue': {
         const controller = ctx.state.players.find((p) => p.id === perm.controllerId);
         const amount = evaluateValue(ctx, cost.amount, { controllerId: perm.controllerId });
-        if (controller === undefined || (amount > 0 && controller.life < amount)) return false;
+        if (
+          controller === undefined ||
+          (amount > 0 && (controller.life < amount || playerLifeLocked(ctx, controller.id)))
+        )
+          return false;
         break;
       }
       case 'payEnergy': {
@@ -729,6 +821,7 @@ export function canPayNonManaCosts(
       case 'discardHand':
         // Discarding the entire hand is payable even when that hand is empty.
         break;
+      case 'returnUnblockedAttacker':
       case 'exileOtherCardsFromGraveyard':
         // Supported only by the spell-cost path, not battlefield activations.
         return false;
@@ -992,7 +1085,7 @@ export function manaSourcesFor(
           .filter(
             (p) =>
               p.controllerId === playerId &&
-              sacrificeCandidateAllowed(cost, perm, p) &&
+              sacrificeCandidateAllowed(ctx, cost, perm, p) &&
               matchesSelector(ctx, p, cost.selector, {
                 cardId: perm.cardId,
                 controllerId: playerId,
@@ -1087,8 +1180,9 @@ export function gatherRuleStatics(ctx: GameContext): RuleStaticEntry[] {
   const out: RuleStaticEntry[] = [];
   for (const perm of ctx.state.battlefield) {
     if (perm.faceDown) continue;
-    const def = ctx.defs.get(perm.oracleId);
-    if (def === undefined) continue;
+    const printed = ctx.defs.get(perm.oracleId);
+    if (printed === undefined) continue;
+    const def = selectedPermanentDefinition(printed, perm.face);
     const printedRuleStatics =
       perm.transformed && def.backFace !== undefined ? def.backFace.ruleStatics : def.ruleStatics;
     if (printedRuleStatics.length === 0 || computeCharacteristics(ctx, perm).loseAbilities)
@@ -1120,6 +1214,23 @@ export function gatherRuleStatics(ctx: GameContext): RuleStaticEntry[] {
     }
   }
   return out;
+}
+
+/** Cost increases apply before reductions, including a zero alternative mana cost. */
+export function nonHandSpellCostIncreaseFor(
+  ctx: GameContext,
+  casterId: PlayerId,
+  zone: string,
+): number {
+  if (zone !== 'graveyard' && zone !== 'exile') return 0;
+  return gatherRuleStatics(ctx).reduce(
+    (total, entry) =>
+      total +
+      (entry.static.kind === 'opponentNonHandSpellCostIncrease' && entry.controllerId !== casterId
+        ? entry.static.amount
+        : 0),
+    0,
+  );
 }
 
 /** Number of land plays available to a player this turn, including the normal play. */
@@ -1157,8 +1268,24 @@ export function hasNoMaximumHandSize(ctx: GameContext, playerId: PlayerId): bool
   );
 }
 /** Does an active `cantCastSpells` rule static currently forbid `playerId` from casting? */
-export function castingSpellsBlockedFor(ctx: GameContext, playerId: PlayerId): boolean {
+export function castingSpellsBlockedFor(
+  ctx: GameContext,
+  playerId: PlayerId,
+  definition?: Pick<CardDefinition, 'types'>,
+): boolean {
+  if (ctx.state.spellsProhibitedTurn === ctx.state.turnNumber) return true;
   return gatherRuleStatics(ctx).some((entry) => {
+    if (entry.static.kind === 'spellCastLimit') {
+      const player = ctx.state.players.find((candidate) => candidate.id === playerId);
+      if (player === undefined) return true;
+      if (entry.static.category === 'noncreature')
+        return (
+          definition !== undefined &&
+          !definition.types.includes('Creature') &&
+          player.noncreatureSpellsCastThisTurn >= entry.static.limit
+        );
+      return player.spellsCastThisTurn >= entry.static.limit;
+    }
     if (entry.static.kind !== 'cantCastSpells') return false;
     // "Your OPPONENTS can't cast spells" — the source's own controller is never blocked by it.
     // "PLAYERS can't cast spells" (Basandra) binds everyone, its controller included.
@@ -1237,6 +1364,21 @@ const PERMANENT_TYPES = [
 ] as const;
 
 /**
+ * A card off the battlefield as a cast permission sees it. A permission is checked against the
+ * spell the card would become, so a bestowed card is judged as the Aura enchantment spell it is
+ * cast as, not as the creature card it is (CR 601.3e, 702.103b).
+ */
+function spellZoneCandidate(
+  ctx: GameContext,
+  card: EngineCardObject,
+  ownerId: PlayerId,
+  spellDefinition: CardDefinition | undefined,
+): SelectorCandidate {
+  const candidate = cardZoneCandidate(ctx, card, ownerId, spellDefinition);
+  return spellDefinition === undefined ? candidate : { ...candidate, name: spellDefinition.name };
+}
+
+/**
  * The currently available permission for a non-hand play. `budgetTypes` is absent for an
  * unlimited permission; otherwise the action must choose one of those still-unused permanent
  * types and consume it. Keeping that choice in the action payload handles multitype cards.
@@ -1246,10 +1388,12 @@ export function playFromZonePermission(
   playerId: PlayerId,
   card: EngineCardObject,
   zone: 'libraryTop' | 'graveyard',
+  /** The spell the card would be cast as (a bestowed Aura), when that differs (CR 601.3e). */
+  spellDefinition?: CardDefinition,
 ): { budgetTypes?: string[] } | null {
   const player = ctx.state.players.find((candidate) => candidate.id === playerId);
   if (player === undefined) return null;
-  const candidate = cardZoneCandidate(ctx, card, playerId);
+  const candidate = spellZoneCandidate(ctx, card, playerId, spellDefinition);
   const source: SelectorSource = { cardId: '', controllerId: playerId };
   const matching = gatherRuleStatics(ctx).filter((entry) => {
     if (entry.static.kind !== 'playFromZone' || entry.static.zone !== zone) return false;
@@ -1322,11 +1466,13 @@ export function canPlayFromZone(
 export function castFromLibraryTopCandidates(
   ctx: GameContext,
   playerId: PlayerId,
+  /** The spell the top card would be cast as (a bestowed Aura), when that differs (CR 601.3e). */
+  spellDefinition?: CardDefinition,
 ): EngineCardObject[] {
   const player = ctx.state.players.find((p) => p.id === playerId);
   const top = player?.library[0];
   if (player === undefined || top === undefined) return [];
-  const candidate = cardZoneCandidate(ctx, top, playerId);
+  const candidate = spellZoneCandidate(ctx, top, playerId, spellDefinition);
   const source: SelectorSource = { cardId: '', controllerId: playerId };
   const eligible = gatherRuleStatics(ctx).some((entry) => {
     if (entry.static.kind !== 'castFromZone' || entry.static.zone !== 'libraryTop') return false;
@@ -1358,34 +1504,6 @@ export function damageMultiplierFor(ctx: GameContext, sourceCardId: string): num
     if (matchesSelector(ctx, sourcePerm, entry.static.sourceFilter, from)) multiplier *= 2;
   }
   return multiplier;
-}
-
-/** Apply every active target-aware damage replacement to one damage event. */
-export function damageAmountAfterReplacements(
-  ctx: GameContext,
-  sourceCardId: string,
-  targetControllerId: PlayerId,
-  amount: number,
-  sourceControllerId?: PlayerId,
-): number {
-  const sourcePerm = ctx.state.battlefield.find((p) => p.cardId === sourceCardId);
-  for (const entry of gatherRuleStatics(ctx)) {
-    if (entry.static.kind === 'damageDoubled') {
-      if (sourcePerm === undefined) continue;
-      const from: SelectorSource = { cardId: entry.sourceCardId, controllerId: entry.controllerId };
-      if (matchesSelector(ctx, sourcePerm, entry.static.sourceFilter, from)) amount *= 2;
-    } else if (entry.static.kind === 'damageDoubledToOpponents') {
-      if (
-        targetControllerId !== entry.controllerId &&
-        (entry.static.sourceControllerOnly !== true ||
-          (sourceControllerId ?? sourcePerm?.controllerId) === entry.controllerId)
-      )
-        amount *= 2;
-    } else if (entry.static.kind === 'damageHalvedToYou') {
-      if (targetControllerId === entry.controllerId) amount = Math.floor(amount / 2);
-    }
-  }
-  return amount;
 }
 
 /** The multiplicative token replacement effects active for tokens created under `controllerId`. */

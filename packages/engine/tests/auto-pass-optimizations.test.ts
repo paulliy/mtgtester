@@ -4,7 +4,7 @@
  * 2. Bystander Auto-Passing in 4-Player Combat
  * 3. Action Utility & Phase Filtering
  * 4. Commander Auto-Routing to Command Zone
- * 5. Single-Basic-Land Search Auto-Selection
+ * 5. Preserve optional failure to find in a basic-land search
  */
 
 import { describe, expect, it } from 'vitest';
@@ -212,7 +212,7 @@ describe('Engine Auto-Passing & Decision Optimizations', () => {
   });
 
   describe('5. Basic Land Search Auto-Selection', () => {
-    it('auto-selects when all matching cards in library share the same name', () => {
+    it('preserves the choice to find nothing when matching lands share one name', () => {
       const ctx = setup4PlayerContext();
       const p1 = ctx.state.players[0]!;
       p1.library = [];
@@ -253,8 +253,10 @@ describe('Engine Auto-Passing & Decision Optimizations', () => {
         ),
       );
 
-      // Single distinct basic land name auto-selects without surfacing an AI decision
-      expect(decisions.some((d) => d.prompt.includes('search your library'))).toBe(false);
+      // The stated quality permits failure to find even when every matching card is a Forest.
+      const search = decisions.find((d) => d.prompt.includes('search your library'));
+      expect(search).toBeDefined();
+      expect(search!.options.some((option) => option.type === 'findNothing')).toBe(true);
       expect(ctx.state.battlefield.some((p) => p.name === 'Forest')).toBe(true);
     });
   });

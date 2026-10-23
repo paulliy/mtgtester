@@ -8,6 +8,7 @@
 
 import type { GameGen } from '../decisions';
 import { cardOption, plainOption } from '../present';
+import { canBeSacrificed } from '../state/queries';
 import type { EngineCardObject, EnginePermanent, GameContext } from '../state/types';
 
 export interface ChooseCardSpec<
@@ -31,15 +32,22 @@ export function* chooseCard<T extends EngineCardObject | EnginePermanent>(
   ctx: GameContext,
   spec: ChooseCardSpec<T>,
 ): GameGen<T | null> {
-  if (spec.cards.length === 0) return null;
+  const cards =
+    spec.type === 'sacrifice'
+      ? spec.cards.filter(
+          (card) => card.zone !== 'battlefield' || canBeSacrificed(ctx, card as EnginePermanent),
+        )
+      : spec.cards;
+  if (cards.length === 0) return null;
 
   // No `payload` here deliberately: the outcome is read back by index (`spec.cards[outcome.index]`
   // below), never by payload. A raw card id as payload would make `interactionFor` (`engine.ts`)
   // treat this option as "click the on-screen object with this id" — true for a hand or
   // battlefield card, but library/graveyard/exile cards picked by `chooseCard` have no such
   // on-screen element, which stranded the option behind an unreachable click target.
-  const options = spec.cards.map((card) =>
+  const options = cards.map((card) =>
     cardOption(ctx, card, {
+      viewerId: spec.player,
       type: spec.type,
       description: spec.describe?.(card) ?? `${spec.verb} ${card.name}`,
       verb: spec.verb,
@@ -63,6 +71,6 @@ export function* chooseCard<T extends EngineCardObject | EnginePermanent>(
     prompt: spec.prompt,
     options,
   };
-  if (outcome.index < 0 || outcome.index >= spec.cards.length) return null;
-  return spec.cards[outcome.index] ?? null;
+  if (outcome.index < 0 || outcome.index >= cards.length) return null;
+  return cards[outcome.index] ?? null;
 }

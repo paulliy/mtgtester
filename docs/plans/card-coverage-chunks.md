@@ -1,7 +1,7 @@
 # Card coverage chunks: 302 cards to 906/906
 
-Prepared 2026-10-06. Status: active; PR01 and PR02 are complete, PR03 is in review and PR04 is next. This plan divides the remaining work under
-[complete card coverage](complete-card-coverage.md) into eleven pull requests (PRs) of about 30
+Prepared 2026-10-06. Status: active; PR01 to PR07 are complete and PR08 is in progress. This plan divides the remaining work under
+[complete card coverage](complete-card-coverage.md) into eleven original pull requests (PRs) of about 30
 cards each. Each commit models one card. The scope, definition of done and completion gate in that
 plan still apply. This document only orders the work and groups it into PRs.
 
@@ -9,16 +9,18 @@ plan still apply. This document only orders the work and groups it into PRs.
 
 The population is the frozen 906 unique Oracle IDs: the 12 committed coverage decks plus the
 200 EDH staples. The plan was prepared from the working tree at `406b61c` (604/906). The current
-numbers below were measured after PR03 by interpreting every card in the committed
-`packages/server/fixtures/coverage-oracle.json`, which holds exactly those 906 cards.
-`bun run coverage --json` and `bun run staples --json` with the local bulk file should give the
-same numbers.
+numbers below were measured after PR07 for those original twelve decks and the staples. The
+committed `packages/server/fixtures/coverage-oracle.json` now holds 958 cards because it also
+includes the later white-black-control fixture. Default coverage includes that thirteenth deck.
+For this plan's frozen 906-card population, exclude cards found only in white-black-control from
+the fixture report, then union the remaining Oracle IDs with the 200 staples. PR08 keeps that
+population fixed; the expanded default report is a separate inventory.
 
-| Population            | Before PR01     | After PR01      | After PR02      | Main before PR03 | After PR03      | Remaining |
-| --------------------- | --------------- | --------------- | --------------- | ---------------- | --------------- | --------: |
-| Fixture decks         | 511/802 (63.7%) | 539/802 (67.2%) | 572/802 (71.3%) | 565/802 (70.4%)  | 591/802 (73.7%) |       211 |
-| EDH staples           | 185/200 (92.5%) | 186/200 (93.0%) | 188/200 (94.0%) | 188/200 (94.0%)  | 189/200 (94.5%) |        11 |
-| Combined unique cards | 604/906 (66.7%) | 633/906 (69.9%) | 666/906 (73.5%) | 659/906 (72.7%)  | 686/906 (75.7%) |       220 |
+| Population            | Before PR01     | After PR01      | After PR02      | Main before PR03 | After PR03      | After PR04      | After PR05      | After PR06      | After PR07      | Remaining |
+| --------------------- | --------------- | --------------- | --------------- | ---------------- | --------------- | --------------- | --------------- | --------------- | --------------- | --------: |
+| Fixture decks         | 511/802 (63.7%) | 539/802 (67.2%) | 572/802 (71.3%) | 565/802 (70.4%)  | 591/802 (73.7%) | 612/802 (76.3%) | 635/802 (79.2%) | 663/802 (82.7%) | 691/802 (86.2%) |       111 |
+| EDH staples           | 185/200 (92.5%) | 186/200 (93.0%) | 188/200 (94.0%) | 188/200 (94.0%)  | 189/200 (94.5%) | 189/200 (94.5%) | 189/200 (94.5%) | 189/200 (94.5%) | 189/200 (94.5%) |        11 |
+| Combined unique cards | 604/906 (66.7%) | 633/906 (69.9%) | 666/906 (73.5%) | 659/906 (72.7%)  | 686/906 (75.7%) | 707/906 (78.0%) | 730/906 (80.6%) | 758/906 (83.7%) | 786/906 (86.8%) |       120 |
 
 PR01 and PR02 landed exactly as planned: all 29 and all 33 cards are modeled, no card regressed,
 and the remaining count for every deck matched the PR01 and PR02 columns below.
@@ -28,12 +30,25 @@ the PR02 measurement and closed seven cards that had counted as modeled: Black B
 (FF4) and Dingus Staff (PRA) now fail IR validation (an event-player reference with no event
 scope); Sivitri, Dragon Master and Zurgo and Ojutai reject an executable `noOp`; and Bloomvine
 Regent, Marang River Regent and Monster Manual are contained explicitly. No PR in this plan owns
-them yet, so they stay in the remaining counts: the measured PR02 and PR03 columns below show them
+them in the original eleven chunks; PR12 below now owns them. They stay in the remaining counts: the measured PR02 and PR03 columns below show them
 as one extra card for PRA and FF4 and five for URD. The later columns are still the planned counts
 without them.
 
 PR03 modeled 27 of its 28 cards; Twilight Diviner moved to PR10 (see the PR03 section). No card
 regressed: main plus those 27 cards gives exactly the 686 measured after PR03.
+
+PR04 modeled its 21 cards (707 measured). PR05 modeled 23 of its 26 cards; Spirit Mantle and
+Unquestioned Authority moved to PR11 and Tenuous Truce to PR06 (see the PR05 section). No card
+regressed: main plus those 23 cards gives exactly the 730 measured after PR05.
+
+PR06 modeled all 28 of its cards, including Human Torch and Tenuous Truce, which moved in from PR04
+and PR05 (758 measured). No card regressed: main plus those 28 cards gives exactly the 758
+measured after PR06, which is the planned 765 less the seven cards that main's quality merge had
+already reopened and no PR owns yet (one each for PRA and FF4, five for URD).
+
+PR07 modeled all 26 of its cards (786 measured). No card regressed: the 758 after PR06, plus
+Bilbo's Gambit and Dark Confidant, which main's white-black control merge modeled ahead of PR10 and PR09,
+plus the 26 gives exactly the 786 measured after PR07.
 
 When the plan was prepared, the 302 remaining cards fell into two groups (PR01 and PR02 have since
 modeled 62 of them):
@@ -109,14 +124,14 @@ PR08 once PR02 and PR03 have landed. All other PRs follow the arrows.
 | PR01 | Targeting, optional choices, resolution fidelity |    29 |          25 |       1 |                633/906 |
 | PR02 | Activation and casting costs                     |    33 |          32 |       2 |                666/906 |
 | PR03 | Zone-change history, LKI, death and return       |    27 |          20 |       1 | 693/906 (686 measured) |
-| PR04 | Counters and turn history                        |    22 |           5 |       0 |                715/906 |
-| PR05 | Auras, Equipment, attachment lifecycle           |    26 |          24 |       0 |                741/906 |
-| PR06 | Combat and damage events, damage prevention      |    26 |          21 |       0 |                767/906 |
-| PR07 | Combat requirements, restrictions, extra combats |    26 |          11 |       0 |                793/906 |
-| PR08 | Control changes and multiplayer choices          |    23 |          10 |       1 |                816/906 |
-| PR09 | Library access and casting during resolution     |    31 |          13 |       1 |                847/906 |
-| PR10 | Stack manipulation, copying, characteristics     |    31 |          18 |       2 |                878/906 |
-| PR11 | Protection, phasing, layouts, game lifecycle     |    28 |          14 |       7 |                906/906 |
+| PR04 | Counters and turn history                        |    21 |           5 |       0 | 714/906 (707 measured) |
+| PR05 | Auras, Equipment, attachment lifecycle           |    23 |          23 |       0 | 737/906 (730 measured) |
+| PR06 | Combat and damage events, damage prevention      |    28 |          21 |       0 | 765/906 (758 measured) |
+| PR07 | Combat requirements, restrictions, extra combats |    26 |          11 |       0 | 791/906 (786 measured) |
+| PR08 | Control changes and multiplayer choices          |    23 |          10 |       1 |                814/906 |
+| PR09 | Library access and casting during resolution     |    31 |          13 |       1 |                845/906 |
+| PR10 | Stack manipulation, copying, characteristics     |    31 |          18 |       2 |                876/906 |
+| PR11 | Protection, phasing, layouts, game lifecycle     |    30 |          15 |       7 |                906/906 |
 
 ### Remaining cards per deck after each PR
 
@@ -132,13 +147,13 @@ several decks counts in each of them.
 | LEN  |    19 |   17 |   11 |   11 |   10 |   10 |    9 |    8 |    7 |    4 |    0 |    0 |
 | MAR  |    31 |   30 |   23 |   14 |   11 |   11 |   11 |   10 |    8 |    7 |    1 |    0 |
 | NEC  |    37 |   31 |   23 |   14 |   13 |   10 |    9 |    7 |    7 |    5 |    3 |    0 |
-| PRA  |    36 |   35 |   36 |   33 |   32 |   30 |   24 |   15 |    5 |    4 |    2 |    0 |
+| PRA  |    36 |   35 |   36 |   33 |   33 |   33 |   25 |   16 |    6 |    5 |    3 |    0 |
 | QMQ  |    39 |   38 |   35 |   34 |   34 |   33 |   22 |   18 |   11 |    9 |    5 |    0 |
 | RUB  |    21 |   16 |   15 |   13 |   12 |   12 |   11 |   10 |   10 |    1 |    0 |    0 |
-| SIL  |    40 |   38 |   35 |   35 |   35 |   17 |   13 |    9 |    8 |    4 |    4 |    0 |
-| FF4  |    31 |   31 |   32 |   32 |   25 |   25 |   24 |   19 |   16 |    9 |    2 |    0 |
+| SIL  |    40 |   38 |   35 |   35 |   35 |   18 |   14 |   10 |    9 |    5 |    5 |    0 |
+| FF4  |    31 |   31 |   32 |   32 |   27 |   27 |   24 |   19 |   16 |    9 |    2 |    0 |
 | TOK  |    13 |    8 |    4 |    3 |    3 |    1 |    1 |    0 |    0 |    0 |    0 |    0 |
-| URD  |     3 |    2 |    7 |    7 |    2 |    2 |    1 |    0 |    0 |    0 |    0 |    0 |
+| URD  |     3 |    2 |    7 |    7 |    7 |    7 |    1 |    0 |    0 |    0 |    0 |    0 |
 | S    |    15 |   14 |   12 |   11 |   11 |   11 |   11 |   11 |   10 |    9 |    7 |    0 |
 
 ## PR sections
@@ -334,30 +349,36 @@ Depends on: PR03, for last-known counters.
 - Attack-group size, "power greater than base power" and base power/toughness selectors.
   Reflexive "pay; when you do" (Human Torch, Lockjaw, The Thing).
 
-|    # | Card                           | Population | Kind        | Primary blocker (first reason; +N = more)                                                                                                               |
-| ---: | ------------------------------ | ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 4.01 | Iron Apprentice                | MAR        | fail-closed | The dies intervening-if checks the battlefield, so it never sees this creature's counters.                                                              |
-| 4.02 | Sautekh Immortal               | NEC        | fail-closed | Enters-with counters is implemented as an enters trigger.                                                                                               |
-| 4.03 | Pensive Professor              | MAR        | fail-closed | Increment is claimed, and the draw trigger fires on damage instead of counters being placed.                                                            |
-| 4.04 | Vigean Graftmage               | MAR        | fail-closed | Graft is claimed without enters-with-counters or move-counter behavior.                                                                                 |
-| 4.05 | Aetheric Amplifier             | LEN        | fail-closed | Choose-one is implemented as two independent activated abilities.                                                                                       |
-| 4.06 | Belladonna Took                | BRI        | unmodeled   | Whenever a token you control enters, you gain 1 life if this is the first time this ability has resolved this turn. If it's the second time, draw a c…  |
-| 4.07 | Call Forth the Tempest         | RUB        | unmodeled   | ~ deals damage to each creature your opponents control equal to the total mana value of other spells you've cast this turn.                             |
-| 4.08 | Captain America, Skybound      | BRI        | unmodeled   | Whenever ~ and at least two other creatures attack, put a +1/+1 counter on each attacking creature. They gain indestructible until end of turn.         |
-| 4.09 | Crystal, Inhuman Princess      | FF4        | unmodeled   | Whenever you cast a noncreature spell, ~ deals X damage to each opponent, where X is the number of colors that spell is.                                |
-| 4.10 | Finneas, Ace Archer            | BRI        | unmodeled   | Whenever ~ attacks, put a +1/+1 counter on each other creature you control that's a token or a Rabbit. Then if creatures you control have total power…  |
-| 4.11 | First Family                   | FF4        | unmodeled   | You draw X cards and gain X life, where X is the number of colors among permanents you control and spells you've cast this turn.                        |
-| 4.12 | Forgotten Ancient              | BRI        | unmodeled   | At the beginning of your upkeep, you may move any number of +1/+1 counters from this creature onto other creatures.                                     |
-| 4.13 | Kutzil, Malamet Exemplar       | BRI        | unmodeled   | Whenever one or more creatures you control each with power greater than its base power deals combat damage to a player, draw a card.                    |
-| 4.14 | Lockjaw, Slobbering Teleporter | FF4        | unmodeled   | At the beginning of combat on your turn, if you've cast a noncreature spell this turn, put a +1/+1 counter on ~. When you do, ~ and up to one other t…  |
-| 4.15 | Mikey & Leo, Chaos & Order     | BRI        | unmodeled   | Whenever you put a counter on a creature you control, draw a card. This ability triggers only once each turn.                                           |
-| 4.16 | Rumor Gatherer                 | BRI        | unmodeled   | Whenever another creature you control enters, scry 1. If this is the second time this ability has resolved this turn, draw a card instead.              |
-| 4.17 | The Thing                      | FF4        | unmodeled   | Whenever ~ attacks, you may pay {R}{G}{W}{U}. When you do, double the number of each kind of counter on any number of target permanents you control.    |
-| 4.18 | Unbreakable Formation          | BRI        | unmodeled   | If you cast this spell during your main phase, put a +1/+1 counter on each of those creatures and they gain vigilance until end of turn.                |
-| 4.19 | Bess, Soul Nourisher           | BRI        | unmodeled   | Whenever one or more other creatures you control with base power and toughness 1/1 enter, put a +1/+1 counter on ~. (+1)                                |
-| 4.20 | Elite Scaleguard               | BRI        | unmodeled   | When this creature enters, bolster 2. (+1)                                                                                                              |
-| 4.21 | Human Torch                    | FF4        | unmodeled   | At the beginning of combat on your turn, if you've cast a noncreature spell this turn, ~ gains flying, double strike, and haste until end of turn. (+1) |
-| 4.22 | The Fantasticar                | FF4        | unmodeled   | Whenever you cast a noncreature spell, you may have ~ become an artifact creature until end of turn. (+1)                                               |
+|    # | Card                           | Population | Kind        | Primary blocker (first reason; +N = more)                                                                                                              |
+| ---: | ------------------------------ | ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 4.01 | Iron Apprentice                | MAR        | fail-closed | The dies intervening-if checks the battlefield, so it never sees this creature's counters.                                                             |
+| 4.02 | Sautekh Immortal               | NEC        | fail-closed | Enters-with counters is implemented as an enters trigger.                                                                                              |
+| 4.03 | Pensive Professor              | MAR        | fail-closed | Increment is claimed, and the draw trigger fires on damage instead of counters being placed.                                                           |
+| 4.04 | Vigean Graftmage               | MAR        | fail-closed | Graft is claimed without enters-with-counters or move-counter behavior.                                                                                |
+| 4.05 | Aetheric Amplifier             | LEN        | fail-closed | Choose-one is implemented as two independent activated abilities.                                                                                      |
+| 4.06 | Belladonna Took                | BRI        | unmodeled   | Whenever a token you control enters, you gain 1 life if this is the first time this ability has resolved this turn. If it's the second time, draw a c… |
+| 4.07 | Call Forth the Tempest         | RUB        | unmodeled   | ~ deals damage to each creature your opponents control equal to the total mana value of other spells you've cast this turn.                            |
+| 4.08 | Captain America, Skybound      | BRI        | unmodeled   | Whenever ~ and at least two other creatures attack, put a +1/+1 counter on each attacking creature. They gain indestructible until end of turn.        |
+| 4.09 | Crystal, Inhuman Princess      | FF4        | unmodeled   | Whenever you cast a noncreature spell, ~ deals X damage to each opponent, where X is the number of colors that spell is.                               |
+| 4.10 | Finneas, Ace Archer            | BRI        | unmodeled   | Whenever ~ attacks, put a +1/+1 counter on each other creature you control that's a token or a Rabbit. Then if creatures you control have total power… |
+| 4.11 | First Family                   | FF4        | unmodeled   | You draw X cards and gain X life, where X is the number of colors among permanents you control and spells you've cast this turn.                       |
+| 4.12 | Forgotten Ancient              | BRI        | unmodeled   | At the beginning of your upkeep, you may move any number of +1/+1 counters from this creature onto other creatures.                                    |
+| 4.13 | Kutzil, Malamet Exemplar       | BRI        | unmodeled   | Whenever one or more creatures you control each with power greater than its base power deals combat damage to a player, draw a card.                   |
+| 4.14 | Lockjaw, Slobbering Teleporter | FF4        | unmodeled   | At the beginning of combat on your turn, if you've cast a noncreature spell this turn, put a +1/+1 counter on ~. When you do, ~ and up to one other t… |
+| 4.15 | Mikey & Leo, Chaos & Order     | BRI        | unmodeled   | Whenever you put a counter on a creature you control, draw a card. This ability triggers only once each turn.                                          |
+| 4.16 | Rumor Gatherer                 | BRI        | unmodeled   | Whenever another creature you control enters, scry 1. If this is the second time this ability has resolved this turn, draw a card instead.             |
+| 4.17 | The Thing                      | FF4        | unmodeled   | Whenever ~ attacks, you may pay {R}{G}{W}{U}. When you do, double the number of each kind of counter on any number of target permanents you control.   |
+| 4.18 | Unbreakable Formation          | BRI        | unmodeled   | If you cast this spell during your main phase, put a +1/+1 counter on each of those creatures and they gain vigilance until end of turn.               |
+| 4.19 | Bess, Soul Nourisher           | BRI        | unmodeled   | Whenever one or more other creatures you control with base power and toughness 1/1 enter, put a +1/+1 counter on ~. (+1)                               |
+| 4.20 | Elite Scaleguard               | BRI        | unmodeled   | When this creature enters, bolster 2. (+1)                                                                                                             |
+| 4.21 | Human Torch                    | FF4        | moved       | Moved to PR06 as 6.27: the granted trigger needs the damaged player bound and Human Torch as the damage source.                                        |
+| 4.22 | The Fantasticar                | FF4        | unmodeled   | Whenever you cast a noncreature spell, you may have ~ become an artifact creature until end of turn. (+1)                                              |
+
+Human Torch (4.21) moved to PR06. Its first ability fits PR04's spell history, but the second
+grants "whenever he deals combat damage to an opponent, he deals that much damage to each other
+opponent" until end of turn. That needs the damaged player bound and Human Torch as the source of
+the second damage, which are PR06's damage-event primitives, so its commit lands there instead of
+approximating the trigger here.
 
 ### PR05: Auras, Equipment, attachment lifecycle
 
@@ -371,49 +392,65 @@ Depends on: PR02 for bestow and cost merging, and PR03 for death and return.
   merged static (Karametra's Favor). Counting Auras attached to a specific object, with last-known
   information on death (Kor Spiritdancer, Hateful Eidolon).
 - Granted creature types (Angelic Destiny), bestow, the Kindred card type with annihilator, and
-  enchant player (Curse of Bounty, Tenuous Truce).
-- Protection from creatures and ward granted by Auras (Spirit Mantle, Unquestioned Authority,
-  Sheltered by Ghosts). Selectors for creatures enchanted by an Aura you control.
+  enchant player (Curse of Bounty).
+- Ward granted by an Aura (Sheltered by Ghosts). Selectors for creatures enchanted by an Aura you
+  control.
 - Equipment: equip merges with other activations, equipped-creature damage triggers, returning a
   card under its owner's control, and the corrected Sunforger equip cost.
 
-|    # | Card                         | Population | Kind        | Primary blocker (first reason; +N = more)                                                                      |
-| ---: | ---------------------------- | ---------- | ----------- | -------------------------------------------------------------------------------------------------------------- |
-| 5.01 | Ajani's Chosen               | SIL        | fail-closed | Aura-enters attach-to-token is omitted from the Cat trigger.                                                   |
-| 5.02 | Cranial Plating              | NEC        | fail-closed | Equip {1} is dropped when the attach activation replaces activatedAbilities.                                   |
-| 5.03 | Forum Filibuster             | SIL        | fail-closed | Reflexive Aura/Equipment return attached to the token is omitted.                                              |
-| 5.04 | Ghoulish Impetus             | SIL        | fail-closed | Delayed Aura return does not attach, so SBA immediately puts it into the graveyard.                            |
-| 5.05 | Gift of Immortality          | SIL        | fail-closed | Delayed Aura return attached to the creature is omitted.                                                       |
-| 5.06 | Hateful Eidolon              | SIL        | fail-closed | Draws one card instead of one per Aura that was attached.                                                      |
-| 5.07 | Karametra's Favor            | TOK        | fail-closed | The enchanted-creature +1/+1 is dropped when the mana ability replaces staticEffects.                          |
-| 5.08 | Martial Impetus              | SIL        | fail-closed | Other-attacking-your-opponents pump is implemented as all creatures in combat.                                 |
-| 5.09 | Mask of Memory               | NEC        | fail-closed | Equipped-creature combat damage is implemented as any equipped creature.                                       |
-| 5.10 | Redemption Arc               | SIL        | fail-closed | Exile-enchanted-creature activated ability is claimed without an implementation.                               |
-| 5.11 | Resurrection Orb             | NEC        | fail-closed | Return is under the equipment controller, not the card's owner.                                                |
-| 5.12 | Screams from Within          | SIL        | fail-closed | Return is a required attach target; current Oracle returns this Aura untargeted.                               |
-| 5.13 | Shielded by Faith            | SIL        | fail-closed | Optional attach is implemented as mandatory attach.                                                            |
-| 5.14 | Spirit Mantle                | SIL        | fail-closed | Protection from creatures is unimplemented.                                                                    |
-| 5.15 | Sunforger                    | QMQ        | fail-closed | Equip {2} is authored; current Oracle is Equip {3}.                                                            |
-| 5.16 | Angelic Destiny              | SIL        | fail-closed | Angel type-changing is claimed without a type-changing static.                                                 |
-| 5.17 | Animate Dead                 | SIL        | fail-closed | Graveyard Aura attach and leave-the-battlefield sacrifice are omitted.                                         |
-| 5.18 | Curse of Bounty              | TOK        | fail-closed | Only the attacking player untaps; the curse controller always should.                                          |
-| 5.19 | Eidolon of Countless Battles | SIL        | fail-closed | Bestow is claimed, and the Aura-count buff is overwritten by a creature-count self pump.                       |
-| 5.20 | Eldrazi Conscription         | SIL        | fail-closed | Annihilator 2 is claimed without an annihilator implementation.                                                |
-| 5.21 | Fallen Ideal                 | SIL        | fail-closed | Granted sacrifice ability is authored on the Aura, and sacrificeOther cannot sacrifice the enchanted creature. |
-| 5.22 | Killian, Decisive Mentor     | SIL        | fail-closed | Attack-trigger scoped to creatures enchanted by your Auras is unimplemented.                                   |
-| 5.23 | Kor Spiritdancer             | SIL        | fail-closed | Attached-Aura pump counts all Auras you control.                                                               |
-| 5.24 | Sheltered by Ghosts          | SIL        | fail-closed | Ward {2} is claimed without a ward static.                                                                     |
-| 5.25 | Unquestioned Authority       | PRA        | unmodeled   | Enchanted creature has protection from creatures.                                                              |
-| 5.26 | Tenuous Truce                | PRA        | unmodeled   | Enchant opponent (+2)                                                                                          |
+|    # | Card                         | Population | Kind        | Primary blocker (first reason; +N = more)                                                                              |
+| ---: | ---------------------------- | ---------- | ----------- | ---------------------------------------------------------------------------------------------------------------------- |
+| 5.01 | Ajani's Chosen               | SIL        | fail-closed | Aura-enters attach-to-token is omitted from the Cat trigger.                                                           |
+| 5.02 | Cranial Plating              | NEC        | fail-closed | Equip {1} is dropped when the attach activation replaces activatedAbilities.                                           |
+| 5.03 | Forum Filibuster             | SIL        | fail-closed | Reflexive Aura/Equipment return attached to the token is omitted.                                                      |
+| 5.04 | Ghoulish Impetus             | SIL        | fail-closed | Delayed Aura return does not attach, so SBA immediately puts it into the graveyard.                                    |
+| 5.05 | Gift of Immortality          | SIL        | fail-closed | Delayed Aura return attached to the creature is omitted.                                                               |
+| 5.06 | Hateful Eidolon              | SIL        | fail-closed | Draws one card instead of one per Aura that was attached.                                                              |
+| 5.07 | Karametra's Favor            | TOK        | fail-closed | The enchanted-creature +1/+1 is dropped when the mana ability replaces staticEffects.                                  |
+| 5.08 | Martial Impetus              | SIL        | fail-closed | Other-attacking-your-opponents pump is implemented as all creatures in combat.                                         |
+| 5.09 | Mask of Memory               | NEC        | fail-closed | Equipped-creature combat damage is implemented as any equipped creature.                                               |
+| 5.10 | Redemption Arc               | SIL        | fail-closed | Exile-enchanted-creature activated ability is claimed without an implementation.                                       |
+| 5.11 | Resurrection Orb             | NEC        | fail-closed | Return is under the equipment controller, not the card's owner.                                                        |
+| 5.12 | Screams from Within          | SIL        | fail-closed | Return is a required attach target; current Oracle returns this Aura untargeted.                                       |
+| 5.13 | Shielded by Faith            | SIL        | fail-closed | Optional attach is implemented as mandatory attach.                                                                    |
+| 5.14 | Spirit Mantle                | SIL        | moved       | Moved to PR11 as 11.29: protection from creatures needs protection keyed on the source's card type.                    |
+| 5.15 | Sunforger                    | QMQ        | fail-closed | Equip {2} is authored; current Oracle is Equip {3}.                                                                    |
+| 5.16 | Angelic Destiny              | SIL        | fail-closed | Angel type-changing is claimed without a type-changing static.                                                         |
+| 5.17 | Animate Dead                 | SIL        | fail-closed | Graveyard Aura attach and leave-the-battlefield sacrifice are omitted.                                                 |
+| 5.18 | Curse of Bounty              | TOK        | fail-closed | Only the attacking player untaps; the curse controller always should.                                                  |
+| 5.19 | Eidolon of Countless Battles | SIL        | fail-closed | Bestow is claimed, and the Aura-count buff is overwritten by a creature-count self pump.                               |
+| 5.20 | Eldrazi Conscription         | SIL        | fail-closed | Annihilator 2 is claimed without an annihilator implementation.                                                        |
+| 5.21 | Fallen Ideal                 | SIL        | fail-closed | Granted sacrifice ability is authored on the Aura, and sacrificeOther cannot sacrifice the enchanted creature.         |
+| 5.22 | Killian, Decisive Mentor     | SIL        | fail-closed | Attack-trigger scoped to creatures enchanted by your Auras is unimplemented.                                           |
+| 5.23 | Kor Spiritdancer             | SIL        | fail-closed | Attached-Aura pump counts all Auras you control.                                                                       |
+| 5.24 | Sheltered by Ghosts          | SIL        | fail-closed | Ward {2} is claimed without a ward static.                                                                             |
+| 5.25 | Unquestioned Authority       | PRA        | moved       | Moved to PR11 as 11.30: protection from creatures needs protection keyed on the source's card type.                    |
+| 5.26 | Tenuous Truce                | PRA        | moved       | Moved to PR06 as 6.28: its sacrifice trigger also fires on attacks at planeswalkers, which need PR06's attack scoping. |
+
+Spirit Mantle (5.14) and Unquestioned Authority (5.25) moved to PR11. Each Aura grants protection
+from creatures, but the engine's protection is keyed on colors only: every damage, targeting,
+blocking and attachment check passes the source's colors. Protection from a card type needs the
+source's characteristics at each of those checks, which is PR11's protection-quality work, so the
+two commits land there instead of approximating protection here.
+
+Tenuous Truce (5.26) moved to PR06. Its Aura is sacrificed "when you attack enchanted opponent or a
+planeswalker they control or when they attack you or a planeswalker you control", but creatures
+attack only players in this engine. Modeling only the player halves would leave the planeswalker
+halves silently missing, so the card waits for PR06's attack-event scoping, which records which
+player or planeswalker was attacked.
 
 ### PR06: Combat and damage events, damage prevention
 
 Depends on: PR04, for attack groups and history.
 
+Status: all 28 cards are modeled (758/906 measured; fixture decks 663/802, staples 189/200). The
+measured remaining count per deck matches the PR06 column above except PRA 26 (planned 25), FF4 25
+(planned 24) and URD 6 (planned 1), the seven cards that main reopened before PR03.
+
 - Attack-event scoping: which player or planeswalker was attacked, which defending player is
   bound, one trigger per group for "one or more creatures attack", and triggers on an opponent
   attacking. Applies to Breena, Mangara, Tomik, Ever-Watching Threshold, Firemane Commando,
-  Frontier Warmonger and Duelist's Heritage.
+  Frontier Warmonger, Duelist's Heritage and Tenuous Truce.
 - The source of damage: the entering or chosen creature deals it (Dragon Tempest, Scourge of
   Valkas, Arcbond, Backlash, Delirium). The damaged player and the player whose spell or ability
   targeted the creature are bound (Tomb Blade, Michiko Konda, Thunderbreak Regent). Thundermaw
@@ -428,38 +465,45 @@ Depends on: PR04, for attack groups and history.
 - Block triggers with a delayed end-of-combat return (Wall of Tears). Brash Taunter's "another
   target". Delirium can be cast only during an opponent's turn.
 
-|    # | Card                        | Population | Kind        | Primary blocker (first reason; +N = more)                                                                                                              |
-| ---: | --------------------------- | ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 6.01 | Arcbond                     | QMQ        | fail-closed | The delayed damage is dealt by Arcbond, not by the chosen creature.                                                                                    |
-| 6.02 | Backlash                    | QMQ        | fail-closed | Untapped-creature targeting is implemented as any creature.                                                                                            |
-| 6.03 | Breena, the Demagogue       | QMQ, SIL   | fail-closed | Defender-has-more-life-than-another-of-your-opponents is implemented as defender-has-more-life-than-the-attacker.                                      |
-| 6.04 | Comeuppance                 | QMQ        | fail-closed | All-damage prevention and reflection are implemented as preventCombatDamageToController.                                                               |
-| 6.05 | Deflecting Palm             | PRA, QMQ   | fail-closed | Source choice and reflection are implemented as unscoped combat-damage prevention.                                                                     |
-| 6.06 | Duelist's Heritage          | PRA, QMQ   | fail-closed | Once-per-attack-group optional double strike is implemented as a per-attacker grant on any creature.                                                   |
-| 6.07 | Flameblast Dragon           | DRA        | fail-closed | The damage target is chosen before you decide to pay X.                                                                                                |
-| 6.08 | Mangara, the Diplomat       | QMQ, SIL   | fail-closed | Two-or-more attacking you is implemented as any combat attack, and a second-spell trigger is added.                                                    |
-| 6.09 | Michiko Konda, Truth Seeker | QMQ        | fail-closed | Damage-to-you is implemented as damage to permanents you control.                                                                                      |
-| 6.10 | Scourge of Valkas           | DRA        | fail-closed | The entering Dragon is the damage source, implemented as damage from this creature.                                                                    |
-| 6.11 | Territorial Aetherkite      | LEN        | fail-closed | The damage is a reflexive trigger after payment, implemented as the same resolution.                                                                   |
-| 6.12 | Thunderbreak Regent         | DRA        | fail-closed | Damage to the targeting opponent uses eventPlayer, which is unset on becomes-targeted events.                                                          |
-| 6.13 | Thundermaw Hellkite         | DRA        | fail-closed | Tap applies to all opposing fliers, not only creatures dealt that damage.                                                                              |
-| 6.14 | Tomb Blade                  | NEC        | fail-closed | Combat-damage life loss targets any player, not the damaged player.                                                                                    |
-| 6.15 | Tyrant's Familiar           | DRA, RUB   | fail-closed | Defending-player creature targeting uses eventPlayer, which is the attacking player.                                                                   |
-| 6.16 | Brash Taunter               | QMQ        | fail-closed | Another-target fight can target this creature.                                                                                                         |
-| 6.17 | Delirium                    | QMQ        | fail-closed | Cast-only-during-an-opponent's-turn is omitted.                                                                                                        |
-| 6.18 | Dragon Tempest              | DRA, URD   | fail-closed | Dragon-dealt damage is implemented as damage from this enchantment.                                                                                    |
-| 6.19 | Firemane Commando           | SIL        | fail-closed | Both attack triggers make you draw, ignoring the other-player and not-attacked-you clauses.                                                            |
-| 6.20 | Selfless Squire             | QMQ        | fail-closed | All-damage prevention and the prevented-damage counters are implemented as preventCombatDamageToController on enter.                                   |
-| 6.21 | Tomik, Wielder of Law       | SIL        | fail-closed | Affinity and opponent-attacks trigger are implemented as a self-attack drain.                                                                          |
-| 6.22 | Ever-Watching Threshold     | PRA        | unmodeled   | Whenever an opponent attacks, if they attacked you and/or a planeswalker you control, draw a card.                                                     |
-| 6.23 | Frontier Warmonger          | PRA        | unmodeled   | Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn.             |
-| 6.24 | Guard Gomazoa               | PRA        | unmodeled   | Prevent all combat damage that would be dealt to this creature.                                                                                        |
-| 6.25 | Invisible Woman             | FF4        | unmodeled   | Whenever you attack, you may pay {R}{G}{W}{U}. When you do, target creature gets +1/+0 until end of turn for each creature you control and can't be b… |
-| 6.26 | Wall of Tears               | PRA        | unmodeled   | Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat.                                                   |
+|    # | Card                        | Population | Kind        | Primary blocker (first reason; +N = more)                                                                                                               |
+| ---: | --------------------------- | ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 6.01 | Arcbond                     | QMQ        | fail-closed | The delayed damage is dealt by Arcbond, not by the chosen creature.                                                                                     |
+| 6.02 | Backlash                    | QMQ        | fail-closed | Untapped-creature targeting is implemented as any creature.                                                                                             |
+| 6.03 | Breena, the Demagogue       | QMQ, SIL   | fail-closed | Defender-has-more-life-than-another-of-your-opponents is implemented as defender-has-more-life-than-the-attacker.                                       |
+| 6.04 | Comeuppance                 | QMQ        | fail-closed | All-damage prevention and reflection are implemented as preventCombatDamageToController.                                                                |
+| 6.05 | Deflecting Palm             | PRA, QMQ   | fail-closed | Source choice and reflection are implemented as unscoped combat-damage prevention.                                                                      |
+| 6.06 | Duelist's Heritage          | PRA, QMQ   | fail-closed | Once-per-attack-group optional double strike is implemented as a per-attacker grant on any creature.                                                    |
+| 6.07 | Flameblast Dragon           | DRA        | fail-closed | The damage target is chosen before you decide to pay X.                                                                                                 |
+| 6.08 | Mangara, the Diplomat       | QMQ, SIL   | fail-closed | Two-or-more attacking you is implemented as any combat attack, and a second-spell trigger is added.                                                     |
+| 6.09 | Michiko Konda, Truth Seeker | QMQ        | fail-closed | Damage-to-you is implemented as damage to permanents you control.                                                                                       |
+| 6.10 | Scourge of Valkas           | DRA        | fail-closed | The entering Dragon is the damage source, implemented as damage from this creature.                                                                     |
+| 6.11 | Territorial Aetherkite      | LEN        | fail-closed | The damage is a reflexive trigger after payment, implemented as the same resolution.                                                                    |
+| 6.12 | Thunderbreak Regent         | DRA        | fail-closed | Damage to the targeting opponent uses eventPlayer, which is unset on becomes-targeted events.                                                           |
+| 6.13 | Thundermaw Hellkite         | DRA        | fail-closed | Tap applies to all opposing fliers, not only creatures dealt that damage.                                                                               |
+| 6.14 | Tomb Blade                  | NEC        | fail-closed | Combat-damage life loss targets any player, not the damaged player.                                                                                     |
+| 6.15 | Tyrant's Familiar           | DRA, RUB   | fail-closed | Defending-player creature targeting uses eventPlayer, which is the attacking player.                                                                    |
+| 6.16 | Brash Taunter               | QMQ        | fail-closed | Another-target fight can target this creature.                                                                                                          |
+| 6.17 | Delirium                    | QMQ        | fail-closed | Cast-only-during-an-opponent's-turn is omitted.                                                                                                         |
+| 6.18 | Dragon Tempest              | DRA, URD   | fail-closed | Dragon-dealt damage is implemented as damage from this enchantment.                                                                                     |
+| 6.19 | Firemane Commando           | SIL        | fail-closed | Both attack triggers make you draw, ignoring the other-player and not-attacked-you clauses.                                                             |
+| 6.20 | Selfless Squire             | QMQ        | fail-closed | All-damage prevention and the prevented-damage counters are implemented as preventCombatDamageToController on enter.                                    |
+| 6.21 | Tomik, Wielder of Law       | SIL        | fail-closed | Affinity and opponent-attacks trigger are implemented as a self-attack drain.                                                                           |
+| 6.22 | Ever-Watching Threshold     | PRA        | unmodeled   | Whenever an opponent attacks, if they attacked you and/or a planeswalker you control, draw a card.                                                      |
+| 6.23 | Frontier Warmonger          | PRA        | unmodeled   | Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn.              |
+| 6.24 | Guard Gomazoa               | PRA        | unmodeled   | Prevent all combat damage that would be dealt to this creature.                                                                                         |
+| 6.25 | Invisible Woman             | FF4        | unmodeled   | Whenever you attack, you may pay {R}{G}{W}{U}. When you do, target creature gets +1/+0 until end of turn for each creature you control and can't be b…  |
+| 6.26 | Wall of Tears               | PRA        | unmodeled   | Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat.                                                    |
+| 6.27 | Human Torch                 | FF4        | unmodeled   | At the beginning of combat on your turn, if you've cast a noncreature spell this turn, ~ gains flying, double strike, and haste until end of turn. (+1) |
+| 6.28 | Tenuous Truce               | PRA        | unmodeled   | Enchant opponent; at enchanted opponent's end step you both draw; attacking between you, or at a planeswalker, sacrifices it.                           |
 
 ### PR07: Combat requirements, restrictions, extra combats
 
 Depends on: PR06.
+
+Status: all 26 cards are modeled (786/906 measured; fixture decks 691/802, staples 189/200). The
+measured remaining count per deck matches the PR07 column above except PRA 17 (planned 16), FF4 20
+(planned 19) and URD 5 (planned 0), the seven cards that main reopened before PR03, and BRI 8
+(planned 9) and MAR 9 (planned 10), where main already modeled Bilbo's Gambit and Dark Confidant.
 
 - Attack requirements are checked jointly for whether they can be satisfied. These include "attacks
   player X if able", effects lasting until your next turn, and goad that covers creatures entering
@@ -674,7 +718,8 @@ worth splitting further.
   can't win", and split second (Teferi's Protection, The One Ring, Angel's Grace).
 - Phasing, including attachments and no zone-change triggers (Clever Concealment). Removing
   hexproof (Arcane Lighthouse). "Can't be the target of abilities your opponents control" (Shanna).
-  Protection from multicolored (Basri's Lieutenant).
+  Protection from multicolored (Basri's Lieutenant) and protection from creatures granted by an
+  Aura (Spirit Mantle, Unquestioned Authority), which key protection on the source's card type.
 - Layouts:
   - Saga chapters, lore counters and sacrifice (Urza's Saga, The War in Heaven);
   - Class levels (Intermediate Chirography) and prepare (Defacing Duskmage, Eiganjo Dynastorian);
@@ -720,6 +765,8 @@ worth splitting further.
 | 11.26 | Dollmaker's Shop // Porcelain Gallery           | BRI        | unmodeled   | unsupported layout "split (+1)                                                                                                                             |
 | 11.27 | Mila, Crafty Companion // Lukka, Wayward Bonder | PRA        | unmodeled   | unsupported layout "modal_dfc (+1)                                                                                                                         |
 | 11.28 | Negative Zone Portal                            | FF4        | unmodeled   | {2}, {T}: Exile target card from an opponent's graveyard. If it's a creature card, draw a card. (+1)                                                       |
+| 11.29 | Spirit Mantle                                   | SIL        | fail-closed | Protection from creatures is unimplemented.                                                                                                                |
+| 11.30 | Unquestioned Authority                          | PRA        | unmodeled   | Enchanted creature has protection from creatures.                                                                                                          |
 
 ## Keeping this plan current
 
@@ -729,3 +776,24 @@ worth splitting further.
 - After each PR, rerun the measurement and replace the baseline and progression tables. If a fix
   shows that a card previously counted as modeled was wrong, report the regression rather than
   hiding it.
+
+### PR12: Reopened quality-audit cards
+
+Assigned during PR08 preparation on 2026-10-17. PR08 keeps its original 23-card scope and targets
+809/906 from the measured 786/906 baseline. These seven cards are additional to the original
+PR01–PR11 assignments; the existing later columns are historical planned counts, not new measurements.
+
+Depends on PR09–PR11 where their shared primitives apply. Each card still requires the full
+[card modeling and testing standard](../guides/card-modeling-and-testing.md), one card per green
+commit, and explicit containment until every clause is faithfully implemented. Completing PR12
+is necessary for the frozen population to reach 906/906.
+
+|     # | Card                     | Population | Reopened blocker                                                   |
+| ----: | ------------------------ | ---------- | ------------------------------------------------------------------ |
+| 12.01 | Black Bolt, Inhuman King | FF4        | Event-player reference without an event scope fails IR validation. |
+| 12.02 | Dingus Staff             | PRA        | Event-player reference without an event scope fails IR validation. |
+| 12.03 | Sivitri, Dragon Master   | URD        | Executable `noOp` is rejected.                                     |
+| 12.04 | Zurgo and Ojutai         | URD        | Executable `noOp` is rejected.                                     |
+| 12.05 | Bloomvine Regent         | URD        | Explicitly contained; implement and verify all relevant faces.     |
+| 12.06 | Marang River Regent      | URD        | Explicitly contained; implement and verify all relevant faces.     |
+| 12.07 | Monster Manual           | URD        | Explicitly contained; implement and verify all relevant faces.     |

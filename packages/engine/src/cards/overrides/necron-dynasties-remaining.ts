@@ -1,6 +1,15 @@
 /** Remaining authored overrides for necron-dynasties.txt. */
 
-import { EXILE_SELF, TAP, activated, mana, manaCost, spell } from '../templates';
+import {
+  EXILE_SELF,
+  TAP,
+  activated,
+  mana,
+  manaCost,
+  onCombatDamageToPlayer,
+  spell,
+  triggered,
+} from '../templates';
 import { constant } from '../value';
 import type { TokenSpec } from '../ability';
 import { allOf, anyOf, ofType, not, SELF, YOURS } from '../selector';
@@ -107,12 +116,6 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   );
   // Convergence of Dominion: restored in coverage PR02. The interpreter reads the conditional
   // graveyard activation reduction and the mill ability, so no override remains.
-  // Catalog audit necron-remaining-batch-7: Equip is dropped by activatedAbilities replace.
-  unsupportedCard(
-    '75564721-e4e9-463a-b49e-f0c7cd6f53a7',
-    'Cranial Plating',
-    'Equip {1} is dropped when the attach activation replaces activatedAbilities.',
-  );
   // Cryptek: restored in coverage PR03. The interpreter reads the dies-this-turn delayed return,
   // which enters tapped, so no override remains.
   defineCard(
@@ -132,12 +135,7 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   // creatures" as a graveyard alternative cast, so no override remains.
   // Endless Atlas: restored in coverage PR02. The interpreter reads "Activate only if you control
   // three or more lands with the same name" as an activation condition, so no override remains.
-  // Catalog audit necron-remaining-batch-3: except-six-or-more is unconditional unblockable.
-  unsupportedCard(
-    'b3329240-c812-45ea-a7f8-4d79cd4ed515',
-    'Hexmark Destroyer',
-    'Cannot-be-blocked-except-by-six-or-more is implemented as cantBeBlocked.',
-  );
+  // Hexmark Destroyer: restored in coverage PR07 (see coverage-pr07.ts).
   // Coverage PR02: a mana ability whose {T} and sacrifice are both costs (CR 605.1a), making {B}
   // equal to the sacrificed creature's mana value. The payment solver sees one source per
   // candidate creature (amountFromSacrificedManaValue), each pinned to that sacrifice.
@@ -179,12 +177,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
       ],
     },
   );
-  // Catalog audit necron-remaining-batch-6: any equipped creature, not this equipment's creature.
-  unsupportedCard(
-    'd6b2c998-a226-426c-a40d-6e6007041bfe',
-    'Mask of Memory',
-    'Equipped-creature combat damage is implemented as any equipped creature.',
-  );
+  // Mask of Memory: restored in coverage PR05. The interpreter reads the equipped-creature combat
+  // damage trigger and its optional draw-then-discard, so no override remains.
   // Catalog audit necron-remaining-batch-3: colorless omitted; exile-top is mill.
   unsupportedCard(
     '994bc16d-fdc6-475c-96df-beeb4d5aa03e',
@@ -264,18 +258,10 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Out of the Tombs',
     'Enters-with two eon counters is authored; the card only places counters on upkeep.',
   );
-  // Catalog audit necron-remaining-batch-5: return is not under the owner's control.
-  unsupportedCard(
-    'b410f294-cbb6-4016-981f-808fd9b7bbae',
-    'Resurrection Orb',
-    "Return is under the equipment controller, not the card's owner.",
-  );
-  // Catalog audit necron-remaining-batch-6: enters-with is an enters trigger.
-  unsupportedCard(
-    '7388a797-d40d-4783-a281-d17bc159b856',
-    'Sautekh Immortal',
-    'Enters-with counters is implemented as an enters trigger.',
-  );
+  // Resurrection Orb: restored in coverage PR05. The interpreter reads the equipped-creature dies
+  // trigger and its next-end-step return under the card's owner, so no override remains.
+  // Sautekh Immortal: restored in coverage PR04. The interpreter reads the enters-with
+  // replacement counted from the creatures that died this turn, so no override remains.
   // Sceptre of Eternal Glory: restored in coverage PR02. The interpreter reads the three-mana
   // ability and its same-name-lands condition, so no override remains.
   defineCard(
@@ -340,11 +326,24 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   );
   // Their Number Is Legion: restored in coverage PR02. The interpreter reads the tapped tokens,
   // the artifact-count life gain, the self-exile and the graveyard cast permission.
-  // Catalog audit necron-remaining-batch-7: combat-damage rider targets any player.
-  unsupportedCard(
+  // Tomb Blade: "that player" is the player this creature dealt combat damage to (the event
+  // player), not a target; the creature count is taken as the trigger resolves, and that player
+  // chooses whether to sacrifice one of their own creatures instead of losing the life.
+  defineCard(
     'c857de66-f4e0-4e97-ad01-fac623af8225',
     'Tomb Blade',
-    'Combat-damage life loss targets any player, not the damaged player.',
+    [
+      'Whenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice.',
+    ],
+    {
+      triggers: [
+        triggered(onCombatDamageToPlayer(), {
+          effects: [{ op: 'tombBladeHit', target: 'eventPlayer' }],
+          description:
+            'Whenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice',
+        }),
+      ],
+    },
   );
   // Coverage PR01: the creature card is chosen on resolution, after the mill, with no target.
   defineCard(
@@ -377,10 +376,5 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   );
   // Triarch Praetorian: restored in coverage PR03. The interpreter reads "enters from a
   // graveyard" as an origin-zone enters trigger, so no override remains.
-  // Catalog audit necron-remaining-batch-3: chosen-opponent attackers is all in combat.
-  unsupportedCard(
-    '1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3',
-    'Triarch Stalker',
-    'Menace for attackers of the chosen opponent is implemented as all creatures in combat.',
-  );
+  // Triarch Stalker: restored in coverage PR07 (see coverage-pr07.ts).
 }

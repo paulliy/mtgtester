@@ -326,6 +326,7 @@ describe('dangerous builder composition boundaries', () => {
         'exile',
       );
       child.attachedToCardId = source.cardId;
+      child.attachedToObjectId = source.id;
       state.ctx.defs.set(child.oracleId, {
         ...state.ctx.defs.get(child.oracleId)!,
         spellAdditionalCosts: [{ kind: 'payLife', amount: 3 }],
@@ -377,6 +378,60 @@ describe('dangerous builder composition boundaries', () => {
       }
     },
   );
+  it.each(['stale', 'missing'] as const)(
+    'linked free play rejects a %s source incarnation despite the same physical card ID',
+    (link) => {
+      const state = setup([]);
+      const source = spawn(
+        state.ctx,
+        'P1',
+        oracle({ name: 'Independent exact linked source', typeLine: 'Artifact' }),
+      );
+      const child = conjure(
+        state.ctx,
+        'P2',
+        oracle({
+          name: 'Independent exact linked child',
+          typeLine: 'Sorcery',
+          manaCost: '{7}',
+          oracleText: 'You gain 1 life.',
+        }),
+        'exile',
+      );
+      child.attachedToCardId = source.cardId;
+      if (link === 'stale') child.attachedToObjectId = 'prior-source-incarnation';
+      state.ctx.defs.set(source.oracleId, {
+        ...state.ctx.defs.get(source.oracleId)!,
+        activatedAbilities: [
+          {
+            timing: 'any',
+            costs: [],
+            ability: {
+              kind: 'activated',
+              targets: [],
+              effects: [playLinkedExiledCardWithoutManaCost()],
+            },
+          },
+        ],
+      });
+      pump(
+        applyPriorityAction(
+          state.ctx,
+          state.player,
+          { kind: 'activateAbility', objectId: source.id, index: 0 },
+          { index: 0, targets: new Map() },
+        ),
+      );
+      const result = pump(resolveTopOfStack(state.ctx));
+      expect(result.decisions).toEqual([]);
+      expect(state.ctx.state.stack).toEqual([]);
+      expect(state.ctx.state.exile).toContain(child);
+      expect(child.ownerId).toBe('P2');
+      expect(state.player.life).toBe(40);
+      expect(state.ctx.state.eventLog.some((event) => event.type === 'castSpell')).toBe(false);
+    },
+  );
+
   it('a free-cast bound does not change the selected card mana value to make it fit', () => {
     const state = setup([castWithoutManaCost({ from: 'hand', maxManaValue: 1 })]);
     const child = conjure(

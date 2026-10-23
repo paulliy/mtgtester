@@ -1,0 +1,995 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-10-12",
+  "cards": [
+    {
+      "sha256": "cb94ffadd9ec7da7b016f68309f21ef28565cd589b728d83d2c5d33f41f84e13",
+      "card": {
+        "oracleId": "b9bacb46-fd1d-459b-81c2-d7d08fe73848",
+        "scryfallId": "39ac7ad0-e570-4209-988c-7c0f9b9d2004",
+        "name": "Dragon Tempest",
+        "manaCost": "{1}{R}",
+        "cmc": 2,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever a creature you control with flying enters, it gains haste until end of turn.\nWhenever a Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "b870fa6ef4866f453377d14c044c5ebdd8d5a336d798e8f6b63846df5bac377c",
+      "card": {
+        "oracleId": "0a147009-a57c-4ac1-ab81-d8bd8b737631",
+        "scryfallId": "e6bd7225-b39f-4b3b-8c36-dbc2c09f6e50",
+        "name": "Scourge of Valkas",
+        "manaCost": "{2}{R}{R}{R}",
+        "cmc": 5,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nWhenever this creature or another Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.\n{R}: This creature gets +1/+0 until end of turn.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c5d073e500e8090f478e0095df9dde5215600f5bcb347d0fbdbbe526b8c020c4",
+      "card": {
+        "oracleId": "63394e24-a456-4cc6-9885-8c62447b050a",
+        "scryfallId": "08076c82-edb6-4c3c-abda-3d3ad7bdd78f",
+        "name": "Tyrant's Familiar",
+        "manaCost": "{5}{R}{R}",
+        "cmc": 7,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying, haste\nLieutenant — As long as you control your commander, this creature gets +2/+2 and has \"Whenever this creature attacks, it deals 7 damage to target creature defending player controls.\"",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Haste",
+          "Lieutenant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "811ca00fb845c5c1d6c5a9e1e67d6114c45a9af8f482ad5de6d04549f9dd130c",
+      "card": {
+        "oracleId": "3e41648f-c5a9-4b26-b97e-8176fe5e9c85",
+        "scryfallId": "275f8721-a6e5-489b-851f-1676aad5ec39",
+        "name": "Brash Taunter",
+        "manaCost": "{4}{R}",
+        "cmc": 5,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Goblin",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Goblin"
+        ],
+        "oracleText": "Indestructible\nWhenever this creature is dealt damage, it deals that much damage to target opponent.\n{2}{R}, {T}: This creature fights another target creature.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Indestructible",
+          "Fight"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "ff9a089b1474562a1dc75e86a4175fb3eaf92fffb089e5e1207ed1b2a90089cf",
+      "card": {
+        "oracleId": "c857de66-f4e0-4e97-ad01-fac623af8225",
+        "scryfallId": "2f5f2e19-41ce-40c6-9732-d0f88ad6735f",
+        "name": "Tomb Blade",
+        "manaCost": "{4}{B}{B}",
+        "cmc": 6,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Artifact Creature — Necron",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Necron"
+        ],
+        "oracleText": "Flying\nWhenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice.\nUnearth {6}{B}{B}",
+        "power": "5",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Unearth"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "908b2f6e15d136d51dd920e704ec04d5f396d1af17eada7bb6afe7f346439f6d",
+      "card": {
+        "oracleId": "5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb",
+        "scryfallId": "45834bc6-be8d-4064-930d-efc73cf3c64d",
+        "name": "Duelist's Heritage",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "474f43d9d886bf106e263b10dd214cd579f62aa9dcd1e0e47df42c69b5a14657",
+      "card": {
+        "oracleId": "bb04f927-0348-4a14-9e74-381f18083f6a",
+        "scryfallId": "06624919-bb3e-458c-9301-0bb22d8b556c",
+        "name": "Thunderbreak Regent",
+        "manaCost": "{2}{R}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nWhenever a Dragon you control becomes the target of a spell or ability an opponent controls, this creature deals 3 damage to that player.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e669176870f40516af34d6c86e4ece9afc834da055d65e93f0331026408ddd2c",
+      "card": {
+        "oracleId": "085016ee-4429-453f-b7f3-d61065f1214e",
+        "scryfallId": "d8e13ecb-98be-4d9b-86a2-24eaa98f7f0d",
+        "name": "Invisible Woman",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "R",
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Hero",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Hero"
+        ],
+        "oracleText": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, create a 0/3 colorless Wall creature token with defender and reach.\nWhenever you attack, you may pay {R}{G}{W}{U}. When you do, target creature gets +1/+0 until end of turn for each creature you control and can't be blocked this turn.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0e43fcdddaf97a13d2c8c714da6e70accf69f025681541279f217f29b9327663",
+      "card": {
+        "oracleId": "3180ee4f-66d7-4b73-bc10-9ee0c790ec18",
+        "scryfallId": "c66293df-a50e-4c64-9482-a2af68288d76",
+        "name": "Flameblast Dragon",
+        "manaCost": "{4}{R}{R}",
+        "cmc": 6,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nWhenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target.",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "3106859a80bb17a69b816832c0e8eb6d49655fb09979542f8aee58130180f893",
+      "card": {
+        "oracleId": "4f63d306-cc14-405c-8424-d8990c670c74",
+        "scryfallId": "c1e2f2af-dbba-4e4c-9c60-ac4d245e1431",
+        "name": "Territorial Aetherkite",
+        "manaCost": "{4}{R}{R}",
+        "cmc": 6,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Cat Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Cat",
+          "Dragon"
+        ],
+        "oracleText": "Flying, haste\nWhen this creature enters, you get {E}{E} (two energy counters). Then you may pay one or more {E}. When you do, this creature deals that much damage to each other creature.",
+        "power": "6",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Haste"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c9f9a7fd462c5e9860928053ebcbc0d98b77f2fe5342f50eef740c4aa7fd24c3",
+      "card": {
+        "oracleId": "01790829-cc03-430f-a899-2f274b7dbf62",
+        "scryfallId": "9bc397d1-50a8-46cd-98b2-7104f2241420",
+        "name": "Arcbond",
+        "manaCost": "{2}{R}",
+        "cmc": 3,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Choose target creature. Whenever that creature is dealt damage this turn, it deals that much damage to each other creature and each player.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "6e4aa521c27b28fb2861e03abdda06a0e8b850bce340e5e4950ad313afe845f4",
+      "card": {
+        "oracleId": "e958144e-01bc-46ff-8f56-ddf2eb098630",
+        "scryfallId": "a75f6bb4-ab06-42ca-a0df-326d9a098a26",
+        "name": "Thundermaw Hellkite",
+        "manaCost": "{3}{R}{R}",
+        "cmc": 5,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nHaste (This creature can attack and {T} as soon as it comes under your control.)\nWhen this creature enters, it deals 1 damage to each creature with flying your opponents control. Tap those creatures.",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Haste"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "116b1ea7f57a9a829f03d7c0a6ffeafd34ece8beb23320dcd9b13668659a9ae5",
+      "card": {
+        "oracleId": "3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c",
+        "scryfallId": "dadf030d-5451-43fc-bf0c-c1629fdf88ec",
+        "name": "Backlash",
+        "manaCost": "{1}{B}{R}",
+        "cmc": 3,
+        "colors": [
+          "B",
+          "R"
+        ],
+        "colorIdentity": [
+          "B",
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Tap target untapped creature. That creature deals damage equal to its power to its controller.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c74c28c601c8f2f0527f10baab04b1fe96da7dd1ebac4bff48d4909fffb22eeb",
+      "card": {
+        "oracleId": "7c565975-aebc-4599-ac32-5594c718e2cb",
+        "scryfallId": "505969a2-0869-461e-a69a-3b380579e00a",
+        "name": "Guard Gomazoa",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Jellyfish",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Jellyfish"
+        ],
+        "oracleText": "Defender, flying\nPrevent all combat damage that would be dealt to this creature.",
+        "power": "1",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Defender"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "debd579414a52e7e7cc408bd06d4bf3f3862f42f108196365a37c3f6d72dc6a6",
+      "card": {
+        "oracleId": "7d079c78-b2a9-444f-ab54-c61c041baa6d",
+        "scryfallId": "8b8f4489-3d07-4e57-9b94-afa52fa984f8",
+        "name": "Selfless Squire",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Human Soldier",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Soldier"
+        ],
+        "oracleText": "Flash\nWhen this creature enters, prevent all damage that would be dealt to you this turn.\nWhenever damage that would be dealt to you is prevented, put that many +1/+1 counters on this creature.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flash"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "3993eb90435f19d48756dd73a5c98c1f311389efee795e82a5f8aa58277b936a",
+      "card": {
+        "oracleId": "dc5dffc8-fac5-4956-bac4-1ad2cc16f6be",
+        "scryfallId": "c5bda1a7-537f-4a80-95a0-c45eb127969b",
+        "name": "Deflecting Palm",
+        "manaCost": "{R}{W}",
+        "cmc": 2,
+        "colors": [
+          "R",
+          "W"
+        ],
+        "colorIdentity": [
+          "R",
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, Deflecting Palm deals that much damage to that source's controller.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c51d55e7df204a7b74f5ccfe5f5a58b4349adecad02f0c0fe15b2b1940059d75",
+      "card": {
+        "oracleId": "01f29158-2dc9-4b9d-b726-add5d3fd5782",
+        "scryfallId": "b63d828d-4f62-424b-969a-00dcc4651b56",
+        "name": "Comeuppance",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Prevent all damage that would be dealt to you and planeswalkers you control this turn by sources you don't control. If damage from a creature source is prevented this way, Comeuppance deals that much damage to that creature. If damage from a noncreature source is prevented this way, Comeuppance deals that much damage to the source's controller.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "cb2ada5b8d71925822fca64f34bed81777cfff96d71c183470213cb575282a47",
+      "card": {
+        "oracleId": "fbe190eb-fd4b-40e7-9a17-48c96b60f653",
+        "scryfallId": "99c56bf0-ad9f-4419-902c-f3a3880c716c",
+        "name": "Michiko Konda, Truth Seeker",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Advisor",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Advisor"
+        ],
+        "oracleText": "Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "7f67096386be6374ad6079171689a2ceec128353a3e0e2abe544784ad5181573",
+      "card": {
+        "oracleId": "a00e5eb6-b916-4cd6-8ff2-c02f4929abc7",
+        "scryfallId": "c52981ea-1173-4f4b-a929-705a11c6e381",
+        "name": "Delirium",
+        "manaCost": "{1}{B}{R}",
+        "cmc": 3,
+        "colors": [
+          "B",
+          "R"
+        ],
+        "colorIdentity": [
+          "B",
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Cast this spell only during an opponent's turn.\nTap target creature that player controls. That creature deals damage equal to its power to the player. Prevent all combat damage that would be dealt to and dealt by the creature this turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "20c0287a3dd96d72f6a5f557813f972125a91a6506ed4b957cf022bf32a2437a",
+      "card": {
+        "oracleId": "ac675899-25bb-4f06-9c8c-bf188024495f",
+        "scryfallId": "c86269cc-bf4d-44b4-ad4b-8356857c532f",
+        "name": "Firemane Commando",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Angel Soldier",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Angel",
+          "Soldier"
+        ],
+        "oracleText": "Flying\nWhenever you attack with two or more creatures, draw a card.\nWhenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you.",
+        "power": "4",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "1a3ea33cc0a417228dcd76cf55f55186215b4f741905684aaeeae17e74d16996",
+      "card": {
+        "oracleId": "d11e627b-8a48-411d-a261-2c9a02a758ba",
+        "scryfallId": "599f87c8-643e-4224-93a5-853c0bd4e497",
+        "name": "Breena, the Demagogue",
+        "manaCost": "{1}{W}{B}",
+        "cmc": 3,
+        "colors": [
+          "B",
+          "W"
+        ],
+        "colorIdentity": [
+          "B",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Bird Warlock",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Bird",
+          "Warlock"
+        ],
+        "oracleText": "Flying\nWhenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control.",
+        "power": "1",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "f91221e3d2d8a8761c35115ed9e63e8bf90737cb6ac40a697aed18fb15a93af5",
+      "card": {
+        "oracleId": "c6639b52-b51d-46e7-a83c-c4621b1cecaa",
+        "scryfallId": "b711a0aa-90e5-4f16-9dc3-9cc331fc3101",
+        "name": "Ever-Watching Threshold",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever an opponent attacks, if they attacked you and/or a planeswalker you control, draw a card.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "23cad2e1c9fb1f941dc492639a8b70d798f9f8dd018480d3bb38c767a1ed3a0a",
+      "card": {
+        "oracleId": "cbcb6d9a-6ae5-4bcd-8013-2b657553764a",
+        "scryfallId": "49d0d7ec-4bee-47d3-91a6-43510be65402",
+        "name": "Mangara, the Diplomat",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Cleric",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Cleric"
+        ],
+        "oracleText": "Lifelink\nWhenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card.\nWhenever an opponent casts their second spell each turn, draw a card.",
+        "power": "2",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Lifelink"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "aa74d762952c526ea0bbb4b56566782832d8946544c2c236d52f6dfc069548dc",
+      "card": {
+        "oracleId": "2ef0961a-0543-4371-8c2a-333881b735e5",
+        "scryfallId": "8a7fc460-fc49-480f-8ee2-28a173509f0b",
+        "name": "Tomik, Wielder of Law",
+        "manaCost": "{1}{W}{B}",
+        "cmc": 3,
+        "colors": [
+          "B",
+          "W"
+        ],
+        "colorIdentity": [
+          "B",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Advisor",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Advisor"
+        ],
+        "oracleText": "Affinity for planeswalkers (This spell costs {1} less to cast for each planeswalker you control.)\nFlying, vigilance\nWhenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card.",
+        "power": "2",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Affinity",
+          "Vigilance"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "044d015a5eddb088abf9886152e757d272a25c2beea3f16771376e4fe2c229de",
+      "card": {
+        "oracleId": "9cb741ae-14d6-4a8d-bfad-703abfe3682c",
+        "scryfallId": "824aa845-0523-4434-8992-bce42f5b2bcb",
+        "name": "Frontier Warmonger",
+        "manaCost": "{3}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Human Warrior",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Warrior"
+        ],
+        "oracleText": "Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "95353ba0725d65be6feae67f59b0d786e508ea3715860f75f4c70ef848999a45",
+      "card": {
+        "oracleId": "f0bf2923-aea2-4bac-b061-64bc84437ef1",
+        "scryfallId": "f511555a-09aa-41f8-b240-c21f911a57b4",
+        "name": "Tenuous Truce",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant opponent\nAt the beginning of enchanted opponent's end step, you and that player each draw a card.\nWhen you attack enchanted opponent or a planeswalker they control or when they attack you or a planeswalker you control, sacrifice this Aura.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "00f50e798f0e2fb5bc6f144abb87651c501e511007b14a3c2c99ad434e1aa9cd",
+      "card": {
+        "oracleId": "5825d718-6a32-4f4c-9b56-1a50051cfe28",
+        "scryfallId": "4638d815-fb86-490c-84d6-777a1c6131d6",
+        "name": "Wall of Tears",
+        "manaCost": "{1}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Wall",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Wall"
+        ],
+        "oracleText": "Defender (This creature can't attack.)\nWhenever this creature blocks a creature, return that creature to its owner's hand at end of combat.",
+        "power": "0",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Defender"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "f335ec2abc29e719d8092c9d014a85aaf39073c6c40d93548a0d66f8846826a4",
+      "card": {
+        "oracleId": "d55cb52d-b35c-4602-a518-cd51f155a2d1",
+        "scryfallId": "bf7b63ef-c7b4-4001-b64a-c7443f5268ba",
+        "name": "Human Torch",
+        "manaCost": "{3}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "G",
+          "R",
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Hero",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Hero"
+        ],
+        "oracleText": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, Human Torch gains flying, double strike, and haste until end of turn.\nWhenever Human Torch attacks, you may pay {R}{G}{W}{U}. If you do, until end of turn, whenever he deals combat damage to an opponent, he deals that much damage to each other opponent.",
+        "power": "3",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

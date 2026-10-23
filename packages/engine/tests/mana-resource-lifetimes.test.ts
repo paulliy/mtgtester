@@ -63,11 +63,18 @@ describe('mana payment shared resources and source lifetimes', () => {
     );
     expect(cast).toBeDefined();
     engine.submit({ requestId: step.request.requestId, actionId: cast!.id });
-    // The only sacrifice is auto-resolved; the public engine must reach the next priority
-    // window after tapping the Elf for G, then sacrificing it to Tower for BB.
+    // The only sacrifice is auto-resolved. Cultivate may now surface its legal failure-to-find
+    // choice even with only Forests in the library; resolve those choices before checking the
+    // spell's final zone. The Elf must produce G before being sacrificed to Tower for BB.
     let error: unknown;
     try {
-      engine.advance();
+      for (let choices = 0; choices < 3; choices++) {
+        const next = engine.advance();
+        if (next.kind !== 'decision') break;
+        const found = next.request.legalActions.find((action) => action.type === 'findCard');
+        if (found === undefined) break;
+        engine.submit({ requestId: next.request.requestId, actionId: found.id });
+      }
     } catch (caught) {
       error = caught;
     }

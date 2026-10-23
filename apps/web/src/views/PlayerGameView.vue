@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ComponentPublicInstance } from 'vue';
 import type { ManaPool } from '@mtg/shared';
+import { ATTACKS_TARGET } from '@mtg/shared';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import type { DecisionRequest, LegalAction, ObjectId, TargetChoice } from '@mtg/shared';
@@ -312,6 +313,15 @@ function exileFor(seat: string) {
   return state.value?.exile.filter((card) => card.owner === seat) ?? [];
 }
 
+/** Only show cards the server explicitly included in this viewer's authorized top reveal. */
+function revealedLibraryTopsFor(seat: string) {
+  return (
+    state.value?.revealedLibraryTops
+      ?.filter((entry) => entry.player === seat)
+      .map((entry) => entry.card) ?? []
+  );
+}
+
 /**
  * Groups identical tokens/creatures (same name, state, P/T, counters — see `stackPermanents.ts`)
  * into one tile with a count badge, so a wide go-wide board doesn't clog the screen with a dozen
@@ -366,6 +376,43 @@ function seatLabel(seatId: string): string {
   const seat = state.value?.seats.find((s) => s.seat === seatId);
   return seat === undefined ? seatId : seat.label;
 }
+
+/** An attack option is an opponent's seat, or a planeswalker (named, not shown as a raw id). */
+function attackTargetLabel(optionId: string): string {
+  if (optionId === ATTACKS_TARGET) return 'Attacks';
+  const seat = state.value?.seats.find((s) => s.seat === optionId);
+  return seat !== undefined ? seat.label : (nameById.value.get(optionId) ?? optionId);
+}
+
+/** What the combat tray says when a declaration is split between players (Master Warcraft). */
+const combatHeading = computed(() => {
+  const split = combatPlan.split;
+  if (split?.variant === 'chooseAttackers')
+    return `Choose which of ${seatLabel(split.owner)}'s creatures attack`;
+  if (split?.variant === 'assignChosen')
+    return `Choose what each creature ${seatLabel(split.chosenBy ?? '')} chose attacks`;
+  if (split?.variant === 'blockersFor') return `Declare blockers for ${seatLabel(split.owner)}`;
+  return combatPlan.kind === 'attackers' ? 'Declare attackers' : 'Declare blockers';
+});
+const combatInstruction = computed(() => {
+  const split = combatPlan.split;
+  if (split?.variant === 'chooseAttackers')
+    return 'Mark the creatures that attack; the rest stay home. The attacking player then chooses what each one attacks.';
+  if (split?.variant === 'assignChosen')
+    return 'These creatures were chosen to attack. Choose what each attacks. One you decline to pay for will not attack, and the creatures are chosen again.';
+  if (split?.variant === 'blockersFor')
+    return 'You choose these blocks. Click a creature, then the attacker it blocks. Unassigned creatures do not block.';
+  return `Click a creature, then its opponent or target, or choose an option below. Unassigned creatures ${
+    combatPlan.kind === 'attackers' ? 'stay home' : 'do not block'
+  }.`;
+});
+const combatDeclineLabel = computed(() =>
+  combatPlan.split?.variant === 'assignChosen'
+    ? 'Decline to pay'
+    : combatPlan.kind === 'attackers'
+      ? 'Stay home'
+      : 'No block',
+);
 
 const nameById = computed(() => {
   const names = new Map<string, string>();
@@ -1474,6 +1521,13 @@ function abandon(): void {
                 :selectable-ids="zoneTargetIds"
                 @select="chooseTarget"
               />
+              <ZoneStrip
+                v-if="revealedLibraryTopsFor(opponent.seat).length > 0"
+                label="Top of library"
+                :cards="revealedLibraryTopsFor(opponent.seat)"
+                :selectable-ids="zoneTargetIds"
+                @select="chooseTarget"
+              />
             </div>
           </article>
         </div>
@@ -1783,6 +1837,15 @@ function abandon(): void {
               @select="chooseTarget"
               @activate="selectSource"
             />
+            <ZoneStrip
+              v-if="revealedLibraryTopsFor(human.seat).length > 0"
+              label="Top of library"
+              :cards="revealedLibraryTopsFor(human.seat)"
+              :selectable-ids="zoneTargetIds"
+              :actionable-ids="zoneSourceIds"
+              @select="chooseTarget"
+              @activate="selectSource"
+            />
           </div>
 
           <section
@@ -1851,9 +1914,7 @@ function abandon(): void {
             </template>
             <template v-else-if="combatPlan.mode === 'composing'">
               <div class="tray-heading">
-                <strong>{{
-                  combatPlan.kind === 'attackers' ? 'Declare attackers' : 'Declare blockers'
-                }}</strong>
+                <strong>{{ combatHeading }}</strong>
                 <span
                   >{{ combatPlan.order.length }} creature{{
                     combatPlan.order.length === 1 ? '' : 's'
@@ -1867,11 +1928,7 @@ function abandon(): void {
                 The engine rejected that declaration: {{ combatPlan.rejectionMessage }} Fix the
                 flagged creature(s) and confirm again.
               </p>
-              <p v-else class="target-instruction">
-                Click a creature, then its opponent or target, or choose an option below. Unassigned
-                creatures
-                {{ combatPlan.kind === 'attackers' ? 'stay home' : 'do not block' }}.
-              </p>
+              <p v-else class="target-instruction">{{ combatInstruction }}</p>
               <div class="combat-assignments">
                 <div
                   v-for="entry in combatPlan.order"
@@ -1892,7 +1949,7 @@ function abandon(): void {
                     >
                       {{
                         combatPlan.kind === 'attackers'
-                          ? seatLabel(optionId)
+                          ? attackTargetLabel(optionId)
                           : (nameById.get(optionId) ?? optionId)
                       }}
                     </button>
@@ -1903,7 +1960,7 @@ function abandon(): void {
                       :class="{ primary: !combatPlan.assignment.has(entry.subjectId) }"
                       @click="combatPlan.clear(entry.subjectId)"
                     >
-                      {{ combatPlan.kind === 'attackers' ? 'Stay home' : 'No block' }}
+                      {{ combatDeclineLabel }}
                     </button>
                   </div>
                 </div>
@@ -1976,7 +2033,7 @@ function abandon(): void {
       </section>
 
       <aside class="rail">
-        <section class="decision">
+        <section class="decision" :data-request-id="request?.requestId">
           <template v-if="request && !openingHand">
             <DecisionPanel
               v-if="fallbackRequest && immediateActions.length === 0"

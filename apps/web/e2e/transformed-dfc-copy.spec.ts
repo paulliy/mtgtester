@@ -37,13 +37,18 @@ const permanent = (page: Page, name: string) =>
     .locator('.object:not(.board-card-leave-active), .seat .tile')
     .filter({ has: page.getByRole('img', { name, exact: true }) });
 
-async function passUntil(page: Page, done: () => boolean | Promise<boolean>) {
+async function passUntil(
+  page: Page,
+  done: () => boolean | Promise<boolean>,
+  mayPass: () => boolean = () => true,
+) {
   await expect
     .poll(
       async () => {
         if (await done()) return true;
         const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
-        if (await pass.isVisible()) await pass.click({ timeout: 1_000 }).catch(() => undefined);
+        if ((await pass.isVisible()) && mayPass() && !(await done()))
+          await pass.click({ timeout: 1_000 }).catch(() => undefined);
         return false;
       },
       { timeout: 20_000 },
@@ -93,12 +98,17 @@ for (const entry of TRANSFORMED_DFC_CASES) {
       await passUntil(page, () => copy.isVisible());
       await copy.click();
     }
-    await passUntil(page, () =>
-      snapshots.some((state) =>
-        state.battlefield.some(
-          (permanent) => permanent.id !== originalId && permanent.name === face,
+    // Pass only while something is on the stack: a pass sent on the prompt that already shows the
+    // copy, with an empty stack, would end the main phase before Blossoming Defense is cast.
+    await passUntil(
+      page,
+      () =>
+        snapshots.some((state) =>
+          state.battlefield.some(
+            (permanent) => permanent.id !== originalId && permanent.name === face,
+          ),
         ),
-      ),
+      () => (snapshots.at(-1)?.stack.length ?? 0) > 0,
     );
     const copy = snapshots
       .at(-1)!

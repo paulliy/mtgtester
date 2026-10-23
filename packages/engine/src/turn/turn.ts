@@ -1,3 +1,4 @@
+import { phaseInAtUntap } from '../state/phasing';
 import { assertTriggerEventFamily } from '../cards/trigger-contracts';
 /**
  * Turn structure (CR 500–514, brief §5.3): beginning (untap/upkeep/draw), precombat main,
@@ -5,7 +6,7 @@ import { assertTriggerEventFamily } from '../cards/trigger-contracts';
  * draw on their first turn (brief §5.3 — no two-player skip rule).
  */
 
-import type { Phase, Step } from '@mtg/shared';
+import type { Phase, PlayerId, Step } from '@mtg/shared';
 import { evaluateCondition } from '../cards/condition';
 import { runCombatPhase } from '../combat/combat';
 import type { GameGen } from '../decisions';
@@ -14,12 +15,13 @@ import { emit, debug } from '../log/log';
 import { priorityCheckpoint } from '../sba/sba';
 import {
   additionalTypedTriggerCopies,
+  discardCard,
   expireRegenerationShields,
-  moveObject,
   playerById,
 } from '../state/objects';
 import { hasNoMaximumHandSize, triggersOf } from '../state/queries';
-import type { EngineCardObject, GameContext } from '../state/types';
+import type { EffectExpiry, EngineCardObject, ExtraCombat, GameContext } from '../state/types';
+import { allOf, ofType, YOURS } from '../cards/selector';
 import { emptyManaPools, runPrioritySequence } from './priority';
 
 function setPhase(ctx: GameContext, phase: Phase, step: Step | null): void {
@@ -36,15 +38,50 @@ function setStep(ctx: GameContext, step: Step): void {
 }
 
 /** Untap step (CR 502): turn-based actions only; NO priority (brief §5.3). */
+/**
+ * End what a departed player made to last until their next turn: it lasts until that turn would
+ * have begun (CR 800.4m). That is as this turn ends when no extra turn comes next and the normal
+ * rotation resumes after the player seated before them; an extra turn defers it.
+ */
+export function expireDepartedPlayerEffects(ctx: GameContext): void {
+  const s = ctx.state;
+  const extraTurnNext = (s.extraTurns ?? []).some((id) =>
+    s.players.some((player) => player.id === id && !player.hasLost),
+  );
+  if (extraTurnNext) return;
+  const resumeAfter = s.normalTurnResumeAfter ?? s.currentTurnPlayer;
+  const endsNow = (departed: { afterTurnOf: PlayerId; fromTurn: number }): boolean =>
+    departed.afterTurnOf === resumeAfter && departed.fromTurn <= s.turnNumber;
+  const ends = (expires: EffectExpiry): boolean =>
+    expires.kind === 'departedNextTurn' && endsNow(expires);
+  if (s.attackRequirements !== undefined)
+    s.attackRequirements = s.attackRequirements.filter((entry) => !ends(entry.expires));
+  if (s.attackDirections !== undefined)
+    s.attackDirections = s.attackDirections.filter((entry) => !ends(entry.expires));
+  if (s.blockRestrictions !== undefined)
+    s.blockRestrictions = s.blockRestrictions.filter((entry) => !ends(entry.expires));
+  for (const perm of [...s.battlefield, ...(s.phasedOut ?? []).map((record) => record.permanent)]) {
+    if (perm.goadedBy === undefined) continue;
+    const remaining = perm.goadedBy.filter(
+      (goad) => goad.departed === undefined || !endsNow(goad.departed),
+    );
+    if (remaining.length > 0) perm.goadedBy = remaining;
+    else delete perm.goadedBy;
+  }
+}
+
 function untapStep(ctx: GameContext): void {
   const ap = playerById(ctx, ctx.state.currentTurnPlayer);
   setPhase(ctx, 'beginning', 'untap');
+  phaseInAtUntap(ctx, ap.id);
   ap.landsPlayedThisTurn = 0;
   for (const player of ctx.state.players) {
     player.cardsDrawnThisTurn = 0;
     player.cardsDrawnThisDrawStep = 0;
     player.spellsCastThisTurn = 0;
     player.noncreatureSpellsCastThisTurn = 0;
+    player.discardedCardsThisTurn = 0;
+    delete player.spellsCastThisTurnRecords;
     player.playFromZoneTypeUsesThisTurn = {};
   }
   ctx.state.excessDamageControllerIds = [];
@@ -52,6 +89,7 @@ function untapStep(ctx: GameContext): void {
   ctx.state.lifeLostThisTurn = {};
   ctx.state.combatDamagePlayersBySource = {};
   ctx.state.creaturesDiedThisTurn = 0;
+  delete ctx.state.abilityResolutionsThisTurn;
   ctx.state.combatDamagePrevention = { all: false, players: {} };
   ctx.state.lifeFloorPlayers = {};
   ctx.state.creaturesCantBeBlockedThisTurn = false;
@@ -62,19 +100,48 @@ function untapStep(ctx: GameContext): void {
   // this clears for every permanent on the battlefield — not just the active player's.
   for (const perm of ctx.state.battlefield) {
     perm.activationsThisTurn = [];
+    if (perm.triggeredOnceThisTurn !== undefined) delete perm.triggeredOnceThisTurn;
     if (perm.attackedThisTurn === true) perm.attackedThisTurn = false;
+    if (perm.timesAttackedThisTurn !== undefined) delete perm.timesAttackedThisTurn;
     perm.mustBlockThisTurn = false;
     // CR 701.15a: a goad requirement lasts until the next turn of the player who caused it.
     // Requirements created during that player's current turn remain active until that turn ends.
     if (perm.goadedBy !== undefined) {
       const remainingGoads = perm.goadedBy.filter(
         (requirement) =>
-          requirement.goaderId !== ap.id || requirement.appliedTurn >= ctx.state.turnNumber,
+          requirement.permanent === true ||
+          requirement.goaderId !== ap.id ||
+          requirement.appliedTurn >= ctx.state.turnNumber,
       );
       if (remainingGoads.length > 0) perm.goadedBy = remainingGoads;
       else delete perm.goadedBy;
     }
   }
+
+  // "Until your next turn" (Kardur) ends as that player's next turn begins.
+  if (ctx.state.attackRequirements !== undefined)
+    ctx.state.attackRequirements = ctx.state.attackRequirements.filter(
+      (entry) =>
+        entry.expires.kind !== 'untilNextTurn' ||
+        entry.expires.playerId !== ap.id ||
+        entry.expires.setTurn >= ctx.state.turnNumber,
+    );
+
+  if (ctx.state.attackDirections !== undefined)
+    ctx.state.attackDirections = ctx.state.attackDirections.filter(
+      (entry) =>
+        entry.expires.kind !== 'untilNextTurn' ||
+        entry.expires.playerId !== ap.id ||
+        entry.expires.setTurn >= ctx.state.turnNumber,
+    );
+
+  if (ctx.state.blockRestrictions !== undefined)
+    ctx.state.blockRestrictions = ctx.state.blockRestrictions.filter(
+      (entry) =>
+        entry.expires.kind !== 'untilNextTurn' ||
+        entry.expires.playerId !== ap.id ||
+        entry.expires.setTurn >= ctx.state.turnNumber,
+    );
 
   let untapped = 0;
   for (const perm of ctx.state.battlefield) {
@@ -105,7 +172,9 @@ export function queueStepTriggers(
     | 'drawStep'
     | 'mainPhase'
     | 'precombatMain'
-    | 'beginningOfCombat',
+    | 'secondMainPhase'
+    | 'beginningOfCombat'
+    | 'endOfCombat',
 ): void {
   assertTriggerEventFamily(when, 'step');
   const apId = ctx.state.currentTurnPlayer;
@@ -114,6 +183,8 @@ export function queueStepTriggers(
       const spec = ability.trigger;
       if (spec === undefined || spec.when !== when) continue;
       if (spec.player === 'you' && perm.controllerId !== apId) continue;
+      if (spec.player === 'enchanted' && perm.attachedTo !== apId) continue;
+      if (spec.player === 'opponent' && perm.controllerId === apId) continue;
       const source = {
         cardId: perm.cardId,
         controllerId: perm.controllerId,
@@ -143,6 +214,7 @@ export function queueStepTriggers(
         const spec = ability.trigger;
         if (spec === undefined || spec.when !== when || !('player' in spec)) continue;
         if (spec.player === 'you' && emblem.controllerId !== apId) continue;
+        if (spec.player === 'opponent' && emblem.controllerId === apId) continue;
         ctx.state.pendingTriggers.push({
           controllerId: emblem.controllerId,
           sourceCardId: emblem.id,
@@ -223,6 +295,8 @@ function queueMonarchTrigger(ctx: GameContext): void {
 export function beginPostcombatMain(ctx: GameContext): void {
   setPhase(ctx, 'postcombatMain', null);
   queueStepTriggers(ctx, 'mainPhase');
+  ctx.state.mainPhasesStartedThisTurn = (ctx.state.mainPhasesStartedThisTurn ?? 1) + 1;
+  if (ctx.state.mainPhasesStartedThisTurn === 2) queueStepTriggers(ctx, 'secondMainPhase');
 }
 
 /**
@@ -236,7 +310,7 @@ export function beginEndStep(ctx: GameContext): void {
 }
 
 /** Cleanup step (CR 514), repeating while SBAs/triggers give players priority (514.3a). */
-function* cleanupStep(ctx: GameContext): GameGen<void> {
+export function* cleanupStep(ctx: GameContext): GameGen<void> {
   const ap = playerById(ctx, ctx.state.currentTurnPlayer);
   for (;;) {
     setStep(ctx, 'cleanup');
@@ -254,18 +328,47 @@ function* cleanupStep(ctx: GameContext): GameGen<void> {
         })),
       };
       const card = ap.hand[outcome.index] as EngineCardObject;
-      emit(ctx, 'discard', { player: ap.id, name: card.name, cardId: card.cardId }, ap.id);
-      yield* moveObject(ctx, card, { zone: 'graveyard' });
+      yield* discardCard(ctx, card, ap.id, 'cleanup');
     }
 
     // Simultaneously: remove all marked damage and end until-EOT effects (CR 514.2).
-    for (const perm of ctx.state.battlefield) {
+    for (const perm of [
+      ...ctx.state.battlefield,
+      ...(ctx.state.phasedOut ?? []).map((record) => record.permanent),
+    ]) {
       perm.damageMarked = 0;
       perm.damagedByDeathtouch = false;
       delete perm.mustAttackThisTurn;
     }
     expireRegenerationShields(ctx);
     endUntilEotEffects(ctx);
+    // A departed player's "until your next turn" ends as that turn would have begun (CR 800.4m).
+    expireDepartedPlayerEffects(ctx);
+    // "Until the end of your next turn" (Silver Surfer) ends in that turn's cleanup step.
+    if (ctx.state.attackRequirements !== undefined)
+      ctx.state.attackRequirements = ctx.state.attackRequirements.filter(
+        (entry) =>
+          entry.expires.kind !== 'endOfNextTurn' ||
+          entry.expires.playerId !== ap.id ||
+          entry.expires.setTurn >= ctx.state.turnNumber,
+      );
+    ctx.state.damageShields = [];
+    // "This turn": whoever chose the attackers and blockers stops choosing.
+    delete ctx.state.combatChoices;
+    // A phase that was to come after one that is over (made in the end step) never happens.
+    ctx.state.extraCombats = [];
+    if (ctx.state.attackRequirements !== undefined)
+      ctx.state.attackRequirements = ctx.state.attackRequirements.filter(
+        (entry) => entry.expires.kind !== 'combat' && entry.expires.kind !== 'thisTurn',
+      );
+    // "During their next turn" (Willie Lumpkin) ends in the cleanup step of that turn.
+    if (ctx.state.attackRequirements !== undefined)
+      ctx.state.attackRequirements = ctx.state.attackRequirements.filter(
+        (entry) =>
+          entry.expires.kind !== 'theirNextTurn' ||
+          entry.expires.playerId !== ap.id ||
+          entry.expires.setTurn >= ctx.state.turnNumber,
+      );
     ctx.state.delayedTriggers = ctx.state.delayedTriggers.filter((dt) => dt.expiry !== 'cleanup');
     // End of TURN: "you don't lose this mana as steps and phases end" runs out here too, so
     // cleanup drains persistent mana as well (Klauth's is explicitly "until end of turn").
@@ -288,17 +391,68 @@ function* cleanupStep(ctx: GameContext): GameGen<void> {
  * Card Test Lab's prepared-scenario continuation so both use one combat sequence.
  */
 export function* runCombatAndExtraCombats(ctx: GameContext): GameGen<void> {
+  // Combat phases made in the precombat main phase come right after it, before the regular one.
+  yield* runInsertedPhases(ctx, 'precombatMain');
+  yield* runOneCombat(ctx, 'regular');
+}
+
+/**
+ * One combat phase and whatever was inserted after it (CR 500.8). `id` names the phase for
+ * effects that last "that combat".
+ */
+function* runOneCombat(ctx: GameContext, id: string, extra?: ExtraCombat): GameGen<void> {
   setPhase(ctx, 'combat', null);
+  ctx.state.currentCombatId = id;
   queueStepTriggers(ctx, 'beginningOfCombat');
+  if (extra?.untapAllAtBeginning === true) {
+    // "At the beginning of that combat, untap all creatures you control" is a triggered ability.
+    ctx.state.pendingTriggers.push({
+      controllerId: extra.controllerId,
+      sourceCardId: extra.sourceCardId,
+      sourceOracleId: extra.sourceOracleId,
+      sourceName: extra.sourceName,
+      ability: {
+        kind: 'triggered',
+        trigger: { when: 'beginningOfCombat', player: 'you' },
+        targets: [],
+        effects: [{ op: 'untapEach', selector: allOf(ofType('Creature'), YOURS) }],
+        description: 'At the beginning of that combat, untap all creatures you control',
+      },
+      scope: { eventPlayerId: extra.controllerId },
+    });
+  }
   yield* runCombatPhase(ctx);
-  while (ctx.state.extraCombatPhases > 0) {
-    ctx.state.extraCombatPhases -= 1;
-    queueStepTriggers(ctx, 'beginningOfCombat');
-    yield* runCombatPhase(ctx);
+  delete ctx.state.currentCombatId;
+  // What lasted "that combat" ends with it.
+  if (ctx.state.attackRequirements !== undefined)
+    ctx.state.attackRequirements = ctx.state.attackRequirements.filter(
+      (entry) => entry.expires.kind !== 'combat' || entry.expires.combatId !== id,
+    );
+  yield* runInsertedPhases(ctx, 'combat');
+}
+
+/**
+ * Run the additional phases created in `phase`, most recent first (CR 500.8). A combat phase made
+ * during one of them is inserted right after it, so it runs before the additional main phase that
+ * may follow and before what was scheduled earlier.
+ */
+export function* runInsertedPhases(ctx: GameContext, phase: Phase): GameGen<void> {
+  for (;;) {
+    const index = ctx.state.extraCombats.findIndex((extra) => extra.after === phase);
+    if (index < 0) return;
+    const [extra] = ctx.state.extraCombats.splice(index, 1) as [ExtraCombat];
+    yield* runOneCombat(ctx, extra.id, extra);
+    if (extra.additionalMain === true) {
+      beginPostcombatMain(ctx);
+      yield* runPrioritySequence(ctx);
+      emptyManaPools(ctx);
+      yield* runInsertedPhases(ctx, 'postcombatMain');
+    }
   }
 }
 
-export function* runTurn(ctx: GameContext): GameGen<void> {
+/** The normal turn opening through the first main-phase priority window. */
+export function* runBeginningAndPrecombatMain(ctx: GameContext): GameGen<void> {
   const s = ctx.state;
   const ap = playerById(ctx, s.currentTurnPlayer);
   emit(ctx, 'turnBegin', { turn: s.turnNumber, player: ap.id }, ap.id);
@@ -308,6 +462,7 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   queueStepTriggers(ctx, 'untapStep');
   untapStep(ctx);
 
+  delete ctx.state.declareAttackersReachedThisTurn;
   if (ctx.state.createdTokenThisTurn) {
     for (const player of ctx.state.players) ctx.state.createdTokenThisTurn[player.id] = false;
   }
@@ -325,8 +480,11 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   yield* drawCards(ctx, ap, 1); // multiplayer: first-turn draw included (brief §5.3)
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
+  // A combat phase made in the beginning phase comes right after it, before the first main phase.
+  yield* runInsertedPhases(ctx, 'beginning');
 
   // Precombat main.
+  ctx.state.mainPhasesStartedThisTurn = 1;
   setPhase(ctx, 'precombatMain', null);
   queueStepTriggers(ctx, 'mainPhase');
   // "your first main phase" is the precombat one specifically, so it gets its own event
@@ -334,6 +492,10 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   queueStepTriggers(ctx, 'precombatMain');
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
+}
+
+export function* runTurn(ctx: GameContext): GameGen<void> {
+  yield* runBeginningAndPrecombatMain(ctx);
 
   yield* runCombatAndExtraCombats(ctx);
 
@@ -341,11 +503,17 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   beginPostcombatMain(ctx);
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
+  yield* runInsertedPhases(ctx, 'postcombatMain');
 
+  yield* runEndingPhase(ctx);
+}
+
+/** Production end step and cleanup, also used by finite multi-turn viewer scenarios. */
+export function* runEndingPhase(ctx: GameContext): GameGen<void> {
+  const player = ctx.state.currentTurnPlayer;
   beginEndStep(ctx);
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
-
   yield* cleanupStep(ctx);
-  emit(ctx, 'turnEnd', { turn: s.turnNumber, player: ap.id }, ap.id);
+  emit(ctx, 'turnEnd', { turn: ctx.state.turnNumber, player }, player);
 }

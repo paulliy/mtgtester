@@ -204,9 +204,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     },
   );
 
-  unimplemented('b3329240-c812-45ea-a7f8-4d79cd4ed515', 'Hexmark Destroyer', [
-    "Multi-threat Eliminator — ~ can't be blocked except by six or more creatures.",
-  ]);
+  // Hexmark Destroyer: restored in coverage PR07 (see coverage-pr07.ts).
 
   unimplemented('10f274f9-9044-447b-81c9-d4906ad9e6be', 'Illuminor Szeras', [
     "Secrets of the Soul — {T}, Sacrifice another creature: Add an amount of {B} equal to the sacrificed creature's mana value.",
@@ -218,10 +216,6 @@ export function registerNECRON_DYNASTIESOverrides(): void {
 
   unimplemented('fd03f20a-d365-48fb-8b2a-ad4b502a0045', 'Lokhust Heavy Destroyer', [
     'Enmitic Exterminator — When this creature enters, each player sacrifices a creature of their choice.',
-  ]);
-
-  unimplemented('d6b2c998-a226-426c-a40d-6e6007041bfe', 'Mask of Memory', [
-    'Whenever equipped creature deals combat damage to a player, you may draw two cards. If you do, discard a card.',
   ]);
 
   defineCard(
@@ -337,17 +331,11 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'You have no maximum hand size.',
   ]);
 
-  unimplemented('b410f294-cbb6-4016-981f-808fd9b7bbae', 'Resurrection Orb', [
-    "Whenever equipped creature dies, return that card to the battlefield under its owner's control at the beginning of the next end step.",
-  ]);
-
   unimplemented('0192ba05-6144-4fec-a803-462ecdf64195', 'Royal Warden', [
     'Phalanx Commander — When this creature enters, create two tapped 2/2 black Necron Warrior artifact creature tokens.',
   ]);
 
-  unimplemented('7388a797-d40d-4783-a281-d17bc159b856', 'Sautekh Immortal', [
-    'Elite Troops — ~ enters with a +1/+1 counter on it for each creature that died this turn.',
-  ]);
+  // Sautekh Immortal: restored in coverage PR04 (see necron-dynasties-remaining.ts).
 
   unimplemented('6c85271c-c711-49b0-a72e-9e576c33714d', 'Sculpting Steel', [
     'You may have this artifact enter as a copy of any artifact on the battlefield.',
@@ -380,9 +368,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'You have no maximum hand size.',
   ]);
 
-  unimplemented('c857de66-f4e0-4e97-ad01-fac623af8225', 'Tomb Blade', [
-    'Whenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice.',
-  ]);
+  // Tomb Blade: restored in coverage PR06 (see necron-dynasties-remaining.ts).
 
   unimplemented('986f510c-e2ec-423e-a443-51a169939558', 'Tomb Fortress', [
     '{2}{B}{B}{B}, {T}, Exile this land: Mill four cards, then return a creature card from your graveyard to the battlefield. Activate only as a sorcery.',
@@ -394,8 +380,5 @@ export function registerNECRON_DYNASTIESOverrides(): void {
 
   // Triarch Praetorian: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
-  unimplemented('1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3', 'Triarch Stalker', [
-    'Targeting Relay — At the beginning of combat on your turn, choose an opponent.',
-    'Creatures attacking the last chosen player have menace.',
-  ]);
+  // Triarch Stalker: restored in coverage PR07 (see coverage-pr07.ts).
 }

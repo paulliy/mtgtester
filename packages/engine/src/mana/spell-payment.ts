@@ -1,9 +1,10 @@
+import { playerLifeLocked } from '../state/phasing';
 import type { ObjectId } from '@mtg/shared';
 import type { AbilityCost } from '../cards/ability';
 import type { GameGen } from '../decisions';
 import { chooseCard } from '../effects/choose';
 import { selectMatches } from '../cards/selector';
-import { matchesSelector } from '../effects/continuous';
+import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
 import {
   allowanceFor,
@@ -11,6 +12,7 @@ import {
   convokeSourcesFor,
   manaSourcesFor,
   spellHasConvoke,
+  canBeSacrificed,
 } from '../state/queries';
 import type { EnginePlayerState, GameContext } from '../state/types';
 import { planPayment } from './cost';
@@ -37,6 +39,7 @@ export interface SpellPaymentChoice {
   kind:
     | 'tapOther'
     | 'sacrificeOther'
+    | 'returnUnblockedAttacker'
     | 'discardCard'
     | 'exileCardFromHand'
     | 'exileOtherCardsFromGraveyard';
@@ -109,8 +112,25 @@ export function planSpellPayment(
           (permanent) =>
             permanent.controllerId === player.id &&
             (cost.kind !== 'tapOther' || !permanent.tapped) &&
+            (cost.kind !== 'sacrificeOther' || canBeSacrificed(ctx, permanent)) &&
             matchesSelector(ctx, permanent, cost.selector, source),
         );
+        break;
+      case 'returnUnblockedAttacker':
+        kind = cost.kind;
+        // Sneak is payable only by the active player during their declare blockers step.
+        // The blocker list stays populated when a blocker leaves combat, preserving the distinction
+        // between unblocked and "was blocked".
+        candidates =
+          ctx.state.currentTurnPlayer === player.id && ctx.state.step === 'declareBlockers'
+            ? ctx.state.battlefield.filter(
+                (permanent) =>
+                  permanent.controllerId === player.id &&
+                  permanent.attacking !== null &&
+                  permanent.blockedByOrdered.length === 0 &&
+                  computeCharacteristics(ctx, permanent).types.includes('Creature'),
+              )
+            : [];
         break;
       case 'discardCard':
       case 'exileCardFromHand':
@@ -136,6 +156,7 @@ export function planSpellPayment(
     for (let ordinal = 0; ordinal < count; ordinal++)
       groups.push({ costIndex, ordinal, kind, resource, candidates });
   }
+  if (lifePaid > 0 && playerLifeLocked(ctx, player.id)) return null;
   const statefulMana = needsStatefulManaPayment(ctx, player, request.mana, lifePaid);
   if (!statefulMana && lifePaid > 0 && lifePaid > player.life) return null;
   // The caller cannot smuggle a nonexistent or duplicate assignment through a prefix.
@@ -236,7 +257,7 @@ export function planSpellPayment(
             player.manaEntries,
             usableFrom(player, sources),
             allows,
-            player.life - lifePaid,
+            playerLifeLocked(ctx, player.id) ? 0 : player.life - lifePaid,
           );
       if (manaPlan === null) return null;
       return {
@@ -283,7 +304,7 @@ export function* chooseSpellPayment(
   for (const group of witness.choices) {
     const kind = group.kind;
     const pool =
-      kind === 'tapOther' || kind === 'sacrificeOther'
+      kind === 'tapOther' || kind === 'sacrificeOther' || kind === 'returnUnblockedAttacker'
         ? ctx.state.battlefield
         : kind === 'exileOtherCardsFromGraveyard'
           ? player.graveyard
@@ -311,9 +332,11 @@ export function* chooseSpellPayment(
         ? 'Tap'
         : kind === 'sacrificeOther'
           ? 'Sacrifice'
-          : kind === 'discardCard'
-            ? 'Discard'
-            : 'Exile';
+          : kind === 'returnUnblockedAttacker'
+            ? 'Return to hand'
+            : kind === 'discardCard'
+              ? 'Discard'
+              : 'Exile';
     const chosen = yield* chooseCard(ctx, {
       player: player.id,
       prompt: `${player.id}: choose a card to ${verb.toLowerCase()} as a spell cost.`,

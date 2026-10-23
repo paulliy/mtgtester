@@ -24,11 +24,11 @@ Threat assessment: in a 4-player free-for-all, the correct target for removal or
 
 Turn planning & yielding: A strategist may supply a standing turn plan separately. Treat it as useful intent, but adapt whenever the current legal menu or board has changed. When taking priority actions, if there are no good actions available, choose a yield action (e.g. passAndYieldTurn / yieldToAbility) to yield until something happens.
 
-Declaring attackers: the whole attack is ONE decision, type "attackDeclaration", with one target slot per eligible creature (in "targets", indexed by "slot"). For each slot, "choice" must be either the seat id of the opponent that creature attacks, or the literal string "__no_attack__" to hold it back — "__no_attack__" is only offered for creatures not forced to attack. Fill in EVERY slot; different slots may choose different defenders in the same response. If a proposal is rejected (attack tax you can't pay for everyone attacking that opponent at once), you get exactly one more try with the problem described — fix only the flagged creature(s).
+Declaring attackers: the whole attack is ONE decision, type "attackDeclaration", with one target slot per eligible creature (in "targets", indexed by "slot"). For each slot, "choice" must be either the seat id of the opponent that creature attacks, the object id of a planeswalker an opponent controls (attacking it deals damage to its loyalty, not to that player), or the literal string "__no_attack__" to hold it back — "__no_attack__" is only offered for creatures not forced to attack. Fill in EVERY slot; different slots may choose different defenders in the same response. If a proposal is rejected (attack tax you can't pay for everyone attacking that opponent at once), you get exactly one more try with the problem described — fix only the flagged creature(s).
 
 Declaring blockers: the whole block is ONE decision too, type "blockDeclaration", with one target slot per eligible blocker (in "targets", indexed by "slot"). For each slot, "choice" must be either the id of the attacker that creature blocks, or the literal string "__no_block__" to hold it back — "__no_block__" is only offered for creatures not forced to block. Fill in EVERY slot; several of your creatures may gang up on the same attacker in the same response (menace REQUIRES at least two blockers on that attacker, or the whole proposal is rejected). If a proposal is rejected, you get exactly one more try with the problem described.
 
-Dividing combat damage: when one of your attackers is blocked by two or more creatures, or by one creature with trample excess available, you get a separate decision naming a fixed "amount" (that attacker's power) and a list of "targets" (the blocker ids, plus the defending seat id at the end if that attacker has trample). Reply with "combatDamageSplit" — an object mapping each target id to how much of "amount" it gets — instead of picking one of the listed options; the counts must sum to exactly "amount". You may divide it however you want among the blockers (no requirement to assign lethal to each, or in any particular order). The defending seat may only receive damage once EVERY blocker id in the split already has at least lethal damage assigned to it (trample, CR 702.19b) — otherwise send it all to the blockers.
+Dividing combat damage: when one of your attackers is blocked by two or more creatures, or by one creature with trample excess available, you get a separate decision naming a fixed "amount" (that attacker's power) and a list of "targets" (the blocker ids, plus the defending seat id — or the id of the planeswalker it attacks — at the end if that attacker has trample). Reply with "combatDamageSplit" — an object mapping each target id to how much of "amount" it gets — instead of picking one of the listed options; the counts must sum to exactly "amount". You may divide it however you want among the blockers (no requirement to assign lethal to each, or in any particular order). The defending seat or planeswalker may only receive damage once EVERY blocker id in the split already has at least lethal damage assigned to it (trample, CR 702.19b) — otherwise send it all to the blockers.
 
 REQUIRED JSON OUTPUT FORMAT (Respond with ONLY this raw JSON object, no markdown fences):
 {"requestId":"<id>","actionId":0,"targets":[{"slot":0,"choice":"<id>"}],"note":"<one short sentence rationale>"}`;
@@ -47,11 +47,17 @@ const LAND_AND_MANA_PRIMER = `Land and mana data are authoritative. A source lis
 
 const TARGETING_PRIMER = `Targeted actions expose numbered target slots. Fill every required slot with an offered choice for that slot; do not copy ids from another slot or invent a target.`;
 
-const ATTACK_PRIMER = `This is one batched attack declaration. Fill every creature target slot with an offered defending seat or __no_attack__. Different creatures may attack different opponents; obey forced-attack options and any attack-tax correction.`;
+const ATTACK_PRIMER = `This is one batched attack declaration. Fill every creature target slot with an offered defending player or planeswalker id, or __no_attack__. Different creatures may attack different opponents; obey forced-attack options and any attack-tax correction.`;
 
 const BLOCK_PRIMER = `This is one batched block declaration. Fill every blocker target slot with an offered attacker id or __no_block__. Several blockers may block one attacker; menace requires a legal multi-block assignment.`;
 
-const COMBAT_DAMAGE_PRIMER = `Return combatDamageSplit counts summing exactly to the stated amount. With trample, damage may reach the defending seat only after every blocker has at least lethal damage assigned.`;
+const COMBAT_DAMAGE_PRIMER = `Return combatDamageSplit counts summing exactly to the stated amount. With trample, damage may reach the defending player or planeswalker only after every blocker has at least lethal damage assigned.`;
+
+/** Master Warcraft: choosing which of ANOTHER player's creatures attack. */
+const CHOOSE_ATTACKERS_PRIMER = `Choosing another player's attackers: this "attackDeclaration" only decides WHICH of the named player's creatures attack, and that player then chooses what each one attacks. For each slot, "choice" is the literal string "__attacks__" or "__no_attack__" ("__no_attack__" is only offered for creatures not forced to attack). Fill in EVERY slot.`;
+
+/** Master Warcraft: choosing the blocks of ANOTHER player's creatures. */
+const CHOOSE_FOREIGN_BLOCKS_PRIMER = `Choosing another player's blocks: the blockers in this "blockDeclaration" belong to the player named in the prompt, not to you, but you decide whether and how each one blocks. Fill in EVERY slot.`;
 
 const MANA_SPLIT_PRIMER = `Return manaSplit counts summing exactly to the stated amount and use only offered mana categories.`;
 
@@ -68,6 +74,10 @@ export function tacticianPrimerFor(request: DecisionRequest): string {
   }
   if (request.decisionType === 'declareAttackers') fragments.push(ATTACK_PRIMER);
   if (request.decisionType === 'declareBlockers') fragments.push(BLOCK_PRIMER);
+  if (request.legalActions.some((action) => action.data?.['chooseAttackers'] === true))
+    fragments.push(CHOOSE_ATTACKERS_PRIMER);
+  if (request.legalActions.some((action) => typeof action.data?.['blockingPlayer'] === 'string'))
+    fragments.push(CHOOSE_FOREIGN_BLOCKS_PRIMER);
   if (request.combatDamageSplit !== undefined || request.decisionType === 'assignCombatDamage') {
     fragments.push(COMBAT_DAMAGE_PRIMER);
   }

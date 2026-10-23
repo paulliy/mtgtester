@@ -59,6 +59,10 @@ const DEFAULT_DECKS: { slug: string; url: string; lenient?: boolean }[] = [
     url: 'https://moxfield.com/decks/QkagAeRybXmuv4wZIIaASw',
     lenient: true,
   },
+  {
+    slug: 'white-black-control',
+    url: 'https://moxfield.com/decks/2ZPO0WX1o0WMesn6B5ZuOg',
+  },
 ];
 
 function slugify(text: string): string {

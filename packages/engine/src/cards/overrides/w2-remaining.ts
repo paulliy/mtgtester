@@ -225,7 +225,11 @@ export function registerW2RemainingOverrides(): void {
     [
       "Creatures can't attack you or planeswalkers you control unless their controller pays {W/P} for each of those creatures.",
     ],
-    { ruleStatics: [{ kind: 'attackTax', amount: 0, phyrexianColor: 'W' }] },
+    {
+      ruleStatics: [
+        { kind: 'attackTax', amount: 0, phyrexianColor: 'W', includePlaneswalkers: true },
+      ],
+    },
   );
 
   defineCard(

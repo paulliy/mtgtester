@@ -59,6 +59,7 @@ describe('actionLabel', () => {
       'nonMana',
       'energy',
       'overload',
+      'bestow',
       'adventure',
       'omen',
     ]) {
@@ -69,6 +70,7 @@ describe('actionLabel', () => {
     expect(actionLabel(action({ data: { castVariant: 'energy', energyCost: 4 } }))).toBe(
       'Cast for 4 energy',
     );
+    expect(actionLabel(action({ data: { castVariant: 'bestow' } }))).toBe('Cast with bestow');
   });
 
   it('names the optional-cost count of a cast (replicate, squad, kicker)', () => {

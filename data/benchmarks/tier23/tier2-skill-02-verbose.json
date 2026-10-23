@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "seed": "tier2-skill-02",
+  "maxTurns": 20,
+  "cutoff": true,
+  "firstEliminationTurn": null,
+  "missedLandDrops": 0,
+  "landDropOpportunities": 20,
+  "repeatedNonPassNoOps": 0,
+  "unusedManaEstimate": {
+    "P4": 5,
+    "P1": 0,
+    "P2": 3,
+    "P3": 1
+  },
+  "boardAtCutoff": [
+    {
+      "seat": "P1",
+      "life": 39,
+      "lands": 5,
+      "permanents": 9,
+      "handSize": 4,
+      "graveyardSize": 0,
+      "eliminated": false
+    },
+    {
+      "seat": "P2",
+      "life": 51,
+      "lands": 5,
+      "permanents": 10,
+      "handSize": 2,
+      "graveyardSize": 0,
+      "eliminated": false
+    },
+    {
+      "seat": "P3",
+      "life": 21,
+      "lands": 5,
+      "permanents": 10,
+      "handSize": 2,
+      "graveyardSize": 1,
+      "eliminated": false
+    },
+    {
+      "seat": "P4",
+      "life": 37,
+      "lands": 5,
+      "permanents": 7,
+      "handSize": 5,
+      "graveyardSize": 0,
+      "eliminated": false
+    }
+  ],
+  "ai": {
+    "totalDecisions": 150,
+    "totalCalls": 111,
+    "skippedCalls": 39,
+    "retries": 0,
+    "fallbacks": 0,
+    "totalPromptTokens": 345010,
+    "totalResponseTokens": 37264,
+    "avgLatencyMs": 12183,
+    "totalCostUsd": 0.045578500399999985,
+    "strategistCalls": 18,
+    "planExecutions": 32
+  }
+}

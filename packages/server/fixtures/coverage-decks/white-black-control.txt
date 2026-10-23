@@ -1,0 +1,85 @@
+# white black control
+# snapshot of https://moxfield.com/decks/2ZPO0WX1o0WMesn6B5ZuOg
+
+Commander
+1 Breena, the Demagogue
+
+Deck
+11 Plains
+12 Swamp
+1 Arcane Signet
+1 Archon of Absolution
+1 Command Tower
+1 Deafening Silence
+1 Hushbringer
+1 Rankle, Master of Pranks
+1 Waste Not
+1 Duress
+1 Hypnotic Specter
+1 Mother of Runes
+1 Orzhov Basilica
+1 Path to Exile
+1 Sol Ring
+1 Liliana, Waker of the Dead
+1 Fellwar Stone
+1 Library of Leng
+1 Leyline of the Void
+1 Rule of Law
+1 Exotic Orchard
+1 Duelist's Heritage
+1 Orzhov Signet
+1 Syphon Mind
+1 Curse of Disturbance
+1 Ghostly Prison
+1 Cloak of Confusion
+1 Hymn to Tourach
+1 Dark Confidant
+1 Drana, Liberator of Malakir
+1 Anguished Unmaking
+1 Selfless Spirit
+1 Whispers of Emrakul
+1 Soul Snare
+1 Liliana of the Veil
+1 The Haunt of Hightower
+1 Vicious Rumors
+1 Authority of the Consuls
+1 Fetid Heath
+1 Caves of Koilos
+1 Painful Quandary
+1 Geth's Grimoire
+1 Despark
+1 Generous Gift
+1 Talisman of Hierarchy
+1 Archfiend of Ifnir
+1 Thoughtseize
+1 Isolated Chapel
+1 Rest in Peace
+1 Oppression
+1 Planar Void
+1 Tinybones, Trinket Thief
+1 Bottomless Pit
+1 Imp's Mischief
+1 Rebuff the Wicked
+1 Necrogen Mists
+1 Brightclimb Pathway // Grimclimb Pathway
+1 Sejiri Shelter // Sejiri Glacier
+1 Archon of Emeria
+1 Tergrid, God of Fright // Tergrid's Lantern
+1 Inkshield
+1 Promise of Loyalty
+1 Esper Sentinel
+1 Reprieve
+1 Dusk Legion Duelist
+1 Stone of Erech
+1 Doorkeeper Thrull
+1 Tinybones Joins Up
+1 Aven Interrupter
+1 Dawn's Truce
+1 Bandit's Talent
+1 Perch Protection
+1 Reluctant Role Model
+1 Restoration Magic
+1 Eclipsed Steppe
+1 Turbulent Moor
+1 Bilbo's Gambit
+1 Karn, Argent Defender

@@ -7,11 +7,12 @@
 import type { GameGen } from '../decisions';
 import { evaluateCondition } from '../cards/condition';
 import { isPermanentCard } from '../cards/definition';
-import { executeAbility } from '../effects/resolve';
+import { executeAbility, drawCards } from '../effects/resolve';
+import { TREASURE } from '../cards/tokens';
 import { captureResolutionTargets } from '../targets/resolution';
 import { emit, debug } from '../log/log';
-import { makePermanent, moveObject, queueTriggersForObject } from '../state/objects';
-import { getDefByOracleId, sourceColorsOf } from '../state/queries';
+import { makePermanent, moveObject, queueTriggersForObject, createTokens } from '../state/objects';
+import { sourceColorsOf, spellDefinitionOf } from '../state/queries';
 import type { EngineStackObject, GameContext } from '../state/types';
 
 /** Resolve the top object of the stack. Caller guarantees the stack is nonempty. */
@@ -77,7 +78,14 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
     },
   );
   const { anyChosen, anyLegal } = resolutionTargets;
-  if (anyChosen && !anyLegal) {
+  // CR 702.103e, 608.3b: a bestowed Aura spell whose target is illegal ceases to be bestowed and
+  // resolves as the creature spell it is printed as, instead of being removed.
+  if (anyChosen && !anyLegal && top.kind === 'spell' && top.alternativeCastKind === 'bestow') {
+    delete top.alternativeCastKind;
+    delete top.spellDefinition;
+    top.targets = [];
+    emit(ctx, 'bestowTargetIllegal', { description: top.description }, top.controllerId);
+  } else if (anyChosen && !anyLegal) {
     emit(ctx, 'fizzle', { description: top.description }, top.controllerId);
     debug(ctx, 'stack', `${top.description} fizzles — all targets illegal`);
     if (top.card !== null) {
@@ -107,6 +115,19 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
     }
   }
 
+  if (top.kind === 'spell' && top.giftRecipientId !== undefined) {
+    const gift = spellDefinitionOf(ctx, top).gift;
+    const recipient = s.players.find(
+      (player) => player.id === top.giftRecipientId && !player.hasLost,
+    );
+    if (recipient !== undefined) {
+      if (gift === 'treasure') createTokens(ctx, TREASURE, 1, recipient.id);
+      else if (gift === 'card') yield* drawCards(ctx, recipient, 1);
+      else if (gift === 'extraTurn') (s.extraTurns ??= []).unshift(recipient.id);
+      else throw new Error('gift promise has no supported gift');
+      emit(ctx, 'giftFulfilled', { recipient: recipient.id, gift }, top.controllerId);
+    }
+  }
   if (top.ability !== null) {
     yield* executeAbility(
       ctx,
@@ -129,11 +150,18 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
       top.triggerObjectCardId,
       {
         ...top.triggerScope,
+        giftPromised: top.giftRecipientId !== undefined,
         ...(top.announcedX === undefined ? {} : { x: top.announcedX }),
       },
       top.countTargets,
       top.divisionAmounts,
     );
+  }
+
+  if (top.kind === 'spell') {
+    const player = s.players.find((player) => player.id === top.controllerId);
+    if (player !== undefined)
+      (player.resolvedSpellNames ??= []).push(spellDefinitionOf(ctx, top).name);
   }
 
   // Destination (CR 608.3): permanent spells enter the battlefield under their caster;
@@ -149,7 +177,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
 export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): GameGen<void> {
   const card = spell.card;
   if (card === null) return;
-  const def = getDefByOracleId(ctx, card.oracleId, card.name);
+  const def = spellDefinitionOf(ctx, spell);
   if (spell.alternativeCastKind === 'adventure') {
     // `moveObject` returns a NEW object for the destination zone — `card` is stale afterward,
     // so the flag has to land on `moved`, not the pre-move reference.
@@ -166,13 +194,21 @@ export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): Ga
   // Permanent spells (creatures, artifacts, enchantments, planeswalkers, battles) enter
   // the battlefield under their caster; instants/sorceries head to the graveyard (CR 608.3).
   if (isPermanentCard(def)) {
+    const bestowed = spell.alternativeCastKind === 'bestow';
     const moved = yield* moveObject(ctx, card, {
       zone: 'battlefield',
       controllerId: spell.controllerId,
-      ...(def.subtypes.includes('Aura') ? { attachedTo: spell.targets[0] } : {}),
+      ...(spell.alternativeCastKind === 'mdfc' ? { face: 'back' as const } : {}),
+      ...(def.subtypes.includes('Aura') || bestowed ? { attachedTo: spell.targets[0] } : {}),
+      // A bestowed Aura spell becomes a bestowed Aura (CR 702.103b).
+      ...(bestowed ? { bestowed: true } : {}),
       // A face-down spell becomes a face-down permanent (CR 708.4).
       ...(spell.alternativeCastKind === 'faceDown' ? { faceDown: true } : {}),
     });
+    if (card.isCardCopy === true && moved?.zone === 'battlefield') {
+      moved.isToken = true;
+      delete moved.isCardCopy;
+    }
     if (spell.grantHasteOnResolution && moved && moved.zone === 'battlefield') {
       ctx.state.effects.push({
         id: `eff-${ctx.state.nextObjectNum++}`,
@@ -219,13 +255,18 @@ export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): Ga
  * to its target (CR 303.4f), as the spell it copies would.
  */
 function putPermanentSpellCopyOntoBattlefield(ctx: GameContext, spell: EngineStackObject): void {
-  const def = getDefByOracleId(ctx, spell.sourceOracleId, spell.description);
+  const selected = spellDefinitionOf(ctx, spell);
+  // A token copying a spell has the chosen spell's characteristics, with no unchosen faces.
+  const copyOracleId = `spell-copy:${spell.id}`;
+  const { alternativeCasts: _alternatives, backFace: _back, ...singleFace } = selected;
+  const def = { ...singleFace, oracleId: copyOracleId };
+  ctx.defs.set(copyOracleId, def);
   const perm = makePermanent(
     ctx,
     {
       id: `o-${ctx.state.nextObjectNum++}`,
       cardId: spell.sourceCardId,
-      oracleId: spell.sourceOracleId,
+      oracleId: copyOracleId,
       ownerId: spell.controllerId,
       name: def.name,
       typeLine: def.typeLine,
@@ -238,6 +279,11 @@ function putPermanentSpellCopyOntoBattlefield(ctx: GameContext, spell: EngineSta
     spell.controllerId,
   );
   if (def.subtypes.includes('Aura')) perm.attachedTo = spell.targets[0] ?? null;
+  // A copy of a bestowed Aura spell is one too (CR 702.103c), and becomes a bestowed Aura.
+  if (spell.alternativeCastKind === 'bestow') {
+    perm.attachedTo = spell.targets[0] ?? null;
+    perm.bestowed = true;
+  }
   ctx.state.battlefield.push(perm);
   emit(
     ctx,

@@ -16,7 +16,13 @@ import type { Selector } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import type { EngineCardObject, EnginePermanent, GameContext } from '../state/types';
 import { computeCharacteristics, selectPermanents } from './continuous';
-import { cardZoneCandidate, effectivePT, getDefByOracleId, opponentsOf } from '../state/queries';
+import {
+  cardZoneCandidate,
+  effectivePT,
+  getDefByOracleId,
+  opponentsOf,
+  spellDefinitionOf,
+} from '../state/queries';
 import { spellManaValue } from '../state/objects';
 
 function scopedPermanents(
@@ -73,6 +79,15 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
           attached !== undefined && computeCharacteristics(ctx, attached).types.includes('Creature')
         );
       }).length;
+    case 'aurasAttachedToSource': {
+      const host = ctx.state.battlefield.find((perm) => perm.cardId === scope.sourceCardId);
+      if (host === undefined) return 0;
+      return ctx.state.battlefield.filter(
+        (perm) =>
+          perm.attachedTo === host.id &&
+          computeCharacteristics(ctx, perm).subtypes.includes('Aura'),
+      ).length;
+    }
     case 'countCardsInZone': {
       const source = { cardId: scope.sourceCardId ?? '', controllerId: scope.controllerId };
       let count = 0;
@@ -88,11 +103,19 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       }
       return count;
     }
-    case 'colorsAmongPermanents': {
+    case 'cardTypesInYourGraveyard':
+      return cardTypesInAllGraveyards(ctx, scope.controllerId);
+    case 'colorsAmongPermanents':
+    case 'colorsAmongPermanentsAndSpellsCastThisTurn': {
       const colors = new Set<string>();
       for (const perm of ctx.state.battlefield) {
         if (perm.controllerId !== scope.controllerId) continue;
         for (const color of computeCharacteristics(ctx, perm).colors) colors.add(color);
+      }
+      if (value.kind === 'colorsAmongPermanentsAndSpellsCastThisTurn') {
+        const caster = ctx.state.players.find((player) => player.id === scope.controllerId);
+        for (const record of caster?.spellsCastThisTurnRecords ?? [])
+          for (const color of record.candidate.colors) colors.add(color);
       }
       return colors.size;
     }
@@ -149,12 +172,18 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     }
     case 'damageDealt':
       return scope.damageDealt ?? 0;
+    case 'aurasYouControlledAttachedToTriggerObject':
+      return (scope.triggerObjectFacts?.attachedAuraControllerIds ?? []).filter(
+        (controllerId) => controllerId === scope.controllerId,
+      ).length;
     case 'triggerCount':
       // An aggregate trigger always fired because at least one object matched, so the absent
       // case is a scope that was never populated — 1 is the honest floor, not 0.
       return scope.triggerCount ?? 1;
     case 'spellManaValue':
       return scope.spellManaValue ?? 0;
+    case 'spellColorCount':
+      return scope.spellColorCount ?? 0;
     case 'manaSpent':
       return scope.manaSpent ?? 0;
     case 'treasureManaSpent':
@@ -193,6 +222,14 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       if (value.target === 'source')
         return sourceObjectFacts(ctx, scope)?.manaValue ?? scope.resolvingSourceManaValue ?? 0;
       if (value.target === 'triggerObject') return eventObjectFacts(ctx, scope)?.manaValue ?? 0;
+      const targetId = scope.targets?.[value.target];
+      const spell = ctx.state.stack.find(
+        (entry) => entry.id === targetId && entry.kind === 'spell',
+      );
+      if (spell !== undefined && spell.card !== null) {
+        const definition = spellDefinitionOf(ctx, spell);
+        return spellManaValue(definition, spell.announcedX);
+      }
       return targetObjectFacts(ctx, scope, value.target)?.manaValue ?? 0;
     }
     case 'commanderCastCount': {
@@ -233,6 +270,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       }
       return count;
     }
+    case 'timesAttackedThisTurn':
+      throw new Error('engine bug: "timesAttackedThisTurn" is read per affected object in a layer');
     case 'creaturesDiedThisTurn':
       return ctx.state.creaturesDiedThisTurn;
     case 'powerOfSource':
@@ -267,6 +306,13 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     }
     case 'attackingCreatures':
       return ctx.state.battlefield.filter((permanent) => permanent.attacking !== null).length;
+    case 'manaValueOfOtherSpellsCastThisTurn':
+      return (
+        ctx.state.players.find((player) => player.id === scope.controllerId)
+          ?.spellsCastThisTurnRecords ?? []
+      )
+        .filter((record) => record.objectId !== scope.sourceObjectId)
+        .reduce((total, record) => total + record.manaValue, 0);
     case 'spellsCastThisTurn':
       return (
         ctx.state.players.find((player) => player.id === scope.controllerId)?.spellsCastThisTurn ??

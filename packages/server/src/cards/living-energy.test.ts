@@ -4,6 +4,9 @@ import { describe, expect, it } from 'vitest';
 import type { OracleCard, ServerToClientMessage } from '@mtg/shared';
 import { RandomDecisionProvider } from '@mtg/engine';
 import { interpretCard } from '../../../engine/src/cards/interpret';
+import { createGame } from '../../../engine/src/state/game';
+import { executeAbility } from '../../../engine/src/effects/resolve';
+import { copies, forest, gameConfig, oracle, pump, spawn } from '../../../engine/tests/fixtures';
 import { MatchSession } from '../match/session';
 import type { SeatSetup } from '../match/setup';
 import { parsePlaintextDeck } from '../decks/plaintext';
@@ -29,16 +32,9 @@ function realCard(name: string): OracleCard {
 }
 
 const CATALOG_CONTAINED = new Set([
-  'Lightning Runner',
-  'Aetheric Amplifier',
   'Saheeli, Radiant Creator',
   'Saheeli, Sublime Artificer',
-  'Aetherworks Marvel',
-  'Territorial Aetherkite',
   'Duplicant',
-  'Adaptive Omnitool',
-  'Druid of Purification',
-  'Chaos Warp',
   'Reality Shift',
 ]);
 
@@ -85,13 +81,27 @@ describe.skipIf(SKIP)('Living Energy modeled-card and player-experience checks',
     }
   });
 
-  it('is catalog-contained because chosen permanents use the choosing player, not you', () => {
+  it('each chooser excludes the Druid controller permanents, including the chooser who owns the chosen artifact', () => {
     const card = realCard('Druid of Purification');
     const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'Each player chooses a permanent they do not control, not a permanent you do not control.',
-    );
+    expect(def.modeled).toBe(true);
+    const ctx = createGame(gameConfig([0, 1, 2, 3].map(() => ({ cards: copies(8, forest) }))));
+    ctx.state.currentTurnPlayer = 'P1';
+    const source = spawn(ctx, 'P1', card);
+    const own = spawn(ctx, 'P1', oracle({ name: 'Controller Artifact', typeLine: 'Artifact' }));
+    const other = spawn(ctx, 'P2', oracle({ name: 'Chooser Artifact', typeLine: 'Artifact' }));
+    const { decisions } = pump(executeAbility(ctx, source, def.triggers[0]!, []), (decision) => {
+      expect(decision.options.map((option) => option.description)).toEqual([
+        'Choose none',
+        'Destroy Chooser Artifact',
+      ]);
+      expect(ctx.state.battlefield.some((permanent) => permanent.id === other.id)).toBe(true);
+      return { index: 1, targets: new Map() };
+    });
+    expect(decisions.map((decision) => decision.player)).toEqual(['P1', 'P2', 'P3', 'P4']);
+    expect(ctx.state.battlefield.some((permanent) => permanent.id === own.id)).toBe(true);
+    expect(ctx.state.battlefield.some((permanent) => permanent.id === other.id)).toBe(false);
+    expect(ctx.state.eventLog.filter((event) => event.type === 'destroy')).toHaveLength(1);
   });
 
   it('starts a real living-energy deck in single-player mode and waits for the human action', async () => {

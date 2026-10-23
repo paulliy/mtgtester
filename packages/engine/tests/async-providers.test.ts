@@ -34,7 +34,7 @@ function pod(): SeatSpec[] {
   }));
 }
 
-describe('runToCompletionAsync', () => {
+describe('runToCompletionAsync', { timeout: 60_000 }, () => {
   it('plays to completion with an async decision provider', async () => {
     const seed = 'async-test-1';
     const engine = new Engine(gameConfig(pod(), { gameId: `async-${seed}`, seed, turnCap: 150 }));

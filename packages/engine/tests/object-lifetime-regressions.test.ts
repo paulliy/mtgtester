@@ -198,11 +198,13 @@ describe('expected rules regressions', () => {
       // The generic producer's differently formatted type line has its own definition.
       if (!lifelinkFirst) {
         const nest = spawn(ctx, 'P1', real('Hornet Nest'));
-        dealDamageToCreature(ctx, dawn, nest, 1, {
-          combat: false,
-          sourceHasDeathtouch: false,
-          sourceHasLifelink: false,
-        });
+        pump(
+          dealDamageToCreature(ctx, dawn, nest, 1, {
+            combat: false,
+            sourceHasDeathtouch: false,
+            sourceHasLifelink: false,
+          }),
+        );
         pump(runPrioritySequence(ctx));
       }
       const player = ctx.state.players[0]!;

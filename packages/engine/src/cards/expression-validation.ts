@@ -17,6 +17,14 @@ const finite: Check = (value, path, issues) => {
   if (typeof value !== 'number' || !Number.isFinite(value))
     issue(path, issues, 'expected finite number');
 };
+const nonnegativeInteger: Check = (value, path, issues) => {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0)
+    issue(path, issues, 'expected nonnegative integer');
+};
+const positiveInteger: Check = (value, path, issues) => {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 1)
+    issue(path, issues, 'expected positive integer');
+};
 const text: Check = (value, path, issues) => {
   if (typeof value !== 'string' || value.length === 0)
     issue(path, issues, 'expected nonempty string');
@@ -26,6 +34,9 @@ const oneOf =
   (value, path, issues) => {
     if (!values.includes(value as string)) issue(path, issues, 'expected ' + values.join(' | '));
   };
+const flag: Check = (value, path, issues) => {
+  if (value !== true) issue(path, issues, 'expected true');
+};
 const optional =
   (check: Check): Check =>
   (value, path, issues) => {
@@ -86,6 +97,11 @@ const numberValue: Check = (value, path, issues) =>
   validateExpression('value', value, path, issues);
 const condition: Check = (value, path, issues) =>
   validateExpression('condition', value, path, issues);
+/** Gain-control duration union — 'permanent' | 'untilEndOfTurn' | 'whileSourceOnBattlefield'. */
+const controlDuration: Check = (value, path, issues) => {
+  if (!['permanent', 'untilEndOfTurn', 'whileSourceOnBattlefield'].includes(value as string))
+    issue(path, issues, 'expected permanent | untilEndOfTurn | whileSourceOnBattlefield');
+};
 
 const selectorShapes = {
   self: {},
@@ -94,15 +110,18 @@ const selectorShapes = {
   type: { value: text },
   subtype: { value: text },
   supertype: { value: text },
+  name: { value: text },
   color: { value: color },
   chosenColor: {},
   chosenType: {},
   chosenSubtype: {},
-  controller: { who: oneOf('you', 'opponents') },
+  controller: { who: oneOf('you', 'opponents', 'eventPlayer') },
   powerAtLeast: { n: finite },
   powerAtMost: { n: finite },
   powerAtMostSource: {},
   toughnessAtLeast: { n: finite },
+  basePowerToughness: { power: finite, toughness: finite },
+  powerGreaterThanBase: {},
   manaValueAtMost: { n: finite },
   manaValueAtLeast: { n: finite },
   hasAnyCounter: {},
@@ -118,6 +137,12 @@ const selectorShapes = {
   inCombat: {},
   combatRole: { role: oneOf('attacking', 'blocking') },
   attackingEventPlayer: {},
+  attackingChosenPlayer: {},
+  attackedThisTurn: {},
+  controlledSinceTurnStart: {},
+  attackingOpponent: {},
+  attackingYouOrYourPlaneswalker: {},
+  enchantedByAuraYouControl: {},
   allOf: { of: arrayOf(selector) },
   anyOf: { of: arrayOf(selector) },
   not: { of: selector },
@@ -126,6 +151,7 @@ const selectorShapes = {
 const valueShapes = {
   const: { n: finite },
   cardTypesInAllGraveyards: {},
+  cardTypesInYourGraveyard: {},
   plus: { of: numberValue, n: finite },
   negate: { of: numberValue },
   times: { of: numberValue, n: finite },
@@ -133,12 +159,14 @@ const valueShapes = {
   countTappedPermanents: { selector: selector, scope: oneOf('you', 'opponents', 'all') },
   countPermanentsControlledByTarget: { target: reference, selector: selector },
   aurasYouControlAttachedToCreatures: {},
+  aurasAttachedToSource: {},
   countCardsInZone: {
     zone: oneOf('graveyard', 'hand', 'library'),
     selector: selector,
     owner: oneOf('you', 'opponents', 'all'),
   },
   colorsAmongPermanents: {},
+  colorsAmongPermanentsAndSpellsCastThisTurn: {},
   devotionTo: { color: color },
   countOpponents: {},
   greatestToughnessAmong: { selector: selector, scope: oneOf('you', 'opponents', 'all') },
@@ -150,7 +178,9 @@ const valueShapes = {
   optionalCostCount: { mechanic: oneOf('kicker', 'squad', 'offspring') },
   damageDealt: {},
   triggerCount: {},
+  aurasYouControlledAttachedToTriggerObject: {},
   spellManaValue: {},
+  spellColorCount: {},
   manaSpent: {},
   treasureManaSpent: {},
   energyPaid: {},
@@ -166,6 +196,7 @@ const valueShapes = {
   countOpponentsWithFewerCreatures: {},
   creaturesDiedThisTurn: {},
   powerOfSource: {},
+  timesAttackedThisTurn: {},
   toughnessOfSource: {},
   powerOfTarget: { target: reference },
   opponentsLostLifeThisTurn: {},
@@ -174,6 +205,7 @@ const valueShapes = {
   tappedCreaturesControlledByTarget: { target: reference },
   attackingCreatures: {},
   spellsCastThisTurn: {},
+  manaValueOfOtherSpellsCastThisTurn: {},
   countersOnTriggerObject: { counter: text },
 } satisfies Shapes<Value>;
 
@@ -192,6 +224,7 @@ const conditionShapes = {
   mayRevealCardFromHand: { subtypes: arrayOf(text) },
   excessDamageDealtTo: { scope: oneOf('opponents') },
   opponentDealtDamageThisTurn: { minDamage: finite },
+  opponentDiscardedThisTurn: {},
   totalCreaturePower: {
     scope: oneOf('you', 'opponents', 'all'),
     cmp: oneOf('>=', '<='),
@@ -202,27 +235,65 @@ const conditionShapes = {
   sourceWasCast: {},
   announcedXAtLeast: { n: finite },
   escaped: {},
+  castDuringYourMainPhase: {},
   hasCounters: { selector: selector, counter: text, cmp: oneOf('>=', '<='), n: finite },
   enteredThisTurn: {},
   createdTokenThisTurn: {},
   hadToAttackThisCombat: {},
   triggerObjectHadToAttackThisCombat: {},
   triggerObjectMatches: { selector: selector },
+  sourceMatches: { selector: selector },
+  compareValues: {
+    left: (value, path, issues) => numericExpression(value, path, issues),
+    cmp: oneOf('>=', '<=', '=='),
+    right: (value, path, issues) => numericExpression(value, path, issues),
+  },
   chosenOptionIs: { value: text },
   controlsYourCommander: {},
   controlsACommander: {},
   opponentIsMonarch: {},
   notYourTurn: {},
+  duringStep: {
+    step: oneOf(
+      'untap',
+      'upkeep',
+      'draw',
+      'beginCombat',
+      'declareAttackers',
+      'declareBlockers',
+      'firstStrikeCombatDamage',
+      'combatDamage',
+      'endCombat',
+      'end',
+      'cleanup',
+    ),
+  },
+  beforeAttackersDeclared: {},
+  duringYourMainPhase: {},
   yourTurn: {},
   attackingPlayerHasMoreLife: {},
   attackingPlayerHasMoreLifeThanYou: {},
+  defendingOpponentHasMoreLifeThanAnother: {},
   triggerObjectAttackingOpponent: {},
+  attackGroupAttackingYou: {
+    planeswalkers: (value, path, issues) => {
+      if (typeof value !== 'boolean') issues.push({ path, message: 'expected a boolean' });
+    },
+    cmp: oneOf('>=', '<=', '=='),
+    n: finite,
+  },
+  attackWasNotAtYou: {},
+  attackedPlayerHasMoreLifeThanAnotherOpponent: {},
+  eventObjectDefendingPlayerIsYou: {},
   allOf: { of: arrayOf(condition) },
   anyOf: { of: arrayOf(condition) },
   eventPlayerDrawCount: { cmp: oneOf('>=', '<=', '=='), n: finite },
   notFirstDrawInOwnDrawStep: {},
   cardsInYourGraveyard: { cmp: oneOf('>=', '<=', '=='), n: finite },
   sourceHasCounters: { counter: text, cmp: oneOf('>=', '<=', '=='), n: finite },
+  giftPromised: {},
+  sourceClassLevel: { cmp: oneOf('>=', '<=', '=='), n: finite },
+  eventPlayerHandSize: { cmp: oneOf('>=', '<=', '=='), n: finite },
   castSpellThisTurn: { category: oneOf('any', 'noncreature'), cmp: oneOf('>=', '<='), n: finite },
   not: { of: condition },
 } satisfies Shapes<Condition>;
@@ -281,7 +352,23 @@ const effectExpressions = {
   pumpEachUntilEot: { selector: selector, power: numericExpression, toughness: numericExpression },
   doublePowerAndToughnessEachUntilEot: { selector: selector },
   grantKeywordEachUntilEot: { selector: selector },
+  grantKeywordToAttackGroupUntilEot: {},
+  putCountersOnCreatureOfChoice: { count: finite },
+  returnBlockedCreatureAtEndOfCombat: {},
+  damageEachOtherOpponent: { amount: numberValue },
   grantProtectionEachUntilEot: { selector: selector },
+  grantChosenColorProtectionUntilEot: {},
+  returnSpellToOwnerHand: {},
+  exileSpellAndPlot: {},
+  prohibitSpellsThisTurn: {},
+  phaseOutAndProtectControllerUntilNextTurn: {},
+  controllerHexproofUntilEot: {},
+  changeSingleSpellTarget: {},
+  exileGraveyardEventCard: {},
+  sacrificeTargetPlayerCreature: {},
+  eachPlayerKeepsCreatureWithVow: {},
+  separatePermanentsIntoPilesThenSacrifice: {},
+  separateIntoPilesLimitAttackers: {},
   dealDamage: { amount: numberValue },
   dealDamageUnlessSacrifice: { amount: numberValue },
   destroy: {},
@@ -290,8 +377,17 @@ const effectExpressions = {
   exileAndGainLifeTargetController: {},
   damageEachCreatureController: { amount: numberValue },
   sacrificeAndDrawForPower: {},
-  sacrificeGreatestEachOpponent: {},
+  sacrificeGreatestEachOpponent: { damageIfGraveyardSpellsAtLeast: optional(nonnegativeInteger) },
   transferCountersFromTriggerObject: {},
+  transferCountersFromTriggerObjectToChosenCreatures: {},
+  mayForgoTriggerObjectCombatDamageForRandomDiscard: {},
+  gainClassLevel: { level: positiveInteger },
+  drawForOpponentsWithSmallHands: { maximum: nonnegativeInteger },
+  sacrificeNonlandOrDiscardOrLoseLife: { amount: numberValue },
+  transferCountersFromSource: {},
+  moveCounters: { counter: text, count: finite },
+  bolster: { count: finite },
+  distributeCountersFromSource: { selector: selector },
   mayPayLifeForTriggerPowerAndCounter: {},
   vindictiveLichModes: {},
   returnExiledAttachedCard: {},
@@ -311,33 +407,55 @@ const effectExpressions = {
   dealDamageNonbasicLands: {},
   sacrificeOneEachOpponent: { filter: selectorOr('creature', 'nonland') },
   sacrificeEachPlayer: {},
+  eventPlayerSacrificesPermanents: { count: finite },
+  attackingOpponentUntapsNonland: {},
+  reanimateEnchantedCardAndAttach: {},
+  sacrificeRememberedPermanent: {},
   putCounterByPermanentType: { count: numericExpression },
   drawRevealTopLoseManaValue: {},
+  mutualRevealTopLoseManaValue: {},
+  discover: { count: numberValue },
+  revealUntilAura: {},
+  exileEachUntilNonlandCast: {},
+  revealCreatureOrBottom: {},
+  explore: {},
+  exileLibraryTop: {},
+  partitionLibrary: {},
+  recruit: {},
+  trickery: {},
+  exileAndCastNextUpkeep: {},
+  castRememberedExile: {},
+  capstoneParadigm: {},
+  castParadigmCopy: {},
+
   goadEachOpponent: {},
   createTreasureForDeaths: {},
   preventCombatDamageAll: {},
-  preventCombatDamageToController: {},
+  createDamageShield: {
+    player: optional(oneOf('you')),
+    target: optional(reference),
+    dealtTo: optional(flag),
+    dealtBy: optional(flag),
+    combatOnly: optional(flag),
+    chosenSource: optional(flag),
+    oneShot: optional(flag),
+    reflect: optional(oneOf('toSourceController', 'toSourceCreatureElseController')),
+    andPlaneswalkersYouControl: optional(flag),
+    sources: optional(oneOf('youDontControl')),
+  },
   copyTargetSpell: {},
   replicateCopies: {},
   copyEachTargetedSpell: {},
   angelGrace: {},
-  arcbond: {},
-  arcbondDamage: {},
-  tapAndDamageController: {},
   drawForEachOpponent: {},
   drawTargetAndController: {},
-  combatCalligrapher: {},
   inkshield: {},
-  delirium: {},
-  deflectingPalm: {},
   gisela: {},
   humbleDefector: {},
   shadrixModes: {},
   masterOfCeremonies: {},
-  breenaAttack: {},
   drawTargetAndControllerN: {},
   schemingSymmetry: {},
-  sacrificePermanentOnDamage: {},
   kambal: {},
   destroyAndCreateTokensEqualToManaValue: {},
   exile: {},
@@ -347,7 +465,11 @@ const effectExpressions = {
   sacrifice: {},
   sacrificeOneThen: { selector: selector },
   sacrificeSourceThenReflexive: {},
+  mayPayManaThenReflexive: {},
+  mayPayEnergyThenReflexive: { min: finite },
+  putCountersOnSourceThenReflexive: { counter: text, count: finite },
   gainControlTarget: {},
+  swapCreatureControlUntilEot: {},
   putCounters: { count: numericExpression },
   putCountersEach: { selector: selector, count: numericExpression },
   putCountersOnCreaturesTargetPlayerControls: { count: numericExpression },
@@ -378,6 +500,14 @@ const effectExpressions = {
   discard: {},
   putFromHandOnLibraryTop: { count: numberValue },
   discardAtRandom: { count: numberValue },
+  discardTarget: { count: numberValue },
+  discardOrLoseLife: { amount: numberValue },
+  millEachPlayer: { count: numberValue },
+  eachPlayerLosesLifeAndDraws: { amount: numberValue, count: numberValue },
+  discardChosenPlayers: { count: numberValue },
+  millAndLoseLifeChosenPlayers: { count: numberValue, amount: numberValue },
+  revealHandAndDiscard: { filter: selector },
+  discardEachPlayer: { count: numberValue, opponentsUnableLoseLife: optional(numberValue) },
   mill: { count: numberValue },
   gainEnergy: { amount: numberValue },
   createEmblem: {},
@@ -389,7 +519,7 @@ const effectExpressions = {
   reboundCastFromExile: {},
   eachOpponentLosesLife: { amount: numericExpression },
   gainLifeEqualToLifeLostThisWay: {},
-  eachOpponentDamage: {},
+  eachOpponentDamage: { amount: numericExpression },
   damageController: {},
   damageEach: { selector: selector, amount: numberValue },
   damageEachPlayer: { amount: numberValue },
@@ -418,6 +548,9 @@ const effectExpressions = {
   createTokenForEachOpponent: {},
   createTokenForPlayer: { count: numberValue },
   createTokenForEachPlayerExceptTarget: { count: numberValue },
+  eachOpponentCreatesTokens: { count: numberValue },
+  shareTokensWithChosenOpponent: { count: numberValue },
+  shareCreatureLifeWithChosenOpponent: { amount: numberValue },
   createTokenCopyOf: {
     count: numberValue,
     powerOverride: optional(numericExpression),
@@ -444,21 +577,29 @@ const effectExpressions = {
   selfToLibraryTop: {},
   putCountersEachChosen: { count: numericExpression },
   grantKeywordEachChosenUntilEot: {},
+  doubleCountersEachChosen: {},
+  cantBeBlockedEachChosen: {},
   untapUpTo: { selector: selector },
   exileEachChosen: {},
   destroyEachChosen: {},
+  tapAndGoadEachChosen: {},
   blinkEachChosen: {},
   regainControlOfOwnCreatures: {},
   exileTargetGraveyardAndBuffIfCreature: {},
   pumpTargetPlayerCreaturesUntilEot: {},
   untapTargetPlayerCreatures: {},
   exileUntilSourceLeaves: {},
+  exileEachChosenUntilSourceLeaves: {},
   exileTargetAndControllerMaySearchBasicLandTapped: {},
   removeTargetAndControllerMaySearchBasicLand: {},
+  destroyTargetAndControllerMaySearchBasicTypedLand: {},
+  exileCreatureAndControllerSearchBasicLand: {},
+  exileEachCreatureAndControllersSearchBasicLands: { selector },
   populate: {},
   untapAttackingPlayerNonlandPermanents: {},
   dealDamageDivided: { total: numberValue },
   conditionalEffect: { condition: condition },
+  byResolutionCountThisTurn: { key: text },
   counterUnlessControllerPays: {},
   unlessPays: { genericValue: optional(numberValue) },
   addMana: { amount: numberValue },
@@ -471,6 +612,13 @@ const effectExpressions = {
   grantHasteOnResolution: {},
   overloadBounceAllNonlandOpponents: {},
   goad: {},
+  chooseAttackersAndBlockers: {},
+  addAttackRequirement: { selector: optional(selector) },
+  cantBlockEach: { selector: selector },
+  limitAttacksToNearestOpponent: {},
+  chooseOpponentForSource: {},
+  removeAttackersFromCombat: {},
+  eventPlayerMayDraw: {},
   forceAttack: {},
   forceAttackEach: { selector: selector },
   doublePower: { selector: selector },
@@ -487,7 +635,12 @@ const effectExpressions = {
   manifestTop: {},
   manifestTopForTargetController: {},
   opponentMayDrawOrMillThenDamage: {},
-  lookAtTopNCastOneFree: {},
+  lookAtTopNCastOneFree: {
+    count: (value, path, issues) =>
+      typeof value === 'number' ? finite(value, path, issues) : numberValue(value, path, issues),
+    filter: optional(selector),
+    maxManaValue: optional(numberValue),
+  },
   castAnyFromHandFree: {},
   castForLifeFromZones: { selector: selector },
   castOneFromHandFreeUpTo: {},
@@ -495,6 +648,13 @@ const effectExpressions = {
   extraCombatPhase: {},
   becomeMonarch: {},
   druidPurification: {},
+  attackingCreaturesToOwnerLibraries: {},
+  rotateSourceAtUpkeep: {},
+  choosePermanentTypesThenSacrificeOthers: {
+    types: arrayOf(oneOf('Artifact', 'Creature', 'Enchantment', 'Planeswalker')),
+  },
+  eachPlayerMayPutCountersAndGoad: { count: numericExpression },
+  voteAndExileMost: { selector: selector },
   exileTargetWithSource: {},
   exileAndManifestTarget: {},
   blinkTarget: {},
@@ -505,6 +665,7 @@ const effectExpressions = {
   bounceUpTo6MV: {},
   millAndReturnSpells: {},
   hideawayExileTop4: {},
+  hideaway: {},
   playExiledCardFree: {},
   fightUpToOneChosen: {},
   becomeCreatureUntilEot: {},
@@ -516,15 +677,37 @@ const effectExpressions = {
   returnSelfFromGraveyardToHand: {},
   returnDiedSourceToBattlefield: { counter: text },
   putDepartedSourceIntoLibrary: { fromTop: finite },
+  returnDepartedSourceToHand: {},
   exileTargetReturnAtNextEndStep: { returnUnder: oneOf('owner', 'sourceController') },
   returnExiledTriggerObject: { returnUnder: oneOf('owner', 'sourceController') },
   reanimateTargetHasteExileAtYourNextEndStep: {},
   returnDiedTriggerObjectTapped: {},
+  returnDiedTriggerObjectAtNextEndStep: {},
+  returnRememberedGraveyardCard: {},
+  returnDepartedSourceToBattlefield: {},
+  attach: {},
+  reflexiveOnCreatedToken: {},
+  returnChosenCardsAttachedTo: {},
   reanimateEachChosenTapped: {},
   connive: {},
   exileTopNPlayableUntilEot: { count: numberValue },
   noOp: {},
 } satisfies { [O in Effect['op']]: ExpressionFields<Extract<Effect, { op: O }>> };
+
+/**
+ * Ops with optional NON-expression fields (durations, rider flags) — the expression registry
+ * above can only carry Selector/Value/Condition operands, so anything else is checked here.
+ * Malformed payloads surface as authoring issues, never silently pass.
+ */
+const effectExtraFields: Partial<Record<Effect['op'], Record<string, Check>>> = {
+  eachPlayerMayPutCountersAndGoad: { counter: text },
+  gainControlTarget: { duration: optional(controlDuration) },
+  gainControl: {
+    duration: optional(controlDuration),
+    untap: optional(flag),
+    grantHaste: optional(flag),
+  },
+};
 
 export function validateEffectExpressions(
   effect: Effect,
@@ -532,7 +715,8 @@ export function validateEffectExpressions(
   issues: AuthoringIssue[],
 ): void {
   const fields: Record<string, Check> | undefined = effectExpressions[effect.op];
-  if (fields === undefined) return; // Unknown operations are rejected by the effect-reference registry.
-  for (const [field, check] of Object.entries(fields))
+  const extra: Record<string, Check> | undefined = effectExtraFields[effect.op];
+  if (fields === undefined && extra === undefined) return; // Unknown operations are rejected by the effect-reference registry.
+  for (const [field, check] of [...Object.entries(fields ?? {}), ...Object.entries(extra ?? {})])
     check((effect as unknown as Record<string, unknown>)[field], path + '.' + field, issues);
 }

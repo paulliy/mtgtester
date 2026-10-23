@@ -15,7 +15,11 @@ import type { AbilityCost } from '../cards/ability';
 import type { GameGen } from '../decisions';
 import { addGeneric, subtractColored, subtractGeneric } from '../mana/cost';
 import { planSpellPayment } from '../mana/spell-payment';
-import { getDefByOracleId, castingSpellsBlockedFor } from '../state/queries';
+import {
+  getDefByOracleId,
+  castingSpellsBlockedFor,
+  nonHandSpellCostIncreaseFor,
+} from '../state/queries';
 import type { EngineCardObject, GameContext } from '../state/types';
 import { castSpell } from './cast';
 import { selectedSpellDefinition } from '../cards/spell-faces';
@@ -25,7 +29,7 @@ import { spellManaValue } from '../state/objects';
 
 interface FreeCastSelection {
   definition: CardDefinition;
-  alternativeCast?: 'adventure' | 'omen';
+  alternativeCast?: 'adventure' | 'omen' | 'mdfc';
   altIndex?: number;
   modes?: number[];
   optionalCostCount: number;
@@ -40,6 +44,8 @@ function legalFreeCastSelections(
   manaValueLessThan = Infinity,
   /** Life paid instead of the mana cost (Anrakyr), paid with the other costs (CR 601.2h). */
   lifeCost = 0,
+  /** Additional restrictions apply to the chosen spell face, not only the underlying card. */
+  spellAllowed: (definition: CardDefinition) => boolean = () => true,
 ): FreeCastSelection[] {
   const player = ctx.state.players.find((candidate) => candidate.id === controllerId);
   const def = getDefByOracleId(ctx, card.oracleId, card.name);
@@ -67,11 +73,15 @@ function legalFreeCastSelections(
   const selections: FreeCastSelection[] = [];
   const variants: {
     definition: CardDefinition;
-    alternativeCast?: 'adventure' | 'omen';
+    alternativeCast?: 'adventure' | 'omen' | 'mdfc';
     altIndex?: number;
   }[] = [{ definition: def }];
   for (const [altIndex, alternative] of (def.alternativeCasts ?? []).entries()) {
-    if (alternative.kind === 'adventure' || alternative.kind === 'omen')
+    if (
+      alternative.kind === 'adventure' ||
+      alternative.kind === 'omen' ||
+      (alternative.kind === 'mdfc' && alternative.spellFace !== undefined)
+    )
       variants.push({
         definition: selectedSpellDefinition(def, alternative),
         alternativeCast: alternative.kind,
@@ -79,6 +89,8 @@ function legalFreeCastSelections(
       });
   }
   for (const { definition, ...variant } of variants) {
+    if (!spellAllowed(definition)) continue;
+    if (castingSpellsBlockedFor(ctx, controllerId, definition)) continue;
     if (spellManaValue(definition, 0) >= manaValueLessThan) continue;
     const preview = castingPreviewContext(ctx, card, controllerId, definition);
     const previewPlayer = preview.state.players.find((candidate) => candidate.id === controllerId)!;
@@ -127,7 +139,10 @@ function legalFreeCastSelections(
           costs.push({ kind: 'mana', cost: optional!.cost });
         const commanderTax =
           card.zone === 'command' ? 2 * (previewPlayer.commanderCastCount[card.cardId] ?? 0) : 0;
-        let mana = addGeneric(manaPortionOf(costs), commanderTax);
+        let mana = addGeneric(
+          manaPortionOf(costs),
+          commanderTax + nonHandSpellCostIncreaseFor(preview, controllerId, card.zone),
+        );
         if (reduction.colored !== undefined) mana = subtractColored(mana, reduction.colored);
         mana = subtractGeneric(mana, reduction.generic);
         for (const targets of targetAssignments) {
@@ -182,8 +197,12 @@ export function freeCardIsCastable(
   controllerId: PlayerId,
   manaValueLessThan = Infinity,
   lifeCost = 0,
+  spellAllowed?: (definition: CardDefinition) => boolean,
 ): boolean {
-  return legalFreeCastSelections(ctx, card, controllerId, manaValueLessThan, lifeCost).length > 0;
+  return (
+    legalFreeCastSelections(ctx, card, controllerId, manaValueLessThan, lifeCost, spellAllowed)
+      .length > 0
+  );
 }
 
 /**
@@ -232,8 +251,17 @@ export function* resolveFreeCard(
   manaValueLessThan = Infinity,
   /** Life paid instead of the mana cost (Anrakyr). */
   lifeCost = 0,
+  spellAllowed?: (definition: CardDefinition) => boolean,
+  exileIfGraveyardFromStack?: true,
 ): GameGen<void> {
-  const selections = legalFreeCastSelections(ctx, card, controllerId, manaValueLessThan, lifeCost);
+  const selections = legalFreeCastSelections(
+    ctx,
+    card,
+    controllerId,
+    manaValueLessThan,
+    lifeCost,
+    spellAllowed,
+  );
   if (selections.length === 0) return;
   const outcome = yield {
     decisionType: 'chooseTargets',
@@ -309,6 +337,11 @@ export function* resolveFreeCard(
         : {}),
     },
     { index: 0, targets: selection.targets },
-    { card, withoutManaCost: true, ...(lifeCost > 0 ? { lifeCost } : {}) },
+    {
+      card,
+      withoutManaCost: true,
+      ...(lifeCost > 0 ? { lifeCost } : {}),
+      ...(exileIfGraveyardFromStack === true ? { exileIfGraveyardFromStack: true } : {}),
+    },
   );
 }

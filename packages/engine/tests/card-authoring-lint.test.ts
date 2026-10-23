@@ -1,6 +1,9 @@
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
 
+// A cold ESLint start (config load, type info) can exceed the 5s default when files run in parallel.
+const ESLINT_CHILD_TIMEOUT_MS = 60_000;
+
 const eslint = new ESLint();
 const forbidden = [
   ['raw registration', 'registerOverride({});'],
@@ -132,23 +135,27 @@ it('keeps the legacy exemption inventory exact, with no duplicate or stale entri
   expect(current.sort()).toEqual(expected.sort());
 });
 
-it('resolves authorized file identities when ESLint runs from a nested directory', async () => {
-  const { execFileSync } = await import('node:child_process');
-  const { resolve } = await import('node:path');
-  const output = execFileSync(
-    process.execPath,
-    [
-      resolve('node_modules/eslint/bin/eslint.js'),
-      resolve('packages/engine/src/cards/overrides/draconic-destruction.ts'),
-      '--format',
-      'json',
-    ],
-    { cwd: resolve('packages/engine'), encoding: 'utf8' },
-  );
-  const results = JSON.parse(output) as { messages: { ruleId: string }[] }[];
-  expect(
-    results
-      .flatMap((result) => result.messages)
-      .filter((message) => message.ruleId === 'card-authoring/guard-legacy-builders'),
-  ).toEqual([]);
-});
+it(
+  'resolves authorized file identities when ESLint runs from a nested directory',
+  async () => {
+    const { execFileSync } = await import('node:child_process');
+    const { resolve } = await import('node:path');
+    const output = execFileSync(
+      process.execPath,
+      [
+        resolve('node_modules/eslint/bin/eslint.js'),
+        resolve('packages/engine/src/cards/overrides/draconic-destruction.ts'),
+        '--format',
+        'json',
+      ],
+      { cwd: resolve('packages/engine'), encoding: 'utf8' },
+    );
+    const results = JSON.parse(output) as { messages: { ruleId: string }[] }[];
+    expect(
+      results
+        .flatMap((result) => result.messages)
+        .filter((message) => message.ruleId === 'card-authoring/guard-legacy-builders'),
+    ).toEqual([]);
+  },
+  ESLINT_CHILD_TIMEOUT_MS,
+);

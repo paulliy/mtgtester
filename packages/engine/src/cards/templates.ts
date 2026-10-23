@@ -240,7 +240,7 @@ export function onUpkeep(player: 'you' | 'each' = 'you'): TriggerHead {
 }
 
 /** "At the beginning of your/each end step". */
-export function onEndStep(player: 'you' | 'each' = 'you'): TriggerHead {
+export function onEndStep(player: 'you' | 'each' | 'opponent' = 'you'): TriggerHead {
   return { when: 'endStep', player };
 }
 
@@ -253,7 +253,7 @@ export function onDrawStep(player: 'you' | 'each' = 'you'): TriggerHead {
 }
 
 /** "At the beginning of combat on your/each turn". */
-export function onBeginCombat(player: 'you' | 'each' = 'you'): TriggerHead {
+export function onBeginCombat(player: 'you' | 'each' | 'opponent' = 'you'): TriggerHead {
   return { when: 'beginningOfCombat', player };
 }
 
@@ -332,11 +332,25 @@ export function spell(body: AbilityBody): Ability {
  * ability would trigger and again as it resolves — not a targeting restriction.
  */
 export function triggered(
-  head: TriggerHead,
-  body: AbilityBody & { condition?: Condition },
+  head: TriggerHead | undefined,
+  body: AbilityBody & { condition?: Condition; eventCondition?: Condition },
 ): Ability {
+  // A delayed registration supplies its own event and bound referents (CR 603.7).
+  if (head === undefined) {
+    if (body.condition !== undefined || body.eventCondition !== undefined)
+      throw new Error('a trigger condition requires an explicit event head');
+    return buildAbility('triggered', body);
+  }
+  if (body.eventCondition !== undefined && head.when !== 'attacks')
+    throw new Error('an event-only condition requires an attacks event');
   const trigger: TriggerSpec =
-    body.condition === undefined ? head : ({ ...head, condition: body.condition } as TriggerSpec);
+    body.condition === undefined && body.eventCondition === undefined
+      ? head
+      : {
+          ...head,
+          ...(body.condition === undefined ? {} : { condition: body.condition }),
+          ...(body.eventCondition === undefined ? {} : { eventCondition: body.eventCondition }),
+        };
   return buildAbility('triggered', body, trigger);
 }
 
@@ -348,7 +362,7 @@ export function triggered(
 export function activated(
   spec: AbilityBody & {
     costs: AbilityCost[];
-    timing?: 'any' | 'sorcery';
+    timing?: 'any' | 'sorcery' | 'yourTurn';
     oncePerTurn?: boolean;
     zone?: 'hand' | 'battlefield' | 'graveyard';
     requiresAttackedThisTurn?: true;

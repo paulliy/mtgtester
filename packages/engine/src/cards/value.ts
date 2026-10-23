@@ -30,6 +30,8 @@ export function assertNumericReference(
   reference: EffectRef,
 ): asserts reference is number | 'source' | 'triggerObject' {
   if (typeof reference === 'number') return;
+  if (typeof reference === 'object')
+    throw new Error('numeric controller references have no supported lifetime contract');
   switch (reference) {
     case 'source':
     case 'triggerObject':
@@ -45,6 +47,7 @@ export function assertNumericReference(
 
 /** What a resolving ability knows that the board alone does not. */
 export interface ValueScope {
+  giftPromised?: boolean;
   /** Whose "you" this is. */
   controllerId: PlayerId;
   /** The source object's card id, for `self`-relative selectors. */
@@ -67,6 +70,8 @@ export interface ValueScope {
   triggerCount?: number;
   /** Mana value of the spell that fired a `castsSpell` trigger (Lozhan). */
   spellManaValue?: number;
+  /** How many colors the spell that fired a `castsSpell` trigger is (Crystal, Inhuman Princess). */
+  spellColorCount?: number;
   /** Mana actually spent to cast the spell that fired a trigger (Aetherflux Conduit). */
   manaSpent?: number;
   /** Mana produced by Treasure permanents that was spent to cast the entering spell. */
@@ -76,6 +81,20 @@ export interface ValueScope {
   stationPower?: number;
   /** Player involved in the firing event (for that-player-controlled targets). */
   eventPlayerId?: PlayerId;
+  /**
+   * `attackDeclared`: the attackers of the group that fired the trigger, by object, as declared —
+   * "those creatures" (Frontier Warmonger). Remembered, not re-derived (CR 603.7c).
+   */
+  attackGroupIds?: readonly string[];
+  /** `blocks`: the creature this blocker blocked, by object (Wall of Tears). */
+  blockedObjectId?: string;
+  /** `attackDeclared` with `perDefender`: the attacked player this firing is about (Breena). */
+  attackedPlayerId?: PlayerId;
+  /**
+   * `attackDeclared`: whether any creature of the declaring player's whole attack was attacking
+   * the watcher itself (not its planeswalkers) when declared — a fact about the declaration.
+   */
+  attackedWatcher?: boolean;
   /** Targets resolved for this ability, indexed by slot. */
   targets?: readonly string[];
   /** Card id of the object that fired the trigger. */
@@ -115,11 +134,17 @@ export interface ValueScope {
 export type TriggerScope = Pick<
   ValueScope,
   | 'damageDealt'
+  | 'energyPaid'
   | 'triggerCount'
   | 'spellManaValue'
+  | 'spellColorCount'
   | 'manaSpent'
   | 'treasureManaSpent'
   | 'eventPlayerId'
+  | 'attackGroupIds'
+  | 'blockedObjectId'
+  | 'attackedPlayerId'
+  | 'attackedWatcher'
   | 'stationPower'
   | 'sourceCountersTotal'
   | 'triggerObjectId'
@@ -132,6 +157,7 @@ export type Value =
   | { kind: 'const'; n: number }
   /** Number of card types among cards in all graveyards (Tarmogoyf, CR 208.2b). */
   | { kind: 'cardTypesInAllGraveyards' }
+  | { kind: 'cardTypesInYourGraveyard' }
   /** `of` plus a constant, e.g. Tarmogoyf's toughness = types + 1. */
   | { kind: 'plus'; of: Value; n: number }
   | { kind: 'negate'; of: Value }
@@ -149,6 +175,8 @@ export type Value =
   | { kind: 'countPermanentsControlledByTarget'; target: EffectRef; selector: Selector }
   /** Number of Auras you control that are currently attached to creatures. */
   | { kind: 'aurasYouControlAttachedToCreatures' }
+  /** "for each Aura attached to it" (Kor Spiritdancer): every Aura on the source, any controller. */
+  | { kind: 'aurasAttachedToSource' }
   /**
    * Cards matching printed characteristics in a non-battlefield zone. Unlike
    * `countPermanents`, this deliberately uses card-zone candidates: continuous effects do not
@@ -162,6 +190,11 @@ export type Value =
     }
   /** Number of distinct colors among permanents controlled by the resolving player. */
   | { kind: 'colorsAmongPermanents' }
+  /**
+   * "The number of colors among permanents you control and spells you've cast this turn" (First
+   * Family): one set of colors over both, the resolving spell included — it was cast this turn.
+   */
+  | { kind: 'colorsAmongPermanentsAndSpellsCastThisTurn' }
   /** Colored mana symbols in the mana costs of permanents controlled by the resolving player. */
   | { kind: 'devotionTo'; color: import('@mtg/shared').Color }
   /** Number of opponents of the resolving controller. */
@@ -183,8 +216,20 @@ export type Value =
   | { kind: 'damageDealt' }
   /** "that many" where the trigger aggregated several objects (CR 603.2c). */
   | { kind: 'triggerCount' }
+  /**
+   * "for each Aura you controlled that was attached to it" (Hateful Eidolon): the trigger
+   * object's last-known attached Auras whose controller was this ability's controller.
+   */
+  | { kind: 'aurasYouControlledAttachedToTriggerObject' }
   /** "equal to that spell's mana value" — the spell that fired a `castsSpell` trigger. */
   | { kind: 'spellManaValue' }
+  /** "X is the number of colors that spell is" — read from the trigger's cast event. */
+  | { kind: 'spellColorCount' }
+  /**
+   * "The total mana value of other spells you've cast this turn" (Call Forth the Tempest): every
+   * spell the controller cast this turn except the resolving one (CR 202.3).
+   */
+  | { kind: 'manaValueOfOtherSpellsCastThisTurn' }
   | { kind: 'manaSpent' }
   | { kind: 'treasureManaSpent' }
   | { kind: 'energyPaid' }
@@ -204,6 +249,11 @@ export type Value =
   | { kind: 'countOpponentsWithFewerCreatures' }
   | { kind: 'creaturesDiedThisTurn' }
   | { kind: 'powerOfSource' }
+  /**
+   * How many times the AFFECTED creature has attacked this turn (Moraug): a layer Value read once
+   * per object the static applies to, counting declared attacks only.
+   */
+  | { kind: 'timesAttackedThisTurn' }
   | { kind: 'toughnessOfSource' }
   /** Current power of an announced permanent target at resolution. */
   | { kind: 'powerOfTarget'; target: EffectRef }
@@ -242,12 +292,15 @@ export function isDynamicValue(value: Value): boolean {
     case 'times':
       return isDynamicValue(value.of);
     case 'cardTypesInAllGraveyards':
+    case 'cardTypesInYourGraveyard':
     case 'countPermanents':
     case 'countTappedPermanents':
     case 'countPermanentsControlledByTarget':
     case 'aurasYouControlAttachedToCreatures':
+    case 'aurasAttachedToSource':
     case 'countCardsInZone':
     case 'colorsAmongPermanents':
+    case 'colorsAmongPermanentsAndSpellsCastThisTurn':
     case 'devotionTo':
     case 'countOpponents':
     case 'greatestToughnessAmong':
@@ -259,7 +312,9 @@ export function isDynamicValue(value: Value): boolean {
     case 'optionalCostCount':
     case 'damageDealt':
     case 'triggerCount':
+    case 'aurasYouControlledAttachedToTriggerObject':
     case 'spellManaValue':
+    case 'spellColorCount':
     case 'manaSpent':
     case 'treasureManaSpent':
     case 'energyPaid':
@@ -274,6 +329,7 @@ export function isDynamicValue(value: Value): boolean {
     case 'lifeTotal':
     case 'countOpponentsWithFewerCreatures':
     case 'creaturesDiedThisTurn':
+    case 'timesAttackedThisTurn':
     case 'powerOfSource':
     case 'toughnessOfSource':
     case 'powerOfTarget':
@@ -283,6 +339,7 @@ export function isDynamicValue(value: Value): boolean {
     case 'tappedCreaturesControlledByTarget':
     case 'attackingCreatures':
     case 'spellsCastThisTurn':
+    case 'manaValueOfOtherSpellsCastThisTurn':
     case 'countersOnTriggerObject':
       return true;
     default:
@@ -300,12 +357,15 @@ export function needsScope(value: Value): boolean {
     case 'negate':
     case 'times':
       return needsScope(value.of);
+    case 'cardTypesInYourGraveyard':
     case 'countPermanents':
     case 'countTappedPermanents':
     case 'countPermanentsControlledByTarget':
     case 'aurasYouControlAttachedToCreatures':
+    case 'aurasAttachedToSource':
     case 'countCardsInZone':
     case 'colorsAmongPermanents':
+    case 'colorsAmongPermanentsAndSpellsCastThisTurn':
     case 'devotionTo':
     case 'countOpponents':
     case 'greatestToughnessAmong':
@@ -317,7 +377,9 @@ export function needsScope(value: Value): boolean {
     case 'optionalCostCount':
     case 'damageDealt':
     case 'triggerCount':
+    case 'aurasYouControlledAttachedToTriggerObject':
     case 'spellManaValue':
+    case 'spellColorCount':
     case 'manaSpent':
     case 'treasureManaSpent':
     case 'energyPaid':
@@ -332,6 +394,7 @@ export function needsScope(value: Value): boolean {
     case 'lifeTotal':
     case 'countOpponentsWithFewerCreatures':
     case 'creaturesDiedThisTurn':
+    case 'timesAttackedThisTurn':
     case 'powerOfSource':
     case 'toughnessOfSource':
     case 'powerOfTarget':
@@ -341,6 +404,7 @@ export function needsScope(value: Value): boolean {
     case 'tappedCreaturesControlledByTarget':
     case 'attackingCreatures':
     case 'spellsCastThisTurn':
+    case 'manaValueOfOtherSpellsCastThisTurn':
     case 'countersOnTriggerObject':
       return true;
     default:
@@ -349,9 +413,10 @@ export function needsScope(value: Value): boolean {
 }
 
 /** Number of card types among cards in all graveyards (CR 208.2b). */
-export function cardTypesInAllGraveyards(ctx: GameContext): number {
+export function cardTypesInAllGraveyards(ctx: GameContext, owner?: PlayerId): number {
   const present = new Set<string>();
   for (const player of ctx.state.players) {
+    if (owner !== undefined && player.id !== owner) continue;
     for (const card of player.graveyard) {
       const def = ctx.defs.get(card.oracleId);
       if (def === undefined) continue;
@@ -388,7 +453,10 @@ export function devotionTo(ctx: GameContext, controllerId: PlayerId, color: Colo
  */
 export type LayerValueScope = Pick<ValueScope, 'controllerId' | 'countPermanents'> & {
   sourceCounters?: Readonly<Record<string, number>>;
+  /** For `timesAttackedThisTurn`: the count of the one object the effect is being applied to. */
+  affectedTimesAttacked?: number;
   countAurasYouControlAttachedToCreatures?: () => number;
+  countAurasAttachedToSource?: () => number;
 };
 
 export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValueScope): number {
@@ -403,6 +471,12 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
       return evaluateValue(ctx, value.of, scope) * value.n;
     case 'cardTypesInAllGraveyards':
       return cardTypesInAllGraveyards(ctx);
+    case 'cardTypesInYourGraveyard':
+      if (scope?.controllerId === undefined)
+        throw new Error('your graveyard types require a controller');
+      return cardTypesInAllGraveyards(ctx, scope.controllerId);
+    case 'timesAttackedThisTurn':
+      return scope?.affectedTimesAttacked ?? 0;
     case 'countersOnSelf':
       if (scope?.sourceCounters === undefined) {
         throw new Error('engine bug: source counters need a layer evaluation scope');
@@ -418,6 +492,13 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
         throw new Error('engine bug: attached Aura count needs a layer evaluation scope');
       }
       return scope.countAurasYouControlAttachedToCreatures();
+    case 'aurasAttachedToSource':
+      if (scope?.countAurasAttachedToSource === undefined) {
+        throw new Error(
+          'engine bug: Auras-attached-to-source count needs a layer evaluation scope',
+        );
+      }
+      return scope.countAurasAttachedToSource();
     case 'devotionTo':
       if (scope?.controllerId === undefined) {
         throw new Error(`engine bug: value "devotionTo" needs a source controller`);
@@ -446,6 +527,7 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
     case 'countPermanentsControlledByTarget':
     case 'countCardsInZone':
     case 'colorsAmongPermanents':
+    case 'colorsAmongPermanentsAndSpellsCastThisTurn':
     case 'countOpponents':
     case 'greatestToughnessAmong':
     case 'greatestPowerAmong':
@@ -456,7 +538,9 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
     case 'optionalCostCount':
     case 'damageDealt':
     case 'triggerCount':
+    case 'aurasYouControlledAttachedToTriggerObject':
     case 'spellManaValue':
+    case 'spellColorCount':
     case 'manaSpent':
     case 'treasureManaSpent':
     case 'energyPaid':
@@ -477,6 +561,7 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
     case 'tappedCreaturesControlledByTarget':
     case 'attackingCreatures':
     case 'spellsCastThisTurn':
+    case 'manaValueOfOtherSpellsCastThisTurn':
     case 'countersOnTriggerObject':
       throw new Error(
         `engine bug: value "${value.kind}" needs a resolving ability's scope — use evaluateValueIn`,

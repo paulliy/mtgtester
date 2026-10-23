@@ -118,6 +118,15 @@ export const NO_ATTACK_TARGET = '__no_attack__';
 export const NO_BLOCK_TARGET = '__no_block__';
 
 /**
+ * Sentinel `TargetChoice.choice` value meaning "this creature attacks" in an `attackDeclaration`
+ * whose presentation `mode` is `'chooseAttackers'` (Master Warcraft): the deciding player picks
+ * which creatures attack and the attacking player then picks what each attacks, so no defender is
+ * chosen here. A slot's options are this and, unless the creature is required to attack,
+ * `NO_ATTACK_TARGET`.
+ */
+export const ATTACKS_TARGET = '__attacks__';
+
+/**
  * One eligible attacker in a batched attack declaration, and the legal defenders for IT ALONE
  * (restrictions/costs, CR 508.1c — item 15). `mustAttack` is whether a requirement (goad) makes
  * declining illegal (CR 508.1d — item 19); when true, `NO_ATTACK_TARGET` is not among that
@@ -131,9 +140,22 @@ export interface AttackDeclarationSubject {
   name: string;
   power: number;
   toughness: number;
-  /** Legal defenders for this creature alone. `attackTax` is per-attacker; the total for a
-   * defender receiving several attackers is `attackTax * count`, checked jointly on submission. */
+  /** Legal defenders for this creature alone. `attackTax` is what THIS creature pays to attack
+   * that defender (it can differ by creature, e.g. by its counters); the total for a defender
+   * receiving several attackers is the sum over them, checked jointly on submission. */
   defenders: Array<{ playerId: PlayerId; life: number; attackTax: number }>;
+  /**
+   * Legal planeswalkers for this creature alone (CR 508.1b): planeswalkers its opponents control,
+   * each offered as a slot option by its `objectId` alongside the `defenders` player ids.
+   * `attackTax` is the tax for attacking this planeswalker specifically.
+   */
+  planeswalkers: Array<{
+    objectId: ObjectId;
+    controllerId: PlayerId;
+    name: string;
+    loyalty: number;
+    attackTax: number;
+  }>;
   mustAttack: boolean;
   /** A creature that puts something on the stack when it attacks is worth attacking with at
    * any power — counts *every* trigger on the creature, not only attack triggers, so it
@@ -166,7 +188,7 @@ export interface BlockDeclarationSubject {
  * claims to enumerate it, only to say what was wrong with what was tried. */
 export interface CombatViolation {
   subjectId: ObjectId;
-  kind: 'attackTax' | 'menace';
+  kind: 'attackTax' | 'menace' | 'attackAlone' | 'blockAlone' | 'minBlockers' | 'attackWithAll';
   message: string;
 }
 export interface CombatRejection {
@@ -183,12 +205,24 @@ export interface AttackDeclarationPresentation {
   subjects: AttackDeclarationSubject[];
   /** Present only on the one informed retry (item 17), after a first proposal was rejected. */
   rejection?: CombatRejection;
+  /**
+   * Set when the declaration is split between two players (Master Warcraft).
+   * `chooseAttackers`: the deciding player chooses WHICH of `attackingPlayer`'s creatures attack
+   * (each slot is `ATTACKS_TARGET` or `NO_ATTACK_TARGET`). `assignChosen`: the deciding player is
+   * `attackingPlayer`, assigning what each creature `chosenBy` chose to send attacks; one that has
+   * no attack it need not pay for may decline, and then `chosenBy` chooses again.
+   */
+  mode?: 'chooseAttackers' | 'assignChosen';
+  attackingPlayer?: PlayerId;
+  chosenBy?: PlayerId;
 }
 
 /** Presentation for the one-shot batched block declaration (ADR 0023 Phase 4) — the blocker-side
  * mirror of `AttackDeclarationPresentation`. */
 export interface BlockDeclarationPresentation {
   subjects: BlockDeclarationSubject[];
+  /** Set when someone else chooses this player's blocks (Master Warcraft): whose creatures these are. */
+  blockingPlayer?: PlayerId;
   /** Present only on the one informed retry, after a first proposal was rejected (menace). */
   rejection?: CombatRejection;
 }

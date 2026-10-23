@@ -94,13 +94,15 @@ function foldCounters(h: number, perm: EnginePermanent): number {
     h = mix(h, hashString(name));
     // Offset so that negative counts stay distinct under the xor.
     h = mix(h, (perm.counters[name] ?? 0) + 0x10000);
+    h = mix(h, perm.counterTimestamps?.[name] ?? perm.timestamp);
   }
   return h;
 }
 
 /**
  * Digest of everything `runLayers` reads. `timestamp` is unique per permanent and per
- * until-end-of-turn effect and never changes, so it identifies membership exactly; until-eot
+ * until-end-of-turn effect, so it identifies membership exactly; an Aura or Equipment gets a new
+ * one as it becomes attached (CR 613.7e), which the digest sees like any other change. Until-eot
  * effects are immutable once created, so their timestamp alone covers them.
  */
 export function digestOf(
@@ -114,6 +116,7 @@ export function digestOf(
   h = mix(h, s.battlefield.length);
   for (const perm of s.battlefield) {
     h = mix(h, perm.timestamp);
+    h = mix(h, perm.classLevel ?? 1);
     h = mix(h, hashString(perm.oracleId));
     // Selectors read the controller ("creatures you control"). Nothing reassigns this today —
     // layer 2 is not implemented — but folding it keeps the digest honest when it arrives.
@@ -122,12 +125,27 @@ export function digestOf(
     h = mix(h, (perm.toughness ?? 0) + 0x10000);
     h = mix(h, perm.faceDown === true ? 1 : 0);
     h = mix(h, perm.transformed ? 1 : 0);
+    // A bestowed Aura's type-changing effect ends as it becomes unattached (CR 702.103f).
+    h = mix(h, perm.bestowed === true ? 1 : 0);
     // A static ability can be conditional on being untapped (Iymrith's ward {4}), so tapping is
     // a layer input like any other. Omitting it meant a query before tapping and a query after
     // it returned the same cached characteristics, and ward is read during targeting/payment.
     h = mix(h, perm.tapped ? 1 : 0);
     // Combat-dependent statics must expire even if no other characteristic input changes.
-    h = mix(h, perm.attacking !== null ? 1 : perm.blocking !== null ? 2 : 0);
+    // `attackingDefenderId` also reads whether it attacks a planeswalker, and whether that one is
+    // still in combat.
+    h = mix(
+      h,
+      perm.attacking !== null
+        ? 1 +
+            (perm.attackingPlaneswalker !== null ? 2 : 0) +
+            (perm.attackedPlaneswalkerRemoved ? 4 : 0)
+        : perm.blocking !== null
+          ? 8
+          : 0,
+    );
+    // `timesAttackedThisTurn` feeds a layer-7 value (Moraug).
+    h = mix(h, perm.timesAttackedThisTurn ?? 0);
     // The `hadToAttackThisCombat` condition reads this per-combat flag.
     h = mix(h, perm.hadToAttackThisCombat === true ? 1 : 0);
     // `?? []` would allocate a throwaway array on every digest call for the overwhelming

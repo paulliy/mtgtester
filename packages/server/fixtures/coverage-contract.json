@@ -1040,6 +1040,90 @@
           "fadf984c-c224-432a-87b9-b34f929b8409",
           "fc9ec820-4245-4a96-b009-5308a818ca58"
         ]
+      },
+      {
+        "name": "white-black-control.txt",
+        "oracleIds": [
+          "008eda1f-b913-4f04-8c29-5e87c270149e",
+          "00fdcc19-88ed-46c3-91f0-095806228105",
+          "087f9ad7-e74f-40e2-8102-1ed2925d0418",
+          "0895c9b7-ae7d-4bb3-af17-3b75deb50a25",
+          "0ba134d8-ee7d-48ec-8dc6-57942b8e9261",
+          "0bc7f093-bef0-4f1a-852c-4b75ebf54838",
+          "0e3ac581-3d78-4879-9afb-3db69c5c47a5",
+          "0eaea4fd-a377-4541-9bdd-14921034a975",
+          "1c633e02-95ef-445e-b4e0-fbfbc5ed9cc9",
+          "2068185c-1b50-47d0-aa3f-bf505d199428",
+          "27b047e3-0d41-45e2-98e9-9391d7923a1e",
+          "295fe873-ecb5-4d5e-a73c-3af6c478afc5",
+          "2eb4da30-2600-4a7f-8e6c-6a090faa9a8d",
+          "30367a59-a812-41d4-a451-80d9071dd4a4",
+          "30ec73ad-c7a1-4527-8dc6-44bdd65b9ba6",
+          "33d405ea-7a9a-4970-b70f-9c05d90dd6f0",
+          "33de01e9-ce5a-42d4-afcb-343cd54a6d80",
+          "37c06f89-db36-4937-9404-2b07cd22e1a6",
+          "3d21f710-6bbc-41ae-a8e5-02debe3e02bd",
+          "3d2bd4f6-174d-411a-b930-9161aeefd33a",
+          "42bf259d-4bb9-49c3-b4ec-223dca62f4d6",
+          "52bd4331-67b6-4eb8-9566-e00359889fc6",
+          "535e2af0-7b08-4026-b1bf-87626407dd42",
+          "53e88e64-6f82-4154-a66e-6aeb0154b368",
+          "55b72b1f-6463-406a-8824-d99a3c028285",
+          "55f3c721-e13a-406e-bc8e-d6cdc91ac477",
+          "56719f6a-1a6c-4c0a-8d21-18f7d7350b68",
+          "5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb",
+          "5d258409-28d3-4eac-9f1a-3e494db818bf",
+          "5def9f38-0a0b-4e8d-9f9d-29dcb46520b4",
+          "60433b48-d27f-413c-905c-43839b1943f1",
+          "6216635f-8e6e-40a3-9659-ef6352ab92ce",
+          "6284ef01-d17d-4584-aecb-1b841ae638e5",
+          "6ad8011d-3471-4369-9d68-b264cc027487",
+          "6cbd36d9-de47-41b0-9ef4-a72ca01adccd",
+          "71d785a9-ddc8-472e-a778-a551b444a4bd",
+          "73dad679-1edb-41c9-9d43-56dc93c3e9fe",
+          "759af941-f6a3-4726-91f2-9b1e4e55ea71",
+          "7e5d9efe-48a9-434b-bb09-056e0e09cc9a",
+          "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b",
+          "867def48-4be8-4056-bcf1-d6b00450b9a3",
+          "89b24b5f-d837-4274-8877-8ff7dc2708ba",
+          "8d24c12a-a300-4199-b2a9-3d5ead8df617",
+          "91e6fb47-59e4-4616-b8dd-3a7e30070074",
+          "95560508-7ac9-4be9-8a3f-3c7d5b52807b",
+          "992d9a72-d34d-47d7-96fb-37f0efb515ef",
+          "994e27e1-0bff-47c9-a1e6-b9e3ae4ffb1e",
+          "aa00ae0b-7c0f-427e-8102-ce0e2a6af5df",
+          "abc37d6c-6300-47b5-a679-9db5b83eb54f",
+          "ad09b3c3-c8e7-481c-8c45-e7f234935117",
+          "aecc621f-67da-41a7-9d47-05ded302ae35",
+          "b693c3de-2eaf-4850-b405-e79d00adefda",
+          "b8619990-9dc2-4fcc-bc7e-457b77cd2a8e",
+          "bc71ebf6-2056-41f7-be35-b2e5c34afa99",
+          "bcbe879a-4609-4493-bd7d-47c26d27e83c",
+          "bd16434d-55ea-4c5a-a9ef-752971a4af16",
+          "c37051cc-6683-4dbb-b5ff-5c3a5bdab1df",
+          "ceef2d5a-77ea-4e56-9806-fd1a2d5be400",
+          "cf8bc2e3-2f22-45d3-9810-bc039202f41c",
+          "d11e627b-8a48-411d-a261-2c9a02a758ba",
+          "d31fd12f-b4dd-4bc3-ace4-703dabd0f607",
+          "d54e4e37-042b-44a5-918d-757308545d4d",
+          "d683d985-9888-4d21-8b5f-69e69ce4a03b",
+          "da93264e-4e04-401a-9809-e4e1056cf604",
+          "db25d48e-e5eb-4364-9d7a-f9757ee4ccbe",
+          "ddbe0d17-5cac-417c-afc0-e4aebae83205",
+          "de3dcb5d-775a-479f-99f5-d1883ed9b1b5",
+          "e0df8e2a-96d2-4e4d-b065-aa2e162abbfe",
+          "e1d294e8-67b1-4a4a-86b8-f98f28a327d9",
+          "e70f5520-1b9c-4351-8484-30f0dc692e01",
+          "e828b189-0e8f-43b8-b909-4c23e742e028",
+          "edd8d1e8-be43-4c38-bb3a-83081fbaf0b5",
+          "ef71ef07-8a35-41ec-a851-d95e9e3a221b",
+          "ef809e99-34a2-4471-8269-f56bf8037686",
+          "f0449cbd-855c-4c20-a1f5-f76a395d8d39",
+          "f488f679-f5d5-4e61-b0c8-0b0eb622df0d",
+          "f4e32fc1-1b8d-441e-8e76-71f19f98e925",
+          "f5822e53-ddec-4c77-bcf4-091e35c1e731",
+          "fae37e28-e137-4177-b973-fa8b4dd8f409"
+        ]
       }
     ]
   },
@@ -1459,9 +1543,24 @@
       "sha256": "c9f9a7fd462c5e9860928053ebcbc0d98b77f2fe5342f50eef740c4aa7fd24c3"
     },
     {
+      "oracleId": "535e2af0-7b08-4026-b1bf-87626407dd42",
+      "name": "Archfiend of Ifnir",
+      "sha256": "6c5032145f59037b03b32b5eb8f73eab0da3e75df607c7485f5531b4f3e7d6aa"
+    },
+    {
       "oracleId": "be6cab52-b3ae-46a2-a581-2468a49bff25",
       "name": "Architect of the Untamed",
       "sha256": "6c51eb8acc746c9538efc86abdbf052bea6f29b29f804a8c7ee4c4f5b2cb208f"
+    },
+    {
+      "oracleId": "0e3ac581-3d78-4879-9afb-3db69c5c47a5",
+      "name": "Archon of Absolution",
+      "sha256": "9bd606953d9c7d2b28966ca403927c18bb825ffbfbac485fc051b9528b23014e"
+    },
+    {
+      "oracleId": "ceef2d5a-77ea-4e56-9806-fd1a2d5be400",
+      "name": "Archon of Emeria",
+      "sha256": "621a6663ea180829baaabb0673010fe7177bbd7976d0d5f7099cb9beb4ad9a7f"
     },
     {
       "oracleId": "48a99dce-0aa9-4aac-81df-cec5f94c639d",
@@ -1524,6 +1623,11 @@
       "sha256": "b99430cd2e30978bbffa9be097a046f1d111e7ba481a6c4ce2f8017e1d3c5f12"
     },
     {
+      "oracleId": "55f3c721-e13a-406e-bc8e-d6cdc91ac477",
+      "name": "Authority of the Consuls",
+      "sha256": "bd953a06e68d037b63a96351f987c6d1f253d650cff640bb04d7dec46506dd89"
+    },
+    {
       "oracleId": "069f6530-e65c-4d52-85f3-e0a2acd148c5",
       "name": "Avacyn's Pilgrim",
       "sha256": "4c5aba95f82988d9475b31e55837ed673a86d971c4f135b69b26225e88ff5f0a"
@@ -1534,6 +1638,11 @@
       "sha256": "a5587173a2d5dd8b127a99cf3b83e3c5a80e354b7017fc260249c0e972f6918e"
     },
     {
+      "oracleId": "d31fd12f-b4dd-4bc3-ace4-703dabd0f607",
+      "name": "Aven Interrupter",
+      "sha256": "861efb2a0c89250b158e9f1b6ba71dbd3744cd4d72591457b2739ae8251c4000"
+    },
+    {
       "oracleId": "3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c",
       "name": "Backlash",
       "sha256": "116b1ea7f57a9a829f03d7c0a6ffeafd34ece8beb23320dcd9b13668659a9ae5"
@@ -1542,6 +1651,11 @@
       "oracleId": "37688720-03de-4eca-a82d-a0afe8d58adc",
       "name": "Baleful Strix",
       "sha256": "4bf56100ef77a7c5a782118c8a2f7fd24b45ec28b4d319a175bdcf8650da138a"
+    },
+    {
+      "oracleId": "bcbe879a-4609-4493-bd7d-47c26d27e83c",
+      "name": "Bandit's Talent",
+      "sha256": "f806d0ae13bbfb7b4d6b8168dc45fad6a8ad31691ebe1701b48b8d5955dd69e3"
     },
     {
       "oracleId": "326ba371-124c-4949-a048-3a0c8962e567",
@@ -1752,6 +1866,11 @@
       "oracleId": "5a6176cc-98bf-43ac-815a-1f19c4e9329c",
       "name": "Boss's Chauffeur",
       "sha256": "d5edb131bd5acb7a585bcff04f8d9a04c73a59632070a42ba747ec7004f00b6a"
+    },
+    {
+      "oracleId": "91e6fb47-59e4-4616-b8dd-3a7e30070074",
+      "name": "Bottomless Pit",
+      "sha256": "3e70a3db7bc2437db19f3e7479ebb4eb3a3de4e96aed439d799fc53b2a858d93"
     },
     {
       "oracleId": "7402d98f-6d58-4ff2-a0db-9eec4417a75f",
@@ -1994,6 +2113,11 @@
       "sha256": "aa37e0900a99f5e3092fdf9720cd8eed0dfc8f644c28d9ee4aa66ec01d828978"
     },
     {
+      "oracleId": "5d258409-28d3-4eac-9f1a-3e494db818bf",
+      "name": "Cloak of Confusion",
+      "sha256": "ad25a794244abd775a070eff00cdd3a8b80efa826b43b47d1f8d46d6f95849bc"
+    },
+    {
       "oracleId": "dbb8a3d9-6b1b-4ad1-b8b9-f92ead03d1d9",
       "name": "Coercive Impetus",
       "sha256": "ffbd695d4e087c74775a9a50a680773cd8131fbba0422ffff9f49a5d5d9cfffc"
@@ -2149,6 +2273,11 @@
       "sha256": "138e84680c701ef319c07022067fb1476e248e7bde9df9becb5039cf835a0e18"
     },
     {
+      "oracleId": "6cbd36d9-de47-41b0-9ef4-a72ca01adccd",
+      "name": "Curse of Disturbance",
+      "sha256": "6106530fb8f86fed0553091e4eebc4238155e5193826f14fb676361b473dd717"
+    },
+    {
       "oracleId": "8b5cffd5-5db3-4151-9275-d91387554412",
       "name": "Cut a Deal",
       "sha256": "ebb114b6bfc41cef8114727a540ffd8b6f277c16b451d9652f5e2e1025a29b2d"
@@ -2199,6 +2328,11 @@
       "sha256": "0f2ceb0abebb655426f702639ff86a5342b8a83c919d693ce164352a9fca9d94"
     },
     {
+      "oracleId": "37c06f89-db36-4937-9404-2b07cd22e1a6",
+      "name": "Dawn's Truce",
+      "sha256": "9b94a7f24557052e39ba56e4a491a924a83f664f8eea7d2f37ff14dcd488877b"
+    },
+    {
       "oracleId": "457af74a-02b3-4659-846d-63e482667f34",
       "name": "Deadly Dispute",
       "sha256": "c30f4ab86a74317fa992da54799e63f827a7cb10931fc415d2b0916589be866c"
@@ -2207,6 +2341,11 @@
       "oracleId": "0456ec64-2c81-4763-a352-8ff64a4c3d6b",
       "name": "Deadly Rollick",
       "sha256": "9a788e63f38e7b7e46cb59d9121fcb054ea36996dbde50bf7bdca14b158ff63f"
+    },
+    {
+      "oracleId": "6284ef01-d17d-4584-aecb-1b841ae638e5",
+      "name": "Deafening Silence",
+      "sha256": "6a34ae14eb2e264035ad80521b0eca32dbe9b933dbc30b35a6cfd219e0f47bea"
     },
     {
       "oracleId": "88e912e3-0548-4a4a-94c1-c804093ca1b0",
@@ -2274,6 +2413,11 @@
       "sha256": "1b21b0eeaf410fb4e3fec5260eaa86bbe30d6ed3e4550eb7cb40775d59e305cb"
     },
     {
+      "oracleId": "bd16434d-55ea-4c5a-a9ef-752971a4af16",
+      "name": "Despark",
+      "sha256": "1a25d81e09d87698ba1b94996d1e45d84adf24a4b9a2dc75aaf2bc2a8654b1e8"
+    },
+    {
       "oracleId": "5334dc24-040e-4094-80f4-8d1b9de01230",
       "name": "Devouring Light",
       "sha256": "3d5731ef43565d1aded7b0176e8994b238f9b21ee070a18f91a71b4da64af0a6"
@@ -2322,6 +2466,11 @@
       "oracleId": "ba069664-9f92-47c7-b556-9e5143a22579",
       "name": "Doomwake Giant",
       "sha256": "f3027c4fe1846d0bca069e6f96ae4bb1bd57afd5c0cd0374874698be31e269ac"
+    },
+    {
+      "oracleId": "0eaea4fd-a377-4541-9bdd-14921034a975",
+      "name": "Doorkeeper Thrull",
+      "sha256": "34ad95ef1162e46cb2fe6e2bad6fe4dd85b3430a6eb1f42ca199079bca18383e"
     },
     {
       "oracleId": "01546b7d-a233-4176-8843-d732074dc5b6",
@@ -2389,6 +2538,11 @@
       "sha256": "aadb4d3d4a0709dbd96565e0f767af39202e089b49acfc0c38281f3ad9ea0537"
     },
     {
+      "oracleId": "89b24b5f-d837-4274-8877-8ff7dc2708ba",
+      "name": "Drana, Liberator of Malakir",
+      "sha256": "50ea225b2de91d9e3360729072e3654b6cbeb2b21d334ee2d36c593cd2839dfc"
+    },
+    {
       "oracleId": "352b64d2-2ae5-44ee-a64f-94932ef545d3",
       "name": "Dread Return",
       "sha256": "bda6e9277a015c56401c6b4f23fca3e7258d3aaeb53a6f234f3610f44b650553"
@@ -2432,6 +2586,16 @@
       "oracleId": "ea86abfa-6cab-4ef0-8463-34136fc25b59",
       "name": "Duplicant",
       "sha256": "bf22f39612d4a3841449f71d86cb6d9cce1a9a8fd8fdd5bfada28452772aa129"
+    },
+    {
+      "oracleId": "33d405ea-7a9a-4970-b70f-9c05d90dd6f0",
+      "name": "Duress",
+      "sha256": "151b555caa2c21bf8b37d816d985fa9935506b3a58cf3c275074d5c26b438668"
+    },
+    {
+      "oracleId": "30367a59-a812-41d4-a451-80d9071dd4a4",
+      "name": "Dusk Legion Duelist",
+      "sha256": "09b9f06c27e005a192ac0d4e631bb594a01efc65d57ed1e8aa577a0404765d34"
     },
     {
       "oracleId": "9a40614b-50a3-422c-849e-53c8b7d3d204",
@@ -2844,6 +3008,11 @@
       "sha256": "1428a29d708b04d8d230d222794aa242531d38b72ba9f9f5fad0a77facc09e8f"
     },
     {
+      "oracleId": "ef809e99-34a2-4471-8269-f56bf8037686",
+      "name": "Geth's Grimoire",
+      "sha256": "5b69db18aafa89cd067bbe5be9d0b6397b00200abe381fbfea927a3d6e682a91"
+    },
+    {
       "oracleId": "77b832a8-a3af-44fe-bc67-72510d292667",
       "name": "Gev, Scaled Scorch",
       "sha256": "b88ee58232045a057e42ccdce70c6a115048e5ce37d2dbd00eeb37c87ee36997"
@@ -3149,6 +3318,21 @@
       "sha256": "b673b9cfa9797a896494a8d2751fe9cce08e1787a1e866d6b8b23ce3b3ba5804"
     },
     {
+      "oracleId": "3d21f710-6bbc-41ae-a8e5-02debe3e02bd",
+      "name": "Hushbringer",
+      "sha256": "cb7031304a5cf6ff57f97f9590d97b3d91c0a66a4ac15937926bb0a4810837a5"
+    },
+    {
+      "oracleId": "992d9a72-d34d-47d7-96fb-37f0efb515ef",
+      "name": "Hymn to Tourach",
+      "sha256": "d16287c5c9454bd70fa143c711594965f7cb5657930ab6e4eeaa6fafaab43c66"
+    },
+    {
+      "oracleId": "759af941-f6a3-4726-91f2-9b1e4e55ea71",
+      "name": "Hypnotic Specter",
+      "sha256": "34d0636699a90f6312b9cdc068cb5b822f51b5cf5cdca3cf669bda675df64582"
+    },
+    {
       "oracleId": "c232d974-9c65-4bce-b045-e5a7cc0c62e0",
       "name": "Idol of Oblivion",
       "sha256": "3baa23cd967df7e2c0549ab91ce4f57a51d53fd1282487e1236073936643962b"
@@ -3172,6 +3356,11 @@
       "oracleId": "425fea06-76ec-4cd9-bd3b-750504fd7fd2",
       "name": "Imotekh the Stormlord",
       "sha256": "389742a3862725250d3388b5fa5f0200082ca1cf88295b1f2472ff1e31a9c14c"
+    },
+    {
+      "oracleId": "30ec73ad-c7a1-4527-8dc6-44bdd65b9ba6",
+      "name": "Imp's Mischief",
+      "sha256": "ff07c155d9e445bf1175adebbfa3860a5c1efa0b21f705535e777b680797f890"
     },
     {
       "oracleId": "9242cd3e-1a71-4700-8182-9c1005616033",
@@ -3294,6 +3483,11 @@
       "sha256": "72604f8eb1df87c4020f3d5029549aca480358b6e0ebbb6e680f72dae76bcaa7"
     },
     {
+      "oracleId": "aecc621f-67da-41a7-9d47-05ded302ae35",
+      "name": "Karn, Argent Defender",
+      "sha256": "ec2e361baa13f02b293184d4bf02f337a0c17c88cff306fbad163b3909acd63b"
+    },
+    {
       "oracleId": "bd912666-f37f-4767-af6f-9e6d0fcccacf",
       "name": "Karplusan Forest",
       "sha256": "e3f3b5a2b0a461472157e308399f2a4a2e5c4e412cb114bdb5dbaf72309ef3d4"
@@ -3409,6 +3603,16 @@
       "sha256": "a81314da8bb127a6dfebda3d094990bd56dd680847ba73161f47bcb6efbc7aca"
     },
     {
+      "oracleId": "f4e32fc1-1b8d-441e-8e76-71f19f98e925",
+      "name": "Leyline of the Void",
+      "sha256": "5b00b3e4eeb4eeac75b37fd67a7bb074f6cf1b6771d27f30b39cdb4cea7da74d"
+    },
+    {
+      "oracleId": "867def48-4be8-4056-bcf1-d6b00450b9a3",
+      "name": "Library of Leng",
+      "sha256": "f31e4191d9a77e591944db00ae0e1ba6ed3809c0a66f3287bd97be79ddfe5571"
+    },
+    {
       "oracleId": "b2d1f87b-a11f-43eb-8b89-b48945320d73",
       "name": "Life of the Party",
       "sha256": "6244452d742f3bd5bb3fe11e45312ee784ee2f7b695ea8b0dff970658c43243c"
@@ -3427,6 +3631,16 @@
       "oracleId": "2f82b232-21ff-44cc-bc35-0999a1d1c52f",
       "name": "Lightning Runner",
       "sha256": "3c1a95336f34a682447de952888e4e51c9a8490195569c715edf15cbba6b2b43"
+    },
+    {
+      "oracleId": "0ba134d8-ee7d-48ec-8dc6-57942b8e9261",
+      "name": "Liliana of the Veil",
+      "sha256": "a57605b3abdc39782904af4ac586395623fb6f9e387bf9dc7333be186bbc0f13"
+    },
+    {
+      "oracleId": "e0df8e2a-96d2-4e4d-b065-aa2e162abbfe",
+      "name": "Liliana, Waker of the Dead",
+      "sha256": "1843d5cf2f76658288cf48bd790bfda04a38ccfbfcaac07def9b12ca0fdd5f16"
     },
     {
       "oracleId": "9e6a3df4-67a3-452e-a6ef-f04dbadb21ef",
@@ -3739,6 +3953,11 @@
       "sha256": "da3b117347b6ec92160b659eab14dfa7c7ef49d351782f7dfff7213fdef3ce7e"
     },
     {
+      "oracleId": "60433b48-d27f-413c-905c-43839b1943f1",
+      "name": "Mother of Runes",
+      "sha256": "9a9f376d70f688a3c9319ffc71697a0a397d659b9e681f89327d93112211dbe1"
+    },
+    {
       "oracleId": "a3fb7228-e76b-4e96-a40e-20b5fed75685",
       "name": "Mountain",
       "sha256": "7f358bc47c3e259eb43d240b7d67a5a0c16dbff5d9c9659541aa9b53cc74928e"
@@ -3802,6 +4021,11 @@
       "oracleId": "78826359-fe63-44ad-adc4-a17ffcd710e4",
       "name": "Nature's Lore",
       "sha256": "43aec1ae94ee4f10228029104de1588147e3386db0590d979bee9b55044ac903"
+    },
+    {
+      "oracleId": "db25d48e-e5eb-4364-9d7a-f9757ee4ccbe",
+      "name": "Necrogen Mists",
+      "sha256": "304b0b1c7df5b09fbc24084a3cf9c15f64002fa89eb7364bf966168cd503314a"
     },
     {
       "oracleId": "45866598-4ee4-46b6-ade2-ffcdbe98e58f",
@@ -3944,6 +4168,11 @@
       "sha256": "ae28456283116171d84a9e8300f1d4644c2acfc7a6930b5d47b7789662a100c9"
     },
     {
+      "oracleId": "f488f679-f5d5-4e61-b0c8-0b0eb622df0d",
+      "name": "Oppression",
+      "sha256": "94486b101e3ab95e200fe5b1839ee3513fe9a59cb0e0184d17e77992ddf5465d"
+    },
+    {
       "oracleId": "d9c36ed5-629c-4709-bff5-2f10fcde608a",
       "name": "Orb of Dragonkind",
       "sha256": "13571262d0b001394060a07b5e2bedec1df74763e7b4f68a61623de1414f6543"
@@ -3992,6 +4221,11 @@
       "oracleId": "9ba89c25-5302-414f-a2ec-436b8981999d",
       "name": "Overwhelming Instinct",
       "sha256": "d59ba04e352c8265850ac524e0aca3f8d3492057aecc8c73cdafc10024360d53"
+    },
+    {
+      "oracleId": "c37051cc-6683-4dbb-b5ff-5c3a5bdab1df",
+      "name": "Painful Quandary",
+      "sha256": "907cddfb6e25833cdd784e159a07b112cd910c9f95d9887bc51ce79c917b1424"
     },
     {
       "oracleId": "76678885-3674-443d-b9a2-2a460cf6aac0",
@@ -4049,6 +4283,11 @@
       "sha256": "d1bbff061cf9949664fef0a0f27c26aae1413e512e17fc6b85db90ca429500e8"
     },
     {
+      "oracleId": "295fe873-ecb5-4d5e-a73c-3af6c478afc5",
+      "name": "Perch Protection",
+      "sha256": "e9adf2313e4738116e684727c9ebc9efc4d3a1e85ee65f91f9040d618252c80d"
+    },
+    {
       "oracleId": "ee579a32-a048-4335-b966-231ba731cdea",
       "name": "Phyrexian Arena",
       "sha256": "0c70f9ad0d84c175ded86a4e573654ff5303ae203de1543775267dd7d67b2fd2"
@@ -4077,6 +4316,11 @@
       "oracleId": "bc71ebf6-2056-41f7-be35-b2e5c34afa99",
       "name": "Plains",
       "sha256": "4b5503b37b9ad8e1459adb53f90b7eadf7ace8a6ff7679e57c8a8f66ef870f7c"
+    },
+    {
+      "oracleId": "994e27e1-0bff-47c9-a1e6-b9e3ae4ffb1e",
+      "name": "Planar Void",
+      "sha256": "146d72b8e678921fad84434578e02fd647a18c6cf2733a55c2df2d45080cf066"
     },
     {
       "oracleId": "b3ff8da4-f2cc-41c3-8950-9cc531854b78",
@@ -4224,6 +4468,11 @@
       "sha256": "ba5862ef845e33868b630c6a6e63cbbd6ad52256bcd68c1a14f1d04b5812a02f"
     },
     {
+      "oracleId": "b8619990-9dc2-4fcc-bc7e-457b77cd2a8e",
+      "name": "Rankle, Master of Pranks",
+      "sha256": "069593a2fb3dd2d4d28b5741f452ef3bad6c9662a747880792f1daa37e96836f"
+    },
+    {
       "oracleId": "0944ec2e-1dd9-459f-8f1d-667242cf52fe",
       "name": "Rapacious Dragon",
       "sha256": "d0328eaefb4ddc5238e29d1f69bc3c6d32b63e8c953fc8a9debebc44665def00"
@@ -4252,6 +4501,11 @@
       "oracleId": "a044474a-cd72-4e9d-bd8d-a08f2de9cdc0",
       "name": "Reanimate",
       "sha256": "bb67e6b8de23a07a68e7774a5b8a609172f5e156e4c180349754452f9d2b97f3"
+    },
+    {
+      "oracleId": "f5822e53-ddec-4c77-bcf4-091e35c1e731",
+      "name": "Rebuff the Wicked",
+      "sha256": "e071417dfbbacce2cd007719b51c66433b5cb3fbf85cd829a9f3cc366e9a237e"
     },
     {
       "oracleId": "a621ae15-122a-4e11-bfcf-11dfc09784c0",
@@ -4297,6 +4551,26 @@
       "oracleId": "c23e5b80-08d2-4e24-9908-fe2aa4f30f6f",
       "name": "Reliquary Tower",
       "sha256": "2bdc70414a3dd2d2299ea20ce91581f4a5a43986881655aa793a63c3d5f2e275"
+    },
+    {
+      "oracleId": "8d24c12a-a300-4199-b2a9-3d5ead8df617",
+      "name": "Reluctant Role Model",
+      "sha256": "caa828b6f32adc5fd8882f6eac989c02e9a14c5b7d69d5e5946abe279ba88ac2"
+    },
+    {
+      "oracleId": "f0449cbd-855c-4c20-a1f5-f76a395d8d39",
+      "name": "Reprieve",
+      "sha256": "619a7ea2fb69f1f2c07d5a2e0e1bffc1f5ef08ac77361f57e6483eccf439c443"
+    },
+    {
+      "oracleId": "087f9ad7-e74f-40e2-8102-1ed2925d0418",
+      "name": "Rest in Peace",
+      "sha256": "9519ed723522e91ca26f35969166d20f2c1e764dc274282a377c52851a63d2a4"
+    },
+    {
+      "oracleId": "ddbe0d17-5cac-417c-afc0-e4aebae83205",
+      "name": "Restoration Magic",
+      "sha256": "fe14aacd1b134c4f90f994409eb6d0a6852d23b46a9f486af258de9093058d22"
     },
     {
       "oracleId": "b410f294-cbb6-4016-981f-808fd9b7bbae",
@@ -4417,6 +4691,11 @@
       "oracleId": "8e7641e1-e814-4d5a-9cb3-71ad2f4ceee8",
       "name": "Rugged Prairie",
       "sha256": "1c608941b6fc4db3b4660969ee7c809d608a6b7b4eb681007b1ddb27e3450099"
+    },
+    {
+      "oracleId": "53e88e64-6f82-4154-a66e-6aeb0154b368",
+      "name": "Rule of Law",
+      "sha256": "91cc78622dd7a33386e448320654ea40d3c61eeac6a26d7183e521fb1898dbe3"
     },
     {
       "oracleId": "3ceca713-38de-4428-a4f1-2146f6e98393",
@@ -4599,6 +4878,11 @@
       "sha256": "2f4085eddcedc3d71ffb6c34ea26d53e96a4f61a1f7bec487df4f7c0014be708"
     },
     {
+      "oracleId": "d54e4e37-042b-44a5-918d-757308545d4d",
+      "name": "Sejiri Shelter // Sejiri Glacier",
+      "sha256": "2c459001fbd313a67f4cd39b878d4d1b1a854a24d191dba61fc8011d163cc218"
+    },
+    {
       "oracleId": "4a2fea39-99d6-4766-9f2c-0a63925349cb",
       "name": "Selesnya Evangel",
       "sha256": "c883ac8790452bd0e3c099a50926fb393c075709003df610d0b881dbcced1a02"
@@ -4607,6 +4891,11 @@
       "oracleId": "8fbdca3a-7aa3-4b5a-98d7-9168856045ac",
       "name": "Selesnya Guildmage",
       "sha256": "484dae190e6c6e7830e280759443925d09e3659aee8611134eb8e05f70a58885"
+    },
+    {
+      "oracleId": "71d785a9-ddc8-472e-a778-a551b444a4bd",
+      "name": "Selfless Spirit",
+      "sha256": "c62bf04513485ee40f168c33bdc3e6e4696e63fe8e86620f7b81c91986919a96"
     },
     {
       "oracleId": "7d079c78-b2a9-444f-ab54-c61c041baa6d",
@@ -4814,6 +5103,11 @@
       "sha256": "8f0515d02851294b50044adff1b35936d11ee63a5c81f746227b1a2c68fd27fc"
     },
     {
+      "oracleId": "52bd4331-67b6-4eb8-9566-e00359889fc6",
+      "name": "Soul Snare",
+      "sha256": "994bae03a713184fd5257172464dc1836785328517d213136f2f45d5c4e89855"
+    },
+    {
       "oracleId": "1b5e6560-ff2e-4475-96cb-63f64c8a86db",
       "name": "Soul-Guide Lantern",
       "sha256": "93d00eeabc06f7b9cfb8d6d1ca01b8a6cce4ba7b83905a680d591c3aa5fb93ec"
@@ -4892,6 +5186,11 @@
       "oracleId": "16052b52-ade1-406f-a06b-ce7ea607fb63",
       "name": "Stomping Ground",
       "sha256": "5ae515911230551a234c4159e1b577d096ddd3b16b693f63c7ea0eeda92bf6c7"
+    },
+    {
+      "oracleId": "73dad679-1edb-41c9-9d43-56dc93c3e9fe",
+      "name": "Stone of Erech",
+      "sha256": "e15fa33bcd6283f55ec175f1ea4d8b2bb245aea1eecebaafd8cabe51bded8f84"
     },
     {
       "oracleId": "a145ff8c-5812-4bcb-bd16-9839dc25121d",
@@ -5012,6 +5311,11 @@
       "oracleId": "aeec8e85-6571-4da6-8a48-f5d3985ca10b",
       "name": "Sylvan Reclamation",
       "sha256": "5682177705c6c6ef5b2dccfc5926514a68168bac41623daea143bf738b440274"
+    },
+    {
+      "oracleId": "abc37d6c-6300-47b5-a679-9db5b83eb54f",
+      "name": "Syphon Mind",
+      "sha256": "3f874892d271ffd03fbd6abc86fc342537719e1d1a86765af3187ae7ca698d12"
     },
     {
       "oracleId": "9a63f950-2e8a-4617-896c-1d0af538dbc7",
@@ -5154,6 +5458,11 @@
       "sha256": "95353ba0725d65be6feae67f59b0d786e508ea3715860f75f4c70ef848999a45"
     },
     {
+      "oracleId": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b",
+      "name": "Tergrid, God of Fright // Tergrid's Lantern",
+      "sha256": "390005effb7682d435bd1fffe5b17fd1603da3e0bac9a3fcb43d7c3f04d1d9f4"
+    },
+    {
       "oracleId": "17a34f8d-a80f-4331-8be5-06cbb9d10d7b",
       "name": "Terramorph",
       "sha256": "7ca72e4da37a8a8123f118dbde62199681b10eb64ed18e28d084c834098be0cb"
@@ -5182,6 +5491,11 @@
       "oracleId": "9b0abb58-4e2c-45dc-99b1-61a4cb79354b",
       "name": "The Fantasticar",
       "sha256": "182d86221fe07659b0bee9b3ec6363bd9666aeaefa4ddb31c86ac781cc32e606"
+    },
+    {
+      "oracleId": "e70f5520-1b9c-4351-8484-30f0dc692e01",
+      "name": "The Haunt of Hightower",
+      "sha256": "85b6c7f3a24a701a82b107aa6b27a0a07cc0796d83f3dcc13d7bedfbd6870e31"
     },
     {
       "oracleId": "3aa83ed2-f48b-4ce6-a614-2c54ddf50538",
@@ -5232,6 +5546,11 @@
       "oracleId": "9965d9c5-2ebf-4a6c-930e-55c5890979be",
       "name": "Thought Vessel",
       "sha256": "2047e02e515efe959261ccf9dc3bbf914b7a63729f9a8f0ea4fcc36dd9d3ef39"
+    },
+    {
+      "oracleId": "edd8d1e8-be43-4c38-bb3a-83081fbaf0b5",
+      "name": "Thoughtseize",
+      "sha256": "d2e0f7e4f16b67aaa4e218a844393a9d167c546a9aab748d908b19661eeda516"
     },
     {
       "oracleId": "f7cd7ede-51c1-4117-99b5-484d0d80c95f",
@@ -5287,6 +5606,16 @@
       "oracleId": "00b34fab-5a80-4a4d-b6cf-72479197677a",
       "name": "Timber Gorge",
       "sha256": "7f9c16a0569106e1ebabeffd701b4b2e1cc030fe392e7688036c27af832b126d"
+    },
+    {
+      "oracleId": "3d2bd4f6-174d-411a-b930-9161aeefd33a",
+      "name": "Tinybones Joins Up",
+      "sha256": "e0975b6f80bbae0706c845c15bae881e181f8dda64878d0f101c568224c2d71a"
+    },
+    {
+      "oracleId": "008eda1f-b913-4f04-8c29-5e87c270149e",
+      "name": "Tinybones, Trinket Thief",
+      "sha256": "fa942a88eac3190440d190334f15b964ae56dfb0fb5bcc87d876b8df28cf4651"
     },
     {
       "oracleId": "ab8d5f5c-1976-4f77-8ed2-8d28ee666741",
@@ -5589,6 +5918,11 @@
       "sha256": "34f21854909995c8c060c539603e6749c1787218aac9656276f26bc73954e731"
     },
     {
+      "oracleId": "55b72b1f-6463-406a-8824-d99a3c028285",
+      "name": "Vicious Rumors",
+      "sha256": "b09bf3c311377c7f92e925e5eabbdd4aefb978e905e525d70acc5a8429dec5a2"
+    },
+    {
       "oracleId": "9707ac4f-6493-47fe-9c31-4daf469b5c6e",
       "name": "Vicious Shadows",
       "sha256": "7ca620862616a4932e60bad598d38734f000949cf9590bfc6ae505e07e8eb48c"
@@ -5664,6 +5998,11 @@
       "sha256": "cc738a95445070461d3f1b05319d245f353ca075d7b03765e15dd51cee7782f9"
     },
     {
+      "oracleId": "00fdcc19-88ed-46c3-91f0-095806228105",
+      "name": "Waste Not",
+      "sha256": "45df10c919fc24aac9c6c7a0120063af74262ed0fd1d18776c39f852a54ad04d"
+    },
+    {
       "oracleId": "277aafa6-4270-4d24-a888-cf9e8e635d4b",
       "name": "Watcher for Tomorrow",
       "sha256": "02360583993a6941a09046d20aefacec8e53d3acaa1cc092eee1f67eff3f2e57"
@@ -5702,6 +6041,11 @@
       "oracleId": "6467cbb7-1e4e-482d-a20f-6cb9fc0f1ad1",
       "name": "Whirlwind of Thought",
       "sha256": "9a9c4ea7379db2fb0a63a9bb7d8c12139fdbe78f1f146f3d749faddc11529b23"
+    },
+    {
+      "oracleId": "cf8bc2e3-2f22-45d3-9810-bc039202f41c",
+      "name": "Whispers of Emrakul",
+      "sha256": "e6f95077a5da3657729c65b8c329cc5e93faffd0a530aee542abc934d02e7be7"
     },
     {
       "oracleId": "ea4a9299-c2b3-4092-89dd-28142b203d60",

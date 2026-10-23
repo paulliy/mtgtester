@@ -111,7 +111,7 @@ function planActivation(
       (p) =>
         p.controllerId === player.id &&
         !reserved.has(p.id) &&
-        sacrificeCandidateAllowed(cost, source, p) &&
+        sacrificeCandidateAllowed(ctx, cost, source, p) &&
         matchesSelector(ctx, p, cost.selector, scope),
     );
     function choose(start: number, remaining: number): ActivationPlan | null {

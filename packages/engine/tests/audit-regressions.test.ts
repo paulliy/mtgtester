@@ -168,10 +168,6 @@ describe('audit: Sram only draws for the printed spell types', () => {
 describe('audit: approximate cards fail closed', () => {
   it.each([
     [
-      'Killian, Decisive Mentor',
-      'Whenever one or more creatures that are enchanted by an Aura you control attack, draw a card.',
-    ],
-    [
       "Sage's Reverie",
       "Enchanted creature gets +1/+1 for each Aura you control that's attached to a creature.",
     ],
@@ -179,14 +175,6 @@ describe('audit: approximate cards fail closed', () => {
     [
       'Scriv, the Obligator',
       'Whenever this creature enters or attacks, create a white Aura enchantment token named Contract attached to target creature an opponent controls.',
-    ],
-    [
-      "Songbirds' Blessing",
-      "Whenever enchanted creature attacks, reveal cards from the top of your library until you reveal an Aura card. You may put that card onto the battlefield. If you don't, put it into your hand. Put the rest on the bottom of your library in a random order.",
-    ],
-    [
-      'Promise of Loyalty',
-      "Each player puts a vow counter on a creature they control and sacrifices the rest. Each of those creatures can't attack you or planeswalkers you control for as long as it has a vow counter on it.",
     ],
   ])('%s is not advertised as modeled', (name, oracleText) => {
     const def = interpretCard(oracle({ name, oracleText }));

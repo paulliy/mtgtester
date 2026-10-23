@@ -3,16 +3,7 @@
  */
 
 import { constant } from '../value';
-import {
-  SAC_SELF,
-  TAP,
-  activated,
-  mana,
-  manaCost,
-  spell,
-  targetSlots,
-  triggered,
-} from '../templates';
+import { SAC_SELF, TAP, activated, manaCost, spell, targetSlots, triggered } from '../templates';
 import {
   BEAST_3_3_GREEN,
   BEAST_6_6_ARTIFACT,
@@ -382,31 +373,6 @@ const NISSA_WORLDSOUL_SPEAKER_DEF: Partial<CardDefinition> = {
   energyAlternativeCost: 8,
 };
 
-const AETHERIC_AMPLIFIER_DEF: Partial<CardDefinition> = {
-  activatedAbilities: [
-    {
-      costs: [mana('{4}'), TAP],
-      timing: 'sorcery',
-      ability: {
-        kind: 'activated',
-        targets: [{ kind: 'permanent' }],
-        effects: [{ op: 'doubleCountersTarget', target: 0 }],
-        description: 'Double all counters on target permanent',
-      },
-    },
-    {
-      costs: [mana('{4}'), TAP],
-      timing: 'sorcery',
-      ability: {
-        kind: 'activated',
-        targets: [],
-        effects: [{ op: 'doublePlayerCounters' }],
-        description: 'Double all counters you have',
-      },
-    },
-  ],
-};
-
 const STRIDEHANGAR_AUTOMATON_DEF: Partial<CardDefinition> = {
   ruleStatics: [{ kind: 'artifactTokenCreatesThopter' }],
 };
@@ -699,12 +665,7 @@ export function registerLIVING_ENERGYOverrides(): void {
     'Whenever one or more artifact creatures you control deal combat damage to a player, draw a card.',
   ]);
 
-  // Catalog audit living-energy-batch-1: extra combat untaps all permanents you control.
-  unsupportedCard(
-    '2f82b232-21ff-44cc-bc35-0999a1d1c52f',
-    'Lightning Runner',
-    'Untap all creatures you control is implemented as untapEach of all permanents you control.',
-  );
+  // Lightning Runner: restored in coverage PR07 (see coverage-pr07.ts).
 
   defineCard(
     '355603d1-f62d-407a-8fa9-74e7dca8ecf9',
@@ -830,16 +791,7 @@ export function registerLIVING_ENERGYOverrides(): void {
     ARCANE_DENIAL_DEF,
   );
 
-  defineCard(
-    '295cd8e1-0830-46c1-9957-556afd4bcee6',
-    'Aetheric Amplifier',
-    [
-      '{4}, {T}: Choose one. Activate only as a sorcery.',
-      'â€¢ Double the number of each kind of counter on target permanent.',
-      'â€¢ Double the number of each kind of counter you have.',
-    ],
-    AETHERIC_AMPLIFIER_DEF,
-  );
+  // Aetheric Amplifier: restored in coverage PR04 (see the containment note below).
 
   defineCard(
     '9070c98b-fd01-4eeb-a4ec-fc464946c7c0',
@@ -879,12 +831,7 @@ export function registerLIVING_ENERGYOverrides(): void {
     PEEMA_TRAILBLAZER_DEF,
   );
 
-  // Catalog audit living-energy-batch-3: reflexive damage is same-resolution then.
-  unsupportedCard(
-    '4f63d306-cc14-405c-8424-d8990c670c74',
-    'Territorial Aetherkite',
-    'The damage is a reflexive trigger after payment, implemented as the same resolution.',
-  );
+  // Territorial Aetherkite: restored in coverage PR06 (see coverage-pr06.ts).
 
   defineCard(
     'be6cab52-b3ae-46a2-a581-2468a49bff25',
@@ -1154,12 +1101,6 @@ export function registerLIVING_ENERGYOverrides(): void {
     VINEGLIMMER_SNARL_DEF,
   );
 
-  unsupportedCard(
-    '5bb32efd-9e58-4021-bbda-4ffccfa1d601',
-    'Druid of Purification',
-    'Each player chooses a permanent they do not control, not a permanent you do not control.',
-  );
-
   // Stale claim removed: Scryfall's 2026-08-28 oracle update rewrote this card into current
   // templating, which the generic parser reads on its own. Keeping the claim made the
   // override look drifted. The def stays — it still wins the merge and pins the exact shape.
@@ -1273,17 +1214,6 @@ export function registerLIVING_ENERGYOverrides(): void {
   // means the corrected text reaches BOTH ids, not just the Scryfall one — previously the
   // fixture id kept the broken text and the card stayed unmodeled when built by name.
   replaceCard(
-    '295cd8e1-0830-46c1-9957-556afd4bcee6',
-    'Aetheric Amplifier',
-    [
-      '{4}, {T}: Choose one. Activate only as a sorcery.',
-      '\u2022 Double the number of each kind of counter on target permanent.',
-      '\u2022 Double the number of each kind of counter you have.',
-    ],
-    AETHERIC_AMPLIFIER_DEF,
-    'replace the earlier generated inline definition with the reviewed shared constant',
-  );
-  replaceCard(
     '397b9dcf-690a-4a58-8637-bb9baab7cc2f',
     'Elder Gargaroth',
     [
@@ -1314,12 +1244,8 @@ export function registerLIVING_ENERGYOverrides(): void {
     SAHEELI_SUBLIME_ARTIFICER_DEF,
     'replace the earlier generated inline definition with the reviewed shared constant',
   );
-  // Catalog audit living-energy-batch-1: choose-one is two independent activations.
-  unsupportedCard(
-    '295cd8e1-0830-46c1-9957-556afd4bcee6',
-    'Aetheric Amplifier',
-    'Choose-one is implemented as two independent activated abilities.',
-  );
+  // Aetheric Amplifier: restored in coverage PR04. The interpreter reads the mana ability and the
+  // one modal sorcery-speed activation (CR 700.2), so no override remains.
   // Catalog audit living-energy-batch-2: extra +1 loyalty is not on the card.
   unsupportedCard(
     'ab655810-f67e-4576-9174-35b16f5e3235',

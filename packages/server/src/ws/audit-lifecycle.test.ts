@@ -31,6 +31,15 @@ describe('local server boundary', () => {
   ] as const)('validates %s from %s', (url, origin, allowed) => {
     expect(isAllowedLocalRequest(new Request(url, { headers: { origin } }), 3001)).toBe(allowed);
   });
+
+  it('allows the configured local web port only for the card test lab', () => {
+    const request = new Request('http://127.0.0.1:3102/ws', {
+      headers: { origin: 'http://127.0.0.1:5174' },
+    });
+    expect(isAllowedLocalRequest(request, 3102, true, '5174')).toBe(true);
+    expect(isAllowedLocalRequest(request, 3102, false, '5174')).toBe(false);
+    expect(isAllowedLocalRequest(request, 3102, true, '70000')).toBe(false);
+  });
 });
 
 describe('game startup lifecycle', () => {

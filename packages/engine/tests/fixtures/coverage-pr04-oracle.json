@@ -1,0 +1,602 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-10-10",
+  "cards": [
+    {
+      "sha256": "f6c49e6ad315acd29a654a4090c9a9344d977650d14a6b943eebf671015e5b96",
+      "card": {
+        "oracleId": "b90af42d-edb6-4654-b7dc-10f0f272c883",
+        "scryfallId": "d0ca5bcc-f49f-4370-9f95-031836bb771b",
+        "name": "Elite Scaleguard",
+        "manaCost": "{4}{W}",
+        "cmc": 5,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Human Soldier",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Soldier"
+        ],
+        "oracleText": "When this creature enters, bolster 2. (Choose a creature with the least toughness among creatures you control and put two +1/+1 counters on it.)\nWhenever a creature you control with a +1/+1 counter on it attacks, tap target creature defending player controls.",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Bolster"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "4024f52e734af98755f7494ab043fed6e9a7e9288ffb2fa538b8e0735ddb7d86",
+      "card": {
+        "oracleId": "2ef75cf3-30dc-4852-a6d1-1d6391fad022",
+        "scryfallId": "f8c9d744-8294-4747-ae7e-99be2b6e7479",
+        "name": "Forgotten Ancient",
+        "manaCost": "{3}{G}",
+        "cmc": 4,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Elemental",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elemental"
+        ],
+        "oracleText": "Whenever a player casts a spell, you may put a +1/+1 counter on this creature.\nAt the beginning of your upkeep, you may move any number of +1/+1 counters from this creature onto other creatures.",
+        "power": "0",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0c68ed59f882ea595ee50cbc36912ca70b5b4d5ef1a56bc503e3c532d2bd3b5a",
+      "card": {
+        "oracleId": "a86117c1-b83d-4350-9a10-a23b7e67e1bd",
+        "scryfallId": "9cfeb2b4-937c-4bcc-bb03-467cc0effba2",
+        "name": "Mikey & Leo, Chaos & Order",
+        "manaCost": "{G/W}{G/W}",
+        "cmc": 2,
+        "colors": [
+          "G",
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Mutant Ninja Turtle",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Mutant",
+          "Ninja",
+          "Turtle"
+        ],
+        "oracleText": "Whenever you put a counter on a creature you control, draw a card. This ability triggers only once each turn.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "00655037d7422a06b8926f8538613d5998a3c10bd7cdf633b10aa75e91e592d9",
+      "card": {
+        "oracleId": "df72b5d6-6f9e-4d6b-acf6-7dec4ff35468",
+        "scryfallId": "d96c33f5-f891-44bc-8ae1-11bc6f6544b6",
+        "name": "Bess, Soul Nourisher",
+        "manaCost": "{1}{G}{W}",
+        "cmc": 3,
+        "colors": [
+          "G",
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Citizen",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Citizen"
+        ],
+        "oracleText": "Whenever one or more other creatures you control with base power and toughness 1/1 enter, put a +1/+1 counter on Bess.\nWhenever Bess attacks, each other creature you control with base power and toughness 1/1 gets +X/+X until end of turn, where X is the number of +1/+1 counters on Bess.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "dec568f46ce9c8621a6b2415d420f8b28d7a761f7a8d2c118642fc04c78b2792",
+      "card": {
+        "oracleId": "c8de07d4-9bc1-4bfe-b5a4-0a58e05af022",
+        "scryfallId": "ba5167e4-27b1-4f55-8282-7b5bd6de611a",
+        "name": "The Thing",
+        "manaCost": "{5}{G}",
+        "cmc": 6,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G",
+          "R",
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Hero",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Hero"
+        ],
+        "oracleText": "Trample\nAt the beginning of combat on your turn, if you've cast a noncreature spell this turn, put four +1/+1 counters on The Thing.\nWhenever The Thing attacks, you may pay {R}{G}{W}{U}. When you do, double the number of each kind of counter on any number of target permanents you control.",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Trample",
+          "Double"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c6552c5158eb975d6f921d85bb1c65dc4428f800b2d7d96d1cf753bb8060052a",
+      "card": {
+        "oracleId": "5efce07e-24c4-4520-a46f-9954b67c4e6e",
+        "scryfallId": "e273f4e6-4691-4cb3-89e2-9b1ab45a2bc0",
+        "name": "Lockjaw, Slobbering Teleporter",
+        "manaCost": "{1}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Legendary Creature — Inhuman Dog Hero",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Inhuman",
+          "Dog",
+          "Hero"
+        ],
+        "oracleText": "Vigilance\nAt the beginning of combat on your turn, if you've cast a noncreature spell this turn, put a +1/+1 counter on Lockjaw. When you do, Lockjaw and up to one other target creature you control can't be blocked this turn.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Vigilance"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "65b2c91a9085899dbe7b631298e7cc2893a867f894c885688c34f3a4d2c5525d",
+      "card": {
+        "oracleId": "011da9c5-aa8a-4fa0-b1f2-62b9f3760476",
+        "scryfallId": "88f0c189-c9ed-4ea3-ae62-3d8ac6c7fecf",
+        "name": "Belladonna Took",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Halfling Citizen",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Halfling",
+          "Citizen"
+        ],
+        "oracleText": "Whenever a token you control enters, you gain 1 life if this is the first time this ability has resolved this turn. If it's the second time, draw a card. If it's the third time, put a +1/+1 counter on each creature you control.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "d5b18ba7956be7118501bc486db3177a7bc8ebca881b24c031834ada00e7a19c",
+      "card": {
+        "oracleId": "3ceca713-38de-4428-a4f1-2146f6e98393",
+        "scryfallId": "a7782044-616e-4d4f-b38f-93320ba19797",
+        "name": "Rumor Gatherer",
+        "manaCost": "{1}{W}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Elf Wizard",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elf",
+          "Wizard"
+        ],
+        "oracleText": "Alliance — Whenever another creature you control enters, scry 1. If this is the second time this ability has resolved this turn, draw a card instead.",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Alliance",
+          "Scry"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "8a355e5c6a459e628aff3fb7c22a648424b60a76abf57295153c83289528c385",
+      "card": {
+        "oracleId": "32c14d7f-fdaa-4340-af94-1f10bf064f51",
+        "scryfallId": "1e9aec49-08d7-4fc8-87dd-69ab8910688a",
+        "name": "Crystal, Inhuman Princess",
+        "manaCost": "{1}{R}{G}",
+        "cmc": 3,
+        "colors": [
+          "G",
+          "R"
+        ],
+        "colorIdentity": [
+          "G",
+          "R",
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Inhuman Noble Hero",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Inhuman",
+          "Noble",
+          "Hero"
+        ],
+        "oracleText": "Flying\nWhenever you cast a noncreature spell, Crystal deals X damage to each opponent, where X is the number of colors that spell is.\n{T}: Add {R}, {G}, {W}, or {U}.",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c48b93c22b22cbd4fc9fdac7bb9504e1651e7a9025e5e3bf58d675be756241f6",
+      "card": {
+        "oracleId": "0623c51a-e829-413f-a3a0-817c0902821e",
+        "scryfallId": "81d6b979-251a-4736-86f0-35a6c8b492c9",
+        "name": "Call Forth the Tempest",
+        "manaCost": "{5}{R}{R}{R}",
+        "cmc": 8,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Cascade, cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom of your library in a random order. Then do it again.)\nCall Forth the Tempest deals damage to each creature your opponents control equal to the total mana value of other spells you've cast this turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Cascade"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e81f7767b10c31b9b2a8751591afe24d39f155ca1780fd55ddcb03f805ce4a64",
+      "card": {
+        "oracleId": "e119c709-bf9d-451e-827b-9787d455029a",
+        "scryfallId": "96679821-f850-4de1-b5f9-21e0681647ee",
+        "name": "First Family",
+        "manaCost": "{2}{G}{U}",
+        "cmc": 4,
+        "colors": [
+          "G",
+          "U"
+        ],
+        "colorIdentity": [
+          "G",
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "You draw X cards and gain X life, where X is the number of colors among permanents you control and spells you've cast this turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c0032b5882eac2dab751071f0e153e44f6a893f674fca87ab09b69e8ff7ecc22",
+      "card": {
+        "oracleId": "97435e03-2fff-4fe0-8fa9-69ab0a046a33",
+        "scryfallId": "06e1cc7b-9319-4f6f-88ee-2e6b6d2efbc6",
+        "name": "Unbreakable Formation",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Creatures you control gain indestructible until end of turn.\nAddendum — If you cast this spell during your main phase, put a +1/+1 counter on each of those creatures and they gain vigilance until end of turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Addendum"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "182d86221fe07659b0bee9b3ec6363bd9666aeaefa4ddb31c86ac781cc32e606",
+      "card": {
+        "oracleId": "9b0abb58-4e2c-45dc-99b1-61a4cb79354b",
+        "scryfallId": "ed0beb69-8441-4104-9990-81bd82f81f9a",
+        "name": "The Fantasticar",
+        "manaCost": "{3}",
+        "cmc": 3,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Legendary Artifact — Vehicle",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [
+          "Vehicle"
+        ],
+        "oracleText": "Flying\nWhenever you cast a noncreature spell, you may have The Fantasticar become an artifact creature until end of turn.\nWhenever you cast your fourth noncreature spell each turn, you may sacrifice The Fantasticar. If you do, create four 4/4 colorless Construct artifact creature tokens with flying and haste.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "57d13b3c3e5284079d246751145b8de3e74f83fb584b80df956a5b620956a242",
+      "card": {
+        "oracleId": "3233af43-7826-4895-b67e-03c6102c2cd5",
+        "scryfallId": "c9f88a40-a6ed-4c1f-a309-011aca1acddd",
+        "name": "Kutzil, Malamet Exemplar",
+        "manaCost": "{1}{G}{W}",
+        "cmc": 3,
+        "colors": [
+          "G",
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Cat Warrior",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Cat",
+          "Warrior"
+        ],
+        "oracleText": "Your opponents can't cast spells during your turn.\nWhenever one or more creatures you control each with power greater than its base power deals combat damage to a player, draw a card.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "00e1495e7bebbf263cf6809022878d58016492044ae18a32f092274897ded028",
+      "card": {
+        "oracleId": "69924636-138e-4baa-a378-0fd7df5b847d",
+        "scryfallId": "0dee197d-c313-4364-b52c-f83d5f579bc3",
+        "name": "Finneas, Ace Archer",
+        "manaCost": "{G}{W}",
+        "cmc": 2,
+        "colors": [
+          "G",
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Rabbit Archer",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Rabbit",
+          "Archer"
+        ],
+        "oracleText": "Reach, vigilance\nWhenever Finneas attacks, put a +1/+1 counter on each other creature you control that's a token or a Rabbit. Then if creatures you control have total power 10 or greater, draw a card.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Reach",
+          "Vigilance"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e0fd42e6696204ae8cdbd23b1b5a9576da3ee8573327710106c2726512fa023b",
+      "card": {
+        "oracleId": "e9566303-15cf-4444-a044-fc19540f21b6",
+        "scryfallId": "49d952d9-8584-435a-bf45-62bf13887083",
+        "name": "Captain America, Skybound",
+        "manaCost": "{3}{W}{W}",
+        "cmc": 5,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Soldier Hero",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Soldier",
+          "Hero"
+        ],
+        "oracleText": "Flying, vigilance\nBattalion — Whenever Captain America and at least two other creatures attack, put a +1/+1 counter on each attacking creature. They gain indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy them.)",
+        "power": "3",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Vigilance",
+          "Battalion"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

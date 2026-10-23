@@ -13,14 +13,18 @@ test-results/
 playwright-report/
 .playwright/
 benchmark-output/
+/.tmp/
+/tmp/
 
 # Local card cache & Scryfall bulk data (brief §3 — 100MB+, gitignored)
-data/
+data/*
 !data/README.md
 
 # SQLite databases (brief §9)
 *.sqlite
 *.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
 *.db
 
 # Secrets / env

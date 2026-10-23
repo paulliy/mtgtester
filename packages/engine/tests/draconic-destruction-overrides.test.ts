@@ -5,6 +5,9 @@
  * (per `overrides/index.ts`'s rule 3).
  */
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import type { OracleCard } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { interpretCard } from '../src/cards/interpret';
 import { effectivePT, getDefByOracleId } from '../src/state/queries';
@@ -158,7 +161,8 @@ describe('Steel Hellkite', () => {
 });
 
 describe('Thunderbreak Regent', () => {
-  it('is catalog-contained because becomes-targeted does not bind eventPlayer', () => {
+  // Restored in coverage PR06; behavior is gated by pr06-card-coverage.test.ts.
+  it('is no longer catalog-contained', () => {
     const card = oracle({
       oracleId: 'bb04f927-0348-4a14-9e74-381f18083f6a',
       name: 'Thunderbreak Regent',
@@ -166,12 +170,10 @@ describe('Thunderbreak Regent', () => {
       manaCost: '{2}{R}{R}',
       power: '4',
       toughness: '4',
+      oracleText:
+        'Flying\nWhenever a Dragon you control becomes the target of a spell or ability an opponent controls, this creature deals 3 damage to that player.',
     });
-    const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'Damage to the targeting opponent uses eventPlayer, which is unset on becomes-targeted events.',
-    );
+    expect(interpretCard(card).modeled).toBe(true);
   });
 });
 
@@ -192,7 +194,8 @@ describe('Dragonkin Berserker', () => {
 });
 
 describe('Flameblast Dragon', () => {
-  it('is catalog-contained because the damage target is chosen before pay X', () => {
+  // Restored in coverage PR06; behavior is gated by pr06-card-coverage.test.ts.
+  it('is no longer catalog-contained', () => {
     const card = oracle({
       oracleId: '3180ee4f-66d7-4b73-bc10-9ee0c790ec18',
       name: 'Flameblast Dragon',
@@ -200,12 +203,10 @@ describe('Flameblast Dragon', () => {
       manaCost: '{4}{R}{R}',
       power: '5',
       toughness: '5',
+      oracleText:
+        'Flying\nWhenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target.',
     });
-    const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'The damage target is chosen before you decide to pay X.',
-    );
+    expect(interpretCard(card).modeled).toBe(true);
   });
 });
 
@@ -382,7 +383,7 @@ describe('Spit Flame', () => {
 });
 
 describe('Dream Pillager', () => {
-  it('is catalog-contained because playableUntilEot includes playing lands', () => {
+  it('rejects an incomplete Oracle stub after its full PR09 restoration', () => {
     const card = oracle({
       oracleId: '504cc26d-3fd5-4391-9d30-f0614e5c8bbc',
       name: 'Dream Pillager',
@@ -393,27 +394,20 @@ describe('Dream Pillager', () => {
     });
     const def = interpretCard(card);
     expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'Exiled cards are playable, including lands; Oracle only permits casting spells.',
-    );
+    expect(def.unmodeledReasons.join('\n')).toContain('claims a line this card no longer has');
   });
 });
 
 describe('Dragon Mage', () => {
   it('each player discards their hand, then draws seven cards on combat damage', () => {
     const ctx = pod('dragon-mage');
-    const mage = spawn(
-      ctx,
-      'P1',
-      oracle({
-        oracleId: 'eab71e4e-27c3-4c41-b95f-259c1d14b97a',
-        name: 'Dragon Mage',
-        typeLine: 'Creature — Dragon',
-        manaCost: '{4}{R}{R}',
-        power: '4',
-        toughness: '4',
-      }),
-    );
+    // The wheel now parses generically, so exercise the real printed card rather than an
+    // empty Oracle-text stub that depended on the removed override to supply its ability.
+    const fixture = JSON.parse(
+      readFileSync(join(import.meta.dirname, 'fixtures/combat-trigger-oracle.json'), 'utf8'),
+    ) as { cards: { card: OracleCard }[] };
+    const card = fixture.cards.find(({ card }) => card.name === 'Dragon Mage')!.card;
+    const mage = spawn(ctx, 'P1', card);
     p1(ctx).hand = [
       {
         id: 'h1',

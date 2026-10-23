@@ -37,15 +37,196 @@ let actualImpact: {
 };
 const scratch: string[] = [];
 const expectedCapabilities = [
+  'Ability.activated',
   'Ability.effects',
+  'Ability.modes',
+  'Ability.optional',
   'Ability.spell',
+  'Ability.targets',
+  'Ability.trigger',
+  'Ability.triggered',
+  'AbilityCost.discardSelf',
+  'AbilityCost.mana',
+  'AbilityCost.payEnergy',
+  'AbilityCost.payLife',
+  'AbilityCost.removeCounters',
+  'AbilityCost.returnUnblockedAttacker',
+  'AbilityCost.sacrificeSelf',
+  'AbilityCost.tap',
+  'ActivatedAbility',
+  'ActivatedAbility.ability',
+  'ActivatedAbility.costs',
+  'ActivatedAbility.timing',
+  'ActivatedAbility.zone',
+  'AlternativeCast.ability',
+  'AlternativeCast.condition',
+  'AlternativeCast.costs',
+  'AlternativeCast.instantTiming',
+  'AlternativeCast.manaCost',
+  'AlternativeCast.nonMana',
+  'AlternativeCast.overload',
+  'BackFace',
+  'BackFace.keywords',
+  'BackFace.triggers',
   'CardDefinition',
+  'CardDefinition.activatedAbilities',
+  'CardDefinition.alternativeCasts',
+  'CardDefinition.backFace',
+  'CardDefinition.entersWithCounters',
+  'CardDefinition.keywords',
+  'CardDefinition.manaAbilities',
   'CardDefinition.manaCost',
+  'CardDefinition.ruleStatics',
   'CardDefinition.spellAbility',
+  'CardDefinition.staticEffects',
+  'CardDefinition.triggers',
+  'CardDefinition.ward',
+  'Condition.allOf',
+  'Condition.castSpellThisTurn',
+  'Condition.countPermanents',
+  'Condition.duringStep',
+  'Condition.eventObjectDefendingPlayerIsYou',
+  'Condition.sourceHasCounters',
+  'Condition.yourTurn',
+  'ContinuousOp.6',
+  'ContinuousOp.7',
+  'ContinuousOp.7d',
+  'ContinuousOp.setMustAttackEachCombat',
+  'Effect.attachSelfTo',
+  'Effect.attackingCreaturesToOwnerLibraries',
+  'Effect.capstoneParadigm',
+  'Effect.chaosWarp',
+  'Effect.choosePermanentTypesThenSacrificeOthers',
+  'Effect.conditionalEffect',
+  'Effect.createToken',
+  'Effect.createTokenForPlayer',
+  'Effect.dealDamage',
+  'Effect.destroyTargetAndControllerMaySearchBasicTypedLand',
+  'Effect.discardTarget',
+  'Effect.discover',
+  'Effect.draw',
+  'Effect.drawForEachOpponent',
+  'Effect.drawRevealTopLoseManaValue',
+  'Effect.drawTarget',
+  'Effect.druidPurification',
+  'Effect.eachOpponentCreatesTokens',
+  'Effect.eachPlayerMayPutCountersAndGoad',
+  'Effect.exileAndCastNextUpkeep',
+  'Effect.exileCreatureAndControllerSearchBasicLand',
+  'Effect.exileEachChosenUntilSourceLeaves',
+  'Effect.exileEachCreatureAndControllersSearchBasicLands',
+  'Effect.exileEachUntilNonlandCast',
+  'Effect.exileLibraryTop',
+  'Effect.exileResolvingSpell',
+  'Effect.exileTopNPlayableUntilEot',
+  'Effect.explore',
+  'Effect.gainControl',
+  'Effect.gainControlTarget',
+  'Effect.gainEnergy',
   'Effect.gainLife',
+  'Effect.giveTargetPoisonCounters',
+  'Effect.goad',
+  'Effect.hideaway',
+  'Effect.lookAtTopN',
+  'Effect.lookAtTopNCastOneFree',
+  'Effect.loseLifeTarget',
+  'Effect.millAndChooseArtifact',
+  'Effect.moveCounters',
+  'Effect.mutualRevealTopLoseManaValue',
+  'Effect.partitionLibrary',
+  'Effect.playExiledCardFree',
+  'Effect.pumpUntilEot',
+  'Effect.putCountersOnCreaturesTargetPlayerControls',
+  'Effect.recruit',
+  'Effect.regainControlOfOwnCreatures',
   'Effect.removeCounters',
+  'Effect.revealCreatureOrBottom',
+  'Effect.revealHandAndDiscard',
+  'Effect.revealUntilAura',
+  'Effect.rotateSourceAtUpkeep',
+  'Effect.sacrificeGreatestEachOpponent',
+  'Effect.sacrificeTargetPlayerCreature',
+  'Effect.schemingSymmetry',
+  'Effect.searchLibrary',
+  'Effect.shareCreatureLifeWithChosenOpponent',
+  'Effect.shareTokensWithChosenOpponent',
+  'Effect.shuffle',
+  'Effect.swapCreatureControlUntilEot',
+  'Effect.transformSelf',
+  'Effect.trickery',
+  'Effect.unlessPays',
+  'Effect.voteAndExileMost',
+  'Keyword.cascade',
+  'Keyword.defender',
+  'Keyword.double strike',
+  'Keyword.flying',
+  'Keyword.haste',
+  'Keyword.indestructible',
+  'Keyword.lifelink',
+  'Keyword.menace',
+  'Keyword.rebound',
+  'Keyword.trample',
+  'Keyword.vigilance',
+  'ManaAbilitySpec',
+  'ManaAbilitySpec.costs',
+  'ManaAbilitySpec.units',
   'ParsedManaCost',
+  'RuleStatic.attackRestriction',
+  'RuleStatic.cantAttackOwner',
+  'RuleStatic.cantBeCountered',
+  'RuleStatic.cantBeSacrificed',
+  'RuleStatic.cantBlockMatching',
+  'RuleStatic.castFromZone',
+  'RuleStatic.costReduction',
+  'RuleStatic.lookTopLibrary',
+  'SearchDestination',
+  'Selector.allOf',
+  'Selector.anyOf',
+  'Selector.attachedToSource',
+  'Selector.color',
+  'Selector.combatRole',
+  'Selector.controller',
+  'Selector.hasCounter',
+  'Selector.not',
+  'Selector.other',
+  'Selector.powerAtLeast',
+  'Selector.powerAtMost',
+  'Selector.self',
+  'Selector.subtype',
+  'Selector.supertype',
+  'Selector.type',
+  'StaticEffect',
+  'StaticEffect.affects',
+  'StaticEffect.op',
+  'TargetSpec.cardInGraveyard',
+  'TargetSpec.creature',
+  'TargetSpec.nonlandPermanent',
+  'TargetSpec.permanent',
+  'TargetSpec.player',
+  'TargetSpec.spell',
+  'TokenSpec',
+  'TokenSpec.keywords',
+  'TokenSpec.manaAbilities',
+  'TriggerSpec.attackDeclared',
+  'TriggerSpec.attacks',
+  'TriggerSpec.beginningOfCombat',
+  'TriggerSpec.castsSpell',
+  'TriggerSpec.dealsCombatDamageToPlayer',
+  'TriggerSpec.dies',
+  'TriggerSpec.endStep',
+  'TriggerSpec.enters',
+  'TriggerSpec.leavesBattlefield',
+  'TriggerSpec.upkeep',
+  'TriggerSubject.permanent',
+  'TriggerSubject.self',
   'Value.const',
+  'Value.countPermanents',
+  'Value.damageDealt',
+  'Value.greatestPowerAmong',
+  'Value.spellManaValue',
+  'Value.times',
+  'Value.triggerCount',
+  'WardCost.mana',
 ];
 
 function runCommand(command: string, args: string[], options: ExecFileOptionsWithStringEncoding) {
@@ -80,7 +261,8 @@ beforeAll(async () => {
     {
       cwd: root,
       encoding: 'utf8',
-      timeout: 30_000,
+      // The registry now executes over 950 tests, including paid multiplayer compositions.
+      timeout: 120_000,
     },
   );
   if (run.status !== 0)
@@ -89,14 +271,14 @@ beforeAll(async () => {
   const impact = await runCommand(
     'bun',
     ['run', 'card-capabilities', '--primitive-evidence', runDirectory],
-    { cwd: root, encoding: 'utf8', timeout: 30_000, maxBuffer: 32 * 1024 * 1024 },
+    { cwd: root, encoding: 'utf8', timeout: 60_000, maxBuffer: 32 * 1024 * 1024 },
   );
   if (impact.status !== 0)
     throw new Error(
       `Actual eligibility inventory failed: ${impact.error?.message ?? impact.status}\n${impact.stderr}`,
     );
   actualImpact = JSON.parse(impact.stdout);
-}, 65_000);
+}, 185_000);
 afterEach(async () => {
   vi.restoreAllMocks();
   await yieldToEventLoop();
@@ -130,10 +312,9 @@ describe('primitive evidence and eligibility', { timeout: 30_000 }, () => {
   });
 
   it('keeps uncontracted dependencies experimental despite a passing primitive', () => {
-    const result = cardPrimitiveEligibility(
-      definition(),
-      loadPrimitiveEvidence(root, runDirectory),
-    );
+    const probe = definition();
+    probe.spellAbility!.effects.push({ op: 'mill', count: { kind: 'const', n: 1 } });
+    const result = cardPrimitiveEligibility(probe, loadPrimitiveEvidence(root, runDirectory));
     expect(result.eligible).toBe(false);
     expect(result.dependencies).toContain('Effect.removeCounters');
     expect(result.blocked.some((entry) => entry.capability === 'Effect.removeCounters')).toBe(
@@ -186,9 +367,16 @@ describe('primitive evidence and eligibility', { timeout: 30_000 }, () => {
     const result = cardPrimitiveEligibility(def, evidence);
     expect(result.eligible).toBe(true);
     expect(result.blocked).toEqual([]);
-    expect(result.dependencies).toEqual(
-      expectedCapabilities.filter((capability) => capability !== 'Effect.removeCounters'),
-    );
+    expect(result.dependencies).toEqual([
+      'Ability.effects',
+      'Ability.spell',
+      'CardDefinition',
+      'CardDefinition.manaCost',
+      'CardDefinition.spellAbility',
+      'Effect.gainLife',
+      'ParsedManaCost',
+      'Value.const',
+    ]);
   });
 
   it.each([
@@ -261,7 +449,7 @@ describe('primitive evidence and eligibility', { timeout: 30_000 }, () => {
     });
     const definition = interpretCard(card);
     if (variant === 'experimental')
-      definition.spellAbility!.effects = [{ op: 'draw', count: { kind: 'const', n: 1 } }];
+      definition.spellAbility!.effects = [{ op: 'mill', count: { kind: 'const', n: 1 } }];
     if (variant === 'outsideScope')
       definition.spellAbility!.effects = [{ op: 'gainLife', amount: { kind: 'const', n: 1001 } }];
     const consumer = { canonicalOracleId: card.oracleId, definition };
@@ -287,7 +475,7 @@ describe('primitive evidence and eligibility', { timeout: 30_000 }, () => {
           name: 'Primitive review CLI probe',
           typeLine: 'Sorcery',
           manaCost: '{0}',
-          oracleText: variant === 'experimental' ? 'Draw a card.' : 'You gain 3 life.',
+          oracleText: variant === 'experimental' ? 'Mill a card.' : 'You gain 3 life.',
         }),
         oracleId: 'ceca9ae4-c9ba-4018-b5f2-1288fe8792af',
       };
@@ -319,7 +507,7 @@ describe('primitive evidence and eligibility', { timeout: 30_000 }, () => {
           reviewPath,
           ...(variant === 'missingEvidence' ? [] : ['--primitive-evidence', runDirectory]),
         ],
-        { cwd: root, encoding: 'utf8', timeout: 30_000 },
+        { cwd: root, encoding: 'utf8', timeout: 60_000 },
       );
       if (variant === 'proven') {
         expect(run.status, run.stderr).toBe(0);
@@ -338,7 +526,7 @@ describe('primitive evidence and eligibility', { timeout: 30_000 }, () => {
         );
       }
     },
-    30_000,
+    65_000,
   );
 
   it('executes the actual CI promotion entrypoint against its committed baseline', async () => {
@@ -346,14 +534,14 @@ describe('primitive evidence and eligibility', { timeout: 30_000 }, () => {
     const run = await runCommand(
       'bun',
       ['run', 'primitive-promotions', '--base', base, '--primitive-evidence', runDirectory],
-      { cwd: root, encoding: 'utf8', timeout: 30_000 },
+      { cwd: root, encoding: 'utf8', timeout: 60_000 },
     );
     expect(run.status, run.stderr).toBe(0);
     const result = JSON.parse(run.stdout);
     expect(result.promotions).toEqual([]);
     expect(result.testedTree).toBe(loadPrimitiveEvidence(root, runDirectory).testedTree);
     expect(result.scope).toContain('historical declarations are not current evidence');
-  }, 30_000);
+  }, 65_000);
 
   it('rejects an exact canonical reviewed pin whose primitives are experimental', () => {
     const manifest = parseReviewManifest(
@@ -483,7 +671,9 @@ describe('primitive evidence and eligibility', { timeout: 30_000 }, () => {
   });
 
   it('keeps the registry immutable and requires real permanent-slot scope', () => {
-    const contract = PRIMITIVE_CONTRACTS[0]!;
+    const contract = PRIMITIVE_CONTRACTS.find(
+      (entry) => entry.capability === 'Effect.removeCounters',
+    )!;
     expect(Object.isFrozen(contract)).toBe(true);
     expect(Object.isFrozen(contract.cases)).toBe(true);
     const def = definition();

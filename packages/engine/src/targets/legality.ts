@@ -1,3 +1,4 @@
+import { playerLifeLocked } from '../state/phasing';
 import { spellDefinitionOf } from '../state/queries';
 import type { ObjectId, PlayerId } from '@mtg/shared';
 import type { TargetKind, TargetSpec } from '../cards/ability';
@@ -5,6 +6,7 @@ import { playerFilterAlwaysTrue } from '../cards/effect-reference-contracts';
 import type { SelectorCandidate } from '../cards/selector';
 import { selectMatches, selectorReadsSourcePower } from '../cards/selector';
 import { candidateOf, computeCharacteristics, matchesSelector } from '../effects/continuous';
+import { spellTargetOccurrences } from '../stack/target-occurrences';
 import { offBattlefieldCdaPower } from '../effects/values';
 import { spellManaValue } from '../state/objects';
 import {
@@ -107,6 +109,8 @@ export function targetIsLegal(
   const spec = typeof target === 'string' ? { kind: target } : target;
   const { kind, filter, controller } = spec;
   const { controllerId, eventPlayerId } = context;
+  if (spec.differentPlayerTargetSlots?.some((slot) => context.chosenTargets?.[slot] === candidate))
+    return false;
   const source = {
     cardId: context.sourceCardId ?? '',
     controllerId,
@@ -115,6 +119,8 @@ export function targetIsLegal(
       : {}),
   };
   const matchesController = (id: PlayerId): boolean => {
+    // A slot expanded from a per-player spec (Nils) belongs to one player.
+    if (spec.controllerPlayer !== undefined && id !== spec.controllerPlayer) return false;
     switch (controller) {
       case undefined:
         return true;
@@ -124,6 +130,9 @@ export function targetIsLegal(
         return id !== controllerId && ctx.state.players.some((p) => p.id === id && !p.hasLost);
       case 'eventPlayer':
         return eventPlayerId !== undefined && id === eventPlayerId;
+      // "that player" in a spell cast only during an opponent's turn (Delirium).
+      case 'activePlayer':
+        return id === ctx.state.currentTurnPlayer;
       default:
         return assertNever(controller, 'target controller');
     }
@@ -186,6 +195,19 @@ export function targetIsLegal(
       if (!matchesController(entry.controllerId)) return false;
       if (kind !== 'stackObject' && entry.kind !== 'spell') return false;
       if (kind === 'noncreatureSpell' && isCreatureSpell(ctx, entry)) return false;
+      if (spec.spellHasSingleTarget === true && spellTargetOccurrences(entry).length !== 1)
+        return false;
+      if (spec.spellTargetsPermanentYouControl === true) {
+        const targets = [...entry.targets, ...Object.values(entry.countTargets ?? {}).flat()];
+        if (
+          !targets.some((id) =>
+            ctx.state.battlefield.some(
+              (permanent) => permanent.id === id && permanent.controllerId === controllerId,
+            ),
+          )
+        )
+          return false;
+      }
       return (
         filter === undefined ||
         (entry.kind === 'spell' && spellMatchesSelector(ctx, entry, filter, controllerId))
@@ -198,6 +220,12 @@ export function targetIsLegal(
     return (
       (kind === 'player' || kind === 'anyTarget' || kind === 'playerOrPlaneswalker') &&
       !player.hasLost &&
+      (context.targeting === false || !playerLifeLocked(ctx, player.id)) &&
+      !(
+        context.targeting !== false &&
+        player.id !== controllerId &&
+        ctx.state.playerHexproofTurn?.[player.id] === ctx.state.turnNumber
+      ) &&
       matchesController(player.id) &&
       (filter === undefined || playerFilterAlwaysTrue(filter))
     );
@@ -208,6 +236,9 @@ export function targetIsLegal(
     !permanentMatchesKind(ctx, permanent, kind) ||
     !matchesController(permanent.controllerId)
   )
+    return false;
+  // "Untapped" / "tapped" (CR 608.2b: re-checked on resolution through the same predicate).
+  if (spec.tapState !== undefined && (spec.tapState === 'tapped') !== permanent.tapped)
     return false;
   if (context.targeting !== false) {
     if (hasKeyword(ctx, permanent, 'shroud')) return false;

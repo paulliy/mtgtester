@@ -8,6 +8,8 @@ export interface SourceCastState {
   wasKicked: boolean;
   announcedX: number;
   escaped: boolean;
+  /** Addendum: the resolving spell was cast during its caster's main phase. */
+  castDuringOwnMainPhase?: boolean;
 }
 
 /** Private rules facts for one incarnation; never exposed by player/spectator projections. */
@@ -16,29 +18,61 @@ export interface ObjectFacts extends SourceCastState {
   /** Its name and definition as it last existed: a token that left has no card to ask. */
   name?: string;
   oracleId?: string;
+  /** The rules text and mana cost it showed, a copy's included: its card may show other ones. */
+  oracleText?: string;
+  manaCost?: string | null;
   candidate: SelectorCandidate;
   power: number;
   toughness: number;
   manaValue: number;
   counters: Record<string, number>;
   tapped: boolean;
+  loseAbilities?: boolean;
   hadToAttackThisCombat: boolean;
+  /**
+   * The defending player of the attack these facts captured (or the one retained through its
+   * removal from combat), read directly off `EnginePermanent.attacking`/`lastAttackingDefendingPlayerId`:
+   * `perm.attacking` IS the defending player id for a player and a planeswalker attack alike
+   * (CR 508.1b), so no `candidateOf(includeCombatDefender)` re-read — that would recurse into the
+   * layers. Independent of `candidate`, whose `attackingDefendingPlayerId` stays current-combat
+   * only (CR 506.4): a Kazuul-style recheck must keep the last defender after removal from combat.
+   */
+  lastAttackingDefendingPlayerId?: string;
   enteredTurnNumber: number;
   chosenOption?: string;
+  classLevel?: number;
   /** The permanent's cast record (`CastRecord`), when the spell that became it was cast. */
   castByPlayerId?: string;
   castFromZone?: string;
   manaSpentToCast?: number;
+  /**
+   * The controller of each Aura attached to it as it last existed (CR 603.10a), one entry per
+   * Aura: "each Aura you controlled that was attached to it" (Hateful Eidolon).
+   */
+  attachedAuraControllerIds?: string[];
 }
 
 export function captureObjectFacts(ctx: GameContext, permanent: EnginePermanent): ObjectFacts {
   const chars = computeCharacteristics(ctx, permanent);
   const candidate = candidateOf(ctx, permanent, chars);
   const counters = { ...permanent.counters };
+  const attachedAuraControllerIds = ctx.state.battlefield
+    .filter(
+      (other) =>
+        other.attachedTo === permanent.id &&
+        computeCharacteristics(ctx, other).subtypes.includes('Aura'),
+    )
+    .map((aura) => aura.controllerId);
+  // Outside `computeCharacteristics`/`candidateOf` on purpose: `permanent.attacking` already
+  // names the defending player for both kinds of attack, so capturing here never re-runs layers.
+  const lastAttackingDefendingPlayerId =
+    permanent.attacking ?? permanent.lastAttackingDefendingPlayerId;
   return {
     objectId: permanent.id,
     name: permanent.name,
     oracleId: permanent.oracleId,
+    oracleText: permanent.oracleText,
+    manaCost: permanent.manaCost,
     candidate: {
       ...candidate,
       types: [...candidate.types],
@@ -53,9 +87,12 @@ export function captureObjectFacts(ctx: GameContext, permanent: EnginePermanent)
     manaValue: candidate.manaValue ?? 0,
     counters,
     tapped: permanent.tapped,
+    loseAbilities: chars.loseAbilities,
     hadToAttackThisCombat: permanent.hadToAttackThisCombat === true,
+    ...(lastAttackingDefendingPlayerId === undefined ? {} : { lastAttackingDefendingPlayerId }),
     enteredTurnNumber: permanent.enteredTurnNumber,
     ...(permanent.chosenOption === undefined ? {} : { chosenOption: permanent.chosenOption }),
+    ...(permanent.classLevel === undefined ? {} : { classLevel: permanent.classLevel }),
     ...(permanent.castByPlayerId === undefined
       ? {}
       : {
@@ -66,6 +103,7 @@ export function captureObjectFacts(ctx: GameContext, permanent: EnginePermanent)
     wasKicked: permanent.wasKicked === true || permanent.kicked === true,
     announcedX: permanent.announcedX ?? 0,
     escaped: permanent.escaped === true,
+    ...(attachedAuraControllerIds.length === 0 ? {} : { attachedAuraControllerIds }),
   };
 }
 

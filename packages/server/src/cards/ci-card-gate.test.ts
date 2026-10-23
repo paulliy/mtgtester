@@ -78,6 +78,9 @@ describe('mandatory card CI gate', () => {
     // Coverage PR02 restorations and their Card Test Lab scenarios.
     expect(command).toContain('pr02-card-coverage.test.ts');
     expect(command).toContain('card-test-scenarios-pr02.test.ts');
+    expect(command).toContain('packages/engine/tests/per-player-targets.test.ts');
+    expect(command).toContain('packages/engine/tests/pr09');
+    expect(command).toContain('packages/server/src/cards/pr09');
     expect(command).not.toContain('token-triumph-deck.test.ts');
     expect(command).not.toContain('data/scryfall-oracle-cards.json');
   });

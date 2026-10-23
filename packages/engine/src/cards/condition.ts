@@ -1,6 +1,16 @@
+import type { Step } from '@mtg/shared';
+import { playerLifeLocked } from '../state/phasing';
 import { counterCount } from '../state/counters';
-import { eventObjectFacts, sourceObjectState, eventObjectState } from './source-identity';
+import {
+  eventObjectFacts,
+  eventObjectState,
+  sourceObjectFacts,
+  sourceObjectState,
+  type ObjectFacts,
+} from './source-identity';
 import { assertNever } from '../utils/assert-never';
+import { evaluateValueIn } from '../effects/values';
+import type { Value, ValueScope } from './value';
 /**
  * `Condition` — a predicate over game state, and the counterpart to `Selector` (ADR 0008).
  *
@@ -23,9 +33,9 @@ import { assertNever } from '../utils/assert-never';
  */
 
 import type { GameGen } from '../decisions';
-import { loseLife, payManaCost } from '../effects/resolve';
+import { payLife, payManaCost } from '../effects/resolve';
 import { emit } from '../log/log';
-import { allowanceFor, manaSourcesFor, opponentsOf } from '../state/queries';
+import { allowanceFor, attackedPlaneswalker, manaSourcesFor, opponentsOf } from '../state/queries';
 import type { GameContext } from '../state/types';
 import { canPay, describeManaCost } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
@@ -43,6 +53,9 @@ import type { EnginePermanent } from '../state/types';
 export type Comparison = '>=' | '<=' | '==';
 
 export type Condition =
+  | { kind: 'giftPromised' }
+  | { kind: 'sourceClassLevel'; cmp: Comparison; n: number }
+  | { kind: 'eventPlayerHandSize'; cmp: Comparison; n: number }
   /**
    * "you control two or more other lands" — count the permanents matching `selector` within
    * `scope`, and compare. `scope` narrows *whose* permanents are counted before the selector
@@ -92,6 +105,7 @@ export type Condition =
   | { kind: 'excessDamageDealtTo'; scope: 'opponents' }
   /** "an opponent was dealt 7 or more damage this turn" (Spinerock Knoll). */
   | { kind: 'opponentDealtDamageThisTurn'; minDamage: number }
+  | { kind: 'opponentDiscardedThisTurn' }
   /** "creatures you control have total power 10 or greater" (Mosswort Bridge). */
   | { kind: 'totalCreaturePower'; scope: 'you' | 'opponents' | 'all'; cmp: '>=' | '<='; n: number }
   | { kind: 'isUntapped' }
@@ -104,6 +118,8 @@ export type Condition =
   | { kind: 'sourceWasCast' }
   | { kind: 'announcedXAtLeast'; n: number }
   | { kind: 'escaped' }
+  /** Addendum: "if you cast this spell during your main phase" (Unbreakable Formation). */
+  | { kind: 'castDuringYourMainPhase' }
   | { kind: 'hasCounters'; selector: Selector; counter: string; cmp: '>=' | '<='; n: number }
   | { kind: 'enteredThisTurn' }
   | { kind: 'createdTokenThisTurn' }
@@ -117,6 +133,17 @@ export type Condition =
    * `Selector`. Reuses the selector grammar rather than a bespoke predicate per shape of check.
    */
   | { kind: 'triggerObjectMatches'; selector: Selector }
+  /**
+   * "When this creature dies, if it had counters on it" (Iron Apprentice): the ability's own
+   * source against a selector, read from its last-known facts once it has left (CR 603.10a).
+   */
+  | { kind: 'sourceMatches'; selector: Selector }
+  /**
+   * "if the amount of mana you spent is greater than this creature's power or toughness"
+   * (Increment): two numeric values compared in the trigger's scope, so a cast trigger's mana
+   * spent and the source's current power can be read together.
+   */
+  | { kind: 'compareValues'; left: Value; cmp: Comparison; right: Value }
   /**
    * "Khans — ..." / "Dragons — ..." (Frontier Siege): gates one of two static/triggered
    * clauses by the mode chosen as the permanent entered (`EnginePermanent.chosenOption`),
@@ -141,11 +168,53 @@ export type Condition =
   | { kind: 'notYourTurn' }
   /** "During your turn" — checked against the trigger source's controller. */
   | { kind: 'yourTurn' }
-  /** Attack trigger condition: the defending player has more life than the attacker’s controller. */
+  /** "Cast this spell only during the declare blockers step": the game is in that step now. */
+  | { kind: 'duringStep'; step: Step }
+  /**
+   * "Cast this spell only before attackers are declared": this turn has not yet reached the
+   * declare attackers step of its first combat phase (Siren's Call, Master Warcraft).
+   */
+  | { kind: 'beforeAttackersDeclared' }
+  /** "If it's your main phase" (Moraug): your turn, during either main phase. */
+  | { kind: 'duringYourMainPhase' }
+  /** Dethrone: the defending player has the most life, or is tied for the most life. */
   | { kind: 'attackingPlayerHasMoreLife' }
+  /** The defending player has more life than the ability's controller. */
   | { kind: 'attackingPlayerHasMoreLifeThanYou' }
+  /** Breena: the attacked opponent has more life than another of your opponents. */
+  | { kind: 'defendingOpponentHasMoreLifeThanAnother' }
   /** The attack-trigger object is attacking an opponent of the ability's controller. */
   | { kind: 'triggerObjectAttackingOpponent' }
+  /**
+   * `attackDeclared` firing: at least/most `n` creatures of the group are CURRENTLY attacking the
+   * ability's controller, or (with `planeswalkers`) a planeswalker they control — a creature
+   * removed from combat, or whose planeswalker was, no longer counts (Mangara, Tomik, Ever-Watching
+   * Threshold: "attacking you and/or planeswalkers you control").
+   */
+  | { kind: 'attackGroupAttackingYou'; planeswalkers: boolean; cmp: Comparison; n: number }
+  /** `attackDeclared` firing: none of the declared attackers attacked the ability's controller. */
+  | { kind: 'attackWasNotAtYou' }
+  /**
+   * `attackDeclared` firing with `perDefender`: the attacked player has more life than at least
+   * one other opponent of the ability's controller (Breena). A player who left the game is no one.
+   */
+  | { kind: 'attackedPlayerHasMoreLifeThanAnotherOpponent' }
+  /**
+   * "Whenever a creature an opponent controls attacks, **if you're the defending player**"
+   * (Kazuul, Tyrant of the Cliffs): a genuine intervening-if over the trigger's exact original
+   * event permanent (CR 603.4), checked when the attack triggers and again as the ability
+   * resolves. The defending player is the player attacked, or the controller of the planeswalker
+   * attacked (CMM release notes include the planeswalker's controller; battles stay unsupported
+   * until PR11). The answer follows CR 508.5's retained information, not the current combat
+   * assignment: if the attacker still attacks, its current defending player (`attacking` names
+   * that player for a player and a planeswalker attack alike, CR 508.1b); once combat assignment
+   * for it ended (removed from combat, controller change, phasing, player departure), the
+   * `lastAttackingDefendingPlayerId` retained at that clear, or the captured event. A redirect
+   * to another player keeps the recheck honest — the last-id field follows the redirect, never
+   * the original event — while `SelectorCandidate.attackingDefendingPlayerId` stays strictly
+   * current-combat and the `attackingYouOrYourPlaneswalker` selector keeps its semantics.
+   */
+  | { kind: 'eventObjectDefendingPlayerIsYou' }
   | { kind: 'allOf'; of: Condition[] }
   | { kind: 'anyOf'; of: Condition[] }
   | { kind: 'eventPlayerDrawCount'; cmp: Comparison; n: number }
@@ -199,27 +268,42 @@ export function isChoiceCondition(condition: Condition): boolean {
     case 'opponentCount':
     case 'excessDamageDealtTo':
     case 'opponentDealtDamageThisTurn':
+    case 'opponentDiscardedThisTurn':
     case 'totalCreaturePower':
     case 'isUntapped':
+    case 'giftPromised':
+    case 'sourceClassLevel':
+    case 'eventPlayerHandSize':
     case 'wasKicked':
     case 'sourceWasCast':
     case 'announcedXAtLeast':
     case 'escaped':
+    case 'castDuringYourMainPhase':
     case 'hasCounters':
     case 'enteredThisTurn':
     case 'createdTokenThisTurn':
     case 'hadToAttackThisCombat':
     case 'triggerObjectHadToAttackThisCombat':
     case 'triggerObjectMatches':
+    case 'sourceMatches':
+    case 'compareValues':
     case 'chosenOptionIs':
     case 'controlsYourCommander':
     case 'controlsACommander':
     case 'opponentIsMonarch':
     case 'notYourTurn':
     case 'yourTurn':
+    case 'duringStep':
+    case 'beforeAttackersDeclared':
+    case 'duringYourMainPhase':
     case 'attackingPlayerHasMoreLife':
     case 'attackingPlayerHasMoreLifeThanYou':
+    case 'defendingOpponentHasMoreLifeThanAnother':
     case 'triggerObjectAttackingOpponent':
+    case 'attackGroupAttackingYou':
+    case 'attackWasNotAtYou':
+    case 'attackedPlayerHasMoreLifeThanAnotherOpponent':
+    case 'eventObjectDefendingPlayerIsYou':
     case 'eventPlayerDrawCount':
     case 'notFirstDrawInOwnDrawStep':
     case 'cardsInYourGraveyard':
@@ -263,6 +347,15 @@ export function evaluateCondition(
     controllerId: source.controllerId as PlayerId,
   };
   const sourceState = () => sourceObjectState(ctx, scope);
+  const defenderIdOf = (attacker: EnginePermanent | ObjectFacts | undefined) =>
+    attacker === undefined
+      ? undefined
+      : 'candidate' in attacker
+        ? (attacker.candidate.attackingDefenderId ?? undefined)
+        : // The attacked PLAYER; an attack on their planeswalker attacks no player (CR 508.1b).
+          attacker.attackingPlaneswalker === null
+          ? (attacker.attacking ?? undefined)
+          : undefined;
   switch (condition.kind) {
     case 'castSpellThisTurn': {
       const player = ctx.state.players.find((candidate) => candidate.id === source.controllerId);
@@ -337,16 +430,55 @@ export function evaluateCondition(
       return ctx.state.currentTurnPlayer !== source.controllerId;
     case 'yourTurn':
       return ctx.state.currentTurnPlayer === source.controllerId;
+    case 'duringStep':
+      return ctx.state.step === condition.step;
+    case 'beforeAttackersDeclared':
+      return ctx.state.declareAttackersReachedThisTurn !== true;
+    case 'duringYourMainPhase':
+      return (
+        ctx.state.currentTurnPlayer === source.controllerId &&
+        (ctx.state.phase === 'precombatMain' || ctx.state.phase === 'postcombatMain')
+      );
     case 'triggerObjectAttackingOpponent': {
       if (source.triggerObjectCardId === undefined) return false;
-      const information = eventObjectState(ctx, scope);
-      const attacker =
-        information !== undefined && !('candidate' in information) ? information : undefined;
-      return (
-        attacker !== undefined &&
-        attacker.attacking !== null &&
-        attacker.attacking !== source.controllerId
+      const defenderId = defenderIdOf(eventObjectState(ctx, scope));
+      return opponentsOf(ctx, source.controllerId).some((opponent) => opponent.id === defenderId);
+    }
+    case 'attackGroupAttackingYou': {
+      let count = 0;
+      for (const id of source.attackGroupIds ?? []) {
+        const attacker = ctx.state.battlefield.find((p) => p.id === id);
+        if (attacker === undefined || attacker.attacking !== source.controllerId) continue;
+        if (attacker.attackingPlaneswalker === null) count++;
+        else if (condition.planeswalkers && attackedPlaneswalker(ctx, attacker) !== null) count++;
+      }
+      return compare(count, condition.cmp, condition.n);
+    }
+    case 'attackWasNotAtYou':
+      return source.attackedWatcher !== true;
+    case 'attackedPlayerHasMoreLifeThanAnotherOpponent': {
+      const attacked = ctx.state.players.find((p) => p.id === source.attackedPlayerId);
+      if (attacked === undefined) return false;
+      return opponentsOf(ctx, source.controllerId).some(
+        (other) => other.id !== attacked.id && attacked.life > other.life,
       );
+    }
+    case 'eventObjectDefendingPlayerIsYou': {
+      // Over the trigger's exact original event object only: no `triggerObjectCardId` fallback,
+      // which is how a blinked new incarnation could answer for a departed attacker (CR 400.7,
+      // 603.7). Unbound scope fails closed — an event it was never authored for is not "you".
+      if ((scope.triggerObjectId ?? scope.eventObjectId) === undefined) return false;
+      const eventObject = eventObjectState(ctx, scope);
+      if (eventObject === undefined) return false;
+      const retainedDefender =
+        'candidate' in eventObject
+          ? eventObject.lastAttackingDefendingPlayerId
+          : (eventObject.attacking ?? eventObject.lastAttackingDefendingPlayerId);
+      // The last resort IS the captured original event: the facts the trigger scope took at the
+      // event (refreshed to departure LKI if the attacker left before the recheck, CR 608.2h).
+      const defenderId =
+        retainedDefender ?? scope.triggerObjectFacts?.lastAttackingDefendingPlayerId;
+      return defenderId === source.controllerId;
     }
     case 'opponentCount':
       return compare(opponentsOf(ctx, source.controllerId).length, condition.cmp, condition.n);
@@ -354,6 +486,10 @@ export function evaluateCondition(
       const opponentIds = new Set(opponentsOf(ctx, source.controllerId).map((p) => p.id));
       return ctx.state.excessDamageControllerIds.some((id) => opponentIds.has(id));
     }
+    case 'opponentDiscardedThisTurn':
+      return opponentsOf(ctx, source.controllerId).some(
+        (player) => (player.discardedCardsThisTurn ?? 0) > 0,
+      );
     case 'opponentDealtDamageThisTurn': {
       const opponentIds = new Set(opponentsOf(ctx, source.controllerId).map((p) => p.id));
       return Object.entries(ctx.state.damageDealtToPlayersThisTurn).some(
@@ -380,6 +516,22 @@ export function evaluateCondition(
       const perm = sourceState();
       return perm !== undefined && !perm.tapped;
     }
+    case 'giftPromised':
+      return source.giftPromised === true;
+    case 'sourceClassLevel': {
+      const state = sourceState();
+      return state !== undefined && compare(state.classLevel ?? 1, condition.cmp, condition.n);
+    }
+    case 'eventPlayerHandSize': {
+      if (scope.eventPlayerId === undefined)
+        throw new Error('hand-size condition has no bound event player');
+      const player = ctx.state.players.find((candidate) => candidate.id === scope.eventPlayerId);
+      return (
+        player !== undefined &&
+        !player.hasLost &&
+        compare(player.hand.length, condition.cmp, condition.n)
+      );
+    }
     case 'enteredThisTurn': {
       if (source?.cardId === undefined) return false;
       const perm = sourceState();
@@ -395,11 +547,23 @@ export function evaluateCondition(
       const perm = eventObjectState(ctx, scope);
       return perm?.hadToAttackThisCombat === true;
     }
+    case 'compareValues': {
+      const valueScope = scope as ValueScope;
+      return compare(
+        evaluateValueIn(ctx, condition.left, valueScope),
+        condition.cmp,
+        evaluateValueIn(ctx, condition.right, valueScope),
+      );
+    }
     case 'triggerObjectMatches': {
       const facts = eventObjectFacts(ctx, {
         ...source,
         controllerId: source.controllerId as PlayerId,
       });
+      return facts !== undefined && selectMatches(facts.candidate, condition.selector, source);
+    }
+    case 'sourceMatches': {
+      const facts = sourceObjectFacts(ctx, scope);
       return facts !== undefined && selectMatches(facts.candidate, condition.selector, source);
     }
     case 'chosenOptionIs': {
@@ -427,9 +591,8 @@ export function evaluateCondition(
       // Printed dethrone: "attacks the player with the most life or tied for most life".
       const attacker =
         source.triggerObjectCardId === undefined ? sourceState() : eventObjectState(ctx, scope);
-      if (attacker !== undefined && 'candidate' in attacker) return false;
-      if (attacker?.attacking === null || attacker?.attacking === undefined) return false;
-      const defender = ctx.state.players.find((p) => p.id === attacker.attacking);
+      const defenderId = defenderIdOf(attacker);
+      const defender = ctx.state.players.find((p) => p.id === defenderId && !p.hasLost);
       if (defender === undefined) return false;
       const lives = ctx.state.players
         .filter((player) => !player.hasLost)
@@ -437,11 +600,23 @@ export function evaluateCondition(
       const mostLife = lives.length === 0 ? 0 : Math.max(...lives);
       return defender.life === mostLife;
     }
+    case 'defendingOpponentHasMoreLifeThanAnother': {
+      // The attacked player is an event fact, not the attacker's current combat assignment.
+      const defenderId = scope.triggerObjectFacts?.candidate.attackingDefenderId;
+      const opponents = ctx.state.players.filter(
+        (player) => !player.hasLost && player.id !== source.controllerId,
+      );
+      const defender = opponents.find((player) => player.id === defenderId);
+      return (
+        defender !== undefined &&
+        opponents.some((player) => player.id !== defender.id && defender.life > player.life)
+      );
+    }
     case 'attackingPlayerHasMoreLifeThanYou': {
-      const attacker = sourceState();
-      if (attacker !== undefined && 'candidate' in attacker) return false;
-      if (attacker?.attacking === null || attacker?.attacking === undefined) return false;
-      const defender = ctx.state.players.find((p) => p.id === attacker.attacking);
+      const attacker =
+        source.triggerObjectCardId === undefined ? sourceState() : eventObjectState(ctx, scope);
+      const defenderId = defenderIdOf(attacker);
+      const defender = ctx.state.players.find((p) => p.id === defenderId && !p.hasLost);
       const controller = ctx.state.players.find((p) => p.id === source.controllerId);
       return defender !== undefined && controller !== undefined && defender.life > controller.life;
     }
@@ -478,6 +653,13 @@ export function evaluateCondition(
       );
       return (stackObject?.announcedX ?? 0) >= condition.n;
     }
+    case 'castDuringYourMainPhase':
+      if (source.sourceCastState !== undefined)
+        return source.sourceCastState.castDuringOwnMainPhase === true;
+      return ctx.state.stack.some(
+        (candidate) =>
+          candidate.id === source.objectId && candidate.castDuringOwnMainPhase === true,
+      );
     case 'escaped': {
       if (source.cardId === undefined) return false;
       const permanent = sourceState();
@@ -547,7 +729,8 @@ export function* resolveCondition(
       // this module, and importing back would close a runtime import cycle.
       const player = ctx.state.players.find((p) => p.id === source.controllerId);
       if (player === undefined) throw new Error(`unknown player ${source.controllerId}`);
-      if (condition.n > player.life) return false;
+      if (condition.n > player.life || (condition.n > 0 && playerLifeLocked(ctx, player.id)))
+        return false;
       const outcome = yield {
         decisionType: 'general',
         player: player.id,
@@ -562,7 +745,7 @@ export function* resolveCondition(
         ],
       };
       if (outcome.index !== 0) return false;
-      loseLife(ctx, player, condition.n);
+      payLife(ctx, player, condition.n);
       emit(ctx, 'costPaid', { player: player.id, source: sourceName, life: condition.n });
       return true;
     }
@@ -595,7 +778,16 @@ export function* resolveCondition(
       if (player === undefined) throw new Error(`unknown player ${source.controllerId}`);
       const sources = manaSourcesFor(ctx, player.id);
       const allows = allowanceFor(ctx, player.id, { kind: 'other' });
-      if (!canPay(condition.cost, player.manaEntries, sources, allows, player.life)) return false;
+      if (
+        !canPay(
+          condition.cost,
+          player.manaEntries,
+          sources,
+          allows,
+          playerLifeLocked(ctx, player.id) ? 0 : player.life,
+        )
+      )
+        return false;
       const outcome = yield {
         decisionType: 'general',
         player: player.id,
