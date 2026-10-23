@@ -149,6 +149,7 @@ describe('Marchesa catalog audit containment', () => {
     'Arcane Lighthouse',
     'Spirit Mantle',
     "Angel's Grace",
+    'Smokestack',
 
     'Vindictive Lich',
     'Shadrix Silverquill',

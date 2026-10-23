@@ -415,7 +415,7 @@ const effectExpressions = {
   dealDamageNonbasicLands: {},
   sacrificeOneEachOpponent: { filter: selectorOr('creature', 'nonland') },
   sacrificeEachPlayer: {},
-  eventPlayerSacrificesPermanents: { count: finite },
+  eventPlayerSacrificesPermanents: { count: numericExpression },
   attackingOpponentUntapsNonland: {},
   reanimateEnchantedCardAndAttach: {},
   sacrificeRememberedPermanent: {},
