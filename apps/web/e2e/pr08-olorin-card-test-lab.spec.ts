@@ -64,7 +64,7 @@ for (const [index, id] of OLORIN_SCENARIO_IDS.entries()) {
     ).toBeVisible();
     await expect(p2.locator('.life-badge')).toContainText(index === 0 ? '36' : '40');
     await expect(
-      page.locator('.human-zone .resource').filter({ hasText: 'Graveyard' }),
+      page.locator('.human-zone .meta-item').filter({ hasText: 'Graveyard' }),
     ).toContainText(index === 0 ? '3' : '2');
   });
 }

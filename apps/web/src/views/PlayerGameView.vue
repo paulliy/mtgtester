@@ -13,6 +13,7 @@ import ConfirmDialog from '../components/ConfirmDialog.vue';
 import CopyGameReportButton from '../components/CopyGameReportButton.vue';
 import DecisionPanel from '../components/DecisionPanel.vue';
 import DeckColors from '../components/DeckColors.vue';
+import ManaTaps from '../components/ManaTaps.vue';
 import OpeningHand from '../components/OpeningHand.vue';
 import GlobalCounters from '../components/GlobalCounters.vue';
 import PermanentChip from '../components/PermanentChip.vue';
@@ -205,16 +206,32 @@ function toggleInfo(): void {
 
 /**
  * Each opponent's graveyard and exile fold away behind a "zones" button beside their life, and
- * open by themselves while one of their cards is a target you can pick.
+ * open by themselves while one of their cards is a target you can pick. Every opponent starts
+ * the way you last left one, remembered like the piles.
  */
-const openZoneSeats = ref(new Set<string>());
+const OPPONENT_ZONES_KEY = 'mtg.playerOpponentZonesOpen';
+const zonesByDefault = ref(
+  (() => {
+    try {
+      return localStorage.getItem(OPPONENT_ZONES_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  })(),
+);
+const zoneChoices = ref(new Map<string, boolean>());
 function toggleZones(seat: string): void {
-  const next = new Set(openZoneSeats.value);
-  if (!next.delete(seat)) next.add(seat);
-  openZoneSeats.value = next;
+  const open = !(zoneChoices.value.get(seat) ?? zonesByDefault.value);
+  zoneChoices.value = new Map(zoneChoices.value).set(seat, open);
+  zonesByDefault.value = open;
+  try {
+    localStorage.setItem(OPPONENT_ZONES_KEY, String(open));
+  } catch {
+    // Storage blocked: the toggle still works for this visit.
+  }
 }
 function zonesShown(seat: string): boolean {
-  if (openZoneSeats.value.has(seat)) return true;
+  if (zoneChoices.value.get(seat) ?? zonesByDefault.value) return true;
   const targets = zoneTargetIds.value;
   if (targets.length === 0) return false;
   const seatCards = [
@@ -821,24 +838,22 @@ const manaActionsBySource = computed(() => {
   return bySource;
 });
 /**
- * The mana a stacked tile of identical lands can make: that of its first member that can, so
- * clicking "×6 Forest" taps one untapped Forest.
+ * The mana each tile of yours can make by hand, lands and the rest of your board (a Sol Ring, a
+ * mana creature, a Treasure) alike: that of its first member that can, so clicking "×6 Forest"
+ * taps one untapped Forest.
  */
-const landManaByGroup = computed(() => {
+const manaByGroup = computed(() => {
   const byGroup = new Map<string, LegalAction[]>();
-  for (const group of humanLandGroups.value) {
+  const yours = human.value === null ? [] : permanentsFor(human.value.seat);
+  for (const group of [...humanBoardGroups.value, ...humanLandGroups.value]) {
     const key = stackKey(group.permanent);
-    const member = humanLands.value.find(
-      (land) => stackKey(land) === key && manaActionsBySource.value.has(land.id),
+    const member = yours.find(
+      (permanent) => stackKey(permanent) === key && manaActionsBySource.value.has(permanent.id),
     );
     byGroup.set(group.permanent.id, member ? manaActionsBySource.value.get(member.id)! : []);
   }
   return byGroup;
 });
-function manaSymbols(action: LegalAction): string[] {
-  const symbols = actionData(action, 'symbols');
-  return Array.isArray(symbols) ? symbols.filter((s): s is string => typeof s === 'string') : [];
-}
 function tapForMana(action: LegalAction): void {
   store.submitPlayerAction(action.id);
 }
@@ -848,7 +863,7 @@ function tapForMana(action: LegalAction): void {
  * flow, with the mana buttons on the tile alongside.
  */
 function clickLand(id: ObjectId): void {
-  const mana = landManaByGroup.value.get(id) ?? [];
+  const mana = manaByGroup.value.get(id) ?? [];
   const hasOther = sourceActions.value.some((action) => sourceId(action) === id);
   if (mana.length === 1 && !hasOther) {
     tapForMana(mana[0]!);
@@ -1112,9 +1127,9 @@ function hideCardPreview(): void {
   cardPreview.hide();
 }
 
-/** The highest tax on any of your commanders — what recasting the next one adds. */
-const commanderTax = computed(() =>
-  Math.max(0, ...(human.value?.commanders ?? []).map((commander) => commander.taxGeneric)),
+/** Each commander's own tax: partners are taxed separately (CR 903.8). */
+const taxedCommanders = computed(() =>
+  (human.value?.commanders ?? []).filter((commander) => commander.taxGeneric > 0),
 );
 
 function resourceSummary(pool: ManaPool): string {
@@ -1437,8 +1452,8 @@ function abandon(): void {
                 >{{ opponent.label }}</strong
               >
               <DeckColors :commanders="opponent.commanders" />
-              <span class="meta-item" title="Cards in hand"
-                ><b>hand</b> {{ opponent.handSize }}</span
+              <span class="meta-item opp-meta" title="Cards in hand"
+                >{{ opponent.handSize }} in hand</span
               >
               <span class="meta-item" title="Cards in library"
                 ><b>lib</b> {{ opponent.librarySize }}</span
@@ -1601,10 +1616,11 @@ function abandon(): void {
             <span class="meta-item"><b>Exile</b> {{ humanExile.length }}</span>
             <span class="spacer" />
             <span
-              v-if="commanderTax > 0"
+              v-for="commander in taxedCommanders"
+              :key="commander.cardId"
               class="cmdr-tax"
-              :title="`Commander tax: casting your commander costs {${commanderTax}} more`"
-              >+{{ commanderTax }}</span
+              :title="`Commander tax: casting ${commander.name} costs {${commander.taxGeneric}} more`"
+              >+{{ commander.taxGeneric }}</span
             >
             <span
               v-if="state.monarchSeat === human.seat"
@@ -1645,6 +1661,7 @@ function abandon(): void {
                   'chosen-target': isChosenTarget(group.permanent.id),
                   'payment-source': isPaymentSource(group.permanent.id),
                   actionable: actionableSourceIds.has(group.permanent.id),
+                  'makes-mana': (manaByGroup.get(group.permanent.id) ?? []).length > 0,
                 }"
                 draggable="true"
                 @dragstart="dragStart(group.permanent.id, $event)"
@@ -1657,6 +1674,11 @@ function abandon(): void {
                   :permanent="group.permanent"
                   :count="group.count"
                   :name-by-id="nameById"
+                />
+                <ManaTaps
+                  v-if="(manaByGroup.get(group.permanent.id) ?? []).length > 0"
+                  :actions="manaByGroup.get(group.permanent.id)!"
+                  @tap="tapForMana"
                 />
               </div>
             </TransitionGroup>
@@ -1692,7 +1714,7 @@ function abandon(): void {
                       'chosen-target': isChosenTarget(group.permanent.id),
                       'payment-source': isPaymentSource(group.permanent.id),
                       actionable: actionableSourceIds.has(group.permanent.id),
-                      'makes-mana': (landManaByGroup.get(group.permanent.id) ?? []).length > 0,
+                      'makes-mana': (manaByGroup.get(group.permanent.id) ?? []).length > 0,
                     }"
                     draggable="true"
                     @dragstart="dragStart(group.permanent.id, $event)"
@@ -1707,28 +1729,11 @@ function abandon(): void {
                       :name-by-id="nameById"
                     />
                     <!-- Tap it for mana by hand: one button per kind of mana it can make. -->
-                    <div
-                      v-if="(landManaByGroup.get(group.permanent.id) ?? []).length > 0"
-                      class="mana-taps"
-                    >
-                      <button
-                        v-for="action in landManaByGroup.get(group.permanent.id)"
-                        :key="action.id"
-                        type="button"
-                        class="mana-tap"
-                        :title="`Tap for ${action.description.split(': add ')[1] ?? 'mana'}`"
-                        :aria-label="`Tap ${action.description}`"
-                        @click.stop="tapForMana(action)"
-                      >
-                        <span
-                          v-for="(symbol, i) in manaSymbols(action)"
-                          :key="i"
-                          class="mana-dot"
-                          :class="`mana-${symbol}`"
-                          >{{ symbol }}</span
-                        >
-                      </button>
-                    </div>
+                    <ManaTaps
+                      v-if="(manaByGroup.get(group.permanent.id) ?? []).length > 0"
+                      :actions="manaByGroup.get(group.permanent.id)!"
+                      @tap="tapForMana"
+                    />
                   </div>
                 </TransitionGroup>
               </template>
@@ -2687,36 +2692,9 @@ button.selected,
 .pile-close:hover {
   color: var(--text);
 }
-/* A land you can tap by hand: its mana buttons sit over the art's bottom-left corner. */
+/* A permanent you can tap by hand: its mana buttons (ManaTaps) sit over its tile. */
 .object.makes-mana {
   position: relative;
-}
-.mana-taps {
-  position: absolute;
-  left: 4px;
-  bottom: 4px;
-  display: flex;
-  gap: 2px;
-}
-.mana-tap {
-  display: inline-flex;
-  gap: 1px;
-  padding: 2px;
-  border: 0;
-  border-radius: 999px;
-  background: rgb(28 25 23 / 0.75);
-  cursor: pointer;
-}
-.mana-tap:hover {
-  background: var(--accent);
-}
-.mana-tap .mana-dot {
-  width: 16px;
-  height: 16px;
-  font-size: 0.6rem;
-}
-.mana-tap .mana-dot:first-of-type {
-  margin-left: 0;
 }
 /* Graveyard and exile piles at the row's right end. */
 .piles {

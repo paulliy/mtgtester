@@ -53,8 +53,9 @@ function moveCommanderPreview(event: MouseEvent): void {
 function hideCommanderPreview(): void {
   cardPreview.hide();
 }
-const commanderTax = computed(() =>
-  props.seat.commanders.reduce((total, commander) => total + commander.taxGeneric, 0),
+/** Each commander's own tax: partners are taxed separately (CR 903.8). */
+const taxedCommanders = computed(() =>
+  props.seat.commanders.filter((commander) => commander.taxGeneric > 0),
 );
 const ZONES_CAP = 6;
 
@@ -141,10 +142,11 @@ onBeforeUnmount(() => unregisterAnchor(props.seat.seat));
       >
       <span class="spacer" />
       <span
-        v-if="commanderTax > 0"
+        v-for="commander in taxedCommanders"
+        :key="commander.cardId"
         class="cmdr-tax"
-        :title="`Commander tax: the next cast from the command zone costs {${commanderTax}} more`"
-        >+{{ commanderTax }}</span
+        :title="`Commander tax: casting ${commander.name} from the command zone costs {${commander.taxGeneric}} more`"
+        >+{{ commander.taxGeneric }}</span
       >
       <span
         v-if="isMonarch"

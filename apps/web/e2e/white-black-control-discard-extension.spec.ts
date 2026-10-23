@@ -162,7 +162,7 @@ test('Waste Not draws exactly one card for an opponent noncreature nonland disca
   ).toBeVisible();
   await expect(permanent(page, 'Zombie')).toHaveCount(0);
   await expect(
-    page.locator('.human-zone .resource').filter({ hasText: 'Mana ready' }),
+    page.locator('#top-bar-status .resource').filter({ hasText: 'Mana ready' }),
   ).toContainText('1');
 });
 

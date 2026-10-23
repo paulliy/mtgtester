@@ -46,7 +46,10 @@ async function passUntil(page: Page, target: Locator): Promise<void> {
 test('Library of Leng keeps the normal eight-card hand through cleanup', async ({ page }) => {
   const title = 'Library of Leng: keep eight cards through production cleanup';
   await runScenario(page, title);
+  // Player options live in the Settings menu in the top bar.
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByLabel('Land drop reminder').uncheck();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
 
   const library = handCard(page, 'Library of Leng');
   await expect(library).toHaveClass(/actionable/, { timeout: 15_000 });

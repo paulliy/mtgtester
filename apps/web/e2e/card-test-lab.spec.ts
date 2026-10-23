@@ -622,8 +622,6 @@ test('Swords to Plowshares: exile and gain life', async ({ page }) => {
   await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
   const p2 = page.locator('.opponent[data-seat="P2"]');
   await expect(p2).toContainText('44');
-  // An opponent's zones fold away behind the zones button beside their life.
-  await p2.locator('.zones-toggle').click();
   await expect(
     p2.locator('.zone', { hasText: 'Exile' }).getByRole('img', { name: 'Lab Ox', exact: true }),
   ).toBeVisible();
@@ -1784,7 +1782,7 @@ async function runArcaneDenial(page: Page, drawCount: 0 | 2): Promise<void> {
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(handCard(page, 'Caster Secret Draw')).toBeVisible();
   const p4 = page.locator('.opponent').filter({ hasText: 'P4' });
-  await expect(p4.locator('.meta-item', { hasText: 'hand' })).toHaveText(`hand ${drawCount}`);
+  await expect(p4).toContainText(`${drawCount} in hand`);
   await expect(page.getByText('Target Secret Alpha')).toHaveCount(0);
   await expect(page.getByText('Target Secret Beta')).toHaveCount(0);
   await expect(page.getByText(/Lab Pending Spell is countered by Arcane Denial/i)).toBeVisible();
@@ -2658,8 +2656,8 @@ test('Loran of the Third Path: you and target opponent each draw', async ({ page
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText(/Hand\s*1/).first()).toBeVisible();
-  await expect(page.locator('.opponent').filter({ hasText: 'P3' })).toContainText('hand 1');
-  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('hand 0');
+  await expect(page.locator('.opponent').filter({ hasText: 'P3' })).toContainText('1 in hand');
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('0 in hand');
 });
 
 test('Rishkar, Peema Renegade: two counters, then countered creatures tap for G', async ({
@@ -2869,7 +2867,7 @@ test('Aether Channeler: return another target nonland permanent', async ({ page 
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
-  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('hand 1');
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('1 in hand');
   await expect(permanent(page, 'Aether Channeler')).toBeVisible();
 });
 
@@ -2887,7 +2885,7 @@ test('Aether Channeler: create a 1/1 white Bird with flying', async ({ page }) =
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(permanent(page, 'Bird')).toHaveCount(1);
   await expect(permanent(page, 'Lab Ox')).toBeVisible();
-  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('hand 0');
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('0 in hand');
   await expect(page.getByText(/Hand\s*0/).first()).toBeVisible();
 });
 
@@ -3129,8 +3127,6 @@ test('Public zones: reanimate an opponent’s creature', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await runScenario(page, 'Public zones: reanimate an opponent’s creature');
   const p2 = page.locator('.opponent[data-seat="P2"]');
-  // An opponent's zones fold away behind the zones button beside their life.
-  await p2.locator('.zones-toggle').click();
   const graveyard = p2.locator('.zone', { hasText: 'Graveyard' });
   const ox = graveyard.locator('.zone-card-thumb').filter({
     has: page.getByRole('img', { name: 'Lab Ox', exact: true }),
@@ -4961,8 +4957,6 @@ test("Canoptek Tomb Sentinel: unearth it to exile P2's Lab Ox", async ({ page })
       .locator('.zones-strip .zone', { hasText: 'Exile' })
       .getByRole('img', { name: 'Canoptek Tomb Sentinel', exact: true }),
   ).toBeVisible();
-  // An opponent's zones fold away behind the zones button beside their life.
-  await page.locator('.opponent[data-seat="P2"] .zones-toggle').click();
   await expect(
     page
       .locator('.opponent[data-seat="P2"] .zone', { hasText: 'Exile' })

@@ -279,6 +279,7 @@ function onLeave(): void {
           v-if="isToken"
           class="token-label"
           :class="{
+            pt: ptText !== null,
             'is-name': ptText === null,
             'on-art': artSrc !== null,
             'flash-damage': damageFlash === 'damage',
@@ -327,7 +328,7 @@ function onLeave(): void {
     </div>
     <!-- The tile shows these states without words; this text keeps them for anyone who can't see
          or hover the card. -->
-    <span v-if="permanent.tapped" class="tap-badge visually-hidden">TAP</span>
+    <span v-if="permanent.tapped" class="tap-badge visually-hidden" title="Tapped">TAP</span>
     <span v-if="permanent.damageMarked > 0" class="dmg visually-hidden">
       −{{ permanent.damageMarked }}
     </span>
@@ -658,7 +659,7 @@ function onLeave(): void {
   bottom: 6px;
   right: 6px;
 }
-.pt {
+.corner .pt {
   padding: 0.05rem 0.35rem;
   border-radius: 5px;
   background: rgb(11 13 17 / 0.88);
@@ -678,7 +679,7 @@ function onLeave(): void {
 .token-label:not(.on-art) .hurt {
   color: var(--danger);
 }
-.pt.flash-damage,
+.corner .pt.flash-damage,
 .token-label.flash-damage {
   animation: flash 0.8s ease-out;
 }
