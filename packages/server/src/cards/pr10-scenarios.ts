@@ -210,6 +210,14 @@ export const COMMONER_HEALER = lab(
 
 export const TRINKET = lab('PR10 Lab Trinket', 'Artifact', '{1}', '', []);
 
+export const REANIMATE = lab(
+  'PR10 Lab Reanimate',
+  'Sorcery',
+  '{1}{B}',
+  'Return target creature card from your graveyard to the battlefield.',
+  ['B'],
+);
+
 const SUPPORT_CARDS = [SHOCK, ZAP, TWIN, BEAR, RED_BEAR, BRUTE, COMMANDER, CINDER];
 
 /**
@@ -1073,6 +1081,203 @@ const DEFS: Def[] = [
       p1Hand: [],
       p1Field: [pin('Saheeli, Sublime Artificer').card, TRINKET, BEAR],
       fieldOptions: { 'Saheeli, Sublime Artificer': { counters: { loyalty: 5 } } },
+    },
+  ),
+
+  // PR10.17 Scute Swarm
+  entry(
+    'scute-swarm',
+    'Scute Swarm',
+    'insect',
+    'Scute Swarm: landfall makes an Insect with fewer than six lands',
+    [1],
+    ['Play the Swamp from your hand with two other lands in play.'],
+    'You control three lands, so landfall creates a 1/1 green Insect token.',
+    { p1Hand: [SWAMP], p1Field: [pin('Scute Swarm').card], p1Lands: mountains(2) },
+  ),
+  entry(
+    'scute-swarm',
+    'Scute Swarm',
+    'copy',
+    'Scute Swarm: landfall copies it with six or more lands',
+    [1],
+    ['Play the Swamp from your hand with five other lands in play.'],
+    'You control six lands, so landfall creates a token that is a copy of Scute Swarm.',
+    { p1Hand: [SWAMP], p1Field: [pin('Scute Swarm').card], p1Lands: mountains(5) },
+  ),
+
+  // PR10.16 Council of Reeds
+  entry(
+    'council-of-reeds',
+    'Council of Reeds',
+    'legend-rule',
+    'Council of Reeds: the legend rule does not apply to your creatures',
+    [1],
+    ['Cast a second PR10 Lab Commander while one is already in play.'],
+    'Both legendary Commanders stay on the battlefield.',
+    {
+      p1Hand: [COMMANDER],
+      p1Field: [pin('Council of Reeds').card, COMMANDER],
+      p1Lands: mountains(2),
+    },
+  ),
+  entry(
+    'council-of-reeds',
+    'Council of Reeds',
+    'combat-copy',
+    'Council of Reeds: a copy at the beginning of combat after a noncreature spell',
+    [2],
+    ['Cast PR10 Lab Zap at P2, then move to combat.'],
+    'At the beginning of combat you create a token that is a copy of Council of Reeds.',
+    {
+      p1Hand: [ZAP],
+      p1Field: [pin('Council of Reeds').card],
+      p1Lands: mountains(1),
+      prepared: { continueThroughCombat: true },
+    },
+  ),
+  entry(
+    'council-of-reeds',
+    'Council of Reeds',
+    'combat-no-copy',
+    'Council of Reeds: no copy without a noncreature spell this turn',
+    [2],
+    ['Cast PR10 Lab Red Bear, a creature spell, then move to combat.'],
+    'A creature spell does not count, so no token is created.',
+    {
+      p1Hand: [RED_BEAR],
+      p1Field: [pin('Council of Reeds').card],
+      p1Lands: mountains(1),
+      prepared: { continueThroughCombat: true },
+    },
+  ),
+
+  // PR10.18 Twilight Diviner
+  entry(
+    'twilight-diviner',
+    'Twilight Diviner',
+    'surveil',
+    'Twilight Diviner: surveil 2 when it enters',
+    [1],
+    ['Cast Twilight Diviner and look at the top two cards of your library.'],
+    'You surveil 2 as Twilight Diviner enters.',
+    {
+      p1Hand: [pin('Twilight Diviner').card],
+      p1Lands: ['Swamp', 'Swamp', 'Swamp'],
+      p1Library: [BEAR, RED_BEAR],
+    },
+  ),
+  entry(
+    'twilight-diviner',
+    'Twilight Diviner',
+    'from-graveyard',
+    'Twilight Diviner: copy a creature that entered from a graveyard',
+    [2],
+    ['Cast PR10 Lab Reanimate to return PR10 Lab Bear from your graveyard.'],
+    'The Bear entered from a graveyard, so you also create a token that is a copy of it.',
+    {
+      p1Hand: [REANIMATE],
+      p1Field: [pin('Twilight Diviner').card],
+      p1Graveyard: [BEAR],
+      p1Lands: ['Swamp', 'Swamp'],
+    },
+  ),
+  entry(
+    'twilight-diviner',
+    'Twilight Diviner',
+    'from-hand',
+    'Twilight Diviner: no copy for a creature cast from hand',
+    [2],
+    ['Cast PR10 Lab Bear from your hand.'],
+    'The Bear did not enter from a graveyard, so no token is created.',
+    {
+      p1Hand: [BEAR],
+      p1Field: [pin('Twilight Diviner').card],
+      p1Lands: ['Forest', 'Forest'],
+    },
+  ),
+
+  // PR10.07 Saheeli, Radiant Creator
+  entry(
+    'saheeli-radiant-creator',
+    'Saheeli, Radiant Creator',
+    'energy',
+    'Saheeli, Radiant Creator: energy for an artifact spell',
+    [1],
+    ['Cast PR10 Lab Trinket, an artifact spell.'],
+    'You get an energy counter.',
+    { p1Hand: [TRINKET], p1Field: [pin('Saheeli, Radiant Creator').card], p1Lands: mountains(1) },
+  ),
+  entry(
+    'saheeli-radiant-creator',
+    'Saheeli, Radiant Creator',
+    'combat-copy',
+    'Saheeli, Radiant Creator: pay three energy for a hasty 5/5 copy',
+    [2],
+    ['Move to combat, pay {E}{E}{E}, and target PR10 Lab Brute.'],
+    'A token copy of PR10 Lab Brute is created as a hasty 5/5 artifact creature, to be sacrificed at end step.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Saheeli, Radiant Creator').card, BRUTE],
+      prepared: { continueThroughCombat: true, energy: [{ playerId: 'P1', amount: 3 }] },
+    },
+  ),
+  entry(
+    'saheeli-radiant-creator',
+    'Saheeli, Radiant Creator',
+    'not-enough-energy',
+    'Saheeli, Radiant Creator: two energy is not enough',
+    [2],
+    ['Move to combat with only two energy.'],
+    'There is nothing to pay, so no token is created.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Saheeli, Radiant Creator').card, BRUTE],
+      prepared: { continueThroughCombat: true, energy: [{ playerId: 'P1', amount: 2 }] },
+    },
+  ),
+  entry(
+    'saheeli-radiant-creator',
+    'Saheeli, Radiant Creator',
+    'decline',
+    'Saheeli, Radiant Creator: decline to pay',
+    [2],
+    ['Move to combat and decline to pay {E}{E}{E}.'],
+    'You keep your energy and no token is created.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Saheeli, Radiant Creator').card, BRUTE],
+      prepared: { continueThroughCombat: true, energy: [{ playerId: 'P1', amount: 3 }] },
+    },
+  ),
+
+  // PR10.22 Mocking Doppelganger
+  entry(
+    'mocking-doppelganger',
+    'Mocking Doppelganger',
+    'copy',
+    'Mocking Doppelganger: enter as a copy of an opponent’s creature',
+    [1, 2],
+    ['Cast Mocking Doppelganger and choose to copy the creature P3 controls.'],
+    'It enters as a 4/4 PR10 Lab Brute that you control.',
+    {
+      p1Hand: [pin('Mocking Doppelganger').card],
+      p1Lands: ['Island', 'Island', 'Island', 'Island'],
+      p3Field: [BRUTE],
+    },
+  ),
+  entry(
+    'mocking-doppelganger',
+    'Mocking Doppelganger',
+    'decline',
+    'Mocking Doppelganger: decline to copy',
+    [2],
+    ['Cast Mocking Doppelganger and decline to copy.'],
+    'It enters as a 0/0 and dies, and nothing is goaded.',
+    {
+      p1Hand: [pin('Mocking Doppelganger').card],
+      p1Lands: ['Island', 'Island', 'Island', 'Island'],
+      p3Field: [BRUTE],
     },
   ),
 ];

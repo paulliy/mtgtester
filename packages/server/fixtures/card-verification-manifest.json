@@ -728,15 +728,43 @@
     },
     "05d7222b-cc08-4f1f-8e35-6058599572ba": {
       "name": "Twilight Diviner",
-      "oracleSha256": "974f403c489c84c5ea45ed5afaf9dc63cb5aea548c77a149546b2805ace309c5",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "8cb9a3f6392ac36ec4284df171a42f02873b495754ca2f156053cb4478cf43a4",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-twilight-diviner-pinned-oracle-supported"],
       "clauses": [
         {
+          "id": "pr10-twilight-diviner-clause-1",
+          "oracleText": "When this creature enters, surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
+          "implementation": ["TriggerSpec.etb", "Effect.surveil 2"],
+          "engineTestIds": ["pr10-twilight-diviner-pinned-oracle-supported"],
+          "viewerScenarioIds": ["pr10-twilight-diviner-viewer-surveil"]
+        },
+        {
+          "id": "pr10-twilight-diviner-clause-2",
           "oracleText": "Whenever one or more other creatures you control enter, if they entered or were cast from a graveyard, create a token that's a copy of one of them. This ability triggers only once each turn.",
-          "implementation": ["explicitly unsupported; graveyard origin and once-each-turn omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "TriggerSpec.creaturesEnter",
+            "entered or cast from graveyard",
+            "once each turn",
+            "Effect.createTokenCopy"
+          ],
+          "engineTestIds": [
+            "pr10-twilight-diviner-entered-from-graveyard",
+            "pr10-twilight-diviner-cast-from-graveyard",
+            "pr10-twilight-diviner-from-hand",
+            "pr10-twilight-diviner-once-each-turn",
+            "pr10-twilight-diviner-opponents-creature"
+          ],
+          "viewerScenarioIds": [
+            "pr10-twilight-diviner-viewer-from-graveyard",
+            "pr10-twilight-diviner-viewer-from-hand"
+          ]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr10-twilight-diviner-viewer-surveil",
+        "pr10-twilight-diviner-viewer-from-graveyard",
+        "pr10-twilight-diviner-viewer-from-hand"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -4727,15 +4755,47 @@
     },
     "20f602b3-814f-406c-b7eb-2d1fc98f8cf1": {
       "name": "Saheeli, Radiant Creator",
-      "oracleSha256": "c3c52f8f4ae7aef91f0fda26d391ddcb45e58756f6b37adfb85e48c84f27af06",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "5fcdbdb1b0038c993dbfaa0905e47e68330a156d06911f6f550ed0be28799102",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-saheeli-radiant-creator-pinned-oracle-supported"],
       "clauses": [
         {
+          "id": "pr10-saheeli-radiant-creator-clause-1",
+          "oracleText": "Whenever you cast an Artificer or artifact spell, you get {E} (an energy counter).",
+          "implementation": ["TriggerSpec.onCast Artificer or artifact", "Effect.gainEnergy"],
+          "engineTestIds": [
+            "pr10-saheeli-radiant-creator-pinned-oracle-supported",
+            "pr10-saheeli-radiant-creator-energy"
+          ],
+          "viewerScenarioIds": ["pr10-saheeli-radiant-creator-viewer-energy"]
+        },
+        {
+          "id": "pr10-saheeli-radiant-creator-clause-2",
           "oracleText": "At the beginning of combat on your turn, you may pay {E}{E}{E}. When you do, create a token that's a copy of target permanent you control, except it's a 5/5 artifact creature in addition to its other types and has haste. Sacrifice it at the beginning of the next end step.",
-          "implementation": ["explicitly unsupported; copy target chosen before energy payment"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "TriggerSpec.beginningOfCombat you",
+            "optional payEnergy 3",
+            "reflexive trigger",
+            "Effect.createTokenCopy 5/5 artifact haste",
+            "delayed sacrifice at end step"
+          ],
+          "engineTestIds": [
+            "pr10-saheeli-radiant-creator-combat-copy",
+            "pr10-saheeli-radiant-creator-not-enough-energy",
+            "pr10-saheeli-radiant-creator-decline"
+          ],
+          "viewerScenarioIds": [
+            "pr10-saheeli-radiant-creator-viewer-combat-copy",
+            "pr10-saheeli-radiant-creator-viewer-not-enough-energy",
+            "pr10-saheeli-radiant-creator-viewer-decline"
+          ]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr10-saheeli-radiant-creator-viewer-energy",
+        "pr10-saheeli-radiant-creator-viewer-combat-copy",
+        "pr10-saheeli-radiant-creator-viewer-not-enough-energy",
+        "pr10-saheeli-radiant-creator-viewer-decline"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -15384,6 +15444,111 @@
       "viewerScenarioIds": [
         "pr10-mirage-mirror-viewer-becomes-copy",
         "pr10-mirage-mirror-viewer-insufficient-cost"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "aa854d50-444c-49d9-bfb1-5476b33c1c0b": {
+      "name": "Scute Swarm",
+      "oracleSha256": "dd1103eff5ecbf92809aa5e26608cd346bdb97c2e89103a538717fe66668ff4e",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-scute-swarm-pinned-oracle-supported"],
+      "clauses": [
+        {
+          "id": "pr10-scute-swarm-clause-1",
+          "oracleText": "Landfall — Whenever a land you control enters, create a 1/1 green Insect creature token. If you control six or more lands, create a token that's a copy of this creature instead.",
+          "implementation": [
+            "TriggerSpec.landEnters you",
+            "Effect.createToken Insect",
+            "Effect.createTokenCopy",
+            "land count read on resolution"
+          ],
+          "engineTestIds": [
+            "pr10-scute-swarm-pinned-oracle-supported",
+            "pr10-scute-swarm-insect",
+            "pr10-scute-swarm-copy",
+            "pr10-scute-swarm-your-lands-only"
+          ],
+          "viewerScenarioIds": ["pr10-scute-swarm-viewer-insect", "pr10-scute-swarm-viewer-copy"]
+        }
+      ],
+      "viewerScenarioIds": ["pr10-scute-swarm-viewer-insect", "pr10-scute-swarm-viewer-copy"],
+      "gameplayAiScenarioIds": []
+    },
+    "33fa949c-f29e-4a98-9381-ecfa9e5c3f6d": {
+      "name": "Council of Reeds",
+      "oracleSha256": "577296054aa293bdd2a53ec72c948a29dcbf2c6c698ec8faf8b5a157d8e64267",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-council-of-reeds-pinned-oracle-supported"],
+      "clauses": [
+        {
+          "id": "pr10-council-of-reeds-clause-1",
+          "oracleText": "The \"legend rule\" doesn't apply to creatures you control.",
+          "implementation": ["RuleStatic.legendRuleExempt", "Selector.creature you"],
+          "engineTestIds": [
+            "pr10-council-of-reeds-pinned-oracle-supported",
+            "pr10-council-of-reeds-legend-rule",
+            "pr10-council-of-reeds-legend-rule-scope"
+          ],
+          "viewerScenarioIds": ["pr10-council-of-reeds-viewer-legend-rule"]
+        },
+        {
+          "id": "pr10-council-of-reeds-clause-2",
+          "oracleText": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, create a token that's a copy of Council of Reeds.",
+          "implementation": [
+            "TriggerSpec.beginningOfCombat you",
+            "intervening if noncreature spell cast",
+            "Effect.createTokenCopy source"
+          ],
+          "engineTestIds": ["pr10-council-of-reeds-combat-copy"],
+          "viewerScenarioIds": [
+            "pr10-council-of-reeds-viewer-combat-copy",
+            "pr10-council-of-reeds-viewer-combat-no-copy"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr10-council-of-reeds-viewer-legend-rule",
+        "pr10-council-of-reeds-viewer-combat-copy",
+        "pr10-council-of-reeds-viewer-combat-no-copy"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3b8eb602-01e8-432e-8dfc-8fdb62c3aa43": {
+      "name": "Mocking Doppelganger",
+      "oracleSha256": "5586cda77b3fd989481053908308ffdaf61d37d44354edff342c3ae06dcf63c1",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-mocking-doppelganger-pinned-oracle-supported"],
+      "clauses": [
+        {
+          "id": "pr10-mocking-doppelganger-clause-1",
+          "oracleText": "Flash",
+          "implementation": ["keyword flash (interpreted)"],
+          "engineTestIds": ["pr10-mocking-doppelganger-pinned-oracle-supported"],
+          "viewerScenarioIds": ["pr10-mocking-doppelganger-viewer-copy"]
+        },
+        {
+          "id": "pr10-mocking-doppelganger-clause-2",
+          "oracleText": "You may have this creature enter as a copy of a creature an opponent controls, except it has \"Other creatures with the same name as this creature are goaded.\" (They attack each combat if able and attack a player other than you if able.)",
+          "implementation": [
+            "CardDefinition.entersAsCopy opponent creature",
+            "copiable goad static for same name"
+          ],
+          "engineTestIds": [
+            "pr10-mocking-doppelganger-opponents-only",
+            "pr10-mocking-doppelganger-copy",
+            "pr10-mocking-doppelganger-goads-same-name",
+            "pr10-mocking-doppelganger-decline",
+            "pr10-mocking-doppelganger-copiable-exception"
+          ],
+          "viewerScenarioIds": [
+            "pr10-mocking-doppelganger-viewer-copy",
+            "pr10-mocking-doppelganger-viewer-decline"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr10-mocking-doppelganger-viewer-copy",
+        "pr10-mocking-doppelganger-viewer-decline"
       ],
       "gameplayAiScenarioIds": []
     }

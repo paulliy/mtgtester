@@ -31,7 +31,7 @@ function realCard(name: string): OracleCard {
   return card;
 }
 
-const CATALOG_CONTAINED = new Set(['Saheeli, Radiant Creator', 'Duplicant', 'Reality Shift']);
+const CATALOG_CONTAINED = new Set(['Duplicant', 'Reality Shift']);
 
 function livingDeckCards(): { commander: OracleCard; cards: OracleCard[] } {
   const commanderName = livingParsed.commanderNames[0];

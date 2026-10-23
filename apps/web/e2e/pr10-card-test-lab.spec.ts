@@ -121,6 +121,19 @@ async function orderTriggersIfAsked(page: Page, source: string): Promise<void> {
   await passUntil(page, first);
   await first.click();
 }
+/** How many copies of `name` a seat controls, counting stacked groups ("×2") as their size. */
+async function copiesOf(page: Page, seat: string, name: string): Promise<number> {
+  const groups = permanent(page, seat, name);
+  let total = 0;
+  for (let index = 0; index < (await groups.count()); index += 1) {
+    const badge = /×(\d+)/.exec(await groups.nth(index).innerText());
+    total += badge ? Number(badge[1]) : 1;
+  }
+  return total;
+}
+const expectCopies = (page: Page, seat: string, name: string, count: number) =>
+  expect.poll(() => copiesOf(page, seat, name), { timeout: 15_000 }).toBe(count);
+
 const logLine = (page: Page, text: string | RegExp): Locator =>
   page.locator('.log').getByText(text).first();
 
@@ -572,6 +585,95 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     // The Trinket is now a second Bear, so the two stack into one group.
     await expect(permanent(page, 'P1', 'PR10 Lab Bear')).toContainText('×2');
     await expect(permanent(page, 'P1', 'PR10 Lab Trinket')).toHaveCount(0);
+  },
+  'pr10-scute-swarm-viewer-insect': async (page) => {
+    await hand(page, 'Swamp').click();
+    await passUntil(page, permanent(page, 'P1', 'Insect'));
+    await expectCopies(page, 'P1', 'Scute Swarm', 1);
+  },
+  'pr10-scute-swarm-viewer-copy': async (page) => {
+    await hand(page, 'Swamp').click();
+    await passUntil(page, logLine(page, /Scute Swarm — .* resolves/));
+    await expectCopies(page, 'P1', 'Scute Swarm', 2);
+    await expectCopies(page, 'P1', 'Insect', 0);
+  },
+  'pr10-council-of-reeds-viewer-legend-rule': async (page) => {
+    await cast(page, 'PR10 Lab Commander');
+    await passUntil(page, logLine(page, /PR10 Lab Commander resolves/));
+    await expectCopies(page, 'P1', 'PR10 Lab Commander', 2);
+    await expect(page.locator('.log')).not.toContainText(/legend rule/i);
+  },
+  'pr10-council-of-reeds-viewer-combat-copy': async (page) => {
+    await cast(page, 'PR10 Lab Zap', ['P2']);
+    await passUntil(page, logLine(page, /Council of Reeds — .* resolves/));
+    await expectCopies(page, 'P1', 'Council of Reeds', 2);
+  },
+  'pr10-council-of-reeds-viewer-combat-no-copy': async (page) => {
+    await cast(page, 'PR10 Lab Red Bear');
+    await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+    await expectCopies(page, 'P1', 'Council of Reeds', 1);
+  },
+  'pr10-twilight-diviner-viewer-surveil': async (page) => {
+    await cast(page, 'Twilight Diviner');
+    await passUntil(page, decisionButton(page, 'Put into graveyard'));
+    await decisionButton(page, 'Put into graveyard').click();
+    await passUntil(page, decisionButton(page, 'Keep on top'));
+    await decisionButton(page, 'Keep on top').click();
+    await passUntil(page, logLine(page, /surveils 2/));
+    await expect(page.locator('.human-zone').getByText(/Graveyard\s*1/)).toBeVisible();
+  },
+  'pr10-twilight-diviner-viewer-from-graveyard': async (page) => {
+    await startCast(page, 'PR10 Lab Reanimate');
+    const bear = page.locator('.human-zone .zone-card-thumb.targetable').first();
+    await expect(bear).toBeVisible();
+    await bear.click();
+    await confirm(page);
+    await passUntil(page, logLine(page, /Twilight Diviner — .* resolves/));
+    await expectCopies(page, 'P1', 'PR10 Lab Bear', 2);
+  },
+  'pr10-twilight-diviner-viewer-from-hand': async (page) => {
+    await cast(page, 'PR10 Lab Bear');
+    await passUntil(page, logLine(page, /PR10 Lab Bear resolves/));
+    await expectCopies(page, 'P1', 'PR10 Lab Bear', 1);
+  },
+  'pr10-saheeli-radiant-creator-viewer-energy': async (page) => {
+    await cast(page, 'PR10 Lab Trinket');
+    await passUntil(page, logLine(page, /You get \{E\}/));
+    await expect(page.getByText('ENERGY', { exact: false }).first()).toBeVisible();
+  },
+  'pr10-saheeli-radiant-creator-viewer-combat-copy': async (page) => {
+    await passUntil(page, decisionButton(page, 'Pay no energy'));
+    await page.getByRole('button', { name: 'Pay', exact: true }).click();
+    const brute = permanent(page, 'P1', 'PR10 Lab Brute').first();
+    await expect(brute).toHaveClass(/targetable/);
+    await brute.click();
+    await confirm(page);
+    await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+    await expectCopies(page, 'P1', 'PR10 Lab Brute', 2);
+  },
+  'pr10-saheeli-radiant-creator-viewer-not-enough-energy': async (page) => {
+    await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+    await expect(decisionButton(page, 'Pay no energy')).toHaveCount(0);
+    await expectCopies(page, 'P1', 'PR10 Lab Brute', 1);
+  },
+  'pr10-saheeli-radiant-creator-viewer-decline': async (page) => {
+    await passUntil(page, decisionButton(page, 'Pay no energy'));
+    await decisionButton(page, 'Pay no energy').click();
+    await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+    await expectCopies(page, 'P1', 'PR10 Lab Brute', 1);
+  },
+  'pr10-mocking-doppelganger-viewer-copy': async (page) => {
+    await cast(page, 'Mocking Doppelganger');
+    await passUntil(page, decisionButton(page, 'Enter normally'));
+    await page.getByRole('button', { name: 'Copy', exact: true }).click();
+    await passUntil(page, permanent(page, 'P1', 'PR10 Lab Brute'));
+  },
+  'pr10-mocking-doppelganger-viewer-decline': async (page) => {
+    await cast(page, 'Mocking Doppelganger');
+    await passUntil(page, decisionButton(page, 'Enter normally'));
+    await decisionButton(page, 'Enter normally').click();
+    await passUntil(page, logLine(page, /Mocking Doppelganger.*dies|dies/i));
+    await expect(permanent(page, 'P1', 'Mocking Doppelganger')).toHaveCount(0);
   },
 };
 

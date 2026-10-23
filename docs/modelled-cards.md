@@ -3,7 +3,7 @@
 Generated from the engine-supported card pool.
 This is an interpreter-support inventory. Card behavior verification is tracked separately in the card verification manifest.
 
-**Total**: 6504 modeled non-land cards
+**Total**: 6509 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -1127,6 +1127,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Cosmogrand Zenith
 - Costly Plunder
 - Council of Advisors
+- Council of Reeds
 - Council's Judgment
 - Counsel of the Soratami
 - Counterspell
@@ -3569,6 +3570,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Mob Rule
 - Mobilization
 - Mobilize
+- Mocking Doppelganger
 - Mocking Sprite
 - Mogg Raider
 - Mogg Sentry
@@ -4646,6 +4648,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Sagu Archer
 - Sagu Mauler
 - Sagu Wildling // Roost Seek
+- Saheeli, Radiant Creator
 - Saheeli, Sublime Artificer
 - Sai, Master Thopterist
 - Sailor of Means
@@ -4779,6 +4782,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Scryb Sprites
 - Sculpting Steel
 - Scute Mob
+- Scute Swarm
 - Scuzzback Marauders
 - Scythe Leopard
 - Sea Eagle
@@ -5864,6 +5868,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Tusked Colossodon
 - Tuskguard Captain
 - Tuvasa the Sunlit
+- Twilight Diviner
 - Twin-Silk Spider
 - Twinblade Blessing
 - Twinflame Tyrant

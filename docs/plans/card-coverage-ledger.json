@@ -729,20 +729,6 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
-    "oracleId": "33fa949c-f29e-4a98-9381-ecfa9e5c3f6d",
-    "name": "Council of Reeds",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"The \"legend rule\" doesn't apply to creatures you control.\"",
-      "unrecognized rules text: \"At the beginning of combat on your turn, if you've cast a noncreature spell this turn, create a token that's a copy of ~.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "acf4d685-a718-42f7-9a7a-dee069ae8db2",
     "name": "Council's Judgment",
     "package": "PR08.15",
@@ -2369,19 +2355,6 @@
     "snapshotStatus": "override deleted; override-defs.json regenerated and reviewed"
   },
   {
-    "oracleId": "3b8eb602-01e8-432e-8dfc-8fdb62c3aa43",
-    "name": "Mocking Doppelganger",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"You may have this creature enter as a copy of a creature an opponent controls, except it has \"Other creatures with the same name as this creature are goaded.\"\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "fe83087d-c6c1-40be-9295-baaa1c6b2db1",
     "name": "Mondrak, Glory Dominus",
     "package": "W2",
@@ -3085,19 +3058,6 @@
     "interpretationTests": ["packages/engine/tests/w1-remaining-cards.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
-  },
-  {
-    "oracleId": "aa854d50-444c-49d9-bfb1-5476b33c1c0b",
-    "name": "Scute Swarm",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Whenever a land you control enters, create a 1/1 green Insect creature token. If you control six or more lands, create a token that's a copy of this creature instead.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
   },
   {
     "oracleId": "96312b75-3110-4506-9f95-0c6c17d9da11",
@@ -5076,6 +5036,81 @@
       "apps/web/e2e/pr10-card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr10-animation.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "aa854d50-444c-49d9-bfb1-5476b33c1c0b",
+    "name": "Scute Swarm",
+    "package": "PR10.23",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-token-copy.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-token-copy.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "33fa949c-f29e-4a98-9381-ecfa9e5c3f6d",
+    "name": "Council of Reeds",
+    "package": "PR10.27",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-token-copy.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-token-copy.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "05d7222b-cc08-4f1f-8e35-6058599572ba",
+    "name": "Twilight Diviner",
+    "package": "PR10.31",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-token-copy.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-token-copy.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "20f602b3-814f-406c-b7eb-2d1fc98f8cf1",
+    "name": "Saheeli, Radiant Creator",
+    "package": "PR10.16",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-token-copy.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-token-copy.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "3b8eb602-01e8-432e-8dfc-8fdb62c3aa43",
+    "name": "Mocking Doppelganger",
+    "package": "PR10.22",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-mocking-doppelganger.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-mocking-doppelganger.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   }
 ]

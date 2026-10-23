@@ -135,6 +135,9 @@ describe('Marchesa catalog audit containment', () => {
     'Atarka Monument',
     'Sarkhan, the Dragonspeaker',
     'Saheeli, Sublime Artificer',
+    // PR10 token-copy regressions (copies of permanents and spells' sources).
+    'Saheeli, Radiant Creator',
+    'Twilight Diviner',
 
     'Vindictive Lich',
     'Shadrix Silverquill',

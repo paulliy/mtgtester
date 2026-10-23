@@ -690,8 +690,56 @@
   {
     "oracleId": "05d7222b-cc08-4f1f-8e35-6058599572ba",
     "name": "Twilight Diviner",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever one or more other creatures you control enter, if they entered or were cast from a graveyard, create a token that's a copy of one of them. This ability triggers only once each turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Create a token that's a copy of one of them",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createTokenCopyOfEventGroupMember"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "aggregate": true,
+            "entersFrom": {
+              "orCastFrom": true,
+              "zone": "graveyard"
+            },
+            "oncePerTurn": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "other"
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "06f42f49-32f0-413b-8437-b8efa4d647c2",
@@ -2408,8 +2456,91 @@
   {
     "oracleId": "20f602b3-814f-406c-b7eb-2d1fc98f8cf1",
     "name": "Saheeli, Radiant Creator",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of combat on your turn, you may pay {E}{E}{E}. When you do, create a token that's a copy of target permanent you control, except it's a 5/5 artifact creature in addition to its other types and has haste. Sacrifice it at the beginning of the next end step.",
+      "Whenever you cast an Artificer or artifact spell, you get {E} ."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You get {E}",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "gainEnergy"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "you",
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Artificer"
+                },
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                }
+              ]
+            },
+            "when": "castsSpell"
+          }
+        },
+        {
+          "description": "You may pay {E}{E}{E}. When you do, copy target permanent you control",
+          "effects": [
+            {
+              "exact": true,
+              "min": 3,
+              "op": "mayPayEnergyThenReflexive",
+              "then": {
+                "description": "Create a token that's a copy of target permanent you control, except it's a 5/5 artifact creature with haste. Sacrifice it at the beginning of the next end step",
+                "effects": [
+                  {
+                    "addKeywords": [
+                      "haste"
+                    ],
+                    "addTypes": [
+                      "Artifact",
+                      "Creature"
+                    ],
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "createTokenCopyOf",
+                    "powerOverride": 5,
+                    "ref": 0,
+                    "sacrificeAt": "endStep",
+                    "toughnessOverride": 5
+                  }
+                ],
+                "kind": "triggered",
+                "targets": [
+                  {
+                    "controller": "you",
+                    "kind": "permanent"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "2143f413-7baa-4fd6-a7ca-32f52bfa553f",
@@ -3917,6 +4048,52 @@
     }
   },
   {
+    "oracleId": "33fa949c-f29e-4a98-9381-ecfa9e5c3f6d",
+    "name": "Council of Reeds",
+    "handledLines": [
+      "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, create a token that's a copy of ~.",
+      "The \"legend rule\" doesn't apply to creatures you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "type",
+            "value": "Creature"
+          },
+          "kind": "legendRuleDoesntApply"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Create a token that's a copy of Council of Reeds",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createTokenCopyOf",
+              "ref": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "category": "noncreature",
+              "cmp": ">=",
+              "kind": "castSpellThisTurn",
+              "n": 1
+            },
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "3494a575-f68e-4e78-9f6b-142cd8a0edea",
     "name": "Combustible Gearhulk",
     "handledLines": [
@@ -4485,6 +4662,53 @@
         ],
         "kind": "spell",
         "targets": []
+      }
+    }
+  },
+  {
+    "oracleId": "3b8eb602-01e8-432e-8dfc-8fdb62c3aa43",
+    "name": "Mocking Doppelganger",
+    "handledLines": [
+      "You may have this creature enter as a copy of a creature an opponent controls, except it has \"Other creatures with the same name as this creature are goaded.\""
+    ],
+    "def": {
+      "entersAsCopy": {
+        "addStaticEffects": [
+          {
+            "affects": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "sameNameAsSource"
+                }
+              ]
+            },
+            "op": {
+              "addGoad": true,
+              "layer": 6
+            }
+          }
+        ],
+        "selector": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "controller",
+              "who": "opponents"
+            }
+          ]
+        }
       }
     }
   },
@@ -11886,6 +12110,90 @@
           "trigger": {
             "subject": {
               "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "aa854d50-444c-49d9-bfb1-5476b33c1c0b",
+    "name": "Scute Swarm",
+    "handledLines": [
+      "Whenever a land you control enters, create a 1/1 green Insect creature token. If you control six or more lands, create a token that's a copy of this creature instead."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Create a 1/1 green Insect, or a token that's a copy of this creature if you control six or more lands",
+          "effects": [
+            {
+              "condition": {
+                "cmp": ">=",
+                "kind": "countPermanents",
+                "n": 6,
+                "scope": "you",
+                "selector": {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              },
+              "else": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "createToken",
+                  "spec": {
+                    "colors": [
+                      "G"
+                    ],
+                    "name": "Insect",
+                    "power": 1,
+                    "subtypes": [
+                      "Insect"
+                    ],
+                    "toughness": 1,
+                    "typeLine": "Creature — Insect",
+                    "types": [
+                      "Creature"
+                    ]
+                  }
+                }
+              ],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "createTokenCopyOf",
+                  "ref": "source"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
             },
             "when": "enters"
           }
@@ -23383,6 +23691,52 @@
     }
   },
   {
+    "oracleId": "oracle-council-of-reeds",
+    "name": "Council of Reeds",
+    "handledLines": [
+      "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, create a token that's a copy of ~.",
+      "The \"legend rule\" doesn't apply to creatures you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "type",
+            "value": "Creature"
+          },
+          "kind": "legendRuleDoesntApply"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Create a token that's a copy of Council of Reeds",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createTokenCopyOf",
+              "ref": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "category": "noncreature",
+              "cmp": ">=",
+              "kind": "castSpellThisTurn",
+              "n": 1
+            },
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-council-s-judgment",
     "name": "Council's Judgment",
     "handledLines": [
@@ -29831,6 +30185,53 @@
     }
   },
   {
+    "oracleId": "oracle-mocking-doppelganger",
+    "name": "Mocking Doppelganger",
+    "handledLines": [
+      "You may have this creature enter as a copy of a creature an opponent controls, except it has \"Other creatures with the same name as this creature are goaded.\""
+    ],
+    "def": {
+      "entersAsCopy": {
+        "addStaticEffects": [
+          {
+            "affects": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "sameNameAsSource"
+                }
+              ]
+            },
+            "op": {
+              "addGoad": true,
+              "layer": 6
+            }
+          }
+        ],
+        "selector": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "controller",
+              "who": "opponents"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
     "oracleId": "oracle-mondrak-glory-dominus",
     "name": "Mondrak, Glory Dominus",
     "handledLines": [
@@ -33205,8 +33606,91 @@
   {
     "oracleId": "oracle-saheeli-radiant-creator",
     "name": "Saheeli, Radiant Creator",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of combat on your turn, you may pay {E}{E}{E}. When you do, create a token that's a copy of target permanent you control, except it's a 5/5 artifact creature in addition to its other types and has haste. Sacrifice it at the beginning of the next end step.",
+      "Whenever you cast an Artificer or artifact spell, you get {E} ."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You get {E}",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "gainEnergy"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "you",
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Artificer"
+                },
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                }
+              ]
+            },
+            "when": "castsSpell"
+          }
+        },
+        {
+          "description": "You may pay {E}{E}{E}. When you do, copy target permanent you control",
+          "effects": [
+            {
+              "exact": true,
+              "min": 3,
+              "op": "mayPayEnergyThenReflexive",
+              "then": {
+                "description": "Create a token that's a copy of target permanent you control, except it's a 5/5 artifact creature with haste. Sacrifice it at the beginning of the next end step",
+                "effects": [
+                  {
+                    "addKeywords": [
+                      "haste"
+                    ],
+                    "addTypes": [
+                      "Artifact",
+                      "Creature"
+                    ],
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "createTokenCopyOf",
+                    "powerOverride": 5,
+                    "ref": 0,
+                    "sacrificeAt": "endStep",
+                    "toughnessOverride": 5
+                  }
+                ],
+                "kind": "triggered",
+                "targets": [
+                  {
+                    "controller": "you",
+                    "kind": "permanent"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-saheeli-sublime-artificer",
@@ -33682,6 +34166,90 @@
           "value": "Artifact"
         }
       }
+    }
+  },
+  {
+    "oracleId": "oracle-scute-swarm",
+    "name": "Scute Swarm",
+    "handledLines": [
+      "Whenever a land you control enters, create a 1/1 green Insect creature token. If you control six or more lands, create a token that's a copy of this creature instead."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Create a 1/1 green Insect, or a token that's a copy of this creature if you control six or more lands",
+          "effects": [
+            {
+              "condition": {
+                "cmp": ">=",
+                "kind": "countPermanents",
+                "n": 6,
+                "scope": "you",
+                "selector": {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              },
+              "else": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "createToken",
+                  "spec": {
+                    "colors": [
+                      "G"
+                    ],
+                    "name": "Insect",
+                    "power": 1,
+                    "subtypes": [
+                      "Insect"
+                    ],
+                    "toughness": 1,
+                    "typeLine": "Creature — Insect",
+                    "types": [
+                      "Creature"
+                    ]
+                  }
+                }
+              ],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "createTokenCopyOf",
+                  "ref": "source"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
+        }
+      ]
     }
   },
   {
@@ -37112,8 +37680,56 @@
   {
     "oracleId": "oracle-twilight-diviner",
     "name": "Twilight Diviner",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever one or more other creatures you control enter, if they entered or were cast from a graveyard, create a token that's a copy of one of them. This ability triggers only once each turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Create a token that's a copy of one of them",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createTokenCopyOfEventGroupMember"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "aggregate": true,
+            "entersFrom": {
+              "orCastFrom": true,
+              "zone": "graveyard"
+            },
+            "oncePerTurn": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "other"
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-twitching-doll",

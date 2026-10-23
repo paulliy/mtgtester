@@ -81,7 +81,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Out of the Tombs',
       'Trazyn the Infinite',
       // Catalog audit batch 1 (PR10 restored the retarget, copy and ability-stack cards).
-      'Twilight Diviner',
       'Smokestack',
       "Angel's Grace",
       'Nighthawk Scavenger',

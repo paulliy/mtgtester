@@ -64,6 +64,12 @@ const CARD_NAMES = [
   'Sarkhan, the Dragonspeaker',
   'Mirage Mirror',
   'Saheeli, Sublime Artificer',
+  // Token copies.
+  'Scute Swarm',
+  'Council of Reeds',
+  'Twilight Diviner',
+  'Saheeli, Radiant Creator',
+  'Mocking Doppelganger',
 ];
 
 const SHOCK_AT_P3 = (card: string): Plan => ({
@@ -259,6 +265,41 @@ const PLANS: Record<string, Plan> = {
         targets: ['PR10 Lab Trinket', 'PR10 Lab Bear'],
       },
     ],
+  }, // PR10.17 Scute Swarm
+  'pr10-scute-swarm-viewer-insect': { casts: [{ name: 'Swamp', kind: 'play' }] },
+  'pr10-scute-swarm-viewer-copy': { casts: [{ name: 'Swamp', kind: 'play' }] },
+  // PR10.16 Council of Reeds
+  'pr10-council-of-reeds-viewer-legend-rule': { casts: [{ name: 'PR10 Lab Commander' }] },
+  'pr10-council-of-reeds-viewer-combat-copy': {
+    casts: [{ name: 'PR10 Lab Zap', targets: ['P2'] }],
+  },
+  'pr10-council-of-reeds-viewer-combat-no-copy': { casts: [{ name: 'PR10 Lab Red Bear' }] },
+  // PR10.18 Twilight Diviner
+  'pr10-twilight-diviner-viewer-surveil': {
+    casts: [{ name: 'Twilight Diviner' }],
+    picks: [/^Put PR10 Lab Bear into your graveyard$/],
+  },
+  'pr10-twilight-diviner-viewer-from-graveyard': {
+    casts: [{ name: 'PR10 Lab Reanimate' }],
+  },
+  'pr10-twilight-diviner-viewer-from-hand': { casts: [{ name: 'PR10 Lab Bear' }] },
+  // PR10.07 Saheeli, Radiant Creator
+  'pr10-saheeli-radiant-creator-viewer-energy': { casts: [{ name: 'PR10 Lab Trinket' }] },
+  'pr10-saheeli-radiant-creator-viewer-combat-copy': {
+    casts: [],
+    picks: [/^Pay 3 energy$/],
+    triggerTargets: [['PR10 Lab Brute']],
+  },
+  'pr10-saheeli-radiant-creator-viewer-not-enough-energy': { casts: [] },
+  'pr10-saheeli-radiant-creator-viewer-decline': { casts: [], picks: [/^Pay no energy$/] },
+  // PR10.22 Mocking Doppelganger
+  'pr10-mocking-doppelganger-viewer-copy': {
+    casts: [{ name: 'Mocking Doppelganger' }],
+    picks: [/^Copy PR10 Lab Brute$/],
+  },
+  'pr10-mocking-doppelganger-viewer-decline': {
+    casts: [{ name: 'Mocking Doppelganger' }],
+    picks: [/^Enter normally$/],
   },
 };
 
@@ -625,6 +666,56 @@ describe('PR10 Card Test Lab scenarios', () => {
       copies: 0,
       events: { becomeCopy: 1 },
     },
+    'pr10-scute-swarm-viewer-insect': { lives: {}, copies: 0, events: { tokenCreated: 1 } },
+    'pr10-scute-swarm-viewer-copy': { lives: {}, copies: 0, events: { tokenCreated: 1 } },
+    'pr10-council-of-reeds-viewer-legend-rule': {
+      lives: {},
+      copies: 0,
+      events: { sbaLegendRule: 0, castSpell: 1 },
+    },
+    'pr10-council-of-reeds-viewer-combat-copy': {
+      lives: {},
+      copies: 0,
+      events: { tokenCreated: 1 },
+    },
+    'pr10-council-of-reeds-viewer-combat-no-copy': {
+      lives: {},
+      copies: 0,
+      events: { tokenCreated: 0 },
+    },
+    'pr10-twilight-diviner-viewer-surveil': { lives: {}, copies: 0, events: { surveil: 1 } },
+    'pr10-twilight-diviner-viewer-from-graveyard': {
+      lives: {},
+      copies: 0,
+      events: { tokenCreated: 1, graveyardToBattlefield: 1 },
+    },
+    'pr10-twilight-diviner-viewer-from-hand': {
+      lives: {},
+      copies: 0,
+      events: { tokenCreated: 0 },
+    },
+    'pr10-saheeli-radiant-creator-viewer-energy': { lives: {}, copies: 0, events: { energy: 1 } },
+    'pr10-saheeli-radiant-creator-viewer-combat-copy': {
+      lives: {},
+      copies: 0,
+      events: { tokenCreated: 1, energy: 1 },
+    },
+    'pr10-saheeli-radiant-creator-viewer-not-enough-energy': {
+      lives: {},
+      copies: 0,
+      events: { tokenCreated: 0, energy: 0 },
+    },
+    'pr10-saheeli-radiant-creator-viewer-decline': {
+      lives: {},
+      copies: 0,
+      events: { tokenCreated: 0, energy: 0 },
+    },
+    'pr10-mocking-doppelganger-viewer-copy': { lives: {}, copies: 0, events: { becomeCopy: 1 } },
+    'pr10-mocking-doppelganger-viewer-decline': {
+      lives: {},
+      copies: 0,
+      events: { becomeCopy: 0, sbaCreatureDies: 1 },
+    },
   };
 
   it('has expectations for every scenario', () => {
@@ -778,5 +869,61 @@ describe('PR10 Card Test Lab scenarios', () => {
     expect(trinket).toHaveLength(2);
     const [servo] = onBattlefield(run('pr10-saheeli-sublime-artificer-viewer-servo'), 'Servo');
     expect([servo!.power, servo!.toughness]).toEqual([1, 1]);
+  });
+  it('Scute Swarm makes an Insect below six lands and a copy of itself from six', () => {
+    const insect = run('pr10-scute-swarm-viewer-insect');
+    const [bug] = onBattlefield(insect, 'Insect');
+    expect([bug!.power, bug!.toughness]).toEqual([1, 1]);
+    expect(onBattlefield(insect, 'Scute Swarm')).toHaveLength(1);
+    expect(onBattlefield(run('pr10-scute-swarm-viewer-copy'), 'Scute Swarm')).toHaveLength(2);
+    expect(onBattlefield(run('pr10-scute-swarm-viewer-copy'), 'Insect')).toHaveLength(0);
+  });
+
+  it('Council of Reeds keeps both legends and copies itself only after a noncreature spell', () => {
+    expect(
+      onBattlefield(run('pr10-council-of-reeds-viewer-legend-rule'), 'PR10 Lab Commander'),
+    ).toHaveLength(2);
+    expect(
+      onBattlefield(run('pr10-council-of-reeds-viewer-combat-copy'), 'Council of Reeds'),
+    ).toHaveLength(2);
+    expect(
+      onBattlefield(run('pr10-council-of-reeds-viewer-combat-no-copy'), 'Council of Reeds'),
+    ).toHaveLength(1);
+  });
+
+  it('Twilight Diviner surveils into the graveyard, and copies only a graveyard arrival', () => {
+    const surveil = run('pr10-twilight-diviner-viewer-surveil');
+    const p1 = surveil.state.players.find((player) => player.id === 'P1')!;
+    expect(p1.graveyard.some((card) => card.name === 'PR10 Lab Bear')).toBe(true);
+    expect(
+      onBattlefield(run('pr10-twilight-diviner-viewer-from-graveyard'), 'PR10 Lab Bear'),
+    ).toHaveLength(2);
+    expect(
+      onBattlefield(run('pr10-twilight-diviner-viewer-from-hand'), 'PR10 Lab Bear'),
+    ).toHaveLength(1);
+  });
+
+  it('Saheeli, Radiant Creator copies a permanent as a hasty 5/5 only when the energy is paid', () => {
+    const paid = onBattlefield(
+      run('pr10-saheeli-radiant-creator-viewer-combat-copy'),
+      'PR10 Lab Brute',
+    );
+    expect(paid).toHaveLength(2);
+    expect(paid.map((card) => [card.power, card.toughness]).sort()).toEqual([
+      [4, 4],
+      [5, 5],
+    ]);
+    for (const id of ['not-enough-energy', 'decline'])
+      expect(
+        onBattlefield(run(`pr10-saheeli-radiant-creator-viewer-${id}`), 'PR10 Lab Brute'),
+      ).toHaveLength(1);
+  });
+
+  it('Mocking Doppelganger enters as a copy of the opponent creature, or as itself', () => {
+    const [copy] = onBattlefield(run('pr10-mocking-doppelganger-viewer-copy'), 'PR10 Lab Brute');
+    expect([copy!.power, copy!.toughness]).toEqual([4, 4]);
+    expect(
+      onBattlefield(run('pr10-mocking-doppelganger-viewer-decline'), 'Mocking Doppelganger'),
+    ).toHaveLength(0);
   });
 });
