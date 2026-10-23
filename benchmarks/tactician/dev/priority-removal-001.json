@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "caseId": "priority-removal-001",
-  "contentHash": "0c533cc35a27a1b777a9f91a3312871277703881b90da16bcefc1a82b7b050bf",
+  "contentHash": "56658adf96188eba40e2a0c0acf6c01b383bad1fb556292826bbfacba74ced3b",
   "role": "tactician",
   "categories": ["interaction", "targeting", "small-board"],
   "sourceGroup": "starter-synthetic-001",
@@ -10,8 +10,8 @@
   "phase": "precombatMain",
   "step": null,
   "eventSequence": 42,
-  "supportedEngineVersion": "910c06323b12e8e842d8f436d7770f3bb85d4524a015152783bfba2b6bc9921a",
-  "supportedCardDefinitionHash": "d48e79a9be64d58389694c3cb6b5da98269af4802209b5d507b665a3c03d958b",
+  "supportedEngineVersion": "0b2201662923779d34330f1efd85c2024c35e1600102f6301afbc6cbcb2fda8f",
+  "supportedCardDefinitionHash": "295005420f08839968189e4abd3272ffdaed672e0b72c5d30366554975f04510",
   "input": {
     "request": {
       "requestId": "starter-tactical-001",
