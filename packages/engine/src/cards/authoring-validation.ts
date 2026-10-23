@@ -201,11 +201,12 @@ function validateTargets(targets: TargetSpec[], path: string, issues: AuthoringI
       });
     if (
       spec.spellHasSingleTarget !== undefined &&
-      (spec.spellHasSingleTarget !== true || !['spell', 'noncreatureSpell'].includes(spec.kind))
+      (spec.spellHasSingleTarget !== true ||
+        !['spell', 'noncreatureSpell', 'stackObject'].includes(spec.kind))
     )
       issues.push({
         path: `${at}.spellHasSingleTarget`,
-        message: 'single target restriction requires a stack spell target and true flag',
+        message: 'single target restriction requires a stack target and true flag',
       });
     if (
       spec.controller !== undefined &&

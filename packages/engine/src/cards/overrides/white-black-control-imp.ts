@@ -15,7 +15,7 @@ export function registerWhiteBlackControlImpOverrides(): void {
       spellAbility: spell({
         targets: chosen.targets,
         effects: [
-          { op: 'changeSingleSpellTarget', target: chosen.slot.spell },
+          { op: 'changeSingleTarget', target: chosen.slot.spell },
           { op: 'loseLife', amount: { kind: 'manaValueOfTarget', target: chosen.slot.spell } },
         ],
         description: 'Change target single-target spell and lose life equal to its mana value',

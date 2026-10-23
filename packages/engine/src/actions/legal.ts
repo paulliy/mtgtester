@@ -389,6 +389,16 @@ export function costReductionFor(
     if (entry.controllerId !== casterId) continue;
     if (entry.static.yourTurnOnly === true && ctx.state.currentTurnPlayer !== casterId) continue;
     if (entry.static.excludesSelf === true && entry.sourceCardId === castCardId) continue;
+    // "This spell costs {3} less to cast if you control a creature with power 4 or greater"
+    // (Bolt Bend): checked as the total cost is determined (CR 601.2f).
+    if (
+      entry.static.condition !== undefined &&
+      !evaluateCondition(ctx, entry.static.condition, {
+        cardId: entry.sourceCardId,
+        controllerId: entry.controllerId,
+      })
+    )
+      continue;
     if (entry.static.filter !== undefined) {
       // "Spells you cast of the CHOSEN type cost {1} less" (Cloud Key): the filter reads
       // the reduction's own SOURCE's chosen option, not the spell being cast — so `source`

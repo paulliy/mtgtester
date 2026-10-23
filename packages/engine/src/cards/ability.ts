@@ -441,6 +441,7 @@ export interface TargetSpec {
   differentPlayerTargetSlots?: number[];
   /** A stack spell must currently target a permanent controlled by you. */
   spellTargetsPermanentYouControl?: true;
+  /** A stack spell or ability has exactly one targeting occurrence (CR 115.9a, Bolt Bend). */
   spellHasSingleTarget?: true;
   /**
    * "target creature you control" / "target creature an opponent controls". Omitted for an
@@ -606,7 +607,10 @@ export type Effect =
   | { op: 'grantProtectionEachUntilEot'; selector: Selector; colors: Color[] }
   | { op: 'grantChosenColorProtectionUntilEot'; target: EffectRef }
   | { op: 'returnSpellToOwnerHand'; target: EffectRef }
-  | { op: 'changeSingleSpellTarget'; target: EffectRef }
+  /** "Change the target of target spell or ability with a single target" (CR 115.7a). */
+  | { op: 'changeSingleTarget'; target: EffectRef }
+  /** "You may choose new targets for target spell or ability" (CR 115.7d); not a copy. */
+  | { op: 'chooseNewTargets'; target: EffectRef }
   /** Exile the exact graveyard incarnation that fired this card-zone trigger. */
   | { op: 'exileGraveyardEventCard' }
   | { op: 'sacrificeTargetPlayerCreature'; target: EffectRef }
@@ -798,7 +802,8 @@ export type Effect =
       /** "... by sources you don't control", checked as the damage would be dealt. */
       sources?: 'youDontControl';
     }
-  | { op: 'copyTargetSpell'; target: number }
+  /** "Copy target … spell" (CR 707.10); `newTargets`: "you may choose new targets for the copy". */
+  | { op: 'copyTargetSpell'; target: number; newTargets?: true }
   /**
    * Replicate's cast trigger (CR 702.56a): copy the spell `count` times, each copy's controller
    * choosing to keep or change its targets (CR 707.10c). `spell` is the cast spell as it was put
@@ -828,7 +833,7 @@ export type Effect =
         targetNames?: Record<string, string>;
       };
     }
-  | { op: 'copyEachTargetedSpell'; targetSlot: number }
+  | { op: 'copyEachTargetedSpell'; targetSlot: number; newTargets?: true }
   | { op: 'angelGrace' }
   | { op: 'drawForEachOpponent' }
   | { op: 'drawTargetAndController'; target: EffectRef }

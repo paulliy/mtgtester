@@ -21,16 +21,11 @@ import { eventObjectFacts, sourceObjectFacts } from '../cards/source-identity';
 import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
 import { queueReplicateCopy, queueSpellCopy } from '../stack/copy';
 import { chooseReplicateTargets } from '../stack/replicate-targets';
-import { spellTargetOccurrences } from '../stack/target-occurrences';
+import { allStackTargets, changeSingleStackTarget, chooseNewStackTargets } from '../stack/retarget';
 import { newObjectId } from '../state/objects';
 import { findObjectByCardId, spellDefinitionOf } from '../state/queries';
 import { freeCardIsCastable, resolveFreeCard } from '../casting/free';
-import {
-  permanentManaValue,
-  targetIsLegal,
-  targetDomainCandidates,
-  withinTotalManaValue,
-} from '../targets/legality';
+import { permanentManaValue, targetIsLegal } from '../targets/legality';
 import { captureResolutionTargets, type ResolutionTargets } from '../targets/resolution';
 import { assertNever } from '../utils/assert-never';
 import { assertManaRiders } from '../cards/mana-riders';
@@ -2167,60 +2162,15 @@ export function* executeAbility(
         });
         break;
       }
-      case 'changeSingleSpellTarget': {
-        const spell = ctx.state.stack.find(
-          (entry) => entry.id === ref(effect.target) && entry.kind === 'spell',
-        );
-        if (spell === undefined) break;
-        const positions = spellTargetOccurrences(spell);
-        if (positions.length !== 1) break;
-        const position = positions[0]!;
-        const targetSpec = spell.ability!.targets[position.slot]!;
-        const targetContext = {
-          controllerId: spell.controllerId,
-          sourceCardId: spell.sourceCardId,
-          sourceColors: spell.sourceColors ?? spellDefinitionOf(ctx, spell).colors,
-          chosenTargets: spell.targets,
-          ...(spell.sourceFacts === undefined ? {} : { sourceFacts: spell.sourceFacts }),
-        };
-        const choices = withinTotalManaValue(
-          ctx,
-          targetSpec,
-          [],
-          targetDomainCandidates(ctx, targetSpec.kind),
-        ).filter(
-          (id) =>
-            id !== spell.id &&
-            id !== position.id &&
-            targetIsLegal(ctx, targetSpec, id, targetContext),
-        );
-        // CR 115.7a: if it cannot change to another legal target, retain the old target.
-        if (choices.length === 0) break;
-        const choice = yield {
-          decisionType: 'general',
-          player: controller.id,
-          prompt: `Change the target of ${spell.description}.`,
-          options: choices.map((id) => ({
-            type: 'changeTarget',
-            description: `Target ${findPermanent(ctx, id)?.name ?? ctx.state.stack.find((entry) => entry.id === id)?.description ?? id}`,
-          })),
-        };
-        const chosen = choices[choice.index];
-        if (chosen === undefined) throw new Error('engine bug: invalid new spell target');
-        if (position.ordinal === undefined) spell.targets[position.slot] = chosen;
-        else spell.countTargets![position.slot]![position.ordinal] = chosen;
-        if (spell.divisionAmounts?.[position.id] !== undefined) {
-          spell.divisionAmounts[chosen] = spell.divisionAmounts[position.id]!;
-          delete spell.divisionAmounts[position.id];
-        }
-        queueWardTriggers(ctx, spell.controllerId, spell.id, [chosen]);
-        queueBecomesTargetedTriggers(ctx, spell.controllerId, [chosen]);
-        emit(
-          ctx,
-          'spellTargetChanged',
-          { spell: spell.description, from: position.id, to: chosen },
-          controller.id,
-        );
+      case 'changeSingleTarget': {
+        const entry = ctx.state.stack.find((candidate) => candidate.id === ref(effect.target));
+        if (entry !== undefined) yield* changeSingleStackTarget(ctx, entry, controller.id);
+        break;
+      }
+      case 'chooseNewTargets': {
+        const entry = ctx.state.stack.find((candidate) => candidate.id === ref(effect.target));
+        if (entry !== undefined)
+          yield* chooseNewStackTargets(ctx, entry, controller.id, source.name);
         break;
       }
       case 'phaseOutAndProtectControllerUntilNextTurn':
@@ -3654,8 +3604,14 @@ export function* executeAbility(
           const original = ctx.state.stack.find(
             (entry) => entry.id === id && entry.kind === 'spell',
           );
-          if (original === undefined || original.ability === null) continue;
-          queueSpellCopy(ctx, original, controller.id);
+          if (original === undefined) continue;
+          yield* copySpellOnStack(
+            ctx,
+            original,
+            controller.id,
+            source.name,
+            effect.newTargets === true,
+          );
         }
         break;
       }
@@ -5583,8 +5539,14 @@ export function* executeAbility(
         const original = ctx.state.stack.find(
           (entry) => entry.id === targetId && entry.kind === 'spell',
         );
-        if (original === undefined || original.ability === null) break;
-        queueSpellCopy(ctx, original, controller.id);
+        if (original === undefined) break;
+        yield* copySpellOnStack(
+          ctx,
+          original,
+          controller.id,
+          source.name,
+          effect.newTargets === true,
+        );
         break;
       }
       case 'damageController':
@@ -9197,6 +9159,35 @@ function* searchLibraryGroup(
  * token as it resolves (CR 707.10f). If the spell has left the stack, its last known
  * information is copied (CR 707.10).
  */
+/**
+ * Copy a spell on the stack for `controllerId` (CR 707.10), letting them choose new targets for
+ * the copy when the effect says so. A spell that "can't be copied" (Display of Power) is not.
+ */
+function* copySpellOnStack(
+  ctx: GameContext,
+  original: EngineStackObject,
+  controllerId: PlayerId,
+  sourceName: string,
+  newTargets: boolean,
+): GameGen<EngineStackObject | undefined> {
+  if (original.kind !== 'spell' || original.ability === null || original.castInProgress)
+    return undefined;
+  if (spellDefinitionOf(ctx, original).cantBeCopied === true) return undefined;
+  const copy = queueSpellCopy(ctx, original, controllerId);
+  if (newTargets) yield* chooseNewStackTargets(ctx, copy, controllerId, sourceName, true);
+  else {
+    queueWardTriggers(ctx, controllerId, copy.id, allStackTargets(copy));
+    queueBecomesTargetedTriggers(ctx, controllerId, allStackTargets(copy));
+  }
+  emit(
+    ctx,
+    'spellCopied',
+    { name: original.description, targets: allStackTargets(copy) },
+    controllerId,
+  );
+  return copy;
+}
+
 function* replicateCopies(
   ctx: GameContext,
   controllerId: PlayerId,

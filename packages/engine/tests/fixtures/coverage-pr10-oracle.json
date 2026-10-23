@@ -1,0 +1,1090 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "pinnedAt": "2026-10-22",
+  "cards": [
+    {
+      "sha256": "86d8f5d8bf34253fc713b8bf935e1c6e32f8ea805d57df0a112f54344f26f9fe",
+      "card": {
+        "oracleId": "ae120613-97d6-4393-b39d-c3e6c076f5d6",
+        "scryfallId": "b4b36435-55b3-4615-8812-af41d4fc64d9",
+        "name": "Deflecting Swat",
+        "manaCost": "{2}{R}",
+        "cmc": 3,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "If you control a commander, you may cast this spell without paying its mana cost.\nYou may choose new targets for target spell or ability.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a6f9de58fb06bd80184840fab64dac7d9c7f8542bcefb75bd33441984468777a",
+      "card": {
+        "oracleId": "eb287c04-97f5-4e47-beb1-66cc7d15e748",
+        "scryfallId": "63d52217-a340-4567-9b07-28092a7dc561",
+        "name": "Atarka Monument",
+        "manaCost": "{3}",
+        "cmc": 3,
+        "colors": [],
+        "colorIdentity": [
+          "G",
+          "R"
+        ],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}: Add {R} or {G}.\n{4}{R}{G}: This artifact becomes a 4/4 red and green Dragon artifact creature with flying until end of turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "75cf757c56952b0b058583a69b3c9be8d425de68030a2fe0d1fc3c3fa82ef0e7",
+      "card": {
+        "oracleId": "5443557e-440f-4fdd-a29b-7740d7cec085",
+        "scryfallId": "75a787a3-5838-4121-bbaf-745d22c4b0bc",
+        "name": "Biotransference",
+        "manaCost": "{2}{B}{B}",
+        "cmc": 4,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Creatures you control are artifacts in addition to their other types. The same is true for creature spells you control and creature cards you own that aren't on the battlefield.\nWhenever you cast an artifact spell, you lose 1 life and create a 2/2 black Necron Warrior artifact creature token.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5298846e6acc7903bd8f2241686004c997e783ec07ff45890abdc9c27b80caee",
+      "card": {
+        "oracleId": "35e2f82e-7ca3-4a92-9134-b7999eef5337",
+        "scryfallId": "200c8e3d-c53b-40c7-a29a-fccc1281bfc6",
+        "name": "Mana Sculpt",
+        "manaCost": "{1}{U}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Counter target spell. If you control a Wizard, add an amount of {C} equal to the amount of mana spent to cast that spell at the beginning of your next main phase.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "bf2b48653701608f7cd081357bccad6a95ae8127597042346b72439a9ca9600a",
+      "card": {
+        "oracleId": "70dc830e-d05b-4fc7-88dd-879e140b3fbf",
+        "scryfallId": "920bb44e-aa7f-4ee9-ab19-30114f55ec9b",
+        "name": "Reality Shift",
+        "manaCost": "{1}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Exile target creature. Its controller manifests the top card of their library. (That player puts the top card of their library onto the battlefield face down as a 2/2 creature. If it's a creature card, it can be turned face up any time for its mana cost.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Manifest"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "b903fa4ae25834153fa2ff7cdaba58d24f34ac7a64a8df85ef05972e0742fdba",
+      "card": {
+        "oracleId": "a1f55890-31c5-4ed4-a2cd-7a4a9f05f8ca",
+        "scryfallId": "5996feb4-02ac-45e8-a7f2-966cf74391dc",
+        "name": "Reverberate",
+        "manaCost": "{R}{R}",
+        "cmc": 2,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Copy target instant or sorcery spell. You may choose new targets for the copy.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "22041222bc7cfde403035d47087197fba7f989d871488b4dcf41108c33aa408b",
+      "card": {
+        "oracleId": "ab655810-f67e-4576-9174-35b16f5e3235",
+        "scryfallId": "ce35a39a-6dcd-4bbc-b43b-bd1a5425cb05",
+        "name": "Saheeli, Sublime Artificer",
+        "manaCost": "{1}{U/R}{U/R}",
+        "cmc": 3,
+        "colors": [
+          "R",
+          "U"
+        ],
+        "colorIdentity": [
+          "R",
+          "U"
+        ],
+        "typeLine": "Legendary Planeswalker — Saheeli",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Planeswalker"
+        ],
+        "subtypes": [
+          "Saheeli"
+        ],
+        "oracleText": "Whenever you cast a noncreature spell, create a 1/1 colorless Servo artifact creature token.\n−2: Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact in addition to its other types.",
+        "power": null,
+        "toughness": null,
+        "loyalty": "5",
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "9dc28d7eaa27c68a9f2ffde7ccae5f28f74f2b27baff511fe5b11e2d822cfc2d",
+      "card": {
+        "oracleId": "59c7496b-19a2-478b-b28f-6f153c2458ae",
+        "scryfallId": "073c301e-5bb6-49fa-bf61-2f662030540f",
+        "name": "Siren Stormtamer",
+        "manaCost": "{U}",
+        "cmc": 1,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Siren Pirate Wizard",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Siren",
+          "Pirate",
+          "Wizard"
+        ],
+        "oracleText": "Flying\n{U}, Sacrifice this creature: Counter target spell or ability that targets you or a creature you control.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0be1094151c97fe6fabd9fe994aec0b080e02b493472ffd133fc45f7e52bde50",
+      "card": {
+        "oracleId": "1ef3b48a-55ef-422e-ac7f-e1c1057eec2c",
+        "scryfallId": "1ae95cfb-1c3e-43cc-acfa-68f25b0f6e52",
+        "name": "Trazyn the Infinite",
+        "manaCost": "{4}{B}{B}",
+        "cmc": 6,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Legendary Artifact Creature — Necron",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Necron"
+        ],
+        "oracleText": "Deathtouch\nPrismatic Gallery — As long as Trazyn is on the battlefield, it has all activated abilities of all artifact cards in your graveyard.",
+        "power": "4",
+        "toughness": "6",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Prismatic Gallery",
+          "Deathtouch"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "df84f96797f0c251da35c103e53e92ec7f0d95c61ab6e3d27ee61a8867db5f71",
+      "card": {
+        "oracleId": "04853f06-3fd2-445d-9b0d-d68d0f116635",
+        "scryfallId": "8ca7f49a-ab5a-49de-b07b-96c803daaf7d",
+        "name": "Verrak, Warped Sengir",
+        "manaCost": "{1}{W}{B}",
+        "cmc": 3,
+        "colors": [
+          "B",
+          "W"
+        ],
+        "colorIdentity": [
+          "B",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Vampire",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Vampire"
+        ],
+        "oracleText": "Flying, deathtouch, lifelink\nWhenever you activate an ability that isn't a mana ability, if life was paid to activate it, you may pay that much life again. If you do, copy that ability. You may choose new targets for the copy.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Deathtouch",
+          "Flying",
+          "Lifelink"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e34731fbc50dbe1140b6c7d27cdd63b5d046c6fddf99c7f3e9e5c03981fd62bc",
+      "card": {
+        "oracleId": "c20a96f7-aa5a-4c15-b8b1-806685c99b27",
+        "scryfallId": "771b9f25-76f8-4da9-b3ab-ee51f4ad32d9",
+        "name": "Bolt Bend",
+        "manaCost": "{3}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "This spell costs {3} less to cast if you control a creature with power 4 or greater.\nChange the target of target spell or ability with a single target.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "04e7139139882df20b82d5db6199236f5ea8cbae1917249f20ad24269127625c",
+      "card": {
+        "oracleId": "99140891-face-4015-aacd-1309e87d8f9f",
+        "scryfallId": "295b8595-5b4e-4fc8-8249-486d36e15f67",
+        "name": "Display of Power",
+        "manaCost": "{1}{R}{R}",
+        "cmc": 3,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "This spell can't be copied.\nCopy any number of target instant and/or sorcery spells. You may choose new targets for the copies.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "474d15b714b420fdb9b04aaaf5e89557a8dfeb1f4f0e8b7f930a8ed4d0d1f034",
+      "card": {
+        "oracleId": "ea86abfa-6cab-4ef0-8463-34136fc25b59",
+        "scryfallId": "9ecb184f-c282-42f3-9576-09781a116352",
+        "name": "Duplicant",
+        "manaCost": "{6}",
+        "cmc": 6,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact Creature — Shapeshifter",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Shapeshifter"
+        ],
+        "oracleText": "Imprint — When this creature enters, you may exile target nontoken creature.\nAs long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with it. It's still a Shapeshifter.",
+        "power": "2",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Imprint"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "7ee5cf28a1ce11be9a13913e3dca039b4ac8f66c22baa5c794f89632ea4a32da",
+      "card": {
+        "oracleId": "f586ecb8-310c-4f40-a766-6a7ca46a254d",
+        "scryfallId": "497a10c6-131b-464e-95e4-e47708a24d48",
+        "name": "Flare of Duplication",
+        "manaCost": "{1}{R}{R}",
+        "cmc": 3,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "You may sacrifice a nontoken red creature rather than pay this spell's mana cost.\nCopy target instant or sorcery spell. You may choose new targets for the copy.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "af4df6fbccce06bf9da975bca1e3521d9e6ddf3ebdd8fe8dbd2d1d9698d90704",
+      "card": {
+        "oracleId": "379ed4ec-8f2e-448b-9ed2-a3181e2f877e",
+        "scryfallId": "47433ce9-1ac6-4359-a5e4-4ec68490cb0c",
+        "name": "Nighthawk Scavenger",
+        "manaCost": "{1}{B}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Vampire Rogue",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Vampire",
+          "Rogue"
+        ],
+        "oracleText": "Flying, deathtouch, lifelink\nNighthawk Scavenger's power is equal to 1 plus the number of card types among cards in your opponents' graveyards.",
+        "power": "1+*",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Deathtouch",
+          "Flying",
+          "Lifelink"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5fcdbdb1b0038c993dbfaa0905e47e68330a156d06911f6f550ed0be28799102",
+      "card": {
+        "oracleId": "20f602b3-814f-406c-b7eb-2d1fc98f8cf1",
+        "scryfallId": "5fea0781-e933-47ef-9414-92c8652a7778",
+        "name": "Saheeli, Radiant Creator",
+        "manaCost": "{1}{G}{U}{R}",
+        "cmc": 4,
+        "colors": [
+          "G",
+          "R",
+          "U"
+        ],
+        "colorIdentity": [
+          "G",
+          "R",
+          "U"
+        ],
+        "typeLine": "Legendary Creature — Human Artificer",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Artificer"
+        ],
+        "oracleText": "Whenever you cast an Artificer or artifact spell, you get {E} (an energy counter).\nAt the beginning of combat on your turn, you may pay {E}{E}{E}. When you do, create a token that's a copy of target permanent you control, except it's a 5/5 artifact creature in addition to its other types and has haste. Sacrifice it at the beginning of the next end step.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "150f68361dcf9407b348c0f71a49eff08d630c6cfe6b36dc335196bf58d6af81",
+      "card": {
+        "oracleId": "80c26f58-04b0-4db0-b84e-9b136609abe0",
+        "scryfallId": "c58064fd-4d8b-4f54-812f-0bb1d7e2ddc2",
+        "name": "Sarkhan, the Dragonspeaker",
+        "manaCost": "{3}{R}{R}",
+        "cmc": 5,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Planeswalker — Sarkhan",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Planeswalker"
+        ],
+        "subtypes": [
+          "Sarkhan"
+        ],
+        "oracleText": "+1: Until end of turn, Sarkhan becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste. (He doesn't lose loyalty while he's not a planeswalker.)\n−3: Sarkhan deals 4 damage to target creature.\n−6: You get an emblem with \"At the beginning of your draw step, draw two additional cards\" and \"At the beginning of your end step, discard your hand.\"",
+        "power": null,
+        "toughness": null,
+        "loyalty": "4",
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a968a6b40b698d78552e6a7decbaa1da3634382d27f36587e8eecb5dd6bfd150",
+      "card": {
+        "oracleId": "3640c29b-1534-4952-b297-619ade948431",
+        "scryfallId": "32fd8b7c-baf3-4d3d-be6f-044a917b11a0",
+        "name": "Roaming Throne",
+        "manaCost": "{4}",
+        "cmc": 4,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact Creature — Golem",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Golem"
+        ],
+        "oracleText": "Ward {2}\nAs this creature enters, choose a creature type.\nThis creature is the chosen type in addition to its other types.\nIf a triggered ability of another creature you control of the chosen type triggers, it triggers an additional time.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Ward"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "4cf8b379abf387f20b3755b04b624dd638f032c2339c8c2e883f19946830ddf3",
+      "card": {
+        "oracleId": "c51ed6e3-813b-49c4-b1de-7f92a77f8f6e",
+        "scryfallId": "4e148c83-09d1-4055-b1a6-5c624c67810d",
+        "name": "Galvanic Iteration",
+        "manaCost": "{U}{R}",
+        "cmc": 2,
+        "colors": [
+          "R",
+          "U"
+        ],
+        "colorIdentity": [
+          "R",
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.\nFlashback {1}{U}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flashback"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "38f8997a536f1b3e222bd21bc23da0169f8432c4b0a1353e909638c0b9d99566",
+      "card": {
+        "oracleId": "6a84eda1-7e72-4b5a-849f-b6e177565aeb",
+        "scryfallId": "e516bc14-749c-4da6-b5d3-cb5c16316e0c",
+        "name": "Mirage Mirror",
+        "manaCost": "{3}",
+        "cmc": 3,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "{2}: This artifact becomes a copy of target artifact, creature, enchantment, or land until end of turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "b049705cb84e45954b7b47612983de5b55f4d4b8ba31a141487bd143378ae8e1",
+      "card": {
+        "oracleId": "a8011dce-17fb-46e1-8297-81a4acccbd05",
+        "scryfallId": "f1d80509-ece1-4b6d-bfe5-c6d003f581cf",
+        "name": "Mister Fantastic",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "G",
+          "R",
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Scientist Hero",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Scientist",
+          "Hero"
+        ],
+        "oracleText": "Reach, vigilance\nAt the beginning of combat on your turn, if you've cast a noncreature spell this turn, draw a card.\n{R}{G}{W}{U}, {T}: Copy target triggered ability you control twice. You may choose new targets for the copies.",
+        "power": "2",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Reach",
+          "Vigilance"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5586cda77b3fd989481053908308ffdaf61d37d44354edff342c3ae06dcf63c1",
+      "card": {
+        "oracleId": "3b8eb602-01e8-432e-8dfc-8fdb62c3aa43",
+        "scryfallId": "6c5f81d8-b189-4f6e-872f-a237bb872aa9",
+        "name": "Mocking Doppelganger",
+        "manaCost": "{3}{U}",
+        "cmc": 4,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Shapeshifter",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Shapeshifter"
+        ],
+        "oracleText": "Flash\nYou may have this creature enter as a copy of a creature an opponent controls, except it has \"Other creatures with the same name as this creature are goaded.\" (They attack each combat if able and attack a player other than you if able.)",
+        "power": "0",
+        "toughness": "0",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Goad",
+          "Flash"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "dd1103eff5ecbf92809aa5e26608cd346bdb97c2e89103a538717fe66668ff4e",
+      "card": {
+        "oracleId": "aa854d50-444c-49d9-bfb1-5476b33c1c0b",
+        "scryfallId": "ea630ba1-22f9-4a10-bdc6-0d03128214f4",
+        "name": "Scute Swarm",
+        "manaCost": "{2}{G}",
+        "cmc": 3,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Insect",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Insect"
+        ],
+        "oracleText": "Landfall — Whenever a land you control enters, create a 1/1 green Insect creature token. If you control six or more lands, create a token that's a copy of this creature instead.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Landfall"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "00f134c33bd4b141e8fa9b4bbbca4985f91d4b1e41f52cf47192d2db63075d26",
+      "card": {
+        "oracleId": "4c3ad545-b375-44a7-a24e-58baacc4e4b6",
+        "scryfallId": "1624a5f4-f5bc-47c9-85de-c5520ee234ce",
+        "name": "Annie Joins Up",
+        "manaCost": "{1}{R}{G}{W}",
+        "cmc": 4,
+        "colors": [
+          "G",
+          "R",
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "R",
+          "W"
+        ],
+        "typeLine": "Legendary Enchantment",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "When Annie Joins Up enters, it deals 5 damage to target creature or planeswalker an opponent controls.\nIf a triggered ability of a legendary creature you control triggers, that ability triggers an additional time.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "02df56e5026dfc0cddf64f26febc4d99afee23b4b080d67eba4e13bacab78657",
+      "card": {
+        "oracleId": "ef71ef07-8a35-41ec-a851-d95e9e3a221b",
+        "scryfallId": "45ad01f0-cda8-4931-82bb-cb4949e56ae9",
+        "name": "Bilbo's Gambit",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Gift a Treasure (You may promise an opponent a gift as you cast this spell. If you do, they create a Treasure token before its other effects. It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")\nReturn target spell to its owner's hand. If the gift was promised, players can't cast spells this turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Gift",
+          "Treasure"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "d5e787d2c259e80b35dab329c6c7b5d3f2f46be5560bb80dbefba98f69e05352",
+      "card": {
+        "oracleId": "2469c0b7-a045-4733-bf53-28f3fdbe3797",
+        "scryfallId": "7436364b-5604-44c8-b539-9b7c3221ccdf",
+        "name": "Cosmic Crucible",
+        "manaCost": "{4}{G}{U}",
+        "cmc": 6,
+        "colors": [
+          "G",
+          "U"
+        ],
+        "colorIdentity": [
+          "G",
+          "U"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "At the beginning of your first main phase, add four mana in any combination of colors.\nWhenever you cast a noncreature spell, you may copy it. You may choose new targets for the copy. Do this only once each turn. (A copy of a permanent spell becomes a token.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "577296054aa293bdd2a53ec72c948a29dcbf2c6c698ec8faf8b5a157d8e64267",
+      "card": {
+        "oracleId": "33fa949c-f29e-4a98-9381-ecfa9e5c3f6d",
+        "scryfallId": "a0d824ea-75d2-4de5-923b-813bba44e80b",
+        "name": "Council of Reeds",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Legendary Creature — Human Scientist Hero",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Scientist",
+          "Hero"
+        ],
+        "oracleText": "The \"legend rule\" doesn't apply to creatures you control.\nAt the beginning of combat on your turn, if you've cast a noncreature spell this turn, create a token that's a copy of Council of Reeds.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "dfe7ee79fe6d8e7918e0add5c742cc721d77cd73ae45bb751f259920e02ed91a",
+      "card": {
+        "oracleId": "cb15a8dd-57fe-466f-847e-66476b690a1f",
+        "scryfallId": "6f1bc3bb-46da-492a-850c-f1f588ad8d18",
+        "name": "Xenagos, God of Revels",
+        "manaCost": "{3}{R}{G}",
+        "cmc": 5,
+        "colors": [
+          "G",
+          "R"
+        ],
+        "colorIdentity": [
+          "G",
+          "R"
+        ],
+        "typeLine": "Legendary Enchantment Creature — God",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Enchantment",
+          "Creature"
+        ],
+        "subtypes": [
+          "God"
+        ],
+        "oracleText": "Indestructible\nAs long as your devotion to red and green is less than seven, Xenagos isn't a creature.\nAt the beginning of combat on your turn, another target creature you control gains haste and gets +X/+X until end of turn, where X is that creature's power.",
+        "power": "6",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Indestructible"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "4bccbf1da7acacbac2989fce0b90717e43625a905d3a3a50b389cf8b0d732543",
+      "card": {
+        "oracleId": "c03ca2e6-fcce-4018-952f-1c451ab92cfd",
+        "scryfallId": "527e930b-b233-432c-a0dc-73c68ea3f686",
+        "name": "Dragon Man, Reformed Robot",
+        "manaCost": "{2}{W}{U}",
+        "cmc": 4,
+        "colors": [
+          "U",
+          "W"
+        ],
+        "colorIdentity": [
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Artifact Creature — Dragon Robot",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon",
+          "Robot"
+        ],
+        "oracleText": "Flying\nDragon Man's power is equal to the greatest mana value among noncreature permanents you control and noncreature cards in your graveyard.\nYou may cast this card from your graveyard by discarding a card in addition to paying its other costs.",
+        "power": "*",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "3a74578b3722e817e7cc110ea95ba5daa61fe9b1c49f448855f1177c8f2f240a",
+      "card": {
+        "oracleId": "e191976c-6ab1-4a23-aeb8-8a88bd4bd203",
+        "scryfallId": "bcf0514e-63b3-4695-93ae-527524d48c25",
+        "name": "Rowan Kenrith",
+        "manaCost": "{4}{R}{R}",
+        "cmc": 6,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Planeswalker — Rowan",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Planeswalker"
+        ],
+        "subtypes": [
+          "Rowan"
+        ],
+        "oracleText": "+2: During target player's next turn, each creature that player controls attacks if able.\n−2: Rowan Kenrith deals 3 damage to each tapped creature target player controls.\n−8: Target player gets an emblem with \"Whenever you activate an ability that isn't a mana ability, copy it. You may choose new targets for the copy.\"\nPartner with Will Kenrith\nRowan Kenrith can be your commander.",
+        "power": null,
+        "toughness": null,
+        "loyalty": "4",
+        "defense": null,
+        "keywords": [
+          "Partner with",
+          "Partner"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "8cb9a3f6392ac36ec4284df171a42f02873b495754ca2f156053cb4478cf43a4",
+      "card": {
+        "oracleId": "05d7222b-cc08-4f1f-8e35-6058599572ba",
+        "scryfallId": "443b6f30-1493-4d48-93d9-a91e22a7ebb3",
+        "name": "Twilight Diviner",
+        "manaCost": "{2}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Elf Cleric",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elf",
+          "Cleric"
+        ],
+        "oracleText": "When this creature enters, surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)\nWhenever one or more other creatures you control enter, if they entered or were cast from a graveyard, create a token that's a copy of one of them. This ability triggers only once each turn.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Surveil"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

@@ -3561,7 +3561,7 @@
         "description": "Change target single-target spell and lose life equal to its mana value",
         "effects": [
           {
-            "op": "changeSingleSpellTarget",
+            "op": "changeSingleTarget",
             "target": 0
           },
           {
@@ -26262,7 +26262,7 @@
         "description": "Change target single-target spell and lose life equal to its mana value",
         "effects": [
           {
-            "op": "changeSingleSpellTarget",
+            "op": "changeSingleTarget",
             "target": 0
           },
           {

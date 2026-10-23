@@ -16,6 +16,8 @@ import {
 const ORACLE_ID = '71c52bf5-2a5d-488e-8b15-7ef290e4b77d';
 const ORACLE_SHA256 = '7014d3a7b8e20db7e2a12576165361775173e73cb28f1106afa40a659d6d0c74';
 const SOURCE_FILES = [
+  'packages/engine/src/cards/overrides/coverage-pr10.ts',
+  'packages/engine/src/stack/retarget.ts',
   'packages/engine/src/cards/overrides/coverage-pr09.ts',
   'packages/engine/src/effects/library-cast.ts',
   'packages/engine/src/effects/library-reveal.ts',

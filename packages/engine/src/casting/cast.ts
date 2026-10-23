@@ -230,7 +230,10 @@ function countedTargetName(ctx: GameContext, id: ObjectId): string {
     if (card !== undefined) return `${card.name} (${player.id}'s graveyard)`;
   }
   const exiled = ctx.state.exile.find((candidate) => candidate.id === id);
-  return exiled === undefined ? id : `${exiled.name} (exile)`;
+  if (exiled !== undefined) return `${exiled.name} (exile)`;
+  // A spell or ability on the stack (Display of Power's "any number of target spells").
+  const entry = ctx.state.stack.find((candidate) => candidate.id === id);
+  return entry === undefined ? id : `${entry.description} (on the stack)`;
 }
 
 export function* chooseCountTargets(

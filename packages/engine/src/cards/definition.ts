@@ -193,6 +193,8 @@ export interface CardDefinition {
   castRestriction?: Condition;
   /** "You may cast this spell without paying its mana cost if you control a commander." */
   commanderFreeCast?: boolean;
+  /** "This spell can't be copied" (Display of Power): copy effects create no copy of it. */
+  cantBeCopied?: true;
   /** Additional costs paid while announcing a spell (CR 601.2h), apart from its mana cost. */
   spellAdditionalCosts?: AbilityCost[];
   /** A promise made during announcement, fulfilled before resolving spell effects. */
