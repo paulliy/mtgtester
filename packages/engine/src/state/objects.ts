@@ -18,6 +18,7 @@ import { computeTargetOptions } from '../actions/legal';
 import { BESTOW_ENCHANT } from '../cards/spell-faces';
 import type {
   Ability,
+  Effect,
   KeywordAbility,
   ObjectTriggerWhen,
   TokenSpec,
@@ -2894,7 +2895,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
           sourceObjectId: source.id,
           sourceOracleId: source.oracleId,
           sourceName: source.name,
-          ability,
+          ability: bindCastSpell(ctx, ability, spell),
           scope: {
             spellManaValue: manaValue,
             spellColorCount: candidate.colors.length,
@@ -2908,6 +2909,38 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
       }
     }
   }
+
+  // Delayed cast triggers (Galvanic Iteration's "when you next cast an instant or sorcery spell
+  // this turn"): only the controller's own matching spells, and a `once` trigger fires once.
+  const firedCastDelayed = new Set<string>();
+  for (const delayed of ctx.state.delayedTriggers) {
+    if (delayed.when !== 'castsSpell' || delayed.controllerId !== spell.controllerId) continue;
+    const from: SelectorSource = {
+      cardId: delayed.sourceCardId,
+      controllerId: delayed.controllerId,
+      eventPlayerId: spell.controllerId,
+    };
+    if (delayed.castFilter !== undefined && !selectMatches(candidate, delayed.castFilter, from))
+      continue;
+    ctx.state.pendingTriggers.push({
+      controllerId: delayed.controllerId,
+      sourceCardId: delayed.sourceCardId,
+      sourceOracleId: delayed.sourceOracleId,
+      sourceName: 'Delayed Trigger',
+      ability: bindCastSpell(ctx, delayed.ability, spell),
+      scope: {
+        spellManaValue: manaValue,
+        spellColorCount: candidate.colors.length,
+        eventPlayerId: spell.controllerId,
+      },
+    });
+    debug(ctx, 'stack', `delayed cast trigger queued: ${delayed.id} — ${spell.description}`);
+    if (delayed.once === true) firedCastDelayed.add(delayed.id);
+  }
+  if (firedCastDelayed.size > 0)
+    ctx.state.delayedTriggers = ctx.state.delayedTriggers.filter(
+      (delayed) => !firedCastDelayed.has(delayed.id),
+    );
 
   // Graveyard-functioning cast triggers (CR 112.6a, Aurora Phoenix): a card whose ability says
   // it works from the graveyard watches casts from there, under its owner's control.
@@ -2998,6 +3031,65 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
 }
 
 /**
+ * A cast spell as copy effects need it: every decision made for it, plus the definition and
+ * ability, so a copy can still be made from last known information after it has left the stack
+ * (CR 707.10).
+ */
+function castSpellSnapshot(
+  ctx: GameContext,
+  spell: EngineStackObject,
+  def: CardDefinition = spellDefinitionOf(ctx, spell),
+): Extract<Effect, { op: 'replicateCopies' }>['spell'] {
+  return {
+    stackObjectId: spell.id,
+    oracleId: spell.sourceOracleId,
+    name: spell.description,
+    targets: [...spell.targets],
+    definition: def,
+    ...(spell.ability === null ? {} : { ability: spell.ability }),
+    ...(spell.announcedX === undefined ? {} : { announcedX: spell.announcedX }),
+    ...(spell.countTargets === undefined
+      ? {}
+      : {
+          countTargets: Object.fromEntries(
+            Object.entries(spell.countTargets).map(([slot, ids]) => [slot, [...ids]]),
+          ),
+        }),
+    ...(spell.divisionAmounts === undefined
+      ? {}
+      : { divisionAmounts: { ...spell.divisionAmounts } }),
+    ...(spell.optionalCostCounts === undefined
+      ? {}
+      : { optionalCostCounts: { ...spell.optionalCostCounts } }),
+    ...(spell.wasKicked === undefined ? {} : { wasKicked: spell.wasKicked }),
+    ...(spell.kicked === undefined ? {} : { kicked: spell.kicked }),
+    targetNames: Object.fromEntries(ctx.state.battlefield.map((perm) => [perm.id, perm.name])),
+    oracleText: spell.card?.oracleText ?? '',
+    manaCost: spell.card?.manaCost ?? null,
+  };
+}
+
+/** Bind a cast trigger's `copyCastSpell` effects to the spell that was cast. */
+function bindCastSpell(ctx: GameContext, ability: Ability, spell: EngineStackObject): Ability {
+  if (!ability.effects.some((effect) => effect.op === 'copyCastSpell')) return ability;
+  const snapshot = castSpellSnapshot(ctx, spell);
+  return {
+    ...ability,
+    effects: ability.effects.map((effect) =>
+      effect.op === 'copyCastSpell'
+        ? {
+            op: 'replicateCopies' as const,
+            count: 1,
+            spell: snapshot,
+            ...(effect.optional === true ? { optional: true as const } : {}),
+            ...(effect.oncePerTurn === true ? { oncePerTurn: true as const } : {}),
+          }
+        : effect,
+    ),
+  };
+}
+
+/**
  * Keyword abilities that trigger when their spell is cast. Cascade is attached to the spell
  * rather than a battlefield permanent, so it is queued beside ordinary cast triggers after the
  * spell has entered the stack.
@@ -3020,35 +3112,7 @@ export function queueKeywordCastTriggers(ctx: GameContext, spell: EngineStackObj
           {
             op: 'replicateCopies',
             count: replicated,
-            spell: {
-              stackObjectId: spell.id,
-              oracleId: spell.sourceOracleId,
-              name: spell.description,
-              targets: [...spell.targets],
-              definition: def,
-              ...(spell.ability === null ? {} : { ability: spell.ability }),
-              ...(spell.announcedX === undefined ? {} : { announcedX: spell.announcedX }),
-              ...(spell.countTargets === undefined
-                ? {}
-                : {
-                    countTargets: Object.fromEntries(
-                      Object.entries(spell.countTargets).map(([slot, ids]) => [slot, [...ids]]),
-                    ),
-                  }),
-              ...(spell.divisionAmounts === undefined
-                ? {}
-                : { divisionAmounts: { ...spell.divisionAmounts } }),
-              ...(spell.optionalCostCounts === undefined
-                ? {}
-                : { optionalCostCounts: { ...spell.optionalCostCounts } }),
-              ...(spell.wasKicked === undefined ? {} : { wasKicked: spell.wasKicked }),
-              ...(spell.kicked === undefined ? {} : { kicked: spell.kicked }),
-              targetNames: Object.fromEntries(
-                ctx.state.battlefield.map((perm) => [perm.id, perm.name]),
-              ),
-              oracleText: spell.card?.oracleText ?? '',
-              manaCost: spell.card?.manaCost ?? null,
-            },
+            spell: castSpellSnapshot(ctx, spell, def),
           },
         ],
         description: `${spell.description}: Replicate ${replicated}`,

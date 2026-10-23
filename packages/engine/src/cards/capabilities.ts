@@ -386,6 +386,7 @@ const shapes = {
     andPlaneswalkersYouControl: leaf,
     sources: leaf,
     newTargets: leaf,
+    oncePerTurn: leaf,
   } satisfies Fields<Objects<Effect>>,
   TokenSpec: {
     name: leaf,
@@ -940,6 +941,8 @@ const families = {
       createDamageShield: true,
       copyTargetSpell: true,
       replicateCopies: true,
+      copyCastSpell: true,
+      nextCastThisTurn: true,
       copyEachTargetedSpell: true,
       angelGrace: true,
       drawForEachOpponent: true,

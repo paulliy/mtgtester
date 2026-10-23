@@ -1,17 +1,22 @@
 /** PR10 authored stack, copy and characteristic operations. Evidence is tracked in the manifest. */
 import { countPermanents } from '../condition';
-import { allOf, anyOf, ofType, powerAtLeast } from '../selector';
+import { allOf, anyOf, not, ofType, powerAtLeast } from '../selector';
 import { counterSpellTarget } from '../target-builders';
-import { spell, targetSlots } from '../templates';
+import { onCast, spell, targetSlots, triggered } from '../templates';
 import { constant } from '../value';
 import { replaceCard } from './index';
 
 /**
- * Replace contained approximations only with complete printed abilities. Registered from
- * `index.ts` once each card's manifest and viewer evidence lands; until then only the PR10
- * engine suites install it, in their own isolated module graph.
+ * Every PR10 override, for the PR10 engine suites. `index.ts` registers each group only once its
+ * cards' manifest and Card Test Lab evidence has landed.
  */
 export function registerCoveragePr10Overrides(): void {
+  registerPr10RetargetAndCopyOverrides();
+  registerPr10CastCopyOverrides();
+}
+
+/** PR10.01, 10.11, 10.06, 10.14, 10.12: retargeting and spell copies with new targets. */
+export function registerPr10RetargetAndCopyOverrides(): void {
   // PR10.01: choosing new targets changes the targets of the same object; it is not a copy.
   const swat = targetSlots({ object: { kind: 'stackObject' } });
   replaceCard(
@@ -102,5 +107,61 @@ export function registerCoveragePr10Overrides(): void {
       }),
     },
     'PR10 cannot be copied, and each copy may choose new targets.',
+  );
+}
+
+/** PR10.19, 10.26: copies of a cast spell made by a cast trigger (CR 707.10c). */
+export function registerPr10CastCopyOverrides(): void {
+  // PR10.19: a one-shot delayed cast trigger that lapses at cleanup; flashback is interpreted.
+  replaceCard(
+    'c51ed6e3-813b-49c4-b1de-7f92a77f8f6e',
+    'Galvanic Iteration',
+    [
+      'When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.',
+    ],
+    {
+      spellAbility: spell({
+        effects: [
+          {
+            op: 'nextCastThisTurn',
+            filter: anyOf(ofType('Instant'), ofType('Sorcery')),
+            ability: triggered(undefined, {
+              effects: [{ op: 'copyCastSpell' }],
+              description: 'Copy that spell. You may choose new targets for the copy',
+            }),
+          },
+        ],
+        description:
+          'When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy',
+      }),
+    },
+    'PR10 copies the next instant or sorcery cast this turn, with new targets.',
+  );
+
+  // PR10.26: "your first main phase" is the precombat main phase (CR 505.1a).
+  replaceCard(
+    '2469c0b7-a045-4733-bf53-28f3fdbe3797',
+    'Cosmic Crucible',
+    [
+      'At the beginning of your first main phase, add four mana in any combination of colors.',
+      'Whenever you cast a noncreature spell, you may copy it. You may choose new targets for the copy. Do this only once each turn.',
+    ],
+    {
+      triggers: [
+        triggered(
+          { when: 'precombatMain', player: 'you' },
+          {
+            effects: [{ op: 'addMana', amount: constant(4), colors: 'any' }],
+            description: 'Add four mana in any combination of colors',
+          },
+        ),
+        triggered(onCast('you', not(ofType('Creature'))), {
+          effects: [{ op: 'copyCastSpell', optional: true, oncePerTurn: true }],
+          description:
+            'You may copy that noncreature spell. You may choose new targets for the copy. Do this only once each turn',
+        }),
+      ],
+    },
+    'PR10 adds the first-main-phase mana and copies one noncreature spell each turn.',
   );
 }

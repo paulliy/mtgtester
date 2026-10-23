@@ -731,6 +731,10 @@ export interface DelayedTrigger {
    * turn's upkeep" or "the next end step", wrong for "your next upkeep".
    */
   player?: 'you';
+  /** A `castsSpell` delayed trigger: only its controller's spells matching this filter. */
+  castFilter?: Selector;
+  /** Removed as soon as it fires ("when you NEXT cast"), whatever its expiry. */
+  once?: true;
 }
 
 /** "Prevent all damage that would be dealt to you this turn" and its relatives (CR 615). */
@@ -831,6 +835,11 @@ export interface EngineState extends GameState {
    * (CR 400.7). Cleared at the start of each turn.
    */
   abilityResolutionsThisTurn?: Record<string, number>;
+  /**
+   * "Do this only once each turn" (Cosmic Crucible): keys (source object id and action) of
+   * once-each-turn actions already taken this turn. Cleared at the start of each turn.
+   */
+  onceEachTurnActionsTaken?: string[];
   /** Combat-damage replacement shields used by Darkness-style effects this turn. */
   combatDamagePrevention: {
     all: boolean;

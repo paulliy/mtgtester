@@ -809,9 +809,25 @@ export type Effect =
    * choosing to keep or change its targets (CR 707.10c). `spell` is the cast spell as it was put
    * on the stack — the last known information the copies use if it has left (CR 707.10).
    */
+  /**
+   * "Copy that spell" / "you may copy it" in a cast trigger (Cosmic Crucible, Galvanic
+   * Iteration), with "you may choose new targets for the copy" (CR 707.10c). Bound to the cast
+   * spell when the trigger is put on the stack: it becomes a one-copy `replicateCopies`, which
+   * copies the spell's last known information if it has left the stack (CR 707.10).
+   */
+  | { op: 'copyCastSpell'; optional?: true; oncePerTurn?: true }
+  /**
+   * "When you next cast a [filter] spell this turn, [ability]" (Galvanic Iteration): a delayed
+   * cast trigger that fires once, for its controller's next matching cast, and lapses at cleanup.
+   */
+  | { op: 'nextCastThisTurn'; filter: Selector; ability: Ability }
   | {
       op: 'replicateCopies';
       count: number;
+      /** "You may copy it": the controller decides on resolution. */
+      optional?: true;
+      /** "Do this only once each turn": at most one resolution per source object per turn. */
+      oncePerTurn?: true;
       spell: {
         stackObjectId: string;
         oracleId: string;

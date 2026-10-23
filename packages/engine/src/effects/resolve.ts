@@ -5531,9 +5531,25 @@ export function* executeAbility(
         break;
       }
       case 'replicateCopies': {
-        yield* replicateCopies(ctx, controller.id, effect);
+        yield* replicateCopies(ctx, controller.id, effect, source);
         break;
       }
+      case 'copyCastSpell':
+        throw new Error(`engine bug: ${source.name} copies a cast spell outside a cast trigger`);
+      case 'nextCastThisTurn':
+        ctx.state.delayedTriggers.push({
+          id: `dt-${ctx.state.nextObjectNum++}`,
+          sourceCardId: source.cardId,
+          sourceOracleId: source.oracleId,
+          controllerId: controller.id,
+          when: 'castsSpell',
+          castFilter: effect.filter,
+          ability: effect.ability,
+          expiry: 'cleanup',
+          once: true,
+        });
+        emit(ctx, 'delayedTriggerCreated', { source: source.name }, controller.id);
+        break;
       case 'copyTargetSpell': {
         const targetId = ref(effect.target);
         const original = ctx.state.stack.find(
@@ -9192,6 +9208,7 @@ function* replicateCopies(
   ctx: GameContext,
   controllerId: PlayerId,
   effect: Extract<Effect, { op: 'replicateCopies' }>,
+  source: EffectSource,
 ): GameGen<void> {
   const original = ctx.state.stack.find(
     (entry) => entry.id === effect.spell.stackObjectId && entry.kind === 'spell',
@@ -9202,6 +9219,26 @@ function* replicateCopies(
       : spellDefinitionOf(ctx, original);
   const ability = original?.ability ?? effect.spell.ability ?? def.spellAbility;
   if (ability === null || ability === undefined) return;
+  // "This spell can't be copied" (Display of Power).
+  if (def.cantBeCopied === true) return;
+  // "Do this only once each turn" (Cosmic Crucible): keyed by the source object, so a new object
+  // of the same card may copy again (CR 400.7).
+  const onceKey = `${source.id ?? source.cardId}:copyCastSpell`;
+  const taken = (ctx.state.onceEachTurnActionsTaken ??= []);
+  if (effect.oncePerTurn === true && taken.includes(onceKey)) return;
+  if (effect.optional === true) {
+    const outcome = yield {
+      decisionType: 'general',
+      player: controllerId,
+      prompt: `${source.name}: copy ${effect.spell.name}?`,
+      options: [
+        { type: 'accept', description: `Copy ${effect.spell.name}` },
+        { type: 'decline', description: "Don't copy it" },
+      ],
+    };
+    if (outcome.index !== 0) return;
+  }
+  if (effect.oncePerTurn === true) taken.push(onceKey);
   const originalTargets = original?.targets ?? (effect.spell.targets as ObjectId[]);
   const originalCounted = original?.countTargets ?? effect.spell.countTargets ?? {};
   const originalDivision = original?.divisionAmounts ?? effect.spell.divisionAmounts ?? {};

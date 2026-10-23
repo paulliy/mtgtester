@@ -90,6 +90,7 @@ function untapStep(ctx: GameContext): void {
   ctx.state.combatDamagePlayersBySource = {};
   ctx.state.creaturesDiedThisTurn = 0;
   delete ctx.state.abilityResolutionsThisTurn;
+  delete ctx.state.onceEachTurnActionsTaken;
   ctx.state.combatDamagePrevention = { all: false, players: {} };
   ctx.state.lifeFloorPlayers = {};
   ctx.state.creaturesCantBeBlockedThisTurn = false;

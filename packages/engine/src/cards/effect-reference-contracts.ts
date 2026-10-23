@@ -169,6 +169,8 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   createDamageShield: { target: optionalRef(permanent) },
   copyTargetSpell: { target: spell },
   replicateCopies: {},
+  copyCastSpell: {},
+  nextCastThisTurn: {},
   copyEachTargetedSpell: { targetSlot: many(spell) },
   angelGrace: {},
   drawForEachOpponent: {},
