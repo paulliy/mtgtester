@@ -501,6 +501,7 @@ export function candidateOf(
     keywords: chars.keywords,
     ...(manaValue === undefined ? {} : { manaValue }),
     isToken: perm.isToken,
+    tapped: perm.tapped,
     enteredThisTurn: perm.enteredTurnNumber === ctx.state.turnNumber,
     isCommander: perm.isCommander,
     ownerId: perm.ownerId,

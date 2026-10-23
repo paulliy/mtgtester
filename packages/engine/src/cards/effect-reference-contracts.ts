@@ -22,7 +22,10 @@ type ReferenceField =
   | 'targetSlot'
   | 'bSlot'
   | 'cardsSlot'
-  | 'playerSlot';
+  | 'playerSlot'
+  | 'controlledBy'
+  | 'relativeToPlayer'
+  | 'forPlayer';
 type EffectContracts = {
   [Op in Effect['op']]: Record<
     Extract<keyof Extract<Effect, { op: Op }>, ReferenceField>,
@@ -240,7 +243,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   discardEachPlayer: {},
   mill: {},
   gainEnergy: {},
-  createEmblem: {},
+  createEmblem: { forPlayer: optionalRef(player) },
   gainLife: {},
   loseLife: {},
   loseLifeTarget: { target: player },
@@ -251,7 +254,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   gainLifeEqualToLifeLostThisWay: {},
   eachOpponentDamage: {},
   damageController: {},
-  damageEach: { source: optionalRef(permanent) },
+  damageEach: { source: optionalRef(permanent), controlledBy: optionalRef(player) },
   damageEachPlayer: { source: optionalRef(permanent) },
   searchLibrary: {},
   searchLibraryGroup: {},
@@ -335,7 +338,8 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   overloadBounceAllNonlandOpponents: {},
   goad: { target: permanent },
   chooseAttackersAndBlockers: {},
-  addAttackRequirement: { target: optionalRef(permanent) },
+  addAttackRequirement: { target: optionalRef(permanent), relativeToPlayer: optionalRef(player) },
+  targetPlayerMaySearchNamed: { target: player },
   cantBlockEach: {},
   limitAttacksToNearestOpponent: {},
   chooseOpponentForSource: {},

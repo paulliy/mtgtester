@@ -3744,15 +3744,20 @@ export function* executeAbility(
         }
         break;
       }
-      case 'createEmblem':
-        controller.emblems.push({
+      case 'createEmblem': {
+        const ownerId = effect.forPlayer === undefined ? controller.id : ref(effect.forPlayer);
+        const owner =
+          ownerId === null ? undefined : ctx.state.players.find((player) => player.id === ownerId);
+        if (owner === undefined || owner.hasLost) break;
+        owner.emblems.push({
           id: `emblem-${ctx.state.nextObjectNum++}`,
           name: effect.name,
-          controllerId: controller.id,
+          controllerId: owner.id,
           abilities: effect.abilities,
         });
-        emit(ctx, 'createEmblem', { player: controller.id, name: effect.name }, controller.id);
+        emit(ctx, 'createEmblem', { player: owner.id, name: effect.name }, owner.id);
         break;
+      }
       case 'gainEnergy': {
         const amount = amountOf(effect.amount);
         if (amount > 0) {
@@ -5675,8 +5680,13 @@ export function* executeAbility(
         // has left the battlefield (CR 608.2h).
         const damageSource = effect.source === undefined ? source : damageSourceOf(effect.source);
         if (damageSource === undefined) break;
+        const controlledBy =
+          effect.controlledBy === undefined ? undefined : ref(effect.controlledBy);
+        if (controlledBy === null) break;
         const affected = affectedBy(ctx, source, effect.selector).filter(
-          (permanent) => effect.exceptSource !== true || permanent.cardId !== damageSource.cardId,
+          (permanent) =>
+            (effect.exceptSource !== true || permanent.cardId !== damageSource.cardId) &&
+            (controlledBy === undefined || permanent.controllerId === controlledBy),
         );
         const amount = amountOf(effect.amount);
         for (const perm of affected) {
@@ -6700,18 +6710,56 @@ export function* executeAbility(
         }
         break;
       }
+      case 'targetPlayerMaySearchNamed': {
+        const playerId = ref(effect.target);
+        const searcher =
+          playerId === null
+            ? undefined
+            : ctx.state.players.find((player) => player.id === playerId);
+        if (searcher === undefined || searcher.hasLost) break;
+        const outcome = yield {
+          decisionType: 'general' as const,
+          player: searcher.id,
+          prompt: `${source.name}: search your library for a card named ${effect.name}?`,
+          options: [
+            plainOption({ type: 'search', description: 'Search', verb: 'Search' }),
+            plainOption({
+              type: 'decline',
+              description: "Don't search",
+              verb: 'Decline',
+              role: 'decline',
+            }),
+          ],
+        };
+        if (outcome.index !== 0) break;
+        yield* searchLibrary(
+          ctx,
+          source,
+          searcher,
+          { kind: 'name', value: effect.name },
+          [{ zone: 'hand' }],
+          false,
+          true,
+          true,
+        );
+        shuffleLibrary(ctx, searcher);
+        break;
+      }
       case 'addAttackRequirement': {
         // The fixed set names its object now; a selector set is read live (CR 611.2c).
+        if (effect.relativeToPlayer !== undefined && ref(effect.relativeToPlayer) === null) break;
         let affects: AttackRequirementEntry['affects'] | undefined;
         if (effect.selector !== undefined)
           affects = {
             kind: 'selector',
             selector: effect.selector,
-            ...(effect.relativeTo === 'activePlayer'
-              ? { viewpointId: ctx.state.currentTurnPlayer }
-              : effect.relativeTo === 'eventPlayer'
-                ? { viewpointId: ref('eventPlayer') as unknown as PlayerId }
-                : {}),
+            ...(effect.relativeToPlayer !== undefined
+              ? { viewpointId: ref(effect.relativeToPlayer) as unknown as PlayerId }
+              : effect.relativeTo === 'activePlayer'
+                ? { viewpointId: ctx.state.currentTurnPlayer }
+                : effect.relativeTo === 'eventPlayer'
+                  ? { viewpointId: ref('eventPlayer') as unknown as PlayerId }
+                  : {}),
           };
         else {
           const targetId = effect.target === undefined ? null : ref(effect.target);

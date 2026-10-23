@@ -1085,7 +1085,13 @@ export type Effect =
   | { op: 'mill'; count: Value } // controller mills
   | { op: 'gainEnergy'; amount: Value }
   /** Create a player-owned emblem containing abilities but no targetable characteristics. */
-  | { op: 'createEmblem'; name: string; abilities: Ability[] } // controller gets energy counters
+  | {
+      op: 'createEmblem';
+      name: string;
+      abilities: Ability[];
+      /** "Target player gets an emblem" (Rowan Kenrith): that player owns it, not the controller. */
+      forPlayer?: EffectRef;
+    }
   | { op: 'gainLife'; amount: Value } // controller gains
   | { op: 'loseLife'; amount: Value } // controller loses life (not damage)
   | { op: 'loseLifeTarget'; target: EffectRef; amount: Value }
@@ -1114,6 +1120,8 @@ export type Effect =
       amount: Value;
       source?: EffectRef;
       exceptSource?: true;
+      /** "each tapped creature target player controls" (Rowan Kenrith): only that player's. */
+      controlledBy?: EffectRef;
     }
   /** "~ deals X damage to each creature without flying AND EACH PLAYER" (Earthquake). */
   | { op: 'damageEachPlayer'; amount: Value; source?: EffectRef }
@@ -1607,6 +1615,8 @@ export type Effect =
        * `duringTheirNextTurn` it is also the player whose next turn it lasts through.
        */
       relativeTo?: 'activePlayer' | 'eventPlayer';
+      /** "each creature target player controls" during that player's next turn (Rowan Kenrith). */
+      relativeToPlayer?: EffectRef;
       /** "can't attack you or planeswalkers you control": the controller and what they control. */
       cantAttack?: 'you';
     }
@@ -1615,6 +1625,11 @@ export type Effect =
    * `then` resolves only if they chose to draw.
    */
   | { op: 'eventPlayerMayDraw'; then: Effect[] }
+  /**
+   * Partner with (CR 702.124j): "target player may search their library for a card named
+   * [name], reveal it, put it into their hand, then shuffle."
+   */
+  | { op: 'targetPlayerMaySearchNamed'; target: EffectRef; name: string }
   /**
    * "Until your next turn, those creatures can't block" (Taunt from the Rampart): the creatures
    * matching `selector` as this resolves, a fixed set (CR 611.2c).

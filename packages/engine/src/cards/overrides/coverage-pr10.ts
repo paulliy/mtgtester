@@ -835,4 +835,90 @@ export function registerPr10CharacteristicsOverrides(): void {
     },
     'PR10 defines power from noncreature mana values and casts from the graveyard by discarding.',
   );
+
+  // PR10.30: the +2 lasts through the target player's next turn and covers creatures they control
+  // then; the −2's set is fixed as it resolves (CR 611.2c); the emblem belongs to the target player,
+  // and its copies are not activated, so they don't trigger it again (CR 707.10). Partner with
+  // (CR 702.124j) lets the target player search for Will Kenrith.
+  const rowanAttack = targetSlots({ player: { kind: 'player' } });
+  const rowanBurn = targetSlots({ player: { kind: 'player' } });
+  const rowanEmblem = targetSlots({ player: { kind: 'player' } });
+  const rowanPartner = targetSlots({ player: { kind: 'player' } });
+  replaceCard(
+    'e191976c-6ab1-4a23-aeb8-8a88bd4bd203',
+    'Rowan Kenrith',
+    [
+      "+2: During target player's next turn, each creature that player controls attacks if able.",
+      '−2: ~ deals 3 damage to each tapped creature target player controls.',
+      '−8: Target player gets an emblem with "Whenever you activate an ability that isn\'t a mana ability, copy it. You may choose new targets for the copy."',
+      'Partner with Will Kenrith',
+    ],
+    {
+      activatedAbilities: [
+        loyaltyAbility(2, {
+          targets: rowanAttack.targets,
+          effects: [
+            {
+              op: 'addAttackRequirement',
+              selector: allOf(ofType('Creature'), YOURS),
+              relativeToPlayer: rowanAttack.slot.player,
+              requirements: [{ kind: 'anyAttack' }],
+              duration: 'duringTheirNextTurn',
+            },
+          ],
+          description:
+            "During target player's next turn, each creature that player controls attacks if able",
+        }),
+        loyaltyAbility(-2, {
+          targets: rowanBurn.targets,
+          effects: [
+            {
+              op: 'damageEach',
+              selector: allOf(ofType('Creature'), { kind: 'tapped' }),
+              controlledBy: rowanBurn.slot.player,
+              amount: constant(3),
+            },
+          ],
+          description:
+            'Rowan Kenrith deals 3 damage to each tapped creature target player controls',
+        }),
+        loyaltyAbility(-8, {
+          targets: rowanEmblem.targets,
+          effects: [
+            {
+              op: 'createEmblem',
+              name: 'Rowan Kenrith emblem',
+              forPlayer: rowanEmblem.slot.player,
+              abilities: [
+                triggered(
+                  { when: 'activatesAbility', player: 'you' },
+                  {
+                    effects: [{ op: 'copyActivatedAbility' }],
+                    description:
+                      "Whenever you activate an ability that isn't a mana ability, copy it. You may choose new targets for the copy",
+                  },
+                ),
+              ],
+            },
+          ],
+          description: 'Target player gets an emblem that copies each ability they activate',
+        }),
+      ],
+      triggers: [
+        triggered(onEtb(), {
+          targets: rowanPartner.targets,
+          effects: [
+            {
+              op: 'targetPlayerMaySearchNamed',
+              target: rowanPartner.slot.player,
+              name: 'Will Kenrith',
+            },
+          ],
+          description:
+            'Target player may search their library for a card named Will Kenrith, reveal it, and put it into their hand, then shuffle',
+        }),
+      ],
+    },
+    "PR10 authors Rowan's three loyalty abilities, the copying emblem and Partner with.",
+  );
 }

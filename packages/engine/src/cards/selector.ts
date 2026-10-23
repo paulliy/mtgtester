@@ -47,6 +47,8 @@ export interface SelectorCandidate {
   colors: readonly Color[];
   /** Current power. Only `powerAtLeast` reads it — see the module comment. */
   power: number;
+  /** Tapped status; only the event-only `tapped` selector reads it. Absent off the battlefield. */
+  tapped?: boolean;
   /**
    * A card outside the battlefield whose power is not a printed number ("*", a characteristic-
    * defining ability this candidate does not evaluate). `power` then reads 0, so a comparison
@@ -223,6 +225,8 @@ export type Selector =
    * permanent become or stop being a token, so no layer's output can change this answer.
    */
   | { kind: 'isToken' }
+  /** EVENT-ONLY (see the module comment): "each tapped creature" (Rowan Kenrith). */
+  | { kind: 'tapped' }
   /** "a creature you control that entered this turn" (Neriv, Heart of the Storm). */
   | { kind: 'enteredThisTurn' }
   | { kind: 'isCommander' }
@@ -327,6 +331,7 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'attackingYouOrYourPlaneswalker':
     case 'attackedThisTurn':
     case 'controlledSinceTurnStart':
+    case 'tapped':
       return true;
     case 'allOf':
     case 'anyOf':
@@ -453,6 +458,8 @@ export function selectMatches(
       return candidate.keywords.includes(selector.keyword);
     case 'isToken':
       return candidate.isToken;
+    case 'tapped':
+      return candidate.tapped === true;
     case 'enteredThisTurn':
       return candidate.enteredThisTurn;
     case 'isCommander':
