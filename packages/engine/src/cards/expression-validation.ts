@@ -448,6 +448,9 @@ const effectExpressions = {
   replicateCopies: { optional: optional(flag), oncePerTurn: optional(flag) },
   copyCastSpell: { optional: optional(flag), oncePerTurn: optional(flag) },
   nextCastThisTurn: { filter: selector },
+  copyActivatedAbility: { mayPayLifeAgain: optional(flag) },
+  copyStackAbility: { lifeCost: optional(nonnegativeInteger) },
+  copyTargetAbility: { count: positiveInteger, newTargets: optional(flag) },
   copyEachTargetedSpell: { newTargets: optional(flag) },
   angelGrace: {},
   drawForEachOpponent: {},
@@ -463,7 +466,15 @@ const effectExpressions = {
   destroyAndCreateTokensEqualToManaValue: {},
   exile: {},
   exileCard: {},
-  counter: {},
+  counter: {
+    manaSpentAtNextMainPhase: optional((value, path, issues) => {
+      if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+        issue(path, issues, 'expected object');
+        return;
+      }
+      condition((value as { condition?: unknown }).condition, path + '.condition', issues);
+    }),
+  },
   counterAndCreateTokenForController: { count: numberValue },
   sacrifice: {},
   sacrificeOneThen: { selector: selector },

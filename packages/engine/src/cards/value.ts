@@ -76,6 +76,8 @@ export interface ValueScope {
   manaSpent?: number;
   /** Mana produced by Treasure permanents that was spent to cast the entering spell. */
   treasureManaSpent?: number;
+  /** Life paid to activate the ability that fired an `activatesAbility` trigger (Verrak). */
+  lifePaid?: number;
   /** Energy paid by a preceding variable-payment effect in this same resolution. */
   energyPaid?: number;
   stationPower?: number;
@@ -135,6 +137,7 @@ export type TriggerScope = Pick<
   ValueScope,
   | 'damageDealt'
   | 'energyPaid'
+  | 'lifePaid'
   | 'triggerCount'
   | 'spellManaValue'
   | 'spellColorCount'

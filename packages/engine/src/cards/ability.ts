@@ -398,6 +398,28 @@ export const IMPLEMENTED_KEYWORDS = [
 ] as const;
 export type KeywordAbility = (typeof IMPLEMENTED_KEYWORDS)[number];
 
+/**
+ * An activated or triggered ability on the stack as a copy effect needs it: everything decided
+ * for it, so it can be copied from last known information after it has left the stack.
+ */
+export interface StackAbilitySnapshot {
+  stackObjectId: string;
+  kind: 'activatedAbility' | 'triggeredAbility';
+  description: string;
+  ability: Ability;
+  targets: string[];
+  countTargets?: Record<number, string[]>;
+  divisionAmounts?: Record<string, number>;
+  announcedX?: number;
+  sourceId: string;
+  sourceOracleId: string;
+  sourceCardId: string;
+  sourceColors?: Color[];
+  /** The original's event facts, carried unchanged (CR 707.10). */
+  triggerScope?: import('./value').TriggerScope;
+  triggerObjectCardId?: string;
+}
+
 /** What a target slot may point at. Slot options are computed at cast/announcement time. */
 export type TargetKind =
   | 'creature'
@@ -443,6 +465,13 @@ export interface TargetSpec {
   spellTargetsPermanentYouControl?: true;
   /** A stack spell or ability has exactly one targeting occurrence (CR 115.9a, Bolt Bend). */
   spellHasSingleTarget?: true;
+  /**
+   * A stack spell or ability that targets the ability's controller or a creature they control
+   * (Siren Stormtamer). Checked as it is chosen and again on resolution (CR 608.2b).
+   */
+  stackTargetsYouOrCreatureYouControl?: true;
+  /** Only this kind of stack object: "target triggered ability" (Mister Fantastic). */
+  stackKind?: 'spell' | 'activatedAbility' | 'triggeredAbility';
   /**
    * "target creature you control" / "target creature an opponent controls". Omitted for an
    * unrestricted slot. Kept as a field rather than more `TargetKind` literals, which would
@@ -821,6 +850,24 @@ export type Effect =
    * cast trigger that fires once, for its controller's next matching cast, and lapses at cleanup.
    */
   | { op: 'nextCastThisTurn'; filter: Selector; ability: Ability }
+  /**
+   * "Copy that ability" in an activation trigger (Verrak, Rowan Kenrith's emblem), with "you may
+   * choose new targets for the copy" (CR 707.10c). Bound to the activated ability when the
+   * trigger is put on the stack: it becomes a `copyStackAbility` of that ability's last known
+   * information. `mayPayLifeAgain`: "you may pay that much life again. If you do, copy it."
+   */
+  | { op: 'copyActivatedAbility'; mayPayLifeAgain?: true }
+  /**
+   * A bound `copyActivatedAbility`: copy `stackAbility`, even if it has left the stack (CR
+   * 707.10), with new targets chosen by the copy's controller. `lifeCost` is paid first, and
+   * nothing is copied unless the controller chooses to and can pay it.
+   */
+  | { op: 'copyStackAbility'; stackAbility: StackAbilitySnapshot; lifeCost?: number }
+  /**
+   * "Copy target triggered ability you control twice. You may choose new targets for the
+   * copies." (Mister Fantastic, CR 707.10).
+   */
+  | { op: 'copyTargetAbility'; target: EffectRef; count: number; newTargets?: true }
   | {
       op: 'replicateCopies';
       count: number;
@@ -865,7 +912,18 @@ export type Effect =
   | { op: 'destroyAndCreateTokensEqualToManaValue'; target: EffectRef; spec: TokenSpec }
   | { op: 'exile'; target: EffectRef } // target creature
   | { op: 'exileCard'; target: EffectRef }
-  | { op: 'counter'; target: number; exileIfCountered?: boolean; addManaAtNextMainPhase?: boolean }
+  | {
+      op: 'counter';
+      target: number;
+      exileIfCountered?: boolean;
+      addManaAtNextMainPhase?: boolean;
+      /**
+       * "If [condition], add an amount of {C} equal to the amount of mana spent to cast that
+       * spell at the beginning of your next main phase" (Mana Sculpt). Checked once as this
+       * resolves; the delayed trigger is created whether or not the spell could be countered.
+       */
+      manaSpentAtNextMainPhase?: { condition: Condition };
+    }
   /** Counter a spell, then create tokens for that spell's controller (Offer/Swan Song). */
   | { op: 'counterAndCreateTokenForController'; target: number; spec: TokenSpec; count: Value } // target spell — always a real target
   | { op: 'sacrifice'; target: EffectRef }
@@ -2065,6 +2123,13 @@ export type TriggerHead =
   | { when: 'gainsLife'; player: 'you' | 'each' }
   | { when: 'drawsCard'; player: 'you' | 'each' | 'opponent' }
   | { when: 'foretells'; player: 'you' }
+  /**
+   * "Whenever you activate an ability that isn't a mana ability" (Verrak, Rowan Kenrith's emblem):
+   * queued as the ability is put on the stack (CR 602.2), after its costs are paid. Mana abilities
+   * never get here. `lifePaid`: "if life was paid to activate it", a fact of that activation, so
+   * the CR 603.4 resolution recheck cannot change it. The amount is the `lifePaid` value.
+   */
+  | { when: 'activatesAbility'; player: 'you'; lifePaid?: true }
   /**
    * "Whenever damage that would be dealt to you is prevented" (Selfless Squire): queued once per
    * prevention applied to one damage event to the player, carrying the amount it prevented

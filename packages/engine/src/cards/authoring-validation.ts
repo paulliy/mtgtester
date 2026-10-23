@@ -209,6 +209,24 @@ function validateTargets(targets: TargetSpec[], path: string, issues: AuthoringI
         message: 'single target restriction requires a stack target and true flag',
       });
     if (
+      spec.stackTargetsYouOrCreatureYouControl !== undefined &&
+      (spec.stackTargetsYouOrCreatureYouControl !== true ||
+        !['spell', 'noncreatureSpell', 'stackObject'].includes(spec.kind))
+    )
+      issues.push({
+        path: `${at}.stackTargetsYouOrCreatureYouControl`,
+        message: 'you-or-your-creature restriction requires a stack target and true flag',
+      });
+    if (
+      spec.stackKind !== undefined &&
+      (spec.kind !== 'stackObject' ||
+        !['spell', 'activatedAbility', 'triggeredAbility'].includes(spec.stackKind))
+    )
+      issues.push({
+        path: `${at}.stackKind`,
+        message: 'stack object kind requires a stackObject target and a known kind',
+      });
+    if (
       spec.controller !== undefined &&
       !['you', 'opponent', 'eventPlayer', 'activePlayer'].includes(spec.controller)
     )

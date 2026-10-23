@@ -197,6 +197,23 @@ export function targetIsLegal(
       if (kind === 'noncreatureSpell' && isCreatureSpell(ctx, entry)) return false;
       if (spec.spellHasSingleTarget === true && spellTargetOccurrences(entry).length !== 1)
         return false;
+      if (spec.stackKind !== undefined && entry.kind !== spec.stackKind) return false;
+      if (spec.stackTargetsYouOrCreatureYouControl === true) {
+        const targets = [...entry.targets, ...Object.values(entry.countTargets ?? {}).flat()];
+        if (
+          !targets.some(
+            (id) =>
+              id === controllerId ||
+              ctx.state.battlefield.some(
+                (permanent) =>
+                  permanent.id === id &&
+                  permanent.controllerId === controllerId &&
+                  computeCharacteristics(ctx, permanent).types.includes('Creature'),
+              ),
+          )
+        )
+          return false;
+      }
       if (spec.spellTargetsPermanentYouControl === true) {
         const targets = [...entry.targets, ...Object.values(entry.countTargets ?? {}).flat()];
         if (

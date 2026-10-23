@@ -31,6 +31,8 @@ const targetFields = {
   slotGroup: 'unsupported',
   spellTargetsPermanentYouControl: 'unsupported',
   spellHasSingleTarget: 'unsupported',
+  stackTargetsYouOrCreatureYouControl: 'unsupported',
+  stackKind: 'unsupported',
 } satisfies Record<keyof TargetSpec, FieldRole>;
 const returnFields = { op: 'lower', target: 'lower' } satisfies Record<
   keyof Extract<Effect, { op: 'returnToHand' }>,

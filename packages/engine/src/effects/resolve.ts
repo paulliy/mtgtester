@@ -19,10 +19,10 @@ import { isPermanentCard } from '../cards/definition';
 import type { ObjectFacts } from '../cards/source-identity';
 import { eventObjectFacts, sourceObjectFacts } from '../cards/source-identity';
 import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
-import { queueReplicateCopy, queueSpellCopy } from '../stack/copy';
+import { queueAbilityCopy, queueReplicateCopy, queueSpellCopy } from '../stack/copy';
 import { chooseReplicateTargets } from '../stack/replicate-targets';
 import { allStackTargets, changeSingleStackTarget, chooseNewStackTargets } from '../stack/retarget';
-import { newObjectId } from '../state/objects';
+import { newObjectId, stackAbilitySnapshot } from '../state/objects';
 import { findObjectByCardId, spellDefinitionOf } from '../state/queries';
 import { freeCardIsCastable, resolveFreeCard } from '../casting/free';
 import { permanentManaValue, targetIsLegal } from '../targets/legality';
@@ -37,7 +37,12 @@ import { assertManaRiders } from '../cards/mana-riders';
 import type { Color, ObjectId, PlayerId } from '@mtg/shared';
 import { ALL_COLORS } from '@mtg/shared';
 import { abilityModeSelections } from '../actions/ability-modes';
-import type { AttackRequirementSpec, ManaRider, WardCost } from '../cards/ability';
+import type {
+  AttackRequirementSpec,
+  ManaRider,
+  StackAbilitySnapshot,
+  WardCost,
+} from '../cards/ability';
 import type {
   Ability,
   AbilityCost,
@@ -670,6 +675,7 @@ export function payLife(ctx: GameContext, player: EnginePlayerState, amount: num
   if (amount > player.life || playerLifeLocked(ctx, player.id))
     throw new Error('life cost became unpayable');
   player.life -= amount;
+  if (ctx.costLifePaid !== undefined) ctx.costLifePaid.amount += amount;
   ctx.state.lifeLostThisTurn[player.id] = true;
   emit(ctx, 'lifeLoss', { player: player.id, amount, life: player.life });
 }
@@ -3213,6 +3219,41 @@ export function* executeAbility(
         if (t === null) break;
         const idx = ctx.state.stack.findIndex((s) => s.id === t);
         const countered = ctx.state.stack[idx];
+        const manaSpent = effect.manaSpentAtNextMainPhase;
+        if (
+          countered !== undefined &&
+          manaSpent !== undefined &&
+          evaluateCondition(ctx, manaSpent.condition, {
+            cardId: source.cardId,
+            controllerId: controller.id,
+            ...(source.id === undefined ? {} : { objectId: source.id }),
+          })
+        ) {
+          // A copy was not cast, so no mana was spent to cast it (CR 707.10).
+          const spent = countered.card?.manaSpentToCast ?? 0;
+          ctx.state.delayedTriggers.push({
+            id: `dt-${ctx.state.nextObjectNum++}`,
+            sourceCardId: source.cardId,
+            sourceOracleId: source.oracleId,
+            controllerId: controller.id,
+            when: 'mainPhase',
+            ability: {
+              kind: 'triggered',
+              targets: [],
+              effects: [
+                {
+                  op: 'addMana',
+                  amount: { kind: 'const', n: spent },
+                  colors: ['C'],
+                  fixedSymbols: Array.from({ length: spent }, () => 'C' as const),
+                },
+              ],
+              description: `Add {C} equal to the mana spent to cast the countered spell (${spent})`,
+            },
+            expiry: 'onFire',
+            player: 'you',
+          });
+        }
         if (countered !== undefined) {
           // "This spell can't be countered" (CR 601): still a legal target — DEBT-style, like
           // indestructible on `destroy` above — but the countering itself has no effect.
@@ -5536,6 +5577,49 @@ export function* executeAbility(
       }
       case 'copyCastSpell':
         throw new Error(`engine bug: ${source.name} copies a cast spell outside a cast trigger`);
+      case 'copyActivatedAbility':
+        throw new Error(
+          `engine bug: ${source.name} copies an activated ability outside an activation trigger`,
+        );
+      case 'copyStackAbility': {
+        const lifeCost = effect.lifeCost;
+        if (lifeCost !== undefined) {
+          // "You may pay that much life again. If you do, copy that ability." (CR 119.4)
+          const canPay = controller.life >= lifeCost && !playerLifeLocked(ctx, controller.id);
+          const outcome = yield {
+            decisionType: 'general',
+            player: controller.id,
+            prompt: `${source.name}: pay ${lifeCost} life to copy ${effect.stackAbility.description}?`,
+            options: [
+              plainOption({ type: 'decline', description: 'Decline', verb: 'Decline' }),
+              ...(canPay
+                ? [
+                    plainOption({
+                      type: 'payLife',
+                      description: `Pay ${lifeCost} life`,
+                      verb: 'Pay',
+                    }),
+                  ]
+                : []),
+            ],
+          };
+          if (outcome.index !== 1 || !canPay) break;
+          payLife(ctx, controller, lifeCost);
+        }
+        yield* copyAbilityOnStack(ctx, effect.stackAbility, controller.id, source.name);
+        break;
+      }
+      case 'copyTargetAbility': {
+        const targetId = ref(effect.target);
+        const original = ctx.state.stack.find(
+          (entry) => entry.id === targetId && entry.kind !== 'spell' && entry.ability !== null,
+        );
+        if (original === undefined) break;
+        const snapshot = stackAbilitySnapshot(original);
+        for (let i = 0; i < effect.count; i++)
+          yield* copyAbilityOnStack(ctx, snapshot, controller.id, source.name);
+        break;
+      }
       case 'nextCastThisTurn':
         ctx.state.delayedTriggers.push({
           id: `dt-${ctx.state.nextObjectNum++}`,
@@ -9198,6 +9282,27 @@ function* copySpellOnStack(
   emit(
     ctx,
     'spellCopied',
+    { name: original.description, targets: allStackTargets(copy) },
+    controllerId,
+  );
+  return copy;
+}
+
+/**
+ * Copy an activated or triggered ability for `controllerId` (CR 707.10), who may choose new
+ * targets for the copy (CR 707.10c). Copies made from last known information work the same way.
+ */
+function* copyAbilityOnStack(
+  ctx: GameContext,
+  original: StackAbilitySnapshot,
+  controllerId: PlayerId,
+  sourceName: string,
+): GameGen<EngineStackObject> {
+  const copy = queueAbilityCopy(ctx, original, controllerId);
+  yield* chooseNewStackTargets(ctx, copy, controllerId, sourceName, true);
+  emit(
+    ctx,
+    'abilityCopied',
     { name: original.description, targets: allStackTargets(copy) },
     controllerId,
   );

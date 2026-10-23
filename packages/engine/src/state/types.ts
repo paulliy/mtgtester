@@ -931,6 +931,8 @@ export interface GameContext {
    * entrants (CR 614.12).
    */
   enteringTogether?: ReadonlySet<CardId>;
+  /** Set while an activation's costs are paid: the life paid as part of them (Verrak). */
+  costLifePaid?: { amount: number };
 }
 
 /** Internal debug log entry (brief §13) — separate from the replayable `GameEvent` log. */

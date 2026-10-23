@@ -1,8 +1,8 @@
 /** PR10 authored stack, copy and characteristic operations. Evidence is tracked in the manifest. */
 import { countPermanents } from '../condition';
-import { allOf, anyOf, not, ofType, powerAtLeast } from '../selector';
+import { allOf, anyOf, not, ofSubtype, ofType, powerAtLeast } from '../selector';
 import { counterSpellTarget } from '../target-builders';
-import { onCast, spell, targetSlots, triggered } from '../templates';
+import { activated, mana, onCast, spell, targetSlots, triggered } from '../templates';
 import { constant } from '../value';
 import { replaceCard } from './index';
 
@@ -13,6 +13,7 @@ import { replaceCard } from './index';
 export function registerCoveragePr10Overrides(): void {
   registerPr10RetargetAndCopyOverrides();
   registerPr10CastCopyOverrides();
+  registerPr10AbilityStackOverrides();
 }
 
 /** PR10.01, 10.11, 10.06, 10.14, 10.12: retargeting and spell copies with new targets. */
@@ -163,5 +164,107 @@ export function registerPr10CastCopyOverrides(): void {
       ],
     },
     'PR10 adds the first-main-phase mana and copies one noncreature spell each turn.',
+  );
+}
+
+/** PR10.20, 10.27, 10.21, 10.22: countering, copying and watching abilities on the stack. */
+export function registerPr10AbilityStackOverrides(): void {
+  // PR10.20: the restriction is rechecked on resolution (CR 608.2b), after the sacrifice.
+  const siren = targetSlots({
+    object: { kind: 'stackObject', stackTargetsYouOrCreatureYouControl: true },
+  });
+  replaceCard(
+    '59c7496b-19a2-478b-b28f-6f153c2458ae',
+    'Siren Stormtamer',
+    [
+      '{U}, Sacrifice this creature: Counter target spell or ability that targets you or a creature you control.',
+    ],
+    {
+      activatedAbilities: [
+        activated({
+          costs: [mana('{U}'), { kind: 'sacrificeSelf' }],
+          targets: siren.targets,
+          effects: [{ op: 'counter', target: siren.slot.object }],
+          description: 'Counter target spell or ability that targets you or a creature you control',
+        }),
+      ],
+    },
+    'PR10 counters only a spell or ability that targets you or a creature you control.',
+  );
+
+  // PR10.27: the Wizard check happens as Mana Sculpt resolves; the mana is what was spent.
+  const sculpt = targetSlots({ spell: counterSpellTarget() });
+  replaceCard(
+    '35e2f82e-7ca3-4a92-9134-b7999eef5337',
+    'Mana Sculpt',
+    [
+      'Counter target spell. If you control a Wizard, add an amount of {C} equal to the amount of mana spent to cast that spell at the beginning of your next main phase.',
+    ],
+    {
+      spellAbility: spell({
+        targets: sculpt.targets,
+        effects: [
+          {
+            op: 'counter',
+            target: sculpt.slot.spell,
+            manaSpentAtNextMainPhase: {
+              condition: countPermanents(ofSubtype('Wizard'), 'you', '>=', 1),
+            },
+          },
+        ],
+        description:
+          'Counter target spell. If you control a Wizard, add {C} equal to the mana spent to cast it at the beginning of your next main phase',
+      }),
+    },
+    'PR10 checks for a Wizard on resolution and adds the mana actually spent.',
+  );
+
+  // PR10.21: copies of a triggered ability on the stack (CR 707.10).
+  const fantastic = targetSlots({
+    ability: { kind: 'stackObject', stackKind: 'triggeredAbility', controller: 'you' },
+  });
+  replaceCard(
+    'a8011dce-17fb-46e1-8297-81a4acccbd05',
+    'Mister Fantastic',
+    [
+      '{R}{G}{W}{U}, {T}: Copy target triggered ability you control twice. You may choose new targets for the copies.',
+    ],
+    {
+      activatedAbilities: [
+        activated({
+          costs: [mana('{R}{G}{W}{U}'), { kind: 'tap' }],
+          targets: fantastic.targets,
+          effects: [
+            { op: 'copyTargetAbility', target: fantastic.slot.ability, count: 2, newTargets: true },
+          ],
+          description:
+            'Copy target triggered ability you control twice. You may choose new targets for the copies',
+        }),
+      ],
+    },
+    'PR10 copies a triggered ability on the stack twice, with new targets.',
+  );
+
+  // PR10.22: "if life was paid" is a fact of the activation (CR 603.4); the copy uses last known
+  // information if the ability has already left the stack (CR 707.10).
+  replaceCard(
+    '04853f06-3fd2-445d-9b0d-d68d0f116635',
+    'Verrak, Warped Sengir',
+    [
+      "Whenever you activate an ability that isn't a mana ability, if life was paid to activate it, you may pay that much life again. If you do, copy that ability. You may choose new targets for the copy.",
+    ],
+    {
+      triggers: [
+        triggered(
+          { when: 'activatesAbility', player: 'you', lifePaid: true },
+          {
+            effects: [{ op: 'copyActivatedAbility', mayPayLifeAgain: true }],
+            description:
+              'You may pay that much life again. If you do, copy that ability. You may choose new targets for the copy',
+          },
+        ),
+      ],
+    },
+    'PR10 copies an activated ability that cost life when its controller pays that life again.',
   );
 }

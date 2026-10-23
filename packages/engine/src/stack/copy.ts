@@ -1,5 +1,5 @@
-import type { ObjectId, PlayerId } from '@mtg/shared';
-import type { Ability, Effect } from '../cards/ability';
+import type { ObjectId, OracleId, PlayerId } from '@mtg/shared';
+import type { Ability, Effect, StackAbilitySnapshot } from '../cards/ability';
 import type { CardDefinition } from '../cards/definition';
 import { isPermanentCard } from '../cards/definition';
 import type { DamageKeyword, EngineStackObject, GameContext } from '../state/types';
@@ -145,6 +145,50 @@ export function queueReplicateCopy(
           },
         }
       : {}),
+  };
+  ctx.state.stack.push(copy);
+  return copy;
+}
+
+/**
+ * A copy of an activated or triggered ability (CR 707.10): same source, same decisions, a new
+ * controller. It is not activated or triggered, so it fires nothing that watches those events.
+ * Made from last known information when the original has already left the stack.
+ */
+export function queueAbilityCopy(
+  ctx: GameContext,
+  original: StackAbilitySnapshot,
+  controllerId: PlayerId,
+): EngineStackObject {
+  const id = `o-${ctx.state.nextObjectNum++}` as ObjectId;
+  const copy: EngineStackObject = {
+    id,
+    sourceId: original.sourceId as ObjectId,
+    controllerId,
+    kind: original.kind,
+    description: `Copy of ${original.description}`,
+    targets: [...original.targets] as ObjectId[],
+    ...(original.countTargets === undefined
+      ? {}
+      : {
+          countTargets: Object.fromEntries(
+            Object.entries(original.countTargets).map(([slot, ids]) => [slot, [...ids]]),
+          ) as Record<number, ObjectId[]>,
+        }),
+    ...(original.divisionAmounts === undefined
+      ? {}
+      : { divisionAmounts: { ...original.divisionAmounts } }),
+    ...(original.announcedX === undefined ? {} : { announcedX: original.announcedX }),
+    card: null,
+    ability: original.ability,
+    sourceOracleId: original.sourceOracleId as OracleId,
+    sourceCardId: original.sourceCardId,
+    ...(original.sourceColors === undefined ? {} : { sourceColors: [...original.sourceColors] }),
+    ...(original.triggerScope === undefined ? {} : { triggerScope: { ...original.triggerScope } }),
+    ...(original.triggerObjectCardId === undefined
+      ? {}
+      : { triggerObjectCardId: original.triggerObjectCardId }),
+    isCommanderCast: false,
   };
   ctx.state.stack.push(copy);
   return copy;

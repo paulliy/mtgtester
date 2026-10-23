@@ -11,7 +11,9 @@ import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { addMana } from '../src/mana/pool';
 import { createGame } from '../src/state/game';
 import { playerById } from '../src/state/objects';
-import type { EngineStackObject, GameContext } from '../src/state/types';
+import { priorityCheckpoint } from '../src/sba/sba';
+import { resolveTopOfStack } from '../src/stack/stack';
+import type { EnginePermanent, EngineStackObject, GameContext } from '../src/state/types';
 import { conjure, copies, forest, gameConfig, oracle, pump } from './fixtures';
 
 // Pending evidence, PR10 overrides are installed only in the PR10 suites' module graph.
@@ -160,4 +162,65 @@ export function choose(pattern: RegExp | string) {
       );
     return { index, targets: new Map() };
   };
+}
+
+/** State-based actions, then waiting triggers onto the stack (CR 117.5). */
+export function putPendingTriggersOnStack(
+  ctx: GameContext,
+  answer?: (decision: PendingDecision, count: number) => DecisionOutcome,
+) {
+  pump(priorityCheckpoint(ctx), answer);
+}
+
+/** Resolve until the stack and pending triggers are empty. */
+export function settle(
+  ctx: GameContext,
+  answer?: (decision: PendingDecision, count: number) => DecisionOutcome,
+) {
+  for (let guard = 0; guard < 50; guard++) {
+    putPendingTriggersOnStack(ctx, answer);
+    if (ctx.state.stack.length === 0) return;
+    pump(resolveTopOfStack(ctx), answer);
+  }
+  throw new Error('stack did not settle');
+}
+
+export function activateOption(
+  ctx: GameContext,
+  playerId: string,
+  source: EnginePermanent,
+  index = 0,
+) {
+  return computePriorityOptions(ctx, p(ctx, playerId)).find((option) => {
+    const payload = option.payload as PriorityActionPayload & { index?: number };
+    return (
+      payload.kind === 'activateAbility' &&
+      payload.objectId === source.id &&
+      (payload.index ?? 0) === index
+    );
+  });
+}
+
+/** Activate `source`'s ability through the real priority action; returns its stack object. */
+export function activate(
+  ctx: GameContext,
+  playerId: string,
+  source: EnginePermanent,
+  targets: Map<number, string> = new Map(),
+  answer?: (decision: PendingDecision, count: number) => DecisionOutcome,
+): EngineStackObject {
+  const option = activateOption(ctx, playerId, source);
+  expect(option, `${source.name} activation is offered to ${playerId}`).toBeDefined();
+  pump(
+    applyPriorityAction(ctx, p(ctx, playerId), option!.payload as PriorityActionPayload, {
+      index: 0,
+      targets,
+    }),
+    answer,
+  );
+  const entry = ctx.state.stack.findLast(
+    (item) => item.kind === 'activatedAbility' && item.sourceCardId === source.cardId,
+  );
+  if (entry === undefined) throw new Error(`${source.name}'s ability is not on the stack`);
+  return entry;
 }
