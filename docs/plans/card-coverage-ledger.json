@@ -2379,19 +2379,6 @@
     "snapshotStatus": "pending"
   },
   {
-    "oracleId": "a8011dce-17fb-46e1-8297-81a4acccbd05",
-    "name": "Mister Fantastic",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"{R}{G}{W}{U}, {T}: Copy target triggered ability you control twice. You may choose new targets for the copies.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "bb5c1817-ac22-4779-9005-251bc354f181",
     "name": "Mistveil Plains",
     "package": "PR02.17",
@@ -3966,20 +3953,6 @@
     "coverageDelta": 1
   },
   {
-    "oracleId": "04853f06-3fd2-445d-9b0d-d68d0f116635",
-    "name": "Verrak, Warped Sengir",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Whenever you activate an ability that isn't a mana ability, if life was paid to activate it, you may pay that much life again. If you do, copy that ability. You may choose new targets for the copy.\"",
-      "override for \"Verrak, Warped Sengir\" has no executable behavior"
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "240e85d3-e495-4877-8609-4b4056c402f7",
     "name": "Victimize",
     "package": "PR03.22",
@@ -4994,6 +4967,66 @@
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
     "behaviorTests": ["packages/engine/tests/white-black-control-gifts.test.ts"],
     "interpretationTests": ["packages/engine/tests/white-black-control-gifts.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "35e2f82e-7ca3-4a92-9134-b7999eef5337",
+    "name": "Mana Sculpt",
+    "package": "PR10.04",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-ability-stack.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-ability-stack.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "59c7496b-19a2-478b-b28f-6f153c2458ae",
+    "name": "Siren Stormtamer",
+    "package": "PR10.08",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-ability-stack.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-ability-stack.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "04853f06-3fd2-445d-9b0d-d68d0f116635",
+    "name": "Verrak, Warped Sengir",
+    "package": "PR10.10",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-ability-stack.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-ability-stack.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "a8011dce-17fb-46e1-8297-81a4acccbd05",
+    "name": "Mister Fantastic",
+    "package": "PR10.21",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-ability-stack.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-ability-stack.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   }
 ]

@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import {
   hand,
+  permanent,
   seatZone,
   priorityHelpers,
   selectScenario,
@@ -75,6 +76,41 @@ async function waitForOpponentSpell(page: Page, name = 'PR10 Lab Shock'): Promis
   await passUntil(page, spell);
   return spell;
 }
+
+/** Activate `ability` of `source` (a permanent), choosing `targets` (stack objects or seats). */
+async function activate(
+  page: Page,
+  source: Locator,
+  ability: RegExp,
+  targets: string[] = [],
+): Promise<void> {
+  await expect(source).toBeVisible();
+  await source.click();
+  const action = page.getByRole('button').filter({ hasText: ability }).last();
+  if (await action.isVisible()) await action.click();
+  for (const target of targets) {
+    if (/^P\d$/.test(target)) {
+      const player = page.locator(`.opponent[data-seat="${target}"]`);
+      await expect(player).toHaveClass(/targetable/);
+      await player.locator('header').click();
+    } else {
+      await stackItem(page, target).click();
+    }
+  }
+  await confirm(page);
+}
+/** Play a land from hand, then choose `seat` for the landfall trigger that asks for a target. */
+async function playLandAndTarget(page: Page, land: string, seat: string): Promise<void> {
+  const card = hand(page, land);
+  await expect(card).toHaveClass(/actionable/);
+  await card.click();
+  const player = page.locator(`.opponent[data-seat="${seat}"]`);
+  await expect(player).toHaveClass(/targetable/);
+  await player.locator('header').click();
+  await confirm(page);
+}
+const logLine = (page: Page, text: string | RegExp): Locator =>
+  page.locator('.log').getByText(text).first();
 
 test.describe('PR10 stack, retarget and copy viewer scenarios', () => {
   for (const { id } of PR10_ALL_SCENARIOS) {
@@ -320,6 +356,123 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
         .first(),
     );
     await expect(page.locator('.log')).not.toContainText(/Cosmic Crucible/);
+  },
+
+  'pr10-siren-stormtamer-viewer-counter-spell': async (page) => {
+    await waitForOpponentSpell(page);
+    await activate(
+      page,
+      permanent(page, 'P1', 'Siren Stormtamer'),
+      /Counter target spell or ability/,
+      ['PR10 Lab Shock'],
+    );
+    await passUntil(page, logLine(page, /countered/i));
+    await expect(life(page, 'P1')).toHaveText('40');
+    await expect(
+      seatZone(page, 'P1', 'Graveyard').getByRole('img', { name: 'Siren Stormtamer', exact: true }),
+    ).toBeVisible();
+  },
+  'pr10-siren-stormtamer-viewer-counter-ability': async (page) => {
+    await waitForOpponentSpell(page, 'PR10 Lab Pinger');
+    await activate(
+      page,
+      permanent(page, 'P1', 'Siren Stormtamer'),
+      /Counter target spell or ability/,
+      ['PR10 Lab Pinger'],
+    );
+    await passUntil(page, logLine(page, /countered/i));
+    await expect(life(page, 'P1')).toHaveText('40');
+    await expect(permanent(page, 'P1', 'PR10 Lab Bear')).toBeVisible();
+    await expect(
+      seatZone(page, 'P1', 'Graveyard').getByRole('img', { name: 'Siren Stormtamer', exact: true }),
+    ).toBeVisible();
+  },
+  'pr10-siren-stormtamer-viewer-not-your-target': async (page) => {
+    await waitForOpponentSpell(page);
+    await expectCastable(page, 'PR10 Lab Zap', true);
+    await expect(permanent(page, 'P1', 'Siren Stormtamer')).not.toHaveClass(/actionable/);
+  },
+
+  'pr10-mana-sculpt-viewer-wizard': async (page) => {
+    await waitForOpponentSpell(page, 'PR10 Lab Cinder');
+    await cast(page, 'Mana Sculpt', ['PR10 Lab Cinder']);
+    await passUntil(page, logLine(page, /countered/i));
+    // The mana spent on Lab Cinder ({1}{R}) arrives at the beginning of the next main phase.
+    await passUntil(page, page.getByText(/Floating/));
+    await expect(page.getByText(/Mana ready 2/)).toBeVisible();
+  },
+  'pr10-mana-sculpt-viewer-no-wizard': async (page) => {
+    await waitForOpponentSpell(page, 'PR10 Lab Cinder');
+    await cast(page, 'Mana Sculpt', ['PR10 Lab Cinder']);
+    await passUntil(page, logLine(page, /countered/i));
+    // Nothing is added at the next main phase: the turn runs out with no mana in the pool.
+    await passUntil(page, logLine(page, /game over/i));
+    await expect(page.getByText(/Main phase 2/)).toBeVisible();
+    await expect(page.getByText(/Floating/)).toHaveCount(0);
+  },
+
+  'pr10-mister-fantastic-viewer-copy-twice': async (page) => {
+    await playLandAndTarget(page, 'Swamp', 'P2');
+    await activate(
+      page,
+      permanent(page, 'P1', 'Mister Fantastic'),
+      /Copy target triggered ability you control twice/,
+      ['PR10 Lab Landfall Sparker'],
+    );
+    await decisionButton(page, 'Target P3').click();
+    await decisionButton(page, 'Target P4').click();
+    await passUntil(page, life(page, 'P4').filter({ hasText: '39' }));
+    await expect(life(page, 'P2')).toHaveText('39');
+    await expect(life(page, 'P3')).toHaveText('39');
+  },
+  'pr10-mister-fantastic-viewer-opponent-trigger': async (page) => {
+    await waitForOpponentSpell(page, 'PR10 Lab Flash Sparker');
+    await passUntil(page, stackItem(page, 'PR10 Lab Flash Sparker — When this creature enters'));
+    await expectCastable(page, 'PR10 Lab Zap', true);
+    await expect(permanent(page, 'P1', 'Mister Fantastic')).not.toHaveClass(/actionable/);
+  },
+  'pr10-mister-fantastic-viewer-combat-draw': async (page) => {
+    await cast(page, 'PR10 Lab Zap', ['P2']);
+    await passUntil(page, life(page, 'P2').filter({ hasText: '39' }));
+    await passUntil(page, logLine(page, /Mister Fantastic.*draw/i));
+    await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  },
+  'pr10-mister-fantastic-viewer-combat-no-draw': async (page) => {
+    await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+    await expect(page.locator('.log')).not.toContainText(/Mister Fantastic/);
+  },
+
+  'pr10-verrak-warped-sengir-viewer-pay-again': async (page) => {
+    await activate(page, permanent(page, 'P1', 'PR10 Lab Bloodletter'), /Pay 2 life: Draw a card/);
+    await passUntil(page, decisionButton(page, 'Pay 2 life'));
+    await decisionButton(page, 'Pay 2 life').click();
+    await passUntil(page, life(page, 'P1').filter({ hasText: '36' }));
+    await passUntil(page, logLine(page, /Copy of PR10 Lab Bloodletter.*resolves/i));
+  },
+  'pr10-verrak-warped-sengir-viewer-decline': async (page) => {
+    await activate(page, permanent(page, 'P1', 'PR10 Lab Bloodletter'), /Pay 2 life: Draw a card/);
+    await passUntil(page, decisionButton(page, 'Decline'));
+    await decisionButton(page, 'Decline').click();
+    await passUntil(page, logLine(page, /PR10 Lab Bloodletter.*resolves/i));
+    await expect(life(page, 'P1')).toHaveText('38');
+    await expect(page.locator('.log')).not.toContainText(/Copy of/);
+  },
+  'pr10-verrak-warped-sengir-viewer-new-target': async (page) => {
+    await activate(page, permanent(page, 'P1', 'PR10 Lab Blood Pinger'), /Pay 1 life: .* deals 1/, [
+      'P2',
+    ]);
+    await passUntil(page, decisionButton(page, 'Pay 1 life'));
+    await decisionButton(page, 'Pay 1 life').click();
+    await decisionButton(page, 'Target P3').click();
+    await passUntil(page, life(page, 'P3').filter({ hasText: '39' }));
+    await passUntil(page, life(page, 'P2').filter({ hasText: '39' }));
+    await expect(life(page, 'P1')).toHaveText('38');
+  },
+  'pr10-verrak-warped-sengir-viewer-no-life': async (page) => {
+    await activate(page, permanent(page, 'P1', 'PR10 Lab Scholar'), /Draw a card/);
+    await passUntil(page, logLine(page, /PR10 Lab Scholar.*resolves/i));
+    await expect(decisionButton(page, /^Pay \d+ life/)).toHaveCount(0);
+    await expect(life(page, 'P1')).toHaveText('40');
   },
 };
 

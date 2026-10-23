@@ -26,6 +26,8 @@ interface Plan {
   /** Spells to cast in order, with the preferred target of each slot (a seat id or a stack spell). */
   casts: {
     name: string;
+    /** What the step does: cast a spell (default), activate a permanent's ability, or play a land. */
+    kind?: 'cast' | 'activate' | 'play';
     targets?: string[];
     alternative?: boolean;
     /** Cast only once the stack is empty ('empty') or holds an object whose name contains this. */
@@ -33,7 +35,26 @@ interface Plan {
   }[];
   /** Decision options P1 picks, matched against the option description, in priority order. */
   picks?: RegExp[];
+  /** Targets P1 chooses, in order, whenever a triggered ability asks for them. */
+  triggerTargets?: string[][];
 }
+
+/** Every card with Card Test Lab scenarios, grouped as the overrides are registered. */
+const CARD_NAMES = [
+  // Retarget, spell copy and cast copy.
+  'Deflecting Swat',
+  'Bolt Bend',
+  'Reverberate',
+  'Flare of Duplication',
+  'Display of Power',
+  'Galvanic Iteration',
+  'Cosmic Crucible',
+  // Ability stack.
+  'Siren Stormtamer',
+  'Mana Sculpt',
+  'Mister Fantastic',
+  'Verrak, Warped Sengir',
+];
 
 const SHOCK_AT_P3 = (card: string): Plan => ({
   casts: [{ name: card, targets: ['PR10 Lab Shock'], when: 'PR10 Lab Shock' }],
@@ -108,13 +129,96 @@ const PLANS: Record<string, Plan> = {
     picks: [/^Copy PR10 Lab Shock$/, /^Target P3$/],
   },
   'pr10-cosmic-crucible-viewer-negative': { casts: [{ name: 'PR10 Lab Red Bear' }] },
+
+  // PR10.08 Siren Stormtamer
+  'pr10-siren-stormtamer-viewer-counter-spell': {
+    casts: [
+      {
+        name: 'Siren Stormtamer',
+        kind: 'activate',
+        targets: ['PR10 Lab Shock'],
+        when: 'PR10 Lab Shock',
+      },
+    ],
+  },
+  'pr10-siren-stormtamer-viewer-counter-ability': {
+    casts: [
+      {
+        name: 'Siren Stormtamer',
+        kind: 'activate',
+        targets: ['PR10 Lab Pinger'],
+        when: 'PR10 Lab Pinger',
+      },
+    ],
+  },
+  'pr10-siren-stormtamer-viewer-not-your-target': { casts: [] },
+  // PR10.04 Mana Sculpt
+  'pr10-mana-sculpt-viewer-wizard': {
+    casts: [{ name: 'Mana Sculpt', targets: ['PR10 Lab Cinder'], when: 'PR10 Lab Cinder' }],
+  },
+  'pr10-mana-sculpt-viewer-no-wizard': {
+    casts: [{ name: 'Mana Sculpt', targets: ['PR10 Lab Cinder'], when: 'PR10 Lab Cinder' }],
+  },
+  // PR10.21 Mister Fantastic
+  'pr10-mister-fantastic-viewer-copy-twice': {
+    casts: [
+      { name: 'Swamp', kind: 'play' },
+      {
+        name: 'Mister Fantastic',
+        kind: 'activate',
+        targets: ['PR10 Lab Landfall Sparker'],
+        when: 'PR10 Lab Landfall Sparker',
+      },
+    ],
+    triggerTargets: [['P2']],
+    picks: [/^Target P3$/, /^Target P4$/],
+  },
+  'pr10-mister-fantastic-viewer-opponent-trigger': { casts: [] },
+  'pr10-mister-fantastic-viewer-combat-draw': {
+    casts: [{ name: 'PR10 Lab Zap', targets: ['P2'] }],
+  },
+  'pr10-mister-fantastic-viewer-combat-no-draw': { casts: [] },
+  // PR10.10 Verrak, Warped Sengir
+  'pr10-verrak-warped-sengir-viewer-pay-again': {
+    casts: [{ name: 'PR10 Lab Bloodletter', kind: 'activate' }],
+    picks: [/^Pay 2 life$/],
+  },
+  'pr10-verrak-warped-sengir-viewer-decline': {
+    casts: [{ name: 'PR10 Lab Bloodletter', kind: 'activate' }],
+    picks: [/^Decline$/],
+  },
+  'pr10-verrak-warped-sengir-viewer-new-target': {
+    casts: [{ name: 'PR10 Lab Blood Pinger', kind: 'activate', targets: ['P2'] }],
+    picks: [/^Pay 1 life$/, /^Target P3$/],
+  },
+  'pr10-verrak-warped-sengir-viewer-no-life': {
+    casts: [{ name: 'PR10 Lab Scholar', kind: 'activate' }],
+  },
 };
+
+/** The legal target matching `want`: a seat id, or the name of a permanent or stack object. */
+function targetChoice(
+  state: ReturnType<ReturnType<typeof pr10Scenario>['engine']['getState']>,
+  options: string[],
+  want: string | undefined,
+): string {
+  if (want !== undefined && options.includes(want)) return want;
+  const named = [...state.battlefield, ...state.stack].find(
+    (item) =>
+      options.includes(item.id) &&
+      ('name' in item ? item.name === want : item.description.includes(want ?? '\0')),
+  );
+  return named?.id ?? options[0]!;
+}
+
+const ACTION_TYPE = { cast: 'castSpell', activate: 'activateAbility', play: 'playLand' } as const;
 
 function run(id: string) {
   const scenario = pr10Scenario(id, `server-${id}` as never);
   const plan = PLANS[id]!;
   const castQueue = [...plan.casts];
   const picks = [...(plan.picks ?? [])];
+  const triggerTargets = [...(plan.triggerTargets ?? [])];
   const offered = new Set<string>();
   const options: string[] = [];
   const casts: string[] = [];
@@ -141,16 +245,23 @@ function run(id: string) {
     const next = castQueue[0];
     let action: LegalAction | undefined;
     let targets: { slot: number; choice: string }[] | undefined;
-    const stack = scenario.engine.getState().stack;
+    const state = scenario.engine.getState();
+    const stack = state.stack;
     const ready =
       next?.when === undefined ||
       (next.when === 'empty'
         ? stack.length === 0
         : stack.some((item) => item.description.includes(next.when!)));
     if (next !== undefined && ready) {
+      const kind = next.kind ?? 'cast';
+      const label = {
+        cast: `Cast ${next.name}`,
+        activate: `${next.name}:`,
+        play: `Play ${next.name}`,
+      }[kind];
       const matching = request.legalActions.filter(
         (candidate) =>
-          candidate.type === 'castSpell' && candidate.description.startsWith(`Cast ${next.name}`),
+          candidate.type === ACTION_TYPE[kind] && candidate.description.startsWith(label),
       );
       action = next.alternative
         ? matching.find((candidate) => candidate.data?.['castVariant'] === 'nonMana')
@@ -159,18 +270,21 @@ function run(id: string) {
       if (action !== undefined) {
         castQueue.shift();
         casts.push(next.name);
-        const state = scenario.engine.getState();
-        targets = (action.targets ?? []).map((slot) => {
-          const want = next.targets?.[slot.slot];
-          const byName = state.stack.find((item) => item.description.includes(want ?? '\0'));
-          const choice =
-            want !== undefined && slot.options.includes(want)
-              ? want
-              : byName !== undefined && slot.options.includes(byName.id)
-                ? byName.id
-                : slot.options[0]!;
-          return { slot: slot.slot, choice };
-        });
+        targets = (action.targets ?? []).map((slot) => ({
+          slot: slot.slot,
+          choice: targetChoice(state, slot.options, next.targets?.[slot.slot]),
+        }));
+      }
+    }
+    if (action === undefined) {
+      const asked = request.legalActions.find((candidate) => candidate.type === 'chooseTargets');
+      if (asked !== undefined) {
+        action = asked;
+        const want = triggerTargets.shift();
+        targets = (asked.targets ?? []).map((slot) => ({
+          slot: slot.slot,
+          choice: targetChoice(state, slot.options, want?.[slot.slot]),
+        }));
       }
     }
     if (action === undefined) {
@@ -187,6 +301,13 @@ function run(id: string) {
     }
     action ??= request.legalActions.find((candidate) => candidate.type === 'pass');
     action ??= request.legalActions[0]!;
+    if (targets === undefined && action.targets !== undefined && action.targets.length > 0) {
+      // A decision with no scripted choice: decline to attack, otherwise take the first option.
+      targets = action.targets.map((slot) => ({
+        slot: slot.slot,
+        choice: slot.options.includes('__no_attack__') ? '__no_attack__' : slot.options[0]!,
+      }));
+    }
     scenario.engine.submit({
       requestId: request.requestId,
       actionId: action.id,
@@ -198,22 +319,14 @@ function run(id: string) {
 }
 
 describe('PR10 Card Test Lab scenarios', () => {
-  it('declares the stable catalog for the seven stack cards', () => {
+  it('declares the stable catalog for the PR10 cards', () => {
     expect(PR10_ALL_SCENARIOS).toEqual(PR10_SCENARIOS);
     expect(new Set(PR10_SCENARIOS.map((scenario) => scenario.id)).size).toBe(PR10_SCENARIOS.length);
     expect(new Set(PR10_SCENARIOS.map((scenario) => scenario.title)).size).toBe(
       PR10_SCENARIOS.length,
     );
     expect(new Set(PR10_SCENARIOS.map((scenario) => scenario.cardName))).toEqual(
-      new Set([
-        'Deflecting Swat',
-        'Bolt Bend',
-        'Reverberate',
-        'Flare of Duplication',
-        'Display of Power',
-        'Galvanic Iteration',
-        'Cosmic Crucible',
-      ]),
+      new Set(CARD_NAMES),
     );
     expect(Object.keys(PLANS).sort()).toEqual(PR10_SCENARIOS.map((scenario) => scenario.id).sort());
   });
@@ -244,7 +357,14 @@ describe('PR10 Card Test Lab scenarios', () => {
 
   const EXPECTATIONS: Record<
     string,
-    { lives: Partial<Record<string, number>>; copies: number; absent?: string; present?: string[] }
+    {
+      lives: Partial<Record<string, number>>;
+      copies: number;
+      absent?: string;
+      present?: string[];
+      /** Exact number of events of each type in the log. */
+      events?: Record<string, number>;
+    }
   > = {
     'pr10-deflecting-swat-viewer-positive': { lives: { P3: 40, P4: 38 }, copies: 0 },
     'pr10-deflecting-swat-viewer-negative': { lives: { P3: 38, P4: 40 }, copies: 0 },
@@ -308,6 +428,70 @@ describe('PR10 Card Test Lab scenarios', () => {
     'pr10-cosmic-crucible-viewer-copy': { lives: { P2: 38, P3: 38 }, copies: 1 },
     'pr10-cosmic-crucible-viewer-once-each-turn': { lives: { P2: 37, P3: 38 }, copies: 1 },
     'pr10-cosmic-crucible-viewer-negative': { lives: {}, copies: 0 },
+    'pr10-siren-stormtamer-viewer-counter-spell': {
+      lives: { P1: 40 },
+      copies: 0,
+      events: { counterSpell: 1, damage: 0, sacrifice: 1 },
+    },
+    'pr10-siren-stormtamer-viewer-counter-ability': {
+      lives: { P1: 40 },
+      copies: 0,
+      events: { counterSpell: 1, damage: 0 },
+    },
+    'pr10-siren-stormtamer-viewer-not-your-target': {
+      lives: { P3: 38 },
+      copies: 0,
+      absent: 'Siren Stormtamer:',
+      events: { counterSpell: 0 },
+    },
+    'pr10-mana-sculpt-viewer-wizard': {
+      lives: { P3: 40 },
+      copies: 0,
+      events: { counterSpell: 1, manaAdded: 1 },
+    },
+    'pr10-mana-sculpt-viewer-no-wizard': {
+      lives: { P3: 40 },
+      copies: 0,
+      events: { counterSpell: 1, manaAdded: 0 },
+    },
+    'pr10-mister-fantastic-viewer-copy-twice': {
+      lives: { P2: 39, P3: 39, P4: 39 },
+      copies: 0,
+      events: { abilityCopied: 2, damage: 3 },
+    },
+    'pr10-mister-fantastic-viewer-opponent-trigger': {
+      lives: { P3: 39 },
+      copies: 0,
+      absent: 'Mister Fantastic:',
+      events: { abilityCopied: 0 },
+    },
+    'pr10-mister-fantastic-viewer-combat-draw': {
+      lives: { P2: 39 },
+      copies: 0,
+      events: { draw: 1 },
+    },
+    'pr10-mister-fantastic-viewer-combat-no-draw': { lives: {}, copies: 0, events: { draw: 0 } },
+    'pr10-verrak-warped-sengir-viewer-pay-again': {
+      lives: { P1: 36 },
+      copies: 0,
+      events: { abilityCopied: 1, draw: 2 },
+    },
+    'pr10-verrak-warped-sengir-viewer-decline': {
+      lives: { P1: 38 },
+      copies: 0,
+      events: { abilityCopied: 0, draw: 1 },
+    },
+    'pr10-verrak-warped-sengir-viewer-new-target': {
+      lives: { P1: 38, P2: 39, P3: 39 },
+      copies: 0,
+      events: { abilityCopied: 1, damage: 2 },
+    },
+    'pr10-verrak-warped-sengir-viewer-no-life': {
+      lives: { P1: 40 },
+      copies: 0,
+      absent: 'Pay ',
+      events: { abilityCopied: 0, draw: 1 },
+    },
   };
 
   it('has expectations for every scenario', () => {
@@ -325,6 +509,11 @@ describe('PR10 Card Test Lab scenarios', () => {
       expect(result.state.players.find((player) => player.id === seat)!.life, seat).toBe(life);
     }
     expect(log.filter((event) => event.type === 'spellCopied')).toHaveLength(expected.copies);
+    for (const [type, count] of Object.entries(expected.events ?? {}))
+      expect(
+        log.filter((event) => event.type === type),
+        type,
+      ).toHaveLength(count);
     for (const description of expected.present ?? [])
       expect(result.offered, description).toContain(description);
     if (expected.absent !== undefined)
@@ -378,5 +567,36 @@ describe('PR10 Card Test Lab scenarios', () => {
     const p1 = result.state.players.find((player) => player.id === 'P1')!;
     expect(p1.graveyard.some((card) => card.name === 'PR10 Lab Red Bear')).toBe(true);
     expect(result.state.battlefield.some((card) => card.name === 'PR10 Lab Red Bear')).toBe(false);
+  });
+  it('Siren Stormtamer is sacrificed to counter the spell aimed at you', () => {
+    const result = run('pr10-siren-stormtamer-viewer-counter-spell');
+    const p1 = result.state.players.find((player) => player.id === 'P1')!;
+    expect(p1.graveyard.some((card) => card.name === 'Siren Stormtamer')).toBe(true);
+    expect(result.state.battlefield.some((card) => card.name === 'Siren Stormtamer')).toBe(false);
+    const p2 = result.state.players.find((player) => player.id === 'P2')!;
+    expect(p2.graveyard.some((card) => card.name === 'PR10 Lab Shock')).toBe(true);
+  });
+
+  it('Mana Sculpt adds the mana spent only with a Wizard, at the next main phase', () => {
+    const wizard = run('pr10-mana-sculpt-viewer-wizard');
+    const added = wizard.state.eventLog.filter((event) => event.type === 'manaAdded');
+    expect(added.map((event) => event.payload['symbols'])).toEqual([['C', 'C']]);
+    const begun = wizard.state.eventLog.filter((event) => event.type === 'phaseBegin');
+    expect(begun.at(-1)!.payload['phase']).toBe('postcombatMain');
+  });
+
+  it('Mister Fantastic copies are separate abilities with their own targets', () => {
+    const result = run('pr10-mister-fantastic-viewer-copy-twice');
+    const damage = result.state.eventLog.filter((event) => event.type === 'damage');
+    expect(damage.map((event) => event.payload['target']).sort()).toEqual(['P2', 'P3', 'P4']);
+  });
+
+  it('Verrak copies the ability only when the life is paid again', () => {
+    const paid = run('pr10-verrak-warped-sengir-viewer-pay-again');
+    const draws = paid.state.eventLog.filter((event) => event.type === 'draw');
+    expect(draws).toHaveLength(2);
+    const copy = run('pr10-verrak-warped-sengir-viewer-new-target');
+    const hits = copy.state.eventLog.filter((event) => event.type === 'damage');
+    expect(hits.map((event) => event.payload['target']).sort()).toEqual(['P2', 'P3']);
   });
 });

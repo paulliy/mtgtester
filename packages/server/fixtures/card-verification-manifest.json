@@ -889,15 +889,44 @@
     },
     "59c7496b-19a2-478b-b28f-6f153c2458ae": {
       "name": "Siren Stormtamer",
-      "oracleSha256": "6541f912b62d1948fa6971683d405089a7c6dda6add27ed295670b4e215d50a1",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "9dc28d7eaa27c68a9f2ffde7ccae5f28f74f2b27baff511fe5b11e2d822cfc2d",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-siren-stormtamer-pinned-oracle-supported"],
       "clauses": [
         {
+          "id": "pr10-siren-stormtamer-clause-1",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["pr10-siren-stormtamer-pinned-oracle-supported"],
+          "viewerScenarioIds": ["pr10-siren-stormtamer-viewer-counter-spell"]
+        },
+        {
+          "id": "pr10-siren-stormtamer-clause-2",
           "oracleText": "{U}, Sacrifice this creature: Counter target spell or ability that targets you or a creature you control.",
-          "implementation": ["explicitly unsupported; targeting restriction omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "Effect.counter",
+            "TargetSpec.stackObject",
+            "AbilityCost.sacrificeSelf",
+            "AbilityCost.mana"
+          ],
+          "engineTestIds": [
+            "pr10-siren-stormtamer-counters-spell-targeting-you",
+            "pr10-siren-stormtamer-counters-ability-targeting-your-creature",
+            "pr10-siren-stormtamer-not-your-target",
+            "pr10-siren-stormtamer-rechecked-on-resolution",
+            "pr10-siren-stormtamer-insufficient-cost"
+          ],
+          "viewerScenarioIds": [
+            "pr10-siren-stormtamer-viewer-counter-spell",
+            "pr10-siren-stormtamer-viewer-counter-ability",
+            "pr10-siren-stormtamer-viewer-not-your-target"
+          ]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr10-siren-stormtamer-viewer-counter-spell",
+        "pr10-siren-stormtamer-viewer-counter-ability",
+        "pr10-siren-stormtamer-viewer-not-your-target"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -1171,16 +1200,33 @@
     },
     "35e2f82e-7ca3-4a92-9134-b7999eef5337": {
       "name": "Mana Sculpt",
-      "oracleSha256": "0b2d95dd1b6129ea13122d2493cb1b94b5f20d66a2848532a52aa2f805a15e4e",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "5298846e6acc7903bd8f2241686004c997e783ec07ff45890abdc9c27b80caee",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-mana-sculpt-pinned-oracle-supported"],
       "clauses": [
         {
+          "id": "pr10-mana-sculpt-clause-1",
           "oracleText": "Counter target spell. If you control a Wizard, add an amount of {C} equal to the amount of mana spent to cast that spell at the beginning of your next main phase.",
-          "implementation": ["explicitly unsupported; Wizard if and captured manaSpent omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "Effect.counter",
+            "TargetSpec.spell",
+            "Condition.countPermanents",
+            "Selector.subtype",
+            "Effect.manaSpentAtNextMainPhase"
+          ],
+          "engineTestIds": [
+            "pr10-mana-sculpt-wizard-mana-spent",
+            "pr10-mana-sculpt-no-wizard",
+            "pr10-mana-sculpt-wizard-checked-on-resolution",
+            "pr10-mana-sculpt-uncounterable-still-adds"
+          ],
+          "viewerScenarioIds": [
+            "pr10-mana-sculpt-viewer-wizard",
+            "pr10-mana-sculpt-viewer-no-wizard"
+          ]
         }
       ],
+      "viewerScenarioIds": ["pr10-mana-sculpt-viewer-wizard", "pr10-mana-sculpt-viewer-no-wizard"],
       "gameplayAiScenarioIds": []
     },
     "6dc7f837-158f-4ccf-86a5-a07a20891ec5": {
@@ -3263,15 +3309,48 @@
     },
     "04853f06-3fd2-445d-9b0d-d68d0f116635": {
       "name": "Verrak, Warped Sengir",
-      "oracleSha256": "34f21854909995c8c060c539603e6749c1787218aac9656276f26bc73954e731",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "df84f96797f0c251da35c103e53e92ec7f0d95c61ab6e3d27ee61a8867db5f71",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-verrak-pinned-oracle-supported"],
       "clauses": [
         {
+          "id": "pr10-verrak-warped-sengir-clause-1",
+          "oracleText": "Flying, deathtouch, lifelink",
+          "implementation": ["keywords flying, deathtouch and lifelink (interpreted)"],
+          "engineTestIds": ["pr10-verrak-pinned-oracle-supported"],
+          "viewerScenarioIds": ["pr10-verrak-warped-sengir-viewer-pay-again"]
+        },
+        {
+          "id": "pr10-verrak-warped-sengir-clause-2",
           "oracleText": "Whenever you activate an ability that isn't a mana ability, if life was paid to activate it, you may pay that much life again. If you do, copy that ability. You may choose new targets for the copy.",
-          "implementation": ["explicitly unsupported; copy activated ability unimplemented"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "TriggerSpec.activatesAbility",
+            "Effect.copyActivatedAbility",
+            "Effect.mayPayLifeAgain"
+          ],
+          "engineTestIds": [
+            "pr10-verrak-pay-again-copies",
+            "pr10-verrak-decline",
+            "pr10-verrak-copy-new-target",
+            "pr10-verrak-no-life-no-trigger",
+            "pr10-verrak-opponent-activation",
+            "pr10-verrak-cant-pay",
+            "pr10-verrak-original-left-stack",
+            "pr10-verrak-copy-is-not-activated"
+          ],
+          "viewerScenarioIds": [
+            "pr10-verrak-warped-sengir-viewer-pay-again",
+            "pr10-verrak-warped-sengir-viewer-decline",
+            "pr10-verrak-warped-sengir-viewer-new-target",
+            "pr10-verrak-warped-sengir-viewer-no-life"
+          ]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr10-verrak-warped-sengir-viewer-pay-again",
+        "pr10-verrak-warped-sengir-viewer-decline",
+        "pr10-verrak-warped-sengir-viewer-new-target",
+        "pr10-verrak-warped-sengir-viewer-no-life"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -15037,6 +15116,61 @@
         "pr10-cosmic-crucible-viewer-copy",
         "pr10-cosmic-crucible-viewer-once-each-turn",
         "pr10-cosmic-crucible-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a8011dce-17fb-46e1-8297-81a4acccbd05": {
+      "name": "Mister Fantastic",
+      "oracleSha256": "b049705cb84e45954b7b47612983de5b55f4d4b8ba31a141487bd143378ae8e1",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-mister-fantastic-pinned-oracle-supported"],
+      "clauses": [
+        {
+          "id": "pr10-mister-fantastic-clause-1",
+          "oracleText": "Reach, vigilance",
+          "implementation": ["keywords reach and vigilance (interpreted)"],
+          "engineTestIds": ["pr10-mister-fantastic-pinned-oracle-supported"],
+          "viewerScenarioIds": ["pr10-mister-fantastic-viewer-combat-draw"]
+        },
+        {
+          "id": "pr10-mister-fantastic-clause-2",
+          "oracleText": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, draw a card.",
+          "implementation": [
+            "TriggerSpec.beginningOfCombat",
+            "Condition.castNoncreatureSpellThisTurn",
+            "Effect.draw"
+          ],
+          "engineTestIds": ["pr10-mister-fantastic-combat-draw"],
+          "viewerScenarioIds": [
+            "pr10-mister-fantastic-viewer-combat-draw",
+            "pr10-mister-fantastic-viewer-combat-no-draw"
+          ]
+        },
+        {
+          "id": "pr10-mister-fantastic-clause-3",
+          "oracleText": "{R}{G}{W}{U}, {T}: Copy target triggered ability you control twice. You may choose new targets for the copies.",
+          "implementation": [
+            "Effect.copyTargetAbility",
+            "TargetSpec.stackObject",
+            "AbilityCost.mana",
+            "AbilityCost.tap"
+          ],
+          "engineTestIds": [
+            "pr10-mister-fantastic-copies-twice",
+            "pr10-mister-fantastic-only-your-triggered-abilities",
+            "pr10-mister-fantastic-insufficient-cost"
+          ],
+          "viewerScenarioIds": [
+            "pr10-mister-fantastic-viewer-copy-twice",
+            "pr10-mister-fantastic-viewer-opponent-trigger"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr10-mister-fantastic-viewer-combat-draw",
+        "pr10-mister-fantastic-viewer-combat-no-draw",
+        "pr10-mister-fantastic-viewer-copy-twice",
+        "pr10-mister-fantastic-viewer-opponent-trigger"
       ],
       "gameplayAiScenarioIds": []
     }

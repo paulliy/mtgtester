@@ -72,7 +72,6 @@ function seat(seatId: string, deckData: ReturnType<typeof deck>): SeatSetup {
 describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke checks', () => {
   it('models every unique card except the explicit fail-closed backlog', () => {
     const expectedUnmodeled = new Set([
-      'Verrak, Warped Sengir',
       'Wandering Archaic // Explore the Vastlands',
       // Audit: incomplete mechanics must not silently simulate approximate card text.
       'Spirit Mantle',
@@ -81,11 +80,9 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'The War in Heaven',
       'Out of the Tombs',
       'Trazyn the Infinite',
-      // Catalog audit batch 1 (PR10 restored the retarget and copy cards).
+      // Catalog audit batch 1 (PR10 restored the retarget, copy and ability-stack cards).
       'Twilight Diviner',
-      'Siren Stormtamer',
       'Smokestack',
-      'Mana Sculpt',
       "Angel's Grace",
       'Nighthawk Scavenger',
       'Arcane Lighthouse',

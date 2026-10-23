@@ -68,7 +68,7 @@ function lab(
     oracleText,
     power: stats?.[0] ?? null,
     toughness: stats?.[1] ?? null,
-    keywords: oracleText === 'Flash' ? ['Flash'] : [],
+    keywords: /^Flash(\n|$)/.test(oracleText) ? ['Flash'] : [],
     isBasicLand: false,
   };
 }
@@ -106,12 +106,84 @@ export const COMMANDER = lab(
   ['2', '2'],
 );
 
-const SUPPORT_CARDS = [SHOCK, ZAP, TWIN, BEAR, RED_BEAR, BRUTE, COMMANDER];
+export const CINDER = lab(
+  'PR10 Lab Cinder',
+  'Instant',
+  '{1}{R}',
+  'PR10 Lab Cinder deals 2 damage to any target.',
+  ['R'],
+);
+export const PINGER = lab(
+  'PR10 Lab Pinger',
+  'Creature — Goblin',
+  '{1}{R}',
+  '{T}: This creature deals 1 damage to any target.',
+  ['R'],
+  ['1', '1'],
+);
+export const WIZARD = lab(
+  'PR10 Lab Wizard',
+  'Creature — Human Wizard',
+  '{1}{U}',
+  '',
+  ['U'],
+  ['1', '1'],
+);
+const SPARK = 'When this creature enters, this creature deals 1 damage to any target.';
+export const SPARKER = lab('PR10 Lab Sparker', 'Creature — Imp', '{1}', SPARK, [], ['1', '1']);
+export const LANDFALL_SPARKER = lab(
+  'PR10 Lab Landfall Sparker',
+  'Creature — Imp',
+  '{1}',
+  'Whenever a land you control enters, this creature deals 1 damage to any target.',
+  [],
+  ['1', '1'],
+);
+/** A basic land in P1's hand, for scenarios that need a land entering the battlefield. */
+export const SWAMP = supportCard('Swamp', 'PR10 support land');
+export const FLASH_SPARKER = lab(
+  'PR10 Lab Flash Sparker',
+  'Creature — Imp',
+  '{1}',
+  `Flash\n${SPARK}`,
+  [],
+  ['1', '1'],
+);
+export const BLOODLETTER = lab(
+  'PR10 Lab Bloodletter',
+  'Creature — Vampire',
+  '{1}',
+  'Pay 2 life: Draw a card.',
+  [],
+  ['1', '1'],
+);
+export const BLOOD_PINGER = lab(
+  'PR10 Lab Blood Pinger',
+  'Creature — Vampire',
+  '{1}',
+  'Pay 1 life: This creature deals 1 damage to any target.',
+  [],
+  ['1', '1'],
+);
+export const SCHOLAR = lab(
+  'PR10 Lab Scholar',
+  'Creature — Human',
+  '{1}',
+  '{T}: Draw a card.',
+  [],
+  ['1', '1'],
+);
 
-/** What the scripted opponent P2 casts the first time it holds priority. */
+const SUPPORT_CARDS = [SHOCK, ZAP, TWIN, BEAR, RED_BEAR, BRUTE, COMMANDER, CINDER];
+
+/**
+ * What the scripted opponent P2 does the first time it holds priority: cast `spell`, or activate
+ * the ability of its permanent named `activate`. A target choice is a seat id, or the name of a
+ * permanent or stack object; a slot with no matching choice falls back to its first legal option.
+ */
 interface OpponentCast {
-  spell: OracleCard;
-  /** Preferred choice per target slot; a slot falls back to its first legal option. */
+  spell?: OracleCard;
+  activate?: string;
   targets: string[];
 }
 
@@ -132,6 +204,15 @@ interface Def {
   opponent?: OpponentCast;
   /** Extra permanents controlled by P3 (for example, a creature for a two-target spell). */
   p3Field?: OracleCard[];
+  /** Permanents controlled by P2 (the scripted opponent) besides its two lands. */
+  p2Field?: OracleCard[];
+  p4Field?: OracleCard[];
+  /** Basic lands P2 controls when it is the scripted opponent; defaults to a Mountain and a Forest. */
+  p2Lands?: string[];
+  /** Cards placed on top of P1's library, first card on top. */
+  p1Library?: OracleCard[];
+  /** Arranged state for P1's named battlefield cards. */
+  fieldOptions?: Record<string, { tapped?: boolean; counters?: Record<string, number> }>;
   prepared?: Partial<PreparedScenarioSpec>;
 }
 
@@ -518,27 +599,260 @@ const DEFS: Def[] = [
       p1Lands: mountains(1),
     },
   ),
+
+  // PR10.08 Siren Stormtamer
+  entry(
+    'siren-stormtamer',
+    'Siren Stormtamer',
+    'counter-spell',
+    'Siren Stormtamer: counter a spell that targets you',
+    [2],
+    [
+      'Pass priority so P2 casts PR10 Lab Shock at you.',
+      'Activate Siren Stormtamer ({U}, sacrifice it) targeting the spell.',
+    ],
+    'Siren is sacrificed and Lab Shock is countered, so you take no damage.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Siren Stormtamer').card],
+      p1Lands: ['Island'],
+      opponent: { spell: SHOCK, targets: ['P1'] },
+    },
+  ),
+  entry(
+    'siren-stormtamer',
+    'Siren Stormtamer',
+    'counter-ability',
+    'Siren Stormtamer: counter an ability that targets your creature',
+    [2],
+    [
+      'Pass priority so P2 activates PR10 Lab Pinger targeting PR10 Lab Bear.',
+      'Activate Siren Stormtamer targeting that ability.',
+    ],
+    'The ability is countered, so your creature takes no damage.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Siren Stormtamer').card, BEAR],
+      p1Lands: ['Island'],
+      p2Field: [PINGER],
+      opponent: { activate: PINGER.name, targets: [BEAR.name] },
+    },
+  ),
+  entry(
+    'siren-stormtamer',
+    'Siren Stormtamer',
+    'not-your-target',
+    'Siren Stormtamer: a spell aimed elsewhere cannot be countered',
+    [2],
+    [
+      'Pass priority so P2 casts PR10 Lab Shock at P3.',
+      'Siren has no legal target, while PR10 Lab Zap can still be cast.',
+    ],
+    'Siren’s ability is not offered because the spell targets neither you nor your creature.',
+    {
+      p1Hand: [ZAP],
+      p1Field: [pin('Siren Stormtamer').card],
+      p1Lands: ['Island', 'Mountain'],
+      opponent: SHOCK_P3,
+    },
+  ),
+
+  // PR10.04 Mana Sculpt
+  entry(
+    'mana-sculpt',
+    'Mana Sculpt',
+    'wizard',
+    'Mana Sculpt: counter a spell and add the mana spent with a Wizard',
+    [1],
+    [
+      'Pass priority so P2 casts PR10 Lab Cinder ({1}{R}) at P3, then cast Mana Sculpt targeting it.',
+      'Let everything resolve and move to your second main phase.',
+    ],
+    'Lab Cinder is countered; with a Wizard you add {C}{C} (the mana spent) at the beginning of your next main phase.',
+    {
+      p1Hand: [pin('Mana Sculpt').card],
+      p1Field: [WIZARD],
+      p1Lands: ['Island', 'Island', 'Island'],
+      opponent: { spell: CINDER, targets: ['P3'] },
+      prepared: { continueToPostcombatMain: true },
+    },
+  ),
+  entry(
+    'mana-sculpt',
+    'Mana Sculpt',
+    'no-wizard',
+    'Mana Sculpt: counter a spell without a Wizard adds no mana',
+    [1],
+    [
+      'Pass priority so P2 casts PR10 Lab Cinder at P3, then cast Mana Sculpt targeting it.',
+      'Let everything resolve and move to your second main phase.',
+    ],
+    'Lab Cinder is countered and no mana is added, because you control no Wizard.',
+    {
+      p1Hand: [pin('Mana Sculpt').card],
+      p1Lands: ['Island', 'Island', 'Island'],
+      opponent: { spell: CINDER, targets: ['P3'] },
+      prepared: { continueToPostcombatMain: true },
+    },
+  ),
+
+  // PR10.21 Mister Fantastic
+  entry(
+    'mister-fantastic',
+    'Mister Fantastic',
+    'copy-twice',
+    'Mister Fantastic: copy a triggered ability twice with new targets',
+    [3],
+    [
+      'Play your Swamp; when PR10 Lab Landfall Sparker triggers, target P2 and then activate Mister Fantastic targeting that trigger.',
+      'Choose P3 for the first copy and P4 for the second.',
+    ],
+    'The trigger and its two copies each deal 1 damage, to P2, P3 and P4.',
+    {
+      p1Hand: [SWAMP],
+      p1Field: [pin('Mister Fantastic').card, LANDFALL_SPARKER],
+      p1Lands: ['Mountain', 'Forest', 'Plains', 'Island'],
+    },
+  ),
+  entry(
+    'mister-fantastic',
+    'Mister Fantastic',
+    'opponent-trigger',
+    'Mister Fantastic: an opponent’s triggered ability cannot be copied',
+    [3],
+    [
+      'Pass priority so P2 flashes in PR10 Lab Flash Sparker and its enter trigger goes on the stack.',
+      'Mister Fantastic has no legal target, while PR10 Lab Zap can still be cast.',
+    ],
+    'Mister Fantastic’s ability is not offered because the trigger is controlled by an opponent.',
+    {
+      p1Hand: [ZAP],
+      p1Field: [pin('Mister Fantastic').card],
+      p1Lands: ['Mountain', 'Forest', 'Plains', 'Island'],
+      opponent: { spell: FLASH_SPARKER, targets: ['P3'] },
+    },
+  ),
+  entry(
+    'mister-fantastic',
+    'Mister Fantastic',
+    'combat-draw',
+    'Mister Fantastic: draw at the beginning of combat after a noncreature spell',
+    [2],
+    ['Cast PR10 Lab Zap at P2, then move to combat.'],
+    'At the beginning of combat Mister Fantastic’s trigger draws you a card.',
+    {
+      p1Hand: [ZAP],
+      p1Field: [pin('Mister Fantastic').card],
+      p1Lands: ['Mountain'],
+      prepared: { continueThroughCombat: true },
+    },
+  ),
+  entry(
+    'mister-fantastic',
+    'Mister Fantastic',
+    'combat-no-draw',
+    'Mister Fantastic: no draw without a noncreature spell this turn',
+    [2],
+    ['Cast nothing and move to combat.'],
+    'Mister Fantastic does not trigger, so you draw nothing.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Mister Fantastic').card],
+      prepared: { continueThroughCombat: true },
+    },
+  ),
+
+  // PR10.10 Verrak, Warped Sengir
+  entry(
+    'verrak-warped-sengir',
+    'Verrak, Warped Sengir',
+    'pay-again',
+    'Verrak: pay the life again to copy the ability',
+    [2],
+    ['Activate PR10 Lab Bloodletter (pay 2 life), then pay 2 life again when Verrak triggers.'],
+    'The ability is copied: you pay 4 life in total and draw two cards.',
+    { p1Hand: [], p1Field: [pin('Verrak, Warped Sengir').card, BLOODLETTER] },
+  ),
+  entry(
+    'verrak-warped-sengir',
+    'Verrak, Warped Sengir',
+    'decline',
+    'Verrak: decline to pay the life again',
+    [2],
+    ['Activate PR10 Lab Bloodletter (pay 2 life), then decline when Verrak triggers.'],
+    'Nothing is copied: you pay 2 life and draw one card.',
+    { p1Hand: [], p1Field: [pin('Verrak, Warped Sengir').card, BLOODLETTER] },
+  ),
+  entry(
+    'verrak-warped-sengir',
+    'Verrak, Warped Sengir',
+    'new-target',
+    'Verrak: the copy may choose a new target',
+    [2],
+    [
+      'Activate PR10 Lab Blood Pinger targeting P2 (pay 1 life), then pay 1 life again when Verrak triggers.',
+      'Choose P3 as the copy’s new target.',
+    ],
+    'The original ability hits P2 and the copy hits P3.',
+    { p1Hand: [], p1Field: [pin('Verrak, Warped Sengir').card, BLOOD_PINGER] },
+  ),
+  entry(
+    'verrak-warped-sengir',
+    'Verrak, Warped Sengir',
+    'no-life',
+    'Verrak: an ability that costs no life does not trigger it',
+    [2],
+    ['Activate PR10 Lab Scholar, which costs no life.'],
+    'Verrak does not trigger: you draw one card and are never asked to pay life.',
+    { p1Hand: [], p1Field: [pin('Verrak, Warped Sengir').card, SCHOLAR] },
+  ),
 ];
 
 export const PR10_SCENARIOS = DEFS.map(({ id, cardName, title }) => ({ id, cardName, title }));
 
-function opponentProvider(opponent: OpponentCast) {
+function opponentProvider(opponent: OpponentCast, engine: () => Engine) {
+  let acted = false;
+  const resolve = (want: string | undefined, options: string[]): string => {
+    if (want !== undefined && options.includes(want)) return want;
+    const state = engine().getState();
+    const byName = [...state.battlefield, ...state.stack].find(
+      (item) =>
+        options.includes(item.id) &&
+        ('name' in item ? item.name === want : item.description.includes(want ?? '\0')),
+    );
+    return byName?.id ?? options[0]!;
+  };
   return {
     decide(request: DecisionRequest): DecisionResponse {
-      const cast = request.legalActions.find(
-        (action) => action.type === 'castSpell' && action.description.includes(opponent.spell.name),
-      );
+      // A triggered ability of the opponent's own asks for its targets.
+      const asked = request.legalActions.find((action) => action.type === 'chooseTargets');
+      if (asked)
+        return {
+          requestId: request.requestId,
+          actionId: asked.id,
+          targets: (asked.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: resolve(opponent.targets[slot.slot], slot.options),
+          })),
+        };
+      const act = acted
+        ? undefined
+        : request.legalActions.find((action) =>
+            opponent.activate !== undefined
+              ? action.type === 'activateAbility' &&
+                action.description.startsWith(`${opponent.activate}:`)
+              : action.type === 'castSpell' && action.description.includes(opponent.spell!.name),
+          );
       const pass =
         request.legalActions.find((action) => action.type === 'pass') ?? request.legalActions[0]!;
-      if (!cast) return { requestId: request.requestId, actionId: pass.id };
+      if (!act) return { requestId: request.requestId, actionId: pass.id };
+      acted = true;
       return {
         requestId: request.requestId,
-        actionId: cast.id,
-        targets: (cast.targets ?? []).map((slot) => ({
+        actionId: act.id,
+        targets: (act.targets ?? []).map((slot) => ({
           slot: slot.slot,
-          choice: slot.options.includes(opponent.targets[slot.slot] ?? '')
-            ? opponent.targets[slot.slot]!
-            : slot.options[0]!,
+          choice: resolve(opponent.targets[slot.slot], slot.options),
         })),
       };
     },
@@ -555,12 +869,16 @@ export function pr10Scenario(id: string, gameId: GameId): CardTestScenario {
   for (const basic of ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp'])
     cardNamed.set(basic, supportCard(basic, 'PR10 support land'));
   for (const card of [...SUPPORT_CARDS, source.card]) cardNamed.set(card.name, card);
+  const opponentSpell = def.opponent?.spell;
   for (const card of [
     ...def.p1Hand,
     ...(def.p1Field ?? []),
     ...(def.p1Graveyard ?? []),
+    ...(def.p1Library ?? []),
+    ...(def.p2Field ?? []),
     ...(def.p3Field ?? []),
-    ...(def.opponent ? [def.opponent.spell] : []),
+    ...(def.p4Field ?? []),
+    ...(opponentSpell ? [opponentSpell] : []),
   ])
     cardNamed.set(card.name, card);
 
@@ -568,6 +886,7 @@ export function pr10Scenario(id: string, gameId: GameId): CardTestScenario {
     ...def.p1Hand.map((card) => card.name),
     ...(def.p1Field ?? []).map((card) => card.name),
     ...(def.p1Graveyard ?? []).map((card) => card.name),
+    ...(def.p1Library ?? []).map((card) => card.name),
     ...lands,
   ];
   const filler = (count: number) =>
@@ -576,6 +895,8 @@ export function pr10Scenario(id: string, gameId: GameId): CardTestScenario {
     );
   const named = (names: string[]) => names.map((name) => cardNamed.get(name)!);
   const commander = def.p1Commander ? COMMANDER : undefined;
+  const p2Lands = def.opponent || def.p2Field ? (def.p2Lands ?? ['Mountain', 'Forest']) : [];
+  const p2FieldNames = [...p2Lands, ...(def.p2Field ?? []).map((card) => card.name)];
 
   const players: EnginePlayerConfig[] = (['P1', 'P2', 'P3', 'P4'] as const).map((seat) => ({
     id: seat,
@@ -585,17 +906,15 @@ export function pr10Scenario(id: string, gameId: GameId): CardTestScenario {
       seat === 'P1'
         ? [...named(p1Names), ...filler(24)]
         : seat === 'P2'
-          ? [
-              ...(def.opponent ? [def.opponent.spell] : []),
-              ...named(['Mountain', 'Forest']),
-              ...filler(24),
-            ]
+          ? [...(opponentSpell ? [opponentSpell] : []), ...named(p2FieldNames), ...filler(24)]
           : seat === 'P3'
             ? [...(def.p3Field ?? []), ...filler(24)]
-            : filler(24),
+            : [...(def.p4Field ?? []), ...filler(24)],
   }));
 
-  const p2Hand = def.opponent ? [def.opponent.spell.name] : [];
+  const p2Hand = opponentSpell ? [opponentSpell.name] : [];
+  const fieldOptions = def.fieldOptions ?? {};
+  const optioned = (def.p1Field ?? []).filter((card) => fieldOptions[card.name] !== undefined);
   const prepared: PreparedScenarioSpec = {
     currentTurnPlayer: 'P1',
     phase: 'precombatMain',
@@ -610,13 +929,23 @@ export function pr10Scenario(id: string, gameId: GameId): CardTestScenario {
         playerId: 'P1',
         cardNames: [
           ...lands,
-          ...(def.p1Field ?? []).map((card) => card.name),
+          ...(def.p1Field ?? [])
+            .filter((card) => fieldOptions[card.name] === undefined)
+            .map((card) => card.name),
           ...(commander ? [commander.name] : []),
         ],
       },
-      ...(def.opponent ? [{ playerId: 'P2' as const, cardNames: ['Mountain', 'Forest'] }] : []),
+      ...optioned.map((card) => ({
+        playerId: 'P1' as const,
+        cardNames: [card.name],
+        ...fieldOptions[card.name],
+      })),
+      ...(p2FieldNames.length ? [{ playerId: 'P2' as const, cardNames: p2FieldNames }] : []),
       ...(def.p3Field?.length
         ? [{ playerId: 'P3' as const, cardNames: def.p3Field.map((card) => card.name) }]
+        : []),
+      ...(def.p4Field?.length
+        ? [{ playerId: 'P4' as const, cardNames: def.p4Field.map((card) => card.name) }]
         : []),
     ],
     ...(def.p1Graveyard?.length
@@ -626,11 +955,21 @@ export function pr10Scenario(id: string, gameId: GameId): CardTestScenario {
           ],
         }
       : {}),
+    ...(def.p1Library?.length
+      ? {
+          libraryTop: [
+            { playerId: 'P1' as const, cardNames: def.p1Library.map((card) => card.name) },
+          ],
+        }
+      : {}),
     ...def.prepared,
   };
 
   const seed = `pr10-${id}-seed-1`;
-  const engine = new Engine({ gameId, seed, players, turnCap: 12 }, { preparedScenario: prepared });
+  const engine: Engine = new Engine(
+    { gameId, seed, players, turnCap: 12 },
+    { preparedScenario: prepared },
+  );
   return {
     metadata: {
       id,
@@ -656,6 +995,8 @@ export function pr10Scenario(id: string, gameId: GameId): CardTestScenario {
       },
     })),
     engine,
-    ...(def.opponent ? { decisionProviderOverrides: { P2: opponentProvider(def.opponent) } } : {}),
+    ...(def.opponent
+      ? { decisionProviderOverrides: { P2: opponentProvider(def.opponent, () => engine) } }
+      : {}),
   };
 }

@@ -499,8 +499,29 @@
   {
     "oracleId": "04853f06-3fd2-445d-9b0d-d68d0f116635",
     "name": "Verrak, Warped Sengir",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever you activate an ability that isn't a mana ability, if life was paid to activate it, you may pay that much life again. If you do, copy that ability. You may choose new targets for the copy."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may pay that much life again. If you do, copy that ability. You may choose new targets for the copy",
+          "effects": [
+            {
+              "mayPayLifeAgain": true,
+              "op": "copyActivatedAbility"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "lifePaid": true,
+            "player": "you",
+            "when": "activatesAbility"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "04b7362d-0490-4cb0-b5d7-2a7732f659ce",
@@ -4061,8 +4082,38 @@
   {
     "oracleId": "35e2f82e-7ca3-4a92-9134-b7999eef5337",
     "name": "Mana Sculpt",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Counter target spell. If you control a Wizard, add an amount of {C} equal to the amount of mana spent to cast that spell at the beginning of your next main phase."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Counter target spell. If you control a Wizard, add {C} equal to the mana spent to cast it at the beginning of your next main phase",
+        "effects": [
+          {
+            "manaSpentAtNextMainPhase": {
+              "condition": {
+                "cmp": ">=",
+                "kind": "countPermanents",
+                "n": 1,
+                "scope": "you",
+                "selector": {
+                  "kind": "subtype",
+                  "value": "Wizard"
+                }
+              }
+            },
+            "op": "counter",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "366a218e-84d3-4cf9-bbc8-f2f8ecce92a3",
@@ -5946,8 +5997,51 @@
   {
     "oracleId": "59c7496b-19a2-478b-b28f-6f153c2458ae",
     "name": "Siren Stormtamer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "{U}, Sacrifice this creature: Counter target spell or ability that targets you or a creature you control."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Counter target spell or ability that targets you or a creature you control",
+            "effects": [
+              {
+                "op": "counter",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "stackObject",
+                "stackTargetsYouOrCreatureYouControl": true
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 1,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "sacrificeSelf"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "5a343a5f-3f9b-43c3-8532-8391de7a5443",
@@ -11279,6 +11373,58 @@
     "name": "Malakir Rebirth // Malakir Mire",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "a8011dce-17fb-46e1-8297-81a4acccbd05",
+    "name": "Mister Fantastic",
+    "handledLines": [
+      "{R}{G}{W}{U}, {T}: Copy target triggered ability you control twice. You may choose new targets for the copies."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Copy target triggered ability you control twice. You may choose new targets for the copies",
+            "effects": [
+              {
+                "count": 2,
+                "newTargets": true,
+                "op": "copyTargetAbility",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "you",
+                "kind": "stackObject",
+                "stackKind": "triggeredAbility"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 1,
+                  "U": 1,
+                  "W": 1
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "a97e760a-99c8-47ea-a875-451aca913ee7",
@@ -28560,8 +28706,38 @@
   {
     "oracleId": "oracle-mana-sculpt",
     "name": "Mana Sculpt",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Counter target spell. If you control a Wizard, add an amount of {C} equal to the amount of mana spent to cast that spell at the beginning of your next main phase."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Counter target spell. If you control a Wizard, add {C} equal to the mana spent to cast it at the beginning of your next main phase",
+        "effects": [
+          {
+            "manaSpentAtNextMainPhase": {
+              "condition": {
+                "cmp": ">=",
+                "kind": "countPermanents",
+                "n": 1,
+                "scope": "you",
+                "selector": {
+                  "kind": "subtype",
+                  "value": "Wizard"
+                }
+              }
+            },
+            "op": "counter",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-mangara-the-diplomat",
@@ -28940,6 +29116,58 @@
             "ordinal": 1,
             "when": "castsSpell"
           }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-mister-fantastic",
+    "name": "Mister Fantastic",
+    "handledLines": [
+      "{R}{G}{W}{U}, {T}: Copy target triggered ability you control twice. You may choose new targets for the copies."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Copy target triggered ability you control twice. You may choose new targets for the copies",
+            "effects": [
+              {
+                "count": 2,
+                "newTargets": true,
+                "op": "copyTargetAbility",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "you",
+                "kind": "stackObject",
+                "stackKind": "triggeredAbility"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 1,
+                  "U": 1,
+                  "W": 1
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
         }
       ]
     }
@@ -33271,8 +33499,51 @@
   {
     "oracleId": "oracle-siren-stormtamer",
     "name": "Siren Stormtamer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "{U}, Sacrifice this creature: Counter target spell or ability that targets you or a creature you control."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Counter target spell or ability that targets you or a creature you control",
+            "effects": [
+              {
+                "op": "counter",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "stackObject",
+                "stackTargetsYouOrCreatureYouControl": true
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 1,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "sacrificeSelf"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-skorpekh-destroyer",
@@ -36470,8 +36741,29 @@
   {
     "oracleId": "oracle-verrak-warped-sengir",
     "name": "Verrak, Warped Sengir",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever you activate an ability that isn't a mana ability, if life was paid to activate it, you may pay that much life again. If you do, copy that ability. You may choose new targets for the copy."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may pay that much life again. If you do, copy that ability. You may choose new targets for the copy",
+          "effects": [
+            {
+              "mayPayLifeAgain": true,
+              "op": "copyActivatedAbility"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "lifePaid": true,
+            "player": "you",
+            "when": "activatesAbility"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-vicious-rumors",

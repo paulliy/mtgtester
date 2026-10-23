@@ -3,7 +3,7 @@
 Generated from the engine-supported card pool.
 This is an interpreter-support inventory. Card behavior verification is tracked separately in the card verification manifest.
 
-**Total**: 6494 modeled non-land cards
+**Total**: 6498 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -3366,6 +3366,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Mana Leak
 - Mana Matrix
 - Mana Prism
+- Mana Sculpt
 - Mana Tithe
 - Managorger Hydra
 - Manakin
@@ -3549,6 +3550,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Mist Raven
 - Mist-Cloaked Herald
 - Mistcutter Hydra
+- Mister Fantastic
 - Mister Fantastic, Reed Richards
 - Mistmeadow Witch
 - Mistral Charger
@@ -5023,6 +5025,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Sink into Stupor // Soporific Springs
 - Sinkhole
 - Sir Shandlar of Eberyn
+- Siren Stormtamer
 - Siren's Call
 - Sisay's Ring
 - Sisters of the Flame
@@ -6041,6 +6044,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Vermiculos
 - Vermin Gorger
 - Vernadi Shieldmate
+- Verrak, Warped Sengir
 - Vesper Ghoul
 - Vessel of Ephemera
 - Vessel of Volatility

@@ -127,6 +127,10 @@ describe('Marchesa catalog audit containment', () => {
     'Reverberate',
     'Flare of Duplication',
     'Display of Power',
+    // PR10 ability-stack regressions (counter, copy and life-paid copies) replace these guards.
+    'Siren Stormtamer',
+    'Mana Sculpt',
+    'Verrak, Warped Sengir',
 
     'Vindictive Lich',
     'Shadrix Silverquill',
