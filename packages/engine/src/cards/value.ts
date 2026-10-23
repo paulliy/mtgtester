@@ -25,6 +25,7 @@ import type { Selector } from './selector';
 import type { ObjectFacts, SourceCastState } from './source-identity';
 import type { EffectRef } from './ability';
 import { selectedPermanentDefinition } from './spell-faces';
+import { offBattlefieldTypes } from '../state/off-battlefield-types';
 
 /** Specialized numeric consumers must reject referents lacking a proven lifetime path. */
 export function assertNumericReference(
@@ -444,7 +445,7 @@ export function cardTypesInAllGraveyards(ctx: GameContext, owner?: PlayerId): nu
     for (const card of player.graveyard) {
       const def = ctx.defs.get(card.oracleId);
       if (def === undefined) continue;
-      for (const t of def.types) {
+      for (const t of offBattlefieldTypes(ctx, def.types, card.ownerId)) {
         if ((CARD_TYPES as readonly string[]).includes(t)) present.add(t);
       }
     }
@@ -463,7 +464,7 @@ export function cardTypesInOpponentsGraveyards(ctx: GameContext, controllerId: P
     for (const card of player.graveyard) {
       const def = ctx.defs.get(card.oracleId);
       if (def === undefined) continue;
-      for (const t of def.types) {
+      for (const t of offBattlefieldTypes(ctx, def.types, card.ownerId)) {
         if ((CARD_TYPES as readonly string[]).includes(t)) present.add(t);
       }
     }

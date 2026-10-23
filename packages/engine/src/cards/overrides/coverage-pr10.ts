@@ -921,4 +921,24 @@ export function registerPr10CharacteristicsOverrides(): void {
     },
     "PR10 authors Rowan's three loyalty abilities, the copying emblem and Partner with.",
   );
+
+  // PR10.03: on the battlefield it is a layer 4 effect; on the stack and in other zones the
+  // `alsoTypesOffBattlefield` rule static adds the type wherever a card's types are read, so its
+  // own "whenever you cast an artifact spell" trigger, which is interpreted, sees creature spells.
+  replaceCard(
+    '5443557e-440f-4fdd-a29b-7740d7cec085',
+    'Biotransference',
+    [
+      "Creatures you control are artifacts in addition to their other types. The same is true for creature spells you control and creature cards you own that aren't on the battlefield.",
+    ],
+    {
+      staticEffects: [
+        { affects: allOf(ofType('Creature'), YOURS), op: { layer: 4, addTypes: ['Artifact'] } },
+      ],
+      ruleStatics: [
+        { kind: 'alsoTypesOffBattlefield', ifType: 'Creature', addTypes: ['Artifact'] },
+      ],
+    },
+    'PR10 makes your creatures, creature spells and creature cards off the battlefield artifacts.',
+  );
 }

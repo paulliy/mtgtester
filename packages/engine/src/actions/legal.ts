@@ -1,4 +1,5 @@
 import { playerLifeLocked } from '../state/phasing';
+import { offBattlefieldTypes } from '../state/off-battlefield-types';
 import { UnmodeledCardError } from '../errors';
 import type { ObjectFacts } from '../cards/source-identity';
 import { supportsAdditionalXAnnouncement } from '../cards/cost-contracts';
@@ -378,7 +379,7 @@ export function costReductionFor(
   const candidate: SelectorCandidate = {
     cardId: castCardId,
     controllerId: casterId,
-    types: def.types,
+    types: offBattlefieldTypes(ctx, def.types, casterId),
     supertypes: def.supertypes,
     subtypes: def.subtypes,
     colors: def.colors,

@@ -1,4 +1,5 @@
 import { counterCount, setCounterCount } from './counters';
+import { offBattlefieldTypes } from './off-battlefield-types';
 import { playerLifeLocked } from './phasing';
 import { selectedPermanentDefinition } from '../cards/spell-faces';
 import { assertTriggerEventFamily } from '../cards/trigger-contracts';
@@ -2867,7 +2868,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
   const candidate: SelectorCandidate = {
     cardId: spell.sourceCardId,
     controllerId: spell.controllerId,
-    types: def.types,
+    types: offBattlefieldTypes(ctx, def.types, spell.controllerId),
     supertypes: def.supertypes,
     subtypes: def.subtypes,
     colors: def.colors,

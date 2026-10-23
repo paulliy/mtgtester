@@ -703,6 +703,8 @@ const shapes = {
   } satisfies Fields<Objects<Condition>>,
   RuleStatic: {
     scope: leaf,
+    ifType: leaf,
+    addTypes: { array: leaf },
     basis: leaf,
     includeTokens: leaf,
     creatureFromBattlefieldOnly: leaf,
@@ -1472,6 +1474,7 @@ const families = {
       playFromZone: true,
       manaActivationRider: true,
       revealTopLibrary: true,
+      alsoTypesOffBattlefield: true,
       lookTopLibrary: true,
       additionalLandDrops: true,
       cantActivateAbilities: true,

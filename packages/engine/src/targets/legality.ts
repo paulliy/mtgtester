@@ -1,4 +1,5 @@
 import { playerLifeLocked } from '../state/phasing';
+import { offBattlefieldTypes } from '../state/off-battlefield-types';
 import { spellDefinitionOf } from '../state/queries';
 import type { ObjectId, PlayerId } from '@mtg/shared';
 import type { TargetKind, TargetSpec } from '../cards/ability';
@@ -361,7 +362,7 @@ export function spellMatchesSelector(
   const candidate: SelectorCandidate = {
     cardId: entry.sourceCardId,
     controllerId: entry.controllerId,
-    types: def.types,
+    types: offBattlefieldTypes(ctx, def.types, entry.controllerId),
     supertypes: def.supertypes,
     subtypes: def.subtypes,
     colors: def.colors,

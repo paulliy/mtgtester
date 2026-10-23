@@ -120,6 +120,13 @@ export type RuleStatic =
   /** "Play with the top card of your library revealed." */
   | { kind: 'revealTopLibrary' }
   /**
+   * "The same is true for creature spells you control and creature cards you own that aren't on
+   * the battlefield" (Biotransference): an object of `ifType` gains `addTypes` on the stack (if
+   * this permanent's controller controls it) and in every other zone but the battlefield (if they
+   * own it). The battlefield half is an ordinary layer 4 static.
+   */
+  | { kind: 'alsoTypesOffBattlefield'; ifType: string; addTypes: string[] }
+  /**
    * "Each nonland card in your hand without foretell has foretell. Its foretell cost is equal to
    * its mana cost reduced by {2}." (Dream Devourer, CR 702.143a): the foretell special action
    * for its controller's hand cards, each keeping that cost once foretold.

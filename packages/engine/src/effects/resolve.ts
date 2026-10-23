@@ -1,4 +1,5 @@
 import { copyData } from '../state/copy-data';
+import { offBattlefieldTypes } from '../state/off-battlefield-types';
 import { HUMAN_SOLDIER_1_1_WHITE } from '../cards/tokens';
 import {
   discover,
@@ -5054,8 +5055,12 @@ export function* executeAbility(
         if (target === undefined) break;
         const cards = [...target.graveyard];
         const count = cards.filter((card) => {
-          const def = getDefByOracleId(ctx, card.oracleId, card.name);
-          return def.types.includes('Artifact') || def.types.includes('Land');
+          const types = offBattlefieldTypes(
+            ctx,
+            getDefByOracleId(ctx, card.oracleId, card.name).types,
+            card.ownerId,
+          );
+          return types.includes('Artifact') || types.includes('Land');
         }).length;
         yield* moveObjects(ctx, cards, { zone: 'exile' });
         for (let i = 0; i < count; i++) createToken(ctx, effect.spec, controller.id);
@@ -5083,9 +5088,10 @@ export function* executeAbility(
           const choices = controller.graveyard.filter((card) => {
             if (chosen.includes(card)) return false;
             const def = getDefByOracleId(ctx, card.oracleId, card.name);
+            const types = offBattlefieldTypes(ctx, def.types, card.ownerId);
             return (
-              def.types.includes('Artifact') &&
-              def.types.includes('Creature') &&
+              types.includes('Artifact') &&
+              types.includes('Creature') &&
               spellManaValue(def, undefined) <= remaining
             );
           });
@@ -5174,7 +5180,8 @@ export function* executeAbility(
       case 'grantUnearthToArtifactCreaturesInGraveyard': {
         for (const card of controller.graveyard) {
           const def = ctx.defs.get(card.oracleId);
-          if (def?.types.includes('Artifact') !== true || !def.types.includes('Creature')) continue;
+          const types = def === undefined ? [] : offBattlefieldTypes(ctx, def.types, card.ownerId);
+          if (!types.includes('Artifact') || !types.includes('Creature')) continue;
           ctx.state.temporaryGraveyardAbilities[card.cardId] = [
             {
               costs: [{ kind: 'mana', cost: effect.cost }],
@@ -5277,9 +5284,10 @@ export function* executeAbility(
         }
         const choices = milled.filter((card) => {
           const def = getDefByOracleId(ctx, card.oracleId, card.name);
+          const types = offBattlefieldTypes(ctx, def.types, card.ownerId);
           return (
             findObjectById(ctx, card.id) === card &&
-            ((def.types.includes('Artifact') && def.types.includes('Creature')) ||
+            ((types.includes('Artifact') && types.includes('Creature')) ||
               def.subtypes.includes('Vehicle'))
           );
         });

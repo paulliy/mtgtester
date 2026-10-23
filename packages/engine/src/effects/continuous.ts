@@ -31,6 +31,7 @@
  * previous layer produced, not the printed ones.
  */
 
+import { offBattlefieldTypes } from '../state/off-battlefield-types';
 import type { Color } from '@mtg/shared';
 import { selectedPermanentDefinition } from '../cards/spell-faces';
 import { counterCount, KEYWORD_COUNTERS } from '../state/counters';
@@ -276,7 +277,11 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
       const controller = ctx.state.players.find((p) => p.id === source.controllerId);
       for (const card of controller?.graveyard ?? []) {
         const graveyardDef = ctx.defs.get(card.oracleId);
-        if (graveyardDef === undefined || !graveyardDef.types.includes('Artifact')) continue;
+        if (
+          graveyardDef === undefined ||
+          !offBattlefieldTypes(ctx, graveyardDef.types, card.ownerId).includes('Artifact')
+        )
+          continue;
         const applies = {
           kind: 'selector',
           selector: { kind: 'self' },
@@ -888,7 +893,25 @@ function readsGameState(effects: LayerEffect[]): boolean {
 }
 
 /** Run the full layer pass over `perms` as the candidate set. */
+/** Nonzero while a layer pass runs, so code it calls can avoid asking for characteristics. */
+let layerPassDepth = 0;
+export function inLayerPass(): boolean {
+  return layerPassDepth > 0;
+}
+
 function runLayers(
+  ctx: GameContext,
+  perms: EnginePermanent[],
+): { map: Map<string, Characteristics>; usedGraveyards: boolean } {
+  layerPassDepth++;
+  try {
+    return runLayerPass(ctx, perms);
+  } finally {
+    layerPassDepth--;
+  }
+}
+
+function runLayerPass(
   ctx: GameContext,
   perms: EnginePermanent[],
 ): { map: Map<string, Characteristics>; usedGraveyards: boolean } {
