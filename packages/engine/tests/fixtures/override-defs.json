@@ -976,8 +976,85 @@
   {
     "oracleId": "09b895ff-e729-48d1-bfc1-ea5fd7adda6a",
     "name": "Caged Sun",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"As this artifact enters, choose a color.\"",
+      "unrecognized rules text: \"Creatures you control of the chosen color get +1/+1.\"",
+      "unrecognized rules text: \"Whenever a land's ability causes you to add one or more mana of the chosen color, add an additional one mana of that color.\""
+    ],
+    "def": {
+      "entersChoosingOption": {
+        "options": [
+          {
+            "key": "W",
+            "label": "White"
+          },
+          {
+            "key": "U",
+            "label": "Blue"
+          },
+          {
+            "key": "B",
+            "label": "Black"
+          },
+          {
+            "key": "R",
+            "label": "Red"
+          },
+          {
+            "key": "G",
+            "label": "Green"
+          }
+        ],
+        "prompt": "Choose a color"
+      },
+      "ruleStatics": [
+        {
+          "add": {
+            "kind": "chosenColorIfProduced"
+          },
+          "kind": "manaActivationRider",
+          "source": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Land"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          }
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "chosenColor"
+              }
+            ]
+          },
+          "op": {
+            "layer": 7,
+            "power": 1,
+            "sublayer": "d",
+            "toughness": 1
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "0a023964-2905-4928-9c3e-dc63e6ebd218",
@@ -23494,8 +23571,85 @@
   {
     "oracleId": "oracle-caged-sun",
     "name": "Caged Sun",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"As this artifact enters, choose a color.\"",
+      "unrecognized rules text: \"Creatures you control of the chosen color get +1/+1.\"",
+      "unrecognized rules text: \"Whenever a land's ability causes you to add one or more mana of the chosen color, add an additional one mana of that color.\""
+    ],
+    "def": {
+      "entersChoosingOption": {
+        "options": [
+          {
+            "key": "W",
+            "label": "White"
+          },
+          {
+            "key": "U",
+            "label": "Blue"
+          },
+          {
+            "key": "B",
+            "label": "Black"
+          },
+          {
+            "key": "R",
+            "label": "Red"
+          },
+          {
+            "key": "G",
+            "label": "Green"
+          }
+        ],
+        "prompt": "Choose a color"
+      },
+      "ruleStatics": [
+        {
+          "add": {
+            "kind": "chosenColorIfProduced"
+          },
+          "kind": "manaActivationRider",
+          "source": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Land"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          }
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "chosenColor"
+              }
+            ]
+          },
+          "op": {
+            "layer": 7,
+            "power": 1,
+            "sublayer": "d",
+            "toughness": 1
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-camaraderie",

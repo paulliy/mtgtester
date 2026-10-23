@@ -1054,13 +1054,42 @@ export function manaSourcesFor(
       )
         continue;
 
+      if (rider.add.kind === 'chosenColorIfProduced') {
+        const chosen = riderSource?.chosenOption;
+        const color = (['W', 'U', 'B', 'R', 'G'] as const).find((symbol) => symbol === chosen);
+        if (color === undefined) continue;
+        // The bonus depends on the color actually produced, so a source that can make the chosen
+        // color splits into two alternatives (one {T}, so only one is ever used): make that color
+        // and get one more, or make only other colors and get nothing.
+        abilities = abilities.flatMap((ability) => {
+          const first = ability.units.findIndex((unit) => unit.includes(color));
+          if (first < 0) return [ability];
+          const { productionSpec: _productionSpec, ...fixedProduction } = ability;
+          const withColor = ability.units.map((unit, index) =>
+            ability.linked === true || index === first ? [color] : unit,
+          );
+          const without = ability.units.map((unit) => unit.filter((symbol) => symbol !== color));
+          return [
+            {
+              ...fixedProduction,
+              stateDependentProduction: true as const,
+              units: [...withColor, [color]],
+            },
+            ...(without.every((unit) => unit.length > 0)
+              ? [{ ...fixedProduction, stateDependentProduction: true as const, units: without }]
+              : []),
+          ];
+        });
+        continue;
+      }
+      const add = rider.add;
       abilities = abilities.map((ability) => {
         const { productionSpec: _productionSpec, ...fixedProduction } = ability;
-        if (rider.add.kind === 'fixed') {
+        if (add.kind === 'fixed') {
           return {
             ...fixedProduction,
             stateDependentProduction: true as const,
-            units: [...ability.units, ...rider.add.units],
+            units: [...ability.units, ...add.units],
           };
         }
         const producedTypes = [...new Set(ability.units.flat())];
