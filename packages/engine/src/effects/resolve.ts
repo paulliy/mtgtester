@@ -7642,6 +7642,7 @@ export function* executeAbility(
         const targetId = ref(effect.target);
         const target = targetId === null ? undefined : findObjectById(ctx, targetId);
         if (target === undefined || target.zone !== 'graveyard') break;
+        const types = getDefByOracleId(ctx, target.oracleId, target.name).types;
         const exiled = yield* moveObject(ctx, target, { zone: 'exile' });
         // Linked to the source object that exiled it (CR 607.2a), as Duplicant's exile is.
         const currentSource = ctx.state.battlefield.find(
@@ -7650,6 +7651,8 @@ export function* executeAbility(
         );
         if (currentSource !== undefined && exiled !== null && exiled.zone === 'exile')
           currentSource.exiledWithIds = [...(currentSource.exiledWithIds ?? []), exiled.id];
+        if (effect.drawIfCardType !== undefined && types.includes(effect.drawIfCardType))
+          yield* drawCards(ctx, controller, 1);
         break;
       }
       case 'exileAndManifestTarget': {
@@ -8791,6 +8794,36 @@ export function* executeAbility(
         } else {
           yield* resolveFreeCard(ctx, card, controller.id);
         }
+        break;
+      }
+      case 'flipCoin': {
+        // CR 705.2: the flip is random; the game PRNG keeps replays deterministic.
+        const won = ctx.rng.nextInt(2) === 0;
+        emit(ctx, 'coinFlip', { player: controller.id, source: source.name, won }, controller.id);
+        const branch = won ? effect.onWin : effect.onLose;
+        if (branch.length > 0)
+          yield* executeAbility(
+            ctx,
+            source,
+            { ...ability, effects: branch },
+            targets,
+            triggerObjectCardId,
+            extraScope,
+            countTargets,
+            divisionAmounts,
+          );
+        break;
+      }
+      case 'returnRandomExiledWithSourceToHand': {
+        const self = ctx.state.battlefield.find((perm) => perm.cardId === source.cardId);
+        const exiled = (self?.exiledWithIds ?? []).flatMap((objectId) => {
+          const card = ctx.state.exile.find((entry) => entry.id === objectId);
+          return card === undefined ? [] : [card];
+        });
+        const card = exiled[ctx.rng.nextInt(Math.max(1, exiled.length))];
+        if (card === undefined) break;
+        emit(ctx, 'returnToHand', { target: card.name, source: source.name });
+        yield* moveObject(ctx, card, { zone: 'hand' });
         break;
       }
       case 'noOp':

@@ -2,6 +2,7 @@
 import { allOf, CHOSEN_COLOR, hasCounter, not, OPPONENTS, ofType, YOURS } from '../selector';
 import {
   activated,
+  graveyardCardTarget,
   lord,
   mana,
   manaCost,
@@ -344,6 +345,53 @@ function registerPr11LifecycleOverrides(): void {
         }),
       ],
       manaAbilities: [{ units: [], dynamic: 'exiledWithSourceColors' }],
+    },
+  );
+
+  // PR11.28: "exiled with this artifact" is the linked set on this object (CR 607.2a); the
+  // upkeep check is an intervening if, and the flip is the controller's.
+  const portalTarget = targetSlots({ card: graveyardCardTarget('opponent') });
+  defineCard(
+    '8430ae03-2d4c-4031-aa29-4d53815ded78',
+    'Negative Zone Portal',
+    [
+      'unrecognized rules text: "{2}, {T}: Exile target card from an opponent\'s graveyard. If it\'s a creature card, draw a card."',
+      'unrecognized rules text: "At the beginning of your upkeep, if there are four or more creature cards exiled with this artifact, flip a coin. If you lose the flip, sacrifice this artifact and return a card exiled with it at random to its owner\'s hand."',
+    ],
+    {
+      activatedAbilities: [
+        activated({
+          costs: [mana('{2}'), TAP],
+          targets: portalTarget.targets,
+          effects: [
+            {
+              op: 'exileGraveyardCardWithSource',
+              target: portalTarget.slot.card,
+              drawIfCardType: 'Creature',
+            },
+          ],
+          description:
+            "{2}, {T}: Exile target card from an opponent's graveyard; if it's a creature card, draw a card",
+        }),
+      ],
+      triggers: [
+        triggered(onUpkeep('you'), {
+          condition: { kind: 'exiledWithSourceAtLeast', cardType: 'Creature', n: 4 },
+          effects: [
+            {
+              op: 'flipCoin',
+              onWin: [],
+              onLose: [
+                // Read the linked cards before the sacrifice ends the link (CR 607.2a).
+                { op: 'returnRandomExiledWithSourceToHand' },
+                { op: 'sacrifice', target: 'source' },
+              ],
+            },
+          ],
+          description:
+            'At the beginning of your upkeep, with four or more creature cards exiled with this, flip a coin; on a loss, sacrifice this and return one at random',
+        }),
+      ],
     },
   );
 
