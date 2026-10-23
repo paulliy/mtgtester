@@ -7,7 +7,6 @@ import { addMana } from '../src/mana/pool';
 import { moveObject } from '../src/state/objects';
 import { playerLifeLocked, playerProtectedFromEverything } from '../src/state/phasing';
 import type { EnginePermanent, GameContext } from '../src/state/types';
-import { runBeginningAndPrecombatMain } from '../src/turn/turn';
 import { bear, conjure, oracle, plains, pump, spawn } from './fixtures';
 import {
   activate,
@@ -17,6 +16,7 @@ import {
   checkpoint,
   combat,
   game,
+  nextTurnOf,
   offeredTargets,
   pinned,
   player,
@@ -64,14 +64,6 @@ const trinket = (): OracleCard =>
 
 const castsBolt = (ctx: GameContext, playerId: string) =>
   priorityOption(ctx, playerId, (payload) => payload.kind === 'castSpell') !== undefined;
-
-/** Advance to `playerId`'s next turn and run its beginning phase and first main phase. */
-function nextTurnOf(ctx: GameContext, playerId: string): void {
-  ctx.state.currentTurnPlayer = playerId;
-  ctx.state.activePlayerIndex = ctx.state.turnOrder.indexOf(playerId);
-  ctx.state.turnNumber += 1;
-  pump(runBeginningAndPrecombatMain(ctx));
-}
 
 /** P2 attacks P1 with a fresh 3/3; returns P1's life afterward. */
 function opponentAttacks(ctx: GameContext): number {

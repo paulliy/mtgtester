@@ -149,6 +149,7 @@ function untapStep(ctx: GameContext): void {
     if (perm.controllerId !== ap.id) continue;
     // CR 302.6: controlled continuously since the turn began → no longer summoning sick.
     perm.summoningSick = false;
+    if (ctx.defs.get(perm.oracleId)?.doesntUntapDuringUntapStep === true) continue;
     if (perm.tapped) {
       perm.tapped = false;
       untapped += 1;
