@@ -221,16 +221,17 @@
   {
     "oracleId": "57d0c688-6206-4c83-9fcb-27fd29e2a9ed",
     "name": "Basri's Lieutenant",
-    "package": "W8",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Vigilance, protection from multicolored\"",
-      "unrecognized rules text: \"Whenever this creature or another creature you control dies, if it had a +1/+1 counter on it, create a 2/2 white Knight creature token with vigilance.\""
+    "package": "PR11.25",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11-protection.test.ts",
+      "packages/server/src/cards/pr11-scenarios.test.ts",
+      "apps/web/e2e/pr11-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr11-protection.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "71bc69a5-7cec-4abd-b97d-13f8e1f9afac",
@@ -600,29 +601,32 @@
   {
     "oracleId": "ec3d4466-547c-4e02-b1b5-a156ec4637e9",
     "name": "Chrome Mox",
-    "package": "W9",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"When this artifact enters, you may exile a nonartifact, nonland card from your hand.\"",
-      "unsupported mana production: \"{T}: Add one mana of any of the exiled card's colors.\""
+    "package": "PR11.16",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11-lifecycle.test.ts",
+      "packages/server/src/cards/pr11-scenarios.test.ts",
+      "apps/web/e2e/pr11-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr11-lifecycle.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "42bb7ea9-f6e4-4551-8d93-3b1eae84b865",
     "name": "Clever Concealment",
-    "package": "W8",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Any number of target nonland permanents you control phase out.\""
+    "package": "PR11.22",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11-phasing.test.ts",
+      "packages/server/src/cards/pr11-scenarios.test.ts",
+      "apps/web/e2e/pr11-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr11-phasing.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "a97e760a-99c8-47ea-a875-451aca913ee7",
@@ -1410,16 +1414,17 @@
   {
     "oracleId": "c0adbddc-b070-4c5f-afe0-0474c72a9251",
     "name": "Gemstone Caverns",
-    "package": "W9",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"If this card is in your opening hand and you're not the starting player, you may begin the game with ~ on the battlefield with a luck counter on it. If you do, exile a card from your hand.\"",
-      "unrecognized rules text: \"{T}: Add {C}. If ~ has a luck counter on it, instead add one mana of any color.\""
+    "package": "PR11.17",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11-lifecycle.test.ts",
+      "packages/server/src/cards/pr11-scenarios.test.ts",
+      "apps/web/e2e/pr11-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr11-lifecycle.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "756042c5-e444-45d7-8dc6-ae7c83c98438",
@@ -1619,16 +1624,17 @@
   {
     "oracleId": "60e7130a-d321-4e50-93a4-999013c76054",
     "name": "Gut, True Soul Zealot",
-    "package": "W1",
-    "status": "modeled-focused-tests-passed",
-    "blockers": [
-      "unrecognized rules text: \"Whenever you attack, you may sacrifice another creature or an artifact. If you do, create a 4/1 black Skeleton creature token with menace that's tapped and attacking.\"",
-      "unrecognized rules text: \"Choose a Background\""
+    "package": "PR11.08",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11-lifecycle.test.ts",
+      "packages/server/src/cards/pr11-scenarios.test.ts",
+      "apps/web/e2e/pr11-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": ["packages/engine/tests/w1-remaining-cards.test.ts"],
-    "interpretationTests": ["packages/engine/tests/w1-remaining-cards.test.ts"],
-    "snapshotStatus": "passed",
+    "interpretationTests": ["packages/engine/tests/pr11-lifecycle.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed",
     "coverageDelta": 1
   },
   {
@@ -2191,17 +2197,17 @@
   {
     "oracleId": "736892cb-a34b-4bb9-b56c-e26e3db207a2",
     "name": "Mana Vault",
-    "package": "W9",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"~ doesn't untap during your untap step.\"",
-      "unrecognized rules text: \"At the beginning of your upkeep, you may pay {4}. If you do, untap this artifact.\"",
-      "unrecognized rules text: \"At the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you.\""
+    "package": "PR11.19",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11-lifecycle.test.ts",
+      "packages/server/src/cards/pr11-scenarios.test.ts",
+      "apps/web/e2e/pr11-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr11-lifecycle.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "cbcb6d9a-6ae5-4bcd-8013-2b657553764a",
@@ -2393,13 +2399,17 @@
   {
     "oracleId": "8a52f3c0-2552-4425-b2e3-5496eb2232a7",
     "name": "Mystic Remora",
-    "package": "W9",
-    "status": "pending",
-    "blockers": ["unrecognized rules text: \"Cumulative upkeep {1}\""],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "package": "PR11.15",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11-lifecycle.test.ts",
+      "packages/server/src/cards/pr11-scenarios.test.ts",
+      "apps/web/e2e/pr11-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr11-lifecycle.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "17b60106-a4c7-410a-8ac3-ec8e74e29a7c",
@@ -2454,16 +2464,17 @@
   {
     "oracleId": "8430ae03-2d4c-4031-aa29-4d53815ded78",
     "name": "Negative Zone Portal",
-    "package": "W4",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"{2}, {T}: Exile target card from an opponent's graveyard. If it's a creature card, draw a card.\"",
-      "unrecognized rules text: \"At the beginning of your upkeep, if there are four or more creature cards exiled with this artifact, flip a coin. If you lose the flip, sacrifice this artifact and return a card exiled with it at random to its owner's hand.\""
+    "package": "PR11.28",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11-lifecycle.test.ts",
+      "packages/server/src/cards/pr11-scenarios.test.ts",
+      "apps/web/e2e/pr11-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr11-lifecycle.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "ff6b52b7-ae3c-465b-b10e-901160e5230e",
@@ -3074,15 +3085,17 @@
   {
     "oracleId": "546201d0-3fa5-44e4-a526-ab0945711e49",
     "name": "Shanna, Sisay's Legacy",
-    "package": "W8",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"~ can't be the target of abilities your opponents control.\""
+    "package": "PR11.24",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11-protection.test.ts",
+      "packages/server/src/cards/pr11-scenarios.test.ts",
+      "apps/web/e2e/pr11-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr11-protection.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "eedd5a17-d0fe-4a13-8f2c-f343bfa43f92",
@@ -3220,16 +3233,17 @@
   {
     "oracleId": "81a51328-b995-4f3b-90bc-a20ae21dd254",
     "name": "Spirit Mantle",
-    "package": "W8",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Enchanted creature gets +1/+1 and has protection from creatures.\"",
-      "override for \"Spirit Mantle\" has no executable behavior"
+    "package": "PR11.29",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11-protection.test.ts",
+      "packages/server/src/cards/pr11-scenarios.test.ts",
+      "apps/web/e2e/pr11-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr11-protection.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "eb735501-19e7-4910-aa6a-6667fff6f4e5",
@@ -3331,16 +3345,17 @@
   {
     "oracleId": "0d4ecdb1-ec90-497f-a7a4-1c68092b8757",
     "name": "Teferi's Protection",
-    "package": "W8",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Until your next turn, your life total can't change and you gain protection from everything. All permanents you control phase out.\"",
-      "unrecognized rules text: \"Exile ~.\""
+    "package": "PR11.18",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11-phasing.test.ts",
+      "packages/server/src/cards/pr11-scenarios.test.ts",
+      "apps/web/e2e/pr11-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr11-phasing.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "74868bc0-6081-4f46-a2c6-9521cd5465aa",
@@ -3441,17 +3456,17 @@
   {
     "oracleId": "3aa83ed2-f48b-4ce6-a614-2c54ddf50538",
     "name": "The One Ring",
-    "package": "W8",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"When ~ enters, if you cast it, you gain protection from everything until your next turn.\"",
-      "unrecognized rules text: \"At the beginning of your upkeep, you lose 1 life for each burden counter on ~.\"",
-      "unrecognized rules text: \"{T}: Put a burden counter on ~, then draw a card for each burden counter on ~.\""
+    "package": "PR11.20",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11-phasing.test.ts",
+      "packages/server/src/cards/pr11-scenarios.test.ts",
+      "apps/web/e2e/pr11-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr11-phasing.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "82a6fa6f-13c2-4ea3-bec2-c51b56b2783b",
@@ -3752,13 +3767,17 @@
   {
     "oracleId": "3d50266f-5a2f-4a48-ab15-87e733624fd4",
     "name": "Unquestioned Authority",
-    "package": "W8",
-    "status": "pending",
-    "blockers": ["unrecognized rules text: \"Enchanted creature has protection from creatures.\""],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "package": "PR11.30",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11-protection.test.ts",
+      "packages/server/src/cards/pr11-scenarios.test.ts",
+      "apps/web/e2e/pr11-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr11-protection.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "4c6a0c30-b547-4eff-8ff4-0ca25803c076",
@@ -5186,6 +5205,81 @@
       "apps/web/e2e/pr10-card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr10-biotransference.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "30ac68e6-160a-41f9-9f0f-0e0eef383150",
+    "name": "Arcane Lighthouse",
+    "package": "PR11.01",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11-protection.test.ts",
+      "packages/server/src/cards/pr11-scenarios.test.ts",
+      "apps/web/e2e/pr11-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr11-protection.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "fda61506-ed79-47fd-badd-639185297913",
+    "name": "Smokestack",
+    "package": "PR11.03",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11-lifecycle.test.ts",
+      "packages/server/src/cards/pr11-scenarios.test.ts",
+      "apps/web/e2e/pr11-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr11-lifecycle.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "66ca8a60-e028-4a5f-8177-860b888cb9d1",
+    "name": "Angel's Grace",
+    "package": "PR11.05",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11-phasing.test.ts",
+      "packages/server/src/cards/pr11-scenarios.test.ts",
+      "apps/web/e2e/pr11-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr11-phasing.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "473a7998-669d-4181-83fe-f178a2e781f0",
+    "name": "Out of the Tombs",
+    "package": "PR11.09",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11-lifecycle.test.ts",
+      "packages/server/src/cards/pr11-scenarios.test.ts",
+      "apps/web/e2e/pr11-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr11-lifecycle.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "09b895ff-e729-48d1-bfc1-ea5fd7adda6a",
+    "name": "Caged Sun",
+    "package": "PR11.12",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11-lifecycle.test.ts",
+      "packages/server/src/cards/pr11-scenarios.test.ts",
+      "apps/web/e2e/pr11-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr11-lifecycle.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   }
 ]

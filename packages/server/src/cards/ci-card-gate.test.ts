@@ -83,6 +83,8 @@ describe('mandatory card CI gate', () => {
     expect(command).toContain('packages/server/src/cards/pr09');
     expect(command).toContain('packages/engine/tests/pr10');
     expect(command).toContain('packages/server/src/cards/pr10');
+    expect(command).toContain('packages/engine/tests/pr11');
+    expect(command).toContain('packages/server/src/cards/pr11');
     expect(command).not.toContain('token-triumph-deck.test.ts');
     expect(command).not.toContain('data/scryfall-oracle-cards.json');
   });
