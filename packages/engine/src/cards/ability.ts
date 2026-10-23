@@ -96,7 +96,12 @@ export type AbilityCost =
   | { kind: 'unattachSelf' };
 
 export interface AlternativeCast {
-  kind: 'overload' | 'adventure' | 'omen' | 'mdfc' | 'nonMana' | 'bestow';
+  kind: 'overload' | 'adventure' | 'omen' | 'mdfc' | 'nonMana' | 'bestow' | 'split';
+  /**
+   * `split`: both halves cast fused (CR 702.102), from hand only. The face then has the combined
+   * characteristics and resolves the left half's instructions, then the right's.
+   */
+  fused?: true;
   /** Explicit zone restriction/permission. Omitted alternatives use normal casting permissions. */
   from?: 'hand' | 'graveyard' | 'exile';
   manaCost: ParsedManaCost;
@@ -1119,6 +1124,15 @@ export type Effect =
       forPlayer?: EffectRef;
     }
   | { op: 'gainLife'; amount: Value } // controller gains
+  /** "Each player gains N life", in APNAP order (CR 101.4). */
+  | { op: 'eachPlayerGainsLife'; amount: Value }
+  /**
+   * "Each player looks at the top N cards of their library and may reveal a land card and/or an
+   * instant or sorcery card from among them. Each player puts the cards they revealed this way
+   * into their hand and the rest on the bottom of their library in a random order" (Explore the
+   * Vastlands): up to one card for each of `picks`, chosen in APNAP order (CR 101.4).
+   */
+  | { op: 'eachPlayerLooksAtTopRevealsToHand'; count: number; picks: Selector[] }
   | { op: 'loseLife'; amount: Value } // controller loses life (not damage)
   | { op: 'loseLifeTarget'; target: EffectRef; amount: Value }
   /** "Target player draws two cards." (Sign in Blood) — the target draws, not the controller

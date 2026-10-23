@@ -489,6 +489,7 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
   if (
     record['kind'] === 'adventure' ||
     record['kind'] === 'omen' ||
+    record['kind'] === 'split' ||
     (record['kind'] === 'mdfc' && record['spellFace'] !== undefined)
   ) {
     try {

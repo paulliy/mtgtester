@@ -300,6 +300,8 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   dealDamageEachChosen: { targetSlot: many(damage) },
   returnToHandEachChosen: { targetSlot: many(permanent) },
   transformSelf: {},
+  eachPlayerGainsLife: {},
+  eachPlayerLooksAtTopRevealsToHand: {},
   sourceGainsAbility: {},
   selfToLibraryTop: {},
   putCountersEachChosen: { targetSlot: many(permanent) },
@@ -428,6 +430,53 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   exileTopNPlayableUntilEot: {},
   noOp: {},
 } satisfies EffectContracts;
+
+const REFERENCE_FIELDS: ReadonlySet<string> = new Set<ReferenceField>([
+  'target',
+  'first',
+  'second',
+  'a',
+  'ref',
+  'source',
+  'checkTarget',
+  'targetSlot',
+  'bSlot',
+  'cardsSlot',
+  'playerSlot',
+  'controlledBy',
+  'relativeToPlayer',
+  'forPlayer',
+]);
+
+/**
+ * `effect` with each of its target-slot references moved up by `offset`, for the right half of a
+ * fused split spell whose slots follow the left half's (CR 702.102d). Undefined, so the caller
+ * fails closed, when a slot reference is nested anywhere below the operation's own fields (a
+ * nested effect or a target-reading value), where this flat renumbering would miss it.
+ */
+export function offsetEffectSlots(effect: Effect, offset: number): Effect | undefined {
+  const nestedReference = (value: unknown): boolean => {
+    if (Array.isArray(value)) return value.some(nestedReference);
+    if (value === null || typeof value !== 'object') return false;
+    return Object.entries(value).some(
+      ([key, entry]) =>
+        key === 'op' ||
+        (REFERENCE_FIELDS.has(key) && typeof entry === 'number') ||
+        nestedReference(entry),
+    );
+  };
+  const contract = EFFECT_REFERENCE_CONTRACTS[effect.op] as Record<string, ReferenceContract>;
+  const out: Record<string, unknown> = { ...effect };
+  for (const [key, value] of Object.entries(effect)) {
+    if (key === 'op') continue;
+    if (key in contract) {
+      if (typeof value === 'number') out[key] = value + offset;
+      continue;
+    }
+    if (nestedReference(value)) return undefined;
+  }
+  return out as unknown as Effect;
+}
 
 /** Safe mixed-domain filter: players cannot be commanders (CR 903.3). */
 export function playerFilterAlwaysTrue(selector: Selector): boolean {

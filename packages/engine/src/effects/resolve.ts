@@ -6156,6 +6156,14 @@ export function* executeAbility(
       case 'lookAtTopN':
         yield* lookAtTopN(ctx, source, controller, effect);
         break;
+      case 'eachPlayerGainsLife': {
+        const amount = amountOf(effect.amount);
+        for (const player of playersInApnapOrder(ctx)) gainLife(ctx, player, amount);
+        break;
+      }
+      case 'eachPlayerLooksAtTopRevealsToHand':
+        yield* eachPlayerLooksAtTopRevealsToHand(ctx, source, effect);
+        break;
       case 'counterUnlessPays':
         yield* counterUnlessPays(ctx, source, effect.stackObjectId, effect.cost);
         break;
@@ -9217,6 +9225,62 @@ function* handToBattlefield(
  * The random order is drawn from `ctx.rng`, the game's single seeded PRNG — never
  * `Math.random` (brief §4/§5.9), or the game stops being replayable.
  */
+/**
+ * Explore the Vastlands: each player, in APNAP order (CR 101.4), looks at their top `count` and
+ * may reveal up to one card for each of `picks`. Then each puts what they revealed into their
+ * hand and the rest on the bottom of their library in a random order.
+ */
+function* eachPlayerLooksAtTopRevealsToHand(
+  ctx: GameContext,
+  source: EffectSource,
+  effect: Extract<Effect, { op: 'eachPlayerLooksAtTopRevealsToHand' }>,
+): GameGen<void> {
+  const choices: {
+    player: EnginePlayerState;
+    looked: EngineCardObject[];
+    revealed: EngineCardObject[];
+  }[] = [];
+  for (const player of playersInApnapOrder(ctx)) {
+    const looked = player.library.slice(0, effect.count);
+    const revealed: EngineCardObject[] = [];
+    const selectorSource = { cardId: source.cardId, controllerId: player.id };
+    for (const pick of effect.picks) {
+      const eligible = looked.filter(
+        (card) =>
+          !revealed.includes(card) &&
+          selectMatches(cardZoneCandidate(ctx, card, player.id), pick, selectorSource),
+      );
+      if (eligible.length === 0) continue;
+      const chosen = yield* chooseCard(ctx, {
+        player: player.id,
+        cards: eligible,
+        type: 'revealFromTop',
+        verb: 'Reveal',
+        prompt: `${source.name}: you may reveal a card from among the top ${looked.length} of your library.`,
+        decline: { type: 'decline', description: 'Reveal none of them', verb: 'Decline' },
+      });
+      const card = chosen === null ? undefined : eligible.find((entry) => entry.id === chosen.id);
+      if (card === undefined) continue;
+      revealed.push(card);
+      emit(
+        ctx,
+        'revealCard',
+        { player: player.id, cardId: card.cardId, name: card.name, revealed: true },
+        player.id,
+      );
+    }
+    choices.push({ player, looked, revealed });
+  }
+  for (const { player, looked, revealed } of choices) {
+    for (const card of revealed)
+      if (player.library.includes(card)) yield* moveObject(ctx, card, { zone: 'hand' });
+    const rest = looked.filter((card) => player.library.includes(card) && !revealed.includes(card));
+    ctx.rng.shuffle(rest);
+    const restObjects = new Set(rest);
+    player.library = [...player.library.filter((card) => !restObjects.has(card)), ...rest];
+  }
+}
+
 function* lookAtTopN(
   ctx: GameContext,
   source: EffectSource,

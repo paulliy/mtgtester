@@ -3,7 +3,7 @@
 import type { CardDefinition } from '../definition';
 import { constant } from '../value';
 import { allOf, ofSupertype, ofType, YOURS } from '../selector';
-import { defineCard, unsupportedCard } from './index';
+import { defineCard } from './index';
 import { ASSASSIN_1_1 as ASSASSIN_TOKEN, ELEPHANT_3_3_GREEN, HUMAN_1_1_WHITE } from '../tokens';
 
 const BOROS_CHARM: Partial<CardDefinition> = {
@@ -173,12 +173,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBITOverrides(): void {
   // overrides are in queen-marchesa-queens-gambit-remaining.ts. Wandering Archaic //
   // Explore the Vastlands (creature // enchantment) stays `unimplemented()` there too.
 
-  // Catalog audit queen-main-batch-2: fuse stub; remaining file already contains the same ID.
-  unsupportedCard(
-    '9842734c-1eac-4509-a731-4c22017ae586',
-    'Wear // Tear',
-    'Fuse is authored as a third mode with an extra {2}{W} rather than casting both halves.',
-  );
+  // Wear // Tear: restored in coverage PR11b; the interpreter casts each split half and fuses.
   defineCard(
     '2679d0dd-ba30-4a1c-b6a0-b3ac6c790496',
     'Boros Charm',

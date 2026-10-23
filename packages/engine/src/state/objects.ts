@@ -3196,22 +3196,24 @@ export function stackAbilitySnapshot(entry: EngineStackObject): StackAbilitySnap
 
 /** Bind a cast trigger's `copyCastSpell` effects to the spell that was cast. */
 function bindCastSpell(ctx: GameContext, ability: Ability, spell: EngineStackObject): Ability {
-  if (!ability.effects.some((effect) => effect.op === 'copyCastSpell')) return ability;
+  // "They may pay {2}. If they don't, you may copy that spell" (Wandering Archaic) nests the copy.
+  const copies = (effect: Effect): boolean =>
+    effect.op === 'copyCastSpell' || (effect.op === 'unlessPays' && effect.then.some(copies));
+  if (!ability.effects.some(copies)) return ability;
   const snapshot = castSpellSnapshot(ctx, spell);
-  return {
-    ...ability,
-    effects: ability.effects.map((effect) =>
-      effect.op === 'copyCastSpell'
-        ? {
-            op: 'replicateCopies' as const,
-            count: 1,
-            spell: snapshot,
-            ...(effect.optional === true ? { optional: true as const } : {}),
-            ...(effect.oncePerTurn === true ? { oncePerTurn: true as const } : {}),
-          }
-        : effect,
-    ),
-  };
+  const bind = (effect: Effect): Effect =>
+    effect.op === 'copyCastSpell'
+      ? {
+          op: 'replicateCopies' as const,
+          count: 1,
+          spell: snapshot,
+          ...(effect.optional === true ? { optional: true as const } : {}),
+          ...(effect.oncePerTurn === true ? { oncePerTurn: true as const } : {}),
+        }
+      : effect.op === 'unlessPays'
+        ? { ...effect, then: effect.then.map(bind) }
+        : effect;
+  return { ...ability, effects: ability.effects.map(bind) };
 }
 
 /**

@@ -138,7 +138,8 @@ export type PriorityActionPayload =
         | 'energy'
         | 'commanderFree'
         | 'faceDown'
-        | 'bestow';
+        | 'bestow'
+        | 'split';
       altIndex?: number;
       /**
        * The option priced with target-dependent reductions (Killian): the target slot that must
@@ -999,7 +1000,7 @@ export function computePriorityOptions(
       if (
         plotCast &&
         variant.alternativeCast !== undefined &&
-        !['adventure', 'omen', 'mdfc'].includes(variant.alternativeCast)
+        !['adventure', 'omen', 'mdfc', 'split'].includes(variant.alternativeCast)
       )
         return;
       if (plotCast) baseCost = emptyCost();
@@ -1329,7 +1330,9 @@ export function computePriorityOptions(
         }
       }
     };
-    if (def.manaCost !== null || plotCast)
+    // A split card is cast as one half or both, never as the combined card (CR 709.3).
+    const splitCard = def.alternativeCasts?.some((alt) => alt.kind === 'split') === true;
+    if ((def.manaCost !== null || plotCast) && !splitCard)
       offerCast(
         plotCast || reboundCast ? emptyCost() : foretold !== null ? foretold.cost : def.manaCost!,
         spellAdditionalCosts,
@@ -1421,6 +1424,7 @@ export function computePriorityOptions(
           alt.kind !== 'bestow' &&
           alt.kind !== 'adventure' &&
           alt.kind !== 'omen' &&
+          alt.kind !== 'split' &&
           !(alt.kind === 'mdfc' && alt.spellFace !== undefined)
         )
           continue;
@@ -1436,7 +1440,9 @@ export function computePriorityOptions(
           { alternativeCast: alt.kind, altIndex: index },
           alt.kind === 'bestow'
             ? ' via Bestow'
-            : ` via ${alt.kind === 'mdfc' ? 'back face' : alt.kind}`,
+            : alt.kind === 'split'
+              ? ` as ${face.name}`
+              : ` via ${alt.kind === 'mdfc' ? 'back face' : alt.kind}`,
           0,
           face.types.includes('Instant') || face.keywords.includes('flash'),
           face.name,
@@ -1466,7 +1472,8 @@ export function computePriorityOptions(
           alt.kind !== 'adventure' &&
           alt.kind !== 'omen' &&
           alt.kind !== 'bestow' &&
-          alt.kind !== 'mdfc'
+          alt.kind !== 'mdfc' &&
+          alt.kind !== 'split'
         )
           continue;
         if (fromExile && alt.from === 'hand' && !plotCast) continue;
@@ -1526,6 +1533,20 @@ export function computePriorityOptions(
             );
             break;
           }
+          case 'split': {
+            const face = selectedSpellDefinition(def, alt);
+            offerCast(
+              alt.manaCost,
+              face.spellAdditionalCosts ?? [],
+              face,
+              { alternativeCast: alt.kind, altIndex: index },
+              alt.fused === true ? ' fused' : ` as ${face.name}`,
+              0,
+              face.types.includes('Instant') || face.keywords.includes('flash'),
+              face.name,
+            );
+            break;
+          }
           case 'bestow':
             offerCast(
               alt.manaCost,
@@ -1574,6 +1595,7 @@ export function computePriorityOptions(
           (alt.kind === 'bestow' ||
             alt.kind === 'adventure' ||
             alt.kind === 'omen' ||
+            alt.kind === 'split' ||
             (alt.kind === 'mdfc' && alt.spellFace !== undefined)) &&
           topCastableAs(libraryTop, selectedSpellDefinition(topDef, alt)),
       )

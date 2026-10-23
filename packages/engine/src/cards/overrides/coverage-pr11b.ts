@@ -1,8 +1,11 @@
 /** PR11b authored layout cards: MDFC spell faces, transform, Class, Sagas, split cards, prepare, Rooms. */
-import { allOf, ofType, SELF } from '../selector';
+import type { CardDefinition } from '../definition';
+import { allOf, anyOf, ofType, SELF } from '../selector';
 import {
   activated,
   mana,
+  manaCost,
+  onCast,
   onChapter,
   onDies,
   spell,
@@ -19,6 +22,7 @@ export function registerCoveragePr11bOverrides(): void {
   registerPr11bTransform();
   registerPr11bClass();
   registerPr11bSagas();
+  registerPr11bModalBackFaces();
 }
 
 /** PR11.02, .04: spell // land modal DFCs whose land backs were already authored. */
@@ -283,5 +287,96 @@ function registerPr11bSagas(): void {
       ],
     },
     "PR11b implements Saga chapters and the abilities Urza's Saga gains.",
+  );
+}
+
+/** PR11.10, .27: modal DFCs whose back face is a spell rather than a land. */
+function registerPr11bModalBackFaces(): void {
+  // PR11.10: the opponent who cast the spell decides whether to pay as the trigger resolves; if
+  // they don't, its controller may copy the spell, using its last known information if it has
+  // left the stack, and may choose new targets (CR 707.10). Explore the Vastlands is the back
+  // face's sorcery (CR 712.11): each player picks in APNAP order, then all of them move.
+  const vastlandsText =
+    'Each player looks at the top five cards of their library and may reveal a land card and/or an instant or sorcery card from among them. Each player puts the cards they revealed this way into their hand and the rest on the bottom of their library in a random order. Each player gains 3 life.';
+  const vastlands: CardDefinition = {
+    oracleId: '6556c4c0-b10d-4208-821b-0c0a49abd188',
+    name: 'Explore the Vastlands',
+    typeLine: 'Sorcery',
+    supertypes: [],
+    types: ['Sorcery'],
+    subtypes: [],
+    colors: [],
+    colorIdentity: [],
+    manaCost: manaCost('{3}'),
+    hasUnsupportedCost: false,
+    power: null,
+    toughness: null,
+    loyalty: null,
+    defense: null,
+    keywords: [],
+    manaAbilities: [],
+    activatedAbilities: [],
+    entersTapped: false,
+    triggers: [],
+    staticEffects: [],
+    ruleStatics: [],
+    spellAbility: spell({
+      effects: [
+        {
+          op: 'eachPlayerLooksAtTopRevealsToHand',
+          count: 5,
+          picks: [ofType('Land'), anyOf(ofType('Instant'), ofType('Sorcery'))],
+        },
+        { op: 'eachPlayerGainsLife', amount: constant(3) },
+      ],
+      description:
+        'Each player looks at their top five cards, may reveal a land and an instant or sorcery card and puts them into their hand, then gains 3 life',
+    }),
+    modeled: true,
+    unmodeledReasons: [],
+  };
+  replaceCard(
+    '6556c4c0-b10d-4208-821b-0c0a49abd188',
+    'Wandering Archaic // Explore the Vastlands',
+    [
+      'unsupported layout "modal_dfc"',
+      'unrecognized rules text: "Whenever an opponent casts an instant or sorcery spell, they may pay {2}. If they don\'t, you may copy that spell. You may choose new targets for the copy."',
+    ],
+    {
+      name: 'Wandering Archaic',
+      triggers: [
+        triggered(onCast('opponent', anyOf(ofType('Instant'), ofType('Sorcery'))), {
+          effects: [
+            {
+              op: 'unlessPays',
+              payer: 'eventPlayer',
+              cost: manaCost('{2}'),
+              then: [{ op: 'copyCastSpell', optional: true }],
+            },
+          ],
+          description:
+            "Whenever an opponent casts an instant or sorcery spell, they may pay {2}. If they don't, you may copy that spell and choose new targets for the copy",
+        }),
+      ],
+      alternativeCasts: [
+        {
+          kind: 'mdfc',
+          name: vastlands.name,
+          typeLine: vastlands.typeLine,
+          manaCost: vastlands.manaCost!,
+          ability: vastlands.spellAbility!,
+          spellFace: vastlands,
+          spellFaceText: {
+            oracleText: vastlandsText,
+            manaCost: '{3}',
+            frontOracleText:
+              "Whenever an opponent casts an instant or sorcery spell, they may pay {2}. If they don't, you may copy that spell. You may choose new targets for the copy.",
+            frontManaCost: '{5}',
+          },
+          description: 'Cast Explore the Vastlands',
+        },
+      ],
+    },
+    'PR11b implements the pay-or-copy cast trigger and the Explore the Vastlands sorcery face.',
   );
 }

@@ -10,7 +10,8 @@ export function selectedSpellDefinition(
   if (
     alternative?.kind !== 'adventure' &&
     alternative?.kind !== 'omen' &&
-    alternative?.kind !== 'mdfc'
+    alternative?.kind !== 'mdfc' &&
+    alternative?.kind !== 'split'
   )
     return definition;
   if (alternative.kind === 'mdfc' && alternative.spellFace === undefined) return definition;
@@ -44,11 +45,23 @@ export function spellFaceOf(alternative: AlternativeCast): CardDefinition {
         typeof alternative.spellFaceText.manaCost !== 'string')) ||
     (alternative.kind === 'mdfc'
       ? !face.types.some((type) =>
-          ['Artifact', 'Battle', 'Creature', 'Enchantment', 'Planeswalker'].includes(type),
+          [
+            'Artifact',
+            'Battle',
+            'Creature',
+            'Enchantment',
+            'Planeswalker',
+            'Instant',
+            'Sorcery',
+          ].includes(type),
         ) || face.types.includes('Land')
-      : face.types.length !== 1 ||
-        !['Instant', 'Sorcery'].includes(face.types[0]!) ||
-        !face.subtypes.includes(alternative.kind === 'omen' ? 'Omen' : 'Adventure')) ||
+      : alternative.kind === 'split'
+        ? face.types.length === 0 ||
+          !face.types.every((type) => type === 'Instant' || type === 'Sorcery') ||
+          (alternative.fused === true && alternative.from !== 'hand')
+        : face.types.length !== 1 ||
+          !['Instant', 'Sorcery'].includes(face.types[0]!) ||
+          !face.subtypes.includes(alternative.kind === 'omen' ? 'Omen' : 'Adventure')) ||
     JSON.stringify(face.manaCost) !== JSON.stringify(alternative.manaCost) ||
     (alternative.name !== undefined && alternative.name !== face.name) ||
     (alternative.typeLine !== undefined && alternative.typeLine !== face.typeLine) ||

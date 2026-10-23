@@ -602,6 +602,8 @@ const effectExpressions = {
   dealDamageEachChosen: { amount: numberValue },
   returnToHandEachChosen: {},
   transformSelf: {},
+  eachPlayerGainsLife: { amount: numberValue },
+  eachPlayerLooksAtTopRevealsToHand: { count: positiveInteger },
   sourceGainsAbility: {},
   selfToLibraryTop: {},
   putCountersEachChosen: { count: numericExpression },
