@@ -18660,6 +18660,44 @@
     }
   },
   {
+    "oracleId": "ec3d4466-547c-4e02-b1b5-a156ec4637e9",
+    "name": "Chrome Mox",
+    "handledLines": [
+      "unrecognized rules text: \"When this artifact enters, you may exile a nonartifact, nonland card from your hand.\"",
+      "unsupported mana production: \"{T}: Add one mana of any of the exiled card's colors.\""
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "dynamic": "exiledWithSourceColors",
+          "units": []
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Imprint — When this enters, you may exile a nonartifact, nonland card from your hand",
+          "effects": [
+            {
+              "excludeTypes": [
+                "Artifact",
+                "Land"
+              ],
+              "op": "exileFromHandWithSource"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "ec6d52f9-1c8f-48da-951c-be8d7813c7be",
     "name": "Harvest Season",
     "handledLines": [
@@ -24098,6 +24136,44 @@
           "trigger": {
             "player": "you",
             "when": "endStep"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-chrome-mox",
+    "name": "Chrome Mox",
+    "handledLines": [
+      "unrecognized rules text: \"When this artifact enters, you may exile a nonartifact, nonland card from your hand.\"",
+      "unsupported mana production: \"{T}: Add one mana of any of the exiled card's colors.\""
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "dynamic": "exiledWithSourceColors",
+          "units": []
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Imprint — When this enters, you may exile a nonartifact, nonland card from your hand",
+          "effects": [
+            {
+              "excludeTypes": [
+                "Artifact",
+                "Land"
+              ],
+              "op": "exileFromHandWithSource"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
           }
         }
       ]

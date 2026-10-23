@@ -7612,6 +7612,46 @@ export function* executeAbility(
         }
         break;
       }
+      case 'exileFromHandWithSource': {
+        const candidates = controller.hand.filter(
+          (card) =>
+            !getDefByOracleId(ctx, card.oracleId, card.name).types.some((type) =>
+              effect.excludeTypes.includes(type),
+            ),
+        );
+        const chosen = yield* chooseCard(ctx, {
+          player: controller.id,
+          prompt: `${source.name}: you may exile a card from your hand`,
+          cards: candidates,
+          type: 'exile',
+          verb: 'Exile',
+          decline: { type: 'decline', description: 'Exile nothing', verb: 'Decline' },
+        });
+        if (chosen === null) break;
+        const exiled = yield* moveObject(ctx, chosen, { zone: 'exile' });
+        // Linked to the source object that exiled it (CR 607.2a), as Duplicant's exile is.
+        const currentSource = ctx.state.battlefield.find(
+          (perm) =>
+            perm.cardId === source.cardId && (source.id === undefined || perm.id === source.id),
+        );
+        if (currentSource !== undefined && exiled !== null && exiled.zone === 'exile')
+          currentSource.exiledWithIds = [...(currentSource.exiledWithIds ?? []), exiled.id];
+        break;
+      }
+      case 'exileGraveyardCardWithSource': {
+        const targetId = ref(effect.target);
+        const target = targetId === null ? undefined : findObjectById(ctx, targetId);
+        if (target === undefined || target.zone !== 'graveyard') break;
+        const exiled = yield* moveObject(ctx, target, { zone: 'exile' });
+        // Linked to the source object that exiled it (CR 607.2a), as Duplicant's exile is.
+        const currentSource = ctx.state.battlefield.find(
+          (perm) =>
+            perm.cardId === source.cardId && (source.id === undefined || perm.id === source.id),
+        );
+        if (currentSource !== undefined && exiled !== null && exiled.zone === 'exile')
+          currentSource.exiledWithIds = [...(currentSource.exiledWithIds ?? []), exiled.id];
+        break;
+      }
       case 'exileAndManifestTarget': {
         const targetId = ref(effect.target);
         const target = targetId === null ? undefined : findPermanent(ctx, targetId);

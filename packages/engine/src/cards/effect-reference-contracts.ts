@@ -378,6 +378,8 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   eachPlayerMayPutCountersAndGoad: {},
   voteAndExileMost: {},
   exileTargetWithSource: { target: permanent },
+  exileFromHandWithSource: {},
+  exileGraveyardCardWithSource: { target: graveyard },
   exileAndManifestTarget: { target: permanent },
   blinkTarget: { target: permanent },
   blinkOneCreatureYouControl: {},
