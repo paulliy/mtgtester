@@ -844,6 +844,46 @@ function* putFromHandOnLibraryTop(
   player.library.unshift(...ordered);
 }
 
+/**
+ * Valakut Awakening: choose any number of cards in hand, put them on the bottom of the library in
+ * an order of the player's choosing (CR 401.4), then draw that many plus `extra`. The choice is
+ * made one card at a time with a "done" option, so every subset — including none — is reachable.
+ */
+function* putAnyFromHandOnBottomThenDraw(
+  ctx: GameContext,
+  source: EffectSource,
+  player: EnginePlayerState,
+  extra: number,
+): GameGen<void> {
+  const selected: EngineCardObject[] = [];
+  for (;;) {
+    const remaining = player.hand.filter((card) => !selected.includes(card));
+    if (remaining.length === 0) break;
+    const chosen = yield* chooseCard(ctx, {
+      player: player.id,
+      prompt: `${source.name}: put a card from your hand on the bottom of your library (${selected.length} chosen).`,
+      cards: remaining,
+      type: 'putFromHand',
+      verb: 'Put on bottom',
+      decline: {
+        type: 'decline',
+        description:
+          selected.length === 0 ? 'Put no cards on the bottom' : 'Done choosing cards',
+        verb: selected.length === 0 ? 'Put none' : 'Done',
+      },
+    });
+    if (chosen === null) break;
+    selected.push(chosen as EngineCardObject);
+  }
+  if (selected.length > 0) {
+    const ordered = yield* orderForLibrary(ctx, source, player, selected, 'bottom');
+    for (const card of ordered) {
+      yield* moveObject(ctx, card, { zone: 'library', libraryPosition: 'bottom' });
+    }
+  }
+  yield* drawCards(ctx, player, selected.length + extra);
+}
+
 /** Discard cards chosen by the game's seeded PRNG (CR 701.8a). */
 function* discardAtRandomCards(
   ctx: GameContext,
@@ -3872,6 +3912,9 @@ export function* executeAbility(
           addCounters(ctx, source, conniver, '+1/+1', 1);
         break;
       }
+      case 'putAnyFromHandOnBottomThenDraw':
+        yield* putAnyFromHandOnBottomThenDraw(ctx, source, controller, effect.extra);
+        break;
       case 'putFromHandOnLibraryTop':
         yield* putFromHandOnLibraryTop(
           ctx,
@@ -7961,6 +8004,9 @@ export function* executeAbility(
           sourceId: source.cardId,
           description: `${perm.name} gains ability until end of turn`,
           targetCardIds: [perm.cardId],
+          // The grant is to this object only: the card returning as a new object (CR 400.7)
+          // does not keep it, while the departing object's last-known information does.
+          targetObjectIds: [perm.id],
           kind: 'grantAbility',
           ability: effect.ability,
           timestamp: ctx.state.nextTimestamp++,
@@ -8096,7 +8142,8 @@ export function* executeAbility(
         yield* moveObject(ctx, card, {
           zone: 'battlefield',
           controllerId: card.ownerId,
-          withCounters: { [effect.counter]: 1 },
+          ...(effect.counter === undefined ? {} : { withCounters: { [effect.counter]: 1 } }),
+          ...(effect.tapped === true ? { entersTapped: true } : {}),
         });
         break;
       }

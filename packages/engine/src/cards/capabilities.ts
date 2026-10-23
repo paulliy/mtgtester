@@ -192,6 +192,7 @@ const shapes = {
   } satisfies Fields<Objects<TargetSpec>>,
   Effect: {
     damageIfGraveyardSpellsAtLeast: leaf,
+    extra: leaf,
     types: { array: leaf },
     level: leaf,
     additionalMain: leaf,
@@ -1221,6 +1222,7 @@ const families = {
       destroyEachNonlandMVFromDamagedControllers: true,
       returnSelfFromGraveyardToHand: true,
       returnDiedSourceToBattlefield: true,
+      putAnyFromHandOnBottomThenDraw: true,
       putDepartedSourceIntoLibrary: true,
       returnDepartedSourceToHand: true,
       exileTargetReturnAtNextEndStep: true,

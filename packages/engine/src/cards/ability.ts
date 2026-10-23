@@ -1080,6 +1080,12 @@ export type Effect =
   | { op: 'connive' }
   /** Put a chosen number of cards from hand on top of the library, optionally ordering them. */
   | { op: 'putFromHandOnLibraryTop'; count: Value; anyOrder: boolean }
+  /**
+   * "Put any number of cards from your hand on the bottom of your library, then draw that many
+   * cards plus one" (Valakut Awakening): the controller picks any subset of their hand, orders it
+   * on the bottom (CR 401.4), then draws the number actually put there plus `extra`.
+   */
+  | { op: 'putAnyFromHandOnBottomThenDraw'; extra: number }
   /** Discard cards using the game PRNG rather than a player choice. */
   | { op: 'discardAtRandom'; count: Value }
   /** A specified player discards; random selection uses only the seeded game PRNG. */
@@ -1899,7 +1905,12 @@ export type Effect =
    * graveyard (CR 400.7e); if that card has left the graveyard, nothing returns. The counter is
    * on it as it enters.
    */
-  | { op: 'returnDiedSourceToBattlefield'; counter: string }
+  | {
+      op: 'returnDiedSourceToBattlefield';
+      counter?: string;
+      /** "Return it to the battlefield **tapped** under its owner's control" (Malakir Rebirth). */
+      tapped?: true;
+    }
   /**
    * "Put it into its owner's library third from the top" (God-Eternal Rhonas), after the source
    * died or was exiled: "it" is the card the source became in the graveyard or exile (CR

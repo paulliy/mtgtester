@@ -408,6 +408,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   destroyEachNonlandMVFromDamagedControllers: {},
   returnSelfFromGraveyardToHand: {},
   returnDiedSourceToBattlefield: {},
+  putAnyFromHandOnBottomThenDraw: {},
   putDepartedSourceIntoLibrary: {},
   returnDepartedSourceToHand: {},
   exileTargetReturnAtNextEndStep: { target: permanent },

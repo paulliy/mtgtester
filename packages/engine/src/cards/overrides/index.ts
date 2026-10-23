@@ -80,6 +80,7 @@ import {
   registerPr10TriggerDoublingOverrides,
 } from './coverage-pr10';
 import { registerCoveragePr11Overrides } from './coverage-pr11';
+import { registerCoveragePr11bOverrides } from './coverage-pr11b';
 import { registerCoveragePr12Overrides } from './coverage-pr12';
 import { registerWhiteBlackControlHandOverrides } from './white-black-control-hand';
 import { registerWhiteBlackControlStaxOverrides } from './white-black-control-stax';
@@ -252,6 +253,7 @@ registerDeck('coverage-pr10-animation', registerPr10AnimationOverrides);
 registerDeck('coverage-pr10-token-copy', registerPr10TokenCopyOverrides);
 registerDeck('coverage-pr10-characteristics', registerPr10CharacteristicsOverrides);
 registerDeck('coverage-pr11', registerCoveragePr11Overrides);
+registerDeck('coverage-pr11b', registerCoveragePr11bOverrides);
 registerDeck('coverage-pr12', registerCoveragePr12Overrides);
 
 /** Register an override. Exported for the per-card modules and for tests. */

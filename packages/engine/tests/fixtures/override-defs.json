@@ -12690,8 +12690,50 @@
   {
     "oracleId": "a731e87b-8d99-4b64-8ee3-8e540d652366",
     "name": "Malakir Rebirth // Malakir Mire",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Choose target creature. You lose 2 life. Until end of turn, that creature gains \"When this creature dies, return it to the battlefield tapped under its owner's control.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Choose target creature. You lose 2 life. Until end of turn, it gains \"When this creature dies, return it to the battlefield tapped\"",
+        "effects": [
+          {
+            "amount": {
+              "kind": "const",
+              "n": 2
+            },
+            "op": "loseLife"
+          },
+          {
+            "ability": {
+              "description": "When this creature dies, return it to the battlefield tapped under its owner's control",
+              "effects": [
+                {
+                  "op": "returnDiedSourceToBattlefield",
+                  "tapped": true
+                }
+              ],
+              "kind": "triggered",
+              "targets": [],
+              "trigger": {
+                "subject": {
+                  "kind": "self"
+                },
+                "when": "dies"
+              }
+            },
+            "op": "grantAbilityUntilEot",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "creature"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "a8011dce-17fb-46e1-8297-81a4acccbd05",
@@ -20702,8 +20744,22 @@
   {
     "oracleId": "ff0ab867-b710-4b1a-baed-95fc3cf68f79",
     "name": "Valakut Awakening // Valakut Stoneforge",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Put any number of cards from your hand on the bottom of your library, then draw that many cards plus one."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Put any number of cards from your hand on the bottom of your library, then draw that many plus one",
+        "effects": [
+          {
+            "extra": 1,
+            "op": "putAnyFromHandOnBottomThenDraw"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "ff3de07d-86c3-49e1-9de0-97c85301ff93",
@@ -31409,8 +31465,50 @@
   {
     "oracleId": "oracle-malakir-rebirth-malakir-mire",
     "name": "Malakir Rebirth // Malakir Mire",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Choose target creature. You lose 2 life. Until end of turn, that creature gains \"When this creature dies, return it to the battlefield tapped under its owner's control.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Choose target creature. You lose 2 life. Until end of turn, it gains \"When this creature dies, return it to the battlefield tapped\"",
+        "effects": [
+          {
+            "amount": {
+              "kind": "const",
+              "n": 2
+            },
+            "op": "loseLife"
+          },
+          {
+            "ability": {
+              "description": "When this creature dies, return it to the battlefield tapped under its owner's control",
+              "effects": [
+                {
+                  "op": "returnDiedSourceToBattlefield",
+                  "tapped": true
+                }
+              ],
+              "kind": "triggered",
+              "targets": [],
+              "trigger": {
+                "subject": {
+                  "kind": "self"
+                },
+                "when": "dies"
+              }
+            },
+            "op": "grantAbilityUntilEot",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "creature"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-mana-sculpt",
@@ -40411,8 +40509,22 @@
   {
     "oracleId": "oracle-valakut-awakening-valakut-stoneforge",
     "name": "Valakut Awakening // Valakut Stoneforge",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Put any number of cards from your hand on the bottom of your library, then draw that many cards plus one."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Put any number of cards from your hand on the bottom of your library, then draw that many plus one",
+        "effects": [
+          {
+            "extra": 1,
+            "op": "putAnyFromHandOnBottomThenDraw"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-varchild-betrayer-of-kjeldor",
