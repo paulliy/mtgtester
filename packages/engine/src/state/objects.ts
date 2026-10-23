@@ -1,6 +1,6 @@
 import { counterCount, setCounterCount } from './counters';
 import { offBattlefieldTypes } from './off-battlefield-types';
-import { playerLifeLocked } from './phasing';
+import { playerProtectedFromEverything } from './phasing';
 import { selectedPermanentDefinition } from '../cards/spell-faces';
 import { assertTriggerEventFamily } from '../cards/trigger-contracts';
 import { attackedPlaneswalker, spellDefinitionOf, canBeSacrificed } from './queries';
@@ -924,7 +924,7 @@ export function* moveObject(
               if (host !== undefined && ctx.enteringTogether?.has(host.cardId) === true)
                 return false;
               return host === undefined
-                ? !playerLifeLocked(ctx, id)
+                ? !playerProtectedFromEverything(ctx, id)
                 : !hasProtectionFrom(ctx, host, def);
             });
       if (target.attachedTo !== undefined) {

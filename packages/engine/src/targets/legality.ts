@@ -1,4 +1,4 @@
-import { playerLifeLocked } from '../state/phasing';
+import { playerProtectedFromEverything } from '../state/phasing';
 import { offBattlefieldTypes } from '../state/off-battlefield-types';
 import { spellDefinitionOf } from '../state/queries';
 import type { ObjectId, PlayerId } from '@mtg/shared';
@@ -241,7 +241,7 @@ export function targetIsLegal(
     return (
       (kind === 'player' || kind === 'anyTarget' || kind === 'playerOrPlaneswalker') &&
       !player.hasLost &&
-      (context.targeting === false || !playerLifeLocked(ctx, player.id)) &&
+      (context.targeting === false || !playerProtectedFromEverything(ctx, player.id)) &&
       !(
         context.targeting !== false &&
         player.id !== controllerId &&

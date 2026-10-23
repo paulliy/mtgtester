@@ -395,6 +395,7 @@ export const IMPLEMENTED_KEYWORDS = [
   'infect',
   'cascade',
   'rebound',
+  'split second',
 ] as const;
 export type KeywordAbility = (typeof IMPLEMENTED_KEYWORDS)[number];
 
@@ -693,6 +694,10 @@ export type Effect =
   | { op: 'gainClassLevel'; level: number }
   | { op: 'drawForOpponentsWithSmallHands'; maximum: number }
   | { op: 'phaseOutAndProtectControllerUntilNextTurn' }
+  /** The One Ring: protection from everything until your next turn, without the life lock. */
+  | { op: 'controllerProtectionFromEverythingUntilNextTurn' }
+  /** Clever Concealment: each chosen permanent phases out until its controller's next turn. */
+  | { op: 'phaseOutEachChosen'; targetSlot: number }
   | { op: 'prohibitSpellsThisTurn' }
   | { op: 'controllerHexproofUntilEot' }
   | { op: 'exileSpellAndPlot'; target: EffectRef }

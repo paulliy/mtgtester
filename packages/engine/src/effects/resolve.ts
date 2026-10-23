@@ -11,7 +11,11 @@ import {
   bottomCards,
 } from './library-reveal';
 import { lookAtLibraryAndCast } from './library-cast';
-import { playerLifeLocked, phaseOutControlledPermanents } from '../state/phasing';
+import {
+  playerLifeLocked,
+  phaseOutControlledPermanents,
+  phaseOutPermanents,
+} from '../state/phasing';
 import { returnToOwnerLibraryChoices } from './owner-library-choices';
 import {
   counterCount,
@@ -147,6 +151,7 @@ import {
   resolveConditionalUnits,
   resolveDynamicAmount,
   resolveDynamicUnits,
+  playerCantLose,
 } from '../state/queries';
 import type {
   ControlChangeDuration,
@@ -679,10 +684,8 @@ function gainLifeForPlayers(
 
 export function loseLife(ctx: GameContext, player: EnginePlayerState, amount: number): void {
   if (amount <= 0 || playerLifeLocked(ctx, player.id)) return;
-  player.life =
-    ctx.state.lifeFloorPlayers[player.id] === true
-      ? Math.max(1, player.life - amount)
-      : player.life - amount;
+  // Angel's Grace's floor is for damage only (applyDamageToPlayer); life loss goes below 1.
+  player.life -= amount;
   ctx.state.lifeLostThisTurn[player.id] = true;
   emit(ctx, 'lifeLoss', { player: player.id, amount, life: player.life });
 }
@@ -738,8 +741,9 @@ export function* drawCards(
           verb: 'Return',
           decline: { type: 'loseGame', description: 'No creature — lose the game', verb: 'Lose' },
         });
-        if (chosen === null) player.hasLost = true;
-        else yield* moveObject(ctx, chosen, { zone: 'battlefield', controllerId: player.id });
+        if (chosen === null) {
+          if (!playerCantLose(ctx, player.id)) player.hasLost = true;
+        } else yield* moveObject(ctx, chosen, { zone: 'battlefield', controllerId: player.id });
         // The reanimation AS A DRAW REPLACEMENT is not a draw: no card reached the hand.
         continue;
       }
@@ -2227,6 +2231,23 @@ export function* executeAbility(
         phaseOutControlledPermanents(ctx, controller.id);
         (ctx.state.playerProtectionUntilNextTurn ??= {})[controller.id] = ctx.state.turnNumber;
         emit(ctx, 'playerProtectionUntilNextTurn', { player: controller.id });
+        break;
+      case 'controllerProtectionFromEverythingUntilNextTurn':
+        (ctx.state.playerProtectionFromEverythingUntilNextTurn ??= {})[controller.id] =
+          ctx.state.turnNumber;
+        emit(ctx, 'playerProtectionUntilNextTurn', { player: controller.id });
+        break;
+      case 'phaseOutEachChosen':
+        // Each object phases in during its controller's untap step (CR 702.26b). The targets
+        // are "you control", so that is this spell's controller.
+        phaseOutPermanents(
+          ctx,
+          legalChosenPermanents(effect.targetSlot).flatMap((chosen) => {
+            const perm = findPermanent(ctx, chosen.id);
+            return perm === undefined ? [] : [perm.id];
+          }),
+          controller.id,
+        );
         break;
       case 'prohibitSpellsThisTurn':
         ctx.state.spellsProhibitedTurn = ctx.state.turnNumber;
@@ -4176,6 +4197,9 @@ export function* executeAbility(
         break;
       }
       case 'angelGrace':
+        // Opponents can only win here as the last player left (CR 104.2a), which "can't lose"
+        // already rules out.
+        (ctx.state.cantLoseTurn ??= {})[controller.id] = ctx.state.turnNumber;
         ctx.state.lifeFloorPlayers[controller.id] = true;
         emit(ctx, 'lifeFloor', { player: controller.id, minimum: 1 });
         break;
@@ -5216,8 +5240,10 @@ export function* executeAbility(
             verb: 'Return',
             decline: { type: 'loseGame', description: 'No creature — lose the game', verb: 'Lose' },
           });
-          if (chosen === null) controller.hasLost = true;
-          else yield* moveObject(ctx, chosen, { zone: 'battlefield', controllerId: controller.id });
+          if (chosen === null) {
+            if (!playerCantLose(ctx, controller.id)) controller.hasLost = true;
+          } else
+            yield* moveObject(ctx, chosen, { zone: 'battlefield', controllerId: controller.id });
         }
         break;
       case 'grantUnearthToArtifactCreaturesInGraveyard': {
