@@ -46,6 +46,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Bolt Bend',
       'Brash Taunter',
       'Breena, the Demagogue',
+      'Caged Sun',
       'Canoptek Spyder',
       'Canoptek Tomb Sentinel',
       'Canoptek Wraith',

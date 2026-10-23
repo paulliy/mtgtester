@@ -117,7 +117,11 @@ export type RuleStatic =
   | {
       kind: 'manaActivationRider';
       source: Selector;
-      add: { kind: 'fixed'; units: ManaUnit[] } | { kind: 'oneOfProducedTypes' };
+      add:
+        | { kind: 'fixed'; units: ManaUnit[] }
+        | { kind: 'oneOfProducedTypes' }
+        /** Caged Sun: one more mana of the source's chosen color, when that color is produced. */
+        | { kind: 'chosenColorIfProduced' };
     }
   /** "Play with the top card of your library revealed." */
   | { kind: 'revealTopLibrary' }
