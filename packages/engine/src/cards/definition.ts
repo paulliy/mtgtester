@@ -163,7 +163,11 @@ export interface CardDefinition {
   }[];
   /** Additional 1/1 token replacement generated whenever a creature token is created. */
   tokenCreationReplacement?: import('./ability').TokenSpec;
-  /** Static characteristic behavior for a Duplicant-style last-exiled creature copy. */
+  /**
+   * Duplicant: "As long as a card exiled with this creature is a creature card, this creature
+   * has the power, toughness, and creature types of the last creature card exiled with it. It's
+   * still a Shapeshifter." A layer 4 and layer 7b effect over `exiledWithIds` (CR 607.2a).
+   */
   copyLastExiledCreature?: boolean;
   /** Grants an energy alternative cost to permanent spells while this permanent is controlled. */
   energyAlternativeCost?: number;

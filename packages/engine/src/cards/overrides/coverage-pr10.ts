@@ -8,6 +8,7 @@ import {
   not,
   ofSubtype,
   ofSupertype,
+  IS_TOKEN,
   ofType,
   OPPONENTS,
   powerAtLeast,
@@ -42,6 +43,7 @@ export function registerCoveragePr10Overrides(): void {
   registerPr10TriggerDoublingOverrides();
   registerPr10AnimationOverrides();
   registerPr10TokenCopyOverrides();
+  registerPr10CharacteristicsOverrides();
 }
 
 /** PR10.01, 10.11, 10.06, 10.14, 10.12: retargeting and spell copies with new targets. */
@@ -676,5 +678,32 @@ export function registerPr10TokenCopyOverrides(): void {
       },
     },
     "PR10 copies an opponent's creature and goads the other creatures sharing its name.",
+  );
+}
+
+/** PR10.13 and the characteristic group: cards whose characteristics come from other objects. */
+export function registerPr10CharacteristicsOverrides(): void {
+  const imprint = targetSlots({ exiled: { kind: 'creature', filter: not(IS_TOKEN) } });
+  // PR10.13: the exile is optional on resolution, but the target is chosen as the trigger is put
+  // on the stack (CR 603.3d). Its static ability reads the cards still exiled with this object.
+  replaceCard(
+    'ea86abfa-6cab-4ef0-8463-34136fc25b59',
+    'Duplicant',
+    [
+      'When this creature enters, you may exile target nontoken creature.',
+      "As long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with it. It's still a Shapeshifter.",
+    ],
+    {
+      triggers: [
+        triggered(onEtb(), {
+          optional: true,
+          targets: imprint.targets,
+          effects: [{ op: 'exileTargetWithSource', target: imprint.slot.exiled }],
+          description: 'You may exile target nontoken creature',
+        }),
+      ],
+      copyLastExiledCreature: true,
+    },
+    'PR10 links the exiled cards to this object and sets base P/T and creature types from the last creature card.',
   );
 }

@@ -161,8 +161,12 @@ export function digestOf(
       for (const st of perm.copyAddSupertypes) h = mix(h, hashString(st));
     if (perm.copyAddTriggers !== undefined)
       for (const tr of perm.copyAddTriggers) h = mix(h, hashString(tr.description ?? ''));
-    if (perm.exiledCardIds !== undefined)
-      for (const cardId of perm.exiledCardIds) h = mix(h, hashString(cardId));
+    // Duplicant reads which linked cards are still in exile (CR 607.2a).
+    if (perm.exiledWithIds !== undefined)
+      for (const id of perm.exiledWithIds) {
+        h = mix(h, hashString(id));
+        h = mix(h, s.exile.some((card) => card.id === id) ? 1 : 0);
+      }
     h = foldCounters(h, perm);
     // `attachedToSource`/`isEnchanted`/`isEquipped` read this; attaching/detaching changes
     // none of the fields above, so it must be folded in explicitly (ADR 0007).

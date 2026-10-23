@@ -7471,11 +7471,16 @@ export function* executeAbility(
         const targetId = ref(effect.target);
         const target = targetId === null ? undefined : findPermanent(ctx, targetId);
         if (target === undefined) break;
-        const targetCardId = target.cardId;
-        yield* moveObject(ctx, target, { zone: 'exile' });
-        const currentSource = ctx.state.battlefield.find((perm) => perm.cardId === source.cardId);
-        if (currentSource !== undefined) {
-          currentSource.exiledCardIds = [...(currentSource.exiledCardIds ?? []), targetCardId];
+        emit(ctx, 'exile', { target: target.name, source: source.name });
+        const exiled = yield* moveObject(ctx, target, { zone: 'exile' });
+        // Linked to the source object that exiled it (CR 607.2a); a replacement that sent the
+        // card elsewhere means nothing was exiled with it.
+        const currentSource = ctx.state.battlefield.find(
+          (perm) =>
+            perm.cardId === source.cardId && (source.id === undefined || perm.id === source.id),
+        );
+        if (currentSource !== undefined && exiled !== null && exiled.zone === 'exile') {
+          currentSource.exiledWithIds = [...(currentSource.exiledWithIds ?? []), exiled.id];
         }
         break;
       }

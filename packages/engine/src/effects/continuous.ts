@@ -93,6 +93,72 @@ function groupOf(op: ContinuousOp): string {
   return op.layer === 7 ? `7${op.sublayer}` : String(op.layer);
 }
 
+/**
+ * Duplicant's static ability: the power, toughness and creature types of the last creature card
+ * still in exile among those it exiled (CR 607.2a). It sets base P/T (layer 7b) and creature
+ * types (layer 4), keeping Shapeshifter. A `*` is read from the card's characteristic-defining
+ * ability as it works in exile (CR 604.3), with its owner as "you"; abilities that only modify
+ * the card's P/T don't apply there (Death's Shadow is 13/13).
+ */
+const ZERO_VALUE = { kind: 'const', n: 0 } as const;
+
+function lastExiledCreatureEffects(ctx: GameContext, source: EnginePermanent): LayerEffect[] {
+  const linked = source.exiledWithIds ?? [];
+  for (let i = linked.length - 1; i >= 0; i--) {
+    const card = ctx.state.exile.find((candidate) => candidate.id === linked[i]);
+    const def = card === undefined ? undefined : ctx.defs.get(card.oracleId);
+    if (card === undefined || def === undefined || !def.types.includes('Creature')) continue;
+    const cda = def.staticEffects.find(
+      (effect) =>
+        effect.affects.kind === 'self' &&
+        effect.condition === undefined &&
+        effect.op.layer === 7 &&
+        effect.op.sublayer === 'a',
+    )?.op as Extract<ContinuousOp, { layer: 7; sublayer: 'a' }> | undefined;
+    const changeling = def.staticEffects.some(
+      (effect) =>
+        effect.affects.kind === 'self' &&
+        effect.op.layer === 4 &&
+        effect.op.addAllCreatureTypes === true,
+    );
+    const creatureTypes = changeling
+      ? [...CREATURE_TYPES]
+      : def.subtypes.filter((subtype) => CREATURE_TYPES.includes(subtype));
+    const self = {
+      kind: 'selector',
+      selector: { kind: 'self' },
+      // "You" in the exiled card's own ability is its owner (CR 109.5).
+      source: { cardId: source.cardId, controllerId: card.ownerId },
+    } as const;
+    return [
+      {
+        applies: { kind: 'fixed', cardIds: [source.cardId], objectIds: [source.id] },
+        op: {
+          layer: 4,
+          setSubtypes: creatureTypes.includes('Shapeshifter')
+            ? creatureTypes
+            : [...creatureTypes, 'Shapeshifter'],
+        },
+        timestamp: source.timestamp,
+      },
+      {
+        applies: self,
+        op: {
+          layer: 7,
+          sublayer: 'b',
+          power: def.power !== null ? { kind: 'const', n: def.power } : (cda?.power ?? ZERO_VALUE),
+          toughness:
+            def.toughness !== null
+              ? { kind: 'const', n: def.toughness }
+              : (cda?.toughness ?? ZERO_VALUE),
+        },
+        timestamp: source.timestamp,
+      },
+    ];
+  }
+  return [];
+}
+
 /** The card id of whatever `perm` is attached to, for `attachedToSource`. */
 function attachedCardId(ctx: GameContext, perm: EnginePermanent): string | null {
   if (perm.attachedTo === null) return null;
@@ -205,6 +271,7 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
         ...(boardCondition !== undefined ? { condition: boardCondition } : {}),
       });
     }
+    if (def.copyLastExiledCreature === true) out.push(...lastExiledCreatureEffects(ctx, source));
     if (!source.transformed && def.artifactGraveyardAbilities === true) {
       const controller = ctx.state.players.find((p) => p.id === source.controllerId);
       for (const card of controller?.graveyard ?? []) {
@@ -823,16 +890,6 @@ function runLayers(
       if (perm.copyAddSupertypes !== undefined)
         for (const st of perm.copyAddSupertypes) if (!supertypes.includes(st)) supertypes.push(st);
       if (perm.copyAddTriggers !== undefined) triggers = [...triggers, ...perm.copyAddTriggers];
-      if (def.copyLastExiledCreature === true && (perm.exiledCardIds?.length ?? 0) > 0) {
-        const lastId = perm.exiledCardIds?.[perm.exiledCardIds.length - 1];
-        const exiled = ctx.state.exile.find((card) => card.cardId === lastId);
-        const exiledDef = exiled === undefined ? undefined : ctx.defs.get(exiled.oracleId);
-        if (exiledDef?.types.includes('Creature')) {
-          subtypes = [...exiledDef.subtypes, 'Shapeshifter'];
-          power = exiledDef.power ?? 0;
-          toughness = exiledDef.toughness ?? 0;
-        }
-      }
     }
     work.set(perm.cardId, {
       perm,

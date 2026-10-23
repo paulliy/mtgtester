@@ -373,8 +373,12 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
   /** Name kept instead of the copied object's ("except its name is Sarkhan, Soul Aflame" —
    * Sarkhan, Soul Aflame). */
   copyNameOverride?: string;
-  /** Cards exiled by a Duplicant-style ability, newest card last. */
-  exiledCardIds?: CardId[];
+  /**
+   * Exile-zone object ids of the cards this object exiled with an `exileTargetWithSource` ability,
+   * newest last. Linked to this object only (CR 607.2a): a card that leaves exile becomes a new
+   * object and is no longer "exiled with" it.
+   */
+  exiledWithIds?: string[];
   /** A face-down manifested card is a 2/2 colorless creature. */
   faceDown?: boolean;
 }
