@@ -166,7 +166,7 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
       : family === 'cast'
         ? ['caster', 'filter', 'targetFilter', 'ordinal', 'castFrom']
         : family === 'attackDeclaration'
-          ? ['attacker', 'attacking', 'perDefender', 'minAttackers']
+          ? ['attacker', 'attacking', 'perDefender', 'minAttackers', 'attackerFilter']
           : family === 'card'
             ? ['player', 'filter']
             : [

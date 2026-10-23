@@ -2345,6 +2345,8 @@ export type TriggerHead =
       };
       perDefender?: boolean;
       minAttackers?: number;
+      /** Only attackers this matches form the group ("one or more non-Toy creatures"). */
+      attackerFilter?: Selector;
     };
 
 /**

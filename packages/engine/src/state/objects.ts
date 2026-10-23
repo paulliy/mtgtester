@@ -1,7 +1,8 @@
 import { counterCount, setCounterCount } from './counters';
 import { offBattlefieldTypes } from './off-battlefield-types';
 import { playerProtectedFromEverything } from './phasing';
-import { selectedPermanentDefinition } from '../cards/spell-faces';
+import { roomDefinition, selectedPermanentDefinition } from '../cards/spell-faces';
+import type { RoomDoor } from '../cards/spell-faces';
 import { assertTriggerEventFamily } from '../cards/trigger-contracts';
 import { attackedPlaneswalker, spellDefinitionOf, canBeSacrificed, isModified } from './queries';
 /**
@@ -46,6 +47,7 @@ import {
 } from '../effects/continuous';
 import { CREATURE_TYPES } from '../cards/creature-types';
 import { debug, emit } from '../log/log';
+import { manaCostTextOf } from '../mana/cost';
 import {
   cardZoneCandidate,
   counterAmountAfterReplacements,
@@ -132,6 +134,8 @@ export interface MoveDestination {
    * so enters triggers see the new types, and it lasts for as long as it stays this object.
    */
   addTypes?: string[];
+  /** Battlefield only: the Room door its spell was cast as, unlocked as it enters (CR 709.5d). */
+  unlockedDoor?: RoomDoor;
 }
 
 /**
@@ -256,6 +260,9 @@ function reincarnate(ctx: GameContext, obj: EngineObject, zone: Zone): EngineCar
     isCommander: obj.isCommander,
     zone,
     ...(zone === 'battlefield' && obj.face !== undefined ? { face: obj.face } : {}),
+    ...(zone === 'battlefield' && obj.unlockedDoors !== undefined
+      ? { unlockedDoors: [...obj.unlockedDoors] }
+      : {}),
     ...(zone === 'battlefield' && obj.escaped === true ? { escaped: true } : {}),
     // How a spell was cast — its X and any kicker-style payments — describes the permanent that
     // spell becomes (CR 107.3m, 702.33d), and nothing after: a kicked creature that dies and is
@@ -428,6 +435,26 @@ export function expireSourceControlEffects(ctx: GameContext, sourceObjectId: Obj
   }
 }
 
+/** The name and mana cost a Room permanent has with its current doors unlocked (CR 709.5). */
+function roomFaceText(def: CardDefinition): Pick<EnginePermanent, 'name' | 'manaCost'> {
+  return { name: def.name, manaCost: manaCostTextOf(def.manaCost) as EnginePermanent['manaCost'] };
+}
+
+/**
+ * Give a Room permanent an unlocked designation (CR 709.5c, 709.5e–f): its name, mana cost and
+ * abilities now include that door's. False when the door is already unlocked.
+ */
+export function unlockRoomDoor(ctx: GameContext, perm: EnginePermanent, door: RoomDoor): boolean {
+  const printed = getDefByOracleId(ctx, perm.oracleId, perm.name);
+  if (printed.roomDoors === undefined || perm.unlockedDoors?.includes(door) === true) return false;
+  perm.unlockedDoors = (['left', 'right'] as const).filter(
+    (entry) => entry === door || perm.unlockedDoors?.includes(entry) === true,
+  );
+  if (!perm.faceDown)
+    Object.assign(perm, roomFaceText(roomDefinition(printed, perm.unlockedDoors)));
+  return true;
+}
+
 /** What a face-down permanent is called while face down (CR 708.2a). */
 export const FACE_DOWN_PERMANENT_NAME = 'Face-down permanent';
 
@@ -446,7 +473,11 @@ export function makePermanent(
   /** Counters a moving effect puts on it as it enters (`MoveDestination.withCounters`). */
   entryCounters: Record<string, number> = {},
 ): EnginePermanent {
-  const def = selectedPermanentDefinition(getDefByOracleId(ctx, obj.oracleId, obj.name), obj.face);
+  const def = selectedPermanentDefinition(
+    getDefByOracleId(ctx, obj.oracleId, obj.name),
+    obj.face,
+    obj.unlockedDoors,
+  );
   const landFace = mdfcLandFaceFor(ctx, obj);
   // Planeswalkers/battles enter with their printed loyalty/defense (CR 306.5b, 310.6).
   const counters: Record<string, number> = {};
@@ -511,6 +542,7 @@ export function makePermanent(
     const sourceDef = selectedPermanentDefinition(
       getDefByOracleId(ctx, source.oracleId, source.name),
       source.face,
+      source.unlockedDoors,
     );
     for (const replacement of sourceDef.additionalCountersOnEntry ?? []) {
       if (
@@ -553,6 +585,8 @@ export function makePermanent(
     // A face-down permanent has no name (CR 708.2a): every event, prompt and view that names it
     // reads this, so its identity reaches no other player. The definition keeps the real one.
     ...(faceDown ? { name: FACE_DOWN_PERMANENT_NAME } : {}),
+    // A Room is named and costed by its unlocked doors alone (CR 709.5).
+    ...(!faceDown && def.roomDoors !== undefined ? roomFaceText(def) : {}),
     zone: 'battlefield',
     controllerId,
     defaultControllerId: controllerId,
@@ -993,9 +1027,11 @@ export function* moveObject(
     // As-enters replacement (CR 614.1c): "enters tapped unless <condition>". Resolved BEFORE
     // the permanent exists, so it is never momentarily tapped-then-untapped — and because the
     // condition may be a choice ("you may pay 2 life"), it is resolved here, in the generator.
+    const unlockedDoors = target.unlockedDoor === undefined ? undefined : [target.unlockedDoor];
     const def = selectedPermanentDefinition(
       getDefByOracleId(ctx, obj.oracleId, obj.name),
       target.face ?? obj.face,
+      unlockedDoors,
     );
     const landFace =
       target.face === 'back'
@@ -1021,7 +1057,14 @@ export function* moveObject(
       entersTappedOverride = !met;
     }
     if (target.entersTapped === true) entersTappedOverride = true;
-    const incoming = target.face === 'back' ? { ...obj, face: 'back' as const } : obj;
+    const incoming =
+      target.face !== 'back' && unlockedDoors === undefined
+        ? obj
+        : {
+            ...obj,
+            ...(target.face === 'back' ? { face: 'back' as const } : {}),
+            ...(unlockedDoors === undefined ? {} : { unlockedDoors }),
+          };
     const perm = makePermanent(
       ctx,
       incoming,
@@ -1957,6 +2000,7 @@ function copiableDefinition(ctx: GameContext, perm: EnginePermanent): CardDefini
   const def = selectedPermanentDefinition(
     getDefByOracleId(ctx, perm.oracleId, perm.name),
     perm.face,
+    perm.unlockedDoors,
   );
   const face = perm.transformed ? def.backFace : undefined;
   const faceValues =
@@ -2348,6 +2392,7 @@ export function queueTriggersForEvent(
       const def = selectedPermanentDefinition(
         getDefByOracleId(ctx, source.oracleId, source.name),
         source.face,
+        source.unlockedDoors,
       );
       const rules =
         source.transformed && def.backFace !== undefined
@@ -3466,7 +3511,18 @@ export function queueAttackDeclarationTriggers(
                   ? attackingPlayerId === enchantedPlayerId
                   : true;
         if (!attackerOk) continue;
-        const mine = declared.filter((a) => a.controllerId === attackingPlayerId);
+        const attackerFilter = spec.attackerFilter;
+        const mine = declared.filter(
+          (a) =>
+            a.controllerId === attackingPlayerId &&
+            (attackerFilter === undefined ||
+              matchesSelector(ctx, a, attackerFilter, {
+                cardId: source.cardId,
+                objectId: source.id,
+                controllerId: watcherId,
+                attachedToCardId: null,
+              })),
+        );
         // Attacking a planeswalker is not attacking its controller (CR 506.2); one removed from
         // combat attacks nothing.
         const filter = spec.attacking;

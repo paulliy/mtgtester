@@ -38,6 +38,7 @@ import {
   moveObject,
   queueActivationTriggers,
   queuePlayerTriggersForEvent,
+  unlockRoomDoor,
 } from '../state/objects';
 import {
   activatingAbilitiesBlockedFor,
@@ -61,6 +62,7 @@ import {
   handActivationCost,
   manaPortionOf,
   graveyardActivationCost,
+  roomUnlockCosts,
   turnFaceUpCosts,
 } from './legal';
 import { breakYieldsForStop } from '../turn/stops';
@@ -631,6 +633,28 @@ export function* applyPriorityAction(
       delete perm.manifested;
       perm.name = getDefByOracleId(ctx, perm.oracleId, perm.name).name;
       emit(ctx, 'turnedFaceUp', { name: perm.name, cardId: perm.cardId }, player.id);
+      return;
+    }
+
+    case 'unlockDoor': {
+      const perm = s.battlefield.find((candidate) => candidate.id === payload.objectId);
+      const way =
+        perm === undefined
+          ? undefined
+          : roomUnlockCosts(ctx, perm).find((candidate) => candidate.door === payload.door);
+      if (
+        perm === undefined ||
+        perm.controllerId !== player.id ||
+        way === undefined ||
+        s.turnOrder[s.activePlayerIndex] !== player.id ||
+        s.stack.length > 0 ||
+        (s.phase !== 'precombatMain' && s.phase !== 'postcombatMain')
+      ) {
+        throw new Error('illegal action: no locked door to unlock');
+      }
+      yield* payManaCost(ctx, player, way.cost);
+      unlockRoomDoor(ctx, perm, way.door);
+      emit(ctx, 'doorUnlocked', { name: way.name, cardId: perm.cardId }, player.id);
       return;
     }
 

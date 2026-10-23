@@ -19200,6 +19200,456 @@
     }
   },
   {
+    "oracleId": "e633412b-e36b-4ec5-b0d0-7cb24c7503f4",
+    "name": "Dollmaker's Shop // Porcelain Gallery",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever one or more non-Toy creatures you control attack a player, create a 1/1 white Toy artifact creature token.\"",
+      "unsupported layout \"split\""
+    ],
+    "def": {
+      "activatedAbilities": [],
+      "alternativeCasts": [
+        {
+          "ability": {
+            "effects": [],
+            "kind": "spell",
+            "targets": []
+          },
+          "description": "Dollmaker's Shop",
+          "kind": "split",
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 0,
+              "U": 0,
+              "W": 1
+            },
+            "colorless": 0,
+            "generic": 1
+          },
+          "name": "Dollmaker's Shop",
+          "spellFace": {
+            "activatedAbilities": [],
+            "colorIdentity": [
+              "W"
+            ],
+            "colors": [
+              "W"
+            ],
+            "defense": null,
+            "entersTapped": false,
+            "hasUnsupportedCost": false,
+            "keywords": [],
+            "loyalty": null,
+            "manaAbilities": [],
+            "manaCost": {
+              "colored": {
+                "B": 0,
+                "G": 0,
+                "R": 0,
+                "U": 0,
+                "W": 1
+              },
+              "colorless": 0,
+              "generic": 1
+            },
+            "modeled": true,
+            "name": "Dollmaker's Shop",
+            "oracleId": "e633412b-e36b-4ec5-b0d0-7cb24c7503f4:left",
+            "power": null,
+            "ruleStatics": [],
+            "spellAbility": {
+              "effects": [],
+              "kind": "spell",
+              "targets": []
+            },
+            "staticEffects": [],
+            "subtypes": [
+              "Room"
+            ],
+            "supertypes": [],
+            "toughness": null,
+            "triggers": [
+              {
+                "description": "Whenever one or more non-Toy creatures you control attack a player, create a 1/1 white Toy artifact creature token",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "createToken",
+                    "spec": {
+                      "colors": [
+                        "W"
+                      ],
+                      "name": "Toy",
+                      "power": 1,
+                      "subtypes": [
+                        "Toy"
+                      ],
+                      "toughness": 1,
+                      "typeLine": "Artifact Creature — Toy",
+                      "types": [
+                        "Artifact",
+                        "Creature"
+                      ]
+                    }
+                  }
+                ],
+                "kind": "triggered",
+                "targets": [],
+                "trigger": {
+                  "attacker": "you",
+                  "attackerFilter": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "not",
+                        "of": {
+                          "kind": "subtype",
+                          "value": "Toy"
+                        }
+                      }
+                    ]
+                  },
+                  "attacking": {
+                    "planeswalkers": false,
+                    "who": "opponent"
+                  },
+                  "when": "attackDeclared"
+                }
+              }
+            ],
+            "typeLine": "Enchantment — Room",
+            "types": [
+              "Enchantment"
+            ],
+            "unmodeledReasons": []
+          },
+          "typeLine": "Enchantment — Room"
+        },
+        {
+          "ability": {
+            "effects": [],
+            "kind": "spell",
+            "targets": []
+          },
+          "description": "Porcelain Gallery",
+          "kind": "split",
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 0,
+              "U": 0,
+              "W": 2
+            },
+            "colorless": 0,
+            "generic": 4
+          },
+          "name": "Porcelain Gallery",
+          "spellFace": {
+            "activatedAbilities": [],
+            "colorIdentity": [
+              "W"
+            ],
+            "colors": [
+              "W"
+            ],
+            "defense": null,
+            "entersTapped": false,
+            "hasUnsupportedCost": false,
+            "keywords": [],
+            "loyalty": null,
+            "manaAbilities": [],
+            "manaCost": {
+              "colored": {
+                "B": 0,
+                "G": 0,
+                "R": 0,
+                "U": 0,
+                "W": 2
+              },
+              "colorless": 0,
+              "generic": 4
+            },
+            "modeled": true,
+            "name": "Porcelain Gallery",
+            "oracleId": "e633412b-e36b-4ec5-b0d0-7cb24c7503f4:right",
+            "power": null,
+            "ruleStatics": [],
+            "spellAbility": {
+              "effects": [],
+              "kind": "spell",
+              "targets": []
+            },
+            "staticEffects": [
+              {
+                "affects": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                },
+                "op": {
+                  "layer": 7,
+                  "power": {
+                    "kind": "countPermanents",
+                    "scope": "you",
+                    "selector": {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  },
+                  "sublayer": "b",
+                  "toughness": {
+                    "kind": "countPermanents",
+                    "scope": "you",
+                    "selector": {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  }
+                }
+              }
+            ],
+            "subtypes": [
+              "Room"
+            ],
+            "supertypes": [],
+            "toughness": null,
+            "triggers": [],
+            "typeLine": "Enchantment — Room",
+            "types": [
+              "Enchantment"
+            ],
+            "unmodeledReasons": []
+          },
+          "typeLine": "Enchantment — Room"
+        }
+      ],
+      "colors": [
+        "W"
+      ],
+      "manaCost": {
+        "colored": {
+          "B": 0,
+          "G": 0,
+          "R": 0,
+          "U": 0,
+          "W": 3
+        },
+        "colorless": 0,
+        "generic": 5
+      },
+      "roomDoors": [
+        {
+          "activatedAbilities": [],
+          "colorIdentity": [
+            "W"
+          ],
+          "colors": [
+            "W"
+          ],
+          "defense": null,
+          "entersTapped": false,
+          "hasUnsupportedCost": false,
+          "keywords": [],
+          "loyalty": null,
+          "manaAbilities": [],
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 0,
+              "U": 0,
+              "W": 1
+            },
+            "colorless": 0,
+            "generic": 1
+          },
+          "modeled": true,
+          "name": "Dollmaker's Shop",
+          "oracleId": "e633412b-e36b-4ec5-b0d0-7cb24c7503f4:left",
+          "power": null,
+          "ruleStatics": [],
+          "spellAbility": {
+            "effects": [],
+            "kind": "spell",
+            "targets": []
+          },
+          "staticEffects": [],
+          "subtypes": [
+            "Room"
+          ],
+          "supertypes": [],
+          "toughness": null,
+          "triggers": [
+            {
+              "description": "Whenever one or more non-Toy creatures you control attack a player, create a 1/1 white Toy artifact creature token",
+              "effects": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "createToken",
+                  "spec": {
+                    "colors": [
+                      "W"
+                    ],
+                    "name": "Toy",
+                    "power": 1,
+                    "subtypes": [
+                      "Toy"
+                    ],
+                    "toughness": 1,
+                    "typeLine": "Artifact Creature — Toy",
+                    "types": [
+                      "Artifact",
+                      "Creature"
+                    ]
+                  }
+                }
+              ],
+              "kind": "triggered",
+              "targets": [],
+              "trigger": {
+                "attacker": "you",
+                "attackerFilter": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "not",
+                      "of": {
+                        "kind": "subtype",
+                        "value": "Toy"
+                      }
+                    }
+                  ]
+                },
+                "attacking": {
+                  "planeswalkers": false,
+                  "who": "opponent"
+                },
+                "when": "attackDeclared"
+              }
+            }
+          ],
+          "typeLine": "Enchantment — Room",
+          "types": [
+            "Enchantment"
+          ],
+          "unmodeledReasons": []
+        },
+        {
+          "activatedAbilities": [],
+          "colorIdentity": [
+            "W"
+          ],
+          "colors": [
+            "W"
+          ],
+          "defense": null,
+          "entersTapped": false,
+          "hasUnsupportedCost": false,
+          "keywords": [],
+          "loyalty": null,
+          "manaAbilities": [],
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 0,
+              "U": 0,
+              "W": 2
+            },
+            "colorless": 0,
+            "generic": 4
+          },
+          "modeled": true,
+          "name": "Porcelain Gallery",
+          "oracleId": "e633412b-e36b-4ec5-b0d0-7cb24c7503f4:right",
+          "power": null,
+          "ruleStatics": [],
+          "spellAbility": {
+            "effects": [],
+            "kind": "spell",
+            "targets": []
+          },
+          "staticEffects": [
+            {
+              "affects": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              },
+              "op": {
+                "layer": 7,
+                "power": {
+                  "kind": "countPermanents",
+                  "scope": "you",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                },
+                "sublayer": "b",
+                "toughness": {
+                  "kind": "countPermanents",
+                  "scope": "you",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                }
+              }
+            }
+          ],
+          "subtypes": [
+            "Room"
+          ],
+          "supertypes": [],
+          "toughness": null,
+          "triggers": [],
+          "typeLine": "Enchantment — Room",
+          "types": [
+            "Enchantment"
+          ],
+          "unmodeledReasons": []
+        }
+      ],
+      "spellAbility": null,
+      "staticEffects": [],
+      "triggers": []
+    }
+  },
+  {
     "oracleId": "e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe",
     "name": "Olórin's Searing Light",
     "handledLines": [
@@ -27559,6 +28009,456 @@
           }
         ]
       }
+    }
+  },
+  {
+    "oracleId": "oracle-dollmaker-s-shop-porcelain-gallery",
+    "name": "Dollmaker's Shop // Porcelain Gallery",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever one or more non-Toy creatures you control attack a player, create a 1/1 white Toy artifact creature token.\"",
+      "unsupported layout \"split\""
+    ],
+    "def": {
+      "activatedAbilities": [],
+      "alternativeCasts": [
+        {
+          "ability": {
+            "effects": [],
+            "kind": "spell",
+            "targets": []
+          },
+          "description": "Dollmaker's Shop",
+          "kind": "split",
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 0,
+              "U": 0,
+              "W": 1
+            },
+            "colorless": 0,
+            "generic": 1
+          },
+          "name": "Dollmaker's Shop",
+          "spellFace": {
+            "activatedAbilities": [],
+            "colorIdentity": [
+              "W"
+            ],
+            "colors": [
+              "W"
+            ],
+            "defense": null,
+            "entersTapped": false,
+            "hasUnsupportedCost": false,
+            "keywords": [],
+            "loyalty": null,
+            "manaAbilities": [],
+            "manaCost": {
+              "colored": {
+                "B": 0,
+                "G": 0,
+                "R": 0,
+                "U": 0,
+                "W": 1
+              },
+              "colorless": 0,
+              "generic": 1
+            },
+            "modeled": true,
+            "name": "Dollmaker's Shop",
+            "oracleId": "e633412b-e36b-4ec5-b0d0-7cb24c7503f4:left",
+            "power": null,
+            "ruleStatics": [],
+            "spellAbility": {
+              "effects": [],
+              "kind": "spell",
+              "targets": []
+            },
+            "staticEffects": [],
+            "subtypes": [
+              "Room"
+            ],
+            "supertypes": [],
+            "toughness": null,
+            "triggers": [
+              {
+                "description": "Whenever one or more non-Toy creatures you control attack a player, create a 1/1 white Toy artifact creature token",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "createToken",
+                    "spec": {
+                      "colors": [
+                        "W"
+                      ],
+                      "name": "Toy",
+                      "power": 1,
+                      "subtypes": [
+                        "Toy"
+                      ],
+                      "toughness": 1,
+                      "typeLine": "Artifact Creature — Toy",
+                      "types": [
+                        "Artifact",
+                        "Creature"
+                      ]
+                    }
+                  }
+                ],
+                "kind": "triggered",
+                "targets": [],
+                "trigger": {
+                  "attacker": "you",
+                  "attackerFilter": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "not",
+                        "of": {
+                          "kind": "subtype",
+                          "value": "Toy"
+                        }
+                      }
+                    ]
+                  },
+                  "attacking": {
+                    "planeswalkers": false,
+                    "who": "opponent"
+                  },
+                  "when": "attackDeclared"
+                }
+              }
+            ],
+            "typeLine": "Enchantment — Room",
+            "types": [
+              "Enchantment"
+            ],
+            "unmodeledReasons": []
+          },
+          "typeLine": "Enchantment — Room"
+        },
+        {
+          "ability": {
+            "effects": [],
+            "kind": "spell",
+            "targets": []
+          },
+          "description": "Porcelain Gallery",
+          "kind": "split",
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 0,
+              "U": 0,
+              "W": 2
+            },
+            "colorless": 0,
+            "generic": 4
+          },
+          "name": "Porcelain Gallery",
+          "spellFace": {
+            "activatedAbilities": [],
+            "colorIdentity": [
+              "W"
+            ],
+            "colors": [
+              "W"
+            ],
+            "defense": null,
+            "entersTapped": false,
+            "hasUnsupportedCost": false,
+            "keywords": [],
+            "loyalty": null,
+            "manaAbilities": [],
+            "manaCost": {
+              "colored": {
+                "B": 0,
+                "G": 0,
+                "R": 0,
+                "U": 0,
+                "W": 2
+              },
+              "colorless": 0,
+              "generic": 4
+            },
+            "modeled": true,
+            "name": "Porcelain Gallery",
+            "oracleId": "e633412b-e36b-4ec5-b0d0-7cb24c7503f4:right",
+            "power": null,
+            "ruleStatics": [],
+            "spellAbility": {
+              "effects": [],
+              "kind": "spell",
+              "targets": []
+            },
+            "staticEffects": [
+              {
+                "affects": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                },
+                "op": {
+                  "layer": 7,
+                  "power": {
+                    "kind": "countPermanents",
+                    "scope": "you",
+                    "selector": {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  },
+                  "sublayer": "b",
+                  "toughness": {
+                    "kind": "countPermanents",
+                    "scope": "you",
+                    "selector": {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  }
+                }
+              }
+            ],
+            "subtypes": [
+              "Room"
+            ],
+            "supertypes": [],
+            "toughness": null,
+            "triggers": [],
+            "typeLine": "Enchantment — Room",
+            "types": [
+              "Enchantment"
+            ],
+            "unmodeledReasons": []
+          },
+          "typeLine": "Enchantment — Room"
+        }
+      ],
+      "colors": [
+        "W"
+      ],
+      "manaCost": {
+        "colored": {
+          "B": 0,
+          "G": 0,
+          "R": 0,
+          "U": 0,
+          "W": 3
+        },
+        "colorless": 0,
+        "generic": 5
+      },
+      "roomDoors": [
+        {
+          "activatedAbilities": [],
+          "colorIdentity": [
+            "W"
+          ],
+          "colors": [
+            "W"
+          ],
+          "defense": null,
+          "entersTapped": false,
+          "hasUnsupportedCost": false,
+          "keywords": [],
+          "loyalty": null,
+          "manaAbilities": [],
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 0,
+              "U": 0,
+              "W": 1
+            },
+            "colorless": 0,
+            "generic": 1
+          },
+          "modeled": true,
+          "name": "Dollmaker's Shop",
+          "oracleId": "e633412b-e36b-4ec5-b0d0-7cb24c7503f4:left",
+          "power": null,
+          "ruleStatics": [],
+          "spellAbility": {
+            "effects": [],
+            "kind": "spell",
+            "targets": []
+          },
+          "staticEffects": [],
+          "subtypes": [
+            "Room"
+          ],
+          "supertypes": [],
+          "toughness": null,
+          "triggers": [
+            {
+              "description": "Whenever one or more non-Toy creatures you control attack a player, create a 1/1 white Toy artifact creature token",
+              "effects": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "createToken",
+                  "spec": {
+                    "colors": [
+                      "W"
+                    ],
+                    "name": "Toy",
+                    "power": 1,
+                    "subtypes": [
+                      "Toy"
+                    ],
+                    "toughness": 1,
+                    "typeLine": "Artifact Creature — Toy",
+                    "types": [
+                      "Artifact",
+                      "Creature"
+                    ]
+                  }
+                }
+              ],
+              "kind": "triggered",
+              "targets": [],
+              "trigger": {
+                "attacker": "you",
+                "attackerFilter": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "not",
+                      "of": {
+                        "kind": "subtype",
+                        "value": "Toy"
+                      }
+                    }
+                  ]
+                },
+                "attacking": {
+                  "planeswalkers": false,
+                  "who": "opponent"
+                },
+                "when": "attackDeclared"
+              }
+            }
+          ],
+          "typeLine": "Enchantment — Room",
+          "types": [
+            "Enchantment"
+          ],
+          "unmodeledReasons": []
+        },
+        {
+          "activatedAbilities": [],
+          "colorIdentity": [
+            "W"
+          ],
+          "colors": [
+            "W"
+          ],
+          "defense": null,
+          "entersTapped": false,
+          "hasUnsupportedCost": false,
+          "keywords": [],
+          "loyalty": null,
+          "manaAbilities": [],
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 0,
+              "U": 0,
+              "W": 2
+            },
+            "colorless": 0,
+            "generic": 4
+          },
+          "modeled": true,
+          "name": "Porcelain Gallery",
+          "oracleId": "e633412b-e36b-4ec5-b0d0-7cb24c7503f4:right",
+          "power": null,
+          "ruleStatics": [],
+          "spellAbility": {
+            "effects": [],
+            "kind": "spell",
+            "targets": []
+          },
+          "staticEffects": [
+            {
+              "affects": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              },
+              "op": {
+                "layer": 7,
+                "power": {
+                  "kind": "countPermanents",
+                  "scope": "you",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                },
+                "sublayer": "b",
+                "toughness": {
+                  "kind": "countPermanents",
+                  "scope": "you",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                }
+              }
+            }
+          ],
+          "subtypes": [
+            "Room"
+          ],
+          "supertypes": [],
+          "toughness": null,
+          "triggers": [],
+          "typeLine": "Enchantment — Room",
+          "types": [
+            "Enchantment"
+          ],
+          "unmodeledReasons": []
+        }
+      ],
+      "spellAbility": null,
+      "staticEffects": [],
+      "triggers": []
     }
   },
   {

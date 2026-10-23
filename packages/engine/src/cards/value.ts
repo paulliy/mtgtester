@@ -489,7 +489,10 @@ export function devotionTo(
   for (const perm of ctx.state.battlefield) {
     if (perm.controllerId !== controllerId || perm.faceDown === true || perm.transformed) continue;
     const def = ctx.defs.get(perm.oracleId);
-    const cost = def === undefined ? null : selectedPermanentDefinition(def, perm.face).manaCost;
+    const cost =
+      def === undefined
+        ? null
+        : selectedPermanentDefinition(def, perm.face, perm.unlockedDoors).manaCost;
     if (cost == null) continue;
     for (const color of counted) total += cost.colored[color];
     for (const pip of cost.hybrid ?? []) if (pip.some((c) => counted.includes(c))) total += 1;

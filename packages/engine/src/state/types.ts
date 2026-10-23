@@ -38,6 +38,7 @@ import type {
 import type { ObjectFacts } from '../cards/source-identity';
 import type { Selector, SelectorCandidate } from '../cards/selector';
 import type { TriggerScope } from '../cards/value';
+import type { RoomDoor } from '../cards/spell-faces';
 import type { Prng } from '../rng/prng';
 
 /** Stable physical-card identity, assigned once at game creation. */
@@ -208,6 +209,11 @@ export interface EngineObject extends GameObject {
   preparedBy?: ObjectId;
   /** The active face while a modal DFC is on the battlefield. Non-battlefield cards use front. */
   face?: 'front' | 'back';
+  /**
+   * A Room permanent's unlocked designations (CR 709.5c), in printed order. Absent means both
+   * doors are locked; never present off the battlefield.
+   */
+  unlockedDoors?: RoomDoor[];
   /** Tokens cease to exist when they leave the battlefield (CR 704.5d). */
   isToken: boolean;
   /** Commander-ness is a property of the physical card (brief §5.7). */

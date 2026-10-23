@@ -338,6 +338,15 @@ export const RABBIT_1_1_WHITE: TokenSpec = creatureToken({
   toughness: 1,
 });
 
+export const TOY_1_1_WHITE_ARTIFACT: TokenSpec = creatureToken({
+  name: 'Toy',
+  subtypes: ['Toy'],
+  colors: ['W'],
+  power: 1,
+  toughness: 1,
+  artifact: true,
+});
+
 export const SPIDER_2_2_REACH_GREEN: TokenSpec = creatureToken({
   name: 'Spider',
   subtypes: ['Spider'],
@@ -625,6 +634,7 @@ export const ALL_TOKENS: TokenSpec[] = [
   OGRE_3_3_RED,
   NINJA_1_1_BLACK,
   RABBIT_1_1_WHITE,
+  TOY_1_1_WHITE_ARTIFACT,
   SPIDER_2_2_REACH_GREEN,
   CONTRACT_AURA,
   CONSTRUCT_4_4,

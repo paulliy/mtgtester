@@ -1341,7 +1341,7 @@ export function gatherRuleStatics(ctx: GameContext): RuleStaticEntry[] {
     if (perm.faceDown) continue;
     const printed = ctx.defs.get(perm.oracleId);
     if (printed === undefined) continue;
-    const def = selectedPermanentDefinition(printed, perm.face);
+    const def = selectedPermanentDefinition(printed, perm.face, perm.unlockedDoors);
     const printedRuleStatics =
       perm.transformed && def.backFace !== undefined ? def.backFace.ruleStatics : def.ruleStatics;
     if (printedRuleStatics.length === 0 || computeCharacteristics(ctx, perm).loseAbilities)

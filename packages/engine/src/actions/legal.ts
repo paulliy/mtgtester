@@ -6,6 +6,7 @@ import { UnmodeledCardError } from '../errors';
 import type { ObjectFacts } from '../cards/source-identity';
 import { supportsAdditionalXAnnouncement } from '../cards/cost-contracts';
 import { bestowedDefinition, selectedSpellDefinition } from '../cards/spell-faces';
+import type { RoomDoor } from '../cards/spell-faces';
 import { assertNever } from '../utils/assert-never';
 import { castingPreviewContext } from '../casting/preview';
 import { mayCastCommanderFromCommand } from '../casting/permissions';
@@ -168,7 +169,27 @@ export type PriorityActionPayload =
    * Turning a face-down permanent face up (CR 116.2b): for its morph cost (CR 702.37e), or, when
    * it was manifested and is a creature card, for its mana cost (`via: 'manaCost'`, CR 701.40b).
    */
-  | { kind: 'turnFaceUp'; objectId: ObjectId; via?: 'manaCost' };
+  | { kind: 'turnFaceUp'; objectId: ObjectId; via?: 'manaCost' }
+  /** Paying a locked Room door's mana cost to unlock it (CR 709.5e). */
+  | { kind: 'unlockDoor'; objectId: ObjectId; door: RoomDoor };
+
+/**
+ * The locked doors of a Room permanent and their unlock costs (CR 709.5e): each door's own mana
+ * cost, with {X} as 0 (CR 107.3). A door with no mana cost can't be unlocked this way.
+ */
+export function roomUnlockCosts(
+  ctx: GameContext,
+  perm: EnginePermanent,
+): { door: RoomDoor; name: string; cost: ParsedManaCost }[] {
+  const doors = getDefByOracleId(ctx, perm.oracleId, perm.name).roomDoors;
+  if (doors === undefined || perm.faceDown === true) return [];
+  return (['left', 'right'] as const).flatMap((door, index) => {
+    const face = doors[index]!;
+    return perm.unlockedDoors?.includes(door) === true || face.manaCost === null
+      ? []
+      : [{ door, name: face.name, cost: { ...face.manaCost, x: 0 } }];
+  });
+}
 
 /**
  * The costs a face-down permanent can be turned face up for: its morph cost (CR 702.37e) and, if
@@ -2089,6 +2110,39 @@ export function computePriorityOptions(
           manaCost: describeManaCost(way.cost),
           ...paymentPreview(ctx, player, way.cost, baseCastSources, allows),
           publicDescription: `Turn a face-down permanent face up`,
+        },
+        interaction: { kind: 'source', sourceId: perm.id, sourceCardId: perm.cardId },
+      });
+    }
+  }
+
+  // Unlock a locked door of a Room you control for its mana cost (CR 709.5e): a special action
+  // any time you have priority with the stack empty in a main phase of your turn.
+  for (const perm of sorcerySpeed ? ctx.state.battlefield : []) {
+    if (perm.controllerId !== player.id) continue;
+    // Neither casting nor activating: restricted mana cannot pay it.
+    const allows = allowanceFor(ctx, player.id, { kind: 'other' });
+    for (const way of roomUnlockCosts(ctx, perm)) {
+      if (
+        !canPay(
+          way.cost,
+          player.manaEntries,
+          baseCastSources,
+          allows,
+          playerLifeLocked(ctx, player.id) ? 0 : player.life,
+        )
+      )
+        continue;
+      options.push({
+        type: 'activateAbility',
+        description: `Unlock ${way.name} (${describeManaCost(way.cost)})`,
+        payload: { kind: 'unlockDoor', objectId: perm.id, door: way.door },
+        data: {
+          sourceName: perm.name,
+          sourceZone: 'battlefield',
+          abilityDescription: `Unlock ${way.name}`,
+          manaCost: describeManaCost(way.cost),
+          ...paymentPreview(ctx, player, way.cost, baseCastSources, allows),
         },
         interaction: { kind: 'source', sourceId: perm.id, sourceCardId: perm.cardId },
       });

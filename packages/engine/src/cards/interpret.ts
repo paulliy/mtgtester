@@ -14,7 +14,7 @@ import { searchLibraryCards, graveyardAlternativeCost } from './effect-builders'
 import type { Color, OracleCard } from '@mtg/shared';
 import { enforceInterpretedDefinition } from './overload';
 import { offsetEffectSlots } from './effect-reference-contracts';
-import { emptyCost, parseManaCost } from '../mana/cost';
+import { colorsOfManaCost, combinedManaCost, emptyCost, parseManaCost } from '../mana/cost';
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type {
   AbilityCost,
@@ -7394,34 +7394,6 @@ interface TransformBackFaceResult {
 
 /** Interpret the second face of a traditional transforming DFC with the normal card grammar. */
 const FUSE_REMINDER = /^Fuse \(You may cast one or both halves of this card from your hand\.\)$/;
-
-/** The colors of a mana cost's symbols (CR 105.2, 202.2): a split half's own colors. */
-function colorsOfManaCost(cost: ParsedManaCost | null): Color[] {
-  if (cost === null) return [];
-  const present = new Set<Color>();
-  for (const color of ['W', 'U', 'B', 'R', 'G'] as const)
-    if (cost.colored[color] > 0) present.add(color);
-  for (const pair of cost.hybrid ?? []) for (const color of pair) present.add(color);
-  for (const color of cost.phyrexian ?? []) present.add(color);
-  return (['W', 'U', 'B', 'R', 'G'] as const).filter((color) => present.has(color));
-}
-
-/** Two mana costs added together: a split card's combined cost (CR 709.4b). */
-function combinedManaCost(a: ParsedManaCost, b: ParsedManaCost): ParsedManaCost {
-  const colored = { ...a.colored };
-  for (const color of ['W', 'U', 'B', 'R', 'G'] as const) colored[color] += b.colored[color];
-  const x = (a.x ?? 0) + (b.x ?? 0);
-  const hybrid = [...(a.hybrid ?? []), ...(b.hybrid ?? [])];
-  const phyrexian = [...(a.phyrexian ?? []), ...(b.phyrexian ?? [])];
-  return {
-    generic: a.generic + b.generic,
-    colored,
-    colorless: a.colorless + b.colorless,
-    ...(x > 0 ? { x } : {}),
-    ...(hybrid.length > 0 ? { hybrid } : {}),
-    ...(phyrexian.length > 0 ? { phyrexian } : {}),
-  };
-}
 
 /**
  * A split card whose halves are both instants or sorceries (CR 709). Each half is interpreted

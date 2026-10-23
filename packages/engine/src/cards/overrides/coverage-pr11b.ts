@@ -1,6 +1,6 @@
 /** PR11b authored layout cards: MDFC spell faces, transform, Class, Sagas, split cards, prepare, Rooms. */
 import type { CardDefinition } from '../definition';
-import { allOf, anyOf, ofType, SELF, YOURS } from '../selector';
+import { allOf, anyOf, not, ofSubtype, ofType, SELF, YOURS } from '../selector';
 import {
   activated,
   loyaltyAbility,
@@ -14,7 +14,11 @@ import {
   targetSlots,
   triggered,
 } from '../templates';
-import { CONSTRUCT_0_0_ARTIFACT_COUNT, INKLING_2_1_FLYING } from '../tokens';
+import {
+  CONSTRUCT_0_0_ARTIFACT_COUNT,
+  INKLING_2_1_FLYING,
+  TOY_1_1_WHITE_ARTIFACT,
+} from '../tokens';
 import { constant } from '../value';
 import { extendCard, replaceCard } from './index';
 
@@ -25,6 +29,7 @@ export function registerCoveragePr11bOverrides(): void {
   registerPr11bSagas();
   registerPr11bModalBackFaces();
   registerPr11bPrepare();
+  registerPr11bRoom();
 }
 
 /** PR11.02, .04: spell // land modal DFCs whose land backs were already authored. */
@@ -650,5 +655,118 @@ function registerPr11bPrepare(): void {
       }),
     },
     'PR11b implements prepare and the two-attacker trigger.',
+  );
+}
+
+/** One door of a Room (CR 709.5): the shared type line, with its own name, cost and abilities. */
+function roomDoor(door: {
+  oracleId: string;
+  name: string;
+  cost: string;
+  colors: CardDefinition['colors'];
+  triggers?: CardDefinition['triggers'];
+  staticEffects?: CardDefinition['staticEffects'];
+}): CardDefinition {
+  return {
+    oracleId: door.oracleId as CardDefinition['oracleId'],
+    name: door.name,
+    typeLine: 'Enchantment — Room',
+    supertypes: [],
+    types: ['Enchantment'],
+    subtypes: ['Room'],
+    colors: door.colors,
+    colorIdentity: door.colors,
+    manaCost: manaCost(door.cost),
+    hasUnsupportedCost: false,
+    power: null,
+    toughness: null,
+    loyalty: null,
+    defense: null,
+    keywords: [],
+    manaAbilities: [],
+    activatedAbilities: [],
+    entersTapped: false,
+    triggers: door.triggers ?? [],
+    staticEffects: door.staticEffects ?? [],
+    ruleStatics: [],
+    spellAbility: spell({ effects: [] }),
+    modeled: true,
+    unmodeledReasons: [],
+  };
+}
+
+/** PR11.26: a Room, cast as either door and unlocked door by door (CR 709.5). */
+function registerPr11bRoom(): void {
+  // PR11.26: a locked door has no name, cost or abilities, so the Room's colors and mana value
+  // are its unlocked doors' alone. "Attack a player" leaves out attacks on planeswalkers, and a
+  // Toy attacking alongside other creatures doesn't count toward "one or more non-Toy creatures".
+  // Porcelain Gallery sets base power and toughness in layer 7b, so counters and pumps still apply.
+  const oracleId = 'e633412b-e36b-4ec5-b0d0-7cb24c7503f4';
+  const shop = roomDoor({
+    oracleId: `${oracleId}:left`,
+    name: "Dollmaker's Shop",
+    cost: '{1}{W}',
+    colors: ['W'],
+    triggers: [
+      triggered(
+        {
+          when: 'attackDeclared',
+          attacker: 'you',
+          attacking: { who: 'opponent', planeswalkers: false },
+          attackerFilter: allOf(ofType('Creature'), not(ofSubtype('Toy'))),
+        },
+        {
+          effects: [{ op: 'createToken', spec: TOY_1_1_WHITE_ARTIFACT, count: constant(1) }],
+          description:
+            'Whenever one or more non-Toy creatures you control attack a player, create a 1/1 white Toy artifact creature token',
+        },
+      ),
+    ],
+  });
+  const creaturesYouControl = {
+    kind: 'countPermanents',
+    selector: ofType('Creature'),
+    scope: 'you',
+  } as const;
+  const gallery = roomDoor({
+    oracleId: `${oracleId}:right`,
+    name: 'Porcelain Gallery',
+    cost: '{4}{W}{W}',
+    colors: ['W'],
+    staticEffects: [
+      {
+        affects: allOf(ofType('Creature'), YOURS),
+        op: { layer: 7, sublayer: 'b', power: creaturesYouControl, toughness: creaturesYouControl },
+      },
+    ],
+  });
+  replaceCard(
+    oracleId,
+    "Dollmaker's Shop // Porcelain Gallery",
+    [
+      'unsupported layout "split"',
+      'unrecognized rules text: "Whenever one or more non-Toy creatures you control attack a player, create a 1/1 white Toy artifact creature token."',
+    ],
+    {
+      manaCost: manaCost('{5}{W}{W}{W}'),
+      colors: ['W'],
+      spellAbility: null,
+      // The doors' abilities live on `roomDoors`, read through `roomDefinition` on the
+      // battlefield, so a reader of the card's own lists never sees a locked door's ability.
+      triggers: [],
+      staticEffects: [],
+      activatedAbilities: [],
+      roomDoors: [shop, gallery],
+      alternativeCasts: [shop, gallery].map((door) => ({
+        kind: 'split' as const,
+        manaCost: door.manaCost!,
+        name: door.name,
+        typeLine: door.typeLine,
+        description: door.name,
+        ability: door.spellAbility!,
+        spellFace: door,
+      })),
+    },
+    'PR11b implements Rooms: casting a door, the unlock special action and door-only characteristics.',
   );
 }
