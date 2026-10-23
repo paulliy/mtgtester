@@ -277,14 +277,23 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
       for (const card of controller?.graveyard ?? []) {
         const graveyardDef = ctx.defs.get(card.oracleId);
         if (graveyardDef === undefined || !graveyardDef.types.includes('Artifact')) continue;
+        const applies = {
+          kind: 'selector',
+          selector: { kind: 'self' },
+          source: { cardId: source.cardId, controllerId: source.controllerId },
+        } as const;
         for (const ability of graveyardDef.activatedAbilities) {
           out.push({
-            applies: {
-              kind: 'selector',
-              selector: { kind: 'self' },
-              source: { cardId: source.cardId, controllerId: source.controllerId },
-            },
+            applies,
             op: { layer: 6, addActivatedAbility: ability },
+            timestamp: source.timestamp,
+          });
+        }
+        // Mana abilities are activated abilities too (CR 605.1a).
+        for (const ability of graveyardDef.manaAbilities) {
+          out.push({
+            applies,
+            op: { layer: 6, addManaAbility: ability },
             timestamp: source.timestamp,
           });
         }

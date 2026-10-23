@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { computeTargetOptions } from '../src/actions/legal';
 import { computeCharacteristics } from '../src/effects/continuous';
+import { moveObject } from '../src/state/objects';
 import { queueStepTriggers } from '../src/turn/turn';
 import { resolveTopOfStack } from '../src/stack/stack';
 import type { EnginePermanent, GameContext } from '../src/state/types';
@@ -12,6 +13,8 @@ import {
   pinned,
   pinnedDefinition,
   pod,
+  activate,
+  activateOption,
   putPendingTriggersOnStack,
   settle,
 } from './pr10-helpers';
@@ -147,5 +150,89 @@ describe('PR10.28 Xenagos, God of Revels', () => {
     const chars = computeCharacteristics(ctx, ally);
     expect([chars.power, chars.toughness]).toEqual([6, 5]);
     expect(chars.keywords).toContain('haste');
+  });
+});
+
+describe('PR10.09 Trazyn the Infinite', () => {
+  const lifeRelic = () =>
+    oracle({
+      name: 'Gallery Relic',
+      typeLine: 'Artifact',
+      manaCost: '{2}',
+      cmc: 2,
+      power: null,
+      toughness: null,
+      oracleText: '{T}: You gain 2 life.',
+    });
+  const manaRelic = () =>
+    oracle({
+      name: 'Gallery Stone',
+      typeLine: 'Artifact',
+      manaCost: '{2}',
+      cmc: 2,
+      power: null,
+      toughness: null,
+      oracleText: '{T}: Add {C}.',
+    });
+  const lifeCreature = () =>
+    oracle({
+      name: 'Gallery Healer',
+      typeLine: 'Creature — Human Cleric',
+      power: '1',
+      toughness: '1',
+      oracleText: '{T}: You gain 2 life.',
+    });
+
+  /** P1's Trazyn, entered through the real cast and ready to tap. */
+  function trazyn(seed: string) {
+    const ctx = pod(seed);
+    castFromHand(ctx, 'P1', pinned('Trazyn the Infinite'));
+    pump(resolveTopOfStack(ctx));
+    const trazynPerm = ctx.state.battlefield.find(
+      (permanent) => permanent.name === 'Trazyn the Infinite',
+    )!;
+    trazynPerm.summoningSick = false;
+    return { ctx, trazyn: trazynPerm };
+  }
+
+  it('pr10-trazyn-pinned-oracle-supported — every line is modeled', () => {
+    const def = pinnedDefinition('Trazyn the Infinite');
+    expect(def.modeled, def.unmodeledReasons.join('\n')).toBe(true);
+    expect(def.keywords).toContain('deathtouch');
+  });
+
+  it("pr10-trazyn-activated — it has an artifact card's activated ability, and it works", () => {
+    const { ctx, trazyn: gallery } = trazyn('pr10-trazyn-activated');
+    expect(activateOption(ctx, 'P1', gallery)).toBeUndefined();
+    conjure(ctx, 'P1', lifeRelic(), 'graveyard');
+    const before = p(ctx, 'P1').life;
+    activate(ctx, 'P1', gallery);
+    settle(ctx);
+    expect(p(ctx, 'P1').life).toBe(before + 2);
+    expect(gallery.tapped).toBe(true);
+  });
+
+  it('pr10-trazyn-mana — it has the mana abilities of artifact cards in your graveyard', () => {
+    const { ctx, trazyn: gallery } = trazyn('pr10-trazyn-mana');
+    expect(computeCharacteristics(ctx, gallery).manaAbilities).toHaveLength(0);
+    conjure(ctx, 'P1', manaRelic(), 'graveyard');
+    expect(computeCharacteristics(ctx, gallery).manaAbilities).toHaveLength(1);
+  });
+
+  it("pr10-trazyn-scope — not nonartifact cards, and not an opponent's graveyard", () => {
+    const { ctx, trazyn: gallery } = trazyn('pr10-trazyn-scope');
+    conjure(ctx, 'P1', lifeCreature(), 'graveyard');
+    conjure(ctx, 'P2', lifeRelic(), 'graveyard');
+    conjure(ctx, 'P2', manaRelic(), 'graveyard');
+    expect(activateOption(ctx, 'P1', gallery)).toBeUndefined();
+    expect(computeCharacteristics(ctx, gallery).manaAbilities).toHaveLength(0);
+  });
+
+  it('pr10-trazyn-leaves-graveyard — the ability is gone once the card leaves the graveyard', () => {
+    const { ctx, trazyn: gallery } = trazyn('pr10-trazyn-leaves');
+    const relic = conjure(ctx, 'P1', lifeRelic(), 'graveyard');
+    expect(activateOption(ctx, 'P1', gallery)).toBeDefined();
+    pump(moveObject(ctx, relic, { zone: 'exile' }));
+    expect(activateOption(ctx, 'P1', gallery)).toBeUndefined();
   });
 });

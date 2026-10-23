@@ -777,4 +777,16 @@ export function registerPr10CharacteristicsOverrides(): void {
     },
     "PR10 removes the creature type below seven devotion and doubles another creature's power at combat.",
   );
+
+  // PR10.09: every activated ability of each artifact card in your graveyard, mana abilities
+  // included (CR 605.1a), read again whenever the graveyard changes. Deathtouch is interpreted.
+  replaceCard(
+    '1ef3b48a-55ef-422e-ac7f-e1c1057eec2c',
+    'Trazyn the Infinite',
+    [
+      'Prismatic Gallery — As long as ~ is on the battlefield, it has all activated abilities of all artifact cards in your graveyard.',
+    ],
+    { artifactGraveyardAbilities: true },
+    'PR10 grants the activated and mana abilities of artifact cards in your graveyard.',
+  );
 }
