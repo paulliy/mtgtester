@@ -5513,8 +5513,42 @@
   {
     "oracleId": "473a7998-669d-4181-83fe-f178a2e781f0",
     "name": "Out of the Tombs",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your upkeep, put two eon counters on this enchantment, then mill cards equal to the number of eon counters on it.\"",
+      "unrecognized rules text: \"If you would draw a card while your library has no cards in it, instead return a creature card from your graveyard to the battlefield. If you can't, you lose the game.\""
+    ],
+    "def": {
+      "emptyLibraryCreatureReplacement": true,
+      "triggers": [
+        {
+          "description": "At the beginning of your upkeep, put two eon counters on this, then mill one card per eon counter",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 2
+              },
+              "counter": "eon",
+              "op": "putCounters",
+              "target": "source"
+            },
+            {
+              "count": {
+                "counter": "eon",
+                "kind": "countersOnSelf"
+              },
+              "op": "mill"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "47c685b1-6e1e-4e08-8a52-9da6902df113",
@@ -32728,8 +32762,42 @@
   {
     "oracleId": "oracle-out-of-the-tombs",
     "name": "Out of the Tombs",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your upkeep, put two eon counters on this enchantment, then mill cards equal to the number of eon counters on it.\"",
+      "unrecognized rules text: \"If you would draw a card while your library has no cards in it, instead return a creature card from your graveyard to the battlefield. If you can't, you lose the game.\""
+    ],
+    "def": {
+      "emptyLibraryCreatureReplacement": true,
+      "triggers": [
+        {
+          "description": "At the beginning of your upkeep, put two eon counters on this, then mill one card per eon counter",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 2
+              },
+              "counter": "eon",
+              "op": "putCounters",
+              "target": "source"
+            },
+            {
+              "count": {
+                "counter": "eon",
+                "kind": "countersOnSelf"
+              },
+              "op": "mill"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-overwhelming-instinct",
