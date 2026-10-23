@@ -13,6 +13,7 @@ import { PR02_FOLLOW_UP_SCENARIO_IDS } from './pr02-follow-up-scenarios';
 import { PR08_SCENARIO_IDS } from './pr08-scenario-catalog';
 import { PR09_ALL_SCENARIO_IDS } from './pr09-scenario-catalog';
 import { PR10_ALL_SCENARIO_IDS } from './pr10-scenario-catalog';
+import { PR11_ALL_SCENARIO_IDS } from './pr11-scenario-catalog';
 import {
   CARD_TEST_SCENARIO_IDS,
   createCardTestScenario,
@@ -45,6 +46,17 @@ describe('Card Test Lab viewer-evidence gate', () => {
     expect(labSpec).toContain('!PR10_ALL_SCENARIO_IDS.includes(scenarioId)');
     expect(labSpec).toContain('!PR10_ALL_SCENARIO_IDS.includes(id)');
     const spec = readFileSync(resolve('apps/web/e2e/pr10-card-test-lab.spec.ts'), 'utf8');
+    expect(spec).toContain('exercised.add(id)');
+    expect(spec).toContain('test.afterAll(');
+    expect(spec).toContain("trace: 'on'");
+    expect(spec).not.toContain('routeWebSocket');
+    expect(spec).not.toContain('page.route(');
+  });
+  it('requires the dedicated PR11 browser batch and excludes it from generic walkthroughs', () => {
+    for (const id of PR11_ALL_SCENARIO_IDS) expect(CARD_TEST_SCENARIO_IDS).toContain(id);
+    expect(labSpec).toContain('!PR11_ALL_SCENARIO_IDS.includes(scenarioId)');
+    expect(labSpec).toContain('!PR11_ALL_SCENARIO_IDS.includes(id)');
+    const spec = readFileSync(resolve('apps/web/e2e/pr11-card-test-lab.spec.ts'), 'utf8');
     expect(spec).toContain('exercised.add(id)');
     expect(spec).toContain('test.afterAll(');
     expect(spec).toContain("trace: 'on'");

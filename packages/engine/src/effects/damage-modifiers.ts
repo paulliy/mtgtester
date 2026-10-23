@@ -9,13 +9,14 @@
  * (CR 616.1f), and the rest are re-checked after each one.
  */
 
-import type { Color, ObjectId, PlayerId } from '@mtg/shared';
+import type { ObjectId, PlayerId } from '@mtg/shared';
 import type { GameGen } from '../decisions';
 import { emit } from '../log/log';
 import { cardOption, plainOption, presentedSource } from '../present';
 import { createToken, queuePlayerTriggersForEvent } from '../state/objects';
-import { playerLifeLocked } from '../state/phasing';
+import { playerProtectedFromEverything } from '../state/phasing';
 import { gatherRuleStatics, hasProtectionFrom, triggersOf } from '../state/queries';
+import type { ProtectionSource } from '../state/queries';
 import type { EnginePermanent, EnginePlayerState, GameContext } from '../state/types';
 import { computeCharacteristics, matchesSelector } from './continuous';
 import type { EffectSource } from './resolve';
@@ -30,8 +31,8 @@ export interface DamageEvent {
     | { kind: 'permanent'; permanent: EnginePermanent };
   amount: number;
   combat: boolean;
-  /** The source's colors, for protection (CR 702.16e). Omitted means protection never applies. */
-  sourceColors?: readonly Color[];
+  /** The source's colors and types, for protection (CR 702.16e). Omitted: protection never applies. */
+  sourceTraits?: ProtectionSource;
 }
 
 export type DamageModifier =
@@ -83,7 +84,7 @@ export function collectDamageModifiers(ctx: GameContext, event: DamageEvent): Da
 
   // Protection from everything (Teferi's Protection): all damage to the player is prevented,
   // combat or not, while the player's shield lasts.
-  if (recipient.kind === 'player' && playerLifeLocked(ctx, recipient.player.id)) {
+  if (recipient.kind === 'player' && playerProtectedFromEverything(ctx, recipient.player.id)) {
     modifiers.push({
       kind: 'prevention',
       id: 'protectionFromEverything',
@@ -210,8 +211,8 @@ export function collectDamageModifiers(ctx: GameContext, event: DamageEvent): Da
   // Protection (CR 702.16e): damage from a source of a protected-from color is prevented.
   if (
     recipient.kind === 'permanent' &&
-    event.sourceColors !== undefined &&
-    hasProtectionFrom(ctx, recipient.permanent, event.sourceColors)
+    event.sourceTraits !== undefined &&
+    hasProtectionFrom(ctx, recipient.permanent, event.sourceTraits)
   ) {
     modifiers.push({
       kind: 'prevention',

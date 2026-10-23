@@ -19,9 +19,21 @@ import type { Value } from './value';
 export type RuleStatic =
   | { kind: 'cantBlockMatching'; filter: Selector }
   | { kind: 'cantBeSacrificed' }
+  /** "~ can't be the target of abilities your opponents control" (Shanna, CR 115.1). */
+  | { kind: 'cantBeTargetedByOpponentAbilities' }
   | { kind: 'cantAttackOwner' }
   | { kind: 'opponentNonHandSpellCostIncrease'; amount: number }
-  | { kind: 'beginOnBattlefieldFromOpeningHand' }
+  /**
+   * CR 103.6a: a Leyline begins the game on the battlefield. Gemstone Caverns adds conditions and
+   * a cost: only for a player who isn't the starting player, with one counter of `withCounter`,
+   * and "if you do, exile a card from your hand".
+   */
+  | {
+      kind: 'beginOnBattlefieldFromOpeningHand';
+      notStartingPlayer?: true;
+      withCounter?: string;
+      exileCardFromHand?: true;
+    }
   | { kind: 'effectDiscardMayGoToLibraryTop' }
   /** Redirect a matching graveyard move before any zone-change or dies event. */
   | {
@@ -115,7 +127,11 @@ export type RuleStatic =
   | {
       kind: 'manaActivationRider';
       source: Selector;
-      add: { kind: 'fixed'; units: ManaUnit[] } | { kind: 'oneOfProducedTypes' };
+      add:
+        | { kind: 'fixed'; units: ManaUnit[] }
+        | { kind: 'oneOfProducedTypes' }
+        /** Caged Sun: one more mana of the source's chosen color, when that color is produced. */
+        | { kind: 'chosenColorIfProduced' };
     }
   /** "Play with the top card of your library revealed." */
   | { kind: 'revealTopLibrary' }

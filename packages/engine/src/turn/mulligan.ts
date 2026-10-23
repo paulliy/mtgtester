@@ -7,7 +7,9 @@
  * ever surfaced to another player's view (brief §5.8/§7.1).
  */
 
+import type { RuleStatic } from '../cards/rule-statics';
 import type { GameGen } from '../decisions';
+import { chooseCard } from '../effects/choose';
 import { drawCards } from '../effects/resolve';
 import { emit, debug } from '../log/log';
 import { moveObject } from '../state/objects';
@@ -106,13 +108,24 @@ export function* runOpeningHands(ctx: GameContext): GameGen<void> {
 
 /** CR 103.6: after all mulligans, each player may take opening-hand actions in any order. */
 export function* runOpeningHandBattlefieldActions(ctx: GameContext): GameGen<void> {
+  // The starting player was chosen before opening hands were drawn (CR 103.1).
+  const startingPlayer = ctx.state.currentTurnPlayer;
+  const actionOf = (card: EngineCardObject) =>
+    ctx.defs
+      .get(card.oracleId)
+      ?.ruleStatics.find(
+        (rule): rule is Extract<RuleStatic, { kind: 'beginOnBattlefieldFromOpeningHand' }> =>
+          rule.kind === 'beginOnBattlefieldFromOpeningHand',
+      );
   for (const player of playersInApnapOrder(ctx)) {
     while (true) {
-      const cards = player.hand.filter((card) =>
-        ctx.defs
-          .get(card.oracleId)
-          ?.ruleStatics.some((rule) => rule.kind === 'beginOnBattlefieldFromOpeningHand'),
-      );
+      const cards = player.hand.filter((card) => {
+        const action = actionOf(card);
+        return (
+          action !== undefined &&
+          !(action.notStartingPlayer === true && player.id === startingPlayer)
+        );
+      });
       if (cards.length === 0) break;
       for (const card of cards)
         requireModeled(ctx.defs.get(card.oracleId)!, 'opening-hand battlefield action');
@@ -131,7 +144,21 @@ export function* runOpeningHandBattlefieldActions(ctx: GameContext): GameGen<voi
       };
       const card = cards[choice.index];
       if (card === undefined) break;
+      const action = actionOf(card)!;
       yield* moveObject(ctx, card, { zone: 'battlefield', controllerId: player.id });
+      const permanent = ctx.state.battlefield.find((perm) => perm.cardId === card.cardId);
+      if (action.withCounter !== undefined && permanent !== undefined)
+        permanent.counters[action.withCounter] = (permanent.counters[action.withCounter] ?? 0) + 1;
+      if (action.exileCardFromHand === true) {
+        const exiled = yield* chooseCard(ctx, {
+          player: player.id,
+          prompt: `${card.name}: exile a card from your hand`,
+          cards: player.hand,
+          type: 'exile',
+          verb: 'Exile',
+        });
+        if (exiled !== null) yield* moveObject(ctx, exiled, { zone: 'exile' });
+      }
     }
   }
 }

@@ -3,6 +3,7 @@ import type { OracleCard } from '@mtg/shared';
 import { SPELL_FACE_LAB_EXPECTATIONS } from '../../../packages/server/src/cards/spell-face-lab-expectations';
 import { TRANSFORMED_DFC_SCENARIO_IDS } from '../../../packages/server/src/cards/transformed-dfc-scenarios';
 import { PR02_FOLLOW_UP_SCENARIO_IDS } from '../../../packages/server/src/cards/pr02-follow-up-scenarios';
+import { PR11_ALL_SCENARIO_IDS } from '../../../packages/server/src/cards/pr11-scenario-catalog';
 import { PR10_ALL_SCENARIO_IDS } from '../../../packages/server/src/cards/pr10-scenario-catalog';
 import { PR09_ALL_SCENARIO_IDS } from '../../../packages/server/src/cards/pr09-scenario-catalog';
 import { PR08_SCENARIO_IDS } from '../../../packages/server/src/cards/pr08-scenario-catalog';
@@ -82,6 +83,7 @@ async function runScenario(page: Page, title: string): Promise<void> {
         !PR08_SCENARIO_IDS.includes(scenarioId) &&
         !PR09_ALL_SCENARIO_IDS.includes(scenarioId) &&
         !PR10_ALL_SCENARIO_IDS.includes(scenarioId) &&
+        !PR11_ALL_SCENARIO_IDS.includes(scenarioId) &&
         !TRANSFORMED_DFC_SCENARIO_IDS.includes(scenarioId) &&
         !(COMBAT_TRIGGER_SCENARIO_IDS as readonly string[]).includes(scenarioId) &&
         !WHITE_BLACK_COMBAT_SCENARIO_IDS.includes(scenarioId) &&
@@ -116,6 +118,7 @@ async function runScenario(page: Page, title: string): Promise<void> {
             !PR08_SCENARIO_IDS.includes(id) &&
             !PR09_ALL_SCENARIO_IDS.includes(id) &&
             !PR10_ALL_SCENARIO_IDS.includes(id) &&
+            !PR11_ALL_SCENARIO_IDS.includes(id) &&
             !TRANSFORMED_DFC_SCENARIO_IDS.includes(id) &&
             !(COMBAT_TRIGGER_SCENARIO_IDS as readonly string[]).includes(id) &&
             !WHITE_BLACK_COMBAT_SCENARIO_IDS.includes(id) &&

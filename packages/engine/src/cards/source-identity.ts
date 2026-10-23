@@ -50,6 +50,8 @@ export interface ObjectFacts extends SourceCastState {
    * Aura: "each Aura you controlled that was attached to it" (Hateful Eidolon).
    */
   attachedAuraControllerIds?: string[];
+  /** Cards exiled with it (CR 607.2a), so a linked ability still finds them after it leaves. */
+  exiledWithIds?: string[];
 }
 
 export function captureObjectFacts(ctx: GameContext, permanent: EnginePermanent): ObjectFacts {
@@ -92,6 +94,9 @@ export function captureObjectFacts(ctx: GameContext, permanent: EnginePermanent)
     ...(lastAttackingDefendingPlayerId === undefined ? {} : { lastAttackingDefendingPlayerId }),
     enteredTurnNumber: permanent.enteredTurnNumber,
     ...(permanent.chosenOption === undefined ? {} : { chosenOption: permanent.chosenOption }),
+    ...(permanent.exiledWithIds === undefined
+      ? {}
+      : { exiledWithIds: [...permanent.exiledWithIds] }),
     ...(permanent.classLevel === undefined ? {} : { classLevel: permanent.classLevel }),
     ...(permanent.castByPlayerId === undefined
       ? {}

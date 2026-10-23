@@ -7,8 +7,9 @@
  * all objects the player owns leave the game, and the game continues among survivors.
  */
 
+import type { TargetingSource } from '../targets/context';
 import type { LossReason, ObjectId, PlayerId } from '@mtg/shared';
-import { playerLifeLocked } from '../state/phasing';
+import { playerProtectedFromEverything } from '../state/phasing';
 import { queueBecomesTargetedTriggers, queueWardTriggers } from '../actions/apply';
 import {
   abilityForModes,
@@ -42,7 +43,8 @@ import {
   hasProtectionFrom,
   isCreaturePermanent,
   playersInApnapOrder,
-  sourceColorsOf,
+  sourceTraitsOf,
+  playerCantLose,
 } from '../state/queries';
 import type {
   EngineCardObject,
@@ -260,6 +262,11 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
       }
       continue;
     }
+    if (playerCantLose(ctx, player.id)) {
+      // CR 704.5b looks only at draws since the last check: this one is spent, not deferred.
+      player.attemptedDrawFromEmptyLibrary = false;
+      continue;
+    }
     if (player.life <= 0) {
       markLoss(ctx, player, 'lifeZeroOrLess');
       acted = true;
@@ -362,7 +369,7 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
         (host === undefined ||
           host.id !== perm.reanimatedHostId ||
           !isCreaturePermanent(ctx, host) ||
-          hasProtectionFrom(ctx, host, chars.colors));
+          hasProtectionFrom(ctx, host, chars));
       // Any other permanent host must satisfy the enchant restriction.
       const hostIllegal =
         host !== undefined &&
@@ -564,12 +571,13 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
   // mode never used, let that target's illegality fizzle a targetless mode, and dropped the
   // whole trigger when only one mode lacked a target.
   // Protection (CR 702.16): a triggered ability can't target what is protected from its source.
-  const sourceColors = sourceColorsOf(
-    ctx,
-    trigger.sourceCardId,
-    trigger.sourceOracleId,
-    trigger.sourceColors,
-  );
+  const source: TargetingSource = {
+    traits: sourceTraitsOf(ctx, trigger.sourceCardId, trigger.sourceOracleId, {
+      ...(trigger.sourceColors === undefined ? {} : { colors: trigger.sourceColors }),
+      ...(trigger.sourceFacts === undefined ? {} : { types: trigger.sourceFacts.candidate.types }),
+    }),
+    kind: 'ability',
+  };
   let ability: Ability = trigger.ability;
   let activeSlots: number[] | undefined;
   let modeLabel: string | undefined;
@@ -580,7 +588,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
         ctx,
         spec,
         trigger.controllerId,
-        sourceColors,
+        source,
         trigger.scope?.eventPlayerId,
         undefined,
         trigger.sourceCardId,
@@ -637,7 +645,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
       ctx,
       spec,
       trigger.controllerId,
-      sourceColors,
+      source,
       trigger.scope?.eventPlayerId,
       undefined,
       trigger.sourceCardId,
@@ -675,7 +683,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
         ctx,
         specs[slot]!,
         trigger.controllerId,
-        sourceColors,
+        source,
         trigger.scope?.eventPlayerId,
         chosen,
         trigger.sourceCardId,
@@ -778,7 +786,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
           ctx,
           spec,
           trigger.controllerId,
-          sourceColors,
+          source,
           trigger.scope?.eventPlayerId,
           chosen,
           trigger.sourceCardId,
@@ -868,7 +876,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
     targets: chosen,
     card: null,
     ability,
-    sourceColors,
+    sourceColors: [...source.traits.colors],
     sourceOracleId: trigger.sourceOracleId,
     sourceCardId: trigger.sourceCardId,
     isCommanderCast: false,
@@ -921,14 +929,14 @@ export function* priorityCheckpoint(ctx: GameContext): GameGen<boolean> {
 /** Whether a player is still a legal host for `aura`'s enchant ability (CR 303.4d, 704.5m). */
 function auraPlayerHostIsLegal(ctx: GameContext, aura: EnginePermanent, playerId: string): boolean {
   // Protection forbids enchantment; hexproof only forbids targeting, not attachment.
-  if (playerLifeLocked(ctx, playerId)) return false;
+  if (playerProtectedFromEverything(ctx, playerId)) return false;
   const enchant = getDefByOracleId(ctx, aura.oracleId, aura.name).spellAbility?.targets[0];
   if (enchant === undefined || enchant.kind !== 'player') return false;
   return computeTargetOptions(
     ctx,
     enchant,
     aura.controllerId,
-    computeCharacteristics(ctx, aura).colors,
+    undefined,
     undefined,
     undefined,
     aura.cardId,
@@ -948,7 +956,7 @@ function auraGraveyardHostIsLegal(
     ctx,
     enchant,
     aura.controllerId,
-    computeCharacteristics(ctx, aura).colors,
+    undefined,
     undefined,
     undefined,
     aura.cardId,

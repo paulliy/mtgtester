@@ -1,4 +1,4 @@
-import { playerLifeLocked } from '../state/phasing';
+import { playerProtectedFromEverything } from '../state/phasing';
 import { offBattlefieldTypes } from '../state/off-battlefield-types';
 import { spellDefinitionOf } from '../state/queries';
 import type { ObjectId, PlayerId } from '@mtg/shared';
@@ -14,6 +14,7 @@ import {
   cardZoneCandidate,
   findPermanent,
   hasKeyword,
+  cantBeTargetedByOpponentAbilities,
   hasProtectionFrom,
   playersInApnapOrder,
 } from '../state/queries';
@@ -240,7 +241,7 @@ export function targetIsLegal(
     return (
       (kind === 'player' || kind === 'anyTarget' || kind === 'playerOrPlaneswalker') &&
       !player.hasLost &&
-      (context.targeting === false || !playerLifeLocked(ctx, player.id)) &&
+      (context.targeting === false || !playerProtectedFromEverything(ctx, player.id)) &&
       !(
         context.targeting !== false &&
         player.id !== controllerId &&
@@ -264,9 +265,16 @@ export function targetIsLegal(
     if (hasKeyword(ctx, permanent, 'shroud')) return false;
     if (permanent.controllerId !== controllerId && hasKeyword(ctx, permanent, 'hexproof'))
       return false;
+    // An unknown targeting object might be an ability, so it is refused (CR 115.1).
     if (
-      context.sourceColors !== undefined &&
-      hasProtectionFrom(ctx, permanent, context.sourceColors)
+      permanent.controllerId !== controllerId &&
+      context.sourceKind !== 'spell' &&
+      cantBeTargetedByOpponentAbilities(ctx, permanent)
+    )
+      return false;
+    if (
+      context.sourceTraits !== undefined &&
+      hasProtectionFrom(ctx, permanent, context.sourceTraits)
     )
       return false;
   }

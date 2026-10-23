@@ -3,7 +3,7 @@
 Generated from the engine-supported card pool.
 This is an interpreter-support inventory. Card behavior verification is tracked separately in the card verification manifest.
 
-**Total**: 6517 modeled non-land cards
+**Total**: 6533 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -184,6 +184,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Angel of Retribution
 - Angel of the Dawn
 - Angel of the God-Pharaoh
+- Angel's Grace
 - Angel's Mercy
 - Angelfire Crusader
 - Angelfire Ignition
@@ -448,6 +449,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Bash to Bits
 - Basilica Skullbomb
 - Basilisk Collar
+- Basri's Lieutenant
 - Basri's Solidarity
 - Bassara Tower Archer
 - Bastion Enforcer
@@ -802,6 +804,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Cadaver Imp
 - Cadira, Caller of the Small
 - Caelorna, Coral Tyrant
+- Caged Sun
 - Call Forth the Tempest
 - Call of the Conclave
 - Call of the Herd
@@ -963,6 +966,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Chromatic Lantern
 - Chromatic Star
 - Chrome Cat
+- Chrome Mox
 - Chronicle of Victory
 - Chronomancer
 - Chronomaton
@@ -1000,6 +1004,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Clear
 - Cleaver Riot
 - Cleaving Sliver
+- Clever Concealment
 - Clever Lumimancer
 - Clickslither
 - Cliffhaven Sell-Sword
@@ -2501,6 +2506,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Gurmag Swiftwing
 - Gustrider Exuberant
 - Gut Shot
+- Gut, True Soul Zealot
 - Gutless Ghoul
 - Gutter Skulk
 - Guttersnipe
@@ -3374,6 +3380,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Mana Prism
 - Mana Sculpt
 - Mana Tithe
+- Mana Vault
 - Managorger Hydra
 - Manakin
 - Manalith
@@ -3682,6 +3689,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Mystic Confluence
 - Mystic Forge
 - Mystic of the Hidden Way
+- Mystic Remora
 - Mystic Retrieval
 - Mystic Skull // Mystic Monstrosity
 - Mystic Snake
@@ -3730,6 +3738,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Needleshot Gourna
 - Needlethorn Drake
 - Negate
+- Negative Zone Portal
 - Nema Siltlurker
 - Nemata, Grove Guardian
 - Nephalia Seakite
@@ -3945,6 +3954,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Orzhov Signet
 - Oscorp Research Team
 - Otherworldly Gaze
+- Out of the Tombs
 - Outlaw Medic
 - Ovalchase Dragster
 - Overcome
@@ -4904,6 +4914,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Shambling Goblin
 - Shambling Remains
 - Shambling Strider
+- Shanna, Sisay's Legacy
 - Shape the Sands
 - Shaper Guildmage
 - Shapers of Nature
@@ -5133,6 +5144,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Smelt
 - Smiting Helix
 - Smokespew Invoker
+- Smokestack
 - Smoldering Efreet
 - Smother
 - Smothering Tithe
@@ -5240,6 +5252,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Spineless Thug
 - Spire Monitor
 - Spire Owl
+- Spirit Mantle
 - Spirit of Malevolence
 - Spirit Shackle
 - Spirit Summoning
@@ -5563,6 +5576,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Technomancer
 - Teeming Dragonstorm
 - Teeterpeak Ambusher
+- Teferi's Protection
 - Teferi's Protege
 - Tegwyll, Duke of Splendor
 - Tel-Jilad Justice
@@ -5620,6 +5634,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - The Howling Commandos
 - The Lady of the Mountain
 - The Meathook Massacre
+- The One Ring
 - The Ooze
 - The Terror of Serpent's Pass
 - The Thing
@@ -5951,6 +5966,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Unnatural Predation
 - Unnatural Restoration
 - Unnatural Speed
+- Unquestioned Authority
 - Unruly Catapult
 - Unruly Mob
 - Unspeakable Symbol
