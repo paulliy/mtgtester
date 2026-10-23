@@ -204,7 +204,9 @@ export type DynamicManaKind =
    */
   | 'ownLandTypes'
   /** "…any color among legendary creatures and planeswalkers you control" (Mox Amber). */
-  | 'legendaryPermanentColors';
+  | 'legendaryPermanentColors'
+  /** "one mana of any of the exiled card's colors" (Chrome Mox): cards still exiled with it. */
+  | 'exiledWithSourceColors';
 
 /**
  * What a payment is *for*, so restricted mana can decide whether it may pay (CR 106.6).
@@ -1769,6 +1771,13 @@ export type Effect =
    */
   | { op: 'voteAndExileMost'; selector: Selector }
   | { op: 'exileTargetWithSource'; target: EffectRef }
+  /**
+   * Imprint (Chrome Mox): "you may exile a nonartifact, nonland card from your hand", linked to
+   * the source through `EnginePermanent.exiledWithIds` (CR 702.33, 607.2a).
+   */
+  | { op: 'exileFromHandWithSource'; excludeTypes: string[] }
+  /** "Exile target card from an opponent's graveyard" linked to the source (Negative Zone Portal). */
+  | { op: 'exileGraveyardCardWithSource'; target: EffectRef }
   | { op: 'exileAndManifestTarget'; target: EffectRef }
   | { op: 'blinkTarget'; target: EffectRef }
   | { op: 'blinkOneCreatureYouControl' }

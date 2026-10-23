@@ -326,6 +326,27 @@ function registerPr11LifecycleOverrides(): void {
     'PR11 adds the chosen-color land mana as a triggered mana ability.',
   );
 
+  // PR11.16: imprint links the exiled card to this object (CR 607.2a); the mana reads that card's
+  // colors only while it stays in exile, so a colorless card or none makes no mana.
+  defineCard(
+    'ec3d4466-547c-4e02-b1b5-a156ec4637e9',
+    'Chrome Mox',
+    [
+      'unrecognized rules text: "When this artifact enters, you may exile a nonartifact, nonland card from your hand."',
+      'unsupported mana production: "{T}: Add one mana of any of the exiled card\'s colors."',
+    ],
+    {
+      triggers: [
+        triggered(onEtb(), {
+          effects: [{ op: 'exileFromHandWithSource', excludeTypes: ['Artifact', 'Land'] }],
+          description:
+            'Imprint — When this enters, you may exile a nonartifact, nonland card from your hand',
+        }),
+      ],
+      manaAbilities: [{ units: [], dynamic: 'exiledWithSourceColors' }],
+    },
+  );
+
   // PR11.15: the opponent's draw trigger is interpreted; cumulative upkeep is authored.
   extendCard(
     '8a52f3c0-2552-4425-b2e3-5496eb2232a7',

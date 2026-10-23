@@ -471,7 +471,7 @@ export function findObjectByCardId(ctx: GameContext, cardId: string): EngineObje
  * existing call sites are unaffected.
  */
 export type ManaAbilityContext = Pick<EnginePermanent, 'id' | 'cardId' | 'controllerId'> &
-  Partial<Pick<EnginePermanent, 'chosenOption' | 'counters'>>;
+  Partial<Pick<EnginePermanent, 'chosenOption' | 'counters' | 'exiledWithIds'>>;
 
 /**
  * Derive the symbols of a state-dependent mana ability (`ManaAbilitySpec.dynamic`).
@@ -514,6 +514,14 @@ export function resolveDynamicUnits(
     // The source sees current colors, including color-changing continuous effects.
     for (const permanent of controlledPermanents(ctx, perm.controllerId)) {
       for (const color of computeCharacteristics(ctx, permanent).colors) add(color);
+    }
+  } else if (spec.dynamic === 'exiledWithSourceColors') {
+    // Chrome Mox: the imprinted card's printed colors, only while it is still in exile. A
+    // colorless or departed card leaves the ability with no mana to make.
+    for (const objectId of perm.exiledWithIds ?? []) {
+      const exiled = ctx.state.exile.find((card) => card.id === objectId);
+      if (exiled === undefined) continue;
+      for (const color of getDefByOracleId(ctx, exiled.oracleId, exiled.name).colors) add(color);
     }
   } else if (spec.dynamic === 'legendaryPermanentColors') {
     // Mox Amber. "Among legendary creatures and planeswalkers you control" — read through the

@@ -58,6 +58,7 @@ const dynamicManaKinds = {
   oneColorAmongPermanents: true,
   ownLandTypes: true,
   legendaryPermanentColors: true,
+  exiledWithSourceColors: true,
 } satisfies Record<DynamicManaKind, true>;
 
 function checkReference(
