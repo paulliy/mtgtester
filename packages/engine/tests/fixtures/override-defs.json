@@ -2382,8 +2382,12 @@
   {
     "oracleId": "1ef3b48a-55ef-422e-ac7f-e1c1057eec2c",
     "name": "Trazyn the Infinite",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Prismatic Gallery — As long as ~ is on the battlefield, it has all activated abilities of all artifact cards in your graveyard."
+    ],
+    "def": {
+      "artifactGraveyardAbilities": true
+    }
   },
   {
     "oracleId": "2068185c-1b50-47d0-aa3f-bf505d199428",
@@ -4396,8 +4400,34 @@
   {
     "oracleId": "379ed4ec-8f2e-448b-9ed2-a3181e2f877e",
     "name": "Nighthawk Scavenger",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "non-numeric power/toughness \"1+*\"",
+      "~'s power is equal to 1 plus the number of card types among cards in your opponents' graveyards."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "op": {
+            "layer": 7,
+            "power": {
+              "kind": "plus",
+              "n": 1,
+              "of": {
+                "kind": "cardTypesInOpponentsGraveyards"
+              }
+            },
+            "sublayer": "a",
+            "toughness": {
+              "kind": "const",
+              "n": 3
+            }
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "37c06f89-db36-4937-9404-2b07cd22e1a6",
@@ -6041,8 +6071,43 @@
   {
     "oracleId": "5443557e-440f-4fdd-a29b-7740d7cec085",
     "name": "Biotransference",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Creatures you control are artifacts in addition to their other types. The same is true for creature spells you control and creature cards you own that aren't on the battlefield."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "addTypes": [
+            "Artifact"
+          ],
+          "ifType": "Creature",
+          "kind": "alsoTypesOffBattlefield"
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          },
+          "op": {
+            "addTypes": [
+              "Artifact"
+            ],
+            "layer": 4
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "55b72b1f-6463-406a-8824-d99a3c028285",
@@ -7933,8 +7998,26 @@
   {
     "oracleId": "70dc830e-d05b-4fc7-88dd-879e140b3fbf",
     "name": "Reality Shift",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Exile target creature. Its controller manifests the top card of their library."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Exile target creature. Its controller manifests the top card of their library",
+        "effects": [
+          {
+            "op": "exileAndManifestTarget",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "creature"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "7137aae6-260d-41de-8b4e-42a8cf752697",
@@ -14595,6 +14678,42 @@
     }
   },
   {
+    "oracleId": "c03ca2e6-fcce-4018-952f-1c451ab92cfd",
+    "name": "Dragon Man, Reformed Robot",
+    "handledLines": [
+      "You may cast this card from your graveyard by discarding a card in addition to paying its other costs.",
+      "non-numeric power/toughness \"*\"",
+      "~'s power is equal to the greatest mana value among noncreature permanents you control and noncreature cards in your graveyard."
+    ],
+    "def": {
+      "castFromGraveyard": true,
+      "castFromGraveyardCosts": [
+        {
+          "count": 1,
+          "kind": "discardCard"
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "op": {
+            "layer": 7,
+            "power": {
+              "kind": "greatestNoncreatureManaValueYouControlOrInGraveyard"
+            },
+            "sublayer": "a",
+            "toughness": {
+              "kind": "const",
+              "n": 5
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "c20a96f7-aa5a-4c15-b8b1-806685c99b27",
     "name": "Bolt Bend",
     "handledLines": [
@@ -15024,6 +15143,78 @@
           "Swamp"
         ]
       }
+    }
+  },
+  {
+    "oracleId": "cb15a8dd-57fe-466f-847e-66476b690a1f",
+    "name": "Xenagos, God of Revels",
+    "handledLines": [
+      "As long as your devotion to red and green is less than seven, ~ isn't a creature.",
+      "At the beginning of combat on your turn, another target creature you control gains haste and gets +X/+X until end of turn, where X is that creature's power."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "cmp": "<=",
+            "kind": "compareValues",
+            "left": {
+              "and": "G",
+              "color": "R",
+              "kind": "devotionTo"
+            },
+            "right": {
+              "kind": "const",
+              "n": 6
+            }
+          },
+          "op": {
+            "layer": 4,
+            "removeCreatureType": true
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Another target creature you control gains haste and gets +X/+X until end of turn, where X is that creature's power",
+          "effects": [
+            {
+              "keyword": "haste",
+              "op": "grantKeywordUntilEot",
+              "target": 0
+            },
+            {
+              "op": "pumpUntilEot",
+              "power": {
+                "kind": "powerOfTarget",
+                "target": 0
+              },
+              "target": 0,
+              "toughness": {
+                "kind": "powerOfTarget",
+                "target": 0
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "you",
+              "filter": {
+                "kind": "other"
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
     }
   },
   {
@@ -17066,6 +17257,168 @@
     }
   },
   {
+    "oracleId": "e191976c-6ab1-4a23-aeb8-8a88bd4bd203",
+    "name": "Rowan Kenrith",
+    "handledLines": [
+      "+2: During target player's next turn, each creature that player controls attacks if able.",
+      "Partner with Will Kenrith",
+      "−2: ~ deals 3 damage to each tapped creature target player controls.",
+      "−8: Target player gets an emblem with \"Whenever you activate an ability that isn't a mana ability, copy it. You may choose new targets for the copy.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "During target player's next turn, each creature that player controls attacks if able",
+            "effects": [
+              {
+                "duration": "duringTheirNextTurn",
+                "op": "addAttackRequirement",
+                "relativeToPlayer": 0,
+                "requirements": [
+                  {
+                    "kind": "anyAttack"
+                  }
+                ],
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": 2,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Rowan Kenrith deals 3 damage to each tapped creature target player controls",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 3
+                },
+                "controlledBy": 0,
+                "op": "damageEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "tapped"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -2,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Target player gets an emblem that copies each ability they activate",
+            "effects": [
+              {
+                "abilities": [
+                  {
+                    "description": "Whenever you activate an ability that isn't a mana ability, copy it. You may choose new targets for the copy",
+                    "effects": [
+                      {
+                        "op": "copyActivatedAbility"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "player": "you",
+                      "when": "activatesAbility"
+                    }
+                  }
+                ],
+                "forPlayer": 0,
+                "name": "Rowan Kenrith emblem",
+                "op": "createEmblem"
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -8,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Target player may search their library for a card named Will Kenrith, reveal it, and put it into their hand, then shuffle",
+          "effects": [
+            {
+              "name": "Will Kenrith",
+              "op": "targetPlayerMaySearchNamed",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "player"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "e1a776d2-fb3a-4215-a14e-4b6e9bda95df",
     "name": "Hunter's Prowess",
     "handledLines": [
@@ -17532,8 +17885,43 @@
   {
     "oracleId": "ea86abfa-6cab-4ef0-8463-34136fc25b59",
     "name": "Duplicant",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "As long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with it. It's still a Shapeshifter.",
+      "When this creature enters, you may exile target nontoken creature."
+    ],
+    "def": {
+      "copyLastExiledCreature": true,
+      "triggers": [
+        {
+          "description": "You may exile target nontoken creature",
+          "effects": [
+            {
+              "op": "exileTargetWithSource",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "filter": {
+                "kind": "not",
+                "of": {
+                  "kind": "isToken"
+                }
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "eb287c04-97f5-4e47-beb1-66cc7d15e748",
@@ -21765,8 +22153,43 @@
   {
     "oracleId": "oracle-biotransference",
     "name": "Biotransference",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Creatures you control are artifacts in addition to their other types. The same is true for creature spells you control and creature cards you own that aren't on the battlefield."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "addTypes": [
+            "Artifact"
+          ],
+          "ifType": "Creature",
+          "kind": "alsoTypesOffBattlefield"
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          },
+          "op": {
+            "addTypes": [
+              "Artifact"
+            ],
+            "layer": 4
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-black-bolt-inhuman-king",
@@ -24687,6 +25110,42 @@
     }
   },
   {
+    "oracleId": "oracle-dragon-man-reformed-robot",
+    "name": "Dragon Man, Reformed Robot",
+    "handledLines": [
+      "You may cast this card from your graveyard by discarding a card in addition to paying its other costs.",
+      "non-numeric power/toughness \"*\"",
+      "~'s power is equal to the greatest mana value among noncreature permanents you control and noncreature cards in your graveyard."
+    ],
+    "def": {
+      "castFromGraveyard": true,
+      "castFromGraveyardCosts": [
+        {
+          "count": 1,
+          "kind": "discardCard"
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "op": {
+            "layer": 7,
+            "power": {
+              "kind": "greatestNoncreatureManaValueYouControlOrInGraveyard"
+            },
+            "sublayer": "a",
+            "toughness": {
+              "kind": "const",
+              "n": 5
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-dream-pillager",
     "name": "Dream Pillager",
     "handledLines": [
@@ -24790,8 +25249,43 @@
   {
     "oracleId": "oracle-duplicant",
     "name": "Duplicant",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "As long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with it. It's still a Shapeshifter.",
+      "When this creature enters, you may exile target nontoken creature."
+    ],
+    "def": {
+      "copyLastExiledCreature": true,
+      "triggers": [
+        {
+          "description": "You may exile target nontoken creature",
+          "effects": [
+            {
+              "op": "exileTargetWithSource",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "filter": {
+                "kind": "not",
+                "of": {
+                  "kind": "isToken"
+                }
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-duress",
@@ -31034,8 +31528,34 @@
   {
     "oracleId": "oracle-nighthawk-scavenger",
     "name": "Nighthawk Scavenger",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "non-numeric power/toughness \"1+*\"",
+      "~'s power is equal to 1 plus the number of card types among cards in your opponents' graveyards."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "op": {
+            "layer": 7,
+            "power": {
+              "kind": "plus",
+              "n": 1,
+              "of": {
+                "kind": "cardTypesInOpponentsGraveyards"
+              }
+            },
+            "sublayer": "a",
+            "toughness": {
+              "kind": "const",
+              "n": 3
+            }
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-nightscape-familiar",
@@ -32761,8 +33281,26 @@
   {
     "oracleId": "oracle-reality-shift",
     "name": "Reality Shift",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Exile target creature. Its controller manifests the top card of their library."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Exile target creature. Its controller manifests the top card of their library",
+        "effects": [
+          {
+            "op": "exileAndManifestTarget",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "creature"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-rebuff-the-wicked",
@@ -33481,6 +34019,168 @@
         "kind": "spell",
         "targets": []
       }
+    }
+  },
+  {
+    "oracleId": "oracle-rowan-kenrith",
+    "name": "Rowan Kenrith",
+    "handledLines": [
+      "+2: During target player's next turn, each creature that player controls attacks if able.",
+      "Partner with Will Kenrith",
+      "−2: ~ deals 3 damage to each tapped creature target player controls.",
+      "−8: Target player gets an emblem with \"Whenever you activate an ability that isn't a mana ability, copy it. You may choose new targets for the copy.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "During target player's next turn, each creature that player controls attacks if able",
+            "effects": [
+              {
+                "duration": "duringTheirNextTurn",
+                "op": "addAttackRequirement",
+                "relativeToPlayer": 0,
+                "requirements": [
+                  {
+                    "kind": "anyAttack"
+                  }
+                ],
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": 2,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Rowan Kenrith deals 3 damage to each tapped creature target player controls",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 3
+                },
+                "controlledBy": 0,
+                "op": "damageEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "tapped"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -2,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Target player gets an emblem that copies each ability they activate",
+            "effects": [
+              {
+                "abilities": [
+                  {
+                    "description": "Whenever you activate an ability that isn't a mana ability, copy it. You may choose new targets for the copy",
+                    "effects": [
+                      {
+                        "op": "copyActivatedAbility"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "player": "you",
+                      "when": "activatesAbility"
+                    }
+                  }
+                ],
+                "forPlayer": 0,
+                "name": "Rowan Kenrith emblem",
+                "op": "createEmblem"
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -8,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Target player may search their library for a card named Will Kenrith, reveal it, and put it into their hand, then shuffle",
+          "effects": [
+            {
+              "name": "Will Kenrith",
+              "op": "targetPlayerMaySearchNamed",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "player"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
     }
   },
   {
@@ -37423,8 +38123,12 @@
   {
     "oracleId": "oracle-trazyn-the-infinite",
     "name": "Trazyn the Infinite",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Prismatic Gallery — As long as ~ is on the battlefield, it has all activated abilities of all artifact cards in your graveyard."
+    ],
+    "def": {
+      "artifactGraveyardAbilities": true
+    }
   },
   {
     "oracleId": "oracle-triarch-stalker",
@@ -39026,6 +39730,78 @@
             }
           ],
           "timing": "yourTurn"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-xenagos-god-of-revels",
+    "name": "Xenagos, God of Revels",
+    "handledLines": [
+      "As long as your devotion to red and green is less than seven, ~ isn't a creature.",
+      "At the beginning of combat on your turn, another target creature you control gains haste and gets +X/+X until end of turn, where X is that creature's power."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "cmp": "<=",
+            "kind": "compareValues",
+            "left": {
+              "and": "G",
+              "color": "R",
+              "kind": "devotionTo"
+            },
+            "right": {
+              "kind": "const",
+              "n": 6
+            }
+          },
+          "op": {
+            "layer": 4,
+            "removeCreatureType": true
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Another target creature you control gains haste and gets +X/+X until end of turn, where X is that creature's power",
+          "effects": [
+            {
+              "keyword": "haste",
+              "op": "grantKeywordUntilEot",
+              "target": 0
+            },
+            {
+              "op": "pumpUntilEot",
+              "power": {
+                "kind": "powerOfTarget",
+                "target": 0
+              },
+              "target": 0,
+              "toughness": {
+                "kind": "powerOfTarget",
+                "target": 0
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "you",
+              "filter": {
+                "kind": "other"
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
         }
       ]
     }

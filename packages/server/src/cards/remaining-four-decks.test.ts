@@ -76,14 +76,11 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       // Audit: incomplete mechanics must not silently simulate approximate card text.
       'Spirit Mantle',
       'Caged Sun',
-      'Biotransference',
       'The War in Heaven',
       'Out of the Tombs',
-      'Trazyn the Infinite',
       // Catalog audit batch 1 (PR10 restored the retarget, copy and ability-stack cards).
       'Smokestack',
       "Angel's Grace",
-      'Nighthawk Scavenger',
       'Arcane Lighthouse',
       "Defacing Duskmage // Vandal's Edit",
       'Eiganjo Dynastorian // Replenish',

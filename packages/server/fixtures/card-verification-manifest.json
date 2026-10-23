@@ -1399,15 +1399,41 @@
     },
     "379ed4ec-8f2e-448b-9ed2-a3181e2f877e": {
       "name": "Nighthawk Scavenger",
-      "oracleSha256": "03f3cabd2fa87632395fa1d079c4f04adb73da4ed90c84fd0f9f1c598c05f40e",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "af4df6fbccce06bf9da975bca1e3521d9e6ddf3ebdd8fe8dbd2d1d9698d90704",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-nighthawk-scavenger-pinned-oracle-supported"],
       "clauses": [
         {
+          "id": "pr10-nighthawk-scavenger-clause-1",
+          "oracleText": "Flying, deathtouch, lifelink",
+          "implementation": ["keyword flying deathtouch lifelink (interpreted)"],
+          "engineTestIds": ["pr10-nighthawk-scavenger-pinned-oracle-supported"],
+          "viewerScenarioIds": ["pr10-nighthawk-scavenger-viewer-empty"]
+        },
+        {
+          "id": "pr10-nighthawk-scavenger-clause-2",
           "oracleText": "Nighthawk Scavenger's power is equal to 1 plus the number of card types among cards in your opponents' graveyards.",
-          "implementation": ["explicitly unsupported; counts all graveyards"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "power CDA card types among opponents graveyards",
+            "Value.cardTypesAmong"
+          ],
+          "engineTestIds": [
+            "pr10-nighthawk-scavenger-empty",
+            "pr10-nighthawk-scavenger-counts-types",
+            "pr10-nighthawk-scavenger-own-graveyard",
+            "pr10-nighthawk-scavenger-left-game"
+          ],
+          "viewerScenarioIds": [
+            "pr10-nighthawk-scavenger-viewer-empty",
+            "pr10-nighthawk-scavenger-viewer-counts-types",
+            "pr10-nighthawk-scavenger-viewer-own-graveyard"
+          ]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr10-nighthawk-scavenger-viewer-empty",
+        "pr10-nighthawk-scavenger-viewer-counts-types",
+        "pr10-nighthawk-scavenger-viewer-own-graveyard"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -4079,15 +4105,50 @@
     },
     "5443557e-440f-4fdd-a29b-7740d7cec085": {
       "name": "Biotransference",
-      "oracleSha256": "d693464368e3d8093da14fd32051868cfd0cf034ecd0340c38d9623cff10ef3c",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "75cf757c56952b0b058583a69b3c9be8d425de68030a2fe0d1fc3c3fa82ef0e7",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-biotransference-pinned-oracle-supported"],
       "clauses": [
         {
+          "id": "pr10-biotransference-clause-1",
           "oracleText": "Creatures you control are artifacts in addition to their other types. The same is true for creature spells you control and creature cards you own that aren't on the battlefield.",
-          "implementation": ["explicitly unsupported; type change omits spells and other zones"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "StaticEffect.addType Artifact",
+            "creatures, creature spells, creature cards off the battlefield"
+          ],
+          "engineTestIds": [
+            "pr10-biotransference-pinned-oracle-supported",
+            "pr10-biotransference-battlefield",
+            "pr10-biotransference-cards",
+            "pr10-biotransference-creature-spell",
+            "pr10-biotransference-trazyn"
+          ],
+          "viewerScenarioIds": ["pr10-biotransference-viewer-artifact-spell"]
+        },
+        {
+          "id": "pr10-biotransference-clause-2",
+          "oracleText": "Whenever you cast an artifact spell, you lose 1 life and create a 2/2 black Necron Warrior artifact creature token.",
+          "implementation": [
+            "TriggerSpec.onCast artifact spell you",
+            "Effect.loseLife",
+            "Effect.createToken Necron Warrior"
+          ],
+          "engineTestIds": [
+            "pr10-biotransference-creature-spell",
+            "pr10-biotransference-noncreature-spell",
+            "pr10-biotransference-opponents-spell"
+          ],
+          "viewerScenarioIds": [
+            "pr10-biotransference-viewer-artifact-spell",
+            "pr10-biotransference-viewer-noncreature-spell",
+            "pr10-biotransference-viewer-opponents-spell"
+          ]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr10-biotransference-viewer-artifact-spell",
+        "pr10-biotransference-viewer-noncreature-spell",
+        "pr10-biotransference-viewer-opponents-spell"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -4556,15 +4617,41 @@
     },
     "1ef3b48a-55ef-422e-ac7f-e1c1057eec2c": {
       "name": "Trazyn the Infinite",
-      "oracleSha256": "b76fab614968b5aa8e1655657cdcf4697853f3da4159a3e1c682929b226dd812",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "0be1094151c97fe6fabd9fe994aec0b080e02b493472ffd133fc45f7e52bde50",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-trazyn-pinned-oracle-supported"],
       "clauses": [
         {
-          "oracleText": "As long as Trazyn is on the battlefield, it has all activated abilities of all artifact cards in your graveyard.",
-          "implementation": ["explicitly unsupported; graveyard artifact mana abilities omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "pr10-trazyn-the-infinite-clause-1",
+          "oracleText": "Deathtouch",
+          "implementation": ["keyword deathtouch (interpreted)"],
+          "engineTestIds": ["pr10-trazyn-pinned-oracle-supported"],
+          "viewerScenarioIds": ["pr10-trazyn-the-infinite-viewer-activated"]
+        },
+        {
+          "id": "pr10-trazyn-the-infinite-clause-2",
+          "oracleText": "Prismatic Gallery — As long as Trazyn is on the battlefield, it has all activated abilities of all artifact cards in your graveyard.",
+          "implementation": [
+            "StaticEffect.grantAbilitiesOf artifact cards in your graveyard",
+            "activated and mana abilities"
+          ],
+          "engineTestIds": [
+            "pr10-trazyn-activated",
+            "pr10-trazyn-mana",
+            "pr10-trazyn-scope",
+            "pr10-trazyn-leaves-graveyard"
+          ],
+          "viewerScenarioIds": [
+            "pr10-trazyn-the-infinite-viewer-activated",
+            "pr10-trazyn-the-infinite-viewer-mana",
+            "pr10-trazyn-the-infinite-viewer-scope"
+          ]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr10-trazyn-the-infinite-viewer-activated",
+        "pr10-trazyn-the-infinite-viewer-mana",
+        "pr10-trazyn-the-infinite-viewer-scope"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -4895,16 +4982,45 @@
     },
     "ea86abfa-6cab-4ef0-8463-34136fc25b59": {
       "name": "Duplicant",
-      "oracleSha256": "bf22f39612d4a3841449f71d86cb6d9cce1a9a8fd8fdd5bfada28452772aa129",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "474d15b714b420fdb9b04aaaf5e89557a8dfeb1f4f0e8b7f930a8ed4d0d1f034",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-duplicant-pinned-oracle-supported"],
       "clauses": [
         {
+          "id": "pr10-duplicant-clause-1",
           "oracleText": "Imprint — When this creature enters, you may exile target nontoken creature.",
-          "implementation": ["explicitly unsupported; optional exile is a required target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "TriggerSpec.etb optional",
+            "TargetSpec.permanent nontoken creature",
+            "Effect.exile linked to source"
+          ],
+          "engineTestIds": [
+            "pr10-duplicant-pinned-oracle-supported",
+            "pr10-duplicant-nontoken-target",
+            "pr10-duplicant-decline"
+          ],
+          "viewerScenarioIds": ["pr10-duplicant-viewer-exile", "pr10-duplicant-viewer-decline"]
+        },
+        {
+          "id": "pr10-duplicant-clause-2",
+          "oracleText": "As long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with it. It's still a Shapeshifter.",
+          "implementation": [
+            "StaticEffect.setBaseStats from linked exiled creature card",
+            "creature types of the last card",
+            "layer 7b"
+          ],
+          "engineTestIds": [
+            "pr10-duplicant-exile-copies-characteristics",
+            "pr10-duplicant-counters-still-apply",
+            "pr10-duplicant-card-leaves-exile",
+            "pr10-duplicant-new-object",
+            "pr10-duplicant-last-creature-card",
+            "pr10-duplicant-cda"
+          ],
+          "viewerScenarioIds": ["pr10-duplicant-viewer-exile", "pr10-duplicant-viewer-decline"]
         }
       ],
+      "viewerScenarioIds": ["pr10-duplicant-viewer-exile", "pr10-duplicant-viewer-decline"],
       "gameplayAiScenarioIds": []
     },
     "cd1eda60-53e4-44d0-9b2c-7a57395e291f": {
@@ -6741,15 +6857,33 @@
     },
     "70dc830e-d05b-4fc7-88dd-879e140b3fbf": {
       "name": "Reality Shift",
-      "oracleSha256": "f5f201dcbde7712b8decf3ca31230879fb9c4d62218f3b033bba26c007c28439",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "bf2b48653701608f7cd081357bccad6a95ae8127597042346b72439a9ca9600a",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-reality-shift-pinned-oracle-supported"],
       "clauses": [
         {
+          "id": "pr10-reality-shift-clause-1",
           "oracleText": "Exile target creature. Its controller manifests the top card of their library. (That player puts the top card of their library onto the battlefield face down as a 2/2 creature. If it's a creature card, it can be turned face up any time for its mana cost.)",
-          "implementation": ["explicitly unsupported; manifest never offers turn-face-up"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "Effect.exile",
+            "Effect.manifestTop controller",
+            "turn face up for mana cost if a creature card"
+          ],
+          "engineTestIds": [
+            "pr10-reality-shift-pinned-oracle-supported",
+            "pr10-reality-shift-manifest",
+            "pr10-reality-shift-turn-face-up",
+            "pr10-reality-shift-noncreature"
+          ],
+          "viewerScenarioIds": [
+            "pr10-reality-shift-viewer-manifest",
+            "pr10-reality-shift-viewer-turn-face-up"
+          ]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr10-reality-shift-viewer-manifest",
+        "pr10-reality-shift-viewer-turn-face-up"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -15549,6 +15683,154 @@
       "viewerScenarioIds": [
         "pr10-mocking-doppelganger-viewer-copy",
         "pr10-mocking-doppelganger-viewer-decline"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "cb15a8dd-57fe-466f-847e-66476b690a1f": {
+      "name": "Xenagos, God of Revels",
+      "oracleSha256": "dfe7ee79fe6d8e7918e0add5c742cc721d77cd73ae45bb751f259920e02ed91a",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-xenagos-pinned-oracle-supported"],
+      "clauses": [
+        {
+          "id": "pr10-xenagos-god-of-revels-clause-1",
+          "oracleText": "Indestructible",
+          "implementation": ["keyword indestructible (interpreted)"],
+          "engineTestIds": ["pr10-xenagos-pinned-oracle-supported"],
+          "viewerScenarioIds": ["pr10-xenagos-god-of-revels-viewer-seven-devotion"]
+        },
+        {
+          "id": "pr10-xenagos-god-of-revels-clause-2",
+          "oracleText": "As long as your devotion to red and green is less than seven, Xenagos isn't a creature.",
+          "implementation": [
+            "StaticEffect.notCreatureUnless devotion R and G",
+            "hybrid symbols count once"
+          ],
+          "engineTestIds": [
+            "pr10-xenagos-low-devotion",
+            "pr10-xenagos-seven-devotion",
+            "pr10-xenagos-hybrid-once",
+            "pr10-xenagos-opponents-permanents"
+          ],
+          "viewerScenarioIds": [
+            "pr10-xenagos-god-of-revels-viewer-low-devotion",
+            "pr10-xenagos-god-of-revels-viewer-seven-devotion"
+          ]
+        },
+        {
+          "id": "pr10-xenagos-god-of-revels-clause-3",
+          "oracleText": "At the beginning of combat on your turn, another target creature you control gains haste and gets +X/+X until end of turn, where X is that creature's power.",
+          "implementation": [
+            "TriggerSpec.beginningOfCombat you",
+            "Effect.grantKeyword haste",
+            "Effect.pump power X"
+          ],
+          "engineTestIds": ["pr10-xenagos-combat"],
+          "viewerScenarioIds": ["pr10-xenagos-god-of-revels-viewer-combat"]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr10-xenagos-god-of-revels-viewer-seven-devotion",
+        "pr10-xenagos-god-of-revels-viewer-low-devotion",
+        "pr10-xenagos-god-of-revels-viewer-combat"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c03ca2e6-fcce-4018-952f-1c451ab92cfd": {
+      "name": "Dragon Man, Reformed Robot",
+      "oracleSha256": "4bccbf1da7acacbac2989fce0b90717e43625a905d3a3a50b389cf8b0d732543",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-dragon-man-pinned-oracle-supported"],
+      "clauses": [
+        {
+          "id": "pr10-dragon-man-reformed-robot-clause-1",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["pr10-dragon-man-pinned-oracle-supported"],
+          "viewerScenarioIds": ["pr10-dragon-man-reformed-robot-viewer-power"]
+        },
+        {
+          "id": "pr10-dragon-man-reformed-robot-clause-2",
+          "oracleText": "Dragon Man's power is equal to the greatest mana value among noncreature permanents you control and noncreature cards in your graveyard.",
+          "implementation": [
+            "power CDA greatest mana value among noncreature permanents and graveyard cards"
+          ],
+          "engineTestIds": ["pr10-dragon-man-power", "pr10-dragon-man-excludes"],
+          "viewerScenarioIds": [
+            "pr10-dragon-man-reformed-robot-viewer-power",
+            "pr10-dragon-man-reformed-robot-viewer-excludes"
+          ]
+        },
+        {
+          "id": "pr10-dragon-man-reformed-robot-clause-3",
+          "oracleText": "You may cast this card from your graveyard by discarding a card in addition to paying its other costs.",
+          "implementation": ["cast from graveyard", "additional cost discard a card"],
+          "engineTestIds": ["pr10-dragon-man-graveyard-cast"],
+          "viewerScenarioIds": ["pr10-dragon-man-reformed-robot-viewer-graveyard-cast"]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr10-dragon-man-reformed-robot-viewer-power",
+        "pr10-dragon-man-reformed-robot-viewer-excludes",
+        "pr10-dragon-man-reformed-robot-viewer-graveyard-cast"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e191976c-6ab1-4a23-aeb8-8a88bd4bd203": {
+      "name": "Rowan Kenrith",
+      "oracleSha256": "3a74578b3722e817e7cc110ea95ba5daa61fe9b1c49f448855f1177c8f2f240a",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-rowan-kenrith-pinned-oracle-supported"],
+      "clauses": [
+        {
+          "id": "pr10-rowan-kenrith-clause-1",
+          "oracleText": "+2: During target player's next turn, each creature that player controls attacks if able.",
+          "implementation": ["loyaltyAbility +2", "attack requirement for next turn"],
+          "engineTestIds": ["pr10-rowan-kenrith-plus-two"],
+          "viewerScenarioIds": ["pr10-rowan-kenrith-viewer-plus-two"]
+        },
+        {
+          "id": "pr10-rowan-kenrith-clause-2",
+          "oracleText": "−2: Rowan Kenrith deals 3 damage to each tapped creature target player controls.",
+          "implementation": ["loyaltyAbility -2", "Effect.damageEach tapped creatures"],
+          "engineTestIds": ["pr10-rowan-kenrith-minus-two"],
+          "viewerScenarioIds": ["pr10-rowan-kenrith-viewer-minus-two"]
+        },
+        {
+          "id": "pr10-rowan-kenrith-clause-3",
+          "oracleText": "−8: Target player gets an emblem with \"Whenever you activate an ability that isn't a mana ability, copy it. You may choose new targets for the copy.\"",
+          "implementation": [
+            "loyaltyAbility -8",
+            "Effect.createEmblem for target player",
+            "copy activated abilities"
+          ],
+          "engineTestIds": ["pr10-rowan-kenrith-emblem", "pr10-rowan-kenrith-emblem-owner"],
+          "viewerScenarioIds": ["pr10-rowan-kenrith-viewer-emblem"]
+        },
+        {
+          "id": "pr10-rowan-kenrith-clause-4",
+          "oracleText": "Partner with Will Kenrith",
+          "implementation": ["Partner with Will Kenrith", "search trigger for target player"],
+          "engineTestIds": [
+            "pr10-rowan-kenrith-partner-with",
+            "pr10-rowan-kenrith-partner-decline"
+          ],
+          "viewerScenarioIds": ["pr10-rowan-kenrith-viewer-partner"]
+        },
+        {
+          "id": "pr10-rowan-kenrith-clause-5",
+          "oracleText": "Rowan Kenrith can be your commander.",
+          "implementation": ["can be your commander"],
+          "engineTestIds": ["pr10-rowan-kenrith-pinned-oracle-supported"],
+          "viewerScenarioIds": ["pr10-rowan-kenrith-viewer-commander"]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr10-rowan-kenrith-viewer-plus-two",
+        "pr10-rowan-kenrith-viewer-minus-two",
+        "pr10-rowan-kenrith-viewer-emblem",
+        "pr10-rowan-kenrith-viewer-partner",
+        "pr10-rowan-kenrith-viewer-commander"
       ],
       "gameplayAiScenarioIds": []
     }

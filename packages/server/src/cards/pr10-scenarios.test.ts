@@ -27,7 +27,7 @@ interface Plan {
   casts: {
     name: string;
     /** What the step does: cast a spell (default), activate a permanent's ability, or play a land. */
-    kind?: 'cast' | 'activate' | 'play';
+    kind?: 'cast' | 'activate' | 'play' | 'ability';
     /** Only an action whose description matches this (one of several abilities of a permanent). */
     match?: RegExp;
     targets?: string[];
@@ -70,6 +70,15 @@ const CARD_NAMES = [
   'Twilight Diviner',
   'Saheeli, Radiant Creator',
   'Mocking Doppelganger',
+  // Characteristics.
+  'Duplicant',
+  'Nighthawk Scavenger',
+  'Xenagos, God of Revels',
+  'Trazyn the Infinite',
+  'Reality Shift',
+  'Dragon Man, Reformed Robot',
+  'Rowan Kenrith',
+  'Biotransference',
 ];
 
 const SHOCK_AT_P3 = (card: string): Plan => ({
@@ -300,7 +309,84 @@ const PLANS: Record<string, Plan> = {
   'pr10-mocking-doppelganger-viewer-decline': {
     casts: [{ name: 'Mocking Doppelganger' }],
     picks: [/^Enter normally$/],
+  }, // PR10.13 Duplicant
+  'pr10-duplicant-viewer-exile': {
+    casts: [{ name: 'Duplicant' }],
+    triggerTargets: [['PR10 Lab Brute']],
+    picks: [/^Yes$/],
   },
+  'pr10-duplicant-viewer-decline': {
+    casts: [{ name: 'Duplicant' }],
+    triggerTargets: [['PR10 Lab Brute']],
+    picks: [/^No$/],
+  },
+  // PR10.15 Nighthawk Scavenger
+  'pr10-nighthawk-scavenger-viewer-empty': { casts: [] },
+  'pr10-nighthawk-scavenger-viewer-counts-types': { casts: [] },
+  'pr10-nighthawk-scavenger-viewer-own-graveyard': {
+    casts: [{ name: 'PR10 Lab Zap', targets: ['P2'] }],
+  },
+  // PR10.28 Xenagos, God of Revels
+  'pr10-xenagos-god-of-revels-viewer-low-devotion': { casts: [] },
+  'pr10-xenagos-god-of-revels-viewer-seven-devotion': { casts: [] },
+  'pr10-xenagos-god-of-revels-viewer-combat': { casts: [] },
+  // PR10.09 Trazyn the Infinite
+  'pr10-trazyn-the-infinite-viewer-activated': {
+    casts: [{ name: 'Trazyn the Infinite', kind: 'activate' }],
+  },
+  'pr10-trazyn-the-infinite-viewer-mana': {
+    casts: [{ name: 'PR10 Lab Zap', targets: ['P2'] }],
+  },
+  'pr10-trazyn-the-infinite-viewer-scope': { casts: [] },
+  // PR10.05 Reality Shift
+  'pr10-reality-shift-viewer-manifest': {
+    casts: [{ name: 'Reality Shift', targets: ['PR10 Lab Brute'] }],
+  },
+  'pr10-reality-shift-viewer-turn-face-up': {
+    casts: [
+      { name: 'Reality Shift', targets: ['PR10 Lab Bear'] },
+      { name: 'Turn PR10 Lab Red Bear face up', kind: 'ability' },
+    ],
+  },
+  // PR10.29 Dragon Man, Reformed Robot
+  'pr10-dragon-man-reformed-robot-viewer-power': { casts: [] },
+  'pr10-dragon-man-reformed-robot-viewer-excludes': { casts: [] },
+  'pr10-dragon-man-reformed-robot-viewer-graveyard-cast': {
+    casts: [{ name: 'Dragon Man, Reformed Robot' }],
+  },
+  // PR10.30 Rowan Kenrith
+  'pr10-rowan-kenrith-viewer-plus-two': {
+    casts: [
+      {
+        name: 'Rowan Kenrith',
+        kind: 'activate',
+        match: /During target player/,
+        targets: ['P3'],
+      },
+    ],
+  },
+  'pr10-rowan-kenrith-viewer-minus-two': {
+    casts: [{ name: 'Rowan Kenrith', kind: 'activate', match: /deals 3 damage/, targets: ['P3'] }],
+  },
+  'pr10-rowan-kenrith-viewer-emblem': {
+    casts: [{ name: 'Rowan Kenrith', kind: 'activate', match: /emblem/, targets: ['P1'] }],
+  },
+  'pr10-rowan-kenrith-viewer-partner': {
+    casts: [{ name: 'Rowan Kenrith' }],
+    triggerTargets: [['P1']],
+    picks: [/^Don't search$/],
+  },
+  'pr10-rowan-kenrith-viewer-commander': {
+    casts: [{ name: 'Rowan Kenrith' }],
+    triggerTargets: [['P1']],
+    picks: [/^Don't search$/],
+  },
+  // PR10.03 Biotransference
+  'pr10-biotransference-viewer-artifact-spell': { casts: [{ name: 'PR10 Lab Red Bear' }] },
+  'pr10-biotransference-viewer-noncreature-spell': {
+    casts: [{ name: 'PR10 Lab Zap', targets: ['P2'] }],
+  },
+  'pr10-biotransference-viewer-opponents-spell': { casts: [] },
 };
 
 /** The legal target matching `want`: a seat id, or the name of a permanent or stack object. */
@@ -318,7 +404,12 @@ function targetChoice(
   return named?.id ?? options[0]!;
 }
 
-const ACTION_TYPE = { cast: 'castSpell', activate: 'activateAbility', play: 'playLand' } as const;
+const ACTION_TYPE = {
+  cast: 'castSpell',
+  activate: 'activateAbility',
+  play: 'playLand',
+  ability: 'activateAbility',
+} as const;
 
 function run(id: string) {
   const scenario = pr10Scenario(id, `server-${id}` as never);
@@ -365,6 +456,7 @@ function run(id: string) {
         cast: `Cast ${next.name}`,
         activate: `${next.name}:`,
         play: `Play ${next.name}`,
+        ability: next.name,
       }[kind];
       const matching = request.legalActions.filter(
         (candidate) =>
@@ -716,6 +808,70 @@ describe('PR10 Card Test Lab scenarios', () => {
       copies: 0,
       events: { becomeCopy: 0, sbaCreatureDies: 1 },
     },
+    'pr10-duplicant-viewer-exile': { lives: {}, copies: 0, events: { exile: 1 } },
+    'pr10-duplicant-viewer-decline': { lives: {}, copies: 0, events: { exile: 0 } },
+    'pr10-nighthawk-scavenger-viewer-empty': { lives: {}, copies: 0 },
+    'pr10-nighthawk-scavenger-viewer-counts-types': { lives: { P3: 38 }, copies: 0 },
+    'pr10-nighthawk-scavenger-viewer-own-graveyard': { lives: { P2: 39 }, copies: 0 },
+    'pr10-xenagos-god-of-revels-viewer-low-devotion': { lives: {}, copies: 0 },
+    'pr10-xenagos-god-of-revels-viewer-seven-devotion': { lives: {}, copies: 0 },
+    'pr10-xenagos-god-of-revels-viewer-combat': {
+      lives: {},
+      copies: 0,
+      events: { grantKeyword: 1, pump: 1 },
+    },
+    'pr10-trazyn-the-infinite-viewer-activated': {
+      lives: { P1: 42 },
+      copies: 0,
+      events: { activateAbility: 1 },
+    },
+    'pr10-trazyn-the-infinite-viewer-mana': {
+      lives: { P2: 39 },
+      copies: 0,
+      events: { castSpell: 1 },
+    },
+    'pr10-trazyn-the-infinite-viewer-scope': {
+      lives: {},
+      copies: 0,
+      absent: 'Trazyn the Infinite:',
+    },
+    'pr10-reality-shift-viewer-manifest': { lives: {}, copies: 0, events: { exile: 1 } },
+    'pr10-reality-shift-viewer-turn-face-up': {
+      lives: {},
+      copies: 0,
+      events: { exile: 1, turnedFaceUp: 1 },
+    },
+    'pr10-dragon-man-reformed-robot-viewer-power': { lives: {}, copies: 0 },
+    'pr10-dragon-man-reformed-robot-viewer-excludes': { lives: {}, copies: 0 },
+    'pr10-dragon-man-reformed-robot-viewer-graveyard-cast': {
+      lives: {},
+      copies: 0,
+      events: { discard: 1 },
+    },
+    'pr10-rowan-kenrith-viewer-plus-two': {
+      lives: {},
+      copies: 0,
+      events: { attackRequirement: 1 },
+    },
+    'pr10-rowan-kenrith-viewer-minus-two': { lives: {}, copies: 0, events: { damageEach: 1 } },
+    'pr10-rowan-kenrith-viewer-emblem': { lives: {}, copies: 0, events: { createEmblem: 1 } },
+    'pr10-rowan-kenrith-viewer-partner': { lives: {}, copies: 0, events: { castSpell: 1 } },
+    'pr10-rowan-kenrith-viewer-commander': { lives: {}, copies: 0, events: { castSpell: 1 } },
+    'pr10-biotransference-viewer-artifact-spell': {
+      lives: { P1: 39 },
+      copies: 0,
+      events: { tokenCreated: 1, lifeLoss: 1 },
+    },
+    'pr10-biotransference-viewer-noncreature-spell': {
+      lives: { P1: 40, P2: 39 },
+      copies: 0,
+      events: { tokenCreated: 0 },
+    },
+    'pr10-biotransference-viewer-opponents-spell': {
+      lives: { P1: 40 },
+      copies: 0,
+      events: { tokenCreated: 0 },
+    },
   };
 
   it('has expectations for every scenario', () => {
@@ -924,6 +1080,102 @@ describe('PR10 Card Test Lab scenarios', () => {
     expect([copy!.power, copy!.toughness]).toEqual([4, 4]);
     expect(
       onBattlefield(run('pr10-mocking-doppelganger-viewer-decline'), 'Mocking Doppelganger'),
+    ).toHaveLength(0);
+  });
+  const size = (card: { power?: number | null; toughness?: number | null }) => [
+    card.power,
+    card.toughness,
+  ];
+
+  it('Duplicant takes the exiled creature’s power, toughness and types, or stays a 2/4', () => {
+    const [taken] = onBattlefield(run('pr10-duplicant-viewer-exile'), 'Duplicant');
+    expect(size(taken!)).toEqual([4, 4]);
+    expect(
+      run('pr10-duplicant-viewer-exile').state.battlefield.some(
+        (card) => card.name === 'PR10 Lab Brute',
+      ),
+    ).toBe(false);
+    const [kept] = onBattlefield(run('pr10-duplicant-viewer-decline'), 'Duplicant');
+    expect(size(kept!)).toEqual([2, 4]);
+  });
+
+  it('Nighthawk Scavenger counts only card types in opponents’ graveyards', () => {
+    const [empty] = onBattlefield(
+      run('pr10-nighthawk-scavenger-viewer-empty'),
+      'Nighthawk Scavenger',
+    );
+    expect(size(empty!)).toEqual([1, 3]);
+    expect(empty!.keywords).toEqual(expect.arrayContaining(['flying', 'deathtouch', 'lifelink']));
+    const [counted] = onBattlefield(
+      run('pr10-nighthawk-scavenger-viewer-counts-types'),
+      'Nighthawk Scavenger',
+    );
+    expect(size(counted!)).toEqual([2, 3]);
+    const [own] = onBattlefield(
+      run('pr10-nighthawk-scavenger-viewer-own-graveyard'),
+      'Nighthawk Scavenger',
+    );
+    expect(size(own!)).toEqual([1, 3]);
+  });
+
+  it('Xenagos is a creature only at seven devotion to red and green', () => {
+    const [low] = onBattlefield(
+      run('pr10-xenagos-god-of-revels-viewer-low-devotion'),
+      'Xenagos, God of Revels',
+    );
+    expect(low!.power ?? null).toBeNull();
+    const [high] = onBattlefield(
+      run('pr10-xenagos-god-of-revels-viewer-seven-devotion'),
+      'Xenagos, God of Revels',
+    );
+    expect(size(high!)).toEqual([6, 5]);
+    expect(high!.keywords).toContain('indestructible');
+  });
+
+  it('Trazyn gains only the abilities of artifact cards in your graveyard', () => {
+    const activated = run('pr10-trazyn-the-infinite-viewer-activated');
+    expect(activated.offered).toContain('Trazyn the Infinite: {1}: You gain 2 life.');
+    const scoped = run('pr10-trazyn-the-infinite-viewer-scope');
+    expect(scoped.offered).toContain('Cast PR10 Lab Zap ({R})');
+  });
+
+  it('Reality Shift exiles, manifests, and lets a manifested creature card turn face up', () => {
+    const shifted = run('pr10-reality-shift-viewer-manifest');
+    expect(shifted.state.battlefield.some((card) => card.name === 'PR10 Lab Brute')).toBe(false);
+    expect(shifted.state.battlefield.filter((card) => card.controllerId === 'P3')).toHaveLength(1);
+    const [up] = onBattlefield(run('pr10-reality-shift-viewer-turn-face-up'), 'PR10 Lab Red Bear');
+    expect(size(up!)).toEqual([2, 2]);
+  });
+
+  it('Dragon Man reads the greatest noncreature mana value and casts from the graveyard', () => {
+    const [power] = onBattlefield(
+      run('pr10-dragon-man-reformed-robot-viewer-power'),
+      'Dragon Man, Reformed Robot',
+    );
+    expect(size(power!)).toEqual([4, 5]);
+    const [excluded] = onBattlefield(
+      run('pr10-dragon-man-reformed-robot-viewer-excludes'),
+      'Dragon Man, Reformed Robot',
+    );
+    expect(size(excluded!)).toEqual([0, 5]);
+    const cast = run('pr10-dragon-man-reformed-robot-viewer-graveyard-cast');
+    expect(onBattlefield(cast, 'Dragon Man, Reformed Robot')).toHaveLength(1);
+    const p1 = cast.state.players.find((player) => player.id === 'P1')!;
+    expect(p1.graveyard.some((card) => card.name === 'PR10 Lab Zap')).toBe(true);
+  });
+
+  it('Rowan Kenrith loses two loyalty for the -2, and is cast from the command zone as a commander', () => {
+    const minus = run('pr10-rowan-kenrith-viewer-minus-two');
+    expect(onBattlefield(minus, 'Rowan Kenrith')).toHaveLength(1);
+    const commander = run('pr10-rowan-kenrith-viewer-commander');
+    expect(onBattlefield(commander, 'Rowan Kenrith')).toHaveLength(1);
+  });
+
+  it('Biotransference makes a Necron Warrior only for your own artifact spells', () => {
+    const own = run('pr10-biotransference-viewer-artifact-spell');
+    expect(onBattlefield(own, 'Necron Warrior')).toHaveLength(1);
+    expect(
+      onBattlefield(run('pr10-biotransference-viewer-noncreature-spell'), 'Necron Warrior'),
     ).toHaveLength(0);
   });
 });

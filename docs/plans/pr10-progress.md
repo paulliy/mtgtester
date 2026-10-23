@@ -4,13 +4,13 @@ Branches: `pr10-evidence-stack`, started from `aab7307` (the PR10 retarget and c
 primitives), and `pr10-evidence-rest`, which continues it. PR10 as a whole covers 31 cards pinned in
 [coverage-pr10-oracle.json](../../packages/engine/tests/fixtures/coverage-pr10-oracle.json). The cards
 below went from engine-only to the same `implemented-reviewed` evidence layer PR09 used, and
-Bilbo's Gambit, which the white-black control work modeled earlier, is recorded with them. 8 pinned cards are not part of this increment yet.
+Bilbo's Gambit, which the white-black control work modeled earlier, is recorded with them. Every pinned card is now covered.
 
 ## Current implementation
 
 The overrides in
 [coverage-pr10.ts](../../packages/engine/src/cards/overrides/coverage-pr10.ts) are registered in
-production by `index.ts` beside `coverage-pr09`, one group at a time as its evidence landed: `registerPr10RetargetAndCopyOverrides` and `registerPr10CastCopyOverrides`, `registerPr10AbilityStackOverrides`, `registerPr10TriggerDoublingOverrides`, `registerPr10AnimationOverrides`, `registerPr10TokenCopyOverrides`.
+production by `index.ts` beside `coverage-pr09`, one group at a time as its evidence landed: `registerPr10RetargetAndCopyOverrides` and `registerPr10CastCopyOverrides`, `registerPr10AbilityStackOverrides`, `registerPr10TriggerDoublingOverrides`, `registerPr10AnimationOverrides`, `registerPr10TokenCopyOverrides`, `registerPr10CharacteristicsOverrides`.
 Before this, only the PR10 engine suites installed them through `tests/pr10-helpers.ts`;
 registering twice is harmless, so that call stays. No rules logic changed.
 
@@ -18,14 +18,19 @@ registering twice is harmless, so that call stays. No rules logic changed.
 | -------------------------- | ------- | ------- | ----------------------------------- | ----------------------- |
 | Deflecting Swat            | 10.01   | 2       | `pr10-retarget.test.ts`             | 4                       |
 | Atarka Monument            | 10.02   | 2       | `pr10-animation.test.ts`            | 3                       |
+| Biotransference            | 10.03   | 2       | `pr10-biotransference.test.ts`      | 3                       |
 | Mana Sculpt                | 10.04   | 1       | `pr10-ability-stack.test.ts`        | 2                       |
+| Reality Shift              | 10.05   | 1       | `pr10-characteristics.test.ts`      | 2                       |
 | Reverberate                | 10.06   | 1       | `pr10-spell-copy.test.ts`           | 2                       |
 | Saheeli, Sublime Artificer | 10.07   | 2       | `pr10-animation.test.ts`            | 2                       |
 | Siren Stormtamer           | 10.08   | 2       | `pr10-ability-stack.test.ts`        | 3                       |
+| Trazyn the Infinite        | 10.09   | 2       | `pr10-characteristics.test.ts`      | 3                       |
 | Verrak, Warped Sengir      | 10.10   | 2       | `pr10-ability-stack.test.ts`        | 4                       |
 | Bolt Bend                  | 10.11   | 2       | `pr10-retarget.test.ts`             | 4                       |
 | Display of Power           | 10.12   | 2       | `pr10-spell-copy.test.ts`           | 3                       |
+| Duplicant                  | 10.13   | 2       | `pr10-duplicant.test.ts`            | 2                       |
 | Flare of Duplication       | 10.14   | 2       | `pr10-spell-copy.test.ts`           | 4                       |
+| Nighthawk Scavenger        | 10.15   | 2       | `pr10-characteristics.test.ts`      | 3                       |
 | Saheeli, Radiant Creator   | 10.16   | 2       | `pr10-token-copy.test.ts`           | 4                       |
 | Sarkhan, the Dragonspeaker | 10.17   | 3       | `pr10-animation.test.ts`            | 3                       |
 | Roaming Throne             | 10.18   | 4       | `pr10-trigger-doubling.test.ts`     | 2                       |
@@ -38,6 +43,9 @@ registering twice is harmless, so that call stays. No rules logic changed.
 | Bilbo's Gambit             | 10.25   | 2       | `white-black-control-gifts.test.ts` | not in this increment   |
 | Cosmic Crucible            | 10.26   | 2       | `pr10-cast-copy.test.ts`            | 4                       |
 | Council of Reeds           | 10.27   | 2       | `pr10-token-copy.test.ts`           | 3                       |
+| Xenagos, God of Revels     | 10.28   | 3       | `pr10-characteristics.test.ts`      | 3                       |
+| Dragon Man, Reformed Robot | 10.29   | 3       | `pr10-characteristics.test.ts`      | 3                       |
+| Rowan Kenrith              | 10.30   | 5       | `pr10-rowan.test.ts`                | 5                       |
 | Twilight Diviner           | 10.31   | 2       | `pr10-token-copy.test.ts`           | 3                       |
 
 What the scenarios show through the real frontend and backend:
@@ -78,11 +86,20 @@ What the scenarios show through the real frontend and backend:
   was cast from a graveyard, once each turn. Saheeli, Radiant Creator gains energy for artifact spells
   and, after you pay three energy, copies a permanent as a hasty 5/5 artifact. Mocking Doppelganger may
   enter as a copy of an opponent's creature that goads other creatures with the same name.
+- Duplicant may exile a nontoken creature and takes its power, toughness and creature types. Nighthawk
+  Scavenger counts card types in opponents' graveyards only. Xenagos is a creature only at seven
+  devotion to red and green and hastes and doubles another creature at combat. Trazyn has the activated
+  and mana abilities of artifact cards in your graveyard. Reality Shift exiles a creature and manifests,
+  and a manifested creature card can turn face up for its mana cost. Dragon Man's power is the greatest
+  noncreature mana value, and it can be cast from the graveyard by discarding. Rowan Kenrith has all
+  three loyalty abilities, Partner with Will Kenrith and can be your commander. Biotransference makes
+  your creatures, creature spells and creature cards outside the battlefield artifacts, and makes a
+  Necron Warrior when you cast an artifact spell.
 
 ## Validation
 
-- The manifest maps every printed clause (44 across the 22 cards) to named engine cases and to
-  66 Card Test Lab scenarios, at `implemented-reviewed`. The earlier `unsupported` and contained
+- The manifest maps every printed clause (64 across the 30 cards) to named engine cases and to
+  90 Card Test Lab scenarios, at `implemented-reviewed`. The earlier `unsupported` and contained
   entries for these cards are replaced, and the matching guard tests no longer treat them as
   contained (`marchesa-batch1-containment`, `fail-closed-restoration`,
   `marchesa-batch1-pool-containment`, `remaining-four-decks`).
@@ -98,8 +115,8 @@ What the scenarios show through the real frontend and backend:
   Negative scenarios keep a second, castable spell in hand so P1 still receives priority while the
   card under test is not offered.
 - `bun run snapshots:check` is current for the production registration. The coverage ledger has
-  `implemented-reviewed` rows for the 22 cards and a `modeled-focused-tests-passed` row for
-  Bilbo's Gambit. `docs/modelled-cards.md` lists the new cards (6509 total); it was edited
+  `implemented-reviewed` rows for the 30 cards and a `modeled-focused-tests-passed` row for
+  Bilbo's Gambit. `docs/modelled-cards.md` lists the new cards (6517 total); it was edited
   by hand because `bun run modelled-cards` needs the local Scryfall bulk file.
 
 ## Not done in this increment

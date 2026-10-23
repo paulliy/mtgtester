@@ -74,6 +74,7 @@ import { registerCoveragePr09Overrides } from './coverage-pr09';
 import {
   registerPr10AbilityStackOverrides,
   registerPr10AnimationOverrides,
+  registerPr10CharacteristicsOverrides,
   registerPr10CastCopyOverrides,
   registerPr10RetargetAndCopyOverrides,
   registerPr10TokenCopyOverrides,
@@ -248,6 +249,7 @@ registerDeck('coverage-pr10-ability-stack', registerPr10AbilityStackOverrides);
 registerDeck('coverage-pr10-trigger-doubling', registerPr10TriggerDoublingOverrides);
 registerDeck('coverage-pr10-animation', registerPr10AnimationOverrides);
 registerDeck('coverage-pr10-token-copy', registerPr10TokenCopyOverrides);
+registerDeck('coverage-pr10-characteristics', registerPr10CharacteristicsOverrides);
 registerDeck('unsupported-spell-faces', registerUnsupportedSpellFaces);
 
 /** Register an override. Exported for the per-card modules and for tests. */

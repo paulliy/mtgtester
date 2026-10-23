@@ -46,21 +46,33 @@ async function expectCastable(page: Page, name: string, castable: boolean): Prom
   else await expect(card).not.toHaveClass(/actionable/);
 }
 
+/** Choose one target: a seat, "P3:Name" for a permanent that seat controls, or a stack object. */
+async function chooseTarget(page: Page, target: string): Promise<void> {
+  const onBoard = /^(P\d):(.+)$/.exec(target);
+  if (onBoard) {
+    const chosen = permanent(page, onBoard[1]!, onBoard[2]!).first();
+    await expect(chosen).toHaveClass(/targetable/);
+    await chosen.click();
+  } else if (target === 'P1') {
+    const self = page.locator('.human-zone > header');
+    await expect(self).toHaveClass(/targetable/);
+    await self.click();
+  } else if (/^P\d$/.test(target)) {
+    const player = page.locator(`.opponent[data-seat="${target}"]`);
+    await expect(player).toHaveClass(/targetable/);
+    await player.locator('header').click();
+  } else {
+    await stackItem(page, target).click();
+  }
+}
+
 /** Start casting `name`, choosing `targets` (stack spells by name, or player seats) in order. */
 async function startCast(page: Page, name: string, targets: string[] = []): Promise<void> {
   const card = hand(page, name);
   await expect(card).toHaveClass(/actionable/);
   await card.click();
   await expect(page.getByText(/Auto-pay|Pay with|Alternative/i).first()).toBeVisible();
-  for (const target of targets) {
-    if (/^P\d$/.test(target)) {
-      const player = page.locator(`.opponent[data-seat="${target}"]`);
-      await expect(player).toHaveClass(/targetable/);
-      await player.locator('header').click();
-    } else {
-      await stackItem(page, target).click();
-    }
-  }
+  for (const target of targets) await chooseTarget(page, target);
 }
 const confirm = (page: Page): Promise<void> =>
   page.getByRole('button', { name: 'Confirm', exact: true }).click();
@@ -88,21 +100,7 @@ async function activate(
   await source.click();
   const action = page.getByRole('button').filter({ hasText: ability }).last();
   if (await action.isVisible()) await action.click();
-  for (const target of targets) {
-    const onBoard = /^(P\d):(.+)$/.exec(target);
-    if (onBoard) {
-      // "P3:Name" is a permanent that seat controls.
-      const chosen = permanent(page, onBoard[1]!, onBoard[2]!);
-      await expect(chosen).toHaveClass(/targetable/);
-      await chosen.click();
-    } else if (/^P\d$/.test(target)) {
-      const player = page.locator(`.opponent[data-seat="${target}"]`);
-      await expect(player).toHaveClass(/targetable/);
-      await player.locator('header').click();
-    } else {
-      await stackItem(page, target).click();
-    }
-  }
+  for (const target of targets) await chooseTarget(page, target);
   await confirm(page);
 }
 /** Play a land from hand, then choose `seat` for the landfall trigger that asks for a target. */
@@ -674,6 +672,137 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await decisionButton(page, 'Enter normally').click();
     await passUntil(page, logLine(page, /Mocking Doppelganger.*dies|dies/i));
     await expect(permanent(page, 'P1', 'Mocking Doppelganger')).toHaveCount(0);
+  },
+  'pr10-duplicant-viewer-exile': async (page) => {
+    await cast(page, 'Duplicant');
+    await chooseTarget(page, 'P3:PR10 Lab Brute');
+    await confirm(page);
+    await passUntil(page, decisionButton(page, 'Yes'));
+    await decisionButton(page, 'Yes').click();
+    await passUntil(page, logLine(page, /Duplicant — .* resolves/));
+    await expect(permanent(page, 'P3', 'PR10 Lab Brute')).toHaveCount(0);
+    await expect(permanent(page, 'P1', 'Duplicant')).toContainText('4/4');
+  },
+  'pr10-duplicant-viewer-decline': async (page) => {
+    await cast(page, 'Duplicant');
+    await chooseTarget(page, 'P3:PR10 Lab Brute');
+    await confirm(page);
+    await passUntil(page, decisionButton(page, 'No'));
+    await decisionButton(page, 'No').click();
+    await passUntil(page, logLine(page, /^No$/));
+    await expect(permanent(page, 'P3', 'PR10 Lab Brute')).toBeVisible();
+    await expect(permanent(page, 'P1', 'Duplicant')).toContainText('2/4');
+  },
+  'pr10-nighthawk-scavenger-viewer-empty': async (page) => {
+    await expect(permanent(page, 'P1', 'Nighthawk Scavenger')).toContainText('1/3');
+  },
+  'pr10-nighthawk-scavenger-viewer-counts-types': async (page) => {
+    await passUntil(page, life(page, 'P3').filter({ hasText: '38' }));
+    await expect(permanent(page, 'P1', 'Nighthawk Scavenger')).toContainText('2/3');
+  },
+  'pr10-nighthawk-scavenger-viewer-own-graveyard': async (page) => {
+    await cast(page, 'PR10 Lab Zap', ['P2']);
+    await passUntil(page, life(page, 'P2').filter({ hasText: '39' }));
+    await expect(permanent(page, 'P1', 'Nighthawk Scavenger')).toContainText('1/3');
+  },
+  'pr10-xenagos-god-of-revels-viewer-low-devotion': async (page) => {
+    await expect(permanent(page, 'P1', 'Xenagos, God of Revels')).toBeVisible();
+    await expect(permanent(page, 'P1', 'Xenagos, God of Revels')).not.toContainText('6/5');
+  },
+  'pr10-xenagos-god-of-revels-viewer-seven-devotion': async (page) => {
+    await expect(permanent(page, 'P1', 'Xenagos, God of Revels')).toContainText('6/5');
+  },
+  'pr10-xenagos-god-of-revels-viewer-combat': async (page) => {
+    await passUntil(page, logLine(page, /Xenagos, God of Revels — .* resolves/));
+    await expect(permanent(page, 'P1', 'PR10 Lab Bear')).toContainText('4/4');
+  },
+  'pr10-trazyn-the-infinite-viewer-activated': async (page) => {
+    await activate(page, permanent(page, 'P1', 'Trazyn the Infinite'), /gain 2 life/);
+    await passUntil(page, life(page, 'P1').filter({ hasText: '42' }));
+  },
+  'pr10-trazyn-the-infinite-viewer-mana': async (page) => {
+    await cast(page, 'PR10 Lab Zap', ['P2']);
+    await passUntil(page, life(page, 'P2').filter({ hasText: '39' }));
+  },
+  'pr10-trazyn-the-infinite-viewer-scope': async (page) => {
+    await expectCastable(page, 'PR10 Lab Zap', true);
+    await permanent(page, 'P1', 'Trazyn the Infinite').click();
+    await expect(page.getByRole('button').filter({ hasText: /gain 2 life/ })).toHaveCount(0);
+  },
+  'pr10-reality-shift-viewer-manifest': async (page) => {
+    await cast(page, 'Reality Shift', ['P3:PR10 Lab Brute']);
+    await passUntil(page, logLine(page, /Reality Shift resolves/));
+    await expect(permanent(page, 'P3', 'PR10 Lab Brute')).toHaveCount(0);
+  },
+  'pr10-reality-shift-viewer-turn-face-up': async (page) => {
+    await cast(page, 'Reality Shift', ['P1:PR10 Lab Bear']);
+    await passUntil(page, logLine(page, /Reality Shift resolves/));
+    await expect(permanent(page, 'P1', 'PR10 Lab Bear')).toHaveCount(0);
+    await activate(page, page.locator('.human-zone .object.actionable').last(), /Turn .* face up/);
+    await passUntil(page, permanent(page, 'P1', 'PR10 Lab Red Bear'));
+  },
+  'pr10-dragon-man-reformed-robot-viewer-power': async (page) => {
+    await expect(permanent(page, 'P1', 'Dragon Man, Reformed Robot')).toContainText('4/5');
+  },
+  'pr10-dragon-man-reformed-robot-viewer-excludes': async (page) => {
+    await expect(permanent(page, 'P1', 'Dragon Man, Reformed Robot')).toContainText('0/5');
+  },
+  'pr10-dragon-man-reformed-robot-viewer-graveyard-cast': async (page) => {
+    const dragon = page
+      .locator('.human-zone .zone-card-thumb')
+      .filter({ has: page.getByRole('img', { name: 'Dragon Man, Reformed Robot', exact: true }) });
+    await dragon.click();
+    await expect(page.getByText(/Auto-pay|Pay with|Alternative/i).first()).toBeVisible();
+    await confirm(page);
+    await passUntil(page, permanent(page, 'P1', 'Dragon Man, Reformed Robot'));
+  },
+  'pr10-rowan-kenrith-viewer-plus-two': async (page) => {
+    await activate(page, permanent(page, 'P1', 'Rowan Kenrith'), /During target player/, ['P3']);
+    await passUntil(page, logLine(page, /Rowan Kenrith — .* resolves/));
+  },
+  'pr10-rowan-kenrith-viewer-minus-two': async (page) => {
+    await activate(page, permanent(page, 'P1', 'Rowan Kenrith'), /deals 3 damage/, ['P3']);
+    await passUntil(page, logLine(page, /Rowan Kenrith — .* resolves/));
+  },
+  'pr10-rowan-kenrith-viewer-emblem': async (page) => {
+    await activate(page, permanent(page, 'P1', 'Rowan Kenrith'), /emblem/, ['P1']);
+    await passUntil(page, logLine(page, /emblem/i));
+  },
+  'pr10-rowan-kenrith-viewer-partner': async (page) => {
+    await cast(page, 'Rowan Kenrith');
+    await chooseTarget(page, 'P1');
+    await confirm(page);
+    await passUntil(page, decisionButton(page, /Don.t search/));
+    await decisionButton(page, /Don.t search/).click();
+    await passUntil(page, logLine(page, /Rowan Kenrith — .* resolves/));
+  },
+  'pr10-rowan-kenrith-viewer-commander': async (page) => {
+    const commander = page.locator('.command-zone .commander-card.actionable').first();
+    await expect(commander).toBeVisible();
+    await commander.click();
+    await expect(page.getByText(/Auto-pay|Pay with|Alternative/i).first()).toBeVisible();
+    await confirm(page);
+    await chooseTarget(page, 'P1');
+    await confirm(page);
+    await passUntil(page, decisionButton(page, /Don.t search/));
+    await decisionButton(page, /Don.t search/).click();
+    await passUntil(page, permanent(page, 'P1', 'Rowan Kenrith'));
+  },
+  'pr10-biotransference-viewer-artifact-spell': async (page) => {
+    await cast(page, 'PR10 Lab Red Bear');
+    await passUntil(page, permanent(page, 'P1', 'Necron Warrior'));
+    await expect(life(page, 'P1')).toHaveText('39');
+  },
+  'pr10-biotransference-viewer-noncreature-spell': async (page) => {
+    await cast(page, 'PR10 Lab Zap', ['P2']);
+    await passUntil(page, life(page, 'P2').filter({ hasText: '39' }));
+    await expect(permanent(page, 'P1', 'Necron Warrior')).toHaveCount(0);
+    await expect(life(page, 'P1')).toHaveText('40');
+  },
+  'pr10-biotransference-viewer-opponents-spell': async (page) => {
+    await passUntil(page, logLine(page, /PR10 Lab Flash Sparker resolves/));
+    await expect(permanent(page, 'P1', 'Necron Warrior')).toHaveCount(0);
+    await expect(life(page, 'P1')).toHaveText('40');
   },
 };
 

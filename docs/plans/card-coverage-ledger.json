@@ -872,21 +872,6 @@
     "snapshotStatus": "pending"
   },
   {
-    "oracleId": "c03ca2e6-fcce-4018-952f-1c451ab92cfd",
-    "name": "Dragon Man, Reformed Robot",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"~'s power is equal to the greatest mana value among noncreature permanents you control and noncreature cards in your graveyard.\"",
-      "unrecognized rules text: \"You may cast this card from your graveyard by discarding a card in addition to paying its other costs.\"",
-      "non-numeric power/toughness \"*\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "b9bacb46-fd1d-459b-81c2-d7d08fe73848",
     "name": "Dragon Tempest",
     "package": "PR06.18",
@@ -2877,22 +2862,6 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
-    "oracleId": "e191976c-6ab1-4a23-aeb8-8a88bd4bd203",
-    "name": "Rowan Kenrith",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"+2: During target player's next turn, each creature that player controls attacks if able.\"",
-      "unrecognized rules text: \"−2: ~ deals 3 damage to each tapped creature target player controls.\"",
-      "unrecognized rules text: \"−8: Target player gets an emblem with \"Whenever you activate an ability that isn't a mana ability, copy it. You may choose new targets for the copy.\"\"",
-      "unrecognized rules text: \"Partner with Will Kenrith\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "3ceca713-38de-4428-a4f1-2146f6e98393",
     "name": "Rumor Gatherer",
     "package": "PR04.16",
@@ -4071,20 +4040,6 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
-    "oracleId": "cb15a8dd-57fe-466f-847e-66476b690a1f",
-    "name": "Xenagos, God of Revels",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"As long as your devotion to red and green is less than seven, ~ isn't a creature.\"",
-      "unrecognized rules text: \"At the beginning of combat on your turn, another target creature you control gains haste and gets +X/+X until end of turn, where X is that creature's power.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "b168e4e6-f572-4d9f-b98f-95b2611354cb",
     "name": "Zopandrel, Hunger Dominus",
     "package": "W2",
@@ -5111,6 +5066,126 @@
       "apps/web/e2e/pr10-card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr10-mocking-doppelganger.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "ea86abfa-6cab-4ef0-8463-34136fc25b59",
+    "name": "Duplicant",
+    "package": "PR10.13",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-duplicant.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-duplicant.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "379ed4ec-8f2e-448b-9ed2-a3181e2f877e",
+    "name": "Nighthawk Scavenger",
+    "package": "PR10.15",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-characteristics.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-characteristics.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "cb15a8dd-57fe-466f-847e-66476b690a1f",
+    "name": "Xenagos, God of Revels",
+    "package": "PR10.28",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-characteristics.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-characteristics.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "1ef3b48a-55ef-422e-ac7f-e1c1057eec2c",
+    "name": "Trazyn the Infinite",
+    "package": "PR10.09",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-characteristics.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-characteristics.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "70dc830e-d05b-4fc7-88dd-879e140b3fbf",
+    "name": "Reality Shift",
+    "package": "PR10.05",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-characteristics.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-characteristics.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "c03ca2e6-fcce-4018-952f-1c451ab92cfd",
+    "name": "Dragon Man, Reformed Robot",
+    "package": "PR10.29",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-characteristics.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-characteristics.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "e191976c-6ab1-4a23-aeb8-8a88bd4bd203",
+    "name": "Rowan Kenrith",
+    "package": "PR10.30",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-rowan.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-rowan.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "5443557e-440f-4fdd-a29b-7740d7cec085",
+    "name": "Biotransference",
+    "package": "PR10.03",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-biotransference.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-biotransference.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   }
 ]

@@ -218,6 +218,11 @@ export const REANIMATE = lab(
   ['B'],
 );
 
+export const IDOL = lab('PR10 Lab Idol', 'Artifact', '{R}{R}{G}{G}{R}', '', ['R', 'G']);
+export const FOUNTAIN = lab('PR10 Lab Fountain', 'Artifact', '{1}', '{1}: You gain 2 life.', []);
+export const ROCK = lab('PR10 Lab Rock', 'Artifact', '{1}', '{T}: Add {R}.', []);
+export const RELIC = lab('PR10 Lab Relic', 'Artifact', '{4}', '', []);
+
 const SUPPORT_CARDS = [SHOCK, ZAP, TWIN, BEAR, RED_BEAR, BRUTE, COMMANDER, CINDER];
 
 /**
@@ -245,9 +250,13 @@ interface Def {
   /** Number of basic lands P1 controls, by name. */
   p1Lands?: string[];
   p1Commander?: boolean;
+  /** A card P1 has as its commander, left in the command zone. */
+  p1CommanderCard?: OracleCard;
   opponent?: OpponentCast;
   /** Extra permanents controlled by P3 (for example, a creature for a two-target spell). */
   p3Field?: OracleCard[];
+  /** P3's permanents start tapped. */
+  p3Tapped?: boolean;
   /** Permanents controlled by P2 (the scripted opponent) besides its two lands. */
   p2Field?: OracleCard[];
   p4Field?: OracleCard[];
@@ -1280,6 +1289,338 @@ const DEFS: Def[] = [
       p3Field: [BRUTE],
     },
   ),
+
+  // PR10.13 Duplicant
+  entry(
+    'duplicant',
+    'Duplicant',
+    'exile',
+    'Duplicant: exile a creature and take its power, toughness and types',
+    [1, 2],
+    ['Cast Duplicant and exile the creature P3 controls.'],
+    'PR10 Lab Brute is exiled and Duplicant becomes a 4/4 Giant Shapeshifter.',
+    {
+      p1Hand: [pin('Duplicant').card],
+      p1Lands: mountains(6),
+      p3Field: [BRUTE],
+    },
+  ),
+  entry(
+    'duplicant',
+    'Duplicant',
+    'decline',
+    'Duplicant: decline to exile',
+    [1, 2],
+    ['Cast Duplicant and choose not to exile anything.'],
+    'Nothing is exiled and Duplicant stays a 2/4 Shapeshifter.',
+    {
+      p1Hand: [pin('Duplicant').card],
+      p1Lands: mountains(6),
+      p3Field: [BRUTE],
+    },
+  ),
+
+  // PR10.15 Nighthawk Scavenger
+  entry(
+    'nighthawk-scavenger',
+    'Nighthawk Scavenger',
+    'empty',
+    'Nighthawk Scavenger: a 1/3 with nothing in opponents’ graveyards',
+    [1, 2],
+    ['Look at Nighthawk Scavenger with no cards in your opponents’ graveyards.'],
+    'It is a 1/3 flying, deathtouch, lifelink creature.',
+    { p1Hand: [], p1Field: [pin('Nighthawk Scavenger').card] },
+  ),
+  entry(
+    'nighthawk-scavenger',
+    'Nighthawk Scavenger',
+    'counts-types',
+    'Nighthawk Scavenger: +1 for each card type in opponents’ graveyards',
+    [2],
+    ['Pass priority so P2 casts PR10 Lab Shock, which goes to P2’s graveyard.'],
+    'An instant card is in an opponent’s graveyard, so Nighthawk Scavenger is a 2/3.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Nighthawk Scavenger').card],
+      opponent: SHOCK_P3,
+    },
+  ),
+  entry(
+    'nighthawk-scavenger',
+    'Nighthawk Scavenger',
+    'own-graveyard',
+    'Nighthawk Scavenger: your own graveyard does not count',
+    [2],
+    ['Cast PR10 Lab Zap at P2 so an instant is in your own graveyard.'],
+    'Only opponents’ graveyards count, so Nighthawk Scavenger stays a 1/3.',
+    {
+      p1Hand: [ZAP],
+      p1Field: [pin('Nighthawk Scavenger').card],
+      p1Lands: mountains(1),
+    },
+  ),
+
+  // PR10.28 Xenagos, God of Revels
+  entry(
+    'xenagos-god-of-revels',
+    'Xenagos, God of Revels',
+    'low-devotion',
+    'Xenagos: not a creature below seven devotion',
+    [2],
+    ['Look at Xenagos with only its own two red and green symbols.'],
+    'Devotion is two, so Xenagos is an indestructible enchantment, not a creature.',
+    { p1Hand: [], p1Field: [pin('Xenagos, God of Revels').card] },
+  ),
+  entry(
+    'xenagos-god-of-revels',
+    'Xenagos, God of Revels',
+    'seven-devotion',
+    'Xenagos: a creature at seven devotion',
+    [1, 2],
+    ['Look at Xenagos with PR10 Lab Idol adding five more red and green symbols.'],
+    'Devotion is seven, so Xenagos is a 6/5 indestructible creature.',
+    { p1Hand: [], p1Field: [pin('Xenagos, God of Revels').card, IDOL] },
+  ),
+  entry(
+    'xenagos-god-of-revels',
+    'Xenagos, God of Revels',
+    'combat',
+    'Xenagos: haste and doubled power at the beginning of combat',
+    [3],
+    ['Move to combat and choose PR10 Lab Bear for Xenagos’s trigger.'],
+    'PR10 Lab Bear gains haste and +2/+2, so it attacks as a 4/4.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Xenagos, God of Revels').card, BEAR],
+      prepared: { continueThroughCombat: true },
+    },
+  ),
+
+  // PR10.09 Trazyn the Infinite
+  entry(
+    'trazyn-the-infinite',
+    'Trazyn the Infinite',
+    'activated',
+    'Trazyn: use the activated ability of an artifact card in your graveyard',
+    [2],
+    ['Activate Trazyn’s granted ability, paying {1}.'],
+    'Trazyn has PR10 Lab Fountain’s ability, so you gain 2 life.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Trazyn the Infinite').card],
+      p1Graveyard: [FOUNTAIN],
+      p1Lands: mountains(1),
+    },
+  ),
+  entry(
+    'trazyn-the-infinite',
+    'Trazyn the Infinite',
+    'mana',
+    'Trazyn: tap for the mana ability of an artifact card in your graveyard',
+    [2],
+    ['Cast PR10 Lab Zap at P2 using the mana from Trazyn.'],
+    'Trazyn has PR10 Lab Rock’s mana ability, so Lab Zap is castable with no lands.',
+    {
+      p1Hand: [ZAP],
+      p1Field: [pin('Trazyn the Infinite').card],
+      p1Graveyard: [ROCK],
+    },
+  ),
+  entry(
+    'trazyn-the-infinite',
+    'Trazyn the Infinite',
+    'scope',
+    'Trazyn: only artifact cards in your graveyard grant abilities',
+    [2],
+    [
+      'With only an instant in your graveyard, Trazyn has no granted ability while PR10 Lab Zap is castable.',
+    ],
+    'No granted ability is offered.',
+    {
+      p1Hand: [ZAP],
+      p1Field: [pin('Trazyn the Infinite').card],
+      p1Graveyard: [CINDER],
+      p1Lands: mountains(1),
+    },
+  ),
+
+  // PR10.05 Reality Shift
+  entry(
+    'reality-shift',
+    'Reality Shift',
+    'manifest',
+    'Reality Shift: exile a creature, its controller manifests',
+    [1],
+    ['Cast Reality Shift targeting the creature P3 controls.'],
+    'PR10 Lab Brute is exiled and P3 manifests their top card as a face-down 2/2.',
+    {
+      p1Hand: [pin('Reality Shift').card],
+      p1Lands: ['Island', 'Island'],
+      p3Field: [BRUTE],
+    },
+  ),
+  entry(
+    'reality-shift',
+    'Reality Shift',
+    'turn-face-up',
+    'Reality Shift: turn a manifested creature card face up for its mana cost',
+    [1],
+    [
+      'Cast Reality Shift on your own PR10 Lab Bear, then turn the manifested creature face up for {R}.',
+    ],
+    'The manifested PR10 Lab Red Bear turns face up as a 2/2 for its mana cost.',
+    {
+      p1Hand: [pin('Reality Shift').card],
+      p1Field: [BEAR],
+      p1Lands: ['Island', 'Island', 'Mountain'],
+      p1Library: [RED_BEAR],
+    },
+  ),
+
+  // PR10.29 Dragon Man, Reformed Robot
+  entry(
+    'dragon-man-reformed-robot',
+    'Dragon Man, Reformed Robot',
+    'power',
+    'Dragon Man: power is the greatest noncreature mana value',
+    [1, 2],
+    ['Look at Dragon Man with PR10 Lab Relic (mana value 4) in play.'],
+    'Dragon Man is a 4/5 flyer.',
+    { p1Hand: [], p1Field: [pin('Dragon Man, Reformed Robot').card, RELIC] },
+  ),
+  entry(
+    'dragon-man-reformed-robot',
+    'Dragon Man, Reformed Robot',
+    'excludes',
+    'Dragon Man: creatures do not count',
+    [2],
+    ['Look at Dragon Man with only a creature (mana value 3) beside it.'],
+    'Creatures do not count, so Dragon Man is a 0/5.',
+    { p1Hand: [], p1Field: [pin('Dragon Man, Reformed Robot').card, BRUTE] },
+  ),
+  entry(
+    'dragon-man-reformed-robot',
+    'Dragon Man, Reformed Robot',
+    'graveyard-cast',
+    'Dragon Man: cast from the graveyard by discarding a card',
+    [3],
+    ['Cast Dragon Man from your graveyard, discarding PR10 Lab Zap.'],
+    'Dragon Man returns to the battlefield and PR10 Lab Zap is discarded.',
+    {
+      p1Hand: [ZAP],
+      p1Graveyard: [pin('Dragon Man, Reformed Robot').card],
+      p1Lands: ['Plains', 'Island', 'Mountain', 'Mountain'],
+    },
+  ),
+
+  // PR10.30 Rowan Kenrith
+  entry(
+    'rowan-kenrith',
+    'Rowan Kenrith',
+    'plus-two',
+    'Rowan Kenrith: +2 forces a player’s creatures to attack',
+    [1],
+    ['Activate Rowan’s +2 targeting P3.'],
+    'Rowan gains two loyalty and P3’s creatures must attack during their next turn.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Rowan Kenrith').card],
+      p3Field: [BRUTE],
+    },
+  ),
+  entry(
+    'rowan-kenrith',
+    'Rowan Kenrith',
+    'minus-two',
+    'Rowan Kenrith: −2 damages each tapped creature',
+    [2],
+    ['Activate Rowan’s −2 targeting P3, who controls a tapped creature.'],
+    'PR10 Lab Brute is tapped, so it takes 3 damage; Rowan loses two loyalty.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Rowan Kenrith').card],
+      p3Field: [BRUTE],
+      p3Tapped: true,
+    },
+  ),
+  entry(
+    'rowan-kenrith',
+    'Rowan Kenrith',
+    'emblem',
+    'Rowan Kenrith: −8 gives a player the copy emblem',
+    [3],
+    ['Activate Rowan’s −8 targeting yourself.'],
+    'You get the emblem and Rowan is left with no loyalty.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Rowan Kenrith').card],
+      fieldOptions: { 'Rowan Kenrith': { counters: { loyalty: 8 } } },
+    },
+  ),
+  entry(
+    'rowan-kenrith',
+    'Rowan Kenrith',
+    'partner',
+    'Rowan Kenrith: partner with Will Kenrith',
+    [4],
+    ['Cast Rowan Kenrith from your hand, targeting yourself with the partner trigger.'],
+    'You may search your library for Will Kenrith; declining leaves the library alone.',
+    { p1Hand: [pin('Rowan Kenrith').card], p1Lands: mountains(6) },
+  ),
+  entry(
+    'rowan-kenrith',
+    'Rowan Kenrith',
+    'commander',
+    'Rowan Kenrith: can be your commander',
+    [5],
+    ['Cast Rowan Kenrith from the command zone.'],
+    'Rowan Kenrith is your commander and is cast from the command zone.',
+    { p1Hand: [], p1CommanderCard: pin('Rowan Kenrith').card, p1Lands: mountains(6) },
+  ),
+
+  // PR10.03 Biotransference
+  entry(
+    'biotransference',
+    'Biotransference',
+    'artifact-spell',
+    'Biotransference: a creature spell is an artifact spell',
+    [1, 2],
+    ['Cast PR10 Lab Red Bear, a creature spell.'],
+    'Casting it counts as casting an artifact spell, so you lose 1 life and create a 2/2 Necron Warrior.',
+    {
+      p1Hand: [RED_BEAR],
+      p1Field: [pin('Biotransference').card],
+      p1Lands: mountains(1),
+    },
+  ),
+  entry(
+    'biotransference',
+    'Biotransference',
+    'noncreature-spell',
+    'Biotransference: an instant is not an artifact spell',
+    [2],
+    ['Cast PR10 Lab Zap at P2.'],
+    'It is not an artifact spell, so nothing triggers.',
+    {
+      p1Hand: [ZAP],
+      p1Field: [pin('Biotransference').card],
+      p1Lands: mountains(1),
+    },
+  ),
+  entry(
+    'biotransference',
+    'Biotransference',
+    'opponents-spell',
+    'Biotransference: an opponent’s creature spell does not trigger it',
+    [2],
+    ['Pass priority so P2 casts PR10 Lab Flash Sparker.'],
+    'Only your own artifact spells trigger it, so nothing happens to you.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Biotransference').card],
+      opponent: { spell: FLASH_SPARKER, targets: ['P3'] },
+    },
+  ),
 ];
 
 export const PR10_SCENARIOS = DEFS.map(({ id, cardName, title }) => ({ id, cardName, title }));
@@ -1369,13 +1710,15 @@ export function pr10Scenario(id: string, gameId: GameId): CardTestScenario {
     );
   const named = (names: string[]) => names.map((name) => cardNamed.get(name)!);
   const commander = def.p1Commander ? COMMANDER : undefined;
+  const commandZoneCommander = def.p1CommanderCard;
   const p2Lands = def.opponent || def.p2Field ? (def.p2Lands ?? ['Mountain', 'Forest']) : [];
   const p2FieldNames = [...p2Lands, ...(def.p2Field ?? []).map((card) => card.name)];
 
   const players: EnginePlayerConfig[] = (['P1', 'P2', 'P3', 'P4'] as const).map((seat) => ({
     id: seat,
     deckId: `pr10-${seat}`,
-    commanders: seat === 'P1' && commander ? [commander] : [],
+    commanders:
+      seat === 'P1' ? [commander ?? commandZoneCommander].filter((card) => card !== undefined) : [],
     cards:
       seat === 'P1'
         ? [...named(p1Names), ...filler(24)]
@@ -1416,7 +1759,13 @@ export function pr10Scenario(id: string, gameId: GameId): CardTestScenario {
       })),
       ...(p2FieldNames.length ? [{ playerId: 'P2' as const, cardNames: p2FieldNames }] : []),
       ...(def.p3Field?.length
-        ? [{ playerId: 'P3' as const, cardNames: def.p3Field.map((card) => card.name) }]
+        ? [
+            {
+              playerId: 'P3' as const,
+              cardNames: def.p3Field.map((card) => card.name),
+              ...(def.p3Tapped ? { tapped: true } : {}),
+            },
+          ]
         : []),
       ...(def.p4Field?.length
         ? [{ playerId: 'P4' as const, cardNames: def.p4Field.map((card) => card.name) }]

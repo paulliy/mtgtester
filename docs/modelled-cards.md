@@ -3,7 +3,7 @@
 Generated from the engine-supported card pool.
 This is an interpreter-support inventory. Card behavior verification is tracked separately in the card verification manifest.
 
-**Total**: 6509 modeled non-land cards
+**Total**: 6517 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -528,6 +528,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Bile Urchin
 - Biogenic Ooze
 - Biomathematician
+- Biotransference
 - Bird Maiden
 - Birds of Paradise
 - Birthing Boughs
@@ -1363,6 +1364,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Deft Duelist
 - Defy Gravity
 - Dega Disciple
+- Dragon Man, Reformed Robot
+- Duplicant
 - Déjà Vu
 - Deliberate
 - Delighted Halfling
@@ -3751,6 +3754,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Night Scythe
 - Night's Whisper
 - Nightguard Patrol
+- Nighthawk Scavenger
 - Nighthawk, Dark Defender
 - Nighthowl Pursuer
 - Nightmare
@@ -4374,6 +4378,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Reach the Horizon
 - Reach Through Mists
 - Read the Bones
+- Reality Shift
 - Realm-Cloaked Giant // Cast Off
 - Reanimate
 - Reap the Seagraf
@@ -4581,6 +4586,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Rousing Read
 - Rover Blades
 - Roving Harper
+- Rowan Kenrith
 - Rowan Treefolk
 - Roxxon Brutes
 - Royal Falcon
@@ -5807,6 +5813,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Traveling Minister
 - Traveling Philosopher
 - Trawler Drake
+- Trazyn the Infinite
 - Tread Upon
 - Treasure Dredger
 - Treasure Hunter
@@ -6445,6 +6452,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Wyluli Wolf
 - Xande, Dark Mage
 - Xathrid Necromancer
+- Xenagos, God of Revels
 - Xira Arien
 - Yargle and Multani
 - Yargle, Glutton of Urborg

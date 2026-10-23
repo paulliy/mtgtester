@@ -680,39 +680,39 @@ Depends on: PR02, PR03 and PR09.
   - activated abilities gained from cards in the graveyard (Trazyn);
   - turning a manifested card face up (Reality Shift).
 
-|     # | Card                       | Population | Kind        | Primary blocker (first reason; +N = more)                                                                                            |
-| ----: | -------------------------- | ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| 10.01 | Deflecting Swat            | MAR, S     | modeled     | Modeled: retargets the same stack object (PR10 evidence).                                                                            |
-| 10.02 | Atarka Monument            | DRA        | modeled     | Modeled: animation is a 4/4 red and green Dragon artifact creature with flying (PR10 evidence).                                      |
-| 10.03 | Biotransference            | NEC        | fail-closed | Type change omits creature spells and off-battlefield cards.                                                                         |
-| 10.04 | Mana Sculpt                | MAR        | modeled     | Modeled: Wizard checked on resolution; adds the mana spent (PR10 evidence).                                                          |
-| 10.05 | Reality Shift              | LEN        | fail-closed | Manifest puts the card face-down but never offers turning it face up for its mana cost.                                              |
-| 10.06 | Reverberate                | QMQ        | modeled     | Modeled: the copy chooses new targets (PR10 evidence).                                                                               |
-| 10.07 | Saheeli, Sublime Artificer | LEN        | modeled     | Modeled: Servo for each noncreature spell; the -2 copy as an artifact (PR10 evidence).                                               |
-| 10.08 | Siren Stormtamer           | MAR        | modeled     | Modeled: counters only what targets you or your creature (PR10 evidence).                                                            |
-| 10.09 | Trazyn the Infinite        | NEC        | fail-closed | Activated mana abilities of artifacts in the graveyard are omitted.                                                                  |
-| 10.10 | Verrak, Warped Sengir      | QMQ        | modeled     | Modeled: pay the life again to copy the ability (PR10 evidence).                                                                     |
-| 10.11 | Bolt Bend                  | MAR        | modeled     | Modeled: changes the single target; cost reduction (PR10 evidence).                                                                  |
-| 10.12 | Display of Power           | QMQ        | modeled     | Modeled: cannot be copied; copies choose new targets (PR10 evidence).                                                                |
-| 10.13 | Duplicant                  | LEN        | fail-closed | Optional exile is a required target.                                                                                                 |
-| 10.14 | Flare of Duplication       | MAR        | modeled     | Modeled: sacrifice alternative cost; copy chooses new targets (PR10 evidence).                                                       |
-| 10.15 | Nighthawk Scavenger        | QMQ        | fail-closed | Power counts card types in all graveyards, not only opponents' graveyards.                                                           |
-| 10.16 | Saheeli, Radiant Creator   | LEN        | modeled     | Modeled: energy for artifact spells; the copy is chosen after the energy is paid (PR10 evidence).                                    |
-| 10.17 | Sarkhan, the Dragonspeaker | DRA        | modeled     | Modeled: legendary red Dragon creature only; the -3 and the emblem (PR10 evidence).                                                  |
-| 10.18 | Roaming Throne             | S          | modeled     | Modeled: chosen creature type; doubles triggers of that type (PR10 evidence).                                                        |
-| 10.19 | Galvanic Iteration         | FF4        | modeled     | Modeled: next-cast copy with flashback (PR10 evidence).                                                                              |
-| 10.20 | Mirage Mirror              | FF4        | modeled     | Modeled: becomes a copy of a permanent until end of turn (PR10 evidence).                                                            |
-| 10.21 | Mister Fantastic           | FF4        | modeled     | Modeled: copies a triggered ability twice with new targets (PR10 evidence).                                                          |
-| 10.22 | Mocking Doppelganger       | PRA        | modeled     | Modeled: may enter as a copy of an opponent's creature that goads same-named creatures (PR10 evidence).                              |
-| 10.23 | Scute Swarm                | BRI        | modeled     | Modeled: an Insect, or a copy of itself with six or more lands (PR10 evidence).                                                      |
-| 10.24 | Annie Joins Up             | FF4        | modeled     | Modeled: enter damage; doubles legendary creature triggers (PR10 evidence).                                                          |
-| 10.25 | Bilbo's Gambit             | BRI        | modeled     | Modeled ahead of PR10 by the white-black control merge (Gift, spell lock).                                                           |
-| 10.26 | Cosmic Crucible            | FF4        | modeled     | Modeled: first-main mana and a once-each-turn spell copy (PR10 evidence).                                                            |
-| 10.27 | Council of Reeds           | FF4        | modeled     | Modeled: your creatures ignore the legend rule; a combat copy after a noncreature spell (PR10 evidence).                             |
-| 10.28 | Xenagos, God of Revels     | RUB        | unmodeled   | As long as your devotion to red and green is less than seven, ~ isn't a creature. (+1)                                               |
-| 10.29 | Dragon Man, Reformed Robot | FF4        | unmodeled   | ~'s power is equal to the greatest mana value among noncreature permanents you control and noncreature cards in your graveyard. (+2) |
-| 10.30 | Rowan Kenrith              | PRA        | unmodeled   | +2: During target player's next turn, each creature that player controls attacks if able. (+3)                                       |
-| 10.31 | Twilight Diviner           | MAR        | modeled     | Modeled: surveil 2; copies one creature that entered or was cast from a graveyard, once each turn (PR10 evidence).                   |
+|     # | Card                       | Population | Kind    | Primary blocker (first reason; +N = more)                                                                                         |
+| ----: | -------------------------- | ---------- | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| 10.01 | Deflecting Swat            | MAR, S     | modeled | Modeled: retargets the same stack object (PR10 evidence).                                                                         |
+| 10.02 | Atarka Monument            | DRA        | modeled | Modeled: animation is a 4/4 red and green Dragon artifact creature with flying (PR10 evidence).                                   |
+| 10.03 | Biotransference            | NEC        | modeled | Modeled: your creatures, creature spells and creature cards off the battlefield are artifacts (PR10 evidence).                    |
+| 10.04 | Mana Sculpt                | MAR        | modeled | Modeled: Wizard checked on resolution; adds the mana spent (PR10 evidence).                                                       |
+| 10.05 | Reality Shift              | LEN        | modeled | Modeled: exile and manifest, with a manifested creature card turning face up for its mana cost (PR10 evidence).                   |
+| 10.06 | Reverberate                | QMQ        | modeled | Modeled: the copy chooses new targets (PR10 evidence).                                                                            |
+| 10.07 | Saheeli, Sublime Artificer | LEN        | modeled | Modeled: Servo for each noncreature spell; the -2 copy as an artifact (PR10 evidence).                                            |
+| 10.08 | Siren Stormtamer           | MAR        | modeled | Modeled: counters only what targets you or your creature (PR10 evidence).                                                         |
+| 10.09 | Trazyn the Infinite        | NEC        | modeled | Modeled: activated and mana abilities of artifact cards in your graveyard (PR10 evidence).                                        |
+| 10.10 | Verrak, Warped Sengir      | QMQ        | modeled | Modeled: pay the life again to copy the ability (PR10 evidence).                                                                  |
+| 10.11 | Bolt Bend                  | MAR        | modeled | Modeled: changes the single target; cost reduction (PR10 evidence).                                                               |
+| 10.12 | Display of Power           | QMQ        | modeled | Modeled: cannot be copied; copies choose new targets (PR10 evidence).                                                             |
+| 10.13 | Duplicant                  | LEN        | modeled | Modeled: optional exile of a nontoken creature; takes the last exiled creature card's power, toughness and types (PR10 evidence). |
+| 10.14 | Flare of Duplication       | MAR        | modeled | Modeled: sacrifice alternative cost; copy chooses new targets (PR10 evidence).                                                    |
+| 10.15 | Nighthawk Scavenger        | QMQ        | modeled | Modeled: power counts card types in opponents' graveyards only (PR10 evidence).                                                   |
+| 10.16 | Saheeli, Radiant Creator   | LEN        | modeled | Modeled: energy for artifact spells; the copy is chosen after the energy is paid (PR10 evidence).                                 |
+| 10.17 | Sarkhan, the Dragonspeaker | DRA        | modeled | Modeled: legendary red Dragon creature only; the -3 and the emblem (PR10 evidence).                                               |
+| 10.18 | Roaming Throne             | S          | modeled | Modeled: chosen creature type; doubles triggers of that type (PR10 evidence).                                                     |
+| 10.19 | Galvanic Iteration         | FF4        | modeled | Modeled: next-cast copy with flashback (PR10 evidence).                                                                           |
+| 10.20 | Mirage Mirror              | FF4        | modeled | Modeled: becomes a copy of a permanent until end of turn (PR10 evidence).                                                         |
+| 10.21 | Mister Fantastic           | FF4        | modeled | Modeled: copies a triggered ability twice with new targets (PR10 evidence).                                                       |
+| 10.22 | Mocking Doppelganger       | PRA        | modeled | Modeled: may enter as a copy of an opponent's creature that goads same-named creatures (PR10 evidence).                           |
+| 10.23 | Scute Swarm                | BRI        | modeled | Modeled: an Insect, or a copy of itself with six or more lands (PR10 evidence).                                                   |
+| 10.24 | Annie Joins Up             | FF4        | modeled | Modeled: enter damage; doubles legendary creature triggers (PR10 evidence).                                                       |
+| 10.25 | Bilbo's Gambit             | BRI        | modeled | Modeled ahead of PR10 by the white-black control merge (Gift, spell lock).                                                        |
+| 10.26 | Cosmic Crucible            | FF4        | modeled | Modeled: first-main mana and a once-each-turn spell copy (PR10 evidence).                                                         |
+| 10.27 | Council of Reeds           | FF4        | modeled | Modeled: your creatures ignore the legend rule; a combat copy after a noncreature spell (PR10 evidence).                          |
+| 10.28 | Xenagos, God of Revels     | RUB        | modeled | Modeled: a creature only at seven devotion to red and green; combat haste and doubled power (PR10 evidence).                      |
+| 10.29 | Dragon Man, Reformed Robot | FF4        | modeled | Modeled: power from the greatest noncreature mana value; cast from the graveyard by discarding (PR10 evidence).                   |
+| 10.30 | Rowan Kenrith              | PRA        | modeled | Modeled: all three loyalty abilities, Partner with Will Kenrith, can be your commander (PR10 evidence).                           |
+| 10.31 | Twilight Diviner           | MAR        | modeled | Modeled: surveil 2; copies one creature that entered or was cast from a graveyard, once each turn (PR10 evidence).                |
 
 ### PR11: Protection, phasing, layouts, game lifecycle
 

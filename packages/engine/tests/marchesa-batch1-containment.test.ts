@@ -138,6 +138,12 @@ describe('Marchesa catalog audit containment', () => {
     // PR10 token-copy regressions (copies of permanents and spells' sources).
     'Saheeli, Radiant Creator',
     'Twilight Diviner',
+    // PR10 characteristics regressions.
+    'Biotransference',
+    'Duplicant',
+    'Nighthawk Scavenger',
+    'Reality Shift',
+    'Trazyn the Infinite',
 
     'Vindictive Lich',
     'Shadrix Silverquill',
