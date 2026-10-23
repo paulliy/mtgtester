@@ -89,6 +89,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   pumpEachUntilEot: {},
   doublePowerAndToughnessEachUntilEot: {},
   grantKeywordEachUntilEot: {},
+  denyKeywordsEachUntilEot: {},
   grantKeywordToAttackGroupUntilEot: {},
   putCountersOnCreatureOfChoice: {},
   returnBlockedCreatureAtEndOfCombat: {},

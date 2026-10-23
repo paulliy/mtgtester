@@ -43,7 +43,7 @@ import {
   CREATURE_TYPES,
   NONCREATURE_SUBTYPE_BY_LOWER,
 } from './creature-types';
-import type { StaticEffect } from './continuous-types';
+import type { ProtectionQuality, StaticEffect } from './continuous-types';
 import type { RuleStatic } from './rule-statics';
 import type { Selector } from './selector';
 import {
@@ -434,7 +434,7 @@ const KEYWORD_SET = new Set<string>(IMPLEMENTED_KEYWORDS);
 interface ParsedKeywordLine {
   keywords: KeywordAbility[];
   ward?: ParsedManaCost;
-  protectionFrom?: Color[];
+  protectionFrom?: ProtectionQuality[];
 }
 
 const WARD_RE = /^ward ((?:\{[^}]+\})+)$/;
@@ -469,6 +469,12 @@ function parseKeywordLine(text: string): ParsedKeywordLine | null {
       // what "each color" means; colorless is not a color and is correctly excluded.
       if (argument === 'each color' || argument === 'all colors') {
         out.protectionFrom = [...(out.protectionFrom ?? []), ...FIVE_COLORS];
+        continue;
+      }
+      // "protection from multicolored" (CR 105.4) and "protection from creatures" (a card
+      // type, CR 702.16a) are qualities of their own, never joined with a color.
+      if (argument === 'multicolored' || argument === 'creatures') {
+        out.protectionFrom = [...(out.protectionFrom ?? []), argument];
         continue;
       }
       const colors: Color[] = [];
@@ -1824,11 +1830,10 @@ function parseEffectSentence(
           effects.push({ op: 'grantKeywordEachUntilEot', selector, keyword });
         }
         if (parsed.protectionFrom !== undefined) {
-          effects.push({
-            op: 'grantProtectionEachUntilEot',
-            selector,
-            colors: [...parsed.protectionFrom],
-          });
+          // The granted-protection effect carries colors only; refuse any other quality.
+          const colors = parsed.protectionFrom.filter((q): q is Color => q.length === 1);
+          if (colors.length !== parsed.protectionFrom.length) return null;
+          effects.push({ op: 'grantProtectionEachUntilEot', selector, colors });
         }
       }
       if (effects.length > 0) return effects;
@@ -7570,7 +7575,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   let tokenCreationReplacement: TokenSpec | undefined;
   let chosenCreatureType = false;
   let ward: ParsedManaCost | undefined;
-  let protectionFrom: Color[] | undefined;
+  let protectionFrom: ProtectionQuality[] | undefined;
   let spellCantBeCountered = false;
   const spellAdditionalCosts: AbilityCost[] = [];
   let commanderFreeCast = false;

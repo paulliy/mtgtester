@@ -3757,8 +3757,62 @@
   {
     "oracleId": "30ac68e6-160a-41f9-9f0f-0e0eef383150",
     "name": "Arcane Lighthouse",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "{1}, {T}: Until end of turn, creatures your opponents control lose hexproof and shroud and can't have hexproof or shroud."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{1}, {T}: Until end of turn, creatures your opponents control lose hexproof and shroud and can't have them",
+            "effects": [
+              {
+                "keywords": [
+                  "hexproof",
+                  "shroud"
+                ],
+                "op": "denyKeywordsEachUntilEot",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "opponents"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "30ec73ad-c7a1-4527-8dc6-44bdd65b9ba6",
@@ -6110,6 +6164,21 @@
     }
   },
   {
+    "oracleId": "546201d0-3fa5-44e4-a526-ab0945711e49",
+    "name": "Shanna, Sisay's Legacy",
+    "handledLines": [
+      "unrecognized rules text: \"~ can't be the target of abilities your opponents control.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "cantBeTargetedByOpponentAbilities"
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "55b72b1f-6463-406a-8824-d99a3c028285",
     "name": "Vicious Rumors",
     "handledLines": [
@@ -6313,6 +6382,76 @@
         }
       ]
     }
+  },
+  {
+    "oracleId": "57d0c688-6206-4c83-9fcb-27fd29e2a9ed",
+    "name": "Basri's Lieutenant",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever this creature or another creature you control dies, if it had a +1/+1 counter on it, create a 2/2 white Knight creature token with vigilance.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When this or another creature you control dies with a +1/+1 counter, create a 2/2 white Knight with vigilance",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [
+                  "W"
+                ],
+                "keywords": [
+                  "vigilance"
+                ],
+                "name": "Knight",
+                "power": 2,
+                "subtypes": [
+                  "Knight"
+                ],
+                "toughness": 2,
+                "typeLine": "Creature — Knight",
+                "types": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "triggerObjectMatches",
+              "selector": {
+                "counter": "+1/+1",
+                "kind": "hasCounter"
+              }
+            },
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "5825d718-6a32-4f4c-9b56-1a50051cfe28",
@@ -9308,12 +9447,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "81a51328-b995-4f3b-90bc-a20ae21dd254",
-    "name": "Spirit Mantle",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "81c6c4f0-81ad-463c-a42b-60a73e6d70f3",
@@ -21082,8 +21215,62 @@
   {
     "oracleId": "oracle-arcane-lighthouse",
     "name": "Arcane Lighthouse",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "{1}, {T}: Until end of turn, creatures your opponents control lose hexproof and shroud and can't have hexproof or shroud."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{1}, {T}: Until end of turn, creatures your opponents control lose hexproof and shroud and can't have them",
+            "effects": [
+              {
+                "keywords": [
+                  "hexproof",
+                  "shroud"
+                ],
+                "op": "denyKeywordsEachUntilEot",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "opponents"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-arcbond",
@@ -21847,6 +22034,76 @@
         }
       ]
     }
+  },
+  {
+    "oracleId": "oracle-basri-s-lieutenant",
+    "name": "Basri's Lieutenant",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever this creature or another creature you control dies, if it had a +1/+1 counter on it, create a 2/2 white Knight creature token with vigilance.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When this or another creature you control dies with a +1/+1 counter, create a 2/2 white Knight with vigilance",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [
+                  "W"
+                ],
+                "keywords": [
+                  "vigilance"
+                ],
+                "name": "Knight",
+                "power": 2,
+                "subtypes": [
+                  "Knight"
+                ],
+                "toughness": 2,
+                "typeLine": "Creature — Knight",
+                "types": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "triggerObjectMatches",
+              "selector": {
+                "counter": "+1/+1",
+                "kind": "hasCounter"
+              }
+            },
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-baxter-building",
@@ -35385,6 +35642,21 @@
     }
   },
   {
+    "oracleId": "oracle-shanna-sisay-s-legacy",
+    "name": "Shanna, Sisay's Legacy",
+    "handledLines": [
+      "unrecognized rules text: \"~ can't be the target of abilities your opponents control.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "cantBeTargetedByOpponentAbilities"
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "oracle-shineshadow-snarl",
     "name": "Shineshadow Snarl",
     "handledLines": [
@@ -36021,12 +36293,6 @@
         }
       }
     }
-  },
-  {
-    "oracleId": "oracle-spirit-mantle",
-    "name": "Spirit Mantle",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-spit-flame",

@@ -117,6 +117,16 @@ export const SOLDIER_1_1_LIFELINK: TokenSpec = creatureToken({
   keywords: ['lifelink'],
 });
 
+/** Basri's Lieutenant: "a 2/2 white Knight creature token with vigilance". */
+export const KNIGHT_2_2_WHITE_VIGILANCE: TokenSpec = creatureToken({
+  name: 'Knight',
+  subtypes: ['Knight'],
+  colors: ['W'],
+  power: 2,
+  toughness: 2,
+  keywords: ['vigilance'],
+});
+
 export const INKLING_2_1_FLYING: TokenSpec = creatureToken({
   name: 'Inkling',
   subtypes: ['Inkling'],

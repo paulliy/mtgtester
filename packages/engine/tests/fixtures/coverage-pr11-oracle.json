@@ -1,0 +1,1083 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "pinnedAt": "2026-10-23",
+  "cards": [
+    {
+      "sha256": "50c9be824477d2117ecd0d97711dc046d652c3f1a425274089313866a7aa6ae1",
+      "card": {
+        "oracleId": "30ac68e6-160a-41f9-9f0f-0e0eef383150",
+        "scryfallId": "e2384e42-2442-4b40-9bae-8db470d2fb8c",
+        "name": "Arcane Lighthouse",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}: Add {C}.\n{1}, {T}: Until end of turn, creatures your opponents control lose hexproof and shroud and can't have hexproof or shroud.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e0707453e36b4abf8fa1bdc6bb1870907515b78f1a6deab2881d497ca1431b7f",
+      "card": {
+        "oracleId": "a731e87b-8d99-4b64-8ee3-8e540d652366",
+        "scryfallId": "609d3ecf-f88d-4268-a8d3-4bf2bcf5df60",
+        "name": "Malakir Rebirth // Malakir Mire",
+        "manaCost": "{B}",
+        "cmc": 1,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Instant // Land",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Choose target creature. You lose 2 life. Until end of turn, that creature gains \"When this creature dies, return it to the battlefield tapped under its owner's control.\"",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "modal_dfc",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Malakir Mire",
+          "typeLine": "Land",
+          "oracleText": "This land enters tapped.\n{T}: Add {B}.",
+          "manaCost": null,
+          "colors": [],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "91aabae6b80a8744b6cd0ed2cb400bb224b003ed6907b5c9bebfcdbad5394cb8",
+      "card": {
+        "oracleId": "fda61506-ed79-47fd-badd-639185297913",
+        "scryfallId": "d1af92a1-a86a-43eb-82fd-394f1168111e",
+        "name": "Smokestack",
+        "manaCost": "{4}",
+        "cmc": 4,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "At the beginning of your upkeep, you may put a soot counter on this artifact.\nAt the beginning of each player's upkeep, that player sacrifices a permanent of their choice for each soot counter on this artifact.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2e683a7ba9875b006532bca335c30b7a298b97b5f42738a0c93a6e1149953c7c",
+      "card": {
+        "oracleId": "ff0ab867-b710-4b1a-baed-95fc3cf68f79",
+        "scryfallId": "228e551e-023a-4c9a-8f32-58dae6ffdf7f",
+        "name": "Valakut Awakening // Valakut Stoneforge",
+        "manaCost": "{2}{R}",
+        "cmc": 3,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Instant // Land",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Put any number of cards from your hand on the bottom of your library, then draw that many cards plus one.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "modal_dfc",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Valakut Stoneforge",
+          "typeLine": "Land",
+          "oracleText": "This land enters tapped.\n{T}: Add {R}.",
+          "manaCost": null,
+          "colors": [],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "41ae997aee2cf777ae28b7228f8e7b666384f67a98e6f7f2675c98231f07fab3",
+      "card": {
+        "oracleId": "66ca8a60-e028-4a5f-8177-860b888cb9d1",
+        "scryfallId": "e78e39ea-20be-4196-992c-7ed2cb8150c1",
+        "name": "Angel's Grace",
+        "manaCost": "{W}",
+        "cmc": 1,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.)\nYou can't lose the game this turn and your opponents can't win the game this turn. Until end of turn, damage that would reduce your life total to less than 1 reduces it to 1 instead.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Split second"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "893dd89057bd4227854f34bd35cd06a3c453a6cdce3ea8dd377ee6d7f844f2db",
+      "card": {
+        "oracleId": "27c366cf-00d7-47d4-9577-736bfc4a3b81",
+        "scryfallId": "c35a1c6f-1656-4619-9ab8-40044c857a7f",
+        "name": "Defacing Duskmage // Vandal's Edit",
+        "manaCost": "{W}{B} // {1}{W}{B}",
+        "cmc": 2,
+        "colors": [
+          "B",
+          "W"
+        ],
+        "colorIdentity": [
+          "B",
+          "W"
+        ],
+        "typeLine": "Creature — Dog Warlock // Instant",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dog",
+          "Warlock"
+        ],
+        "oracleText": "Deathtouch\nWhenever an opponent draws their second card each turn, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Prepared",
+          "Deathtouch"
+        ],
+        "layout": "prepare",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Vandal's Edit",
+          "typeLine": "Instant",
+          "oracleText": "Draw two cards. Each player loses 2 life.",
+          "manaCost": "{1}{W}{B}",
+          "colors": [],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "6c4b262016dc94d02325fc2f0ae096b8169a558d8ce1bce59c14ba11d5447b2a",
+      "card": {
+        "oracleId": "09b7ea91-2620-4c45-af3c-60bbeab89966",
+        "scryfallId": "09d1f048-f411-4677-a0dc-dbddd06fe694",
+        "name": "Eiganjo Dynastorian // Replenish",
+        "manaCost": "{2}{W} // {3}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Fox Advisor // Sorcery",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Fox",
+          "Advisor"
+        ],
+        "oracleText": "Vigilance\nWhenever you attack with two or more creatures, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Vigilance",
+          "Prepared"
+        ],
+        "layout": "prepare",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Replenish",
+          "typeLine": "Sorcery",
+          "oracleText": "Return all enchantment cards from your graveyard to the battlefield.",
+          "manaCost": "{3}{W}",
+          "colors": [],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "57480a490d28aa07da41e084c8f776cafc6e85a4b1aeffc5d3446ca56da46c47",
+      "card": {
+        "oracleId": "60e7130a-d321-4e50-93a4-999013c76054",
+        "scryfallId": "3d8ca18d-9099-4f1e-95c1-f04da58a26bd",
+        "name": "Gut, True Soul Zealot",
+        "manaCost": "{2}{R}",
+        "cmc": 3,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Goblin Shaman",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Goblin",
+          "Shaman"
+        ],
+        "oracleText": "Whenever you attack, you may sacrifice another creature or an artifact. If you do, create a 4/1 black Skeleton creature token with menace that's tapped and attacking. (It can't be blocked except by two or more creatures.)\nChoose a Background (You can have a Background as a second commander.)",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Choose a background"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "8d816e435c5897d424a7ac741fafa1b74a906e68f1e06201b0c9a853940fe0ff",
+      "card": {
+        "oracleId": "473a7998-669d-4181-83fe-f178a2e781f0",
+        "scryfallId": "f1170bfa-9623-44c3-a15e-bd8c2627fe6e",
+        "name": "Out of the Tombs",
+        "manaCost": "{2}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "At the beginning of your upkeep, put two eon counters on this enchantment, then mill cards equal to the number of eon counters on it.\nIf you would draw a card while your library has no cards in it, instead return a creature card from your graveyard to the battlefield. If you can't, you lose the game.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Mill"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c94c5d90da630eecadefc1d848d8d6b5ff17143dcc0cc52e96628bf3172ab308",
+      "card": {
+        "oracleId": "6556c4c0-b10d-4208-821b-0c0a49abd188",
+        "scryfallId": "18a2bdc8-b705-4eb5-b3a5-ff2e2ab8f312",
+        "name": "Wandering Archaic // Explore the Vastlands",
+        "manaCost": "{5}",
+        "cmc": 5,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Creature — Avatar // Sorcery",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Avatar"
+        ],
+        "oracleText": "Whenever an opponent casts an instant or sorcery spell, they may pay {2}. If they don't, you may copy that spell. You may choose new targets for the copy.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "modal_dfc",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Explore the Vastlands",
+          "typeLine": "Sorcery",
+          "oracleText": "Each player looks at the top five cards of their library and may reveal a land card and/or an instant or sorcery card from among them. Each player puts the cards they revealed this way into their hand and the rest on the bottom of their library in a random order. Each player gains 3 life.",
+          "manaCost": "{3}",
+          "colors": [],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "fe984b8abf1ac010710964b66352478f43b6cb9de73b93cf0baa4b179a1e091f",
+      "card": {
+        "oracleId": "9842734c-1eac-4509-a731-4c22017ae586",
+        "scryfallId": "e01cc65a-0e38-4f41-b9ed-796ef0355d0b",
+        "name": "Wear // Tear",
+        "manaCost": "{1}{R} // {W}",
+        "cmc": 3,
+        "colors": [
+          "R",
+          "W"
+        ],
+        "colorIdentity": [
+          "R",
+          "W"
+        ],
+        "typeLine": "Instant // Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Destroy target artifact.\nFuse (You may cast one or both halves of this card from your hand.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Fuse"
+        ],
+        "layout": "split",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Tear",
+          "typeLine": "Instant",
+          "oracleText": "Destroy target enchantment.\nFuse (You may cast one or both halves of this card from your hand.)",
+          "manaCost": "{W}",
+          "colors": [],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "391e9b8768e82cdb8d8ab67bb2f38747ce52929cae80bfe7d734d2f37c95cbe8",
+      "card": {
+        "oracleId": "09b895ff-e729-48d1-bfc1-ea5fd7adda6a",
+        "scryfallId": "dfe6f9ec-3b7f-4c11-acd1-440e14217e5d",
+        "name": "Caged Sun",
+        "manaCost": "{6}",
+        "cmc": 6,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "As this artifact enters, choose a color.\nCreatures you control of the chosen color get +1/+1.\nWhenever a land's ability causes you to add one or more mana of the chosen color, add an additional one mana of that color.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "34c80ebeb69c7ccffe0143a205a1e08d8fd70ccd80065988f57c57a202a77f26",
+      "card": {
+        "oracleId": "5924cbb0-19b5-449c-a7c5-722e744a54f8",
+        "scryfallId": "cd556cd1-e33a-433d-ac18-4a4fd195c3ab",
+        "name": "The War in Heaven",
+        "manaCost": "{3}{B}{B}{B}",
+        "cmc": 6,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Enchantment — Saga",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Saga"
+        ],
+        "oracleText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)\nI — You draw three cards and you lose 3 life.\nII — Mill three cards.\nIII — Choose up to three target creature cards with total mana value 8 or less in your graveyard. Return each of them to the battlefield with a necrodermis counter on it. They're artifacts in addition to their other types.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Mill"
+        ],
+        "layout": "saga",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "cc793f0486cdb04f472c10c7449ef03a7813227931f526a6b8d296ccdbabe932",
+      "card": {
+        "oracleId": "6c948f71-5c86-450c-8828-df4d8deaf1dd",
+        "scryfallId": "d60c64aa-57a9-4082-82f4-af0d89c1a52d",
+        "name": "Intermediate Chirography",
+        "manaCost": "{1}{B}",
+        "cmc": 2,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Enchantment — Class",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Class"
+        ],
+        "oracleText": "(Gain the next level as a sorcery to add its ability.)\nWhen this Class enters, create a 2/1 white and black Inkling creature token with flying.\n{1}{B}: Level 2\nWhenever you lose life for the first time each turn, put a +1/+1 counter on target creature you control.\n{2}{B}: Level 3\nAt the beginning of each end step, if a modified creature died under your control this turn, create a 2/1 white and black Inkling creature token with flying. (Equipment, Auras you control, and counters are modifications.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "class",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "1d1cc6e3169c56b64038ea4a887b0ebe7e3898aadf6fb5b35221630fe12d04a0",
+      "card": {
+        "oracleId": "8a52f3c0-2552-4425-b2e3-5496eb2232a7",
+        "scryfallId": "40140991-cffa-4b52-9a25-37e9a8aa9ddd",
+        "name": "Mystic Remora",
+        "manaCost": "{U}",
+        "cmc": 1,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Cumulative upkeep {1} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nWhenever an opponent casts a noncreature spell, you may draw a card unless that player pays {4}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Cumulative upkeep"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "50b6f2fe62f9c9aa09d73975c9121171f1ab274b6700eede6181a025b4b3aaaf",
+      "card": {
+        "oracleId": "ec3d4466-547c-4e02-b1b5-a156ec4637e9",
+        "scryfallId": "f340cbf7-5bbe-45b9-a4bf-d1caa500ff93",
+        "name": "Chrome Mox",
+        "manaCost": "{0}",
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "Imprint — When this artifact enters, you may exile a nonartifact, nonland card from your hand.\n{T}: Add one mana of any of the exiled card's colors.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Imprint"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "dae3d703ffc51a500bb39e219e9d6c8251e68bd1f636f75cd4d3e5d24a22fad1",
+      "card": {
+        "oracleId": "c0adbddc-b070-4c5f-afe0-0474c72a9251",
+        "scryfallId": "7f273641-c5f3-48bc-b89e-3cff52d26a0b",
+        "name": "Gemstone Caverns",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Legendary Land",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "If this card is in your opening hand and you're not the starting player, you may begin the game with Gemstone Caverns on the battlefield with a luck counter on it. If you do, exile a card from your hand.\n{T}: Add {C}. If Gemstone Caverns has a luck counter on it, instead add one mana of any color.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "05b8e0aa5425764cf5d2555212a9334a2a84bc250e19882b18b5d210afbe338a",
+      "card": {
+        "oracleId": "0d4ecdb1-ec90-497f-a7a4-1c68092b8757",
+        "scryfallId": "483fa1cb-1e35-44f2-a143-98c0f107f5ca",
+        "name": "Teferi's Protection",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Until your next turn, your life total can't change and you gain protection from everything. All permanents you control phase out. (While they're phased out, they're treated as though they don't exist. They phase in before you untap during your untap step.)\nExile Teferi's Protection.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "3f4b086c293816418c1076321ea9f445886dc0f7ba70e71c36217c617b92406c",
+      "card": {
+        "oracleId": "736892cb-a34b-4bb9-b56c-e26e3db207a2",
+        "scryfallId": "c1a31d52-a407-4ded-bfca-cc812f11afa0",
+        "name": "Mana Vault",
+        "manaCost": "{1}",
+        "cmc": 1,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "This artifact doesn't untap during your untap step.\nAt the beginning of your upkeep, you may pay {4}. If you do, untap this artifact.\nAt the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you.\n{T}: Add {C}{C}{C}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "76bff693c91a40628a95ba5fffe76c9a2a69394a1c0d7ac9fbf8d99cffd3a9ad",
+      "card": {
+        "oracleId": "3aa83ed2-f48b-4ce6-a614-2c54ddf50538",
+        "scryfallId": "d5806e68-1054-458e-866d-1f2470f682b2",
+        "name": "The One Ring",
+        "manaCost": "{4}",
+        "cmc": 4,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Legendary Artifact",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "Indestructible\nWhen The One Ring enters, if you cast it, you gain protection from everything until your next turn.\nAt the beginning of your upkeep, you lose 1 life for each burden counter on The One Ring.\n{T}: Put a burden counter on The One Ring, then draw a card for each burden counter on The One Ring.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Indestructible"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "af2957876fc1d3287eaf3740e9ebd11d65924f1b62859fb62ceafb570f68d339",
+      "card": {
+        "oracleId": "4c6a0c30-b547-4eff-8ff4-0ca25803c076",
+        "scryfallId": "c1e0f201-42cb-46a1-901a-65bb4fc18f6c",
+        "name": "Urza's Saga",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Enchantment Land — Urza's Saga",
+        "supertypes": [],
+        "types": [
+          "Enchantment",
+          "Land"
+        ],
+        "subtypes": [
+          "Urza's",
+          "Saga"
+        ],
+        "oracleText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)\nI — This Saga gains \"{T}: Add {C}.\"\nII — This Saga gains \"{2}, {T}: Create a 0/0 colorless Construct artifact creature token with 'This token gets +1/+1 for each artifact you control.'\"\nIII — Search your library for an artifact card with mana cost {0} or {1}, put it onto the battlefield, then shuffle.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "saga",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "fc013d57e113d5dedda518615a991151aaf8eaebedb9d05877a3ef90838f19fa",
+      "card": {
+        "oracleId": "42bb7ea9-f6e4-4551-8d93-3b1eae84b865",
+        "scryfallId": "41d45a8a-ea1d-4fbc-86d2-5d6340f3b639",
+        "name": "Clever Concealment",
+        "manaCost": "{2}{W}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nAny number of target nonland permanents you control phase out. (Treat them and anything attached to them as though they don't exist until your next turn.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Convoke"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5d88da81550d51ce2fbf34bdeaafbfb9958fe87cf30749d041660cdb0e6bdb49",
+      "card": {
+        "oracleId": "f7d8b91b-6541-4d3e-af51-7e000eac69c1",
+        "scryfallId": "05e2a5e6-3aaa-4096-bdd0-fcc1afe5a36c",
+        "name": "Legion's Landing // Adanto, the First Fort",
+        "manaCost": "{W}",
+        "cmc": 1,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Legendary Enchantment // Legendary Land",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "When Legion's Landing enters, create a 1/1 white Vampire creature token with lifelink.\nWhen you attack with three or more creatures, transform Legion's Landing.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Transform"
+        ],
+        "layout": "transform",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Adanto, the First Fort",
+          "typeLine": "Legendary Land",
+          "oracleText": "(Transforms from Legion's Landing.)\n{T}: Add {W}.\n{2}{W}, {T}: Create a 1/1 white Vampire creature token with lifelink.",
+          "manaCost": null,
+          "colors": [],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "be30e80acedc68cd53c18c247fe2816c890d8ff2c2523baf34373e9f7ba8b565",
+      "card": {
+        "oracleId": "546201d0-3fa5-44e4-a526-ab0945711e49",
+        "scryfallId": "b90df81c-d738-46b3-8e96-9db0b3507ee0",
+        "name": "Shanna, Sisay's Legacy",
+        "manaCost": "{G}{W}",
+        "cmc": 2,
+        "colors": [
+          "G",
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Warrior",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Warrior"
+        ],
+        "oracleText": "Shanna can't be the target of abilities your opponents control.\nShanna gets +1/+1 for each creature you control.",
+        "power": "0",
+        "toughness": "0",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "11ada25f5aa01a06f88e6c5d6c3e2eb043773ee92fcc34a2439cc3f9ef2965a3",
+      "card": {
+        "oracleId": "57d0c688-6206-4c83-9fcb-27fd29e2a9ed",
+        "scryfallId": "74b1eae0-1bf8-4922-a9e3-45c01ece9005",
+        "name": "Basri's Lieutenant",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Human Knight",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Knight"
+        ],
+        "oracleText": "Vigilance, protection from multicolored\nWhen this creature enters, put a +1/+1 counter on target creature you control.\nWhenever this creature or another creature you control dies, if it had a +1/+1 counter on it, create a 2/2 white Knight creature token with vigilance.",
+        "power": "3",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Vigilance",
+          "Protection"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "1c35524e7fddd802fb1b0914bd1b6b10a1548ca20a8eaae70c839e1401173412",
+      "card": {
+        "oracleId": "e633412b-e36b-4ec5-b0d0-7cb24c7503f4",
+        "scryfallId": "c5ee6651-9946-4bae-b21e-6cf28fa77b13",
+        "name": "Dollmaker's Shop // Porcelain Gallery",
+        "manaCost": "{1}{W} // {4}{W}{W}",
+        "cmc": 8,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment — Room // Enchantment — Room",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Room"
+        ],
+        "oracleText": "Whenever one or more non-Toy creatures you control attack a player, create a 1/1 white Toy artifact creature token.\n(You may cast either half. That door unlocks on the battlefield. As a sorcery, you may pay the mana cost of a locked door to unlock it.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "split",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Porcelain Gallery",
+          "typeLine": "Enchantment — Room",
+          "oracleText": "Creatures you control have base power and toughness each equal to the number of creatures you control.\n(You may cast either half. That door unlocks on the battlefield. As a sorcery, you may pay the mana cost of a locked door to unlock it.)",
+          "manaCost": "{4}{W}{W}",
+          "colors": [],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "beec0bc6f8009ea5b35aecec0c61d7d09af83775755f8f748ae128c5c74d7bde",
+      "card": {
+        "oracleId": "ee524e82-35c4-4cae-b65e-3e147eac2927",
+        "scryfallId": "8e4e0f81-f92b-4a3a-bb29-adcc3de211b4",
+        "name": "Mila, Crafty Companion // Lukka, Wayward Bonder",
+        "manaCost": "{1}{W}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "R",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Fox // Legendary Planeswalker — Lukka",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Fox"
+        ],
+        "oracleText": "Whenever an opponent attacks one or more planeswalkers you control, put a loyalty counter on each planeswalker you control.\nWhenever a permanent you control becomes the target of a spell or ability an opponent controls, you may draw a card.",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "modal_dfc",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Lukka, Wayward Bonder",
+          "typeLine": "Legendary Planeswalker — Lukka",
+          "oracleText": "+1: You may discard a card. If you do, draw a card. If a creature card was discarded this way, draw two cards instead.\n−2: Return target creature card from your graveyard to the battlefield. It gains haste. Exile it at the beginning of your next upkeep.\n−7: You get an emblem with \"Whenever a creature you control enters, it deals damage equal to its power to any target.\"",
+          "manaCost": "{4}{R}{R}",
+          "colors": [
+            "R"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": "5",
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "d015ea8e449d67e43f8df5cb1aed6c4f87a53890174921279ea2c2aed8d0f5d3",
+      "card": {
+        "oracleId": "8430ae03-2d4c-4031-aa29-4d53815ded78",
+        "scryfallId": "16fa4f17-972b-4a35-8dd6-88ee9b2ea2ce",
+        "name": "Negative Zone Portal",
+        "manaCost": "{2}",
+        "cmc": 2,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "{2}, {T}: Exile target card from an opponent's graveyard. If it's a creature card, draw a card.\nAt the beginning of your upkeep, if there are four or more creature cards exiled with this artifact, flip a coin. If you lose the flip, sacrifice this artifact and return a card exiled with it at random to its owner's hand.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "79c2fc57e55befcba9e2dd8eb331e2c5345be9dfbfdd5d40915c0a3b23f1d543",
+      "card": {
+        "oracleId": "81a51328-b995-4f3b-90bc-a20ae21dd254",
+        "scryfallId": "8ac5a048-e8aa-48e8-b51b-b4e9a5b63ea6",
+        "name": "Spirit Mantle",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nEnchanted creature gets +1/+1 and has protection from creatures.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5d0e89744f57d1bf4d94be83fcbcb618da89c0cd6c207d13a9fda6543b080e57",
+      "card": {
+        "oracleId": "3d50266f-5a2f-4a48-ab15-87e733624fd4",
+        "scryfallId": "829710f9-6554-4391-bdb1-2ccdefc2caf5",
+        "name": "Unquestioned Authority",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nWhen this Aura enters, draw a card.\nEnchanted creature has protection from creatures.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

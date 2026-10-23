@@ -23,6 +23,7 @@ const SOURCE_FILES = [
   'packages/engine/src/cards/overrides/coverage-pr10.ts',
   'packages/engine/src/stack/retarget.ts',
   'packages/engine/src/cards/overrides/coverage-pr09.ts',
+  'packages/engine/src/cards/overrides/coverage-pr11.ts',
   'packages/engine/src/effects/library-cast.ts',
   'packages/engine/src/effects/library-reveal.ts',
   'packages/engine/src/state/copy-data.ts',

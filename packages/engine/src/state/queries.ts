@@ -20,6 +20,7 @@ import type {
 } from '../cards/definition';
 import { TAP_COST } from '../cards/definition';
 import type { RuleStatic } from '../cards/rule-statics';
+import type { TargetingSource } from '../targets/context';
 import { evaluateCondition } from '../cards/condition';
 import { evaluateValue } from '../cards/value';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
@@ -159,19 +160,33 @@ export function wardCostOf(ctx: GameContext, perm: EnginePermanent): WardCost | 
   return computeCharacteristics(ctx, perm).ward;
 }
 
+/** What protection reads from a source (CR 702.16a): its colors and its card types. */
+export interface ProtectionSource {
+  colors: readonly Color[];
+  types: readonly string[];
+}
+
 /**
- * Protection (CR 702.16): does `perm` have protection from `source`'s colors?
+ * Protection (CR 702.16): does `perm` have protection from `source`?
  *
  * One predicate for all four consequences (DEBT — can't be Damaged, Enchanted/Equipped, Blocked
  * or Targeted), so a new consequence cannot be added on one path and forgotten on another.
+ * Multicolored means two or more colors (CR 105.4); "protection from creatures" is from any
+ * source that is a creature (CR 702.16a).
  */
 export function hasProtectionFrom(
   ctx: GameContext,
   perm: EnginePermanent,
-  colors: readonly Color[],
+  source: ProtectionSource,
 ): boolean {
   const from = computeCharacteristics(ctx, perm).protectionFrom;
-  return colors.some((c) => from.includes(c));
+  return from.some((quality) =>
+    quality === 'multicolored'
+      ? new Set(source.colors).size >= 2
+      : quality === 'creatures'
+        ? source.types.includes('Creature')
+        : source.colors.includes(quality),
+  );
 }
 
 /** The current colors of a permanent, through the layer engine. */
@@ -185,22 +200,61 @@ export function spellDefinitionOf(ctx: GameContext, entry: EngineStackObject): C
 }
 
 /**
- * The colors of whatever a spell or ability comes from, for protection (CR 702.16): a source
- * still on the battlefield has its current colors; anything else (a spell on the stack, a card in
- * hand activating channel/cycling, a source that has since left) uses its printed colors as last
- * known information. Emblems and other cardless sources have no definition and are colorless.
+ * The colors and card types of whatever a spell or ability comes from, for protection
+ * (CR 702.16): a source still on the battlefield has its current characteristics; anything else
+ * (a spell on the stack, a card in hand activating channel/cycling, a source that has since left)
+ * uses what it last had (CR 113.7a) or, failing that, its printed characteristics. Emblems and
+ * other cardless sources have no definition: colorless, with no card types.
  */
-export function sourceColorsOf(
+export function sourceTraitsOf(
   ctx: GameContext,
   cardId: string,
   oracleId: string,
-  /** Colors captured while the source was still on the battlefield (last known information). */
-  lastKnown?: readonly Color[],
-): Color[] {
+  /** Characteristics captured while the source still existed (last known information). */
+  lastKnown?: { colors?: readonly Color[]; types?: readonly string[] },
+): ProtectionSource {
   const perm = ctx.state.battlefield.find((p) => p.cardId === cardId);
-  if (perm !== undefined) return colorsOf(ctx, perm);
-  if (lastKnown !== undefined) return [...lastKnown];
-  return [...(ctx.defs.get(oracleId as OracleId)?.colors ?? [])];
+  if (perm !== undefined) {
+    const chars = computeCharacteristics(ctx, perm);
+    return { colors: [...chars.colors], types: [...chars.types] };
+  }
+  const def = ctx.defs.get(oracleId as OracleId);
+  return {
+    colors: [...(lastKnown?.colors ?? def?.colors ?? [])],
+    types: [...(lastKnown?.types ?? def?.types ?? [])],
+  };
+}
+
+/**
+ * A stack object's source for protection (CR 702.16b): a spell is its selected face's colors and
+ * types; an ability's source is read live while it is on the battlefield, else as it last was.
+ */
+export function stackSourceTraits(ctx: GameContext, top: EngineStackObject): ProtectionSource {
+  if (top.kind === 'spell') {
+    const def = top.spellDefinition ?? ctx.defs.get(top.sourceOracleId as OracleId);
+    return {
+      colors: [...(top.sourceColors ?? def?.colors ?? [])],
+      types: [...(def?.types ?? [])],
+    };
+  }
+  return sourceTraitsOf(ctx, top.sourceCardId, top.sourceOracleId, {
+    ...(top.sourceColors === undefined ? {} : { colors: top.sourceColors }),
+    ...(top.sourceFacts === undefined ? {} : { types: top.sourceFacts.candidate.types }),
+  });
+}
+
+/** A permanent's ability is targeting: its current colors and card types (CR 702.16b). */
+export function abilityOfPermanent(ctx: GameContext, perm: EnginePermanent): TargetingSource {
+  const chars = computeCharacteristics(ctx, perm);
+  return { traits: { colors: [...chars.colors], types: [...chars.types] }, kind: 'ability' };
+}
+
+/** A card's spell, or an ability of a card off the battlefield, is targeting: printed traits. */
+export function targetingFromDefinition(
+  def: Pick<CardDefinition, 'colors' | 'types'>,
+  kind: TargetingSource['kind'],
+): TargetingSource {
+  return { traits: { colors: [...def.colors], types: [...def.types] }, kind };
 }
 
 /** Players still in the game, in turn order starting from the active player (APNAP). */
@@ -607,6 +661,28 @@ export function sacrificeCandidateAllowed(
   if (!canBeSacrificed(ctx, candidate)) return false;
   if (cost.onlyCardId !== undefined && candidate.cardId !== cost.onlyCardId) return false;
   return cost.allowSelf === true || candidate.id !== source.id;
+}
+
+/**
+ * "Can't be the target of abilities your opponents control" (Shanna): a static of the permanent
+ * itself, gone with its abilities. Spells may still target it.
+ */
+export function cantBeTargetedByOpponentAbilities(
+  ctx: GameContext,
+  permanent: EnginePermanent,
+): boolean {
+  // Cheap printed pre-check: targeting legality runs often, and almost no card has this static.
+  const printed = ctx.defs.get(permanent.oracleId);
+  const kind = 'cantBeTargetedByOpponentAbilities';
+  if (
+    printed === undefined ||
+    (!printed.ruleStatics.some((rs) => rs.kind === kind) &&
+      !(printed.backFace?.ruleStatics ?? []).some((rs) => rs.kind === kind))
+  )
+    return false;
+  return gatherRuleStatics(ctx).some(
+    (entry) => entry.sourceCardId === permanent.cardId && entry.static.kind === kind,
+  );
 }
 
 /** Rules prohibition applies to both costs and effects, and disappears with the ability. */

@@ -148,7 +148,15 @@ describe('PR10.28 Xenagos, God of Revels', () => {
     const ally = spawn(ctx, 'P1', bear('Revel Bear', { power: '3', toughness: '2' }));
     const rival = spawn(ctx, 'P2', bear('Revel Rival'));
     const spec = pinnedDefinition('Xenagos, God of Revels').triggers[0]!.targets[0]!;
-    const legal = computeTargetOptions(ctx, spec, 'P1', ['R', 'G'], undefined, [], god.cardId);
+    const legal = computeTargetOptions(
+      ctx,
+      spec,
+      'P1',
+      { traits: { colors: ['R', 'G'], types: ['Enchantment', 'Creature'] }, kind: 'ability' },
+      undefined,
+      [],
+      god.cardId,
+    );
     expect(legal).toContain(ally.id);
     expect(legal).not.toContain(god.id);
     expect(legal).not.toContain(rival.id);

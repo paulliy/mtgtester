@@ -616,6 +616,12 @@ export type Effect =
   | { op: 'doublePowerAndToughnessEachUntilEot'; selector: Selector }
   | { op: 'grantKeywordEachUntilEot'; selector: Selector; keyword: KeywordAbility }
   /**
+   * "Until end of turn, creatures your opponents control lose hexproof and shroud and can't have
+   * hexproof or shroud" (Arcane Lighthouse). The affected set is fixed at resolution (CR 611.2c);
+   * "can't have" beats any grant of those keywords, whatever its timestamp.
+   */
+  | { op: 'denyKeywordsEachUntilEot'; selector: Selector; keywords: KeywordAbility[] }
+  /**
    * "Those creatures gain `keyword` until end of turn" for an `attackDeclared` trigger (Frontier
    * Warmonger): exactly the creatures of the firing's attack group, bound when it fired and still
    * on the battlefield as the same objects (CR 400.7); the set is fixed at resolution (CR 611.2c).

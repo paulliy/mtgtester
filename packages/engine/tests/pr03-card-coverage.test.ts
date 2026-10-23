@@ -2776,7 +2776,7 @@ describe('Flickerwisp', () => {
         ctx,
         interpretCard(wisp.card).triggers[0]!.targets[0]!,
         'P1',
-        [],
+        undefined,
         undefined,
         undefined,
         self.cardId,
@@ -2895,7 +2895,15 @@ describe('Venser, the Sojourner', () => {
     const theirsBorrowed = spawn(ctx, 'P2', bear);
     theirsBorrowed.controllerId = 'P1';
     const spec = interpretCard(venser.card).activatedAbilities[0]!.ability.targets[0]!;
-    const legal = computeTargetOptions(ctx, spec, 'P1', [], undefined, undefined, self.cardId);
+    const legal = computeTargetOptions(
+      ctx,
+      spec,
+      'P1',
+      undefined,
+      undefined,
+      undefined,
+      self.cardId,
+    );
     expect(legal).toContain(yoursStolen.id);
     expect(legal).not.toContain(theirsBorrowed.id);
     activate(ctx, self, /: \+2:/, yoursStolen.id);
@@ -3242,7 +3250,15 @@ describe('Cryptek', () => {
     const bearPerm = spawn(ctx, 'P1', bear);
     const theirs = spawn(ctx, 'P2', construct);
     const spec = interpretCard(cryptek.card).activatedAbilities[0]!.ability.targets[0]!;
-    const legal = computeTargetOptions(ctx, spec, 'P1', [], undefined, undefined, self.cardId);
+    const legal = computeTargetOptions(
+      ctx,
+      spec,
+      'P1',
+      undefined,
+      undefined,
+      undefined,
+      self.cardId,
+    );
     expect(legal).toEqual([ally.id]);
     expect(legal).not.toContain(bearPerm.id);
     expect(legal).not.toContain(theirs.id);
