@@ -1,7 +1,8 @@
 /** PR11 authored protection, phasing, layout and lifecycle cards. Review status is in the manifest. */
-import { allOf, hasCounter, not, OPPONENTS, ofType, YOURS } from '../selector';
+import { allOf, CHOSEN_COLOR, hasCounter, not, OPPONENTS, ofType, YOURS } from '../selector';
 import {
   activated,
+  lord,
   mana,
   manaCost,
   onDrawStep,
@@ -290,6 +291,39 @@ function registerPr11LifecycleOverrides(): void {
       ],
     },
     'PR11 adds the eon counters at upkeep only and requires returning a creature when able.',
+  );
+
+  // PR11.12: a triggered mana ability (CR 605.1b), so the extra mana is added with the land's;
+  // a land that can make several colors gets it only when it makes the chosen one.
+  replaceCard(
+    '09b895ff-e729-48d1-bfc1-ea5fd7adda6a',
+    'Caged Sun',
+    [
+      'unrecognized rules text: "As this artifact enters, choose a color."',
+      'unrecognized rules text: "Creatures you control of the chosen color get +1/+1."',
+      'unrecognized rules text: "Whenever a land\'s ability causes you to add one or more mana of the chosen color, add an additional one mana of that color."',
+    ],
+    {
+      entersChoosingOption: {
+        prompt: 'Choose a color',
+        options: [
+          { key: 'W', label: 'White' },
+          { key: 'U', label: 'Blue' },
+          { key: 'B', label: 'Black' },
+          { key: 'R', label: 'Red' },
+          { key: 'G', label: 'Green' },
+        ],
+      },
+      staticEffects: [lord(allOf(ofType('Creature'), YOURS, CHOSEN_COLOR), 1, 1)],
+      ruleStatics: [
+        {
+          kind: 'manaActivationRider',
+          source: allOf(ofType('Land'), YOURS),
+          add: { kind: 'chosenColorIfProduced' },
+        },
+      ],
+    },
+    'PR11 adds the chosen-color land mana as a triggered mana ability.',
   );
 
   // PR11.15: the opponent's draw trigger is interpreted; cumulative upkeep is authored.

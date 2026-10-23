@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { OracleCard } from '@mtg/shared';
 import { interpretCard } from '../src/cards/interpret';
+import { computeCharacteristics } from '../src/effects/continuous';
+import { resolveTopOfStack } from '../src/stack/stack';
 import type { GameContext } from '../src/state/types';
 import { drawCards } from '../src/effects/resolve';
 import { bear, conjure, oracle, plains, pump, spawn } from './fixtures';
@@ -13,6 +15,7 @@ import {
   pinned,
   player,
   preferring,
+  priorityOption,
   resolve,
 } from './pr11-helpers';
 
@@ -308,5 +311,127 @@ describe('Out of the Tombs', () => {
     pump(drawCards(ctx, me, 1));
     expect(me.hand.length).toBe(hand + 1);
     expect(battlefield(ctx, 'Test Bear')).toEqual([]);
+  });
+});
+
+const SUN = pinned('Caged Sun');
+
+describe('Caged Sun', () => {
+  function sunChoosing(ctx: GameContext, label: string) {
+    castFromHand(ctx, 'P1', SUN, new Map(), { C: 6 });
+    pump(resolveTopOfStack(ctx), (decision) => {
+      const index = decision.options.findIndex((option) => option.description === label);
+      return { index: Math.max(0, index), targets: new Map() };
+    });
+    return battlefield(ctx, 'Caged Sun')[0]!;
+  }
+  const spellCosting = (cost: string): OracleCard =>
+    oracle({
+      name: `Spell ${cost}`,
+      typeLine: 'Sorcery',
+      manaCost: cost,
+      oracleText: 'You gain 1 life.',
+    });
+  const castable = (ctx: GameContext, playerId: string, cost: string): boolean => {
+    const card = conjure(ctx, playerId, spellCosting(cost), 'hand');
+    return (
+      priorityOption(
+        ctx,
+        playerId,
+        (payload) => payload.kind === 'castSpell' && payload.objectId === card.id,
+      ) !== undefined
+    );
+  };
+
+  it('sun-c01 — as it enters you choose a color, and it is remembered', () => {
+    const ctx = game('pr11-sun-choose');
+    expect(interpretCard(SUN).modeled).toBe(true);
+    expect(sunChoosing(ctx, 'Red').chosenOption).toBe('R');
+  });
+
+  it('sun-c02 — creatures you control of the chosen color get +1/+1; others do not', () => {
+    const ctx = game('pr11-sun-anthem');
+    sunChoosing(ctx, 'Red');
+    const red = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Red One', colors: ['R'], manaCost: '{R}', power: '2', toughness: '2' }),
+    );
+    const white = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'White One', colors: ['W'], manaCost: '{W}', power: '2', toughness: '2' }),
+    );
+    const theirs = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Their Red', colors: ['R'], manaCost: '{R}', power: '2', toughness: '2' }),
+    );
+    expect(computeCharacteristics(ctx, red).power).toBe(3);
+    expect(computeCharacteristics(ctx, red).toughness).toBe(3);
+    expect(computeCharacteristics(ctx, white).power).toBe(2);
+    expect(computeCharacteristics(ctx, theirs).power).toBe(2);
+  });
+
+  it('sun-c03-positive — a land tapped for the chosen color adds one more of it', () => {
+    const ctx = game('pr11-sun-mana');
+    sunChoosing(ctx, 'White');
+    spawn(ctx, 'P1', plains());
+    expect(castable(ctx, 'P1', '{W}{W}')).toBe(true);
+    castFromHand(ctx, 'P1', spellCosting('{W}{W}'));
+    expect(battlefield(ctx, 'Plains').every((land) => land.tapped)).toBe(true);
+  });
+
+  it('sun-c03-choice — a land that makes several colors adds the extra only for the chosen one', () => {
+    const ctx = game('pr11-sun-dual');
+    sunChoosing(ctx, 'White');
+    spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Test Dual', typeLine: 'Land', oracleText: '{T}: Add {W} or {U}.' }),
+    );
+    expect(castable(ctx, 'P1', '{W}{W}')).toBe(true);
+    expect(castable(ctx, 'P1', '{W}{U}')).toBe(false);
+    expect(castable(ctx, 'P1', '{U}{U}')).toBe(false);
+    expect(castable(ctx, 'P1', '{U}')).toBe(true);
+  });
+
+  it('sun-c03-negative — other colors, nonland sources, and opponents’ lands get nothing', () => {
+    const ctx = game('pr11-sun-negative');
+    sunChoosing(ctx, 'White');
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Mountain',
+        typeLine: 'Basic Land — Mountain',
+        oracleText: '({T}: Add {R}.)',
+        subtypes: ['Mountain'],
+        supertypes: ['Basic'],
+      }),
+    );
+    expect(castable(ctx, 'P1', '{R}{R}')).toBe(false);
+    expect(castable(ctx, 'P1', '{R}')).toBe(true);
+
+    const rock = game('pr11-sun-rock');
+    sunChoosing(rock, 'White');
+    spawn(
+      rock,
+      'P1',
+      oracle({
+        name: 'White Rock',
+        typeLine: 'Artifact',
+        manaCost: '{1}',
+        oracleText: '{T}: Add {W}.',
+      }),
+    );
+    expect(castable(rock, 'P1', '{W}{W}')).toBe(false);
+
+    const theirs = game('pr11-sun-theirs');
+    sunChoosing(theirs, 'White');
+    spawn(theirs, 'P2', plains());
+    theirs.state.currentTurnPlayer = 'P2';
+    theirs.state.activePlayerIndex = 1;
+    expect(castable(theirs, 'P2', '{W}{W}')).toBe(false);
   });
 });
