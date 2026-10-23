@@ -24,6 +24,7 @@ import type { GameContext } from '../state/types';
 import type { Selector } from './selector';
 import type { ObjectFacts, SourceCastState } from './source-identity';
 import type { EffectRef } from './ability';
+import { selectedPermanentDefinition } from './spell-faces';
 
 /** Specialized numeric consumers must reject referents lacking a proven lifetime path. */
 export function assertNumericReference(
@@ -169,6 +170,8 @@ export type Value =
   /** Number of card types among cards in all graveyards (Tarmogoyf, CR 208.2b). */
   | { kind: 'cardTypesInAllGraveyards' }
   | { kind: 'cardTypesInYourGraveyard' }
+  /** "card types among cards in your opponents' graveyards" (Nighthawk Scavenger). */
+  | { kind: 'cardTypesInOpponentsGraveyards' }
   /** `of` plus a constant, e.g. Tarmogoyf's toughness = types + 1. */
   | { kind: 'plus'; of: Value; n: number }
   | { kind: 'negate'; of: Value }
@@ -207,7 +210,8 @@ export type Value =
    */
   | { kind: 'colorsAmongPermanentsAndSpellsCastThisTurn' }
   /** Colored mana symbols in the mana costs of permanents controlled by the resolving player. */
-  | { kind: 'devotionTo'; color: import('@mtg/shared').Color }
+  /** Devotion (CR 700.5); `and` makes it "devotion to red and green" (CR 700.5a). */
+  | { kind: 'devotionTo'; color: import('@mtg/shared').Color; and?: import('@mtg/shared').Color }
   /** Number of opponents of the resolving controller. */
   | { kind: 'countOpponents' }
   /** "the greatest toughness among creatures you control" (Last March of the Ents). */
@@ -304,6 +308,7 @@ export function isDynamicValue(value: Value): boolean {
       return isDynamicValue(value.of);
     case 'cardTypesInAllGraveyards':
     case 'cardTypesInYourGraveyard':
+    case 'cardTypesInOpponentsGraveyards':
     case 'countPermanents':
     case 'countTappedPermanents':
     case 'countPermanentsControlledByTarget':
@@ -369,6 +374,7 @@ export function needsScope(value: Value): boolean {
     case 'times':
       return needsScope(value.of);
     case 'cardTypesInYourGraveyard':
+    case 'cardTypesInOpponentsGraveyards':
     case 'countPermanents':
     case 'countTappedPermanents':
     case 'countPermanentsControlledByTarget':
@@ -440,17 +446,48 @@ export function cardTypesInAllGraveyards(ctx: GameContext, owner?: PlayerId): nu
 }
 
 /**
- * Devotion to a colour (CR 700.5): mana symbols of that colour in the mana costs of permanents
- * you control. Printed costs, read straight off the definitions — nothing continuous changes a
- * permanent's mana cost, so this needs no layer pass and is safe to answer from `evaluateValue`.
+ * Card types among cards in the graveyards of `controllerId`'s opponents, counted once across all
+ * of them. A player who has left the game is no longer an opponent (CR 800.4a).
  */
-export function devotionTo(ctx: GameContext, controllerId: PlayerId, color: Color): number {
-  return ctx.state.battlefield
-    .filter((perm) => perm.controllerId === controllerId)
-    .reduce(
-      (total, perm) => total + (ctx.defs.get(perm.oracleId)?.manaCost?.colored[color] ?? 0),
-      0,
-    );
+export function cardTypesInOpponentsGraveyards(ctx: GameContext, controllerId: PlayerId): number {
+  const present = new Set<string>();
+  for (const player of ctx.state.players) {
+    if (player.id === controllerId || player.hasLost) continue;
+    for (const card of player.graveyard) {
+      const def = ctx.defs.get(card.oracleId);
+      if (def === undefined) continue;
+      for (const t of def.types) {
+        if ((CARD_TYPES as readonly string[]).includes(t)) present.add(t);
+      }
+    }
+  }
+  return present.size;
+}
+
+/**
+ * Devotion to one or two colours (CR 700.5, 700.5a): the mana symbols in the mana costs of
+ * permanents you control that are any of those colours. A hybrid or Phyrexian symbol counts once
+ * if any of its colours is one of them. Costs are copiable values read off the definitions (a
+ * copy's `oracleId` is its copied definition), so this needs no layer pass. A face-down
+ * permanent and a transformed permanent's back face have no mana cost.
+ */
+export function devotionTo(
+  ctx: GameContext,
+  controllerId: PlayerId,
+  colors: Color | readonly Color[],
+): number {
+  const counted: readonly Color[] = typeof colors === 'string' ? [colors] : colors;
+  let total = 0;
+  for (const perm of ctx.state.battlefield) {
+    if (perm.controllerId !== controllerId || perm.faceDown === true || perm.transformed) continue;
+    const def = ctx.defs.get(perm.oracleId);
+    const cost = def === undefined ? null : selectedPermanentDefinition(def, perm.face).manaCost;
+    if (cost == null) continue;
+    for (const color of counted) total += cost.colored[color];
+    for (const pip of cost.hybrid ?? []) if (pip.some((c) => counted.includes(c))) total += 1;
+    for (const pip of cost.phyrexian ?? []) if (counted.includes(pip)) total += 1;
+  }
+  return total;
 }
 
 /**
@@ -486,6 +523,10 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
       if (scope?.controllerId === undefined)
         throw new Error('your graveyard types require a controller');
       return cardTypesInAllGraveyards(ctx, scope.controllerId);
+    case 'cardTypesInOpponentsGraveyards':
+      if (scope?.controllerId === undefined)
+        throw new Error("opponents' graveyard types require a controller");
+      return cardTypesInOpponentsGraveyards(ctx, scope.controllerId);
     case 'timesAttackedThisTurn':
       return scope?.affectedTimesAttacked ?? 0;
     case 'countersOnSelf':
@@ -514,7 +555,11 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
       if (scope?.controllerId === undefined) {
         throw new Error(`engine bug: value "devotionTo" needs a source controller`);
       }
-      return devotionTo(ctx, scope.controllerId, value.color);
+      return devotionTo(
+        ctx,
+        scope.controllerId,
+        value.and === undefined ? value.color : [value.color, value.and],
+      );
     case 'commanderCastCount': {
       if (scope?.controllerId === undefined) {
         throw new Error(

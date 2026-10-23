@@ -580,6 +580,11 @@ function applyOpTo(
       if (op.setTypes !== undefined) chars.types = [...op.setTypes];
       if (op.setSubtypes !== undefined) chars.subtypes = [...op.setSubtypes];
       if (op.setSupertypes !== undefined) chars.supertypes = [...op.setSupertypes];
+      if (op.removeCreatureType === true) {
+        chars.types = chars.types.filter((type) => type !== 'Creature');
+        if (!chars.types.includes('Kindred') && !chars.types.includes('Tribal'))
+          chars.subtypes = chars.subtypes.filter((subtype) => !CREATURE_TYPES.includes(subtype));
+      }
       for (const t of op.addSupertypes ?? [])
         if (!chars.supertypes.includes(t)) chars.supertypes.push(t);
       for (const t of op.addTypes ?? []) if (!chars.types.includes(t)) chars.types.push(t);

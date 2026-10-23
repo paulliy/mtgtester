@@ -38,6 +38,11 @@ export type ContinuousOp =
        */
       setTypes?: string[];
       setSubtypes?: string[];
+      /**
+       * "Isn't a creature" (Theros Gods): removes the creature card type and, unless it is also
+       * Kindred, the creature types that went with it (CR 205.1a).
+       */
+      removeCreatureType?: true;
       /** Supertypes to add ("becomes a legendary …") or to set alongside `setTypes`. */
       addSupertypes?: string[];
       setSupertypes?: string[];

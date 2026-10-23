@@ -11,7 +11,12 @@ import { assertNever } from '../utils/assert-never';
  */
 
 import type { Value, ValueScope } from '../cards/value';
-import { assertNumericReference, cardTypesInAllGraveyards, devotionTo } from '../cards/value';
+import {
+  assertNumericReference,
+  cardTypesInAllGraveyards,
+  cardTypesInOpponentsGraveyards,
+  devotionTo,
+} from '../cards/value';
 import type { Selector } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import type { EngineCardObject, EnginePermanent, GameContext } from '../state/types';
@@ -105,6 +110,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     }
     case 'cardTypesInYourGraveyard':
       return cardTypesInAllGraveyards(ctx, scope.controllerId);
+    case 'cardTypesInOpponentsGraveyards':
+      return cardTypesInOpponentsGraveyards(ctx, scope.controllerId);
     case 'colorsAmongPermanents':
     case 'colorsAmongPermanentsAndSpellsCastThisTurn': {
       const colors = new Set<string>();
@@ -120,7 +127,11 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return colors.size;
     }
     case 'devotionTo':
-      return devotionTo(ctx, scope.controllerId, value.color);
+      return devotionTo(
+        ctx,
+        scope.controllerId,
+        value.and === undefined ? value.color : [value.color, value.and],
+      );
     case 'countOpponents':
       // Opponents still in the game (CR 102.2/800.4a) — an eliminated player is no one's opponent.
       return opponentsOf(ctx, scope.controllerId).length;

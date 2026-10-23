@@ -9,6 +9,7 @@ import {
   ofSubtype,
   ofSupertype,
   IS_TOKEN,
+  OTHER,
   ofType,
   OPPONENTS,
   powerAtLeast,
@@ -705,5 +706,75 @@ export function registerPr10CharacteristicsOverrides(): void {
       copyLastExiledCreature: true,
     },
     'PR10 links the exiled cards to this object and sets base P/T and creature types from the last creature card.',
+  );
+
+  // PR10.15: a characteristic-defining ability (CR 604.3), counting each card type once across
+  // all opponents' graveyards. Flying, deathtouch and lifelink are interpreted and kept.
+  replaceCard(
+    '379ed4ec-8f2e-448b-9ed2-a3181e2f877e',
+    'Nighthawk Scavenger',
+    [
+      "~'s power is equal to 1 plus the number of card types among cards in your opponents' graveyards.",
+      // The printed "1+*" is defined by the layer 7a ability below.
+      'non-numeric power/toughness "1+*"',
+    ],
+    {
+      staticEffects: [
+        {
+          affects: SELF,
+          op: {
+            layer: 7,
+            sublayer: 'a',
+            power: { kind: 'plus', of: { kind: 'cardTypesInOpponentsGraveyards' }, n: 1 },
+            toughness: constant(3),
+          },
+        },
+      ],
+    },
+    "PR10 counts card types among cards in opponents' graveyards only.",
+  );
+
+  // PR10.28: devotion counts hybrid symbols once (CR 700.5a); while it is below seven Xenagos loses
+  // the creature type and the God creature type with it (CR 205.1a). X is locked in as the
+  // trigger resolves (CR 608.2h).
+  const revel = targetSlots({ pumped: { kind: 'creature', controller: 'you', filter: OTHER } });
+  replaceCard(
+    'cb15a8dd-57fe-466f-847e-66476b690a1f',
+    'Xenagos, God of Revels',
+    [
+      "As long as your devotion to red and green is less than seven, ~ isn't a creature.",
+      "At the beginning of combat on your turn, another target creature you control gains haste and gets +X/+X until end of turn, where X is that creature's power.",
+    ],
+    {
+      staticEffects: [
+        {
+          affects: SELF,
+          op: { layer: 4, removeCreatureType: true },
+          condition: {
+            kind: 'compareValues',
+            left: { kind: 'devotionTo', color: 'R', and: 'G' },
+            cmp: '<=',
+            right: constant(6),
+          },
+        },
+      ],
+      triggers: [
+        triggered(onBeginCombat('you'), {
+          targets: revel.targets,
+          effects: [
+            { op: 'grantKeywordUntilEot', target: revel.slot.pumped, keyword: 'haste' },
+            {
+              op: 'pumpUntilEot',
+              target: revel.slot.pumped,
+              power: { kind: 'powerOfTarget', target: revel.slot.pumped },
+              toughness: { kind: 'powerOfTarget', target: revel.slot.pumped },
+            },
+          ],
+          description:
+            "Another target creature you control gains haste and gets +X/+X until end of turn, where X is that creature's power",
+        }),
+      ],
+    },
+    "PR10 removes the creature type below seven devotion and doubles another creature's power at combat.",
   );
 }
