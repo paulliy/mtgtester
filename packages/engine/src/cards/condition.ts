@@ -35,7 +35,13 @@ import type { Value, ValueScope } from './value';
 import type { GameGen } from '../decisions';
 import { payLife, payManaCost } from '../effects/resolve';
 import { emit } from '../log/log';
-import { allowanceFor, attackedPlaneswalker, manaSourcesFor, opponentsOf } from '../state/queries';
+import {
+  allowanceFor,
+  attackedPlaneswalker,
+  getDefByOracleId,
+  manaSourcesFor,
+  opponentsOf,
+} from '../state/queries';
 import type { GameContext } from '../state/types';
 import { canPay, describeManaCost } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
@@ -123,6 +129,8 @@ export type Condition =
   | { kind: 'hasCounters'; selector: Selector; counter: string; cmp: '>=' | '<='; n: number }
   | { kind: 'enteredThisTurn' }
   | { kind: 'createdTokenThisTurn' }
+  /** "if there are four or more creature cards exiled with this artifact" (Negative Zone Portal). */
+  | { kind: 'exiledWithSourceAtLeast'; cardType: string; n: number }
   | { kind: 'hadToAttackThisCombat' }
   /** The object that fired this trigger had to attack (currently, because it was goaded). */
   | { kind: 'triggerObjectHadToAttackThisCombat' }
@@ -282,6 +290,7 @@ export function isChoiceCondition(condition: Condition): boolean {
     case 'hasCounters':
     case 'enteredThisTurn':
     case 'createdTokenThisTurn':
+    case 'exiledWithSourceAtLeast':
     case 'hadToAttackThisCombat':
     case 'triggerObjectHadToAttackThisCombat':
     case 'triggerObjectMatches':
@@ -622,6 +631,20 @@ export function evaluateCondition(
     }
     case 'createdTokenThisTurn':
       return ctx.state.createdTokenThisTurn?.[source.controllerId] === true;
+    case 'exiledWithSourceAtLeast': {
+      // Only cards still in exile count: one that left is no longer "exiled with" it.
+      const self = sourceState();
+      const linked =
+        self !== undefined && 'exiledWithIds' in self ? (self.exiledWithIds ?? []) : [];
+      const count = linked.filter((objectId: string) => {
+        const card = ctx.state.exile.find((entry) => entry.id === objectId);
+        return (
+          card !== undefined &&
+          getDefByOracleId(ctx, card.oracleId, card.name).types.includes(condition.cardType)
+        );
+      }).length;
+      return count >= condition.n;
+    }
     case 'sourceWasCast': {
       const self = sourceState();
       if (self === undefined) return false;

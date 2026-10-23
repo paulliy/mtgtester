@@ -8,11 +8,14 @@ import type { GameContext } from '../src/state/types';
 import { drawCards } from '../src/effects/resolve';
 import { bear, conjure, oracle, plains, pump, spawn } from './fixtures';
 import {
+  activate,
+  anyMana,
   battlefield,
   castFromHand,
   checkpoint,
   game,
   nextTurnOf,
+  offeredTargets,
   pinned,
   player,
   preferring,
@@ -536,5 +539,108 @@ describe('Chrome Mox', () => {
     const exiled = gone.state.exile.find((entry) => entry.name === 'Red Spell')!;
     pump(moveObject(gone, exiled, { zone: 'graveyard' }));
     expect(castable(gone, '{R}')).toBe(false);
+  });
+});
+
+const PORTAL = pinned('Negative Zone Portal');
+
+describe('Negative Zone Portal', () => {
+  const creatureCard = (name: string): OracleCard =>
+    oracle({ name, typeLine: 'Creature — Test', manaCost: '{1}', power: '1', toughness: '1' });
+  const sorceryCard = (name: string): OracleCard =>
+    oracle({ name, typeLine: 'Sorcery', manaCost: '{1}', oracleText: 'You gain 1 life.' });
+  /** Force every coin flip and random pick: 0 wins the flip, 1 loses it. */
+  function rig(ctx: GameContext, value: number): void {
+    ctx.rng.nextInt = (bound: number) => Math.min(value, bound - 1);
+  }
+  function portalWith(ctx: GameContext, cards: OracleCard[]) {
+    const portal = spawn(ctx, 'P1', PORTAL);
+    for (const card of cards) {
+      const exiled = conjure(ctx, 'P2', card, 'exile');
+      portal.exiledWithIds = [...(portal.exiledWithIds ?? []), exiled.id];
+    }
+    return portal;
+  }
+
+  it('portal-c01-creature — exiles a creature card from an opponent’s graveyard and draws', () => {
+    const ctx = game('pr11-portal-creature');
+    expect(interpretCard(PORTAL).modeled).toBe(true);
+    const portal = spawn(ctx, 'P1', PORTAL);
+    const target = conjure(ctx, 'P2', creatureCard('Dead Bear'), 'graveyard');
+    const mine = conjure(ctx, 'P1', creatureCard('My Dead Bear'), 'graveyard');
+    anyMana(ctx, 'P1', 2);
+    const offered = offeredTargets(
+      ctx,
+      'P1',
+      (payload) => payload.kind === 'activateAbility' && payload.objectId === portal.id,
+    );
+    expect(offered).toContain(target.id);
+    expect(offered).not.toContain(mine.id);
+    const hand = player(ctx, 'P1').hand.length;
+    activate(ctx, 'P1', portal, new Map([[0, target.id]]));
+    resolve(ctx);
+    expect(ctx.state.exile.some((card) => card.cardId === target.cardId)).toBe(true);
+    expect(portal.exiledWithIds).toEqual([
+      ctx.state.exile.find((card) => card.cardId === target.cardId)!.id,
+    ]);
+    expect(player(ctx, 'P1').hand.length).toBe(hand + 1);
+  });
+
+  it('portal-c01-noncreature — a noncreature card is exiled without a draw; it costs {2}', () => {
+    const ctx = game('pr11-portal-noncreature');
+    const portal = spawn(ctx, 'P1', PORTAL);
+    const target = conjure(ctx, 'P2', sorceryCard('Old Sorcery'), 'graveyard');
+    expect(
+      priorityOption(
+        ctx,
+        'P1',
+        (payload) => payload.kind === 'activateAbility' && payload.objectId === portal.id,
+      ),
+    ).toBeUndefined();
+    anyMana(ctx, 'P1', 2);
+    const hand = player(ctx, 'P1').hand.length;
+    activate(ctx, 'P1', portal, new Map([[0, target.id]]));
+    resolve(ctx);
+    expect(portal.exiledWithIds).toEqual([
+      ctx.state.exile.find((card) => card.cardId === target.cardId)!.id,
+    ]);
+    expect(player(ctx, 'P1').hand.length).toBe(hand);
+  });
+
+  it('portal-c02-negative — fewer than four creature cards exiled with it: no flip', () => {
+    const ctx = game('pr11-portal-three');
+    portalWith(ctx, [creatureCard('A'), creatureCard('B'), creatureCard('C'), sorceryCard('D')]);
+    const before = ctx.state.eventLog.length;
+    nextTurnOf(ctx, 'P1');
+    expect(ctx.state.eventLog.slice(before).some((event) => event.type === 'coinFlip')).toBe(false);
+    expect(battlefield(ctx, 'Negative Zone Portal')).toHaveLength(1);
+  });
+
+  it('portal-c02-win — with four creature cards it flips; winning keeps everything', () => {
+    const ctx = game('pr11-portal-win');
+    const portal = portalWith(ctx, ['A', 'B', 'C', 'D'].map(creatureCard));
+    rig(ctx, 0);
+    const before = ctx.state.eventLog.length;
+    nextTurnOf(ctx, 'P1');
+    const flips = ctx.state.eventLog.slice(before).filter((event) => event.type === 'coinFlip');
+    expect(flips).toHaveLength(1);
+    expect(battlefield(ctx, 'Negative Zone Portal')).toEqual([portal]);
+    expect(portal.exiledWithIds).toHaveLength(4);
+  });
+
+  it('portal-c02-lose — losing sacrifices it and returns one exiled card to its owner’s hand', () => {
+    const ctx = game('pr11-portal-lose');
+    portalWith(ctx, ['A', 'B', 'C', 'D'].map(creatureCard));
+    rig(ctx, 1);
+    const theirHand = player(ctx, 'P2').hand.length;
+    nextTurnOf(ctx, 'P1');
+    expect(battlefield(ctx, 'Negative Zone Portal')).toEqual([]);
+    expect(player(ctx, 'P1').graveyard.some((card) => card.name === 'Negative Zone Portal')).toBe(
+      true,
+    );
+    expect(player(ctx, 'P2').hand.length).toBe(theirHand + 1);
+    expect(ctx.state.exile.filter((card) => ['A', 'B', 'C', 'D'].includes(card.name))).toHaveLength(
+      3,
+    );
   });
 });
