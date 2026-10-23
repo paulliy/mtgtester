@@ -4741,15 +4741,36 @@
     },
     "ab655810-f67e-4576-9174-35b16f5e3235": {
       "name": "Saheeli, Sublime Artificer",
-      "oracleSha256": "6fd798237894874887cb134162018d34caaf1c7f9c4a7727abf76f02bc33f456",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "22041222bc7cfde403035d47087197fba7f989d871488b4dcf41108c33aa408b",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-saheeli-sublime-artificer-pinned-oracle-supported"],
       "clauses": [
         {
-          "oracleText": "Whenever you cast a noncreature spell, create a 1/1 colorless Servo artifact creature token.\n−2: Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact in addition to its other types.",
-          "implementation": ["explicitly unsupported; extra +1 loyalty ability not on the card"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "pr10-saheeli-sublime-artificer-clause-1",
+          "oracleText": "Whenever you cast a noncreature spell, create a 1/1 colorless Servo artifact creature token.",
+          "implementation": ["TriggerSpec.onCast noncreature", "Effect.createToken Servo"],
+          "engineTestIds": ["pr10-saheeli-sublime-artificer-servo"],
+          "viewerScenarioIds": ["pr10-saheeli-sublime-artificer-viewer-servo"]
+        },
+        {
+          "id": "pr10-saheeli-sublime-artificer-clause-2",
+          "oracleText": "−2: Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact in addition to its other types.",
+          "implementation": [
+            "loyaltyAbility -2",
+            "Effect.becomeCopyOfTarget untilEot",
+            "addTypes Artifact",
+            "differentFromSlots"
+          ],
+          "engineTestIds": [
+            "pr10-saheeli-sublime-artificer-minus-two",
+            "pr10-saheeli-sublime-artificer-another-target"
+          ],
+          "viewerScenarioIds": ["pr10-saheeli-sublime-artificer-viewer-minus-two"]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr10-saheeli-sublime-artificer-viewer-servo",
+        "pr10-saheeli-sublime-artificer-viewer-minus-two"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -5404,15 +5425,41 @@
     },
     "eb287c04-97f5-4e47-beb1-66cc7d15e748": {
       "name": "Atarka Monument",
-      "oracleSha256": "da64902790a2ef3abc2b683d1d6a1cc6614dba635b4f543a4961885d6407785e",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "a6f9de58fb06bd80184840fab64dac7d9c7f8542bcefb75bd33441984468777a",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-atarka-monument-pinned-oracle-supported"],
       "clauses": [
         {
+          "id": "pr10-atarka-monument-clause-1",
+          "oracleText": "{T}: Add {R} or {G}.",
+          "implementation": ["ManaAbility {T}: Add {R} or {G}"],
+          "engineTestIds": ["pr10-atarka-monument-pinned-oracle-supported"],
+          "viewerScenarioIds": ["pr10-atarka-monument-viewer-mana"]
+        },
+        {
+          "id": "pr10-atarka-monument-clause-2",
           "oracleText": "{4}{R}{G}: This artifact becomes a 4/4 red and green Dragon artifact creature with flying until end of turn.",
-          "implementation": ["explicitly unsupported; animation omits red and green"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "activated mana cost",
+            "Effect.becomeCreatureUntilEot",
+            "colors R G",
+            "keyword flying"
+          ],
+          "engineTestIds": [
+            "pr10-atarka-monument-animates",
+            "pr10-atarka-monument-until-end-of-turn",
+            "pr10-atarka-monument-insufficient-cost"
+          ],
+          "viewerScenarioIds": [
+            "pr10-atarka-monument-viewer-animate",
+            "pr10-atarka-monument-viewer-insufficient-cost"
+          ]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr10-atarka-monument-viewer-mana",
+        "pr10-atarka-monument-viewer-animate",
+        "pr10-atarka-monument-viewer-insufficient-cost"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -5688,15 +5735,55 @@
     },
     "80c26f58-04b0-4db0-b84e-9b136609abe0": {
       "name": "Sarkhan, the Dragonspeaker",
-      "oracleSha256": "cf7a04d5ae77d44c11f0f771d031583a08bc13c5a3c0718a57561040fe967b40",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "150f68361dcf9407b348c0f71a49eff08d630c6cfe6b36dc335196bf58d6af81",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-sarkhan-the-dragonspeaker-pinned-oracle-supported"],
       "clauses": [
         {
-          "oracleText": "+1: Until end of turn, Sarkhan, the Dragonspeaker becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste.",
-          "implementation": ["explicitly unsupported; +1 omits legendary and red"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "pr10-sarkhan-the-dragonspeaker-clause-1",
+          "oracleText": "+1: Until end of turn, Sarkhan becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste. (He doesn't lose loyalty while he's not a planeswalker.)",
+          "implementation": [
+            "loyaltyAbility +1",
+            "Effect.becomeCreatureUntilEot",
+            "replaceTypes Creature",
+            "supertypes Legendary"
+          ],
+          "engineTestIds": [
+            "pr10-sarkhan-the-dragonspeaker-plus-one",
+            "pr10-sarkhan-the-dragonspeaker-no-loyalty-loss",
+            "pr10-sarkhan-the-dragonspeaker-reverts"
+          ],
+          "viewerScenarioIds": ["pr10-sarkhan-the-dragonspeaker-viewer-plus-one"]
+        },
+        {
+          "id": "pr10-sarkhan-the-dragonspeaker-clause-2",
+          "oracleText": "−3: Sarkhan deals 4 damage to target creature.",
+          "implementation": [
+            "loyaltyAbility -3",
+            "Effect.dealDamage",
+            "TargetSpec.permanent creature"
+          ],
+          "engineTestIds": ["pr10-sarkhan-the-dragonspeaker-minus-three"],
+          "viewerScenarioIds": ["pr10-sarkhan-the-dragonspeaker-viewer-minus-three"]
+        },
+        {
+          "id": "pr10-sarkhan-the-dragonspeaker-clause-3",
+          "oracleText": "−6: You get an emblem with \"At the beginning of your draw step, draw two additional cards\" and \"At the beginning of your end step, discard your hand.\"",
+          "implementation": [
+            "loyaltyAbility -6",
+            "Effect.createEmblem",
+            "onDrawStep",
+            "onEndStep",
+            "Effect.discardHand"
+          ],
+          "engineTestIds": ["pr10-sarkhan-the-dragonspeaker-emblem"],
+          "viewerScenarioIds": ["pr10-sarkhan-the-dragonspeaker-viewer-emblem"]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr10-sarkhan-the-dragonspeaker-viewer-plus-one",
+        "pr10-sarkhan-the-dragonspeaker-viewer-minus-three",
+        "pr10-sarkhan-the-dragonspeaker-viewer-emblem"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -15266,6 +15353,37 @@
         "pr10-annie-joins-up-viewer-enter-damage",
         "pr10-annie-joins-up-viewer-doubles-legendary",
         "pr10-annie-joins-up-viewer-nonlegendary"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6a84eda1-7e72-4b5a-849f-b6e177565aeb": {
+      "name": "Mirage Mirror",
+      "oracleSha256": "38f8997a536f1b3e222bd21bc23da0169f8432c4b0a1353e909638c0b9d99566",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-mirage-mirror-pinned-oracle-supported"],
+      "clauses": [
+        {
+          "id": "pr10-mirage-mirror-clause-1",
+          "oracleText": "{2}: This artifact becomes a copy of target artifact, creature, enchantment, or land until end of turn.",
+          "implementation": [
+            "activated mana cost",
+            "Effect.becomeCopyOf untilEot",
+            "TargetSpec.permanent artifact creature enchantment land"
+          ],
+          "engineTestIds": [
+            "pr10-mirage-mirror-becomes-copy",
+            "pr10-mirage-mirror-target-types",
+            "pr10-mirage-mirror-insufficient-cost"
+          ],
+          "viewerScenarioIds": [
+            "pr10-mirage-mirror-viewer-becomes-copy",
+            "pr10-mirage-mirror-viewer-insufficient-cost"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr10-mirage-mirror-viewer-becomes-copy",
+        "pr10-mirage-mirror-viewer-insufficient-cost"
       ],
       "gameplayAiScenarioIds": []
     }

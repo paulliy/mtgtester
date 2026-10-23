@@ -2352,19 +2352,6 @@
     "snapshotStatus": "pending"
   },
   {
-    "oracleId": "6a84eda1-7e72-4b5a-849f-b6e177565aeb",
-    "name": "Mirage Mirror",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"{2}: ~ becomes a copy of target artifact, creature, enchantment, or land until end of turn.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "bb5c1817-ac22-4779-9005-251bc354f181",
     "name": "Mistveil Plains",
     "package": "PR02.17",
@@ -5029,6 +5016,66 @@
       "apps/web/e2e/pr10-card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr10-trigger-doubling.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "eb287c04-97f5-4e47-beb1-66cc7d15e748",
+    "name": "Atarka Monument",
+    "package": "PR10.02",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-animation.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-animation.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "80c26f58-04b0-4db0-b84e-9b136609abe0",
+    "name": "Sarkhan, the Dragonspeaker",
+    "package": "PR10.17",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-animation.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-animation.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "6a84eda1-7e72-4b5a-849f-b6e177565aeb",
+    "name": "Mirage Mirror",
+    "package": "PR10.20",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-animation.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-animation.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "ab655810-f67e-4576-9174-35b16f5e3235",
+    "name": "Saheeli, Sublime Artificer",
+    "package": "PR10.07",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-animation.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-animation.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   }
 ]

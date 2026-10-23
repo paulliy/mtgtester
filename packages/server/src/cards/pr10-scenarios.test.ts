@@ -28,6 +28,8 @@ interface Plan {
     name: string;
     /** What the step does: cast a spell (default), activate a permanent's ability, or play a land. */
     kind?: 'cast' | 'activate' | 'play';
+    /** Only an action whose description matches this (one of several abilities of a permanent). */
+    match?: RegExp;
     targets?: string[];
     alternative?: boolean;
     /** Cast only once the stack is empty ('empty') or holds an object whose name contains this. */
@@ -57,6 +59,11 @@ const CARD_NAMES = [
   // Trigger doubling.
   'Roaming Throne',
   'Annie Joins Up',
+  // Animation and becoming a copy.
+  'Atarka Monument',
+  'Sarkhan, the Dragonspeaker',
+  'Mirage Mirror',
+  'Saheeli, Sublime Artificer',
 ];
 
 const SHOCK_AT_P3 = (card: string): Plan => ({
@@ -212,6 +219,47 @@ const PLANS: Record<string, Plan> = {
     casts: [{ name: 'PR10 Lab Legend Healer' }],
   },
   'pr10-annie-joins-up-viewer-nonlegendary': { casts: [{ name: 'PR10 Lab Commoner Healer' }] },
+  // PR10.02 Atarka Monument
+  'pr10-atarka-monument-viewer-animate': {
+    casts: [{ name: 'Atarka Monument', kind: 'activate' }],
+  },
+  'pr10-atarka-monument-viewer-insufficient-cost': { casts: [] },
+  'pr10-atarka-monument-viewer-mana': { casts: [{ name: 'PR10 Lab Zap', targets: ['P2'] }] },
+  // PR10.17 Sarkhan, the Dragonspeaker
+  'pr10-sarkhan-the-dragonspeaker-viewer-plus-one': {
+    casts: [{ name: 'Sarkhan, the Dragonspeaker', kind: 'activate', match: /becomes a legendary/ }],
+  },
+  'pr10-sarkhan-the-dragonspeaker-viewer-minus-three': {
+    casts: [
+      {
+        name: 'Sarkhan, the Dragonspeaker',
+        kind: 'activate',
+        match: /deals 4 damage/,
+        targets: ['PR10 Lab Brute'],
+      },
+    ],
+  },
+  'pr10-sarkhan-the-dragonspeaker-viewer-emblem': {
+    casts: [{ name: 'Sarkhan, the Dragonspeaker', kind: 'activate', match: /emblem/ }],
+  },
+  // PR10.20 Mirage Mirror
+  'pr10-mirage-mirror-viewer-becomes-copy': {
+    casts: [{ name: 'Mirage Mirror', kind: 'activate', targets: ['PR10 Lab Brute'] }],
+  },
+  'pr10-mirage-mirror-viewer-insufficient-cost': { casts: [] },
+  // PR10.07 Saheeli, Sublime Artificer
+  'pr10-saheeli-sublime-artificer-viewer-servo': {
+    casts: [{ name: 'PR10 Lab Zap', targets: ['P2'] }],
+  },
+  'pr10-saheeli-sublime-artificer-viewer-minus-two': {
+    casts: [
+      {
+        name: 'Saheeli, Sublime Artificer',
+        kind: 'activate',
+        targets: ['PR10 Lab Trinket', 'PR10 Lab Bear'],
+      },
+    ],
+  },
 };
 
 /** The legal target matching `want`: a seat id, or the name of a permanent or stack object. */
@@ -279,7 +327,9 @@ function run(id: string) {
       }[kind];
       const matching = request.legalActions.filter(
         (candidate) =>
-          candidate.type === ACTION_TYPE[kind] && candidate.description.startsWith(label),
+          candidate.type === ACTION_TYPE[kind] &&
+          candidate.description.startsWith(label) &&
+          (next.match === undefined || next.match.test(candidate.description)),
       );
       action = next.alternative
         ? matching.find((candidate) => candidate.data?.['castVariant'] === 'nonMana')
@@ -535,6 +585,46 @@ describe('PR10 Card Test Lab scenarios', () => {
       copies: 0,
       events: { lifeGain: 1 },
     },
+    'pr10-atarka-monument-viewer-animate': { lives: {}, copies: 0, events: { becomeCreature: 1 } },
+    'pr10-atarka-monument-viewer-insufficient-cost': {
+      lives: {},
+      copies: 0,
+      absent: 'Atarka Monument:',
+      events: { becomeCreature: 0 },
+    },
+    'pr10-atarka-monument-viewer-mana': { lives: { P2: 39 }, copies: 0, events: { castSpell: 1 } },
+    'pr10-sarkhan-the-dragonspeaker-viewer-plus-one': {
+      lives: {},
+      copies: 0,
+      events: { becomeCreature: 1 },
+    },
+    'pr10-sarkhan-the-dragonspeaker-viewer-minus-three': {
+      lives: {},
+      copies: 0,
+      events: { damage: 1, sbaCreatureDies: 1 },
+    },
+    'pr10-sarkhan-the-dragonspeaker-viewer-emblem': {
+      lives: {},
+      copies: 0,
+      events: { createEmblem: 1 },
+    },
+    'pr10-mirage-mirror-viewer-becomes-copy': { lives: {}, copies: 0, events: { becomeCopy: 1 } },
+    'pr10-mirage-mirror-viewer-insufficient-cost': {
+      lives: {},
+      copies: 0,
+      absent: 'Mirage Mirror:',
+      events: { becomeCopy: 0 },
+    },
+    'pr10-saheeli-sublime-artificer-viewer-servo': {
+      lives: { P2: 39 },
+      copies: 0,
+      events: { tokenCreated: 1 },
+    },
+    'pr10-saheeli-sublime-artificer-viewer-minus-two': {
+      lives: {},
+      copies: 0,
+      events: { becomeCopy: 1 },
+    },
   };
 
   it('has expectations for every scenario', () => {
@@ -646,5 +736,47 @@ describe('PR10 Card Test Lab scenarios', () => {
     const result = run('pr10-annie-joins-up-viewer-enter-damage');
     expect(result.state.battlefield.some((card) => card.name === 'PR10 Lab Brute')).toBe(false);
     expect(result.state.battlefield.some((card) => card.name === 'PR10 Lab Bear')).toBe(true);
+  });
+  const onBattlefield = (result: ReturnType<typeof run>, name: string) =>
+    result.scenario.engine
+      .view('P1')
+      .battlefield.filter((card) => card.name === name && card.controller === 'P1');
+
+  it('Atarka Monument is a 4/4 flyer once animated, and taps for red', () => {
+    const [dragon] = onBattlefield(run('pr10-atarka-monument-viewer-animate'), 'Atarka Monument');
+    expect([dragon!.power, dragon!.toughness]).toEqual([4, 4]);
+    expect(dragon!.keywords).toContain('flying');
+    const [tapped] = onBattlefield(run('pr10-atarka-monument-viewer-mana'), 'Atarka Monument');
+    expect(tapped!.tapped).toBe(true);
+    const [plain] = onBattlefield(
+      run('pr10-atarka-monument-viewer-insufficient-cost'),
+      'Atarka Monument',
+    );
+    expect(plain!.power ?? null).toBeNull();
+  });
+
+  it('Sarkhan becomes a 4/4 flying indestructible haste creature, and the -3 kills the target', () => {
+    const [sarkhan] = onBattlefield(
+      run('pr10-sarkhan-the-dragonspeaker-viewer-plus-one'),
+      'Sarkhan, the Dragonspeaker',
+    );
+    expect([sarkhan!.power, sarkhan!.toughness]).toEqual([4, 4]);
+    expect(sarkhan!.keywords).toEqual(
+      expect.arrayContaining(['flying', 'indestructible', 'haste']),
+    );
+    const walked = run('pr10-sarkhan-the-dragonspeaker-viewer-minus-three');
+    expect(walked.state.battlefield.some((card) => card.name === 'PR10 Lab Brute')).toBe(false);
+  });
+
+  it('Mirage Mirror and Saheeli copy a permanent without leaving a second object', () => {
+    const [mirror] = onBattlefield(run('pr10-mirage-mirror-viewer-becomes-copy'), 'PR10 Lab Brute');
+    expect([mirror!.power, mirror!.toughness]).toEqual([4, 4]);
+    const trinket = onBattlefield(
+      run('pr10-saheeli-sublime-artificer-viewer-minus-two'),
+      'PR10 Lab Bear',
+    );
+    expect(trinket).toHaveLength(2);
+    const [servo] = onBattlefield(run('pr10-saheeli-sublime-artificer-viewer-servo'), 'Servo');
+    expect([servo!.power, servo!.toughness]).toEqual([1, 1]);
   });
 });

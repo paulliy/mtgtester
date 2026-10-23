@@ -131,6 +131,10 @@ describe('Marchesa catalog audit containment', () => {
     'Siren Stormtamer',
     'Mana Sculpt',
     'Verrak, Warped Sengir',
+    // PR10 animation regressions (type and color changes, copies until end of turn).
+    'Atarka Monument',
+    'Sarkhan, the Dragonspeaker',
+    'Saheeli, Sublime Artificer',
 
     'Vindictive Lich',
     'Shadrix Silverquill',

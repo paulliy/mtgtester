@@ -208,6 +208,8 @@ export const COMMONER_HEALER = lab(
   ['1', '1'],
 );
 
+export const TRINKET = lab('PR10 Lab Trinket', 'Artifact', '{1}', '', []);
+
 const SUPPORT_CARDS = [SHOCK, ZAP, TWIN, BEAR, RED_BEAR, BRUTE, COMMANDER, CINDER];
 
 /**
@@ -917,6 +919,160 @@ const DEFS: Def[] = [
       p1Hand: [COMMONER_HEALER],
       p1Field: [pin('Annie Joins Up').card],
       p1Lands: mountains(1),
+    },
+  ),
+
+  // PR10.02 Atarka Monument
+  entry(
+    'atarka-monument',
+    'Atarka Monument',
+    'animate',
+    'Atarka Monument: becomes a 4/4 red and green Dragon with flying',
+    [2],
+    ['Activate Atarka Monument’s second ability, paying {4}{R}{G}.'],
+    'Until end of turn it is a 4/4 red and green Dragon artifact creature with flying.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Atarka Monument').card],
+      p1Lands: ['Mountain', 'Mountain', 'Mountain', 'Mountain', 'Mountain', 'Forest'],
+    },
+  ),
+  entry(
+    'atarka-monument',
+    'Atarka Monument',
+    'insufficient-cost',
+    'Atarka Monument: the animation needs {4}{R}{G}',
+    [2],
+    [
+      'With four lands and the Monument’s own mana the animation cannot be paid, while PR10 Lab Zap can be cast.',
+    ],
+    'The animation is not offered, so Atarka Monument stays a noncreature artifact.',
+    {
+      p1Hand: [ZAP],
+      p1Field: [pin('Atarka Monument').card],
+      p1Lands: ['Mountain', 'Mountain', 'Mountain', 'Forest'],
+    },
+  ),
+  entry(
+    'atarka-monument',
+    'Atarka Monument',
+    'mana',
+    'Atarka Monument: tap for red mana',
+    [1],
+    ['Cast PR10 Lab Zap at P2 with the red mana from Atarka Monument.'],
+    'With only a Forest, Lab Zap is castable because the Monument taps for {R}.',
+    {
+      p1Hand: [ZAP],
+      p1Field: [pin('Atarka Monument').card],
+      p1Lands: ['Forest'],
+    },
+  ),
+
+  // PR10.17 Sarkhan, the Dragonspeaker
+  entry(
+    'sarkhan-the-dragonspeaker',
+    'Sarkhan, the Dragonspeaker',
+    'plus-one',
+    'Sarkhan: +1 makes him a legendary 4/4 red Dragon',
+    [1],
+    ['Activate Sarkhan’s +1.'],
+    'Sarkhan gains a loyalty counter and is a 4/4 Dragon creature with flying, indestructible and haste until end of turn.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Sarkhan, the Dragonspeaker').card],
+      fieldOptions: { 'Sarkhan, the Dragonspeaker': { counters: { loyalty: 4 } } },
+    },
+  ),
+  entry(
+    'sarkhan-the-dragonspeaker',
+    'Sarkhan, the Dragonspeaker',
+    'minus-three',
+    'Sarkhan: −3 deals 4 damage to a creature',
+    [2],
+    ['Activate Sarkhan’s −3 targeting the creature P3 controls.'],
+    'PR10 Lab Brute takes 4 damage and dies, and Sarkhan is left with one loyalty.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Sarkhan, the Dragonspeaker').card],
+      p3Field: [BRUTE],
+      fieldOptions: { 'Sarkhan, the Dragonspeaker': { counters: { loyalty: 4 } } },
+    },
+  ),
+  entry(
+    'sarkhan-the-dragonspeaker',
+    'Sarkhan, the Dragonspeaker',
+    'emblem',
+    'Sarkhan: −6 creates an emblem',
+    [3],
+    ['Activate Sarkhan’s −6.'],
+    'You get the emblem and Sarkhan is left with no loyalty.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Sarkhan, the Dragonspeaker').card],
+      fieldOptions: { 'Sarkhan, the Dragonspeaker': { counters: { loyalty: 6 } } },
+    },
+  ),
+
+  // PR10.20 Mirage Mirror
+  entry(
+    'mirage-mirror',
+    'Mirage Mirror',
+    'becomes-copy',
+    'Mirage Mirror: becomes a copy of a creature until end of turn',
+    [1],
+    ['Activate Mirage Mirror ({2}) targeting the creature P3 controls.'],
+    'Mirage Mirror becomes a copy of PR10 Lab Brute, a 4/4 creature you control.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Mirage Mirror').card],
+      p1Lands: mountains(2),
+      p3Field: [BRUTE],
+    },
+  ),
+  entry(
+    'mirage-mirror',
+    'Mirage Mirror',
+    'insufficient-cost',
+    'Mirage Mirror: the ability needs {2}',
+    [1],
+    ['With one land the ability cannot be paid, while PR10 Lab Zap can be cast.'],
+    'Mirage Mirror’s ability is not offered.',
+    {
+      p1Hand: [ZAP],
+      p1Field: [pin('Mirage Mirror').card],
+      p1Lands: mountains(1),
+      p3Field: [BRUTE],
+    },
+  ),
+
+  // PR10.07 Saheeli, Sublime Artificer
+  entry(
+    'saheeli-sublime-artificer',
+    'Saheeli, Sublime Artificer',
+    'servo',
+    'Saheeli: a Servo for each noncreature spell',
+    [1],
+    ['Cast PR10 Lab Zap, a noncreature spell.'],
+    'Saheeli’s trigger creates a 1/1 Servo artifact creature token.',
+    {
+      p1Hand: [ZAP],
+      p1Field: [pin('Saheeli, Sublime Artificer').card],
+      p1Lands: mountains(1),
+      fieldOptions: { 'Saheeli, Sublime Artificer': { counters: { loyalty: 5 } } },
+    },
+  ),
+  entry(
+    'saheeli-sublime-artificer',
+    'Saheeli, Sublime Artificer',
+    'minus-two',
+    'Saheeli: −2 turns an artifact into a copy of a creature',
+    [2],
+    ['Activate Saheeli’s −2 targeting PR10 Lab Trinket, then PR10 Lab Bear.'],
+    'The Trinket becomes a copy of PR10 Lab Bear until end of turn and is still an artifact.',
+    {
+      p1Hand: [],
+      p1Field: [pin('Saheeli, Sublime Artificer').card, TRINKET, BEAR],
+      fieldOptions: { 'Saheeli, Sublime Artificer': { counters: { loyalty: 5 } } },
     },
   ),
 ];

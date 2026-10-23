@@ -3,7 +3,7 @@
 Generated from the engine-supported card pool.
 This is an interpreter-support inventory. Card behavior verification is tracked separately in the card verification manifest.
 
-**Total**: 6500 modeled non-land cards
+**Total**: 6504 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -317,6 +317,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Assault Zeppelid
 - Astral Wingspan
 - Atalan Jackal
+- Atarka Monument
 - Atarka, World Render
 - Atlantean Cavalry
 - Atmosphere Surgeon
@@ -3531,6 +3532,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Minotaur, Roxxon CEO
 - Mintstrosity
 - Miraculous Recovery
+- Mirage Mirror
 - Mirari's Wake
 - Mire Shade
 - Mire Triton
@@ -4644,6 +4646,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Sagu Archer
 - Sagu Mauler
 - Sagu Wildling // Roost Seek
+- Saheeli, Sublime Artificer
 - Sai, Master Thopterist
 - Sailor of Means
 - Sakura-Tribe Elder
@@ -4679,6 +4682,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Sarkhan, Dragon Ascendant
 - Sarkhan, Soul Aflame
 - Sarkhan's Triumph
+- Sarkhan, the Dragonspeaker
 - Saruli Caretaker
 - Saruli Gatekeepers
 - Satoru, the Infiltrator

@@ -77,7 +77,7 @@ async function waitForOpponentSpell(page: Page, name = 'PR10 Lab Shock'): Promis
   return spell;
 }
 
-/** Activate `ability` of `source` (a permanent), choosing `targets` (stack objects or seats). */
+/** Activate `ability` of `source` (a permanent), choosing `targets` (stack objects, seats, or "P3:Name" permanents). */
 async function activate(
   page: Page,
   source: Locator,
@@ -89,7 +89,13 @@ async function activate(
   const action = page.getByRole('button').filter({ hasText: ability }).last();
   if (await action.isVisible()) await action.click();
   for (const target of targets) {
-    if (/^P\d$/.test(target)) {
+    const onBoard = /^(P\d):(.+)$/.exec(target);
+    if (onBoard) {
+      // "P3:Name" is a permanent that seat controls.
+      const chosen = permanent(page, onBoard[1]!, onBoard[2]!);
+      await expect(chosen).toHaveClass(/targetable/);
+      await chosen.click();
+    } else if (/^P\d$/.test(target)) {
       const player = page.locator(`.opponent[data-seat="${target}"]`);
       await expect(player).toHaveClass(/targetable/);
       await player.locator('header').click();
@@ -508,6 +514,64 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await passUntil(page, logLine(page, /PR10 Lab Scholar.*resolves/i));
     await expect(decisionButton(page, /^Pay \d+ life/)).toHaveCount(0);
     await expect(life(page, 'P1')).toHaveText('40');
+  },
+  'pr10-atarka-monument-viewer-animate': async (page) => {
+    await activate(page, permanent(page, 'P1', 'Atarka Monument'), /becomes a 4\/4/);
+    await passUntil(page, logLine(page, /Atarka Monument.*(4\/4|Dragon|becomes)/i));
+  },
+  'pr10-atarka-monument-viewer-insufficient-cost': async (page) => {
+    await expectCastable(page, 'PR10 Lab Zap', true);
+    await permanent(page, 'P1', 'Atarka Monument').click();
+    await expect(page.getByRole('button').filter({ hasText: /becomes a 4\/4/ })).toHaveCount(0);
+  },
+  'pr10-atarka-monument-viewer-mana': async (page) => {
+    await cast(page, 'PR10 Lab Zap', ['P2']);
+    await passUntil(page, life(page, 'P2').filter({ hasText: '39' }));
+  },
+  'pr10-sarkhan-the-dragonspeaker-viewer-plus-one': async (page) => {
+    await activate(
+      page,
+      permanent(page, 'P1', 'Sarkhan, the Dragonspeaker'),
+      /becomes a legendary/,
+    );
+    await passUntil(page, logLine(page, /Sarkhan.*(becomes|Dragon)/i));
+  },
+  'pr10-sarkhan-the-dragonspeaker-viewer-minus-three': async (page) => {
+    await activate(page, permanent(page, 'P1', 'Sarkhan, the Dragonspeaker'), /deals 4 damage/, [
+      'P3:PR10 Lab Brute',
+    ]);
+    await passUntil(page, logLine(page, /dies/i));
+    await expect(permanent(page, 'P3', 'PR10 Lab Brute')).toHaveCount(0);
+  },
+  'pr10-sarkhan-the-dragonspeaker-viewer-emblem': async (page) => {
+    await activate(page, permanent(page, 'P1', 'Sarkhan, the Dragonspeaker'), /emblem/);
+    await passUntil(page, logLine(page, /emblem/i));
+  },
+  'pr10-mirage-mirror-viewer-becomes-copy': async (page) => {
+    await activate(page, permanent(page, 'P1', 'Mirage Mirror'), /becomes a copy/, [
+      'P3:PR10 Lab Brute',
+    ]);
+    await passUntil(page, permanent(page, 'P1', 'PR10 Lab Brute'));
+  },
+  'pr10-mirage-mirror-viewer-insufficient-cost': async (page) => {
+    await expectCastable(page, 'PR10 Lab Zap', true);
+    await permanent(page, 'P1', 'Mirage Mirror').click();
+    await expect(page.getByRole('button').filter({ hasText: /becomes a copy/ })).toHaveCount(0);
+  },
+  'pr10-saheeli-sublime-artificer-viewer-servo': async (page) => {
+    await cast(page, 'PR10 Lab Zap', ['P2']);
+    await passUntil(page, permanent(page, 'P1', 'Servo'));
+    await passUntil(page, life(page, 'P2').filter({ hasText: '39' }));
+  },
+  'pr10-saheeli-sublime-artificer-viewer-minus-two': async (page) => {
+    await activate(page, permanent(page, 'P1', 'Saheeli, Sublime Artificer'), /becomes a copy/, [
+      'P1:PR10 Lab Trinket',
+      'P1:PR10 Lab Bear',
+    ]);
+    await passUntil(page, logLine(page, /Saheeli, Sublime Artificer — .* resolves/));
+    // The Trinket is now a second Bear, so the two stack into one group.
+    await expect(permanent(page, 'P1', 'PR10 Lab Bear')).toContainText('×2');
+    await expect(permanent(page, 'P1', 'PR10 Lab Trinket')).toHaveCount(0);
   },
 };
 

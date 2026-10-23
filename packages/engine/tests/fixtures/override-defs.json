@@ -7166,6 +7166,73 @@
     }
   },
   {
+    "oracleId": "6a84eda1-7e72-4b5a-849f-b6e177565aeb",
+    "name": "Mirage Mirror",
+    "handledLines": [
+      "{2}: ~ becomes a copy of target artifact, creature, enchantment, or land until end of turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "This artifact becomes a copy of target artifact, creature, enchantment, or land until end of turn",
+            "effects": [
+              {
+                "op": "becomeCopyOf",
+                "ref": 0,
+                "untilEot": true
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Enchantment"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Land"
+                    }
+                  ]
+                },
+                "kind": "permanent"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "6c25c6b5-d98c-4eb4-aacd-b6960a8779a9",
     "name": "Herald of Amity",
     "handledLines": [
@@ -8805,8 +8872,135 @@
   {
     "oracleId": "80c26f58-04b0-4db0-b84e-9b136609abe0",
     "name": "Sarkhan, the Dragonspeaker",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "+1: Until end of turn, ~ becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste.",
+      "−6: You get an emblem with \"At the beginning of your draw step, draw two additional cards\" and \"At the beginning of your end step, discard your hand.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Until end of turn, Sarkhan becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste",
+            "effects": [
+              {
+                "colors": [
+                  "R"
+                ],
+                "keywords": [
+                  "flying",
+                  "indestructible",
+                  "haste"
+                ],
+                "op": "becomeCreatureUntilEot",
+                "power": 4,
+                "replaceTypes": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Dragon"
+                ],
+                "supertypes": [
+                  "Legendary"
+                ],
+                "target": "source",
+                "toughness": 4
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "delta": 1,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Sarkhan deals 4 damage to target creature",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 4
+                },
+                "op": "dealDamage",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -3,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "You get an emblem that draws two more cards and discards your hand",
+            "effects": [
+              {
+                "abilities": [
+                  {
+                    "description": "At the beginning of your draw step, draw two additional cards",
+                    "effects": [
+                      {
+                        "count": {
+                          "kind": "const",
+                          "n": 2
+                        },
+                        "op": "draw"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "player": "you",
+                      "when": "drawStep"
+                    }
+                  },
+                  {
+                    "description": "At the beginning of your end step, discard your hand",
+                    "effects": [
+                      {
+                        "op": "discardHand"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "player": "you",
+                      "when": "endStep"
+                    }
+                  }
+                ],
+                "name": "Sarkhan, the Dragonspeaker emblem",
+                "op": "createEmblem"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "delta": -6,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
   },
   {
     "oracleId": "81a51328-b995-4f3b-90bc-a20ae21dd254",
@@ -11767,8 +11961,63 @@
   {
     "oracleId": "ab655810-f67e-4576-9174-35b16f5e3235",
     "name": "Saheeli, Sublime Artificer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "−2: Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact in addition to its other types."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact",
+            "effects": [
+              {
+                "addTypes": [
+                  "Artifact"
+                ],
+                "op": "becomeCopyOfTarget",
+                "ref": 1,
+                "target": 0,
+                "untilEot": true
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "you",
+                "kind": "artifact"
+              },
+              {
+                "controller": "you",
+                "differentFromSlots": [
+                  0
+                ],
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                },
+                "kind": "permanent"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -2,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
   },
   {
     "oracleId": "abc37d6c-6300-47b5-a679-9db5b83eb54f",
@@ -16981,8 +17230,55 @@
   {
     "oracleId": "eb287c04-97f5-4e47-beb1-66cc7d15e748",
     "name": "Atarka Monument",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "{4}{R}{G}: ~ becomes a 4/4 red and green Dragon artifact creature with flying until end of turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "This artifact becomes a 4/4 red and green Dragon artifact creature with flying until end of turn",
+            "effects": [
+              {
+                "colors": [
+                  "R",
+                  "G"
+                ],
+                "keywords": [
+                  "flying"
+                ],
+                "op": "becomeCreatureUntilEot",
+                "power": 4,
+                "subtypes": [
+                  "Dragon"
+                ],
+                "target": "source",
+                "toughness": 4
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 1,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 4
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "eb735501-19e7-4910-aa6a-6667fff6f4e5",
@@ -20410,8 +20706,55 @@
   {
     "oracleId": "oracle-atarka-monument",
     "name": "Atarka Monument",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "{4}{R}{G}: ~ becomes a 4/4 red and green Dragon artifact creature with flying until end of turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "This artifact becomes a 4/4 red and green Dragon artifact creature with flying until end of turn",
+            "effects": [
+              {
+                "colors": [
+                  "R",
+                  "G"
+                ],
+                "keywords": [
+                  "flying"
+                ],
+                "op": "becomeCreatureUntilEot",
+                "power": 4,
+                "subtypes": [
+                  "Dragon"
+                ],
+                "target": "source",
+                "toughness": 4
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 1,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 4
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-attune-with-aether",
@@ -29298,6 +29641,73 @@
     }
   },
   {
+    "oracleId": "oracle-mirage-mirror",
+    "name": "Mirage Mirror",
+    "handledLines": [
+      "{2}: ~ becomes a copy of target artifact, creature, enchantment, or land until end of turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "This artifact becomes a copy of target artifact, creature, enchantment, or land until end of turn",
+            "effects": [
+              {
+                "op": "becomeCopyOf",
+                "ref": 0,
+                "untilEot": true
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Enchantment"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Land"
+                    }
+                  ]
+                },
+                "kind": "permanent"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-mister-fantastic",
     "name": "Mister Fantastic",
     "handledLines": [
@@ -32801,8 +33211,63 @@
   {
     "oracleId": "oracle-saheeli-sublime-artificer",
     "name": "Saheeli, Sublime Artificer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "−2: Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact in addition to its other types."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact",
+            "effects": [
+              {
+                "addTypes": [
+                  "Artifact"
+                ],
+                "op": "becomeCopyOfTarget",
+                "ref": 1,
+                "target": 0,
+                "untilEot": true
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "you",
+                "kind": "artifact"
+              },
+              {
+                "controller": "you",
+                "differentFromSlots": [
+                  0
+                ],
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                },
+                "kind": "permanent"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -2,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-sai-master-thopterist",
@@ -32815,8 +33280,135 @@
   {
     "oracleId": "oracle-sarkhan-the-dragonspeaker",
     "name": "Sarkhan, the Dragonspeaker",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "+1: Until end of turn, ~ becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste.",
+      "−6: You get an emblem with \"At the beginning of your draw step, draw two additional cards\" and \"At the beginning of your end step, discard your hand.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Until end of turn, Sarkhan becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste",
+            "effects": [
+              {
+                "colors": [
+                  "R"
+                ],
+                "keywords": [
+                  "flying",
+                  "indestructible",
+                  "haste"
+                ],
+                "op": "becomeCreatureUntilEot",
+                "power": 4,
+                "replaceTypes": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Dragon"
+                ],
+                "supertypes": [
+                  "Legendary"
+                ],
+                "target": "source",
+                "toughness": 4
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "delta": 1,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Sarkhan deals 4 damage to target creature",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 4
+                },
+                "op": "dealDamage",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -3,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "You get an emblem that draws two more cards and discards your hand",
+            "effects": [
+              {
+                "abilities": [
+                  {
+                    "description": "At the beginning of your draw step, draw two additional cards",
+                    "effects": [
+                      {
+                        "count": {
+                          "kind": "const",
+                          "n": 2
+                        },
+                        "op": "draw"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "player": "you",
+                      "when": "drawStep"
+                    }
+                  },
+                  {
+                    "description": "At the beginning of your end step, discard your hand",
+                    "effects": [
+                      {
+                        "op": "discardHand"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "player": "you",
+                      "when": "endStep"
+                    }
+                  }
+                ],
+                "name": "Sarkhan, the Dragonspeaker emblem",
+                "op": "createEmblem"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "delta": -6,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-savage-ventmaw",
