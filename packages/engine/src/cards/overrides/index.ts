@@ -63,7 +63,6 @@ import { registerMARCHESA_THE_BLACK_ROSEOverrides } from './marchesa-the-black-r
 import { registerW1RemainingOverrides } from './w1-remaining';
 import { registerW2RemainingOverrides } from './w2-remaining';
 import { registerReviewedFiveOverrides } from './reviewed-five';
-import { registerUnsupportedSpellFaces } from './unsupported-spell-faces';
 import { registerCoveragePr01Overrides } from './coverage-pr01';
 import { registerCoveragePr02Overrides } from './coverage-pr02';
 import { registerCoveragePr03Overrides } from './coverage-pr03';
@@ -81,6 +80,7 @@ import {
   registerPr10TriggerDoublingOverrides,
 } from './coverage-pr10';
 import { registerCoveragePr11Overrides } from './coverage-pr11';
+import { registerCoveragePr12Overrides } from './coverage-pr12';
 import { registerWhiteBlackControlHandOverrides } from './white-black-control-hand';
 import { registerWhiteBlackControlStaxOverrides } from './white-black-control-stax';
 import { registerWhiteBlackControlDiscardOverrides } from './white-black-control-discard';
@@ -252,7 +252,7 @@ registerDeck('coverage-pr10-animation', registerPr10AnimationOverrides);
 registerDeck('coverage-pr10-token-copy', registerPr10TokenCopyOverrides);
 registerDeck('coverage-pr10-characteristics', registerPr10CharacteristicsOverrides);
 registerDeck('coverage-pr11', registerCoveragePr11Overrides);
-registerDeck('unsupported-spell-faces', registerUnsupportedSpellFaces);
+registerDeck('coverage-pr12', registerCoveragePr12Overrides);
 
 /** Register an override. Exported for the per-card modules and for tests. */
 export function registerOverride(override: CardOverride): void {
@@ -324,6 +324,27 @@ export function defineCard(
 ): void {
   registerOverride({ oracleId, name, handledLines, def });
   registerOverride({ oracleId: fixtureOracleId(name), name, handledLines, def });
+}
+
+/**
+ * Register an Adventure or Omen card's spell face. The interpreter reads that face as a card of
+ * its own under `<oracleId>:back`, so the face is registered under the real and fixture ids of
+ * the whole card with that suffix, named by the face.
+ */
+export function defineSpellFace(
+  oracleId: string,
+  cardName: string,
+  faceName: string,
+  handledLines: string[],
+  def: Partial<CardDefinition>,
+): void {
+  registerOverride({ oracleId: `${oracleId}:back`, name: faceName, handledLines, def });
+  registerOverride({
+    oracleId: `${fixtureOracleId(cardName)}:back`,
+    name: faceName,
+    handledLines,
+    def,
+  });
 }
 
 /**

@@ -28,8 +28,8 @@ const caseIds: Record<string, string> = {
   Insolence: 'insolence-event-player-contained',
   'Scalelord Reckoner': 'scalelord-reckoner-event-player-contained',
 };
-const becomesTargeted = ['Black Bolt, Inhuman King', 'Scalelord Reckoner'];
-const names = [
+const becomesTargeted = ['Scalelord Reckoner'];
+const pinnedNames = [
   'Black Bolt, Inhuman King',
   'Blur of Blades',
   'Consign to the Pit',
@@ -37,9 +37,20 @@ const names = [
   'Insolence',
   'Scalelord Reckoner',
 ];
+// Coverage PR12 models these two with engine and Card Test Lab evidence (pr12-*.test.ts).
+const retired = ['Black Bolt, Inhuman King', 'Dingus Staff'];
+const names = pinnedNames.filter((name) => !retired.includes(name));
 describe('printed clauses with unsupported event-player provenance remain contained', () => {
   it('covers exactly the six independently identified Oracle consumers', () =>
-    expect(fixture.cards.map(({ card }) => card.name)).toEqual(names));
+    expect(fixture.cards.map(({ card }) => card.name)).toEqual(pinnedNames));
+  it('the two consumers modeled in coverage PR12 interpret with every reason cleared', () => {
+    for (const name of retired) {
+      const pin = fixture.cards.find(({ card }) => card.name === name)!;
+      expect(pin.sha256).toBe(expectedPins[name]);
+      for (const oracleId of [pin.card.oracleId, fixtureOracleId(name)])
+        expect(interpretCard({ ...pin.card, oracleId }).unmodeledReasons, name).toEqual([]);
+    }
+  });
   for (const name of names)
     it(`${caseIds[name]}: ${name} rejects normal action generation for both Oracle identities without mutation`, () => {
       const pin = fixture.cards.find(({ card }) => card.name === name)!;
@@ -50,8 +61,8 @@ describe('printed clauses with unsupported event-player provenance remain contai
         const def = interpretCard(card);
         expect(def.modeled).toBe(false);
         expect(def.unmodeledReasons.join('; ')).toContain(
-          // The two becomes-targeted cards are read now that the targeting player is bound as the
-          // event player (coverage PR06), and are contained explicitly until they have evidence.
+          // Scalelord Reckoner is read now that the targeting player is bound as the event player
+          // (coverage PR06), and is contained explicitly until it has evidence.
           becomesTargeted.includes(name)
             ? 'explicitly unsupported: No focused engine or Card Test Lab evidence yet'
             : 'event player reference has no owning event player scope',

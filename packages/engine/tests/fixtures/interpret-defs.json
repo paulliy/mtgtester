@@ -200,7 +200,7 @@
       "Creature"
     ],
     "unmodeledReasons": [
-      "explicitly unsupported: Coil and Catch must draw three cards, then discard a card, and shuffle this card into its owner’s library; the former targeted bounce substitute was incorrect."
+      "missing or unsupported executable spell face"
     ]
   },
   {
@@ -1646,7 +1646,11 @@
                 "kind": "subtype",
                 "value": "Dragon"
               },
-              "op": "searchLibrary"
+              "op": "searchLibrary",
+              "reveal": true
+            },
+            {
+              "op": "shuffle"
             }
           ],
           "kind": "activated",
@@ -2032,7 +2036,8 @@
           "description": "+1: Until your next turn, creatures can't attack you or planeswalkers you control unless their controller pays 2 life for each of those creatures.",
           "effects": [
             {
-              "op": "noOp"
+              "amount": 2,
+              "op": "attackLifeTaxUntilYourNextTurn"
             }
           ],
           "kind": "activated",
@@ -2061,7 +2066,11 @@
                 "kind": "subtype",
                 "value": "Dragon"
               },
-              "op": "searchLibrary"
+              "op": "searchLibrary",
+              "reveal": true
+            },
+            {
+              "op": "shuffle"
             }
           ],
           "kind": "activated",
@@ -2138,7 +2147,7 @@
       "colorless": 0,
       "generic": 2
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Sivitri, Dragon Master",
     "oracleId": "5cf86603-cc47-4644-890a-0997c694817f",
     "power": null,
@@ -2158,9 +2167,7 @@
     "types": [
       "Planeswalker"
     ],
-    "unmodeledReasons": [
-      "Invalid ability IR at definition.activatedAbilities[0].ability.effects[0]: executable noOp effects are prohibited; keep the card unsupported instead"
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [],
@@ -2786,7 +2793,7 @@
       "Artifact"
     ],
     "unmodeledReasons": [
-      "explicitly unsupported: Zoological Study must mill five cards and return a creature card milled this way to hand, then exile this card with its Adventure permission; modeling only the artifact face omits an executable spell face."
+      "missing or unsupported executable spell face"
     ]
   },
   {
@@ -4355,7 +4362,7 @@
       "colorless": 0,
       "generic": 2
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Zurgo and Ojutai",
     "oracleId": "941c9acd-2773-456a-88d5-0537735f93c6",
     "power": 4,
@@ -4386,10 +4393,25 @@
     "toughness": 4,
     "triggers": [
       {
-        "description": "Combat damage look top 3",
+        "description": "Look at the top three cards, put one into your hand and the rest on the bottom in any order; you may return one of those Dragons to its owner’s hand",
         "effects": [
           {
-            "op": "noOp"
+            "count": 3,
+            "mayPut": {
+              "destination": {
+                "zone": "hand"
+              },
+              "filter": {
+                "kind": "allOf",
+                "of": []
+              },
+              "required": true
+            },
+            "op": "lookAtTopN",
+            "rest": "bottomAnyOrder"
+          },
+          {
+            "op": "mayReturnEventGroupMemberToHand"
           }
         ],
         "kind": "triggered",
@@ -4420,9 +4442,7 @@
     "types": [
       "Creature"
     ],
-    "unmodeledReasons": [
-      "Invalid ability IR at definition.triggers[0].effects[0]: executable noOp effects are prohibited; keep the card unsupported instead"
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [],
@@ -7014,7 +7034,7 @@
       "Creature"
     ],
     "unmodeledReasons": [
-      "explicitly unsupported: Claim Territory must search for up to two basic Forests, reveal them, put one onto the battlefield tapped and the other into hand, and shuffle; the former single basic-land-to-hand substitute was incorrect."
+      "missing or unsupported executable spell face"
     ]
   },
   {

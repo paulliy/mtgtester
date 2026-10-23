@@ -59,6 +59,8 @@ export function expireDepartedPlayerEffects(ctx: GameContext): void {
     s.attackRequirements = s.attackRequirements.filter((entry) => !ends(entry.expires));
   if (s.attackDirections !== undefined)
     s.attackDirections = s.attackDirections.filter((entry) => !ends(entry.expires));
+  if (s.attackLifeTaxes !== undefined)
+    s.attackLifeTaxes = s.attackLifeTaxes.filter((entry) => !ends(entry.expires));
   if (s.blockRestrictions !== undefined)
     s.blockRestrictions = s.blockRestrictions.filter((entry) => !ends(entry.expires));
   for (const perm of [...s.battlefield, ...(s.phasedOut ?? []).map((record) => record.permanent)]) {
@@ -139,6 +141,14 @@ function untapStep(ctx: GameContext): void {
 
   if (ctx.state.blockRestrictions !== undefined)
     ctx.state.blockRestrictions = ctx.state.blockRestrictions.filter(
+      (entry) =>
+        entry.expires.kind !== 'untilNextTurn' ||
+        entry.expires.playerId !== ap.id ||
+        entry.expires.setTurn >= ctx.state.turnNumber,
+    );
+
+  if (ctx.state.attackLifeTaxes !== undefined)
+    ctx.state.attackLifeTaxes = ctx.state.attackLifeTaxes.filter(
       (entry) =>
         entry.expires.kind !== 'untilNextTurn' ||
         entry.expires.playerId !== ap.id ||

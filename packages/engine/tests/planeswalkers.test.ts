@@ -53,11 +53,13 @@ function pod(seed = 'planeswalkers-test'): GameContext {
 }
 
 describe('Increment 17: Planeswalkers & Hybrid Mana', () => {
-  it('models Kiora and contains Sivitri’s unimplemented attack-tax ability', () => {
+  it('models Kiora and Sivitri, whose +1 is a life tax on attacks (coverage PR12)', () => {
     expect(interpretCard(kiora()).modeled).toBe(true);
     const def = interpretCard(sivitri());
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('; ')).toContain('noOp');
+    expect(def.unmodeledReasons).toEqual([]);
+    expect(def.activatedAbilities[0]?.ability.effects).toEqual([
+      { op: 'attackLifeTaxUntilYourNextTurn', amount: 2 },
+    ]);
   });
 
   it('parses hybrid cost {2}{G/U} and allows payment with G or U', () => {

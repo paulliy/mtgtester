@@ -2473,9 +2473,14 @@ export function queueTriggersForEvent(
               ? first.permanent.attacking
               : 'attackingPlayerIsEventPlayer' in spec && spec.attackingPlayerIsEventPlayer === true
                 ? first.playerId
-                : spec.aggregate === 'byEventPlayer'
-                  ? byEventPlayerKey(first)
-                  : first.playerId;
+                : // "That creature's controller" (Dingus Staff): the dying permanent's controller
+                  // as it last existed on the battlefield (CR 603.10a).
+                  'subjectControllerIsEventPlayer' in spec &&
+                    spec.subjectControllerIsEventPlayer === true
+                  ? first.permanent.controllerId
+                  : spec.aggregate === 'byEventPlayer'
+                    ? byEventPlayerKey(first)
+                    : first.playerId;
           // Attack qualifications are checked once at the event. A genuine intervening-if
           // is also checked here, then checked again on resolution (CR 603.4).
           if (
@@ -2506,7 +2511,11 @@ export function queueTriggersForEvent(
           const scope: TriggerScope = {
             ...(spec.aggregate !== undefined ? { triggerCount: group.length } : {}),
             ...(spec.aggregate !== undefined &&
-            ability.effects.some((effect) => effect.op === 'createTokenCopyOfEventGroupMember')
+            ability.effects.some(
+              (effect) =>
+                effect.op === 'createTokenCopyOfEventGroupMember' ||
+                effect.op === 'mayReturnEventGroupMemberToHand',
+            )
               ? { eventGroupIds: group.map((subject) => subject.permanent.id) }
               : {}),
             ...(eventPlayerId !== undefined ? { eventPlayerId } : {}),

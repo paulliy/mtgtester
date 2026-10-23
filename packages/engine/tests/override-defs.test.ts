@@ -35,8 +35,20 @@ describe('authored override data', () => {
     // reachable in a real game but missing from any test that builds the card by name.
     const byId = new Map(listOverrides().map((o) => [o.oracleId, o]));
     const missing: string[] = [];
+    // A spell face (`defineSpellFace`) is keyed `<id>:back` under the card's name, not the face's,
+    // so its fixture twin is any `oracle-…:back` registration of the same face.
+    const fixtureFaces = new Set(
+      [...byId.values()]
+        .filter((o) => o.oracleId.startsWith('oracle-') && o.oracleId.endsWith(':back'))
+        .map((o) => o.name),
+    );
     for (const override of byId.values()) {
       if (override.oracleId.startsWith('oracle-')) continue;
+      if (override.oracleId.endsWith(':back')) {
+        if (!fixtureFaces.has(override.name))
+          missing.push(`${override.name} (${override.oracleId})`);
+        continue;
+      }
       const slug = `oracle-${override.name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
@@ -51,13 +63,20 @@ describe('authored override data', () => {
     // patch under its slug, so the same card behaved differently depending on how it was loaded.
     const byId = new Map(listOverrides().map((o) => [o.oracleId, o]));
     const diverged: string[] = [];
+    const fixtureFaces = new Map(
+      [...byId.values()]
+        .filter((o) => o.oracleId.startsWith('oracle-') && o.oracleId.endsWith(':back'))
+        .map((o) => [o.name, o]),
+    );
     for (const override of byId.values()) {
       if (override.oracleId.startsWith('oracle-')) continue;
       const slug = `oracle-${override.name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '')}`;
-      const twin = byId.get(slug);
+      const twin = override.oracleId.endsWith(':back')
+        ? fixtureFaces.get(override.name)
+        : byId.get(slug);
       if (twin === undefined) continue;
       const a = Object.keys(override.def).length > 0;
       const b = Object.keys(twin.def).length > 0;

@@ -36,11 +36,12 @@ import {
   permanentSource,
 } from '../effects/resolve';
 import { computeCharacteristics, matchesSelector } from '../effects/continuous';
-import { payManaCost } from '../effects/resolve';
+import { payLife, payManaCost } from '../effects/resolve';
 import { canPay, emptyCost, totalPips } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
 import { emit, debug } from '../log/log';
 import { counterCount } from '../state/counters';
+import { playerLifeLocked } from '../state/phasing';
 import {
   playerById,
   queueAttackDeclarationTriggers,
@@ -349,6 +350,53 @@ function attackCost(
 }
 
 /**
+ * Life each creature attacking this defender, or a planeswalker they control, pays (Sivitri,
+ * Dragon Master's +1). A resolved effect rather than a static, so it outlasts its source.
+ */
+function attackLifeTax(ctx: GameContext, defendingPlayerId: PlayerId): number {
+  return (ctx.state.attackLifeTaxes ?? []).reduce(
+    (total, entry) => (entry.controllerId === defendingPlayerId ? total + entry.amount : total),
+    0,
+  );
+}
+
+/** No mana and no life to attack this defender: the only attacks a requirement can force (CR 508.1d). */
+function attackIsFree(
+  ctx: GameContext,
+  defendingPlayerId: PlayerId,
+  atPlaneswalker: boolean,
+  creature: EnginePermanent,
+): boolean {
+  return (
+    totalPips(attackCost(ctx, defendingPlayerId, atPlaneswalker, [creature])) === 0 &&
+    attackLifeTax(ctx, defendingPlayerId) === 0
+  );
+}
+
+/**
+ * Can the attacking player pay `life` in attack taxes and still pay `cost`? CR 119.4: a positive
+ * life payment needs that much life, and none at all when the life total can't change. Phyrexian
+ * pips may only spend the life left over.
+ */
+function canPayAttackCosts(
+  ctx: GameContext,
+  attackingPlayerId: PlayerId,
+  cost: ParsedManaCost,
+  life: number,
+): boolean {
+  const player = playerById(ctx, attackingPlayerId);
+  if (life > 0 && (player.life < life || playerLifeLocked(ctx, attackingPlayerId))) return false;
+  if (totalPips(cost) === 0) return true;
+  return canPay(
+    cost,
+    player.manaEntries,
+    manaSourcesFor(ctx, attackingPlayerId),
+    allowanceFor(ctx, attackingPlayerId, { kind: 'other' }),
+    player.life - life,
+  );
+}
+
+/**
  * Can this ONE creature alone afford to attack this defender? Per-creature restriction/cost
  * legality (item 15) — never the whole proposed set's joint cost, which several creatures
  * sharing one taxed defender can still fail even when each individually passes this check
@@ -360,16 +408,11 @@ function canPayAttackTax(
   defendingPlayerId: PlayerId,
   atPlaneswalker: boolean,
 ): boolean {
-  const cost = attackCost(ctx, defendingPlayerId, atPlaneswalker, [creature]);
-  if (totalPips(cost) === 0) return true;
-  const attackingPlayerId = creature.controllerId;
-  const player = playerById(ctx, attackingPlayerId);
-  return canPay(
-    cost,
-    player.manaEntries,
-    manaSourcesFor(ctx, attackingPlayerId),
-    allowanceFor(ctx, attackingPlayerId, { kind: 'other' }),
-    player.life,
+  return canPayAttackCosts(
+    ctx,
+    creature.controllerId,
+    attackCost(ctx, defendingPlayerId, atPlaneswalker, [creature]),
+    attackLifeTax(ctx, defendingPlayerId),
   );
 }
 
@@ -496,8 +539,8 @@ function attackTargetsFor(
   const payable = allowed.filter((t) =>
     canPayAttackTax(ctx, creature, t.player.id, t.planeswalker !== null),
   );
-  const free = allowed.filter(
-    (t) => totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null, [creature])) === 0,
+  const free = allowed.filter((t) =>
+    attackIsFree(ctx, t.player.id, t.planeswalker !== null, creature),
   );
   return applyRequirementScope(ctx, creature, payable, free);
 }
@@ -521,7 +564,7 @@ function freeAttackTargetsFor(
   const free = allAttackTargets(ctx, opponents).filter(
     (t) =>
       attackRestrictionAllows(ctx, creature, t) &&
-      totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null, [creature])) === 0,
+      attackIsFree(ctx, t.player.id, t.planeswalker !== null, creature),
   );
   return applyRequirementScope(ctx, creature, free, free);
 }
@@ -542,7 +585,7 @@ function requiredAttackTargets(
   const free = allAttackTargets(ctx, opponents).filter(
     (t) =>
       attackRestrictionAllows(ctx, creature, t) &&
-      totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null, [creature])) === 0,
+      attackIsFree(ctx, t.player.id, t.planeswalker !== null, creature),
   );
   const maximum = Math.max(0, ...free.map((t) => requirementsObeyed(requirements, t)));
   return maximum === 0 ? [] : free.filter((t) => requirementsObeyed(requirements, t) >= maximum);
@@ -556,6 +599,9 @@ function* payAttackTax(
   creatures: readonly EnginePermanent[],
 ): GameGen<void> {
   const cost = attackCost(ctx, defendingPlayerId, atPlaneswalker, creatures);
+  const life = attackLifeTax(ctx, defendingPlayerId) * creatures.length;
+  // The life is paid first, so Phyrexian pips can only spend what is left (CR 601.2h).
+  if (life > 0) payLife(ctx, playerById(ctx, attackingPlayerId), life);
   if (totalPips(cost) === 0) return;
   yield* payManaCost(ctx, playerById(ctx, attackingPlayerId), cost, { kind: 'other' });
 }
@@ -696,6 +742,7 @@ function buildAttackSubjects(
           playerId: t.player.id,
           life: t.player.life,
           attackTax: attackTax(ctx, t.player.id, false, creature),
+          ...lifeTaxField(ctx, t.player.id),
         })),
       planeswalkers: legal.flatMap((t) =>
         t.planeswalker === null
@@ -707,6 +754,7 @@ function buildAttackSubjects(
                 name: t.planeswalker.name,
                 loyalty: counterCount(t.planeswalker.counters, 'loyalty'),
                 attackTax: attackTax(ctx, t.player.id, true, creature),
+                ...lifeTaxField(ctx, t.player.id),
               },
             ],
       ),
@@ -714,6 +762,11 @@ function buildAttackSubjects(
       hasTriggers: triggersOf(ctx, creature).length > 0,
     };
   });
+}
+
+function lifeTaxField(ctx: GameContext, defendingPlayerId: PlayerId): { attackLifeTax?: number } {
+  const life = attackLifeTax(ctx, defendingPlayerId);
+  return life > 0 ? { attackLifeTax: life } : {};
 }
 
 /**
@@ -847,29 +900,23 @@ function validateAttackDeclaration(
   if (!costs) return [];
   const groups = groupByDefender(eligible, assignment);
   const totalCost = emptyCost();
+  let totalLife = 0;
   for (const { defenderId, atPlaneswalker, creatures } of groups) {
     const cost = attackCost(ctx, defenderId, atPlaneswalker, creatures);
     totalCost.generic += cost.generic;
     totalCost.phyrexian = [...(totalCost.phyrexian ?? []), ...(cost.phyrexian ?? [])];
+    totalLife += attackLifeTax(ctx, defenderId) * creatures.length;
   }
-  if (totalPips(totalCost) === 0) return [];
-  const player = playerById(ctx, attackingPlayerId);
-  const payable = canPay(
-    totalCost,
-    player.manaEntries,
-    manaSourcesFor(ctx, attackingPlayerId),
-    allowanceFor(ctx, attackingPlayerId, { kind: 'other' }),
-    player.life,
-  );
-  if (payable) return [];
+  if (totalPips(totalCost) === 0 && totalLife === 0) return [];
+  if (canPayAttackCosts(ctx, attackingPlayerId, totalCost, totalLife)) return [];
   const violations: CombatViolation[] = [];
   for (const { defenderId, atPlaneswalker, creatures } of groups) {
     for (const creature of creatures) {
-      if (totalPips(attackCost(ctx, defenderId, atPlaneswalker, [creature])) === 0) continue;
+      if (attackIsFree(ctx, defenderId, atPlaneswalker, creature)) continue;
       violations.push({
         subjectId: creature.id,
         kind: 'attackTax',
-        message: `Not enough mana to pay the combined attack tax for every creature attacking ${
+        message: `Not enough mana or life to pay the combined attack tax for every creature attacking ${
           atPlaneswalker ? `${defenderId}'s planeswalkers` : defenderId
         } at once`,
       });
