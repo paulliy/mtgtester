@@ -9,6 +9,7 @@ import { addMana } from '../src/mana/pool';
 import { createGame } from '../src/state/game';
 import { priorityCheckpoint } from '../src/sba/sba';
 import { resolveTopOfStack } from '../src/stack/stack';
+import { runBeginningAndPrecombatMain } from '../src/turn/turn';
 import type { EnginePermanent, EnginePlayerState, GameContext } from '../src/state/types';
 import type { PendingDecision } from '../src/decisions';
 import {
@@ -168,4 +169,24 @@ export function combat(
     return undefined as never;
   });
   return { blockable };
+}
+
+/** Advance to `playerId`'s next turn and run its beginning phase and first main phase. */
+export function nextTurnOf(
+  ctx: GameContext,
+  playerId: string,
+  answer?: Parameters<typeof pump>[1],
+): PendingDecision[] {
+  ctx.state.currentTurnPlayer = playerId;
+  ctx.state.activePlayerIndex = ctx.state.turnOrder.indexOf(playerId);
+  ctx.state.turnNumber += 1;
+  return pump(runBeginningAndPrecombatMain(ctx), answer).decisions;
+}
+
+/** Answer every decision with its first option, except the named type when one is offered. */
+export function preferring(type: string): NonNullable<Parameters<typeof pump>[1]> {
+  return (decision) => {
+    const index = decision.options.findIndex((option) => option.type === type);
+    return { index: Math.max(0, index), targets: new Map() };
+  };
 }

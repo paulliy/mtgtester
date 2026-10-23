@@ -253,6 +253,8 @@ export interface CardDefinition {
   artifactGraveyardAbilities?: boolean;
   /** Replaces an empty-library draw with a creature return, as on Out of the Tombs. */
   emptyLibraryCreatureReplacement?: boolean;
+  /** "This doesn't untap during your untap step" (Mana Vault, CR 502.3). */
+  doesntUntapDuringUntapStep?: boolean;
   /** Triggered abilities (kind 'triggered'). */
   triggers: Ability[];
   /** Continuous effects this card contributes while a permanent (static abilities / CDAs). */

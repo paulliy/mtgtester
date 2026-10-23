@@ -650,6 +650,7 @@ const shapes = {
     cantBeBlocked: leaf,
     artifactGraveyardAbilities: leaf,
     emptyLibraryCreatureReplacement: leaf,
+    doesntUntapDuringUntapStep: leaf,
     triggers: { array: { node: 'Ability' } },
     staticEffects: { array: { node: 'StaticEffect' } },
     ruleStatics: { array: { node: 'RuleStatic' } },

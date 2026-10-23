@@ -1,6 +1,18 @@
 /** PR11 authored protection, phasing, layout and lifecycle cards. Review status is in the manifest. */
 import { allOf, hasCounter, not, OPPONENTS, ofType, YOURS } from '../selector';
-import { activated, mana, onEtb, onUpkeep, spell, TAP, targetSlots, triggered } from '../templates';
+import {
+  activated,
+  mana,
+  manaCost,
+  onDrawStep,
+  onEtb,
+  onUpkeep,
+  spell,
+  TAP,
+  targetSlots,
+  triggered,
+} from '../templates';
+import type { Ability } from '../ability';
 import { constant } from '../value';
 import { KNIGHT_2_2_WHITE_VIGILANCE } from '../tokens';
 import { defineCard, extendCard, replaceCard } from './index';
@@ -68,6 +80,7 @@ export function registerCoveragePr11Overrides(): void {
   );
 
   registerPr11PhasingOverrides();
+  registerPr11LifecycleOverrides();
 }
 
 /** PR11.05, 11.18, 11.20, 11.22: phasing and player protection. */
@@ -165,5 +178,70 @@ function registerPr11PhasingOverrides(): void {
       }),
     },
     'PR11 implements split second and the full cannot-lose clause instead of a life floor alone.',
+  );
+}
+
+/**
+ * CR 702.24a: cumulative upkeep. Put an age counter on the permanent, then sacrifice it unless
+ * its controller pays the cost once for each age counter. Only generic costs are authored.
+ */
+function cumulativeUpkeep(generic: number): Ability {
+  return triggered(onUpkeep('you'), {
+    effects: [
+      { op: 'putCounters', target: 'source', counter: 'age', count: constant(1) },
+      {
+        op: 'unlessPays',
+        payer: 'controller',
+        cost: manaCost('{0}'),
+        genericValue: { kind: 'times', of: { kind: 'countersOnSelf', counter: 'age' }, n: generic },
+        then: [{ op: 'sacrifice', target: 'source' }],
+      },
+    ],
+    description: `Cumulative upkeep {${generic}}: add an age counter, then pay {${generic}} per age counter or sacrifice this`,
+  });
+}
+
+/** PR11.03, .08, .09, .12, .15, .16, .17, .19, .28: permanents with a lifecycle. */
+function registerPr11LifecycleOverrides(): void {
+  // PR11.19: the untap is optional and paid on resolution; the draw-step damage is an
+  // intervening if on the artifact being tapped.
+  extendCard(
+    '736892cb-a34b-4bb9-b56c-e26e3db207a2',
+    'Mana Vault',
+    [
+      'unrecognized rules text: "~ doesn\'t untap during your untap step."',
+      'unrecognized rules text: "At the beginning of your upkeep, you may pay {4}. If you do, untap this artifact."',
+      'unrecognized rules text: "At the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you."',
+    ],
+    {
+      doesntUntapDuringUntapStep: true,
+      triggers: [
+        triggered(onUpkeep('you'), {
+          effects: [
+            {
+              op: 'conditionalEffect',
+              condition: { kind: 'mayPayMana', cost: manaCost('{4}') },
+              then: [{ op: 'untapTarget', target: 'source' }],
+              else: [],
+            },
+          ],
+          description: 'At the beginning of your upkeep, you may pay {4} to untap this',
+        }),
+        triggered(onDrawStep('you'), {
+          condition: { kind: 'not', of: { kind: 'isUntapped' } },
+          effects: [{ op: 'damageController', amount: 1 }],
+          description:
+            'At the beginning of your draw step, if this is tapped, it deals 1 damage to you',
+        }),
+      ],
+    },
+  );
+
+  // PR11.15: the opponent's draw trigger is interpreted; cumulative upkeep is authored.
+  extendCard(
+    '8a52f3c0-2552-4425-b2e3-5496eb2232a7',
+    'Mystic Remora',
+    ['unrecognized rules text: "Cumulative upkeep {1}"'],
+    { triggers: [cumulativeUpkeep(1)] },
   );
 }
