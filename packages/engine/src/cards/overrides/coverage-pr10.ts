@@ -1,8 +1,18 @@
 /** PR10 authored stack, copy and characteristic operations. Evidence is tracked in the manifest. */
 import { countPermanents } from '../condition';
-import { allOf, anyOf, not, ofSubtype, ofType, powerAtLeast } from '../selector';
+import {
+  CHOSEN_SUBTYPE,
+  SELF,
+  allOf,
+  anyOf,
+  not,
+  ofSubtype,
+  ofSupertype,
+  ofType,
+  powerAtLeast,
+} from '../selector';
 import { counterSpellTarget } from '../target-builders';
-import { activated, mana, onCast, spell, targetSlots, triggered } from '../templates';
+import { activated, mana, onCast, onEtb, spell, targetSlots, triggered } from '../templates';
 import { constant } from '../value';
 import { replaceCard } from './index';
 
@@ -14,6 +24,7 @@ export function registerCoveragePr10Overrides(): void {
   registerPr10RetargetAndCopyOverrides();
   registerPr10CastCopyOverrides();
   registerPr10AbilityStackOverrides();
+  registerPr10TriggerDoublingOverrides();
 }
 
 /** PR10.01, 10.11, 10.06, 10.14, 10.12: retargeting and spell copies with new targets. */
@@ -266,5 +277,62 @@ export function registerPr10AbilityStackOverrides(): void {
       ],
     },
     'PR10 copies an activated ability that cost life when its controller pays that life again.',
+  );
+}
+
+/** PR10.24, 10.30: triggered abilities that trigger an additional time. */
+export function registerPr10TriggerDoublingOverrides(): void {
+  // PR10.24: ward and the creature type choice are interpreted; the type is the one chosen for it.
+  replaceCard(
+    '3640c29b-1534-4952-b297-619ade948431',
+    'Roaming Throne',
+    [
+      '~ is the chosen type in addition to its other types.',
+      'If a triggered ability of another creature you control of the chosen type triggers, it triggers an additional time.',
+    ],
+    {
+      staticEffects: [{ affects: SELF, op: { layer: 4, addChosenSubtype: true } }],
+      ruleStatics: [
+        {
+          kind: 'triggerAdditionalTime',
+          filter: allOf(ofType('Creature'), CHOSEN_SUBTYPE),
+          excludesSelf: true,
+        },
+      ],
+    },
+    'PR10 makes it the chosen type and doubles triggers of your other creatures of that type.',
+  );
+
+  // PR10.30: "it" is Annie Joins Up, an enchantment, so its own trigger is not doubled.
+  const annie = targetSlots({
+    victim: {
+      kind: 'permanent',
+      controller: 'opponent',
+      filter: anyOf(ofType('Creature'), ofType('Planeswalker')),
+    },
+  });
+  replaceCard(
+    '4c3ad545-b375-44a7-a24e-58baacc4e4b6',
+    'Annie Joins Up',
+    [
+      'When ~ enters, it deals 5 damage to target creature or planeswalker an opponent controls.',
+      'If a triggered ability of a legendary creature you control triggers, that ability triggers an additional time.',
+    ],
+    {
+      triggers: [
+        triggered(onEtb(), {
+          targets: annie.targets,
+          effects: [{ op: 'dealDamage', target: annie.slot.victim, amount: constant(5) }],
+          description: 'It deals 5 damage to target creature or planeswalker an opponent controls',
+        }),
+      ],
+      ruleStatics: [
+        {
+          kind: 'triggerAdditionalTime',
+          filter: allOf(ofType('Creature'), ofSupertype('Legendary')),
+        },
+      ],
+    },
+    'PR10 deals the enter damage and doubles triggers of your legendary creatures.',
   );
 }

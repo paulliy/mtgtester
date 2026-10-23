@@ -2137,6 +2137,30 @@ export function* discardCard(
  * effects. Computed once for the original event, so copied triggers never recursively copy.
  */
 export function additionalTypedTriggerCopies(ctx: GameContext, source: EnginePermanent): number {
+  return harmonicCopies(ctx, source) + additionalTriggerTimes(ctx, source);
+}
+
+/** "It triggers an additional time" statics (Annie Joins Up, Roaming Throne), one each. */
+function additionalTriggerTimes(ctx: GameContext, source: EnginePermanent): number {
+  let copies = 0;
+  for (const amplifier of ctx.state.battlefield) {
+    if (amplifier.controllerId !== source.controllerId) continue;
+    for (const rule of ctx.defs.get(amplifier.oracleId)?.ruleStatics ?? []) {
+      if (rule.kind !== 'triggerAdditionalTime') continue;
+      if (rule.excludesSelf === true && amplifier.cardId === source.cardId) continue;
+      const from: SelectorSource = {
+        cardId: amplifier.cardId,
+        objectId: amplifier.id,
+        controllerId: amplifier.controllerId,
+        ...(amplifier.chosenOption === undefined ? {} : { chosenOption: amplifier.chosenOption }),
+      };
+      if (matchesSelector(ctx, source, rule.filter, from)) copies++;
+    }
+  }
+  return copies;
+}
+
+function harmonicCopies(ctx: GameContext, source: EnginePermanent): number {
   const sourceSubtypes = computeCharacteristics(ctx, source).subtypes;
   const isShaman = sourceSubtypes.includes('Shaman');
   const isWizard = sourceSubtypes.includes('Wizard');

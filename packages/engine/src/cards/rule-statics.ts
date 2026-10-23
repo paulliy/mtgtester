@@ -232,4 +232,10 @@ export type RuleStatic =
    * trigger one additional time. Multiple permanents with this static each add one copy.
    */
   | { kind: 'triggerAdditionalForShamanOrOtherWizard' }
+  /**
+   * "If a triggered ability of [another] [filter] you control triggers, it triggers an additional
+   * time" (Annie Joins Up, Roaming Throne). `filter` is matched from this permanent's view, so
+   * `chosenSubtype` is the type chosen for it; each such permanent adds one more firing.
+   */
+  | { kind: 'triggerAdditionalTime'; filter: Selector; excludesSelf?: true }
   | { kind: 'artifactTokenCreatesThopter' };

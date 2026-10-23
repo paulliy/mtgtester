@@ -25,6 +25,8 @@ export type ContinuousOp =
       addTypes?: string[];
       /** Subtypes to add, keeping the existing ones (Urborg → "a Swamp in addition"). */
       addSubtypes?: string[];
+      /** "Is the chosen type in addition to its other types" (Roaming Throne). */
+      addChosenSubtype?: true;
       /** Changeling (CR 702.73): every creature type in CR 205.3m. */
       addAllCreatureTypes?: boolean;
       /** Set the land subtype and drop other land subtypes (Blood Moon → Mountain). */

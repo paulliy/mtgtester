@@ -170,6 +170,23 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
         });
         continue;
       }
+      // "Is the chosen type in addition to its other types" (Roaming Throne): the concrete type
+      // lives on the permanent, so it is resolved here as well.
+      if ('addChosenSubtype' in s.op && s.op.addChosenSubtype === true) {
+        if (source.chosenOption === undefined) continue;
+        const { addChosenSubtype: _chosen, ...rest } = s.op;
+        out.push({
+          applies: {
+            kind: 'selector',
+            selector: s.affects,
+            source: { cardId: source.cardId, controllerId: source.controllerId },
+          },
+          op: { ...rest, addSubtypes: [...(rest.addSubtypes ?? []), source.chosenOption] },
+          timestamp: source.timestamp,
+          ...(boardCondition !== undefined ? { condition: boardCondition } : {}),
+        });
+        continue;
+      }
       out.push({
         applies: {
           kind: 'selector',
