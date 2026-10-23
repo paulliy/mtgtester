@@ -395,6 +395,36 @@ function registerPr11LifecycleOverrides(): void {
     },
   );
 
+  // PR11.17: an opening-hand action (CR 103.6) only for a player who isn't the starting player;
+  // the luck counter turns the colorless mana into any color, "instead".
+  defineCard(
+    'c0adbddc-b070-4c5f-afe0-0474c72a9251',
+    'Gemstone Caverns',
+    [
+      'unrecognized rules text: "If this card is in your opening hand and you\'re not the starting player, you may begin the game with ~ on the battlefield with a luck counter on it. If you do, exile a card from your hand."',
+      'unrecognized rules text: "{T}: Add {C}. If ~ has a luck counter on it, instead add one mana of any color."',
+    ],
+    {
+      ruleStatics: [
+        {
+          kind: 'beginOnBattlefieldFromOpeningHand',
+          notStartingPlayer: true,
+          withCounter: 'luck',
+          exileCardFromHand: true,
+        },
+      ],
+      manaAbilities: [
+        {
+          units: [['C']],
+          conditionalUnits: {
+            condition: { kind: 'sourceMatches', selector: hasCounter('luck') },
+            units: [['W', 'U', 'B', 'R', 'G']],
+          },
+        },
+      ],
+    },
+  );
+
   // PR11.15: the opponent's draw trigger is interpreted; cumulative upkeep is authored.
   extendCard(
     '8a52f3c0-2552-4425-b2e3-5496eb2232a7',
