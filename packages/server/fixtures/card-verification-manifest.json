@@ -7580,34 +7580,113 @@
     "5cf86603-cc47-4644-890a-0997c694817f": {
       "name": "Sivitri, Dragon Master",
       "oracleSha256": "f3e1cc6f16f788685d23f89ea4ee1c95a0122e8053265fb69cc371ac01490b64",
-      "implementationStatus": "unsupported",
-      "unsupportedReason": "The attack-tax loyalty ability is an executable noOp; the engine has no implementation of its required attack payments.",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr12-oracle-pins", "pr12-modeled"],
       "clauses": [
         {
+          "id": "pr12-sivitri-dragon-master-clause-1",
           "oracleText": "+1: Until your next turn, creatures can't attack you or planeswalkers you control unless their controller pays 2 life for each of those creatures.",
           "implementation": [
-            "unsupported: The attack-tax loyalty ability is an executable noOp; the engine has no implementation of its required attack payments."
+            "ActivatedAbility.loyalty +1",
+            "Effect.attackLifeTaxUntilYourNextTurn 2: AttackLifeTaxEntry until your next turn, covering you and planeswalkers you control",
+            "attack declaration: life for every attacker is checked together with any mana tax and paid before mana (CR 508.1g-h); a player who cannot pay, or whose life total cannot change, cannot attack you",
+            "expires at its controller's next untap step and when that player leaves the game"
           ],
-          "engineTestIds": ["sivitri-noop-contained"],
+          "engineTestIds": [
+            "sivitri-c01-activate",
+            "sivitri-c01-positive",
+            "sivitri-c01-negative",
+            "sivitri-c01-unaffordable",
+            "sivitri-c01-joint",
+            "sivitri-c01-locked",
+            "sivitri-c01-stacks-with-mana-tax",
+            "sivitri-c01-expires"
+          ],
+          "viewerScenarioIds": [
+            "pr12-sivitri-dragon-master-viewer-attack-tax",
+            "pr12-sivitri-dragon-master-viewer-unaffordable-tax"
+          ]
+        },
+        {
+          "id": "pr12-sivitri-dragon-master-clause-2",
+          "oracleText": "−3: Search your library for a Dragon card, reveal it, put it into your hand, then shuffle.",
+          "implementation": [
+            "ActivatedAbility.loyalty -3",
+            "Effect.searchLibrary Dragon card to hand, reveal",
+            "Effect.shuffle"
+          ],
+          "engineTestIds": ["sivitri-c02", "sivitri-c02-shared-grammar"],
+          "viewerScenarioIds": ["pr12-sivitri-dragon-master-viewer-tutor"]
+        },
+        {
+          "id": "pr12-sivitri-dragon-master-clause-3",
+          "oracleText": "−7: Destroy all non-Dragon creatures.",
+          "implementation": [
+            "ActivatedAbility.loyalty -7",
+            "Effect.destroyEach non-Dragon creature"
+          ],
+          "engineTestIds": ["sivitri-c03"],
+          "viewerScenarioIds": ["pr12-sivitri-dragon-master-viewer-wrath"]
+        },
+        {
+          "id": "pr12-sivitri-dragon-master-clause-4",
+          "oracleText": "Sivitri, Dragon Master can be your commander.",
+          "implementation": ["can be your commander"],
+          "engineTestIds": ["pr12-modeled"],
           "viewerScenarioIds": []
         }
+      ],
+      "viewerScenarioIds": [
+        "pr12-sivitri-dragon-master-viewer-attack-tax",
+        "pr12-sivitri-dragon-master-viewer-unaffordable-tax",
+        "pr12-sivitri-dragon-master-viewer-tutor",
+        "pr12-sivitri-dragon-master-viewer-wrath"
       ],
       "gameplayAiScenarioIds": []
     },
     "941c9acd-2773-456a-88d5-0537735f93c6": {
       "name": "Zurgo and Ojutai",
       "oracleSha256": "45392f93794edf49d1b74a1d73be74a4c4ce7f0815f3f49262a78b6a94618493",
-      "implementationStatus": "unsupported",
-      "unsupportedReason": "The combat-damage look/select/order/optional-return clause is an executable noOp; the linked choices are not implemented.",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr12-oracle-pins", "pr12-modeled"],
       "clauses": [
         {
+          "id": "pr12-zurgo-and-ojutai-clause-1",
+          "oracleText": "Flying, haste",
+          "implementation": ["Keyword.flying", "Keyword.haste"],
+          "engineTestIds": ["zurgo-c01"],
+          "viewerScenarioIds": ["pr12-zurgo-and-ojutai-viewer-return"]
+        },
+        {
+          "id": "pr12-zurgo-and-ojutai-clause-2",
+          "oracleText": "Zurgo and Ojutai has hexproof as long as it entered this turn.",
+          "implementation": ["conditional hexproof while it entered this turn"],
+          "engineTestIds": ["zurgo-c02"],
+          "viewerScenarioIds": []
+        },
+        {
+          "id": "pr12-zurgo-and-ojutai-clause-3",
           "oracleText": "Whenever one or more Dragons you control deal combat damage to a player or battle, look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order. You may return one of those Dragons to its owner's hand.",
           "implementation": [
-            "unsupported: The combat-damage look/select/order/optional-return clause is an executable noOp; the linked choices are not implemented."
+            "aggregate TriggerSpec.dealsCombatDamage (one or more Dragons you control, to a player); battles do not exist in this engine, so the battle branch cannot arise",
+            "Effect.lookAtTopN 3: one card to hand is required, the rest on the bottom in any order",
+            "Effect.mayReturnEventGroupMemberToHand: optionally return one of the triggering Dragons still on the battlefield"
           ],
-          "engineTestIds": ["zurgo-noop-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "zurgo-c03-positive",
+            "zurgo-c03-decline",
+            "zurgo-c03-negative",
+            "zurgo-c03-left"
+          ],
+          "viewerScenarioIds": [
+            "pr12-zurgo-and-ojutai-viewer-return",
+            "pr12-zurgo-and-ojutai-viewer-keep"
+          ]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr12-zurgo-and-ojutai-viewer-return",
+        "pr12-zurgo-and-ojutai-viewer-keep"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -7631,51 +7710,122 @@
     "099b8d2c-b482-48dd-b6bc-dedf546d66c5": {
       "name": "Marang River Regent // Coil and Catch",
       "oracleSha256": "a61b03077e75c21a2b78e2698ff0ead3653977e2e29c32b34a6fb84e73b72f8d",
-      "implementationStatus": "unsupported",
-      "unsupportedReason": "Coil and Catch’s draw-three/discard-one clause was replaced with a targeted bounce.",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr12-oracle-pins", "pr12-modeled", "pr12-spell-faces-modeled"],
       "clauses": [
         {
+          "id": "pr12-marang-river-regent-coil-and-catch-clause-1",
+          "oracleText": "Flying",
+          "implementation": ["Keyword.flying"],
+          "engineTestIds": ["marang-c01-c02"],
+          "viewerScenarioIds": ["pr12-marang-river-regent-coil-and-catch-viewer-enters"]
+        },
+        {
+          "id": "pr12-marang-river-regent-coil-and-catch-clause-2",
+          "oracleText": "When this creature enters, return up to two other target nonland permanents to their owners' hands.",
+          "implementation": [
+            "TriggerSpec.entersBattlefield (self)",
+            "Effect.returnToHandEachChosen up to two other target nonland permanents to their owners' hands"
+          ],
+          "engineTestIds": ["marang-c01-c02"],
+          "viewerScenarioIds": ["pr12-marang-river-regent-coil-and-catch-viewer-enters"]
+        },
+        {
+          "id": "pr12-marang-river-regent-coil-and-catch-clause-face-1",
           "oracleText": "Draw three cards, then discard a card. (Then shuffle this card into its owner's library.)",
           "implementation": [
-            "unsupported: Coil and Catch’s draw-three/discard-one clause was replaced with a targeted bounce."
+            "interpreted Omen instant spell face",
+            "Effect.draw 3",
+            "Effect.discard 1",
+            "Omen resolution shuffles the card into its owner's library"
           ],
-          "engineTestIds": ["coil-and-catch-substitute-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": ["coil-c01-positive"],
+          "viewerScenarioIds": ["pr12-marang-river-regent-coil-and-catch-viewer-coil-and-catch"]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr12-marang-river-regent-coil-and-catch-viewer-enters",
+        "pr12-marang-river-regent-coil-and-catch-viewer-coil-and-catch"
       ],
       "gameplayAiScenarioIds": []
     },
     "6d4e7943-1fdf-4085-8af0-658badbd0cb8": {
       "name": "Monster Manual // Zoological Study",
       "oracleSha256": "f1a88cb9b7a2583e8fec1dea7413b1c0476db8c46cffd38a9da7928858a7ba1e",
-      "implementationStatus": "unsupported",
-      "unsupportedReason": "Zoological Study’s mill-five and milled-creature recovery Adventure was omitted.",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr12-oracle-pins", "pr12-modeled", "pr12-spell-faces-modeled"],
       "clauses": [
         {
+          "id": "pr12-monster-manual-zoological-study-clause-1",
+          "oracleText": "{1}{G}, {T}: You may put a creature card from your hand onto the battlefield.",
+          "implementation": [
+            "ActivatedAbility {1}{G}, {T}",
+            "Effect.handToBattlefield: you may put a creature card from your hand onto the battlefield"
+          ],
+          "engineTestIds": ["manual-c01-positive", "manual-c01-optional"],
+          "viewerScenarioIds": ["pr12-monster-manual-zoological-study-viewer-put-creature"]
+        },
+        {
+          "id": "pr12-monster-manual-zoological-study-clause-face-1",
           "oracleText": "Mill five cards, then return a creature card milled this way to your hand. (Then exile this card. You may cast the artifact later from exile.)",
           "implementation": [
-            "unsupported: Zoological Study’s mill-five and milled-creature recovery Adventure was omitted."
+            "defineSpellFace Adventure sorcery",
+            "Effect.millThenReturnMilledCard 5, creature: a creature card milled this way returns to hand (CR 701.13c)",
+            "Adventure resolution exiles the card, castable as the artifact from exile"
           ],
-          "engineTestIds": ["zoological-study-omission-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "zoological-c01-positive",
+            "zoological-c01-negative",
+            "zoological-c01-choice"
+          ],
+          "viewerScenarioIds": ["pr12-monster-manual-zoological-study-viewer-zoological-study"]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr12-monster-manual-zoological-study-viewer-put-creature",
+        "pr12-monster-manual-zoological-study-viewer-zoological-study"
       ],
       "gameplayAiScenarioIds": []
     },
     "da1e019c-2ffb-412d-90d7-f2e5e5c44c4b": {
       "name": "Bloomvine Regent // Claim Territory",
       "oracleSha256": "923a1d4e57487e65b17e92d1cfa6fdbf5afbd6b3d0f858826bd94ced7b8b6372",
-      "implementationStatus": "unsupported",
-      "unsupportedReason": "Claim Territory’s two-Forest split-destination search was replaced with a single basic-land-to-hand search.",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr12-oracle-pins", "pr12-modeled", "pr12-spell-faces-modeled"],
       "clauses": [
         {
+          "id": "pr12-bloomvine-regent-claim-territory-clause-1",
+          "oracleText": "Flying",
+          "implementation": ["Keyword.flying"],
+          "engineTestIds": ["bloomvine-c01-c02"],
+          "viewerScenarioIds": ["pr12-bloomvine-regent-claim-territory-viewer-enters"]
+        },
+        {
+          "id": "pr12-bloomvine-regent-claim-territory-clause-2",
+          "oracleText": "Whenever this creature or another Dragon you control enters, you gain 3 life.",
+          "implementation": [
+            "TriggerSpec.entersBattlefield (this or another Dragon you control)",
+            "Effect.gainLife 3"
+          ],
+          "engineTestIds": ["bloomvine-c01-c02", "bloomvine-c02-negative"],
+          "viewerScenarioIds": ["pr12-bloomvine-regent-claim-territory-viewer-enters"]
+        },
+        {
+          "id": "pr12-bloomvine-regent-claim-territory-clause-face-1",
           "oracleText": "Search your library for up to two basic Forest cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle. (Also shuffle this card.)",
           "implementation": [
-            "unsupported: Claim Territory’s two-Forest split-destination search was replaced with a single basic-land-to-hand search."
+            "defineSpellFace Omen sorcery",
+            "Effect.searchLibrary up to two basic Forest cards, reveal: one onto the battlefield tapped, the other to hand",
+            "Effect.shuffle",
+            "Omen resolution shuffles the card into its owner's library"
           ],
-          "engineTestIds": ["claim-territory-substitute-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": ["claim-c01-positive", "claim-c01-up-to", "claim-c01-negative"],
+          "viewerScenarioIds": ["pr12-bloomvine-regent-claim-territory-viewer-claim-territory"]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr12-bloomvine-regent-claim-territory-viewer-enters",
+        "pr12-bloomvine-regent-claim-territory-viewer-claim-territory"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -9783,17 +9933,50 @@
     "a30f30e3-dbbf-4cb2-b3d0-76f57dffb2dd": {
       "name": "Black Bolt, Inhuman King",
       "oracleSha256": "db53d857faae9d00e9f233eae5e77aaefaf2798661c14cc011220e1f7e5a5c23",
-      "implementationStatus": "unsupported",
-      "unsupportedReason": "The becomes-targeted dispatcher does not bind the targeting player needed by the destroy target controlled by that player clause.",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr12-oracle-pins", "pr12-modeled"],
       "clauses": [
         {
+          "id": "pr12-black-bolt-inhuman-king-clause-1",
+          "oracleText": "Flying",
+          "implementation": ["Keyword.flying"],
+          "engineTestIds": ["bolt-c01"],
+          "viewerScenarioIds": ["pr12-black-bolt-inhuman-king-viewer-noncreature-pump"]
+        },
+        {
+          "id": "pr12-black-bolt-inhuman-king-clause-2",
+          "oracleText": "Whenever you cast a noncreature spell, Black Bolt gets +2/+2 until end of turn.",
+          "implementation": [
+            "TriggerSpec.castSpell (you, noncreature)",
+            "Effect.pumpEachUntilEot +2/+2 on the source"
+          ],
+          "engineTestIds": ["bolt-c02-positive", "bolt-c02-negative"],
+          "viewerScenarioIds": [
+            "pr12-black-bolt-inhuman-king-viewer-noncreature-pump",
+            "pr12-black-bolt-inhuman-king-viewer-creature-spell"
+          ]
+        },
+        {
+          "id": "pr12-black-bolt-inhuman-king-clause-3",
           "oracleText": "Lethal Voice — Whenever Black Bolt becomes the target of a spell or ability an opponent controls, destroy target nonland permanent that player controls.",
           "implementation": [
-            "unsupported: The becomes-targeted dispatcher does not bind the targeting player needed by the destroy target controlled by that player clause."
+            "TriggerSpec.becomesTarget (source, by an opponent's spell or ability)",
+            "eventPlayerId binds the targeting spell or ability's controller",
+            "Effect.destroy target nonland permanent controlled by the event player; no legal target removes the trigger (CR 603.3d)"
           ],
-          "engineTestIds": ["black-bolt-inhuman-king-event-player-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "bolt-c03-positive",
+            "bolt-c03-ability",
+            "bolt-c03-negative",
+            "bolt-c03-no-target"
+          ],
+          "viewerScenarioIds": ["pr12-black-bolt-inhuman-king-viewer-lethal-voice"]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr12-black-bolt-inhuman-king-viewer-noncreature-pump",
+        "pr12-black-bolt-inhuman-king-viewer-creature-spell",
+        "pr12-black-bolt-inhuman-king-viewer-lethal-voice"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -9834,17 +10017,33 @@
     "7127fc35-600c-4397-8c01-5327d3c4944b": {
       "name": "Dingus Staff",
       "oracleSha256": "fa26a662e0d1a4e2bdabcbb0164f9e7d8df110cd13333ee0af014c9e00c5a825",
-      "implementationStatus": "unsupported",
-      "unsupportedReason": "The dies dispatcher does not bind the dead creature controller required by the damage clause.",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr12-oracle-pins", "pr12-modeled"],
       "clauses": [
         {
+          "id": "pr12-dingus-staff-clause-1",
           "oracleText": "Whenever a creature dies, this artifact deals 2 damage to that creature's controller.",
           "implementation": [
-            "unsupported: The dies dispatcher does not bind the dead creature controller required by the damage clause."
+            "TriggerSpec.dies (any creature) with subjectControllerIsEventPlayer",
+            "eventPlayerId binds the dying creature's controller from last known information (CR 603.10a)",
+            "Effect.dealDamage 2 to the event player from the source"
           ],
-          "engineTestIds": ["dingus-staff-event-player-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "dingus-c01-positive",
+            "dingus-c01-own",
+            "dingus-c01-lki",
+            "dingus-c01-each",
+            "dingus-c01-negative"
+          ],
+          "viewerScenarioIds": [
+            "pr12-dingus-staff-viewer-opponent-creature",
+            "pr12-dingus-staff-viewer-own-creature"
+          ]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr12-dingus-staff-viewer-opponent-creature",
+        "pr12-dingus-staff-viewer-own-creature"
       ],
       "gameplayAiScenarioIds": []
     },
