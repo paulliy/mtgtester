@@ -3978,6 +3978,34 @@ export function* executeAbility(
       case 'discard':
         yield* discardCards(ctx, controller, effect.count);
         break;
+      case 'mayDiscardThenDraw': {
+        if (controller.hand.length === 0) break;
+        const chosen = yield* chooseCard(ctx, {
+          player: controller.id,
+          prompt: `${source.name}: you may discard a card. If you do, draw a card.`,
+          cards: [...controller.hand],
+          type: 'discard',
+          verb: 'Discard',
+          decline: { type: 'decline', description: "Don't discard", verb: 'Decline' },
+        });
+        const card =
+          chosen === null ? undefined : controller.hand.find((entry) => entry.id === chosen.id);
+        if (card === undefined) break;
+        // The discarded card's characteristics as it was discarded (CR 608.2h).
+        const candidate = cardZoneCandidate(ctx, card, controller.id);
+        yield* discardCard(ctx, card, controller.id, 'effect');
+        const instead = effect.instead;
+        const draws =
+          instead !== undefined &&
+          selectMatches(candidate, instead.filter, {
+            cardId: source.cardId,
+            controllerId: controller.id,
+          })
+            ? instead.count
+            : effect.count;
+        yield* drawCards(ctx, controller, draws);
+        break;
+      }
       case 'connive': {
         // CR 701.50a: draw a card, then discard a card; a nonland discard puts a +1/+1 counter
         // on the conniving permanent. CR 701.50c: if it has left the battlefield, its controller
@@ -8329,7 +8357,7 @@ export function* executeAbility(
           controllerId: source.controllerId,
           targetId: entered.cardId,
           targetObjectId: entered.id,
-          when: 'endStep',
+          when: effect.exileAt === 'yourNextUpkeep' ? 'upkeep' : 'endStep',
           player: 'you',
           ability: {
             kind: 'triggered',

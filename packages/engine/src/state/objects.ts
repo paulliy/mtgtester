@@ -3470,8 +3470,9 @@ export function queueAttackDeclarationTriggers(
                 (a) =>
                   a.attacking !== null &&
                   targetPlayerOf(filter.who, a.attacking) &&
-                  (a.attackingPlaneswalker === null ||
-                    (filter.planeswalkers && attackedPlaneswalker(ctx, a) !== null)),
+                  (a.attackingPlaneswalker === null
+                    ? filter.planeswalkersOnly !== true
+                    : filter.planeswalkers && attackedPlaneswalker(ctx, a) !== null),
               );
         const groups: { members: EnginePermanent[]; attackedPlayerId?: PlayerId }[] =
           spec.perDefender === true

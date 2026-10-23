@@ -387,7 +387,11 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
         record === undefined ||
         !['you', 'opponent', 'enchantedPlayer'].includes(record['who'] as string) ||
         typeof record['planeswalkers'] !== 'boolean' ||
-        Object.keys(record).some((key) => !['who', 'planeswalkers'].includes(key))
+        (record['planeswalkersOnly'] !== undefined &&
+          (record['planeswalkersOnly'] !== true || record['planeswalkers'] !== true)) ||
+        Object.keys(record).some(
+          (key) => !['who', 'planeswalkers', 'planeswalkersOnly'].includes(key),
+        )
       )
         issues.push({ path: `${path}.attacking`, message: 'attacked-player filter is malformed' });
     }

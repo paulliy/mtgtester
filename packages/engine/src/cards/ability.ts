@@ -1079,6 +1079,16 @@ export type Effect =
   | { op: 'draw'; count: Value; player?: 'controller' | 'eventPlayer' }
   | { op: 'discard'; count: number } // controller chooses cards to discard
   /**
+   * "You may discard a card. If you do, draw a card. If a creature card was discarded this way,
+   * draw two cards instead" (Lukka, Wayward Bonder): `instead` replaces the draw count when the
+   * discarded card matched its filter as it was discarded.
+   */
+  | {
+      op: 'mayDiscardThenDraw';
+      count: number;
+      instead?: { filter: Selector; count: number };
+    }
+  /**
    * "This creature connives" (CR 701.50): draw a card, then discard a card; a nonland discard
    * puts a +1/+1 counter on the source, if it is still the same object on the battlefield.
    */
@@ -1965,7 +1975,12 @@ export type Effect =
    * Clique). The haste has no duration, so it lasts as long as that object stays on the
    * battlefield; the delayed exile remembers that object and skips a new one (CR 400.7).
    */
-  | { op: 'reanimateTargetHasteExileAtYourNextEndStep'; target: EffectRef }
+  | {
+      op: 'reanimateTargetHasteExileAtYourNextEndStep';
+      target: EffectRef;
+      /** "Exile it at the beginning of your next upkeep" (Lukka, Wayward Bonder) instead. */
+      exileAt?: 'yourNextUpkeep';
+    }
   /**
    * The delayed return of "When that creature dies this turn, return it to the battlefield tapped
    * under your control" (Cryptek): the card the remembered permanent became in a graveyard
@@ -2307,7 +2322,15 @@ export type TriggerHead =
   | {
       when: 'attackDeclared';
       attacker: 'you' | 'opponent' | 'otherPlayer' | 'any' | 'enchantedPlayer';
-      attacking?: { who: 'you' | 'opponent' | 'enchantedPlayer'; planeswalkers: boolean };
+      /**
+       * Whom the attackers attack. `planeswalkers` also counts their planeswalkers;
+       * `planeswalkersOnly` counts only those ("attacks one or more planeswalkers you control").
+       */
+      attacking?: {
+        who: 'you' | 'opponent' | 'enchantedPlayer';
+        planeswalkers: boolean;
+        planeswalkersOnly?: true;
+      };
       perDefender?: boolean;
       minAttackers?: number;
     };

@@ -300,6 +300,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   dealDamageEachChosen: { targetSlot: many(damage) },
   returnToHandEachChosen: { targetSlot: many(permanent) },
   transformSelf: {},
+  mayDiscardThenDraw: {},
   eachPlayerGainsLife: {},
   eachPlayerLooksAtTopRevealsToHand: {},
   sourceGainsAbility: {},

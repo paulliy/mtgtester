@@ -1,8 +1,9 @@
 /** PR11b authored layout cards: MDFC spell faces, transform, Class, Sagas, split cards, prepare, Rooms. */
 import type { CardDefinition } from '../definition';
-import { allOf, anyOf, ofType, SELF } from '../selector';
+import { allOf, anyOf, ofType, SELF, YOURS } from '../selector';
 import {
   activated,
+  loyaltyAbility,
   mana,
   manaCost,
   onCast,
@@ -378,5 +379,158 @@ function registerPr11bModalBackFaces(): void {
       ],
     },
     'PR11b implements the pay-or-copy cast trigger and the Explore the Vastlands sorcery face.',
+  );
+
+  // PR11.27: Mila's first trigger counts only attacks on your planeswalkers, not on you (CR
+  // 506.2). Lukka's -2 haste lasts as long as that object stays, and the delayed exile at your
+  // next upkeep remembers that object only (CR 400.7). The emblem's damage comes from the
+  // creature that entered, using its power as the trigger resolves (CR 608.2h).
+  const reanimated = targetSlots({
+    card: { kind: 'cardInGraveyard', filter: ofType('Creature') },
+  });
+  const struck = targetSlots({ target: { kind: 'anyTarget' } });
+  const lukkaText =
+    '+1: You may discard a card. If you do, draw a card. If a creature card was discarded this way, draw two cards instead.\n\u22122: Return target creature card from your graveyard to the battlefield. It gains haste. Exile it at the beginning of your next upkeep.\n\u22127: You get an emblem with "Whenever a creature you control enters, it deals damage equal to its power to any target."';
+  const milaText =
+    'Whenever an opponent attacks one or more planeswalkers you control, put a loyalty counter on each planeswalker you control.\nWhenever a permanent you control becomes the target of a spell or ability an opponent controls, you may draw a card.';
+  const lukka: CardDefinition = {
+    oracleId: 'ee524e82-35c4-4cae-b65e-3e147eac2927',
+    name: 'Lukka, Wayward Bonder',
+    typeLine: 'Legendary Planeswalker \u2014 Lukka',
+    supertypes: ['Legendary'],
+    types: ['Planeswalker'],
+    subtypes: ['Lukka'],
+    colors: ['R'],
+    colorIdentity: ['W', 'R'],
+    manaCost: manaCost('{4}{R}{R}'),
+    hasUnsupportedCost: false,
+    power: null,
+    toughness: null,
+    loyalty: 5,
+    defense: null,
+    keywords: [],
+    manaAbilities: [],
+    entersTapped: false,
+    triggers: [],
+    staticEffects: [],
+    ruleStatics: [],
+    spellAbility: spell({ effects: [] }),
+    activatedAbilities: [
+      loyaltyAbility(1, {
+        effects: [
+          {
+            op: 'mayDiscardThenDraw',
+            count: 1,
+            instead: { filter: ofType('Creature'), count: 2 },
+          },
+        ],
+        description:
+          'You may discard a card. If you do, draw a card, or two cards if it was a creature card',
+      }),
+      loyaltyAbility(-2, {
+        targets: reanimated.targets,
+        effects: [
+          {
+            op: 'reanimateTargetHasteExileAtYourNextEndStep',
+            target: reanimated.slot.card,
+            exileAt: 'yourNextUpkeep',
+          },
+        ],
+        description:
+          'Return target creature card from your graveyard to the battlefield. It gains haste. Exile it at the beginning of your next upkeep',
+      }),
+      loyaltyAbility(-7, {
+        effects: [
+          {
+            op: 'createEmblem',
+            name: 'Lukka, Wayward Bonder emblem',
+            abilities: [
+              triggered(
+                {
+                  when: 'enters',
+                  subject: { kind: 'permanent', selector: allOf(ofType('Creature'), YOURS) },
+                },
+                {
+                  targets: struck.targets,
+                  effects: [
+                    {
+                      op: 'dealDamage',
+                      target: struck.slot.target,
+                      amount: { kind: 'powerOfTriggerObject' },
+                      source: 'triggerObject',
+                    },
+                  ],
+                  description:
+                    'Whenever a creature you control enters, it deals damage equal to its power to any target',
+                },
+              ),
+            ],
+          },
+        ],
+        description:
+          'You get an emblem with "Whenever a creature you control enters, it deals damage equal to its power to any target"',
+      }),
+    ],
+    modeled: true,
+    unmodeledReasons: [],
+  };
+  replaceCard(
+    'ee524e82-35c4-4cae-b65e-3e147eac2927',
+    'Mila, Crafty Companion // Lukka, Wayward Bonder',
+    [
+      'unsupported layout "modal_dfc"',
+      'unrecognized rules text: "Whenever an opponent attacks one or more planeswalkers you control, put a loyalty counter on each planeswalker you control."',
+    ],
+    {
+      name: 'Mila, Crafty Companion',
+      triggers: [
+        triggered(
+          {
+            when: 'attackDeclared',
+            attacker: 'opponent',
+            attacking: { who: 'you', planeswalkers: true, planeswalkersOnly: true },
+          },
+          {
+            effects: [
+              {
+                op: 'putCountersEach',
+                selector: allOf(ofType('Planeswalker'), YOURS),
+                counter: 'loyalty',
+                count: 1,
+              },
+            ],
+            description:
+              'Whenever an opponent attacks one or more planeswalkers you control, put a loyalty counter on each planeswalker you control',
+          },
+        ),
+        triggered(
+          { when: 'becomesTargeted', subject: { kind: 'permanent', selector: YOURS } },
+          {
+            optional: true,
+            effects: [{ op: 'draw', count: constant(1) }],
+            description:
+              'Whenever a permanent you control becomes the target of a spell or ability an opponent controls, you may draw a card',
+          },
+        ),
+      ],
+      alternativeCasts: [
+        {
+          kind: 'mdfc',
+          name: lukka.name,
+          typeLine: lukka.typeLine,
+          manaCost: lukka.manaCost!,
+          ability: lukka.spellAbility!,
+          spellFace: lukka,
+          spellFaceText: {
+            oracleText: lukkaText,
+            manaCost: '{4}{R}{R}',
+            frontOracleText: milaText,
+            frontManaCost: '{1}{W}{W}',
+          },
+          description: 'Cast Lukka, Wayward Bonder',
+        },
+      ],
+    },
+    "PR11b implements Mila's planeswalker-attack trigger and the Lukka, Wayward Bonder face.",
   );
 }
