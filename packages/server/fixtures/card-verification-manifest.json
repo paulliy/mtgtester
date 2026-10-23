@@ -16346,7 +16346,12 @@
             "Effect.flipCoin",
             "Effect.returnRandomExiledWithSourceToHand"
           ],
-          "engineTestIds": ["portal-c02-negative", "portal-c02-win", "portal-c02-lose"],
+          "engineTestIds": [
+            "portal-c02-negative",
+            "portal-c02-win",
+            "portal-c02-lose",
+            "portal-c02-departed"
+          ],
           "viewerScenarioIds": []
         }
       ],

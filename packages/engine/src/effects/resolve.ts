@@ -24,7 +24,7 @@ import {
 } from '../state/counters';
 import { isPermanentCard } from '../cards/definition';
 import type { ObjectFacts } from '../cards/source-identity';
-import { eventObjectFacts, sourceObjectFacts } from '../cards/source-identity';
+import { eventObjectFacts, sourceObjectFacts, sourceObjectState } from '../cards/source-identity';
 import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
 import { queueAbilityCopy, queueReplicateCopy, queueSpellCopy } from '../stack/copy';
 import { chooseReplicateTargets } from '../stack/replicate-targets';
@@ -8825,8 +8825,10 @@ export function* executeAbility(
         break;
       }
       case 'returnRandomExiledWithSourceToHand': {
-        const self = ctx.state.battlefield.find((perm) => perm.cardId === source.cardId);
-        const exiled = (self?.exiledWithIds ?? []).flatMap((objectId) => {
+        // The source as it is, or as it last was once sacrificed: its link survives (CR 607.2a).
+        const self = sourceObjectState(ctx, scope);
+        const linked = self !== undefined && 'exiledWithIds' in self ? self.exiledWithIds : [];
+        const exiled = (linked ?? []).flatMap((objectId: string) => {
           const card = ctx.state.exile.find((entry) => entry.id === objectId);
           return card === undefined ? [] : [card];
         });

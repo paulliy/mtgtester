@@ -10136,11 +10136,11 @@
             {
               "onLose": [
                 {
-                  "op": "returnRandomExiledWithSourceToHand"
-                },
-                {
                   "op": "sacrifice",
                   "target": "source"
+                },
+                {
+                  "op": "returnRandomExiledWithSourceToHand"
                 }
               ],
               "onWin": [],
@@ -32880,11 +32880,11 @@
             {
               "onLose": [
                 {
-                  "op": "returnRandomExiledWithSourceToHand"
-                },
-                {
                   "op": "sacrifice",
                   "target": "source"
+                },
+                {
+                  "op": "returnRandomExiledWithSourceToHand"
                 }
               ],
               "onWin": [],

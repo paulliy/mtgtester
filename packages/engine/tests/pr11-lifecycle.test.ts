@@ -709,6 +709,32 @@ describe('Negative Zone Portal', () => {
     expect(ctx.state.exile.filter((card) => ['A', 'B', 'C', 'D'].includes(card.name))).toHaveLength(
       3,
     );
+    // In printed order: the Portal is sacrificed before the card leaves exile.
+    const moves = ctx.state.eventLog
+      .filter((event) => event.type === 'zoneChange')
+      .map((event) => (event.payload as { name: string }).name);
+    const sacrificed = moves.lastIndexOf('Negative Zone Portal');
+    const returned = moves.findLastIndex((name) => ['A', 'B', 'C', 'D'].includes(name));
+    expect(sacrificed).toBeGreaterThanOrEqual(0);
+    expect(sacrificed).toBeLessThan(returned);
+  });
+
+  it('portal-c02-departed — removed in response, its trigger still flips and returns a linked card', () => {
+    const ctx = game('pr11-portal-departed');
+    const portal = portalWith(ctx, ['A', 'B', 'C', 'D'].map(creatureCard));
+    rig(ctx, 1);
+    turnOf(ctx, 'P1');
+    ctx.state.phase = 'beginning';
+    ctx.state.step = 'upkeep';
+    queueStepTriggers(ctx, 'upkeep');
+    checkpoint(ctx);
+    expect(ctx.state.stack.at(-1)?.kind).toBe('triggeredAbility');
+    pump(moveObject(ctx, portal, { zone: 'graveyard' }));
+    const theirHand = player(ctx, 'P2').hand.length;
+    const before = ctx.state.eventLog.length;
+    resolve(ctx);
+    expect(ctx.state.eventLog.slice(before).some((event) => event.type === 'coinFlip')).toBe(true);
+    expect(player(ctx, 'P2').hand.length).toBe(theirHand + 1);
   });
 });
 
