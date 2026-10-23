@@ -8541,6 +8541,77 @@
     }
   },
   {
+    "oracleId": "736892cb-a34b-4bb9-b56c-e26e3db207a2",
+    "name": "Mana Vault",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you.\"",
+      "unrecognized rules text: \"At the beginning of your upkeep, you may pay {4}. If you do, untap this artifact.\"",
+      "unrecognized rules text: \"~ doesn't untap during your untap step.\""
+    ],
+    "def": {
+      "doesntUntapDuringUntapStep": true,
+      "triggers": [
+        {
+          "description": "At the beginning of your upkeep, you may pay {4} to untap this",
+          "effects": [
+            {
+              "condition": {
+                "cost": {
+                  "colored": {
+                    "B": 0,
+                    "G": 0,
+                    "R": 0,
+                    "U": 0,
+                    "W": 0
+                  },
+                  "colorless": 0,
+                  "generic": 4
+                },
+                "kind": "mayPayMana"
+              },
+              "else": [],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "op": "untapTarget",
+                  "target": "source"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        },
+        {
+          "description": "At the beginning of your draw step, if this is tapped, it deals 1 damage to you",
+          "effects": [
+            {
+              "amount": 1,
+              "op": "damageController"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "not",
+              "of": {
+                "kind": "isUntapped"
+              }
+            },
+            "player": "you",
+            "when": "drawStep"
+          }
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "73dad679-1edb-41c9-9d43-56dc93c3e9fe",
     "name": "Stone of Erech",
     "handledLines": [
@@ -10281,6 +10352,67 @@
         "targets": []
       }
     }
+  },
+  {
+    "oracleId": "8a52f3c0-2552-4425-b2e3-5496eb2232a7",
+    "name": "Mystic Remora",
+    "handledLines": [
+      "unrecognized rules text: \"Cumulative upkeep {1}\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Cumulative upkeep {1}: add an age counter, then pay {1} per age counter or sacrifice this",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "counter": "age",
+              "op": "putCounters",
+              "target": "source"
+            },
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "genericValue": {
+                "kind": "times",
+                "n": 1,
+                "of": {
+                  "counter": "age",
+                  "kind": "countersOnSelf"
+                }
+              },
+              "op": "unlessPays",
+              "payer": "controller",
+              "then": [
+                {
+                  "op": "sacrifice",
+                  "target": "source"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "8b21062e-97b0-4967-96df-30e8309f4fba",
@@ -30584,6 +30716,77 @@
     }
   },
   {
+    "oracleId": "oracle-mana-vault",
+    "name": "Mana Vault",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you.\"",
+      "unrecognized rules text: \"At the beginning of your upkeep, you may pay {4}. If you do, untap this artifact.\"",
+      "unrecognized rules text: \"~ doesn't untap during your untap step.\""
+    ],
+    "def": {
+      "doesntUntapDuringUntapStep": true,
+      "triggers": [
+        {
+          "description": "At the beginning of your upkeep, you may pay {4} to untap this",
+          "effects": [
+            {
+              "condition": {
+                "cost": {
+                  "colored": {
+                    "B": 0,
+                    "G": 0,
+                    "R": 0,
+                    "U": 0,
+                    "W": 0
+                  },
+                  "colorless": 0,
+                  "generic": 4
+                },
+                "kind": "mayPayMana"
+              },
+              "else": [],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "op": "untapTarget",
+                  "target": "source"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        },
+        {
+          "description": "At the beginning of your draw step, if this is tapped, it deals 1 damage to you",
+          "effects": [
+            {
+              "amount": 1,
+              "op": "damageController"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "not",
+              "of": {
+                "kind": "isUntapped"
+              }
+            },
+            "player": "you",
+            "when": "drawStep"
+          }
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "oracle-mangara-the-diplomat",
     "name": "Mangara, the Diplomat",
     "handledLines": [
@@ -31665,6 +31868,67 @@
         }
       ]
     }
+  },
+  {
+    "oracleId": "oracle-mystic-remora",
+    "name": "Mystic Remora",
+    "handledLines": [
+      "unrecognized rules text: \"Cumulative upkeep {1}\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Cumulative upkeep {1}: add an age counter, then pay {1} per age counter or sacrifice this",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "counter": "age",
+              "op": "putCounters",
+              "target": "source"
+            },
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "genericValue": {
+                "kind": "times",
+                "n": 1,
+                "of": {
+                  "counter": "age",
+                  "kind": "countersOnSelf"
+                }
+              },
+              "op": "unlessPays",
+              "payer": "controller",
+              "then": [
+                {
+                  "op": "sacrifice",
+                  "target": "source"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-mystic-sanctuary",
