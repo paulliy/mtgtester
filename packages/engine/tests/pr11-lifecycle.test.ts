@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { OracleCard } from '@mtg/shared';
 import { interpretCard } from '../src/cards/interpret';
 import type { GameContext } from '../src/state/types';
-import { oracle, plains, spawn } from './fixtures';
+import { drawCards } from '../src/effects/resolve';
+import { bear, conjure, oracle, plains, pump, spawn } from './fixtures';
 import {
   battlefield,
   castFromHand,
@@ -241,5 +242,71 @@ describe('Smokestack', () => {
     lands(ctx, 'P2', 2);
     nextTurnOf(ctx, 'P2');
     expect(ctx.state.battlefield.filter((perm) => perm.controllerId === 'P2')).toHaveLength(2);
+  });
+});
+
+const TOMBS = pinned('Out of the Tombs');
+
+describe('Out of the Tombs', () => {
+  it('tombs-modeled — models with every reason cleared and enters with no eon counters', () => {
+    const def = interpretCard(TOMBS);
+    expect(def.modeled, def.unmodeledReasons.join('; ')).toBe(true);
+    const ctx = game('pr11-tombs-enter');
+    castFromHand(ctx, 'P1', TOMBS, new Map(), { B: 1, C: 2 });
+    resolve(ctx);
+    expect(battlefield(ctx, 'Out of the Tombs')[0]!.counters['eon'] ?? 0).toBe(0);
+  });
+
+  it('tombs-c01 — each upkeep adds two eon counters, then mills one card per counter', () => {
+    const ctx = game('pr11-tombs-mill');
+    const tombs = spawn(ctx, 'P1', TOMBS);
+    const me = player(ctx, 'P1');
+    for (let index = 0; index < 10; index++) conjure(ctx, 'P1', plains(), 'library');
+    const graveyard = me.graveyard.length;
+    nextTurnOf(ctx, 'P1');
+    expect(tombs.counters['eon']).toBe(2);
+    expect(me.graveyard.length - graveyard).toBe(2);
+    nextTurnOf(ctx, 'P1');
+    expect(tombs.counters['eon']).toBe(4);
+    expect(me.graveyard.length - graveyard).toBe(6);
+  });
+
+  it('tombs-c02-positive — drawing from an empty library returns a creature card instead', () => {
+    const ctx = game('pr11-tombs-replace');
+    spawn(ctx, 'P1', TOMBS);
+    const me = player(ctx, 'P1');
+    me.library = [];
+    conjure(ctx, 'P1', bear(), 'graveyard');
+    const decisions = pump(drawCards(ctx, me, 1)).decisions;
+    expect(battlefield(ctx, 'Test Bear')).toHaveLength(1);
+    expect(me.attemptedDrawFromEmptyLibrary).not.toBe(true);
+    checkpoint(ctx);
+    expect(me.hasLost).toBe(false);
+    // "If you can't, you lose": with a creature card available, losing is not offered.
+    for (const decision of decisions)
+      expect(decision.options.map((option) => option.type)).not.toContain('loseGame');
+  });
+
+  it('tombs-c02-lose — with no creature card in your graveyard, you lose the game', () => {
+    const ctx = game('pr11-tombs-lose');
+    spawn(ctx, 'P1', TOMBS);
+    const me = player(ctx, 'P1');
+    me.library = [];
+    conjure(ctx, 'P1', plains(), 'graveyard');
+    pump(drawCards(ctx, me, 1));
+    checkpoint(ctx);
+    expect(me.hasLost).toBe(true);
+  });
+
+  it('tombs-c02-negative — a library with cards draws normally', () => {
+    const ctx = game('pr11-tombs-normal');
+    spawn(ctx, 'P1', TOMBS);
+    const me = player(ctx, 'P1');
+    conjure(ctx, 'P1', bear(), 'graveyard');
+    const hand = me.hand.length;
+    expect(me.library.length).toBeGreaterThan(0);
+    pump(drawCards(ctx, me, 1));
+    expect(me.hand.length).toBe(hand + 1);
+    expect(battlefield(ctx, 'Test Bear')).toEqual([]);
   });
 });
