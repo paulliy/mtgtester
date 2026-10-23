@@ -40,7 +40,7 @@ const mana = (...symbols: ('W' | 'U' | 'B' | 'R' | 'G' | 'C')[]) =>
 
 const hand = (ctx: GameContext, playerId: string) => p(ctx, playerId).hand.length;
 
-describe('PR10.20 Siren Stormtamer', () => {
+describe('PR10.08 Siren Stormtamer', () => {
   function setup(seed: string) {
     const ctx = pod(seed);
     const siren = spawn(ctx, 'P1', pinned('Siren Stormtamer'));
@@ -119,7 +119,7 @@ describe('PR10.20 Siren Stormtamer', () => {
   });
 });
 
-describe('PR10.27 Mana Sculpt', () => {
+describe('PR10.04 Mana Sculpt', () => {
   const sculpt = pinned('Mana Sculpt');
   const wizard = () => bear('Sculpt Apprentice', { typeLine: 'Creature — Human Wizard' });
 
@@ -299,7 +299,7 @@ describe('PR10.21 Mister Fantastic', () => {
   });
 });
 
-describe('PR10.22 Verrak, Warped Sengir', () => {
+describe('PR10.10 Verrak, Warped Sengir', () => {
   const bloodletter = () => lab('Verrak Bloodletter', 'Pay 2 life: Draw a card.');
   const bloodPinger = () =>
     lab('Verrak Blood Pinger', 'Pay 1 life: This creature deals 1 damage to any target.');

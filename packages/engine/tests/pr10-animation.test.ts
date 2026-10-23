@@ -29,7 +29,7 @@ function endTurn(ctx: GameContext) {
   pump(cleanupStep(ctx));
 }
 
-describe('PR10.29 Atarka Monument', () => {
+describe('PR10.02 Atarka Monument', () => {
   it('pr10-atarka-monument-pinned-oracle-supported — mana and animation are modeled', () => {
     const def = pinnedDefinition('Atarka Monument');
     expect(def.modeled, def.unmodeledReasons.join('\n')).toBe(true);
@@ -70,7 +70,7 @@ describe('PR10.29 Atarka Monument', () => {
   });
 });
 
-describe('PR10.28 Sarkhan, the Dragonspeaker', () => {
+describe('PR10.17 Sarkhan, the Dragonspeaker', () => {
   function sarkhan(seed: string) {
     const ctx = pod(seed);
     const walker = spawn(ctx, 'P1', pinned('Sarkhan, the Dragonspeaker'));
@@ -153,7 +153,7 @@ describe('PR10.28 Sarkhan, the Dragonspeaker', () => {
   });
 });
 
-describe('PR10.15 Mirage Mirror', () => {
+describe('PR10.20 Mirage Mirror', () => {
   const ogre = () =>
     oracle({
       name: 'Mirror Ogre',
@@ -207,7 +207,7 @@ describe('PR10.15 Mirage Mirror', () => {
   });
 });
 
-describe('PR10.08 Saheeli, Sublime Artificer', () => {
+describe('PR10.07 Saheeli, Sublime Artificer', () => {
   const trinket = () =>
     oracle({
       name: 'Saheeli Trinket',

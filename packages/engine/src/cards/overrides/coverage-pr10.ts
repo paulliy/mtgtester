@@ -198,9 +198,9 @@ export function registerPr10CastCopyOverrides(): void {
   );
 }
 
-/** PR10.20, 10.27, 10.21, 10.22: countering, copying and watching abilities on the stack. */
+/** PR10.08, 10.04, 10.21, 10.10: countering, copying and watching abilities on the stack. */
 export function registerPr10AbilityStackOverrides(): void {
-  // PR10.20: the restriction is rechecked on resolution (CR 608.2b), after the sacrifice.
+  // PR10.08: the restriction is rechecked on resolution (CR 608.2b), after the sacrifice.
   const siren = targetSlots({
     object: { kind: 'stackObject', stackTargetsYouOrCreatureYouControl: true },
   });
@@ -223,7 +223,7 @@ export function registerPr10AbilityStackOverrides(): void {
     'PR10 counters only a spell or ability that targets you or a creature you control.',
   );
 
-  // PR10.27: the Wizard check happens as Mana Sculpt resolves; the mana is what was spent.
+  // PR10.04: the Wizard check happens as Mana Sculpt resolves; the mana is what was spent.
   const sculpt = targetSlots({ spell: counterSpellTarget() });
   replaceCard(
     '35e2f82e-7ca3-4a92-9134-b7999eef5337',
@@ -276,7 +276,7 @@ export function registerPr10AbilityStackOverrides(): void {
     'PR10 copies a triggered ability on the stack twice, with new targets.',
   );
 
-  // PR10.22: "if life was paid" is a fact of the activation (CR 603.4); the copy uses last known
+  // PR10.10: "if life was paid" is a fact of the activation (CR 603.4); the copy uses last known
   // information if the ability has already left the stack (CR 707.10).
   replaceCard(
     '04853f06-3fd2-445d-9b0d-d68d0f116635',
@@ -300,9 +300,9 @@ export function registerPr10AbilityStackOverrides(): void {
   );
 }
 
-/** PR10.24, 10.30: triggered abilities that trigger an additional time. */
+/** PR10.18, 10.24: triggered abilities that trigger an additional time. */
 export function registerPr10TriggerDoublingOverrides(): void {
-  // PR10.24: ward and the creature type choice are interpreted; the type is the one chosen for it.
+  // PR10.18: ward and the creature type choice are interpreted; the type is the one chosen for it.
   replaceCard(
     '3640c29b-1534-4952-b297-619ade948431',
     'Roaming Throne',
@@ -323,7 +323,7 @@ export function registerPr10TriggerDoublingOverrides(): void {
     'PR10 makes it the chosen type and doubles triggers of your other creatures of that type.',
   );
 
-  // PR10.30: "it" is Annie Joins Up, an enchantment, so its own trigger is not doubled.
+  // PR10.24: "it" is Annie Joins Up, an enchantment, so its own trigger is not doubled.
   const annie = targetSlots({
     victim: {
       kind: 'permanent',
@@ -357,9 +357,9 @@ export function registerPr10TriggerDoublingOverrides(): void {
   );
 }
 
-/** PR10.29, 10.28, 10.15: animation and becoming a copy until end of turn. */
+/** PR10.02, 10.17, 10.20, 10.07: animation and becoming a copy until end of turn. */
 export function registerPr10AnimationOverrides(): void {
-  // PR10.29: it stays an artifact; its colors become exactly red and green (CR 105.3).
+  // PR10.02: it stays an artifact; its colors become exactly red and green (CR 105.3).
   replaceCard(
     'eb287c04-97f5-4e47-beb1-66cc7d15e748',
     'Atarka Monument',
@@ -389,7 +389,7 @@ export function registerPr10AnimationOverrides(): void {
     'PR10 makes the animated Monument red and green.',
   );
 
-  // PR10.28: no "in addition to its other types", so he stops being a planeswalker (CR 205.1a).
+  // PR10.17: no "in addition to its other types", so he stops being a planeswalker (CR 205.1a).
   const sarkhanBolt = targetSlots({ creature: { kind: 'creature' } });
   replaceCard(
     '80c26f58-04b0-4db0-b84e-9b136609abe0',
@@ -446,7 +446,7 @@ export function registerPr10AnimationOverrides(): void {
     'PR10 makes Sarkhan a legendary red Dragon creature only, and adds the emblem.',
   );
 
-  // PR10.15: it copies the target's copiable values until end of turn (CR 707.2).
+  // PR10.20: it copies the target's copiable values until end of turn (CR 707.2).
   const mirror = targetSlots({
     original: {
       kind: 'permanent',
@@ -471,7 +471,7 @@ export function registerPr10AnimationOverrides(): void {
     'PR10 copies the target until end of turn.',
   );
 
-  // PR10.08: the card has no +1; "another target" cannot be the first target (CR 115.3).
+  // PR10.07: the card has no +1; "another target" cannot be the first target (CR 115.3).
   const saheeli = targetSlots({
     artifact: { kind: 'artifact', controller: 'you' },
     model: {
@@ -512,9 +512,9 @@ export function registerPr10AnimationOverrides(): void {
   );
 }
 
-/** PR10.17, 10.16: tokens that are copies of their source. */
+/** PR10.23, 10.27, 10.31, 10.16, 10.22: tokens that are copies of their source. */
 export function registerPr10TokenCopyOverrides(): void {
-  // PR10.17: the land count is read as the trigger resolves; the copy uses last known
+  // PR10.23: the land count is read as the trigger resolves; the copy uses last known
   // information if Scute Swarm has left the battlefield (CR 707.2, 608.2h).
   replaceCard(
     'aa854d50-444c-49d9-bfb1-5476b33c1c0b',
@@ -559,7 +559,7 @@ export function registerPr10TokenCopyOverrides(): void {
     'PR10 creates an Insect, or a copy of Scute Swarm with six or more lands.',
   );
 
-  // PR10.16: the exemption covers every creature you control, including the copies (CR 704.5j).
+  // PR10.27: the exemption covers every creature you control, including the copies (CR 704.5j).
   replaceCard(
     '33fa949c-f29e-4a98-9381-ecfa9e5c3f6d',
     'Council of Reeds',
@@ -580,7 +580,7 @@ export function registerPr10TokenCopyOverrides(): void {
     'PR10 exempts your creatures from the legend rule and copies Council of Reeds at combat.',
   );
 
-  // PR10.18: only the creatures that entered from, or were cast from, a graveyard are "them".
+  // PR10.31: only the creatures that entered from, or were cast from, a graveyard are "them".
   // The surveil enter trigger is interpreted and kept.
   replaceCard(
     '05d7222b-cc08-4f1f-8e35-6058599572ba',
@@ -612,7 +612,7 @@ export function registerPr10TokenCopyOverrides(): void {
     'append',
   );
 
-  // PR10.07: the target is chosen only after the energy is paid (CR 603.12).
+  // PR10.16: the target is chosen only after the energy is paid (CR 603.12).
   const radiant = targetSlots({ original: { kind: 'permanent', controller: 'you' } });
   replaceCard(
     '20f602b3-814f-406c-b7eb-2d1fc98f8cf1',
@@ -682,7 +682,7 @@ export function registerPr10TokenCopyOverrides(): void {
   );
 }
 
-/** PR10.13 and the characteristic group: cards whose characteristics come from other objects. */
+/** PR10.13, 10.15, 10.28, 10.09, 10.05, 10.29, 10.30, 10.03: cards whose characteristics come from other objects. */
 export function registerPr10CharacteristicsOverrides(): void {
   const imprint = targetSlots({ exiled: { kind: 'creature', filter: not(IS_TOKEN) } });
   // PR10.13: the exile is optional on resolution, but the target is chosen as the trigger is put

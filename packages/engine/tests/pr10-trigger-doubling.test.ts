@@ -39,7 +39,7 @@ function enterTriggers(ctx: GameContext, card: ReturnType<typeof lifeCreature>):
   return count;
 }
 
-describe('PR10.24 Roaming Throne', () => {
+describe('PR10.18 Roaming Throne', () => {
   /** P1's Roaming Throne enters through the real cast, choosing Elf. */
   function throneChoosingElf(seed: string) {
     const ctx = pod(seed);
@@ -85,7 +85,7 @@ describe('PR10.24 Roaming Throne', () => {
   });
 });
 
-describe('PR10.30 Annie Joins Up', () => {
+describe('PR10.24 Annie Joins Up', () => {
   const annie = pinned('Annie Joins Up');
 
   it('pr10-annie-joins-up-pinned-oracle-supported — both lines are modeled', () => {

@@ -44,7 +44,7 @@ const tokensOf = (ctx: GameContext, playerId: string) =>
     (permanent) => permanent.isToken && permanent.controllerId === playerId,
   );
 
-describe('PR10.17 Scute Swarm', () => {
+describe('PR10.23 Scute Swarm', () => {
   function swarmWithLands(seed: string, lands: number) {
     const ctx = pod(seed);
     const swarm = spawn(ctx, 'P1', pinned('Scute Swarm'));
@@ -87,7 +87,7 @@ describe('PR10.17 Scute Swarm', () => {
   });
 });
 
-describe('PR10.16 Council of Reeds', () => {
+describe('PR10.27 Council of Reeds', () => {
   const legendaryArtifact = () =>
     oracle({
       name: 'Reeds Relic',
@@ -159,7 +159,7 @@ describe('PR10.16 Council of Reeds', () => {
   });
 });
 
-describe('PR10.18 Twilight Diviner', () => {
+describe('PR10.31 Twilight Diviner', () => {
   const zombie = (name: string) =>
     oracle({
       name,
@@ -242,7 +242,7 @@ describe('PR10.18 Twilight Diviner', () => {
   });
 });
 
-describe('PR10.07 Saheeli, Radiant Creator', () => {
+describe('PR10.16 Saheeli, Radiant Creator', () => {
   const trinket = () =>
     oracle({
       name: 'Radiant Trinket',
