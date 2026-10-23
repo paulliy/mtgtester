@@ -212,41 +212,90 @@
     },
     "c20a96f7-aa5a-4c15-b8b1-806685c99b27": {
       "name": "Bolt Bend",
-      "oracleSha256": "991a63702cbdcb9ba33de60fd845455d691ba2783677a2ab6d6591da9314d4b5",
+      "oracleSha256": "e34731fbc50dbe1140b6c7d27cdd63b5d046c6fddf99c7f3e9e5c03981fd62bc",
       "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-bolt-bend-pinned-oracle-supported"],
       "clauses": [
         {
+          "id": "pr10-bolt-bend-clause-1",
           "oracleText": "This spell costs {3} less to cast if you control a creature with power 4 or greater.",
-          "implementation": ["explicitly unsupported pending a retarget primitive"],
-          "engineTestIds": ["marchesa-batch1-bolt-bend-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "RuleStatic.costReduction",
+            "Condition.countPermanents",
+            "Selector.powerAtLeast",
+            "Selector.type",
+            "Value.const"
+          ],
+          "engineTestIds": ["pr10-bolt-bend-ferocious-reduction", "pr10-bolt-bend-no-reduction"],
+          "viewerScenarioIds": [
+            "pr10-bolt-bend-viewer-reduction",
+            "pr10-bolt-bend-viewer-no-reduction"
+          ]
         },
         {
+          "id": "pr10-bolt-bend-clause-2",
           "oracleText": "Change the target of target spell or ability with a single target.",
-          "implementation": ["explicitly unsupported; copyTargetSpell is not a retarget"],
-          "engineTestIds": ["marchesa-batch1-bolt-bend-contained"],
-          "viewerScenarioIds": []
+          "implementation": ["Effect.changeSingleTarget", "TargetSpec.stackObject"],
+          "engineTestIds": [
+            "pr10-bolt-bend-changes-target",
+            "pr10-bolt-bend-ability",
+            "pr10-bolt-bend-single-target-only",
+            "pr10-bolt-bend-no-other-target"
+          ],
+          "viewerScenarioIds": ["pr10-bolt-bend-viewer-positive", "pr10-bolt-bend-viewer-negative"]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr10-bolt-bend-viewer-reduction",
+        "pr10-bolt-bend-viewer-no-reduction",
+        "pr10-bolt-bend-viewer-positive",
+        "pr10-bolt-bend-viewer-negative"
       ],
       "gameplayAiScenarioIds": []
     },
     "ae120613-97d6-4393-b39d-c3e6c076f5d6": {
       "name": "Deflecting Swat",
-      "oracleSha256": "59d61f13ab689ea2b364e26bf4c2216a6038b75fbbd09c680af867abd759feac",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "86d8f5d8bf34253fc713b8bf935e1c6e32f8ea805d57df0a112f54344f26f9fe",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-deflecting-swat-pinned-oracle-supported"],
       "clauses": [
         {
+          "id": "pr10-deflecting-swat-clause-1",
           "oracleText": "If you control a commander, you may cast this spell without paying its mana cost.",
-          "implementation": ["explicitly unsupported pending a retarget primitive"],
-          "engineTestIds": ["marchesa-batch1-deflecting-swat-contained"],
-          "viewerScenarioIds": []
+          "implementation": ["CardDefinition.commanderFreeCast"],
+          "engineTestIds": [
+            "pr10-deflecting-swat-commander-free-cast",
+            "pr10-deflecting-swat-insufficient-cost"
+          ],
+          "viewerScenarioIds": [
+            "pr10-deflecting-swat-viewer-commander",
+            "pr10-deflecting-swat-viewer-no-commander"
+          ]
         },
         {
+          "id": "pr10-deflecting-swat-clause-2",
           "oracleText": "You may choose new targets for target spell or ability.",
-          "implementation": ["explicitly unsupported; copyTargetSpell is not a retarget"],
-          "engineTestIds": ["marchesa-batch1-deflecting-swat-contained"],
-          "viewerScenarioIds": []
+          "implementation": ["Effect.chooseNewTargets", "TargetSpec.stackObject"],
+          "engineTestIds": [
+            "pr10-deflecting-swat-redirects-spell",
+            "pr10-deflecting-swat-may-keep",
+            "pr10-deflecting-swat-legal-new-targets",
+            "pr10-deflecting-swat-ability",
+            "pr10-deflecting-swat-ward",
+            "pr10-deflecting-swat-targetless",
+            "pr10-deflecting-swat-needs-target"
+          ],
+          "viewerScenarioIds": [
+            "pr10-deflecting-swat-viewer-positive",
+            "pr10-deflecting-swat-viewer-negative"
+          ]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr10-deflecting-swat-viewer-commander",
+        "pr10-deflecting-swat-viewer-no-commander",
+        "pr10-deflecting-swat-viewer-positive",
+        "pr10-deflecting-swat-viewer-negative"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -505,21 +554,56 @@
     },
     "f586ecb8-310c-4f40-a766-6a7ca46a254d": {
       "name": "Flare of Duplication",
-      "oracleSha256": "42fad81d0b0efc5b4ce467d29301a30d4ad4c6790d84c06549000a7dd2dfec55",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "7ee5cf28a1ce11be9a13913e3dca039b4ac8f66c22baa5c794f89632ea4a32da",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-flare-of-duplication-pinned-oracle-supported"],
       "clauses": [
         {
+          "id": "pr10-flare-of-duplication-clause-1",
           "oracleText": "You may sacrifice a nontoken red creature rather than pay this spell's mana cost.",
-          "implementation": ["explicitly unsupported; alternativeCast omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "AlternativeCast.nonMana",
+            "AlternativeCast.costs",
+            "AbilityCost.sacrificeOther",
+            "Selector.color",
+            "Selector.isToken",
+            "Selector.not"
+          ],
+          "engineTestIds": [
+            "pr10-flare-of-duplication-sacrifice-cost",
+            "pr10-flare-of-duplication-sacrifice-filter"
+          ],
+          "viewerScenarioIds": [
+            "pr10-flare-of-duplication-viewer-sacrifice",
+            "pr10-flare-of-duplication-viewer-no-sacrifice"
+          ]
         },
         {
+          "id": "pr10-flare-of-duplication-clause-2",
           "oracleText": "Copy target instant or sorcery spell. You may choose new targets for the copy.",
-          "implementation": ["explicitly unsupported; copyTargetSpell copies original targets"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "Effect.copyTargetSpell",
+            "TargetSpec.spell",
+            "Selector.anyOf",
+            "Selector.type"
+          ],
+          "engineTestIds": [
+            "pr10-flare-of-duplication-copy-new-target",
+            "pr10-flare-of-duplication-copy-keep-target",
+            "pr10-flare-of-duplication-instant-or-sorcery-only",
+            "pr10-flare-of-duplication-insufficient-cost"
+          ],
+          "viewerScenarioIds": [
+            "pr10-flare-of-duplication-viewer-positive",
+            "pr10-flare-of-duplication-viewer-negative"
+          ]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr10-flare-of-duplication-viewer-sacrifice",
+        "pr10-flare-of-duplication-viewer-no-sacrifice",
+        "pr10-flare-of-duplication-viewer-positive",
+        "pr10-flare-of-duplication-viewer-negative"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -1188,21 +1272,40 @@
     },
     "99140891-face-4015-aacd-1309e87d8f9f": {
       "name": "Display of Power",
-      "oracleSha256": "7467b0fdbbc96a79b05aeadc8074b241be93294abbe71b53ede15f0c35889261",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "04e7139139882df20b82d5db6199236f5ea8cbae1917249f20ad24269127625c",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-display-of-power-pinned-oracle-supported"],
       "clauses": [
         {
+          "id": "pr10-display-of-power-clause-1",
           "oracleText": "This spell can't be copied.",
-          "implementation": ["explicitly unsupported; cannot-be-copied is omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": ["CardDefinition.cantBeCopied"],
+          "engineTestIds": ["pr10-display-of-power-cant-be-copied"],
+          "viewerScenarioIds": ["pr10-display-of-power-viewer-cant-be-copied"]
         },
         {
+          "id": "pr10-display-of-power-clause-2",
           "oracleText": "Copy any number of target instant and/or sorcery spells. You may choose new targets for the copies.",
-          "implementation": ["explicitly unsupported; copies keep original targets"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "Effect.copyEachTargetedSpell",
+            "TargetSpec.spell",
+            "Selector.anyOf",
+            "Selector.type"
+          ],
+          "engineTestIds": [
+            "pr10-display-of-power-copies-each",
+            "pr10-display-of-power-zero-targets"
+          ],
+          "viewerScenarioIds": [
+            "pr10-display-of-power-viewer-positive",
+            "pr10-display-of-power-viewer-negative"
+          ]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr10-display-of-power-viewer-cant-be-copied",
+        "pr10-display-of-power-viewer-positive",
+        "pr10-display-of-power-viewer-negative"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -1310,16 +1413,32 @@
     },
     "a1f55890-31c5-4ed4-a2cd-7a4a9f05f8ca": {
       "name": "Reverberate",
-      "oracleSha256": "1fe3b372294daf708f9e6604546cfa7880fe1dfaff5a8754ab240477d99a4546",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "b903fa4ae25834153fa2ff7cdaba58d24f34ac7a64a8df85ef05972e0742fdba",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-reverberate-pinned-oracle-supported"],
       "clauses": [
         {
+          "id": "pr10-reverberate-clause-1",
           "oracleText": "Copy target instant or sorcery spell. You may choose new targets for the copy.",
-          "implementation": ["explicitly unsupported; copyTargetSpell is not a retarget"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "Effect.copyTargetSpell",
+            "TargetSpec.spell",
+            "Selector.anyOf",
+            "Selector.type"
+          ],
+          "engineTestIds": [
+            "pr10-reverberate-copy-new-target",
+            "pr10-reverberate-copy-keep-target",
+            "pr10-reverberate-instant-or-sorcery-only",
+            "pr10-reverberate-insufficient-cost"
+          ],
+          "viewerScenarioIds": [
+            "pr10-reverberate-viewer-positive",
+            "pr10-reverberate-viewer-negative"
+          ]
         }
       ],
+      "viewerScenarioIds": ["pr10-reverberate-viewer-positive", "pr10-reverberate-viewer-negative"],
       "gameplayAiScenarioIds": []
     },
     "c0d8fef4-65f4-4769-982d-b397d2b7e977": {
@@ -14821,6 +14940,103 @@
         "pr09-grenzo-havoc-raiser-viewer-positive",
         "pr09-grenzo-havoc-raiser-viewer-negative",
         "pr09-grenzo-havoc-raiser-viewer-goad"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c51ed6e3-813b-49c4-b1de-7f92a77f8f6e": {
+      "name": "Galvanic Iteration",
+      "oracleSha256": "4cf8b379abf387f20b3755b04b624dd638f032c2339c8c2e883f19946830ddf3",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-galvanic-iteration-pinned-oracle-supported"],
+      "clauses": [
+        {
+          "id": "pr10-galvanic-iteration-clause-1",
+          "oracleText": "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.",
+          "implementation": [
+            "Effect.nextCastThisTurn",
+            "Effect.copyCastSpell",
+            "Selector.anyOf",
+            "Selector.type"
+          ],
+          "engineTestIds": [
+            "pr10-galvanic-iteration-copies-next",
+            "pr10-galvanic-iteration-only-next",
+            "pr10-galvanic-iteration-ignores-other-spells",
+            "pr10-galvanic-iteration-opponent-spell",
+            "pr10-galvanic-iteration-this-turn",
+            "pr10-galvanic-iteration-countered"
+          ],
+          "viewerScenarioIds": [
+            "pr10-galvanic-iteration-viewer-positive",
+            "pr10-galvanic-iteration-viewer-negative"
+          ]
+        },
+        {
+          "id": "pr10-galvanic-iteration-clause-2",
+          "oracleText": "Flashback {1}{U}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+          "implementation": [
+            "AlternativeCast.manaCost",
+            "AlternativeCast.from",
+            "AlternativeCast.exileOnResolution"
+          ],
+          "engineTestIds": [
+            "pr10-galvanic-iteration-flashback",
+            "pr10-galvanic-iteration-insufficient-cost"
+          ],
+          "viewerScenarioIds": ["pr10-galvanic-iteration-viewer-flashback"]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr10-galvanic-iteration-viewer-positive",
+        "pr10-galvanic-iteration-viewer-negative",
+        "pr10-galvanic-iteration-viewer-flashback"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2469c0b7-a045-4733-bf53-28f3fdbe3797": {
+      "name": "Cosmic Crucible",
+      "oracleSha256": "d5e787d2c259e80b35dab329c6c7b5d3f2f46be5560bb80dbefba98f69e05352",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-cosmic-crucible-pinned-oracle-supported"],
+      "clauses": [
+        {
+          "id": "pr10-cosmic-crucible-clause-1",
+          "oracleText": "At the beginning of your first main phase, add four mana in any combination of colors.",
+          "implementation": ["TriggerSpec.precombatMain", "Effect.addMana", "Value.const"],
+          "engineTestIds": [
+            "pr10-cosmic-crucible-first-main-mana",
+            "pr10-cosmic-crucible-only-your-first-main"
+          ],
+          "viewerScenarioIds": ["pr10-cosmic-crucible-viewer-mana"]
+        },
+        {
+          "id": "pr10-cosmic-crucible-clause-2",
+          "oracleText": "Whenever you cast a noncreature spell, you may copy it. You may choose new targets for the copy. Do this only once each turn. (A copy of a permanent spell becomes a token.)",
+          "implementation": [
+            "TriggerSpec.castsSpell",
+            "Effect.copyCastSpell",
+            "Selector.not",
+            "Selector.type"
+          ],
+          "engineTestIds": [
+            "pr10-cosmic-crucible-copies-noncreature",
+            "pr10-cosmic-crucible-once-each-turn",
+            "pr10-cosmic-crucible-decline-keep-turn-use",
+            "pr10-cosmic-crucible-not-creature",
+            "pr10-cosmic-crucible-cant-be-copied"
+          ],
+          "viewerScenarioIds": [
+            "pr10-cosmic-crucible-viewer-copy",
+            "pr10-cosmic-crucible-viewer-once-each-turn",
+            "pr10-cosmic-crucible-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr10-cosmic-crucible-viewer-mana",
+        "pr10-cosmic-crucible-viewer-copy",
+        "pr10-cosmic-crucible-viewer-once-each-turn",
+        "pr10-cosmic-crucible-viewer-negative"
       ],
       "gameplayAiScenarioIds": []
     }

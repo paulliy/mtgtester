@@ -50,6 +50,11 @@ PR07 modeled all 26 of its cards (786 measured). No card regressed: the 758 afte
 Bilbo's Gambit and Dark Confidant, which main's white-black control merge modeled ahead of PR10 and PR09,
 plus the 26 gives exactly the 786 measured after PR07.
 
+PR10 is in progress. Its stack retarget and spell-copy cards (Deflecting Swat, Reverberate, Bolt
+Bend, Display of Power, Flare of Duplication, Galvanic Iteration and Cosmic Crucible) now have
+production overrides and reviewed evidence, and Bilbo's Gambit, which main's white-black control
+merge modeled ahead of PR10, is recorded with them. See [PR10 progress](pr10-progress.md).
+
 When the plan was prepared, the 302 remaining cards fell into two groups (PR01 and PR02 have since
 modeled 62 of them):
 
@@ -677,32 +682,32 @@ Depends on: PR02, PR03 and PR09.
 
 |     # | Card                       | Population | Kind        | Primary blocker (first reason; +N = more)                                                                                                              |
 | ----: | -------------------------- | ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 10.01 | Deflecting Swat            | MAR, S     | fail-closed | Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.                                                                        |
+| 10.01 | Deflecting Swat            | MAR, S     | modeled     | Modeled: retargets the same stack object (PR10 evidence).                                                                                              |
 | 10.02 | Atarka Monument            | DRA        | fail-closed | The animation does not make it red and green.                                                                                                          |
 | 10.03 | Biotransference            | NEC        | fail-closed | Type change omits creature spells and off-battlefield cards.                                                                                           |
 | 10.04 | Mana Sculpt                | MAR        | fail-closed | Wizard intervening-if is omitted, and delayed manaSpent is not captured from the countered spell.                                                      |
 | 10.05 | Reality Shift              | LEN        | fail-closed | Manifest puts the card face-down but never offers turning it face up for its mana cost.                                                                |
-| 10.06 | Reverberate                | QMQ        | fail-closed | Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.                                                                        |
+| 10.06 | Reverberate                | QMQ        | modeled     | Modeled: the copy chooses new targets (PR10 evidence).                                                                                                 |
 | 10.07 | Saheeli, Sublime Artificer | LEN        | fail-closed | A +1 loyalty ability is authored that is not on the card.                                                                                              |
 | 10.08 | Siren Stormtamer           | MAR        | fail-closed | Counter target is any stack object, not only spells or abilities that target you or your creature.                                                     |
 | 10.09 | Trazyn the Infinite        | NEC        | fail-closed | Activated mana abilities of artifacts in the graveyard are omitted.                                                                                    |
 | 10.10 | Verrak, Warped Sengir      | QMQ        | fail-closed | Copy-activated-ability when life was paid is unimplemented.                                                                                            |
-| 10.11 | Bolt Bend                  | MAR        | fail-closed | Change-the-target is implemented as copyTargetSpell; a copy is not a retarget.                                                                         |
-| 10.12 | Display of Power           | QMQ        | fail-closed | Cannot-be-copied is omitted, and copies keep original targets instead of choosing new ones.                                                            |
+| 10.11 | Bolt Bend                  | MAR        | modeled     | Modeled: changes the single target; cost reduction (PR10 evidence).                                                                                    |
+| 10.12 | Display of Power           | QMQ        | modeled     | Modeled: cannot be copied; copies choose new targets (PR10 evidence).                                                                                  |
 | 10.13 | Duplicant                  | LEN        | fail-closed | Optional exile is a required target.                                                                                                                   |
-| 10.14 | Flare of Duplication       | MAR        | fail-closed | Sacrifice alternative cost is missing, and copyTargetSpell copies original targets instead of choosing new ones.                                       |
+| 10.14 | Flare of Duplication       | MAR        | modeled     | Modeled: sacrifice alternative cost; copy chooses new targets (PR10 evidence).                                                                         |
 | 10.15 | Nighthawk Scavenger        | QMQ        | fail-closed | Power counts card types in all graveyards, not only opponents' graveyards.                                                                             |
 | 10.16 | Saheeli, Radiant Creator   | LEN        | fail-closed | The copy is a reflexive trigger after payment; the target is chosen before you decide to pay.                                                          |
 | 10.17 | Sarkhan, the Dragonspeaker | DRA        | fail-closed | The +1 does not make it legendary or red.                                                                                                              |
 | 10.18 | Roaming Throne             | S          | unmodeled   | ~ is the chosen type in addition to its other types. (+1)                                                                                              |
-| 10.19 | Galvanic Iteration         | FF4        | unmodeled   | When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.                                    |
+| 10.19 | Galvanic Iteration         | FF4        | modeled     | Modeled: next-cast copy with flashback (PR10 evidence).                                                                                                |
 | 10.20 | Mirage Mirror              | FF4        | unmodeled   | {2}: ~ becomes a copy of target artifact, creature, enchantment, or land until end of turn.                                                            |
 | 10.21 | Mister Fantastic           | FF4        | unmodeled   | {R}{G}{W}{U}, {T}: Copy target triggered ability you control twice. You may choose new targets for the copies.                                         |
 | 10.22 | Mocking Doppelganger       | PRA        | unmodeled   | You may have this creature enter as a copy of a creature an opponent controls, except it has "Other creatures with the same name as this creature are… |
 | 10.23 | Scute Swarm                | BRI        | unmodeled   | Whenever a land you control enters, create a 1/1 green Insect creature token. If you control six or more lands, create a token that's a copy of this…  |
 | 10.24 | Annie Joins Up             | FF4        | unmodeled   | When ~ enters, it deals 5 damage to target creature or planeswalker an opponent controls. (+1)                                                         |
-| 10.25 | Bilbo's Gambit             | BRI        | unmodeled   | Gift a Treasure (+1)                                                                                                                                   |
-| 10.26 | Cosmic Crucible            | FF4        | unmodeled   | At the beginning of your first main phase, add four mana in any combination of colors. (+1)                                                            |
+| 10.25 | Bilbo's Gambit             | BRI        | modeled     | Modeled ahead of PR10 by the white-black control merge (Gift, spell lock).                                                                             |
+| 10.26 | Cosmic Crucible            | FF4        | modeled     | Modeled: first-main mana and a once-each-turn spell copy (PR10 evidence).                                                                              |
 | 10.27 | Council of Reeds           | FF4        | unmodeled   | The "legend rule" doesn't apply to creatures you control. (+1)                                                                                         |
 | 10.28 | Xenagos, God of Revels     | RUB        | unmodeled   | As long as your devotion to red and green is less than seven, ~ isn't a creature. (+1)                                                                 |
 | 10.29 | Dragon Man, Reformed Robot | FF4        | unmodeled   | ~'s power is equal to the greatest mana value among noncreature permanents you control and noncreature cards in your graveyard. (+2)                   |

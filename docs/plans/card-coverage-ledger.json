@@ -348,20 +348,6 @@
     "snapshotStatus": "interpreter only; no override registration"
   },
   {
-    "oracleId": "ef71ef07-8a35-41ec-a851-d95e9e3a221b",
-    "name": "Bilbo's Gambit",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Gift a Treasure\"",
-      "unrecognized rules text: \"Return target spell to its owner's hand. If the gift was promised, players can't cast spells this turn.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "6cf50e21-0f60-4e9a-b910-ebe1bad2a29e",
     "name": "Blasphemous Edict",
     "package": "PR02.24",
@@ -755,20 +741,6 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
-  },
-  {
-    "oracleId": "2469c0b7-a045-4733-bf53-28f3fdbe3797",
-    "name": "Cosmic Crucible",
-    "package": "W3",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"At the beginning of your first main phase, add four mana in any combination of colors.\"",
-      "unrecognized rules text: \"Whenever you cast a noncreature spell, you may copy it. You may choose new targets for the copy. Do this only once each turn.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
   },
   {
     "oracleId": "33fa949c-f29e-4a98-9381-ecfa9e5c3f6d",
@@ -1477,19 +1449,6 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
     "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
-  },
-  {
-    "oracleId": "c51ed6e3-813b-49c4-b1de-7f92a77f8f6e",
-    "name": "Galvanic Iteration",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
   },
   {
     "oracleId": "c0adbddc-b070-4c5f-afe0-0474c72a9251",
@@ -4919,6 +4878,122 @@
       "apps/web/e2e/pr09-permanent-card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "ae120613-97d6-4393-b39d-c3e6c076f5d6",
+    "name": "Deflecting Swat",
+    "package": "PR10.01",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-retarget.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-retarget.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "a1f55890-31c5-4ed4-a2cd-7a4a9f05f8ca",
+    "name": "Reverberate",
+    "package": "PR10.06",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-spell-copy.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-spell-copy.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "c20a96f7-aa5a-4c15-b8b1-806685c99b27",
+    "name": "Bolt Bend",
+    "package": "PR10.11",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-retarget.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-retarget.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "99140891-face-4015-aacd-1309e87d8f9f",
+    "name": "Display of Power",
+    "package": "PR10.12",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-spell-copy.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-spell-copy.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "f586ecb8-310c-4f40-a766-6a7ca46a254d",
+    "name": "Flare of Duplication",
+    "package": "PR10.14",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-spell-copy.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-spell-copy.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "c51ed6e3-813b-49c4-b1de-7f92a77f8f6e",
+    "name": "Galvanic Iteration",
+    "package": "PR10.19",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-cast-copy.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-cast-copy.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "2469c0b7-a045-4733-bf53-28f3fdbe3797",
+    "name": "Cosmic Crucible",
+    "package": "PR10.26",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-cast-copy.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-cast-copy.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "ef71ef07-8a35-41ec-a851-d95e9e3a221b",
+    "name": "Bilbo's Gambit",
+    "package": "PR10.25",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": ["packages/engine/tests/white-black-control-gifts.test.ts"],
+    "interpretationTests": ["packages/engine/tests/white-black-control-gifts.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   }
 ]

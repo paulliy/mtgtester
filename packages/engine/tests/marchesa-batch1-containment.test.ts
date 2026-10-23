@@ -121,6 +121,12 @@ describe('Marchesa catalog audit containment', () => {
     'Aetherworks Marvel',
     'Herald of Amity',
     'Mystic Forge',
+    // PR10 stack retarget and copy regressions replace these historical guards.
+    'Deflecting Swat',
+    'Bolt Bend',
+    'Reverberate',
+    'Flare of Duplication',
+    'Display of Power',
 
     'Vindictive Lich',
     'Shadrix Silverquill',
