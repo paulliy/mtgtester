@@ -16,6 +16,12 @@ import type { Condition } from './condition';
 import type { Selector } from './selector';
 import type { Value } from './value';
 
+/**
+ * What a permanent can have protection from (CR 702.16a): a color, multicolored (two or more
+ * colors, CR 105.4) or a card type ("protection from creatures" — the source is a creature).
+ */
+export type ProtectionQuality = Color | 'multicolored' | 'creatures';
+
 /** One layer operation. The `layer`/`sublayer` fix its place in the CR 613 order. */
 export type ContinuousOp =
   // Layer 4 — type-changing.
@@ -57,6 +63,11 @@ export type ContinuousOp =
   // Layer 5 — color-changing.
   | { layer: 5; setColors: Color[] }
   | { layer: 6; addKeyword: KeywordAbility }
+  /**
+   * Lose these keywords and can't have them (Arcane Lighthouse): removed where the op applies and
+   * again after every other layer-6 effect, so a later grant cannot restore them.
+   */
+  | { layer: 6; denyKeywords: KeywordAbility[] }
   /** "Creatures with counters on them can't be blocked" (Herald of Secret Streams). */
   | { layer: 6; setCantBeBlocked: true }
   /** "Creatures your opponents control attack each combat if able." */
@@ -66,7 +77,7 @@ export type ContinuousOp =
   /** "Other Dragons you control have ward {2}" — parameterized, so not an `addKeyword`. */
   | { layer: 6; addWard: WardCost }
   /** "Protection from white and from black" (CR 702.16). */
-  | { layer: 6; addProtection: Color[] }
+  | { layer: 6; addProtection: ProtectionQuality[] }
   /**
    * "Protection from the chosen color" (Flickering Ward) — the color is per-permanent state
    * (`EnginePermanent.chosenOption`), not fixed, so `gatherEffects` resolves this into a
@@ -125,8 +136,8 @@ export interface Characteristics {
    * pool grants a second one, and silently combining them would be a guess.
    */
   ward: WardCost | null;
-  /** Colors this permanent has protection from (CR 702.16). */
-  protectionFrom: Color[];
+  /** Qualities this permanent has protection from (CR 702.16). */
+  protectionFrom: ProtectionQuality[];
   /** Computed evasion from a layer-6 effect, separate from printed characteristics. */
   cantBeBlocked: boolean;
   /** Static goad requirements, stored as the controlling player id. */

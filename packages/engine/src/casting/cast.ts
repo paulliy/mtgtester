@@ -1,3 +1,5 @@
+import { targetingSourceFields } from '../targets/context';
+import type { TargetingSource } from '../targets/context';
 import { supportsAdditionalXAnnouncement } from '../cards/cost-contracts';
 import { selectedSpellDefinition } from '../cards/spell-faces';
 import { castingPreviewContext } from './preview';
@@ -9,7 +11,7 @@ import { chooseSpellPayment, planSpellPayment } from '../mana/spell-payment';
  * migrated here incrementally; this module owns configuration, targeting, payment, and casts.
  */
 
-import type { Color, ObjectId, PlayerId } from '@mtg/shared';
+import type { ObjectId, PlayerId } from '@mtg/shared';
 
 import type { WardCost } from '../cards/ability';
 import { evaluateCondition } from '../cards/condition';
@@ -48,6 +50,7 @@ import {
   playFromZonePermission,
   wardCostOf,
   requireModeled,
+  targetingFromDefinition,
 } from '../state/queries';
 import type {
   DamageKeyword,
@@ -243,8 +246,8 @@ export function* chooseCountTargets(
   sourceCardId: string,
   ordinaryTargets: readonly ObjectId[],
   activeSlots?: readonly number[],
-  /** The spell's or ability source's colors, for protection (CR 702.16). */
-  sourceColors?: readonly Color[],
+  /** The spell or ability source, for protection (CR 702.16). */
+  source?: TargetingSource,
   payable: (chosen: CountedTargetChoices) => boolean = () => true,
   x = 0,
 ): GameGen<{
@@ -258,7 +261,7 @@ export function* chooseCountTargets(
     sourceCardId,
     chosenTargets: ordinaryTargets,
     x,
-    ...(sourceColors === undefined ? {} : { sourceColors }),
+    ...targetingSourceFields(source),
   };
   if (!countTargetsCanComplete(ctx, ability, context, {}, activeSlots, payable)) {
     throw new Error(
@@ -287,7 +290,7 @@ export function* chooseCountTargets(
           ctx,
           spec,
           playerId,
-          sourceColors,
+          source,
           undefined,
           ordinaryTargets,
           sourceCardId,
@@ -961,7 +964,7 @@ function* proposeCast(
     obj.cardId,
     targets,
     selectedModeTargetSlots(abilityDef, selectedModes),
-    abilityDef.colors,
+    targetingFromDefinition(abilityDef, 'spell'),
     payableTargets,
     payload.x ?? 0,
   );

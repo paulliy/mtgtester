@@ -225,7 +225,7 @@ describe('white-black-control protection and stack cards — pinned Oracle', () 
     );
     expect(colors).not.toContain('Protection from C');
     expect(computeCharacteristics(ctx, mother).protectionFrom).toEqual(['W']);
-    expect(hasProtectionFrom(ctx, mother, ['W'])).toBe(true);
+    expect(hasProtectionFrom(ctx, mother, { colors: ['W'], types: [] })).toBe(true);
   });
 
   it('mother-of-runes-c03/c04-positive — protection prevents white damage/targeting, survives source departure, blinks away, and expires at cleanup', () => {
@@ -276,12 +276,27 @@ describe('white-black-control protection and stack cards — pinned Oracle', () 
       },
       target,
       2,
-      { combat: false, sourceHasDeathtouch: false, sourceHasLifelink: false, sourceColors: ['W'] },
+      {
+        combat: false,
+        sourceHasDeathtouch: false,
+        sourceHasLifelink: false,
+        sourceTraits: { colors: ['W'], types: ['Creature'] },
+      },
     );
     expect(target.damageMarked).toBe(0);
     const whiteTargetSpec: TargetSpec = { kind: 'creature' };
-    expect(computeTargetOptions(ctx, whiteTargetSpec, 'P2', ['W'])).not.toContain(target.id);
-    expect(computeTargetOptions(ctx, whiteTargetSpec, 'P2', ['B'])).toContain(target.id);
+    expect(
+      computeTargetOptions(ctx, whiteTargetSpec, 'P2', {
+        traits: { colors: ['W'], types: [] },
+        kind: 'spell',
+      }),
+    ).not.toContain(target.id);
+    expect(
+      computeTargetOptions(ctx, whiteTargetSpec, 'P2', {
+        traits: { colors: ['B'], types: [] },
+        kind: 'spell',
+      }),
+    ).toContain(target.id);
     const returned = pump(moveObject(ctx, target, { zone: 'exile' })).value;
     if (returned === null || returned === undefined || returned.zone !== 'exile')
       throw new Error('Target did not leave');
@@ -555,7 +570,12 @@ describe('white-black-control protection and stack cards — pinned Oracle', () 
     const ownCreature = spawn(ctx, 'P1', bear());
     const ownSpell = castToStack(ctx, 'P2', doom(), new Map([[0, opponentCreature.id]]));
     const spec: TargetSpec = { kind: 'spell', spellTargetsPermanentYouControl: true };
-    expect(computeTargetOptions(ctx, spec, 'P1', ['W'])).not.toContain(ownSpell);
+    expect(
+      computeTargetOptions(ctx, spec, 'P1', {
+        traits: { colors: ['W'], types: [] },
+        kind: 'spell',
+      }),
+    ).not.toContain(ownSpell);
     const mother = spawn(ctx, 'P1', card('Mother of Runes'));
     mother.summoningSick = false;
     const activateMother = computePriorityOptions(ctx, player(ctx, 'P1')).find((entry) => {
@@ -576,7 +596,12 @@ describe('white-black-control protection and stack cards — pinned Oracle', () 
     );
     const activatedAbility = ctx.state.stack.at(-1)!;
     expect(activatedAbility.kind).toBe('activatedAbility');
-    expect(computeTargetOptions(ctx, spec, 'P1', ['W'])).not.toContain(activatedAbility.id);
+    expect(
+      computeTargetOptions(ctx, spec, 'P1', {
+        traits: { colors: ['W'], types: [] },
+        kind: 'spell',
+      }),
+    ).not.toContain(activatedAbility.id);
     const playerTargetSpell = oracle({
       name: 'Player Target Probe',
       typeLine: 'Instant',
@@ -602,7 +627,12 @@ describe('white-black-control protection and stack cards — pinned Oracle', () 
       }),
     );
     const spellOnPlayer = ctx.state.stack.at(-1)!;
-    expect(computeTargetOptions(ctx, spec, 'P1', ['W'])).not.toContain(spellOnPlayer.id);
+    expect(
+      computeTargetOptions(ctx, spec, 'P1', {
+        traits: { colors: ['W'], types: [] },
+        kind: 'spell',
+      }),
+    ).not.toContain(spellOnPlayer.id);
     const targetlessCard = oracle({
       name: 'Targetless Probe',
       typeLine: 'Instant',
@@ -615,7 +645,12 @@ describe('white-black-control protection and stack cards — pinned Oracle', () 
       spellAbility: { kind: 'spell', targets: [], effects: [] },
     });
     const targetless = castToStack(ctx, 'P2', targetlessCard);
-    expect(computeTargetOptions(ctx, spec, 'P1', ['W'])).not.toContain(targetless);
+    expect(
+      computeTargetOptions(ctx, spec, 'P1', {
+        traits: { colors: ['W'], types: [] },
+        kind: 'spell',
+      }),
+    ).not.toContain(targetless);
 
     const changed = context('rebuff-control-change');
     ensureMana(changed, 'P1', 4);
@@ -660,9 +695,10 @@ describe('white-black-control protection and stack cards — pinned Oracle', () 
     });
     const rebuffId = castPinnedToStack(ctx, 'P1', 'Rebuff the Wicked', new Map([[0, spellId]]));
     expect(
-      computeTargetOptions(ctx, { kind: 'spell', spellTargetsPermanentYouControl: true }, 'P1', [
-        'W',
-      ]),
+      computeTargetOptions(ctx, { kind: 'spell', spellTargetsPermanentYouControl: true }, 'P1', {
+        traits: { colors: ['W'], types: [] },
+        kind: 'spell',
+      }),
     ).toContain(spellId);
     resolveTop(ctx);
     expect(ctx.state.stack.some((entry) => entry.id === spellId)).toBe(true);

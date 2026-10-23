@@ -103,9 +103,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
 
   // Shadrix Silverquill: restored in coverage PR08.
 
-  unimplemented('30ac68e6-160a-41f9-9f0f-0e0eef383150', 'Arcane Lighthouse', [
-    "{1}, {T}: Until end of turn, creatures your opponents control lose hexproof and shroud and can't have hexproof or shroud.",
-  ]);
+  // Arcane Lighthouse: restored in coverage PR11 (see coverage-pr11.ts).
 
   unimplemented('b8602f19-6fc2-43c4-b0c4-2cd11d5dbda2', 'Keen Duelist', [
     'At the beginning of your upkeep, you and target opponent each reveal the top card of your library. You each lose life equal to the mana value of the card revealed by the other player. You each put the card you revealed into your hand.',
@@ -186,9 +184,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     "Whenever enchanted creature attacks, reveal cards from the top of your library until you reveal an Aura card. You may put that card onto the battlefield. If you don't, put it into your hand. Put the rest on the bottom of your library in a random order.",
   ]);
 
-  unimplemented('81a51328-b995-4f3b-90bc-a20ae21dd254', 'Spirit Mantle', [
-    'Enchanted creature gets +1/+1 and has protection from creatures.',
-  ]);
+  // Spirit Mantle: restored in coverage PR11 (see silverquill-influence-remaining.ts).
 
   // Promise of Loyalty: authored in white-black-control-promise.ts (recorded in coverage PR07).
 

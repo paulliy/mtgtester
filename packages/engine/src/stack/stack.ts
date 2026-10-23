@@ -12,7 +12,7 @@ import { TREASURE } from '../cards/tokens';
 import { captureResolutionTargets } from '../targets/resolution';
 import { emit, debug } from '../log/log';
 import { makePermanent, moveObject, queueTriggersForObject, createTokens } from '../state/objects';
-import { sourceColorsOf, spellDefinitionOf } from '../state/queries';
+import { spellDefinitionOf, stackSourceTraits } from '../state/queries';
 import type { EngineStackObject, GameContext } from '../state/types';
 
 /** Resolve the top object of the stack. Caller guarantees the stack is nonempty. */
@@ -61,7 +61,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
   // otherwise targetless mode fizzle.
   const specs = top.ability?.targets ?? [];
   // Protection gained in response makes a target illegal too (CR 702.16b, 608.2b).
-  const sourceColors = sourceColorsOf(ctx, top.sourceCardId, top.sourceOracleId, top.sourceColors);
+  const sourceTraits = stackSourceTraits(ctx, top);
   const resolutionTargets = captureResolutionTargets(
     ctx,
     specs,
@@ -70,7 +70,8 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
     {
       controllerId: top.controllerId,
       sourceCardId: top.sourceCardId,
-      sourceColors,
+      sourceTraits,
+      sourceKind: top.kind === 'spell' ? 'spell' : 'ability',
       ...(top.sourceFacts === undefined ? {} : { sourceFacts: top.sourceFacts }),
       ...(top.triggerScope?.eventPlayerId === undefined
         ? {}
@@ -141,6 +142,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
         ...(top.sourceFacts === undefined ? {} : { lastKnownFacts: top.sourceFacts }),
         ...(top.kind === 'spell' ? { resolvingStackObject: top } : {}),
         ...(top.sourceColors !== undefined ? { lastKnownColors: top.sourceColors } : {}),
+        ...(top.kind === 'spell' ? { lastKnownTypes: stackSourceTraits(ctx, top).types } : {}),
         ...(top.sourceDamageKeywords !== undefined
           ? { lastKnownDamageKeywords: top.sourceDamageKeywords }
           : {}),

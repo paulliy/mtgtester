@@ -171,7 +171,6 @@ describe('audit: approximate cards fail closed', () => {
       "Sage's Reverie",
       "Enchanted creature gets +1/+1 for each Aura you control that's attached to a creature.",
     ],
-    ['Spirit Mantle', 'Enchanted creature gets +1/+1 and has protection from creatures.'],
     [
       'Scriv, the Obligator',
       'Whenever this creature enters or attacks, create a white Aura enchantment token named Contract attached to target creature an opponent controls.',

@@ -1,8 +1,9 @@
-import type { Color, ObjectId, PlayerId } from '@mtg/shared';
+import type { ObjectId, PlayerId } from '@mtg/shared';
 import type { Ability } from '../cards/ability';
 import type { GameGen } from '../decisions';
 import type { GameContext } from '../state/types';
-import type { TargetContext } from '../targets/context';
+import type { TargetContext, TargetingSource } from '../targets/context';
+import { targetingSourceFields } from '../targets/context';
 import { targetDomainCandidates, targetIsLegal, withinTotalManaValue } from '../targets/legality';
 
 /** Retarget identities, preserving every original targeting occurrence and its cardinality. */
@@ -13,7 +14,7 @@ export function* chooseReplicateTargets(
   copyIndex: number,
   copyCount: number,
   ability: Ability,
-  colors: readonly Color[],
+  source: TargetingSource,
   sourceCardId: string,
   originalTargets: readonly ObjectId[],
   originalCounted: Readonly<Record<number, readonly ObjectId[]>>,
@@ -28,7 +29,7 @@ export function* chooseReplicateTargets(
     name,
     subject: `copy ${copyIndex + 1} of ${copyCount}`,
     ability,
-    colors,
+    source,
     sourceCardId,
     originalTargets,
     originalCounted,
@@ -50,7 +51,8 @@ export function* chooseNewTargets(
     name: string;
     subject: string;
     ability: Ability;
-    colors: readonly Color[];
+    /** The targeting object's source, for protection and ability restrictions. */
+    source: TargetingSource;
     sourceCardId: string;
     originalTargets: readonly ObjectId[];
     originalCounted: Readonly<Record<number, readonly ObjectId[]>>;
@@ -71,7 +73,7 @@ export function* chooseNewTargets(
     name,
     subject,
     ability,
-    colors,
+    source,
     sourceCardId,
     originalTargets,
     originalCounted,
@@ -102,7 +104,7 @@ export function* chooseNewTargets(
   const context = (chosenTargets: readonly ObjectId[]): TargetContext => ({
     controllerId: objectControllerId,
     sourceCardId,
-    sourceColors: colors,
+    ...targetingSourceFields(source),
     chosenTargets,
     ...(request.eventPlayerId === undefined ? {} : { eventPlayerId: request.eventPlayerId }),
     ...(request.sourceFacts === undefined ? {} : { sourceFacts: request.sourceFacts }),

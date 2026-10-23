@@ -326,6 +326,12 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
         op: { layer: 6, addProtection: eff.protectionFrom },
         timestamp: eff.timestamp,
       });
+    } else if (eff.kind === 'denyKeywords' && eff.deniedKeywords !== undefined) {
+      out.push({
+        applies,
+        op: { layer: 6, denyKeywords: eff.deniedKeywords },
+        timestamp: eff.timestamp,
+      });
     } else if (eff.kind === 'grantAbility' && eff.ability !== undefined) {
       out.push({ applies, op: { layer: 6, addTrigger: eff.ability }, timestamp: eff.timestamp });
     } else if (eff.kind === 'becomeCreature' && eff.becomeCreature !== undefined) {
@@ -670,6 +676,8 @@ function applyOpTo(
           }
       } else if ('addTrigger' in op) {
         chars.triggers.push(op.addTrigger);
+      } else if ('denyKeywords' in op) {
+        chars.keywords = chars.keywords.filter((keyword) => !op.denyKeywords.includes(keyword));
       } else if ('addKeyword' in op) {
         if (!chars.keywords.includes(op.addKeyword)) {
           chars.keywords.push(op.addKeyword);
@@ -1016,6 +1024,10 @@ function runLayerPass(
   finishLayer4(ctx, work);
   applyGroup(ctx, work, group('5'));
   applyGroup(ctx, work, group('6'));
+  // "Can't have" (Arcane Lighthouse) holds against every grant, whatever its timestamp.
+  for (const effect of group('6')) {
+    if ('denyKeywords' in effect.op) applyOne(ctx, work, effect);
+  }
   applyGroup(ctx, work, group('7a'));
   applyGroup(ctx, work, group('7b'));
   for (const entry of work.values()) {

@@ -647,6 +647,7 @@ export interface UntilEotEffect extends ContinuousEffect {
     | 'ptDelta'
     | 'grantKeyword'
     | 'grantProtection'
+    | 'denyKeywords'
     | 'grantAbility'
     | 'cantBeBlocked'
     | 'becomeCreature';
@@ -659,6 +660,8 @@ export interface UntilEotEffect extends ContinuousEffect {
    * op (`addProtection`) rather than riding on `keyword`.
    */
   protectionFrom?: Color[];
+  /** Keywords the affected permanents lose and can't have (`denyKeywords`, Arcane Lighthouse). */
+  deniedKeywords?: KeywordAbility[];
   ability?: Ability;
   /**
    * "Becomes a 4/4 red and green Dragon artifact creature with flying until end of turn"

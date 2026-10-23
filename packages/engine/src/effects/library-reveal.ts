@@ -114,14 +114,14 @@ export function* revealUntilAura(
           ctx,
           enchant,
           controllerId,
-          definition.colors,
+          undefined,
           undefined,
           undefined,
           aura.cardId,
           false,
         ).filter((id) => {
           const host = ctx.state.battlefield.find((permanent) => permanent.id === id);
-          return host === undefined || !hasProtectionFrom(ctx, host, definition.colors);
+          return host === undefined || !hasProtectionFrom(ctx, host, definition);
         });
   let destination: 'battlefield' | 'hand' = 'hand';
   if (hosts.length > 0) {

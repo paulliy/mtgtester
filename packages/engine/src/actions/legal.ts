@@ -1,3 +1,5 @@
+import { targetingSourceFields } from '../targets/context';
+import type { TargetingSource } from '../targets/context';
 import { playerLifeLocked } from '../state/phasing';
 import { offBattlefieldTypes } from '../state/off-battlefield-types';
 import { UnmodeledCardError } from '../errors';
@@ -67,7 +69,6 @@ import {
   allowanceFor,
   canPlayFromZone,
   canPayNonManaCosts,
-  colorsOf,
   playFromZonePermission,
   castFromLibraryTopCandidates,
   castingSpellsBlockedFor,
@@ -82,6 +83,8 @@ import {
   requireModeled,
   convokeSourcesFor,
   spellHasConvoke,
+  abilityOfPermanent,
+  targetingFromDefinition,
 } from '../state/queries';
 import { faceDownSpellOracleId } from '../state/objects';
 import type {
@@ -645,7 +648,7 @@ export function computeTargetOptions(
   ctx: GameContext,
   spec: TargetKind | TargetSpec,
   casterId: PlayerId,
-  sourceColors?: readonly Color[],
+  source?: TargetingSource,
   eventPlayerId?: PlayerId,
   chosenTargets?: readonly ObjectId[],
   sourceCardId = '',
@@ -657,7 +660,7 @@ export function computeTargetOptions(
     sourceCardId,
     targeting,
     ...(sourceFacts === undefined ? {} : { sourceFacts }),
-    ...(sourceColors === undefined ? {} : { sourceColors }),
+    ...targetingSourceFields(source),
     ...(eventPlayerId === undefined ? {} : { eventPlayerId }),
     ...(chosenTargets === undefined ? {} : { chosenTargets }),
   });
@@ -1168,7 +1171,7 @@ export function computePriorityOptions(
                 {
                   controllerId: castPlayer.id,
                   sourceCardId: obj.cardId,
-                  sourceColors: castingDef.colors,
+                  ...targetingSourceFields(targetingFromDefinition(castingDef, 'spell')),
                   x,
                 },
                 selectedModeTargetSlots(castingDef, selectedModes),
@@ -1769,7 +1772,7 @@ export function computePriorityOptions(
             ctx,
             spec,
             player.id,
-            colorsOf(ctx, perm),
+            abilityOfPermanent(ctx, perm),
             undefined,
             undefined,
             perm.cardId,
@@ -1890,7 +1893,12 @@ export function computePriorityOptions(
       const slots: { slot: number; options: ObjectId[] }[] = [];
       let missingTarget = false;
       for (const [slot, spec] of activated.ability.targets.entries()) {
-        const targetOptions = computeTargetOptions(ctx, spec, player.id, def.colors);
+        const targetOptions = computeTargetOptions(
+          ctx,
+          spec,
+          player.id,
+          targetingFromDefinition(def, 'ability'),
+        );
         if (spec.count !== undefined) {
           if (targetOptions.length < spec.count.min) missingTarget = true;
           continue;
@@ -2125,7 +2133,7 @@ export function validateChosenTargets(
     if (
       !targetIsLegal(ctx, spec, choice, {
         controllerId: casterId,
-        sourceColors: def.colors,
+        ...targetingSourceFields(targetingFromDefinition(def, 'spell')),
         ...(sourceCardId === undefined ? {} : { sourceCardId }),
         chosenTargets: targets,
         phase: 'announcement',

@@ -356,6 +356,7 @@ const effectExpressions = {
   pumpEachUntilEot: { selector: selector, power: numericExpression, toughness: numericExpression },
   doublePowerAndToughnessEachUntilEot: { selector: selector },
   grantKeywordEachUntilEot: { selector: selector },
+  denyKeywordsEachUntilEot: { selector: selector },
   grantKeywordToAttackGroupUntilEot: {},
   putCountersOnCreatureOfChoice: { count: finite },
   returnBlockedCreatureAtEndOfCombat: {},
