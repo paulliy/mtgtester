@@ -9,7 +9,7 @@
 
 import type { TargetingSource } from '../targets/context';
 import type { LossReason, ObjectId, PlayerId } from '@mtg/shared';
-import { playerLifeLocked } from '../state/phasing';
+import { playerProtectedFromEverything } from '../state/phasing';
 import { queueBecomesTargetedTriggers, queueWardTriggers } from '../actions/apply';
 import {
   abilityForModes,
@@ -44,6 +44,7 @@ import {
   isCreaturePermanent,
   playersInApnapOrder,
   sourceTraitsOf,
+  playerCantLose,
 } from '../state/queries';
 import type {
   EngineCardObject,
@@ -259,6 +260,11 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
         player.lossReason ??= 'other';
         acted = true;
       }
+      continue;
+    }
+    if (playerCantLose(ctx, player.id)) {
+      // CR 704.5b looks only at draws since the last check: this one is spent, not deferred.
+      player.attemptedDrawFromEmptyLibrary = false;
       continue;
     }
     if (player.life <= 0) {
@@ -923,7 +929,7 @@ export function* priorityCheckpoint(ctx: GameContext): GameGen<boolean> {
 /** Whether a player is still a legal host for `aura`'s enchant ability (CR 303.4d, 704.5m). */
 function auraPlayerHostIsLegal(ctx: GameContext, aura: EnginePermanent, playerId: string): boolean {
   // Protection forbids enchantment; hexproof only forbids targeting, not attachment.
-  if (playerLifeLocked(ctx, playerId)) return false;
+  if (playerProtectedFromEverything(ctx, playerId)) return false;
   const enchant = getDefByOracleId(ctx, aura.oracleId, aura.name).spellAbility?.targets[0];
   if (enchant === undefined || enchant.kind !== 'player') return false;
   return computeTargetOptions(

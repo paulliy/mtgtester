@@ -1175,6 +1175,28 @@
     }
   },
   {
+    "oracleId": "0d4ecdb1-ec90-497f-a7a4-1c68092b8757",
+    "name": "Teferi's Protection",
+    "handledLines": [
+      "unrecognized rules text: \"Until your next turn, your life total can't change and you gain protection from everything. All permanents you control phase out.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Until your next turn, your life total can't change and you have protection from everything; your permanents phase out; exile this spell",
+        "effects": [
+          {
+            "op": "phaseOutAndProtectControllerUntilNextTurn"
+          },
+          {
+            "op": "resolvingSpellExile"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "0dfdf1a1-a3a9-490f-bd9d-dcba088c6785",
     "name": "Teyo, Geometric Tactician",
     "handledLines": [
@@ -4718,6 +4740,89 @@
     }
   },
   {
+    "oracleId": "3aa83ed2-f48b-4ce6-a614-2c54ddf50538",
+    "name": "The One Ring",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your upkeep, you lose 1 life for each burden counter on ~.\"",
+      "unrecognized rules text: \"When ~ enters, if you cast it, you gain protection from everything until your next turn.\"",
+      "unrecognized rules text: \"{T}: Put a burden counter on ~, then draw a card for each burden counter on ~.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{T}: Put a burden counter on this, then draw a card for each burden counter",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "counter": "burden",
+                "op": "putCounters",
+                "target": "source"
+              },
+              {
+                "count": {
+                  "counter": "burden",
+                  "kind": "countersOnSelf"
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "When this enters, if you cast it, you gain protection from everything until your next turn",
+          "effects": [
+            {
+              "op": "controllerProtectionFromEverythingUntilNextTurn"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "sourceWasCast"
+            },
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "At the beginning of your upkeep, lose 1 life for each burden counter",
+          "effects": [
+            {
+              "amount": {
+                "counter": "burden",
+                "kind": "countersOnSelf"
+              },
+              "op": "loseLife"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "3ac01298-e45b-4ea0-8379-2074279716a4",
     "name": "Citywide Bust",
     "handledLines": [
@@ -5232,6 +5337,50 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "42bb7ea9-f6e4-4551-8d93-3b1eae84b865",
+    "name": "Clever Concealment",
+    "handledLines": [
+      "unrecognized rules text: \"Any number of target nonland permanents you control phase out.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Any number of target nonland permanents you control phase out",
+        "effects": [
+          {
+            "op": "phaseOutEachChosen",
+            "targetSlot": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "count": {
+              "max": null,
+              "min": 0
+            },
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "kind": "permanent"
+          }
+        ]
+      }
     }
   },
   {
@@ -7463,8 +7612,21 @@
   {
     "oracleId": "66ca8a60-e028-4a5f-8177-860b888cb9d1",
     "name": "Angel's Grace",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"You can't lose the game this turn and your opponents can't win the game this turn. Until end of turn, damage that would reduce your life total to less than 1 reduces it to 1 instead.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "You can't lose and your opponents can't win this turn; damage can't reduce your life below 1 this turn",
+        "effects": [
+          {
+            "op": "angelGrace"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "66e37011-f3d2-41ed-8e09-7bba9464e8c3",
@@ -21075,8 +21237,21 @@
   {
     "oracleId": "oracle-angel-s-grace",
     "name": "Angel's Grace",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"You can't lose the game this turn and your opponents can't win the game this turn. Until end of turn, damage that would reduce your life total to less than 1 reduces it to 1 instead.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "You can't lose and your opponents can't win this turn; damage can't reduce your life below 1 this turn",
+        "effects": [
+          {
+            "op": "angelGrace"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-annie-joins-up",
@@ -23689,6 +23864,50 @@
           },
           {
             "kind": "playerOrPlaneswalker"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "oracleId": "oracle-clever-concealment",
+    "name": "Clever Concealment",
+    "handledLines": [
+      "unrecognized rules text: \"Any number of target nonland permanents you control phase out.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Any number of target nonland permanents you control phase out",
+        "effects": [
+          {
+            "op": "phaseOutEachChosen",
+            "targetSlot": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "count": {
+              "max": null,
+              "min": 0
+            },
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "kind": "permanent"
           }
         ]
       }
@@ -36969,6 +37188,28 @@
     }
   },
   {
+    "oracleId": "oracle-teferi-s-protection",
+    "name": "Teferi's Protection",
+    "handledLines": [
+      "unrecognized rules text: \"Until your next turn, your life total can't change and you gain protection from everything. All permanents you control phase out.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Until your next turn, your life total can't change and you have protection from everything; your permanents phase out; exile this spell",
+        "effects": [
+          {
+            "op": "phaseOutAndProtectControllerUntilNextTurn"
+          },
+          {
+            "op": "resolvingSpellExile"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "oracle-tender-wildguide",
     "name": "Tender Wildguide",
     "handledLines": [
@@ -37573,6 +37814,89 @@
               }
             },
             "when": "putIntoGraveyardFromAnywhere"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-the-one-ring",
+    "name": "The One Ring",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your upkeep, you lose 1 life for each burden counter on ~.\"",
+      "unrecognized rules text: \"When ~ enters, if you cast it, you gain protection from everything until your next turn.\"",
+      "unrecognized rules text: \"{T}: Put a burden counter on ~, then draw a card for each burden counter on ~.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{T}: Put a burden counter on this, then draw a card for each burden counter",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "counter": "burden",
+                "op": "putCounters",
+                "target": "source"
+              },
+              {
+                "count": {
+                  "counter": "burden",
+                  "kind": "countersOnSelf"
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "When this enters, if you cast it, you gain protection from everything until your next turn",
+          "effects": [
+            {
+              "op": "controllerProtectionFromEverythingUntilNextTurn"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "sourceWasCast"
+            },
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "At the beginning of your upkeep, lose 1 life for each burden counter",
+          "effects": [
+            {
+              "amount": {
+                "counter": "burden",
+                "kind": "countersOnSelf"
+              },
+              "op": "loseLife"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
           }
         }
       ]

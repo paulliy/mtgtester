@@ -72,6 +72,7 @@ import {
   playFromZonePermission,
   castFromLibraryTopCandidates,
   castingSpellsBlockedFor,
+  splitSecondOnStack,
   findPermanent,
   gatherRuleStatics,
   getDefByOracleId,
@@ -2098,6 +2099,11 @@ export function computePriorityOptions(
   if (player.manualMana === true) options.push(...manualManaOptions(ctx, player));
 
   // Strategic usefulness belongs to the decision provider, not legal-action generation.
+  // CR 702.61a: split second leaves only passing, yielding and special actions (CR 116.2).
+  if (splitSecondOnStack(ctx))
+    return options.filter(
+      (option) => option.type !== 'castSpell' && option.type !== 'activateAbility',
+    );
   return options;
 }
 

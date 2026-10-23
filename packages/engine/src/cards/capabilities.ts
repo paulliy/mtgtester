@@ -912,6 +912,8 @@ const families = {
       exileSpellAndPlot: true,
       prohibitSpellsThisTurn: true,
       phaseOutAndProtectControllerUntilNextTurn: true,
+      controllerProtectionFromEverythingUntilNextTurn: true,
+      phaseOutEachChosen: true,
       controllerHexproofUntilEot: true,
       changeSingleTarget: true,
       chooseNewTargets: true,

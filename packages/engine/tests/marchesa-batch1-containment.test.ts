@@ -145,8 +145,10 @@ describe('Marchesa catalog audit containment', () => {
     'Reality Shift',
     'Trazyn the Infinite',
     // PR11 pinned activation regressions replace this guard.
+    // PR11 pinned regressions replace these guards.
     'Arcane Lighthouse',
     'Spirit Mantle',
+    "Angel's Grace",
 
     'Vindictive Lich',
     'Shadrix Silverquill',

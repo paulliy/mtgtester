@@ -367,6 +367,8 @@ const effectExpressions = {
   exileSpellAndPlot: {},
   prohibitSpellsThisTurn: {},
   phaseOutAndProtectControllerUntilNextTurn: {},
+  controllerProtectionFromEverythingUntilNextTurn: {},
+  phaseOutEachChosen: {},
   controllerHexproofUntilEot: {},
   changeSingleTarget: {},
   chooseNewTargets: {},

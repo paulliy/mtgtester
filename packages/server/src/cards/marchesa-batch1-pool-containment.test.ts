@@ -27,6 +27,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Aetheric Amplifier',
       'Aetherworks Marvel',
       "Ajani's Chosen",
+      "Angel's Grace",
       'Angelic Destiny',
       'Animate Dead',
       'Anrakyr the Traveller',
