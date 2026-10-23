@@ -16124,7 +16124,7 @@
           "id": "pr11-mana-vault-clause-1",
           "oracleText": "This artifact doesn't untap during your untap step.",
           "implementation": ["CardDefinition.doesntUntapDuringUntapStep"],
-          "engineTestIds": ["vault-c01"],
+          "engineTestIds": ["vault-c01", "vault-c01-lost-abilities"],
           "viewerScenarioIds": ["pr11-mana-vault-viewer-pay-untap", "pr11-mana-vault-viewer-damage"]
         },
         {

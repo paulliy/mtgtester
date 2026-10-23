@@ -139,6 +139,9 @@ describe("Teferi's Protection", () => {
     expect(ctx.state.phasedOut ?? []).toEqual([]);
     expect(battlefield(ctx, 'Test Bear')[0]).toBe(mine);
     expect(mine.tapped).toBe(false);
+    nextTurnOf(ctx, 'P2');
+    expect(playerProtectedFromEverything(ctx, 'P1')).toBe(false);
+    expect(playerLifeLocked(ctx, 'P1')).toBe(false);
   });
 });
 
@@ -184,6 +187,9 @@ describe('The One Ring', () => {
     nextTurnOf(ctx, 'P2');
     expect(playerProtectedFromEverything(ctx, 'P1')).toBe(true);
     nextTurnOf(ctx, 'P1');
+    expect(playerProtectedFromEverything(ctx, 'P1')).toBe(false);
+    // Gone for good: an opponent's later turn does not bring it back.
+    nextTurnOf(ctx, 'P2');
     expect(playerProtectedFromEverything(ctx, 'P1')).toBe(false);
   });
 

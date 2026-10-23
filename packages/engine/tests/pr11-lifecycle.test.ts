@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { OracleCard } from '@mtg/shared';
 import { interpretCard } from '../src/cards/interpret';
+import { ofType } from '../src/cards/selector';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { moveObject } from '../src/state/objects';
 import { resolveTopOfStack } from '../src/stack/stack';
@@ -94,6 +95,21 @@ describe('Mana Vault', () => {
     nextTurnOf(ctx, 'P1', preferring('decline'));
     expect(land.tapped).toBe(false);
     expect(vault.tapped).toBe(true);
+  });
+
+  it('vault-c01-lost-abilities — a Vault that has lost its abilities untaps normally', () => {
+    const ctx = game('pr11-vault-song');
+    const vault = spawn(ctx, 'P1', VAULT, { tapped: true });
+    const song = oracle({ name: 'Test Song', typeLine: 'Enchantment', manaCost: '{2}' });
+    spawn(ctx, 'P2', song);
+    const songDef = ctx.defs.get(song.oracleId as never)!;
+    ctx.defs.set(song.oracleId as never, {
+      ...songDef,
+      staticEffects: [{ affects: ofType('Artifact'), op: { layer: 6, loseAllAbilities: true } }],
+    });
+    expect(computeCharacteristics(ctx, vault).loseAbilities).toBe(true);
+    nextTurnOf(ctx, 'P1', preferring('decline'));
+    expect(vault.tapped).toBe(false);
   });
 
   it('vault-c02-positive — paying {4} at upkeep untaps it, before the draw-step damage', () => {
