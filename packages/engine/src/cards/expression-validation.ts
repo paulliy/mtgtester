@@ -679,6 +679,8 @@ const effectExpressions = {
   eachPlayerMayPutCountersAndGoad: { count: numericExpression },
   voteAndExileMost: { selector: selector },
   exileTargetWithSource: {},
+  exileFromHandWithSource: {},
+  exileGraveyardCardWithSource: {},
   exileAndManifestTarget: {},
   blinkTarget: {},
   blinkOneCreatureYouControl: {},

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { OracleCard } from '@mtg/shared';
 import { interpretCard } from '../src/cards/interpret';
 import { computeCharacteristics } from '../src/effects/continuous';
+import { moveObject } from '../src/state/objects';
 import { resolveTopOfStack } from '../src/stack/stack';
 import type { GameContext } from '../src/state/types';
 import { drawCards } from '../src/effects/resolve';
@@ -433,5 +434,107 @@ describe('Caged Sun', () => {
     theirs.state.currentTurnPlayer = 'P2';
     theirs.state.activePlayerIndex = 1;
     expect(castable(theirs, 'P2', '{W}{W}')).toBe(false);
+  });
+});
+
+const MOX = pinned('Chrome Mox');
+
+describe('Chrome Mox', () => {
+  const card = (name: string, extra: Partial<OracleCard>): OracleCard =>
+    oracle({
+      name,
+      typeLine: 'Instant',
+      manaCost: '{1}',
+      oracleText: 'You gain 1 life.',
+      ...extra,
+    });
+  const spellCosting = (cost: string): OracleCard =>
+    oracle({
+      name: `Spell ${cost}`,
+      typeLine: 'Sorcery',
+      manaCost: cost,
+      oracleText: 'You gain 1 life.',
+    });
+  const castable = (ctx: GameContext, cost: string): boolean => {
+    const spell = conjure(ctx, 'P1', spellCosting(cost), 'hand');
+    const ok =
+      priorityOption(
+        ctx,
+        'P1',
+        (payload) => payload.kind === 'castSpell' && payload.objectId === spell.id,
+      ) !== undefined;
+    player(ctx, 'P1').hand = player(ctx, 'P1').hand.filter((entry) => entry.id !== spell.id);
+    return ok;
+  };
+  /** Cast the Mox and imprint `name` (or nothing); returns the offered card names. */
+  function moxImprinting(ctx: GameContext, name: string | null): string[] {
+    let offered: string[] = [];
+    castFromHand(ctx, 'P1', MOX);
+    pump(resolveTopOfStack(ctx));
+    checkpoint(ctx);
+    pump(resolveTopOfStack(ctx), (decision) => {
+      offered = decision.options
+        .filter((option) => option.type === 'exile')
+        .map((option) => option.description);
+      const index = decision.options.findIndex((option) =>
+        name === null ? option.type === 'decline' : option.description === `Exile ${name}`,
+      );
+      return { index: Math.max(0, index), targets: new Map() };
+    });
+    return offered;
+  }
+
+  it('mox-c01 — imprint offers only nonartifact, nonland cards and links the exiled card', () => {
+    const ctx = game('pr11-mox-imprint');
+    expect(interpretCard(MOX).modeled).toBe(true);
+    player(ctx, 'P1').hand = [];
+    conjure(ctx, 'P1', card('Red Spell', { colors: ['R'], manaCost: '{R}' }), 'hand');
+    conjure(ctx, 'P1', plains(), 'hand');
+    conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Some Artifact', typeLine: 'Artifact', manaCost: '{1}' }),
+      'hand',
+    );
+    const offered = moxImprinting(ctx, 'Red Spell');
+    expect(offered).toEqual(['Exile Red Spell']);
+    const mox = battlefield(ctx, 'Chrome Mox')[0]!;
+    const exiled = ctx.state.exile.find((entry) => entry.name === 'Red Spell');
+    expect(exiled).toBeDefined();
+    expect(mox.exiledWithIds).toEqual([exiled!.id]);
+  });
+
+  it("mox-c02 — {T} adds one mana of any of the exiled card's colors, and only those", () => {
+    const ctx = game('pr11-mox-gold');
+    player(ctx, 'P1').hand = [];
+    conjure(ctx, 'P1', card('Gold Spell', { colors: ['R', 'W'], manaCost: '{R}{W}' }), 'hand');
+    moxImprinting(ctx, 'Gold Spell');
+    expect(castable(ctx, '{R}')).toBe(true);
+    expect(castable(ctx, '{W}')).toBe(true);
+    expect(castable(ctx, '{U}')).toBe(false);
+    expect(castable(ctx, '{R}{W}')).toBe(false);
+  });
+
+  it('mox-c02-negative — nothing imprinted, a colorless card, or a card that left exile: no mana', () => {
+    const none = game('pr11-mox-none');
+    conjure(none, 'P1', card('Kept Spell', { colors: ['R'], manaCost: '{R}' }), 'hand');
+    moxImprinting(none, null);
+    expect(battlefield(none, 'Chrome Mox')[0]!.exiledWithIds ?? []).toEqual([]);
+    expect(castable(none, '{1}')).toBe(false);
+
+    const colorless = game('pr11-mox-colorless');
+    player(colorless, 'P1').hand = [];
+    conjure(colorless, 'P1', card('Colorless Spell', { colors: [], manaCost: '{2}' }), 'hand');
+    moxImprinting(colorless, 'Colorless Spell');
+    expect(castable(colorless, '{1}')).toBe(false);
+
+    const gone = game('pr11-mox-gone');
+    player(gone, 'P1').hand = [];
+    conjure(gone, 'P1', card('Red Spell', { colors: ['R'], manaCost: '{R}' }), 'hand');
+    moxImprinting(gone, 'Red Spell');
+    expect(castable(gone, '{R}')).toBe(true);
+    const exiled = gone.state.exile.find((entry) => entry.name === 'Red Spell')!;
+    pump(moveObject(gone, exiled, { zone: 'graveyard' }));
+    expect(castable(gone, '{R}')).toBe(false);
   });
 });
