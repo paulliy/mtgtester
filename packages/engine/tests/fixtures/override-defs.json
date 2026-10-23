@@ -964,8 +964,86 @@
   {
     "oracleId": "09b7ea91-2620-4c45-af3c-60bbeab89966",
     "name": "Eiganjo Dynastorian // Replenish",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Whenever you attack with two or more creatures, this creature becomes prepared.\"",
+      "unsupported layout \"prepare\""
+    ],
+    "def": {
+      "name": "Eiganjo Dynastorian",
+      "prepareSpell": {
+        "activatedAbilities": [],
+        "colorIdentity": [
+          "W"
+        ],
+        "colors": [
+          "W"
+        ],
+        "defense": null,
+        "entersTapped": false,
+        "hasUnsupportedCost": false,
+        "keywords": [],
+        "loyalty": null,
+        "manaAbilities": [],
+        "manaCost": {
+          "colored": {
+            "B": 0,
+            "G": 0,
+            "R": 0,
+            "U": 0,
+            "W": 1
+          },
+          "colorless": 0,
+          "generic": 3
+        },
+        "modeled": true,
+        "name": "Replenish",
+        "oracleId": "09b7ea91-2620-4c45-af3c-60bbeab89966",
+        "power": null,
+        "ruleStatics": [],
+        "spellAbility": {
+          "description": "Return all enchantment cards from your graveyard to the battlefield",
+          "effects": [
+            {
+              "filter": {
+                "kind": "type",
+                "value": "Enchantment"
+              },
+              "op": "graveyardToBattlefieldEach",
+              "scope": "you"
+            }
+          ],
+          "kind": "spell",
+          "targets": []
+        },
+        "staticEffects": [],
+        "subtypes": [],
+        "supertypes": [],
+        "toughness": null,
+        "triggers": [],
+        "typeLine": "Sorcery",
+        "types": [
+          "Sorcery"
+        ],
+        "unmodeledReasons": []
+      },
+      "triggers": [
+        {
+          "description": "Whenever you attack with two or more creatures, this creature becomes prepared",
+          "effects": [
+            {
+              "op": "becomePrepared"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "you",
+            "minAttackers": 2,
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "09b895ff-e729-48d1-bfc1-ea5fd7adda6a",
@@ -3284,8 +3362,94 @@
   {
     "oracleId": "27c366cf-00d7-47d4-9577-736bfc4a3b81",
     "name": "Defacing Duskmage // Vandal's Edit",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Whenever an opponent draws their second card each turn, this creature becomes prepared.\"",
+      "unsupported layout \"prepare\""
+    ],
+    "def": {
+      "name": "Defacing Duskmage",
+      "prepareSpell": {
+        "activatedAbilities": [],
+        "colorIdentity": [
+          "W",
+          "B"
+        ],
+        "colors": [
+          "W",
+          "B"
+        ],
+        "defense": null,
+        "entersTapped": false,
+        "hasUnsupportedCost": false,
+        "keywords": [],
+        "loyalty": null,
+        "manaAbilities": [],
+        "manaCost": {
+          "colored": {
+            "B": 1,
+            "G": 0,
+            "R": 0,
+            "U": 0,
+            "W": 1
+          },
+          "colorless": 0,
+          "generic": 1
+        },
+        "modeled": true,
+        "name": "Vandal's Edit",
+        "oracleId": "27c366cf-00d7-47d4-9577-736bfc4a3b81",
+        "power": null,
+        "ruleStatics": [],
+        "spellAbility": {
+          "description": "Draw two cards. Each player loses 2 life",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 2
+              },
+              "op": "draw"
+            },
+            {
+              "amount": {
+                "kind": "const",
+                "n": 2
+              },
+              "op": "eachPlayerLosesLife"
+            }
+          ],
+          "kind": "spell",
+          "targets": []
+        },
+        "staticEffects": [],
+        "subtypes": [],
+        "supertypes": [],
+        "toughness": null,
+        "triggers": [],
+        "typeLine": "Instant",
+        "types": [
+          "Instant"
+        ],
+        "unmodeledReasons": []
+      },
+      "triggers": [
+        {
+          "description": "Whenever an opponent draws their second card each turn, this creature becomes prepared",
+          "effects": [
+            {
+              "op": "becomePrepared"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "ordinalThisTurn": 2,
+            "player": "opponent",
+            "when": "drawsCard"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "295fe873-ecb5-4d5e-a73c-3af6c478afc5",
@@ -26989,8 +27153,94 @@
   {
     "oracleId": "oracle-defacing-duskmage-vandal-s-edit",
     "name": "Defacing Duskmage // Vandal's Edit",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Whenever an opponent draws their second card each turn, this creature becomes prepared.\"",
+      "unsupported layout \"prepare\""
+    ],
+    "def": {
+      "name": "Defacing Duskmage",
+      "prepareSpell": {
+        "activatedAbilities": [],
+        "colorIdentity": [
+          "W",
+          "B"
+        ],
+        "colors": [
+          "W",
+          "B"
+        ],
+        "defense": null,
+        "entersTapped": false,
+        "hasUnsupportedCost": false,
+        "keywords": [],
+        "loyalty": null,
+        "manaAbilities": [],
+        "manaCost": {
+          "colored": {
+            "B": 1,
+            "G": 0,
+            "R": 0,
+            "U": 0,
+            "W": 1
+          },
+          "colorless": 0,
+          "generic": 1
+        },
+        "modeled": true,
+        "name": "Vandal's Edit",
+        "oracleId": "27c366cf-00d7-47d4-9577-736bfc4a3b81",
+        "power": null,
+        "ruleStatics": [],
+        "spellAbility": {
+          "description": "Draw two cards. Each player loses 2 life",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 2
+              },
+              "op": "draw"
+            },
+            {
+              "amount": {
+                "kind": "const",
+                "n": 2
+              },
+              "op": "eachPlayerLosesLife"
+            }
+          ],
+          "kind": "spell",
+          "targets": []
+        },
+        "staticEffects": [],
+        "subtypes": [],
+        "supertypes": [],
+        "toughness": null,
+        "triggers": [],
+        "typeLine": "Instant",
+        "types": [
+          "Instant"
+        ],
+        "unmodeledReasons": []
+      },
+      "triggers": [
+        {
+          "description": "Whenever an opponent draws their second card each turn, this creature becomes prepared",
+          "effects": [
+            {
+              "op": "becomePrepared"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "ordinalThisTurn": 2,
+            "player": "opponent",
+            "when": "drawsCard"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-defile",
@@ -27566,8 +27816,86 @@
   {
     "oracleId": "oracle-eiganjo-dynastorian-replenish",
     "name": "Eiganjo Dynastorian // Replenish",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Whenever you attack with two or more creatures, this creature becomes prepared.\"",
+      "unsupported layout \"prepare\""
+    ],
+    "def": {
+      "name": "Eiganjo Dynastorian",
+      "prepareSpell": {
+        "activatedAbilities": [],
+        "colorIdentity": [
+          "W"
+        ],
+        "colors": [
+          "W"
+        ],
+        "defense": null,
+        "entersTapped": false,
+        "hasUnsupportedCost": false,
+        "keywords": [],
+        "loyalty": null,
+        "manaAbilities": [],
+        "manaCost": {
+          "colored": {
+            "B": 0,
+            "G": 0,
+            "R": 0,
+            "U": 0,
+            "W": 1
+          },
+          "colorless": 0,
+          "generic": 3
+        },
+        "modeled": true,
+        "name": "Replenish",
+        "oracleId": "09b7ea91-2620-4c45-af3c-60bbeab89966",
+        "power": null,
+        "ruleStatics": [],
+        "spellAbility": {
+          "description": "Return all enchantment cards from your graveyard to the battlefield",
+          "effects": [
+            {
+              "filter": {
+                "kind": "type",
+                "value": "Enchantment"
+              },
+              "op": "graveyardToBattlefieldEach",
+              "scope": "you"
+            }
+          ],
+          "kind": "spell",
+          "targets": []
+        },
+        "staticEffects": [],
+        "subtypes": [],
+        "supertypes": [],
+        "toughness": null,
+        "triggers": [],
+        "typeLine": "Sorcery",
+        "types": [
+          "Sorcery"
+        ],
+        "unmodeledReasons": []
+      },
+      "triggers": [
+        {
+          "description": "Whenever you attack with two or more creatures, this creature becomes prepared",
+          "effects": [
+            {
+              "op": "becomePrepared"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "you",
+            "minAttackers": 2,
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-elder-gargaroth",

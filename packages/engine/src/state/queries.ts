@@ -222,6 +222,20 @@ export function colorsOf(ctx: GameContext, perm: EnginePermanent): Color[] {
 }
 
 /** Selected printed characteristics of a stack spell, including copies. */
+/**
+ * The prepared permanent whose prepare-spell copy `card` is, while it is still prepared (CR
+ * 722.3c). Its controller may cast the copy.
+ */
+export function preparedCopyHolder(
+  ctx: GameContext,
+  card: EngineCardObject,
+): EnginePermanent | undefined {
+  if (card.isCardCopy !== true || card.preparedBy === undefined) return undefined;
+  return ctx.state.battlefield.find(
+    (perm) => perm.id === card.preparedBy && perm.prepared === true,
+  );
+}
+
 export function spellDefinitionOf(ctx: GameContext, entry: EngineStackObject): CardDefinition {
   return entry.spellDefinition ?? getDefByOracleId(ctx, entry.sourceOracleId, entry.description);
 }

@@ -45,6 +45,7 @@ import {
   playersInApnapOrder,
   sourceTraitsOf,
   playerCantLose,
+  preparedCopyHolder,
   sagaFinalChapter,
 } from '../state/queries';
 import type {
@@ -241,6 +242,8 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
   const removeCopies = (cards: EngineCardObject[]): EngineCardObject[] =>
     cards.filter((card) => {
       if (card.isCardCopy !== true) return true;
+      // A prepare spell's copy stays in exile while its permanent stays prepared (CR 722.3c).
+      if (card.zone === 'exile' && preparedCopyHolder(ctx, card) !== undefined) return true;
       emit(ctx, 'cardCopyCeased', { name: card.name, cardId: card.cardId });
       acted = true;
       return false;

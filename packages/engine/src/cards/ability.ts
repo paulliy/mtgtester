@@ -1136,6 +1136,8 @@ export type Effect =
   | { op: 'gainLife'; amount: Value } // controller gains
   /** "Each player gains N life", in APNAP order (CR 101.4). */
   | { op: 'eachPlayerGainsLife'; amount: Value }
+  /** "Each player loses N life", in APNAP order (CR 101.4). */
+  | { op: 'eachPlayerLosesLife'; amount: Value }
   /**
    * "Each player looks at the top N cards of their library and may reveal a land card and/or an
    * instant or sorcery card from among them. Each player puts the cards they revealed this way
@@ -1480,6 +1482,8 @@ export type Effect =
   | { op: 'returnToHandEachChosen'; targetSlot: number }
   /** Toggle this transforming permanent between its front and back faces. */
   | { op: 'transformSelf' }
+  /** "This creature becomes prepared" (CR 722.3a, 722.3c). */
+  | { op: 'becomePrepared' }
   /**
    * "This Saga gains '{T}: Add {C}.'" (Urza's Saga): the source permanent gains the ability for
    * as long as it remains that object (CR 611.2c, 400.7). Exactly one of the two is set.
@@ -2284,7 +2288,15 @@ export type TriggerHead =
    * Chirography), part of the event — only the turn's first loss by that player fires it.
    */
   | { when: 'losesLife'; player: 'you' | 'each' | 'opponent'; firstTimeEachTurn?: true }
-  | { when: 'drawsCard'; player: 'you' | 'each' | 'opponent' }
+  | {
+      when: 'drawsCard';
+      player: 'you' | 'each' | 'opponent';
+      /**
+       * "draws their second card each turn": only the draw that makes the player's count this turn
+       * exactly N. Part of the event, so the trigger is not rechecked on resolution.
+       */
+      ordinalThisTurn?: number;
+    }
   | { when: 'foretells'; player: 'you' }
   /**
    * "Whenever you activate an ability that isn't a mana ability" (Verrak, Rowan Kenrith's emblem):

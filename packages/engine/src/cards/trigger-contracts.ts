@@ -174,6 +174,7 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
                 ...(head['when'] === 'playerDealtDamage' ? ['sourceController'] : []),
                 ...(head['when'] === 'activatesAbility' ? ['lifePaid'] : []),
                 ...(head['when'] === 'losesLife' ? ['firstTimeEachTurn'] : []),
+                ...(head['when'] === 'drawsCard' ? ['ordinalThisTurn'] : []),
               ]),
   ];
   for (const key of Object.keys(head))

@@ -114,6 +114,11 @@ export interface CardDefinition {
   /** Parsed starting defense (battles, CR 310.6); null otherwise. `*` is unmodeled. */
   defense: number | null;
   /** Interpreted second face for a transforming double-faced permanent. */
+  /**
+   * The inset prepare spell of a preparation card (CR 722.2): alternative characteristics used
+   * only by the copy a prepared permanent lets its controller cast (CR 722.3c).
+   */
+  prepareSpell?: CardDefinition;
   backFace?: BackFace;
   keywords: KeywordAbility[];
   /** Printed ward cost (CR 702.21), or absent. Parameterized, so not in `keywords`. */

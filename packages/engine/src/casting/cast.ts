@@ -51,6 +51,7 @@ import {
   wardCostOf,
   requireModeled,
   targetingFromDefinition,
+  preparedCopyHolder,
 } from '../state/queries';
 import type {
   DamageKeyword,
@@ -707,6 +708,7 @@ function* proposeCast(
     payload.fromExile === true &&
     !(obj.onAdventure === true && obj.ownerId === player.id) &&
     obj.playableUntilEotBy !== player.id &&
+    preparedCopyHolder(ctx, obj)?.controllerId !== player.id &&
     !plotCast &&
     foretold === null
   ) {

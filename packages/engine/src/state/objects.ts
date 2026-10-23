@@ -2896,6 +2896,13 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
   const def = spellDefinitionOf(ctx, spell);
 
   const caster = playerById(ctx, spell.controllerId);
+  // Casting a prepare spell's copy unprepares its permanent as the spell becomes cast (CR
+  // 722.3c, 601.2i).
+  const preparedBy = spell.card?.preparedBy;
+  if (preparedBy !== undefined) {
+    const prepared = ctx.state.battlefield.find((perm) => perm.id === preparedBy);
+    if (prepared !== undefined) delete prepared.prepared;
+  }
   caster.spellsCastThisTurn += 1;
   // Addendum: "if you cast this spell during your main phase" is a fact of the cast itself.
   if (
@@ -3666,6 +3673,13 @@ export function queuePlayerTriggersForEvent(
       const spec = ability.trigger;
       if (spec === undefined || spec.when !== when) continue;
       if (spec.when === 'losesLife' && spec.firstTimeEachTurn === true && firstThisTurn !== true)
+        continue;
+      if (
+        spec.when === 'drawsCard' &&
+        spec.ordinalThisTurn !== undefined &&
+        ctx.state.players.find((candidate) => candidate.id === playerId)?.cardsDrawnThisTurn !==
+          spec.ordinalThisTurn
+      )
         continue;
       if (spec.player === 'you' && perm.controllerId !== playerId) continue;
       if (

@@ -201,6 +201,11 @@ export interface EngineObject extends GameObject {
   cardId: CardId;
   /** Copy of a card created in exile (CR 707.12); ceases outside stack/battlefield at SBAs. */
   isCardCopy?: true;
+  /**
+   * The exile copy of a prepare spell (CR 722.3c): the prepared permanent it belongs to. It stays
+   * in exile, castable by that permanent's controller, while the permanent stays prepared.
+   */
+  preparedBy?: ObjectId;
   /** The active face while a modal DFC is on the battlefield. Non-battlefield cards use front. */
   face?: 'front' | 'back';
   /** Tokens cease to exist when they leave the battlefield (CR 704.5d). */
@@ -282,6 +287,8 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
   assignsNoCombatDamageTurn?: number;
   /** A resolved effect's fixed attack prohibition, active while the named counter remains. */
   cantAttackPlayerWhileCounter?: Array<{ playerId: PlayerId; counter: string }>;
+  /** The prepared designation (CR 722.3a). */
+  prepared?: true;
   /** Attacker this creature is blocking, while in combat. */
   blocking: ObjectId | null;
   /** For attackers: blockers in damage-assignment order (CR 509.2). */

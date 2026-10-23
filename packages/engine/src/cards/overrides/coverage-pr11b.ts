@@ -24,6 +24,7 @@ export function registerCoveragePr11bOverrides(): void {
   registerPr11bClass();
   registerPr11bSagas();
   registerPr11bModalBackFaces();
+  registerPr11bPrepare();
 }
 
 /** PR11.02, .04: spell // land modal DFCs whose land backs were already authored. */
@@ -532,5 +533,122 @@ function registerPr11bModalBackFaces(): void {
       ],
     },
     "PR11b implements Mila's planeswalker-attack trigger and the Lukka, Wayward Bonder face.",
+  );
+}
+
+/** A prepare spell's own characteristics (CR 722.2): an instant or sorcery with one ability. */
+function prepareSpellFace(face: {
+  oracleId: string;
+  name: string;
+  type: 'Instant' | 'Sorcery';
+  cost: string;
+  colors: CardDefinition['colors'];
+  spellAbility: CardDefinition['spellAbility'];
+}): CardDefinition {
+  return {
+    oracleId: face.oracleId as CardDefinition['oracleId'],
+    name: face.name,
+    typeLine: face.type,
+    supertypes: [],
+    types: [face.type],
+    subtypes: [],
+    colors: face.colors,
+    colorIdentity: face.colors,
+    manaCost: manaCost(face.cost),
+    hasUnsupportedCost: false,
+    power: null,
+    toughness: null,
+    loyalty: null,
+    defense: null,
+    keywords: [],
+    manaAbilities: [],
+    activatedAbilities: [],
+    entersTapped: false,
+    triggers: [],
+    staticEffects: [],
+    ruleStatics: [],
+    spellAbility: face.spellAbility,
+    modeled: true,
+    unmodeledReasons: [],
+  };
+}
+
+/** PR11.06, .07: preparation cards (CR 722). */
+function registerPr11bPrepare(): void {
+  // PR11.06: "their second card each turn" is that draw itself, part of the event, so a third
+  // draw before the trigger resolves changes nothing. Becoming prepared makes a castable copy of
+  // Vandal's Edit in exile; casting it unprepares Duskmage (CR 722.3c).
+  replaceCard(
+    '27c366cf-00d7-47d4-9577-736bfc4a3b81',
+    "Defacing Duskmage // Vandal's Edit",
+    [
+      'unsupported layout "prepare"',
+      'unrecognized rules text: "Whenever an opponent draws their second card each turn, this creature becomes prepared."',
+    ],
+    {
+      name: 'Defacing Duskmage',
+      triggers: [
+        triggered(
+          { when: 'drawsCard', player: 'opponent', ordinalThisTurn: 2 },
+          {
+            effects: [{ op: 'becomePrepared' }],
+            description:
+              'Whenever an opponent draws their second card each turn, this creature becomes prepared',
+          },
+        ),
+      ],
+      prepareSpell: prepareSpellFace({
+        oracleId: '27c366cf-00d7-47d4-9577-736bfc4a3b81',
+        name: "Vandal's Edit",
+        type: 'Instant',
+        cost: '{1}{W}{B}',
+        colors: ['W', 'B'],
+        spellAbility: spell({
+          effects: [
+            { op: 'draw', count: constant(2) },
+            { op: 'eachPlayerLosesLife', amount: constant(2) },
+          ],
+          description: 'Draw two cards. Each player loses 2 life',
+        }),
+      }),
+    },
+    "PR11b implements prepare and the opponent's-second-draw trigger.",
+  );
+
+  // PR11.07: attacking with two or more creatures is the declaration itself (CR 508.1).
+  replaceCard(
+    '09b7ea91-2620-4c45-af3c-60bbeab89966',
+    'Eiganjo Dynastorian // Replenish',
+    [
+      'unsupported layout "prepare"',
+      'unrecognized rules text: "Whenever you attack with two or more creatures, this creature becomes prepared."',
+    ],
+    {
+      name: 'Eiganjo Dynastorian',
+      triggers: [
+        triggered(
+          { when: 'attackDeclared', attacker: 'you', minAttackers: 2 },
+          {
+            effects: [{ op: 'becomePrepared' }],
+            description:
+              'Whenever you attack with two or more creatures, this creature becomes prepared',
+          },
+        ),
+      ],
+      prepareSpell: prepareSpellFace({
+        oracleId: '09b7ea91-2620-4c45-af3c-60bbeab89966',
+        name: 'Replenish',
+        type: 'Sorcery',
+        cost: '{3}{W}',
+        colors: ['W'],
+        spellAbility: spell({
+          effects: [
+            { op: 'graveyardToBattlefieldEach', filter: ofType('Enchantment'), scope: 'you' },
+          ],
+          description: 'Return all enchantment cards from your graveyard to the battlefield',
+        }),
+      }),
+    },
+    'PR11b implements prepare and the two-attacker trigger.',
   );
 }

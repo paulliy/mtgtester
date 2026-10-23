@@ -85,6 +85,7 @@ import {
   spellHasConvoke,
   abilityOfPermanent,
   targetingFromDefinition,
+  preparedCopyHolder,
 } from '../state/queries';
 import { faceDownSpellOracleId } from '../state/objects';
 import type {
@@ -1615,6 +1616,8 @@ export function computePriorityOptions(
     if (
       (obj.ownerId === player.id && obj.onAdventure === true) ||
       obj.playableUntilEotBy === player.id ||
+      // A prepared permanent's prepare-spell copy (CR 722.3c).
+      preparedCopyHolder(ctx, obj)?.controllerId === player.id ||
       // Foretold: castable after the turn it was foretold (CR 702.143a).
       (obj.ownerId === player.id &&
         obj.foretold !== undefined &&
