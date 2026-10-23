@@ -152,6 +152,7 @@ describe('Marchesa catalog audit containment', () => {
     'Smokestack',
     'Out of the Tombs',
     'Caged Sun',
+    'Gut, True Soul Zealot',
 
     'Vindictive Lich',
     'Shadrix Silverquill',

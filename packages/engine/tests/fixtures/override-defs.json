@@ -7239,8 +7239,93 @@
   {
     "oracleId": "60e7130a-d321-4e50-93a4-999013c76054",
     "name": "Gut, True Soul Zealot",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Choose a Background\"",
+      "unrecognized rules text: \"Whenever you attack, you may sacrifice another creature or an artifact. If you do, create a 4/1 black Skeleton creature token with menace that's tapped and attacking.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever you attack, you may sacrifice another creature or an artifact to create a tapped and attacking 4/1 Skeleton with menace",
+          "effects": [
+            {
+              "op": "sacrificeOneThen",
+              "selector": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "other"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  }
+                ]
+              },
+              "then": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "createTokenAttacking",
+                  "spec": {
+                    "colors": [
+                      "B"
+                    ],
+                    "keywords": [
+                      "menace"
+                    ],
+                    "name": "Skeleton",
+                    "power": 4,
+                    "subtypes": [
+                      "Skeleton"
+                    ],
+                    "toughness": 1,
+                    "typeLine": "Creature — Skeleton",
+                    "types": [
+                      "Creature"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "aggregate": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "61849685-b407-4ed0-aafc-ec3a003200b9",
@@ -28637,8 +28722,93 @@
   {
     "oracleId": "oracle-gut-true-soul-zealot",
     "name": "Gut, True Soul Zealot",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Choose a Background\"",
+      "unrecognized rules text: \"Whenever you attack, you may sacrifice another creature or an artifact. If you do, create a 4/1 black Skeleton creature token with menace that's tapped and attacking.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever you attack, you may sacrifice another creature or an artifact to create a tapped and attacking 4/1 Skeleton with menace",
+          "effects": [
+            {
+              "op": "sacrificeOneThen",
+              "selector": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "other"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  }
+                ]
+              },
+              "then": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "createTokenAttacking",
+                  "spec": {
+                    "colors": [
+                      "B"
+                    ],
+                    "keywords": [
+                      "menace"
+                    ],
+                    "name": "Skeleton",
+                    "power": 4,
+                    "subtypes": [
+                      "Skeleton"
+                    ],
+                    "toughness": 1,
+                    "typeLine": "Creature — Skeleton",
+                    "types": [
+                      "Creature"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "aggregate": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-harmonic-prodigy",

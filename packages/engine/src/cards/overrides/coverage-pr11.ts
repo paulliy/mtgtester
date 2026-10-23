@@ -1,5 +1,15 @@
 /** PR11 authored protection, phasing, layout and lifecycle cards. Review status is in the manifest. */
-import { allOf, CHOSEN_COLOR, hasCounter, not, OPPONENTS, ofType, YOURS } from '../selector';
+import {
+  allOf,
+  anyOf,
+  CHOSEN_COLOR,
+  hasCounter,
+  not,
+  OPPONENTS,
+  ofType,
+  OTHER,
+  YOURS,
+} from '../selector';
 import {
   activated,
   graveyardCardTarget,
@@ -16,7 +26,7 @@ import {
 } from '../templates';
 import type { Ability } from '../ability';
 import { constant } from '../value';
-import { KNIGHT_2_2_WHITE_VIGILANCE } from '../tokens';
+import { KNIGHT_2_2_WHITE_VIGILANCE, SKELETON_4_1_BLACK_MENACE } from '../tokens';
 import { defineCard, extendCard, replaceCard } from './index';
 
 export function registerCoveragePr11Overrides(): void {
@@ -423,6 +433,48 @@ function registerPr11LifecycleOverrides(): void {
         },
       ],
     },
+  );
+
+  // PR11.08: "whenever you attack" fires once per attack declaration; the token was never
+  // declared as an attacker (CR 508.4). Choose a Background is deck construction only
+  // (CR 702.124 and the background pairing in deck validation); it does nothing in a game.
+  replaceCard(
+    '60e7130a-d321-4e50-93a4-999013c76054',
+    'Gut, True Soul Zealot',
+    [
+      'unrecognized rules text: "Whenever you attack, you may sacrifice another creature or an artifact. If you do, create a 4/1 black Skeleton creature token with menace that\'s tapped and attacking."',
+      'unrecognized rules text: "Choose a Background"',
+    ],
+    {
+      triggers: [
+        triggered(
+          {
+            when: 'attacks',
+            subject: { kind: 'permanent', selector: allOf(ofType('Creature'), YOURS) },
+            aggregate: true,
+          },
+          {
+            optional: true,
+            effects: [
+              {
+                op: 'sacrificeOneThen',
+                selector: anyOf(allOf(ofType('Creature'), OTHER), ofType('Artifact')),
+                then: [
+                  {
+                    op: 'createTokenAttacking',
+                    spec: SKELETON_4_1_BLACK_MENACE,
+                    count: constant(1),
+                  },
+                ],
+              },
+            ],
+            description:
+              'Whenever you attack, you may sacrifice another creature or an artifact to create a tapped and attacking 4/1 Skeleton with menace',
+          },
+        ),
+      ],
+    },
+    'PR11 authors the attack trigger; Choose a Background is a deck-construction rule.',
   );
 
   // PR11.15: the opponent's draw trigger is interpreted; cumulative upkeep is authored.

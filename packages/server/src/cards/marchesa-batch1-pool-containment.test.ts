@@ -101,6 +101,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Gleeful Arsonist',
       'Glen Elendra Archmage',
       'Grim Haruspex',
+      'Gut, True Soul Zealot',
       'Harvest Season',
       'Hateful Eidolon',
       'Herald of Amity',
