@@ -3,7 +3,7 @@
 Generated from the engine-supported card pool.
 This is an interpreter-support inventory. Card behavior verification is tracked separately in the card verification manifest.
 
-**Total**: 6487 modeled non-land cards
+**Total**: 6494 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -652,6 +652,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Bold Impaler
 - Boldwyr Aggressor
 - Bolrac-Clan Crusher
+- Bolt Bend
 - Bolt Hound
 - Bolt of Keranos
 - Boltwave
@@ -1118,6 +1119,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Corrosive Gale
 - Corrupted Conviction
 - Corsair Captain
+- Cosmic Crucible
 - Cosmic Cube
 - Cosmic Spider-Man
 - Cosmogrand Zenith
@@ -1354,6 +1356,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Defiant Strike
 - Defile
 - Deflecting Palm
+- Deflecting Swat
 - Deft Duelist
 - Defy Gravity
 - Dega Disciple
@@ -1443,6 +1446,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Disperse
 - Dispersing Orb
 - Displacer Kitten
+- Display of Power
 - Disrupt Decorum
 - Disruptive Pitmage
 - Disruptive Student
@@ -1993,6 +1997,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Flaming Sword
 - Flare of Cultivation
 - Flare of Denial
+- Flare of Duplication
 - Flare of Malice
 - Flashfires
 - Flatten
@@ -2163,6 +2168,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Gallant Cavalry
 - Gallant Citizen
 - Gallows Warden
+- Galvanic Iteration
 - Galvanic Key
 - Galvanizing Sawship
 - Game-Trail Changeling
@@ -4454,6 +4460,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Return to Nature
 - Revel of the Fallen God
 - Revelsong Horn
+- Reverberate
 - Reverent Hoplite
 - Reverent Howl
 - Reverse Engineer

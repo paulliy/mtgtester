@@ -2603,6 +2603,60 @@
     }
   },
   {
+    "oracleId": "2469c0b7-a045-4733-bf53-28f3fdbe3797",
+    "name": "Cosmic Crucible",
+    "handledLines": [
+      "At the beginning of your first main phase, add four mana in any combination of colors.",
+      "Whenever you cast a noncreature spell, you may copy it. You may choose new targets for the copy. Do this only once each turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Add four mana in any combination of colors",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 4
+              },
+              "colors": "any",
+              "op": "addMana"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "precombatMain"
+          }
+        },
+        {
+          "description": "You may copy that noncreature spell. You may choose new targets for the copy. Do this only once each turn",
+          "effects": [
+            {
+              "oncePerTurn": true,
+              "op": "copyCastSpell",
+              "optional": true
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "you",
+            "filter": {
+              "kind": "not",
+              "of": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            "when": "castsSpell"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "2549bc57-9ffb-4053-9f10-f2a5f792b845",
     "name": "Myriad Landscape",
     "handledLines": [
@@ -10212,8 +10266,46 @@
   {
     "oracleId": "99140891-face-4015-aacd-1309e87d8f9f",
     "name": "Display of Power",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Copy any number of target instant and/or sorcery spells. You may choose new targets for the copies.",
+      "This spell can't be copied."
+    ],
+    "def": {
+      "cantBeCopied": true,
+      "spellAbility": {
+        "description": "Copy any number of target instant and/or sorcery spells. You may choose new targets for the copies",
+        "effects": [
+          {
+            "newTargets": true,
+            "op": "copyEachTargetedSpell",
+            "targetSlot": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "count": {
+              "max": null,
+              "min": 0
+            },
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "992d9a72-d34d-47d7-96fb-37f0efb515ef",
@@ -11038,8 +11130,40 @@
   {
     "oracleId": "a1f55890-31c5-4ed4-a2cd-7a4a9f05f8ca",
     "name": "Reverberate",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Copy target instant or sorcery spell. You may choose new targets for the copy."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Copy target instant or sorcery spell. You may choose new targets for the copy",
+        "effects": [
+          {
+            "newTargets": true,
+            "op": "copyTargetSpell",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "a30f30e3-dbbf-4cb2-b3d0-76f57dffb2dd",
@@ -11773,8 +11897,26 @@
   {
     "oracleId": "ae120613-97d6-4393-b39d-c3e6c076f5d6",
     "name": "Deflecting Swat",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "You may choose new targets for target spell or ability."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "You may choose new targets for target spell or ability",
+        "effects": [
+          {
+            "op": "chooseNewTargets",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "stackObject"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "aecc621f-67da-41a7-9d47-05ded302ae35",
@@ -13644,8 +13786,57 @@
   {
     "oracleId": "c20a96f7-aa5a-4c15-b8b1-806685c99b27",
     "name": "Bolt Bend",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Change the target of target spell or ability with a single target.",
+      "This spell costs {3} less to cast if you control a creature with power 4 or greater."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "amount": {
+            "kind": "const",
+            "n": 3
+          },
+          "condition": {
+            "cmp": ">=",
+            "kind": "countPermanents",
+            "n": 1,
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "powerAtLeast",
+                  "n": 4
+                }
+              ]
+            }
+          },
+          "kind": "costReduction",
+          "selfOnly": true
+        }
+      ],
+      "spellAbility": {
+        "description": "Change the target of target spell or ability with a single target",
+        "effects": [
+          {
+            "op": "changeSingleTarget",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "stackObject",
+            "spellHasSingleTarget": true
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "c23e5b80-08d2-4e24-9908-fe2aa4f30f6f",
@@ -13788,6 +13979,48 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "c51ed6e3-813b-49c4-b1de-7f92a77f8f6e",
+    "name": "Galvanic Iteration",
+    "handledLines": [
+      "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy",
+        "effects": [
+          {
+            "ability": {
+              "description": "Copy that spell. You may choose new targets for the copy",
+              "effects": [
+                {
+                  "op": "copyCastSpell"
+                }
+              ],
+              "kind": "triggered",
+              "targets": []
+            },
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "op": "nextCastThisTurn"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
     }
   },
   {
@@ -17376,8 +17609,40 @@
   {
     "oracleId": "f586ecb8-310c-4f40-a766-6a7ca46a254d",
     "name": "Flare of Duplication",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Copy target instant or sorcery spell. You may choose new targets for the copy."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Copy target instant or sorcery spell. You may choose new targets for the copy",
+        "effects": [
+          {
+            "newTargets": true,
+            "op": "copyTargetSpell",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "f63278e0-3c67-421d-87ce-67725e5e74df",
@@ -20599,8 +20864,57 @@
   {
     "oracleId": "oracle-bolt-bend",
     "name": "Bolt Bend",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Change the target of target spell or ability with a single target.",
+      "This spell costs {3} less to cast if you control a creature with power 4 or greater."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "amount": {
+            "kind": "const",
+            "n": 3
+          },
+          "condition": {
+            "cmp": ">=",
+            "kind": "countPermanents",
+            "n": 1,
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "powerAtLeast",
+                  "n": 4
+                }
+              ]
+            }
+          },
+          "kind": "costReduction",
+          "selfOnly": true
+        }
+      ],
+      "spellAbility": {
+        "description": "Change the target of target spell or ability with a single target",
+        "effects": [
+          {
+            "op": "changeSingleTarget",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "stackObject",
+            "spellHasSingleTarget": true
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-bootleggers-stash",
@@ -22306,6 +22620,60 @@
     }
   },
   {
+    "oracleId": "oracle-cosmic-crucible",
+    "name": "Cosmic Crucible",
+    "handledLines": [
+      "At the beginning of your first main phase, add four mana in any combination of colors.",
+      "Whenever you cast a noncreature spell, you may copy it. You may choose new targets for the copy. Do this only once each turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Add four mana in any combination of colors",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 4
+              },
+              "colors": "any",
+              "op": "addMana"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "precombatMain"
+          }
+        },
+        {
+          "description": "You may copy that noncreature spell. You may choose new targets for the copy. Do this only once each turn",
+          "effects": [
+            {
+              "oncePerTurn": true,
+              "op": "copyCastSpell",
+              "optional": true
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "you",
+            "filter": {
+              "kind": "not",
+              "of": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            "when": "castsSpell"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-cosmic-cube",
     "name": "Cosmic Cube",
     "handledLines": [
@@ -23023,8 +23391,26 @@
   {
     "oracleId": "oracle-deflecting-swat",
     "name": "Deflecting Swat",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "You may choose new targets for target spell or ability."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "You may choose new targets for target spell or ability",
+        "effects": [
+          {
+            "op": "chooseNewTargets",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "stackObject"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-delirium",
@@ -23209,8 +23595,46 @@
   {
     "oracleId": "oracle-display-of-power",
     "name": "Display of Power",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Copy any number of target instant and/or sorcery spells. You may choose new targets for the copies.",
+      "This spell can't be copied."
+    ],
+    "def": {
+      "cantBeCopied": true,
+      "spellAbility": {
+        "description": "Copy any number of target instant and/or sorcery spells. You may choose new targets for the copies",
+        "effects": [
+          {
+            "newTargets": true,
+            "op": "copyEachTargetedSpell",
+            "targetSlot": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "count": {
+              "max": null,
+              "min": 0
+            },
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-doorkeeper-thrull",
@@ -24351,8 +24775,40 @@
   {
     "oracleId": "oracle-flare-of-duplication",
     "name": "Flare of Duplication",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Copy target instant or sorcery spell. You may choose new targets for the copy."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Copy target instant or sorcery spell. You may choose new targets for the copy",
+        "effects": [
+          {
+            "newTargets": true,
+            "op": "copyTargetSpell",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-flayed-one",
@@ -24915,6 +25371,48 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "oracle-galvanic-iteration",
+    "name": "Galvanic Iteration",
+    "handledLines": [
+      "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy",
+        "effects": [
+          {
+            "ability": {
+              "description": "Copy that spell. You may choose new targets for the copy",
+              "effects": [
+                {
+                  "op": "copyCastSpell"
+                }
+              ],
+              "kind": "triggered",
+              "targets": []
+            },
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "op": "nextCastThisTurn"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
     }
   },
   {
@@ -31470,8 +31968,40 @@
   {
     "oracleId": "oracle-reverberate",
     "name": "Reverberate",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Copy target instant or sorcery spell. You may choose new targets for the copy."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Copy target instant or sorcery spell. You may choose new targets for the copy",
+        "effects": [
+          {
+            "newTargets": true,
+            "op": "copyTargetSpell",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-rishkar-peema-renegade",
