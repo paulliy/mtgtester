@@ -754,7 +754,8 @@ export type Effect =
    * Annihilator N (CR 702.86a): "defending player sacrifices N permanents" of their choice — the
    * attack trigger's event player, all at once.
    */
-  | { op: 'eventPlayerSacrificesPermanents'; count: number }
+  /** Smokestack: "that player sacrifices a permanent … for each soot counter". */
+  | { op: 'eventPlayerSacrificesPermanents'; count: Value | number }
   /**
    * "Each opponent attacking that player untaps all nonland permanents they control" (Curse of
    * Bounty): the attacking player (the event player), only if they are an opponent of this

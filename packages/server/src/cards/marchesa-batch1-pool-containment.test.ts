@@ -171,6 +171,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Sheltered by Ghosts',
       'Shielded by Faith',
       'Siren Stormtamer',
+      'Smokestack',
       'Smothering Tithe',
       'Solar Transformer',
       "Songbirds' Blessing",
