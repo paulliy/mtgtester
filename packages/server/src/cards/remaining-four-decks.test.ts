@@ -72,27 +72,15 @@ function seat(seatId: string, deckData: ReturnType<typeof deck>): SeatSetup {
 describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke checks', () => {
   it('models every unique card except the explicit fail-closed backlog', () => {
     const expectedUnmodeled = new Set([
-      'Verrak, Warped Sengir',
       'Wandering Archaic // Explore the Vastlands',
       // Audit: incomplete mechanics must not silently simulate approximate card text.
       'Spirit Mantle',
       'Caged Sun',
-      'Biotransference',
       'The War in Heaven',
       'Out of the Tombs',
-      'Trazyn the Infinite',
-      // Catalog audit batch 1: retarget authored as copyTargetSpell.
-      'Bolt Bend',
-      'Deflecting Swat',
-      'Flare of Duplication',
-      'Twilight Diviner',
-      'Siren Stormtamer',
+      // Catalog audit batch 1 (PR10 restored the retarget, copy and ability-stack cards).
       'Smokestack',
-      'Mana Sculpt',
       "Angel's Grace",
-      'Display of Power',
-      'Nighthawk Scavenger',
-      'Reverberate',
       'Arcane Lighthouse',
       "Defacing Duskmage // Vandal's Edit",
       'Eiganjo Dynastorian // Replenish',

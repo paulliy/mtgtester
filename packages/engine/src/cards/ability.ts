@@ -15,6 +15,8 @@ import type { Selector } from './selector';
 import type { Value } from './value';
 import type { StaticEffect } from './continuous-types';
 import type { RuleStatic } from './rule-statics';
+import type { ObjectFacts } from './source-identity';
+import type { DamageKeyword } from '../state/types';
 
 /** A ward payment (CR 702.21b). Target legality never depends on ability to pay it. */
 export type WardCost = { kind: 'mana'; cost: ParsedManaCost } | { kind: 'life'; amount: number };
@@ -398,6 +400,31 @@ export const IMPLEMENTED_KEYWORDS = [
 ] as const;
 export type KeywordAbility = (typeof IMPLEMENTED_KEYWORDS)[number];
 
+/**
+ * An activated or triggered ability on the stack as a copy effect needs it: everything decided
+ * for it, so it can be copied from last known information after it has left the stack.
+ */
+export interface StackAbilitySnapshot {
+  stackObjectId: string;
+  kind: 'activatedAbility' | 'triggeredAbility';
+  description: string;
+  ability: Ability;
+  targets: string[];
+  countTargets?: Record<number, string[]>;
+  divisionAmounts?: Record<string, number>;
+  announcedX?: number;
+  sourceId: string;
+  sourceOracleId: string;
+  sourceCardId: string;
+  sourceColors?: Color[];
+  /** The source's last known facts and damage keywords, if it had left (CR 707.10, 113.7a). */
+  sourceFacts?: ObjectFacts;
+  sourceDamageKeywords?: DamageKeyword[];
+  /** The original's event facts, carried unchanged (CR 707.10). */
+  triggerScope?: import('./value').TriggerScope;
+  triggerObjectCardId?: string;
+}
+
 /** What a target slot may point at. Slot options are computed at cast/announcement time. */
 export type TargetKind =
   | 'creature'
@@ -437,11 +464,24 @@ export interface TargetSpec {
   kind: TargetKind;
   /** Select a uniformly random legal target as the trigger is put on the stack (Power Pack). */
   random?: true;
+  /**
+   * "Another target" (Saheeli, Sublime Artificer): an object or player chosen for one of these
+   * earlier ordinary slots is not a legal choice here (CR 115.3).
+   */
+  differentFromSlots?: number[];
   /** These ordinary target slots must name different players. Inactive mode slots are absent. */
   differentPlayerTargetSlots?: number[];
   /** A stack spell must currently target a permanent controlled by you. */
   spellTargetsPermanentYouControl?: true;
+  /** A stack spell or ability has exactly one targeting occurrence (CR 115.9a, Bolt Bend). */
   spellHasSingleTarget?: true;
+  /**
+   * A stack spell or ability that targets the ability's controller or a creature they control
+   * (Siren Stormtamer). Checked as it is chosen and again on resolution (CR 608.2b).
+   */
+  stackTargetsYouOrCreatureYouControl?: true;
+  /** Only this kind of stack object: "target triggered ability" (Mister Fantastic). */
+  stackKind?: 'spell' | 'activatedAbility' | 'triggeredAbility';
   /**
    * "target creature you control" / "target creature an opponent controls". Omitted for an
    * unrestricted slot. Kept as a field rather than more `TargetKind` literals, which would
@@ -606,7 +646,10 @@ export type Effect =
   | { op: 'grantProtectionEachUntilEot'; selector: Selector; colors: Color[] }
   | { op: 'grantChosenColorProtectionUntilEot'; target: EffectRef }
   | { op: 'returnSpellToOwnerHand'; target: EffectRef }
-  | { op: 'changeSingleSpellTarget'; target: EffectRef }
+  /** "Change the target of target spell or ability with a single target" (CR 115.7a). */
+  | { op: 'changeSingleTarget'; target: EffectRef }
+  /** "You may choose new targets for target spell or ability" (CR 115.7d); not a copy. */
+  | { op: 'chooseNewTargets'; target: EffectRef }
   /** Exile the exact graveyard incarnation that fired this card-zone trigger. */
   | { op: 'exileGraveyardEventCard' }
   | { op: 'sacrificeTargetPlayerCreature'; target: EffectRef }
@@ -798,15 +841,56 @@ export type Effect =
       /** "... by sources you don't control", checked as the damage would be dealt. */
       sources?: 'youDontControl';
     }
-  | { op: 'copyTargetSpell'; target: number }
+  /** "Copy target … spell" (CR 707.10); `newTargets`: "you may choose new targets for the copy". */
+  | { op: 'copyTargetSpell'; target: number; newTargets?: true }
   /**
    * Replicate's cast trigger (CR 702.56a): copy the spell `count` times, each copy's controller
    * choosing to keep or change its targets (CR 707.10c). `spell` is the cast spell as it was put
    * on the stack — the last known information the copies use if it has left (CR 707.10).
    */
+  /**
+   * "Copy that spell" / "you may copy it" in a cast trigger (Cosmic Crucible, Galvanic
+   * Iteration), with "you may choose new targets for the copy" (CR 707.10c). Bound to the cast
+   * spell when the trigger is put on the stack: it becomes a one-copy `replicateCopies`, which
+   * copies the spell's last known information if it has left the stack (CR 707.10).
+   */
+  | { op: 'copyCastSpell'; optional?: true; oncePerTurn?: true }
+  /**
+   * "When you next cast a [filter] spell this turn, [ability]" (Galvanic Iteration): a delayed
+   * cast trigger that fires once, for its controller's next matching cast, and lapses at cleanup.
+   */
+  | { op: 'nextCastThisTurn'; filter: Selector; ability: Ability }
+  /**
+   * "Copy that ability" in an activation trigger (Verrak, Rowan Kenrith's emblem), with "you may
+   * choose new targets for the copy" (CR 707.10c). Bound to the activated ability when the
+   * trigger is put on the stack: it becomes a `copyStackAbility` of that ability's last known
+   * information. `mayPayLifeAgain`: "you may pay that much life again. If you do, copy it."
+   */
+  | { op: 'copyActivatedAbility'; mayPayLifeAgain?: true }
+  /**
+   * A bound `copyActivatedAbility`: copy `stackAbility`, even if it has left the stack (CR
+   * 707.10), with new targets chosen by the copy's controller. `lifeCost` is paid first, and
+   * nothing is copied unless the controller chooses to and can pay it.
+   */
+  | { op: 'copyStackAbility'; stackAbility: StackAbilitySnapshot; lifeCost?: number }
+  /**
+   * "Copy target triggered ability you control twice. You may choose new targets for the
+   * copies." (Mister Fantastic, CR 707.10).
+   */
+  | { op: 'copyTargetAbility'; target: EffectRef; count: number; newTargets?: true }
+  /**
+   * "Create a token that's a copy of one of them" (Twilight Diviner): the controller chooses one
+   * permanent of the aggregate group that fired this trigger. One that has left the battlefield
+   * is copied from its last known information (CR 707.2, 608.2h).
+   */
+  | { op: 'createTokenCopyOfEventGroupMember'; count: Value }
   | {
       op: 'replicateCopies';
       count: number;
+      /** "You may copy it": the controller decides on resolution. */
+      optional?: true;
+      /** "Do this only once each turn": at most one resolution per source object per turn. */
+      oncePerTurn?: true;
       spell: {
         stackObjectId: string;
         oracleId: string;
@@ -818,6 +902,8 @@ export type Effect =
         definition?: import('./definition').CardDefinition;
         ability?: Ability;
         announcedX?: number;
+        /** The opponent promised a gift as it was cast (CR 702.174); a copy keeps the promise. */
+        giftRecipientId?: PlayerId;
         countTargets?: Record<number, string[]>;
         divisionAmounts?: Record<string, number>;
         optionalCostCounts?: Partial<
@@ -828,7 +914,7 @@ export type Effect =
         targetNames?: Record<string, string>;
       };
     }
-  | { op: 'copyEachTargetedSpell'; targetSlot: number }
+  | { op: 'copyEachTargetedSpell'; targetSlot: number; newTargets?: true }
   | { op: 'angelGrace' }
   | { op: 'drawForEachOpponent' }
   | { op: 'drawTargetAndController'; target: EffectRef }
@@ -844,7 +930,18 @@ export type Effect =
   | { op: 'destroyAndCreateTokensEqualToManaValue'; target: EffectRef; spec: TokenSpec }
   | { op: 'exile'; target: EffectRef } // target creature
   | { op: 'exileCard'; target: EffectRef }
-  | { op: 'counter'; target: number; exileIfCountered?: boolean; addManaAtNextMainPhase?: boolean }
+  | {
+      op: 'counter';
+      target: number;
+      exileIfCountered?: boolean;
+      addManaAtNextMainPhase?: boolean;
+      /**
+       * "If [condition], add an amount of {C} equal to the amount of mana spent to cast that
+       * spell at the beginning of your next main phase" (Mana Sculpt). Checked once as this
+       * resolves; the delayed trigger is created whether or not the spell could be countered.
+       */
+      manaSpentAtNextMainPhase?: { condition: Condition };
+    }
   /** Counter a spell, then create tokens for that spell's controller (Offer/Swan Song). */
   | { op: 'counterAndCreateTokenForController'; target: number; spec: TokenSpec; count: Value } // target spell — always a real target
   | { op: 'sacrifice'; target: EffectRef }
@@ -868,7 +965,13 @@ export type Effect =
    * made while this ability resolves. Paying fires `then`, which goes on the stack as its own
    * ability and reads the amount paid as `energyPaid`; declining fires nothing.
    */
-  | { op: 'mayPayEnergyThenReflexive'; min: number; then: Ability }
+  | {
+      op: 'mayPayEnergyThenReflexive';
+      min: number;
+      then: Ability;
+      /** "You may pay {E}{E}{E}" (Saheeli, Radiant Creator): exactly `min`, not more. */
+      exact?: true;
+    }
   /**
    * "Put a +1/+1 counter on Lockjaw. When you do, …" (CR 603.12): `then` triggers only if the
    * counters were actually put on the source — not if it left the battlefield first.
@@ -989,7 +1092,13 @@ export type Effect =
   | { op: 'mill'; count: Value } // controller mills
   | { op: 'gainEnergy'; amount: Value }
   /** Create a player-owned emblem containing abilities but no targetable characteristics. */
-  | { op: 'createEmblem'; name: string; abilities: Ability[] } // controller gets energy counters
+  | {
+      op: 'createEmblem';
+      name: string;
+      abilities: Ability[];
+      /** "Target player gets an emblem" (Rowan Kenrith): that player owns it, not the controller. */
+      forPlayer?: EffectRef;
+    }
   | { op: 'gainLife'; amount: Value } // controller gains
   | { op: 'loseLife'; amount: Value } // controller loses life (not damage)
   | { op: 'loseLifeTarget'; target: EffectRef; amount: Value }
@@ -1018,6 +1127,8 @@ export type Effect =
       amount: Value;
       source?: EffectRef;
       exceptSource?: true;
+      /** "each tapped creature target player controls" (Rowan Kenrith): only that player's. */
+      controlledBy?: EffectRef;
     }
   /** "~ deals X damage to each creature without flying AND EACH PLAYER" (Earthquake). */
   | { op: 'damageEachPlayer'; amount: Value; source?: EffectRef }
@@ -1511,6 +1622,8 @@ export type Effect =
        * `duringTheirNextTurn` it is also the player whose next turn it lasts through.
        */
       relativeTo?: 'activePlayer' | 'eventPlayer';
+      /** "each creature target player controls" during that player's next turn (Rowan Kenrith). */
+      relativeToPlayer?: EffectRef;
       /** "can't attack you or planeswalkers you control": the controller and what they control. */
       cantAttack?: 'you';
     }
@@ -1519,6 +1632,11 @@ export type Effect =
    * `then` resolves only if they chose to draw.
    */
   | { op: 'eventPlayerMayDraw'; then: Effect[] }
+  /**
+   * Partner with (CR 702.124j): "target player may search their library for a card named
+   * [name], reveal it, put it into their hand, then shuffle."
+   */
+  | { op: 'targetPlayerMaySearchNamed'; target: EffectRef; name: string }
   /**
    * "Until your next turn, those creatures can't block" (Taunt from the Rampart): the creatures
    * matching `selector` as this resolves, a fixed set (CR 611.2c).
@@ -1683,6 +1801,13 @@ export type Effect =
        * stops being a planeswalker while this applies. Omitted keeps the additive behavior.
        */
       replaceTypes?: string[];
+      /** "Red and green" (Atarka Monument): its colors become exactly these (CR 105.3). */
+      colors?: Color[];
+      /**
+       * "Becomes a legendary …" (Sarkhan): with `replaceTypes` these are its supertypes; without,
+       * they are added.
+       */
+      supertypes?: string[];
     }
   /** "Discard your hand" (Sarkhan's emblem) — the controller only, no draw follows. */
   | { op: 'discardHand' }
@@ -1958,7 +2083,12 @@ export type TriggerHead =
        * have been in the ability controller's graveyard, which a card only ever is when its owner
        * is that player.
        */
-      entersFrom?: { zone: 'graveyard'; graveyardOwner?: 'you' };
+      entersFrom?: {
+        zone: 'graveyard';
+        graveyardOwner?: 'you';
+        /** "…entered or were cast from a graveyard" (Twilight Diviner): its cast record counts too. */
+        orCastFrom?: true;
+      };
       /**
        * "…enter, if none of them were cast or no mana was spent to cast them" (Satoru, the
        * Infiltrator): every permanent in the firing (the whole group for an aggregate head) was
@@ -2044,6 +2174,13 @@ export type TriggerHead =
   | { when: 'gainsLife'; player: 'you' | 'each' }
   | { when: 'drawsCard'; player: 'you' | 'each' | 'opponent' }
   | { when: 'foretells'; player: 'you' }
+  /**
+   * "Whenever you activate an ability that isn't a mana ability" (Verrak, Rowan Kenrith's emblem):
+   * queued as the ability is put on the stack (CR 602.2), after its costs are paid. Mana abilities
+   * never get here. `lifePaid`: "if life was paid to activate it", a fact of that activation, so
+   * the CR 603.4 resolution recheck cannot change it. The amount is the `lifePaid` value.
+   */
+  | { when: 'activatesAbility'; player: 'you'; lifePaid?: true }
   /**
    * "Whenever damage that would be dealt to you is prevented" (Selfless Squire): queued once per
    * prevention applied to one damage event to the player, carrying the amount it prevented

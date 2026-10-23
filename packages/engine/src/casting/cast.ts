@@ -230,7 +230,10 @@ function countedTargetName(ctx: GameContext, id: ObjectId): string {
     if (card !== undefined) return `${card.name} (${player.id}'s graveyard)`;
   }
   const exiled = ctx.state.exile.find((candidate) => candidate.id === id);
-  return exiled === undefined ? id : `${exiled.name} (exile)`;
+  if (exiled !== undefined) return `${exiled.name} (exile)`;
+  // A spell or ability on the stack (Display of Power's "any number of target spells").
+  const entry = ctx.state.stack.find((candidate) => candidate.id === id);
+  return entry === undefined ? id : `${entry.description} (on the stack)`;
 }
 
 export function* chooseCountTargets(
@@ -665,6 +668,12 @@ function* proposeCast(
   }
   let castingAdditionalCosts: AbilityCost[] = [
     ...(printedSpellDef.spellAdditionalCosts ?? []),
+    // Cast under the card's own graveyard permission: its extra cost (Dragon Man).
+    ...(resolutionPermission === undefined &&
+    payload.fromGraveyard === true &&
+    printedSpellDef.castFromGraveyard === true
+      ? (printedSpellDef.castFromGraveyardCosts ?? [])
+      : []),
     // Life paid rather than the mana cost (Anrakyr) is paid with the other costs (CR 601.2h).
     ...((resolutionPermission?.lifeCost ?? 0) > 0
       ? [{ kind: 'payLife' as const, amount: resolutionPermission!.lifeCost! }]

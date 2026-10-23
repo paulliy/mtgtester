@@ -274,19 +274,18 @@ describe('Foe-Razer Regent', () => {
   });
 });
 
+/** The exact Oracle text PR10 pinned; the restored overrides are registered with it. */
+function pr10Card(name: string): OracleCard {
+  const pins = JSON.parse(
+    readFileSync(join(__dirname, 'fixtures', 'coverage-pr10-oracle.json'), 'utf8'),
+  ) as { cards: { card: OracleCard }[] };
+  return pins.cards.find((entry) => entry.card.name === name)!.card;
+}
+
 describe('Atarka Monument', () => {
-  it('is catalog-contained because the animation omits red and green', () => {
-    const card = oracle({
-      oracleId: 'eb287c04-97f5-4e47-beb1-66cc7d15e748',
-      name: 'Atarka Monument',
-      typeLine: 'Artifact',
-      manaCost: '{3}',
-    });
-    const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'The animation does not make it red and green.',
-    );
+  it('is modeled by PR10, whose animation makes it red and green', () => {
+    const def = interpretCard(pr10Card('Atarka Monument'));
+    expect(def.modeled, def.unmodeledReasons.join('\n')).toBe(true);
   });
 });
 
@@ -323,17 +322,9 @@ describe('Clan Defiance', () => {
 });
 
 describe('Sarkhan, the Dragonspeaker', () => {
-  it('is catalog-contained because the +1 omits legendary and red', () => {
-    const card = oracle({
-      oracleId: '80c26f58-04b0-4db0-b84e-9b136609abe0',
-      name: 'Sarkhan, the Dragonspeaker',
-      typeLine: 'Legendary Planeswalker — Sarkhan',
-      manaCost: '{3}{R}{R}',
-      loyalty: '4',
-    });
-    const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain('The +1 does not make it legendary or red.');
+  it('is modeled by PR10, whose +1 makes it legendary and red', () => {
+    const def = interpretCard(pr10Card('Sarkhan, the Dragonspeaker'));
+    expect(def.modeled, def.unmodeledReasons.join('\n')).toBe(true);
   });
 });
 

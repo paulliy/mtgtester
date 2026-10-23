@@ -1,4 +1,5 @@
 import { playerLifeLocked } from './phasing';
+import { offBattlefieldTypes } from './off-battlefield-types';
 import { counterCount } from './counters';
 import { assertNever } from '../utils/assert-never';
 import { assertManaRiders } from '../cards/mana-riders';
@@ -274,7 +275,8 @@ export function cardZoneCandidate(
   return {
     cardId: card.cardId,
     controllerId: ownerId,
-    types: def.types,
+    // "Creature cards you own that aren't on the battlefield" (Biotransference).
+    types: offBattlefieldTypes(ctx, def.types, card.ownerId),
     supertypes: def.supertypes,
     subtypes: def.subtypes,
     colors: def.colors,
@@ -325,7 +327,8 @@ export function manaRestrictionAllows(
   const candidate: SelectorCandidate = {
     cardId: '',
     controllerId: '',
-    types: def.types,
+    // A spell being paid for is controlled by the payer (Biotransference's creature spells).
+    types: purpose.kind === 'castSpell' ? offBattlefieldTypes(ctx, def.types, playerId) : def.types,
     supertypes: def.supertypes,
     subtypes: def.subtypes,
     colors: def.colors,
@@ -1329,7 +1332,7 @@ export function spellProtectedFromCounter(
   const candidate: SelectorCandidate = {
     cardId: '',
     controllerId: casterId,
-    types: def.types,
+    types: offBattlefieldTypes(ctx, def.types, casterId),
     supertypes: def.supertypes,
     subtypes: def.subtypes,
     colors: def.colors,

@@ -20,7 +20,7 @@ import {
 import { computeTargetOptions, withinTotalManaValue } from '../actions/legal';
 import type { Ability, Effect } from '../cards/ability';
 import type { GameGen } from '../decisions';
-import { computeCharacteristics } from '../effects/continuous';
+import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
 import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
@@ -37,6 +37,7 @@ import {
   returnExiledUntilLeaves,
 } from '../state/objects';
 import {
+  gatherRuleStatics,
   getDefByOracleId,
   hasProtectionFrom,
   isCreaturePermanent,
@@ -412,11 +413,26 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
   }
 
   // --- Legend rule (CR 704.5j) — controller chooses which to keep (brief §5.6). ---
+  const legendRuleExemptions = gatherRuleStatics(ctx).filter(
+    (entry) => entry.static.kind === 'legendRuleDoesntApply',
+  );
   for (const player of playersInApnapOrder(ctx)) {
     const byName = new Map<string, EnginePermanent[]>();
     for (const perm of s.battlefield) {
       if (perm.controllerId !== player.id) continue;
       if (!computeCharacteristics(ctx, perm).supertypes.includes('Legendary')) continue;
+      if (
+        legendRuleExemptions.some(
+          (entry) =>
+            entry.controllerId === player.id &&
+            entry.static.kind === 'legendRuleDoesntApply' &&
+            matchesSelector(ctx, perm, entry.static.filter, {
+              cardId: entry.sourceCardId,
+              controllerId: entry.controllerId,
+            }),
+        )
+      )
+        continue;
       const group = byName.get(perm.name) ?? [];
       group.push(perm);
       byName.set(perm.name, group);

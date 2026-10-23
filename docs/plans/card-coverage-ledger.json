@@ -133,20 +133,6 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
-    "oracleId": "4c3ad545-b375-44a7-a24e-58baacc4e4b6",
-    "name": "Annie Joins Up",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"When ~ enters, it deals 5 damage to target creature or planeswalker an opponent controls.\"",
-      "unrecognized rules text: \"If a triggered ability of a legendary creature you control triggers, that ability triggers an additional time.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "32476743-c9d4-49ca-bec2-0669c215841b",
     "name": "Anrakyr the Traveller",
     "package": "PR02.04",
@@ -346,20 +332,6 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr04-card-coverage.test.ts"],
     "snapshotStatus": "interpreter only; no override registration"
-  },
-  {
-    "oracleId": "ef71ef07-8a35-41ec-a851-d95e9e3a221b",
-    "name": "Bilbo's Gambit",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Gift a Treasure\"",
-      "unrecognized rules text: \"Return target spell to its owner's hand. If the gift was promised, players can't cast spells this turn.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
   },
   {
     "oracleId": "6cf50e21-0f60-4e9a-b910-ebe1bad2a29e",
@@ -757,34 +729,6 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
-    "oracleId": "2469c0b7-a045-4733-bf53-28f3fdbe3797",
-    "name": "Cosmic Crucible",
-    "package": "W3",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"At the beginning of your first main phase, add four mana in any combination of colors.\"",
-      "unrecognized rules text: \"Whenever you cast a noncreature spell, you may copy it. You may choose new targets for the copy. Do this only once each turn.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
-    "oracleId": "33fa949c-f29e-4a98-9381-ecfa9e5c3f6d",
-    "name": "Council of Reeds",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"The \"legend rule\" doesn't apply to creatures you control.\"",
-      "unrecognized rules text: \"At the beginning of combat on your turn, if you've cast a noncreature spell this turn, create a token that's a copy of ~.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "acf4d685-a718-42f7-9a7a-dee069ae8db2",
     "name": "Council's Judgment",
     "package": "PR08.15",
@@ -921,21 +865,6 @@
     "blockers": [
       "unsupported layout \"split\"",
       "unrecognized rules text: \"Whenever one or more non-Toy creatures you control attack a player, create a 1/1 white Toy artifact creature token.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
-    "oracleId": "c03ca2e6-fcce-4018-952f-1c451ab92cfd",
-    "name": "Dragon Man, Reformed Robot",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"~'s power is equal to the greatest mana value among noncreature permanents you control and noncreature cards in your graveyard.\"",
-      "unrecognized rules text: \"You may cast this card from your graveyard by discarding a card in addition to paying its other costs.\"",
-      "non-numeric power/toughness \"*\""
     ],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
     "behaviorTests": [],
@@ -1477,19 +1406,6 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
     "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
-  },
-  {
-    "oracleId": "c51ed6e3-813b-49c4-b1de-7f92a77f8f6e",
-    "name": "Galvanic Iteration",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
   },
   {
     "oracleId": "c0adbddc-b070-4c5f-afe0-0474c72a9251",
@@ -2407,32 +2323,6 @@
     "snapshotStatus": "pending"
   },
   {
-    "oracleId": "6a84eda1-7e72-4b5a-849f-b6e177565aeb",
-    "name": "Mirage Mirror",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"{2}: ~ becomes a copy of target artifact, creature, enchantment, or land until end of turn.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
-    "oracleId": "a8011dce-17fb-46e1-8297-81a4acccbd05",
-    "name": "Mister Fantastic",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"{R}{G}{W}{U}, {T}: Copy target triggered ability you control twice. You may choose new targets for the copies.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "bb5c1817-ac22-4779-9005-251bc354f181",
     "name": "Mistveil Plains",
     "package": "PR02.17",
@@ -2448,19 +2338,6 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
     "snapshotStatus": "override deleted; override-defs.json regenerated and reviewed"
-  },
-  {
-    "oracleId": "3b8eb602-01e8-432e-8dfc-8fdb62c3aa43",
-    "name": "Mocking Doppelganger",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"You may have this creature enter as a copy of a creature an opponent controls, except it has \"Other creatures with the same name as this creature are goaded.\"\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
   },
   {
     "oracleId": "fe83087d-c6c1-40be-9295-baaa1c6b2db1",
@@ -2985,36 +2862,6 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
-    "oracleId": "3640c29b-1534-4952-b297-619ade948431",
-    "name": "Roaming Throne",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"~ is the chosen type in addition to its other types.\"",
-      "unrecognized rules text: \"If a triggered ability of another creature you control of the chosen type triggers, it triggers an additional time.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
-    "oracleId": "e191976c-6ab1-4a23-aeb8-8a88bd4bd203",
-    "name": "Rowan Kenrith",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"+2: During target player's next turn, each creature that player controls attacks if able.\"",
-      "unrecognized rules text: \"−2: ~ deals 3 damage to each tapped creature target player controls.\"",
-      "unrecognized rules text: \"−8: Target player gets an emblem with \"Whenever you activate an ability that isn't a mana ability, copy it. You may choose new targets for the copy.\"\"",
-      "unrecognized rules text: \"Partner with Will Kenrith\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "3ceca713-38de-4428-a4f1-2146f6e98393",
     "name": "Rumor Gatherer",
     "package": "PR04.16",
@@ -3180,19 +3027,6 @@
     "interpretationTests": ["packages/engine/tests/w1-remaining-cards.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
-  },
-  {
-    "oracleId": "aa854d50-444c-49d9-bfb1-5476b33c1c0b",
-    "name": "Scute Swarm",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Whenever a land you control enters, create a 1/1 green Insect creature token. If you control six or more lands, create a token that's a copy of this creature instead.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
   },
   {
     "oracleId": "96312b75-3110-4506-9f95-0c6c17d9da11",
@@ -4007,20 +3841,6 @@
     "coverageDelta": 1
   },
   {
-    "oracleId": "04853f06-3fd2-445d-9b0d-d68d0f116635",
-    "name": "Verrak, Warped Sengir",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Whenever you activate an ability that isn't a mana ability, if life was paid to activate it, you may pay that much life again. If you do, copy that ability. You may choose new targets for the copy.\"",
-      "override for \"Verrak, Warped Sengir\" has no executable behavior"
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "240e85d3-e495-4877-8609-4b4056c402f7",
     "name": "Victimize",
     "package": "PR03.22",
@@ -4218,20 +4038,6 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr08-winds-of-abandon.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
-  },
-  {
-    "oracleId": "cb15a8dd-57fe-466f-847e-66476b690a1f",
-    "name": "Xenagos, God of Revels",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"As long as your devotion to red and green is less than seven, ~ isn't a creature.\"",
-      "unrecognized rules text: \"At the beginning of combat on your turn, another target creature you control gains haste and gets +X/+X until end of turn, where X is that creature's power.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
   },
   {
     "oracleId": "b168e4e6-f572-4d9f-b98f-95b2611354cb",
@@ -4919,6 +4725,467 @@
       "apps/web/e2e/pr09-permanent-card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "ae120613-97d6-4393-b39d-c3e6c076f5d6",
+    "name": "Deflecting Swat",
+    "package": "PR10.01",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-retarget.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-retarget.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "a1f55890-31c5-4ed4-a2cd-7a4a9f05f8ca",
+    "name": "Reverberate",
+    "package": "PR10.06",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-spell-copy.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-spell-copy.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "c20a96f7-aa5a-4c15-b8b1-806685c99b27",
+    "name": "Bolt Bend",
+    "package": "PR10.11",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-retarget.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-retarget.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "99140891-face-4015-aacd-1309e87d8f9f",
+    "name": "Display of Power",
+    "package": "PR10.12",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-spell-copy.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-spell-copy.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "f586ecb8-310c-4f40-a766-6a7ca46a254d",
+    "name": "Flare of Duplication",
+    "package": "PR10.14",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-spell-copy.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-spell-copy.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "c51ed6e3-813b-49c4-b1de-7f92a77f8f6e",
+    "name": "Galvanic Iteration",
+    "package": "PR10.19",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-cast-copy.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-cast-copy.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "2469c0b7-a045-4733-bf53-28f3fdbe3797",
+    "name": "Cosmic Crucible",
+    "package": "PR10.26",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-cast-copy.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-cast-copy.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "ef71ef07-8a35-41ec-a851-d95e9e3a221b",
+    "name": "Bilbo's Gambit",
+    "package": "PR10.25",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": ["packages/engine/tests/white-black-control-gifts.test.ts"],
+    "interpretationTests": ["packages/engine/tests/white-black-control-gifts.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "35e2f82e-7ca3-4a92-9134-b7999eef5337",
+    "name": "Mana Sculpt",
+    "package": "PR10.04",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-ability-stack.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-ability-stack.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "59c7496b-19a2-478b-b28f-6f153c2458ae",
+    "name": "Siren Stormtamer",
+    "package": "PR10.08",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-ability-stack.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-ability-stack.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "04853f06-3fd2-445d-9b0d-d68d0f116635",
+    "name": "Verrak, Warped Sengir",
+    "package": "PR10.10",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-ability-stack.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-ability-stack.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "a8011dce-17fb-46e1-8297-81a4acccbd05",
+    "name": "Mister Fantastic",
+    "package": "PR10.21",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-ability-stack.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-ability-stack.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "3640c29b-1534-4952-b297-619ade948431",
+    "name": "Roaming Throne",
+    "package": "PR10.18",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-trigger-doubling.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-trigger-doubling.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "4c3ad545-b375-44a7-a24e-58baacc4e4b6",
+    "name": "Annie Joins Up",
+    "package": "PR10.24",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-trigger-doubling.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-trigger-doubling.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "eb287c04-97f5-4e47-beb1-66cc7d15e748",
+    "name": "Atarka Monument",
+    "package": "PR10.02",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-animation.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-animation.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "80c26f58-04b0-4db0-b84e-9b136609abe0",
+    "name": "Sarkhan, the Dragonspeaker",
+    "package": "PR10.17",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-animation.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-animation.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "6a84eda1-7e72-4b5a-849f-b6e177565aeb",
+    "name": "Mirage Mirror",
+    "package": "PR10.20",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-animation.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-animation.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "ab655810-f67e-4576-9174-35b16f5e3235",
+    "name": "Saheeli, Sublime Artificer",
+    "package": "PR10.07",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-animation.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-animation.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "aa854d50-444c-49d9-bfb1-5476b33c1c0b",
+    "name": "Scute Swarm",
+    "package": "PR10.23",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-token-copy.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-token-copy.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "33fa949c-f29e-4a98-9381-ecfa9e5c3f6d",
+    "name": "Council of Reeds",
+    "package": "PR10.27",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-token-copy.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-token-copy.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "05d7222b-cc08-4f1f-8e35-6058599572ba",
+    "name": "Twilight Diviner",
+    "package": "PR10.31",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-token-copy.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-token-copy.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "20f602b3-814f-406c-b7eb-2d1fc98f8cf1",
+    "name": "Saheeli, Radiant Creator",
+    "package": "PR10.16",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-token-copy.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-token-copy.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "3b8eb602-01e8-432e-8dfc-8fdb62c3aa43",
+    "name": "Mocking Doppelganger",
+    "package": "PR10.22",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-mocking-doppelganger.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-mocking-doppelganger.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "ea86abfa-6cab-4ef0-8463-34136fc25b59",
+    "name": "Duplicant",
+    "package": "PR10.13",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-duplicant.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-duplicant.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "379ed4ec-8f2e-448b-9ed2-a3181e2f877e",
+    "name": "Nighthawk Scavenger",
+    "package": "PR10.15",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-characteristics.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-characteristics.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "cb15a8dd-57fe-466f-847e-66476b690a1f",
+    "name": "Xenagos, God of Revels",
+    "package": "PR10.28",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-characteristics.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-characteristics.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "1ef3b48a-55ef-422e-ac7f-e1c1057eec2c",
+    "name": "Trazyn the Infinite",
+    "package": "PR10.09",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-characteristics.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-characteristics.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "70dc830e-d05b-4fc7-88dd-879e140b3fbf",
+    "name": "Reality Shift",
+    "package": "PR10.05",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-characteristics.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-characteristics.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "c03ca2e6-fcce-4018-952f-1c451ab92cfd",
+    "name": "Dragon Man, Reformed Robot",
+    "package": "PR10.29",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-characteristics.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-characteristics.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "e191976c-6ab1-4a23-aeb8-8a88bd4bd203",
+    "name": "Rowan Kenrith",
+    "package": "PR10.30",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-rowan.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-rowan.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "5443557e-440f-4fdd-a29b-7740d7cec085",
+    "name": "Biotransference",
+    "package": "PR10.03",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-biotransference.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-biotransference.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   }
 ]

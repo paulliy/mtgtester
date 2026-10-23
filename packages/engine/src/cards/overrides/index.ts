@@ -71,6 +71,15 @@ import { registerCoveragePr06Overrides } from './coverage-pr06';
 import { registerCoveragePr07Overrides } from './coverage-pr07';
 import { registerCoveragePr08Overrides } from './coverage-pr08';
 import { registerCoveragePr09Overrides } from './coverage-pr09';
+import {
+  registerPr10AbilityStackOverrides,
+  registerPr10AnimationOverrides,
+  registerPr10CharacteristicsOverrides,
+  registerPr10CastCopyOverrides,
+  registerPr10RetargetAndCopyOverrides,
+  registerPr10TokenCopyOverrides,
+  registerPr10TriggerDoublingOverrides,
+} from './coverage-pr10';
 import { registerWhiteBlackControlHandOverrides } from './white-black-control-hand';
 import { registerWhiteBlackControlStaxOverrides } from './white-black-control-stax';
 import { registerWhiteBlackControlDiscardOverrides } from './white-black-control-discard';
@@ -233,6 +242,14 @@ registerDeck('white-black-control-aven', registerWhiteBlackControlAvenOverrides)
 registerDeck('white-black-control-gifts', registerWhiteBlackControlGiftOverrides);
 registerDeck('white-black-control-perch', registerWhiteBlackControlPerchOverrides);
 registerDeck('coverage-pr09', registerCoveragePr09Overrides);
+// PR10 groups register here as their manifest and Card Test Lab evidence lands.
+registerDeck('coverage-pr10-retarget', registerPr10RetargetAndCopyOverrides);
+registerDeck('coverage-pr10-cast-copy', registerPr10CastCopyOverrides);
+registerDeck('coverage-pr10-ability-stack', registerPr10AbilityStackOverrides);
+registerDeck('coverage-pr10-trigger-doubling', registerPr10TriggerDoublingOverrides);
+registerDeck('coverage-pr10-animation', registerPr10AnimationOverrides);
+registerDeck('coverage-pr10-token-copy', registerPr10TokenCopyOverrides);
+registerDeck('coverage-pr10-characteristics', registerPr10CharacteristicsOverrides);
 registerDeck('unsupported-spell-faces', registerUnsupportedSpellFaces);
 
 /** Register an override. Exported for the per-card modules and for tests. */
@@ -334,9 +351,17 @@ export function replaceCard(
   handledLines: string[],
   def: Partial<CardDefinition>,
   reason: string,
+  /** `'append'` keeps the abilities the interpreter parsed from other lines, as `extendCard`. */
+  compose?: 'append',
 ): void {
   const replace = (id: string): void => {
-    const override = { oracleId: id, name, handledLines, def };
+    const override: CardOverride = {
+      oracleId: id,
+      name,
+      handledLines,
+      def,
+      ...(compose === undefined ? {} : { compose }),
+    };
     if (OVERRIDES.has(id)) {
       explicitReplacements.push({ oracleId: id, name, reason });
       OVERRIDES.set(id, override);

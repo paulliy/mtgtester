@@ -163,7 +163,11 @@ export interface CardDefinition {
   }[];
   /** Additional 1/1 token replacement generated whenever a creature token is created. */
   tokenCreationReplacement?: import('./ability').TokenSpec;
-  /** Static characteristic behavior for a Duplicant-style last-exiled creature copy. */
+  /**
+   * Duplicant: "As long as a card exiled with this creature is a creature card, this creature
+   * has the power, toughness, and creature types of the last creature card exiled with it. It's
+   * still a Shapeshifter." A layer 4 and layer 7b effect over `exiledWithIds` (CR 607.2a).
+   */
   copyLastExiledCreature?: boolean;
   /** Grants an energy alternative cost to permanent spells while this permanent is controlled. */
   energyAlternativeCost?: number;
@@ -187,12 +191,19 @@ export interface CardDefinition {
    */
   castFromGraveyard?: true;
   /**
+   * Costs added when the card is cast from the graveyard under its own `castFromGraveyard`
+   * permission ("by discarding a card in addition to paying its other costs" — Dragon Man).
+   */
+  castFromGraveyardCosts?: AbilityCost[];
+  /**
    * "Cast this spell only during an opponent's turn" (Delirium): a condition on the caster that
    * must hold to cast the spell at all, checked when offering the cast and again as it is cast.
    */
   castRestriction?: Condition;
   /** "You may cast this spell without paying its mana cost if you control a commander." */
   commanderFreeCast?: boolean;
+  /** "This spell can't be copied" (Display of Power): copy effects create no copy of it. */
+  cantBeCopied?: true;
   /** Additional costs paid while announcing a spell (CR 601.2h), apart from its mana cost. */
   spellAdditionalCosts?: AbilityCost[];
   /** A promise made during announcement, fulfilled before resolving spell effects. */
@@ -225,6 +236,10 @@ export interface CardDefinition {
     addTriggers?: import('./ability').Ability[];
     /** Supertypes stripped from the copy ("except it isn't legendary" — Spark Double). */
     removeSupertypes?: string[];
+    /** Static abilities the copy has beyond the copied object's (Mocking Doppelganger's "Other
+     * creatures with the same name as this creature are goaded"). Part of the copiable values
+     * (CR 707.9b), so a copy of the copy has them too. */
+    addStaticEffects?: StaticEffect[];
     /** A counter added on entry, chosen by the copy's own resulting type (Spark Double). */
     addCounterByType?: { creatureCounter: string; planeswalkerCounter: string; count: number };
   };

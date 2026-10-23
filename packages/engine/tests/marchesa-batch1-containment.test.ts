@@ -121,6 +121,29 @@ describe('Marchesa catalog audit containment', () => {
     'Aetherworks Marvel',
     'Herald of Amity',
     'Mystic Forge',
+    // PR10 stack retarget and copy regressions replace these historical guards.
+    'Deflecting Swat',
+    'Bolt Bend',
+    'Reverberate',
+    'Flare of Duplication',
+    'Display of Power',
+    // PR10 ability-stack regressions (counter, copy and life-paid copies) replace these guards.
+    'Siren Stormtamer',
+    'Mana Sculpt',
+    'Verrak, Warped Sengir',
+    // PR10 animation regressions (type and color changes, copies until end of turn).
+    'Atarka Monument',
+    'Sarkhan, the Dragonspeaker',
+    'Saheeli, Sublime Artificer',
+    // PR10 token-copy regressions (copies of permanents and spells' sources).
+    'Saheeli, Radiant Creator',
+    'Twilight Diviner',
+    // PR10 characteristics regressions.
+    'Biotransference',
+    'Duplicant',
+    'Nighthawk Scavenger',
+    'Reality Shift',
+    'Trazyn the Infinite',
 
     'Vindictive Lich',
     'Shadrix Silverquill',

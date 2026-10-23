@@ -3,7 +3,7 @@
 Generated from the engine-supported card pool.
 This is an interpreter-support inventory. Card behavior verification is tracked separately in the card verification manifest.
 
-**Total**: 6487 modeled non-land cards
+**Total**: 6517 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -201,6 +201,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Animate Dead
 - Ankle Biter
 - Ankle Shanker
+- Annie Joins Up
 - Annoyed Altisaur
 - Anodet Lurker
 - Anointed Chorister
@@ -316,6 +317,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Assault Zeppelid
 - Astral Wingspan
 - Atalan Jackal
+- Atarka Monument
 - Atarka, World Render
 - Atlantean Cavalry
 - Atmosphere Surgeon
@@ -526,6 +528,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Bile Urchin
 - Biogenic Ooze
 - Biomathematician
+- Biotransference
 - Bird Maiden
 - Birds of Paradise
 - Birthing Boughs
@@ -652,6 +655,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Bold Impaler
 - Boldwyr Aggressor
 - Bolrac-Clan Crusher
+- Bolt Bend
 - Bolt Hound
 - Bolt of Keranos
 - Boltwave
@@ -1118,11 +1122,13 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Corrosive Gale
 - Corrupted Conviction
 - Corsair Captain
+- Cosmic Crucible
 - Cosmic Cube
 - Cosmic Spider-Man
 - Cosmogrand Zenith
 - Costly Plunder
 - Council of Advisors
+- Council of Reeds
 - Council's Judgment
 - Counsel of the Soratami
 - Counterspell
@@ -1354,9 +1360,12 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Defiant Strike
 - Defile
 - Deflecting Palm
+- Deflecting Swat
 - Deft Duelist
 - Defy Gravity
 - Dega Disciple
+- Dragon Man, Reformed Robot
+- Duplicant
 - Déjà Vu
 - Deliberate
 - Delighted Halfling
@@ -1443,6 +1452,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Disperse
 - Dispersing Orb
 - Displacer Kitten
+- Display of Power
 - Disrupt Decorum
 - Disruptive Pitmage
 - Disruptive Student
@@ -1993,6 +2003,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Flaming Sword
 - Flare of Cultivation
 - Flare of Denial
+- Flare of Duplication
 - Flare of Malice
 - Flashfires
 - Flatten
@@ -2163,6 +2174,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Gallant Cavalry
 - Gallant Citizen
 - Gallows Warden
+- Galvanic Iteration
 - Galvanic Key
 - Galvanizing Sawship
 - Game-Trail Changeling
@@ -3360,6 +3372,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Mana Leak
 - Mana Matrix
 - Mana Prism
+- Mana Sculpt
 - Mana Tithe
 - Managorger Hydra
 - Manakin
@@ -3523,6 +3536,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Minotaur, Roxxon CEO
 - Mintstrosity
 - Miraculous Recovery
+- Mirage Mirror
 - Mirari's Wake
 - Mire Shade
 - Mire Triton
@@ -3543,6 +3557,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Mist Raven
 - Mist-Cloaked Herald
 - Mistcutter Hydra
+- Mister Fantastic
 - Mister Fantastic, Reed Richards
 - Mistmeadow Witch
 - Mistral Charger
@@ -3558,6 +3573,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Mob Rule
 - Mobilization
 - Mobilize
+- Mocking Doppelganger
 - Mocking Sprite
 - Mogg Raider
 - Mogg Sentry
@@ -3738,6 +3754,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Night Scythe
 - Night's Whisper
 - Nightguard Patrol
+- Nighthawk Scavenger
 - Nighthawk, Dark Defender
 - Nighthowl Pursuer
 - Nightmare
@@ -4361,6 +4378,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Reach the Horizon
 - Reach Through Mists
 - Read the Bones
+- Reality Shift
 - Realm-Cloaked Giant // Cast Off
 - Reanimate
 - Reap the Seagraf
@@ -4454,6 +4472,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Return to Nature
 - Revel of the Fallen God
 - Revelsong Horn
+- Reverberate
 - Reverent Hoplite
 - Reverent Howl
 - Reverse Engineer
@@ -4523,6 +4542,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - River Sneak
 - Riverguard's Reflexes
 - Riverwise Augur
+- Roaming Throne
 - Roar of the Wurm
 - Robe of Mirrors
 - Robotics Mastery
@@ -4566,6 +4586,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Rousing Read
 - Rover Blades
 - Roving Harper
+- Rowan Kenrith
 - Rowan Treefolk
 - Roxxon Brutes
 - Royal Falcon
@@ -4633,6 +4654,8 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Sagu Archer
 - Sagu Mauler
 - Sagu Wildling // Roost Seek
+- Saheeli, Radiant Creator
+- Saheeli, Sublime Artificer
 - Sai, Master Thopterist
 - Sailor of Means
 - Sakura-Tribe Elder
@@ -4668,6 +4691,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Sarkhan, Dragon Ascendant
 - Sarkhan, Soul Aflame
 - Sarkhan's Triumph
+- Sarkhan, the Dragonspeaker
 - Saruli Caretaker
 - Saruli Gatekeepers
 - Satoru, the Infiltrator
@@ -4764,6 +4788,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Scryb Sprites
 - Sculpting Steel
 - Scute Mob
+- Scute Swarm
 - Scuzzback Marauders
 - Scythe Leopard
 - Sea Eagle
@@ -5016,6 +5041,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Sink into Stupor // Soporific Springs
 - Sinkhole
 - Sir Shandlar of Eberyn
+- Siren Stormtamer
 - Siren's Call
 - Sisay's Ring
 - Sisters of the Flame
@@ -5787,6 +5813,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Traveling Minister
 - Traveling Philosopher
 - Trawler Drake
+- Trazyn the Infinite
 - Tread Upon
 - Treasure Dredger
 - Treasure Hunter
@@ -5848,6 +5875,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Tusked Colossodon
 - Tuskguard Captain
 - Tuvasa the Sunlit
+- Twilight Diviner
 - Twin-Silk Spider
 - Twinblade Blessing
 - Twinflame Tyrant
@@ -6034,6 +6062,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Vermiculos
 - Vermin Gorger
 - Vernadi Shieldmate
+- Verrak, Warped Sengir
 - Vesper Ghoul
 - Vessel of Ephemera
 - Vessel of Volatility
@@ -6423,6 +6452,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Wyluli Wolf
 - Xande, Dark Mage
 - Xathrid Necromancer
+- Xenagos, God of Revels
 - Xira Arien
 - Yargle and Multani
 - Yargle, Glutton of Urborg

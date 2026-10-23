@@ -373,10 +373,16 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
   /** Name kept instead of the copied object's ("except its name is Sarkhan, Soul Aflame" —
    * Sarkhan, Soul Aflame). */
   copyNameOverride?: string;
-  /** Cards exiled by a Duplicant-style ability, newest card last. */
-  exiledCardIds?: CardId[];
+  /**
+   * Exile-zone object ids of the cards this object exiled with an `exileTargetWithSource` ability,
+   * newest last. Linked to this object only (CR 607.2a): a card that leaves exile becomes a new
+   * object and is no longer "exiled with" it.
+   */
+  exiledWithIds?: string[];
   /** A face-down manifested card is a 2/2 colorless creature. */
   faceDown?: boolean;
+  /** Face down because it was manifested (CR 701.40), not cast face down. */
+  manifested?: true;
 }
 
 /** Non-battlefield engine object living in graveyard/exile with 903.9a bookkeeping. */
@@ -668,6 +674,8 @@ export interface UntilEotEffect extends ContinuousEffect {
     setColors?: Color[];
     /** See `Effect.becomeCreatureUntilEot.replaceTypes` — full type-line replacement, not add. */
     replaceTypes?: string[];
+    /** Set alongside `replaceTypes`, added otherwise. */
+    supertypes?: string[];
   };
   /** Timestamp assigned on creation (CR 613.7 within-layer ordering). */
   timestamp: number;
@@ -736,6 +744,10 @@ export interface DelayedTrigger {
    * turn's upkeep" or "the next end step", wrong for "your next upkeep".
    */
   player?: 'you';
+  /** A `castsSpell` delayed trigger: only its controller's spells matching this filter. */
+  castFilter?: Selector;
+  /** Removed as soon as it fires ("when you NEXT cast"), whatever its expiry. */
+  once?: true;
 }
 
 /** "Prevent all damage that would be dealt to you this turn" and its relatives (CR 615). */
@@ -836,6 +848,11 @@ export interface EngineState extends GameState {
    * (CR 400.7). Cleared at the start of each turn.
    */
   abilityResolutionsThisTurn?: Record<string, number>;
+  /**
+   * "Do this only once each turn" (Cosmic Crucible): keys (source object id and action) of
+   * once-each-turn actions already taken this turn. Cleared at the start of each turn.
+   */
+  onceEachTurnActionsTaken?: string[];
   /** Combat-damage replacement shields used by Darkness-style effects this turn. */
   combatDamagePrevention: {
     all: boolean;
@@ -927,6 +944,8 @@ export interface GameContext {
    * entrants (CR 614.12).
    */
   enteringTogether?: ReadonlySet<CardId>;
+  /** Set while an activation's costs are paid: the life paid as part of them (Verrak). */
+  costLifePaid?: { amount: number };
 }
 
 /** Internal debug log entry (brief §13) — separate from the replayable `GameEvent` log. */

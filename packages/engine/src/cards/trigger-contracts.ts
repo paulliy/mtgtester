@@ -47,6 +47,7 @@ export function triggerEventFamily(
     case 'gainsLife':
     case 'drawsCard':
     case 'foretells':
+    case 'activatesAbility':
     case 'damagePreventedToPlayer':
     case 'playerDealtDamage':
       return 'player';
@@ -88,6 +89,7 @@ export function triggerProvidesEventPlayer(when: TriggerHead['when']): boolean {
     case 'gainsLife':
     case 'drawsCard':
     case 'foretells':
+    case 'activatesAbility':
     case 'damagePreventedToPlayer':
     case 'playerDealtDamage':
     case 'attackDeclared':
@@ -163,7 +165,11 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
           ? ['attacker', 'attacking', 'perDefender', 'minAttackers']
           : family === 'card'
             ? ['player', 'filter']
-            : ['player', ...(head['when'] === 'playerDealtDamage' ? ['sourceController'] : [])]),
+            : [
+                'player',
+                ...(head['when'] === 'playerDealtDamage' ? ['sourceController'] : []),
+                ...(head['when'] === 'activatesAbility' ? ['lifePaid'] : []),
+              ]),
   ];
   for (const key of Object.keys(head))
     if (!allowed.includes(key))
@@ -261,7 +267,8 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
         record === undefined ||
         record['zone'] !== 'graveyard' ||
         (record['graveyardOwner'] !== undefined && record['graveyardOwner'] !== 'you') ||
-        Object.keys(record).some((key) => !['zone', 'graveyardOwner'].includes(key))
+        (record['orCastFrom'] !== undefined && record['orCastFrom'] !== true) ||
+        Object.keys(record).some((key) => !['zone', 'graveyardOwner', 'orCastFrom'].includes(key))
       )
         issues.push({
           path: `${path}.entersFrom`,
@@ -377,7 +384,7 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
     !(
       head['when'] === 'drawsCard'
         ? ['you', 'each', 'opponent']
-        : head['when'] === 'foretells'
+        : head['when'] === 'foretells' || head['when'] === 'activatesAbility'
           ? ['you']
           : family === 'step' && !['mainPhase', 'precombatMain'].includes(head['when'] as string)
             ? [
@@ -400,6 +407,8 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
       path: `${path}.sourceController`,
       message: 'source controller restriction must be opponent',
     });
+  if (head['lifePaid'] !== undefined && head['lifePaid'] !== true)
+    issues.push({ path: `${path}.lifePaid`, message: 'life paid qualification requires true' });
   if (head['condition'] !== undefined)
     validateExpression('condition', head['condition'], `${path}.condition`, issues);
   if (head['eventCondition'] !== undefined)

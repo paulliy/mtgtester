@@ -67,22 +67,23 @@ const restored = [
 ] as const;
 
 // Toxic Deluge was restored in coverage PR02; its gate is packages/engine/tests/pr02-card-coverage.test.ts.
-const expected = [
-  {
-    oracleId: 'ae120613-97d6-4393-b39d-c3e6c076f5d6',
-    name: 'Deflecting Swat',
-    sha256: '59d61f13ab689ea2b364e26bf4c2216a6038b75fbbd09c680af867abd759feac',
-    reason:
-      'explicitly unsupported: Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
-    clauseCount: 2,
-  },
-] as const;
+// Deflecting Swat was the last contained card here; PR10 restored it (see the PR10 test below).
+const expected: readonly {
+  oracleId: string;
+  name: string;
+  sha256: string;
+  reason: string;
+  clauseCount: number;
+}[] = [];
 
 const fixture = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/marchesa-batch1-oracle.json'), 'utf8'),
 ) as PinnedFixture;
 const pr09Fixture = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr09-oracle.json'), 'utf8'),
+) as PinnedFixture;
+const pr10Fixture = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr10-oracle.json'), 'utf8'),
 ) as PinnedFixture;
 const manifest = JSON.parse(
   readFileSync(resolve('packages/server/fixtures/card-verification-manifest.json'), 'utf8'),
@@ -172,6 +173,25 @@ describe('fail-closed restoration baseline', () => {
     expect(entry?.clauses[0]?.viewerScenarioIds).toEqual([
       'pr09-chaos-warp-viewer-positive',
       'pr09-chaos-warp-viewer-negative',
+    ]);
+  });
+
+  it('recognizes the PR10 Deflecting Swat restoration from its current pin and viewer clauses', () => {
+    const pin = pr10Fixture.cards.find(
+      (entry) => entry.card.oracleId === 'ae120613-97d6-4393-b39d-c3e6c076f5d6',
+    );
+    expect(pin?.card.name).toBe('Deflecting Swat');
+    expect(interpretCard(pin!.card).modeled).toBe(true);
+    expect(interpretCard({ ...pin!.card, oracleId: 'oracle-deflecting-swat' }).modeled).toBe(true);
+
+    const entry = manifest.cards[pin!.card.oracleId];
+    expect(entry?.name).toBe('Deflecting Swat');
+    expect(entry?.oracleSha256).toBe(pin!.sha256);
+    expect(entry?.implementationStatus).toBe('implemented-reviewed');
+    expect(entry?.clauses).toHaveLength(2);
+    expect(entry?.clauses.map((clause) => clause.viewerScenarioIds)).toEqual([
+      ['pr10-deflecting-swat-viewer-commander', 'pr10-deflecting-swat-viewer-no-commander'],
+      ['pr10-deflecting-swat-viewer-positive', 'pr10-deflecting-swat-viewer-negative'],
     ]);
   });
 

@@ -1,4 +1,5 @@
 import { playerLifeLocked } from '../state/phasing';
+import { offBattlefieldTypes } from '../state/off-battlefield-types';
 import { spellDefinitionOf } from '../state/queries';
 import type { ObjectId, PlayerId } from '@mtg/shared';
 import type { TargetKind, TargetSpec } from '../cards/ability';
@@ -111,6 +112,8 @@ export function targetIsLegal(
   const { controllerId, eventPlayerId } = context;
   if (spec.differentPlayerTargetSlots?.some((slot) => context.chosenTargets?.[slot] === candidate))
     return false;
+  if (spec.differentFromSlots?.some((slot) => context.chosenTargets?.[slot] === candidate))
+    return false;
   const source = {
     cardId: context.sourceCardId ?? '',
     controllerId,
@@ -197,6 +200,23 @@ export function targetIsLegal(
       if (kind === 'noncreatureSpell' && isCreatureSpell(ctx, entry)) return false;
       if (spec.spellHasSingleTarget === true && spellTargetOccurrences(entry).length !== 1)
         return false;
+      if (spec.stackKind !== undefined && entry.kind !== spec.stackKind) return false;
+      if (spec.stackTargetsYouOrCreatureYouControl === true) {
+        const targets = [...entry.targets, ...Object.values(entry.countTargets ?? {}).flat()];
+        if (
+          !targets.some(
+            (id) =>
+              id === controllerId ||
+              ctx.state.battlefield.some(
+                (permanent) =>
+                  permanent.id === id &&
+                  permanent.controllerId === controllerId &&
+                  computeCharacteristics(ctx, permanent).types.includes('Creature'),
+              ),
+          )
+        )
+          return false;
+      }
       if (spec.spellTargetsPermanentYouControl === true) {
         const targets = [...entry.targets, ...Object.values(entry.countTargets ?? {}).flat()];
         if (
@@ -342,7 +362,7 @@ export function spellMatchesSelector(
   const candidate: SelectorCandidate = {
     cardId: entry.sourceCardId,
     controllerId: entry.controllerId,
-    types: def.types,
+    types: offBattlefieldTypes(ctx, def.types, entry.controllerId),
     supertypes: def.supertypes,
     subtypes: def.subtypes,
     colors: def.colors,

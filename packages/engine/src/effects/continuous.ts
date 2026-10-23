@@ -31,6 +31,7 @@
  * previous layer produced, not the printed ones.
  */
 
+import { offBattlefieldTypes } from '../state/off-battlefield-types';
 import type { Color } from '@mtg/shared';
 import { selectedPermanentDefinition } from '../cards/spell-faces';
 import { counterCount, KEYWORD_COUNTERS } from '../state/counters';
@@ -91,6 +92,72 @@ type WorkMap = Map<string, Working>;
 /** Layer/sublayer bucket an op belongs to, in application order. */
 function groupOf(op: ContinuousOp): string {
   return op.layer === 7 ? `7${op.sublayer}` : String(op.layer);
+}
+
+/**
+ * Duplicant's static ability: the power, toughness and creature types of the last creature card
+ * still in exile among those it exiled (CR 607.2a). It sets base P/T (layer 7b) and creature
+ * types (layer 4), keeping Shapeshifter. A `*` is read from the card's characteristic-defining
+ * ability as it works in exile (CR 604.3), with its owner as "you"; abilities that only modify
+ * the card's P/T don't apply there (Death's Shadow is 13/13).
+ */
+const ZERO_VALUE = { kind: 'const', n: 0 } as const;
+
+function lastExiledCreatureEffects(ctx: GameContext, source: EnginePermanent): LayerEffect[] {
+  const linked = source.exiledWithIds ?? [];
+  for (let i = linked.length - 1; i >= 0; i--) {
+    const card = ctx.state.exile.find((candidate) => candidate.id === linked[i]);
+    const def = card === undefined ? undefined : ctx.defs.get(card.oracleId);
+    if (card === undefined || def === undefined || !def.types.includes('Creature')) continue;
+    const cda = def.staticEffects.find(
+      (effect) =>
+        effect.affects.kind === 'self' &&
+        effect.condition === undefined &&
+        effect.op.layer === 7 &&
+        effect.op.sublayer === 'a',
+    )?.op as Extract<ContinuousOp, { layer: 7; sublayer: 'a' }> | undefined;
+    const changeling = def.staticEffects.some(
+      (effect) =>
+        effect.affects.kind === 'self' &&
+        effect.op.layer === 4 &&
+        effect.op.addAllCreatureTypes === true,
+    );
+    const creatureTypes = changeling
+      ? [...CREATURE_TYPES]
+      : def.subtypes.filter((subtype) => CREATURE_TYPES.includes(subtype));
+    const self = {
+      kind: 'selector',
+      selector: { kind: 'self' },
+      // "You" in the exiled card's own ability is its owner (CR 109.5).
+      source: { cardId: source.cardId, controllerId: card.ownerId },
+    } as const;
+    return [
+      {
+        applies: { kind: 'fixed', cardIds: [source.cardId], objectIds: [source.id] },
+        op: {
+          layer: 4,
+          setSubtypes: creatureTypes.includes('Shapeshifter')
+            ? creatureTypes
+            : [...creatureTypes, 'Shapeshifter'],
+        },
+        timestamp: source.timestamp,
+      },
+      {
+        applies: self,
+        op: {
+          layer: 7,
+          sublayer: 'b',
+          power: def.power !== null ? { kind: 'const', n: def.power } : (cda?.power ?? ZERO_VALUE),
+          toughness:
+            def.toughness !== null
+              ? { kind: 'const', n: def.toughness }
+              : (cda?.toughness ?? ZERO_VALUE),
+        },
+        timestamp: source.timestamp,
+      },
+    ];
+  }
+  return [];
 }
 
 /** The card id of whatever `perm` is attached to, for `attachedToSource`. */
@@ -170,6 +237,23 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
         });
         continue;
       }
+      // "Is the chosen type in addition to its other types" (Roaming Throne): the concrete type
+      // lives on the permanent, so it is resolved here as well.
+      if ('addChosenSubtype' in s.op && s.op.addChosenSubtype === true) {
+        if (source.chosenOption === undefined) continue;
+        const { addChosenSubtype: _chosen, ...rest } = s.op;
+        out.push({
+          applies: {
+            kind: 'selector',
+            selector: s.affects,
+            source: { cardId: source.cardId, controllerId: source.controllerId },
+          },
+          op: { ...rest, addSubtypes: [...(rest.addSubtypes ?? []), source.chosenOption] },
+          timestamp: source.timestamp,
+          ...(boardCondition !== undefined ? { condition: boardCondition } : {}),
+        });
+        continue;
+      }
       out.push({
         applies: {
           kind: 'selector',
@@ -180,6 +264,7 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
             // Equipment/Auras: `attachedTo` is an ObjectId, and selectors work in card ids.
             attachedToCardId: attachedCardId(ctx, source),
             ...(source.chosenOption !== undefined ? { chosenOption: source.chosenOption } : {}),
+            sourceName: source.name,
           },
         },
         op: s.op,
@@ -187,19 +272,33 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
         ...(boardCondition !== undefined ? { condition: boardCondition } : {}),
       });
     }
+    if (def.copyLastExiledCreature === true) out.push(...lastExiledCreatureEffects(ctx, source));
     if (!source.transformed && def.artifactGraveyardAbilities === true) {
       const controller = ctx.state.players.find((p) => p.id === source.controllerId);
       for (const card of controller?.graveyard ?? []) {
         const graveyardDef = ctx.defs.get(card.oracleId);
-        if (graveyardDef === undefined || !graveyardDef.types.includes('Artifact')) continue;
+        if (
+          graveyardDef === undefined ||
+          !offBattlefieldTypes(ctx, graveyardDef.types, card.ownerId).includes('Artifact')
+        )
+          continue;
+        const applies = {
+          kind: 'selector',
+          selector: { kind: 'self' },
+          source: { cardId: source.cardId, controllerId: source.controllerId },
+        } as const;
         for (const ability of graveyardDef.activatedAbilities) {
           out.push({
-            applies: {
-              kind: 'selector',
-              selector: { kind: 'self' },
-              source: { cardId: source.cardId, controllerId: source.controllerId },
-            },
+            applies,
             op: { layer: 6, addActivatedAbility: ability },
+            timestamp: source.timestamp,
+          });
+        }
+        // Mana abilities are activated abilities too (CR 605.1a).
+        for (const ability of graveyardDef.manaAbilities) {
+          out.push({
+            applies,
+            op: { layer: 6, addManaAbility: ability },
             timestamp: source.timestamp,
           });
         }
@@ -238,8 +337,18 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
         applies,
         op:
           bc.replaceTypes !== undefined
-            ? { layer: 4, setTypes: bc.replaceTypes, setSubtypes: bc.addSubtypes }
-            : { layer: 4, addTypes: ['Creature'], addSubtypes: bc.addSubtypes },
+            ? {
+                layer: 4,
+                setTypes: bc.replaceTypes,
+                setSubtypes: bc.addSubtypes,
+                ...(bc.supertypes === undefined ? {} : { setSupertypes: bc.supertypes }),
+              }
+            : {
+                layer: 4,
+                addTypes: ['Creature'],
+                addSubtypes: bc.addSubtypes,
+                ...(bc.supertypes === undefined ? {} : { addSupertypes: bc.supertypes }),
+              },
         timestamp: eff.timestamp,
       });
       out.push({
@@ -296,7 +405,30 @@ function effectExists(ctx: GameContext, work: WorkMap, effect: LayerEffect): boo
  *
  * A face-down permanent has no mana cost, so its mana value is 0 whatever card it is (CR 708.2).
  */
-function printedManaValue(ctx: GameContext, perm: EnginePermanent): number | undefined {
+/**
+ * The greatest mana value among `controllerId`'s noncreature permanents (by their current types)
+ * and the noncreature cards in their graveyard (CR 202.3; a card's {X} is 0). 0 when none.
+ */
+export function greatestNoncreatureManaValue(
+  ctx: GameContext,
+  controllerId: string,
+  permanents: readonly { perm: EnginePermanent; types: readonly string[] }[],
+): number {
+  let best = 0;
+  for (const { perm, types } of permanents) {
+    if (perm.controllerId !== controllerId || types.includes('Creature')) continue;
+    best = Math.max(best, printedManaValue(ctx, perm) ?? 0);
+  }
+  const player = ctx.state.players.find((candidate) => candidate.id === controllerId);
+  for (const card of player?.graveyard ?? []) {
+    const def = ctx.defs.get(card.oracleId);
+    if (def === undefined || def.types.includes('Creature')) continue;
+    best = Math.max(best, manaValueOf(def.manaCost));
+  }
+  return best;
+}
+
+export function printedManaValue(ctx: GameContext, perm: EnginePermanent): number | undefined {
   const def = ctx.defs.get(perm.oracleId);
   if (def === undefined) return undefined;
   if (perm.faceDown) return 0;
@@ -374,6 +506,7 @@ export function candidateOf(
     keywords: chars.keywords,
     ...(manaValue === undefined ? {} : { manaValue }),
     isToken: perm.isToken,
+    tapped: perm.tapped,
     enteredThisTurn: perm.enteredTurnNumber === ctx.state.turnNumber,
     isCommander: perm.isCommander,
     ownerId: perm.ownerId,
@@ -450,6 +583,12 @@ function scopeOf(
       }
       return count;
     },
+    greatestNoncreatureManaValue: () =>
+      greatestNoncreatureManaValue(
+        ctx,
+        source.controllerId,
+        [...work.values()].map((entry) => ({ perm: entry.perm, types: entry.chars.types })),
+      ),
     countAurasYouControlAttachedToCreatures: () => {
       let count = 0;
       for (const entry of work.values()) {
@@ -484,6 +623,14 @@ function applyOpTo(
     case 4:
       if (op.setTypes !== undefined) chars.types = [...op.setTypes];
       if (op.setSubtypes !== undefined) chars.subtypes = [...op.setSubtypes];
+      if (op.setSupertypes !== undefined) chars.supertypes = [...op.setSupertypes];
+      if (op.removeCreatureType === true) {
+        chars.types = chars.types.filter((type) => type !== 'Creature');
+        if (!chars.types.includes('Kindred') && !chars.types.includes('Tribal'))
+          chars.subtypes = chars.subtypes.filter((subtype) => !CREATURE_TYPES.includes(subtype));
+      }
+      for (const t of op.addSupertypes ?? [])
+        if (!chars.supertypes.includes(t)) chars.supertypes.push(t);
       for (const t of op.addTypes ?? []) if (!chars.types.includes(t)) chars.types.push(t);
       for (const s of op.addSubtypes ?? []) if (!chars.subtypes.includes(s)) chars.subtypes.push(s);
       // Changeling (CR 702.73): every creature type, always — a characteristic-defining ability
@@ -746,7 +893,25 @@ function readsGameState(effects: LayerEffect[]): boolean {
 }
 
 /** Run the full layer pass over `perms` as the candidate set. */
+/** Nonzero while a layer pass runs, so code it calls can avoid asking for characteristics. */
+let layerPassDepth = 0;
+export function inLayerPass(): boolean {
+  return layerPassDepth > 0;
+}
+
 function runLayers(
+  ctx: GameContext,
+  perms: EnginePermanent[],
+): { map: Map<string, Characteristics>; usedGraveyards: boolean } {
+  layerPassDepth++;
+  try {
+    return runLayerPass(ctx, perms);
+  } finally {
+    layerPassDepth--;
+  }
+}
+
+function runLayerPass(
   ctx: GameContext,
   perms: EnginePermanent[],
 ): { map: Map<string, Characteristics>; usedGraveyards: boolean } {
@@ -792,16 +957,6 @@ function runLayers(
       if (perm.copyAddSupertypes !== undefined)
         for (const st of perm.copyAddSupertypes) if (!supertypes.includes(st)) supertypes.push(st);
       if (perm.copyAddTriggers !== undefined) triggers = [...triggers, ...perm.copyAddTriggers];
-      if (def.copyLastExiledCreature === true && (perm.exiledCardIds?.length ?? 0) > 0) {
-        const lastId = perm.exiledCardIds?.[perm.exiledCardIds.length - 1];
-        const exiled = ctx.state.exile.find((card) => card.cardId === lastId);
-        const exiledDef = exiled === undefined ? undefined : ctx.defs.get(exiled.oracleId);
-        if (exiledDef?.types.includes('Creature')) {
-          subtypes = [...exiledDef.subtypes, 'Shapeshifter'];
-          power = exiledDef.power ?? 0;
-          toughness = exiledDef.toughness ?? 0;
-        }
-      }
     }
     work.set(perm.cardId, {
       perm,

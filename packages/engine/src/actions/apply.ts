@@ -37,6 +37,7 @@ import {
   discardCard,
   makePermanent,
   moveObject,
+  queueActivationTriggers,
   queuePlayerTriggersForEvent,
 } from '../state/objects';
 import {
@@ -59,8 +60,21 @@ import {
   handActivationCost,
   manaPortionOf,
   graveyardActivationCost,
+  turnFaceUpCosts,
 } from './legal';
 import { breakYieldsForStop } from '../turn/stops';
+
+/** Run an activation's cost payment, returning the life paid as part of it (Verrak). */
+function* withLifePaidTally<T>(ctx: GameContext, pay: GameGen<T>): GameGen<[T, number]> {
+  const tally = { amount: 0 };
+  ctx.costLifePaid = tally;
+  try {
+    const result = yield* pay;
+    return [result, tally.amount];
+  } finally {
+    delete ctx.costLifePaid;
+  }
+}
 
 /**
  * Pay a whole activation cost. A source that is itself tapped as a cost must be excluded from
@@ -247,15 +261,20 @@ export function* applyPriorityAction(
         // leaving hand must not change what it costs.
         const manaCost = handActivationCost(ctx, def, activated.costs, player.id, card.cardId);
 
-        if (activated.costs.some((c) => c.kind === 'discardSelf')) {
-          yield* discardCard(ctx, card, player.id, 'cost');
-        }
-        if (totalPips(manaCost) > 0) {
-          yield* payManaCost(ctx, player, manaCost, {
-            kind: 'activateAbility',
-            sourceOracleId: card.oracleId,
-          });
-        }
+        const [, lifePaid] = yield* withLifePaidTally(
+          ctx,
+          (function* (): GameGen<void> {
+            if (activated.costs.some((c) => c.kind === 'discardSelf')) {
+              yield* discardCard(ctx, card, player.id, 'cost');
+            }
+            if (totalPips(manaCost) > 0) {
+              yield* payManaCost(ctx, player, manaCost, {
+                kind: 'activateAbility',
+                sourceOracleId: card.oracleId,
+              });
+            }
+          })(),
+        );
 
         const description = activated.ability.description ?? 'activated ability';
         const id = `o-${s.nextObjectNum++}` as ObjectId;
@@ -294,6 +313,7 @@ export function* applyPriorityAction(
         );
         queueWardTriggers(ctx, player.id, id, allTargets);
         queueBecomesTargetedTriggers(ctx, player.id, allTargets);
+        queueActivationTriggers(ctx, stackEntry, lifePaid);
         debug(ctx, 'stack', `${player.id} activates ${card.name} (hand) — ${description}`);
         return;
       }
@@ -317,15 +337,20 @@ export function* applyPriorityAction(
         // Every mana component, for the same purpose `computePriorityOptions` priced it with —
         // otherwise mana that may only pay for activations would make an offered action unpayable.
         const manaCost = graveyardActivationCost(ctx, player.id, manaPortionOf(activated.costs));
-        if (totalPips(manaCost) > 0) {
-          yield* payManaCost(ctx, player, manaCost, {
-            kind: 'activateAbility',
-            sourceOracleId: card.oracleId,
-          });
-        }
-        if (activated.costs.some((c) => c.kind === 'exileSelfFromGraveyard')) {
-          yield* moveObject(ctx, card, { zone: 'exile' });
-        }
+        const [, lifePaid] = yield* withLifePaidTally(
+          ctx,
+          (function* (): GameGen<void> {
+            if (totalPips(manaCost) > 0) {
+              yield* payManaCost(ctx, player, manaCost, {
+                kind: 'activateAbility',
+                sourceOracleId: card.oracleId,
+              });
+            }
+            if (activated.costs.some((c) => c.kind === 'exileSelfFromGraveyard')) {
+              yield* moveObject(ctx, card, { zone: 'exile' });
+            }
+          })(),
+        );
 
         const description = activated.ability.description ?? 'activated ability';
         const id = `o-${s.nextObjectNum++}` as ObjectId;
@@ -350,6 +375,7 @@ export function* applyPriorityAction(
           { player: player.id, source: card.name, cardId: card.cardId, description, targets: [] },
           player.id,
         );
+        queueActivationTriggers(ctx, stackEntry, lifePaid);
         debug(ctx, 'stack', `${player.id} activates ${card.name} (graveyard) — ${description}`);
         return;
       }
@@ -500,7 +526,10 @@ export function* applyPriorityAction(
         reductionLeft -= announced.generic - reduced.generic;
         return { ...c, cost: reduced };
       });
-      const paymentScope = yield* payActivationCosts(ctx, player, perm, costsToPay, payload.x ?? 0);
+      const [paymentScope, lifePaid] = yield* withLifePaidTally(
+        ctx,
+        payActivationCosts(ctx, player, perm, costsToPay, payload.x ?? 0),
+      );
       if (perm.lastKnownFacts !== undefined) stackEntry.sourceFacts = perm.lastKnownFacts;
       if (paymentScope.stationPower !== undefined) {
         stackEntry.triggerScope = {
@@ -536,6 +565,7 @@ export function* applyPriorityAction(
       debug(ctx, 'stack', `${player.id} activates ${perm.name} — ${description}`);
       queueWardTriggers(ctx, player.id, id, allTargets);
       queueBecomesTargetedTriggers(ctx, player.id, allTargets);
+      queueActivationTriggers(ctx, stackEntry, lifePaid);
       return;
     }
 
@@ -572,19 +602,24 @@ export function* applyPriorityAction(
 
     case 'turnFaceUp': {
       const perm = s.battlefield.find((candidate) => candidate.id === payload.objectId);
-      const morphCost =
-        perm === undefined ? undefined : getDefByOracleId(ctx, perm.oracleId, perm.name).morphCost;
+      const way =
+        perm === undefined
+          ? undefined
+          : turnFaceUpCosts(perm, getDefByOracleId(ctx, perm.oracleId, perm.name)).find(
+              (candidate) => candidate.via === payload.via,
+            );
       if (
         perm === undefined ||
         perm.controllerId !== player.id ||
         perm.faceDown !== true ||
-        morphCost === undefined
+        way === undefined
       ) {
         throw new Error('illegal action: nothing to turn face up');
       }
-      yield* payManaCost(ctx, player, morphCost);
+      yield* payManaCost(ctx, player, way.cost);
       // CR 708.8: it keeps its status, counters and damage, and does not enter the battlefield.
       perm.faceDown = false;
+      delete perm.manifested;
       perm.name = getDefByOracleId(ctx, perm.oracleId, perm.name).name;
       emit(ctx, 'turnedFaceUp', { name: perm.name, cardId: perm.cardId }, player.id);
       return;

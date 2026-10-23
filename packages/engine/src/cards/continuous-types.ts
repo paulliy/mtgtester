@@ -25,6 +25,8 @@ export type ContinuousOp =
       addTypes?: string[];
       /** Subtypes to add, keeping the existing ones (Urborg → "a Swamp in addition"). */
       addSubtypes?: string[];
+      /** "Is the chosen type in addition to its other types" (Roaming Throne). */
+      addChosenSubtype?: true;
       /** Changeling (CR 702.73): every creature type in CR 205.3m. */
       addAllCreatureTypes?: boolean;
       /** Set the land subtype and drop other land subtypes (Blood Moon → Mountain). */
@@ -36,6 +38,14 @@ export type ContinuousOp =
        */
       setTypes?: string[];
       setSubtypes?: string[];
+      /**
+       * "Isn't a creature" (Theros Gods): removes the creature card type and, unless it is also
+       * Kindred, the creature types that went with it (CR 205.1a).
+       */
+      removeCreatureType?: true;
+      /** Supertypes to add ("becomes a legendary …") or to set alongside `setTypes`. */
+      addSupertypes?: string[];
+      setSupertypes?: string[];
       /**
        * Remove the abilities the affected permanent generates from its rules text (CR 305.7,
        * the consequence of Blood Moon *setting* a land's subtype). This is what lets one

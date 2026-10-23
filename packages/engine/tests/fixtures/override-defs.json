@@ -499,8 +499,29 @@
   {
     "oracleId": "04853f06-3fd2-445d-9b0d-d68d0f116635",
     "name": "Verrak, Warped Sengir",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever you activate an ability that isn't a mana ability, if life was paid to activate it, you may pay that much life again. If you do, copy that ability. You may choose new targets for the copy."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may pay that much life again. If you do, copy that ability. You may choose new targets for the copy",
+          "effects": [
+            {
+              "mayPayLifeAgain": true,
+              "op": "copyActivatedAbility"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "lifePaid": true,
+            "player": "you",
+            "when": "activatesAbility"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "04b7362d-0490-4cb0-b5d7-2a7732f659ce",
@@ -669,8 +690,56 @@
   {
     "oracleId": "05d7222b-cc08-4f1f-8e35-6058599572ba",
     "name": "Twilight Diviner",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever one or more other creatures you control enter, if they entered or were cast from a graveyard, create a token that's a copy of one of them. This ability triggers only once each turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Create a token that's a copy of one of them",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createTokenCopyOfEventGroupMember"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "aggregate": true,
+            "entersFrom": {
+              "orCastFrom": true,
+              "zone": "graveyard"
+            },
+            "oncePerTurn": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "other"
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "06f42f49-32f0-413b-8437-b8efa4d647c2",
@@ -2313,8 +2382,12 @@
   {
     "oracleId": "1ef3b48a-55ef-422e-ac7f-e1c1057eec2c",
     "name": "Trazyn the Infinite",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Prismatic Gallery — As long as ~ is on the battlefield, it has all activated abilities of all artifact cards in your graveyard."
+    ],
+    "def": {
+      "artifactGraveyardAbilities": true
+    }
   },
   {
     "oracleId": "2068185c-1b50-47d0-aa3f-bf505d199428",
@@ -2387,8 +2460,91 @@
   {
     "oracleId": "20f602b3-814f-406c-b7eb-2d1fc98f8cf1",
     "name": "Saheeli, Radiant Creator",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of combat on your turn, you may pay {E}{E}{E}. When you do, create a token that's a copy of target permanent you control, except it's a 5/5 artifact creature in addition to its other types and has haste. Sacrifice it at the beginning of the next end step.",
+      "Whenever you cast an Artificer or artifact spell, you get {E} ."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You get {E}",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "gainEnergy"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "you",
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Artificer"
+                },
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                }
+              ]
+            },
+            "when": "castsSpell"
+          }
+        },
+        {
+          "description": "You may pay {E}{E}{E}. When you do, copy target permanent you control",
+          "effects": [
+            {
+              "exact": true,
+              "min": 3,
+              "op": "mayPayEnergyThenReflexive",
+              "then": {
+                "description": "Create a token that's a copy of target permanent you control, except it's a 5/5 artifact creature with haste. Sacrifice it at the beginning of the next end step",
+                "effects": [
+                  {
+                    "addKeywords": [
+                      "haste"
+                    ],
+                    "addTypes": [
+                      "Artifact",
+                      "Creature"
+                    ],
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "createTokenCopyOf",
+                    "powerOverride": 5,
+                    "ref": 0,
+                    "sacrificeAt": "endStep",
+                    "toughnessOverride": 5
+                  }
+                ],
+                "kind": "triggered",
+                "targets": [
+                  {
+                    "controller": "you",
+                    "kind": "permanent"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "2143f413-7baa-4fd6-a7ca-32f52bfa553f",
@@ -2597,6 +2753,60 @@
           "trigger": {
             "player": "you",
             "when": "endStep"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "2469c0b7-a045-4733-bf53-28f3fdbe3797",
+    "name": "Cosmic Crucible",
+    "handledLines": [
+      "At the beginning of your first main phase, add four mana in any combination of colors.",
+      "Whenever you cast a noncreature spell, you may copy it. You may choose new targets for the copy. Do this only once each turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Add four mana in any combination of colors",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 4
+              },
+              "colors": "any",
+              "op": "addMana"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "precombatMain"
+          }
+        },
+        {
+          "description": "You may copy that noncreature spell. You may choose new targets for the copy. Do this only once each turn",
+          "effects": [
+            {
+              "oncePerTurn": true,
+              "op": "copyCastSpell",
+              "optional": true
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "you",
+            "filter": {
+              "kind": "not",
+              "of": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            "when": "castsSpell"
           }
         }
       ]
@@ -3561,7 +3771,7 @@
         "description": "Change target single-target spell and lose life equal to its mana value",
         "effects": [
           {
-            "op": "changeSingleSpellTarget",
+            "op": "changeSingleTarget",
             "target": 0
           },
           {
@@ -3842,6 +4052,52 @@
     }
   },
   {
+    "oracleId": "33fa949c-f29e-4a98-9381-ecfa9e5c3f6d",
+    "name": "Council of Reeds",
+    "handledLines": [
+      "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, create a token that's a copy of ~.",
+      "The \"legend rule\" doesn't apply to creatures you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "type",
+            "value": "Creature"
+          },
+          "kind": "legendRuleDoesntApply"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Create a token that's a copy of Council of Reeds",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createTokenCopyOf",
+              "ref": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "category": "noncreature",
+              "cmp": ">=",
+              "kind": "castSpellThisTurn",
+              "n": 1
+            },
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "3494a575-f68e-4e78-9f6b-142cd8a0edea",
     "name": "Combustible Gearhulk",
     "handledLines": [
@@ -4007,8 +4263,77 @@
   {
     "oracleId": "35e2f82e-7ca3-4a92-9134-b7999eef5337",
     "name": "Mana Sculpt",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Counter target spell. If you control a Wizard, add an amount of {C} equal to the amount of mana spent to cast that spell at the beginning of your next main phase."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Counter target spell. If you control a Wizard, add {C} equal to the mana spent to cast it at the beginning of your next main phase",
+        "effects": [
+          {
+            "manaSpentAtNextMainPhase": {
+              "condition": {
+                "cmp": ">=",
+                "kind": "countPermanents",
+                "n": 1,
+                "scope": "you",
+                "selector": {
+                  "kind": "subtype",
+                  "value": "Wizard"
+                }
+              }
+            },
+            "op": "counter",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "oracleId": "3640c29b-1534-4952-b297-619ade948431",
+    "name": "Roaming Throne",
+    "handledLines": [
+      "If a triggered ability of another creature you control of the chosen type triggers, it triggers an additional time.",
+      "~ is the chosen type in addition to its other types."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "excludesSelf": true,
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "chosenSubtype"
+              }
+            ]
+          },
+          "kind": "triggerAdditionalTime"
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "op": {
+            "addChosenSubtype": true,
+            "layer": 4
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "366a218e-84d3-4cf9-bbc8-f2f8ecce92a3",
@@ -4075,8 +4400,34 @@
   {
     "oracleId": "379ed4ec-8f2e-448b-9ed2-a3181e2f877e",
     "name": "Nighthawk Scavenger",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "non-numeric power/toughness \"1+*\"",
+      "~'s power is equal to 1 plus the number of card types among cards in your opponents' graveyards."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "op": {
+            "layer": 7,
+            "power": {
+              "kind": "plus",
+              "n": 1,
+              "of": {
+                "kind": "cardTypesInOpponentsGraveyards"
+              }
+            },
+            "sublayer": "a",
+            "toughness": {
+              "kind": "const",
+              "n": 3
+            }
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "37c06f89-db36-4937-9404-2b07cd22e1a6",
@@ -4341,6 +4692,53 @@
         ],
         "kind": "spell",
         "targets": []
+      }
+    }
+  },
+  {
+    "oracleId": "3b8eb602-01e8-432e-8dfc-8fdb62c3aa43",
+    "name": "Mocking Doppelganger",
+    "handledLines": [
+      "You may have this creature enter as a copy of a creature an opponent controls, except it has \"Other creatures with the same name as this creature are goaded.\""
+    ],
+    "def": {
+      "entersAsCopy": {
+        "addStaticEffects": [
+          {
+            "affects": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "sameNameAsSource"
+                }
+              ]
+            },
+            "op": {
+              "addGoad": true,
+              "layer": 6
+            }
+          }
+        ],
+        "selector": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "controller",
+              "who": "opponents"
+            }
+          ]
+        }
       }
     }
   },
@@ -5141,6 +5539,75 @@
     }
   },
   {
+    "oracleId": "4c3ad545-b375-44a7-a24e-58baacc4e4b6",
+    "name": "Annie Joins Up",
+    "handledLines": [
+      "If a triggered ability of a legendary creature you control triggers, that ability triggers an additional time.",
+      "When ~ enters, it deals 5 damage to target creature or planeswalker an opponent controls."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "supertype",
+                "value": "Legendary"
+              }
+            ]
+          },
+          "kind": "triggerAdditionalTime"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "It deals 5 damage to target creature or planeswalker an opponent controls",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 5
+              },
+              "op": "dealDamage",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "opponent",
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Planeswalker"
+                  }
+                ]
+              },
+              "kind": "permanent"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "4cfaa5cf-cc3d-49a7-9544-38a8bb7e9ec1",
     "name": "Frontier Siege",
     "handledLines": [
@@ -5604,8 +6071,43 @@
   {
     "oracleId": "5443557e-440f-4fdd-a29b-7740d7cec085",
     "name": "Biotransference",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Creatures you control are artifacts in addition to their other types. The same is true for creature spells you control and creature cards you own that aren't on the battlefield."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "addTypes": [
+            "Artifact"
+          ],
+          "ifType": "Creature",
+          "kind": "alsoTypesOffBattlefield"
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          },
+          "op": {
+            "addTypes": [
+              "Artifact"
+            ],
+            "layer": 4
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "55b72b1f-6463-406a-8824-d99a3c028285",
@@ -5892,8 +6394,51 @@
   {
     "oracleId": "59c7496b-19a2-478b-b28f-6f153c2458ae",
     "name": "Siren Stormtamer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "{U}, Sacrifice this creature: Counter target spell or ability that targets you or a creature you control."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Counter target spell or ability that targets you or a creature you control",
+            "effects": [
+              {
+                "op": "counter",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "stackObject",
+                "stackTargetsYouOrCreatureYouControl": true
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 1,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "sacrificeSelf"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "5a343a5f-3f9b-43c3-8532-8391de7a5443",
@@ -6910,6 +7455,73 @@
     }
   },
   {
+    "oracleId": "6a84eda1-7e72-4b5a-849f-b6e177565aeb",
+    "name": "Mirage Mirror",
+    "handledLines": [
+      "{2}: ~ becomes a copy of target artifact, creature, enchantment, or land until end of turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "This artifact becomes a copy of target artifact, creature, enchantment, or land until end of turn",
+            "effects": [
+              {
+                "op": "becomeCopyOf",
+                "ref": 0,
+                "untilEot": true
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Enchantment"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Land"
+                    }
+                  ]
+                },
+                "kind": "permanent"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "6c25c6b5-d98c-4eb4-aacd-b6960a8779a9",
     "name": "Herald of Amity",
     "handledLines": [
@@ -7386,8 +7998,26 @@
   {
     "oracleId": "70dc830e-d05b-4fc7-88dd-879e140b3fbf",
     "name": "Reality Shift",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Exile target creature. Its controller manifests the top card of their library."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Exile target creature. Its controller manifests the top card of their library",
+        "effects": [
+          {
+            "op": "exileAndManifestTarget",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "creature"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "7137aae6-260d-41de-8b4e-42a8cf752697",
@@ -8549,8 +9179,135 @@
   {
     "oracleId": "80c26f58-04b0-4db0-b84e-9b136609abe0",
     "name": "Sarkhan, the Dragonspeaker",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "+1: Until end of turn, ~ becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste.",
+      "−6: You get an emblem with \"At the beginning of your draw step, draw two additional cards\" and \"At the beginning of your end step, discard your hand.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Until end of turn, Sarkhan becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste",
+            "effects": [
+              {
+                "colors": [
+                  "R"
+                ],
+                "keywords": [
+                  "flying",
+                  "indestructible",
+                  "haste"
+                ],
+                "op": "becomeCreatureUntilEot",
+                "power": 4,
+                "replaceTypes": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Dragon"
+                ],
+                "supertypes": [
+                  "Legendary"
+                ],
+                "target": "source",
+                "toughness": 4
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "delta": 1,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Sarkhan deals 4 damage to target creature",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 4
+                },
+                "op": "dealDamage",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -3,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "You get an emblem that draws two more cards and discards your hand",
+            "effects": [
+              {
+                "abilities": [
+                  {
+                    "description": "At the beginning of your draw step, draw two additional cards",
+                    "effects": [
+                      {
+                        "count": {
+                          "kind": "const",
+                          "n": 2
+                        },
+                        "op": "draw"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "player": "you",
+                      "when": "drawStep"
+                    }
+                  },
+                  {
+                    "description": "At the beginning of your end step, discard your hand",
+                    "effects": [
+                      {
+                        "op": "discardHand"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "player": "you",
+                      "when": "endStep"
+                    }
+                  }
+                ],
+                "name": "Sarkhan, the Dragonspeaker emblem",
+                "op": "createEmblem"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "delta": -6,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
   },
   {
     "oracleId": "81a51328-b995-4f3b-90bc-a20ae21dd254",
@@ -10212,8 +10969,46 @@
   {
     "oracleId": "99140891-face-4015-aacd-1309e87d8f9f",
     "name": "Display of Power",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Copy any number of target instant and/or sorcery spells. You may choose new targets for the copies.",
+      "This spell can't be copied."
+    ],
+    "def": {
+      "cantBeCopied": true,
+      "spellAbility": {
+        "description": "Copy any number of target instant and/or sorcery spells. You may choose new targets for the copies",
+        "effects": [
+          {
+            "newTargets": true,
+            "op": "copyEachTargetedSpell",
+            "targetSlot": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "count": {
+              "max": null,
+              "min": 0
+            },
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "992d9a72-d34d-47d7-96fb-37f0efb515ef",
@@ -11038,8 +11833,40 @@
   {
     "oracleId": "a1f55890-31c5-4ed4-a2cd-7a4a9f05f8ca",
     "name": "Reverberate",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Copy target instant or sorcery spell. You may choose new targets for the copy."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Copy target instant or sorcery spell. You may choose new targets for the copy",
+        "effects": [
+          {
+            "newTargets": true,
+            "op": "copyTargetSpell",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "a30f30e3-dbbf-4cb2-b3d0-76f57dffb2dd",
@@ -11155,6 +11982,58 @@
     "name": "Malakir Rebirth // Malakir Mire",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "a8011dce-17fb-46e1-8297-81a4acccbd05",
+    "name": "Mister Fantastic",
+    "handledLines": [
+      "{R}{G}{W}{U}, {T}: Copy target triggered ability you control twice. You may choose new targets for the copies."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Copy target triggered ability you control twice. You may choose new targets for the copies",
+            "effects": [
+              {
+                "count": 2,
+                "newTargets": true,
+                "op": "copyTargetAbility",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "you",
+                "kind": "stackObject",
+                "stackKind": "triggeredAbility"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 1,
+                  "U": 1,
+                  "W": 1
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "a97e760a-99c8-47ea-a875-451aca913ee7",
@@ -11322,6 +12201,90 @@
     }
   },
   {
+    "oracleId": "aa854d50-444c-49d9-bfb1-5476b33c1c0b",
+    "name": "Scute Swarm",
+    "handledLines": [
+      "Whenever a land you control enters, create a 1/1 green Insect creature token. If you control six or more lands, create a token that's a copy of this creature instead."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Create a 1/1 green Insect, or a token that's a copy of this creature if you control six or more lands",
+          "effects": [
+            {
+              "condition": {
+                "cmp": ">=",
+                "kind": "countPermanents",
+                "n": 6,
+                "scope": "you",
+                "selector": {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              },
+              "else": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "createToken",
+                  "spec": {
+                    "colors": [
+                      "G"
+                    ],
+                    "name": "Insect",
+                    "power": 1,
+                    "subtypes": [
+                      "Insect"
+                    ],
+                    "toughness": 1,
+                    "typeLine": "Creature — Insect",
+                    "types": [
+                      "Creature"
+                    ]
+                  }
+                }
+              ],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "createTokenCopyOf",
+                  "ref": "source"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "ab1cc360-b9de-48d9-9983-4dfe4a7d2a37",
     "name": "Arcane Denial",
     "handledLines": [
@@ -11389,8 +12352,63 @@
   {
     "oracleId": "ab655810-f67e-4576-9174-35b16f5e3235",
     "name": "Saheeli, Sublime Artificer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "−2: Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact in addition to its other types."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact",
+            "effects": [
+              {
+                "addTypes": [
+                  "Artifact"
+                ],
+                "op": "becomeCopyOfTarget",
+                "ref": 1,
+                "target": 0,
+                "untilEot": true
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "you",
+                "kind": "artifact"
+              },
+              {
+                "controller": "you",
+                "differentFromSlots": [
+                  0
+                ],
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                },
+                "kind": "permanent"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -2,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
   },
   {
     "oracleId": "abc37d6c-6300-47b5-a679-9db5b83eb54f",
@@ -11773,8 +12791,26 @@
   {
     "oracleId": "ae120613-97d6-4393-b39d-c3e6c076f5d6",
     "name": "Deflecting Swat",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "You may choose new targets for target spell or ability."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "You may choose new targets for target spell or ability",
+        "effects": [
+          {
+            "op": "chooseNewTargets",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "stackObject"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "aecc621f-67da-41a7-9d47-05ded302ae35",
@@ -13642,10 +14678,95 @@
     }
   },
   {
+    "oracleId": "c03ca2e6-fcce-4018-952f-1c451ab92cfd",
+    "name": "Dragon Man, Reformed Robot",
+    "handledLines": [
+      "You may cast this card from your graveyard by discarding a card in addition to paying its other costs.",
+      "non-numeric power/toughness \"*\"",
+      "~'s power is equal to the greatest mana value among noncreature permanents you control and noncreature cards in your graveyard."
+    ],
+    "def": {
+      "castFromGraveyard": true,
+      "castFromGraveyardCosts": [
+        {
+          "count": 1,
+          "kind": "discardCard"
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "op": {
+            "layer": 7,
+            "power": {
+              "kind": "greatestNoncreatureManaValueYouControlOrInGraveyard"
+            },
+            "sublayer": "a",
+            "toughness": {
+              "kind": "const",
+              "n": 5
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "c20a96f7-aa5a-4c15-b8b1-806685c99b27",
     "name": "Bolt Bend",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Change the target of target spell or ability with a single target.",
+      "This spell costs {3} less to cast if you control a creature with power 4 or greater."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "amount": {
+            "kind": "const",
+            "n": 3
+          },
+          "condition": {
+            "cmp": ">=",
+            "kind": "countPermanents",
+            "n": 1,
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "powerAtLeast",
+                  "n": 4
+                }
+              ]
+            }
+          },
+          "kind": "costReduction",
+          "selfOnly": true
+        }
+      ],
+      "spellAbility": {
+        "description": "Change the target of target spell or ability with a single target",
+        "effects": [
+          {
+            "op": "changeSingleTarget",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "stackObject",
+            "spellHasSingleTarget": true
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "c23e5b80-08d2-4e24-9908-fe2aa4f30f6f",
@@ -13788,6 +14909,48 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "c51ed6e3-813b-49c4-b1de-7f92a77f8f6e",
+    "name": "Galvanic Iteration",
+    "handledLines": [
+      "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy",
+        "effects": [
+          {
+            "ability": {
+              "description": "Copy that spell. You may choose new targets for the copy",
+              "effects": [
+                {
+                  "op": "copyCastSpell"
+                }
+              ],
+              "kind": "triggered",
+              "targets": []
+            },
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "op": "nextCastThisTurn"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
     }
   },
   {
@@ -13980,6 +15143,78 @@
           "Swamp"
         ]
       }
+    }
+  },
+  {
+    "oracleId": "cb15a8dd-57fe-466f-847e-66476b690a1f",
+    "name": "Xenagos, God of Revels",
+    "handledLines": [
+      "As long as your devotion to red and green is less than seven, ~ isn't a creature.",
+      "At the beginning of combat on your turn, another target creature you control gains haste and gets +X/+X until end of turn, where X is that creature's power."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "cmp": "<=",
+            "kind": "compareValues",
+            "left": {
+              "and": "G",
+              "color": "R",
+              "kind": "devotionTo"
+            },
+            "right": {
+              "kind": "const",
+              "n": 6
+            }
+          },
+          "op": {
+            "layer": 4,
+            "removeCreatureType": true
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Another target creature you control gains haste and gets +X/+X until end of turn, where X is that creature's power",
+          "effects": [
+            {
+              "keyword": "haste",
+              "op": "grantKeywordUntilEot",
+              "target": 0
+            },
+            {
+              "op": "pumpUntilEot",
+              "power": {
+                "kind": "powerOfTarget",
+                "target": 0
+              },
+              "target": 0,
+              "toughness": {
+                "kind": "powerOfTarget",
+                "target": 0
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "you",
+              "filter": {
+                "kind": "other"
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
     }
   },
   {
@@ -16022,6 +17257,168 @@
     }
   },
   {
+    "oracleId": "e191976c-6ab1-4a23-aeb8-8a88bd4bd203",
+    "name": "Rowan Kenrith",
+    "handledLines": [
+      "+2: During target player's next turn, each creature that player controls attacks if able.",
+      "Partner with Will Kenrith",
+      "−2: ~ deals 3 damage to each tapped creature target player controls.",
+      "−8: Target player gets an emblem with \"Whenever you activate an ability that isn't a mana ability, copy it. You may choose new targets for the copy.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "During target player's next turn, each creature that player controls attacks if able",
+            "effects": [
+              {
+                "duration": "duringTheirNextTurn",
+                "op": "addAttackRequirement",
+                "relativeToPlayer": 0,
+                "requirements": [
+                  {
+                    "kind": "anyAttack"
+                  }
+                ],
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": 2,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Rowan Kenrith deals 3 damage to each tapped creature target player controls",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 3
+                },
+                "controlledBy": 0,
+                "op": "damageEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "tapped"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -2,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Target player gets an emblem that copies each ability they activate",
+            "effects": [
+              {
+                "abilities": [
+                  {
+                    "description": "Whenever you activate an ability that isn't a mana ability, copy it. You may choose new targets for the copy",
+                    "effects": [
+                      {
+                        "op": "copyActivatedAbility"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "player": "you",
+                      "when": "activatesAbility"
+                    }
+                  }
+                ],
+                "forPlayer": 0,
+                "name": "Rowan Kenrith emblem",
+                "op": "createEmblem"
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -8,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Target player may search their library for a card named Will Kenrith, reveal it, and put it into their hand, then shuffle",
+          "effects": [
+            {
+              "name": "Will Kenrith",
+              "op": "targetPlayerMaySearchNamed",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "player"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "e1a776d2-fb3a-4215-a14e-4b6e9bda95df",
     "name": "Hunter's Prowess",
     "handledLines": [
@@ -16488,14 +17885,96 @@
   {
     "oracleId": "ea86abfa-6cab-4ef0-8463-34136fc25b59",
     "name": "Duplicant",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "As long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with it. It's still a Shapeshifter.",
+      "When this creature enters, you may exile target nontoken creature."
+    ],
+    "def": {
+      "copyLastExiledCreature": true,
+      "triggers": [
+        {
+          "description": "You may exile target nontoken creature",
+          "effects": [
+            {
+              "op": "exileTargetWithSource",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "filter": {
+                "kind": "not",
+                "of": {
+                  "kind": "isToken"
+                }
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "eb287c04-97f5-4e47-beb1-66cc7d15e748",
     "name": "Atarka Monument",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "{4}{R}{G}: ~ becomes a 4/4 red and green Dragon artifact creature with flying until end of turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "This artifact becomes a 4/4 red and green Dragon artifact creature with flying until end of turn",
+            "effects": [
+              {
+                "colors": [
+                  "R",
+                  "G"
+                ],
+                "keywords": [
+                  "flying"
+                ],
+                "op": "becomeCreatureUntilEot",
+                "power": 4,
+                "subtypes": [
+                  "Dragon"
+                ],
+                "target": "source",
+                "toughness": 4
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 1,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 4
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "eb735501-19e7-4910-aa6a-6667fff6f4e5",
@@ -17376,8 +18855,40 @@
   {
     "oracleId": "f586ecb8-310c-4f40-a766-6a7ca46a254d",
     "name": "Flare of Duplication",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Copy target instant or sorcery spell. You may choose new targets for the copy."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Copy target instant or sorcery spell. You may choose new targets for the copy",
+        "effects": [
+          {
+            "newTargets": true,
+            "op": "copyTargetSpell",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "f63278e0-3c67-421d-87ce-67725e5e74df",
@@ -19435,6 +20946,75 @@
     "def": {}
   },
   {
+    "oracleId": "oracle-annie-joins-up",
+    "name": "Annie Joins Up",
+    "handledLines": [
+      "If a triggered ability of a legendary creature you control triggers, that ability triggers an additional time.",
+      "When ~ enters, it deals 5 damage to target creature or planeswalker an opponent controls."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "supertype",
+                "value": "Legendary"
+              }
+            ]
+          },
+          "kind": "triggerAdditionalTime"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "It deals 5 damage to target creature or planeswalker an opponent controls",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 5
+              },
+              "op": "dealDamage",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "opponent",
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Planeswalker"
+                  }
+                ]
+              },
+              "kind": "permanent"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-arcane-denial",
     "name": "Arcane Denial",
     "handledLines": [
@@ -19822,8 +21402,55 @@
   {
     "oracleId": "oracle-atarka-monument",
     "name": "Atarka Monument",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "{4}{R}{G}: ~ becomes a 4/4 red and green Dragon artifact creature with flying until end of turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "This artifact becomes a 4/4 red and green Dragon artifact creature with flying until end of turn",
+            "effects": [
+              {
+                "colors": [
+                  "R",
+                  "G"
+                ],
+                "keywords": [
+                  "flying"
+                ],
+                "op": "becomeCreatureUntilEot",
+                "power": 4,
+                "subtypes": [
+                  "Dragon"
+                ],
+                "target": "source",
+                "toughness": 4
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 1,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 4
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-attune-with-aether",
@@ -20526,8 +22153,43 @@
   {
     "oracleId": "oracle-biotransference",
     "name": "Biotransference",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Creatures you control are artifacts in addition to their other types. The same is true for creature spells you control and creature cards you own that aren't on the battlefield."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "addTypes": [
+            "Artifact"
+          ],
+          "ifType": "Creature",
+          "kind": "alsoTypesOffBattlefield"
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          },
+          "op": {
+            "addTypes": [
+              "Artifact"
+            ],
+            "layer": 4
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-black-bolt-inhuman-king",
@@ -20599,8 +22261,57 @@
   {
     "oracleId": "oracle-bolt-bend",
     "name": "Bolt Bend",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Change the target of target spell or ability with a single target.",
+      "This spell costs {3} less to cast if you control a creature with power 4 or greater."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "amount": {
+            "kind": "const",
+            "n": 3
+          },
+          "condition": {
+            "cmp": ">=",
+            "kind": "countPermanents",
+            "n": 1,
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "powerAtLeast",
+                  "n": 4
+                }
+              ]
+            }
+          },
+          "kind": "costReduction",
+          "selfOnly": true
+        }
+      ],
+      "spellAbility": {
+        "description": "Change the target of target spell or ability with a single target",
+        "effects": [
+          {
+            "op": "changeSingleTarget",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "stackObject",
+            "spellHasSingleTarget": true
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-bootleggers-stash",
@@ -22306,6 +24017,60 @@
     }
   },
   {
+    "oracleId": "oracle-cosmic-crucible",
+    "name": "Cosmic Crucible",
+    "handledLines": [
+      "At the beginning of your first main phase, add four mana in any combination of colors.",
+      "Whenever you cast a noncreature spell, you may copy it. You may choose new targets for the copy. Do this only once each turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Add four mana in any combination of colors",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 4
+              },
+              "colors": "any",
+              "op": "addMana"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "precombatMain"
+          }
+        },
+        {
+          "description": "You may copy that noncreature spell. You may choose new targets for the copy. Do this only once each turn",
+          "effects": [
+            {
+              "oncePerTurn": true,
+              "op": "copyCastSpell",
+              "optional": true
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "you",
+            "filter": {
+              "kind": "not",
+              "of": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            "when": "castsSpell"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-cosmic-cube",
     "name": "Cosmic Cube",
     "handledLines": [
@@ -22343,6 +24108,52 @@
           "trigger": {
             "attacker": "you",
             "when": "attackDeclared"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-council-of-reeds",
+    "name": "Council of Reeds",
+    "handledLines": [
+      "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, create a token that's a copy of ~.",
+      "The \"legend rule\" doesn't apply to creatures you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "type",
+            "value": "Creature"
+          },
+          "kind": "legendRuleDoesntApply"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Create a token that's a copy of Council of Reeds",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createTokenCopyOf",
+              "ref": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "category": "noncreature",
+              "cmp": ">=",
+              "kind": "castSpellThisTurn",
+              "n": 1
+            },
+            "player": "you",
+            "when": "beginningOfCombat"
           }
         }
       ]
@@ -23023,8 +24834,26 @@
   {
     "oracleId": "oracle-deflecting-swat",
     "name": "Deflecting Swat",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "You may choose new targets for target spell or ability."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "You may choose new targets for target spell or ability",
+        "effects": [
+          {
+            "op": "chooseNewTargets",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "stackObject"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-delirium",
@@ -23209,8 +25038,46 @@
   {
     "oracleId": "oracle-display-of-power",
     "name": "Display of Power",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Copy any number of target instant and/or sorcery spells. You may choose new targets for the copies.",
+      "This spell can't be copied."
+    ],
+    "def": {
+      "cantBeCopied": true,
+      "spellAbility": {
+        "description": "Copy any number of target instant and/or sorcery spells. You may choose new targets for the copies",
+        "effects": [
+          {
+            "newTargets": true,
+            "op": "copyEachTargetedSpell",
+            "targetSlot": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "count": {
+              "max": null,
+              "min": 0
+            },
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-doorkeeper-thrull",
@@ -23238,6 +25105,42 @@
             ]
           },
           "kind": "suppressObjectTriggers"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-dragon-man-reformed-robot",
+    "name": "Dragon Man, Reformed Robot",
+    "handledLines": [
+      "You may cast this card from your graveyard by discarding a card in addition to paying its other costs.",
+      "non-numeric power/toughness \"*\"",
+      "~'s power is equal to the greatest mana value among noncreature permanents you control and noncreature cards in your graveyard."
+    ],
+    "def": {
+      "castFromGraveyard": true,
+      "castFromGraveyardCosts": [
+        {
+          "count": 1,
+          "kind": "discardCard"
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "op": {
+            "layer": 7,
+            "power": {
+              "kind": "greatestNoncreatureManaValueYouControlOrInGraveyard"
+            },
+            "sublayer": "a",
+            "toughness": {
+              "kind": "const",
+              "n": 5
+            }
+          }
         }
       ]
     }
@@ -23346,8 +25249,43 @@
   {
     "oracleId": "oracle-duplicant",
     "name": "Duplicant",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "As long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with it. It's still a Shapeshifter.",
+      "When this creature enters, you may exile target nontoken creature."
+    ],
+    "def": {
+      "copyLastExiledCreature": true,
+      "triggers": [
+        {
+          "description": "You may exile target nontoken creature",
+          "effects": [
+            {
+              "op": "exileTargetWithSource",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "filter": {
+                "kind": "not",
+                "of": {
+                  "kind": "isToken"
+                }
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-duress",
@@ -24351,8 +26289,40 @@
   {
     "oracleId": "oracle-flare-of-duplication",
     "name": "Flare of Duplication",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Copy target instant or sorcery spell. You may choose new targets for the copy."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Copy target instant or sorcery spell. You may choose new targets for the copy",
+        "effects": [
+          {
+            "newTargets": true,
+            "op": "copyTargetSpell",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-flayed-one",
@@ -24915,6 +26885,48 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "oracle-galvanic-iteration",
+    "name": "Galvanic Iteration",
+    "handledLines": [
+      "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy",
+        "effects": [
+          {
+            "ability": {
+              "description": "Copy that spell. You may choose new targets for the copy",
+              "effects": [
+                {
+                  "op": "copyCastSpell"
+                }
+              ],
+              "kind": "triggered",
+              "targets": []
+            },
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "op": "nextCastThisTurn"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
     }
   },
   {
@@ -26262,7 +28274,7 @@
         "description": "Change target single-target spell and lose life equal to its mana value",
         "effects": [
           {
-            "op": "changeSingleSpellTarget",
+            "op": "changeSingleTarget",
             "target": 0
           },
           {
@@ -28062,8 +30074,38 @@
   {
     "oracleId": "oracle-mana-sculpt",
     "name": "Mana Sculpt",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Counter target spell. If you control a Wizard, add an amount of {C} equal to the amount of mana spent to cast that spell at the beginning of your next main phase."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Counter target spell. If you control a Wizard, add {C} equal to the mana spent to cast it at the beginning of your next main phase",
+        "effects": [
+          {
+            "manaSpentAtNextMainPhase": {
+              "condition": {
+                "cmp": ">=",
+                "kind": "countPermanents",
+                "n": 1,
+                "scope": "you",
+                "selector": {
+                  "kind": "subtype",
+                  "value": "Wizard"
+                }
+              }
+            },
+            "op": "counter",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-mangara-the-diplomat",
@@ -28447,6 +30489,125 @@
     }
   },
   {
+    "oracleId": "oracle-mirage-mirror",
+    "name": "Mirage Mirror",
+    "handledLines": [
+      "{2}: ~ becomes a copy of target artifact, creature, enchantment, or land until end of turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "This artifact becomes a copy of target artifact, creature, enchantment, or land until end of turn",
+            "effects": [
+              {
+                "op": "becomeCopyOf",
+                "ref": 0,
+                "untilEot": true
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Enchantment"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Land"
+                    }
+                  ]
+                },
+                "kind": "permanent"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-mister-fantastic",
+    "name": "Mister Fantastic",
+    "handledLines": [
+      "{R}{G}{W}{U}, {T}: Copy target triggered ability you control twice. You may choose new targets for the copies."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Copy target triggered ability you control twice. You may choose new targets for the copies",
+            "effects": [
+              {
+                "count": 2,
+                "newTargets": true,
+                "op": "copyTargetAbility",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "you",
+                "kind": "stackObject",
+                "stackKind": "triggeredAbility"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 1,
+                  "U": 1,
+                  "W": 1
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-mob-rule",
     "name": "Mob Rule",
     "handledLines": [
@@ -28514,6 +30675,53 @@
           ]
         },
         "targets": []
+      }
+    }
+  },
+  {
+    "oracleId": "oracle-mocking-doppelganger",
+    "name": "Mocking Doppelganger",
+    "handledLines": [
+      "You may have this creature enter as a copy of a creature an opponent controls, except it has \"Other creatures with the same name as this creature are goaded.\""
+    ],
+    "def": {
+      "entersAsCopy": {
+        "addStaticEffects": [
+          {
+            "affects": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "sameNameAsSource"
+                }
+              ]
+            },
+            "op": {
+              "addGoad": true,
+              "layer": 6
+            }
+          }
+        ],
+        "selector": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "controller",
+              "who": "opponents"
+            }
+          ]
+        }
       }
     }
   },
@@ -29320,8 +31528,34 @@
   {
     "oracleId": "oracle-nighthawk-scavenger",
     "name": "Nighthawk Scavenger",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "non-numeric power/toughness \"1+*\"",
+      "~'s power is equal to 1 plus the number of card types among cards in your opponents' graveyards."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "op": {
+            "layer": 7,
+            "power": {
+              "kind": "plus",
+              "n": 1,
+              "of": {
+                "kind": "cardTypesInOpponentsGraveyards"
+              }
+            },
+            "sublayer": "a",
+            "toughness": {
+              "kind": "const",
+              "n": 3
+            }
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-nightscape-familiar",
@@ -31047,8 +33281,26 @@
   {
     "oracleId": "oracle-reality-shift",
     "name": "Reality Shift",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Exile target creature. Its controller manifests the top card of their library."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Exile target creature. Its controller manifests the top card of their library",
+        "effects": [
+          {
+            "op": "exileAndManifestTarget",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "creature"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-rebuff-the-wicked",
@@ -31470,8 +33722,40 @@
   {
     "oracleId": "oracle-reverberate",
     "name": "Reverberate",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Copy target instant or sorcery spell. You may choose new targets for the copy."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Copy target instant or sorcery spell. You may choose new targets for the copy",
+        "effects": [
+          {
+            "newTargets": true,
+            "op": "copyTargetSpell",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-rishkar-peema-renegade",
@@ -31625,6 +33909,45 @@
     }
   },
   {
+    "oracleId": "oracle-roaming-throne",
+    "name": "Roaming Throne",
+    "handledLines": [
+      "If a triggered ability of another creature you control of the chosen type triggers, it triggers an additional time.",
+      "~ is the chosen type in addition to its other types."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "excludesSelf": true,
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "chosenSubtype"
+              }
+            ]
+          },
+          "kind": "triggerAdditionalTime"
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "op": {
+            "addChosenSubtype": true,
+            "layer": 4
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-rogue-refiner",
     "name": "Rogue Refiner",
     "handledLines": [
@@ -31696,6 +34019,168 @@
         "kind": "spell",
         "targets": []
       }
+    }
+  },
+  {
+    "oracleId": "oracle-rowan-kenrith",
+    "name": "Rowan Kenrith",
+    "handledLines": [
+      "+2: During target player's next turn, each creature that player controls attacks if able.",
+      "Partner with Will Kenrith",
+      "−2: ~ deals 3 damage to each tapped creature target player controls.",
+      "−8: Target player gets an emblem with \"Whenever you activate an ability that isn't a mana ability, copy it. You may choose new targets for the copy.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "During target player's next turn, each creature that player controls attacks if able",
+            "effects": [
+              {
+                "duration": "duringTheirNextTurn",
+                "op": "addAttackRequirement",
+                "relativeToPlayer": 0,
+                "requirements": [
+                  {
+                    "kind": "anyAttack"
+                  }
+                ],
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": 2,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Rowan Kenrith deals 3 damage to each tapped creature target player controls",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 3
+                },
+                "controlledBy": 0,
+                "op": "damageEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "tapped"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -2,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Target player gets an emblem that copies each ability they activate",
+            "effects": [
+              {
+                "abilities": [
+                  {
+                    "description": "Whenever you activate an ability that isn't a mana ability, copy it. You may choose new targets for the copy",
+                    "effects": [
+                      {
+                        "op": "copyActivatedAbility"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "player": "you",
+                      "when": "activatesAbility"
+                    }
+                  }
+                ],
+                "forPlayer": 0,
+                "name": "Rowan Kenrith emblem",
+                "op": "createEmblem"
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -8,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Target player may search their library for a card named Will Kenrith, reveal it, and put it into their hand, then shuffle",
+          "effects": [
+            {
+              "name": "Will Kenrith",
+              "op": "targetPlayerMaySearchNamed",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "player"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
     }
   },
   {
@@ -31821,14 +34306,152 @@
   {
     "oracleId": "oracle-saheeli-radiant-creator",
     "name": "Saheeli, Radiant Creator",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of combat on your turn, you may pay {E}{E}{E}. When you do, create a token that's a copy of target permanent you control, except it's a 5/5 artifact creature in addition to its other types and has haste. Sacrifice it at the beginning of the next end step.",
+      "Whenever you cast an Artificer or artifact spell, you get {E} ."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You get {E}",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "gainEnergy"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "you",
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Artificer"
+                },
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                }
+              ]
+            },
+            "when": "castsSpell"
+          }
+        },
+        {
+          "description": "You may pay {E}{E}{E}. When you do, copy target permanent you control",
+          "effects": [
+            {
+              "exact": true,
+              "min": 3,
+              "op": "mayPayEnergyThenReflexive",
+              "then": {
+                "description": "Create a token that's a copy of target permanent you control, except it's a 5/5 artifact creature with haste. Sacrifice it at the beginning of the next end step",
+                "effects": [
+                  {
+                    "addKeywords": [
+                      "haste"
+                    ],
+                    "addTypes": [
+                      "Artifact",
+                      "Creature"
+                    ],
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "createTokenCopyOf",
+                    "powerOverride": 5,
+                    "ref": 0,
+                    "sacrificeAt": "endStep",
+                    "toughnessOverride": 5
+                  }
+                ],
+                "kind": "triggered",
+                "targets": [
+                  {
+                    "controller": "you",
+                    "kind": "permanent"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-saheeli-sublime-artificer",
     "name": "Saheeli, Sublime Artificer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "−2: Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact in addition to its other types."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact",
+            "effects": [
+              {
+                "addTypes": [
+                  "Artifact"
+                ],
+                "op": "becomeCopyOfTarget",
+                "ref": 1,
+                "target": 0,
+                "untilEot": true
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "you",
+                "kind": "artifact"
+              },
+              {
+                "controller": "you",
+                "differentFromSlots": [
+                  0
+                ],
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                },
+                "kind": "permanent"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -2,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-sai-master-thopterist",
@@ -31841,8 +34464,135 @@
   {
     "oracleId": "oracle-sarkhan-the-dragonspeaker",
     "name": "Sarkhan, the Dragonspeaker",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "+1: Until end of turn, ~ becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste.",
+      "−6: You get an emblem with \"At the beginning of your draw step, draw two additional cards\" and \"At the beginning of your end step, discard your hand.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Until end of turn, Sarkhan becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste",
+            "effects": [
+              {
+                "colors": [
+                  "R"
+                ],
+                "keywords": [
+                  "flying",
+                  "indestructible",
+                  "haste"
+                ],
+                "op": "becomeCreatureUntilEot",
+                "power": 4,
+                "replaceTypes": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Dragon"
+                ],
+                "supertypes": [
+                  "Legendary"
+                ],
+                "target": "source",
+                "toughness": 4
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "delta": 1,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Sarkhan deals 4 damage to target creature",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 4
+                },
+                "op": "dealDamage",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -3,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "You get an emblem that draws two more cards and discards your hand",
+            "effects": [
+              {
+                "abilities": [
+                  {
+                    "description": "At the beginning of your draw step, draw two additional cards",
+                    "effects": [
+                      {
+                        "count": {
+                          "kind": "const",
+                          "n": 2
+                        },
+                        "op": "draw"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "player": "you",
+                      "when": "drawStep"
+                    }
+                  },
+                  {
+                    "description": "At the beginning of your end step, discard your hand",
+                    "effects": [
+                      {
+                        "op": "discardHand"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "player": "you",
+                      "when": "endStep"
+                    }
+                  }
+                ],
+                "name": "Sarkhan, the Dragonspeaker emblem",
+                "op": "createEmblem"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "delta": -6,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-savage-ventmaw",
@@ -32116,6 +34866,90 @@
           "value": "Artifact"
         }
       }
+    }
+  },
+  {
+    "oracleId": "oracle-scute-swarm",
+    "name": "Scute Swarm",
+    "handledLines": [
+      "Whenever a land you control enters, create a 1/1 green Insect creature token. If you control six or more lands, create a token that's a copy of this creature instead."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Create a 1/1 green Insect, or a token that's a copy of this creature if you control six or more lands",
+          "effects": [
+            {
+              "condition": {
+                "cmp": ">=",
+                "kind": "countPermanents",
+                "n": 6,
+                "scope": "you",
+                "selector": {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              },
+              "else": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "createToken",
+                  "spec": {
+                    "colors": [
+                      "G"
+                    ],
+                    "name": "Insect",
+                    "power": 1,
+                    "subtypes": [
+                      "Insect"
+                    ],
+                    "toughness": 1,
+                    "typeLine": "Creature — Insect",
+                    "types": [
+                      "Creature"
+                    ]
+                  }
+                }
+              ],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "createTokenCopyOf",
+                  "ref": "source"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
+        }
+      ]
     }
   },
   {
@@ -32741,8 +35575,51 @@
   {
     "oracleId": "oracle-siren-stormtamer",
     "name": "Siren Stormtamer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "{U}, Sacrifice this creature: Counter target spell or ability that targets you or a creature you control."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Counter target spell or ability that targets you or a creature you control",
+            "effects": [
+              {
+                "op": "counter",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "stackObject",
+                "stackTargetsYouOrCreatureYouControl": true
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 1,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "sacrificeSelf"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-skorpekh-destroyer",
@@ -35246,8 +38123,12 @@
   {
     "oracleId": "oracle-trazyn-the-infinite",
     "name": "Trazyn the Infinite",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Prismatic Gallery — As long as ~ is on the battlefield, it has all activated abilities of all artifact cards in your graveyard."
+    ],
+    "def": {
+      "artifactGraveyardAbilities": true
+    }
   },
   {
     "oracleId": "oracle-triarch-stalker",
@@ -35503,8 +38384,56 @@
   {
     "oracleId": "oracle-twilight-diviner",
     "name": "Twilight Diviner",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever one or more other creatures you control enter, if they entered or were cast from a graveyard, create a token that's a copy of one of them. This ability triggers only once each turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Create a token that's a copy of one of them",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createTokenCopyOfEventGroupMember"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "aggregate": true,
+            "entersFrom": {
+              "orCastFrom": true,
+              "zone": "graveyard"
+            },
+            "oncePerTurn": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "other"
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-twitching-doll",
@@ -35940,8 +38869,29 @@
   {
     "oracleId": "oracle-verrak-warped-sengir",
     "name": "Verrak, Warped Sengir",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever you activate an ability that isn't a mana ability, if life was paid to activate it, you may pay that much life again. If you do, copy that ability. You may choose new targets for the copy."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may pay that much life again. If you do, copy that ability. You may choose new targets for the copy",
+          "effects": [
+            {
+              "mayPayLifeAgain": true,
+              "op": "copyActivatedAbility"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "lifePaid": true,
+            "player": "you",
+            "when": "activatesAbility"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-vicious-rumors",
@@ -36780,6 +39730,78 @@
             }
           ],
           "timing": "yourTurn"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-xenagos-god-of-revels",
+    "name": "Xenagos, God of Revels",
+    "handledLines": [
+      "As long as your devotion to red and green is less than seven, ~ isn't a creature.",
+      "At the beginning of combat on your turn, another target creature you control gains haste and gets +X/+X until end of turn, where X is that creature's power."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "cmp": "<=",
+            "kind": "compareValues",
+            "left": {
+              "and": "G",
+              "color": "R",
+              "kind": "devotionTo"
+            },
+            "right": {
+              "kind": "const",
+              "n": 6
+            }
+          },
+          "op": {
+            "layer": 4,
+            "removeCreatureType": true
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Another target creature you control gains haste and gets +X/+X until end of turn, where X is that creature's power",
+          "effects": [
+            {
+              "keyword": "haste",
+              "op": "grantKeywordUntilEot",
+              "target": 0
+            },
+            {
+              "op": "pumpUntilEot",
+              "power": {
+                "kind": "powerOfTarget",
+                "target": 0
+              },
+              "target": 0,
+              "toughness": {
+                "kind": "powerOfTarget",
+                "target": 0
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "you",
+              "filter": {
+                "kind": "other"
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
         }
       ]
     }

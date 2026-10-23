@@ -1,4 +1,5 @@
 import { counterCount, setCounterCount } from './counters';
+import { offBattlefieldTypes } from './off-battlefield-types';
 import { playerLifeLocked } from './phasing';
 import { selectedPermanentDefinition } from '../cards/spell-faces';
 import { assertTriggerEventFamily } from '../cards/trigger-contracts';
@@ -18,15 +19,17 @@ import { computeTargetOptions } from '../actions/legal';
 import { BESTOW_ENCHANT } from '../cards/spell-faces';
 import type {
   Ability,
+  Effect,
   KeywordAbility,
   ObjectTriggerWhen,
+  StackAbilitySnapshot,
   TokenSpec,
   TriggerSpec,
 } from '../cards/ability';
 import { captureObjectFacts, eventObjectScope } from '../cards/source-identity';
 import type { ObjectFacts } from '../cards/source-identity';
 import { evaluateCondition, resolveCondition } from '../cards/condition';
-import type { BackFace, CardDefinition } from '../cards/definition';
+import type { BackFace, CardDefinition, StaticEffect } from '../cards/definition';
 import { assertValidModeledDefinition } from '../cards/authoring-validation';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
@@ -107,6 +110,9 @@ export interface MoveDestination {
   entersTapped?: boolean;
   /** Manifest: enter with face-down characteristics before replacements and triggers. */
   faceDown?: boolean;
+  /** With `faceDown`: it was manifested, so a creature card can be turned face up for its mana
+   * cost (CR 701.40b). A face-down spell that resolves is not manifested. */
+  manifested?: true;
   /** Library only: where to put it. Defaults to 'top'. Index 0 is the top. */
   libraryPosition?: 'top' | 'bottom';
   /**
@@ -674,6 +680,8 @@ export interface ApplyCopyOptions {
   addTriggers?: Ability[] | undefined;
   /** Supertypes stripped from the copy ("except it isn't legendary" — Spark Double). */
   removeSupertypes?: string[] | undefined;
+  /** Static abilities folded into the copiable values (CR 707.9b — Mocking Doppelganger). */
+  addStaticEffects?: StaticEffect[] | undefined;
   /** Supertypes the copy has that the copied object doesn't ("it's legendary in addition to
    * its other types" — Sarkhan, Soul Aflame). */
   addSupertypes?: string[] | undefined;
@@ -693,7 +701,11 @@ export function applyCopy(
   target: EnginePermanent,
   opts: ApplyCopyOptions = {},
 ): void {
-  const copied = copiableDefinition(ctx, target);
+  const base = copiableDefinition(ctx, target);
+  const copied =
+    opts.addStaticEffects === undefined || opts.addStaticEffects.length === 0
+      ? base
+      : { ...base, staticEffects: [...base.staticEffects, ...opts.addStaticEffects] };
   const imageFace = copyImageFace(ctx, target);
   perm.copyOriginal ??= {
     oracleId: perm.oracleId,
@@ -1011,6 +1023,7 @@ export function* moveObject(
     );
     perm.attachedTo = target.attachedTo ?? null;
     if (target.bestowed === true && perm.attachedTo !== null) perm.bestowed = true;
+    if (target.manifested === true && perm.faceDown === true) perm.manifested = true;
     ctx.state.battlefield.push(perm);
     next = perm;
 
@@ -1110,6 +1123,7 @@ export function* moveObject(
           addKeywords: config.addKeywords,
           addTriggers: config.addTriggers,
           removeSupertypes: config.removeSupertypes,
+          addStaticEffects: config.addStaticEffects,
         });
         if (config.addCounterByType !== undefined) {
           const copiedTypes = computeCharacteristics(ctx, perm).types;
@@ -2135,6 +2149,27 @@ export function* discardCard(
  * effects. Computed once for the original event, so copied triggers never recursively copy.
  */
 export function additionalTypedTriggerCopies(ctx: GameContext, source: EnginePermanent): number {
+  return harmonicCopies(ctx, source) + additionalTriggerTimes(ctx, source);
+}
+
+/** "It triggers an additional time" statics (Annie Joins Up, Roaming Throne), one each. */
+function additionalTriggerTimes(ctx: GameContext, source: EnginePermanent): number {
+  let copies = 0;
+  for (const { static: rule, sourceCardId, controllerId } of gatherRuleStatics(ctx)) {
+    if (rule.kind !== 'triggerAdditionalTime' || controllerId !== source.controllerId) continue;
+    if (rule.excludesSelf === true && sourceCardId === source.cardId) continue;
+    const amplifier = ctx.state.battlefield.find((perm) => perm.cardId === sourceCardId);
+    const from: SelectorSource = {
+      cardId: sourceCardId,
+      controllerId,
+      ...(amplifier?.chosenOption === undefined ? {} : { chosenOption: amplifier.chosenOption }),
+    };
+    if (matchesSelector(ctx, source, rule.filter, from)) copies++;
+  }
+  return copies;
+}
+
+function harmonicCopies(ctx: GameContext, source: EnginePermanent): number {
   const sourceSubtypes = computeCharacteristics(ctx, source).subtypes;
   const isShaman = sourceSubtypes.includes('Shaman');
   const isWizard = sourceSubtypes.includes('Wizard');
@@ -2470,6 +2505,10 @@ export function queueTriggersForEvent(
           const amounts = group.filter((s) => s.amount !== undefined);
           const scope: TriggerScope = {
             ...(spec.aggregate !== undefined ? { triggerCount: group.length } : {}),
+            ...(spec.aggregate !== undefined &&
+            ability.effects.some((effect) => effect.op === 'createTokenCopyOfEventGroupMember')
+              ? { eventGroupIds: group.map((subject) => subject.permanent.id) }
+              : {}),
             ...(eventPlayerId !== undefined ? { eventPlayerId } : {}),
             ...(first.blockedObjectId !== undefined
               ? { blockedObjectId: first.blockedObjectId }
@@ -2682,6 +2721,13 @@ function rememberLeavingSourceTraits(
     if ((scope?.triggerObjectId ?? scope?.eventObjectId) === perm.id)
       scope!.triggerObjectFacts = facts;
   }
+  for (const scope of [
+    ...ctx.state.stack.map((entry) => entry.triggerScope),
+    ...ctx.state.pendingTriggers.map((pending) => pending.scope),
+  ]) {
+    if (scope?.eventGroupIds?.includes(perm.id) === true)
+      scope.eventGroupFacts = { ...scope.eventGroupFacts, [perm.id]: facts };
+  }
   const entries = ctx.state.stack.filter(
     (entry) =>
       entry.kind !== 'spell' &&
@@ -2719,7 +2765,11 @@ function matchesEntryRestrictions(
 ): boolean {
   if ('entersUntapped' in spec && spec.entersUntapped === true && permanent.tapped) return false;
   if ('entersFrom' in spec && spec.entersFrom !== undefined) {
-    if (permanent.enteredFromZone !== spec.entersFrom.zone) return false;
+    if (
+      permanent.enteredFromZone !== spec.entersFrom.zone &&
+      !(spec.entersFrom.orCastFrom === true && permanent.castFromZone === spec.entersFrom.zone)
+    )
+      return false;
     // A card is only ever in its owner's graveyard (CR 404.2).
     if (spec.entersFrom.graveyardOwner === 'you' && permanent.ownerId !== watcherControllerId)
       return false;
@@ -2818,7 +2868,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
   const candidate: SelectorCandidate = {
     cardId: spell.sourceCardId,
     controllerId: spell.controllerId,
-    types: def.types,
+    types: offBattlefieldTypes(ctx, def.types, spell.controllerId),
     supertypes: def.supertypes,
     subtypes: def.subtypes,
     colors: def.colors,
@@ -2894,7 +2944,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
           sourceObjectId: source.id,
           sourceOracleId: source.oracleId,
           sourceName: source.name,
-          ability,
+          ability: bindCastSpell(ctx, ability, spell),
           scope: {
             spellManaValue: manaValue,
             spellColorCount: candidate.colors.length,
@@ -2908,6 +2958,38 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
       }
     }
   }
+
+  // Delayed cast triggers (Galvanic Iteration's "when you next cast an instant or sorcery spell
+  // this turn"): only the controller's own matching spells, and a `once` trigger fires once.
+  const firedCastDelayed = new Set<string>();
+  for (const delayed of ctx.state.delayedTriggers) {
+    if (delayed.when !== 'castsSpell' || delayed.controllerId !== spell.controllerId) continue;
+    const from: SelectorSource = {
+      cardId: delayed.sourceCardId,
+      controllerId: delayed.controllerId,
+      eventPlayerId: spell.controllerId,
+    };
+    if (delayed.castFilter !== undefined && !selectMatches(candidate, delayed.castFilter, from))
+      continue;
+    ctx.state.pendingTriggers.push({
+      controllerId: delayed.controllerId,
+      sourceCardId: delayed.sourceCardId,
+      sourceOracleId: delayed.sourceOracleId,
+      sourceName: 'Delayed Trigger',
+      ability: bindCastSpell(ctx, delayed.ability, spell),
+      scope: {
+        spellManaValue: manaValue,
+        spellColorCount: candidate.colors.length,
+        eventPlayerId: spell.controllerId,
+      },
+    });
+    debug(ctx, 'stack', `delayed cast trigger queued: ${delayed.id} — ${spell.description}`);
+    if (delayed.once === true) firedCastDelayed.add(delayed.id);
+  }
+  if (firedCastDelayed.size > 0)
+    ctx.state.delayedTriggers = ctx.state.delayedTriggers.filter(
+      (delayed) => !firedCastDelayed.has(delayed.id),
+    );
 
   // Graveyard-functioning cast triggers (CR 112.6a, Aurora Phoenix): a card whose ability says
   // it works from the graveyard watches casts from there, under its owner's control.
@@ -2998,6 +3080,102 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
 }
 
 /**
+ * A cast spell as copy effects need it: every decision made for it, plus the definition and
+ * ability, so a copy can still be made from last known information after it has left the stack
+ * (CR 707.10).
+ */
+function castSpellSnapshot(
+  ctx: GameContext,
+  spell: EngineStackObject,
+  def: CardDefinition = spellDefinitionOf(ctx, spell),
+): Extract<Effect, { op: 'replicateCopies' }>['spell'] {
+  return {
+    stackObjectId: spell.id,
+    oracleId: spell.sourceOracleId,
+    name: spell.description,
+    targets: [...spell.targets],
+    definition: def,
+    ...(spell.ability === null ? {} : { ability: spell.ability }),
+    ...(spell.announcedX === undefined ? {} : { announcedX: spell.announcedX }),
+    ...(spell.giftRecipientId === undefined ? {} : { giftRecipientId: spell.giftRecipientId }),
+    ...(spell.countTargets === undefined
+      ? {}
+      : {
+          countTargets: Object.fromEntries(
+            Object.entries(spell.countTargets).map(([slot, ids]) => [slot, [...ids]]),
+          ),
+        }),
+    ...(spell.divisionAmounts === undefined
+      ? {}
+      : { divisionAmounts: { ...spell.divisionAmounts } }),
+    ...(spell.optionalCostCounts === undefined
+      ? {}
+      : { optionalCostCounts: { ...spell.optionalCostCounts } }),
+    ...(spell.wasKicked === undefined ? {} : { wasKicked: spell.wasKicked }),
+    ...(spell.kicked === undefined ? {} : { kicked: spell.kicked }),
+    targetNames: Object.fromEntries(ctx.state.battlefield.map((perm) => [perm.id, perm.name])),
+    oracleText: spell.card?.oracleText ?? '',
+    manaCost: spell.card?.manaCost ?? null,
+  };
+}
+
+/** An ability on the stack, recorded so it can still be copied after it leaves (CR 707.10). */
+export function stackAbilitySnapshot(entry: EngineStackObject): StackAbilitySnapshot {
+  if (entry.kind === 'spell' || entry.ability === null)
+    throw new Error('engine bug: only an ability on the stack has an ability snapshot');
+  return {
+    stackObjectId: entry.id,
+    kind: entry.kind,
+    description: entry.description,
+    ability: entry.ability,
+    targets: [...entry.targets],
+    ...(entry.countTargets === undefined
+      ? {}
+      : {
+          countTargets: Object.fromEntries(
+            Object.entries(entry.countTargets).map(([slot, ids]) => [slot, [...ids]]),
+          ),
+        }),
+    ...(entry.divisionAmounts === undefined
+      ? {}
+      : { divisionAmounts: { ...entry.divisionAmounts } }),
+    ...(entry.announcedX === undefined ? {} : { announcedX: entry.announcedX }),
+    sourceId: entry.sourceId,
+    sourceOracleId: entry.sourceOracleId,
+    sourceCardId: entry.sourceCardId,
+    ...(entry.sourceColors === undefined ? {} : { sourceColors: [...entry.sourceColors] }),
+    ...(entry.sourceFacts === undefined ? {} : { sourceFacts: entry.sourceFacts }),
+    ...(entry.sourceDamageKeywords === undefined
+      ? {}
+      : { sourceDamageKeywords: [...entry.sourceDamageKeywords] }),
+    ...(entry.triggerScope === undefined ? {} : { triggerScope: { ...entry.triggerScope } }),
+    ...(entry.triggerObjectCardId === undefined
+      ? {}
+      : { triggerObjectCardId: entry.triggerObjectCardId }),
+  };
+}
+
+/** Bind a cast trigger's `copyCastSpell` effects to the spell that was cast. */
+function bindCastSpell(ctx: GameContext, ability: Ability, spell: EngineStackObject): Ability {
+  if (!ability.effects.some((effect) => effect.op === 'copyCastSpell')) return ability;
+  const snapshot = castSpellSnapshot(ctx, spell);
+  return {
+    ...ability,
+    effects: ability.effects.map((effect) =>
+      effect.op === 'copyCastSpell'
+        ? {
+            op: 'replicateCopies' as const,
+            count: 1,
+            spell: snapshot,
+            ...(effect.optional === true ? { optional: true as const } : {}),
+            ...(effect.oncePerTurn === true ? { oncePerTurn: true as const } : {}),
+          }
+        : effect,
+    ),
+  };
+}
+
+/**
  * Keyword abilities that trigger when their spell is cast. Cascade is attached to the spell
  * rather than a battlefield permanent, so it is queued beside ordinary cast triggers after the
  * spell has entered the stack.
@@ -3020,35 +3198,7 @@ export function queueKeywordCastTriggers(ctx: GameContext, spell: EngineStackObj
           {
             op: 'replicateCopies',
             count: replicated,
-            spell: {
-              stackObjectId: spell.id,
-              oracleId: spell.sourceOracleId,
-              name: spell.description,
-              targets: [...spell.targets],
-              definition: def,
-              ...(spell.ability === null ? {} : { ability: spell.ability }),
-              ...(spell.announcedX === undefined ? {} : { announcedX: spell.announcedX }),
-              ...(spell.countTargets === undefined
-                ? {}
-                : {
-                    countTargets: Object.fromEntries(
-                      Object.entries(spell.countTargets).map(([slot, ids]) => [slot, [...ids]]),
-                    ),
-                  }),
-              ...(spell.divisionAmounts === undefined
-                ? {}
-                : { divisionAmounts: { ...spell.divisionAmounts } }),
-              ...(spell.optionalCostCounts === undefined
-                ? {}
-                : { optionalCostCounts: { ...spell.optionalCostCounts } }),
-              ...(spell.wasKicked === undefined ? {} : { wasKicked: spell.wasKicked }),
-              ...(spell.kicked === undefined ? {} : { kicked: spell.kicked }),
-              targetNames: Object.fromEntries(
-                ctx.state.battlefield.map((perm) => [perm.id, perm.name]),
-              ),
-              oracleText: spell.card?.oracleText ?? '',
-              manaCost: spell.card?.manaCost ?? null,
-            },
+            spell: castSpellSnapshot(ctx, spell, def),
           },
         ],
         description: `${spell.description}: Replicate ${replicated}`,
@@ -3343,6 +3493,109 @@ export function* returnExiledUntilLeaves(ctx: GameContext, sourceCardId: CardId)
     if (exiled === undefined || playerById(ctx, exiled.ownerId).hasLost) continue;
     yield* moveObject(ctx, exiled, { zone: 'battlefield', controllerId: exiled.ownerId });
   }
+}
+
+/**
+ * "Whenever you activate an ability that isn't a mana ability" (Verrak, Rowan Kenrith's emblem):
+ * queued once `ability` is on the stack with its costs paid (CR 602.2i). A copy of an ability is
+ * not activated (CR 707.10), so copies never get here. `lifePaid` is the life paid as part of the
+ * activation's total cost, Phyrexian mana included.
+ */
+export function queueActivationTriggers(
+  ctx: GameContext,
+  ability: EngineStackObject,
+  lifePaid: number,
+): void {
+  assertTriggerEventFamily('activatesAbility', 'player');
+  const playerId = ability.controllerId;
+  const watchers: {
+    controllerId: PlayerId;
+    sourceCardId: string;
+    sourceObjectId?: ObjectId;
+    sourceOracleId: OracleId;
+    sourceName: string;
+    abilities: Ability[];
+    permanent?: EnginePermanent;
+  }[] = [
+    ...ctx.state.battlefield.map((perm) => ({
+      controllerId: perm.controllerId,
+      sourceCardId: perm.cardId,
+      sourceObjectId: perm.id,
+      sourceOracleId: perm.oracleId,
+      sourceName: perm.name,
+      abilities: triggersOf(ctx, perm),
+      permanent: perm,
+    })),
+    // Emblem triggers (CR 114.4): an emblem has no characteristics of its own.
+    ...ctx.state.players.flatMap((player) =>
+      player.emblems.map((emblem) => ({
+        controllerId: emblem.controllerId,
+        sourceCardId: emblem.id,
+        sourceOracleId: '' as OracleId,
+        sourceName: emblem.name,
+        abilities: emblem.abilities,
+      })),
+    ),
+  ];
+  for (const watcher of watchers) {
+    for (const watched of watcher.abilities) {
+      const spec = watched.trigger;
+      if (spec === undefined || spec.when !== 'activatesAbility') continue;
+      if (spec.player === 'you' && watcher.controllerId !== playerId) continue;
+      if (spec.lifePaid === true && lifePaid <= 0) continue;
+      const from: SelectorSource = {
+        cardId: watcher.sourceCardId,
+        controllerId: watcher.controllerId,
+        eventPlayerId: playerId,
+      };
+      if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, from)) continue;
+      const copies =
+        1 +
+        (watcher.permanent === undefined
+          ? 0
+          : additionalTypedTriggerCopies(ctx, watcher.permanent));
+      for (let copy = 0; copy < copies; copy++) {
+        ctx.state.pendingTriggers.push({
+          controllerId: watcher.controllerId,
+          sourceCardId: watcher.sourceCardId,
+          ...(watcher.sourceObjectId === undefined
+            ? {}
+            : { sourceObjectId: watcher.sourceObjectId }),
+          sourceOracleId: watcher.sourceOracleId,
+          sourceName: watcher.sourceName,
+          ability: bindActivatedAbility(watched, ability, lifePaid),
+          scope: { eventPlayerId: playerId, lifePaid },
+        });
+        debug(
+          ctx,
+          'stack',
+          `activation trigger queued: ${watcher.sourceName} — ${ability.description}`,
+        );
+      }
+    }
+  }
+}
+
+/** Bind an activation trigger's `copyActivatedAbility` effects to the ability that was activated. */
+function bindActivatedAbility(
+  watched: Ability,
+  activated: EngineStackObject,
+  lifePaid: number,
+): Ability {
+  if (!watched.effects.some((effect) => effect.op === 'copyActivatedAbility')) return watched;
+  const snapshot = stackAbilitySnapshot(activated);
+  return {
+    ...watched,
+    effects: watched.effects.map((effect) =>
+      effect.op === 'copyActivatedAbility'
+        ? {
+            op: 'copyStackAbility' as const,
+            stackAbility: snapshot,
+            ...(effect.mayPayLifeAgain === true ? { lifeCost: lifePaid } : {}),
+          }
+        : effect,
+    ),
+  };
 }
 
 export function queuePlayerTriggersForEvent(

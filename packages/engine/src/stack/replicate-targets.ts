@@ -2,6 +2,7 @@ import type { Color, ObjectId, PlayerId } from '@mtg/shared';
 import type { Ability } from '../cards/ability';
 import type { GameGen } from '../decisions';
 import type { GameContext } from '../state/types';
+import type { TargetContext } from '../targets/context';
 import { targetDomainCandidates, targetIsLegal, withinTotalManaValue } from '../targets/legality';
 
 /** Retarget identities, preserving every original targeting occurrence and its cardinality. */
@@ -23,6 +24,62 @@ export function* chooseReplicateTargets(
   countTargets: Record<number, ObjectId[]>;
   divisionAmounts: Record<ObjectId, number>;
 }> {
+  return yield* chooseNewTargets(ctx, controllerId, {
+    name,
+    subject: `copy ${copyIndex + 1} of ${copyCount}`,
+    ability,
+    colors,
+    sourceCardId,
+    originalTargets,
+    originalCounted,
+    originalDivision,
+    originalNames,
+  });
+}
+
+/**
+ * "You may choose new targets" (CR 115.7d) for a copy or for a stack object in place: each
+ * targeting occurrence may keep its target or change to another one, and the final collective
+ * assignment must be legal. `excluded` removes candidates that may not be chosen at all, such as
+ * the retargeted object itself (CR 115.5).
+ */
+export function* chooseNewTargets(
+  ctx: GameContext,
+  controllerId: PlayerId,
+  request: {
+    name: string;
+    subject: string;
+    ability: Ability;
+    colors: readonly Color[];
+    sourceCardId: string;
+    originalTargets: readonly ObjectId[];
+    originalCounted: Readonly<Record<number, readonly ObjectId[]>>;
+    originalDivision: Readonly<Record<ObjectId, number>>;
+    originalNames?: Readonly<Record<string, string>>;
+    excluded?: ReadonlySet<ObjectId>;
+    /** Legality is relative to the targeting object's controller, not the chooser. */
+    objectControllerId?: PlayerId;
+    eventPlayerId?: PlayerId;
+    sourceFacts?: TargetContext['sourceFacts'];
+  },
+): GameGen<{
+  targets: ObjectId[];
+  countTargets: Record<number, ObjectId[]>;
+  divisionAmounts: Record<ObjectId, number>;
+}> {
+  const {
+    name,
+    subject,
+    ability,
+    colors,
+    sourceCardId,
+    originalTargets,
+    originalCounted,
+    originalDivision,
+    originalNames = {},
+    excluded = new Set<ObjectId>(),
+    objectControllerId = controllerId,
+  } = request;
   const targets = [...originalTargets];
   const countTargets = Object.fromEntries(
     Object.entries(originalCounted).map(([slot, ids]) => [slot, [...ids]]),
@@ -42,11 +99,13 @@ export function* chooseReplicateTargets(
     if (ability.targets[position.slot]!.count === undefined) targets[position.slot] = id;
     else countTargets[position.slot]![position.ordinal] = id;
   };
-  const context = (chosenTargets: readonly ObjectId[]) => ({
-    controllerId,
+  const context = (chosenTargets: readonly ObjectId[]): TargetContext => ({
+    controllerId: objectControllerId,
     sourceCardId,
     sourceColors: colors,
     chosenTargets,
+    ...(request.eventPlayerId === undefined ? {} : { eventPlayerId: request.eventPlayerId }),
+    ...(request.sourceFacts === undefined ? {} : { sourceFacts: request.sourceFacts }),
   });
   const originallyLegal = positions.map((position) =>
     targetIsLegal(ctx, ability.targets[position.slot]!, position.old, context(originalTargets)),
@@ -84,7 +143,7 @@ export function* chooseReplicateTargets(
   const domains = positions.map((position) => [
     position.old,
     ...targetDomainCandidates(ctx, ability.targets[position.slot]!.kind).filter(
-      (id) => id !== position.old,
+      (id) => id !== position.old && !excluded.has(id),
     ),
   ]);
   const canComplete = (index: number): boolean => {
@@ -108,7 +167,10 @@ export function* chooseReplicateTargets(
     return false;
   };
   const nameOf = (id: ObjectId) =>
-    ctx.state.battlefield.find((perm) => perm.id === id)?.name ?? originalNames[id] ?? String(id);
+    ctx.state.battlefield.find((perm) => perm.id === id)?.name ??
+    ctx.state.stack.find((entry) => entry.id === id)?.description ??
+    originalNames[id] ??
+    String(id);
   for (const [index, position] of positions.entries()) {
     const choices = domains[index]!.filter((id) => {
       set(position, id);
@@ -117,14 +179,14 @@ export function* chooseReplicateTargets(
       return result;
     });
     if (choices.length === 1 && choices[0] === position.old) continue;
-    if (choices.length === 0) throw new Error('replicate targets have no legal completion');
+    if (choices.length === 0) throw new Error('new targets have no legal completion');
     const single = positions.length === 1 && ability.targets[position.slot]!.count === undefined;
     const outcome = yield {
       decisionType: 'general' as const,
       player: controllerId,
       prompt: single
-        ? `${name}: choose a target for copy ${copyIndex + 1} of ${copyCount}.`
-        : `${name}: choose a target for copy ${copyIndex + 1} of ${copyCount}, slot ${position.slot}, target ${position.ordinal + 1}.`,
+        ? `${name}: choose a target for ${subject}.`
+        : `${name}: choose a target for ${subject}, slot ${position.slot}, target ${position.ordinal + 1}.`,
       options: choices.map((id) => ({
         type: 'chooseTarget',
         description:
@@ -132,7 +194,7 @@ export function* chooseReplicateTargets(
       })),
     };
     const chosen = Number.isSafeInteger(outcome.index) ? choices[outcome.index] : undefined;
-    if (chosen === undefined) throw new Error('invalid replicate target choice');
+    if (chosen === undefined) throw new Error('invalid new target choice');
     set(position, chosen);
   }
   const divisionAmounts = { ...originalDivision };

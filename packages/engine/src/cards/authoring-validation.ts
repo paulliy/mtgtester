@@ -162,6 +162,19 @@ function validateTargets(targets: TargetSpec[], path: string, issues: AuthoringI
       issues.push({ path: at, message: 'invalid target specification' });
       continue;
     }
+    if (
+      spec.differentFromSlots !== undefined &&
+      (!Array.isArray(spec.differentFromSlots) ||
+        spec.differentFromSlots.length === 0 ||
+        spec.count !== undefined ||
+        spec.differentFromSlots.some(
+          (other) => !integer(other) || other >= slot || targets[other]?.count !== undefined,
+        ))
+    )
+      issues.push({
+        path: `${at}.differentFromSlots`,
+        message: 'another target requires earlier ordinary slots',
+      });
     if (spec.differentPlayerTargetSlots !== undefined) {
       const others = spec.differentPlayerTargetSlots;
       if (
@@ -201,11 +214,30 @@ function validateTargets(targets: TargetSpec[], path: string, issues: AuthoringI
       });
     if (
       spec.spellHasSingleTarget !== undefined &&
-      (spec.spellHasSingleTarget !== true || !['spell', 'noncreatureSpell'].includes(spec.kind))
+      (spec.spellHasSingleTarget !== true ||
+        !['spell', 'noncreatureSpell', 'stackObject'].includes(spec.kind))
     )
       issues.push({
         path: `${at}.spellHasSingleTarget`,
-        message: 'single target restriction requires a stack spell target and true flag',
+        message: 'single target restriction requires a stack target and true flag',
+      });
+    if (
+      spec.stackTargetsYouOrCreatureYouControl !== undefined &&
+      (spec.stackTargetsYouOrCreatureYouControl !== true ||
+        !['spell', 'noncreatureSpell', 'stackObject'].includes(spec.kind))
+    )
+      issues.push({
+        path: `${at}.stackTargetsYouOrCreatureYouControl`,
+        message: 'you-or-your-creature restriction requires a stack target and true flag',
+      });
+    if (
+      spec.stackKind !== undefined &&
+      (spec.kind !== 'stackObject' ||
+        !['spell', 'activatedAbility', 'triggeredAbility'].includes(spec.stackKind))
+    )
+      issues.push({
+        path: `${at}.stackKind`,
+        message: 'stack object kind requires a stackObject target and a known kind',
       });
     if (
       spec.controller !== undefined &&

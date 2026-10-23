@@ -47,6 +47,8 @@ export interface SelectorCandidate {
   colors: readonly Color[];
   /** Current power. Only `powerAtLeast` reads it — see the module comment. */
   power: number;
+  /** Tapped status; only the event-only `tapped` selector reads it. Absent off the battlefield. */
+  tapped?: boolean;
   /**
    * A card outside the battlefield whose power is not a printed number ("*", a characteristic-
    * defining ability this candidate does not evaluate). `power` then reads 0, so a comparison
@@ -133,6 +135,8 @@ export interface SelectorSource {
   chosenOption?: string;
   /** The source's power, or its last-known power once it has left, for `powerAtMostSource`. */
   sourcePower?: number;
+  /** The source permanent's current name, for `sameNameAsSource`. */
+  sourceName?: string;
 }
 
 export type Selector =
@@ -151,6 +155,11 @@ export type Selector =
    * a layer this selector would be read inside.
    */
   | { kind: 'name'; value: string }
+  /**
+   * "with the same name as this creature" (Mocking Doppelganger): the source's own current
+   * name, which a copy effect may have changed, so it reads `source.sourceName`, not a value.
+   */
+  | { kind: 'sameNameAsSource' }
   | { kind: 'color'; value: Color }
   /**
    * "of the chosen color" (Caged Sun) — the color is per-permanent state
@@ -216,6 +225,8 @@ export type Selector =
    * permanent become or stop being a token, so no layer's output can change this answer.
    */
   | { kind: 'isToken' }
+  /** EVENT-ONLY (see the module comment): "each tapped creature" (Rowan Kenrith). */
+  | { kind: 'tapped' }
   /** "a creature you control that entered this turn" (Neriv, Heart of the Storm). */
   | { kind: 'enteredThisTurn' }
   | { kind: 'isCommander' }
@@ -320,6 +331,7 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'attackingYouOrYourPlaneswalker':
     case 'attackedThisTurn':
     case 'controlledSinceTurnStart':
+    case 'tapped':
       return true;
     case 'allOf':
     case 'anyOf':
@@ -339,6 +351,7 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'subtype':
     case 'supertype':
     case 'name':
+    case 'sameNameAsSource':
     case 'color':
     case 'chosenColor':
     case 'chosenType':
@@ -385,6 +398,12 @@ export function selectMatches(
       return candidate.supertypes.includes(selector.value);
     case 'name':
       return candidate.name !== undefined && candidate.name === selector.value;
+    case 'sameNameAsSource':
+      return (
+        source.sourceName !== undefined &&
+        candidate.name !== undefined &&
+        candidate.name === source.sourceName
+      );
     case 'color':
       return candidate.colors.includes(selector.value);
     case 'chosenColor':
@@ -439,6 +458,8 @@ export function selectMatches(
       return candidate.keywords.includes(selector.keyword);
     case 'isToken':
       return candidate.isToken;
+    case 'tapped':
+      return candidate.tapped === true;
     case 'enteredThisTurn':
       return candidate.enteredThisTurn;
     case 'isCommander':

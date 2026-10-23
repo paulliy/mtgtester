@@ -1,5 +1,5 @@
-import type { ObjectId, PlayerId } from '@mtg/shared';
-import type { Ability, Effect } from '../cards/ability';
+import type { ObjectId, OracleId, PlayerId } from '@mtg/shared';
+import type { Ability, Effect, StackAbilitySnapshot } from '../cards/ability';
 import type { CardDefinition } from '../cards/definition';
 import { isPermanentCard } from '../cards/definition';
 import type { DamageKeyword, EngineStackObject, GameContext } from '../state/types';
@@ -123,6 +123,10 @@ export function queueReplicateCopy(
     ...((original?.announcedX ?? spell.announcedX) !== undefined
       ? { announcedX: original?.announcedX ?? spell.announcedX }
       : {}),
+    // The gift promise is a choice made while casting, which a copy keeps (CR 707.10).
+    ...((original?.giftRecipientId ?? spell.giftRecipientId) !== undefined
+      ? { giftRecipientId: original?.giftRecipientId ?? spell.giftRecipientId }
+      : {}),
     // A copy copies every decision made for the spell (CR 707.10), into its own records.
     ...((original?.countTargets ?? spell.countTargets) !== undefined
       ? {
@@ -145,6 +149,54 @@ export function queueReplicateCopy(
           },
         }
       : {}),
+  };
+  ctx.state.stack.push(copy);
+  return copy;
+}
+
+/**
+ * A copy of an activated or triggered ability (CR 707.10): same source, same decisions, a new
+ * controller. It is not activated or triggered, so it fires nothing that watches those events.
+ * Made from last known information when the original has already left the stack.
+ */
+export function queueAbilityCopy(
+  ctx: GameContext,
+  original: StackAbilitySnapshot,
+  controllerId: PlayerId,
+): EngineStackObject {
+  const id = `o-${ctx.state.nextObjectNum++}` as ObjectId;
+  const copy: EngineStackObject = {
+    id,
+    sourceId: original.sourceId as ObjectId,
+    controllerId,
+    kind: original.kind,
+    description: `Copy of ${original.description}`,
+    targets: [...original.targets] as ObjectId[],
+    ...(original.countTargets === undefined
+      ? {}
+      : {
+          countTargets: Object.fromEntries(
+            Object.entries(original.countTargets).map(([slot, ids]) => [slot, [...ids]]),
+          ) as Record<number, ObjectId[]>,
+        }),
+    ...(original.divisionAmounts === undefined
+      ? {}
+      : { divisionAmounts: { ...original.divisionAmounts } }),
+    ...(original.announcedX === undefined ? {} : { announcedX: original.announcedX }),
+    card: null,
+    ability: original.ability,
+    sourceOracleId: original.sourceOracleId as OracleId,
+    sourceCardId: original.sourceCardId,
+    ...(original.sourceColors === undefined ? {} : { sourceColors: [...original.sourceColors] }),
+    ...(original.sourceFacts === undefined ? {} : { sourceFacts: original.sourceFacts }),
+    ...(original.sourceDamageKeywords === undefined
+      ? {}
+      : { sourceDamageKeywords: [...original.sourceDamageKeywords] }),
+    ...(original.triggerScope === undefined ? {} : { triggerScope: { ...original.triggerScope } }),
+    ...(original.triggerObjectCardId === undefined
+      ? {}
+      : { triggerObjectCardId: original.triggerObjectCardId }),
+    isCommanderCast: false,
   };
   ctx.state.stack.push(copy);
   return copy;

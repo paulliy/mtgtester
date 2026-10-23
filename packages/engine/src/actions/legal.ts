@@ -1,4 +1,5 @@
 import { playerLifeLocked } from '../state/phasing';
+import { offBattlefieldTypes } from '../state/off-battlefield-types';
 import { UnmodeledCardError } from '../errors';
 import type { ObjectFacts } from '../cards/source-identity';
 import { supportsAdditionalXAnnouncement } from '../cards/cost-contracts';
@@ -160,8 +161,31 @@ export type PriorityActionPayload =
   | ActivateManaAbilityPayload
   /** Foretell (CR 702.143a): pay {2} and exile this hand card face down. */
   | { kind: 'foretell'; objectId: ObjectId }
-  /** Morph's special action (CR 702.37e, 116.2b): pay the morph cost, turn it face up. */
-  | { kind: 'turnFaceUp'; objectId: ObjectId };
+  /**
+   * Turning a face-down permanent face up (CR 116.2b): for its morph cost (CR 702.37e), or, when
+   * it was manifested and is a creature card, for its mana cost (`via: 'manaCost'`, CR 701.40b).
+   */
+  | { kind: 'turnFaceUp'; objectId: ObjectId; via?: 'manaCost' };
+
+/**
+ * The costs a face-down permanent can be turned face up for: its morph cost (CR 702.37e) and, if
+ * it was manifested and its front face is a creature card, its mana cost (CR 701.40b). An {X} in
+ * that mana cost is 0 (CR 107.3); a card with no mana cost can't be turned up this way.
+ */
+export function turnFaceUpCosts(
+  perm: EnginePermanent,
+  faceUpDef: CardDefinition,
+): { cost: ParsedManaCost; via?: 'manaCost' }[] {
+  const ways: { cost: ParsedManaCost; via?: 'manaCost' }[] = [];
+  if (faceUpDef.morphCost !== undefined) ways.push({ cost: faceUpDef.morphCost });
+  if (
+    perm.manifested === true &&
+    faceUpDef.types.includes('Creature') &&
+    faceUpDef.manaCost !== null
+  )
+    ways.push({ cost: faceUpDef.manaCost, via: 'manaCost' });
+  return ways;
+}
 
 function addManaCosts(a: ParsedManaCost, b: ParsedManaCost): ParsedManaCost {
   const hybrid = [...(a.hybrid ?? []), ...(b.hybrid ?? [])];
@@ -358,7 +382,7 @@ export function costReductionFor(
   const candidate: SelectorCandidate = {
     cardId: castCardId,
     controllerId: casterId,
-    types: def.types,
+    types: offBattlefieldTypes(ctx, def.types, casterId),
     supertypes: def.supertypes,
     subtypes: def.subtypes,
     colors: def.colors,
@@ -392,6 +416,16 @@ export function costReductionFor(
     if (entry.controllerId !== casterId) continue;
     if (entry.static.yourTurnOnly === true && ctx.state.currentTurnPlayer !== casterId) continue;
     if (entry.static.excludesSelf === true && entry.sourceCardId === castCardId) continue;
+    // "This spell costs {3} less to cast if you control a creature with power 4 or greater"
+    // (Bolt Bend): checked as the total cost is determined (CR 601.2f).
+    if (
+      entry.static.condition !== undefined &&
+      !evaluateCondition(ctx, entry.static.condition, {
+        cardId: entry.sourceCardId,
+        controllerId: entry.controllerId,
+      })
+    )
+      continue;
     if (entry.static.filter !== undefined) {
       // "Spells you cast of the CHOSEN type cost {1} less" (Cloud Key): the filter reads
       // the reduction's own SOURCE's chosen option, not the spell being cast — so `source`
@@ -924,7 +958,13 @@ export function computePriorityOptions(
     // (CR 702.143a), never for its mana cost or another alternative cost.
     const foretold =
       fromExile && obj.ownerId === player.id && obj.foretold !== undefined ? obj.foretold : null;
-    const spellAdditionalCosts = def.spellAdditionalCosts ?? [];
+    const spellAdditionalCosts = [
+      ...(def.spellAdditionalCosts ?? []),
+      // The card's own graveyard permission carries its extra cost (Dragon Man).
+      ...(fromGraveyard && def.castFromGraveyard === true
+        ? (def.castFromGraveyardCosts ?? [])
+        : []),
+    ];
     if (
       fromGraveyard &&
       def.castFromGraveyard !== true &&
@@ -1983,40 +2023,45 @@ export function computePriorityOptions(
     }
   }
 
-  // Morph (CR 702.37e): any time you have priority, turn a face-down permanent you control
-  // with morph face up by paying its morph cost. A special action: no stack, no response.
+  // Any time you have priority, turn a face-down permanent you control face up (CR 116.2b): for
+  // its morph cost (CR 702.37e), or, if it was manifested and is a creature card, for its mana
+  // cost (CR 701.40b). A special action: no stack, no response.
   for (const perm of ctx.state.battlefield) {
     if (perm.controllerId !== player.id || perm.faceDown !== true) continue;
     const faceUpDef = getDefByOracleId(ctx, perm.oracleId, perm.name);
-    const morphCost = faceUpDef.morphCost;
-    if (morphCost === undefined) continue;
     // Neither casting nor activating: restricted mana cannot pay it.
     const allows = allowanceFor(ctx, player.id, { kind: 'other' });
-    if (
-      !canPay(
-        morphCost,
-        player.manaEntries,
-        baseCastSources,
-        allows,
-        playerLifeLocked(ctx, player.id) ? 0 : player.life,
+    for (const way of turnFaceUpCosts(perm, faceUpDef)) {
+      if (
+        !canPay(
+          way.cost,
+          player.manaEntries,
+          baseCastSources,
+          allows,
+          playerLifeLocked(ctx, player.id) ? 0 : player.life,
+        )
       )
-    )
-      continue;
-    options.push({
-      type: 'activateAbility',
-      // Only its controller sees this option, and may look at the card (CR 708.5).
-      description: `Turn ${faceUpDef.name} face up (${describeManaCost(morphCost)})`,
-      payload: { kind: 'turnFaceUp', objectId: perm.id },
-      data: {
-        sourceName: faceUpDef.name,
-        sourceZone: 'battlefield',
-        abilityDescription: 'Turn face up',
-        manaCost: describeManaCost(morphCost),
-        ...paymentPreview(ctx, player, morphCost, baseCastSources, allows),
-        publicDescription: `Turn a face-down permanent face up`,
-      },
-      interaction: { kind: 'source', sourceId: perm.id, sourceCardId: perm.cardId },
-    });
+        continue;
+      options.push({
+        type: 'activateAbility',
+        // Only its controller sees this option, and may look at the card (CR 708.5).
+        description: `Turn ${faceUpDef.name} face up (${describeManaCost(way.cost)})`,
+        payload: {
+          kind: 'turnFaceUp',
+          objectId: perm.id,
+          ...(way.via === undefined ? {} : { via: way.via }),
+        },
+        data: {
+          sourceName: faceUpDef.name,
+          sourceZone: 'battlefield',
+          abilityDescription: 'Turn face up',
+          manaCost: describeManaCost(way.cost),
+          ...paymentPreview(ctx, player, way.cost, baseCastSources, allows),
+          publicDescription: `Turn a face-down permanent face up`,
+        },
+        interaction: { kind: 'source', sourceId: perm.id, sourceCardId: perm.cardId },
+      });
+    }
   }
 
   // Companion: pay {3} at sorcery speed to move it to hand, once per game (brief §5.7).
