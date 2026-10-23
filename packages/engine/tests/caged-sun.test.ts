@@ -2,8 +2,8 @@
  * Caged Sun — "As this artifact enters, choose a color. Creatures you control of the chosen
  * color get +1/+1." Exercises the generic as-enters modal-choice primitive
  * (`CardDefinition.entersChoosingOption` / `EnginePermanent.chosenOption` / the `chosenColor`
- * selector), not just Caged Sun itself: the mana-doubling clause is left unhandled (still an
- * `unmodeledReasons` entry) so this only claims the two lines the override actually implements.
+ * selector), not just Caged Sun itself. PR11 restored the full card, including the mana clause;
+ * its behavior tests live in pr11-lifecycle.test.ts.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -91,11 +91,9 @@ function ctxWithSeats(seats: number): GameContext {
 }
 
 describe('as-enters chosen-color primitive', () => {
-  it('keeps Caged Sun contained until its mana clause is implemented', () => {
-    expect(interpretCard(cagedSun()).modeled).toBe(false);
-    expect(interpretCard(cagedSun()).unmodeledReasons.join(' ')).toContain(
-      'explicitly unsupported:',
-    );
+  it('models all three Caged Sun lines since PR11 (mana tests: pr11-lifecycle.test.ts)', () => {
+    expect(interpretCard(cagedSun()).modeled).toBe(true);
+    expect(interpretCard(cagedSun()).unmodeledReasons).toEqual([]);
   });
   it('asks the controller to choose a color as it enters', () => {
     const ctx = ctxWithSeats(2);
