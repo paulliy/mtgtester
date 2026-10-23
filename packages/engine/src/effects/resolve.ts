@@ -276,7 +276,10 @@ export interface EffectSource {
   resolvingStackObject?: EngineStackObject;
   /** The source's colors as its ability went on the stack — protection's last known information. */
   lastKnownColors?: readonly Color[];
-  /** The resolving spell's card types (its selected face), for protection from a card type. */
+  /**
+   * The source's card types for protection from a card type: a resolving spell's selected face,
+   * or a departed trigger object's types as it last existed (CR 113.7a).
+   */
   lastKnownTypes?: readonly string[];
   /** The source's damage keywords as it left the battlefield — LKI for damage it deals after. */
   lastKnownDamageKeywords?: readonly DamageKeyword[];
@@ -406,14 +409,17 @@ export function* dealDamageToPlayer(
       source.controllerId,
     );
   } else {
+    const before = target.life;
+    // Angel's Grace: damage that would reduce the total below 1 reduces it to 1 instead. A total
+    // already below 1 is left alone; the replacement never raises it.
     target.life =
       ctx.state.lifeFloorPlayers[target.id] === true
-        ? Math.max(1, target.life - amount)
-        : target.life - amount;
+        ? Math.min(before, Math.max(1, before - amount))
+        : before - amount;
     // CR 120.3: damage dealt to a player causes that player to lose that much life. Cards that
     // ask who "lost life this turn" (Gev, Scaled Scorch) must see damage, not just `loseLife`.
     // The infect branch above is deliberately excluded: it gives poison counters instead.
-    ctx.state.lifeLostThisTurn[target.id] = true;
+    if (target.life < before) ctx.state.lifeLostThisTurn[target.id] = true;
   }
   ctx.state.damageDealtToPlayersThisTurn[target.id] =
     (ctx.state.damageDealtToPlayersThisTurn[target.id] ?? 0) + amount;
@@ -1694,6 +1700,7 @@ export function* executeAbility(
       oracleId: facts.oracleId,
       controllerId: facts.candidate.controllerId as PlayerId,
       lastKnownColors: facts.candidate.colors,
+      lastKnownTypes: facts.candidate.types,
       lastKnownDamageKeywords: (['deathtouch', 'lifelink', 'infect'] as const).filter((keyword) =>
         facts.candidate.keywords.includes(keyword),
       ),

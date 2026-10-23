@@ -385,6 +385,28 @@ describe("Angel's Grace", () => {
     expect(player(ctx, 'P1').life).toBe(1);
   });
 
+  it('grace-c03-below-one — damage never raises a total already below 1', () => {
+    const ctx = game('pr11-grace-below-one');
+    castGrace(ctx);
+    resolve(ctx);
+    loseLife(ctx, player(ctx, 'P1'), player(ctx, 'P1').life + 1);
+    expect(player(ctx, 'P1').life).toBe(-1);
+    castFromHand(ctx, 'P2', bigBolt(), new Map([[0, 'P1']]), { R: 1 });
+    resolve(ctx);
+    expect(player(ctx, 'P1').life).toBe(-1);
+  });
+
+  it('grace-c03-at-one — damage at 1 life leaves the total unchanged and loses no life', () => {
+    const ctx = game('pr11-grace-at-one');
+    castGrace(ctx);
+    resolve(ctx);
+    player(ctx, 'P1').life = 1;
+    castFromHand(ctx, 'P2', bigBolt(), new Map([[0, 'P1']]), { R: 1 });
+    resolve(ctx);
+    expect(player(ctx, 'P1').life).toBe(1);
+    expect(ctx.state.lifeLostThisTurn['P1']).not.toBe(true);
+  });
+
   it('grace-c03-negative — life loss is not damage and still goes below 1', () => {
     const ctx = game('pr11-grace-loss');
     castGrace(ctx);

@@ -1353,7 +1353,15 @@
             "PlayerState.cantLoseTurn",
             "Replacement.damageLifeFloor"
           ],
-          "engineTestIds": ["grace-c02-positive", "grace-c02-expiry", "grace-c02-negative"],
+          "engineTestIds": [
+            "grace-c02-positive",
+            "grace-c02-expiry",
+            "grace-c02-negative",
+            "grace-c03-positive",
+            "grace-c03-below-one",
+            "grace-c03-at-one",
+            "grace-c03-negative"
+          ],
           "viewerScenarioIds": ["pr11-angel-s-grace-viewer-life-floor"]
         }
       ],
@@ -3585,7 +3593,8 @@
           "engineTestIds": [
             "spirit-mantle-c02-positive",
             "spirit-mantle-c02-negative",
-            "spirit-mantle-c02-fight"
+            "spirit-mantle-c02-fight",
+            "spirit-mantle-c02-last-known"
           ],
           "viewerScenarioIds": [
             "pr11-spirit-mantle-viewer-cast",
