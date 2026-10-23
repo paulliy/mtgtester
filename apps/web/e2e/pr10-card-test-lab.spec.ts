@@ -736,7 +736,8 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
   },
   'pr10-reality-shift-viewer-turn-face-up': async (page) => {
     await cast(page, 'Reality Shift', ['P1:PR10 Lab Bear']);
-    await passUntil(page, logLine(page, /Reality Shift resolves/));
+    // Pass only while Reality Shift is on the stack: a pass on the empty stack ends the lab game.
+    await passStackUntil(page, logLine(page, /Reality Shift resolves/));
     await expect(permanent(page, 'P1', 'PR10 Lab Bear')).toHaveCount(0);
     await activate(page, page.locator('.human-zone .object.actionable').last(), /Turn .* face up/);
     await passUntil(page, permanent(page, 'P1', 'PR10 Lab Red Bear'));
