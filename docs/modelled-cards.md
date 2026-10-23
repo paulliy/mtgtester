@@ -3,7 +3,7 @@
 Generated from the engine-supported card pool.
 This is an interpreter-support inventory. Card behavior verification is tracked separately in the card verification manifest.
 
-**Total**: 6498 modeled non-land cards
+**Total**: 6500 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -201,6 +201,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Animate Dead
 - Ankle Biter
 - Ankle Shanker
+- Annie Joins Up
 - Annoyed Altisaur
 - Anodet Lurker
 - Anointed Chorister
@@ -4532,6 +4533,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - River Sneak
 - Riverguard's Reflexes
 - Riverwise Augur
+- Roaming Throne
 - Roar of the Wurm
 - Robe of Mirrors
 - Robotics Mastery

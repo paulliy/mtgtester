@@ -174,6 +174,40 @@ export const SCHOLAR = lab(
   ['1', '1'],
 );
 
+const GAIN = 'When this creature enters, you gain 3 life.';
+export const ELF_HEALER = lab(
+  'PR10 Lab Elf Healer',
+  'Creature — Elf Druid',
+  '{1}',
+  GAIN,
+  [],
+  ['1', '1'],
+);
+export const BEAR_HEALER = lab(
+  'PR10 Lab Bear Healer',
+  'Creature — Bear',
+  '{1}',
+  GAIN,
+  [],
+  ['1', '1'],
+);
+export const LEGEND_HEALER = lab(
+  'PR10 Lab Legend Healer',
+  'Legendary Creature — Human',
+  '{1}',
+  GAIN,
+  [],
+  ['1', '1'],
+);
+export const COMMONER_HEALER = lab(
+  'PR10 Lab Commoner Healer',
+  'Creature — Human',
+  '{1}',
+  GAIN,
+  [],
+  ['1', '1'],
+);
+
 const SUPPORT_CARDS = [SHOCK, ZAP, TWIN, BEAR, RED_BEAR, BRUTE, COMMANDER, CINDER];
 
 /**
@@ -805,6 +839,85 @@ const DEFS: Def[] = [
     ['Activate PR10 Lab Scholar, which costs no life.'],
     'Verrak does not trigger: you draw one card and are never asked to pay life.',
     { p1Hand: [], p1Field: [pin('Verrak, Warped Sengir').card, SCHOLAR] },
+  ),
+
+  // PR10.18 Roaming Throne
+  entry(
+    'roaming-throne',
+    'Roaming Throne',
+    'chosen-type-doubles',
+    'Roaming Throne: another creature of the chosen type triggers twice',
+    [2, 3, 4],
+    [
+      'Cast Roaming Throne and choose Elf as its creature type.',
+      'Cast PR10 Lab Elf Healer, whose enter trigger gains you 3 life.',
+    ],
+    'Roaming Throne is also an Elf, and the Elf’s enter trigger fires twice, gaining 6 life.',
+    {
+      p1Hand: [pin('Roaming Throne').card, ELF_HEALER],
+      p1Lands: mountains(5),
+    },
+  ),
+  entry(
+    'roaming-throne',
+    'Roaming Throne',
+    'other-type',
+    'Roaming Throne: a creature of another type triggers once',
+    [4],
+    [
+      'Cast Roaming Throne and choose Elf as its creature type.',
+      'Cast PR10 Lab Bear Healer, which is not an Elf.',
+    ],
+    'The Bear’s enter trigger fires once, gaining 3 life.',
+    {
+      p1Hand: [pin('Roaming Throne').card, BEAR_HEALER, ELF_HEALER],
+      p1Lands: mountains(5),
+    },
+  ),
+
+  // PR10.24 Annie Joins Up
+  entry(
+    'annie-joins-up',
+    'Annie Joins Up',
+    'enter-damage',
+    'Annie Joins Up: 5 damage to a creature an opponent controls',
+    [1],
+    ['Cast Annie Joins Up and target the creature P3 controls.'],
+    'The enter trigger deals 5 damage, destroying PR10 Lab Brute; only an opponent’s creature can be targeted.',
+    {
+      p1Hand: [pin('Annie Joins Up').card],
+      p1Field: [BEAR],
+      p1Lands: ['Mountain', 'Forest', 'Plains', 'Island'],
+      p3Field: [BRUTE],
+    },
+  ),
+  entry(
+    'annie-joins-up',
+    'Annie Joins Up',
+    'doubles-legendary',
+    'Annie Joins Up: a legendary creature’s trigger fires twice',
+    [2],
+    ['Cast PR10 Lab Legend Healer, whose enter trigger gains you 3 life.'],
+    'With Annie Joins Up in play, the legendary creature’s enter trigger fires twice, gaining 6 life.',
+    {
+      p1Hand: [LEGEND_HEALER],
+      p1Field: [pin('Annie Joins Up').card],
+      p1Lands: mountains(1),
+    },
+  ),
+  entry(
+    'annie-joins-up',
+    'Annie Joins Up',
+    'nonlegendary',
+    'Annie Joins Up: a nonlegendary creature’s trigger fires once',
+    [2],
+    ['Cast PR10 Lab Commoner Healer, whose enter trigger gains you 3 life.'],
+    'The nonlegendary creature’s enter trigger fires once, gaining 3 life.',
+    {
+      p1Hand: [COMMONER_HEALER],
+      p1Field: [pin('Annie Joins Up').card],
+      p1Lands: mountains(1),
+    },
   ),
 ];
 

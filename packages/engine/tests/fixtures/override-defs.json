@@ -4116,6 +4116,45 @@
     }
   },
   {
+    "oracleId": "3640c29b-1534-4952-b297-619ade948431",
+    "name": "Roaming Throne",
+    "handledLines": [
+      "If a triggered ability of another creature you control of the chosen type triggers, it triggers an additional time.",
+      "~ is the chosen type in addition to its other types."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "excludesSelf": true,
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "chosenSubtype"
+              }
+            ]
+          },
+          "kind": "triggerAdditionalTime"
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "op": {
+            "addChosenSubtype": true,
+            "layer": 4
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "366a218e-84d3-4cf9-bbc8-f2f8ecce92a3",
     "name": "Herald of Secret Streams",
     "handledLines": [
@@ -5235,6 +5274,75 @@
           ],
           "kind": "triggered",
           "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "4c3ad545-b375-44a7-a24e-58baacc4e4b6",
+    "name": "Annie Joins Up",
+    "handledLines": [
+      "If a triggered ability of a legendary creature you control triggers, that ability triggers an additional time.",
+      "When ~ enters, it deals 5 damage to target creature or planeswalker an opponent controls."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "supertype",
+                "value": "Legendary"
+              }
+            ]
+          },
+          "kind": "triggerAdditionalTime"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "It deals 5 damage to target creature or planeswalker an opponent controls",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 5
+              },
+              "op": "dealDamage",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "opponent",
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Planeswalker"
+                  }
+                ]
+              },
+              "kind": "permanent"
+            }
+          ],
           "trigger": {
             "subject": {
               "kind": "self"
@@ -19846,6 +19954,75 @@
     "def": {}
   },
   {
+    "oracleId": "oracle-annie-joins-up",
+    "name": "Annie Joins Up",
+    "handledLines": [
+      "If a triggered ability of a legendary creature you control triggers, that ability triggers an additional time.",
+      "When ~ enters, it deals 5 damage to target creature or planeswalker an opponent controls."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "supertype",
+                "value": "Legendary"
+              }
+            ]
+          },
+          "kind": "triggerAdditionalTime"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "It deals 5 damage to target creature or planeswalker an opponent controls",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 5
+              },
+              "op": "dealDamage",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "opponent",
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Planeswalker"
+                  }
+                ]
+              },
+              "kind": "permanent"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-arcane-denial",
     "name": "Arcane Denial",
     "handledLines": [
@@ -32377,6 +32554,45 @@
           "trigger": {
             "player": "each",
             "when": "upkeep"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-roaming-throne",
+    "name": "Roaming Throne",
+    "handledLines": [
+      "If a triggered ability of another creature you control of the chosen type triggers, it triggers an additional time.",
+      "~ is the chosen type in addition to its other types."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "excludesSelf": true,
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "chosenSubtype"
+              }
+            ]
+          },
+          "kind": "triggerAdditionalTime"
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "op": {
+            "addChosenSubtype": true,
+            "layer": 4
           }
         }
       ]

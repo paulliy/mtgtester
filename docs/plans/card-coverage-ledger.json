@@ -133,20 +133,6 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
-    "oracleId": "4c3ad545-b375-44a7-a24e-58baacc4e4b6",
-    "name": "Annie Joins Up",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"When ~ enters, it deals 5 damage to target creature or planeswalker an opponent controls.\"",
-      "unrecognized rules text: \"If a triggered ability of a legendary creature you control triggers, that ability triggers an additional time.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "32476743-c9d4-49ca-bec2-0669c215841b",
     "name": "Anrakyr the Traveller",
     "package": "PR02.04",
@@ -2931,20 +2917,6 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
-    "oracleId": "3640c29b-1534-4952-b297-619ade948431",
-    "name": "Roaming Throne",
-    "package": "W7",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"~ is the chosen type in addition to its other types.\"",
-      "unrecognized rules text: \"If a triggered ability of another creature you control of the chosen type triggers, it triggers an additional time.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "e191976c-6ab1-4a23-aeb8-8a88bd4bd203",
     "name": "Rowan Kenrith",
     "package": "W7",
@@ -5027,6 +4999,36 @@
       "apps/web/e2e/pr10-card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr10-ability-stack.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "3640c29b-1534-4952-b297-619ade948431",
+    "name": "Roaming Throne",
+    "package": "PR10.18",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-trigger-doubling.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-trigger-doubling.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "4c3ad545-b375-44a7-a24e-58baacc4e4b6",
+    "name": "Annie Joins Up",
+    "package": "PR10.24",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr10-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr10-trigger-doubling.test.ts",
+      "packages/server/src/cards/pr10-scenarios.test.ts",
+      "apps/web/e2e/pr10-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr10-trigger-doubling.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   }
 ]

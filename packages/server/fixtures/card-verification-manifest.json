@@ -15173,6 +15173,101 @@
         "pr10-mister-fantastic-viewer-opponent-trigger"
       ],
       "gameplayAiScenarioIds": []
+    },
+    "3640c29b-1534-4952-b297-619ade948431": {
+      "name": "Roaming Throne",
+      "oracleSha256": "a968a6b40b698d78552e6a7decbaa1da3634382d27f36587e8eecb5dd6bfd150",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-roaming-throne-pinned-oracle-supported"],
+      "clauses": [
+        {
+          "id": "pr10-roaming-throne-clause-1",
+          "oracleText": "Ward {2}",
+          "implementation": ["keyword ward (interpreted)"],
+          "engineTestIds": ["pr10-roaming-throne-pinned-oracle-supported"],
+          "viewerScenarioIds": ["pr10-roaming-throne-viewer-chosen-type-doubles"]
+        },
+        {
+          "id": "pr10-roaming-throne-clause-2",
+          "oracleText": "As this creature enters, choose a creature type.",
+          "implementation": ["CardDefinition.entersChoosingOption", "domain creatureType"],
+          "engineTestIds": [
+            "pr10-roaming-throne-pinned-oracle-supported",
+            "pr10-roaming-throne-chosen-type"
+          ],
+          "viewerScenarioIds": ["pr10-roaming-throne-viewer-chosen-type-doubles"]
+        },
+        {
+          "id": "pr10-roaming-throne-clause-3",
+          "oracleText": "This creature is the chosen type in addition to its other types.",
+          "implementation": ["StaticEffect.addChosenSubtype", "layer 4"],
+          "engineTestIds": ["pr10-roaming-throne-chosen-type"],
+          "viewerScenarioIds": ["pr10-roaming-throne-viewer-chosen-type-doubles"]
+        },
+        {
+          "id": "pr10-roaming-throne-clause-4",
+          "oracleText": "If a triggered ability of another creature you control of the chosen type triggers, it triggers an additional time.",
+          "implementation": [
+            "RuleStatic.triggerAdditionalTime",
+            "Selector.chosenSubtype",
+            "excludesSelf"
+          ],
+          "engineTestIds": [
+            "pr10-roaming-throne-doubles-chosen-type",
+            "pr10-roaming-throne-other-type",
+            "pr10-roaming-throne-opponents-creature"
+          ],
+          "viewerScenarioIds": [
+            "pr10-roaming-throne-viewer-chosen-type-doubles",
+            "pr10-roaming-throne-viewer-other-type"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr10-roaming-throne-viewer-chosen-type-doubles",
+        "pr10-roaming-throne-viewer-other-type"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4c3ad545-b375-44a7-a24e-58baacc4e4b6": {
+      "name": "Annie Joins Up",
+      "oracleSha256": "00f134c33bd4b141e8fa9b4bbbca4985f91d4b1e41f52cf47192d2db63075d26",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr10-annie-joins-up-pinned-oracle-supported"],
+      "clauses": [
+        {
+          "id": "pr10-annie-joins-up-clause-1",
+          "oracleText": "When Annie Joins Up enters, it deals 5 damage to target creature or planeswalker an opponent controls.",
+          "implementation": [
+            "TriggerSpec.etb",
+            "Effect.dealDamage",
+            "TargetSpec.permanent",
+            "Selector.anyOf"
+          ],
+          "engineTestIds": ["pr10-annie-joins-up-enter-damage"],
+          "viewerScenarioIds": ["pr10-annie-joins-up-viewer-enter-damage"]
+        },
+        {
+          "id": "pr10-annie-joins-up-clause-2",
+          "oracleText": "If a triggered ability of a legendary creature you control triggers, that ability triggers an additional time.",
+          "implementation": ["RuleStatic.triggerAdditionalTime", "Selector.supertype"],
+          "engineTestIds": [
+            "pr10-annie-joins-up-doubles-legendary",
+            "pr10-annie-joins-up-nonlegendary",
+            "pr10-annie-joins-up-stacks-with-throne"
+          ],
+          "viewerScenarioIds": [
+            "pr10-annie-joins-up-viewer-doubles-legendary",
+            "pr10-annie-joins-up-viewer-nonlegendary"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr10-annie-joins-up-viewer-enter-damage",
+        "pr10-annie-joins-up-viewer-doubles-legendary",
+        "pr10-annie-joins-up-viewer-nonlegendary"
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

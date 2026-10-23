@@ -54,6 +54,9 @@ const CARD_NAMES = [
   'Mana Sculpt',
   'Mister Fantastic',
   'Verrak, Warped Sengir',
+  // Trigger doubling.
+  'Roaming Throne',
+  'Annie Joins Up',
 ];
 
 const SHOCK_AT_P3 = (card: string): Plan => ({
@@ -194,6 +197,21 @@ const PLANS: Record<string, Plan> = {
   'pr10-verrak-warped-sengir-viewer-no-life': {
     casts: [{ name: 'PR10 Lab Scholar', kind: 'activate' }],
   },
+  // PR10.18 Roaming Throne
+  'pr10-roaming-throne-viewer-chosen-type-doubles': {
+    casts: [{ name: 'Roaming Throne' }, { name: 'PR10 Lab Elf Healer' }],
+    picks: [/^Elf$/],
+  },
+  'pr10-roaming-throne-viewer-other-type': {
+    casts: [{ name: 'Roaming Throne' }, { name: 'PR10 Lab Bear Healer' }],
+    picks: [/^Elf$/],
+  },
+  // PR10.24 Annie Joins Up
+  'pr10-annie-joins-up-viewer-enter-damage': { casts: [{ name: 'Annie Joins Up' }] },
+  'pr10-annie-joins-up-viewer-doubles-legendary': {
+    casts: [{ name: 'PR10 Lab Legend Healer' }],
+  },
+  'pr10-annie-joins-up-viewer-nonlegendary': { casts: [{ name: 'PR10 Lab Commoner Healer' }] },
 };
 
 /** The legal target matching `want`: a seat id, or the name of a permanent or stack object. */
@@ -492,6 +510,31 @@ describe('PR10 Card Test Lab scenarios', () => {
       absent: 'Pay ',
       events: { abilityCopied: 0, draw: 1 },
     },
+    'pr10-roaming-throne-viewer-chosen-type-doubles': {
+      lives: { P1: 46 },
+      copies: 0,
+      events: { lifeGain: 2 },
+    },
+    'pr10-roaming-throne-viewer-other-type': {
+      lives: { P1: 43 },
+      copies: 0,
+      events: { lifeGain: 1 },
+    },
+    'pr10-annie-joins-up-viewer-enter-damage': {
+      lives: { P1: 40 },
+      copies: 0,
+      events: { damage: 1, sbaCreatureDies: 1 },
+    },
+    'pr10-annie-joins-up-viewer-doubles-legendary': {
+      lives: { P1: 46 },
+      copies: 0,
+      events: { lifeGain: 2 },
+    },
+    'pr10-annie-joins-up-viewer-nonlegendary': {
+      lives: { P1: 43 },
+      copies: 0,
+      events: { lifeGain: 1 },
+    },
   };
 
   it('has expectations for every scenario', () => {
@@ -598,5 +641,10 @@ describe('PR10 Card Test Lab scenarios', () => {
     const copy = run('pr10-verrak-warped-sengir-viewer-new-target');
     const hits = copy.state.eventLog.filter((event) => event.type === 'damage');
     expect(hits.map((event) => event.payload['target']).sort()).toEqual(['P2', 'P3']);
+  });
+  it('Annie Joins Up destroys only the opponent creature it targets', () => {
+    const result = run('pr10-annie-joins-up-viewer-enter-damage');
+    expect(result.state.battlefield.some((card) => card.name === 'PR10 Lab Brute')).toBe(false);
+    expect(result.state.battlefield.some((card) => card.name === 'PR10 Lab Bear')).toBe(true);
   });
 });

@@ -109,6 +109,12 @@ async function playLandAndTarget(page: Page, land: string, seat: string): Promis
   await player.locator('header').click();
   await confirm(page);
 }
+/** Two identical triggers ask for an order; either choice is the same. */
+async function orderTriggersIfAsked(page: Page, source: string): Promise<void> {
+  const first = page.getByRole('button', { name: new RegExp(source) }).first();
+  await passUntil(page, first);
+  await first.click();
+}
 const logLine = (page: Page, text: string | RegExp): Locator =>
   page.locator('.log').getByText(text).first();
 
@@ -467,6 +473,35 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await passUntil(page, life(page, 'P3').filter({ hasText: '39' }));
     await passUntil(page, life(page, 'P2').filter({ hasText: '39' }));
     await expect(life(page, 'P1')).toHaveText('38');
+  },
+  'pr10-roaming-throne-viewer-chosen-type-doubles': async (page) => {
+    await cast(page, 'Roaming Throne');
+    await decisionButton(page, 'Elf').click();
+    await cast(page, 'PR10 Lab Elf Healer');
+    await orderTriggersIfAsked(page, 'PR10 Lab Elf Healer');
+    await passUntil(page, life(page, 'P1').filter({ hasText: '46' }));
+  },
+  'pr10-roaming-throne-viewer-other-type': async (page) => {
+    await cast(page, 'Roaming Throne');
+    await decisionButton(page, 'Elf').click();
+    await cast(page, 'PR10 Lab Bear Healer');
+    await passUntil(page, life(page, 'P1').filter({ hasText: '43' }));
+    await expect(page.locator('.log')).not.toContainText(/gain 3 life.*\n.*gain 3 life/s);
+  },
+  'pr10-annie-joins-up-viewer-enter-damage': async (page) => {
+    await cast(page, 'Annie Joins Up');
+    await passUntil(page, logLine(page, /PR10 Lab Brute dies|PR10 Lab Brute.*destroyed|dies/i));
+    await expect(permanent(page, 'P3', 'PR10 Lab Brute')).toHaveCount(0);
+    await expect(permanent(page, 'P1', 'PR10 Lab Bear')).toBeVisible();
+  },
+  'pr10-annie-joins-up-viewer-doubles-legendary': async (page) => {
+    await cast(page, 'PR10 Lab Legend Healer');
+    await orderTriggersIfAsked(page, 'PR10 Lab Legend Healer');
+    await passUntil(page, life(page, 'P1').filter({ hasText: '46' }));
+  },
+  'pr10-annie-joins-up-viewer-nonlegendary': async (page) => {
+    await cast(page, 'PR10 Lab Commoner Healer');
+    await passUntil(page, life(page, 'P1').filter({ hasText: '43' }));
   },
   'pr10-verrak-warped-sengir-viewer-no-life': async (page) => {
     await activate(page, permanent(page, 'P1', 'PR10 Lab Scholar'), /Draw a card/);

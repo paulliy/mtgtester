@@ -75,6 +75,7 @@ import {
   registerPr10AbilityStackOverrides,
   registerPr10CastCopyOverrides,
   registerPr10RetargetAndCopyOverrides,
+  registerPr10TriggerDoublingOverrides,
 } from './coverage-pr10';
 import { registerWhiteBlackControlHandOverrides } from './white-black-control-hand';
 import { registerWhiteBlackControlStaxOverrides } from './white-black-control-stax';
@@ -242,6 +243,7 @@ registerDeck('coverage-pr09', registerCoveragePr09Overrides);
 registerDeck('coverage-pr10-retarget', registerPr10RetargetAndCopyOverrides);
 registerDeck('coverage-pr10-cast-copy', registerPr10CastCopyOverrides);
 registerDeck('coverage-pr10-ability-stack', registerPr10AbilityStackOverrides);
+registerDeck('coverage-pr10-trigger-doubling', registerPr10TriggerDoublingOverrides);
 registerDeck('unsupported-spell-faces', registerUnsupportedSpellFaces);
 
 /** Register an override. Exported for the per-card modules and for tests. */
