@@ -380,6 +380,8 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   exileTargetWithSource: { target: permanent },
   exileFromHandWithSource: {},
   exileGraveyardCardWithSource: { target: graveyard },
+  flipCoin: {},
+  returnRandomExiledWithSourceToHand: {},
   exileAndManifestTarget: { target: permanent },
   blinkTarget: { target: permanent },
   blinkOneCreatureYouControl: {},

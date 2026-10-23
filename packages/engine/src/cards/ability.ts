@@ -1776,8 +1776,15 @@ export type Effect =
    * the source through `EnginePermanent.exiledWithIds` (CR 702.33, 607.2a).
    */
   | { op: 'exileFromHandWithSource'; excludeTypes: string[] }
-  /** "Exile target card from an opponent's graveyard" linked to the source (Negative Zone Portal). */
-  | { op: 'exileGraveyardCardWithSource'; target: EffectRef }
+  /**
+   * "Exile target card from an opponent's graveyard. If it's a creature card, draw a card."
+   * (Negative Zone Portal), linked to the source. `drawIfCardType` reads the exiled card.
+   */
+  | { op: 'exileGraveyardCardWithSource'; target: EffectRef; drawIfCardType?: string }
+  /** CR 705: flip a coin; the controller calls it, so the result is a win or a loss. */
+  | { op: 'flipCoin'; onWin: Effect[]; onLose: Effect[] }
+  /** "return a card exiled with it at random to its owner's hand" (Negative Zone Portal). */
+  | { op: 'returnRandomExiledWithSourceToHand' }
   | { op: 'exileAndManifestTarget'; target: EffectRef }
   | { op: 'blinkTarget'; target: EffectRef }
   | { op: 'blinkOneCreatureYouControl' }

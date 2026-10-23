@@ -9996,6 +9996,88 @@
     }
   },
   {
+    "oracleId": "8430ae03-2d4c-4031-aa29-4d53815ded78",
+    "name": "Negative Zone Portal",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your upkeep, if there are four or more creature cards exiled with this artifact, flip a coin. If you lose the flip, sacrifice this artifact and return a card exiled with it at random to its owner's hand.\"",
+      "unrecognized rules text: \"{2}, {T}: Exile target card from an opponent's graveyard. If it's a creature card, draw a card.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{2}, {T}: Exile target card from an opponent's graveyard; if it's a creature card, draw a card",
+            "effects": [
+              {
+                "drawIfCardType": "Creature",
+                "op": "exileGraveyardCardWithSource",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "graveyardOwnerScope": "opponent",
+                "kind": "cardInGraveyard"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of your upkeep, with four or more creature cards exiled with this, flip a coin; on a loss, sacrifice this and return one at random",
+          "effects": [
+            {
+              "onLose": [
+                {
+                  "op": "returnRandomExiledWithSourceToHand"
+                },
+                {
+                  "op": "sacrifice",
+                  "target": "source"
+                }
+              ],
+              "onWin": [],
+              "op": "flipCoin"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "cardType": "Creature",
+              "kind": "exiledWithSourceAtLeast",
+              "n": 4
+            },
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b",
     "name": "Tergrid, God of Fright // Tergrid's Lantern",
     "handledLines": [
@@ -32478,6 +32560,88 @@
             }
           ],
           "timing": "any"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-negative-zone-portal",
+    "name": "Negative Zone Portal",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your upkeep, if there are four or more creature cards exiled with this artifact, flip a coin. If you lose the flip, sacrifice this artifact and return a card exiled with it at random to its owner's hand.\"",
+      "unrecognized rules text: \"{2}, {T}: Exile target card from an opponent's graveyard. If it's a creature card, draw a card.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{2}, {T}: Exile target card from an opponent's graveyard; if it's a creature card, draw a card",
+            "effects": [
+              {
+                "drawIfCardType": "Creature",
+                "op": "exileGraveyardCardWithSource",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "graveyardOwnerScope": "opponent",
+                "kind": "cardInGraveyard"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of your upkeep, with four or more creature cards exiled with this, flip a coin; on a loss, sacrifice this and return one at random",
+          "effects": [
+            {
+              "onLose": [
+                {
+                  "op": "returnRandomExiledWithSourceToHand"
+                },
+                {
+                  "op": "sacrifice",
+                  "target": "source"
+                }
+              ],
+              "onWin": [],
+              "op": "flipCoin"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "cardType": "Creature",
+              "kind": "exiledWithSourceAtLeast",
+              "n": 4
+            },
+            "player": "you",
+            "when": "upkeep"
+          }
         }
       ]
     }
