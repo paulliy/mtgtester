@@ -3,6 +3,9 @@ import { describe, expect, it } from 'vitest';
 import type { OracleCard } from '@mtg/shared';
 import { computeTargetOptions, type PriorityActionPayload } from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
+import { ofType } from '../src/cards/selector';
+import { triggered, whenPermanent } from '../src/cards/templates';
+import { constant } from '../src/cards/value';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { endUntilEotEffects } from '../src/effects/resolve';
 import { addMana } from '../src/mana/pool';
@@ -296,6 +299,59 @@ describe('Spirit Mantle and Unquestioned Authority — protection from creatures
     resolve(ctx);
     expect(host.damageMarked).toBe(0);
     expect(foe.damageMarked).toBe(3);
+  });
+
+  it('spirit-mantle-c02-last-known — a departed source that was animated is still a creature source', () => {
+    const { ctx, host } = enchanted('mantle-lki', MANTLE, { W: 1, C: 1 });
+    // Printed as a noncreature artifact; a static makes it a 2/2 artifact creature, like an
+    // animated manland. When it dies, an Arcbond-style trigger has the departed object deal
+    // damage with its last known characteristics (CR 608.2h), so the damage comes from a
+    // creature even though the card in the graveyard is not one.
+    const golem = oracle({ name: 'Test Golem Relic', typeLine: 'Artifact', manaCost: '{2}' });
+    const relic = spawn(ctx, 'P2', golem);
+    const relicDef = ctx.defs.get(golem.oracleId as never)!;
+    ctx.defs.set(golem.oracleId as never, {
+      ...relicDef,
+      staticEffects: [
+        { affects: { kind: 'self' }, op: { layer: 4, addTypes: ['Creature'] } },
+        {
+          affects: { kind: 'self' },
+          op: {
+            layer: 7,
+            sublayer: 'b',
+            power: { kind: 'const', n: 2 },
+            toughness: { kind: 'const', n: 2 },
+          },
+        },
+      ],
+    });
+    const pyre = oracle({ name: 'Test Pyre Shrine', typeLine: 'Enchantment', manaCost: '{2}' });
+    spawn(ctx, 'P2', pyre);
+    const pyreDef = ctx.defs.get(pyre.oracleId as never)!;
+    ctx.defs.set(pyre.oracleId as never, {
+      ...pyreDef,
+      triggers: [
+        triggered(whenPermanent('dies', ofType('Artifact')), {
+          effects: [
+            {
+              op: 'damageEach',
+              selector: ofType('Creature'),
+              amount: constant(2),
+              source: 'triggerObject',
+            },
+          ],
+          description: 'Whenever an artifact dies, it deals 2 damage to each creature.',
+        }),
+      ],
+    });
+    const witness = spawn(ctx, 'P2', redCreature());
+    expect(computeCharacteristics(ctx, relic).types).toContain('Creature');
+    pump(moveObject(ctx, relic, { zone: 'graveyard' }));
+    checkpoint(ctx);
+    expect(ctx.state.stack.at(-1)?.kind).toBe('triggeredAbility');
+    resolve(ctx);
+    expect(witness.damageMarked).toBe(2);
+    expect(host.damageMarked).toBe(0);
   });
 
   it('unquestioned-authority-c02/c03 — its enters trigger draws and the creature gains protection from creatures', () => {
