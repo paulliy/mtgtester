@@ -128,14 +128,16 @@ function checkpointTargets(ctx: GameContext, pick?: string): string[] {
 function attackWith(
   ctx: GameContext,
   attackers: readonly EnginePermanent[],
-  defender: string,
+  defender: string | ((attackerId: string) => string | null),
   answer: (decision: PendingDecision) => DecisionOutcome | undefined = () => undefined,
 ): PendingDecision[] {
   ctx.state.phase = 'combat';
   const ids = new Set(attackers.map((attacker) => attacker.id));
   return pump(runCombatPhase(ctx), (decision) => {
     if (decision.presentationAttackDeclaration !== undefined)
-      return declareAttacks(decision, (id) => (ids.has(id) ? defender : null));
+      return declareAttacks(decision, (id) =>
+        ids.has(id) ? (typeof defender === 'string' ? defender : defender(id)) : null,
+      );
     if (decision.presentationBlockDeclaration !== undefined)
       return declareBlocks(decision, () => null);
     const custom = answer(decision);
@@ -405,6 +407,55 @@ describe('Zurgo and Ojutai', () => {
     expect(me.hand.some((card) => card.name === 'Test Whelp')).toBe(true);
     expect(me.hand.length).toBe(handBefore + 2);
     expect(battlefield(ctx, 'Zurgo and Ojutai')).toHaveLength(1);
+  });
+
+  it('zurgo-c03-multiplayer — groups damage and return choices separately for each damaged player', () => {
+    const ctx = game('pr12-zurgo-multiplayer');
+    const zurgo = spawn(ctx, 'P1', ZURGO);
+    const other = spawn(ctx, 'P1', whelp());
+    const third = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Other Whelp',
+        typeLine: 'Creature — Dragon',
+        manaCost: '{1}',
+        power: '2',
+        toughness: '2',
+      }),
+    );
+    other.summoningSick = false;
+    third.summoningSick = false;
+    const handBefore = player(ctx, 'P1').hand.length;
+    let selections = 0;
+    const returnGroups: string[][] = [];
+    attackWith(
+      ctx,
+      [zurgo, other, third],
+      (id) => (id === third.id ? 'P3' : 'P2'),
+      (decision) => {
+        if (/put a card from among the top 3/.test(decision.prompt)) selections++;
+        if (/return one of them/.test(decision.prompt)) {
+          returnGroups.push(decision.options.map((option) => option.description));
+          return {
+            index: decision.options.findIndex((option) => option.type === 'decline'),
+            targets: new Map(),
+          };
+        }
+        return undefined;
+      },
+    );
+    expect(player(ctx, 'P2').life).toBe(34);
+    expect(player(ctx, 'P3').life).toBe(38);
+    expect(selections).toBe(2);
+    expect(player(ctx, 'P1').hand.length).toBe(handBefore + 2);
+    expect(returnGroups).toHaveLength(2);
+    expect(returnGroups).toEqual(
+      expect.arrayContaining([
+        ['Return Zurgo and Ojutai', 'Return Test Whelp', 'Return none'],
+        ['Return Other Whelp', 'Return none'],
+      ]),
+    );
   });
 
   it('zurgo-c03-decline — returning a Dragon is optional', () => {

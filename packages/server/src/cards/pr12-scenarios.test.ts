@@ -78,6 +78,19 @@ const PLANS: Record<string, Plan> = {
     attacks: { [ZURGO]: 'P2' },
     answers: [/PR12 Lab Relic/, /^Return none$/],
   },
+  'pr12-zurgo-and-ojutai-viewer-multiplayer': {
+    steps: [],
+    attacks: { [ZURGO]: 'P2', 'PR12 Lab Dragon': 'P3' },
+    answers: [
+      /event player: P2/,
+      /Put PR12 Lab Relic into your hand/,
+      /^Keep the current bottom order$/,
+      /^Return PR12 Lab Dragon$/,
+      /Put PR12 Lab Dragon into your hand/,
+      /^Keep the current bottom order$/,
+      /^Return Zurgo and Ojutai$/,
+    ],
+  },
   'pr12-bloomvine-regent-claim-territory-viewer-claim-territory': {
     steps: [{ cast: 'Claim Territory' }],
     answers: [/^Put Forest onto the battlefield tapped$/, /^Put Forest into your hand$/],
@@ -308,6 +321,29 @@ const CHECKS: Record<string, (result: Result) => void> = {
   'pr12-zurgo-and-ojutai-viewer-keep': (r) => {
     expect(r.permanent(ZURGO)).toBeDefined();
     expect(zoneNames(r.player('P1').hand)).toContain('PR12 Lab Relic');
+  },
+  'pr12-zurgo-and-ojutai-viewer-multiplayer': (r) => {
+    expect(r.player('P2').life).toBe(36);
+    expect(r.player('P3').life).toBe(36);
+    expect(zoneNames(r.player('P1').hand)).toEqual(
+      expect.arrayContaining(['PR12 Lab Relic', 'PR12 Lab Dragon', ZURGO]),
+    );
+    expect(r.permanent(ZURGO)).toBeUndefined();
+    expect(r.permanent('PR12 Lab Dragon')).toBeUndefined();
+    expect(r.picked.filter((choice) => choice.startsWith('Return '))).toEqual([
+      'Return PR12 Lab Dragon',
+      'Return Zurgo and Ojutai',
+    ]);
+    expect(r.picked.filter((choice) => choice.startsWith('Put '))).toEqual([
+      'Put PR12 Lab Relic into your hand',
+      'Put PR12 Lab Dragon into your hand',
+    ]);
+    expect(
+      r.seen
+        .map((decision) => decision.actions.filter((action) => action.type === 'returnToHand'))
+        .filter((actions) => actions.length > 0)
+        .map((actions) => actions.map((action) => action.description)),
+    ).toEqual([['Return PR12 Lab Dragon'], ['Return Zurgo and Ojutai']]);
   },
   'pr12-bloomvine-regent-claim-territory-viewer-claim-territory': (r) => {
     expect(r.picked).toEqual([

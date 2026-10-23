@@ -57,6 +57,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'pr12-sivitri-dragon-master-viewer-wrath',
       'pr12-zurgo-and-ojutai-viewer-return',
       'pr12-zurgo-and-ojutai-viewer-keep',
+      'pr12-zurgo-and-ojutai-viewer-multiplayer',
       'pr12-bloomvine-regent-claim-territory-viewer-claim-territory',
       'pr12-bloomvine-regent-claim-territory-viewer-enters',
       'pr12-marang-river-regent-coil-and-catch-viewer-coil-and-catch',

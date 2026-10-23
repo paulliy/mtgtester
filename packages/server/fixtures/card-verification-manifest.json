@@ -7685,17 +7685,20 @@
             "zurgo-c03-positive",
             "zurgo-c03-decline",
             "zurgo-c03-negative",
-            "zurgo-c03-left"
+            "zurgo-c03-left",
+            "zurgo-c03-multiplayer"
           ],
           "viewerScenarioIds": [
             "pr12-zurgo-and-ojutai-viewer-return",
-            "pr12-zurgo-and-ojutai-viewer-keep"
+            "pr12-zurgo-and-ojutai-viewer-keep",
+            "pr12-zurgo-and-ojutai-viewer-multiplayer"
           ]
         }
       ],
       "viewerScenarioIds": [
         "pr12-zurgo-and-ojutai-viewer-return",
-        "pr12-zurgo-and-ojutai-viewer-keep"
+        "pr12-zurgo-and-ojutai-viewer-keep",
+        "pr12-zurgo-and-ojutai-viewer-multiplayer"
       ],
       "gameplayAiScenarioIds": []
     },
