@@ -20045,8 +20045,52 @@
   {
     "oracleId": "fda61506-ed79-47fd-badd-639185297913",
     "name": "Smokestack",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of each player's upkeep, that player sacrifices a permanent of their choice for each soot counter on this artifact.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of your upkeep, you may put a soot counter on this",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "counter": "soot",
+              "op": "putCounters",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        },
+        {
+          "description": "At the beginning of each player's upkeep, that player sacrifices a permanent for each soot counter",
+          "effects": [
+            {
+              "count": {
+                "counter": "soot",
+                "kind": "countersOnSelf"
+              },
+              "op": "eventPlayerSacrificesPermanents"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "each",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "fe83087d-c6c1-40be-9295-baaa1c6b2db1",
@@ -36484,8 +36528,52 @@
   {
     "oracleId": "oracle-smokestack",
     "name": "Smokestack",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of each player's upkeep, that player sacrifices a permanent of their choice for each soot counter on this artifact.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of your upkeep, you may put a soot counter on this",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "counter": "soot",
+              "op": "putCounters",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        },
+        {
+          "description": "At the beginning of each player's upkeep, that player sacrifices a permanent for each soot counter",
+          "effects": [
+            {
+              "count": {
+                "counter": "soot",
+                "kind": "countersOnSelf"
+              },
+              "op": "eventPlayerSacrificesPermanents"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "each",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-smothering-tithe",

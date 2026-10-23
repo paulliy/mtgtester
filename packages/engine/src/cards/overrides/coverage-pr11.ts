@@ -237,6 +237,36 @@ function registerPr11LifecycleOverrides(): void {
     },
   );
 
+  // PR11.03: the soot counter is optional; each upkeep's sacrifice counts soot as it resolves,
+  // so on your upkeep the order you stack the two triggers matters (CR 603.3b).
+  replaceCard(
+    'fda61506-ed79-47fd-badd-639185297913',
+    'Smokestack',
+    [
+      'unrecognized rules text: "At the beginning of each player\'s upkeep, that player sacrifices a permanent of their choice for each soot counter on this artifact."',
+    ],
+    {
+      triggers: [
+        triggered(onUpkeep('you'), {
+          optional: true,
+          effects: [{ op: 'putCounters', target: 'source', counter: 'soot', count: constant(1) }],
+          description: 'At the beginning of your upkeep, you may put a soot counter on this',
+        }),
+        triggered(onUpkeep('each'), {
+          effects: [
+            {
+              op: 'eventPlayerSacrificesPermanents',
+              count: { kind: 'countersOnSelf', counter: 'soot' },
+            },
+          ],
+          description:
+            "At the beginning of each player's upkeep, that player sacrifices a permanent for each soot counter",
+        }),
+      ],
+    },
+    'PR11 counts soot counters, starts with none, and makes only the upkeep player sacrifice.',
+  );
+
   // PR11.15: the opponent's draw trigger is interpreted; cumulative upkeep is authored.
   extendCard(
     '8a52f3c0-2552-4425-b2e3-5496eb2232a7',

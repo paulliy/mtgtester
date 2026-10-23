@@ -176,3 +176,70 @@ describe('Mystic Remora', () => {
     expect(ctx.state.stack.map((entry) => entry.kind)).toEqual(['spell']);
   });
 });
+
+const SMOKESTACK = pinned('Smokestack');
+
+describe('Smokestack', () => {
+  it('smokestack-modeled — models with every reason cleared and enters with no soot', () => {
+    const def = interpretCard(SMOKESTACK);
+    expect(def.modeled, def.unmodeledReasons.join('; ')).toBe(true);
+    const ctx = game('pr11-smokestack-enter');
+    castFromHand(ctx, 'P1', SMOKESTACK, new Map(), { C: 4 });
+    resolve(ctx);
+    expect(battlefield(ctx, 'Smokestack')[0]!.counters['soot'] ?? 0).toBe(0);
+  });
+
+  it('smokestack-c01 — at your upkeep you may add a soot counter; declining adds none', () => {
+    const ctx = game('pr11-smokestack-soot');
+    const stack = spawn(ctx, 'P1', SMOKESTACK);
+    lands(ctx, 'P1', 3);
+    nextTurnOf(ctx, 'P1', (decision) => {
+      const yes = decision.options.findIndex((option) => option.type === 'acceptTrigger');
+      return { index: Math.max(0, yes), targets: new Map() };
+    });
+    expect(stack.counters['soot']).toBe(1);
+
+    const declined = game('pr11-smokestack-no-soot');
+    const idle = spawn(declined, 'P1', SMOKESTACK);
+    nextTurnOf(declined, 'P1', (decision) => {
+      const no = decision.options.findIndex((option) => option.type === 'declineTrigger');
+      return { index: Math.max(0, no), targets: new Map() };
+    });
+    expect(idle.counters['soot'] ?? 0).toBe(0);
+  });
+
+  it('smokestack-c02 — the upkeep player sacrifices one permanent per soot counter, of their choice', () => {
+    const ctx = game('pr11-smokestack-sacrifice');
+    const stack = spawn(ctx, 'P1', SMOKESTACK);
+    stack.counters['soot'] = 2;
+    const keep = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Keeper', typeLine: 'Artifact', manaCost: '{1}' }),
+    );
+    lands(ctx, 'P2', 2);
+    lands(ctx, 'P1', 2);
+    const prompts: string[] = [];
+    nextTurnOf(ctx, 'P2', (decision) => {
+      if (decision.prompt.includes('choose a permanent to sacrifice')) {
+        prompts.push(decision.player);
+        const land = decision.options.findIndex(
+          (option) => option.description === 'Sacrifice Plains',
+        );
+        return { index: Math.max(0, land), targets: new Map() };
+      }
+      return { index: 0, targets: new Map() };
+    });
+    expect(prompts.every((who) => who === 'P2')).toBe(true);
+    expect(ctx.state.battlefield.filter((perm) => perm.controllerId === 'P2')).toEqual([keep]);
+    expect(ctx.state.battlefield.filter((perm) => perm.controllerId === 'P1')).toHaveLength(3);
+  });
+
+  it('smokestack-c02-negative — with no soot counters nobody sacrifices', () => {
+    const ctx = game('pr11-smokestack-empty');
+    spawn(ctx, 'P1', SMOKESTACK);
+    lands(ctx, 'P2', 2);
+    nextTurnOf(ctx, 'P2');
+    expect(ctx.state.battlefield.filter((perm) => perm.controllerId === 'P2')).toHaveLength(2);
+  });
+});

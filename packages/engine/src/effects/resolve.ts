@@ -4694,20 +4694,21 @@ export function* executeAbility(
         const player =
           scope.eventPlayerId === undefined ? undefined : playerById(ctx, scope.eventPlayerId);
         if (player === undefined || player.hasLost) break;
+        const count = amountOf(effect.count);
         const selected: EnginePermanent[] = [];
-        for (let i = 0; i < effect.count; i++) {
+        for (let i = 0; i < count; i++) {
           const candidates = ctx.state.battlefield.filter(
             (perm) => perm.controllerId === player.id && !selected.includes(perm),
           );
           if (candidates.length === 0) break;
           // Owing at least as many as they have is no choice at all: all of them go.
-          if (candidates.length <= effect.count - i) {
+          if (candidates.length <= count - i) {
             selected.push(...candidates);
             break;
           }
           const chosen = yield* chooseCard(ctx, {
             player: player.id,
-            prompt: `${source.name}: choose a permanent to sacrifice (${i + 1} of ${effect.count})`,
+            prompt: `${source.name}: choose a permanent to sacrifice (${i + 1} of ${count})`,
             cards: candidates,
             type: 'sacrifice',
             verb: 'Sacrifice',
