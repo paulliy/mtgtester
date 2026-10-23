@@ -5,6 +5,7 @@ import { computeCharacteristics } from '../src/effects/continuous';
 import { moveObject } from '../src/state/objects';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runOpeningHandBattlefieldActions } from '../src/turn/mulligan';
+import { queueStepTriggers } from '../src/turn/turn';
 import type { GameContext } from '../src/state/types';
 import { drawCards } from '../src/effects/resolve';
 import { runCombatPhase } from '../src/combat/combat';
@@ -128,6 +129,22 @@ describe('Mana Vault', () => {
     const otherLife = player(other, 'P1').life;
     nextTurnOf(other, 'P2', preferring('decline'));
     expect(player(other, 'P1').life).toBe(otherLife);
+  });
+  it('vault-c03-departed — a tapped Vault that leaves before its trigger resolves still deals 1 damage', () => {
+    // CR 603.4 rechecks "if this artifact is tapped" on resolution, and CR 608.2h answers it
+    // for a source that has left with last known information: it was tapped.
+    const ctx = game('pr11-vault-departed');
+    const vault = spawn(ctx, 'P1', VAULT, { tapped: true });
+    turnOf(ctx, 'P1');
+    ctx.state.phase = 'beginning';
+    ctx.state.step = 'draw';
+    queueStepTriggers(ctx, 'drawStep');
+    checkpoint(ctx);
+    expect(ctx.state.stack.at(-1)?.kind).toBe('triggeredAbility');
+    const life = player(ctx, 'P1').life;
+    pump(moveObject(ctx, vault, { zone: 'graveyard' }));
+    resolve(ctx);
+    expect(player(ctx, 'P1').life).toBe(life - 1);
   });
 });
 
@@ -518,6 +535,27 @@ describe('Chrome Mox', () => {
     const exiled = ctx.state.exile.find((entry) => entry.name === 'Red Spell');
     expect(exiled).toBeDefined();
     expect(mox.exiledWithIds).toEqual([exiled!.id]);
+  });
+
+  it('mox-c01-off-battlefield-types — a creature card that Biotransference makes an artifact is not offered', () => {
+    const ctx = game('pr11-mox-biotransference');
+    player(ctx, 'P1').hand = [];
+    const shrine = oracle({
+      name: 'Test Artifice Shrine',
+      typeLine: 'Enchantment',
+      manaCost: '{2}',
+    });
+    spawn(ctx, 'P1', shrine);
+    const shrineDef = ctx.defs.get(shrine.oracleId as never)!;
+    ctx.defs.set(shrine.oracleId as never, {
+      ...shrineDef,
+      ruleStatics: [
+        { kind: 'alsoTypesOffBattlefield', ifType: 'Creature', addTypes: ['Artifact'] },
+      ],
+    });
+    conjure(ctx, 'P1', card('Red Spell', { colors: ['R'], manaCost: '{R}' }), 'hand');
+    conjure(ctx, 'P1', bear(), 'hand');
+    expect(moxImprinting(ctx, 'Red Spell')).toEqual(['Exile Red Spell']);
   });
 
   it("mox-c02 — {T} adds one mana of any of the exiled card's colors, and only those", () => {

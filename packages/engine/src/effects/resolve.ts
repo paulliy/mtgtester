@@ -7622,9 +7622,12 @@ export function* executeAbility(
       case 'exileFromHandWithSource': {
         const candidates = controller.hand.filter(
           (card) =>
-            !getDefByOracleId(ctx, card.oracleId, card.name).types.some((type) =>
-              effect.excludeTypes.includes(type),
-            ),
+            // Card types in hand, including Biotransference's added Artifact (CR 611.3c).
+            !offBattlefieldTypes(
+              ctx,
+              getDefByOracleId(ctx, card.oracleId, card.name).types,
+              card.ownerId,
+            ).some((type) => effect.excludeTypes.includes(type)),
         );
         const chosen = yield* chooseCard(ctx, {
           player: controller.id,

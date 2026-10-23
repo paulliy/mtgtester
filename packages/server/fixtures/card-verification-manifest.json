@@ -16021,7 +16021,7 @@
             "Effect.exileFromHandWithSource",
             "ExiledWithLink"
           ],
-          "engineTestIds": ["mox-c01"],
+          "engineTestIds": ["mox-c01", "mox-c01-off-battlefield-types"],
           "viewerScenarioIds": [
             "pr11-chrome-mox-viewer-imprint",
             "pr11-chrome-mox-viewer-no-imprint"
@@ -16142,7 +16142,7 @@
             "Condition.sourceTapped",
             "Effect.damageController"
           ],
-          "engineTestIds": ["vault-c02-c03", "vault-c03-negative"],
+          "engineTestIds": ["vault-c02-c03", "vault-c03-negative", "vault-c03-departed"],
           "viewerScenarioIds": ["pr11-mana-vault-viewer-pay-untap", "pr11-mana-vault-viewer-damage"]
         },
         {
