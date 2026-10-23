@@ -20,7 +20,11 @@ import {
 import type { Selector } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import type { EngineCardObject, EnginePermanent, GameContext } from '../state/types';
-import { computeCharacteristics, selectPermanents } from './continuous';
+import {
+  computeCharacteristics,
+  greatestNoncreatureManaValue,
+  selectPermanents,
+} from './continuous';
 import {
   cardZoneCandidate,
   effectivePT,
@@ -144,6 +148,15 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return scopedPermanents(ctx, scope, value.selector, value.scope).reduce(
         (best, perm) => Math.max(best, effectivePT(ctx, perm).power),
         0,
+      );
+    case 'greatestNoncreatureManaValueYouControlOrInGraveyard':
+      return greatestNoncreatureManaValue(
+        ctx,
+        scope.controllerId,
+        ctx.state.battlefield.map((perm) => ({
+          perm,
+          types: computeCharacteristics(ctx, perm).types,
+        })),
       );
     case 'greatestManaValueAmong':
       return scopedPermanents(ctx, scope, value.selector, value.scope).reduce(

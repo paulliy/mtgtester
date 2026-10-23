@@ -400,7 +400,30 @@ function effectExists(ctx: GameContext, work: WorkMap, effect: LayerEffect): boo
  *
  * A face-down permanent has no mana cost, so its mana value is 0 whatever card it is (CR 708.2).
  */
-function printedManaValue(ctx: GameContext, perm: EnginePermanent): number | undefined {
+/**
+ * The greatest mana value among `controllerId`'s noncreature permanents (by their current types)
+ * and the noncreature cards in their graveyard (CR 202.3; a card's {X} is 0). 0 when none.
+ */
+export function greatestNoncreatureManaValue(
+  ctx: GameContext,
+  controllerId: string,
+  permanents: readonly { perm: EnginePermanent; types: readonly string[] }[],
+): number {
+  let best = 0;
+  for (const { perm, types } of permanents) {
+    if (perm.controllerId !== controllerId || types.includes('Creature')) continue;
+    best = Math.max(best, printedManaValue(ctx, perm) ?? 0);
+  }
+  const player = ctx.state.players.find((candidate) => candidate.id === controllerId);
+  for (const card of player?.graveyard ?? []) {
+    const def = ctx.defs.get(card.oracleId);
+    if (def === undefined || def.types.includes('Creature')) continue;
+    best = Math.max(best, manaValueOf(def.manaCost));
+  }
+  return best;
+}
+
+export function printedManaValue(ctx: GameContext, perm: EnginePermanent): number | undefined {
   const def = ctx.defs.get(perm.oracleId);
   if (def === undefined) return undefined;
   if (perm.faceDown) return 0;
@@ -554,6 +577,12 @@ function scopeOf(
       }
       return count;
     },
+    greatestNoncreatureManaValue: () =>
+      greatestNoncreatureManaValue(
+        ctx,
+        source.controllerId,
+        [...work.values()].map((entry) => ({ perm: entry.perm, types: entry.chars.types })),
+      ),
     countAurasYouControlAttachedToCreatures: () => {
       let count = 0;
       for (const entry of work.values()) {

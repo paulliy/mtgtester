@@ -15,6 +15,8 @@ import { conjure, oracle, pump, spawn } from './fixtures';
 import {
   bear,
   castFromHand,
+  castOption,
+  exactMana,
   p,
   pinned,
   pinnedDefinition,
@@ -325,5 +327,77 @@ describe('PR10.05 Reality Shift', () => {
     const { ctx, manifested } = shift('pr10-shift-noncreature', relic());
     addMana(p(ctx, 'P2'), [{ symbol: 'C' }, { symbol: 'C' }, { symbol: 'C' }]);
     expect(faceUpOptions(ctx, 'P2', manifested)).toHaveLength(0);
+  });
+});
+
+describe('PR10.29 Dragon Man, Reformed Robot', () => {
+  const card = (name: string, typeLine: string, manaCost: string, cmc: number) =>
+    oracle({
+      name,
+      typeLine,
+      manaCost,
+      cmc,
+      power: typeLine.includes('Creature') ? '1' : null,
+      toughness: typeLine.includes('Creature') ? '1' : null,
+    });
+
+  /** P1's Dragon Man, entered through the real cast. */
+  function dragonMan(seed: string) {
+    const ctx = pod(seed);
+    castFromHand(ctx, 'P1', pinned('Dragon Man, Reformed Robot'));
+    pump(resolveTopOfStack(ctx));
+    const robot = ctx.state.battlefield.find((permanent) =>
+      permanent.name.startsWith('Dragon Man'),
+    )!;
+    return { ctx, robot };
+  }
+
+  it('pr10-dragon-man-pinned-oracle-supported — every line is modeled', () => {
+    const def = pinnedDefinition('Dragon Man, Reformed Robot');
+    expect(def.modeled, def.unmodeledReasons.join('\n')).toBe(true);
+    expect(def.keywords).toContain('flying');
+  });
+
+  it('pr10-dragon-man-power — the greatest noncreature mana value you control or in your graveyard', () => {
+    const { ctx, robot } = dragonMan('pr10-dragon-man-power');
+    // Dragon Man itself is a creature, so with nothing else it is a 0/5.
+    expect(pt(ctx, robot)).toEqual([0, 5]);
+    spawn(ctx, 'P1', card('Robot Relic', 'Artifact', '{3}', 3));
+    expect(pt(ctx, robot)).toEqual([3, 5]);
+    conjure(ctx, 'P1', card('Robot Insight', 'Instant', '{4}{U}', 5), 'graveyard');
+    expect(pt(ctx, robot)).toEqual([5, 5]);
+  });
+
+  it("pr10-dragon-man-excludes — creatures and opponents' cards do not count", () => {
+    const { ctx, robot } = dragonMan('pr10-dragon-man-excludes');
+    spawn(ctx, 'P1', card('Robot Golem', 'Artifact Creature — Golem', '{6}', 6));
+    conjure(ctx, 'P1', card('Robot Titan', 'Creature — Giant', '{7}', 7), 'graveyard');
+    spawn(ctx, 'P2', card('Rival Relic', 'Artifact', '{4}', 4));
+    conjure(ctx, 'P2', card('Rival Insight', 'Sorcery', '{5}', 5), 'graveyard');
+    expect(pt(ctx, robot)).toEqual([0, 5]);
+  });
+
+  it('pr10-dragon-man-graveyard-cast — cast from the graveyard by discarding a card', () => {
+    const ctx = pod('pr10-dragon-man-graveyard');
+    const robotCard = conjure(ctx, 'P1', pinned('Dragon Man, Reformed Robot'), 'graveyard');
+    addMana(p(ctx, 'P1'), exactMana(pinnedDefinition('Dragon Man, Reformed Robot')));
+    // With no card to discard, it cannot be cast from the graveyard.
+    p(ctx, 'P1').hand.length = 0;
+    expect(castOption(ctx, 'P1', robotCard.id)).toBeUndefined();
+    const fodder = conjure(ctx, 'P1', card('Robot Fodder', 'Artifact', '{1}', 1), 'hand');
+    const option = castOption(ctx, 'P1', robotCard.id);
+    expect(option).toBeDefined();
+    pump(
+      applyPriorityAction(ctx, p(ctx, 'P1'), option!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+    );
+    expect(p(ctx, 'P1').hand.some((handCard) => handCard.id === fodder.id)).toBe(false);
+    expect(p(ctx, 'P1').graveyard.some((grave) => grave.cardId === fodder.cardId)).toBe(true);
+    pump(resolveTopOfStack(ctx));
+    const robot = ctx.state.battlefield.find((permanent) => permanent.cardId === robotCard.cardId)!;
+    // The discarded artifact is now a noncreature card in the graveyard.
+    expect(pt(ctx, robot)).toEqual([1, 5]);
   });
 });

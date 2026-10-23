@@ -154,6 +154,7 @@ const valueShapes = {
   cardTypesInAllGraveyards: {},
   cardTypesInYourGraveyard: {},
   cardTypesInOpponentsGraveyards: {},
+  greatestNoncreatureManaValueYouControlOrInGraveyard: {},
   plus: { of: numberValue, n: finite },
   negate: { of: numberValue },
   times: { of: numberValue, n: finite },

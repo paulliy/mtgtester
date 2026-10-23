@@ -954,7 +954,13 @@ export function computePriorityOptions(
     // (CR 702.143a), never for its mana cost or another alternative cost.
     const foretold =
       fromExile && obj.ownerId === player.id && obj.foretold !== undefined ? obj.foretold : null;
-    const spellAdditionalCosts = def.spellAdditionalCosts ?? [];
+    const spellAdditionalCosts = [
+      ...(def.spellAdditionalCosts ?? []),
+      // The card's own graveyard permission carries its extra cost (Dragon Man).
+      ...(fromGraveyard && def.castFromGraveyard === true
+        ? (def.castFromGraveyardCosts ?? [])
+        : []),
+    ];
     if (
       fromGraveyard &&
       def.castFromGraveyard !== true &&

@@ -807,4 +807,32 @@ export function registerPr10CharacteristicsOverrides(): void {
     },
     'PR10 manifests a card that can be turned face up for its mana cost.',
   );
+
+  // PR10.29: a characteristic-defining ability (CR 604.3) reading noncreature permanents by their
+  // current types; the graveyard permission's discard is an additional cost (CR 601.2h).
+  replaceCard(
+    'c03ca2e6-fcce-4018-952f-1c451ab92cfd',
+    'Dragon Man, Reformed Robot',
+    [
+      "~'s power is equal to the greatest mana value among noncreature permanents you control and noncreature cards in your graveyard.",
+      'You may cast this card from your graveyard by discarding a card in addition to paying its other costs.',
+      'non-numeric power/toughness "*"',
+    ],
+    {
+      staticEffects: [
+        {
+          affects: SELF,
+          op: {
+            layer: 7,
+            sublayer: 'a',
+            power: { kind: 'greatestNoncreatureManaValueYouControlOrInGraveyard' },
+            toughness: constant(5),
+          },
+        },
+      ],
+      castFromGraveyard: true,
+      castFromGraveyardCosts: [{ kind: 'discardCard', count: 1 }],
+    },
+    'PR10 defines power from noncreature mana values and casts from the graveyard by discarding.',
+  );
 }

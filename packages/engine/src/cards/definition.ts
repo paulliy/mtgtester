@@ -191,6 +191,11 @@ export interface CardDefinition {
    */
   castFromGraveyard?: true;
   /**
+   * Costs added when the card is cast from the graveyard under its own `castFromGraveyard`
+   * permission ("by discarding a card in addition to paying its other costs" — Dragon Man).
+   */
+  castFromGraveyardCosts?: AbilityCost[];
+  /**
    * "Cast this spell only during an opponent's turn" (Delirium): a condition on the caster that
    * must hold to cast the spell at all, checked when offering the cast and again as it is cast.
    */

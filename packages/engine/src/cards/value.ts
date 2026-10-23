@@ -220,6 +220,11 @@ export type Value =
   | { kind: 'greatestPowerAmong'; selector: Selector; scope: 'you' | 'opponents' | 'all' }
   /** Greatest mana value among permanents matching a selector. */
   | { kind: 'greatestManaValueAmong'; selector: Selector; scope: 'you' | 'opponents' | 'all' }
+  /**
+   * "the greatest mana value among noncreature permanents you control and noncreature cards in
+   * your graveyard" (Dragon Man, Reformed Robot); 0 when there are none.
+   */
+  | { kind: 'greatestNoncreatureManaValueYouControlOrInGraveyard' }
   /** "the total power of attacking creatures" (Klauth). */
   | { kind: 'totalPowerOfAttackers' }
   | { kind: 'totalPowerAmong'; selector: Selector; scope: 'you' | 'opponents' | 'all' }
@@ -309,6 +314,7 @@ export function isDynamicValue(value: Value): boolean {
     case 'cardTypesInAllGraveyards':
     case 'cardTypesInYourGraveyard':
     case 'cardTypesInOpponentsGraveyards':
+    case 'greatestNoncreatureManaValueYouControlOrInGraveyard':
     case 'countPermanents':
     case 'countTappedPermanents':
     case 'countPermanentsControlledByTarget':
@@ -375,6 +381,7 @@ export function needsScope(value: Value): boolean {
       return needsScope(value.of);
     case 'cardTypesInYourGraveyard':
     case 'cardTypesInOpponentsGraveyards':
+    case 'greatestNoncreatureManaValueYouControlOrInGraveyard':
     case 'countPermanents':
     case 'countTappedPermanents':
     case 'countPermanentsControlledByTarget':
@@ -505,6 +512,8 @@ export type LayerValueScope = Pick<ValueScope, 'controllerId' | 'countPermanents
   affectedTimesAttacked?: number;
   countAurasYouControlAttachedToCreatures?: () => number;
   countAurasAttachedToSource?: () => number;
+  /** Dragon Man: noncreature permanents read as the layers have them so far (CR 613.8a). */
+  greatestNoncreatureManaValue?: () => number;
 };
 
 export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValueScope): number {
@@ -523,6 +532,10 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
       if (scope?.controllerId === undefined)
         throw new Error('your graveyard types require a controller');
       return cardTypesInAllGraveyards(ctx, scope.controllerId);
+    case 'greatestNoncreatureManaValueYouControlOrInGraveyard':
+      if (scope?.greatestNoncreatureManaValue === undefined)
+        throw new Error('engine bug: greatest mana value needs a layer evaluation scope');
+      return scope.greatestNoncreatureManaValue();
     case 'cardTypesInOpponentsGraveyards':
       if (scope?.controllerId === undefined)
         throw new Error("opponents' graveyard types require a controller");

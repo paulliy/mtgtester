@@ -668,6 +668,12 @@ function* proposeCast(
   }
   let castingAdditionalCosts: AbilityCost[] = [
     ...(printedSpellDef.spellAdditionalCosts ?? []),
+    // Cast under the card's own graveyard permission: its extra cost (Dragon Man).
+    ...(resolutionPermission === undefined &&
+    payload.fromGraveyard === true &&
+    printedSpellDef.castFromGraveyard === true
+      ? (printedSpellDef.castFromGraveyardCosts ?? [])
+      : []),
     // Life paid rather than the mana cost (Anrakyr) is paid with the other costs (CR 601.2h).
     ...((resolutionPermission?.lifeCost ?? 0) > 0
       ? [{ kind: 'payLife' as const, amount: resolutionPermission!.lifeCost! }]
