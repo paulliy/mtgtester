@@ -4,19 +4,56 @@ import { expireSourceControlEffects, retainAttackDefender } from './objects';
 import type { GameContext } from './types';
 
 /** Player shields expire as that player's next turn begins, before its untap step. */
-export function playerLifeLocked(ctx: GameContext, playerId: PlayerId): boolean {
-  const since = ctx.state.playerProtectionUntilNextTurn?.[playerId];
+function untilNextTurnActive(
+  ctx: GameContext,
+  playerId: PlayerId,
+  since: number | undefined,
+): boolean {
   return (
     since !== undefined &&
     !(ctx.state.currentTurnPlayer === playerId && ctx.state.turnNumber > since)
   );
 }
 
+/** Teferi's Protection: the life total can't change until the player's next turn. */
+export function playerLifeLocked(ctx: GameContext, playerId: PlayerId): boolean {
+  return untilNextTurnActive(ctx, playerId, ctx.state.playerProtectionUntilNextTurn?.[playerId]);
+}
+
+/**
+ * CR 702.16j: protection from everything. Teferi's Protection grants it with the life lock; The
+ * One Ring grants it alone, so the life total still changes.
+ */
+export function playerProtectedFromEverything(ctx: GameContext, playerId: PlayerId): boolean {
+  return (
+    playerLifeLocked(ctx, playerId) ||
+    untilNextTurnActive(
+      ctx,
+      playerId,
+      ctx.state.playerProtectionFromEverythingUntilNextTurn?.[playerId],
+    )
+  );
+}
+
 /** CR 702.26: keep the same object, counters, attachments and choices; no zone-change event. */
 export function phaseOutControlledPermanents(ctx: GameContext, playerId: PlayerId): void {
-  const ids = new Set(
+  phaseOutPermanents(
+    ctx,
     ctx.state.battlefield.filter((perm) => perm.controllerId === playerId).map((perm) => perm.id),
+    playerId,
   );
+}
+
+/**
+ * Phase out `directIds` and, indirectly, everything attached to them (CR 702.26g). They phase in
+ * during `playerId`'s next untap step (Clever Concealment: "until your next turn").
+ */
+export function phaseOutPermanents(
+  ctx: GameContext,
+  directIds: readonly string[],
+  playerId: PlayerId,
+): void {
+  const ids = new Set(directIds);
   let changed = true;
   while (changed) {
     changed = false;

@@ -100,6 +100,8 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   exileSpellAndPlot: { target: spell },
   prohibitSpellsThisTurn: {},
   phaseOutAndProtectControllerUntilNextTurn: {},
+  controllerProtectionFromEverythingUntilNextTurn: {},
+  phaseOutEachChosen: { targetSlot: many(permanent) },
   controllerHexproofUntilEot: {},
   changeSingleTarget: { target: stack },
   chooseNewTargets: { target: stack },

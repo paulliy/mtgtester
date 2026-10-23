@@ -1,9 +1,9 @@
 /** PR11 authored protection, phasing, layout and lifecycle cards. Review status is in the manifest. */
-import { allOf, hasCounter, OPPONENTS, ofType, YOURS } from '../selector';
-import { activated, mana, TAP, triggered } from '../templates';
+import { allOf, hasCounter, not, OPPONENTS, ofType, YOURS } from '../selector';
+import { activated, mana, onEtb, onUpkeep, spell, TAP, targetSlots, triggered } from '../templates';
 import { constant } from '../value';
 import { KNIGHT_2_2_WHITE_VIGILANCE } from '../tokens';
-import { extendCard, replaceCard } from './index';
+import { defineCard, extendCard, replaceCard } from './index';
 
 export function registerCoveragePr11Overrides(): void {
   // PR11: the creatures are fixed at resolution (CR 611.2c) and "can't have" outlasts any later
@@ -65,5 +65,105 @@ export function registerCoveragePr11Overrides(): void {
     "Shanna, Sisay's Legacy",
     ['unrecognized rules text: "~ can\'t be the target of abilities your opponents control."'],
     { ruleStatics: [{ kind: 'cantBeTargetedByOpponentAbilities' }] },
+  );
+
+  registerPr11PhasingOverrides();
+}
+
+/** PR11.05, 11.18, 11.20, 11.22: phasing and player protection. */
+function registerPr11PhasingOverrides(): void {
+  // PR11.18: the life lock and protection from everything both last until your next turn.
+  defineCard(
+    '0d4ecdb1-ec90-497f-a7a4-1c68092b8757',
+    "Teferi's Protection",
+    [
+      'unrecognized rules text: "Until your next turn, your life total can\'t change and you gain protection from everything. All permanents you control phase out."',
+    ],
+    {
+      spellAbility: spell({
+        effects: [
+          { op: 'phaseOutAndProtectControllerUntilNextTurn' },
+          { op: 'resolvingSpellExile' },
+        ],
+        description:
+          "Until your next turn, your life total can't change and you have protection from everything; your permanents phase out; exile this spell",
+      }),
+    },
+  );
+
+  // PR11.20: protection from everything without the life lock; the cast check is an
+  // intervening if (CR 603.4).
+  defineCard(
+    '3aa83ed2-f48b-4ce6-a614-2c54ddf50538',
+    'The One Ring',
+    [
+      'unrecognized rules text: "When ~ enters, if you cast it, you gain protection from everything until your next turn."',
+      'unrecognized rules text: "At the beginning of your upkeep, you lose 1 life for each burden counter on ~."',
+      'unrecognized rules text: "{T}: Put a burden counter on ~, then draw a card for each burden counter on ~."',
+    ],
+    {
+      triggers: [
+        triggered(onEtb(), {
+          condition: { kind: 'sourceWasCast' },
+          effects: [{ op: 'controllerProtectionFromEverythingUntilNextTurn' }],
+          description:
+            'When this enters, if you cast it, you gain protection from everything until your next turn',
+        }),
+        triggered(onUpkeep('you'), {
+          effects: [{ op: 'loseLife', amount: { kind: 'countersOnSelf', counter: 'burden' } }],
+          description: 'At the beginning of your upkeep, lose 1 life for each burden counter',
+        }),
+      ],
+      activatedAbilities: [
+        activated({
+          costs: [TAP],
+          effects: [
+            { op: 'putCounters', target: 'source', counter: 'burden', count: constant(1) },
+            { op: 'draw', count: { kind: 'countersOnSelf', counter: 'burden' } },
+          ],
+          description:
+            '{T}: Put a burden counter on this, then draw a card for each burden counter',
+        }),
+      ],
+    },
+  );
+
+  // PR11.22: each chosen permanent phases out with whatever is attached to it.
+  const concealed = targetSlots({
+    permanents: {
+      kind: 'permanent',
+      filter: allOf(not(ofType('Land')), YOURS),
+      count: { min: 0, max: Infinity },
+    },
+  });
+  defineCard(
+    '42bb7ea9-f6e4-4551-8d93-3b1eae84b865',
+    'Clever Concealment',
+    ['unrecognized rules text: "Any number of target nonland permanents you control phase out."'],
+    {
+      spellAbility: spell({
+        targets: concealed.targets,
+        effects: [{ op: 'phaseOutEachChosen', targetSlot: concealed.slot.permanents }],
+        description: 'Any number of target nonland permanents you control phase out',
+      }),
+    },
+  );
+
+  // PR11.05: split second is the keyword; "can't lose" covers every loss this turn, and the
+  // life floor applies to damage only.
+  replaceCard(
+    '66ca8a60-e028-4a5f-8177-860b888cb9d1',
+    "Angel's Grace",
+    [
+      'unrecognized rules text: "You can\'t lose the game this turn and your opponents can\'t win the game this turn. Until end of turn, damage that would reduce your life total to less than 1 reduces it to 1 instead."',
+    ],
+    {
+      spellAbility: spell({
+        effects: [{ op: 'angelGrace' }],
+        description:
+          "You can't lose and your opponents can't win this turn; damage can't reduce your life below 1 this turn",
+      }),
+    },
+    'PR11 implements split second and the full cannot-lose clause instead of a life floor alone.',
   );
 }

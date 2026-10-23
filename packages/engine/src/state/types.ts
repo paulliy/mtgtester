@@ -874,11 +874,15 @@ export interface EngineState extends GameState {
   damageChain: string[];
   /** Players protected from dropping below 1 life until the end of the turn (Angel's Grace). */
   lifeFloorPlayers: Record<PlayerId, boolean>;
+  /** The turn number during which each player can't lose the game (Angel's Grace, CR 104.3a). */
+  cantLoseTurn?: Record<PlayerId, number>;
   spellsProhibitedTurn?: number;
   playerHexproofTurn?: Record<PlayerId, number>;
   extraTurns?: PlayerId[];
   phasedOut?: { permanent: EnginePermanent; phaseInPlayerId: PlayerId }[];
   playerProtectionUntilNextTurn?: Record<PlayerId, number>;
+  /** Protection from everything without the life lock (The One Ring), keyed like the above. */
+  playerProtectionFromEverythingUntilNextTurn?: Record<PlayerId, number>;
   /** Attack requirements made by resolved spells and abilities, until they expire (CR 508.1d). */
   attackRequirements?: AttackRequirementEntry[];
   /** Creatures that can't block because of a resolved spell or ability, until it expires. */

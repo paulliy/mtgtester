@@ -1,76 +1,35 @@
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { OracleCard } from '@mtg/shared';
-import { applyPriorityAction } from '../src/actions/apply';
-import {
-  computePriorityOptions,
-  computeTargetOptions,
-  type PriorityActionPayload,
-} from '../src/actions/legal';
+import { computeTargetOptions, type PriorityActionPayload } from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
-import { runCombatPhase } from '../src/combat/combat';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { endUntilEotEffects } from '../src/effects/resolve';
 import { addMana } from '../src/mana/pool';
-import { createGame } from '../src/state/game';
 import { moveObject } from '../src/state/objects';
 import { hasKeyword, hasProtectionFrom } from '../src/state/queries';
-import { priorityCheckpoint } from '../src/sba/sba';
-import { resolveTopOfStack } from '../src/stack/stack';
-import type { EnginePermanent, EnginePlayerState, GameContext } from '../src/state/types';
-import type { PendingDecision } from '../src/decisions';
+import { bear, conjure, oracle, pump, spawn } from './fixtures';
 import {
-  bear,
-  conjure,
-  copies,
-  declareAttacks,
-  declareBlocks,
-  gameConfig,
-  oracle,
-  plains,
-  pump,
-  spawn,
-} from './fixtures';
-
-const fixture = JSON.parse(
-  readFileSync(new URL('./fixtures/coverage-pr11-oracle.json', import.meta.url), 'utf8'),
-) as { cards: { sha256: string; card: OracleCard }[] };
-
-function pinned(name: string): OracleCard {
-  const entry = fixture.cards.find((candidate) => candidate.card.name === name);
-  if (entry === undefined) throw new Error(`Missing pinned PR11 card ${name}`);
-  return entry.card;
-}
+  activate,
+  anyMana,
+  battlefield,
+  castFromHand,
+  checkpoint,
+  combat,
+  fixture,
+  game,
+  offeredTargets,
+  pinned,
+  player,
+  priorityOption,
+  resolve,
+} from './pr11-helpers';
 
 const LIGHTHOUSE = pinned('Arcane Lighthouse');
 const LIEUTENANT = pinned("Basri's Lieutenant");
 const SHANNA = pinned("Shanna, Sisay's Legacy");
 const MANTLE = pinned('Spirit Mantle');
 const AUTHORITY = pinned('Unquestioned Authority');
-
-function game(seed: string): GameContext {
-  const ctx = createGame(
-    gameConfig(
-      Array.from({ length: 4 }, () => ({ cards: copies(10, plains) })),
-      { seed },
-    ),
-  );
-  Object.assign(ctx.state, {
-    currentTurnPlayer: 'P1',
-    activePlayerIndex: 0,
-    turnNumber: 4,
-    phase: 'precombatMain',
-    step: null,
-  });
-  return ctx;
-}
-
-function player(ctx: GameContext, id: string): EnginePlayerState {
-  const found = ctx.state.players.find((candidate) => candidate.id === id);
-  if (found === undefined) throw new Error(`Missing player ${id}`);
-  return found;
-}
 
 const goldCreature = (): OracleCard =>
   oracle({
@@ -131,120 +90,6 @@ const hexproofer = (): OracleCard =>
     colors: ['G'],
     oracleText: 'Target creature gains hexproof until end of turn.',
   });
-
-function anyMana(ctx: GameContext, playerId: string, count: number): void {
-  addMana(
-    player(ctx, playerId),
-    Array.from({ length: count }, () => ({ symbol: 'C' as const })),
-  );
-}
-
-/** Find a priority option by payload predicate, for the normal cast/activation path. */
-function priorityOption(
-  ctx: GameContext,
-  playerId: string,
-  match: (payload: PriorityActionPayload) => boolean,
-) {
-  return computePriorityOptions(ctx, player(ctx, playerId)).find((entry) =>
-    match(entry.payload as PriorityActionPayload),
-  );
-}
-
-function castFromHand(
-  ctx: GameContext,
-  playerId: string,
-  card: OracleCard,
-  targets: ReadonlyMap<number, string> = new Map(),
-  mana: Partial<Record<'W' | 'U' | 'B' | 'R' | 'G' | 'C', number>> = {},
-): void {
-  const object = conjure(ctx, playerId, card, 'hand');
-  addMana(
-    player(ctx, playerId),
-    Object.entries(mana).flatMap(([symbol, count]) =>
-      Array.from({ length: count }, () => ({ symbol: symbol as 'W' })),
-    ),
-  );
-  const option = priorityOption(
-    ctx,
-    playerId,
-    (payload) => payload.kind === 'castSpell' && payload.objectId === object.id,
-  );
-  expect(option, `cast ${card.name}`).toBeDefined();
-  pump(
-    applyPriorityAction(ctx, player(ctx, playerId), option!.payload as PriorityActionPayload, {
-      index: 0,
-      targets,
-    }),
-  );
-}
-
-/** The targets the priority menu offers for one slot of a cast or activation. */
-function offeredTargets(
-  ctx: GameContext,
-  playerId: string,
-  match: (payload: PriorityActionPayload) => boolean,
-  slot = 0,
-): string[] {
-  const option = priorityOption(ctx, playerId, match);
-  if (option === undefined) return [];
-  return [...(option.targets?.find((entry) => entry.slot === slot)?.options ?? [])];
-}
-
-function activate(
-  ctx: GameContext,
-  playerId: string,
-  source: EnginePermanent,
-  targets: ReadonlyMap<number, string> = new Map(),
-): void {
-  const option = priorityOption(
-    ctx,
-    playerId,
-    (payload) => payload.kind === 'activateAbility' && payload.objectId === source.id,
-  );
-  expect(option, `activate ${source.name}`).toBeDefined();
-  pump(
-    applyPriorityAction(ctx, player(ctx, playerId), option!.payload as PriorityActionPayload, {
-      index: 0,
-      targets,
-    }),
-  );
-}
-
-function resolve(ctx: GameContext): PendingDecision[] {
-  return pump(resolveTopOfStack(ctx)).decisions;
-}
-
-/** State-based actions, then pending triggers onto the stack (CR 117.5). */
-function checkpoint(ctx: GameContext): void {
-  pump(priorityCheckpoint(ctx));
-}
-
-function battlefield(ctx: GameContext, name: string): EnginePermanent[] {
-  return ctx.state.battlefield.filter((permanent) => permanent.name === name);
-}
-
-/** Run one combat with `attacker` attacking `defender`, `blocker` blocking if it may. */
-function combat(
-  ctx: GameContext,
-  attacker: EnginePermanent,
-  defender: string,
-  blocker?: EnginePermanent,
-): { blockable: string[] } {
-  ctx.state.phase = 'combat';
-  let blockable: string[] = [];
-  pump(runCombatPhase(ctx), (decision) => {
-    if (decision.decisionType === 'declareAttackers')
-      return declareAttacks(decision, (id) => (id === attacker.id ? defender : null));
-    if (decision.decisionType === 'declareBlockers')
-      return declareBlocks(decision, (id, subject) => {
-        if (blocker === undefined || id !== blocker.id) return null;
-        blockable = subject.attackers.map((entry) => entry.attackerId);
-        return blockable.includes(attacker.id) ? attacker.id : null;
-      });
-    return undefined as never;
-  });
-  return { blockable };
-}
 
 describe('PR11 Oracle pins', () => {
   it('pr11-oracle-pins — pins the 30 assigned Oracle identities and full definitions', () => {

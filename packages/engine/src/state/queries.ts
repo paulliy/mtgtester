@@ -1347,12 +1347,30 @@ export function hasNoMaximumHandSize(ctx: GameContext, playerId: PlayerId): bool
   );
 }
 /** Does an active `cantCastSpells` rule static currently forbid `playerId` from casting? */
+/** "You can't lose the game this turn" (Angel's Grace) overrides every loss (CR 104.3a, 704.5). */
+export function playerCantLose(ctx: GameContext, playerId: PlayerId): boolean {
+  return ctx.state.cantLoseTurn?.[playerId] === ctx.state.turnNumber;
+}
+
+/**
+ * CR 702.61a: while a spell with split second is on the stack, no player can cast spells or
+ * activate abilities that aren't mana abilities. Triggers and special actions are unaffected.
+ */
+export function splitSecondOnStack(ctx: GameContext): boolean {
+  return ctx.state.stack.some((entry) => {
+    if (entry.kind !== 'spell') return false;
+    const def = entry.spellDefinition ?? ctx.defs.get(entry.sourceOracleId as OracleId);
+    return def?.keywords.includes('split second') === true;
+  });
+}
+
 export function castingSpellsBlockedFor(
   ctx: GameContext,
   playerId: PlayerId,
   definition?: Pick<CardDefinition, 'types'>,
 ): boolean {
   if (ctx.state.spellsProhibitedTurn === ctx.state.turnNumber) return true;
+  if (splitSecondOnStack(ctx)) return true;
   return gatherRuleStatics(ctx).some((entry) => {
     if (entry.static.kind === 'spellCastLimit') {
       const player = ctx.state.players.find((candidate) => candidate.id === playerId);
