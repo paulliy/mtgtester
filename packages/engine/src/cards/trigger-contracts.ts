@@ -45,6 +45,7 @@ export function triggerEventFamily(
     case 'secondMainPhase':
       return 'step';
     case 'gainsLife':
+    case 'losesLife':
     case 'drawsCard':
     case 'foretells':
     case 'activatesAbility':
@@ -87,6 +88,7 @@ export function triggerProvidesEventPlayer(when: TriggerHead['when']): boolean {
     case 'dealsDamageToOpponent':
     case 'castsSpell':
     case 'gainsLife':
+    case 'losesLife':
     case 'drawsCard':
     case 'foretells':
     case 'activatesAbility':
@@ -170,6 +172,7 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
                 'player',
                 ...(head['when'] === 'playerDealtDamage' ? ['sourceController'] : []),
                 ...(head['when'] === 'activatesAbility' ? ['lifePaid'] : []),
+                ...(head['when'] === 'losesLife' ? ['firstTimeEachTurn'] : []),
               ]),
   ];
   for (const key of Object.keys(head))

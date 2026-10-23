@@ -55,9 +55,7 @@ describe('PR11b modal DFC spell faces', () => {
         const def = interpretCard({ ...source, oracleId } as typeof source);
         expect(def.unmodeledReasons, source.name).toEqual([]);
         expect(def.modeled).toBe(true);
-        expect(def.alternativeCasts?.some((alt) => alt.kind === 'mdfc' && alt.landFace)).toBe(
-          true,
-        );
+        expect(def.alternativeCasts?.some((alt) => alt.kind === 'mdfc' && alt.landFace)).toBe(true);
       }
     }
   });

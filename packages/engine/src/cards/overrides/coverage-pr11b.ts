@@ -1,11 +1,14 @@
 /** PR11b authored layout cards: MDFC spell faces, transform, Class, Sagas, split cards, prepare, Rooms. */
-import { onDies, spell, triggered } from '../templates';
+import { SELF } from '../selector';
+import { activated, mana, onDies, spell, triggered } from '../templates';
+import { INKLING_2_1_FLYING } from '../tokens';
 import { constant } from '../value';
 import { extendCard, replaceCard } from './index';
 
 export function registerCoveragePr11bOverrides(): void {
   registerPr11bModalSpellFaces();
   registerPr11bTransform();
+  registerPr11bClass();
 }
 
 /** PR11.02, .04: spell // land modal DFCs whose land backs were already authored. */
@@ -79,5 +82,81 @@ function registerPr11bTransform(): void {
         ),
       ],
     },
+  );
+}
+
+/** PR11.14: a Class whose levels are gained in order at sorcery speed (CR 716). */
+function registerPr11bClass(): void {
+  // PR11.14: level 2's trigger only exists from level 2 on, and "for the first time each turn"
+  // is part of the life-loss event, so a Class that levels up after its controller has already
+  // lost life that turn waits for the next turn. Level 3's end-step check is an intervening if
+  // over a modified creature (CR 700.9) that died while its controller was this Class's.
+  const levelUp = (cost: string, level: number) => ({
+    ...activated({
+      costs: [mana(cost)],
+      timing: 'sorcery',
+      effects: [{ op: 'gainClassLevel', level }],
+      description: `${cost}: Gain Class level ${level}`,
+    }),
+    condition: { kind: 'sourceClassLevel', cmp: '==', n: level - 1 } as const,
+  });
+  replaceCard(
+    '6c948f71-5c86-450c-8828-df4d8deaf1dd',
+    'Intermediate Chirography',
+    [
+      'unsupported layout "class"',
+      'unrecognized rules text: "When this Class enters, create a 2/1 white and black Inkling creature token with flying."',
+      'unrecognized rules text: "{1}{B}: Level 2"',
+      'unrecognized rules text: "Whenever you lose life for the first time each turn, put a +1/+1 counter on target creature you control."',
+      'unrecognized rules text: "{2}{B}: Level 3"',
+      'unrecognized rules text: "At the beginning of each end step, if a modified creature died under your control this turn, create a 2/1 white and black Inkling creature token with flying."',
+    ],
+    {
+      triggers: [
+        triggered(
+          { when: 'enters', subject: { kind: 'self' } },
+          {
+            effects: [{ op: 'createToken', spec: INKLING_2_1_FLYING, count: constant(1) }],
+            description: 'When this Class enters, create a 2/1 white and black Inkling with flying',
+          },
+        ),
+      ],
+      activatedAbilities: [levelUp('{1}{B}', 2), levelUp('{2}{B}', 3)],
+      staticEffects: [
+        {
+          affects: SELF,
+          condition: { kind: 'sourceClassLevel', cmp: '>=', n: 2 },
+          op: {
+            layer: 6,
+            addTrigger: triggered(
+              { when: 'losesLife', player: 'you', firstTimeEachTurn: true },
+              {
+                targets: [{ kind: 'creature', controller: 'you' }],
+                effects: [{ op: 'putCounters', target: 0, counter: '+1/+1', count: constant(1) }],
+                description:
+                  'Whenever you lose life for the first time each turn, put a +1/+1 counter on target creature you control',
+              },
+            ),
+          },
+        },
+        {
+          affects: SELF,
+          condition: { kind: 'sourceClassLevel', cmp: '>=', n: 3 },
+          op: {
+            layer: 6,
+            addTrigger: triggered(
+              { when: 'endStep', player: 'each' },
+              {
+                condition: { kind: 'modifiedCreatureDiedUnderYourControlThisTurn' },
+                effects: [{ op: 'createToken', spec: INKLING_2_1_FLYING, count: constant(1) }],
+                description:
+                  'At the beginning of each end step, if a modified creature died under your control this turn, create a 2/1 white and black Inkling with flying',
+              },
+            ),
+          },
+        },
+      ],
+    },
+    'PR11b implements the Class levels, the first-life-loss trigger and the modified-death check.',
   );
 }

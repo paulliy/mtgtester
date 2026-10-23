@@ -408,6 +408,7 @@ export function* dealDamageToPlayer(
       source.controllerId,
     );
   } else {
+    const before = target.life;
     target.life =
       ctx.state.lifeFloorPlayers[target.id] === true
         ? Math.max(1, target.life - amount)
@@ -415,6 +416,7 @@ export function* dealDamageToPlayer(
     // CR 120.3: damage dealt to a player causes that player to lose that much life. Cards that
     // ask who "lost life this turn" (Gev, Scaled Scorch) must see damage, not just `loseLife`.
     // The infect branch above is deliberately excluded: it gives poison counters instead.
+    noteLifeLost(ctx, target.id, before - target.life);
     ctx.state.lifeLostThisTurn[target.id] = true;
   }
   ctx.state.damageDealtToPlayersThisTurn[target.id] =
@@ -688,8 +690,19 @@ export function loseLife(ctx: GameContext, player: EnginePlayerState, amount: nu
   if (amount <= 0 || playerLifeLocked(ctx, player.id)) return;
   // Angel's Grace's floor is for damage only (applyDamageToPlayer); life loss goes below 1.
   player.life -= amount;
-  ctx.state.lifeLostThisTurn[player.id] = true;
+  noteLifeLost(ctx, player.id, amount);
   emit(ctx, 'lifeLoss', { player: player.id, amount, life: player.life });
+}
+
+/**
+ * Record one life-loss event (CR 119.3) and queue "whenever you lose life" triggers. The
+ * first-loss flag is read before this loss is recorded, so it names the turn's first loss.
+ */
+function noteLifeLost(ctx: GameContext, playerId: PlayerId, amount: number): void {
+  if (amount <= 0) return;
+  const first = ctx.state.lifeLostThisTurn[playerId] !== true;
+  ctx.state.lifeLostThisTurn[playerId] = true;
+  queuePlayerTriggersForEvent(ctx, 'losesLife', playerId, amount, undefined, first);
 }
 
 /** CR 119.4 / 119.4b: positive life payments need enough life; zero is always payable. */
@@ -702,7 +715,7 @@ export function payLife(ctx: GameContext, player: EnginePlayerState, amount: num
     throw new Error('life cost became unpayable');
   player.life -= amount;
   if (ctx.costLifePaid !== undefined) ctx.costLifePaid.amount += amount;
-  ctx.state.lifeLostThisTurn[player.id] = true;
+  noteLifeLost(ctx, player.id, amount);
   emit(ctx, 'lifeLoss', { player: player.id, amount, life: player.life });
 }
 

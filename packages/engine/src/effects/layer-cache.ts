@@ -203,6 +203,7 @@ export function digestOf(
   h = mix(h, s.monarchPlayerId === null ? 0 : hashString(s.monarchPlayerId));
   h = mix(h, s.eliminatedPlayers.length);
   h = mix(h, s.creaturesDiedThisTurn + 0x10000);
+  h = mix(h, Object.keys(s.modifiedCreatureDiedThisTurn ?? {}).length);
   h = mix(h, s.excessDamageControllerIds.length);
   for (const player of s.players) {
     h = mix(h, player.life + 0x10000);

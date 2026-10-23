@@ -123,6 +123,22 @@ export function isAttackingPlayerOrTheirPlaneswalker(
 }
 
 /** Current card types include Creature after the layer system (Mutavault, etc.). */
+/**
+ * CR 700.9: a permanent is modified if it has a counter on it, is equipped, or is enchanted by
+ * an Aura its controller controls.
+ */
+export function isModified(ctx: GameContext, perm: EnginePermanent): boolean {
+  if (Object.values(perm.counters).some((count) => count > 0)) return true;
+  return ctx.state.battlefield.some((attached) => {
+    if (attached.attachedTo !== perm.id) return false;
+    const subtypes = computeCharacteristics(ctx, attached).subtypes;
+    return (
+      subtypes.includes('Equipment') ||
+      (subtypes.includes('Aura') && attached.controllerId === perm.controllerId)
+    );
+  });
+}
+
 export function isCreaturePermanent(ctx: GameContext, perm: EnginePermanent): boolean {
   return computeCharacteristics(ctx, perm).types.includes('Creature');
 }

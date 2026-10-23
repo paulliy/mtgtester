@@ -3,7 +3,7 @@ import { offBattlefieldTypes } from './off-battlefield-types';
 import { playerProtectedFromEverything } from './phasing';
 import { selectedPermanentDefinition } from '../cards/spell-faces';
 import { assertTriggerEventFamily } from '../cards/trigger-contracts';
-import { attackedPlaneswalker, spellDefinitionOf, canBeSacrificed } from './queries';
+import { attackedPlaneswalker, spellDefinitionOf, canBeSacrificed, isModified } from './queries';
 /**
  * Object identity and zone movement (CR 400.7, brief §5.2). A card changing zones becomes
  * a NEW object with a new `ObjectId`; the stable `cardId` links its zone-visits together.
@@ -3303,9 +3303,7 @@ export function* movePermanentsTogether(
   );
   // Only what really reaches the graveyard dies.
   const dying = permanents.filter((perm) => destinations.get(perm.id) === 'graveyard');
-  ctx.state.creaturesDiedThisTurn += dying.filter((perm) =>
-    computeCharacteristics(ctx, perm).types.includes('Creature'),
-  ).length;
+  for (const perm of dying) recordCreatureDeath(ctx, perm);
   const pendingStart = ctx.state.pendingTriggers.length;
   if (reason === 'sacrifice')
     queueTriggersForEvent(
@@ -3368,10 +3366,16 @@ function queueLeaveBattlefieldTriggers(ctx: GameContext, obj: EngineObject, to: 
   // "dies" means battlefield → graveyard (CR 700.4). The pre-move battlefield object
   // carries the controller.
   if (to !== 'graveyard') return;
-  if (computeCharacteristics(ctx, perm).types.includes('Creature')) {
-    ctx.state.creaturesDiedThisTurn += 1;
-  }
+  recordCreatureDeath(ctx, perm);
   queueTriggersForObject(ctx, 'dies', perm);
+}
+
+/** Count a dying creature, and whether it died modified (CR 700.9), before it leaves. */
+function recordCreatureDeath(ctx: GameContext, perm: EnginePermanent): void {
+  if (!computeCharacteristics(ctx, perm).types.includes('Creature')) return;
+  ctx.state.creaturesDiedThisTurn += 1;
+  if (isModified(ctx, perm))
+    (ctx.state.modifiedCreatureDiedThisTurn ??= {})[perm.controllerId] = true;
 }
 
 /**
@@ -3605,17 +3609,27 @@ function bindActivatedAbility(
 
 export function queuePlayerTriggersForEvent(
   ctx: GameContext,
-  when: 'gainsLife' | 'drawsCard' | 'foretells' | 'damagePreventedToPlayer' | 'playerDealtDamage',
+  when:
+    | 'gainsLife'
+    | 'losesLife'
+    | 'drawsCard'
+    | 'foretells'
+    | 'damagePreventedToPlayer'
+    | 'playerDealtDamage',
   playerId: PlayerId,
   amount?: number,
   /** `playerDealtDamage`: who controls the source that dealt the damage; it is the event player. */
   sourceControllerId?: PlayerId,
+  /** `losesLife`: this is the player's first life loss this turn. */
+  firstThisTurn?: boolean,
 ): void {
   assertTriggerEventFamily(when, 'player');
   for (const perm of ctx.state.battlefield) {
     for (const ability of triggersOf(ctx, perm)) {
       const spec = ability.trigger;
       if (spec === undefined || spec.when !== when) continue;
+      if (spec.when === 'losesLife' && spec.firstTimeEachTurn === true && firstThisTurn !== true)
+        continue;
       if (spec.player === 'you' && perm.controllerId !== playerId) continue;
       if (
         spec.player === 'opponent' &&

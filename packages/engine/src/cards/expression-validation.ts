@@ -300,6 +300,7 @@ const conditionShapes = {
   sourceClassLevel: { cmp: oneOf('>=', '<=', '=='), n: finite },
   eventPlayerHandSize: { cmp: oneOf('>=', '<=', '=='), n: finite },
   castSpellThisTurn: { category: oneOf('any', 'noncreature'), cmp: oneOf('>=', '<='), n: finite },
+  modifiedCreatureDiedUnderYourControlThisTurn: {},
   not: { of: condition },
 } satisfies Shapes<Condition>;
 

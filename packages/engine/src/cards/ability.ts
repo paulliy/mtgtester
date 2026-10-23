@@ -2232,6 +2232,12 @@ export type TriggerHead =
   | { when: 'secondMainPhase'; player: 'you' | 'each' }
   /** "Whenever you gain life" (Dawn of Hope) — player-scoped, like the step triggers above. */
   | { when: 'gainsLife'; player: 'you' | 'each' }
+  /**
+   * "Whenever you lose life" (CR 119.3): queued once per life-loss event, damage included, with
+   * the amount actually lost. `firstTimeEachTurn`: "for the first time each turn" (Intermediate
+   * Chirography), part of the event — only the turn's first loss by that player fires it.
+   */
+  | { when: 'losesLife'; player: 'you' | 'each' | 'opponent'; firstTimeEachTurn?: true }
   | { when: 'drawsCard'; player: 'you' | 'each' | 'opponent' }
   | { when: 'foretells'; player: 'you' }
   /**

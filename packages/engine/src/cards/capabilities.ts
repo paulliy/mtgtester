@@ -482,6 +482,7 @@ const shapes = {
     perDefender: leaf,
     minAttackers: leaf,
     lifePaid: leaf,
+    firstTimeEachTurn: leaf,
   } satisfies Fields<Objects<TriggerSpec>>,
   Ability: {
     kind: leaf,
@@ -1285,6 +1286,7 @@ const families = {
       precombatMain: true,
       secondMainPhase: true,
       gainsLife: true,
+      losesLife: true,
       drawsCard: true,
       becomesCrewed: true,
       foretells: true,
@@ -1475,6 +1477,7 @@ const families = {
       sourceClassLevel: true,
       eventPlayerHandSize: true,
       castSpellThisTurn: true,
+      modifiedCreatureDiedUnderYourControlThisTurn: true,
       not: true,
     } satisfies Record<Extract<Condition['kind'], string | number>, true>,
   },
