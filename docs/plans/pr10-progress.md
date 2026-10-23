@@ -12,7 +12,7 @@ The overrides in
 [coverage-pr10.ts](../../packages/engine/src/cards/overrides/coverage-pr10.ts) are registered in
 production by `index.ts` beside `coverage-pr09`, one group at a time as its evidence landed: `registerPr10RetargetAndCopyOverrides` and `registerPr10CastCopyOverrides`, `registerPr10AbilityStackOverrides`, `registerPr10TriggerDoublingOverrides`, `registerPr10AnimationOverrides`, `registerPr10TokenCopyOverrides`, `registerPr10CharacteristicsOverrides`.
 Before this, only the PR10 engine suites installed them through `tests/pr10-helpers.ts`;
-registering twice is harmless, so that call stays. No rules logic changed.
+registering twice is harmless, so that call stays. Registration itself changed no rules logic; the engine primitives the cards need landed in the earlier PR10 engine commits.
 
 | Card                       | PR10 id | Clauses | Engine cases (file)                 | Card Test Lab scenarios |
 | -------------------------- | ------- | ------- | ----------------------------------- | ----------------------- |
