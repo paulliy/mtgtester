@@ -351,7 +351,8 @@ describe('Imp’s Mischief and Restoration Magic — pinned Oracle behavior', ()
       targetIsLegal(game, spell.ability!.targets![0]!, old.id, {
         controllerId: 'P2',
         sourceCardId: spell.sourceCardId,
-        sourceColors: ['R'],
+        sourceTraits: { colors: ['R'], types: ['Instant'] },
+        sourceKind: 'spell',
       }),
     ).toBe(false);
     addMana(player(game, 'P1'), [{ symbol: 'B' }, { symbol: 'C' }]);
@@ -396,14 +397,16 @@ describe('Imp’s Mischief and Restoration Magic — pinned Oracle behavior', ()
       targetIsLegal(game, secondSpell.ability!.targets![0]!, blackProtected.id, {
         controllerId: 'P2',
         sourceCardId: secondSpell.sourceCardId,
-        sourceColors: ['R'],
+        sourceTraits: { colors: ['R'], types: ['Instant'] },
+        sourceKind: 'spell',
       }),
     ).toBe(true);
     expect(
       targetIsLegal(game, secondSpell.ability!.targets![0]!, blackProtected.id, {
         controllerId: 'P1',
         sourceCardId: 'imp-source',
-        sourceColors: ['B'],
+        sourceTraits: { colors: ['B'], types: ['Instant'] },
+        sourceKind: 'spell',
       }),
     ).toBe(false);
     addMana(player(game, 'P1'), [{ symbol: 'B' }, { symbol: 'C' }]);

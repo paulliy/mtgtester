@@ -912,7 +912,7 @@ export function* moveObject(
               ctx,
               enchant,
               controllerId,
-              def.colors,
+              undefined,
               undefined,
               undefined,
               obj.cardId,
@@ -925,7 +925,7 @@ export function* moveObject(
                 return false;
               return host === undefined
                 ? !playerLifeLocked(ctx, id)
-                : !hasProtectionFrom(ctx, host, def.colors);
+                : !hasProtectionFrom(ctx, host, def);
             });
       if (target.attachedTo !== undefined) {
         if (!hosts.includes(target.attachedTo)) return null;
@@ -1688,8 +1688,8 @@ export function canAttach(
   if (!ctx.state.battlefield.includes(host)) return false;
   const chars = computeCharacteristics(ctx, attachment);
   if (chars.types.includes('Creature')) return false;
-  // Protection: can't be Enchanted or Equipped by something of that color (CR 702.16d).
-  if (hasProtectionFrom(ctx, host, chars.colors)) return false;
+  // Protection: can't be Enchanted or Equipped by something it is protected from (CR 702.16d).
+  if (hasProtectionFrom(ctx, host, chars)) return false;
   if (chars.subtypes.includes('Aura')) return enchantAllows(ctx, attachment, host) === true;
   if (chars.subtypes.includes('Equipment'))
     return computeCharacteristics(ctx, host).types.includes('Creature');
@@ -1706,8 +1706,8 @@ export function enchantAllows(
   aura: EnginePermanent,
   host: EnginePermanent,
 ): boolean | undefined {
-  const colors = computeCharacteristics(ctx, aura).colors;
-  if (hasProtectionFrom(ctx, host, colors)) return false;
+  const chars = computeCharacteristics(ctx, aura);
+  if (hasProtectionFrom(ctx, host, chars)) return false;
   // A bestowed Aura has "enchant creature" (CR 702.103b).
   const enchant =
     aura.bestowed === true
@@ -1718,7 +1718,7 @@ export function enchantAllows(
     ctx,
     enchant,
     aura.controllerId,
-    colors,
+    undefined,
     undefined,
     undefined,
     aura.cardId,

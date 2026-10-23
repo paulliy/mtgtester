@@ -144,6 +144,9 @@ describe('Marchesa catalog audit containment', () => {
     'Nighthawk Scavenger',
     'Reality Shift',
     'Trazyn the Infinite',
+    // PR11 pinned activation regressions replace this guard.
+    'Arcane Lighthouse',
+    'Spirit Mantle',
 
     'Vindictive Lich',
     'Shadrix Silverquill',

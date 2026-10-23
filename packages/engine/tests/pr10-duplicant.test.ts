@@ -47,7 +47,10 @@ describe('PR10.13 Duplicant', () => {
     const token = spawn(ctx, 'P2', bear('Duplicant Token'));
     token.isToken = true;
     const spec = pinnedDefinition('Duplicant').triggers[0]!.targets[0]!;
-    const legal = computeTargetOptions(ctx, spec, 'P1', []);
+    const legal = computeTargetOptions(ctx, spec, 'P1', {
+      traits: { colors: [], types: ['Artifact', 'Creature'] },
+      kind: 'ability',
+    });
     expect(legal).toContain(card.id);
     expect(legal).not.toContain(token.id);
   });

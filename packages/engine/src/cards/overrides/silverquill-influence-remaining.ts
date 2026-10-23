@@ -300,12 +300,8 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
     "Songbirds' Blessing",
     'Reveal-until-Aura with optional battlefield and hand fallback is unimplemented.',
   );
-  // Catalog audit silverquill-remaining-batch-3: protection from creatures is unimplemented.
-  unsupportedCard(
-    '81a51328-b995-4f3b-90bc-a20ae21dd254',
-    'Spirit Mantle',
-    'Protection from creatures is unimplemented.',
-  );
+  // Spirit Mantle: restored in coverage PR11. The interpreter reads +1/+1 and protection from
+  // creatures as layer-6/7 effects on the enchanted creature, and protection reads card types.
   defineCard(
     '7e00b0cd-d212-4604-ba07-da21f4fe00b0',
     'Sram, Senior Edificer',

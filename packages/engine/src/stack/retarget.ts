@@ -2,7 +2,8 @@ import type { ObjectId, PlayerId } from '@mtg/shared';
 import { queueBecomesTargetedTriggers, queueWardTriggers } from '../actions/apply';
 import type { GameGen } from '../decisions';
 import { emit } from '../log/log';
-import { findPermanent, sourceColorsOf } from '../state/queries';
+import { findPermanent, stackSourceTraits } from '../state/queries';
+import { targetingSourceFields } from '../targets/context';
 import type { EngineStackObject, GameContext } from '../state/types';
 import { targetDomainCandidates, targetIsLegal, withinTotalManaValue } from '../targets/legality';
 import { chooseNewTargets } from './replicate-targets';
@@ -30,7 +31,10 @@ export function* chooseNewStackTargets(
     name: sourceName,
     subject: entry.description,
     ability,
-    colors: sourceColorsOf(ctx, entry.sourceCardId, entry.sourceOracleId, entry.sourceColors),
+    source: {
+      traits: stackSourceTraits(ctx, entry),
+      kind: entry.kind === 'spell' ? 'spell' : 'ability',
+    },
     sourceCardId: entry.sourceCardId,
     originalTargets: entry.targets,
     originalCounted: entry.countTargets ?? {},
@@ -77,7 +81,10 @@ export function* changeSingleStackTarget(
   const targetContext = {
     controllerId: entry.controllerId,
     sourceCardId: entry.sourceCardId,
-    sourceColors: sourceColorsOf(ctx, entry.sourceCardId, entry.sourceOracleId, entry.sourceColors),
+    ...targetingSourceFields({
+      traits: stackSourceTraits(ctx, entry),
+      kind: entry.kind === 'spell' ? 'spell' : 'ability',
+    }),
     chosenTargets: entry.targets,
     ...(entry.triggerScope?.eventPlayerId === undefined
       ? {}

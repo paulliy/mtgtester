@@ -72,9 +72,19 @@ function permanentView(ctx: GameContext, perm: EnginePermanent): SpectatorPerman
       ...new Set([
         ...chars.keywords,
         ...chars.protectionFrom.map(
-          (color) =>
+          (quality) =>
             `protection from ${
-              ({ W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green' } as const)[color]
+              (
+                {
+                  W: 'white',
+                  U: 'blue',
+                  B: 'black',
+                  R: 'red',
+                  G: 'green',
+                  multicolored: 'multicolored',
+                  creatures: 'creatures',
+                } as const
+              )[quality]
             }`,
         ),
       ]),

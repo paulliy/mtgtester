@@ -767,6 +767,7 @@ const shapes = {
     loseAbilities: leaf,
     setColors: { array: leaf },
     addKeyword: leaf,
+    denyKeywords: { array: leaf },
     setCantBeBlocked: leaf,
     setMustAttackEachCombat: leaf,
     addGoad: leaf,
@@ -900,6 +901,7 @@ const families = {
       pumpEachUntilEot: true,
       doublePowerAndToughnessEachUntilEot: true,
       grantKeywordEachUntilEot: true,
+      denyKeywordsEachUntilEot: true,
       grantKeywordToAttackGroupUntilEot: true,
       putCountersOnCreatureOfChoice: true,
       returnBlockedCreatureAtEndOfCombat: true,
@@ -1462,6 +1464,7 @@ const families = {
     tags: {
       cantBlockMatching: true,
       cantBeSacrificed: true,
+      cantBeTargetedByOpponentAbilities: true,
       cantAttackOwner: true,
       costReduction: true,
       opponentNonHandSpellCostIncrease: true,

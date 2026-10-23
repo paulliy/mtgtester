@@ -19,6 +19,8 @@ import type { Value } from './value';
 export type RuleStatic =
   | { kind: 'cantBlockMatching'; filter: Selector }
   | { kind: 'cantBeSacrificed' }
+  /** "~ can't be the target of abilities your opponents control" (Shanna, CR 115.1). */
+  | { kind: 'cantBeTargetedByOpponentAbilities' }
   | { kind: 'cantAttackOwner' }
   | { kind: 'opponentNonHandSpellCostIncrease'; amount: number }
   | { kind: 'beginOnBattlefieldFromOpeningHand' }
