@@ -152,6 +152,7 @@ import {
   resolveDynamicAmount,
   resolveDynamicUnits,
   playerCantLose,
+  sagaFinalChapter,
 } from '../state/queries';
 import type {
   ControlChangeDuration,
@@ -882,8 +883,7 @@ function* putAnyFromHandOnBottomThenDraw(
       verb: 'Put on bottom',
       decline: {
         type: 'decline',
-        description:
-          selected.length === 0 ? 'Put no cards on the bottom' : 'Done choosing cards',
+        description: selected.length === 0 ? 'Put no cards on the bottom' : 'Done choosing cards',
         verb: selected.length === 0 ? 'Put none' : 'Done',
       },
     });
@@ -1299,12 +1299,18 @@ function addCounterPlacements(
     'countersPut',
     planned
       .filter(({ adjustedCount }) => adjustedCount > 0)
-      .map(({ placement, adjustedCount }) => {
+      .map(({ placement, before, adjustedCount }) => {
         actual.set(placement.perm.id, adjustedCount);
         return {
           permanent: placement.perm,
           playerId: placement.placingPlayerId,
           counterKinds: [placement.counter],
+          counterCounts: {
+            [placement.counter]: {
+              before,
+              after: counterCount(placement.perm.counters, placement.counter),
+            },
+          },
         };
       }),
   );
@@ -1333,6 +1339,32 @@ function addCounterPlacements(
     }
   }
   return actual;
+}
+
+/**
+ * CR 714.3c: as its controller's precombat main phase begins, each Saga with a chapter ability
+ * gets a lore counter. A turn-based action, not an ability, so the controller places it.
+ */
+export function addSagaLoreCounters(ctx: GameContext, playerId: PlayerId): void {
+  const sagas = ctx.state.battlefield.filter(
+    (perm) =>
+      perm.controllerId === playerId &&
+      computeCharacteristics(ctx, perm).subtypes.includes('Saga') &&
+      sagaFinalChapter(ctx, perm) > 0,
+  );
+  for (const saga of sagas) {
+    addCounterPlacements(
+      ctx,
+      {
+        cardId: saga.cardId,
+        id: saga.id,
+        name: saga.name,
+        oracleId: saga.oracleId,
+        controllerId: playerId,
+      },
+      [{ perm: saga, counter: 'lore', count: 1, placingPlayerId: playerId }],
+    );
+  }
 }
 
 /**
@@ -1950,6 +1982,31 @@ export function* executeAbility(
             (current.transformations ?? 0) === source.transformationsAtStack)
         )
           transformPermanent(ctx, current);
+        break;
+      }
+      case 'sourceGainsAbility': {
+        const current = sourcePermanent();
+        if (current === undefined) break;
+        const granted =
+          effect.manaAbility !== undefined
+            ? { kind: 'grantManaAbility' as const, manaAbility: effect.manaAbility }
+            : effect.activatedAbility !== undefined
+              ? {
+                  kind: 'grantActivatedAbility' as const,
+                  activatedAbility: effect.activatedAbility,
+                }
+              : undefined;
+        if (granted === undefined) break;
+        ctx.state.effects.push({
+          id: `eff-${ctx.state.nextObjectNum++}`,
+          sourceId: source.cardId,
+          description: `${current.name} gains an ability`,
+          targetCardIds: [current.cardId],
+          targetObjectIds: [current.id],
+          ...granted,
+          duration: 'permanent',
+          timestamp: ctx.state.nextTimestamp++,
+        });
         break;
       }
       case 'selfToLibraryTop': {
@@ -8392,6 +8449,22 @@ export function* executeAbility(
         });
         if (returned !== null && returned.zone === 'battlefield')
           emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
+        break;
+      }
+      case 'reanimateEachChosen': {
+        // The legal chosen cards still in a graveyard (CR 608.2b), entering together (CR 603.6a).
+        const cards = chosenReferents(effect.targetSlot).flatMap((cardId) => {
+          const card = ctx.state.players
+            .flatMap((player) => player.graveyard)
+            .find((candidate) => candidate.id === cardId);
+          return card === undefined ? [] : [card];
+        });
+        yield* moveObjects(ctx, cards, {
+          zone: 'battlefield',
+          controllerId: source.controllerId,
+          ...(effect.counter === undefined ? {} : { withCounters: { [effect.counter]: 1 } }),
+          ...(effect.addTypes === undefined ? {} : { addTypes: effect.addTypes }),
+        });
         break;
       }
       case 'reanimateEachChosenTapped': {

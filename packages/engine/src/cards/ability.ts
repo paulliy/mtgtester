@@ -1457,6 +1457,11 @@ export type Effect =
   /** Toggle this transforming permanent between its front and back faces. */
   | { op: 'transformSelf' }
   /**
+   * "This Saga gains '{T}: Add {C}.'" (Urza's Saga): the source permanent gains the ability for
+   * as long as it remains that object (CR 611.2c, 400.7). Exactly one of the two is set.
+   */
+  | { op: 'sourceGainsAbility'; manaAbility?: ManaAbilitySpec; activatedAbility?: ActivatedAbility }
+  /**
    * "Put this artifact on top of its owner's library" (Sensei's Divining Top). Distinct from a
    * bounce: the destination is the LIBRARY of the OWNER, not the controller's hand, so a stolen
    * Top goes back to the library of the player who owns it (CR 400.3).
@@ -1991,6 +1996,12 @@ export type Effect =
    */
   | { op: 'reanimateEachChosenTapped'; targetSlot: number }
   /**
+   * Return each chosen graveyard card to the battlefield under your control, together (CR
+   * 603.6a), each with one `counter` on it as it enters (CR 122.6) and, from then on, with
+   * `addTypes` in addition to its other types (The War in Heaven).
+   */
+  | { op: 'reanimateEachChosen'; targetSlot: number; counter?: string; addTypes?: string[] }
+  /**
    * "Exile that many cards from the top of your library. Until end of turn, you may cast
    * spells from among those exiled cards" (Dream Pillager) — an impulse-draw of a DYNAMIC
    * count. `legal.ts` offers each exiled card back as a cast option for the rest of the turn.
@@ -2177,6 +2188,12 @@ export type TriggerHead =
       withOtherAttackers?: number;
       /** `countersPut`: only a placement that includes this counter kind. */
       counter?: string;
+      /**
+       * A chapter ability (CR 714.2b): "When one or more lore counters are put onto this Saga, if
+       * the number of lore counters on it was less than N and became at least N". The crossing is
+       * read from the placement itself, so it is part of the event.
+       */
+      chapter?: number;
       /** `countersPut`: "Whenever **you** put a counter on …" — the placing player is the controller. */
       byYou?: true;
       /**

@@ -5916,6 +5916,182 @@
     }
   },
   {
+    "oracleId": "4c6a0c30-b547-4eff-8ff4-0ca25803c076",
+    "name": "Urza's Saga",
+    "handledLines": [
+      "unrecognized rules text: \"I — ~ gains \"{T}: Add {C}.\"\"",
+      "unrecognized rules text: \"II — ~ gains \"{2}, {T}: Create a 0/0 colorless Construct artifact creature token with '~ gets +1/+1 for each artifact you control.'\"\"",
+      "unrecognized rules text: \"III — Search your library for an artifact card with mana cost {0} or {1}, put it onto the battlefield, then shuffle.\"",
+      "unsupported layout \"saga\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "I — This Saga gains \"{T}: Add {C}\"",
+          "effects": [
+            {
+              "manaAbility": {
+                "units": [
+                  [
+                    "C"
+                  ]
+                ]
+              },
+              "op": "sourceGainsAbility"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "chapter": 1,
+            "counter": "lore",
+            "subject": {
+              "kind": "self"
+            },
+            "when": "countersPut"
+          }
+        },
+        {
+          "description": "II — This Saga gains \"{2}, {T}: Create a 0/0 colorless Construct artifact creature token\"",
+          "effects": [
+            {
+              "activatedAbility": {
+                "ability": {
+                  "description": "{2}, {T}: Create a 0/0 Construct artifact token with \"This creature gets +1/+1 for each artifact you control\"",
+                  "effects": [
+                    {
+                      "count": {
+                        "kind": "const",
+                        "n": 1
+                      },
+                      "op": "createToken",
+                      "spec": {
+                        "colors": [],
+                        "name": "Construct",
+                        "power": 0,
+                        "staticEffects": [
+                          {
+                            "affects": {
+                              "kind": "self"
+                            },
+                            "op": {
+                              "layer": 7,
+                              "power": {
+                                "kind": "countPermanents",
+                                "scope": "you",
+                                "selector": {
+                                  "kind": "type",
+                                  "value": "Artifact"
+                                }
+                              },
+                              "sublayer": "d",
+                              "toughness": {
+                                "kind": "countPermanents",
+                                "scope": "you",
+                                "selector": {
+                                  "kind": "type",
+                                  "value": "Artifact"
+                                }
+                              }
+                            }
+                          }
+                        ],
+                        "subtypes": [
+                          "Construct"
+                        ],
+                        "toughness": 0,
+                        "typeLine": "Artifact Creature — Construct",
+                        "types": [
+                          "Artifact",
+                          "Creature"
+                        ]
+                      }
+                    }
+                  ],
+                  "kind": "activated",
+                  "targets": []
+                },
+                "costs": [
+                  {
+                    "cost": {
+                      "colored": {
+                        "B": 0,
+                        "G": 0,
+                        "R": 0,
+                        "U": 0,
+                        "W": 0
+                      },
+                      "colorless": 0,
+                      "generic": 2
+                    },
+                    "kind": "mana"
+                  },
+                  {
+                    "kind": "tap"
+                  }
+                ],
+                "timing": "any"
+              },
+              "op": "sourceGainsAbility"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "chapter": 2,
+            "counter": "lore",
+            "subject": {
+              "kind": "self"
+            },
+            "when": "countersPut"
+          }
+        },
+        {
+          "description": "III — Search your library for an artifact card with mana cost {0} or {1}, put it onto the battlefield, then shuffle",
+          "effects": [
+            {
+              "destinations": [
+                {
+                  "zone": "battlefield"
+                }
+              ],
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "manaCostIs",
+                    "manaCosts": [
+                      "{0}",
+                      "{1}"
+                    ]
+                  }
+                ]
+              },
+              "op": "searchLibrary"
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "chapter": 3,
+            "counter": "lore",
+            "subject": {
+              "kind": "self"
+            },
+            "when": "countersPut"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "4cfaa5cf-cc3d-49a7-9544-38a8bb7e9ec1",
     "name": "Frontier Siege",
     "handledLines": [
@@ -6781,8 +6957,103 @@
   {
     "oracleId": "5924cbb0-19b5-449c-a7c5-722e744a54f8",
     "name": "The War in Heaven",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "I — You draw three cards and you lose 3 life.",
+      "II — Mill three cards.",
+      "III — Choose up to three target creature cards with total mana value 8 or less in your graveyard. Return each of them to the battlefield with a necrodermis counter on it. They're artifacts in addition to their other types.",
+      "unsupported layout \"saga\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "I — You draw three cards and you lose 3 life",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 3
+              },
+              "op": "draw"
+            },
+            {
+              "amount": {
+                "kind": "const",
+                "n": 3
+              },
+              "op": "loseLife"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "chapter": 1,
+            "counter": "lore",
+            "subject": {
+              "kind": "self"
+            },
+            "when": "countersPut"
+          }
+        },
+        {
+          "description": "II — Mill three cards",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 3
+              },
+              "op": "mill"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "chapter": 2,
+            "counter": "lore",
+            "subject": {
+              "kind": "self"
+            },
+            "when": "countersPut"
+          }
+        },
+        {
+          "description": "III — Return up to three target creature cards with total mana value 8 or less from your graveyard to the battlefield with a necrodermis counter, as artifacts",
+          "effects": [
+            {
+              "addTypes": [
+                "Artifact"
+              ],
+              "counter": "necrodermis",
+              "op": "reanimateEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": 3,
+                "min": 0
+              },
+              "filter": {
+                "kind": "type",
+                "value": "Creature"
+              },
+              "kind": "cardInGraveyard",
+              "totalManaValueAtMost": 8
+            }
+          ],
+          "trigger": {
+            "chapter": 3,
+            "counter": "lore",
+            "subject": {
+              "kind": "self"
+            },
+            "when": "countersPut"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "59c7496b-19a2-478b-b28f-6f153c2458ae",
@@ -39655,8 +39926,103 @@
   {
     "oracleId": "oracle-the-war-in-heaven",
     "name": "The War in Heaven",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "I — You draw three cards and you lose 3 life.",
+      "II — Mill three cards.",
+      "III — Choose up to three target creature cards with total mana value 8 or less in your graveyard. Return each of them to the battlefield with a necrodermis counter on it. They're artifacts in addition to their other types.",
+      "unsupported layout \"saga\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "I — You draw three cards and you lose 3 life",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 3
+              },
+              "op": "draw"
+            },
+            {
+              "amount": {
+                "kind": "const",
+                "n": 3
+              },
+              "op": "loseLife"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "chapter": 1,
+            "counter": "lore",
+            "subject": {
+              "kind": "self"
+            },
+            "when": "countersPut"
+          }
+        },
+        {
+          "description": "II — Mill three cards",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 3
+              },
+              "op": "mill"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "chapter": 2,
+            "counter": "lore",
+            "subject": {
+              "kind": "self"
+            },
+            "when": "countersPut"
+          }
+        },
+        {
+          "description": "III — Return up to three target creature cards with total mana value 8 or less from your graveyard to the battlefield with a necrodermis counter, as artifacts",
+          "effects": [
+            {
+              "addTypes": [
+                "Artifact"
+              ],
+              "counter": "necrodermis",
+              "op": "reanimateEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": 3,
+                "min": 0
+              },
+              "filter": {
+                "kind": "type",
+                "value": "Creature"
+              },
+              "kind": "cardInGraveyard",
+              "totalManaValueAtMost": 8
+            }
+          ],
+          "trigger": {
+            "chapter": 3,
+            "counter": "lore",
+            "subject": {
+              "kind": "self"
+            },
+            "when": "countersPut"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-their-name-is-death",
@@ -40988,6 +41354,182 @@
           }
         ]
       }
+    }
+  },
+  {
+    "oracleId": "oracle-urza-s-saga",
+    "name": "Urza's Saga",
+    "handledLines": [
+      "unrecognized rules text: \"I — ~ gains \"{T}: Add {C}.\"\"",
+      "unrecognized rules text: \"II — ~ gains \"{2}, {T}: Create a 0/0 colorless Construct artifact creature token with '~ gets +1/+1 for each artifact you control.'\"\"",
+      "unrecognized rules text: \"III — Search your library for an artifact card with mana cost {0} or {1}, put it onto the battlefield, then shuffle.\"",
+      "unsupported layout \"saga\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "I — This Saga gains \"{T}: Add {C}\"",
+          "effects": [
+            {
+              "manaAbility": {
+                "units": [
+                  [
+                    "C"
+                  ]
+                ]
+              },
+              "op": "sourceGainsAbility"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "chapter": 1,
+            "counter": "lore",
+            "subject": {
+              "kind": "self"
+            },
+            "when": "countersPut"
+          }
+        },
+        {
+          "description": "II — This Saga gains \"{2}, {T}: Create a 0/0 colorless Construct artifact creature token\"",
+          "effects": [
+            {
+              "activatedAbility": {
+                "ability": {
+                  "description": "{2}, {T}: Create a 0/0 Construct artifact token with \"This creature gets +1/+1 for each artifact you control\"",
+                  "effects": [
+                    {
+                      "count": {
+                        "kind": "const",
+                        "n": 1
+                      },
+                      "op": "createToken",
+                      "spec": {
+                        "colors": [],
+                        "name": "Construct",
+                        "power": 0,
+                        "staticEffects": [
+                          {
+                            "affects": {
+                              "kind": "self"
+                            },
+                            "op": {
+                              "layer": 7,
+                              "power": {
+                                "kind": "countPermanents",
+                                "scope": "you",
+                                "selector": {
+                                  "kind": "type",
+                                  "value": "Artifact"
+                                }
+                              },
+                              "sublayer": "d",
+                              "toughness": {
+                                "kind": "countPermanents",
+                                "scope": "you",
+                                "selector": {
+                                  "kind": "type",
+                                  "value": "Artifact"
+                                }
+                              }
+                            }
+                          }
+                        ],
+                        "subtypes": [
+                          "Construct"
+                        ],
+                        "toughness": 0,
+                        "typeLine": "Artifact Creature — Construct",
+                        "types": [
+                          "Artifact",
+                          "Creature"
+                        ]
+                      }
+                    }
+                  ],
+                  "kind": "activated",
+                  "targets": []
+                },
+                "costs": [
+                  {
+                    "cost": {
+                      "colored": {
+                        "B": 0,
+                        "G": 0,
+                        "R": 0,
+                        "U": 0,
+                        "W": 0
+                      },
+                      "colorless": 0,
+                      "generic": 2
+                    },
+                    "kind": "mana"
+                  },
+                  {
+                    "kind": "tap"
+                  }
+                ],
+                "timing": "any"
+              },
+              "op": "sourceGainsAbility"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "chapter": 2,
+            "counter": "lore",
+            "subject": {
+              "kind": "self"
+            },
+            "when": "countersPut"
+          }
+        },
+        {
+          "description": "III — Search your library for an artifact card with mana cost {0} or {1}, put it onto the battlefield, then shuffle",
+          "effects": [
+            {
+              "destinations": [
+                {
+                  "zone": "battlefield"
+                }
+              ],
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "manaCostIs",
+                    "manaCosts": [
+                      "{0}",
+                      "{1}"
+                    ]
+                  }
+                ]
+              },
+              "op": "searchLibrary"
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "chapter": 3,
+            "counter": "lore",
+            "subject": {
+              "kind": "self"
+            },
+            "when": "countersPut"
+          }
+        }
+      ]
     }
   },
   {

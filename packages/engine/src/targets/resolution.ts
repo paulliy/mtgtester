@@ -2,7 +2,7 @@ import type { ObjectId } from '@mtg/shared';
 import type { TargetSpec } from '../cards/ability';
 import type { GameContext } from '../state/types';
 import type { TargetContext } from './context';
-import { permanentManaValue, targetIsLegal } from './legality';
+import { targetIsLegal, targetManaValue } from './legality';
 
 /** Ephemeral resolution context, never serialized into a player view. */
 export interface ResolutionTargets {
@@ -42,15 +42,10 @@ export function captureResolutionTargets(
     }
     const budget = spec.totalManaValueAtMost;
     if (budget !== undefined) {
-      const total = chosen.reduce((sum, id) => {
-        const permanent = ctx.state.battlefield.find((candidate) => candidate.id === id);
-        return (
-          sum +
-          (results.get(id) === true && permanent !== undefined
-            ? permanentManaValue(ctx, permanent)
-            : 0)
-        );
-      }, 0);
+      const total = chosen.reduce(
+        (sum, id) => sum + (results.get(id) === true ? targetManaValue(ctx, id) : 0),
+        0,
+      );
       if (total > budget) for (const id of chosen) results.set(id, false);
     }
     slotLegality.set(slot, results);

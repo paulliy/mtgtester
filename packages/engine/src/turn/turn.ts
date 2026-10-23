@@ -10,7 +10,7 @@ import type { Phase, PlayerId, Step } from '@mtg/shared';
 import { evaluateCondition } from '../cards/condition';
 import { runCombatPhase } from '../combat/combat';
 import type { GameGen } from '../decisions';
-import { drawCards, endUntilEotEffects } from '../effects/resolve';
+import { addSagaLoreCounters, drawCards, endUntilEotEffects } from '../effects/resolve';
 import { emit, debug } from '../log/log';
 import { priorityCheckpoint } from '../sba/sba';
 import {
@@ -499,6 +499,7 @@ export function* runBeginningAndPrecombatMain(ctx: GameContext): GameGen<void> {
   // Precombat main.
   ctx.state.mainPhasesStartedThisTurn = 1;
   setPhase(ctx, 'precombatMain', null);
+  addSagaLoreCounters(ctx, ap.id);
   queueStepTriggers(ctx, 'mainPhase');
   // "your first main phase" is the precombat one specifically, so it gets its own event
   // alongside the both-mains `mainPhase` above rather than replacing it.

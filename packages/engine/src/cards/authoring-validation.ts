@@ -327,11 +327,13 @@ function validateTargets(targets: TargetSpec[], path: string, issues: AuthoringI
       (!integer(spec.totalManaValueAtMost) ||
         spec.count === undefined ||
         !knownDomain ||
-        !targetDomains(spec.kind).includes('permanent'))
+        !targetDomains(spec.kind).some(
+          (domain) => domain === 'permanent' || domain === 'graveyard',
+        ))
     )
       issues.push({
         path: at,
-        message: 'collective mana value requires a counted battlefield target',
+        message: 'collective mana value requires a counted battlefield or graveyard target',
       });
     if (spec.graveyardOwnerSlot !== undefined) {
       const dependency = targets[spec.graveyardOwnerSlot];

@@ -28,7 +28,7 @@ import type {
   StackObject,
   Zone,
 } from '@mtg/shared';
-import type { ManaEntry, TriggerWhen } from '../cards/ability';
+import type { ManaAbilitySpec, ManaEntry, TriggerWhen } from '../cards/ability';
 import type {
   Ability,
   ActivatedAbility,
@@ -665,7 +665,10 @@ export interface UntilEotEffect extends ContinuousEffect {
     | 'denyKeywords'
     | 'grantAbility'
     | 'cantBeBlocked'
-    | 'becomeCreature';
+    | 'becomeCreature'
+    | 'addTypes'
+    | 'grantActivatedAbility'
+    | 'grantManaAbility';
   power?: number;
   toughness?: number;
   keyword?: KeywordAbility;
@@ -678,6 +681,11 @@ export interface UntilEotEffect extends ContinuousEffect {
   /** Keywords the affected permanents lose and can't have (`denyKeywords`, Arcane Lighthouse). */
   deniedKeywords?: KeywordAbility[];
   ability?: Ability;
+  /** `grantActivatedAbility` / `grantManaAbility`: "This Saga gains '{T}: Add {C}.'" */
+  activatedAbility?: ActivatedAbility;
+  manaAbility?: ManaAbilitySpec;
+  /** `addTypes`: "They're artifacts in addition to their other types" (layer 4). */
+  addTypes?: string[];
   /**
    * "Becomes a 4/4 red and green Dragon artifact creature with flying until end of turn"
    * (Atarka Monument, Sarkhan's +1) — a type-changing CDA-shaped grant, distinct from

@@ -126,6 +126,12 @@ export interface MoveDestination {
    * enters-with-counters, and counter replacements apply to them (CR 614.1c).
    */
   withCounters?: Record<string, number>;
+  /**
+   * Battlefield only: the moving effect gives it these card types in addition to its others
+   * ("They're artifacts in addition to their other types"). The effect is in place as it enters,
+   * so enters triggers see the new types, and it lasts for as long as it stays this object.
+   */
+  addTypes?: string[];
 }
 
 /**
@@ -453,6 +459,8 @@ export function makePermanent(
     counters['loyalty'] = def.loyalty;
   if (!faceDown && landFace === undefined && def.types.includes('Battle') && def.defense !== null)
     counters['defense'] = def.defense;
+  // A Saga enters with a lore counter (CR 714.3a), which triggers its chapter I (CR 714.2b).
+  if (!faceDown && landFace === undefined && def.subtypes.includes('Saga')) counters['lore'] = 1;
   // "~ enters with N +1/+1 counters on it" is a replacement effect (CR 614.1c): the counters
   // are already there as it enters, so it is never momentarily 0-toughness.
   const valueScope = {
@@ -1027,6 +1035,19 @@ export function* moveObject(
     if (target.manifested === true && perm.faceDown === true) perm.manifested = true;
     ctx.state.battlefield.push(perm);
     next = perm;
+    if (target.addTypes !== undefined && target.addTypes.length > 0) {
+      ctx.state.effects.push({
+        id: `eff-${ctx.state.nextObjectNum++}`,
+        sourceId: perm.cardId,
+        description: `${perm.name} is ${target.addTypes.join(' ')} in addition to its other types`,
+        targetCardIds: [perm.cardId],
+        targetObjectIds: [perm.id],
+        kind: 'addTypes',
+        addTypes: [...target.addTypes],
+        duration: 'permanent',
+        timestamp: ctx.state.nextTimestamp++,
+      });
+    }
 
     const chars = computeCharacteristics(ctx, perm);
     if (chars.types.includes('Creature') && chars.keywords.includes('riot')) {
@@ -2045,6 +2066,8 @@ export interface TriggerEventSubject {
   toZone?: Zone;
   /** `countersPut`: the counter kinds this placement put on the permanent. */
   counterKinds?: readonly string[];
+  /** `countersPut`: each kind's count before and after this placement, for chapter crossings. */
+  counterCounts?: Readonly<Record<string, { before: number; after: number }>>;
   /** `becomesTapped`: it was tapped to activate a mana ability. */
   forMana?: true;
 }
@@ -2384,6 +2407,11 @@ export function queueTriggersForEvent(
           !(s.counterKinds ?? []).includes(spec.counter)
         )
           return false;
+        if ('chapter' in spec && spec.chapter !== undefined) {
+          const lore = s.counterCounts?.['lore'];
+          if (lore === undefined || lore.before >= spec.chapter || lore.after < spec.chapter)
+            return false;
+        }
         if ('byYou' in spec && spec.byYou === true && s.playerId !== source.controllerId)
           return false;
         if ('forMana' in spec && spec.forMana === true && s.forMana !== true) return false;
@@ -2700,6 +2728,12 @@ export function queueTriggersForEvent(
                 permanent: subject.permanent,
                 playerId: subject.permanent.controllerId,
                 counterKinds,
+                counterCounts: Object.fromEntries(
+                  counterKinds.map((counter) => [
+                    counter,
+                    { before: 0, after: subject.permanent.counters[counter] ?? 0 },
+                  ]),
+                ),
               },
             ];
       }),

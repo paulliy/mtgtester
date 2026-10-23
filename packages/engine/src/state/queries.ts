@@ -33,7 +33,7 @@ import {
 } from '../effects/continuous';
 import { UnmodeledCardError } from '../errors';
 import type { ManaAllowance, ManaSource, ManaUnit, ParsedManaCost } from '../mana/cost';
-import { manaCostComponent } from '../mana/cost';
+import { manaCostComponent, manaCostTextOf } from '../mana/cost';
 import type {
   DamageKeyword,
   EngineCardObject,
@@ -163,6 +163,17 @@ export function triggersOf(ctx: GameContext, perm: EnginePermanent): Ability[] {
 
 /** Effective keywords through the CR 613 layer engine (grants in layer 6). */
 /** The damage keywords a permanent has now, for last known information on the stack. */
+/** CR 714.2d: the greatest chapter number among the Saga's chapter abilities, or 0. */
+export function sagaFinalChapter(ctx: GameContext, perm: EnginePermanent): number {
+  let final = 0;
+  for (const ability of triggersOf(ctx, perm)) {
+    const head = ability.trigger;
+    if (head !== undefined && 'chapter' in head && head.chapter !== undefined)
+      final = Math.max(final, head.chapter);
+  }
+  return final;
+}
+
 export function damageKeywordsOf(ctx: GameContext, perm: EnginePermanent): DamageKeyword[] {
   return (['deathtouch', 'lifelink', 'infect'] as const).filter((kw) => hasKeyword(ctx, perm, kw));
 }
@@ -354,6 +365,8 @@ export function cardZoneCandidate(
     ...(def.power === null ? { powerUnknown: true } : {}),
     keywords: def.keywords,
     manaValue: spellManaValue(def, undefined),
+    // An unmodeled printed cost is unknown, not absent, so it matches no mana-cost filter.
+    ...(def.hasUnsupportedCost ? {} : { manaCostText: manaCostTextOf(def.manaCost) }),
     // A card off the battlefield is never a token: tokens cease to exist on leaving it
     // (CR 704.5d), so nothing this function is handed can be one.
     isToken: false,

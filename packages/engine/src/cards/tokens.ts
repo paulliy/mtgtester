@@ -400,6 +400,37 @@ export const CONSTRUCT_4_4: TokenSpec = creatureToken({
   artifact: true,
 });
 
+/** Urza's Saga's Construct: "This creature gets +1/+1 for each artifact you control." */
+export const CONSTRUCT_0_0_ARTIFACT_COUNT: TokenSpec = {
+  ...creatureToken({
+    name: 'Construct',
+    subtypes: ['Construct'],
+    colors: [],
+    power: 0,
+    toughness: 0,
+    artifact: true,
+  }),
+  staticEffects: [
+    {
+      affects: { kind: 'self' },
+      op: {
+        layer: 7,
+        sublayer: 'd',
+        power: {
+          kind: 'countPermanents',
+          selector: { kind: 'type', value: 'Artifact' },
+          scope: 'you',
+        },
+        toughness: {
+          kind: 'countPermanents',
+          selector: { kind: 'type', value: 'Artifact' },
+          scope: 'you',
+        },
+      },
+    },
+  ],
+};
+
 export const ELDRAZI_CONSTRUCT_10_10: TokenSpec = creatureToken({
   name: 'Eldrazi Construct',
   subtypes: ['Eldrazi', 'Construct'],

@@ -45,6 +45,7 @@ import {
   playersInApnapOrder,
   sourceTraitsOf,
   playerCantLose,
+  sagaFinalChapter,
 } from '../state/queries';
 import type {
   EngineCardObject,
@@ -399,6 +400,26 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
         debug(ctx, 'sba', `equipment ${perm.name} illegally attached — unattached`);
         emit(ctx, 'sbaEquipmentUnattached', { name: perm.name });
         perm.attachedTo = null;
+        return true;
+      }
+    }
+
+    // CR 714.4: a Saga at or past its final chapter is sacrificed once none of its chapter
+    // abilities is still waiting to be put on, or sitting on, the stack.
+    if (chars.subtypes.includes('Saga')) {
+      const final = sagaFinalChapter(ctx, perm);
+      const isChapter = (ability: { trigger?: object } | null): boolean =>
+        ability?.trigger !== undefined && 'chapter' in ability.trigger;
+      if (
+        final > 0 &&
+        (perm.counters['lore'] ?? 0) >= final &&
+        !s.pendingTriggers.some(
+          (pending) => pending.sourceObjectId === perm.id && isChapter(pending.ability),
+        ) &&
+        !s.stack.some((entry) => entry.sourceId === perm.id && isChapter(entry.ability))
+      ) {
+        emit(ctx, 'sbaSagaSacrificed', { name: perm.name });
+        yield* moveObject(ctx, perm, { zone: 'graveyard', reason: 'sacrifice' });
         return true;
       }
     }

@@ -158,6 +158,7 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
           'subjectControllerIsEventPlayer',
           'withOtherAttackers',
           'counter',
+          'chapter',
           'byYou',
           'forMana',
           'oncePerTurn',
@@ -318,6 +319,19 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
       issues.push({
         path: `${path}.counter`,
         message: 'a counter kind requires a countersPut event',
+      });
+    if (
+      head['chapter'] !== undefined &&
+      (head['when'] !== 'countersPut' ||
+        head['counter'] !== 'lore' ||
+        (head['subject'] as { kind?: string } | undefined)?.kind !== 'self' ||
+        typeof head['chapter'] !== 'number' ||
+        !Number.isInteger(head['chapter']) ||
+        head['chapter'] < 1)
+    )
+      issues.push({
+        path: `${path}.chapter`,
+        message: "a chapter ability is a positive lore-counter crossing of the Saga's own counters",
       });
     if (head['byYou'] !== undefined && (head['byYou'] !== true || head['when'] !== 'countersPut'))
       issues.push({

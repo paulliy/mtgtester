@@ -5,7 +5,7 @@ import { runCombatPhase } from '../src/combat/combat';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { addMana } from '../src/mana/pool';
 import type { EnginePermanent, GameContext } from '../src/state/types';
-import { bear, declareAttacks, pump, spawn } from './fixtures';
+import { bear, declareAttacks, spawn } from './fixtures';
 import {
   activate,
   anyMana,
