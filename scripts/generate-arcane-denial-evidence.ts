@@ -41,6 +41,7 @@ const SOURCE_FILES = [
   'packages/server/src/cards/pr09-scenarios.ts',
   'packages/server/src/cards/pr10-scenarios.ts',
   'packages/server/src/cards/pr11-scenarios.ts',
+  'packages/server/src/cards/pr12-scenarios.ts',
   'packages/engine/src/effects/owner-library-choices.ts',
   'packages/server/src/cards/pr08-boseiju-scenarios.ts',
   'packages/server/src/cards/pr08-modal-player-scenarios.ts',
