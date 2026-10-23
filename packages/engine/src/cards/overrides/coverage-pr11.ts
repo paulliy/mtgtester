@@ -267,6 +267,31 @@ function registerPr11LifecycleOverrides(): void {
     'PR11 counts soot counters, starts with none, and makes only the upkeep player sacrifice.',
   );
 
+  // PR11.09: the counters are put on at upkeep, not as it enters. The empty-library draw
+  // replacement must return a creature card when there is one; only none means losing.
+  replaceCard(
+    '473a7998-669d-4181-83fe-f178a2e781f0',
+    'Out of the Tombs',
+    [
+      'unrecognized rules text: "At the beginning of your upkeep, put two eon counters on this enchantment, then mill cards equal to the number of eon counters on it."',
+      'unrecognized rules text: "If you would draw a card while your library has no cards in it, instead return a creature card from your graveyard to the battlefield. If you can\'t, you lose the game."',
+    ],
+    {
+      emptyLibraryCreatureReplacement: true,
+      triggers: [
+        triggered(onUpkeep('you'), {
+          effects: [
+            { op: 'putCounters', target: 'source', counter: 'eon', count: constant(2) },
+            { op: 'mill', count: { kind: 'countersOnSelf', counter: 'eon' } },
+          ],
+          description:
+            'At the beginning of your upkeep, put two eon counters on this, then mill one card per eon counter',
+        }),
+      ],
+    },
+    'PR11 adds the eon counters at upkeep only and requires returning a creature when able.',
+  );
+
   // PR11.15: the opponent's draw trigger is interpreted; cumulative upkeep is authored.
   extendCard(
     '8a52f3c0-2552-4425-b2e3-5496eb2232a7',

@@ -138,6 +138,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Nils, Discipline Enforcer',
       'Nullmage Shepherd',
       "Olórin's Searing Light",
+      'Out of the Tombs',
       'Peema Trailblazer',
       'Pensive Professor',
       'Plasmancer',

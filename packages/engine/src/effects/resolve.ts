@@ -739,8 +739,8 @@ export function* drawCards(
           cards: creatures,
           type: 'returnToBattlefield',
           verb: 'Return',
-          decline: { type: 'loseGame', description: 'No creature — lose the game', verb: 'Lose' },
         });
+        // "If you can't, you lose the game": a creature card must be returned when there is one.
         if (chosen === null) {
           if (!playerCantLose(ctx, player.id)) player.hasLost = true;
         } else yield* moveObject(ctx, chosen, { zone: 'battlefield', controllerId: player.id });
