@@ -88,6 +88,12 @@ export interface ValueScope {
    * "those creatures" (Frontier Warmonger). Remembered, not re-derived (CR 603.7c).
    */
   attackGroupIds?: readonly string[];
+  /**
+   * An aggregate trigger's firing group, by object, for an effect that picks one of them
+   * (Twilight Diviner), with the last known facts of any that have left the battlefield.
+   */
+  eventGroupIds?: readonly string[];
+  eventGroupFacts?: Record<string, ObjectFacts>;
   /** `blocks`: the creature this blocker blocked, by object (Wall of Tears). */
   blockedObjectId?: string;
   /** `attackDeclared` with `perDefender`: the attacked player this firing is about (Breena). */
@@ -145,6 +151,8 @@ export type TriggerScope = Pick<
   | 'treasureManaSpent'
   | 'eventPlayerId'
   | 'attackGroupIds'
+  | 'eventGroupIds'
+  | 'eventGroupFacts'
   | 'blockedObjectId'
   | 'attackedPlayerId'
   | 'attackedWatcher'

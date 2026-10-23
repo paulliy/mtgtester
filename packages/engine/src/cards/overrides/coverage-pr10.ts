@@ -10,12 +10,15 @@ import {
   ofSupertype,
   ofType,
   powerAtLeast,
+  YOURS,
 } from '../selector';
 import { counterSpellTarget } from '../target-builders';
+import { creatureToken } from '../tokens';
 import {
   activated,
   loyaltyAbility,
   mana,
+  onBeginCombat,
   onCast,
   onDrawStep,
   onEndStep,
@@ -37,6 +40,7 @@ export function registerCoveragePr10Overrides(): void {
   registerPr10AbilityStackOverrides();
   registerPr10TriggerDoublingOverrides();
   registerPr10AnimationOverrides();
+  registerPr10TokenCopyOverrides();
 }
 
 /** PR10.01, 10.11, 10.06, 10.14, 10.12: retargeting and spell copies with new targets. */
@@ -501,5 +505,153 @@ export function registerPr10AnimationOverrides(): void {
       ],
     },
     'PR10 has only the printed loyalty ability, and the copied object must be another target.',
+  );
+}
+
+/** PR10.17, 10.16: tokens that are copies of their source. */
+export function registerPr10TokenCopyOverrides(): void {
+  // PR10.17: the land count is read as the trigger resolves; the copy uses last known
+  // information if Scute Swarm has left the battlefield (CR 707.2, 608.2h).
+  replaceCard(
+    'aa854d50-444c-49d9-bfb1-5476b33c1c0b',
+    'Scute Swarm',
+    [
+      "Whenever a land you control enters, create a 1/1 green Insect creature token. If you control six or more lands, create a token that's a copy of this creature instead.",
+    ],
+    {
+      triggers: [
+        triggered(
+          {
+            when: 'enters',
+            subject: { kind: 'permanent', selector: allOf(ofType('Land'), YOURS) },
+          },
+          {
+            effects: [
+              {
+                op: 'conditionalEffect',
+                condition: countPermanents(ofType('Land'), 'you', '>=', 6),
+                then: [{ op: 'createTokenCopyOf', ref: 'source', count: constant(1) }],
+                else: [
+                  {
+                    op: 'createToken',
+                    count: constant(1),
+                    spec: creatureToken({
+                      name: 'Insect',
+                      subtypes: ['Insect'],
+                      colors: ['G'],
+                      power: 1,
+                      toughness: 1,
+                    }),
+                  },
+                ],
+              },
+            ],
+            description:
+              "Create a 1/1 green Insect, or a token that's a copy of this creature if you control six or more lands",
+          },
+        ),
+      ],
+    },
+    'PR10 creates an Insect, or a copy of Scute Swarm with six or more lands.',
+  );
+
+  // PR10.16: the exemption covers every creature you control, including the copies (CR 704.5j).
+  replaceCard(
+    '33fa949c-f29e-4a98-9381-ecfa9e5c3f6d',
+    'Council of Reeds',
+    [
+      'The "legend rule" doesn\'t apply to creatures you control.',
+      "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, create a token that's a copy of ~.",
+    ],
+    {
+      ruleStatics: [{ kind: 'legendRuleDoesntApply', filter: ofType('Creature') }],
+      triggers: [
+        triggered(onBeginCombat('you'), {
+          condition: { kind: 'castSpellThisTurn', category: 'noncreature', cmp: '>=', n: 1 },
+          effects: [{ op: 'createTokenCopyOf', ref: 'source', count: constant(1) }],
+          description: "Create a token that's a copy of Council of Reeds",
+        }),
+      ],
+    },
+    'PR10 exempts your creatures from the legend rule and copies Council of Reeds at combat.',
+  );
+
+  // PR10.18: only the creatures that entered from, or were cast from, a graveyard are "them".
+  // The surveil enter trigger is interpreted and kept.
+  replaceCard(
+    '05d7222b-cc08-4f1f-8e35-6058599572ba',
+    'Twilight Diviner',
+    [
+      "Whenever one or more other creatures you control enter, if they entered or were cast from a graveyard, create a token that's a copy of one of them. This ability triggers only once each turn.",
+    ],
+    {
+      triggers: [
+        triggered(
+          {
+            when: 'enters',
+            subject: {
+              kind: 'permanent',
+              selector: allOf(ofType('Creature'), YOURS, { kind: 'other' }),
+            },
+            aggregate: true,
+            entersFrom: { zone: 'graveyard', orCastFrom: true },
+            oncePerTurn: true,
+          },
+          {
+            effects: [{ op: 'createTokenCopyOfEventGroupMember', count: constant(1) }],
+            description: "Create a token that's a copy of one of them",
+          },
+        ),
+      ],
+    },
+    'PR10 copies one creature that entered or was cast from a graveyard, once each turn.',
+    'append',
+  );
+
+  // PR10.07: the target is chosen only after the energy is paid (CR 603.12).
+  const radiant = targetSlots({ original: { kind: 'permanent', controller: 'you' } });
+  replaceCard(
+    '20f602b3-814f-406c-b7eb-2d1fc98f8cf1',
+    'Saheeli, Radiant Creator',
+    [
+      'Whenever you cast an Artificer or artifact spell, you get {E} .',
+      "At the beginning of combat on your turn, you may pay {E}{E}{E}. When you do, create a token that's a copy of target permanent you control, except it's a 5/5 artifact creature in addition to its other types and has haste. Sacrifice it at the beginning of the next end step.",
+    ],
+    {
+      triggers: [
+        triggered(onCast('you', anyOf(ofSubtype('Artificer'), ofType('Artifact'))), {
+          effects: [{ op: 'gainEnergy', amount: constant(1) }],
+          description: 'You get {E}',
+        }),
+        triggered(onBeginCombat('you'), {
+          effects: [
+            {
+              op: 'mayPayEnergyThenReflexive',
+              min: 3,
+              exact: true,
+              then: triggered(undefined, {
+                targets: radiant.targets,
+                effects: [
+                  {
+                    op: 'createTokenCopyOf',
+                    ref: radiant.slot.original,
+                    count: constant(1),
+                    addTypes: ['Artifact', 'Creature'],
+                    powerOverride: 5,
+                    toughnessOverride: 5,
+                    addKeywords: ['haste'],
+                    sacrificeAt: 'endStep',
+                  },
+                ],
+                description:
+                  "Create a token that's a copy of target permanent you control, except it's a 5/5 artifact creature with haste. Sacrifice it at the beginning of the next end step",
+              }),
+            },
+          ],
+          description: 'You may pay {E}{E}{E}. When you do, copy target permanent you control',
+        }),
+      ],
+    },
+    'PR10 chooses the copy target after the energy is paid.',
   );
 }

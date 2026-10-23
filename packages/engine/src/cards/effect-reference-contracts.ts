@@ -173,6 +173,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   copyActivatedAbility: {},
   copyStackAbility: {},
   copyTargetAbility: { target: stack },
+  createTokenCopyOfEventGroupMember: {},
   nextCastThisTurn: {},
   copyEachTargetedSpell: { targetSlot: many(spell) },
   angelGrace: {},

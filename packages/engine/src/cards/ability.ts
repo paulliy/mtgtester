@@ -873,6 +873,12 @@ export type Effect =
    * copies." (Mister Fantastic, CR 707.10).
    */
   | { op: 'copyTargetAbility'; target: EffectRef; count: number; newTargets?: true }
+  /**
+   * "Create a token that's a copy of one of them" (Twilight Diviner): the controller chooses one
+   * permanent of the aggregate group that fired this trigger. One that has left the battlefield
+   * is copied from its last known information (CR 707.2, 608.2h).
+   */
+  | { op: 'createTokenCopyOfEventGroupMember'; count: Value }
   | {
       op: 'replicateCopies';
       count: number;
@@ -952,7 +958,13 @@ export type Effect =
    * made while this ability resolves. Paying fires `then`, which goes on the stack as its own
    * ability and reads the amount paid as `energyPaid`; declining fires nothing.
    */
-  | { op: 'mayPayEnergyThenReflexive'; min: number; then: Ability }
+  | {
+      op: 'mayPayEnergyThenReflexive';
+      min: number;
+      then: Ability;
+      /** "You may pay {E}{E}{E}" (Saheeli, Radiant Creator): exactly `min`, not more. */
+      exact?: true;
+    }
   /**
    * "Put a +1/+1 counter on Lockjaw. When you do, …" (CR 603.12): `then` triggers only if the
    * counters were actually put on the source — not if it left the battlefield first.
@@ -2049,7 +2061,12 @@ export type TriggerHead =
        * have been in the ability controller's graveyard, which a card only ever is when its owner
        * is that player.
        */
-      entersFrom?: { zone: 'graveyard'; graveyardOwner?: 'you' };
+      entersFrom?: {
+        zone: 'graveyard';
+        graveyardOwner?: 'you';
+        /** "…entered or were cast from a graveyard" (Twilight Diviner): its cast record counts too. */
+        orCastFrom?: true;
+      };
       /**
        * "…enter, if none of them were cast or no mana was spent to cast them" (Satoru, the
        * Infiltrator): every permanent in the firing (the whole group for an aggregate head) was

@@ -2143,19 +2143,16 @@ export function additionalTypedTriggerCopies(ctx: GameContext, source: EnginePer
 /** "It triggers an additional time" statics (Annie Joins Up, Roaming Throne), one each. */
 function additionalTriggerTimes(ctx: GameContext, source: EnginePermanent): number {
   let copies = 0;
-  for (const amplifier of ctx.state.battlefield) {
-    if (amplifier.controllerId !== source.controllerId) continue;
-    for (const rule of ctx.defs.get(amplifier.oracleId)?.ruleStatics ?? []) {
-      if (rule.kind !== 'triggerAdditionalTime') continue;
-      if (rule.excludesSelf === true && amplifier.cardId === source.cardId) continue;
-      const from: SelectorSource = {
-        cardId: amplifier.cardId,
-        objectId: amplifier.id,
-        controllerId: amplifier.controllerId,
-        ...(amplifier.chosenOption === undefined ? {} : { chosenOption: amplifier.chosenOption }),
-      };
-      if (matchesSelector(ctx, source, rule.filter, from)) copies++;
-    }
+  for (const { static: rule, sourceCardId, controllerId } of gatherRuleStatics(ctx)) {
+    if (rule.kind !== 'triggerAdditionalTime' || controllerId !== source.controllerId) continue;
+    if (rule.excludesSelf === true && sourceCardId === source.cardId) continue;
+    const amplifier = ctx.state.battlefield.find((perm) => perm.cardId === sourceCardId);
+    const from: SelectorSource = {
+      cardId: sourceCardId,
+      controllerId,
+      ...(amplifier?.chosenOption === undefined ? {} : { chosenOption: amplifier.chosenOption }),
+    };
+    if (matchesSelector(ctx, source, rule.filter, from)) copies++;
   }
   return copies;
 }
@@ -2496,6 +2493,10 @@ export function queueTriggersForEvent(
           const amounts = group.filter((s) => s.amount !== undefined);
           const scope: TriggerScope = {
             ...(spec.aggregate !== undefined ? { triggerCount: group.length } : {}),
+            ...(spec.aggregate !== undefined &&
+            ability.effects.some((effect) => effect.op === 'createTokenCopyOfEventGroupMember')
+              ? { eventGroupIds: group.map((subject) => subject.permanent.id) }
+              : {}),
             ...(eventPlayerId !== undefined ? { eventPlayerId } : {}),
             ...(first.blockedObjectId !== undefined
               ? { blockedObjectId: first.blockedObjectId }
@@ -2708,6 +2709,13 @@ function rememberLeavingSourceTraits(
     if ((scope?.triggerObjectId ?? scope?.eventObjectId) === perm.id)
       scope!.triggerObjectFacts = facts;
   }
+  for (const scope of [
+    ...ctx.state.stack.map((entry) => entry.triggerScope),
+    ...ctx.state.pendingTriggers.map((pending) => pending.scope),
+  ]) {
+    if (scope?.eventGroupIds?.includes(perm.id) === true)
+      scope.eventGroupFacts = { ...scope.eventGroupFacts, [perm.id]: facts };
+  }
   const entries = ctx.state.stack.filter(
     (entry) =>
       entry.kind !== 'spell' &&
@@ -2745,7 +2753,11 @@ function matchesEntryRestrictions(
 ): boolean {
   if ('entersUntapped' in spec && spec.entersUntapped === true && permanent.tapped) return false;
   if ('entersFrom' in spec && spec.entersFrom !== undefined) {
-    if (permanent.enteredFromZone !== spec.entersFrom.zone) return false;
+    if (
+      permanent.enteredFromZone !== spec.entersFrom.zone &&
+      !(spec.entersFrom.orCastFrom === true && permanent.castFromZone === spec.entersFrom.zone)
+    )
+      return false;
     // A card is only ever in its owner's graveyard (CR 404.2).
     if (spec.entersFrom.graveyardOwner === 'you' && permanent.ownerId !== watcherControllerId)
       return false;

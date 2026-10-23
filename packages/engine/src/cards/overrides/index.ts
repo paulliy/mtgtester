@@ -334,9 +334,17 @@ export function replaceCard(
   handledLines: string[],
   def: Partial<CardDefinition>,
   reason: string,
+  /** `'append'` keeps the abilities the interpreter parsed from other lines, as `extendCard`. */
+  compose?: 'append',
 ): void {
   const replace = (id: string): void => {
-    const override = { oracleId: id, name, handledLines, def };
+    const override: CardOverride = {
+      oracleId: id,
+      name,
+      handledLines,
+      def,
+      ...(compose === undefined ? {} : { compose }),
+    };
     if (OVERRIDES.has(id)) {
       explicitReplacements.push({ oracleId: id, name, reason });
       OVERRIDES.set(id, override);

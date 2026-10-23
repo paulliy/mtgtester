@@ -350,6 +350,7 @@ const shapes = {
     cardsSlot: leaf,
     templatedCost: { node: 'ParsedManaCost' },
     lifeCost: leaf,
+    exact: leaf,
     mayPayLifeAgain: leaf,
     stackAbility: {
       object: {
@@ -447,7 +448,7 @@ const shapes = {
     subject: { node: 'TriggerSubject' },
     aggregate: leaf,
     entersUntapped: leaf,
-    entersFrom: { object: { zone: leaf, graveyardOwner: leaf } },
+    entersFrom: { object: { zone: leaf, graveyardOwner: leaf, orCastFrom: leaf } },
     entersWithoutManaSpentToCast: leaf,
     leavesTo: { array: leaf },
     defendingPlayerIsEventPlayer: leaf,
@@ -975,6 +976,7 @@ const families = {
       copyActivatedAbility: true,
       copyStackAbility: true,
       copyTargetAbility: true,
+      createTokenCopyOfEventGroupMember: true,
       copyEachTargetedSpell: true,
       angelGrace: true,
       drawForEachOpponent: true,
@@ -1484,6 +1486,7 @@ const families = {
       triggerAdditionalOnArtifactOrCreatureEntry: true,
       triggerAdditionalForShamanOrOtherWizard: true,
       triggerAdditionalTime: true,
+      legendRuleDoesntApply: true,
       artifactTokenCreatesThopter: true,
       grantForetell: true,
     } satisfies Record<Extract<RuleStatic['kind'], string | number>, true>,

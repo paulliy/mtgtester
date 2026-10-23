@@ -238,4 +238,9 @@ export type RuleStatic =
    * `chosenSubtype` is the type chosen for it; each such permanent adds one more firing.
    */
   | { kind: 'triggerAdditionalTime'; filter: Selector; excludesSelf?: true }
+  /**
+   * "The 'legend rule' doesn't apply to [filter] you control" (Council of Reeds): CR 704.5j
+   * ignores its controller's permanents that match `filter` from this permanent's view.
+   */
+  | { kind: 'legendRuleDoesntApply'; filter: Selector }
   | { kind: 'artifactTokenCreatesThopter' };

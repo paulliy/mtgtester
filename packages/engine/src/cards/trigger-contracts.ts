@@ -267,7 +267,8 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
         record === undefined ||
         record['zone'] !== 'graveyard' ||
         (record['graveyardOwner'] !== undefined && record['graveyardOwner'] !== 'you') ||
-        Object.keys(record).some((key) => !['zone', 'graveyardOwner'].includes(key))
+        (record['orCastFrom'] !== undefined && record['orCastFrom'] !== true) ||
+        Object.keys(record).some((key) => !['zone', 'graveyardOwner', 'orCastFrom'].includes(key))
       )
         issues.push({
           path: `${path}.entersFrom`,

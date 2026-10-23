@@ -4493,21 +4493,33 @@ export function* executeAbility(
         const min = Math.max(1, Math.floor(effect.min));
         const options = [
           plainOption({ type: 'decline', description: 'Pay no energy', verb: 'Decline' }),
-          ...Array.from({ length: Math.max(0, controller.energy - min + 1) }, (_, offset) => {
-            const amount = min + offset;
-            return valueOption(amount, `Pay ${amount} energy`, {
-              type: 'payEnergy',
-              description: `Pay ${amount} energy`,
-              verb: 'Pay',
-            });
-          }),
+          ...Array.from(
+            {
+              length:
+                effect.exact === true
+                  ? controller.energy >= min
+                    ? 1
+                    : 0
+                  : Math.max(0, controller.energy - min + 1),
+            },
+            (_, offset) => {
+              const amount = min + offset;
+              return valueOption(amount, `Pay ${amount} energy`, {
+                type: 'payEnergy',
+                description: `Pay ${amount} energy`,
+                verb: 'Pay',
+              });
+            },
+          ),
         ];
         // Nothing to offer without enough energy to pay the minimum.
         if (options.length === 1) break;
         const outcome = yield {
           decisionType: 'general',
           player: controller.id,
-          prompt: `${source.name}: pay energy? (${min === 1 ? 'one or more' : `${min} or more`})`,
+          prompt: `${source.name}: pay energy? (${
+            effect.exact === true ? `exactly ${min}` : min === 1 ? 'one or more' : `${min} or more`
+          })`,
           options,
         };
         if (outcome.index === 0) break;
@@ -6261,71 +6273,79 @@ export function* executeAbility(
         }
         break;
       }
-      case 'createTokenCopyOf': {
-        const t = ref(effect.ref);
-        const live = t === null ? undefined : findPermanent(ctx, t);
-        // The referent may have left before this resolved. `'triggerObject'` is not a target
-        // (CR 115.10a), so that is a no-op rather than a fizzle. A trigger that copies ITS OWN
-        // source ("each opponent creates a copy of it") still copies it with its last known
-        // copiable values (CR 608.2h, 707.2): the source's definition at the time it triggered,
-        // which for a copy is the copied definition.
-        const lastKnownSourceDef = ctx.defs.get(source.oracleId);
-        // The copies show the rules text and cost it showed as it left (a copy's, for a copy of
-        // something); without those facts, the card itself, wherever it went.
-        const facts = source.lastKnownFacts;
-        const sourceCard =
-          live === undefined && facts?.oracleText === undefined
-            ? findObjectByCardId(ctx, source.cardId)
-            : undefined;
-        const original =
-          live ??
-          (effect.ref === 'source' && lastKnownSourceDef !== undefined
-            ? ({
-                id: source.id ?? source.cardId,
-                cardId: source.cardId,
-                oracleId: source.oracleId,
-                name: source.name,
-                typeLine: lastKnownSourceDef.typeLine,
-                oracleText: facts?.oracleText ?? sourceCard?.oracleText ?? '',
-                manaCost:
-                  facts?.oracleText !== undefined
-                    ? (facts.manaCost ?? null)
-                    : (sourceCard?.manaCost ?? null),
-                transformed: false,
-              } as unknown as EnginePermanent)
-            : undefined);
+      case 'createTokenCopyOf':
+      case 'createTokenCopyOfEventGroupMember': {
+        const copyOptions: Partial<Extract<Effect, { op: 'createTokenCopyOf' }>> =
+          effect.op === 'createTokenCopyOf' ? effect : {};
+        let original: EnginePermanent | undefined;
+        if (effect.op === 'createTokenCopyOfEventGroupMember') {
+          original = yield* chooseEventGroupMember(ctx, controller.id, source.name, scope);
+        } else {
+          const t = ref(effect.ref);
+          const live = t === null ? undefined : findPermanent(ctx, t);
+          // The referent may have left before this resolved. `'triggerObject'` is not a target
+          // (CR 115.10a), so that is a no-op rather than a fizzle. A trigger that copies ITS OWN
+          // source ("each opponent creates a copy of it") still copies it with its last known
+          // copiable values (CR 608.2h, 707.2): the source's definition at the time it triggered,
+          // which for a copy is the copied definition.
+          const lastKnownSourceDef = ctx.defs.get(source.oracleId);
+          // The copies show the rules text and cost it showed as it left (a copy's, for a copy of
+          // something); without those facts, the card itself, wherever it went.
+          const facts = source.lastKnownFacts;
+          const sourceCard =
+            live === undefined && facts?.oracleText === undefined
+              ? findObjectByCardId(ctx, source.cardId)
+              : undefined;
+          original =
+            live ??
+            (effect.ref === 'source' && lastKnownSourceDef !== undefined
+              ? ({
+                  id: source.id ?? source.cardId,
+                  cardId: source.cardId,
+                  oracleId: source.oracleId,
+                  name: source.name,
+                  typeLine: lastKnownSourceDef.typeLine,
+                  oracleText: facts?.oracleText ?? sourceCard?.oracleText ?? '',
+                  manaCost:
+                    facts?.oracleText !== undefined
+                      ? (facts.manaCost ?? null)
+                      : (sourceCard?.manaCost ?? null),
+                  transformed: false,
+                } as unknown as EnginePermanent)
+              : undefined);
+        }
         if (original === undefined) break;
-        const baseSpec = tokenSpecCopying(ctx, original, effect.exceptNonLegendary === true);
+        const baseSpec = tokenSpecCopying(ctx, original, copyOptions.exceptNonLegendary === true);
         const spec = {
           ...baseSpec,
-          ...(effect.addTypes !== undefined
-            ? { types: [...new Set([...baseSpec.types, ...effect.addTypes])] }
+          ...(copyOptions.addTypes !== undefined
+            ? { types: [...new Set([...baseSpec.types, ...copyOptions.addTypes])] }
             : {}),
-          ...(effect.powerOverride !== undefined
+          ...(copyOptions.powerOverride !== undefined
             ? {
                 power:
-                  typeof effect.powerOverride === 'number'
-                    ? effect.powerOverride
-                    : evaluateValueIn(ctx, effect.powerOverride, scope),
+                  typeof copyOptions.powerOverride === 'number'
+                    ? copyOptions.powerOverride
+                    : evaluateValueIn(ctx, copyOptions.powerOverride, scope),
               }
             : {}),
-          ...(effect.toughnessOverride !== undefined
+          ...(copyOptions.toughnessOverride !== undefined
             ? {
                 toughness:
-                  typeof effect.toughnessOverride === 'number'
-                    ? effect.toughnessOverride
-                    : evaluateValueIn(ctx, effect.toughnessOverride, scope),
+                  typeof copyOptions.toughnessOverride === 'number'
+                    ? copyOptions.toughnessOverride
+                    : evaluateValueIn(ctx, copyOptions.toughnessOverride, scope),
               }
             : {}),
-          ...(effect.addKeywords !== undefined
-            ? { keywords: [...new Set([...(baseSpec.keywords ?? []), ...effect.addKeywords])] }
+          ...(copyOptions.addKeywords !== undefined
+            ? { keywords: [...new Set([...(baseSpec.keywords ?? []), ...copyOptions.addKeywords])] }
             : {}),
         };
-        if (effect.eachOpponent === true) {
+        if (copyOptions.eachOpponent === true) {
           // Each opponent, in turn order from the active player, creates their own copies.
           for (const opponent of opponentsOf(ctx, controller.id)) {
             for (const token of createTokens(ctx, spec, amountOf(effect.count), opponent.id)) {
-              if (effect.goadedForRestOfGame === true)
+              if (copyOptions.goadedForRestOfGame === true)
                 addGoadRequirement(ctx, token, controller.id, true);
             }
           }
@@ -6333,9 +6353,9 @@ export function* executeAbility(
         }
         for (let i = 0; i < amountOf(effect.count); i++) {
           const token = createToken(ctx, spec, controller.id);
-          if (effect.goadedForRestOfGame === true)
+          if (copyOptions.goadedForRestOfGame === true)
             addGoadRequirement(ctx, token, controller.id, true);
-          if (effect.sacrificeAt === 'endStep') {
+          if (copyOptions.sacrificeAt === 'endStep') {
             ctx.state.delayedTriggers.push({
               id: `dt-${ctx.state.nextObjectNum++}`,
               sourceCardId: source.cardId,
@@ -9288,6 +9308,47 @@ function* copySpellOnStack(
     controllerId,
   );
   return copy;
+}
+
+/**
+ * "One of them" (Twilight Diviner): the controller picks one permanent of the group that fired
+ * the trigger. One that has left the battlefield is copied as it last existed (CR 608.2h).
+ */
+function* chooseEventGroupMember(
+  ctx: GameContext,
+  controllerId: PlayerId,
+  sourceName: string,
+  scope: ValueScope,
+): GameGen<EnginePermanent | undefined> {
+  const members = (scope.eventGroupIds ?? []).flatMap((id): EnginePermanent[] => {
+    const live = ctx.state.battlefield.find((permanent) => permanent.id === id);
+    if (live !== undefined) return [live];
+    const facts = scope.eventGroupFacts?.[id];
+    if (facts?.oracleId === undefined) return [];
+    return [
+      {
+        id,
+        cardId: facts.candidate.cardId,
+        oracleId: facts.oracleId,
+        name: facts.name ?? '',
+        typeLine:
+          getDefByOracleId(ctx, facts.oracleId, facts.name ?? facts.oracleId).typeLine ?? '',
+        oracleText: facts.oracleText ?? '',
+        manaCost: facts.manaCost ?? null,
+        transformed: false,
+      } as unknown as EnginePermanent,
+    ];
+  });
+  if (members.length <= 1) return members[0];
+  const choice = yield {
+    decisionType: 'general',
+    player: controllerId,
+    prompt: `${sourceName}: choose one of them to copy.`,
+    options: members.map((member) =>
+      plainOption({ type: 'chooseOption', description: member.name, verb: 'Copy' }),
+    ),
+  };
+  return members[choice.index];
 }
 
 /**
