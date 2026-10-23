@@ -643,6 +643,7 @@ export function transformPermanent(ctx: GameContext, perm: EnginePermanent): boo
   if (nextFace.types.some((type) => type === 'Instant' || type === 'Sorcery')) return false;
 
   perm.transformed = !perm.transformed;
+  perm.transformations = (perm.transformations ?? 0) + 1;
   // A copy effect continues to apply when the physical DFC turns over (CR 712.20).
   if (perm.copyOriginal === undefined) {
     const face = perm.transformed ? def.backFace : def;

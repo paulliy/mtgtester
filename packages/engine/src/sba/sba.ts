@@ -864,6 +864,13 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
   }
 
   const id = `o-${s.nextObjectNum++}` as ObjectId;
+  // A delayed trigger (no event head) is exempt from CR 701.27f, so only ordinary triggers record it.
+  const transformingSource =
+    ability.trigger === undefined || trigger.sourceObjectId === undefined
+      ? undefined
+      : s.battlefield.find((perm) => perm.id === trigger.sourceObjectId);
+  const sourceTransformations =
+    transformingSource === undefined ? undefined : (transformingSource.transformations ?? 0);
   // The announced mode is public (CR 700.2b) — name it on the stack, where every player sees it.
   const description =
     (ability.description ?? trigger.sourceName) +
@@ -882,6 +889,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
     sourceCardId: trigger.sourceCardId,
     isCommanderCast: false,
     ...(trigger.sourceFacts === undefined ? {} : { sourceFacts: trigger.sourceFacts }),
+    ...(sourceTransformations === undefined ? {} : { sourceTransformations }),
     ...(trigger.triggerObjectCardId !== undefined
       ? { triggerObjectCardId: trigger.triggerObjectCardId }
       : {}),

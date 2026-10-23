@@ -140,6 +140,9 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
         controllerId: top.controllerId,
         resolutionTargets,
         ...(top.sourceFacts === undefined ? {} : { lastKnownFacts: top.sourceFacts }),
+        ...(top.sourceTransformations === undefined
+          ? {}
+          : { transformationsAtStack: top.sourceTransformations }),
         ...(top.kind === 'spell' ? { resolvingStackObject: top } : {}),
         ...(top.sourceColors !== undefined ? { lastKnownColors: top.sourceColors } : {}),
         ...(top.kind === 'spell' ? { lastKnownTypes: stackSourceTraits(ctx, top).types } : {}),

@@ -489,6 +489,7 @@ export function* applyPriorityAction(
       const stackEntry: EngineStackObject = {
         id,
         sourceId: perm.id,
+        sourceTransformations: perm.transformations ?? 0,
         controllerId: player.id,
         kind: 'activatedAbility' as const,
         description: `${perm.name} — ${description}`,

@@ -19913,6 +19913,33 @@
     }
   },
   {
+    "oracleId": "f7d8b91b-6541-4d3e-af51-7e000eac69c1",
+    "name": "Legion's Landing // Adanto, the First Fort",
+    "handledLines": [
+      "When you attack with three or more creatures, transform ~."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When you attack with three or more creatures, transform Legion's Landing",
+          "effects": [
+            {
+              "op": "transformSelf"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "you",
+            "minAttackers": 3,
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "f82da236-e567-4221-a0bc-439a0c7e2b03",
     "name": "Whirler Virtuoso",
     "handledLines": [
@@ -30648,6 +30675,33 @@
         }
       ]
     }
+  },
+  {
+    "oracleId": "oracle-legion-s-landing-adanto-the-first-fort",
+    "name": "Legion's Landing // Adanto, the First Fort",
+    "handledLines": [
+      "When you attack with three or more creatures, transform ~."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When you attack with three or more creatures, transform Legion's Landing",
+          "effects": [
+            {
+              "op": "transformSelf"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "you",
+            "minAttackers": 3,
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-leyline-of-the-void",

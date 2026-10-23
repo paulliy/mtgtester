@@ -268,6 +268,8 @@ export interface EffectSource {
   resolutionTargets?: ResolutionTargets;
   /** The source incarnation, when resolving an ability of a permanent. */
   id?: ObjectId;
+  /** The source's transform count as the ability went on the stack (CR 701.27f). */
+  transformationsAtStack?: number;
   cardId: string;
   name: string;
   oracleId: string;
@@ -1927,7 +1929,14 @@ export function* executeAbility(
     switch (effect.op) {
       case 'transformSelf': {
         const current = sourcePermanent();
-        if (current !== undefined) transformPermanent(ctx, current);
+        // An ability of the permanent transforms it only if it hasn't transformed since the
+        // ability was put on the stack (CR 701.27f), so a doubled trigger turns it over once.
+        if (
+          current !== undefined &&
+          (source.transformationsAtStack === undefined ||
+            (current.transformations ?? 0) === source.transformationsAtStack)
+        )
+          transformPermanent(ctx, current);
         break;
       }
       case 'selfToLibraryTop': {

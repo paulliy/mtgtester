@@ -1,10 +1,11 @@
 /** PR11b authored layout cards: MDFC spell faces, transform, Class, Sagas, split cards, prepare, Rooms. */
 import { onDies, spell, triggered } from '../templates';
 import { constant } from '../value';
-import { replaceCard } from './index';
+import { extendCard, replaceCard } from './index';
 
 export function registerCoveragePr11bOverrides(): void {
   registerPr11bModalSpellFaces();
+  registerPr11bTransform();
 }
 
 /** PR11.02, .04: spell // land modal DFCs whose land backs were already authored. */
@@ -55,5 +56,28 @@ function registerPr11bModalSpellFaces(): void {
       }),
     },
     'PR11b authors the Valakut Awakening spell face beside the existing Valakut Stoneforge land face.',
+  );
+}
+
+/** PR11.23: a transforming DFC whose front face flips on a three-creature attack. */
+function registerPr11bTransform(): void {
+  // PR11.23: the attack count is part of the event (CR 508.2a, 603.2), not an intervening if.
+  // Adanto, the First Fort's mana and token abilities are read from the interpreted back face,
+  // and a doubled trigger turns the card over once (CR 701.27f).
+  extendCard(
+    'f7d8b91b-6541-4d3e-af51-7e000eac69c1',
+    "Legion's Landing // Adanto, the First Fort",
+    ['When you attack with three or more creatures, transform ~.'],
+    {
+      triggers: [
+        triggered(
+          { when: 'attackDeclared', attacker: 'you', minAttackers: 3 },
+          {
+            effects: [{ op: 'transformSelf' }],
+            description: "When you attack with three or more creatures, transform Legion's Landing",
+          },
+        ),
+      ],
+    },
   );
 }

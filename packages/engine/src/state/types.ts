@@ -241,6 +241,8 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
   controlChanges?: ControlChange[];
   /** Whether a transforming double-faced permanent currently uses its back face. */
   transformed: boolean;
+  /** How many times this object has transformed since it entered (CR 701.27f). */
+  transformations?: number;
   /**
    * A bestowed Aura (CR 702.103b): an Aura enchantment with enchant creature, not a creature,
    * until it becomes unattached or attached to an illegal object (CR 702.103f).
@@ -475,6 +477,11 @@ export interface EngineStackObject extends StackObject {
   castDuringOwnMainPhase?: true;
   /** Last known rules facts of this ability's source incarnation. */
   sourceFacts?: ObjectFacts;
+  /**
+   * The source permanent's transform count as this activated or (non-delayed) triggered ability
+   * was put on the stack: it transforms its source only if that has not changed (CR 701.27f).
+   */
+  sourceTransformations?: number;
   /** Internal CR 601 proposal; never triggers a cast until payment finalizes. */
   castInProgress?: true;
   /** Selected characteristics on the stack; copies retain these without changing physical card data. */
