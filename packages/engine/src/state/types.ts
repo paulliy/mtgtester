@@ -663,6 +663,8 @@ export interface UntilEotEffect extends ContinuousEffect {
     setColors?: Color[];
     /** See `Effect.becomeCreatureUntilEot.replaceTypes` — full type-line replacement, not add. */
     replaceTypes?: string[];
+    /** Set alongside `replaceTypes`, added otherwise. */
+    supertypes?: string[];
   };
   /** Timestamp assigned on creation (CR 613.7 within-layer ordering). */
   timestamp: number;

@@ -459,6 +459,11 @@ export interface TargetSpec {
   kind: TargetKind;
   /** Select a uniformly random legal target as the trigger is put on the stack (Power Pack). */
   random?: true;
+  /**
+   * "Another target" (Saheeli, Sublime Artificer): an object or player chosen for one of these
+   * earlier ordinary slots is not a legal choice here (CR 115.3).
+   */
+  differentFromSlots?: number[];
   /** These ordinary target slots must name different players. Inactive mode slots are absent. */
   differentPlayerTargetSlots?: number[];
   /** A stack spell must currently target a permanent controlled by you. */
@@ -1762,6 +1767,13 @@ export type Effect =
        * stops being a planeswalker while this applies. Omitted keeps the additive behavior.
        */
       replaceTypes?: string[];
+      /** "Red and green" (Atarka Monument): its colors become exactly these (CR 105.3). */
+      colors?: Color[];
+      /**
+       * "Becomes a legendary …" (Sarkhan): with `replaceTypes` these are its supertypes; without,
+       * they are added.
+       */
+      supertypes?: string[];
     }
   /** "Discard your hand" (Sarkhan's emblem) — the controller only, no draw follows. */
   | { op: 'discardHand' }

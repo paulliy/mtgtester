@@ -162,6 +162,19 @@ function validateTargets(targets: TargetSpec[], path: string, issues: AuthoringI
       issues.push({ path: at, message: 'invalid target specification' });
       continue;
     }
+    if (
+      spec.differentFromSlots !== undefined &&
+      (!Array.isArray(spec.differentFromSlots) ||
+        spec.differentFromSlots.length === 0 ||
+        spec.count !== undefined ||
+        spec.differentFromSlots.some(
+          (other) => !integer(other) || other >= slot || targets[other]?.count !== undefined,
+        ))
+    )
+      issues.push({
+        path: `${at}.differentFromSlots`,
+        message: 'another target requires earlier ordinary slots',
+      });
     if (spec.differentPlayerTargetSlots !== undefined) {
       const others = spec.differentPlayerTargetSlots;
       if (

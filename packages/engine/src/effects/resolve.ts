@@ -7720,6 +7720,8 @@ export function* executeAbility(
             toughness: effect.toughness,
             addKeywords: effect.keywords,
             ...(effect.replaceTypes !== undefined ? { replaceTypes: effect.replaceTypes } : {}),
+            ...(effect.colors !== undefined ? { setColors: [...effect.colors] } : {}),
+            ...(effect.supertypes !== undefined ? { supertypes: [...effect.supertypes] } : {}),
           },
           timestamp: ctx.state.nextTimestamp++,
         });

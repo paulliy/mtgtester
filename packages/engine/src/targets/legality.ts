@@ -111,6 +111,8 @@ export function targetIsLegal(
   const { controllerId, eventPlayerId } = context;
   if (spec.differentPlayerTargetSlots?.some((slot) => context.chosenTargets?.[slot] === candidate))
     return false;
+  if (spec.differentFromSlots?.some((slot) => context.chosenTargets?.[slot] === candidate))
+    return false;
   const source = {
     cardId: context.sourceCardId ?? '',
     controllerId,

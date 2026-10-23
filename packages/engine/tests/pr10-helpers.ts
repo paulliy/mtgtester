@@ -208,8 +208,9 @@ export function activate(
   source: EnginePermanent,
   targets: Map<number, string> = new Map(),
   answer?: (decision: PendingDecision, count: number) => DecisionOutcome,
+  index = 0,
 ): EngineStackObject {
-  const option = activateOption(ctx, playerId, source);
+  const option = activateOption(ctx, playerId, source, index);
   expect(option, `${source.name} activation is offered to ${playerId}`).toBeDefined();
   pump(
     applyPriorityAction(ctx, p(ctx, playerId), option!.payload as PriorityActionPayload, {

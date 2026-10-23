@@ -255,8 +255,18 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
         applies,
         op:
           bc.replaceTypes !== undefined
-            ? { layer: 4, setTypes: bc.replaceTypes, setSubtypes: bc.addSubtypes }
-            : { layer: 4, addTypes: ['Creature'], addSubtypes: bc.addSubtypes },
+            ? {
+                layer: 4,
+                setTypes: bc.replaceTypes,
+                setSubtypes: bc.addSubtypes,
+                ...(bc.supertypes === undefined ? {} : { setSupertypes: bc.supertypes }),
+              }
+            : {
+                layer: 4,
+                addTypes: ['Creature'],
+                addSubtypes: bc.addSubtypes,
+                ...(bc.supertypes === undefined ? {} : { addSupertypes: bc.supertypes }),
+              },
         timestamp: eff.timestamp,
       });
       out.push({
@@ -501,6 +511,9 @@ function applyOpTo(
     case 4:
       if (op.setTypes !== undefined) chars.types = [...op.setTypes];
       if (op.setSubtypes !== undefined) chars.subtypes = [...op.setSubtypes];
+      if (op.setSupertypes !== undefined) chars.supertypes = [...op.setSupertypes];
+      for (const t of op.addSupertypes ?? [])
+        if (!chars.supertypes.includes(t)) chars.supertypes.push(t);
       for (const t of op.addTypes ?? []) if (!chars.types.includes(t)) chars.types.push(t);
       for (const s of op.addSubtypes ?? []) if (!chars.subtypes.includes(s)) chars.subtypes.push(s);
       // Changeling (CR 702.73): every creature type, always — a characteristic-defining ability

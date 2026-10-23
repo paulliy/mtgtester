@@ -38,6 +38,9 @@ export type ContinuousOp =
        */
       setTypes?: string[];
       setSubtypes?: string[];
+      /** Supertypes to add ("becomes a legendary …") or to set alongside `setTypes`. */
+      addSupertypes?: string[];
+      setSupertypes?: string[];
       /**
        * Remove the abilities the affected permanent generates from its rules text (CR 305.7,
        * the consequence of Blood Moon *setting* a land's subtype). This is what lets one

@@ -12,7 +12,18 @@ import {
   powerAtLeast,
 } from '../selector';
 import { counterSpellTarget } from '../target-builders';
-import { activated, mana, onCast, onEtb, spell, targetSlots, triggered } from '../templates';
+import {
+  activated,
+  loyaltyAbility,
+  mana,
+  onCast,
+  onDrawStep,
+  onEndStep,
+  onEtb,
+  spell,
+  targetSlots,
+  triggered,
+} from '../templates';
 import { constant } from '../value';
 import { replaceCard } from './index';
 
@@ -25,6 +36,7 @@ export function registerCoveragePr10Overrides(): void {
   registerPr10CastCopyOverrides();
   registerPr10AbilityStackOverrides();
   registerPr10TriggerDoublingOverrides();
+  registerPr10AnimationOverrides();
 }
 
 /** PR10.01, 10.11, 10.06, 10.14, 10.12: retargeting and spell copies with new targets. */
@@ -334,5 +346,160 @@ export function registerPr10TriggerDoublingOverrides(): void {
       ],
     },
     'PR10 deals the enter damage and doubles triggers of your legendary creatures.',
+  );
+}
+
+/** PR10.29, 10.28, 10.15: animation and becoming a copy until end of turn. */
+export function registerPr10AnimationOverrides(): void {
+  // PR10.29: it stays an artifact; its colors become exactly red and green (CR 105.3).
+  replaceCard(
+    'eb287c04-97f5-4e47-beb1-66cc7d15e748',
+    'Atarka Monument',
+    [
+      '{4}{R}{G}: ~ becomes a 4/4 red and green Dragon artifact creature with flying until end of turn.',
+    ],
+    {
+      activatedAbilities: [
+        activated({
+          costs: [mana('{4}{R}{G}')],
+          effects: [
+            {
+              op: 'becomeCreatureUntilEot',
+              target: 'source',
+              subtypes: ['Dragon'],
+              power: 4,
+              toughness: 4,
+              keywords: ['flying'],
+              colors: ['R', 'G'],
+            },
+          ],
+          description:
+            'This artifact becomes a 4/4 red and green Dragon artifact creature with flying until end of turn',
+        }),
+      ],
+    },
+    'PR10 makes the animated Monument red and green.',
+  );
+
+  // PR10.28: no "in addition to its other types", so he stops being a planeswalker (CR 205.1a).
+  const sarkhanBolt = targetSlots({ creature: { kind: 'creature' } });
+  replaceCard(
+    '80c26f58-04b0-4db0-b84e-9b136609abe0',
+    'Sarkhan, the Dragonspeaker',
+    [
+      '+1: Until end of turn, ~ becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste.',
+      '−6: You get an emblem with "At the beginning of your draw step, draw two additional cards" and "At the beginning of your end step, discard your hand."',
+    ],
+    {
+      activatedAbilities: [
+        loyaltyAbility(1, {
+          effects: [
+            {
+              op: 'becomeCreatureUntilEot',
+              target: 'source',
+              subtypes: ['Dragon'],
+              power: 4,
+              toughness: 4,
+              keywords: ['flying', 'indestructible', 'haste'],
+              replaceTypes: ['Creature'],
+              colors: ['R'],
+              supertypes: ['Legendary'],
+            },
+          ],
+          description:
+            'Until end of turn, Sarkhan becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste',
+        }),
+        loyaltyAbility(-3, {
+          targets: sarkhanBolt.targets,
+          effects: [{ op: 'dealDamage', target: sarkhanBolt.slot.creature, amount: constant(4) }],
+          description: 'Sarkhan deals 4 damage to target creature',
+        }),
+        loyaltyAbility(-6, {
+          effects: [
+            {
+              op: 'createEmblem',
+              name: 'Sarkhan, the Dragonspeaker emblem',
+              abilities: [
+                triggered(onDrawStep('you'), {
+                  effects: [{ op: 'draw', count: constant(2) }],
+                  description: 'At the beginning of your draw step, draw two additional cards',
+                }),
+                triggered(onEndStep('you'), {
+                  effects: [{ op: 'discardHand' }],
+                  description: 'At the beginning of your end step, discard your hand',
+                }),
+              ],
+            },
+          ],
+          description: 'You get an emblem that draws two more cards and discards your hand',
+        }),
+      ],
+    },
+    'PR10 makes Sarkhan a legendary red Dragon creature only, and adds the emblem.',
+  );
+
+  // PR10.15: it copies the target's copiable values until end of turn (CR 707.2).
+  const mirror = targetSlots({
+    original: {
+      kind: 'permanent',
+      filter: anyOf(ofType('Artifact'), ofType('Creature'), ofType('Enchantment'), ofType('Land')),
+    },
+  });
+  replaceCard(
+    '6a84eda1-7e72-4b5a-849f-b6e177565aeb',
+    'Mirage Mirror',
+    ['{2}: ~ becomes a copy of target artifact, creature, enchantment, or land until end of turn.'],
+    {
+      activatedAbilities: [
+        activated({
+          costs: [mana('{2}')],
+          targets: mirror.targets,
+          effects: [{ op: 'becomeCopyOf', ref: mirror.slot.original, untilEot: true }],
+          description:
+            'This artifact becomes a copy of target artifact, creature, enchantment, or land until end of turn',
+        }),
+      ],
+    },
+    'PR10 copies the target until end of turn.',
+  );
+
+  // PR10.08: the card has no +1; "another target" cannot be the first target (CR 115.3).
+  const saheeli = targetSlots({
+    artifact: { kind: 'artifact', controller: 'you' },
+    model: {
+      kind: 'permanent',
+      controller: 'you',
+      filter: anyOf(ofType('Artifact'), ofType('Creature')),
+    },
+  });
+  const [saheeliArtifact, saheeliModel] = saheeli.targets;
+  replaceCard(
+    'ab655810-f67e-4576-9174-35b16f5e3235',
+    'Saheeli, Sublime Artificer',
+    [
+      "−2: Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact in addition to its other types.",
+    ],
+    {
+      activatedAbilities: [
+        loyaltyAbility(-2, {
+          targets: [
+            saheeliArtifact!,
+            { ...saheeliModel!, differentFromSlots: [saheeli.slot.artifact] },
+          ],
+          effects: [
+            {
+              op: 'becomeCopyOfTarget',
+              target: saheeli.slot.artifact,
+              ref: saheeli.slot.model,
+              untilEot: true,
+              addTypes: ['Artifact'],
+            },
+          ],
+          description:
+            "Target artifact you control becomes a copy of another target artifact or creature you control until end of turn, except it's an artifact",
+        }),
+      ],
+    },
+    'PR10 has only the printed loyalty ability, and the copied object must be another target.',
   );
 }
