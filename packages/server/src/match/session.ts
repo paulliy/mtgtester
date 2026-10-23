@@ -197,9 +197,13 @@ export class MatchSession {
       new Engine({
         gameId: opts.gameId,
         seed: opts.seed,
-        players: opts.seats.map((s) => s.config),
+        // The human taps lands by hand if they like (ADR 0030); bots leave payment to the engine.
+        players: opts.seats.map((s) =>
+          s.seat === this.humanSeat ? { ...s.config, manualMana: true } : s.config,
+        ),
         ...(opts.turnCap !== undefined && { turnCap: opts.turnCap }),
       });
+    if (this.humanSeat !== null) this.engine.enableManualMana(this.humanSeat);
     this.recorder = opts.store?.recorderFor(opts.gameId) ?? null;
     this.logger =
       opts.providerKind === 'ai' ? new AiCallLogger(opts.store?.raw ?? null, opts.gameId) : null;
@@ -941,8 +945,10 @@ export class MatchSession {
       request.decisionType === 'priority' &&
       pass !== undefined &&
       legalActions.length < request.legalActions.length &&
+      // Making mana by hand alone is no reason to stop, as the engine's own quiet-window rule
+      // says (ADR 0030).
       legalActions.every((action) =>
-        ['pass', 'passAndYieldTurn', 'yieldToAbility'].includes(action.type),
+        ['pass', 'passAndYieldTurn', 'yieldToAbility', 'activateManaAbility'].includes(action.type),
       )
     ) {
       // Only the player's explicit preference removes optional choices. Keep costs, targeting,

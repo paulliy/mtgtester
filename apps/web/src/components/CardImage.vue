@@ -5,6 +5,7 @@
  * frame — never a broken-image icon — for cards with no printing (tokens) or a failed load.
  */
 import { computed, ref, watch } from 'vue';
+import { scryfallImageUrl } from '../lib/card';
 
 const props = withDefaults(
   defineProps<{
@@ -46,7 +47,7 @@ const src = computed(() => {
     id = TOKEN_SCRYFALL_IDS[key] ?? null;
   }
   if (id === null || id.length < 2) return null;
-  return `https://cards.scryfall.io/${props.size}/${props.face}/${id[0]}/${id[1]}/${id}.jpg`;
+  return scryfallImageUrl(id, props.size, props.face);
 });
 
 const showImage = computed(() => !props.isToken && src.value !== null && !failed.value);

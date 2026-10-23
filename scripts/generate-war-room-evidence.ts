@@ -178,6 +178,7 @@ const SOURCE_FILES = [
   'packages/engine/src/log/log.ts',
   'packages/engine/src/mana/cost.ts',
   'packages/engine/src/mana/pool.ts',
+  'packages/engine/src/mana/manual.ts',
   'packages/engine/src/present.ts',
   'packages/engine/src/providers/providers.ts',
   'packages/engine/src/rng/prng.ts',

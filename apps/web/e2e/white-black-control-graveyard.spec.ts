@@ -112,7 +112,7 @@ test('Rest in Peace casts normally, clears both existing graveyards, and replace
     })
     .toBe(true);
   await expect(
-    page.locator('.human-zone .resource').filter({ hasText: 'Graveyard' }),
+    page.locator('.human-zone .meta-item').filter({ hasText: 'Graveyard' }),
   ).toContainText('Graveyard 0');
   await expect(opponentGraveyard(page)).toHaveCount(0);
   await expect(

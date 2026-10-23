@@ -20,7 +20,9 @@ test('smart yield crosses quiet windows and a declined combat stop without extra
     .selectOption({ label: 'Kogla, the Titan Ape: bounce a Human, then attack' });
   await page.getByRole('button', { name: 'Run scenario' }).click();
   await expect(page).toHaveURL(/\/game$/);
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByLabel('Skip confirm step').check();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Smart yield Kogla, the Titan Ape', exact: true }).click();
   await expect.poll(() => requests.at(-1)?.payload.request.step).toBe('beginCombat');
   await expect(page.locator('.ignored-abilities')).toContainText('Smart yield');

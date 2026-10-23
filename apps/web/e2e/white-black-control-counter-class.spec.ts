@@ -13,7 +13,10 @@ async function runScenario(page: Page, title: string): Promise<void> {
   await page.getByRole('button', { name: 'Run scenario' }).click();
   await expect(page).toHaveURL(/\/game$/);
   await expect(page.getByText(title).first()).toBeVisible();
+  // Player options live in the Settings menu in the top bar.
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByLabel('Land drop reminder').uncheck();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
 }
 
 function handCard(page: Page, name: string) {

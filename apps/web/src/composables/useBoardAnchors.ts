@@ -53,7 +53,12 @@ export function useBoardAnchors() {
     measureAll();
   }
 
-  function disposeRoot(): void {
+  /**
+   * With `el`, releases the root only if `el` still holds it: the spectator board and the player
+   * board (rendered inside it) each set their own, and one leaving must not clear the other's.
+   */
+  function disposeRoot(el?: HTMLElement): void {
+    if (el !== undefined && root !== el) return;
     resizeObserver?.disconnect();
     resizeObserver = null;
     root = null;
@@ -80,7 +85,20 @@ export function useBoardAnchors() {
     return anchors.get(id);
   }
 
-  return { anchors, setRoot, disposeRoot, registerAnchor, unregisterAnchor, anchorFor };
+  /** Re-reads every rect: tiles shift when others enter, leave, tap or step forward. */
+  function remeasureAnchors(): void {
+    measureAll();
+  }
+
+  return {
+    anchors,
+    setRoot,
+    disposeRoot,
+    registerAnchor,
+    unregisterAnchor,
+    anchorFor,
+    remeasureAnchors,
+  };
 }
 
 /**

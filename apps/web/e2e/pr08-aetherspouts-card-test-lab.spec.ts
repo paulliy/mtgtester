@@ -46,8 +46,8 @@ for (const [index, id] of AETHERSPOUTS_SCENARIO_IDS.entries()) {
 
     for (const name of ['Lab P1 Attacker Alpha', 'Lab P1 Attacker Beta', 'Lab P2 Attacker'])
       await expect(opponentPermanent(page, name)).toHaveCount(0);
-    const library = page.locator('.human-zone .resource').filter({ hasText: 'Library' });
-    await expect(library.locator('strong')).toHaveText('6');
+    const library = page.locator('.human-zone .meta-item').filter({ hasText: 'Library' });
+    await expect(library).toHaveText('Library 6');
     await expect.poll(() => p1LibrarySize).toBe(6);
     await expect(page.getByText(/Target \d+ of \d+/)).toHaveCount(0);
   });

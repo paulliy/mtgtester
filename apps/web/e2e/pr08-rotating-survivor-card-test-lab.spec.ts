@@ -54,7 +54,7 @@ for (const [index, id] of ROTATING_SURVIVOR_SCENARIO_IDS.entries()) {
         await expect(survivor.locator('.stack-count-badge')).toHaveText('×2');
         await expect(permanent(page, 'P2', 'Lab Survivor')).toHaveCount(0);
         await expect(
-          page.locator('.human-zone .resource').filter({ hasText: 'Graveyard' }),
+          page.locator('.human-zone .meta-item').filter({ hasText: 'Graveyard' }),
         ).toContainText('1');
       }
     } else {

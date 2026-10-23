@@ -612,6 +612,11 @@ export interface EnginePlayerState extends PlayerState {
   yieldUntilEndOfTurn?: boolean;
   /** Oracle IDs of triggered abilities the player has chosen to "Yield to this ability". */
   yieldedAbilities?: OracleId[];
+  /**
+   * Offer this player's mana abilities as priority actions (`mana/manual.ts`, ADR 0030). Set at
+   * game creation for human seats; bots leave payment to the engine and never see them.
+   */
+  manualMana?: boolean;
 }
 
 /** An until-end-of-turn continuous effect (the Phase 2 subset of CR 613). */
@@ -951,6 +956,8 @@ export interface EnginePlayerConfig {
   /** The rest of the deck (excluding commanders and companion). */
   cards: OracleCard[];
   companion?: OracleCard | null;
+  /** Offer this seat's mana abilities as priority actions (ADR 0030). Human seats only. */
+  manualMana?: boolean;
 }
 
 export interface GameConfig {
