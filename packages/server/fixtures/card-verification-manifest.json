@@ -960,22 +960,30 @@
     },
     "fda61506-ed79-47fd-badd-639185297913": {
       "name": "Smokestack",
-      "oracleSha256": "2bdc6fec7da5e5a92acd731ef57470524053e530af1824f0ac1e1775a7c0e95b",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "91aabae6b80a8744b6cd0ed2cb400bb224b003ed6907b5c9bebfcdbad5394cb8",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["smokestack-modeled"],
       "clauses": [
         {
+          "id": "pr11-smokestack-clause-1",
           "oracleText": "At the beginning of your upkeep, you may put a soot counter on this artifact.",
-          "implementation": ["explicitly unsupported; soot-adding upkeep omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": ["TriggerSpec.upkeep", "Trigger.optional", "Effect.addCounters"],
+          "engineTestIds": ["smokestack-c01"],
+          "viewerScenarioIds": ["pr11-smokestack-viewer-soot"]
         },
         {
+          "id": "pr11-smokestack-clause-2",
           "oracleText": "At the beginning of each player's upkeep, that player sacrifices a permanent of their choice for each soot counter on this artifact.",
-          "implementation": ["explicitly unsupported; sacrificeEachPlayer count 1 on each upkeep"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "TriggerSpec.eachUpkeep",
+            "Effect.eventPlayerSacrificesPermanents",
+            "Value.countersOnSource"
+          ],
+          "engineTestIds": ["smokestack-c02", "smokestack-c02-negative"],
+          "viewerScenarioIds": ["pr11-smokestack-viewer-soot", "pr11-smokestack-viewer-sacrifice"]
         }
       ],
+      "viewerScenarioIds": ["pr11-smokestack-viewer-soot", "pr11-smokestack-viewer-sacrifice"],
       "gameplayAiScenarioIds": []
     },
     "82a6fa6f-13c2-4ea3-bec2-c51b56b2783b": {
@@ -1326,21 +1334,32 @@
     },
     "66ca8a60-e028-4a5f-8177-860b888cb9d1": {
       "name": "Angel's Grace",
-      "oracleSha256": "8b82f887e6a6fd32cbf163b59bfa27e99378188a63dd77af33a539967c6e349d",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "41ae997aee2cf777ae28b7228f8e7b666384f67a98e6f7f2675c98231f07fab3",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr11-phasing-modeled"],
       "clauses": [
         {
-          "oracleText": "Split second",
-          "implementation": ["explicitly unsupported; Split second is omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "pr11-angel-s-grace-clause-1",
+          "oracleText": "Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.)",
+          "implementation": ["Keyword.splitSecond", "PriorityOptions.splitSecondFilter"],
+          "engineTestIds": ["grace-c01-positive", "grace-c01-negative"],
+          "viewerScenarioIds": ["pr11-angel-s-grace-viewer-split-second"]
         },
         {
+          "id": "pr11-angel-s-grace-clause-2",
           "oracleText": "You can't lose the game this turn and your opponents can't win the game this turn. Until end of turn, damage that would reduce your life total to less than 1 reduces it to 1 instead.",
-          "implementation": ["explicitly unsupported; damage life floor is not cannot-lose"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "Effect.angelGrace",
+            "PlayerState.cantLoseTurn",
+            "Replacement.damageLifeFloor"
+          ],
+          "engineTestIds": ["grace-c02-positive", "grace-c02-expiry", "grace-c02-negative"],
+          "viewerScenarioIds": ["pr11-angel-s-grace-viewer-life-floor"]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr11-angel-s-grace-viewer-split-second",
+        "pr11-angel-s-grace-viewer-life-floor"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -1385,15 +1404,37 @@
     },
     "60e7130a-d321-4e50-93a4-999013c76054": {
       "name": "Gut, True Soul Zealot",
-      "oracleSha256": "57884a8cc2affe2969b44d18992777b721cf770833daba51bcb7f280627563d2",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "57480a490d28aa07da41e084c8f776cafc6e85a4b1aeffc5d3446ca56da46c47",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr11-lifecycle-modeled"],
       "clauses": [
         {
-          "oracleText": "Choose a Background",
-          "implementation": ["explicitly unsupported; background companion is not implemented"],
-          "engineTestIds": ["catalog-audit-contained"],
+          "id": "pr11-gut-true-soul-zealot-clause-1",
+          "oracleText": "Whenever you attack, you may sacrifice another creature or an artifact. If you do, create a 4/1 black Skeleton creature token with menace that's tapped and attacking. (It can't be blocked except by two or more creatures.)",
+          "implementation": [
+            "TriggerSpec.youAttack",
+            "Trigger.optional",
+            "Effect.sacrificeOneThen",
+            "Effect.createTokenAttacking",
+            "Token.skeleton41Menace"
+          ],
+          "engineTestIds": ["gut-c01-positive", "gut-c01-negative"],
+          "viewerScenarioIds": [
+            "pr11-gut-true-soul-zealot-viewer-sacrifice",
+            "pr11-gut-true-soul-zealot-viewer-decline"
+          ]
+        },
+        {
+          "id": "pr11-gut-true-soul-zealot-clause-2",
+          "oracleText": "Choose a Background (You can have a Background as a second commander.)",
+          "implementation": ["DeckRule.chooseABackground"],
+          "engineTestIds": ["gut-c02"],
           "viewerScenarioIds": []
         }
+      ],
+      "viewerScenarioIds": [
+        "pr11-gut-true-soul-zealot-viewer-sacrifice",
+        "pr11-gut-true-soul-zealot-viewer-decline"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -1592,15 +1633,41 @@
     },
     "30ac68e6-160a-41f9-9f0f-0e0eef383150": {
       "name": "Arcane Lighthouse",
-      "oracleSha256": "5d0f333485598adcd887dce6a6c0b98fbdad8048daad6957b159185448ff8410",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "50c9be824477d2117ecd0d97711dc046d652c3f1a425274089313866a7aa6ae1",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr11-protection-modeled"],
       "clauses": [
         {
-          "oracleText": "{1}, {T}: Until end of turn, creatures your opponents control lose hexproof and shroud and can't have hexproof or shroud.",
-          "implementation": ["explicitly unsupported; authored as granting menace"],
-          "engineTestIds": ["catalog-audit-contained"],
+          "id": "pr11-arcane-lighthouse-clause-1",
+          "oracleText": "{T}: Add {C}.",
+          "implementation": ["ActivatedAbility.mana", "Effect.addMana"],
+          "engineTestIds": ["arcane-lighthouse-c01"],
           "viewerScenarioIds": []
+        },
+        {
+          "id": "pr11-arcane-lighthouse-clause-2",
+          "oracleText": "{1}, {T}: Until end of turn, creatures your opponents control lose hexproof and shroud and can't have hexproof or shroud.",
+          "implementation": [
+            "ActivatedAbility",
+            "Effect.loseKeywordsUntilEndOfTurn",
+            "KeywordDenial.hexproof",
+            "KeywordDenial.shroud",
+            "Selector.opponentsCreatures"
+          ],
+          "engineTestIds": [
+            "arcane-lighthouse-c02-positive",
+            "arcane-lighthouse-c02-cant-have",
+            "arcane-lighthouse-c02-negative"
+          ],
+          "viewerScenarioIds": [
+            "pr11-arcane-lighthouse-viewer-positive",
+            "pr11-arcane-lighthouse-viewer-negative"
+          ]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr11-arcane-lighthouse-viewer-positive",
+        "pr11-arcane-lighthouse-viewer-negative"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -3500,15 +3567,35 @@
     },
     "81a51328-b995-4f3b-90bc-a20ae21dd254": {
       "name": "Spirit Mantle",
-      "oracleSha256": "d7ed1ab4d0b9878a98e1f604086d8f926c94da175da9f6f92e1c044757fd5351",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "79c2fc57e55befcba9e2dd8eb331e2c5345be9dfbfdd5d40915c0a3b23f1d543",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr11-protection-modeled"],
       "clauses": [
         {
+          "id": "pr11-spirit-mantle-clause-1",
+          "oracleText": "Enchant creature",
+          "implementation": ["Keyword.enchant"],
+          "engineTestIds": ["pr11-protection-modeled"],
+          "viewerScenarioIds": ["pr11-spirit-mantle-viewer-cast"]
+        },
+        {
+          "id": "pr11-spirit-mantle-clause-2",
           "oracleText": "Enchanted creature gets +1/+1 and has protection from creatures.",
-          "implementation": ["explicitly unsupported; protection from creatures unimplemented"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": ["StaticEffect.attachedPump", "Protection.creatures"],
+          "engineTestIds": [
+            "spirit-mantle-c02-positive",
+            "spirit-mantle-c02-negative",
+            "spirit-mantle-c02-fight"
+          ],
+          "viewerScenarioIds": [
+            "pr11-spirit-mantle-viewer-cast",
+            "pr11-spirit-mantle-viewer-ability-target"
+          ]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr11-spirit-mantle-viewer-cast",
+        "pr11-spirit-mantle-viewer-ability-target"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -3592,17 +3679,36 @@
     },
     "09b895ff-e729-48d1-bfc1-ea5fd7adda6a": {
       "name": "Caged Sun",
-      "oracleSha256": "b34bfaf7fbd92c16e3925213c0c013a876096c33e682d99c4eadcad9508982b3",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "391e9b8768e82cdb8d8ab67bb2f38747ce52929cae80bfe7d734d2f37c95cbe8",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr11-lifecycle-modeled"],
       "clauses": [
         {
+          "id": "pr11-caged-sun-clause-1",
+          "oracleText": "As this artifact enters, choose a color.",
+          "implementation": ["CardDefinition.entersChoosingOption"],
+          "engineTestIds": ["sun-c01"],
+          "viewerScenarioIds": ["pr11-caged-sun-viewer-chosen-color"]
+        },
+        {
+          "id": "pr11-caged-sun-clause-2",
+          "oracleText": "Creatures you control of the chosen color get +1/+1.",
+          "implementation": ["StaticEffect.lord", "Selector.chosenColor"],
+          "engineTestIds": ["sun-c02"],
+          "viewerScenarioIds": ["pr11-caged-sun-viewer-chosen-color"]
+        },
+        {
+          "id": "pr11-caged-sun-clause-3",
           "oracleText": "Whenever a land's ability causes you to add one or more mana of the chosen color, add an additional one mana of that color.",
-          "implementation": [
-            "explicitly unsupported; additional chosen-color mana claimed without a trigger"
-          ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": ["ManaActivationRider.chosenColorIfProduced"],
+          "engineTestIds": ["sun-c03-positive", "sun-c03-choice", "sun-c03-negative"],
+          "viewerScenarioIds": ["pr11-caged-sun-viewer-mana", "pr11-caged-sun-viewer-other-color"]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr11-caged-sun-viewer-chosen-color",
+        "pr11-caged-sun-viewer-mana",
+        "pr11-caged-sun-viewer-other-color"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -4411,15 +4517,33 @@
     },
     "473a7998-669d-4181-83fe-f178a2e781f0": {
       "name": "Out of the Tombs",
-      "oracleSha256": "92a08ff6d3a9267818cc43e08dfba9d1ee239824bc0c12d14cc8fa60d4d15c0b",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "8d816e435c5897d424a7ac741fafa1b74a906e68f1e06201b0c9a853940fe0ff",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["tombs-modeled"],
       "clauses": [
         {
+          "id": "pr11-out-of-the-tombs-clause-1",
           "oracleText": "At the beginning of your upkeep, put two eon counters on this enchantment, then mill cards equal to the number of eon counters on it.",
-          "implementation": ["explicitly unsupported; enters-with two eon counters is authored"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "TriggerSpec.upkeep",
+            "Effect.addCounters",
+            "Effect.mill",
+            "Value.countersOnSource"
+          ],
+          "engineTestIds": ["tombs-c01"],
+          "viewerScenarioIds": ["pr11-out-of-the-tombs-viewer-upkeep"]
+        },
+        {
+          "id": "pr11-out-of-the-tombs-clause-2",
+          "oracleText": "If you would draw a card while your library has no cards in it, instead return a creature card from your graveyard to the battlefield. If you can't, you lose the game.",
+          "implementation": ["Replacement.emptyLibraryCreatureReplacement", "State.playerLoses"],
+          "engineTestIds": ["tombs-c02-positive", "tombs-c02-lose", "tombs-c02-negative"],
+          "viewerScenarioIds": ["pr11-out-of-the-tombs-viewer-empty-library"]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr11-out-of-the-tombs-viewer-upkeep",
+        "pr11-out-of-the-tombs-viewer-empty-library"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -15832,6 +15956,429 @@
         "pr10-rowan-kenrith-viewer-partner",
         "pr10-rowan-kenrith-viewer-commander"
       ],
+      "gameplayAiScenarioIds": []
+    },
+    "8a52f3c0-2552-4425-b2e3-5496eb2232a7": {
+      "name": "Mystic Remora",
+      "oracleSha256": "1d1cc6e3169c56b64038ea4a887b0ebe7e3898aadf6fb5b35221630fe12d04a0",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr11-lifecycle-modeled"],
+      "clauses": [
+        {
+          "id": "pr11-mystic-remora-clause-1",
+          "oracleText": "Cumulative upkeep {1} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)",
+          "implementation": [
+            "TriggerSpec.upkeep",
+            "Effect.cumulativeUpkeep",
+            "Effect.addCounters",
+            "Effect.sacrificeSource"
+          ],
+          "engineTestIds": ["remora-c01-paid", "remora-c01-unpaid"],
+          "viewerScenarioIds": [
+            "pr11-mystic-remora-viewer-pay-upkeep",
+            "pr11-mystic-remora-viewer-skip-upkeep"
+          ]
+        },
+        {
+          "id": "pr11-mystic-remora-clause-2",
+          "oracleText": "Whenever an opponent casts a noncreature spell, you may draw a card unless that player pays {4}.",
+          "implementation": [
+            "TriggerSpec.opponentCastsSpell",
+            "Selector.noncreatureSpell",
+            "Effect.drawUnlessPays"
+          ],
+          "engineTestIds": ["remora-c02-positive", "remora-c02-paid", "remora-c02-negative"],
+          "viewerScenarioIds": ["pr11-mystic-remora-viewer-draw"]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr11-mystic-remora-viewer-draw",
+        "pr11-mystic-remora-viewer-pay-upkeep",
+        "pr11-mystic-remora-viewer-skip-upkeep"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ec3d4466-547c-4e02-b1b5-a156ec4637e9": {
+      "name": "Chrome Mox",
+      "oracleSha256": "50b6f2fe62f9c9aa09d73975c9121171f1ab274b6700eede6181a025b4b3aaaf",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr11-lifecycle-modeled"],
+      "clauses": [
+        {
+          "id": "pr11-chrome-mox-clause-1",
+          "oracleText": "Imprint — When this artifact enters, you may exile a nonartifact, nonland card from your hand.",
+          "implementation": [
+            "TriggerSpec.entersBattlefield",
+            "Effect.exileFromHandWithSource",
+            "ExiledWithLink"
+          ],
+          "engineTestIds": ["mox-c01"],
+          "viewerScenarioIds": [
+            "pr11-chrome-mox-viewer-imprint",
+            "pr11-chrome-mox-viewer-no-imprint"
+          ]
+        },
+        {
+          "id": "pr11-chrome-mox-clause-2",
+          "oracleText": "{T}: Add one mana of any of the exiled card's colors.",
+          "implementation": ["ActivatedAbility.mana", "DynamicMana.exiledWithSourceColors"],
+          "engineTestIds": ["mox-c02", "mox-c02-negative"],
+          "viewerScenarioIds": [
+            "pr11-chrome-mox-viewer-imprint",
+            "pr11-chrome-mox-viewer-no-imprint"
+          ]
+        }
+      ],
+      "viewerScenarioIds": ["pr11-chrome-mox-viewer-imprint", "pr11-chrome-mox-viewer-no-imprint"],
+      "gameplayAiScenarioIds": []
+    },
+    "c0adbddc-b070-4c5f-afe0-0474c72a9251": {
+      "name": "Gemstone Caverns",
+      "oracleSha256": "dae3d703ffc51a500bb39e219e9d6c8251e68bd1f636f75cd4d3e5d24a22fad1",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr11-lifecycle-modeled"],
+      "clauses": [
+        {
+          "id": "pr11-gemstone-caverns-clause-1",
+          "oracleText": "If this card is in your opening hand and you're not the starting player, you may begin the game with Gemstone Caverns on the battlefield with a luck counter on it. If you do, exile a card from your hand.",
+          "implementation": [
+            "RuleStatic.beginOnBattlefieldFromOpeningHand",
+            "OpeningHand.notStartingPlayer",
+            "OpeningHand.withCounter",
+            "OpeningHand.exileCardFromHand"
+          ],
+          "engineTestIds": ["caverns-c01-positive", "caverns-c01-negative"],
+          "viewerScenarioIds": []
+        },
+        {
+          "id": "pr11-gemstone-caverns-clause-2",
+          "oracleText": "{T}: Add {C}. If Gemstone Caverns has a luck counter on it, instead add one mana of any color.",
+          "implementation": [
+            "ActivatedAbility.mana",
+            "ManaAbility.conditionalUnits",
+            "Condition.sourceHasCounter"
+          ],
+          "engineTestIds": ["caverns-c02"],
+          "viewerScenarioIds": [
+            "pr11-gemstone-caverns-viewer-luck",
+            "pr11-gemstone-caverns-viewer-no-luck"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr11-gemstone-caverns-viewer-luck",
+        "pr11-gemstone-caverns-viewer-no-luck"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0d4ecdb1-ec90-497f-a7a4-1c68092b8757": {
+      "name": "Teferi's Protection",
+      "oracleSha256": "05b8e0aa5425764cf5d2555212a9334a2a84bc250e19882b18b5d210afbe338a",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr11-phasing-modeled"],
+      "clauses": [
+        {
+          "id": "pr11-teferi-s-protection-clause-1",
+          "oracleText": "Until your next turn, your life total can't change and you gain protection from everything. All permanents you control phase out. (While they're phased out, they're treated as though they don't exist. They phase in before you untap during your untap step.)",
+          "implementation": [
+            "Effect.controllerProtectionFromEverythingUntilNextTurn",
+            "PlayerState.lifeLocked",
+            "Effect.phaseOutControlledPermanents"
+          ],
+          "engineTestIds": ["teferi-c01"],
+          "viewerScenarioIds": [
+            "pr11-teferi-s-protection-viewer-protection",
+            "pr11-teferi-s-protection-viewer-phase-in"
+          ]
+        },
+        {
+          "id": "pr11-teferi-s-protection-clause-2",
+          "oracleText": "Exile Teferi's Protection.",
+          "implementation": ["Effect.exileSelf"],
+          "engineTestIds": ["teferi-c02"],
+          "viewerScenarioIds": ["pr11-teferi-s-protection-viewer-protection"]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr11-teferi-s-protection-viewer-protection",
+        "pr11-teferi-s-protection-viewer-phase-in"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "736892cb-a34b-4bb9-b56c-e26e3db207a2": {
+      "name": "Mana Vault",
+      "oracleSha256": "3f4b086c293816418c1076321ea9f445886dc0f7ba70e71c36217c617b92406c",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr11-lifecycle-modeled"],
+      "clauses": [
+        {
+          "id": "pr11-mana-vault-clause-1",
+          "oracleText": "This artifact doesn't untap during your untap step.",
+          "implementation": ["CardDefinition.doesntUntapDuringUntapStep"],
+          "engineTestIds": ["vault-c01"],
+          "viewerScenarioIds": ["pr11-mana-vault-viewer-pay-untap", "pr11-mana-vault-viewer-damage"]
+        },
+        {
+          "id": "pr11-mana-vault-clause-2",
+          "oracleText": "At the beginning of your upkeep, you may pay {4}. If you do, untap this artifact.",
+          "implementation": ["TriggerSpec.upkeep", "Cost.optionalMana", "Effect.untapSource"],
+          "engineTestIds": ["vault-c02-positive", "vault-c02-c03"],
+          "viewerScenarioIds": ["pr11-mana-vault-viewer-pay-untap", "pr11-mana-vault-viewer-damage"]
+        },
+        {
+          "id": "pr11-mana-vault-clause-3",
+          "oracleText": "At the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you.",
+          "implementation": [
+            "TriggerSpec.drawStep",
+            "Condition.sourceTapped",
+            "Effect.damageController"
+          ],
+          "engineTestIds": ["vault-c02-c03", "vault-c03-negative"],
+          "viewerScenarioIds": ["pr11-mana-vault-viewer-pay-untap", "pr11-mana-vault-viewer-damage"]
+        },
+        {
+          "id": "pr11-mana-vault-clause-4",
+          "oracleText": "{T}: Add {C}{C}{C}.",
+          "implementation": ["ActivatedAbility.mana", "Effect.addMana"],
+          "engineTestIds": ["vault-c04"],
+          "viewerScenarioIds": ["pr11-mana-vault-viewer-mana"]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr11-mana-vault-viewer-mana",
+        "pr11-mana-vault-viewer-pay-untap",
+        "pr11-mana-vault-viewer-damage"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3aa83ed2-f48b-4ce6-a614-2c54ddf50538": {
+      "name": "The One Ring",
+      "oracleSha256": "76bff693c91a40628a95ba5fffe76c9a2a69394a1c0d7ac9fbf8d99cffd3a9ad",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr11-phasing-modeled"],
+      "clauses": [
+        {
+          "id": "pr11-the-one-ring-clause-1",
+          "oracleText": "Indestructible",
+          "implementation": ["Keyword.indestructible"],
+          "engineTestIds": ["ring-c01"],
+          "viewerScenarioIds": []
+        },
+        {
+          "id": "pr11-the-one-ring-clause-2",
+          "oracleText": "When The One Ring enters, if you cast it, you gain protection from everything until your next turn.",
+          "implementation": [
+            "TriggerSpec.entersBattlefield",
+            "Condition.wasCast",
+            "Effect.controllerProtectionFromEverythingUntilNextTurn"
+          ],
+          "engineTestIds": ["ring-c02-positive", "ring-c02-negative", "ring-c02-expiry"],
+          "viewerScenarioIds": ["pr11-the-one-ring-viewer-cast"]
+        },
+        {
+          "id": "pr11-the-one-ring-clause-3",
+          "oracleText": "At the beginning of your upkeep, you lose 1 life for each burden counter on The One Ring.",
+          "implementation": ["TriggerSpec.upkeep", "Effect.loseLife", "Value.countersOnSource"],
+          "engineTestIds": ["ring-c03"],
+          "viewerScenarioIds": ["pr11-the-one-ring-viewer-upkeep"]
+        },
+        {
+          "id": "pr11-the-one-ring-clause-4",
+          "oracleText": "{T}: Put a burden counter on The One Ring, then draw a card for each burden counter on The One Ring.",
+          "implementation": [
+            "ActivatedAbility",
+            "Effect.addCounters",
+            "Effect.draw",
+            "Value.countersOnSource"
+          ],
+          "engineTestIds": ["ring-c04"],
+          "viewerScenarioIds": ["pr11-the-one-ring-viewer-draw"]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr11-the-one-ring-viewer-cast",
+        "pr11-the-one-ring-viewer-draw",
+        "pr11-the-one-ring-viewer-upkeep"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "42bb7ea9-f6e4-4551-8d93-3b1eae84b865": {
+      "name": "Clever Concealment",
+      "oracleSha256": "fc013d57e113d5dedda518615a991151aaf8eaebedb9d05877a3ef90838f19fa",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr11-phasing-modeled"],
+      "clauses": [
+        {
+          "id": "pr11-clever-concealment-clause-1",
+          "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)",
+          "implementation": ["Keyword.convoke"],
+          "engineTestIds": ["concealment-c01"],
+          "viewerScenarioIds": ["pr11-clever-concealment-viewer-convoke"]
+        },
+        {
+          "id": "pr11-clever-concealment-clause-2",
+          "oracleText": "Any number of target nonland permanents you control phase out. (Treat them and anything attached to them as though they don't exist until your next turn.)",
+          "implementation": ["TargetSlots.anyNumber", "Effect.phaseOutEachChosen"],
+          "engineTestIds": ["concealment-c02-targets", "concealment-c02", "concealment-c02-return"],
+          "viewerScenarioIds": [
+            "pr11-clever-concealment-viewer-phase-out",
+            "pr11-clever-concealment-viewer-convoke"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr11-clever-concealment-viewer-phase-out",
+        "pr11-clever-concealment-viewer-convoke"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "546201d0-3fa5-44e4-a526-ab0945711e49": {
+      "name": "Shanna, Sisay's Legacy",
+      "oracleSha256": "be30e80acedc68cd53c18c247fe2816c890d8ff2c2523baf34373e9f7ba8b565",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr11-protection-modeled"],
+      "clauses": [
+        {
+          "id": "pr11-shanna-sisay-s-legacy-clause-1",
+          "oracleText": "Shanna can't be the target of abilities your opponents control.",
+          "implementation": ["TargetingRestriction.opponentsAbilities"],
+          "engineTestIds": ["shanna-c01-positive", "shanna-c01-negative"],
+          "viewerScenarioIds": [
+            "pr11-shanna-sisay-s-legacy-viewer-ability-target",
+            "pr11-shanna-sisay-s-legacy-viewer-spell-target"
+          ]
+        },
+        {
+          "id": "pr11-shanna-sisay-s-legacy-clause-2",
+          "oracleText": "Shanna gets +1/+1 for each creature you control.",
+          "implementation": ["StaticEffect.selfPump", "Value.countControlledCreatures"],
+          "engineTestIds": ["shanna-c02"],
+          "viewerScenarioIds": ["pr11-shanna-sisay-s-legacy-viewer-power"]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr11-shanna-sisay-s-legacy-viewer-power",
+        "pr11-shanna-sisay-s-legacy-viewer-ability-target",
+        "pr11-shanna-sisay-s-legacy-viewer-spell-target"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "57d0c688-6206-4c83-9fcb-27fd29e2a9ed": {
+      "name": "Basri's Lieutenant",
+      "oracleSha256": "11ada25f5aa01a06f88e6c5d6c3e2eb043773ee92fcc34a2439cc3f9ef2965a3",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr11-protection-modeled"],
+      "clauses": [
+        {
+          "id": "pr11-basri-s-lieutenant-clause-1",
+          "oracleText": "Vigilance, protection from multicolored",
+          "implementation": ["Keyword.vigilance", "Protection.multicolored"],
+          "engineTestIds": [
+            "basri-c01-positive",
+            "basri-c01-negative",
+            "basri-c01-blocking",
+            "basri-c01-damage"
+          ],
+          "viewerScenarioIds": ["pr11-basri-s-lieutenant-viewer-multicolored"]
+        },
+        {
+          "id": "pr11-basri-s-lieutenant-clause-2",
+          "oracleText": "When this creature enters, put a +1/+1 counter on target creature you control.",
+          "implementation": ["TriggerSpec.entersBattlefield", "Effect.addCounters"],
+          "engineTestIds": ["basri-c02"],
+          "viewerScenarioIds": ["pr11-basri-s-lieutenant-viewer-enters"]
+        },
+        {
+          "id": "pr11-basri-s-lieutenant-clause-3",
+          "oracleText": "Whenever this creature or another creature you control dies, if it had a +1/+1 counter on it, create a 2/2 white Knight creature token with vigilance.",
+          "implementation": [
+            "TriggerSpec.creatureYouControlDies",
+            "Condition.hadPlusOneCounter",
+            "Effect.createToken"
+          ],
+          "engineTestIds": ["basri-c03-positive", "basri-c03-self", "basri-c03-negative"],
+          "viewerScenarioIds": ["pr11-basri-s-lieutenant-viewer-dies"]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr11-basri-s-lieutenant-viewer-enters",
+        "pr11-basri-s-lieutenant-viewer-multicolored",
+        "pr11-basri-s-lieutenant-viewer-dies"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8430ae03-2d4c-4031-aa29-4d53815ded78": {
+      "name": "Negative Zone Portal",
+      "oracleSha256": "d015ea8e449d67e43f8df5cb1aed6c4f87a53890174921279ea2c2aed8d0f5d3",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr11-lifecycle-modeled"],
+      "clauses": [
+        {
+          "id": "pr11-negative-zone-portal-clause-1",
+          "oracleText": "{2}, {T}: Exile target card from an opponent's graveyard. If it's a creature card, draw a card.",
+          "implementation": [
+            "ActivatedAbility",
+            "Effect.exileGraveyardCardWithSource",
+            "ExiledWithLink",
+            "Effect.drawIfCardType"
+          ],
+          "engineTestIds": ["portal-c01-creature", "portal-c01-noncreature"],
+          "viewerScenarioIds": [
+            "pr11-negative-zone-portal-viewer-creature",
+            "pr11-negative-zone-portal-viewer-noncreature"
+          ]
+        },
+        {
+          "id": "pr11-negative-zone-portal-clause-2",
+          "oracleText": "At the beginning of your upkeep, if there are four or more creature cards exiled with this artifact, flip a coin. If you lose the flip, sacrifice this artifact and return a card exiled with it at random to its owner's hand.",
+          "implementation": [
+            "TriggerSpec.upkeep",
+            "Condition.exiledWithSourceAtLeast",
+            "Effect.flipCoin",
+            "Effect.returnRandomExiledWithSourceToHand"
+          ],
+          "engineTestIds": ["portal-c02-negative", "portal-c02-win", "portal-c02-lose"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr11-negative-zone-portal-viewer-creature",
+        "pr11-negative-zone-portal-viewer-noncreature"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3d50266f-5a2f-4a48-ab15-87e733624fd4": {
+      "name": "Unquestioned Authority",
+      "oracleSha256": "5d0e89744f57d1bf4d94be83fcbcb618da89c0cd6c207d13a9fda6543b080e57",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr11-protection-modeled"],
+      "clauses": [
+        {
+          "id": "pr11-unquestioned-authority-clause-1",
+          "oracleText": "Enchant creature",
+          "implementation": ["Keyword.enchant"],
+          "engineTestIds": ["pr11-protection-modeled"],
+          "viewerScenarioIds": ["pr11-unquestioned-authority-viewer-cast"]
+        },
+        {
+          "id": "pr11-unquestioned-authority-clause-2",
+          "oracleText": "When this Aura enters, draw a card.",
+          "implementation": ["TriggerSpec.entersBattlefield", "Effect.draw"],
+          "engineTestIds": ["unquestioned-authority-c02/c03"],
+          "viewerScenarioIds": ["pr11-unquestioned-authority-viewer-cast"]
+        },
+        {
+          "id": "pr11-unquestioned-authority-clause-3",
+          "oracleText": "Enchanted creature has protection from creatures.",
+          "implementation": ["StaticEffect.attachedKeyword", "Protection.creatures"],
+          "engineTestIds": [
+            "unquestioned-authority-c02/c03",
+            "unquestioned-authority-c03-negative"
+          ],
+          "viewerScenarioIds": ["pr11-unquestioned-authority-viewer-cast"]
+        }
+      ],
+      "viewerScenarioIds": ["pr11-unquestioned-authority-viewer-cast"],
       "gameplayAiScenarioIds": []
     }
   }
