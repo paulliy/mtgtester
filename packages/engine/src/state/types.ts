@@ -381,6 +381,8 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
   exiledWithIds?: string[];
   /** A face-down manifested card is a 2/2 colorless creature. */
   faceDown?: boolean;
+  /** Face down because it was manifested (CR 701.40), not cast face down. */
+  manifested?: true;
 }
 
 /** Non-battlefield engine object living in graveyard/exile with 903.9a bookkeeping. */

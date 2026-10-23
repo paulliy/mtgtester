@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { computeTargetOptions } from '../src/actions/legal';
+import { applyPriorityAction } from '../src/actions/apply';
+import {
+  computePriorityOptions,
+  computeTargetOptions,
+  type PriorityActionPayload,
+} from '../src/actions/legal';
+import { addMana } from '../src/mana/pool';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { moveObject } from '../src/state/objects';
 import { queueStepTriggers } from '../src/turn/turn';
@@ -234,5 +240,90 @@ describe('PR10.09 Trazyn the Infinite', () => {
     expect(activateOption(ctx, 'P1', gallery)).toBeDefined();
     pump(moveObject(ctx, relic, { zone: 'exile' }));
     expect(activateOption(ctx, 'P1', gallery)).toBeUndefined();
+  });
+});
+
+describe('PR10.05 Reality Shift', () => {
+  const ogre = () =>
+    oracle({
+      name: 'Shifted Ogre',
+      typeLine: 'Creature — Ogre',
+      manaCost: '{2}{R}',
+      cmc: 3,
+      power: '4',
+      toughness: '3',
+      oracleText: 'When this creature enters, you gain 5 life.',
+    });
+  const relic = () =>
+    oracle({
+      name: 'Shifted Relic',
+      typeLine: 'Artifact',
+      manaCost: '{1}',
+      cmc: 1,
+      power: null,
+      toughness: null,
+    });
+
+  /** P1 casts Reality Shift on P2's creature, with `top` on top of P2's library. */
+  function shift(seed: string, top: ReturnType<typeof ogre>) {
+    const ctx = pod(seed);
+    const victim = spawn(ctx, 'P2', bear('Shift Victim'));
+    const topCard = conjure(ctx, 'P2', top, 'library');
+    castFromHand(ctx, 'P1', pinned('Reality Shift'), new Map([[0, victim.id]]));
+    pump(resolveTopOfStack(ctx));
+    settle(ctx);
+    const manifested = ctx.state.battlefield.find(
+      (permanent) => permanent.cardId === topCard.cardId,
+    )!;
+    return { ctx, victim, manifested };
+  }
+  const faceUpOptions = (ctx: GameContext, playerId: string, permanent: EnginePermanent) =>
+    computePriorityOptions(ctx, p(ctx, playerId)).filter((option) => {
+      const payload = option.payload as PriorityActionPayload & { objectId?: string };
+      return payload.kind === 'turnFaceUp' && payload.objectId === permanent.id;
+    });
+
+  it('pr10-reality-shift-pinned-oracle-supported — the spell is modeled', () => {
+    const def = pinnedDefinition('Reality Shift');
+    expect(def.modeled, def.unmodeledReasons.join('\n')).toBe(true);
+  });
+
+  it('pr10-reality-shift-manifest — exiles the creature; its controller manifests their top card', () => {
+    const { ctx, victim, manifested } = shift('pr10-shift-manifest', ogre());
+    expect(ctx.state.exile.some((card) => card.cardId === victim.cardId)).toBe(true);
+    expect(manifested.controllerId).toBe('P2');
+    expect(manifested.faceDown).toBe(true);
+    const chars = computeCharacteristics(ctx, manifested);
+    expect([chars.power, chars.toughness, chars.types]).toEqual([2, 2, ['Creature']]);
+  });
+
+  it('pr10-reality-shift-turn-face-up — a creature card turns face up for its mana cost', () => {
+    const { ctx, manifested } = shift('pr10-shift-face-up', ogre());
+    expect(faceUpOptions(ctx, 'P2', manifested)).toHaveLength(0);
+    addMana(p(ctx, 'P2'), [{ symbol: 'R' }, { symbol: 'C' }, { symbol: 'C' }]);
+    const options = faceUpOptions(ctx, 'P2', manifested);
+    expect(options).toHaveLength(1);
+    // Only P2 controls it, so only P2 is offered the special action.
+    expect(faceUpOptions(ctx, 'P1', manifested)).toHaveLength(0);
+    const life = p(ctx, 'P2').life;
+    pump(
+      applyPriorityAction(ctx, p(ctx, 'P2'), options[0]!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+    );
+    settle(ctx);
+    expect(manifested.faceDown).toBe(false);
+    expect(manifested.name).toBe('Shifted Ogre');
+    const chars = computeCharacteristics(ctx, manifested);
+    expect([chars.power, chars.toughness]).toEqual([4, 3]);
+    // Turning face up is not entering the battlefield (CR 708.8).
+    expect(p(ctx, 'P2').life).toBe(life);
+  });
+
+  it('pr10-reality-shift-noncreature — a manifested noncreature card cannot be turned up', () => {
+    const { ctx, manifested } = shift('pr10-shift-noncreature', relic());
+    addMana(p(ctx, 'P2'), [{ symbol: 'C' }, { symbol: 'C' }, { symbol: 'C' }]);
+    expect(faceUpOptions(ctx, 'P2', manifested)).toHaveLength(0);
   });
 });

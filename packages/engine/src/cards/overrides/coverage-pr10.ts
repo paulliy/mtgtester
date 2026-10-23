@@ -789,4 +789,22 @@ export function registerPr10CharacteristicsOverrides(): void {
     { artifactGraveyardAbilities: true },
     'PR10 grants the activated and mana abilities of artifact cards in your graveyard.',
   );
+
+  // PR10.05: the manifested card can be turned face up for its mana cost if it is a creature card
+  // (CR 701.40b); its controller is the exiled creature's last controller.
+  const shift = targetSlots({ creature: { kind: 'creature' } });
+  replaceCard(
+    '70dc830e-d05b-4fc7-88dd-879e140b3fbf',
+    'Reality Shift',
+    ['Exile target creature. Its controller manifests the top card of their library.'],
+    {
+      spellAbility: spell({
+        targets: shift.targets,
+        effects: [{ op: 'exileAndManifestTarget', target: shift.slot.creature }],
+        description:
+          'Exile target creature. Its controller manifests the top card of their library',
+      }),
+    },
+    'PR10 manifests a card that can be turned face up for its mana cost.',
+  );
 }

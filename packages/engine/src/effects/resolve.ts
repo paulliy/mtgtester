@@ -7194,6 +7194,7 @@ export function* executeAbility(
           zone: 'battlefield',
           controllerId: player.id,
           faceDown: true,
+          manifested: true,
         });
         break;
       }
@@ -7208,6 +7209,7 @@ export function* executeAbility(
           zone: 'battlefield',
           controllerId: player.id,
           faceDown: true,
+          manifested: true,
         });
         break;
       }
@@ -7498,6 +7500,7 @@ export function* executeAbility(
           zone: 'battlefield',
           controllerId: player.id,
           faceDown: true,
+          manifested: true,
         });
         break;
       }

@@ -59,6 +59,7 @@ import {
   handActivationCost,
   manaPortionOf,
   graveyardActivationCost,
+  turnFaceUpCosts,
 } from './legal';
 import { breakYieldsForStop } from '../turn/stops';
 
@@ -600,19 +601,24 @@ export function* applyPriorityAction(
 
     case 'turnFaceUp': {
       const perm = s.battlefield.find((candidate) => candidate.id === payload.objectId);
-      const morphCost =
-        perm === undefined ? undefined : getDefByOracleId(ctx, perm.oracleId, perm.name).morphCost;
+      const way =
+        perm === undefined
+          ? undefined
+          : turnFaceUpCosts(perm, getDefByOracleId(ctx, perm.oracleId, perm.name)).find(
+              (candidate) => candidate.via === payload.via,
+            );
       if (
         perm === undefined ||
         perm.controllerId !== player.id ||
         perm.faceDown !== true ||
-        morphCost === undefined
+        way === undefined
       ) {
         throw new Error('illegal action: nothing to turn face up');
       }
-      yield* payManaCost(ctx, player, morphCost);
+      yield* payManaCost(ctx, player, way.cost);
       // CR 708.8: it keeps its status, counters and damage, and does not enter the battlefield.
       perm.faceDown = false;
+      delete perm.manifested;
       perm.name = getDefByOracleId(ctx, perm.oracleId, perm.name).name;
       emit(ctx, 'turnedFaceUp', { name: perm.name, cardId: perm.cardId }, player.id);
       return;
