@@ -256,7 +256,15 @@ describe('Cytoplast Manipulator (PR08.06)', () => {
     const artifact = spawn(ctx, 'P2', oracle({ name: 'Counter Artifact', typeLine: 'Artifact' }));
     artifact.counters['+1/+1'] = 1;
     const spec = interpretCard(pin.card).activatedAbilities[0]!.ability.targets[0]!;
-    const legal = computeTargetOptions(ctx, spec, 'P1', ['U'], undefined, undefined, source.cardId);
+    const legal = computeTargetOptions(
+      ctx,
+      spec,
+      'P1',
+      { traits: { colors: ['U'], types: ['Creature'] }, kind: 'ability' },
+      undefined,
+      undefined,
+      source.cardId,
+    );
     expect(legal).toContain(enemy.id);
     expect(legal).toContain(own.id);
     expect(legal).toContain(source.id);

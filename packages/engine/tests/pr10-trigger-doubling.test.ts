@@ -98,7 +98,10 @@ describe('PR10.24 Annie Joins Up', () => {
     const mine = spawn(ctx, 'P1', bear('Annie Ally'));
     const theirs = spawn(ctx, 'P2', bear('Annie Foe', { power: '5', toughness: '5' }));
     const spec = pinnedDefinition('Annie Joins Up').triggers[0]!.targets[0]!;
-    const legal = computeTargetOptions(ctx, spec, 'P1', ['R', 'G', 'W']);
+    const legal = computeTargetOptions(ctx, spec, 'P1', {
+      traits: { colors: ['R', 'G', 'W'], types: ['Enchantment'] },
+      kind: 'ability',
+    });
     expect(legal).toContain(theirs.id);
     expect(legal).not.toContain(mine.id);
     expect(legal).not.toContain('P2');

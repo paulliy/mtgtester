@@ -326,12 +326,12 @@ describe('Caged Sun', () => {
         "As this artifact enters, choose a color.\nCreatures you control of the chosen color get +1/+1.\nWhenever a land's ability causes you to add one or more mana of the chosen color, add an additional one mana of that color.",
     });
 
-  it('does not present a color-choice as-enters replacement after catalog containment', () => {
+  it('presents the color choice as it enters now that PR11 models the card', () => {
     const ctx = pod();
     const { entryDecisions } = enterBattlefield(ctx, cagedSun());
     const choice = entryDecisions.filter((d) => d.prompt.includes('Choose a color'));
-    expect(choice).toHaveLength(0);
-    expect(interpretCard(cagedSun()).modeled).toBe(false);
+    expect(choice).toHaveLength(1);
+    expect(interpretCard(cagedSun()).modeled).toBe(true);
   });
 });
 

@@ -45,6 +45,8 @@ import {
   colorsOf,
   gatherRuleStatics,
   getDefByOracleId,
+  abilityOfPermanent,
+  targetingFromDefinition,
 } from '../state/queries';
 import type {
   EngineCardObject,
@@ -237,7 +239,14 @@ export function* applyPriorityAction(
           const choice = outcome.targets.get(slot);
           if (choice === undefined)
             throw new Error(`missing target for slot ${slot} of ${card.name}`);
-          if (!computeTargetOptions(ctx, spec, player.id, def.colors).includes(choice)) {
+          if (
+            !computeTargetOptions(
+              ctx,
+              spec,
+              player.id,
+              targetingFromDefinition(def, 'ability'),
+            ).includes(choice)
+          ) {
             throw new Error(`illegal target ${choice} for slot ${slot} of ${card.name}`);
           }
           targets.push(choice);
@@ -250,7 +259,7 @@ export function* applyPriorityAction(
           card.cardId,
           targets,
           undefined,
-          def.colors,
+          targetingFromDefinition(def, 'ability'),
         );
         const allTargets = [...targets, ...Object.values(counted.countTargets).flat()];
 
@@ -448,7 +457,7 @@ export function* applyPriorityAction(
           ctx,
           spec,
           player.id,
-          colorsOf(ctx, perm),
+          abilityOfPermanent(ctx, perm),
           undefined,
           targets,
           perm.cardId,
@@ -466,7 +475,7 @@ export function* applyPriorityAction(
         perm.cardId,
         targets,
         activeSlots,
-        colorsOf(ctx, perm),
+        abilityOfPermanent(ctx, perm),
       );
       const allTargets = [
         ...targets.filter((id): id is ObjectId => id !== undefined),

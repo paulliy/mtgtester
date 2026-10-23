@@ -206,7 +206,9 @@ export type DynamicManaKind =
    */
   | 'ownLandTypes'
   /** "…any color among legendary creatures and planeswalkers you control" (Mox Amber). */
-  | 'legendaryPermanentColors';
+  | 'legendaryPermanentColors'
+  /** "one mana of any of the exiled card's colors" (Chrome Mox): cards still exiled with it. */
+  | 'exiledWithSourceColors';
 
 /**
  * What a payment is *for*, so restricted mana can decide whether it may pay (CR 106.6).
@@ -397,6 +399,7 @@ export const IMPLEMENTED_KEYWORDS = [
   'infect',
   'cascade',
   'rebound',
+  'split second',
 ] as const;
 export type KeywordAbility = (typeof IMPLEMENTED_KEYWORDS)[number];
 
@@ -621,6 +624,12 @@ export type Effect =
   | { op: 'doublePowerAndToughnessEachUntilEot'; selector: Selector }
   | { op: 'grantKeywordEachUntilEot'; selector: Selector; keyword: KeywordAbility }
   /**
+   * "Until end of turn, creatures your opponents control lose hexproof and shroud and can't have
+   * hexproof or shroud" (Arcane Lighthouse). The affected set is fixed at resolution (CR 611.2c);
+   * "can't have" beats any grant of those keywords, whatever its timestamp.
+   */
+  | { op: 'denyKeywordsEachUntilEot'; selector: Selector; keywords: KeywordAbility[] }
+  /**
    * "Those creatures gain `keyword` until end of turn" for an `attackDeclared` trigger (Frontier
    * Warmonger): exactly the creatures of the firing's attack group, bound when it fired and still
    * on the battlefield as the same objects (CR 400.7); the set is fixed at resolution (CR 611.2c).
@@ -692,6 +701,10 @@ export type Effect =
   | { op: 'gainClassLevel'; level: number }
   | { op: 'drawForOpponentsWithSmallHands'; maximum: number }
   | { op: 'phaseOutAndProtectControllerUntilNextTurn' }
+  /** The One Ring: protection from everything until your next turn, without the life lock. */
+  | { op: 'controllerProtectionFromEverythingUntilNextTurn' }
+  /** Clever Concealment: each chosen permanent phases out until its controller's next turn. */
+  | { op: 'phaseOutEachChosen'; targetSlot: number }
   | { op: 'prohibitSpellsThisTurn' }
   | { op: 'controllerHexproofUntilEot' }
   | { op: 'exileSpellAndPlot'; target: EffectRef }
@@ -748,7 +761,8 @@ export type Effect =
    * Annihilator N (CR 702.86a): "defending player sacrifices N permanents" of their choice — the
    * attack trigger's event player, all at once.
    */
-  | { op: 'eventPlayerSacrificesPermanents'; count: number }
+  /** Smokestack: "that player sacrifices a permanent … for each soot counter". */
+  | { op: 'eventPlayerSacrificesPermanents'; count: Value | number }
   /**
    * "Each opponent attacking that player untaps all nonland permanents they control" (Curse of
    * Bounty): the attacking player (the event player), only if they are an opponent of this
@@ -1764,6 +1778,20 @@ export type Effect =
    */
   | { op: 'voteAndExileMost'; selector: Selector }
   | { op: 'exileTargetWithSource'; target: EffectRef }
+  /**
+   * Imprint (Chrome Mox): "you may exile a nonartifact, nonland card from your hand", linked to
+   * the source through `EnginePermanent.exiledWithIds` (CR 702.33, 607.2a).
+   */
+  | { op: 'exileFromHandWithSource'; excludeTypes: string[] }
+  /**
+   * "Exile target card from an opponent's graveyard. If it's a creature card, draw a card."
+   * (Negative Zone Portal), linked to the source. `drawIfCardType` reads the exiled card.
+   */
+  | { op: 'exileGraveyardCardWithSource'; target: EffectRef; drawIfCardType?: string }
+  /** CR 705: flip a coin; the controller calls it, so the result is a win or a loss. */
+  | { op: 'flipCoin'; onWin: Effect[]; onLose: Effect[] }
+  /** "return a card exiled with it at random to its owner's hand" (Negative Zone Portal). */
+  | { op: 'returnRandomExiledWithSourceToHand' }
   | { op: 'exileAndManifestTarget'; target: EffectRef }
   | { op: 'blinkTarget'; target: EffectRef }
   | { op: 'blinkOneCreatureYouControl' }

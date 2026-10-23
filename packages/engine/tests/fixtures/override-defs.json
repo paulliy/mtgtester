@@ -976,8 +976,85 @@
   {
     "oracleId": "09b895ff-e729-48d1-bfc1-ea5fd7adda6a",
     "name": "Caged Sun",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"As this artifact enters, choose a color.\"",
+      "unrecognized rules text: \"Creatures you control of the chosen color get +1/+1.\"",
+      "unrecognized rules text: \"Whenever a land's ability causes you to add one or more mana of the chosen color, add an additional one mana of that color.\""
+    ],
+    "def": {
+      "entersChoosingOption": {
+        "options": [
+          {
+            "key": "W",
+            "label": "White"
+          },
+          {
+            "key": "U",
+            "label": "Blue"
+          },
+          {
+            "key": "B",
+            "label": "Black"
+          },
+          {
+            "key": "R",
+            "label": "Red"
+          },
+          {
+            "key": "G",
+            "label": "Green"
+          }
+        ],
+        "prompt": "Choose a color"
+      },
+      "ruleStatics": [
+        {
+          "add": {
+            "kind": "chosenColorIfProduced"
+          },
+          "kind": "manaActivationRider",
+          "source": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Land"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          }
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "chosenColor"
+              }
+            ]
+          },
+          "op": {
+            "layer": 7,
+            "power": 1,
+            "sublayer": "d",
+            "toughness": 1
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "0a023964-2905-4928-9c3e-dc63e6ebd218",
@@ -1172,6 +1249,28 @@
           "timing": "any"
         }
       ]
+    }
+  },
+  {
+    "oracleId": "0d4ecdb1-ec90-497f-a7a4-1c68092b8757",
+    "name": "Teferi's Protection",
+    "handledLines": [
+      "unrecognized rules text: \"Until your next turn, your life total can't change and you gain protection from everything. All permanents you control phase out.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Until your next turn, your life total can't change and you have protection from everything; your permanents phase out; exile this spell",
+        "effects": [
+          {
+            "op": "phaseOutAndProtectControllerUntilNextTurn"
+          },
+          {
+            "op": "resolvingSpellExile"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
     }
   },
   {
@@ -3757,8 +3856,62 @@
   {
     "oracleId": "30ac68e6-160a-41f9-9f0f-0e0eef383150",
     "name": "Arcane Lighthouse",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "{1}, {T}: Until end of turn, creatures your opponents control lose hexproof and shroud and can't have hexproof or shroud."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{1}, {T}: Until end of turn, creatures your opponents control lose hexproof and shroud and can't have them",
+            "effects": [
+              {
+                "keywords": [
+                  "hexproof",
+                  "shroud"
+                ],
+                "op": "denyKeywordsEachUntilEot",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "opponents"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "30ec73ad-c7a1-4527-8dc6-44bdd65b9ba6",
@@ -4664,6 +4817,89 @@
     }
   },
   {
+    "oracleId": "3aa83ed2-f48b-4ce6-a614-2c54ddf50538",
+    "name": "The One Ring",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your upkeep, you lose 1 life for each burden counter on ~.\"",
+      "unrecognized rules text: \"When ~ enters, if you cast it, you gain protection from everything until your next turn.\"",
+      "unrecognized rules text: \"{T}: Put a burden counter on ~, then draw a card for each burden counter on ~.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{T}: Put a burden counter on this, then draw a card for each burden counter",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "counter": "burden",
+                "op": "putCounters",
+                "target": "source"
+              },
+              {
+                "count": {
+                  "counter": "burden",
+                  "kind": "countersOnSelf"
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "When this enters, if you cast it, you gain protection from everything until your next turn",
+          "effects": [
+            {
+              "op": "controllerProtectionFromEverythingUntilNextTurn"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "sourceWasCast"
+            },
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "At the beginning of your upkeep, lose 1 life for each burden counter",
+          "effects": [
+            {
+              "amount": {
+                "counter": "burden",
+                "kind": "countersOnSelf"
+              },
+              "op": "loseLife"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "3ac01298-e45b-4ea0-8379-2074279716a4",
     "name": "Citywide Bust",
     "handledLines": [
@@ -5181,6 +5417,50 @@
     }
   },
   {
+    "oracleId": "42bb7ea9-f6e4-4551-8d93-3b1eae84b865",
+    "name": "Clever Concealment",
+    "handledLines": [
+      "unrecognized rules text: \"Any number of target nonland permanents you control phase out.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Any number of target nonland permanents you control phase out",
+        "effects": [
+          {
+            "op": "phaseOutEachChosen",
+            "targetSlot": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "count": {
+              "max": null,
+              "min": 0
+            },
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "kind": "permanent"
+          }
+        ]
+      }
+    }
+  },
+  {
     "oracleId": "437cfd16-94bc-43ba-afd8-e9e9d028a4ca",
     "name": "Flare of Denial",
     "handledLines": [],
@@ -5310,8 +5590,42 @@
   {
     "oracleId": "473a7998-669d-4181-83fe-f178a2e781f0",
     "name": "Out of the Tombs",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your upkeep, put two eon counters on this enchantment, then mill cards equal to the number of eon counters on it.\"",
+      "unrecognized rules text: \"If you would draw a card while your library has no cards in it, instead return a creature card from your graveyard to the battlefield. If you can't, you lose the game.\""
+    ],
+    "def": {
+      "emptyLibraryCreatureReplacement": true,
+      "triggers": [
+        {
+          "description": "At the beginning of your upkeep, put two eon counters on this, then mill one card per eon counter",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 2
+              },
+              "counter": "eon",
+              "op": "putCounters",
+              "target": "source"
+            },
+            {
+              "count": {
+                "counter": "eon",
+                "kind": "countersOnSelf"
+              },
+              "op": "mill"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "47c685b1-6e1e-4e08-8a52-9da6902df113",
@@ -6110,6 +6424,21 @@
     }
   },
   {
+    "oracleId": "546201d0-3fa5-44e4-a526-ab0945711e49",
+    "name": "Shanna, Sisay's Legacy",
+    "handledLines": [
+      "unrecognized rules text: \"~ can't be the target of abilities your opponents control.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "cantBeTargetedByOpponentAbilities"
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "55b72b1f-6463-406a-8824-d99a3c028285",
     "name": "Vicious Rumors",
     "handledLines": [
@@ -6313,6 +6642,76 @@
         }
       ]
     }
+  },
+  {
+    "oracleId": "57d0c688-6206-4c83-9fcb-27fd29e2a9ed",
+    "name": "Basri's Lieutenant",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever this creature or another creature you control dies, if it had a +1/+1 counter on it, create a 2/2 white Knight creature token with vigilance.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When this or another creature you control dies with a +1/+1 counter, create a 2/2 white Knight with vigilance",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [
+                  "W"
+                ],
+                "keywords": [
+                  "vigilance"
+                ],
+                "name": "Knight",
+                "power": 2,
+                "subtypes": [
+                  "Knight"
+                ],
+                "toughness": 2,
+                "typeLine": "Creature — Knight",
+                "types": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "triggerObjectMatches",
+              "selector": {
+                "counter": "+1/+1",
+                "kind": "hasCounter"
+              }
+            },
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "5825d718-6a32-4f4c-9b56-1a50051cfe28",
@@ -6840,8 +7239,93 @@
   {
     "oracleId": "60e7130a-d321-4e50-93a4-999013c76054",
     "name": "Gut, True Soul Zealot",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Choose a Background\"",
+      "unrecognized rules text: \"Whenever you attack, you may sacrifice another creature or an artifact. If you do, create a 4/1 black Skeleton creature token with menace that's tapped and attacking.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever you attack, you may sacrifice another creature or an artifact to create a tapped and attacking 4/1 Skeleton with menace",
+          "effects": [
+            {
+              "op": "sacrificeOneThen",
+              "selector": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "other"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  }
+                ]
+              },
+              "then": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "createTokenAttacking",
+                  "spec": {
+                    "colors": [
+                      "B"
+                    ],
+                    "keywords": [
+                      "menace"
+                    ],
+                    "name": "Skeleton",
+                    "power": 4,
+                    "subtypes": [
+                      "Skeleton"
+                    ],
+                    "toughness": 1,
+                    "typeLine": "Creature — Skeleton",
+                    "types": [
+                      "Creature"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "aggregate": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "61849685-b407-4ed0-aafc-ec3a003200b9",
@@ -7324,8 +7808,21 @@
   {
     "oracleId": "66ca8a60-e028-4a5f-8177-860b888cb9d1",
     "name": "Angel's Grace",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"You can't lose the game this turn and your opponents can't win the game this turn. Until end of turn, damage that would reduce your life total to less than 1 reduces it to 1 instead.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "You can't lose and your opponents can't win this turn; damage can't reduce your life below 1 this turn",
+        "effects": [
+          {
+            "op": "angelGrace"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "66e37011-f3d2-41ed-8e09-7bba9464e8c3",
@@ -8238,6 +8735,77 @@
         }
       ]
     }
+  },
+  {
+    "oracleId": "736892cb-a34b-4bb9-b56c-e26e3db207a2",
+    "name": "Mana Vault",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you.\"",
+      "unrecognized rules text: \"At the beginning of your upkeep, you may pay {4}. If you do, untap this artifact.\"",
+      "unrecognized rules text: \"~ doesn't untap during your untap step.\""
+    ],
+    "def": {
+      "doesntUntapDuringUntapStep": true,
+      "triggers": [
+        {
+          "description": "At the beginning of your upkeep, you may pay {4} to untap this",
+          "effects": [
+            {
+              "condition": {
+                "cost": {
+                  "colored": {
+                    "B": 0,
+                    "G": 0,
+                    "R": 0,
+                    "U": 0,
+                    "W": 0
+                  },
+                  "colorless": 0,
+                  "generic": 4
+                },
+                "kind": "mayPayMana"
+              },
+              "else": [],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "op": "untapTarget",
+                  "target": "source"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        },
+        {
+          "description": "At the beginning of your draw step, if this is tapped, it deals 1 damage to you",
+          "effects": [
+            {
+              "amount": 1,
+              "op": "damageController"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "not",
+              "of": {
+                "kind": "isUntapped"
+              }
+            },
+            "player": "you",
+            "when": "drawStep"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "73dad679-1edb-41c9-9d43-56dc93c3e9fe",
@@ -9310,12 +9878,6 @@
     }
   },
   {
-    "oracleId": "81a51328-b995-4f3b-90bc-a20ae21dd254",
-    "name": "Spirit Mantle",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "81c6c4f0-81ad-463c-a42b-60a73e6d70f3",
     "name": "Alexios, Deimos of Kosmos",
     "handledLines": [
@@ -9513,6 +10075,88 @@
               }
             },
             "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "8430ae03-2d4c-4031-aa29-4d53815ded78",
+    "name": "Negative Zone Portal",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your upkeep, if there are four or more creature cards exiled with this artifact, flip a coin. If you lose the flip, sacrifice this artifact and return a card exiled with it at random to its owner's hand.\"",
+      "unrecognized rules text: \"{2}, {T}: Exile target card from an opponent's graveyard. If it's a creature card, draw a card.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{2}, {T}: Exile target card from an opponent's graveyard; if it's a creature card, draw a card",
+            "effects": [
+              {
+                "drawIfCardType": "Creature",
+                "op": "exileGraveyardCardWithSource",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "graveyardOwnerScope": "opponent",
+                "kind": "cardInGraveyard"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of your upkeep, with four or more creature cards exiled with this, flip a coin; on a loss, sacrifice this and return one at random",
+          "effects": [
+            {
+              "onLose": [
+                {
+                  "op": "returnRandomExiledWithSourceToHand"
+                },
+                {
+                  "op": "sacrifice",
+                  "target": "source"
+                }
+              ],
+              "onWin": [],
+              "op": "flipCoin"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "cardType": "Creature",
+              "kind": "exiledWithSourceAtLeast",
+              "n": 4
+            },
+            "player": "you",
+            "when": "upkeep"
           }
         }
       ]
@@ -9986,6 +10630,67 @@
         "targets": []
       }
     }
+  },
+  {
+    "oracleId": "8a52f3c0-2552-4425-b2e3-5496eb2232a7",
+    "name": "Mystic Remora",
+    "handledLines": [
+      "unrecognized rules text: \"Cumulative upkeep {1}\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Cumulative upkeep {1}: add an age counter, then pay {1} per age counter or sacrifice this",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "counter": "age",
+              "op": "putCounters",
+              "target": "source"
+            },
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "genericValue": {
+                "kind": "times",
+                "n": 1,
+                "of": {
+                  "counter": "age",
+                  "kind": "countersOnSelf"
+                }
+              },
+              "op": "unlessPays",
+              "payer": "controller",
+              "then": [
+                {
+                  "op": "sacrifice",
+                  "target": "source"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "8b21062e-97b0-4967-96df-30e8309f4fba",
@@ -14714,6 +15419,51 @@
     }
   },
   {
+    "oracleId": "c0adbddc-b070-4c5f-afe0-0474c72a9251",
+    "name": "Gemstone Caverns",
+    "handledLines": [
+      "unrecognized rules text: \"If this card is in your opening hand and you're not the starting player, you may begin the game with ~ on the battlefield with a luck counter on it. If you do, exile a card from your hand.\"",
+      "unrecognized rules text: \"{T}: Add {C}. If ~ has a luck counter on it, instead add one mana of any color.\""
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "conditionalUnits": {
+            "condition": {
+              "kind": "sourceMatches",
+              "selector": {
+                "counter": "luck",
+                "kind": "hasCounter"
+              }
+            },
+            "units": [
+              [
+                "W",
+                "U",
+                "B",
+                "R",
+                "G"
+              ]
+            ]
+          },
+          "units": [
+            [
+              "C"
+            ]
+          ]
+        }
+      ],
+      "ruleStatics": [
+        {
+          "exileCardFromHand": true,
+          "kind": "beginOnBattlefieldFromOpeningHand",
+          "notStartingPlayer": true,
+          "withCounter": "luck"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "c20a96f7-aa5a-4c15-b8b1-806685c99b27",
     "name": "Bolt Bend",
     "handledLines": [
@@ -18122,6 +18872,44 @@
     }
   },
   {
+    "oracleId": "ec3d4466-547c-4e02-b1b5-a156ec4637e9",
+    "name": "Chrome Mox",
+    "handledLines": [
+      "unrecognized rules text: \"When this artifact enters, you may exile a nonartifact, nonland card from your hand.\"",
+      "unsupported mana production: \"{T}: Add one mana of any of the exiled card's colors.\""
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "dynamic": "exiledWithSourceColors",
+          "units": []
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Imprint — When this enters, you may exile a nonartifact, nonland card from your hand",
+          "effects": [
+            {
+              "excludeTypes": [
+                "Artifact",
+                "Land"
+              ],
+              "op": "exileFromHandWithSource"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "ec6d52f9-1c8f-48da-951c-be8d7813c7be",
     "name": "Harvest Season",
     "handledLines": [
@@ -19618,8 +20406,52 @@
   {
     "oracleId": "fda61506-ed79-47fd-badd-639185297913",
     "name": "Smokestack",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of each player's upkeep, that player sacrifices a permanent of their choice for each soot counter on this artifact.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of your upkeep, you may put a soot counter on this",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "counter": "soot",
+              "op": "putCounters",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        },
+        {
+          "description": "At the beginning of each player's upkeep, that player sacrifices a permanent for each soot counter",
+          "effects": [
+            {
+              "count": {
+                "counter": "soot",
+                "kind": "countersOnSelf"
+              },
+              "op": "eventPlayerSacrificesPermanents"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "each",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "fe83087d-c6c1-40be-9295-baaa1c6b2db1",
@@ -20942,8 +21774,21 @@
   {
     "oracleId": "oracle-angel-s-grace",
     "name": "Angel's Grace",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"You can't lose the game this turn and your opponents can't win the game this turn. Until end of turn, damage that would reduce your life total to less than 1 reduces it to 1 instead.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "You can't lose and your opponents can't win this turn; damage can't reduce your life below 1 this turn",
+        "effects": [
+          {
+            "op": "angelGrace"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-annie-joins-up",
@@ -21082,8 +21927,62 @@
   {
     "oracleId": "oracle-arcane-lighthouse",
     "name": "Arcane Lighthouse",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "{1}, {T}: Until end of turn, creatures your opponents control lose hexproof and shroud and can't have hexproof or shroud."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{1}, {T}: Until end of turn, creatures your opponents control lose hexproof and shroud and can't have them",
+            "effects": [
+              {
+                "keywords": [
+                  "hexproof",
+                  "shroud"
+                ],
+                "op": "denyKeywordsEachUntilEot",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "opponents"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-arcbond",
@@ -21847,6 +22746,76 @@
         }
       ]
     }
+  },
+  {
+    "oracleId": "oracle-basri-s-lieutenant",
+    "name": "Basri's Lieutenant",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever this creature or another creature you control dies, if it had a +1/+1 counter on it, create a 2/2 white Knight creature token with vigilance.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When this or another creature you control dies with a +1/+1 counter, create a 2/2 white Knight with vigilance",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [
+                  "W"
+                ],
+                "keywords": [
+                  "vigilance"
+                ],
+                "name": "Knight",
+                "power": 2,
+                "subtypes": [
+                  "Knight"
+                ],
+                "toughness": 2,
+                "typeLine": "Creature — Knight",
+                "types": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "triggerObjectMatches",
+              "selector": {
+                "counter": "+1/+1",
+                "kind": "hasCounter"
+              }
+            },
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-baxter-building",
@@ -22852,8 +23821,85 @@
   {
     "oracleId": "oracle-caged-sun",
     "name": "Caged Sun",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"As this artifact enters, choose a color.\"",
+      "unrecognized rules text: \"Creatures you control of the chosen color get +1/+1.\"",
+      "unrecognized rules text: \"Whenever a land's ability causes you to add one or more mana of the chosen color, add an additional one mana of that color.\""
+    ],
+    "def": {
+      "entersChoosingOption": {
+        "options": [
+          {
+            "key": "W",
+            "label": "White"
+          },
+          {
+            "key": "U",
+            "label": "Blue"
+          },
+          {
+            "key": "B",
+            "label": "Black"
+          },
+          {
+            "key": "R",
+            "label": "Red"
+          },
+          {
+            "key": "G",
+            "label": "Green"
+          }
+        ],
+        "prompt": "Choose a color"
+      },
+      "ruleStatics": [
+        {
+          "add": {
+            "kind": "chosenColorIfProduced"
+          },
+          "kind": "manaActivationRider",
+          "source": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Land"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          }
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "chosenColor"
+              }
+            ]
+          },
+          "op": {
+            "layer": 7,
+            "power": 1,
+            "sublayer": "d",
+            "toughness": 1
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-camaraderie",
@@ -23308,6 +24354,44 @@
     }
   },
   {
+    "oracleId": "oracle-chrome-mox",
+    "name": "Chrome Mox",
+    "handledLines": [
+      "unrecognized rules text: \"When this artifact enters, you may exile a nonartifact, nonland card from your hand.\"",
+      "unsupported mana production: \"{T}: Add one mana of any of the exiled card's colors.\""
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "dynamic": "exiledWithSourceColors",
+          "units": []
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Imprint — When this enters, you may exile a nonartifact, nonland card from your hand",
+          "effects": [
+            {
+              "excludeTypes": [
+                "Artifact",
+                "Land"
+              ],
+              "op": "exileFromHandWithSource"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-chronomancer",
     "name": "Chronomancer",
     "handledLines": [
@@ -23432,6 +24516,50 @@
           },
           {
             "kind": "playerOrPlaneswalker"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "oracleId": "oracle-clever-concealment",
+    "name": "Clever Concealment",
+    "handledLines": [
+      "unrecognized rules text: \"Any number of target nonland permanents you control phase out.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Any number of target nonland permanents you control phase out",
+        "effects": [
+          {
+            "op": "phaseOutEachChosen",
+            "targetSlot": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "count": {
+              "max": null,
+              "min": 0
+            },
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "kind": "permanent"
           }
         ]
       }
@@ -26946,6 +28074,51 @@
     }
   },
   {
+    "oracleId": "oracle-gemstone-caverns",
+    "name": "Gemstone Caverns",
+    "handledLines": [
+      "unrecognized rules text: \"If this card is in your opening hand and you're not the starting player, you may begin the game with ~ on the battlefield with a luck counter on it. If you do, exile a card from your hand.\"",
+      "unrecognized rules text: \"{T}: Add {C}. If ~ has a luck counter on it, instead add one mana of any color.\""
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "conditionalUnits": {
+            "condition": {
+              "kind": "sourceMatches",
+              "selector": {
+                "counter": "luck",
+                "kind": "hasCounter"
+              }
+            },
+            "units": [
+              [
+                "W",
+                "U",
+                "B",
+                "R",
+                "G"
+              ]
+            ]
+          },
+          "units": [
+            [
+              "C"
+            ]
+          ]
+        }
+      ],
+      "ruleStatics": [
+        {
+          "exileCardFromHand": true,
+          "kind": "beginOnBattlefieldFromOpeningHand",
+          "notStartingPlayer": true,
+          "withCounter": "luck"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-generous-gift",
     "name": "Generous Gift",
     "handledLines": [],
@@ -27549,8 +28722,93 @@
   {
     "oracleId": "oracle-gut-true-soul-zealot",
     "name": "Gut, True Soul Zealot",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Choose a Background\"",
+      "unrecognized rules text: \"Whenever you attack, you may sacrifice another creature or an artifact. If you do, create a 4/1 black Skeleton creature token with menace that's tapped and attacking.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever you attack, you may sacrifice another creature or an artifact to create a tapped and attacking 4/1 Skeleton with menace",
+          "effects": [
+            {
+              "op": "sacrificeOneThen",
+              "selector": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "other"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  }
+                ]
+              },
+              "then": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "createTokenAttacking",
+                  "spec": {
+                    "colors": [
+                      "B"
+                    ],
+                    "keywords": [
+                      "menace"
+                    ],
+                    "name": "Skeleton",
+                    "power": 4,
+                    "subtypes": [
+                      "Skeleton"
+                    ],
+                    "toughness": 1,
+                    "typeLine": "Creature — Skeleton",
+                    "types": [
+                      "Creature"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "aggregate": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-harmonic-prodigy",
@@ -30108,6 +31366,77 @@
     }
   },
   {
+    "oracleId": "oracle-mana-vault",
+    "name": "Mana Vault",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you.\"",
+      "unrecognized rules text: \"At the beginning of your upkeep, you may pay {4}. If you do, untap this artifact.\"",
+      "unrecognized rules text: \"~ doesn't untap during your untap step.\""
+    ],
+    "def": {
+      "doesntUntapDuringUntapStep": true,
+      "triggers": [
+        {
+          "description": "At the beginning of your upkeep, you may pay {4} to untap this",
+          "effects": [
+            {
+              "condition": {
+                "cost": {
+                  "colored": {
+                    "B": 0,
+                    "G": 0,
+                    "R": 0,
+                    "U": 0,
+                    "W": 0
+                  },
+                  "colorless": 0,
+                  "generic": 4
+                },
+                "kind": "mayPayMana"
+              },
+              "else": [],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "op": "untapTarget",
+                  "target": "source"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        },
+        {
+          "description": "At the beginning of your draw step, if this is tapped, it deals 1 damage to you",
+          "effects": [
+            {
+              "amount": 1,
+              "op": "damageController"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "not",
+              "of": {
+                "kind": "isUntapped"
+              }
+            },
+            "player": "you",
+            "when": "drawStep"
+          }
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "oracle-mangara-the-diplomat",
     "name": "Mangara, the Diplomat",
     "handledLines": [
@@ -31191,6 +32520,67 @@
     }
   },
   {
+    "oracleId": "oracle-mystic-remora",
+    "name": "Mystic Remora",
+    "handledLines": [
+      "unrecognized rules text: \"Cumulative upkeep {1}\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Cumulative upkeep {1}: add an age counter, then pay {1} per age counter or sacrifice this",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "counter": "age",
+              "op": "putCounters",
+              "target": "source"
+            },
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "genericValue": {
+                "kind": "times",
+                "n": 1,
+                "of": {
+                  "counter": "age",
+                  "kind": "countersOnSelf"
+                }
+              },
+              "op": "unlessPays",
+              "payer": "controller",
+              "then": [
+                {
+                  "op": "sacrifice",
+                  "target": "source"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "oracle-mystic-sanctuary",
     "name": "Mystic Sanctuary",
     "handledLines": [
@@ -31430,6 +32820,88 @@
             }
           ],
           "timing": "any"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-negative-zone-portal",
+    "name": "Negative Zone Portal",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your upkeep, if there are four or more creature cards exiled with this artifact, flip a coin. If you lose the flip, sacrifice this artifact and return a card exiled with it at random to its owner's hand.\"",
+      "unrecognized rules text: \"{2}, {T}: Exile target card from an opponent's graveyard. If it's a creature card, draw a card.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{2}, {T}: Exile target card from an opponent's graveyard; if it's a creature card, draw a card",
+            "effects": [
+              {
+                "drawIfCardType": "Creature",
+                "op": "exileGraveyardCardWithSource",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "graveyardOwnerScope": "opponent",
+                "kind": "cardInGraveyard"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of your upkeep, with four or more creature cards exiled with this, flip a coin; on a loss, sacrifice this and return one at random",
+          "effects": [
+            {
+              "onLose": [
+                {
+                  "op": "returnRandomExiledWithSourceToHand"
+                },
+                {
+                  "op": "sacrifice",
+                  "target": "source"
+                }
+              ],
+              "onWin": [],
+              "op": "flipCoin"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "cardType": "Creature",
+              "kind": "exiledWithSourceAtLeast",
+              "n": 4
+            },
+            "player": "you",
+            "when": "upkeep"
+          }
         }
       ]
     }
@@ -31944,8 +33416,42 @@
   {
     "oracleId": "oracle-out-of-the-tombs",
     "name": "Out of the Tombs",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your upkeep, put two eon counters on this enchantment, then mill cards equal to the number of eon counters on it.\"",
+      "unrecognized rules text: \"If you would draw a card while your library has no cards in it, instead return a creature card from your graveyard to the battlefield. If you can't, you lose the game.\""
+    ],
+    "def": {
+      "emptyLibraryCreatureReplacement": true,
+      "triggers": [
+        {
+          "description": "At the beginning of your upkeep, put two eon counters on this, then mill one card per eon counter",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 2
+              },
+              "counter": "eon",
+              "op": "putCounters",
+              "target": "source"
+            },
+            {
+              "count": {
+                "counter": "eon",
+                "kind": "countersOnSelf"
+              },
+              "op": "mill"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-overwhelming-instinct",
@@ -35385,6 +36891,21 @@
     }
   },
   {
+    "oracleId": "oracle-shanna-sisay-s-legacy",
+    "name": "Shanna, Sisay's Legacy",
+    "handledLines": [
+      "unrecognized rules text: \"~ can't be the target of abilities your opponents control.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "cantBeTargetedByOpponentAbilities"
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "oracle-shineshadow-snarl",
     "name": "Shineshadow Snarl",
     "handledLines": [
@@ -35729,8 +37250,52 @@
   {
     "oracleId": "oracle-smokestack",
     "name": "Smokestack",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of each player's upkeep, that player sacrifices a permanent of their choice for each soot counter on this artifact.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of your upkeep, you may put a soot counter on this",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "counter": "soot",
+              "op": "putCounters",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        },
+        {
+          "description": "At the beginning of each player's upkeep, that player sacrifices a permanent for each soot counter",
+          "effects": [
+            {
+              "count": {
+                "counter": "soot",
+                "kind": "countersOnSelf"
+              },
+              "op": "eventPlayerSacrificesPermanents"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "each",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-smothering-tithe",
@@ -36021,12 +37586,6 @@
         }
       }
     }
-  },
-  {
-    "oracleId": "oracle-spirit-mantle",
-    "name": "Spirit Mantle",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-spit-flame",
@@ -36703,6 +38262,28 @@
     }
   },
   {
+    "oracleId": "oracle-teferi-s-protection",
+    "name": "Teferi's Protection",
+    "handledLines": [
+      "unrecognized rules text: \"Until your next turn, your life total can't change and you gain protection from everything. All permanents you control phase out.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Until your next turn, your life total can't change and you have protection from everything; your permanents phase out; exile this spell",
+        "effects": [
+          {
+            "op": "phaseOutAndProtectControllerUntilNextTurn"
+          },
+          {
+            "op": "resolvingSpellExile"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "oracle-tender-wildguide",
     "name": "Tender Wildguide",
     "handledLines": [
@@ -37307,6 +38888,89 @@
               }
             },
             "when": "putIntoGraveyardFromAnywhere"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-the-one-ring",
+    "name": "The One Ring",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your upkeep, you lose 1 life for each burden counter on ~.\"",
+      "unrecognized rules text: \"When ~ enters, if you cast it, you gain protection from everything until your next turn.\"",
+      "unrecognized rules text: \"{T}: Put a burden counter on ~, then draw a card for each burden counter on ~.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{T}: Put a burden counter on this, then draw a card for each burden counter",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "counter": "burden",
+                "op": "putCounters",
+                "target": "source"
+              },
+              {
+                "count": {
+                  "counter": "burden",
+                  "kind": "countersOnSelf"
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "When this enters, if you cast it, you gain protection from everything until your next turn",
+          "effects": [
+            {
+              "op": "controllerProtectionFromEverythingUntilNextTurn"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "sourceWasCast"
+            },
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "At the beginning of your upkeep, lose 1 life for each burden counter",
+          "effects": [
+            {
+              "amount": {
+                "counter": "burden",
+                "kind": "countersOnSelf"
+              },
+              "op": "loseLife"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
           }
         }
       ]

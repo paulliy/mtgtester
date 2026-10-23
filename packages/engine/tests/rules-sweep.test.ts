@@ -280,7 +280,10 @@ describe('"any target" (CR 115.4)', () => {
     const walker = spawn(ctx, 'P2', planeswalker());
     walker.counters['loyalty'] = 5;
     const def = registerDef(ctx, redBolt());
-    const options = computeTargetOptions(ctx, def.spellAbility!.targets[0]!, 'P1', def.colors);
+    const options = computeTargetOptions(ctx, def.spellAbility!.targets[0]!, 'P1', {
+      traits: { colors: def.colors, types: def.types },
+      kind: 'spell',
+    });
     expect(options).toContain(walker.id);
     pump(
       executeAbility(

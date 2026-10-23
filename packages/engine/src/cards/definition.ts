@@ -17,7 +17,7 @@ import type {
   WardCost,
 } from './ability';
 import type { Condition } from './condition';
-import type { StaticEffect } from './continuous-types';
+import type { ProtectionQuality, StaticEffect } from './continuous-types';
 import type { RuleStatic } from './rule-statics';
 
 export type { Condition } from './condition';
@@ -70,7 +70,7 @@ export interface BackFace {
   backFace?: BackFace;
   keywords: KeywordAbility[];
   ward?: WardCost;
-  protectionFrom?: Color[];
+  protectionFrom?: ProtectionQuality[];
   manaAbilities: ManaAbilitySpec[];
   activatedAbilities: ActivatedAbility[];
   entersTapped: boolean;
@@ -118,8 +118,8 @@ export interface CardDefinition {
   keywords: KeywordAbility[];
   /** Printed ward cost (CR 702.21), or absent. Parameterized, so not in `keywords`. */
   ward?: WardCost;
-  /** Printed "protection from `<colors>`" (CR 702.16). */
-  protectionFrom?: Color[];
+  /** Printed "protection from `<quality>`" (CR 702.16). */
+  protectionFrom?: ProtectionQuality[];
   manaAbilities: ManaAbilitySpec[];
   /** "`<costs>`: `<effect>`" abilities that use the stack (CR 602). */
   activatedAbilities: ActivatedAbility[];
@@ -253,6 +253,8 @@ export interface CardDefinition {
   artifactGraveyardAbilities?: boolean;
   /** Replaces an empty-library draw with a creature return, as on Out of the Tombs. */
   emptyLibraryCreatureReplacement?: boolean;
+  /** "This doesn't untap during your untap step" (Mana Vault, CR 502.3). */
+  doesntUntapDuringUntapStep?: boolean;
   /** Triggered abilities (kind 'triggered'). */
   triggers: Ability[];
   /** Continuous effects this card contributes while a permanent (static abilities / CDAs). */

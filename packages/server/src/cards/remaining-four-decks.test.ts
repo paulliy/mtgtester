@@ -73,15 +73,10 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
   it('models every unique card except the explicit fail-closed backlog', () => {
     const expectedUnmodeled = new Set([
       'Wandering Archaic // Explore the Vastlands',
-      // Audit: incomplete mechanics must not silently simulate approximate card text.
-      'Spirit Mantle',
-      'Caged Sun',
+      // Audit: incomplete mechanics must not silently simulate approximate card text
+      // (PR10 restored the retarget, copy and ability-stack cards; PR11 restored the
+      // protection, phasing and lifecycle cards).
       'The War in Heaven',
-      'Out of the Tombs',
-      // Catalog audit batch 1 (PR10 restored the retarget, copy and ability-stack cards).
-      'Smokestack',
-      "Angel's Grace",
-      'Arcane Lighthouse',
       "Defacing Duskmage // Vandal's Edit",
       'Eiganjo Dynastorian // Replenish',
       'Intermediate Chirography',

@@ -1,3 +1,4 @@
+import { targetingSourceFields } from '../targets/context';
 import { castingPreviewContext } from './preview';
 import { countTargetsCanComplete } from '../targets/announcement';
 import type { ObjectId, PlayerId } from '@mtg/shared';
@@ -19,6 +20,7 @@ import {
   getDefByOracleId,
   castingSpellsBlockedFor,
   nonHandSpellCostIncreaseFor,
+  targetingFromDefinition,
 } from '../state/queries';
 import type { EngineCardObject, GameContext } from '../state/types';
 import { castSpell } from './cast';
@@ -117,7 +119,7 @@ function legalFreeCastSelections(
             preview,
             spec,
             controllerId,
-            definition.colors,
+            targetingFromDefinition(definition, 'spell'),
             undefined,
             earlier,
             card.cardId,
@@ -155,7 +157,7 @@ function legalFreeCastSelections(
               {
                 controllerId,
                 sourceCardId: card.cardId,
-                sourceColors: definition.colors,
+                ...targetingSourceFields(targetingFromDefinition(definition, 'spell')),
                 chosenTargets: ordinary,
                 x: 0,
               },

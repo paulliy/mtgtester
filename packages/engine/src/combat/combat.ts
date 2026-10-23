@@ -50,7 +50,6 @@ import {
 } from '../state/objects';
 import {
   attackedPlaneswalker,
-  colorsOf,
   controlledPermanents,
   effectivePT,
   findPermanent,
@@ -598,9 +597,9 @@ function canBlock(ctx: GameContext, blocker: EnginePermanent, attacker: EnginePe
     )
   )
     return false;
-  // Protection (CR 702.16), the B in DEBT: an attacker with protection from the blocker's
-  // colors cannot be blocked by it.
-  if (hasProtectionFrom(ctx, attacker, colorsOf(ctx, blocker))) return false;
+  // Protection (CR 702.16), the B in DEBT: an attacker with protection from the blocker
+  // (its colors, or creatures) cannot be blocked by it.
+  if (hasProtectionFrom(ctx, attacker, computeCharacteristics(ctx, blocker))) return false;
   if (hasKeyword(ctx, attacker, 'flying')) {
     return hasKeyword(ctx, blocker, 'flying') || hasKeyword(ctx, blocker, 'reach');
   }
@@ -2008,7 +2007,7 @@ function* dealCombatDamage(
         sourceHasDeathtouch: traits.deathtouch,
         sourceHasLifelink: traits.lifelink,
         sourceHasInfect: traits.infect,
-        sourceColors: traits.colors,
+        sourceTraits: traits,
         dealtTotals: damageToCreatures,
       });
     } else if (a.targetPlaneswalker !== null) {
@@ -2019,7 +2018,7 @@ function* dealCombatDamage(
         permanentSource(a.source),
         a.targetPlaneswalker,
         a.amount,
-        { sourceHasLifelink: traits.lifelink, sourceColors: traits.colors },
+        { sourceHasLifelink: traits.lifelink, sourceTraits: traits },
       );
     } else if (a.targetPlayer !== null) {
       const dealt = yield* dealDamageToPlayer(
