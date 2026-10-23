@@ -7,7 +7,19 @@ import { resolveTopOfStack } from '../src/stack/stack';
 import { runOpeningHandBattlefieldActions } from '../src/turn/mulligan';
 import type { GameContext } from '../src/state/types';
 import { drawCards } from '../src/effects/resolve';
-import { bear, conjure, oracle, plains, pump, spawn } from './fixtures';
+import { runCombatPhase } from '../src/combat/combat';
+import { createGame } from '../src/state/game';
+import {
+  bear,
+  conjure,
+  copies,
+  declareAttacks,
+  gameConfig,
+  oracle,
+  plains,
+  pump,
+  spawn,
+} from './fixtures';
 import {
   activate,
   anyMana,
@@ -723,5 +735,98 @@ describe('Gemstone Caverns', () => {
     spawn(plain, 'P1', CAVERNS);
     expect(castable(plain, 'P1', '{1}')).toBe(true);
     expect(castable(plain, 'P1', '{R}')).toBe(false);
+  });
+});
+
+const GUT = pinned('Gut, True Soul Zealot');
+
+describe('Gut, True Soul Zealot', () => {
+  const thopter = (): OracleCard =>
+    oracle({ name: 'Spare Artifact', typeLine: 'Artifact', manaCost: '{1}' });
+  /** P1 attacks P2 with `attacker`; `sacrifice` names the permanent to sacrifice, or null to decline. */
+  function attack(ctx: GameContext, attacker: string, sacrifice: string | null): string[] {
+    ctx.state.phase = 'combat';
+    const offered: string[] = [];
+    pump(runCombatPhase(ctx), (decision) => {
+      if (decision.decisionType === 'declareAttackers')
+        return declareAttacks(decision, (id) => (id === attacker ? 'P2' : null));
+      const accept = decision.options.findIndex((option) => option.type === 'acceptTrigger');
+      if (accept >= 0) {
+        const decline = decision.options.findIndex((option) => option.type === 'declineTrigger');
+        return { index: sacrifice === null ? decline : accept, targets: new Map() };
+      }
+      if (decision.prompt.includes('choose a permanent to sacrifice')) {
+        offered.push(...decision.options.map((option) => option.description));
+        const index = decision.options.findIndex(
+          (option) => option.description === `Sacrifice ${sacrifice}`,
+        );
+        return { index: Math.max(0, index), targets: new Map() };
+      }
+      return { index: 0, targets: new Map() };
+    });
+    return offered;
+  }
+
+  it('gut-c01-positive — sacrificing another creature makes a tapped, attacking 4/1 menace Skeleton', () => {
+    const ctx = game('pr11-gut-sacrifice');
+    expect(interpretCard(GUT).modeled).toBe(true);
+    const gut = spawn(ctx, 'P1', GUT);
+    spawn(ctx, 'P1', bear());
+    spawn(ctx, 'P1', thopter());
+    const offered = attack(ctx, gut.id, 'Test Bear');
+    expect(offered).toEqual(
+      expect.arrayContaining(['Sacrifice Test Bear', 'Sacrifice Spare Artifact']),
+    );
+    expect(offered).not.toContain(`Sacrifice ${gut.name}`);
+    expect(battlefield(ctx, 'Test Bear')).toEqual([]);
+    const skeletons = battlefield(ctx, 'Skeleton');
+    expect(skeletons).toHaveLength(1);
+    const skeleton = skeletons[0]!;
+    expect(skeleton.tapped).toBe(true);
+    expect(computeCharacteristics(ctx, skeleton).power).toBe(4);
+    expect(computeCharacteristics(ctx, skeleton).toughness).toBe(1);
+    expect(computeCharacteristics(ctx, skeleton).colors).toEqual(['B']);
+    expect(computeCharacteristics(ctx, skeleton).keywords).toContain('menace');
+    // It attacked P2 alongside Gut: the 4 combat damage is in P2's life total.
+    expect(player(ctx, 'P2').life).toBe(40 - computeCharacteristics(ctx, gut).power - 4);
+  });
+
+  it('gut-c01-negative — declining, or having nothing else to sacrifice, makes no Skeleton', () => {
+    const ctx = game('pr11-gut-decline');
+    const gut = spawn(ctx, 'P1', GUT);
+    spawn(ctx, 'P1', bear());
+    attack(ctx, gut.id, null);
+    expect(battlefield(ctx, 'Test Bear')).toHaveLength(1);
+    expect(battlefield(ctx, 'Skeleton')).toEqual([]);
+
+    const alone = game('pr11-gut-alone');
+    const lonely = spawn(alone, 'P1', GUT);
+    const offered = attack(alone, lonely.id, 'Gut, True Soul Zealot');
+    expect(offered).toEqual([]);
+    expect(battlefield(alone, 'Gut, True Soul Zealot')).toHaveLength(1);
+  });
+
+  it('gut-c02 — Choose a Background: Gut and a Background begin as joint commanders', () => {
+    const background = oracle({
+      name: 'Test Background',
+      typeLine: 'Legendary Enchantment — Background',
+      manaCost: '{1}{R}',
+      colors: ['R'],
+      subtypes: ['Background'],
+      supertypes: ['Legendary'],
+      oracleText: 'Commander creatures you own have haste.',
+    });
+    const ctx = createGame(
+      gameConfig(
+        [
+          { cards: copies(10, plains), commanders: [GUT, background] },
+          { cards: copies(10, plains) },
+          { cards: copies(10, plains) },
+          { cards: copies(10, plains) },
+        ],
+        { seed: 'pr11-gut-background' },
+      ),
+    );
+    expect(player(ctx, 'P1').commanderCardIds).toHaveLength(2);
   });
 });

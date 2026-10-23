@@ -127,6 +127,16 @@ export const KNIGHT_2_2_WHITE_VIGILANCE: TokenSpec = creatureToken({
   keywords: ['vigilance'],
 });
 
+/** Gut, True Soul Zealot's 4/1 black Skeleton with menace. */
+export const SKELETON_4_1_BLACK_MENACE: TokenSpec = creatureToken({
+  name: 'Skeleton',
+  subtypes: ['Skeleton'],
+  colors: ['B'],
+  power: 4,
+  toughness: 1,
+  keywords: ['menace'],
+});
+
 export const INKLING_2_1_FLYING: TokenSpec = creatureToken({
   name: 'Inkling',
   subtypes: ['Inkling'],

@@ -17,14 +17,15 @@ const oracleCards = JSON.parse(
 const modeledNames = [
   'Fumiko the Lowblood',
   'Ghalta and Mavren',
+  // Restored in PR11; its behavior tests live in pr11-lifecycle.test.ts.
+  'Gut, True Soul Zealot',
   'Nova Flame',
   "Sage's Reverie",
   'Scriv, the Obligator',
   'Will of the Mardu',
 ] as const;
 
-const containedNames = ['Gut, True Soul Zealot'] as const;
-const names = [...modeledNames, ...containedNames] as const;
+const names = [...modeledNames] as const;
 
 const cards = new Map(
   names.map((name) => [name, oracleCards.find((candidate) => candidate.name === name)!]),
@@ -48,15 +49,11 @@ function card(name: (typeof names)[number]): OracleCard {
 }
 
 describe('remaining W1 cards', () => {
-  it('fully models every leftover W1 fixture that is not catalog-contained', () => {
+  it('fully models every leftover W1 fixture', () => {
     for (const name of modeledNames) {
       const definition = definitions.get(name)!;
       expect(definition.unmodeledReasons, name).toEqual([]);
       expect(definition.modeled, name).toBe(true);
-    }
-    for (const name of containedNames) {
-      const definition = definitions.get(name)!;
-      expect(definition.modeled, name).toBe(false);
     }
   });
 
@@ -129,14 +126,6 @@ describe('remaining W1 cards', () => {
         computeCharacteristics(vampireGame.ctx, permanent).keywords.includes('lifelink'),
       ),
     ).toBe(true);
-  });
-
-  it('contains Gut, True Soul Zealot until Choose a Background is implemented', () => {
-    const definition = definitions.get('Gut, True Soul Zealot')!;
-    expect(definition.modeled).toBe(false);
-    expect(definition.unmodeledReasons.join('\n')).toContain(
-      'Choose a Background is claimed without a background companion implementation.',
-    );
   });
 
   it("resolves Nova Flame's counters before target-sourced damage and preserves lifelink", () => {
