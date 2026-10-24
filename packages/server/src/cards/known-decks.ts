@@ -29,6 +29,8 @@ export interface KnownDeckSummary {
   slug: string;
   name: string;
   commanderNames: string[];
+  /** One printing per commander, for the setup gallery's art. Same order as `commanderNames`. */
+  commanderScryfallIds: string[];
   colorIdentity: Color[];
   uniqueCards: number;
   modeledCards: number;
@@ -85,6 +87,7 @@ export async function listKnownDecks(
       slug,
       name,
       commanderNames: resolved.commanders.map((c) => c.name),
+      commanderScryfallIds: resolved.commanders.map((c) => c.scryfallId),
       colorIdentity,
       uniqueCards: summary?.uniqueCards ?? cards.length,
       modeledCards: summary?.modeled ?? 0,

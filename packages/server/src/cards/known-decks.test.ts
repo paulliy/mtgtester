@@ -78,6 +78,7 @@ describe('listKnownDecks', () => {
     expect(decks.map((deck) => deck.slug)).toEqual(['playable']);
     expect(decks[0]).toMatchObject({
       commanderNames: ['Test Commander'],
+      commanderScryfallIds: ['test-commander'],
       uniqueCards: 2,
       modeledCards: 2,
     });

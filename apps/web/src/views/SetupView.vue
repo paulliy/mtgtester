@@ -24,6 +24,7 @@ import type {
   SetupPreview,
 } from '@mtg/shared';
 import ManaPips from '../components/ManaPips.vue';
+import { scryfallImageUrl } from '../lib/card';
 import { useConfirmedStart } from '../composables/useConfirmedStart';
 import { PROVIDER_LABELS, controllerLabel } from '../lib/providerLabels';
 import { readRecentIds, syncRecentDeckIds } from '../lib/recentSetup';
@@ -44,6 +45,7 @@ interface KnownDeck {
   slug: string;
   name: string;
   commanderNames: string[];
+  commanderScryfallIds: string[];
   colorIdentity: Color[];
   uniqueCards: number;
   modeledCards: number;
@@ -96,6 +98,12 @@ const previewKey = ref('');
 const previewBusy = ref(false);
 const previewError = ref('');
 const quickError = ref('');
+/** Which start is in flight or last failed, so its outcome shows beside the button pressed. */
+const startedFrom = ref<'quick' | 'custom' | null>(null);
+const quickBusy = ref(false);
+const quickMode = ref<GameMode | null>(null);
+/** Commander art that failed to load, by URL, so the tile falls back to its color band. */
+const brokenArt = ref<string[]>([]);
 
 onMounted(async () => {
   try {
@@ -141,6 +149,8 @@ watch(humanSeat, (next, previous) => {
   if (activeSeat.value === from) activeSeat.value = to;
 });
 
+const galleryDecks = computed(() => knownDecks.value.map((deck) => ({ deck, art: deckArt(deck) })));
+
 const orderedSaved = computed(() =>
   [...saved.value].sort((a, b) => {
     const ai = recentDecks.value.indexOf(a.snapshotId);
@@ -167,11 +177,28 @@ function deckTitle(deck: KnownDeck): string {
   return capitalize(deck.name.replace(/[-_]+/g, ' ').trim());
 }
 
+function markBroken(url: string): void {
+  if (!brokenArt.value.includes(url)) brokenArt.value = [...brokenArt.value, url];
+}
+
+/** The illustration of a deck's first commander, or null when it has none to show. */
+function deckArt(deck: KnownDeck): string | null {
+  const id = deck.commanderScryfallIds?.[0];
+  if (id === undefined || id.length < 2) return null;
+  const url = scryfallImageUrl(id, 'art_crop');
+  return brokenArt.value.includes(url) ? null : url;
+}
+
 /** The deck's title under its commander, unless it only repeats the commander's name. */
 function deckSubtitle(deck: KnownDeck): string {
   const plain = (text: string): string => text.toLowerCase().replace(/[^a-z0-9]+/g, '');
   const title = deckTitle(deck);
   return deck.commanderNames.some((name) => plain(name) === plain(title)) ? '' : title;
+}
+
+/** A saved deck's name, unless the server only had its commanders to name it by. */
+function savedSubtitle(deck: SavedDeckOption): string {
+  return deck.name === deck.commanderNames.join(' & ') ? 'Saved deck' : `Saved · ${deck.name}`;
 }
 
 function choiceLabel(choice: SeatChoice): string {
@@ -331,6 +358,10 @@ const activeChoice = computed(() => choices.value[activeSeat.value]!);
 function start(): void {
   const matchup = current.value;
   if (!matchup || matchup.blockers.length > 0) return;
+  // The start redeems this preview, so it must not be offered again. A refused start brings a
+  // fresh one through the `startErrors` watch.
+  preview.value = null;
+  startedFrom.value = 'custom';
   begin(() =>
     store.startGame(
       request.value.seats,
@@ -346,7 +377,11 @@ function start(): void {
 
 /** One click: four generated decks, built-in bots, a fresh seed. */
 async function quickStart(mode: GameMode): Promise<void> {
+  if (quickBusy.value || starting.value) return;
+  quickBusy.value = true;
+  quickMode.value = mode;
   quickError.value = '';
+  startedFrom.value = 'quick';
   const seats: SeatSource[] = Array.from({ length: SEATS }, () => ({ kind: 'pool' }));
   const body = {
     seats,
@@ -361,6 +396,8 @@ async function quickStart(mode: GameMode): Promise<void> {
     begin(() => store.startGame(seats, 'random', result.seed, mode, 'P1', false, result.previewId));
   } catch (reason) {
     quickError.value = reason instanceof Error ? reason.message : String(reason);
+  } finally {
+    quickBusy.value = false;
   }
 }
 
@@ -373,14 +410,20 @@ const seatRows = computed(() =>
       id: SEAT_IDS[index]!,
       controller: seat ? capitalize(controllerLabel(seat.controller)) : controllerFor(index),
       title: seat?.commanderNames.join(' & ') || choiceLabel(choice),
-      colors: seat?.colorIdentity ?? null,
+      // An import that never resolved has no colors to show, not colorless ones.
+      colors:
+        seat && seat.commanderNames.length > 0 && (seat.modeled || seat.colorIdentity.length > 0)
+          ? seat.colorIdentity
+          : null,
       archetype: seat?.archetypeTag ?? '',
       status: !isComplete(choice)
         ? 'Choose a deck'
         : !ready.value
           ? ''
           : !seat
-            ? 'Checking…'
+            ? previewError.value !== ''
+              ? ''
+              : 'Checking…'
             : seat.modeled
               ? 'Fully modeled'
               : 'Blocked',
@@ -399,20 +442,26 @@ const seatRows = computed(() =>
         <span class="kicker">Quick game</span>
         <strong>Play a random deck against three bots</strong>
         <span class="quick-copy">Built-in bots, a fresh seed, no setup.</span>
-        <button type="button" :disabled="starting" @click="quickStart('singlePlayer')">
-          Play now
+        <button type="button" :disabled="starting || quickBusy" @click="quickStart('singlePlayer')">
+          {{ quickMode === 'singlePlayer' && (quickBusy || starting) ? 'Starting…' : 'Play now' }}
         </button>
       </div>
       <div class="quick-card">
         <span class="kicker">Spectate</span>
         <strong>Watch four bots play it out</strong>
         <span class="quick-copy">Scrub turns and see every hand.</span>
-        <button type="button" :disabled="starting" @click="quickStart('spectator')">
-          Watch now
+        <button type="button" :disabled="starting || quickBusy" @click="quickStart('spectator')">
+          {{ quickMode === 'spectator' && (quickBusy || starting) ? 'Starting…' : 'Watch now' }}
         </button>
       </div>
     </section>
     <p v-if="quickError" class="error-box" role="alert">{{ quickError }}</p>
+    <div v-if="startedFrom === 'quick' && startErrors.length > 0" class="error-box" role="alert">
+      <strong>The game did not start</strong>
+      <ul>
+        <li v-for="(error, index) in startErrors" :key="index">{{ error }}</li>
+      </ul>
+    </div>
 
     <div class="layout">
       <section class="gallery-area" aria-labelledby="gallery-title">
@@ -453,14 +502,14 @@ const seatRows = computed(() =>
             :aria-pressed="activeChoice.kind === 'pool'"
             @click="pickGenerated"
           >
-            <span class="band band-generated" aria-hidden="true"></span>
+            <span class="art art-generated" aria-hidden="true"></span>
             <span class="tile-body">
               <strong>Generated deck</strong>
               <span class="tile-sub">Built from cards the engine fully supports.</span>
             </span>
           </button>
           <button
-            v-for="deck in knownDecks"
+            v-for="{ deck, art } in galleryDecks"
             :key="deck.slug"
             type="button"
             class="tile"
@@ -470,6 +519,9 @@ const seatRows = computed(() =>
             :title="deckTitle(deck)"
             @click="pickKnown(deck.slug)"
           >
+            <span v-if="art" class="art" aria-hidden="true">
+              <img :src="art" alt="" loading="lazy" @error="markBroken(art)" />
+            </span>
             <span class="band" aria-hidden="true">
               <span
                 v-for="c in deck.colorIdentity.length ? deck.colorIdentity : ['C']"
@@ -503,7 +555,7 @@ const seatRows = computed(() =>
             <span class="band band-saved" aria-hidden="true"></span>
             <span class="tile-body">
               <strong>{{ deck.commanderNames.join(' & ') }}</strong>
-              <span class="tile-sub">Saved · {{ deck.name }}</span>
+              <span class="tile-sub">{{ savedSubtitle(deck) }}</span>
               <span class="tile-meta">
                 <ManaPips :colors="deck.colorIdentity" />
                 <span class="archetype">{{ deck.archetypeTag }}</span>
@@ -551,7 +603,6 @@ const seatRows = computed(() =>
               type="button"
               class="seat-main"
               :aria-pressed="activeSeat === row.index"
-              :aria-label="`Choose the deck for ${row.id}`"
               @click="activeSeat = row.index"
             >
               <span class="seat-label">{{ row.id }} · {{ row.controller }}</span>
@@ -580,7 +631,9 @@ const seatRows = computed(() =>
             </button>
           </li>
         </ul>
-        <p class="muted small">Seed: {{ current?.seed ?? seed }}</p>
+        <p class="muted small">
+          Select a seat to choose its deck from the gallery. Seed: {{ current?.seed ?? seed }}
+        </p>
 
         <div class="segmented wide" role="radiogroup" aria-label="Bots">
           <label :class="{ on: providerKind === 'random' }">
@@ -630,10 +683,7 @@ const seatRows = computed(() =>
             <span>Replay seed</span>
             <input v-model="customSeed" type="text" placeholder="Fresh seed" />
           </label>
-          <p class="hint">
-            Repeat a known shuffle with its seed. AI decisions may still vary. Select a seat above
-            to choose that seat's deck.
-          </p>
+          <p class="hint">Repeat a known shuffle with its seed. AI decisions may still vary.</p>
         </details>
 
         <p v-if="previewError" class="error-box" role="alert">{{ previewError }}</p>
@@ -643,7 +693,11 @@ const seatRows = computed(() =>
             <li v-for="blocker in current.blockers" :key="blocker">{{ blocker }}</li>
           </ul>
         </div>
-        <div v-if="startErrors.length > 0" class="error-box" role="alert">
+        <div
+          v-if="startedFrom === 'custom' && startErrors.length > 0"
+          class="error-box"
+          role="alert"
+        >
           <strong>The game did not start</strong>
           <ul>
             <li v-for="(error, index) in startErrors" :key="index">{{ error }}</li>
@@ -651,7 +705,7 @@ const seatRows = computed(() =>
         </div>
 
         <button type="button" class="primary" :disabled="!canStart" @click="start">
-          {{ starting ? 'Starting…' : 'Start game' }}
+          {{ starting && startedFrom === 'custom' ? 'Starting…' : 'Start game' }}
         </button>
       </aside>
     </div>
@@ -814,6 +868,19 @@ h2 {
   border-style: dashed;
   background: transparent;
 }
+.art {
+  display: block;
+  height: 84px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+}
 .band {
   display: flex;
   height: 10px;
@@ -840,7 +907,7 @@ h2 {
 .band-C {
   background: #9ca3af;
 }
-.band-generated {
+.art-generated {
   background: repeating-linear-gradient(135deg, var(--line) 0 6px, transparent 6px 12px);
 }
 .band-saved {

@@ -35,7 +35,7 @@ test('a modeled deck from the gallery fills the selected seat and starts', async
   await page.goto('/');
   const preview = page.getByLabel('Matchup preview');
   await expect(preview.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
-  await page.getByRole('button', { name: /Atarka, World Render/ }).click();
+  await page.getByRole('button', { name: /^Atarka, World Render Draconic/ }).click();
   await expect(preview.locator('li').first()).toContainText('Atarka, World Render', {
     timeout: 60_000,
   });
@@ -54,4 +54,47 @@ test('Play now starts a game with no setup', async ({ page }) => {
   await expect(page.getByText(/Turn \d+/).first()).toBeVisible({ timeout: 60_000 });
 
   await abandon(page);
+});
+
+test('opponent seats take gallery decks, and a blocked import holds Start', async ({ page }) => {
+  await page.goto('/');
+  const seats = page.getByLabel('Matchup preview').locator('li');
+  await expect(seats.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
+
+  // Selecting an opponent's seat points the gallery at it.
+  await seats.nth(3).locator('.seat-main').click();
+  await expect(page.getByRole('heading', { name: 'Or pick a deck for P4' })).toBeVisible();
+  await page.getByRole('button', { name: /^The Ur-Dragon Urdragon/ }).click();
+  await expect(seats.nth(3)).toContainText('The Ur-Dragon', { timeout: 60_000 });
+  await expect(seats.nth(3)).toContainText('Fully modeled');
+
+  // Your seat moves with its deck.
+  await seats.nth(0).locator('.seat-main').click();
+  await page.getByRole('button', { name: /^Atarka, World Render Draconic/ }).click();
+  await page.getByText('More options', { exact: true }).click();
+  await page.getByRole('radio', { name: 'P3' }).click();
+  await expect(seats.nth(2)).toContainText('P3 · You');
+  await expect(seats.nth(3)).toContainText('The Ur-Dragon', { timeout: 60_000 });
+
+  // An import that cannot resolve is caught before the game, and Start stays off.
+  await seats.nth(1).locator('.seat-main').click();
+  await page.getByRole('button', { name: /Import a deck/ }).click();
+  await page
+    .getByLabel('Deck URL or decklist for P2')
+    .fill(['Commander', '1 Azusa, Lost but Seeking', '', 'Deck', '1 Not A Real Card'].join('\n'));
+  await expect(seats.nth(1)).toContainText('Blocked', { timeout: 60_000 });
+  await expect(page.getByText("This matchup can't start")).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Start game' })).toBeDisabled();
+
+  // Going back to a generated deck clears the block.
+  await page.getByRole('button', { name: /^Generated deck Built/ }).click();
+  await expect(seats.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
+  await expect(page.getByRole('button', { name: 'Start game' })).toBeEnabled();
+});
+
+test('Watch now starts a spectator game', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Watch now' }).click();
+  await expect(page).toHaveURL(/\/game$/, { timeout: 60_000 });
+  await expect(page.getByText(/Turn \d+/).first()).toBeVisible({ timeout: 60_000 });
 });
