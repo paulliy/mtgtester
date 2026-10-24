@@ -40,6 +40,8 @@ entries are deleted and recorded in the catalog audit's `interpreterRestored` li
   battlefield any other way has both doors locked. On the battlefield a Room has only its
   unlocked doors' name, mana cost and abilities, so its colors and mana value come from those
   doors alone. Unlocking a locked door for its mana cost is a special action at sorcery timing.
+  External graveyard permissions also allow either door, spending the selected spell's permanent
+  type budget; fuse remains restricted to casting from hand.
 - Prepare (CR 722): becoming prepared makes a castable copy of the card's spell in exile, and
   casting it unprepares the permanent. A draw trigger can name the Nth card drawn this turn.
 - Modal double-faced instant and sorcery faces; transforming once (CR 701.27f); planeswalker-only
@@ -57,13 +59,15 @@ entries are deleted and recorded in the catalog audit's `interpreterRestored` li
   `pr11b-mila.test.ts`, `pr11b-prepare.test.ts`, `pr11b-room.test.ts` and
   `pr11b-split-second.test.ts`. Each test id names
   its card and clause (for example `room-c01-negative-toy`).
-- 25 Card Test Lab scenarios in
+- 26 Card Test Lab scenarios in
   [pr11b-scenarios.ts](../../packages/server/src/cards/pr11b-scenarios.ts).
   [pr11b-scenarios.test.ts](../../packages/server/src/cards/pr11b-scenarios.test.ts) plays each
   one headlessly through the production decision path and checks the outcome.
-- [pr11b-card-test-lab.spec.ts](../../apps/web/e2e/pr11b-card-test-lab.spec.ts) runs all 25 in a
+- [pr11b-card-test-lab.spec.ts](../../apps/web/e2e/pr11b-card-test-lab.spec.ts) runs all 26 in a
   real browser against the lab server, records traces, and enforces the exact scenario-ID set.
-  All 25 passed locally, including simultaneous attacks against two players. The generic Card
+  The graveyard Room scenario checks Muldrotha's per-turn permanent-type budget while both doors
+  are payable; simultaneous attacks against two players are also covered. All 26 passed locally.
+  The generic Card
   Test Lab walkthrough skips these ids.
 - `card-verification-manifest.json` has `implemented-reviewed` entries for the 12 cards, with
   clause-level engine test ids and viewer scenario ids. The coverage ledger rows for the five

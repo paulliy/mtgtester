@@ -553,11 +553,15 @@ function* proposeCast(
         selectedAlternative.kind === 'bestow' ||
         (selectedAlternative.kind === 'split' && selectedAlternative.fused !== true));
     // So does a permission to cast it from the top of the library or a graveyard (CR 118.9);
-    // that permission is checked against the bestowed spell below.
+    // that permission is checked against the selected spell face below.
     const zonePermissionAlternative =
       (selectedAlternative.kind === 'bestow' &&
         (payload.fromLibraryTop === true ||
           (payload.fromGraveyard === true && def.castFromGraveyard !== true))) ||
+      (payload.fromGraveyard === true &&
+        from === undefined &&
+        selectedAlternative.kind === 'split' &&
+        selectedAlternative.fused !== true) ||
       (payload.fromLibraryTop === true &&
         from === undefined &&
         ['adventure', 'omen', 'mdfc', 'split'].includes(selectedAlternative.kind));

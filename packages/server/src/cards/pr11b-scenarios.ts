@@ -126,6 +126,14 @@ export const SECOND_WALKER = lab(
  * still given priority after the card under test leaves P1 nothing else to do.
  */
 export const TRINKET = lab('PR11b Lab Trinket', 'Artifact', '{0}', '', []);
+export const MULDROTHA = lab(
+  'PR11b Lab Muldrotha',
+  'Legendary Creature — Elemental Avatar',
+  '{3}{B}{G}{U}',
+  'During each of your turns, you may play a land and cast a permanent spell of each permanent type from your graveyard.',
+  ['B', 'G', 'U'],
+  ['6', '6'],
+);
 
 const SUPPORT_CARDS = [
   SHOCK,
@@ -595,6 +603,23 @@ const DEFS: Def[] = [
       p1Field: [BEAR, RED_BEAR],
       p1Lands: lands('Plains', 2),
       prepared: { continueThroughCombat: true },
+    },
+  ),
+  entry(
+    'pr11b-dollmaker-s-shop-viewer-graveyard-budget',
+    ROOM,
+    "Dollmaker's Shop: Muldrotha casts one Room door from your graveyard per turn",
+    [1],
+    [
+      "With PR11b Lab Muldrotha in play, cast Dollmaker's Shop from your graveyard as Dollmaker's Shop.",
+      'Confirm Porcelain Gallery stays locked and the other Room card cannot be cast this turn.',
+    ],
+    "Dollmaker's Shop enters with only its left door unlocked. Muldrotha's Enchantment cast for the turn is spent, so the other Room card has no cast options even though six white mana remain for Porcelain Gallery.",
+    {
+      p1Hand: [],
+      p1Field: [MULDROTHA],
+      p1Graveyard: [card(ROOM), card(ROOM)],
+      p1Lands: lands('Plains', 8),
     },
   ),
 

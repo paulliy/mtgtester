@@ -2973,7 +2973,8 @@
           "engineTestIds": [
             "wear-tear-c03-fused",
             "wear-tear-c03-partial",
-            "wear-tear-c03-hand-only"
+            "wear-tear-c03-hand-only",
+            "wear-tear-c03-graveyard"
           ],
           "viewerScenarioIds": ["pr11b-wear-tear-viewer-fused"]
         }
@@ -16932,11 +16933,13 @@
             "room-c01-negative-toy",
             "room-c01-negative-planeswalker",
             "room-c01-multiplayer",
-            "room-c01-multiplayer-toy"
+            "room-c01-multiplayer-toy",
+            "room-c01-graveyard"
           ],
           "viewerScenarioIds": [
             "pr11b-dollmaker-s-shop-viewer-toy-attack",
-            "pr11b-dollmaker-s-shop-viewer-multiplayer"
+            "pr11b-dollmaker-s-shop-viewer-multiplayer",
+            "pr11b-dollmaker-s-shop-viewer-graveyard-budget"
           ]
         },
         {
@@ -16970,7 +16973,8 @@
       "viewerScenarioIds": [
         "pr11b-dollmaker-s-shop-viewer-toy-attack",
         "pr11b-dollmaker-s-shop-viewer-multiplayer",
-        "pr11b-dollmaker-s-shop-viewer-unlock"
+        "pr11b-dollmaker-s-shop-viewer-unlock",
+        "pr11b-dollmaker-s-shop-viewer-graveyard-budget"
       ],
       "gameplayAiScenarioIds": []
     },

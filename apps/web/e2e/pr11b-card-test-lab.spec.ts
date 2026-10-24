@@ -399,6 +399,30 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await passUntil(page, life(page, 'P2').filter({ hasText: '38' }));
     await expect(life(page, 'P3')).toHaveText('38');
   },
+  'pr11b-dollmaker-s-shop-viewer-graveyard-budget': async (page) => {
+    const roomName = "Dollmaker's Shop // Porcelain Gallery";
+    const graveyard = page.locator('.zones-strip .zone', { hasText: 'Graveyard' });
+    const roomCards = graveyard
+      .locator('.zone-card-thumb')
+      .filter({ has: page.getByRole('img', { name: roomName, exact: true }) });
+    const actionableRooms = graveyard
+      .locator('.zone-card-thumb.actionable')
+      .filter({ has: page.getByRole('img', { name: roomName, exact: true }) });
+    await expect(roomCards).toHaveCount(2);
+    await actionableRooms.first().click();
+    const shopDoor = page
+      .locator('.source-actions .source-action-row button')
+      .filter({ hasText: /Dollmaker's Shop/ })
+      .first();
+    await expect(shopDoor).toBeVisible();
+    await shopDoor.click();
+    await expect(confirmButton(page)).toBeVisible();
+    await confirmButton(page).click();
+    await resolveStack(page, "Dollmaker's Shop");
+    await expect(permanent(page, 'P1', "Dollmaker's Shop")).toBeVisible();
+    await expect(roomCards).toHaveCount(1);
+    await expect(roomCards.first()).not.toHaveClass(/actionable/);
+  },
 
   'pr11b-mila-crafty-companion-viewer-walker-attack': async (page) => {
     await passUntil(page, logLine(page, /Mila, Crafty Companion[^]*loyalty counter/));

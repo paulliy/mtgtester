@@ -10,6 +10,7 @@ import { PR11B_SCENARIOS, pr11bScenario } from './pr11b-scenarios';
 const manifest = JSON.parse(
   readFileSync(new URL('../../fixtures/card-verification-manifest.json', import.meta.url), 'utf8'),
 ) as { cards: Record<string, { clauses?: { id: string; viewerScenarioIds: string[] }[] }> };
+const ROOM = "Dollmaker's Shop // Porcelain Gallery";
 
 const pinFile = JSON.parse(
   readFileSync(
@@ -131,6 +132,9 @@ const PLANS: Record<string, Plan> = {
   'pr11b-dollmaker-s-shop-viewer-multiplayer': {
     steps: [{ cast: "Dollmaker's Shop", includes: "as Dollmaker's Shop" }],
     attacks: { 'PR11b Lab Bear': 'P2', 'PR11b Lab Red Bear': 'P3' },
+  },
+  'pr11b-dollmaker-s-shop-viewer-graveyard-budget': {
+    steps: [{ cast: "Dollmaker's Shop", includes: "as Dollmaker's Shop" }],
   },
   'pr11b-mila-crafty-companion-viewer-walker-attack': { steps: [] },
   'pr11b-mila-crafty-companion-viewer-lukka': {
@@ -499,6 +503,29 @@ const CHECKS: Record<string, (result: Result) => void> = {
     }
     expect(r.player('P2').life).toBe(38);
     expect(r.player('P3').life).toBe(38);
+  },
+  'pr11b-dollmaker-s-shop-viewer-graveyard-budget': (r) => {
+    expect(r.done).toEqual(["Dollmaker's Shop"]);
+    expect(r.permanent("Dollmaker's Shop")!.unlockedDoors).toEqual(['left']);
+    expect(r.permanent('PR11b Lab Muldrotha')).toBeDefined();
+    expect(r.player('P1').graveyard.filter((entry) => entry.name === ROOM)).toHaveLength(1);
+    const roomCastOffers = r.seen
+      .filter((decision) => decision.player === 'P1')
+      .flatMap((decision) =>
+        decision.actions.filter(
+          (action) =>
+            action.type === 'castSpell' &&
+            (action.description.includes("Dollmaker's Shop") ||
+              action.description.includes('Porcelain Gallery')),
+        ),
+      );
+    // Both doors of both Room cards are castable initially; after one enchantment spell is cast
+    // from the graveyard, the second card has no remaining Muldrotha permission despite enough
+    // mana.
+    expect(roomCastOffers).toHaveLength(4);
+    expect(roomCastOffers.some((action) => action.description.includes('Porcelain Gallery'))).toBe(
+      true,
+    );
   },
   'pr11b-mila-crafty-companion-viewer-walker-attack': (r) => {
     // The Bear's two damage took the attacked walker from 3 +1 to 2; the other walker kept its +1.

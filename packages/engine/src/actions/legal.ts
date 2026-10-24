@@ -1453,8 +1453,14 @@ export function computePriorityOptions(
           !(alt.kind === 'mdfc' && alt.spellFace !== undefined)
         )
           continue;
-        // Graveyard face casts are handled by their own zone-scoped alternatives below.
-        if (!fromLibraryTop && alt.kind !== 'bestow') continue;
+        // Split halves (including Room doors) use an external graveyard permission too.
+        // Fuse remains hand-only; other graveyard faces use zone-scoped alternatives below.
+        if (
+          !fromLibraryTop &&
+          alt.kind !== 'bestow' &&
+          !(alt.kind === 'split' && alt.fused !== true)
+        )
+          continue;
         if (alt.from === 'hand' || alt.from === 'graveyard' || alt.from === 'exile') continue;
         const face = selectedSpellDefinition(def, alt);
         const start = options.length;

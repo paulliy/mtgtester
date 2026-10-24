@@ -87,6 +87,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'pr11b-dollmaker-s-shop-viewer-unlock',
       'pr11b-dollmaker-s-shop-viewer-toy-attack',
       'pr11b-dollmaker-s-shop-viewer-multiplayer',
+      'pr11b-dollmaker-s-shop-viewer-graveyard-budget',
       'pr11b-mila-crafty-companion-viewer-walker-attack',
       'pr11b-mila-crafty-companion-viewer-lukka',
       'pr11-arcane-lighthouse-viewer-positive',

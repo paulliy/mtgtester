@@ -111,6 +111,69 @@ const ready = (perm: EnginePermanent): EnginePermanent =>
   Object.assign(perm, { summoningSick: false, enteredTurnNumber: 0 });
 
 describe("Dollmaker's Shop // Porcelain Gallery", () => {
+  it.each([
+    [SHOP, 'left'],
+    [GALLERY, 'right'],
+  ])(
+    'room-c01-graveyard — Muldrotha casts %s and spends only the enchantment budget',
+    (door, side) => {
+      const ctx = game(`room-graveyard-${side}`);
+      const card = conjure(ctx, 'P1', ROOM, 'graveyard');
+      const second = conjure(ctx, 'P1', ROOM, 'graveyard');
+      give(ctx, 4, 8);
+      expect(castOptions(ctx, card)).toEqual([]);
+      spawn(
+        ctx,
+        'P1',
+        oracle({
+          name: 'Test Muldrotha',
+          typeLine: 'Legendary Creature — Elemental Avatar',
+          manaCost: '{3}{B}{G}{U}',
+          power: '6',
+          toughness: '6',
+          oracleText:
+            'During each of your turns, you may play a land and cast a permanent spell of each permanent type from your graveyard.',
+        }),
+      );
+      const offered = castOptions(ctx, card);
+      expect(offered).toHaveLength(2);
+      for (const option of offered)
+        expect(option.payload).toMatchObject({
+          fromGraveyard: true,
+          alternativeCast: 'split',
+          zoneBudgetType: 'Enchantment',
+        });
+      const option = offered.find((entry) => entry.description.includes(`as ${door}`))!;
+      pump(
+        applyPriorityAction(ctx, player(ctx, 'P1'), option.payload as PriorityActionPayload, {
+          index: 0,
+          targets: new Map(),
+        }),
+      );
+      expect(ctx.state.stack.at(-1)?.spellDefinition?.name).toBe(door);
+      expect(player(ctx, 'P1').playFromZoneTypeUsesThisTurn).toEqual({ Enchantment: 1 });
+      resolve(ctx);
+      expect(
+        ctx.state.battlefield.find((perm) => perm.cardId === card.cardId)?.unlockedDoors,
+      ).toEqual([side]);
+      expect(castOptions(ctx, second)).toEqual([]);
+      expect(() =>
+        pump(
+          applyPriorityAction(
+            ctx,
+            player(ctx, 'P1'),
+            {
+              ...(option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>),
+              objectId: second.id,
+            },
+            { index: 0, targets: new Map() },
+          ),
+        ),
+      ).toThrow();
+      expect(player(ctx, 'P1').graveyard.some((entry) => entry.id === second.id)).toBe(true);
+    },
+  );
+
   it('room-modeled — both doors are castable faces under the Oracle and fixture ids', () => {
     for (const oracleId of [ROOM.oracleId, fixtureOracleId(ROOM.name)]) {
       const def = interpretCard({ ...ROOM, oracleId } as typeof ROOM);

@@ -53,6 +53,48 @@ function cast(
 }
 
 describe('Wear // Tear', () => {
+  it('wear-tear-c03-graveyard — an external permission allows either half but never fuse', () => {
+    const ctx = game('wear-tear-graveyard');
+    const artifact = spawn(ctx, 'P2', relic());
+    spawn(ctx, 'P2', ward());
+    const card = conjure(ctx, 'P1', WEAR_TEAR, 'graveyard');
+    give(ctx, { R: 1, W: 1, C: 1 });
+    expect(castOptions(ctx, card)).toEqual([]);
+    const grant = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Graveyard permission probe', typeLine: 'Enchantment', manaCost: '{0}' }),
+    );
+    ctx.defs.set(grant.oracleId, {
+      ...ctx.defs.get(grant.oracleId)!,
+      ruleStatics: [{ kind: 'playFromZone', zone: 'graveyard' }],
+    });
+    const offered = castOptions(ctx, card);
+    expect(offered.map((entry) => entry.description)).toEqual([
+      expect.stringContaining('as Wear'),
+      expect.stringContaining('as Tear'),
+    ]);
+    const payload = offered[0]!.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>;
+    const fusedIndex = interpretCard(WEAR_TEAR).alternativeCasts!.findIndex(
+      (alt) => alt.fused === true,
+    );
+    expect(() =>
+      pump(
+        applyPriorityAction(
+          ctx,
+          player(ctx, 'P1'),
+          { ...payload, altIndex: fusedIndex },
+          { index: 0, targets: new Map() },
+        ),
+      ),
+    ).toThrow();
+    expect(player(ctx, 'P1').graveyard.some((entry) => entry.id === card.id)).toBe(true);
+    cast(ctx, card, (text) => text.includes('as Wear'), new Map([[0, artifact.id]]));
+    expect(ctx.state.stack.at(-1)?.card?.castFromZone).toBe('graveyard');
+    resolve(ctx);
+    expect(battlefield(ctx, 'Test Relic')).toHaveLength(0);
+  });
+
   it('wear-tear-modeled — both halves and fuse model under the Oracle and fixture ids', () => {
     for (const oracleId of [WEAR_TEAR.oracleId, fixtureOracleId(WEAR_TEAR.name)]) {
       const def = interpretCard({ ...WEAR_TEAR, oracleId } as typeof WEAR_TEAR);
