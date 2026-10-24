@@ -5593,14 +5593,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 20,
+      "uniqueOracleIds": 19,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
-      "uniqueOracleIds": 11,
+      "uniqueOracleIds": 10,
       "reviewedOracleIds": 12,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6984,6 +6984,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/unsupported-spell-faces.ts",
       "restoredIn": "coverage-pr12",
       "note": "Containment deleted: coverage-pr12.ts authors Zoological Study's mill five and mandatory creature return, and the Adventure face exiles the card with its permission; engine evidence in packages/engine/tests/pr12-spell-faces.test.ts."
+    },
+    {
+      "oracleId": "9842734c-1eac-4509-a731-4c22017ae586",
+      "name": "Wear // Tear",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr11b",
+      "note": "Containment deleted: the interpreter models split cards, each half cast on its own and both fused from hand (CR 709, 702.102); engine evidence in packages/engine/tests/pr11b-split.test.ts."
+    },
+    {
+      "oracleId": "9842734c-1eac-4509-a731-4c22017ae586",
+      "name": "Wear // Tear",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "restoredIn": "coverage-pr11b",
+      "note": "Containment deleted: the interpreter models split cards, each half cast on its own and both fused from hand (CR 709, 702.102); engine evidence in packages/engine/tests/pr11b-split.test.ts."
     }
   ]
 }

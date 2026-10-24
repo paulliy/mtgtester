@@ -117,6 +117,12 @@ export function digestOf(
   for (const perm of s.battlefield) {
     h = mix(h, perm.timestamp);
     h = mix(h, perm.classLevel ?? 1);
+    // A Room's characteristics are its unlocked doors' (CR 709.5).
+    h = mix(
+      h,
+      (perm.unlockedDoors?.includes('left') ? 1 : 0) +
+        (perm.unlockedDoors?.includes('right') ? 2 : 0),
+    );
     h = mix(h, hashString(perm.oracleId));
     // Selectors read the controller ("creatures you control"). Nothing reassigns this today —
     // layer 2 is not implemented — but folding it keeps the digest honest when it arrives.
@@ -203,6 +209,7 @@ export function digestOf(
   h = mix(h, s.monarchPlayerId === null ? 0 : hashString(s.monarchPlayerId));
   h = mix(h, s.eliminatedPlayers.length);
   h = mix(h, s.creaturesDiedThisTurn + 0x10000);
+  h = mix(h, Object.keys(s.modifiedCreatureDiedThisTurn ?? {}).length);
   h = mix(h, s.excessDamageControllerIds.length);
   for (const player of s.players) {
     h = mix(h, player.life + 0x10000);

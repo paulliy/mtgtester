@@ -66,6 +66,11 @@ export interface SelectorCandidate {
    * candidate's card definition can't be found, which is fine: an absent value simply never
    * matches a mana-value filter rather than matching as though it were 0. */
   manaValue?: number;
+  /**
+   * The printed mana cost's text, `null` for a card with no mana cost (CR 202.1). Only card-zone
+   * candidates carry it; an absent value never matches `manaCostIs`.
+   */
+  manaCostText?: string | null;
   /** Token-ness (CR 111.1). NOT event-only: no layer can change it. */
   isToken: boolean;
   /** Did this permanent enter the battlefield during the CURRENT turn (Neriv)? */
@@ -206,6 +211,11 @@ export type Selector =
   /** "with mana value 4 or greater" (Austere Command's other mode). Same rationale as
    * `manaValueAtMost` — not event-only. */
   | { kind: 'manaValueAtLeast'; n: number }
+  /**
+   * "with mana cost {0} or {1}" (Urza's Saga): the printed mana cost itself, not its mana value,
+   * so {X} or no mana cost at all never matches. Not event-only, as for the mana value.
+   */
+  | { kind: 'manaCostIs'; manaCosts: string[] }
   /** Does the permanent have any counter of any kind on it (Rishkar, Peema Renegade)? Not
    * event-only: counters are real state, not a layer's derived output. */
   | { kind: 'hasAnyCounter' }
@@ -359,6 +369,7 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'controller':
     case 'manaValueAtMost':
     case 'manaValueAtLeast':
+    case 'manaCostIs':
     case 'hasAnyCounter':
     case 'hasCounter':
     case 'isToken':
@@ -454,6 +465,11 @@ export function selectMatches(
       return candidate.manaValue !== undefined && candidate.manaValue <= selector.n;
     case 'manaValueAtLeast':
       return candidate.manaValue !== undefined && candidate.manaValue >= selector.n;
+    case 'manaCostIs':
+      return (
+        typeof candidate.manaCostText === 'string' &&
+        selector.manaCosts.includes(candidate.manaCostText)
+      );
     case 'hasKeyword':
       return candidate.keywords.includes(selector.keyword);
     case 'isToken':

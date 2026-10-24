@@ -98,7 +98,12 @@ export type AbilityCost =
   | { kind: 'unattachSelf' };
 
 export interface AlternativeCast {
-  kind: 'overload' | 'adventure' | 'omen' | 'mdfc' | 'nonMana' | 'bestow';
+  kind: 'overload' | 'adventure' | 'omen' | 'mdfc' | 'nonMana' | 'bestow' | 'split';
+  /**
+   * `split`: both halves cast fused (CR 702.102), from hand only. The face then has the combined
+   * characteristics and resolves the left half's instructions, then the right's.
+   */
+  fused?: true;
   /** Explicit zone restriction/permission. Omitted alternatives use normal casting permissions. */
   from?: 'hand' | 'graveyard' | 'exile';
   manaCost: ParsedManaCost;
@@ -1081,12 +1086,28 @@ export type Effect =
   | { op: 'draw'; count: Value; player?: 'controller' | 'eventPlayer' }
   | { op: 'discard'; count: number } // controller chooses cards to discard
   /**
+   * "You may discard a card. If you do, draw a card. If a creature card was discarded this way,
+   * draw two cards instead" (Lukka, Wayward Bonder): `instead` replaces the draw count when the
+   * discarded card matched its filter as it was discarded.
+   */
+  | {
+      op: 'mayDiscardThenDraw';
+      count: number;
+      instead?: { filter: Selector; count: number };
+    }
+  /**
    * "This creature connives" (CR 701.50): draw a card, then discard a card; a nonland discard
    * puts a +1/+1 counter on the source, if it is still the same object on the battlefield.
    */
   | { op: 'connive' }
   /** Put a chosen number of cards from hand on top of the library, optionally ordering them. */
   | { op: 'putFromHandOnLibraryTop'; count: Value; anyOrder: boolean }
+  /**
+   * "Put any number of cards from your hand on the bottom of your library, then draw that many
+   * cards plus one" (Valakut Awakening): the controller picks any subset of their hand, orders it
+   * on the bottom (CR 401.4), then draws the number actually put there plus `extra`.
+   */
+  | { op: 'putAnyFromHandOnBottomThenDraw'; extra: number }
   /** Discard cards using the game PRNG rather than a player choice. */
   | { op: 'discardAtRandom'; count: Value }
   /** A specified player discards; random selection uses only the seeded game PRNG. */
@@ -1120,6 +1141,17 @@ export type Effect =
       forPlayer?: EffectRef;
     }
   | { op: 'gainLife'; amount: Value } // controller gains
+  /** "Each player gains N life", in APNAP order (CR 101.4). */
+  | { op: 'eachPlayerGainsLife'; amount: Value }
+  /** "Each player loses N life", in APNAP order (CR 101.4). */
+  | { op: 'eachPlayerLosesLife'; amount: Value }
+  /**
+   * "Each player looks at the top N cards of their library and may reveal a land card and/or an
+   * instant or sorcery card from among them. Each player puts the cards they revealed this way
+   * into their hand and the rest on the bottom of their library in a random order" (Explore the
+   * Vastlands): up to one card for each of `picks`, chosen in APNAP order (CR 101.4).
+   */
+  | { op: 'eachPlayerLooksAtTopRevealsToHand'; count: number; picks: Selector[] }
   | { op: 'loseLife'; amount: Value } // controller loses life (not damage)
   | { op: 'loseLifeTarget'; target: EffectRef; amount: Value }
   /** "Target player draws two cards." (Sign in Blood) — the target draws, not the controller
@@ -1457,6 +1489,13 @@ export type Effect =
   | { op: 'returnToHandEachChosen'; targetSlot: number }
   /** Toggle this transforming permanent between its front and back faces. */
   | { op: 'transformSelf' }
+  /** "This creature becomes prepared" (CR 722.3a, 722.3c). */
+  | { op: 'becomePrepared' }
+  /**
+   * "This Saga gains '{T}: Add {C}.'" (Urza's Saga): the source permanent gains the ability for
+   * as long as it remains that object (CR 611.2c, 400.7). Exactly one of the two is set.
+   */
+  | { op: 'sourceGainsAbility'; manaAbility?: ManaAbilitySpec; activatedAbility?: ActivatedAbility }
   /**
    * "Put this artifact on top of its owner's library" (Sensei's Divining Top). Distinct from a
    * bounce: the destination is the LIBRARY of the OWNER, not the controller's hand, so a stolen
@@ -1906,7 +1945,12 @@ export type Effect =
    * graveyard (CR 400.7e); if that card has left the graveyard, nothing returns. The counter is
    * on it as it enters.
    */
-  | { op: 'returnDiedSourceToBattlefield'; counter: string }
+  | {
+      op: 'returnDiedSourceToBattlefield';
+      counter?: string;
+      /** "Return it to the battlefield **tapped** under its owner's control" (Malakir Rebirth). */
+      tapped?: true;
+    }
   /**
    * "Put it into its owner's library third from the top" (God-Eternal Rhonas), after the source
    * died or was exiled: "it" is the card the source became in the graveyard or exile (CR
@@ -1942,7 +1986,12 @@ export type Effect =
    * Clique). The haste has no duration, so it lasts as long as that object stays on the
    * battlefield; the delayed exile remembers that object and skips a new one (CR 400.7).
    */
-  | { op: 'reanimateTargetHasteExileAtYourNextEndStep'; target: EffectRef }
+  | {
+      op: 'reanimateTargetHasteExileAtYourNextEndStep';
+      target: EffectRef;
+      /** "Exile it at the beginning of your next upkeep" (Lukka, Wayward Bonder) instead. */
+      exileAt?: 'yourNextUpkeep';
+    }
   /**
    * The delayed return of "When that creature dies this turn, return it to the battlefield tapped
    * under your control" (Cryptek): the card the remembered permanent became in a graveyard
@@ -1986,6 +2035,12 @@ export type Effect =
    * ability's controller (CR 603.6a).
    */
   | { op: 'reanimateEachChosenTapped'; targetSlot: number }
+  /**
+   * Return each chosen graveyard card to the battlefield under your control, together (CR
+   * 603.6a), each with one `counter` on it as it enters (CR 122.6) and, from then on, with
+   * `addTypes` in addition to its other types (The War in Heaven).
+   */
+  | { op: 'reanimateEachChosen'; targetSlot: number; counter?: string; addTypes?: string[] }
   /**
    * "Exile that many cards from the top of your library. Until end of turn, you may cast
    * spells from among those exiled cards" (Dream Pillager) — an impulse-draw of a DYNAMIC
@@ -2173,6 +2228,12 @@ export type TriggerHead =
       withOtherAttackers?: number;
       /** `countersPut`: only a placement that includes this counter kind. */
       counter?: string;
+      /**
+       * A chapter ability (CR 714.2b): "When one or more lore counters are put onto this Saga, if
+       * the number of lore counters on it was less than N and became at least N". The crossing is
+       * read from the placement itself, so it is part of the event.
+       */
+      chapter?: number;
       /** `countersPut`: "Whenever **you** put a counter on …" — the placing player is the controller. */
       byYou?: true;
       /**
@@ -2228,7 +2289,21 @@ export type TriggerHead =
   | { when: 'secondMainPhase'; player: 'you' | 'each' }
   /** "Whenever you gain life" (Dawn of Hope) — player-scoped, like the step triggers above. */
   | { when: 'gainsLife'; player: 'you' | 'each' }
-  | { when: 'drawsCard'; player: 'you' | 'each' | 'opponent' }
+  /**
+   * "Whenever you lose life" (CR 119.3): queued once per life-loss event, damage included, with
+   * the amount actually lost. `firstTimeEachTurn`: "for the first time each turn" (Intermediate
+   * Chirography), part of the event — only the turn's first loss by that player fires it.
+   */
+  | { when: 'losesLife'; player: 'you' | 'each' | 'opponent'; firstTimeEachTurn?: true }
+  | {
+      when: 'drawsCard';
+      player: 'you' | 'each' | 'opponent';
+      /**
+       * "draws their second card each turn": only the draw that makes the player's count this turn
+       * exactly N. Part of the event, so the trigger is not rechecked on resolution.
+       */
+      ordinalThisTurn?: number;
+    }
   | { when: 'foretells'; player: 'you' }
   /**
    * "Whenever you activate an ability that isn't a mana ability" (Verrak, Rowan Kenrith's emblem):
@@ -2266,9 +2341,19 @@ export type TriggerHead =
   | {
       when: 'attackDeclared';
       attacker: 'you' | 'opponent' | 'otherPlayer' | 'any' | 'enchantedPlayer';
-      attacking?: { who: 'you' | 'opponent' | 'enchantedPlayer'; planeswalkers: boolean };
+      /**
+       * Whom the attackers attack. `planeswalkers` also counts their planeswalkers;
+       * `planeswalkersOnly` counts only those ("attacks one or more planeswalkers you control").
+       */
+      attacking?: {
+        who: 'you' | 'opponent' | 'enchantedPlayer';
+        planeswalkers: boolean;
+        planeswalkersOnly?: true;
+      };
       perDefender?: boolean;
       minAttackers?: number;
+      /** Only attackers this matches form the group ("one or more non-Toy creatures"). */
+      attackerFilter?: Selector;
     };
 
 /**

@@ -45,6 +45,8 @@ import {
   playersInApnapOrder,
   sourceTraitsOf,
   playerCantLose,
+  preparedCopyHolder,
+  sagaFinalChapter,
 } from '../state/queries';
 import type {
   EngineCardObject,
@@ -240,6 +242,8 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
   const removeCopies = (cards: EngineCardObject[]): EngineCardObject[] =>
     cards.filter((card) => {
       if (card.isCardCopy !== true) return true;
+      // A prepare spell's copy stays in exile while its permanent stays prepared (CR 722.3c).
+      if (card.zone === 'exile' && preparedCopyHolder(ctx, card) !== undefined) return true;
       emit(ctx, 'cardCopyCeased', { name: card.name, cardId: card.cardId });
       acted = true;
       return false;
@@ -399,6 +403,26 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
         debug(ctx, 'sba', `equipment ${perm.name} illegally attached — unattached`);
         emit(ctx, 'sbaEquipmentUnattached', { name: perm.name });
         perm.attachedTo = null;
+        return true;
+      }
+    }
+
+    // CR 714.4: a Saga at or past its final chapter is sacrificed once none of its chapter
+    // abilities is still waiting to be put on, or sitting on, the stack.
+    if (chars.subtypes.includes('Saga')) {
+      const final = sagaFinalChapter(ctx, perm);
+      const isChapter = (ability: { trigger?: object } | null): boolean =>
+        ability?.trigger !== undefined && 'chapter' in ability.trigger;
+      if (
+        final > 0 &&
+        (perm.counters['lore'] ?? 0) >= final &&
+        !s.pendingTriggers.some(
+          (pending) => pending.sourceObjectId === perm.id && isChapter(pending.ability),
+        ) &&
+        !s.stack.some((entry) => entry.sourceId === perm.id && isChapter(entry.ability))
+      ) {
+        emit(ctx, 'sbaSagaSacrificed', { name: perm.name });
+        yield* moveObject(ctx, perm, { zone: 'graveyard', reason: 'sacrifice' });
         return true;
       }
     }
@@ -864,6 +888,13 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
   }
 
   const id = `o-${s.nextObjectNum++}` as ObjectId;
+  // A delayed trigger (no event head) is exempt from CR 701.27f, so only ordinary triggers record it.
+  const transformingSource =
+    ability.trigger === undefined || trigger.sourceObjectId === undefined
+      ? undefined
+      : s.battlefield.find((perm) => perm.id === trigger.sourceObjectId);
+  const sourceTransformations =
+    transformingSource === undefined ? undefined : (transformingSource.transformations ?? 0);
   // The announced mode is public (CR 700.2b) — name it on the stack, where every player sees it.
   const description =
     (ability.description ?? trigger.sourceName) +
@@ -882,6 +913,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
     sourceCardId: trigger.sourceCardId,
     isCommanderCast: false,
     ...(trigger.sourceFacts === undefined ? {} : { sourceFacts: trigger.sourceFacts }),
+    ...(sourceTransformations === undefined ? {} : { sourceTransformations }),
     ...(trigger.triggerObjectCardId !== undefined
       ? { triggerObjectCardId: trigger.triggerObjectCardId }
       : {}),

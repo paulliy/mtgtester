@@ -6,6 +6,7 @@ import { UnmodeledCardError } from '../errors';
 import type { ObjectFacts } from '../cards/source-identity';
 import { supportsAdditionalXAnnouncement } from '../cards/cost-contracts';
 import { bestowedDefinition, selectedSpellDefinition } from '../cards/spell-faces';
+import type { RoomDoor } from '../cards/spell-faces';
 import { assertNever } from '../utils/assert-never';
 import { castingPreviewContext } from '../casting/preview';
 import { mayCastCommanderFromCommand } from '../casting/permissions';
@@ -86,6 +87,7 @@ import {
   spellHasConvoke,
   abilityOfPermanent,
   targetingFromDefinition,
+  preparedCopyHolder,
 } from '../state/queries';
 import { faceDownSpellOracleId } from '../state/objects';
 import type {
@@ -139,7 +141,8 @@ export type PriorityActionPayload =
         | 'energy'
         | 'commanderFree'
         | 'faceDown'
-        | 'bestow';
+        | 'bestow'
+        | 'split';
       altIndex?: number;
       /**
        * The option priced with target-dependent reductions (Killian): the target slot that must
@@ -169,7 +172,27 @@ export type PriorityActionPayload =
    * Turning a face-down permanent face up (CR 116.2b): for its morph cost (CR 702.37e), or, when
    * it was manifested and is a creature card, for its mana cost (`via: 'manaCost'`, CR 701.40b).
    */
-  | { kind: 'turnFaceUp'; objectId: ObjectId; via?: 'manaCost' };
+  | { kind: 'turnFaceUp'; objectId: ObjectId; via?: 'manaCost' }
+  /** Paying a locked Room door's mana cost to unlock it (CR 709.5e). */
+  | { kind: 'unlockDoor'; objectId: ObjectId; door: RoomDoor };
+
+/**
+ * The locked doors of a Room permanent and their unlock costs (CR 709.5e): each door's own mana
+ * cost, with {X} as 0 (CR 107.3). A door with no mana cost can't be unlocked this way.
+ */
+export function roomUnlockCosts(
+  ctx: GameContext,
+  perm: EnginePermanent,
+): { door: RoomDoor; name: string; cost: ParsedManaCost }[] {
+  const doors = getDefByOracleId(ctx, perm.oracleId, perm.name).roomDoors;
+  if (doors === undefined || perm.faceDown === true) return [];
+  return (['left', 'right'] as const).flatMap((door, index) => {
+    const face = doors[index]!;
+    return perm.unlockedDoors?.includes(door) === true || face.manaCost === null
+      ? []
+      : [{ door, name: face.name, cost: { ...face.manaCost, x: 0 } }];
+  });
+}
 
 /**
  * The costs a face-down permanent can be turned face up for: its morph cost (CR 702.37e) and, if
@@ -1002,7 +1025,7 @@ export function computePriorityOptions(
       if (
         plotCast &&
         variant.alternativeCast !== undefined &&
-        !['adventure', 'omen', 'mdfc'].includes(variant.alternativeCast)
+        !['adventure', 'omen', 'mdfc', 'split'].includes(variant.alternativeCast)
       )
         return;
       if (plotCast) baseCost = emptyCost();
@@ -1332,7 +1355,9 @@ export function computePriorityOptions(
         }
       }
     };
-    if (def.manaCost !== null || plotCast)
+    // A split card is cast as one half or both, never as the combined card (CR 709.3).
+    const splitCard = def.alternativeCasts?.some((alt) => alt.kind === 'split') === true;
+    if ((def.manaCost !== null || plotCast) && !splitCard)
       offerCast(
         plotCast || reboundCast ? emptyCost() : foretold !== null ? foretold.cost : def.manaCost!,
         spellAdditionalCosts,
@@ -1424,11 +1449,18 @@ export function computePriorityOptions(
           alt.kind !== 'bestow' &&
           alt.kind !== 'adventure' &&
           alt.kind !== 'omen' &&
+          alt.kind !== 'split' &&
           !(alt.kind === 'mdfc' && alt.spellFace !== undefined)
         )
           continue;
-        // Graveyard face casts are handled by their own zone-scoped alternatives below.
-        if (!fromLibraryTop && alt.kind !== 'bestow') continue;
+        // Split halves (including Room doors) use an external graveyard permission too.
+        // Fuse remains hand-only; other graveyard faces use zone-scoped alternatives below.
+        if (
+          !fromLibraryTop &&
+          alt.kind !== 'bestow' &&
+          !(alt.kind === 'split' && alt.fused !== true)
+        )
+          continue;
         if (alt.from === 'hand' || alt.from === 'graveyard' || alt.from === 'exile') continue;
         const face = selectedSpellDefinition(def, alt);
         const start = options.length;
@@ -1439,7 +1471,9 @@ export function computePriorityOptions(
           { alternativeCast: alt.kind, altIndex: index },
           alt.kind === 'bestow'
             ? ' via Bestow'
-            : ` via ${alt.kind === 'mdfc' ? 'back face' : alt.kind}`,
+            : alt.kind === 'split'
+              ? ` as ${face.name}`
+              : ` via ${alt.kind === 'mdfc' ? 'back face' : alt.kind}`,
           0,
           face.types.includes('Instant') || face.keywords.includes('flash'),
           face.name,
@@ -1469,7 +1503,8 @@ export function computePriorityOptions(
           alt.kind !== 'adventure' &&
           alt.kind !== 'omen' &&
           alt.kind !== 'bestow' &&
-          alt.kind !== 'mdfc'
+          alt.kind !== 'mdfc' &&
+          alt.kind !== 'split'
         )
           continue;
         if (fromExile && alt.from === 'hand' && !plotCast) continue;
@@ -1529,6 +1564,20 @@ export function computePriorityOptions(
             );
             break;
           }
+          case 'split': {
+            const face = selectedSpellDefinition(def, alt);
+            offerCast(
+              alt.manaCost,
+              face.spellAdditionalCosts ?? [],
+              face,
+              { alternativeCast: alt.kind, altIndex: index },
+              alt.fused === true ? ' fused' : ` as ${face.name}`,
+              0,
+              face.types.includes('Instant') || face.keywords.includes('flash'),
+              face.name,
+            );
+            break;
+          }
           case 'bestow':
             offerCast(
               alt.manaCost,
@@ -1577,6 +1626,7 @@ export function computePriorityOptions(
           (alt.kind === 'bestow' ||
             alt.kind === 'adventure' ||
             alt.kind === 'omen' ||
+            alt.kind === 'split' ||
             (alt.kind === 'mdfc' && alt.spellFace !== undefined)) &&
           topCastableAs(libraryTop, selectedSpellDefinition(topDef, alt)),
       )
@@ -1596,6 +1646,8 @@ export function computePriorityOptions(
     if (
       (obj.ownerId === player.id && obj.onAdventure === true) ||
       obj.playableUntilEotBy === player.id ||
+      // A prepared permanent's prepare-spell copy (CR 722.3c).
+      preparedCopyHolder(ctx, obj)?.controllerId === player.id ||
       // Foretold: castable after the turn it was foretold (CR 702.143a).
       (obj.ownerId === player.id &&
         obj.foretold !== undefined &&
@@ -2073,6 +2125,39 @@ export function computePriorityOptions(
     }
   }
 
+  // Unlock a locked door of a Room you control for its mana cost (CR 709.5e): a special action
+  // any time you have priority with the stack empty in a main phase of your turn.
+  for (const perm of sorcerySpeed ? ctx.state.battlefield : []) {
+    if (perm.controllerId !== player.id) continue;
+    // Neither casting nor activating: restricted mana cannot pay it.
+    const allows = allowanceFor(ctx, player.id, { kind: 'other' });
+    for (const way of roomUnlockCosts(ctx, perm)) {
+      if (
+        !canPay(
+          way.cost,
+          player.manaEntries,
+          baseCastSources,
+          allows,
+          playerLifeLocked(ctx, player.id) ? 0 : player.life,
+        )
+      )
+        continue;
+      options.push({
+        type: 'activateAbility',
+        description: `Unlock ${way.name} (${describeManaCost(way.cost)})`,
+        payload: { kind: 'unlockDoor', objectId: perm.id, door: way.door },
+        data: {
+          sourceName: perm.name,
+          sourceZone: 'battlefield',
+          abilityDescription: `Unlock ${way.name}`,
+          manaCost: describeManaCost(way.cost),
+          ...paymentPreview(ctx, player, way.cost, baseCastSources, allows),
+        },
+        interaction: { kind: 'source', sourceId: perm.id, sourceCardId: perm.cardId },
+      });
+    }
+  }
+
   // Companion: pay {3} at sorcery speed to move it to hand, once per game (brief §5.7).
   if (
     sorcerySpeed &&
@@ -2099,11 +2184,14 @@ export function computePriorityOptions(
   if (player.manualMana === true) options.push(...manualManaOptions(ctx, player));
 
   // Strategic usefulness belongs to the decision provider, not legal-action generation.
-  // CR 702.61a: split second leaves only passing, yielding and special actions (CR 116.2).
+  // CR 702.61a-b: split second permits mana abilities and special actions (CR 116.2).
+  // Presentation types also label face-up and foretell actions as activateAbility; only the
+  // payload identifies a spell cast or a nonmana ability activation.
   if (splitSecondOnStack(ctx))
-    return options.filter(
-      (option) => option.type !== 'castSpell' && option.type !== 'activateAbility',
-    );
+    return options.filter((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind !== 'castSpell' && payload.kind !== 'activateAbility';
+    });
   return options;
 }
 

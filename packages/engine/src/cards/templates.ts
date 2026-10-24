@@ -148,6 +148,11 @@ export function onDies(): TriggerHead {
   return { when: 'dies', subject: { kind: 'self' } };
 }
 
+/** A Saga chapter ability (CR 714.2b): lore counters on this Saga crossing chapter `n`. */
+export function onChapter(n: number): TriggerHead {
+  return { when: 'countersPut', subject: { kind: 'self' }, counter: 'lore', chapter: n };
+}
+
 /** "Whenever this attacks". */
 export function onAttacks(): TriggerHead {
   return { when: 'attacks', subject: { kind: 'self' } };

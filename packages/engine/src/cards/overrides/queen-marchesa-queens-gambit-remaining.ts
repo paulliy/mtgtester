@@ -125,12 +125,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'Wandering Archaic // Explore the Vastlands',
     'Modal DFC copy-on-cast with retarget is unimplemented.',
   );
-  // Catalog audit queen-batch-2: Fuse authored as a third extra-cost mode.
-  unsupportedCard(
-    '9842734c-1eac-4509-a731-4c22017ae586',
-    'Wear // Tear',
-    'Fuse is authored as a third mode with an extra {2}{W} rather than casting both halves.',
-  );
+  // Wear // Tear: restored in coverage PR11b; the interpreter casts each split half and fuses.
   // Catalog audit queen-batch-1: Split second and can't-lose/can't-win are claimed as lifeFloor.
   unsupportedCard(
     '66ca8a60-e028-4a5f-8177-860b888cb9d1',

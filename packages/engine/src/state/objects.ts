@@ -1,9 +1,10 @@
 import { counterCount, setCounterCount } from './counters';
 import { offBattlefieldTypes } from './off-battlefield-types';
 import { playerProtectedFromEverything } from './phasing';
-import { selectedPermanentDefinition } from '../cards/spell-faces';
+import { roomDefinition, selectedPermanentDefinition } from '../cards/spell-faces';
+import type { RoomDoor } from '../cards/spell-faces';
 import { assertTriggerEventFamily } from '../cards/trigger-contracts';
-import { attackedPlaneswalker, spellDefinitionOf, canBeSacrificed } from './queries';
+import { attackedPlaneswalker, spellDefinitionOf, canBeSacrificed, isModified } from './queries';
 /**
  * Object identity and zone movement (CR 400.7, brief §5.2). A card changing zones becomes
  * a NEW object with a new `ObjectId`; the stable `cardId` links its zone-visits together.
@@ -46,6 +47,7 @@ import {
 } from '../effects/continuous';
 import { CREATURE_TYPES } from '../cards/creature-types';
 import { debug, emit } from '../log/log';
+import { manaCostTextOf } from '../mana/cost';
 import {
   cardZoneCandidate,
   counterAmountAfterReplacements,
@@ -126,6 +128,14 @@ export interface MoveDestination {
    * enters-with-counters, and counter replacements apply to them (CR 614.1c).
    */
   withCounters?: Record<string, number>;
+  /**
+   * Battlefield only: the moving effect gives it these card types in addition to its others
+   * ("They're artifacts in addition to their other types"). The effect is in place as it enters,
+   * so enters triggers see the new types, and it lasts for as long as it stays this object.
+   */
+  addTypes?: string[];
+  /** Battlefield only: the Room door its spell was cast as, unlocked as it enters (CR 709.5d). */
+  unlockedDoor?: RoomDoor;
 }
 
 /**
@@ -250,6 +260,9 @@ function reincarnate(ctx: GameContext, obj: EngineObject, zone: Zone): EngineCar
     isCommander: obj.isCommander,
     zone,
     ...(zone === 'battlefield' && obj.face !== undefined ? { face: obj.face } : {}),
+    ...(zone === 'battlefield' && obj.unlockedDoors !== undefined
+      ? { unlockedDoors: [...obj.unlockedDoors] }
+      : {}),
     ...(zone === 'battlefield' && obj.escaped === true ? { escaped: true } : {}),
     // How a spell was cast — its X and any kicker-style payments — describes the permanent that
     // spell becomes (CR 107.3m, 702.33d), and nothing after: a kicked creature that dies and is
@@ -422,6 +435,26 @@ export function expireSourceControlEffects(ctx: GameContext, sourceObjectId: Obj
   }
 }
 
+/** The name and mana cost a Room permanent has with its current doors unlocked (CR 709.5). */
+function roomFaceText(def: CardDefinition): Pick<EnginePermanent, 'name' | 'manaCost'> {
+  return { name: def.name, manaCost: manaCostTextOf(def.manaCost) as EnginePermanent['manaCost'] };
+}
+
+/**
+ * Give a Room permanent an unlocked designation (CR 709.5c, 709.5e–f): its name, mana cost and
+ * abilities now include that door's. False when the door is already unlocked.
+ */
+export function unlockRoomDoor(ctx: GameContext, perm: EnginePermanent, door: RoomDoor): boolean {
+  const printed = getDefByOracleId(ctx, perm.oracleId, perm.name);
+  if (printed.roomDoors === undefined || perm.unlockedDoors?.includes(door) === true) return false;
+  perm.unlockedDoors = (['left', 'right'] as const).filter(
+    (entry) => entry === door || perm.unlockedDoors?.includes(entry) === true,
+  );
+  if (!perm.faceDown)
+    Object.assign(perm, roomFaceText(roomDefinition(printed, perm.unlockedDoors)));
+  return true;
+}
+
 /** What a face-down permanent is called while face down (CR 708.2a). */
 export const FACE_DOWN_PERMANENT_NAME = 'Face-down permanent';
 
@@ -440,7 +473,11 @@ export function makePermanent(
   /** Counters a moving effect puts on it as it enters (`MoveDestination.withCounters`). */
   entryCounters: Record<string, number> = {},
 ): EnginePermanent {
-  const def = selectedPermanentDefinition(getDefByOracleId(ctx, obj.oracleId, obj.name), obj.face);
+  const def = selectedPermanentDefinition(
+    getDefByOracleId(ctx, obj.oracleId, obj.name),
+    obj.face,
+    obj.unlockedDoors,
+  );
   const landFace = mdfcLandFaceFor(ctx, obj);
   // Planeswalkers/battles enter with their printed loyalty/defense (CR 306.5b, 310.6).
   const counters: Record<string, number> = {};
@@ -453,6 +490,8 @@ export function makePermanent(
     counters['loyalty'] = def.loyalty;
   if (!faceDown && landFace === undefined && def.types.includes('Battle') && def.defense !== null)
     counters['defense'] = def.defense;
+  // A Saga enters with a lore counter (CR 714.3a), which triggers its chapter I (CR 714.2b).
+  if (!faceDown && landFace === undefined && def.subtypes.includes('Saga')) counters['lore'] = 1;
   // "~ enters with N +1/+1 counters on it" is a replacement effect (CR 614.1c): the counters
   // are already there as it enters, so it is never momentarily 0-toughness.
   const valueScope = {
@@ -503,6 +542,7 @@ export function makePermanent(
     const sourceDef = selectedPermanentDefinition(
       getDefByOracleId(ctx, source.oracleId, source.name),
       source.face,
+      source.unlockedDoors,
     );
     for (const replacement of sourceDef.additionalCountersOnEntry ?? []) {
       if (
@@ -545,6 +585,8 @@ export function makePermanent(
     // A face-down permanent has no name (CR 708.2a): every event, prompt and view that names it
     // reads this, so its identity reaches no other player. The definition keeps the real one.
     ...(faceDown ? { name: FACE_DOWN_PERMANENT_NAME } : {}),
+    // A Room is named and costed by its unlocked doors alone (CR 709.5).
+    ...(!faceDown && def.roomDoors !== undefined ? roomFaceText(def) : {}),
     zone: 'battlefield',
     controllerId,
     defaultControllerId: controllerId,
@@ -643,6 +685,7 @@ export function transformPermanent(ctx: GameContext, perm: EnginePermanent): boo
   if (nextFace.types.some((type) => type === 'Instant' || type === 'Sorcery')) return false;
 
   perm.transformed = !perm.transformed;
+  perm.transformations = (perm.transformations ?? 0) + 1;
   // A copy effect continues to apply when the physical DFC turns over (CR 712.20).
   if (perm.copyOriginal === undefined) {
     const face = perm.transformed ? def.backFace : def;
@@ -984,9 +1027,11 @@ export function* moveObject(
     // As-enters replacement (CR 614.1c): "enters tapped unless <condition>". Resolved BEFORE
     // the permanent exists, so it is never momentarily tapped-then-untapped — and because the
     // condition may be a choice ("you may pay 2 life"), it is resolved here, in the generator.
+    const unlockedDoors = target.unlockedDoor === undefined ? undefined : [target.unlockedDoor];
     const def = selectedPermanentDefinition(
       getDefByOracleId(ctx, obj.oracleId, obj.name),
       target.face ?? obj.face,
+      unlockedDoors,
     );
     const landFace =
       target.face === 'back'
@@ -1012,7 +1057,14 @@ export function* moveObject(
       entersTappedOverride = !met;
     }
     if (target.entersTapped === true) entersTappedOverride = true;
-    const incoming = target.face === 'back' ? { ...obj, face: 'back' as const } : obj;
+    const incoming =
+      target.face !== 'back' && unlockedDoors === undefined
+        ? obj
+        : {
+            ...obj,
+            ...(target.face === 'back' ? { face: 'back' as const } : {}),
+            ...(unlockedDoors === undefined ? {} : { unlockedDoors }),
+          };
     const perm = makePermanent(
       ctx,
       incoming,
@@ -1026,6 +1078,19 @@ export function* moveObject(
     if (target.manifested === true && perm.faceDown === true) perm.manifested = true;
     ctx.state.battlefield.push(perm);
     next = perm;
+    if (target.addTypes !== undefined && target.addTypes.length > 0) {
+      ctx.state.effects.push({
+        id: `eff-${ctx.state.nextObjectNum++}`,
+        sourceId: perm.cardId,
+        description: `${perm.name} is ${target.addTypes.join(' ')} in addition to its other types`,
+        targetCardIds: [perm.cardId],
+        targetObjectIds: [perm.id],
+        kind: 'addTypes',
+        addTypes: [...target.addTypes],
+        duration: 'permanent',
+        timestamp: ctx.state.nextTimestamp++,
+      });
+    }
 
     const chars = computeCharacteristics(ctx, perm);
     if (chars.types.includes('Creature') && chars.keywords.includes('riot')) {
@@ -1935,6 +2000,7 @@ function copiableDefinition(ctx: GameContext, perm: EnginePermanent): CardDefini
   const def = selectedPermanentDefinition(
     getDefByOracleId(ctx, perm.oracleId, perm.name),
     perm.face,
+    perm.unlockedDoors,
   );
   const face = perm.transformed ? def.backFace : undefined;
   const faceValues =
@@ -2044,6 +2110,8 @@ export interface TriggerEventSubject {
   toZone?: Zone;
   /** `countersPut`: the counter kinds this placement put on the permanent. */
   counterKinds?: readonly string[];
+  /** `countersPut`: each kind's count before and after this placement, for chapter crossings. */
+  counterCounts?: Readonly<Record<string, { before: number; after: number }>>;
   /** `becomesTapped`: it was tapped to activate a mana ability. */
   forMana?: true;
 }
@@ -2324,6 +2392,7 @@ export function queueTriggersForEvent(
       const def = selectedPermanentDefinition(
         getDefByOracleId(ctx, source.oracleId, source.name),
         source.face,
+        source.unlockedDoors,
       );
       const rules =
         source.transformed && def.backFace !== undefined
@@ -2383,6 +2452,11 @@ export function queueTriggersForEvent(
           !(s.counterKinds ?? []).includes(spec.counter)
         )
           return false;
+        if ('chapter' in spec && spec.chapter !== undefined) {
+          const lore = s.counterCounts?.['lore'];
+          if (lore === undefined || lore.before >= spec.chapter || lore.after < spec.chapter)
+            return false;
+        }
         if ('byYou' in spec && spec.byYou === true && s.playerId !== source.controllerId)
           return false;
         if ('forMana' in spec && spec.forMana === true && s.forMana !== true) return false;
@@ -2699,6 +2773,12 @@ export function queueTriggersForEvent(
                 permanent: subject.permanent,
                 playerId: subject.permanent.controllerId,
                 counterKinds,
+                counterCounts: Object.fromEntries(
+                  counterKinds.map((counter) => [
+                    counter,
+                    { before: 0, after: subject.permanent.counters[counter] ?? 0 },
+                  ]),
+                ),
               },
             ];
       }),
@@ -2861,6 +2941,13 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
   const def = spellDefinitionOf(ctx, spell);
 
   const caster = playerById(ctx, spell.controllerId);
+  // Casting a prepare spell's copy unprepares its permanent as the spell becomes cast (CR
+  // 722.3c, 601.2i).
+  const preparedBy = spell.card?.preparedBy;
+  if (preparedBy !== undefined) {
+    const prepared = ctx.state.battlefield.find((perm) => perm.id === preparedBy);
+    if (prepared !== undefined) delete prepared.prepared;
+  }
   caster.spellsCastThisTurn += 1;
   // Addendum: "if you cast this spell during your main phase" is a fact of the cast itself.
   if (
@@ -3166,22 +3253,24 @@ export function stackAbilitySnapshot(entry: EngineStackObject): StackAbilitySnap
 
 /** Bind a cast trigger's `copyCastSpell` effects to the spell that was cast. */
 function bindCastSpell(ctx: GameContext, ability: Ability, spell: EngineStackObject): Ability {
-  if (!ability.effects.some((effect) => effect.op === 'copyCastSpell')) return ability;
+  // "They may pay {2}. If they don't, you may copy that spell" (Wandering Archaic) nests the copy.
+  const copies = (effect: Effect): boolean =>
+    effect.op === 'copyCastSpell' || (effect.op === 'unlessPays' && effect.then.some(copies));
+  if (!ability.effects.some(copies)) return ability;
   const snapshot = castSpellSnapshot(ctx, spell);
-  return {
-    ...ability,
-    effects: ability.effects.map((effect) =>
-      effect.op === 'copyCastSpell'
-        ? {
-            op: 'replicateCopies' as const,
-            count: 1,
-            spell: snapshot,
-            ...(effect.optional === true ? { optional: true as const } : {}),
-            ...(effect.oncePerTurn === true ? { oncePerTurn: true as const } : {}),
-          }
-        : effect,
-    ),
-  };
+  const bind = (effect: Effect): Effect =>
+    effect.op === 'copyCastSpell'
+      ? {
+          op: 'replicateCopies' as const,
+          count: 1,
+          spell: snapshot,
+          ...(effect.optional === true ? { optional: true as const } : {}),
+          ...(effect.oncePerTurn === true ? { oncePerTurn: true as const } : {}),
+        }
+      : effect.op === 'unlessPays'
+        ? { ...effect, then: effect.then.map(bind) }
+        : effect;
+  return { ...ability, effects: ability.effects.map(bind) };
 }
 
 /**
@@ -3307,9 +3396,7 @@ export function* movePermanentsTogether(
   );
   // Only what really reaches the graveyard dies.
   const dying = permanents.filter((perm) => destinations.get(perm.id) === 'graveyard');
-  ctx.state.creaturesDiedThisTurn += dying.filter((perm) =>
-    computeCharacteristics(ctx, perm).types.includes('Creature'),
-  ).length;
+  for (const perm of dying) recordCreatureDeath(ctx, perm);
   const pendingStart = ctx.state.pendingTriggers.length;
   if (reason === 'sacrifice')
     queueTriggersForEvent(
@@ -3372,10 +3459,16 @@ function queueLeaveBattlefieldTriggers(ctx: GameContext, obj: EngineObject, to: 
   // "dies" means battlefield → graveyard (CR 700.4). The pre-move battlefield object
   // carries the controller.
   if (to !== 'graveyard') return;
-  if (computeCharacteristics(ctx, perm).types.includes('Creature')) {
-    ctx.state.creaturesDiedThisTurn += 1;
-  }
+  recordCreatureDeath(ctx, perm);
   queueTriggersForObject(ctx, 'dies', perm);
+}
+
+/** Count a dying creature, and whether it died modified (CR 700.9), before it leaves. */
+function recordCreatureDeath(ctx: GameContext, perm: EnginePermanent): void {
+  if (!computeCharacteristics(ctx, perm).types.includes('Creature')) return;
+  ctx.state.creaturesDiedThisTurn += 1;
+  if (isModified(ctx, perm))
+    (ctx.state.modifiedCreatureDiedThisTurn ??= {})[perm.controllerId] = true;
 }
 
 /**
@@ -3423,7 +3516,18 @@ export function queueAttackDeclarationTriggers(
                   ? attackingPlayerId === enchantedPlayerId
                   : true;
         if (!attackerOk) continue;
-        const mine = declared.filter((a) => a.controllerId === attackingPlayerId);
+        const attackerFilter = spec.attackerFilter;
+        const mine = declared.filter(
+          (a) =>
+            a.controllerId === attackingPlayerId &&
+            (attackerFilter === undefined ||
+              matchesSelector(ctx, a, attackerFilter, {
+                cardId: source.cardId,
+                objectId: source.id,
+                controllerId: watcherId,
+                attachedToCardId: null,
+              })),
+        );
         // Attacking a planeswalker is not attacking its controller (CR 506.2); one removed from
         // combat attacks nothing.
         const filter = spec.attacking;
@@ -3434,8 +3538,9 @@ export function queueAttackDeclarationTriggers(
                 (a) =>
                   a.attacking !== null &&
                   targetPlayerOf(filter.who, a.attacking) &&
-                  (a.attackingPlaneswalker === null ||
-                    (filter.planeswalkers && attackedPlaneswalker(ctx, a) !== null)),
+                  (a.attackingPlaneswalker === null
+                    ? filter.planeswalkersOnly !== true
+                    : filter.planeswalkers && attackedPlaneswalker(ctx, a) !== null),
               );
         const groups: { members: EnginePermanent[]; attackedPlayerId?: PlayerId }[] =
           spec.perDefender === true
@@ -3609,17 +3714,34 @@ function bindActivatedAbility(
 
 export function queuePlayerTriggersForEvent(
   ctx: GameContext,
-  when: 'gainsLife' | 'drawsCard' | 'foretells' | 'damagePreventedToPlayer' | 'playerDealtDamage',
+  when:
+    | 'gainsLife'
+    | 'losesLife'
+    | 'drawsCard'
+    | 'foretells'
+    | 'damagePreventedToPlayer'
+    | 'playerDealtDamage',
   playerId: PlayerId,
   amount?: number,
   /** `playerDealtDamage`: who controls the source that dealt the damage; it is the event player. */
   sourceControllerId?: PlayerId,
+  /** `losesLife`: this is the player's first life loss this turn. */
+  firstThisTurn?: boolean,
 ): void {
   assertTriggerEventFamily(when, 'player');
   for (const perm of ctx.state.battlefield) {
     for (const ability of triggersOf(ctx, perm)) {
       const spec = ability.trigger;
       if (spec === undefined || spec.when !== when) continue;
+      if (spec.when === 'losesLife' && spec.firstTimeEachTurn === true && firstThisTurn !== true)
+        continue;
+      if (
+        spec.when === 'drawsCard' &&
+        spec.ordinalThisTurn !== undefined &&
+        ctx.state.players.find((candidate) => candidate.id === playerId)?.cardsDrawnThisTurn !==
+          spec.ordinalThisTurn
+      )
+        continue;
       if (spec.player === 'you' && perm.controllerId !== playerId) continue;
       if (
         spec.player === 'opponent' &&

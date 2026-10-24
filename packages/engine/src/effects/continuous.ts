@@ -182,7 +182,7 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
     if (source.faceDown) continue;
     const printed = ctx.defs.get(source.oracleId);
     if (printed === undefined) continue;
-    const def = selectedPermanentDefinition(printed, source.face);
+    const def = selectedPermanentDefinition(printed, source.face, source.unlockedDoors);
     // A bestowed Aura "becomes an Aura enchantment" (CR 702.103b): a type-changing effect that
     // replaces its card types and the creature types that went with them (CR 205.1a), in its
     // own timestamp order.
@@ -334,6 +334,20 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
       });
     } else if (eff.kind === 'grantAbility' && eff.ability !== undefined) {
       out.push({ applies, op: { layer: 6, addTrigger: eff.ability }, timestamp: eff.timestamp });
+    } else if (eff.kind === 'grantActivatedAbility' && eff.activatedAbility !== undefined) {
+      out.push({
+        applies,
+        op: { layer: 6, addActivatedAbility: eff.activatedAbility },
+        timestamp: eff.timestamp,
+      });
+    } else if (eff.kind === 'grantManaAbility' && eff.manaAbility !== undefined) {
+      out.push({
+        applies,
+        op: { layer: 6, addManaAbility: eff.manaAbility },
+        timestamp: eff.timestamp,
+      });
+    } else if (eff.kind === 'addTypes' && eff.addTypes !== undefined) {
+      out.push({ applies, op: { layer: 4, addTypes: eff.addTypes }, timestamp: eff.timestamp });
     } else if (eff.kind === 'becomeCreature' && eff.becomeCreature !== undefined) {
       const bc = eff.becomeCreature;
       if (bc.setColors !== undefined) {
@@ -446,7 +460,7 @@ export function printedManaValue(ctx: GameContext, perm: EnginePermanent): numbe
   // target's front-face `oracleId` but its CURRENT cost, which for a transformed target is the
   // back face's — so a copy of a back face reads 0 (CR 712.8e).
   if (perm.copyOriginal !== undefined) return manaValueOf(parseManaCost(perm.manaCost).cost);
-  return manaValueOf(selectedPermanentDefinition(def, perm.face).manaCost);
+  return manaValueOf(selectedPermanentDefinition(def, perm.face, perm.unlockedDoors).manaCost);
 }
 
 /** The one place a `SelectorCandidate` is built, so every selector reads the same fields. */
@@ -927,7 +941,7 @@ function runLayerPass(
   for (const perm of perms) {
     const printed = ctx.defs.get(perm.oracleId);
     if (printed === undefined) throw new Error(`engine bug: no def for ${perm.name}`);
-    const def = selectedPermanentDefinition(printed, perm.face);
+    const def = selectedPermanentDefinition(printed, perm.face, perm.unlockedDoors);
     const landFace =
       perm.face === 'back'
         ? def.alternativeCasts?.find((alt) => alt.kind === 'mdfc')?.landFace

@@ -27,7 +27,7 @@ export function offBattlefieldTypes(
     if (perm.controllerId !== holderId || perm.faceDown) continue;
     const printed = ctx.defs.get(perm.oracleId);
     if (printed === undefined) continue;
-    const def = selectedPermanentDefinition(printed, perm.face);
+    const def = selectedPermanentDefinition(printed, perm.face, perm.unlockedDoors);
     const statics =
       perm.transformed && def.backFace !== undefined ? def.backFace.ruleStatics : def.ruleStatics;
     for (const rs of statics) {

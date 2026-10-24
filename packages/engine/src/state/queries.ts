@@ -33,7 +33,7 @@ import {
 } from '../effects/continuous';
 import { UnmodeledCardError } from '../errors';
 import type { ManaAllowance, ManaSource, ManaUnit, ParsedManaCost } from '../mana/cost';
-import { manaCostComponent } from '../mana/cost';
+import { manaCostComponent, manaCostTextOf } from '../mana/cost';
 import type {
   DamageKeyword,
   EngineCardObject,
@@ -123,6 +123,22 @@ export function isAttackingPlayerOrTheirPlaneswalker(
 }
 
 /** Current card types include Creature after the layer system (Mutavault, etc.). */
+/**
+ * CR 700.9: a permanent is modified if it has a counter on it, is equipped, or is enchanted by
+ * an Aura its controller controls.
+ */
+export function isModified(ctx: GameContext, perm: EnginePermanent): boolean {
+  if (Object.values(perm.counters).some((count) => count > 0)) return true;
+  return ctx.state.battlefield.some((attached) => {
+    if (attached.attachedTo !== perm.id) return false;
+    const subtypes = computeCharacteristics(ctx, attached).subtypes;
+    return (
+      subtypes.includes('Equipment') ||
+      (subtypes.includes('Aura') && attached.controllerId === perm.controllerId)
+    );
+  });
+}
+
 export function isCreaturePermanent(ctx: GameContext, perm: EnginePermanent): boolean {
   return computeCharacteristics(ctx, perm).types.includes('Creature');
 }
@@ -147,6 +163,17 @@ export function triggersOf(ctx: GameContext, perm: EnginePermanent): Ability[] {
 
 /** Effective keywords through the CR 613 layer engine (grants in layer 6). */
 /** The damage keywords a permanent has now, for last known information on the stack. */
+/** CR 714.2d: the greatest chapter number among the Saga's chapter abilities, or 0. */
+export function sagaFinalChapter(ctx: GameContext, perm: EnginePermanent): number {
+  let final = 0;
+  for (const ability of triggersOf(ctx, perm)) {
+    const head = ability.trigger;
+    if (head !== undefined && 'chapter' in head && head.chapter !== undefined)
+      final = Math.max(final, head.chapter);
+  }
+  return final;
+}
+
 export function damageKeywordsOf(ctx: GameContext, perm: EnginePermanent): DamageKeyword[] {
   return (['deathtouch', 'lifelink', 'infect'] as const).filter((kw) => hasKeyword(ctx, perm, kw));
 }
@@ -195,6 +222,20 @@ export function colorsOf(ctx: GameContext, perm: EnginePermanent): Color[] {
 }
 
 /** Selected printed characteristics of a stack spell, including copies. */
+/**
+ * The prepared permanent whose prepare-spell copy `card` is, while it is still prepared (CR
+ * 722.3c). Its controller may cast the copy.
+ */
+export function preparedCopyHolder(
+  ctx: GameContext,
+  card: EngineCardObject,
+): EnginePermanent | undefined {
+  if (card.isCardCopy !== true || card.preparedBy === undefined) return undefined;
+  return ctx.state.battlefield.find(
+    (perm) => perm.id === card.preparedBy && perm.prepared === true,
+  );
+}
+
 export function spellDefinitionOf(ctx: GameContext, entry: EngineStackObject): CardDefinition {
   return entry.spellDefinition ?? getDefByOracleId(ctx, entry.sourceOracleId, entry.description);
 }
@@ -338,6 +379,8 @@ export function cardZoneCandidate(
     ...(def.power === null ? { powerUnknown: true } : {}),
     keywords: def.keywords,
     manaValue: spellManaValue(def, undefined),
+    // An unmodeled printed cost is unknown, not absent, so it matches no mana-cost filter.
+    ...(def.hasUnsupportedCost ? {} : { manaCostText: manaCostTextOf(def.manaCost) }),
     // A card off the battlefield is never a token: tokens cease to exist on leaving it
     // (CR 704.5d), so nothing this function is handed can be one.
     isToken: false,
@@ -1298,7 +1341,7 @@ export function gatherRuleStatics(ctx: GameContext): RuleStaticEntry[] {
     if (perm.faceDown) continue;
     const printed = ctx.defs.get(perm.oracleId);
     if (printed === undefined) continue;
-    const def = selectedPermanentDefinition(printed, perm.face);
+    const def = selectedPermanentDefinition(printed, perm.face, perm.unlockedDoors);
     const printedRuleStatics =
       perm.transformed && def.backFace !== undefined ? def.backFace.ruleStatics : def.ruleStatics;
     if (printedRuleStatics.length === 0 || computeCharacteristics(ctx, perm).loseAbilities)
