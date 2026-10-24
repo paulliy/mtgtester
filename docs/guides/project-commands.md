@@ -14,7 +14,7 @@ bun run test <path-or-filter>           # one test file or pattern
 bun run test:card-gate                  # offline card verification gate
 bun run snapshots:check                 # interpretation/override snapshot drift
 bun run test:e2e                        # Playwright (Card Test Lab + mocked smoke)
-bun run test:e2e:setup                  # Playwright: Play my deck + a seeded player game (DB-backed)
+bun run test:e2e:setup                  # Playwright: setup screen + a seeded player game (DB-backed)
 
 bun run dev                             # server :3001 and UI :5173
 bun run serve [--port N] [--no-db] [--oracle-fixture packages/server/fixtures/coverage-oracle.json]
