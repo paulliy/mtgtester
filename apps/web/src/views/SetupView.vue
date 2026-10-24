@@ -79,6 +79,7 @@ const reflectionEnabled = ref(false);
 /** A replay seed the user typed. Blank means the session's own seed below. */
 const customSeed = ref('');
 const sessionSeed = ref(freshSeed());
+const seed = computed(() => customSeed.value.trim() || sessionSeed.value);
 const choices = ref<SeatChoice[]>(
   Array.from({ length: SEATS }, () => ({ kind: 'pool', seed: null })),
 );
@@ -139,11 +140,24 @@ const humanIndex = computed(() =>
   gameMode.value === 'singlePlayer' ? Number(humanSeat.value.slice(1)) - 1 : -1,
 );
 
+/**
+ * The deck a seat's generated choice stands for. With no seed of its own it is drawn from the
+ * game seed and the seat's index (`previewMatchup`), so moving it to another seat would change
+ * it; this pins the seed it already has.
+ */
+function pinGenerated(choice: SeatChoice, index: number): SeatChoice {
+  return choice.kind === 'pool' && choice.seed === null
+    ? { kind: 'pool', seed: `${seed.value}-seat${index + 1}` }
+    : choice;
+}
+
 /** Your deck follows you to a new seat, and so does the gallery. */
 watch(humanSeat, (next, previous) => {
   const to = Number(next.slice(1)) - 1;
   const from = Number(previous.slice(1)) - 1;
-  const list = [...choices.value];
+  const list = choices.value.map((choice, index) =>
+    index === to || index === from ? pinGenerated(choice, index) : choice,
+  );
   [list[to], list[from]] = [list[from]!, list[to]!];
   choices.value = list;
   if (activeSeat.value === from) activeSeat.value = to;
@@ -251,7 +265,6 @@ function sourceFor(choice: SeatChoice): SeatSource {
   }
 }
 
-const seed = computed(() => customSeed.value.trim() || sessionSeed.value);
 const ready = computed(() => choices.value.every(isComplete));
 
 /** Exactly what the server compares between a preview and the start that redeems it. */

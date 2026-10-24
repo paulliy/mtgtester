@@ -125,3 +125,15 @@ test('an imported Ur-Dragon deck can be selected again as one saved deck', async
   await expect(page).toHaveURL(/\/game$/);
   await abandon(page);
 });
+
+test('a generated deck moves with you when you change seats', async ({ page }) => {
+  await page.goto('/');
+  const seats = page.getByLabel('Matchup preview').locator('li');
+  await expect(seats.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
+  const yours = await seats.nth(0).locator('.seat-title').innerText();
+  await page.getByText('More options', { exact: true }).click();
+  await page.getByRole('radio', { name: 'P3' }).click();
+  await expect(seats.nth(2)).toContainText('P3 · You');
+  await expect(seats.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
+  await expect(seats.nth(2).locator('.seat-title')).toHaveText(yours);
+});
