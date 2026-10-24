@@ -1983,7 +1983,7 @@
           "oracleText": "Deathtouch",
           "implementation": ["Keyword.deathtouch"],
           "engineTestIds": ["prepare-modeled"],
-          "viewerScenarioIds": []
+          "viewerScenarioIds": ["pr11b-defacing-duskmage-viewer-deathtouch"]
         },
         {
           "id": "pr11b-defacing-duskmage-clause-2",
@@ -2009,7 +2009,8 @@
       ],
       "viewerScenarioIds": [
         "pr11b-defacing-duskmage-viewer-prepared",
-        "pr11b-defacing-duskmage-viewer-first-draw"
+        "pr11b-defacing-duskmage-viewer-first-draw",
+        "pr11b-defacing-duskmage-viewer-deathtouch"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -2069,7 +2070,7 @@
           "oracleText": "Vigilance",
           "implementation": ["Keyword.vigilance"],
           "engineTestIds": ["prepare-modeled"],
-          "viewerScenarioIds": []
+          "viewerScenarioIds": ["pr11b-eiganjo-dynastorian-viewer-one-attacker"]
         },
         {
           "id": "pr11b-eiganjo-dynastorian-clause-2",
@@ -2234,14 +2235,17 @@
           "oracleText": "When this Class enters, create a 2/1 white and black Inkling creature token with flying.",
           "implementation": ["TriggerHead.enters", "Effect.createToken"],
           "engineTestIds": ["chirography-c01-positive"],
-          "viewerScenarioIds": []
+          "viewerScenarioIds": ["pr11b-intermediate-chirography-viewer-level-three"]
         },
         {
           "id": "pr11b-intermediate-chirography-clause-2",
           "oracleText": "{1}{B}: Level 2",
           "implementation": ["ActivatedAbility.sorcery", "Effect.gainClassLevel"],
           "engineTestIds": ["chirography-c02-positive", "chirography-c02-negative"],
-          "viewerScenarioIds": ["pr11b-intermediate-chirography-viewer-level-two"]
+          "viewerScenarioIds": [
+            "pr11b-intermediate-chirography-viewer-level-two",
+            "pr11b-intermediate-chirography-viewer-level-three"
+          ]
         },
         {
           "id": "pr11b-intermediate-chirography-clause-3",
@@ -2267,7 +2271,7 @@
           "oracleText": "{2}{B}: Level 3",
           "implementation": ["ActivatedAbility.sorcery", "Effect.gainClassLevel"],
           "engineTestIds": ["chirography-c04-level2"],
-          "viewerScenarioIds": []
+          "viewerScenarioIds": ["pr11b-intermediate-chirography-viewer-level-three"]
         },
         {
           "id": "pr11b-intermediate-chirography-clause-5",
@@ -2282,12 +2286,13 @@
             "chirography-c04-equipped",
             "chirography-c04-negative"
           ],
-          "viewerScenarioIds": []
+          "viewerScenarioIds": ["pr11b-intermediate-chirography-viewer-level-three"]
         }
       ],
       "viewerScenarioIds": [
         "pr11b-intermediate-chirography-viewer-level-two",
-        "pr11b-intermediate-chirography-viewer-level-one"
+        "pr11b-intermediate-chirography-viewer-level-one",
+        "pr11b-intermediate-chirography-viewer-level-three"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -3618,12 +3623,13 @@
             "Effect.eachPlayerGainsLife"
           ],
           "engineTestIds": ["vastlands-c02-positive"],
-          "viewerScenarioIds": []
+          "viewerScenarioIds": ["pr11b-wandering-archaic-viewer-explore"]
         }
       ],
       "viewerScenarioIds": [
         "pr11b-wandering-archaic-viewer-copy",
-        "pr11b-wandering-archaic-viewer-paid"
+        "pr11b-wandering-archaic-viewer-paid",
+        "pr11b-wandering-archaic-viewer-explore"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -4665,7 +4671,7 @@
           "oracleText": "II — Mill three cards.",
           "implementation": ["TriggerHead.countersPut.chapter", "Effect.mill"],
           "engineTestIds": ["war-c02-positive"],
-          "viewerScenarioIds": []
+          "viewerScenarioIds": ["pr11b-the-war-in-heaven-viewer-chapter-two"]
         },
         {
           "id": "pr11b-the-war-in-heaven-clause-4",
@@ -4681,7 +4687,8 @@
       ],
       "viewerScenarioIds": [
         "pr11b-the-war-in-heaven-viewer-chapter-one",
-        "pr11b-the-war-in-heaven-viewer-chapter-three"
+        "pr11b-the-war-in-heaven-viewer-chapter-three",
+        "pr11b-the-war-in-heaven-viewer-chapter-two"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -16903,12 +16910,17 @@
             "Effect.createToken"
           ],
           "engineTestIds": ["adanto-c03-positive"],
-          "viewerScenarioIds": []
+          "viewerScenarioIds": [
+            "pr11b-legion-s-landing-viewer-adanto-mana",
+            "pr11b-legion-s-landing-viewer-adanto-vampire"
+          ]
         }
       ],
       "viewerScenarioIds": [
         "pr11b-legion-s-landing-viewer-transform",
-        "pr11b-legion-s-landing-viewer-two-attackers"
+        "pr11b-legion-s-landing-viewer-two-attackers",
+        "pr11b-legion-s-landing-viewer-adanto-mana",
+        "pr11b-legion-s-landing-viewer-adanto-vampire"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -16999,14 +17011,14 @@
           "oracleText": "Whenever a permanent you control becomes the target of a spell or ability an opponent controls, you may draw a card.",
           "implementation": ["TriggerHead.becomesTarget", "Effect.draw"],
           "engineTestIds": ["mila-c02-positive", "mila-c02-negative"],
-          "viewerScenarioIds": []
+          "viewerScenarioIds": ["pr11b-mila-crafty-companion-viewer-targeted-draw"]
         },
         {
           "id": "pr11b-mila-crafty-companion-clause-3",
           "oracleText": "Lukka +1: You may discard a card. If you do, draw a card. If a creature card was discarded this way, draw two cards instead.",
           "implementation": ["LoyaltyAbility", "Effect.mayDiscardThenDraw"],
           "engineTestIds": ["lukka-c03-positive", "lukka-c03-decline"],
-          "viewerScenarioIds": []
+          "viewerScenarioIds": ["pr11b-mila-crafty-companion-viewer-lukka-plus"]
         },
         {
           "id": "pr11b-mila-crafty-companion-clause-4",
@@ -17023,12 +17035,15 @@
           "oracleText": "Lukka −7: You get an emblem with \"Whenever a creature you control enters, it deals damage equal to its power to any target.\"",
           "implementation": ["LoyaltyAbility", "Effect.createEmblem", "Effect.dealDamage"],
           "engineTestIds": ["lukka-c05-positive"],
-          "viewerScenarioIds": []
+          "viewerScenarioIds": ["pr11b-mila-crafty-companion-viewer-lukka-emblem"]
         }
       ],
       "viewerScenarioIds": [
         "pr11b-mila-crafty-companion-viewer-walker-attack",
-        "pr11b-mila-crafty-companion-viewer-lukka"
+        "pr11b-mila-crafty-companion-viewer-lukka",
+        "pr11b-mila-crafty-companion-viewer-targeted-draw",
+        "pr11b-mila-crafty-companion-viewer-lukka-plus",
+        "pr11b-mila-crafty-companion-viewer-lukka-emblem"
       ],
       "gameplayAiScenarioIds": []
     }

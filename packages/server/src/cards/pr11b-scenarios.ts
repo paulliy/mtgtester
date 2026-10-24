@@ -157,6 +157,8 @@ interface Placed {
   card: OracleCard;
   counters?: Record<string, number>;
   tapped?: boolean;
+  /** Arranged already transformed to its back face. */
+  transformed?: boolean;
 }
 type FieldEntry = OracleCard | Placed;
 const placed = (entry: FieldEntry): Placed => ('card' in entry ? entry : { card: entry });
@@ -331,6 +333,24 @@ const DEFS: Def[] = [
       opponent: P2_CASTS(CANTRIP),
     },
   ),
+  entry(
+    'pr11b-defacing-duskmage-viewer-deathtouch',
+    DUSKMAGE,
+    'Defacing Duskmage: deathtouch kills a bigger attacker',
+    [1],
+    [
+      'Pass priority through to P2’s turn; P2 attacks you with PR11b Lab Giant.',
+      'Block PR11b Lab Giant with Defacing Duskmage.',
+    ],
+    'Duskmage deals 2 damage with deathtouch, so the 4/4 Giant is destroyed; the Giant’s 4 damage destroys Duskmage too.',
+    {
+      p1Hand: [],
+      p1Field: [card(DUSKMAGE)],
+      p2Field: [GIANT],
+      opponent: { seat: 'P2', attack: 'P1' },
+      prepared: { continueThroughNextCombat: true },
+    },
+  ),
 
   // PR11b.04 Eiganjo Dynastorian // Replenish
   entry(
@@ -355,9 +375,9 @@ const DEFS: Def[] = [
     'pr11b-eiganjo-dynastorian-viewer-one-attacker',
     DYNASTORIAN,
     'Eiganjo Dynastorian: attacking alone does not prepare it',
-    [2],
+    [1, 2],
     ['Attack P2 with Eiganjo Dynastorian only.'],
-    'Only one creature attacks, so Dynastorian does not become prepared and Replenish cannot be cast.',
+    'Only one creature attacks, so Dynastorian does not become prepared and Replenish cannot be cast. Vigilance keeps it untapped.',
     {
       p1Hand: [],
       p1Field: [card(DYNASTORIAN), BEAR],
@@ -401,6 +421,22 @@ const DEFS: Def[] = [
       opponent: { ...P2_CASTS(SHOCK, 'P3'), answers: [/^Pay \{2\}$/] },
     },
   ),
+  entry(
+    'pr11b-wandering-archaic-viewer-explore',
+    ARCHAIC,
+    'Explore the Vastlands: each player takes a land and a spell, then gains 3 life',
+    [2],
+    [
+      'Cast the back face, Explore the Vastlands, for {3}.',
+      'From your top five cards, reveal Forest and PR11b Lab Divination.',
+    ],
+    'You put Forest and PR11b Lab Divination into your hand and the other three cards on the bottom of your library. Each player gains 3 life.',
+    {
+      p1Hand: [card(ARCHAIC)],
+      p1Top: [DIVINATION, BEAR, RELIC, CHARM],
+      p1Lands: lands('Plains', 3),
+    },
+  ),
 
   // PR11b.06 Wear // Tear
   entry(
@@ -439,6 +475,20 @@ const DEFS: Def[] = [
     ['Cast The War in Heaven for {3}{B}{B}{B}.'],
     'It enters with a lore counter. Chapter I makes you draw three cards and lose 3 life.',
     { p1Hand: [card('The War in Heaven')], p1Lands: lands('Swamp', 6) },
+  ),
+  entry(
+    'pr11b-the-war-in-heaven-viewer-chapter-two',
+    'The War in Heaven',
+    'The War in Heaven: chapter II mills three cards',
+    [3],
+    ['Pass through to your next precombat main phase, when the Saga gets its second lore counter.'],
+    'Chapter II mills PR11b Lab Bear, PR11b Lab Relic and PR11b Lab Charm, the three cards below the one you draw.',
+    {
+      p1Hand: [],
+      p1Field: [{ card: card('The War in Heaven'), counters: { lore: 1 } }],
+      p1Top: [BEAR, RELIC, CHARM],
+      prepared: THROUGH_YOUR_NEXT_TURN,
+    },
   ),
   entry(
     'pr11b-the-war-in-heaven-viewer-chapter-three',
@@ -486,6 +536,25 @@ const DEFS: Def[] = [
       p1Hand: [DRAIN],
       p1Field: [card('Intermediate Chirography'), BEAR],
       p1Lands: lands('Swamp', 1),
+    },
+  ),
+  entry(
+    'pr11b-intermediate-chirography-viewer-level-three',
+    'Intermediate Chirography',
+    'Intermediate Chirography: enter, reach level 3, and a modified creature dying makes an Inkling',
+    [1, 2, 4, 5],
+    [
+      'Cast Intermediate Chirography for {1}{B}.',
+      'Gain Class level 2 for {1}{B}, then level 3 for {2}{B}.',
+      'Cast PR11b Lab Shock at your PR11b Lab Pinger, which has a +1/+1 counter.',
+      'Pass to the end step.',
+    ],
+    'Chirography’s enter trigger creates a 2/1 flying Inkling. The modified Pinger dies, so at level 3 the end step creates a second Inkling.',
+    {
+      p1Hand: [card('Intermediate Chirography'), SHOCK],
+      p1Field: [{ card: PINGER, counters: { '+1/+1': 1 } }],
+      p1Lands: [...lands('Swamp', 7), 'Mountain'],
+      prepared: { continueToEndStep: true },
     },
   ),
 
@@ -551,6 +620,32 @@ const DEFS: Def[] = [
       p1Hand: [],
       p1Field: [card(LANDING), BEAR, RED_BEAR, PINGER],
       prepared: { continueThroughCombat: true },
+    },
+  ),
+  entry(
+    'pr11b-legion-s-landing-viewer-adanto-mana',
+    LANDING,
+    'Adanto, the First Fort: tap for white mana',
+    [3],
+    ['Cast PR11b Lab Charm for {1}{W}, paying {W} with Adanto, the First Fort.'],
+    'Adanto is your only white source, so its {T}: Add {W} pays for PR11b Lab Charm.',
+    {
+      p1Hand: [CHARM],
+      p1Field: [{ card: card(LANDING), transformed: true }],
+      p1Lands: ['Forest'],
+    },
+  ),
+  entry(
+    'pr11b-legion-s-landing-viewer-adanto-vampire',
+    LANDING,
+    'Adanto, the First Fort: make a lifelink Vampire',
+    [3],
+    ['Activate Adanto’s {2}{W}, {T} ability, paying with three Plains.'],
+    'You create a 1/1 white Vampire creature token with lifelink.',
+    {
+      p1Hand: [],
+      p1Field: [{ card: card(LANDING), transformed: true }],
+      p1Lands: lands('Plains', 3),
     },
   ),
 
@@ -655,6 +750,56 @@ const DEFS: Def[] = [
       p1Lands: [...lands('Mountain', 2), ...lands('Forest', 4)],
     },
   ),
+  entry(
+    'pr11b-mila-crafty-companion-viewer-targeted-draw',
+    MILA,
+    'Mila: an opponent targeting your permanent lets you draw',
+    [2],
+    [
+      'Pass priority; P2 casts PR11b Lab Shock targeting Mila, Crafty Companion.',
+      'Choose to draw a card.',
+    ],
+    'Mila’s trigger lets you draw a card. Mila (2/3) survives the 2 damage.',
+    {
+      p1Hand: [],
+      p1Field: [card(MILA)],
+      p2Hand: [SHOCK],
+      p2Lands: ['Mountain'],
+      opponent: P2_CASTS(SHOCK, 'Mila, Crafty Companion'),
+    },
+  ),
+  entry(
+    'pr11b-mila-crafty-companion-viewer-lukka-plus',
+    MILA,
+    'Lukka, Wayward Bonder: +1 discarding a creature card draws two',
+    [3],
+    [
+      'Cast the back face, Lukka, Wayward Bonder, for {4}{R}{R}.',
+      "Activate Lukka's +1 and discard PR11b Lab Bear.",
+    ],
+    'PR11b Lab Bear is a creature card, so you draw two cards instead of one. Lukka goes up to 6 loyalty.',
+    {
+      p1Hand: [card(MILA), BEAR],
+      p1Lands: [...lands('Mountain', 2), ...lands('Forest', 4)],
+    },
+  ),
+  entry(
+    'pr11b-mila-crafty-companion-viewer-lukka-emblem',
+    MILA,
+    'Lukka, Wayward Bonder: -7 emblem makes entering creatures deal damage',
+    [5],
+    [
+      'Cast Lukka, Wayward Bonder, and activate +1 without discarding. Do the same on your next turn.',
+      "On the turn after that, activate Lukka's -7.",
+      'Cast PR11b Lab Red Bear; its emblem trigger deals 2 damage to P2.',
+    ],
+    'Lukka reaches 7 loyalty and its -7 gives you the emblem. When PR11b Lab Red Bear enters, it deals damage equal to its power (2) to P2.',
+    {
+      p1Hand: [card(MILA), RED_BEAR],
+      p1Lands: [...lands('Mountain', 2), ...lands('Forest', 4)],
+      prepared: { continueThroughPrecombatMains: 8 },
+    },
+  ),
 ];
 
 export const PR11B_SCENARIOS = DEFS.map(({ id, cardName, title }) => ({ id, cardName, title }));
@@ -729,13 +874,15 @@ function battlefieldGroups(playerId: PlayerId, entries: FieldEntry[], basics: st
   const plain = [...basics];
   const groups: PreparedScenarioSpec['battlefield'] = [];
   for (const item of entries.map(placed)) {
-    if (item.counters === undefined && item.tapped === undefined) plain.push(item.card.name);
+    if (item.counters === undefined && item.tapped === undefined && item.transformed === undefined)
+      plain.push(item.card.name);
     else
       groups.push({
         playerId,
         cardNames: [item.card.name],
         ...(item.counters !== undefined ? { counters: item.counters } : {}),
         ...(item.tapped !== undefined ? { tapped: item.tapped } : {}),
+        ...(item.transformed !== undefined ? { transformed: item.transformed } : {}),
       });
   }
   return plain.length > 0 ? [{ playerId, cardNames: plain }, ...groups] : groups;

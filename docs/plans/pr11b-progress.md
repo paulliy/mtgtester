@@ -43,7 +43,8 @@ entries are deleted and recorded in the catalog audit's `interpreterRestored` li
   External graveyard permissions also allow either door, spending the selected spell's permanent
   type budget; fuse remains restricted to casting from hand.
 - Prepare (CR 722): becoming prepared makes a castable copy of the card's spell in exile, and
-  casting it unprepares the permanent. A draw trigger can name the Nth card drawn this turn.
+  casting it unprepares the permanent. The copy ceases while the permanent is phased out, and a
+  permanent that phases in prepared gets a fresh copy (CR 722.3c). A draw trigger can name the Nth card drawn this turn.
 - Modal double-faced instant and sorcery faces; transforming once (CR 701.27f); planeswalker-only
   attack triggers; attack triggers that count only attackers matching a filter ("non-Toy").
 - Grants locked to one object (CR 400.7): a returned creature's dies trigger, a Saga's chapter
@@ -59,24 +60,26 @@ entries are deleted and recorded in the catalog audit's `interpreterRestored` li
   `pr11b-mila.test.ts`, `pr11b-prepare.test.ts`, `pr11b-room.test.ts` and
   `pr11b-split-second.test.ts`. Each test id names
   its card and clause (for example `room-c01-negative-toy`).
-- 26 Card Test Lab scenarios in
+- 36 Card Test Lab scenarios in
   [pr11b-scenarios.ts](../../packages/server/src/cards/pr11b-scenarios.ts).
   [pr11b-scenarios.test.ts](../../packages/server/src/cards/pr11b-scenarios.test.ts) plays each
   one headlessly through the production decision path and checks the outcome.
-- [pr11b-card-test-lab.spec.ts](../../apps/web/e2e/pr11b-card-test-lab.spec.ts) runs all 26 in a
+- [pr11b-card-test-lab.spec.ts](../../apps/web/e2e/pr11b-card-test-lab.spec.ts) runs all 36 in a
   real browser against the lab server, records traces, and enforces the exact scenario-ID set.
   The graveyard Room scenario checks Muldrotha's per-turn permanent-type budget while both doors
-  are payable; simultaneous attacks against two players are also covered. All 26 passed locally.
+  are payable; simultaneous attacks against two players are also covered. All 36 passed locally.
   The generic Card
   Test Lab walkthrough skips these ids.
 - `card-verification-manifest.json` has `implemented-reviewed` entries for the 12 cards, with
   clause-level engine test ids and viewer scenario ids. The coverage ledger rows for the five
   cards it tracks are `implemented-reviewed` under `PR11.NN`.
 
-Some clauses have engine tests but no viewer scenario: Duskmage's deathtouch and Dynastorian's
-vigilance (keywords), The War in Heaven's chapter II, Chirography's enter trigger, level 3 and
-end-step Inkling, Explore the Vastlands, Adanto's abilities, Mila's targeted draw, and Lukka's +1
-and −7.
+Every clause of the 12 cards has at least one viewer scenario. The follow-up to the PR11b review
+added scenarios for the clauses that had only engine tests: Duskmage's deathtouch (a block),
+Dynastorian's vigilance (checked on the one-attacker scenario), The War in Heaven's chapter II,
+Chirography's enter trigger, level 3 and end-step Inkling, Explore the Vastlands, both of
+Adanto's abilities, Mila's targeted draw, Lukka's +1, and Lukka's −7 emblem (reached over three
+of your turns).
 
 ## Not done in this increment
 
