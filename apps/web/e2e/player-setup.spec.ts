@@ -137,3 +137,20 @@ test('a generated deck moves with you when you change seats', async ({ page }) =
   await expect(seats.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
   await expect(seats.nth(2).locator('.seat-title')).toHaveText(yours);
 });
+
+test('a failed automatic preview can be retried without changing anything', async ({ page }) => {
+  let failNext = true;
+  await page.route('**/api/setup-preview', async (route) => {
+    if (failNext) {
+      failNext = false;
+      await route.fulfill({ status: 503, json: { message: 'Preview service unavailable.' } });
+    } else await route.continue();
+  });
+  await page.goto('/');
+  await expect(page.getByText('Preview service unavailable.')).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByRole('button', { name: 'Start game' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Try again' }).click();
+  const seats = page.getByLabel('Matchup preview').locator('li');
+  await expect(seats.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
+  await expect(page.getByRole('button', { name: 'Start game' })).toBeEnabled();
+});

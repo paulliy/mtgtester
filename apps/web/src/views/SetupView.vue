@@ -280,8 +280,13 @@ const requestKey = computed(() => JSON.stringify(request.value));
 const current = computed(() =>
   preview.value !== null && previewKey.value === requestKey.value ? preview.value : null,
 );
+// One start at a time: a quick start holds this button for its whole preview-then-start.
 const canStart = computed(
-  () => current.value !== null && current.value.blockers.length === 0 && !starting.value,
+  () =>
+    current.value !== null &&
+    current.value.blockers.length === 0 &&
+    !starting.value &&
+    !quickBusy.value,
 );
 
 async function fetchPreview(body: object): Promise<SetupPreview> {
@@ -370,7 +375,7 @@ const activeChoice = computed(() => choices.value[activeSeat.value]!);
 
 function start(): void {
   const matchup = current.value;
-  if (!matchup || matchup.blockers.length > 0) return;
+  if (!matchup || matchup.blockers.length > 0 || quickBusy.value) return;
   // The start redeems this preview, so it must not be offered again. A refused start brings a
   // fresh one through the `startErrors` watch.
   preview.value = null;
@@ -406,6 +411,8 @@ async function quickStart(mode: GameMode): Promise<void> {
   try {
     const result = await fetchPreview(body);
     if (result.blockers.length > 0) throw new Error(result.blockers.join('\n'));
+    // Another start may have gone out while this preview was in flight.
+    if (starting.value) return;
     begin(() => store.startGame(seats, 'random', result.seed, mode, 'P1', false, result.previewId));
   } catch (reason) {
     quickError.value = reason instanceof Error ? reason.message : String(reason);
@@ -700,7 +707,12 @@ const seatRows = computed(() =>
           <p class="hint">Repeat a known shuffle with its seed. AI decisions may still vary.</p>
         </details>
 
-        <p v-if="previewError" class="error-box" role="alert">{{ previewError }}</p>
+        <div v-if="previewError" class="error-box" role="alert">
+          <p>{{ previewError }}</p>
+          <button type="button" class="retry" :disabled="previewBusy" @click="refreshPreview">
+            Try again
+          </button>
+        </div>
         <div v-if="current && current.blockers.length" class="error-box" role="alert">
           <strong>This matchup can't start</strong>
           <ul>
@@ -770,6 +782,13 @@ h2 {
 }
 .error-box strong {
   color: var(--danger);
+}
+.error-box .retry {
+  margin-top: 0.4rem;
+  min-height: 34px;
+  padding: 0 0.8rem;
+  border-radius: 6px;
+  font-weight: 600;
 }
 .error-box ul {
   margin: 0.3rem 0 0;
