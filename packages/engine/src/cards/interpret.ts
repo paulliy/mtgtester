@@ -2035,7 +2035,7 @@ function parseEffectSentence(
   // each dealt the same fixed amount independently.
   {
     const m = s.match(
-      /^it deals (\w+) damage to any target and (\w+) damage to each of up to (\w+) other targets$/,
+      /^(?:it|~) deals (\w+) damage to any target and (\w+) damage to each of up to (\w+) other targets$/,
     );
     if (m) {
       const first = parseAmount(m[1] as string);

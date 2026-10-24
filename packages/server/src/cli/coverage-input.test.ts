@@ -16,6 +16,17 @@ describe('reproducible coverage Oracle input', () => {
     expect(report.cards[0]?.oracleId).toBe('0bc7f093-bef0-4f1a-852c-4b75ebf54838');
     expect(() => checkCoverageBaseline(report, result.index, 'staples')).toThrow();
   });
+  it('defaults to the pinned fixture so the gate cannot drift with the local Scryfall download', () => {
+    const result = coverageInput(['--json']);
+    expect(result.path).toBe(pinned);
+    expect(result.args).toEqual(['--json']);
+    expect(result.index.size).toBe(958);
+  });
+  it('rejects combining the bulk download with a fixture', () => {
+    expect(() => coverageInput(['--bulk', '--oracle-fixture', pinned])).toThrow(
+      'mutually exclusive',
+    );
+  });
   it.each([
     { args: ['--oracle-fixture'] },
     { args: ['--oracle-fixture', '--json'] },

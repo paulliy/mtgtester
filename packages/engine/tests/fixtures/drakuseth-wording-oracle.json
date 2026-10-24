@@ -1,0 +1,79 @@
+{
+  "source": "Existing coverage projection and local Scryfall download; wording compatibility regression, not a coverage rebaseline.",
+  "cards": [
+    {
+      "card": {
+        "oracleId": "060deaff-44d6-4f03-9568-bcb7add80255",
+        "scryfallId": "9e9b40f5-3dd0-4607-a78d-b004d57fa4ea",
+        "name": "Drakuseth, Maw of Flames",
+        "manaCost": "{4}{R}{R}{R}",
+        "cmc": 7,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Dragon",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nWhenever Drakuseth attacks, it deals 4 damage to any target and 3 damage to each of up to two other targets.",
+        "power": "7",
+        "toughness": "7",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      },
+      "sha256": "0e9ac1afc481dbab3cb8f4427d2c838b36298a643ea7842ec426dddf19eb8964"
+    },
+    {
+      "card": {
+        "oracleId": "060deaff-44d6-4f03-9568-bcb7add80255",
+        "scryfallId": "9e9b40f5-3dd0-4607-a78d-b004d57fa4ea",
+        "name": "Drakuseth, Maw of Flames",
+        "manaCost": "{4}{R}{R}{R}",
+        "cmc": 7,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Dragon",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nWhenever Drakuseth attacks, Drakuseth deals 4 damage to any target and 3 damage to each of up to two other targets.",
+        "power": "7",
+        "toughness": "7",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      },
+      "sha256": "47a0e2203574fca5f84eae5e58af89c6b3b37202e206732a913701d8bf5c0595"
+    }
+  ]
+}

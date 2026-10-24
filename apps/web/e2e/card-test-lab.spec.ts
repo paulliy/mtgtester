@@ -10,6 +10,7 @@ import { PR10_ALL_SCENARIO_IDS } from '../../../packages/server/src/cards/pr10-s
 import { PR09_ALL_SCENARIO_IDS } from '../../../packages/server/src/cards/pr09-scenario-catalog';
 import { PR08_SCENARIO_IDS } from '../../../packages/server/src/cards/pr08-scenario-catalog';
 import { COMBAT_TRIGGER_SCENARIO_IDS } from '../../../packages/server/src/cards/combat-trigger-scenarios';
+import { DRAKUSETH_WORDING_SCENARIO_IDS } from '../../../packages/server/src/cards/drakuseth-wording-scenarios';
 import { WHITE_BLACK_COMBAT_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-combat-scenarios';
 import { WHITE_BLACK_HAND_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-hand-scenarios';
 import { WHITE_BLACK_ENTRY_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-entry-scenarios';
@@ -90,6 +91,7 @@ async function runScenario(page: Page, title: string): Promise<void> {
         !PR11B_ALL_SCENARIO_IDS.includes(scenarioId) &&
         !TRANSFORMED_DFC_SCENARIO_IDS.includes(scenarioId) &&
         !(COMBAT_TRIGGER_SCENARIO_IDS as readonly string[]).includes(scenarioId) &&
+        !(DRAKUSETH_WORDING_SCENARIO_IDS as readonly string[]).includes(scenarioId) &&
         !WHITE_BLACK_COMBAT_SCENARIO_IDS.includes(scenarioId) &&
         !WHITE_BLACK_HAND_SCENARIO_IDS.includes(scenarioId) &&
         !WHITE_BLACK_ENTRY_SCENARIO_IDS.includes(scenarioId) &&
@@ -127,6 +129,7 @@ async function runScenario(page: Page, title: string): Promise<void> {
             !PR11B_ALL_SCENARIO_IDS.includes(id) &&
             !TRANSFORMED_DFC_SCENARIO_IDS.includes(id) &&
             !(COMBAT_TRIGGER_SCENARIO_IDS as readonly string[]).includes(id) &&
+            !(DRAKUSETH_WORDING_SCENARIO_IDS as readonly string[]).includes(id) &&
             !WHITE_BLACK_COMBAT_SCENARIO_IDS.includes(id) &&
             !WHITE_BLACK_HAND_SCENARIO_IDS.includes(id) &&
             !WHITE_BLACK_ENTRY_SCENARIO_IDS.includes(id) &&

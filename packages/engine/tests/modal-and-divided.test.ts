@@ -189,9 +189,14 @@ describe('Crux of Fate — modal spell', () => {
   });
 });
 
-describe("Drakuseth, Maw of Flames — fixed hit plus a variable-count 'other' group", () => {
+describe.each(['it', 'Drakuseth'])("Drakuseth — '%s deals' fixed and other targets", (subject) => {
+  const original = drakuseth();
+  const drakusethWording = () => ({
+    ...original,
+    oracleText: original.oracleText.replace('it deals', `${subject} deals`),
+  });
   it('parses to a fixed anyTarget slot plus a count slot excluding it, each with its own effect', () => {
-    const def = interpretCard(drakuseth());
+    const def = interpretCard(drakusethWording());
     expect(def.modeled).toBe(true);
     const trigger = def.triggers.find((t) => t.trigger?.when === 'attacks') as Ability;
     expect(trigger.targets).toEqual([
@@ -206,12 +211,12 @@ describe("Drakuseth, Maw of Flames — fixed hit plus a variable-count 'other' g
 
   it('deals 4 to the fixed target and 3 to each of up to two OTHER targets, excluding the fixed pick', () => {
     const ctx = pod();
-    const source = spawn(ctx, 'P1', drakuseth());
+    const source = spawn(ctx, 'P1', drakusethWording());
     const fixed = spawn(ctx, 'P2', bear('2', 'Fixed Target'));
     const otherA = spawn(ctx, 'P2', bear('2', 'Other A'));
     const otherB = spawn(ctx, 'P2', bear('2', 'Other B'));
     const bystander = spawn(ctx, 'P2', bear('2', 'Bystander'));
-    const trigger = interpretCard(drakuseth()).triggers.find(
+    const trigger = interpretCard(drakusethWording()).triggers.find(
       (t) => t.trigger?.when === 'attacks',
     ) as Ability;
 
@@ -249,10 +254,10 @@ describe("Drakuseth, Maw of Flames — fixed hit plus a variable-count 'other' g
 
   it('stops early when the controller declines further "other" targets', () => {
     const ctx = pod();
-    const source = spawn(ctx, 'P1', drakuseth());
+    const source = spawn(ctx, 'P1', drakusethWording());
     const fixed = spawn(ctx, 'P2', bear('2', 'Fixed Only'));
     const other = spawn(ctx, 'P2', bear('2', 'Declined Other'));
-    const trigger = interpretCard(drakuseth()).triggers.find(
+    const trigger = interpretCard(drakusethWording()).triggers.find(
       (t) => t.trigger?.when === 'attacks',
     ) as Ability;
 

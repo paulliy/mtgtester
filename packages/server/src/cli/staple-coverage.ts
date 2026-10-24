@@ -3,11 +3,12 @@
  *
  *   bun run staples
  *   bun run staples --json
+ *   bun run staples --bulk                 # the local Scryfall bulk cache instead of the pinned fixture
  *   bun run staples --oracle-fixture packages/server/fixtures/coverage-oracle.json
  *
- * The ranking itself is frozen as names only. Card data always comes from the same local,
- * gitignored Scryfall bulk cache used by `bun run coverage`, or an explicitly selected pinned
- * Oracle fixture; this command never uses the network. Both routes enforce the same baseline.
+ * The ranking itself is frozen as names only. Card data comes from the pinned Oracle fixture by
+ * default, or from the local gitignored Scryfall bulk cache with `--bulk`; this command never uses
+ * the network. Both routes enforce the same baseline.
  */
 
 import { readFileSync } from 'node:fs';

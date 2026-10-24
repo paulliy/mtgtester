@@ -131,6 +131,10 @@ import { OLORIN_SCENARIO_IDS, pr08OlorinScenario } from './pr08-olorin-scenarios
 import { BOSEIJU_SCENARIO_IDS, pr08BoseijuScenario } from './pr08-boseiju-scenarios';
 import { PR08_CUT_A_DEAL_SCENARIO_IDS, pr08CutADealScenario } from './pr08-cut-a-deal-scenarios';
 import { COMBAT_TRIGGER_SCENARIO_IDS, combatTriggerScenario } from './combat-trigger-scenarios';
+import {
+  DRAKUSETH_WORDING_SCENARIO_IDS,
+  drakusethWordingScenario,
+} from './drakuseth-wording-scenarios';
 
 export interface CardTestScenario {
   metadata: CardTestScenarioMetadata;
@@ -15171,6 +15175,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
   ...ZONE_CHANGE_TRIGGER_SCENARIO_IDS,
   ...COMBAT_TRIGGER_SCENARIO_IDS,
+  ...DRAKUSETH_WORDING_SCENARIO_IDS,
   'mosswort-viewer-free-adventure-face',
   'mosswort-viewer-free-cast-stack',
   'mosswort-viewer-land-play-limit',
@@ -15830,6 +15835,12 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     COMBAT_TRIGGER_SCENARIO_IDS.map((id) => [
       id,
       (gameId: GameId) => combatTriggerScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    DRAKUSETH_WORDING_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => drakusethWordingScenario(id, gameId),
     ]),
   ),
   ...Object.fromEntries(

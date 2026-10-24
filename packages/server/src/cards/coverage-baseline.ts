@@ -31,7 +31,7 @@ export function checkCoverageBaseline(
       createHash('sha256').update(canonicalOracle(card)).digest('hex') !== expected.sha256
     ) {
       throw new Error(
-        `coverage Oracle input changed: ${expected.name}; review and explicitly revise the baseline`,
+        `coverage Oracle input changed: ${expected.name}; review with \`bun run coverage:rebaseline\`, then revise the baseline explicitly`,
       );
     }
   }

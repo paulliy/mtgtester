@@ -210,10 +210,17 @@ function play(): void {
       <ul>
         <li v-for="seat in preview.seats" :key="seat.seat">
           <strong>{{ seat.seat }} {{ controllerLabel(seat.controller) }}</strong> —
-          {{ seat.commanderNames.join(' & ') || 'Unavailable' }} ·
-          {{ seat.colorIdentity.join('') || 'C' }} ·
-          {{ seat.archetypeTag || 'Unknown archetype' }} ·
-          {{ seat.modeled ? 'Fully modeled' : 'Blocked' }}
+          <template v-if="seat.modeled">
+            {{ seat.commanderNames.join(' & ') }} · {{ seat.colorIdentity.join('') || 'C' }} ·
+            {{ seat.archetypeTag || 'Unknown archetype' }} · Fully modeled
+          </template>
+          <template v-else>
+            {{
+              seat.seat === 'P1'
+                ? 'Your deck is blocked. See the reason below.'
+                : 'Opponent deck is blocked. See the reason below.'
+            }}
+          </template>
         </li>
       </ul>
       <ul v-if="preview.blockers.length" role="alert">

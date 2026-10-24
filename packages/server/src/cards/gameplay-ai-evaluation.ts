@@ -14,6 +14,10 @@ import {
   COMBAT_TRIGGER_SCENARIO_IDS,
   combatTriggerScenarioSubject,
 } from './combat-trigger-scenarios';
+import {
+  DRAKUSETH_WORDING_SCENARIO_IDS,
+  drakusethWordingScenarioSubject,
+} from './drakuseth-wording-scenarios';
 
 export type ProviderKind = 'random' | 'heuristic';
 
@@ -50,7 +54,22 @@ export interface GameplayAiReport {
 
 /** Quality observations for the combat regressions, separate from their scripted rules tests. */
 export function evaluateCombatTriggerGameplayAi() {
-  const runs = COMBAT_TRIGGER_SCENARIO_IDS.flatMap((scenarioId) =>
+  return evaluateScenarioGameplayAi(COMBAT_TRIGGER_SCENARIO_IDS, combatTriggerScenarioSubject);
+}
+
+/** Quality observations for the current-wording Drakuseth scenarios, separate from rules tests. */
+export function evaluateDrakusethWordingGameplayAi() {
+  return evaluateScenarioGameplayAi(
+    DRAKUSETH_WORDING_SCENARIO_IDS,
+    drakusethWordingScenarioSubject,
+  );
+}
+
+function evaluateScenarioGameplayAi(
+  scenarioIds: readonly string[],
+  subjectName: (scenarioId: string) => string,
+) {
+  const runs = scenarioIds.flatMap((scenarioId) =>
     (['random', 'heuristic'] as const).map((providerKind) => {
       const scenario = createCardTestScenario(scenarioId, `quality-${providerKind}-${scenarioId}`)!;
       const engine = scenario.engine;
@@ -94,7 +113,7 @@ export function evaluateCombatTriggerGameplayAi() {
         }
       }
       const state = engine.getState();
-      const subject = combatTriggerScenarioSubject(scenarioId);
+      const subject = subjectName(scenarioId);
       const usedSubjectCard = state.eventLog.some(
         (event) =>
           (event.type === 'castSpell' && event.payload['name'] === subject) ||
