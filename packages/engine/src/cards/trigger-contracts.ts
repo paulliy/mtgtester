@@ -153,6 +153,7 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
           'leavesTo',
           'defendingPlayerIsEventPlayer',
           'attackingPlayerIsEventPlayer',
+          'subjectControllerIsEventPlayer',
           'withOtherAttackers',
           'counter',
           'byYou',
@@ -295,6 +296,17 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
         path: `${path}.attackingPlayerIsEventPlayer`,
         message:
           'attacking player binding requires defender-grouped attacks without a defending-player binding',
+      });
+    if (
+      head['subjectControllerIsEventPlayer'] !== undefined &&
+      (head['subjectControllerIsEventPlayer'] !== true ||
+        head['when'] !== 'dies' ||
+        (head['subject'] as { kind?: string } | undefined)?.kind !== 'permanent' ||
+        head['aggregate'] !== undefined)
+    )
+      issues.push({
+        path: `${path}.subjectControllerIsEventPlayer`,
+        message: "the dying permanent's controller binding requires a per-permanent dies event",
       });
     if (
       head['counter'] !== undefined &&

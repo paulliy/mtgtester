@@ -184,7 +184,7 @@ describe('final IR capability derivation', () => {
       readFileSync(new URL('./fixtures/urdragon-oracle.json', import.meta.url), 'utf8'),
     ) as OracleCard[];
     const modeled = cards.map(interpretCard).filter((def) => def.modeled);
-    expect(modeled).toHaveLength(88);
+    expect(modeled).toHaveLength(90);
     for (const def of modeled) expect(() => deriveCardCapabilities(def), def.name).not.toThrow();
   });
 

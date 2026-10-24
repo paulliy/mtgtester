@@ -546,7 +546,11 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
             triggerProvidesEventPlayer(trigger.when as import('./ability').TriggerWhen) ||
             // "Taps a land for mana": the player who activated the mana ability.
             (trigger.when === 'becomesTapped' &&
-              (trigger as { forMana?: unknown }).forMana === true);
+              (trigger as { forMana?: unknown }).forMana === true) ||
+            // "That creature's controller": the dying permanent's last controller.
+            (trigger.when === 'dies' &&
+              (trigger as { subjectControllerIsEventPlayer?: unknown })
+                .subjectControllerIsEventPlayer === true);
         } catch {
           // validateTriggerHead reports unsupported event heads.
         }

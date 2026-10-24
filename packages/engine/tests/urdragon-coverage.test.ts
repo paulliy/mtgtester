@@ -125,9 +125,9 @@ const MODELED = [
   'Kiora, Behemoth Beckoner',
   'Mosswort Bridge',
   'Spinerock Knoll',
-  // The three formerly claimed Adventure/Omen cards are explicitly contained: their
-  // spell faces were substituted or omitted. Pinned negative evidence lives in
-  // unsupported-spell-faces.test.ts; support may return only with faithful face behavior.
+  // The three Adventure/Omen cards whose spell faces were once substituted or omitted are
+  // modeled with faithful faces in coverage PR12 (pr12-spell-faces.test.ts). This older fixture
+  // predates `backFace`, so here they stay unmodeled for a missing spell face.
   // Inc 19 â€” remaining bespoke Dragon cards (100% coverage milestone).
   'Iymrith, Desert Doom',
   "Lozhan, Dragons' Legacy",
@@ -142,6 +142,9 @@ const MODELED = [
   'Dragon Tempest',
   // Coverage PR07: the goad and the damaging creature's intervening-if are modeled.
   'Firkraag, Cunning Instigator',
+  // Coverage PR12: the attack life tax and the look-three-then-return trigger are modeled.
+  'Sivitri, Dragon Master',
+  'Zurgo and Ojutai',
 ].sort();
 
 describe('The Ur-Dragon deck â€” model coverage', () => {

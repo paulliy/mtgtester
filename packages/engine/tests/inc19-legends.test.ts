@@ -230,6 +230,8 @@ describe('Ur-Dragon residual-card implementation', () => {
       'Skycloud Expanse',
       'Thrakkus the Butcher',
       'Vaevictis Asmadi, the Dire',
+      // Coverage PR12: the look-at-three and the return of one of those Dragons are modeled.
+      'Zurgo and Ojutai',
     ]);
     for (const raw of list) {
       const def = interpretCard(raw);
