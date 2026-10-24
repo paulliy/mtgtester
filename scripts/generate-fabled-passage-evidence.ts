@@ -281,6 +281,8 @@ const SOURCE_FILES = [
   'packages/engine/src/cards/mana-production.ts',
   'packages/engine/tests/fixtures/overload-static-review-oracle.json',
   'packages/server/src/cards/combat-trigger-scenarios.ts',
+  'packages/server/src/cards/drakuseth-wording-scenarios.ts',
+  'packages/engine/tests/fixtures/drakuseth-wording-oracle.json',
   'packages/server/src/cards/combat-trigger-scenarios.test.ts',
   'packages/engine/tests/fixtures/combat-trigger-oracle.json',
   'apps/web/e2e/combat-trigger-regressions.spec.ts',

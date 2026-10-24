@@ -464,6 +464,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'marchesa-viewer-granted-dethrone',
       'dragon-mage-viewer-normal-cast-wheel',
       'hunted-phantasm-viewer-opponent-tokens',
+      'drakuseth-wording-viewer-three-targets',
+      'drakuseth-wording-viewer-decline-others',
       'mosswort-viewer-free-adventure-face',
       'mosswort-viewer-free-cast-stack',
       'mosswort-viewer-land-play-limit',

@@ -36,6 +36,7 @@
     "agent-client": "bun run packages/server/src/cli/agent-client.ts",
     "coverage": "bun run packages/server/src/cli/coverage.ts",
     "staples": "bun run packages/server/src/cli/staple-coverage.ts",
+    "coverage:rebaseline": "bun run packages/server/src/cli/rebaseline-coverage.ts",
     "coverage:snapshot": "bun run packages/server/src/cli/snapshot-coverage-decks.ts",
     "snapshot:oracle": "bun run packages/server/src/cli/snapshot-deck-oracle.ts",
     "test:implemented": "bun run scripts/test-implemented-cards.ts",

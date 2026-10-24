@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
 import { expect, test } from './setup-test';
 
@@ -83,6 +84,7 @@ test('opponent seats take gallery decks, and a blocked import holds Start', asyn
     .getByLabel('Deck URL or decklist for P2')
     .fill(['Commander', '1 Azusa, Lost but Seeking', '', 'Deck', '1 Not A Real Card'].join('\n'));
   await expect(seats.nth(1)).toContainText('Blocked', { timeout: 60_000 });
+  await expect(seats.nth(1)).not.toContainText('Azusa');
   await expect(page.getByText("This matchup can't start")).toBeVisible();
   await expect(page.getByRole('button', { name: 'Start game' })).toBeDisabled();
 
@@ -97,4 +99,29 @@ test('Watch now starts a spectator game', async ({ page }) => {
   await page.getByRole('button', { name: 'Watch now' }).click();
   await expect(page).toHaveURL(/\/game$/, { timeout: 60_000 });
   await expect(page.getByText(/Turn \d+/).first()).toBeVisible({ timeout: 60_000 });
+});
+
+test('an imported Ur-Dragon deck can be selected again as one saved deck', async ({ page }) => {
+  const decklist = readFileSync('packages/server/fixtures/coverage-decks/urdragon.txt', 'utf8');
+  const seats = page.getByLabel('Matchup preview').locator('li');
+  await page.goto('/');
+  for (let repeat = 0; repeat < 2; repeat++) {
+    await page.getByRole('button', { name: /^Import a deck/ }).click();
+    await page.getByLabel('Deck URL or decklist for you').fill(decklist);
+    await expect(seats.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
+    await page.getByRole('button', { name: 'Start game' }).click();
+    await expect(page).toHaveURL(/\/game$/);
+    await abandon(page);
+  }
+  // Two plays of the same list leave one saved deck, beside the modeled Ur-Dragon tile.
+  const savedDeck = page.locator('.tile').filter({ hasText: 'The Ur-Dragon' }).filter({
+    hasText: 'Saved',
+  });
+  await expect(savedDeck).toHaveCount(1);
+  await savedDeck.click();
+  await expect(seats.first()).toContainText('The Ur-Dragon', { timeout: 60_000 });
+  await expect(seats.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
+  await page.getByRole('button', { name: 'Start game' }).click();
+  await expect(page).toHaveURL(/\/game$/);
+  await abandon(page);
 });

@@ -401,21 +401,22 @@ async function quickStart(mode: GameMode): Promise<void> {
   }
 }
 
-/** The summary's line for one seat: the preview's answer when it has one, else the choice. */
+/**
+ * The summary's line for one seat: the preview's answer when it has one, else the choice. A
+ * blocked seat shows only the choice, never the preview's names: those came from a list nothing
+ * has validated, and three of the four seats are opponents.
+ */
 const seatRows = computed(() =>
   choices.value.map((choice, index) => {
     const seat = current.value?.seats[index];
+    const shown = seat?.modeled === true ? seat : undefined;
     return {
       index,
       id: SEAT_IDS[index]!,
       controller: seat ? capitalize(controllerLabel(seat.controller)) : controllerFor(index),
-      title: seat?.commanderNames.join(' & ') || choiceLabel(choice),
-      // An import that never resolved has no colors to show, not colorless ones.
-      colors:
-        seat && seat.commanderNames.length > 0 && (seat.modeled || seat.colorIdentity.length > 0)
-          ? seat.colorIdentity
-          : null,
-      archetype: seat?.archetypeTag ?? '',
+      title: shown?.commanderNames.join(' & ') || choiceLabel(choice),
+      colors: shown?.colorIdentity ?? null,
+      archetype: shown?.archetypeTag ?? '',
       status: !isComplete(choice)
         ? 'Choose a deck'
         : !ready.value
@@ -426,7 +427,7 @@ const seatRows = computed(() =>
               : 'Checking…'
             : seat.modeled
               ? 'Fully modeled'
-              : 'Blocked',
+              : 'Blocked. See the reason below.',
       pool: choice.kind === 'pool',
     };
   }),
@@ -615,7 +616,7 @@ const seatRows = computed(() =>
                 class="status"
                 :class="{
                   ok: row.status === 'Fully modeled',
-                  bad: row.status === 'Blocked',
+                  bad: row.status.startsWith('Blocked'),
                 }"
                 >{{ row.status }}</span
               >

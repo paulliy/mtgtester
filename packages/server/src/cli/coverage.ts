@@ -143,6 +143,11 @@ async function main(): Promise<void> {
     return;
   }
 
+  console.log(`\nOracle data: ${input.path}`);
+  console.log(
+    "Card model coverage only. Saved decks are checked separately for legality and support against the player server's Oracle data.",
+  );
+
   console.log('\nPer-deck coverage');
   console.log('─'.repeat(17));
   for (const deck of report.decks) {

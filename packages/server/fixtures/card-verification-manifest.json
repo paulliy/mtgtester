@@ -2,6 +2,50 @@
   "schemaVersion": 1,
   "resultPolicy": "Requirements only. Verification tools generate results; this file contains no handwritten pass flags.",
   "cards": {
+    "060deaff-44d6-4f03-9568-bcb7add80255": {
+      "name": "Drakuseth, Maw of Flames",
+      "oracleSha256": "47a0e2203574fca5f84eae5e58af89c6b3b37202e206732a913701d8bf5c0595",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Flying",
+          "implementation": ["flying keyword and normal creature cast at {4}{R}{R}{R}"],
+          "engineTestIds": [
+            "pins both projections and preserves the same attack event, flying and damage instructions",
+            "does not offer the normal cast with only six Mountains",
+            "drakuseth-wording-viewer-three-targets casts, attacks, and resolves the printed damage",
+            "drakuseth-wording-viewer-decline-others casts, attacks, and resolves the printed damage"
+          ],
+          "viewerScenarioIds": [
+            "drakuseth-wording-viewer-three-targets",
+            "drakuseth-wording-viewer-decline-others"
+          ]
+        },
+        {
+          "oracleText": "Whenever Drakuseth attacks, Drakuseth deals 4 damage to any target and 3 damage to each of up to two other targets.",
+          "implementation": [
+            "self-name normalization to ~ in attack trigger effect grammar",
+            "existing fixed damage and optional distinct target group",
+            "normal cast, priority, attack declaration and triggered ability resolution"
+          ],
+          "engineTestIds": [
+            "does not turn damage dealt by another named creature into source damage",
+            "deals 4 to the fixed target and 3 to each of up to two OTHER targets, excluding the fixed pick",
+            "stops early when the controller declines further \"other\" targets",
+            "drakuseth-wording-viewer-three-targets casts, attacks, and resolves the printed damage",
+            "drakuseth-wording-viewer-decline-others casts, attacks, and resolves the printed damage"
+          ],
+          "viewerScenarioIds": [
+            "drakuseth-wording-viewer-three-targets",
+            "drakuseth-wording-viewer-decline-others"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": [
+        "drakuseth-wording-viewer-three-targets",
+        "drakuseth-wording-viewer-decline-others"
+      ]
+    },
     "b168e4e6-f572-4d9f-b98f-95b2611354cb": {
       "name": "Zopandrel, Hunger Dominus",
       "oracleSha256": "3fb2373850b97ba8e69853c7ea2f6fdbdc3cd32ea4c88e968bf47bde8436347f",

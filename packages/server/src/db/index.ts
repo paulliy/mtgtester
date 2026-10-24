@@ -31,6 +31,14 @@ export interface DeckRow {
   createdAt: string;
 }
 
+function normalizeOracleId(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function normalizeDeckName(value: string): string {
+  return value.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
 export class GameStore {
   private readonly db: Database;
 
@@ -161,25 +169,60 @@ export class GameStore {
       .query<
         {
           snapshot_id: string;
-          name: string | null;
+          source_url: string | null;
+          source_type: string;
+          deck_name: string | null;
           commander_names: string;
+          commander_oracle_ids: string | null;
+          companion_oracle_id: string | null;
+          card_list_json: string;
           color_identity: string;
           archetype_tag: string;
         },
         []
       >(
-        `SELECT s.id AS snapshot_id, d.name, s.commander_names, s.color_identity, d.archetype_tag
+        `SELECT s.id AS snapshot_id, d.source_url, d.source_type, d.name AS deck_name,
+                s.commander_names, s.commander_oracle_ids, s.companion_oracle_id,
+                s.card_list_json, s.color_identity, d.archetype_tag
          FROM deck_snapshots s JOIN decks d ON d.id = s.deck_id
         WHERE d.source_type <> 'generated' ORDER BY s.imported_at DESC, s.id DESC`,
       )
       .all();
-    return rows.map((row) => ({
-      snapshotId: row.snapshot_id,
-      name: row.name ?? (JSON.parse(row.commander_names) as string[]).join(' & '),
-      commanderNames: JSON.parse(row.commander_names) as string[],
-      colorIdentity: JSON.parse(row.color_identity) as string[],
-      archetypeTag: row.archetype_tag,
-    }));
+    const seen = new Set<string>();
+    const options: SavedDeckOption[] = [];
+    for (const row of rows) {
+      const commanderNames = JSON.parse(row.commander_names) as string[];
+      const commanderIds =
+        row.commander_oracle_ids === null ? [] : (JSON.parse(row.commander_oracle_ids) as string[]);
+      const commanderKey =
+        commanderIds.length > 0
+          ? ['ids', ...commanderIds.map(normalizeOracleId).sort()]
+          : ['names', ...commanderNames.map(normalizeDeckName).sort()];
+      const cardQuantities = new Map<string, number>();
+      for (const card of JSON.parse(row.card_list_json) as DeckCardEntry[]) {
+        const oracleId = normalizeOracleId(card.oracleId);
+        cardQuantities.set(oracleId, (cardQuantities.get(oracleId) ?? 0) + card.quantity);
+      }
+      const key = JSON.stringify([
+        row.source_type,
+        row.source_url,
+        row.deck_name,
+        row.archetype_tag,
+        commanderKey,
+        normalizeOracleId(row.companion_oracle_id ?? ''),
+        [...cardQuantities].sort(([a], [b]) => a.localeCompare(b)),
+      ]);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      options.push({
+        snapshotId: row.snapshot_id,
+        name: row.deck_name ?? commanderNames.join(' & '),
+        commanderNames,
+        colorIdentity: JSON.parse(row.color_identity) as string[],
+        archetypeTag: row.archetype_tag,
+      });
+    }
+    return options;
   }
 
   savedSnapshot(snapshotId: string):
