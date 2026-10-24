@@ -14,6 +14,10 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     port: 5173,
+    // The server only accepts browser origins on 5173 (`isAllowedLocalRequest`). Falling back
+    // to 5174 when a stale dev server holds the port would load a UI whose every request is
+    // refused, so fail at startup instead.
+    strictPort: true,
     proxy: {
       '/ws': { target: `ws://${gameServerHost}`, ws: true },
       '/health': { target: `http://${gameServerHost}` },

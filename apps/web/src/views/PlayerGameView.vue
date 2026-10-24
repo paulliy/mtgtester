@@ -2584,8 +2584,11 @@ button.selected,
 .actionable:hover {
   transform: translateY(-2px);
 }
+/* On a short window the board, hand and tray do not all fit. Scroll rather than clip, so the
+   tray (pinned below) is never pushed out of reach while the game waits on it. */
 .human-zone {
   gap: 0.4rem;
+  overflow-y: auto;
   border-color: rgb(96 165 250 / 0.45);
 }
 .human-zone.your-turn {
@@ -2756,7 +2759,15 @@ button.selected,
   width: 26px;
   cursor: pointer;
 }
+/* Pinned to the zone's bottom edge: confirms, targets and combat declarations stay on screen
+   however tall the board above them grows. A long combat list scrolls inside the tray. */
 .interaction-tray {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  flex-shrink: 0;
+  max-height: 70%;
+  overflow-y: auto;
   margin-top: 0.1rem;
   min-height: 4.2rem;
   border: 1px solid var(--line);
@@ -2904,7 +2915,7 @@ button.selected,
   font-weight: 700;
   border-color: var(--accent);
 }
-.assignment-options button.muted {
+.assignment-options button.muted:not(.primary) {
   color: var(--muted);
 }
 .combat-interrupted {
