@@ -1,3 +1,4 @@
+import { copyData } from './copy-data';
 import { counterCount, setCounterCount } from './counters';
 import { offBattlefieldTypes } from './off-battlefield-types';
 import { playerProtectedFromEverything } from './phasing';
@@ -75,6 +76,38 @@ import type {
 
 export function newObjectId(ctx: GameContext): ObjectId {
   return `o-${ctx.state.nextObjectNum++}`;
+}
+
+/**
+ * As a permanent gains the prepared designation or phases in prepared, its controller creates a
+ * copy in exile with only the prepare spell's characteristics (CR 722.3c), castable while the
+ * permanent stays prepared. Returns the prepare spell's name, or undefined if it has none.
+ */
+export function createPreparedCopy(
+  ctx: GameContext,
+  permanent: EnginePermanent,
+): string | undefined {
+  const prepareSpell = getDefByOracleId(ctx, permanent.oracleId, permanent.name).prepareSpell;
+  if (prepareSpell === undefined) return undefined;
+  const objectId = newObjectId(ctx);
+  const oracleId = 'card-copy-definition-' + objectId;
+  ctx.defs.set(oracleId as never, { ...copyData(prepareSpell), oracleId } as never);
+  ctx.state.exile.push({
+    id: objectId,
+    cardId: 'card-copy-' + objectId,
+    oracleId: oracleId as never,
+    ownerId: permanent.controllerId,
+    name: prepareSpell.name,
+    typeLine: prepareSpell.typeLine,
+    oracleText: '',
+    manaCost: null,
+    zone: 'exile',
+    isToken: false,
+    isCommander: false,
+    isCardCopy: true,
+    preparedBy: permanent.id,
+  });
+  return prepareSpell.name;
 }
 
 export function playerById(ctx: GameContext, id: PlayerId): EnginePlayerState {

@@ -164,6 +164,44 @@ async function attackWith(page: Page, attackers: string[]): Promise<void> {
   await page.getByRole('button', { name: 'Confirm attacks', exact: true }).click();
 }
 
+/** A choice offered either as a decision button (`Verb card`) or on a card-layout panel. */
+const offer = (page: Page, card: string, verb: string): Locator =>
+  button(page, `${verb} ${card}`)
+    .or(cardChoice(page, card, verb))
+    .first();
+
+/**
+ * Pass priority one decision at a time until your precombat main phase on `turn`, then activate
+ * `label` of `name`. Each pass waits for the next decision, so a pass can never land on the main
+ * phase window that would end the arranged turn.
+ */
+async function activateOnTurn(page: Page, turn: number, name: string, label: RegExp) {
+  const frontier = frontiers.get(page)!;
+  const pass = page
+    .getByRole('button', { name: 'Pass priority', exact: true })
+    .and(page.locator('button:enabled'));
+  const reminder = page.getByRole('button', { name: 'Pass anyway', exact: true });
+  const due = page.getByText(`Turn ${turn} · Your turn`);
+  const main = page.getByText(/You have priority \(Main phase 1\)/).first();
+  for (let passes = 0; ; passes++) {
+    expect(passes, `reached turn ${turn}'s main phase`).toBeLessThan(80);
+    await expect(pass).toBeVisible({ timeout: 30_000 });
+    if ((await due.isVisible()) && (await main.isVisible())) break;
+    const requestId = frontier.requestId;
+    await pass.click();
+    await expect
+      .poll(
+        async () => {
+          if (await reminder.isVisible()) await reminder.click();
+          return frontier.requestId;
+        },
+        { timeout: 30_000 },
+      )
+      .not.toBe(requestId);
+  }
+  await activate(page, 'P1', name, label);
+}
+
 const tapped = (page: Page, seat: string, name: string): Locator =>
   permanent(page, seat, name).locator('.tap-badge');
 const pt = (page: Page, seat: string, name: string): Locator =>
@@ -234,6 +272,21 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await passUntil(page, gameOver(page));
     await expect(page.locator('.log')).not.toContainText(/prepared/);
   },
+  'pr11b-defacing-duskmage-viewer-deathtouch': async (page) => {
+    // P2's Giant attacks you; block it with Duskmage.
+    const declare = button(page, /Declare blockers/);
+    await passUntil(page, declare);
+    await declare.click();
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: 'Defacing Duskmage' })
+      .getByRole('button', { name: 'PR11b Lab Giant' })
+      .click();
+    await page.getByRole('button', { name: 'Confirm blocks' }).click();
+    await passUntil(page, inZone(page, 'P2', 'Graveyard', 'PR11b Lab Giant'));
+    await expect(inZone(page, 'P1', 'Graveyard', 'Defacing Duskmage')).toBeVisible();
+    await expect(life(page, 'P1')).toHaveText('40');
+  },
 
   'pr11b-eiganjo-dynastorian-viewer-prepared': async (page) => {
     await attackWith(page, ['Eiganjo Dynastorian', 'PR11b Lab Bear']);
@@ -248,6 +301,8 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await passUntil(page, gameOver(page));
     await expect(page.locator('.log')).not.toContainText(/prepared/);
     await expect(inZone(page, 'P1', 'Graveyard', 'PR11b Lab Charm')).toBeVisible();
+    // Vigilance: it attacked without tapping.
+    await expect(tapped(page, 'P1', 'Eiganjo Dynastorian')).toHaveCount(0);
   },
 
   'pr11b-wandering-archaic-viewer-copy': async (page) => {
@@ -261,6 +316,21 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await passUntil(page, gameOver(page));
     await expect(life(page, 'P2')).toHaveText('40');
     await expect(page.locator('.log')).not.toContainText(/Wandering Archaic[^]*copies/);
+  },
+
+  'pr11b-wandering-archaic-viewer-explore': async (page) => {
+    // Only the back face is affordable, so it is cast without a menu.
+    await cast(page, 'Wandering Archaic');
+    for (const name of ['Forest', 'PR11b Lab Divination']) {
+      const reveal = offer(page, name, 'Reveal');
+      await passUntil(page, reveal);
+      await reveal.click();
+    }
+    await passUntil(page, life(page, 'P1').filter({ hasText: '43' }));
+    for (const seat of ['P2', 'P3', 'P4']) await expect(life(page, seat)).toHaveText('43');
+    await expect(hand(page, 'PR11b Lab Divination')).toBeVisible();
+    await expect(hand(page, 'Forest')).toBeVisible();
+    await expect(page.locator('.hand-card')).toHaveCount(3);
   },
 
   'pr11b-wear-tear-viewer-fused': async (page) => {
@@ -289,6 +359,12 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await expect(page.locator('.hand-card')).toHaveCount(4);
     await expect(permanent(page, 'P1', 'The War in Heaven')).toContainText(/lore/i);
   },
+  'pr11b-the-war-in-heaven-viewer-chapter-two': async (page) => {
+    await passUntil(page, inZone(page, 'P1', 'Graveyard', 'PR11b Lab Charm'));
+    await expect(inZone(page, 'P1', 'Graveyard', 'PR11b Lab Bear')).toBeVisible();
+    await expect(inZone(page, 'P1', 'Graveyard', 'PR11b Lab Relic')).toBeVisible();
+    await expect(permanent(page, 'P1', 'The War in Heaven')).toBeVisible();
+  },
   'pr11b-the-war-in-heaven-viewer-chapter-three': async (page) => {
     await choose(page, 'Target PR11b Lab Bear');
     await choose(page, 'Target PR11b Lab Red Bear');
@@ -312,6 +388,24 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await passUntil(page, life(page, 'P1').filter({ hasText: '38' }));
     await passUntil(page, gameOver(page));
     await expect(pt(page, 'P1', 'PR11b Lab Bear')).toHaveText('2/2');
+  },
+
+  'pr11b-intermediate-chirography-viewer-level-three': async (page) => {
+    await cast(page, 'Intermediate Chirography');
+    // Its enter trigger creates the first Inkling.
+    await passStackUntil(page, permanent(page, 'P1', 'Inkling'));
+    await expect(pt(page, 'P1', 'Inkling')).toHaveText('2/1');
+    await activate(page, 'P1', 'Intermediate Chirography', /Gain Class level 2/);
+    await passStackUntil(page, logLine(page, /Gain Class level 2[^]*resolves/));
+    await activate(page, 'P1', 'Intermediate Chirography', /Gain Class level 3/);
+    await passStackUntil(page, logLine(page, /Gain Class level 3[^]*resolves/));
+    await cast(page, 'PR11b Lab Shock', [['P1', 'PR11b Lab Pinger']]);
+    await passUntil(page, inZone(page, 'P1', 'Graveyard', 'PR11b Lab Pinger'));
+    // The modified Pinger died, so the level 3 end-step trigger makes a second Inkling.
+    await passUntil(
+      page,
+      permanent(page, 'P1', 'Inkling').locator('.stack-count-badge').filter({ hasText: '×2' }),
+    );
   },
 
   'pr11b-urza-s-saga-viewer-construct': async (page) => {
@@ -354,6 +448,19 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await passUntil(page, gameOver(page));
     await expect(permanent(page, 'P1', "Legion's Landing")).toBeVisible();
     await expect(permanent(page, 'P1', 'Adanto, the First Fort')).toHaveCount(0);
+  },
+
+  'pr11b-legion-s-landing-viewer-adanto-mana': async (page) => {
+    // Adanto is the only white source, so paying {1}{W} taps it for {W}.
+    await cast(page, 'PR11b Lab Charm');
+    await passUntil(page, permanent(page, 'P1', 'PR11b Lab Charm'));
+    await expect(tapped(page, 'P1', 'Adanto, the First Fort')).toHaveCount(1);
+  },
+  'pr11b-legion-s-landing-viewer-adanto-vampire': async (page) => {
+    await activate(page, 'P1', 'Adanto, the First Fort', /Create a 1\/1 white Vampire/);
+    await resolveStack(page, 'Adanto, the First Fort');
+    await expect(pt(page, 'P1', 'Vampire')).toHaveText('1/1');
+    await expect(tapped(page, 'P1', 'Adanto, the First Fort')).toHaveCount(1);
   },
 
   'pr11b-dollmaker-s-shop-viewer-unlock': async (page) => {
@@ -443,6 +550,51 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     ]);
     await passUntil(page, permanent(page, 'P1', 'PR11b Lab Bear'));
     await expect(inZone(page, 'P1', 'Graveyard', 'PR11b Lab Bear')).toHaveCount(0);
+  },
+  'pr11b-mila-crafty-companion-viewer-targeted-draw': async (page) => {
+    // P2's Shock targets Mila; take the optional draw.
+    await choose(page, 'Yes');
+    await passUntil(page, gameOver(page));
+    await expect(page.locator('.hand-card')).toHaveCount(2);
+    await expect(permanent(page, 'P1', 'Mila, Crafty Companion')).toBeVisible();
+  },
+  'pr11b-mila-crafty-companion-viewer-lukka-plus': async (page) => {
+    await cast(page, 'Mila, Crafty Companion');
+    await resolveStack(page, 'Lukka, Wayward Bonder');
+    await activate(page, 'P1', 'Lukka, Wayward Bonder', /You may discard a card/);
+    const discard = offer(page, 'PR11b Lab Bear', 'Discard');
+    await passUntil(page, discard);
+    await discard.click();
+    await passUntil(page, inZone(page, 'P1', 'Graveyard', 'PR11b Lab Bear'));
+    // A creature card was discarded, so two cards are drawn: the Trinket plus two.
+    await passUntil(page, page.locator('.hand-card').nth(2));
+    await expect(page.locator('.hand-card')).toHaveCount(3);
+    await expect(permanent(page, 'P1', 'Lukka, Wayward Bonder')).toContainText('6');
+  },
+  'pr11b-mila-crafty-companion-viewer-lukka-emblem': async (page) => {
+    await cast(page, 'Mila, Crafty Companion');
+    await resolveStack(page, 'Lukka, Wayward Bonder');
+    // +1 on this turn and your next, without discarding, takes Lukka from 5 to 7 loyalty.
+    await activate(page, 'P1', 'Lukka, Wayward Bonder', /You may discard a card/);
+    await choose(page, "Don't discard");
+    await passStackUntil(
+      page,
+      permanent(page, 'P1', 'Lukka, Wayward Bonder').filter({ hasText: '6' }),
+    );
+    await activateOnTurn(page, 8, 'Lukka, Wayward Bonder', /You may discard a card/);
+    await choose(page, "Don't discard");
+    await passStackUntil(
+      page,
+      permanent(page, 'P1', 'Lukka, Wayward Bonder').filter({ hasText: '7' }),
+    );
+    await activateOnTurn(page, 12, 'Lukka, Wayward Bonder', /You get an emblem/);
+    await passStackUntil(page, inZone(page, 'P1', 'Graveyard', 'Mila, Crafty Companion'));
+    await cast(page, 'PR11b Lab Red Bear');
+    // The emblem's trigger: the Red Bear deals 2 damage to P2.
+    await passUntil(page, page.locator('.opponent[data-seat="P2"].targetable'));
+    await pickTarget(page, 'P2');
+    await confirmIfShown(page);
+    await passUntil(page, life(page, 'P2').filter({ hasText: '38' }));
   },
 };
 

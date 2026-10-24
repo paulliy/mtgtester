@@ -43,6 +43,8 @@ interface Plan {
   answers?: RegExp[];
   /** Which defending seat each named creature attacks; the rest stay home. */
   attacks?: Record<string, string>;
+  /** Which attacker each named creature blocks; the rest do not block. */
+  blocks?: Record<string, string>;
 }
 
 const PLANS: Record<string, Plan> = {
@@ -70,6 +72,10 @@ const PLANS: Record<string, Plan> = {
     steps: [{ cast: "Vandal's Edit" }],
   },
   'pr11b-defacing-duskmage-viewer-first-draw': { steps: [] },
+  'pr11b-defacing-duskmage-viewer-deathtouch': {
+    steps: [],
+    blocks: { 'Defacing Duskmage': 'PR11b Lab Giant' },
+  },
   'pr11b-eiganjo-dynastorian-viewer-prepared': {
     steps: [{ cast: 'Replenish' }],
     attacks: { 'Eiganjo Dynastorian': 'P2', 'PR11b Lab Bear': 'P2' },
@@ -80,6 +86,10 @@ const PLANS: Record<string, Plan> = {
   },
   'pr11b-wandering-archaic-viewer-copy': { steps: [], answers: [/^Copy /, /^Target P2$/] },
   'pr11b-wandering-archaic-viewer-paid': { steps: [] },
+  'pr11b-wandering-archaic-viewer-explore': {
+    steps: [{ cast: 'Explore the Vastlands' }],
+    answers: [/^Reveal Forest$/, /^Reveal PR11b Lab Divination$/],
+  },
   'pr11b-wear-tear-viewer-fused': {
     steps: [
       {
@@ -103,6 +113,15 @@ const PLANS: Record<string, Plan> = {
   'pr11b-intermediate-chirography-viewer-level-one': {
     steps: [{ cast: 'PR11b Lab Drain' }],
   },
+  'pr11b-intermediate-chirography-viewer-level-three': {
+    steps: [
+      { cast: 'Intermediate Chirography' },
+      { activate: 'Gain Class level 2', whenEmpty: true },
+      { activate: 'Gain Class level 3', whenEmpty: true },
+      { cast: 'PR11b Lab Shock', targets: ['PR11b Lab Pinger'], whenEmpty: true },
+    ],
+  },
+  'pr11b-the-war-in-heaven-viewer-chapter-two': { steps: [] },
   'pr11b-urza-s-saga-viewer-construct': {
     steps: [{ play: "Urza's Saga" }, { activate: '{2}, {T}' }],
   },
@@ -115,6 +134,8 @@ const PLANS: Record<string, Plan> = {
       'PR11b Lab Pinger': 'P2',
     },
   },
+  'pr11b-legion-s-landing-viewer-adanto-mana': { steps: [{ cast: 'PR11b Lab Charm' }] },
+  'pr11b-legion-s-landing-viewer-adanto-vampire': { steps: [{ activate: '{2}{W}, {T}' }] },
   'pr11b-legion-s-landing-viewer-two-attackers': {
     steps: [],
     attacks: { 'PR11b Lab Bear': 'P2', 'PR11b Lab Red Bear': 'P2' },
@@ -142,6 +163,24 @@ const PLANS: Record<string, Plan> = {
       { cast: 'Lukka, Wayward Bonder', includes: 'back face' },
       { activate: 'Return target creature', whenEmpty: true },
     ],
+  },
+  'pr11b-mila-crafty-companion-viewer-targeted-draw': { steps: [], answers: [/^Yes$/] },
+  'pr11b-mila-crafty-companion-viewer-lukka-plus': {
+    steps: [
+      { cast: 'Lukka, Wayward Bonder', includes: 'back face' },
+      { activate: 'You may discard a card', whenEmpty: true },
+    ],
+    answers: [/^Discard PR11b Lab Bear$/],
+  },
+  'pr11b-mila-crafty-companion-viewer-lukka-emblem': {
+    steps: [
+      { cast: 'Lukka, Wayward Bonder', includes: 'back face' },
+      { activate: 'You may discard a card', whenEmpty: true },
+      { activate: 'You may discard a card', whenEmpty: true },
+      { activate: 'You get an emblem', whenEmpty: true },
+      { cast: 'PR11b Lab Red Bear', whenEmpty: true },
+    ],
+    answers: [/^Don't discard$/, /^Don't discard$/, /^P2$/],
   },
 };
 
@@ -219,8 +258,13 @@ function run(id: string) {
     }
     const block = request.legalActions.find((option) => option.type === 'blockDeclaration');
     if (block !== undefined) {
+      const subjects = (block.data?.['subjects'] ?? []) as { subjectId: string }[];
       action = block;
-      targets = (block.targets ?? []).map((slot) => ({ slot: slot.slot, choice: '__no_block__' }));
+      targets = (block.targets ?? []).map((slot) => {
+        const attacker = plan.blocks?.[nameOf(subjects[slot.slot]?.subjectId ?? '')];
+        const choice = slot.options.find((option) => nameOf(option) === attacker);
+        return { slot: slot.slot, choice: choice ?? '__no_block__' };
+      });
     }
     const next = steps[0];
     const isPriority = request.legalActions.some((option) => option.type === 'pass');
@@ -356,6 +400,12 @@ const CHECKS: Record<string, (result: Result) => void> = {
       );
     expect(r.state.players.map((p) => p.life)).toEqual([40, 40, 40, 40]);
   },
+  'pr11b-defacing-duskmage-viewer-deathtouch': (r) => {
+    // Two deathtouch damage destroys the 4/4 Giant; the Giant's 4 damage kills Duskmage too.
+    expect(zoneNames(r.player('P2').graveyard)).toEqual(['PR11b Lab Giant']);
+    expect(zoneNames(r.player('P1').graveyard)).toEqual(['Defacing Duskmage']);
+    expect(r.player('P1').life).toBe(40);
+  },
   'pr11b-eiganjo-dynastorian-viewer-prepared': (r) => {
     expect(r.done).toEqual(['Replenish']);
     expect(zoneNames(r.state.battlefield)).toContain('PR11b Lab Charm');
@@ -368,6 +418,8 @@ const CHECKS: Record<string, (result: Result) => void> = {
     expect(zoneNames(r.player('P1').graveyard)).toEqual(['PR11b Lab Charm']);
     expect(r.permanent('PR11b Lab Charm')).toBeUndefined();
     expect(r.permanent('Eiganjo Dynastorian')!.prepared).toBeUndefined();
+    // Vigilance: attacking did not tap it.
+    expect(r.permanent('Eiganjo Dynastorian')!.tapped).toBe(false);
     for (const entry of r.seen.filter((seen) => seen.player === 'P1'))
       expect(entry.actions.some((action) => action.description.includes('Replenish'))).toBe(false);
     expect(r.player('P2').life).toBe(38);
@@ -386,6 +438,25 @@ const CHECKS: Record<string, (result: Result) => void> = {
     ).toBe(false);
     expect(r.state.players.map((p) => p.life)).toEqual([40, 40, 38, 40]);
     expect(r.state.battlefield.filter((p) => p.controllerId === 'P2' && !p.tapped)).toEqual([]);
+  },
+  'pr11b-wandering-archaic-viewer-explore': (r) => {
+    expect(r.done).toEqual(['Explore the Vastlands']);
+    expect(r.picked).toEqual(['Reveal Forest', 'Reveal PR11b Lab Divination']);
+    expect(zoneNames(r.player('P1').hand).sort()).toEqual([
+      'Forest',
+      'PR11b Lab Divination',
+      'PR11b Lab Trinket',
+    ]);
+    // The other three of the top five went to the bottom.
+    expect(
+      r
+        .player('P1')
+        .library.slice(-3)
+        .map((item) => item.name)
+        .sort(),
+    ).toEqual(['PR11b Lab Bear', 'PR11b Lab Charm', 'PR11b Lab Relic']);
+    expect(r.state.players.map((p) => p.life)).toEqual([43, 43, 43, 43]);
+    expect(zoneNames(r.player('P1').graveyard)).toEqual(['Wandering Archaic']);
   },
   'pr11b-wear-tear-viewer-fused': (r) => {
     expect(r.done).toEqual(['Wear // Tear']);
@@ -420,6 +491,14 @@ const CHECKS: Record<string, (result: Result) => void> = {
     expect(r.permanent('The War in Heaven')).toBeUndefined();
     expect(zoneNames(r.player('P1').graveyard)).toEqual(['The War in Heaven']);
   },
+  'pr11b-the-war-in-heaven-viewer-chapter-two': (r) => {
+    expect(r.permanent('The War in Heaven')!.counters['lore']).toBe(2);
+    expect(zoneNames(r.player('P1').graveyard)).toEqual([
+      'PR11b Lab Bear',
+      'PR11b Lab Relic',
+      'PR11b Lab Charm',
+    ]);
+  },
   'pr11b-intermediate-chirography-viewer-level-two': (r) => {
     expect(r.done).toEqual(['Gain Class level 2', 'PR11b Lab Drain']);
     expect(r.permanent('Intermediate Chirography')!.classLevel).toBe(2);
@@ -431,6 +510,35 @@ const CHECKS: Record<string, (result: Result) => void> = {
     expect(r.permanent('Intermediate Chirography')!.classLevel ?? 1).toBe(1);
     expect(r.player('P1').life).toBe(38);
     expect(r.permanent('PR11b Lab Bear')!.counters['+1/+1']).toBeUndefined();
+  },
+  'pr11b-intermediate-chirography-viewer-level-three': (r) => {
+    expect(r.done).toEqual([
+      'Intermediate Chirography',
+      'Gain Class level 2',
+      'Gain Class level 3',
+      'PR11b Lab Shock',
+    ]);
+    expect(r.permanent('Intermediate Chirography')!.classLevel).toBe(3);
+    expect(zoneNames(r.player('P1').graveyard)).toContain('PR11b Lab Pinger');
+    // One Inkling from the enter trigger, one from the level 3 end-step trigger.
+    const inklings = r.state.battlefield.filter((permanent) => permanent.name === 'Inkling');
+    expect(inklings).toHaveLength(2);
+    for (const inkling of inklings) {
+      const chars = computeCharacteristics(r.ctx, inkling);
+      expect([chars.colors, chars.power, chars.toughness, chars.keywords]).toEqual([
+        ['W', 'B'],
+        2,
+        1,
+        ['flying'],
+      ]);
+    }
+    expect(
+      r.state.eventLog.some(
+        (event) =>
+          event.type === 'triggerOnStack' &&
+          JSON.stringify(event).includes('At the beginning of each end step'),
+      ),
+    ).toBe(true);
   },
   'pr11b-urza-s-saga-viewer-construct': (r) => {
     expect(r.done).toEqual(["Urza's Saga", '{2}, {T}']);
@@ -457,6 +565,23 @@ const CHECKS: Record<string, (result: Result) => void> = {
     expect(r.permanent("Legion's Landing")).toBeUndefined();
     expect(r.chars('Adanto, the First Fort').types).toEqual(['Land']);
     expect(r.player('P2').life).toBe(40 - 2 - 2 - 1);
+  },
+  'pr11b-legion-s-landing-viewer-adanto-mana': (r) => {
+    expect(r.done).toEqual(['PR11b Lab Charm']);
+    expect(r.permanent('PR11b Lab Charm')).toBeDefined();
+    // Adanto was the only white source.
+    expect(r.permanent('Adanto, the First Fort')!.tapped).toBe(true);
+  },
+  'pr11b-legion-s-landing-viewer-adanto-vampire': (r) => {
+    expect(r.done).toEqual(['{2}{W}, {T}']);
+    expect(r.permanent('Adanto, the First Fort')!.tapped).toBe(true);
+    const vampire = r.chars('Vampire');
+    expect([vampire.colors, vampire.power, vampire.toughness, vampire.keywords]).toEqual([
+      ['W'],
+      1,
+      1,
+      ['lifelink'],
+    ]);
   },
   'pr11b-legion-s-landing-viewer-two-attackers': (r) => {
     expect(r.permanent("Legion's Landing")!.transformed).toBe(false);
@@ -539,6 +664,35 @@ const CHECKS: Record<string, (result: Result) => void> = {
     expect(r.chars('Lukka, Wayward Bonder').types).toEqual(['Planeswalker']);
     expect(r.chars('PR11b Lab Bear').keywords).toContain('haste');
     expect(r.player('P1').graveyard).toHaveLength(0);
+  },
+  'pr11b-mila-crafty-companion-viewer-targeted-draw': (r) => {
+    expect(r.picked).toEqual(['Yes']);
+    expect(zoneNames(r.player('P2').graveyard)).toEqual(['PR11b Lab Shock']);
+    expect(r.player('P1').hand).toHaveLength(1 + 1);
+    expect(r.permanent('Mila, Crafty Companion')!.damageMarked).toBe(2);
+  },
+  'pr11b-mila-crafty-companion-viewer-lukka-plus': (r) => {
+    expect(r.done).toEqual(['Lukka, Wayward Bonder', 'You may discard a card']);
+    expect(r.picked).toEqual(['Discard PR11b Lab Bear']);
+    expect(r.permanent('Lukka, Wayward Bonder')!.counters['loyalty']).toBe(6);
+    expect(zoneNames(r.player('P1').graveyard)).toEqual(['PR11b Lab Bear']);
+    // The Trinket stayed; the creature card discarded drew two.
+    expect(r.player('P1').hand).toHaveLength(1 + 2);
+  },
+  'pr11b-mila-crafty-companion-viewer-lukka-emblem': (r) => {
+    expect(r.done).toEqual([
+      'Lukka, Wayward Bonder',
+      'You may discard a card',
+      'You may discard a card',
+      'You get an emblem',
+      'PR11b Lab Red Bear',
+    ]);
+    expect(r.picked).toEqual(["Don't discard", "Don't discard", 'P2']);
+    // -7 from 7 loyalty: Lukka is put into the graveyard and the emblem stays.
+    expect(r.permanent('Lukka, Wayward Bonder')).toBeUndefined();
+    expect(r.player('P1').emblems).toHaveLength(1);
+    expect(r.player('P2').life).toBe(38);
+    expect(r.permanent('PR11b Lab Red Bear')).toBeDefined();
   },
 };
 

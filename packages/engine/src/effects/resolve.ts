@@ -29,7 +29,7 @@ import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
 import { queueAbilityCopy, queueReplicateCopy, queueSpellCopy } from '../stack/copy';
 import { chooseReplicateTargets } from '../stack/replicate-targets';
 import { allStackTargets, changeSingleStackTarget, chooseNewStackTargets } from '../stack/retarget';
-import { newObjectId, stackAbilitySnapshot } from '../state/objects';
+import { createPreparedCopy, newObjectId, stackAbilitySnapshot } from '../state/objects';
 import { findObjectByCardId, spellDefinitionOf } from '../state/queries';
 import type { ProtectionSource } from '../state/queries';
 import { freeCardIsCastable, resolveFreeCard } from '../casting/free';
@@ -1994,30 +1994,10 @@ export function* executeAbility(
         // Only a permanent with a prepare spell, and not one already prepared (CR 722.3a).
         const current = sourcePermanent();
         if (current === undefined || current.prepared === true) break;
-        const prepareSpell = getDefByOracleId(ctx, current.oracleId, current.name).prepareSpell;
-        if (prepareSpell === undefined) break;
+        if (getDefByOracleId(ctx, current.oracleId, current.name).prepareSpell === undefined) break;
         current.prepared = true;
-        // Its controller creates a copy in exile with only the prepare spell's characteristics
-        // (CR 722.3c), castable while this permanent stays prepared.
-        const objectId = newObjectId(ctx);
-        const oracleId = 'card-copy-definition-' + objectId;
-        ctx.defs.set(oracleId as never, { ...copyData(prepareSpell), oracleId } as never);
-        ctx.state.exile.push({
-          id: objectId,
-          cardId: 'card-copy-' + objectId,
-          oracleId: oracleId as never,
-          ownerId: current.controllerId,
-          name: prepareSpell.name,
-          typeLine: prepareSpell.typeLine,
-          oracleText: '',
-          manaCost: null,
-          zone: 'exile',
-          isToken: false,
-          isCommander: false,
-          isCardCopy: true,
-          preparedBy: current.id,
-        });
-        emit(ctx, 'becamePrepared', { name: current.name, spell: prepareSpell.name });
+        const spell = createPreparedCopy(ctx, current);
+        emit(ctx, 'becamePrepared', { name: current.name, spell });
         break;
       }
       case 'sourceGainsAbility': {

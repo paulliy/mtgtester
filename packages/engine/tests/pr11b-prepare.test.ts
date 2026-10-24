@@ -6,6 +6,7 @@ import { fixtureOracleId } from '../src/cards/overrides';
 import { drawCards } from '../src/effects/resolve';
 import { addMana } from '../src/mana/pool';
 import { moveObject } from '../src/state/objects';
+import { phaseInAtUntap, phaseOutPermanents } from '../src/state/phasing';
 import type { EngineCardObject, EnginePermanent, GameContext } from '../src/state/types';
 import { bear, conjure, declareAttacks, oracle, pump, spawn } from './fixtures';
 import { battlefield, checkpoint, game, pinned, player, resolve } from './pr11-helpers';
@@ -132,6 +133,31 @@ describe('prepare (CR 722)', () => {
   it('duskmage-c02-leaves — the copy ceases to exist when the prepared permanent leaves', () => {
     const { ctx, duskmage } = preparedDuskmage('duskmage-leaves');
     pump(moveObject(ctx, duskmage, { zone: 'graveyard' }));
+    checkpoint(ctx);
+    expect(preparedCopies(ctx, "Vandal's Edit")).toHaveLength(0);
+  });
+
+  it('duskmage-c02-phasing — phasing in prepared makes a fresh castable copy (CR 722.3c)', () => {
+    const { ctx, duskmage } = preparedDuskmage('duskmage-phasing');
+    phaseOutPermanents(ctx, [duskmage.id], 'P1');
+    checkpoint(ctx);
+    // Phased out, it is treated as though it doesn't exist, so its copy ceases (CR 702.26b).
+    expect(preparedCopies(ctx, "Vandal's Edit")).toHaveLength(0);
+    phaseInAtUntap(ctx, 'P1');
+    checkpoint(ctx);
+    expect(duskmage.prepared).toBe(true);
+    const copies = preparedCopies(ctx, "Vandal's Edit");
+    expect(copies).toHaveLength(1);
+    addMana(player(ctx, 'P1'), [{ symbol: 'W' }, { symbol: 'B' }, { symbol: 'C' }]);
+    castCopy(ctx, copies[0]!);
+    expect(duskmage.prepared).toBeUndefined();
+  });
+
+  it('duskmage-c02-phasing-unprepared — an unprepared permanent phasing in makes no copy', () => {
+    const ctx = game('duskmage-phasing-unprepared');
+    const duskmage = spawn(ctx, 'P1', DUSKMAGE);
+    phaseOutPermanents(ctx, [duskmage.id], 'P1');
+    phaseInAtUntap(ctx, 'P1');
     checkpoint(ctx);
     expect(preparedCopies(ctx, "Vandal's Edit")).toHaveLength(0);
   });
