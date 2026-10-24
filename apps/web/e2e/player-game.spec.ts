@@ -42,11 +42,13 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
   };
 
   await page.goto('/');
+  await page.getByText('More options', { exact: true }).click();
   await page.getByPlaceholder('Fresh seed', { exact: true }).fill(SEED);
-  await page.getByRole('button', { name: 'Preview matchup' }).first().click();
-  const preview = page.getByLabel('Matchup preview');
-  await expect(preview.getByText(`Seed: ${SEED}`)).toBeVisible({ timeout: 60_000 });
-  await preview.getByRole('button', { name: 'Play' }).click();
+  await expect(page.getByText(`Seed: ${SEED}`)).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByLabel('Matchup preview').getByText('Fully modeled')).toHaveCount(4, {
+    timeout: 60_000,
+  });
+  await page.getByRole('button', { name: 'Start game' }).click();
   await expect(page).toHaveURL(/\/game$/);
 
   await page.getByRole('button', { name: /^Keep \d+$/ }).click({ timeout: 60_000 });
@@ -132,5 +134,5 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
   await page.getByRole('button', { name: 'Abandon', exact: true }).click();
   await page.getByRole('button', { name: 'Confirm Abandon' }).click();
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole('heading', { name: 'Play my deck' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'New game' })).toBeVisible();
 });
