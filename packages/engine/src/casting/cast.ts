@@ -51,6 +51,7 @@ import {
   wardCostOf,
   requireModeled,
   targetingFromDefinition,
+  preparedCopyHolder,
 } from '../state/queries';
 import type {
   DamageKeyword,
@@ -422,7 +423,8 @@ function* proposeCast(
     payload.alternativeCast !== undefined &&
     payload.alternativeCast !== 'adventure' &&
     payload.alternativeCast !== 'omen' &&
-    payload.alternativeCast !== 'mdfc'
+    payload.alternativeCast !== 'mdfc' &&
+    payload.alternativeCast !== 'split'
   ) {
     throw new Error('without-mana-cost permission cannot combine alternative costs or nonzero X');
   }
@@ -459,7 +461,7 @@ function* proposeCast(
   if (
     plotCast &&
     payload.alternativeCast !== undefined &&
-    !['adventure', 'omen', 'mdfc'].includes(payload.alternativeCast)
+    !['adventure', 'omen', 'mdfc', 'split'].includes(payload.alternativeCast)
   )
     throw new Error('plot cannot combine alternative costs');
   if (
@@ -479,6 +481,12 @@ function* proposeCast(
   ) {
     throw new Error('a spell with no mana cost requires an alternative cost');
   }
+  // A split card is cast as one half or both, never as the combined card (CR 709.3).
+  if (
+    payload.alternativeCast !== 'split' &&
+    def.alternativeCasts?.some((alternative) => alternative.kind === 'split') === true
+  )
+    throw new Error('a split card is cast as one of its halves');
   if (
     payload.fromLibraryTop === true &&
     resolutionPermission === undefined &&
@@ -502,6 +510,7 @@ function* proposeCast(
       'omen',
       'mdfc',
       'bestow',
+      'split',
     ].includes(payload.alternativeCast)
   )
     throw new Error('unknown casting alternative');
@@ -511,7 +520,8 @@ function* proposeCast(
     payload.alternativeCast === 'adventure' ||
     payload.alternativeCast === 'omen' ||
     payload.alternativeCast === 'mdfc' ||
-    payload.alternativeCast === 'bestow';
+    payload.alternativeCast === 'bestow' ||
+    payload.alternativeCast === 'split';
   if (payload.altIndex !== undefined && !authoredAlternative) {
     throw new Error('unexpected alternative index');
   }
@@ -531,7 +541,8 @@ function* proposeCast(
       (resolutionPermission !== undefined || plotCast) &&
       (selectedAlternative.kind === 'adventure' ||
         selectedAlternative.kind === 'omen' ||
-        selectedAlternative.kind === 'mdfc');
+        selectedAlternative.kind === 'mdfc' ||
+        (selectedAlternative.kind === 'split' && selectedAlternative.fused !== true));
     // A broad "you may play that card this turn" permission allows a spell face or bestow.
     const temporaryExileSpellFace =
       payload.fromExile === true &&
@@ -539,16 +550,21 @@ function* proposeCast(
       (selectedAlternative.kind === 'adventure' ||
         selectedAlternative.kind === 'omen' ||
         selectedAlternative.kind === 'mdfc' ||
-        selectedAlternative.kind === 'bestow');
+        selectedAlternative.kind === 'bestow' ||
+        (selectedAlternative.kind === 'split' && selectedAlternative.fused !== true));
     // So does a permission to cast it from the top of the library or a graveyard (CR 118.9);
-    // that permission is checked against the bestowed spell below.
+    // that permission is checked against the selected spell face below.
     const zonePermissionAlternative =
       (selectedAlternative.kind === 'bestow' &&
         (payload.fromLibraryTop === true ||
           (payload.fromGraveyard === true && def.castFromGraveyard !== true))) ||
+      (payload.fromGraveyard === true &&
+        from === undefined &&
+        selectedAlternative.kind === 'split' &&
+        selectedAlternative.fused !== true) ||
       (payload.fromLibraryTop === true &&
         from === undefined &&
-        ['adventure', 'omen', 'mdfc'].includes(selectedAlternative.kind));
+        ['adventure', 'omen', 'mdfc', 'split'].includes(selectedAlternative.kind));
     if (
       (!freeSpellFace &&
         !zonePermissionAlternative &&
@@ -696,6 +712,7 @@ function* proposeCast(
     payload.fromExile === true &&
     !(obj.onAdventure === true && obj.ownerId === player.id) &&
     obj.playableUntilEotBy !== player.id &&
+    preparedCopyHolder(ctx, obj)?.controllerId !== player.id &&
     !plotCast &&
     foretold === null
   ) {
@@ -835,7 +852,8 @@ function* proposeCast(
   } else if (
     payload.alternativeCast === 'adventure' ||
     payload.alternativeCast === 'omen' ||
-    payload.alternativeCast === 'mdfc'
+    payload.alternativeCast === 'mdfc' ||
+    payload.alternativeCast === 'split'
   ) {
     const alt = selectedAlternative;
     if (alt?.kind !== payload.alternativeCast)

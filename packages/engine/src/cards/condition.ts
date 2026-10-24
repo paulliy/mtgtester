@@ -247,6 +247,8 @@ export type Condition =
    * counters reset for every player at untap, so "this turn" means the whole game turn.
    */
   | { kind: 'castSpellThisTurn'; category: 'any' | 'noncreature'; cmp: '>=' | '<='; n: number }
+  /** "If a modified creature died under your control this turn" (CR 700.9, Intermediate Chirography). */
+  | { kind: 'modifiedCreatureDiedUnderYourControlThisTurn' }
   | { kind: 'not'; of: Condition };
 
 export const countPermanents = (
@@ -318,6 +320,7 @@ export function isChoiceCondition(condition: Condition): boolean {
     case 'cardsInYourGraveyard':
     case 'sourceHasCounters':
     case 'castSpellThisTurn':
+    case 'modifiedCreatureDiedUnderYourControlThisTurn':
     case 'controlsLandsWithSameName':
       return false;
     default:
@@ -366,6 +369,8 @@ export function evaluateCondition(
           ? (attacker.attacking ?? undefined)
           : undefined;
   switch (condition.kind) {
+    case 'modifiedCreatureDiedUnderYourControlThisTurn':
+      return ctx.state.modifiedCreatureDiedThisTurn?.[source.controllerId] === true;
     case 'castSpellThisTurn': {
       const player = ctx.state.players.find((candidate) => candidate.id === source.controllerId);
       if (player === undefined) return false;

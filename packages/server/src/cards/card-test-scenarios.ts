@@ -100,6 +100,7 @@ import {
 } from './white-black-control-keyword-scenarios';
 import { PR02_FOLLOW_UP_SCENARIO_IDS, pr02FollowUpScenario } from './pr02-follow-up-scenarios';
 import { PR12_SCENARIOS, pr12Scenario } from './pr12-scenarios';
+import { PR11B_SCENARIOS, pr11bScenario } from './pr11b-scenarios';
 import { PR11_SCENARIOS, pr11Scenario } from './pr11-scenarios';
 import { PR10_SCENARIOS, pr10Scenario } from './pr10-scenarios';
 import { PR09_SCENARIO_IDS } from './pr09-scenario-catalog';
@@ -15132,6 +15133,7 @@ function masterWarcraftAssignScenario(gameId: GameId): CardTestScenario {
 
 export const CARD_TEST_SCENARIO_IDS = [
   ...PR12_SCENARIOS.map((scenario) => scenario.id),
+  ...PR11B_SCENARIOS.map((scenario) => scenario.id),
   ...PR11_SCENARIOS.map((scenario) => scenario.id),
   ...PR10_SCENARIOS.map((scenario) => scenario.id),
   ...PR09_SCENARIO_IDS,
@@ -15692,6 +15694,9 @@ function agitatorAntScenario(gameId: GameId, mode: 'accept' | 'decline'): CardTe
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
   ...Object.fromEntries(
     PR12_SCENARIOS.map(({ id }) => [id, (gameId: GameId) => pr12Scenario(id, gameId)]),
+  ),
+  ...Object.fromEntries(
+    PR11B_SCENARIOS.map(({ id }) => [id, (gameId: GameId) => pr11bScenario(id, gameId)]),
   ),
   ...Object.fromEntries(
     PR11_SCENARIOS.map(({ id }) => [id, (gameId: GameId) => pr11Scenario(id, gameId)]),

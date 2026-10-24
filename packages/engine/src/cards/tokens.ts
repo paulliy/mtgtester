@@ -338,6 +338,15 @@ export const RABBIT_1_1_WHITE: TokenSpec = creatureToken({
   toughness: 1,
 });
 
+export const TOY_1_1_WHITE_ARTIFACT: TokenSpec = creatureToken({
+  name: 'Toy',
+  subtypes: ['Toy'],
+  colors: ['W'],
+  power: 1,
+  toughness: 1,
+  artifact: true,
+});
+
 export const SPIDER_2_2_REACH_GREEN: TokenSpec = creatureToken({
   name: 'Spider',
   subtypes: ['Spider'],
@@ -399,6 +408,37 @@ export const CONSTRUCT_4_4: TokenSpec = creatureToken({
   toughness: 4,
   artifact: true,
 });
+
+/** Urza's Saga's Construct: "This creature gets +1/+1 for each artifact you control." */
+export const CONSTRUCT_0_0_ARTIFACT_COUNT: TokenSpec = {
+  ...creatureToken({
+    name: 'Construct',
+    subtypes: ['Construct'],
+    colors: [],
+    power: 0,
+    toughness: 0,
+    artifact: true,
+  }),
+  staticEffects: [
+    {
+      affects: { kind: 'self' },
+      op: {
+        layer: 7,
+        sublayer: 'd',
+        power: {
+          kind: 'countPermanents',
+          selector: { kind: 'type', value: 'Artifact' },
+          scope: 'you',
+        },
+        toughness: {
+          kind: 'countPermanents',
+          selector: { kind: 'type', value: 'Artifact' },
+          scope: 'you',
+        },
+      },
+    },
+  ],
+};
 
 export const ELDRAZI_CONSTRUCT_10_10: TokenSpec = creatureToken({
   name: 'Eldrazi Construct',
@@ -594,6 +634,7 @@ export const ALL_TOKENS: TokenSpec[] = [
   OGRE_3_3_RED,
   NINJA_1_1_BLACK,
   RABBIT_1_1_WHITE,
+  TOY_1_1_WHITE_ARTIFACT,
   SPIDER_2_2_REACH_GREEN,
   CONTRACT_AURA,
   CONSTRUCT_4_4,

@@ -153,6 +153,15 @@ describe('Marchesa catalog audit containment', () => {
     'Out of the Tombs',
     'Caged Sun',
     'Gut, True Soul Zealot',
+    // PR11b pinned layout regressions (pr11b-*.test.ts) replace these guards.
+    "Defacing Duskmage // Vandal's Edit",
+    'Eiganjo Dynastorian // Replenish',
+    'Intermediate Chirography',
+    'Malakir Rebirth // Malakir Mire',
+    'Valakut Awakening // Valakut Stoneforge',
+    'Wear // Tear',
+    'Wandering Archaic // Explore the Vastlands',
+    'The War in Heaven',
 
     'Vindictive Lich',
     'Shadrix Silverquill',

@@ -12,6 +12,7 @@ import { TREASURE } from '../cards/tokens';
 import { captureResolutionTargets } from '../targets/resolution';
 import { emit, debug } from '../log/log';
 import { makePermanent, moveObject, queueTriggersForObject, createTokens } from '../state/objects';
+import { roomDoorOf } from '../cards/spell-faces';
 import { spellDefinitionOf, stackSourceTraits } from '../state/queries';
 import type { EngineStackObject, GameContext } from '../state/types';
 
@@ -140,6 +141,9 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
         controllerId: top.controllerId,
         resolutionTargets,
         ...(top.sourceFacts === undefined ? {} : { lastKnownFacts: top.sourceFacts }),
+        ...(top.sourceTransformations === undefined
+          ? {}
+          : { transformationsAtStack: top.sourceTransformations }),
         ...(top.kind === 'spell' ? { resolvingStackObject: top } : {}),
         ...(top.sourceColors !== undefined ? { lastKnownColors: top.sourceColors } : {}),
         ...(top.kind === 'spell' ? { lastKnownTypes: stackSourceTraits(ctx, top).types } : {}),
@@ -197,10 +201,17 @@ export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): Ga
   // the battlefield under their caster; instants/sorceries head to the graveyard (CR 608.3).
   if (isPermanentCard(def)) {
     const bestowed = spell.alternativeCastKind === 'bestow';
+    const printed = ctx.defs.get(card.oracleId);
+    const unlockedDoor =
+      printed === undefined || spell.alternativeCastKind !== 'split' || spell.altIndex === undefined
+        ? undefined
+        : roomDoorOf(printed, printed.alternativeCasts?.[spell.altIndex]);
     const moved = yield* moveObject(ctx, card, {
       zone: 'battlefield',
       controllerId: spell.controllerId,
       ...(spell.alternativeCastKind === 'mdfc' ? { face: 'back' as const } : {}),
+      // A Room spell cast as one door enters with that door unlocked (CR 709.5d).
+      ...(unlockedDoor === undefined ? {} : { unlockedDoor }),
       ...(def.subtypes.includes('Aura') || bestowed ? { attachedTo: spell.targets[0] } : {}),
       // A bestowed Aura spell becomes a bestowed Aura (CR 702.103b).
       ...(bestowed ? { bestowed: true } : {}),

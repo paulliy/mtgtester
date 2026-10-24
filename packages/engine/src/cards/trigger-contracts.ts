@@ -45,6 +45,7 @@ export function triggerEventFamily(
     case 'secondMainPhase':
       return 'step';
     case 'gainsLife':
+    case 'losesLife':
     case 'drawsCard':
     case 'foretells':
     case 'activatesAbility':
@@ -87,6 +88,7 @@ export function triggerProvidesEventPlayer(when: TriggerHead['when']): boolean {
     case 'dealsDamageToOpponent':
     case 'castsSpell':
     case 'gainsLife':
+    case 'losesLife':
     case 'drawsCard':
     case 'foretells':
     case 'activatesAbility':
@@ -156,6 +158,7 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
           'subjectControllerIsEventPlayer',
           'withOtherAttackers',
           'counter',
+          'chapter',
           'byYou',
           'forMana',
           'oncePerTurn',
@@ -163,13 +166,15 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
       : family === 'cast'
         ? ['caster', 'filter', 'targetFilter', 'ordinal', 'castFrom']
         : family === 'attackDeclaration'
-          ? ['attacker', 'attacking', 'perDefender', 'minAttackers']
+          ? ['attacker', 'attacking', 'perDefender', 'minAttackers', 'attackerFilter']
           : family === 'card'
             ? ['player', 'filter']
             : [
                 'player',
                 ...(head['when'] === 'playerDealtDamage' ? ['sourceController'] : []),
                 ...(head['when'] === 'activatesAbility' ? ['lifePaid'] : []),
+                ...(head['when'] === 'losesLife' ? ['firstTimeEachTurn'] : []),
+                ...(head['when'] === 'drawsCard' ? ['ordinalThisTurn'] : []),
               ]),
   ];
   for (const key of Object.keys(head))
@@ -316,6 +321,19 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
         path: `${path}.counter`,
         message: 'a counter kind requires a countersPut event',
       });
+    if (
+      head['chapter'] !== undefined &&
+      (head['when'] !== 'countersPut' ||
+        head['counter'] !== 'lore' ||
+        (head['subject'] as { kind?: string } | undefined)?.kind !== 'self' ||
+        typeof head['chapter'] !== 'number' ||
+        !Number.isInteger(head['chapter']) ||
+        head['chapter'] < 1)
+    )
+      issues.push({
+        path: `${path}.chapter`,
+        message: "a chapter ability is a positive lore-counter crossing of the Saga's own counters",
+      });
     if (head['byYou'] !== undefined && (head['byYou'] !== true || head['when'] !== 'countersPut'))
       issues.push({
         path: `${path}.byYou`,
@@ -370,7 +388,11 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
         record === undefined ||
         !['you', 'opponent', 'enchantedPlayer'].includes(record['who'] as string) ||
         typeof record['planeswalkers'] !== 'boolean' ||
-        Object.keys(record).some((key) => !['who', 'planeswalkers'].includes(key))
+        (record['planeswalkersOnly'] !== undefined &&
+          (record['planeswalkersOnly'] !== true || record['planeswalkers'] !== true)) ||
+        Object.keys(record).some(
+          (key) => !['who', 'planeswalkers', 'planeswalkersOnly'].includes(key),
+        )
       )
         issues.push({ path: `${path}.attacking`, message: 'attacked-player filter is malformed' });
     }

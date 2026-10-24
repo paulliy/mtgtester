@@ -31,7 +31,7 @@ import { spellManaValue } from '../state/objects';
 
 interface FreeCastSelection {
   definition: CardDefinition;
-  alternativeCast?: 'adventure' | 'omen' | 'mdfc';
+  alternativeCast?: 'adventure' | 'omen' | 'mdfc' | 'split';
   altIndex?: number;
   modes?: number[];
   optionalCostCount: number;
@@ -75,13 +75,18 @@ function legalFreeCastSelections(
   const selections: FreeCastSelection[] = [];
   const variants: {
     definition: CardDefinition;
-    alternativeCast?: 'adventure' | 'omen' | 'mdfc';
+    alternativeCast?: 'adventure' | 'omen' | 'mdfc' | 'split';
     altIndex?: number;
-  }[] = [{ definition: def }];
+  }[] = [];
+  // A split card is cast as one half, or both fused from hand (CR 709.3, 702.102a).
+  if (!def.alternativeCasts?.some((alternative) => alternative.kind === 'split'))
+    variants.push({ definition: def });
+  const inHand = player.hand.includes(card);
   for (const [altIndex, alternative] of (def.alternativeCasts ?? []).entries()) {
     if (
       alternative.kind === 'adventure' ||
       alternative.kind === 'omen' ||
+      (alternative.kind === 'split' && (alternative.fused !== true || inHand)) ||
       (alternative.kind === 'mdfc' && alternative.spellFace !== undefined)
     )
       variants.push({

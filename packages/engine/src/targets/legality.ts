@@ -396,12 +396,23 @@ export function withinTotalManaValue(
 ): ObjectId[] {
   const budget = spec.totalManaValueAtMost;
   if (budget === undefined) return candidates;
-  const manaValue = (id: ObjectId): number => {
-    const perm = ctx.state.battlefield.find((candidate) => candidate.id === id);
-    return perm === undefined ? 0 : permanentManaValue(ctx, perm);
-  };
+  const manaValue = (id: ObjectId): number => targetManaValue(ctx, id);
   const spent = picked.reduce((total, id) => total + manaValue(id), 0);
   return candidates.filter((id) => manaValue(id) <= budget - spent);
+}
+
+/**
+ * A budgeted target's mana value: a permanent's current one, or a graveyard card's printed one
+ * (The War in Heaven's "creature cards with total mana value 8 or less in your graveyard").
+ */
+export function targetManaValue(ctx: GameContext, id: ObjectId): number {
+  const perm = ctx.state.battlefield.find((candidate) => candidate.id === id);
+  if (perm !== undefined) return permanentManaValue(ctx, perm);
+  for (const player of ctx.state.players) {
+    const card = player.graveyard.find((candidate) => candidate.id === id);
+    if (card !== undefined) return cardZoneCandidate(ctx, card, card.ownerId).manaValue ?? 0;
+  }
+  return 0;
 }
 
 /** A permanent's current mana value, as targeting and budgets read it. */

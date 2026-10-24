@@ -152,6 +152,7 @@ import {
   resolveDynamicAmount,
   resolveDynamicUnits,
   playerCantLose,
+  sagaFinalChapter,
 } from '../state/queries';
 import type {
   ControlChangeDuration,
@@ -268,6 +269,8 @@ export interface EffectSource {
   resolutionTargets?: ResolutionTargets;
   /** The source incarnation, when resolving an ability of a permanent. */
   id?: ObjectId;
+  /** The source's transform count as the ability went on the stack (CR 701.27f). */
+  transformationsAtStack?: number;
   cardId: string;
   name: string;
   oracleId: string;
@@ -419,6 +422,7 @@ export function* dealDamageToPlayer(
     // CR 120.3: damage dealt to a player causes that player to lose that much life. Cards that
     // ask who "lost life this turn" (Gev, Scaled Scorch) must see damage, not just `loseLife`.
     // The infect branch above is deliberately excluded: it gives poison counters instead.
+    noteLifeLost(ctx, target.id, before - target.life);
     if (target.life < before) ctx.state.lifeLostThisTurn[target.id] = true;
   }
   ctx.state.damageDealtToPlayersThisTurn[target.id] =
@@ -692,8 +696,19 @@ export function loseLife(ctx: GameContext, player: EnginePlayerState, amount: nu
   if (amount <= 0 || playerLifeLocked(ctx, player.id)) return;
   // Angel's Grace's floor is for damage only (applyDamageToPlayer); life loss goes below 1.
   player.life -= amount;
-  ctx.state.lifeLostThisTurn[player.id] = true;
+  noteLifeLost(ctx, player.id, amount);
   emit(ctx, 'lifeLoss', { player: player.id, amount, life: player.life });
+}
+
+/**
+ * Record one life-loss event (CR 119.3) and queue "whenever you lose life" triggers. The
+ * first-loss flag is read before this loss is recorded, so it names the turn's first loss.
+ */
+function noteLifeLost(ctx: GameContext, playerId: PlayerId, amount: number): void {
+  if (amount <= 0) return;
+  const first = ctx.state.lifeLostThisTurn[playerId] !== true;
+  ctx.state.lifeLostThisTurn[playerId] = true;
+  queuePlayerTriggersForEvent(ctx, 'losesLife', playerId, amount, undefined, first);
 }
 
 /** CR 119.4 / 119.4b: positive life payments need enough life; zero is always payable. */
@@ -706,7 +721,7 @@ export function payLife(ctx: GameContext, player: EnginePlayerState, amount: num
     throw new Error('life cost became unpayable');
   player.life -= amount;
   if (ctx.costLifePaid !== undefined) ctx.costLifePaid.amount += amount;
-  ctx.state.lifeLostThisTurn[player.id] = true;
+  noteLifeLost(ctx, player.id, amount);
   emit(ctx, 'lifeLoss', { player: player.id, amount, life: player.life });
 }
 
@@ -848,6 +863,45 @@ function* putFromHandOnLibraryTop(
     ? yield* orderForLibrary(ctx, source, player, selected, 'top')
     : selected;
   player.library.unshift(...ordered);
+}
+
+/**
+ * Valakut Awakening: choose any number of cards in hand, put them on the bottom of the library in
+ * an order of the player's choosing (CR 401.4), then draw that many plus `extra`. The choice is
+ * made one card at a time with a "done" option, so every subset — including none — is reachable.
+ */
+function* putAnyFromHandOnBottomThenDraw(
+  ctx: GameContext,
+  source: EffectSource,
+  player: EnginePlayerState,
+  extra: number,
+): GameGen<void> {
+  const selected: EngineCardObject[] = [];
+  for (;;) {
+    const remaining = player.hand.filter((card) => !selected.includes(card));
+    if (remaining.length === 0) break;
+    const chosen = yield* chooseCard(ctx, {
+      player: player.id,
+      prompt: `${source.name}: put a card from your hand on the bottom of your library (${selected.length} chosen).`,
+      cards: remaining,
+      type: 'putFromHand',
+      verb: 'Put on bottom',
+      decline: {
+        type: 'decline',
+        description: selected.length === 0 ? 'Put no cards on the bottom' : 'Done choosing cards',
+        verb: selected.length === 0 ? 'Put none' : 'Done',
+      },
+    });
+    if (chosen === null) break;
+    selected.push(chosen as EngineCardObject);
+  }
+  if (selected.length > 0) {
+    const ordered = yield* orderForLibrary(ctx, source, player, selected, 'bottom');
+    for (const card of ordered) {
+      yield* moveObject(ctx, card, { zone: 'library', libraryPosition: 'bottom' });
+    }
+  }
+  yield* drawCards(ctx, player, selected.length + extra);
 }
 
 /** Discard cards chosen by the game's seeded PRNG (CR 701.8a). */
@@ -1250,12 +1304,18 @@ function addCounterPlacements(
     'countersPut',
     planned
       .filter(({ adjustedCount }) => adjustedCount > 0)
-      .map(({ placement, adjustedCount }) => {
+      .map(({ placement, before, adjustedCount }) => {
         actual.set(placement.perm.id, adjustedCount);
         return {
           permanent: placement.perm,
           playerId: placement.placingPlayerId,
           counterKinds: [placement.counter],
+          counterCounts: {
+            [placement.counter]: {
+              before,
+              after: counterCount(placement.perm.counters, placement.counter),
+            },
+          },
         };
       }),
   );
@@ -1284,6 +1344,32 @@ function addCounterPlacements(
     }
   }
   return actual;
+}
+
+/**
+ * CR 714.3c: as its controller's precombat main phase begins, each Saga with a chapter ability
+ * gets a lore counter. A turn-based action, not an ability, so the controller places it.
+ */
+export function addSagaLoreCounters(ctx: GameContext, playerId: PlayerId): void {
+  const sagas = ctx.state.battlefield.filter(
+    (perm) =>
+      perm.controllerId === playerId &&
+      computeCharacteristics(ctx, perm).subtypes.includes('Saga') &&
+      sagaFinalChapter(ctx, perm) > 0,
+  );
+  for (const saga of sagas) {
+    addCounterPlacements(
+      ctx,
+      {
+        cardId: saga.cardId,
+        id: saga.id,
+        name: saga.name,
+        oracleId: saga.oracleId,
+        controllerId: playerId,
+      },
+      [{ perm: saga, counter: 'lore', count: 1, placingPlayerId: playerId }],
+    );
+  }
 }
 
 /**
@@ -1894,7 +1980,69 @@ export function* executeAbility(
     switch (effect.op) {
       case 'transformSelf': {
         const current = sourcePermanent();
-        if (current !== undefined) transformPermanent(ctx, current);
+        // An ability of the permanent transforms it only if it hasn't transformed since the
+        // ability was put on the stack (CR 701.27f), so a doubled trigger turns it over once.
+        if (
+          current !== undefined &&
+          (source.transformationsAtStack === undefined ||
+            (current.transformations ?? 0) === source.transformationsAtStack)
+        )
+          transformPermanent(ctx, current);
+        break;
+      }
+      case 'becomePrepared': {
+        // Only a permanent with a prepare spell, and not one already prepared (CR 722.3a).
+        const current = sourcePermanent();
+        if (current === undefined || current.prepared === true) break;
+        const prepareSpell = getDefByOracleId(ctx, current.oracleId, current.name).prepareSpell;
+        if (prepareSpell === undefined) break;
+        current.prepared = true;
+        // Its controller creates a copy in exile with only the prepare spell's characteristics
+        // (CR 722.3c), castable while this permanent stays prepared.
+        const objectId = newObjectId(ctx);
+        const oracleId = 'card-copy-definition-' + objectId;
+        ctx.defs.set(oracleId as never, { ...copyData(prepareSpell), oracleId } as never);
+        ctx.state.exile.push({
+          id: objectId,
+          cardId: 'card-copy-' + objectId,
+          oracleId: oracleId as never,
+          ownerId: current.controllerId,
+          name: prepareSpell.name,
+          typeLine: prepareSpell.typeLine,
+          oracleText: '',
+          manaCost: null,
+          zone: 'exile',
+          isToken: false,
+          isCommander: false,
+          isCardCopy: true,
+          preparedBy: current.id,
+        });
+        emit(ctx, 'becamePrepared', { name: current.name, spell: prepareSpell.name });
+        break;
+      }
+      case 'sourceGainsAbility': {
+        const current = sourcePermanent();
+        if (current === undefined) break;
+        const granted =
+          effect.manaAbility !== undefined
+            ? { kind: 'grantManaAbility' as const, manaAbility: effect.manaAbility }
+            : effect.activatedAbility !== undefined
+              ? {
+                  kind: 'grantActivatedAbility' as const,
+                  activatedAbility: effect.activatedAbility,
+                }
+              : undefined;
+        if (granted === undefined) break;
+        ctx.state.effects.push({
+          id: `eff-${ctx.state.nextObjectNum++}`,
+          sourceId: source.cardId,
+          description: `${current.name} gains an ability`,
+          targetCardIds: [current.cardId],
+          targetObjectIds: [current.id],
+          ...granted,
+          duration: 'permanent',
+          timestamp: ctx.state.nextTimestamp++,
+        });
         break;
       }
       case 'selfToLibraryTop': {
@@ -3866,6 +4014,34 @@ export function* executeAbility(
       case 'discard':
         yield* discardCards(ctx, controller, effect.count);
         break;
+      case 'mayDiscardThenDraw': {
+        if (controller.hand.length === 0) break;
+        const chosen = yield* chooseCard(ctx, {
+          player: controller.id,
+          prompt: `${source.name}: you may discard a card. If you do, draw a card.`,
+          cards: [...controller.hand],
+          type: 'discard',
+          verb: 'Discard',
+          decline: { type: 'decline', description: "Don't discard", verb: 'Decline' },
+        });
+        const card =
+          chosen === null ? undefined : controller.hand.find((entry) => entry.id === chosen.id);
+        if (card === undefined) break;
+        // The discarded card's characteristics as it was discarded (CR 608.2h).
+        const candidate = cardZoneCandidate(ctx, card, controller.id);
+        yield* discardCard(ctx, card, controller.id, 'effect');
+        const instead = effect.instead;
+        const draws =
+          instead !== undefined &&
+          selectMatches(candidate, instead.filter, {
+            cardId: source.cardId,
+            controllerId: controller.id,
+          })
+            ? instead.count
+            : effect.count;
+        yield* drawCards(ctx, controller, draws);
+        break;
+      }
       case 'connive': {
         // CR 701.50a: draw a card, then discard a card; a nonland discard puts a +1/+1 counter
         // on the conniving permanent. CR 701.50c: if it has left the battlefield, its controller
@@ -3879,6 +4055,9 @@ export function* executeAbility(
           addCounters(ctx, source, conniver, '+1/+1', 1);
         break;
       }
+      case 'putAnyFromHandOnBottomThenDraw':
+        yield* putAnyFromHandOnBottomThenDraw(ctx, source, controller, effect.extra);
+        break;
       case 'putFromHandOnLibraryTop':
         yield* putFromHandOnLibraryTop(
           ctx,
@@ -6041,6 +6220,19 @@ export function* executeAbility(
       case 'lookAtTopN':
         yield* lookAtTopN(ctx, source, controller, effect);
         break;
+      case 'eachPlayerGainsLife': {
+        const amount = amountOf(effect.amount);
+        for (const player of playersInApnapOrder(ctx)) gainLife(ctx, player, amount);
+        break;
+      }
+      case 'eachPlayerLosesLife': {
+        const amount = amountOf(effect.amount);
+        for (const player of playersInApnapOrder(ctx)) loseLife(ctx, player, amount);
+        break;
+      }
+      case 'eachPlayerLooksAtTopRevealsToHand':
+        yield* eachPlayerLooksAtTopRevealsToHand(ctx, source, effect);
+        break;
       case 'counterUnlessPays':
         yield* counterUnlessPays(ctx, source, effect.stackObjectId, effect.cost);
         break;
@@ -7971,6 +8163,9 @@ export function* executeAbility(
           sourceId: source.cardId,
           description: `${perm.name} gains ability until end of turn`,
           targetCardIds: [perm.cardId],
+          // The grant is to this object only: the card returning as a new object (CR 400.7)
+          // does not keep it, while the departing object's last-known information does.
+          targetObjectIds: [perm.id],
           kind: 'grantAbility',
           ability: effect.ability,
           timestamp: ctx.state.nextTimestamp++,
@@ -8106,7 +8301,8 @@ export function* executeAbility(
         yield* moveObject(ctx, card, {
           zone: 'battlefield',
           controllerId: card.ownerId,
-          withCounters: { [effect.counter]: 1 },
+          ...(effect.counter === undefined ? {} : { withCounters: { [effect.counter]: 1 } }),
+          ...(effect.tapped === true ? { entersTapped: true } : {}),
         });
         break;
       }
@@ -8205,7 +8401,7 @@ export function* executeAbility(
           controllerId: source.controllerId,
           targetId: entered.cardId,
           targetObjectId: entered.id,
-          when: 'endStep',
+          when: effect.exileAt === 'yourNextUpkeep' ? 'upkeep' : 'endStep',
           player: 'you',
           ability: {
             kind: 'triggered',
@@ -8333,6 +8529,22 @@ export function* executeAbility(
         });
         if (returned !== null && returned.zone === 'battlefield')
           emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
+        break;
+      }
+      case 'reanimateEachChosen': {
+        // The legal chosen cards still in a graveyard (CR 608.2b), entering together (CR 603.6a).
+        const cards = chosenReferents(effect.targetSlot).flatMap((cardId) => {
+          const card = ctx.state.players
+            .flatMap((player) => player.graveyard)
+            .find((candidate) => candidate.id === cardId);
+          return card === undefined ? [] : [card];
+        });
+        yield* moveObjects(ctx, cards, {
+          zone: 'battlefield',
+          controllerId: source.controllerId,
+          ...(effect.counter === undefined ? {} : { withCounters: { [effect.counter]: 1 } }),
+          ...(effect.addTypes === undefined ? {} : { addTypes: effect.addTypes }),
+        });
         break;
       }
       case 'reanimateEachChosenTapped': {
@@ -9087,6 +9299,62 @@ function* handToBattlefield(
  * The random order is drawn from `ctx.rng`, the game's single seeded PRNG — never
  * `Math.random` (brief §4/§5.9), or the game stops being replayable.
  */
+/**
+ * Explore the Vastlands: each player, in APNAP order (CR 101.4), looks at their top `count` and
+ * may reveal up to one card for each of `picks`. Then each puts what they revealed into their
+ * hand and the rest on the bottom of their library in a random order.
+ */
+function* eachPlayerLooksAtTopRevealsToHand(
+  ctx: GameContext,
+  source: EffectSource,
+  effect: Extract<Effect, { op: 'eachPlayerLooksAtTopRevealsToHand' }>,
+): GameGen<void> {
+  const choices: {
+    player: EnginePlayerState;
+    looked: EngineCardObject[];
+    revealed: EngineCardObject[];
+  }[] = [];
+  for (const player of playersInApnapOrder(ctx)) {
+    const looked = player.library.slice(0, effect.count);
+    const revealed: EngineCardObject[] = [];
+    const selectorSource = { cardId: source.cardId, controllerId: player.id };
+    for (const pick of effect.picks) {
+      const eligible = looked.filter(
+        (card) =>
+          !revealed.includes(card) &&
+          selectMatches(cardZoneCandidate(ctx, card, player.id), pick, selectorSource),
+      );
+      if (eligible.length === 0) continue;
+      const chosen = yield* chooseCard(ctx, {
+        player: player.id,
+        cards: eligible,
+        type: 'revealFromTop',
+        verb: 'Reveal',
+        prompt: `${source.name}: you may reveal a card from among the top ${looked.length} of your library.`,
+        decline: { type: 'decline', description: 'Reveal none of them', verb: 'Decline' },
+      });
+      const card = chosen === null ? undefined : eligible.find((entry) => entry.id === chosen.id);
+      if (card === undefined) continue;
+      revealed.push(card);
+      emit(
+        ctx,
+        'revealCard',
+        { player: player.id, cardId: card.cardId, name: card.name, revealed: true },
+        player.id,
+      );
+    }
+    choices.push({ player, looked, revealed });
+  }
+  for (const { player, looked, revealed } of choices) {
+    for (const card of revealed)
+      if (player.library.includes(card)) yield* moveObject(ctx, card, { zone: 'hand' });
+    const rest = looked.filter((card) => player.library.includes(card) && !revealed.includes(card));
+    ctx.rng.shuffle(rest);
+    const restObjects = new Set(rest);
+    player.library = [...player.library.filter((card) => !restObjects.has(card)), ...rest];
+  }
+}
+
 function* lookAtTopN(
   ctx: GameContext,
   source: EffectSource,

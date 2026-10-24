@@ -28,7 +28,7 @@ import type {
   StackObject,
   Zone,
 } from '@mtg/shared';
-import type { ManaEntry, TriggerWhen } from '../cards/ability';
+import type { ManaAbilitySpec, ManaEntry, TriggerWhen } from '../cards/ability';
 import type {
   Ability,
   ActivatedAbility,
@@ -38,6 +38,7 @@ import type {
 import type { ObjectFacts } from '../cards/source-identity';
 import type { Selector, SelectorCandidate } from '../cards/selector';
 import type { TriggerScope } from '../cards/value';
+import type { RoomDoor } from '../cards/spell-faces';
 import type { Prng } from '../rng/prng';
 
 /** Stable physical-card identity, assigned once at game creation. */
@@ -201,8 +202,18 @@ export interface EngineObject extends GameObject {
   cardId: CardId;
   /** Copy of a card created in exile (CR 707.12); ceases outside stack/battlefield at SBAs. */
   isCardCopy?: true;
+  /**
+   * The exile copy of a prepare spell (CR 722.3c): the prepared permanent it belongs to. It stays
+   * in exile, castable by that permanent's controller, while the permanent stays prepared.
+   */
+  preparedBy?: ObjectId;
   /** The active face while a modal DFC is on the battlefield. Non-battlefield cards use front. */
   face?: 'front' | 'back';
+  /**
+   * A Room permanent's unlocked designations (CR 709.5c), in printed order. Absent means both
+   * doors are locked; never present off the battlefield.
+   */
+  unlockedDoors?: RoomDoor[];
   /** Tokens cease to exist when they leave the battlefield (CR 704.5d). */
   isToken: boolean;
   /** Commander-ness is a property of the physical card (brief §5.7). */
@@ -241,6 +252,8 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
   controlChanges?: ControlChange[];
   /** Whether a transforming double-faced permanent currently uses its back face. */
   transformed: boolean;
+  /** How many times this object has transformed since it entered (CR 701.27f). */
+  transformations?: number;
   /**
    * A bestowed Aura (CR 702.103b): an Aura enchantment with enchant creature, not a creature,
    * until it becomes unattached or attached to an illegal object (CR 702.103f).
@@ -280,6 +293,8 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
   assignsNoCombatDamageTurn?: number;
   /** A resolved effect's fixed attack prohibition, active while the named counter remains. */
   cantAttackPlayerWhileCounter?: Array<{ playerId: PlayerId; counter: string }>;
+  /** The prepared designation (CR 722.3a). */
+  prepared?: true;
   /** Attacker this creature is blocking, while in combat. */
   blocking: ObjectId | null;
   /** For attackers: blockers in damage-assignment order (CR 509.2). */
@@ -475,6 +490,11 @@ export interface EngineStackObject extends StackObject {
   castDuringOwnMainPhase?: true;
   /** Last known rules facts of this ability's source incarnation. */
   sourceFacts?: ObjectFacts;
+  /**
+   * The source permanent's transform count as this activated or (non-delayed) triggered ability
+   * was put on the stack: it transforms its source only if that has not changed (CR 701.27f).
+   */
+  sourceTransformations?: number;
   /** Internal CR 601 proposal; never triggers a cast until payment finalizes. */
   castInProgress?: true;
   /** Selected characteristics on the stack; copies retain these without changing physical card data. */
@@ -511,7 +531,8 @@ export interface EngineStackObject extends StackObject {
     | 'energy'
     | 'commanderFree'
     | 'faceDown'
-    | 'bestow';
+    | 'bestow'
+    | 'split';
   altIndex?: number;
   /** Triggered abilities: the object whose event fired this — the `'triggerObject'` referent. */
   triggerObjectCardId?: CardId;
@@ -663,7 +684,10 @@ export interface UntilEotEffect extends ContinuousEffect {
     | 'denyKeywords'
     | 'grantAbility'
     | 'cantBeBlocked'
-    | 'becomeCreature';
+    | 'becomeCreature'
+    | 'addTypes'
+    | 'grantActivatedAbility'
+    | 'grantManaAbility';
   power?: number;
   toughness?: number;
   keyword?: KeywordAbility;
@@ -676,6 +700,11 @@ export interface UntilEotEffect extends ContinuousEffect {
   /** Keywords the affected permanents lose and can't have (`denyKeywords`, Arcane Lighthouse). */
   deniedKeywords?: KeywordAbility[];
   ability?: Ability;
+  /** `grantActivatedAbility` / `grantManaAbility`: "This Saga gains '{T}: Add {C}.'" */
+  activatedAbility?: ActivatedAbility;
+  manaAbility?: ManaAbilitySpec;
+  /** `addTypes`: "They're artifacts in addition to their other types" (layer 4). */
+  addTypes?: string[];
   /**
    * "Becomes a 4/4 red and green Dragon artifact creature with flying until end of turn"
    * (Atarka Monument, Sarkhan's +1) — a type-changing CDA-shaped grant, distinct from
@@ -857,6 +886,11 @@ export interface EngineState extends GameState {
   createdTokenThisTurn: Record<PlayerId, boolean>;
   /** Number of creatures put into graveyards this turn. */
   creaturesDiedThisTurn: number;
+  /**
+   * Players under whose control a modified creature (CR 700.9) died this turn (Intermediate
+   * Chirography), judged by last-known information as it died. Reset at the start of each turn.
+   */
+  modifiedCreatureDiedThisTurn?: Record<PlayerId, true>;
   /**
    * "If this is the second time this ability has resolved this turn" (Rumor Gatherer): how many
    * times each counted ability has resolved this turn, keyed by the source's battlefield object

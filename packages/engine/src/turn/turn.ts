@@ -11,7 +11,7 @@ import { evaluateCondition } from '../cards/condition';
 import { computeCharacteristics } from '../effects/continuous';
 import { runCombatPhase } from '../combat/combat';
 import type { GameGen } from '../decisions';
-import { drawCards, endUntilEotEffects } from '../effects/resolve';
+import { addSagaLoreCounters, drawCards, endUntilEotEffects } from '../effects/resolve';
 import { emit, debug } from '../log/log';
 import { priorityCheckpoint } from '../sba/sba';
 import {
@@ -92,6 +92,7 @@ function untapStep(ctx: GameContext): void {
   ctx.state.lifeLostThisTurn = {};
   ctx.state.combatDamagePlayersBySource = {};
   ctx.state.creaturesDiedThisTurn = 0;
+  delete ctx.state.modifiedCreatureDiedThisTurn;
   delete ctx.state.abilityResolutionsThisTurn;
   delete ctx.state.onceEachTurnActionsTaken;
   ctx.state.combatDamagePrevention = { all: false, players: {} };
@@ -515,6 +516,7 @@ export function* runBeginningAndPrecombatMain(ctx: GameContext): GameGen<void> {
   // Precombat main.
   ctx.state.mainPhasesStartedThisTurn = 1;
   setPhase(ctx, 'precombatMain', null);
+  addSagaLoreCounters(ctx, ap.id);
   queueStepTriggers(ctx, 'mainPhase');
   // "your first main phase" is the precombat one specifically, so it gets its own event
   // alongside the both-mains `mainPhase` above rather than replacing it.

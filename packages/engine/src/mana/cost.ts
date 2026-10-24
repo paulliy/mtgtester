@@ -150,6 +150,17 @@ export function describeManaCost(cost: ParsedManaCost): string {
 }
 
 /**
+ * A printed mana cost in canonical text ("{1}", "{X}{R}"), for "with mana cost {0} or {1}". A
+ * card with no mana cost has none (`null`, CR 202.1b), which is not the same as `{0}`.
+ */
+export function manaCostTextOf(cost: ParsedManaCost | null): string | null {
+  if (cost === null) return null;
+  const xs = '{X}'.repeat(cost.x ?? 0);
+  const rest = describeManaCost(cost);
+  return xs !== '' && rest === '{0}' ? xs : xs + rest;
+}
+
+/**
  * Mana value of a cost with X read as 0 (CR 202.3b's "not on the stack" case) — a permanent's
  * mana value, as opposed to a spell's while it's still resolving with an announced X (see
  * `spellManaValue` in `state/objects.ts`, which this mirrors for the X=0 case; kept here rather
@@ -1055,4 +1066,32 @@ export function canPay(
   lifeTotal = 0,
 ): boolean {
   return planPayment(cost, poolEntries, sources, allows, lifeTotal) !== null;
+}
+
+/** The colors of a mana cost's symbols (CR 105.2, 202.2): a split half's or door's own colors. */
+export function colorsOfManaCost(cost: ParsedManaCost | null): Color[] {
+  if (cost === null) return [];
+  const present = new Set<Color>();
+  for (const color of ['W', 'U', 'B', 'R', 'G'] as const)
+    if (cost.colored[color] > 0) present.add(color);
+  for (const pair of cost.hybrid ?? []) for (const color of pair) present.add(color);
+  for (const color of cost.phyrexian ?? []) present.add(color);
+  return (['W', 'U', 'B', 'R', 'G'] as const).filter((color) => present.has(color));
+}
+
+/** Two mana costs added together: a split card's combined cost (CR 709.4b). */
+export function combinedManaCost(a: ParsedManaCost, b: ParsedManaCost): ParsedManaCost {
+  const colored = { ...a.colored };
+  for (const color of ['W', 'U', 'B', 'R', 'G'] as const) colored[color] += b.colored[color];
+  const x = (a.x ?? 0) + (b.x ?? 0);
+  const hybrid = [...(a.hybrid ?? []), ...(b.hybrid ?? [])];
+  const phyrexian = [...(a.phyrexian ?? []), ...(b.phyrexian ?? [])];
+  return {
+    generic: a.generic + b.generic,
+    colored,
+    colorless: a.colorless + b.colorless,
+    ...(x > 0 ? { x } : {}),
+    ...(hybrid.length > 0 ? { hybrid } : {}),
+    ...(phyrexian.length > 0 ? { phyrexian } : {}),
+  };
 }

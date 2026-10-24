@@ -3,7 +3,7 @@
 Generated from the engine-supported card pool.
 This is an interpreter-support inventory. Card behavior verification is tracked separately in the card verification manifest.
 
-**Total**: 6533 modeled non-land cards
+**Total**: 6544 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -1355,6 +1355,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Deeproot Waters
 - Deepwood Drummer
 - Deer-Dog
+- Defacing Duskmage // Vandal's Edit
 - Defender of Chaos
 - Defender of Law
 - Defensive Stance
@@ -1474,6 +1475,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Dockside Chef
 - Doctor Spectrum
 - Dogged Pursuit
+- Dollmaker's Shop // Porcelain Gallery
 - Donatello, Turtle Techie
 - Donatello, Way with Machines
 - Doom Whisperer
@@ -1639,6 +1641,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Eidolon of Inspiration
 - Eidolon of Philosophy
 - Eidolon of the Great Revel
+- Eiganjo Dynastorian // Replenish
 - Eject
 - Ekundu Griffin
 - Eladamri's Call
@@ -2848,6 +2851,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Instruments of War
 - Intangible Virtue
 - Interjection
+- Intermediate Chirography
 - Into the Maw of Hell
 - Into the Time Vortex
 - Into Thin Air
@@ -3176,6 +3180,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Leeching Bite
 - Leering Emblem
 - Legion Lieutenant
+- Legion's Landing // Adanto, the First Fort
 - Leonin Abunas
 - Leonin Armorguard
 - Leonin Battlemage
@@ -3367,6 +3372,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Makindi Stampede // Makindi Mesas
 - Malakir Bloodwitch
 - Malakir Cullblade
+- Malakir Rebirth // Malakir Mire
 - Malamet War Scribe
 - Malcator's Watcher
 - Malevolent Awakening
@@ -3525,6 +3531,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Migratory Route
 - Miirym, Sentinel Wyrm
 - Mikey & Leo, Chaos & Order
+- Mila, Crafty Companion // Lukka, Wayward Bonder
 - Military Discipline
 - Millennial Gargoyle
 - Mind Spring
@@ -5643,6 +5650,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - The Ur-Dragon
 - The Vision and Scarlet Witch
 - The Walls of Ba Sing Se
+- The War in Heaven
 - The Whizzer, Classic Speedster
 - Theft of Dreams
 - Their Name Is Death
@@ -6000,6 +6008,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Utvara Hellkite
 - Vacuumelt
 - Vaevictis Asmadi, the Dire
+- Valakut Awakening // Valakut Stoneforge
 - Valakut Invoker
 - Valakut Predator
 - Valeria Richards, Precocious
@@ -6239,6 +6248,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Wander Off
 - Wanderbrine Preacher
 - Wanderer's Twig
+- Wandering Archaic // Explore the Vastlands
 - Wandering Musicians
 - Wandering Ones
 - Wandering Tombshell
@@ -6295,6 +6305,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Weakness
 - Weakstone
 - Weaponize the Monsters
+- Wear // Tear
 - Weaselback Redcap
 - Weathered Wayfarer
 - Weatherseed Faeries

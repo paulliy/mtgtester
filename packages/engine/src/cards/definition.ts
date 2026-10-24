@@ -114,6 +114,17 @@ export interface CardDefinition {
   /** Parsed starting defense (battles, CR 310.6); null otherwise. `*` is unmodeled. */
   defense: number | null;
   /** Interpreted second face for a transforming double-faced permanent. */
+  /**
+   * The inset prepare spell of a preparation card (CR 722.2): alternative characteristics used
+   * only by the copy a prepared permanent lets its controller cast (CR 722.3c).
+   */
+  prepareSpell?: CardDefinition;
+  /**
+   * A Room's two doors (CR 709.5), each with the shared type line and its own name, cost and
+   * abilities. Off the battlefield the card has both combined (CR 709.4); on it, only the
+   * unlocked doors' (`roomDefinition`).
+   */
+  roomDoors?: [CardDefinition, CardDefinition];
   backFace?: BackFace;
   keywords: KeywordAbility[];
   /** Printed ward cost (CR 702.21), or absent. Parameterized, so not in `keywords`. */

@@ -13,7 +13,8 @@ import { counterSpellTarget, graveyardCardTarget } from './target-builders';
 import { searchLibraryCards, graveyardAlternativeCost } from './effect-builders';
 import type { Color, OracleCard } from '@mtg/shared';
 import { enforceInterpretedDefinition } from './overload';
-import { emptyCost, parseManaCost } from '../mana/cost';
+import { offsetEffectSlots } from './effect-reference-contracts';
+import { colorsOfManaCost, combinedManaCost, emptyCost, parseManaCost } from '../mana/cost';
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type {
   AbilityCost,
@@ -7392,6 +7393,156 @@ interface TransformBackFaceResult {
 }
 
 /** Interpret the second face of a traditional transforming DFC with the normal card grammar. */
+const FUSE_REMINDER = /^Fuse \(You may cast one or both halves of this card from your hand\.\)$/;
+
+/**
+ * A split card whose halves are both instants or sorceries (CR 709). Each half is interpreted
+ * as its own card and cast as an alternative face; the card itself, everywhere but the stack,
+ * has the two halves' characteristics combined (CR 709.4). With fuse, both halves may be cast
+ * together from hand: the fused spell has the combined characteristics, its targets are the
+ * left half's then the right half's, and it follows the left half's instructions first (CR
+ * 702.102). Rooms (split permanents) are not handled here.
+ */
+function interpretSplitCard(card: OracleCard): CardDefinition | null {
+  const back = card.backFace;
+  const names = card.name.split(' // ');
+  const costs = (card.manaCost ?? '').split(' // ');
+  const typeLines = card.typeLine.split(' // ').map((line) => line.trim());
+  if (back === undefined || names.length !== 2 || costs.length !== 2 || typeLines.length !== 2)
+    return null;
+  if (!typeLines.every((line) => line === 'Instant' || line === 'Sorcery')) return null;
+  const fuse = card.keywords.includes('Fuse');
+  const halfText = (text: string): string =>
+    text
+      .split('\n')
+      .filter((line) => !(fuse && FUSE_REMINDER.test(line.trim())))
+      .join('\n');
+  const half = (suffix: string, index: 0 | 1, oracleText: string): CardDefinition => {
+    const cost = costs[index]!.trim();
+    return interpretCard({
+      oracleId: `${card.oracleId}:${suffix}` as OracleCard['oracleId'],
+      scryfallId: card.scryfallId,
+      name: names[index]!,
+      manaCost: cost as OracleCard['manaCost'],
+      cmc: 0,
+      colors: colorsOfManaCost(parseManaCost(cost as OracleCard['manaCost']).cost),
+      colorIdentity: [...card.colorIdentity],
+      typeLine: typeLines[index]!,
+      supertypes: [],
+      types: [typeLines[index]!],
+      subtypes: [],
+      oracleText: halfText(oracleText),
+      power: null,
+      toughness: null,
+      loyalty: null,
+      defense: null,
+      keywords: [],
+      layout: 'normal',
+      commanderLegality: card.commanderLegality,
+      isBasicLand: false,
+    });
+  };
+  const left = half('left', 0, card.oracleText);
+  const right = half('right', 1, back.oracleText);
+  const reasons = [
+    ...left.unmodeledReasons.map((reason) => `${left.name}: ${reason}`),
+    ...right.unmodeledReasons.map((reason) => `${right.name}: ${reason}`),
+  ];
+  const halvesCastable =
+    left.manaCost !== null &&
+    right.manaCost !== null &&
+    left.spellAbility?.kind === 'spell' &&
+    right.spellAbility?.kind === 'spell';
+  if (!halvesCastable && reasons.length === 0) reasons.push('split half has no executable spell');
+  const combinedCost =
+    left.manaCost !== null && right.manaCost !== null
+      ? combinedManaCost(left.manaCost, right.manaCost)
+      : null;
+  const types = [...new Set([...left.types, ...right.types])];
+  const alternativeCasts: AlternativeCast[] = [];
+  for (const face of [left, right]) {
+    if (face.manaCost === null || face.spellAbility === null) continue;
+    alternativeCasts.push({
+      kind: 'split',
+      manaCost: face.manaCost,
+      name: face.name,
+      typeLine: face.typeLine,
+      description: face.name,
+      ability: face.spellAbility,
+      spellFace: face,
+    });
+  }
+  if (fuse && halvesCastable && combinedCost !== null) {
+    const leftAbility = left.spellAbility!;
+    const rightAbility = right.spellAbility!;
+    const offset = leftAbility.targets.length;
+    const rightEffects = rightAbility.effects.map((effect) => offsetEffectSlots(effect, offset));
+    const slotLinked = (spec: TargetSpec): boolean =>
+      spec.graveyardOwnerSlot !== undefined ||
+      spec.differentPlayerTargetSlots !== undefined ||
+      spec.perPlayer === true;
+    if (
+      leftAbility.modes !== undefined ||
+      rightAbility.modes !== undefined ||
+      rightEffects.some((effect) => effect === undefined) ||
+      [...leftAbility.targets, ...rightAbility.targets].some(slotLinked) ||
+      (leftAbility.targets.some((spec) => spec.count !== undefined) &&
+        rightAbility.targets.some((spec) => spec.count === undefined))
+    ) {
+      reasons.push('fused split halves whose targets cannot be laid side by side');
+    } else {
+      const spellAbility: Ability = {
+        kind: 'spell',
+        targets: [...leftAbility.targets, ...rightAbility.targets],
+        effects: [...leftAbility.effects, ...(rightEffects as Effect[])],
+        description: `${leftAbility.description ?? left.name}, then ${rightAbility.description ?? right.name}`,
+      };
+      const fusedFace: CardDefinition = {
+        ...left,
+        oracleId: `${card.oracleId}:fused` as CardDefinition['oracleId'],
+        name: card.name,
+        typeLine: card.typeLine,
+        types,
+        colors: [...card.colors],
+        manaCost: combinedCost,
+        spellAbility,
+        modeled: true,
+        unmodeledReasons: [],
+      };
+      alternativeCasts.push({
+        kind: 'split',
+        fused: true,
+        from: 'hand',
+        manaCost: combinedCost,
+        name: card.name,
+        typeLine: card.typeLine,
+        description: `${card.name} (fused)`,
+        ability: spellAbility,
+        spellFace: fusedFace,
+      });
+    }
+  }
+  return enforceInterpretedDefinition(
+    applyOverride({
+      ...left,
+      oracleId: card.oracleId,
+      scryfallId: card.scryfallId,
+      name: card.name,
+      typeLine: card.typeLine,
+      types,
+      colors: [...card.colors],
+      colorIdentity: [...card.colorIdentity],
+      manaCost: combinedCost,
+      hasUnsupportedCost: left.hasUnsupportedCost || right.hasUnsupportedCost,
+      keywords: [],
+      spellAbility: null,
+      alternativeCasts,
+      modeled: reasons.length === 0,
+      unmodeledReasons: reasons,
+    }),
+  );
+}
+
 function interpretSecondFace(card: OracleCard): CardDefinition | null {
   const back = card.backFace;
   if (back === undefined) return null;
@@ -7502,6 +7653,10 @@ function buildPathwayLand(card: OracleCard): {
 
 /** Interpret one oracle card. Never throws â€” unmodeled cards are reported, not errors. */
 export function interpretCard(card: OracleCard): CardDefinition {
+  if (card.layout === 'split') {
+    const split = interpretSplitCard(card);
+    if (split !== null) return split;
+  }
   const reasons: string[] = [];
 
   const isLandCard = card.types.includes('Land');
