@@ -1,6 +1,6 @@
 import type { PlayerId } from '@mtg/shared';
 import { emit } from '../log/log';
-import { expireSourceControlEffects, retainAttackDefender } from './objects';
+import { createPreparedCopy, expireSourceControlEffects, retainAttackDefender } from './objects';
 import type { GameContext } from './types';
 
 /** Player shields expire as that player's next turn begins, before its untap step. */
@@ -106,6 +106,10 @@ export function phaseInAtUntap(ctx: GameContext, playerId: PlayerId): void {
     (record) => record.phaseInPlayerId !== playerId,
   );
   ctx.state.battlefield.push(...due.map((record) => record.permanent));
+  // Its prepare-spell copy ceased while it was phased out; phasing in prepared makes a fresh one
+  // (CR 722.3c).
+  for (const { permanent } of due)
+    if (permanent.prepared === true) createPreparedCopy(ctx, permanent);
   if (due.length > 0)
     emit(ctx, 'phaseIn', {
       player: playerId,
