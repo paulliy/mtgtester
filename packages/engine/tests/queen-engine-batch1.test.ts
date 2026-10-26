@@ -18,6 +18,7 @@ import {
   permanentSource,
 } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
+import { manaSourcesFor } from '../src/state/queries';
 import type { GameContext } from '../src/state/types';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
@@ -359,6 +360,13 @@ describe('Master of Ceremonies', () => {
     expect(treasures).toHaveLength(2);
     expect(treasures.some((permanent) => permanent.controllerId === 'P1')).toBe(true);
     expect(treasures.some((permanent) => permanent.controllerId === 'P2')).toBe(true);
+    // Each is a real Treasure: "{T}, Sacrifice this token: Add one mana of any color."
+    for (const treasure of treasures) {
+      const source = manaSourcesFor(ctx, treasure.controllerId).find(
+        (candidate) => candidate.cardId === treasure.cardId,
+      );
+      expect(source?.costs).toEqual([{ kind: 'tap' }, { kind: 'sacrificeSelf' }]);
+    }
   });
 
   it('master-secrets-draws-both: opponent secrets choice draws you and them', () => {

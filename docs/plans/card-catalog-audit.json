@@ -3553,7 +3553,7 @@
           "viewerEvidence": "not-run",
           "gameplayAiEvidence": "not-evaluated",
           "engineTestIds": [
-            "securitron-puts-a-counter-only-on-another-creature-token",
+            "securitron-puts-a-counter-on-a-creature-token",
             "securitron-does-not-counter-a-nontoken-creature"
           ],
           "evidenceNote": "Other creature tokens enter with +1/+1. Self and nontokens do not. Engine tests only."

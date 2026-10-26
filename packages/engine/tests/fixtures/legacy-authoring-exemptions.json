@@ -798,11 +798,6 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/token-triumph.ts",
-      "sha256": "529d65c3956e96a45670d1276fc61fef1fe14222441014f452a6788e3774af91",
-      "description": "Overwhelming Instinct"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/token-triumph.ts",
       "sha256": "7840d914b805aa8d0380afbc4540c00a24a14a12f6bd02f0c85ee4b660f7c73e",
       "description": "Ajani, Caller of the Pride"
     },
@@ -985,11 +980,6 @@
       "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
       "sha256": "528163f849ae35bbbac316c94b886b6beddf5e8cdea997d3a2322807931b95eb",
       "description": "Pearl-Ear, Imperial Advisor"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
-      "sha256": "1f2fcc7c489ff01030582e76bc49ae501b0c17689f6136111d84712f237a5808",
-      "description": "Securitron Squadron"
     },
     {
       "file": "packages/engine/src/cards/overrides/w2-remaining.ts",

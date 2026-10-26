@@ -12260,9 +12260,6 @@
                     "who": "you"
                   },
                   {
-                    "kind": "other"
-                  },
-                  {
                     "kind": "isToken"
                   }
                 ]
@@ -13035,7 +13032,7 @@
           "targets": [],
           "trigger": {
             "aggregate": true,
-            "condition": {
+            "eventCondition": {
               "cmp": ">=",
               "kind": "countPermanents",
               "n": 3,
@@ -36377,7 +36374,7 @@
           "targets": [],
           "trigger": {
             "aggregate": true,
-            "condition": {
+            "eventCondition": {
               "cmp": ">=",
               "kind": "countPermanents",
               "n": 3,
@@ -39454,9 +39451,6 @@
                   {
                     "kind": "controller",
                     "who": "you"
-                  },
-                  {
-                    "kind": "other"
                   },
                   {
                     "kind": "isToken"

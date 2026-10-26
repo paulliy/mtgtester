@@ -15,7 +15,7 @@ import {
 } from '../selector';
 import { NINJA_1_1_BLACK, RABBIT_1_1_WHITE, SPIDER_2_2_REACH_GREEN } from '../tokens';
 import { constant } from '../value';
-import { mana, manaCost, SAC_SELF, sacOther, spell, TAP } from '../templates';
+import { mana, manaCost, SAC_SELF, sacOther, spell, TAP, triggered } from '../templates';
 import { defineCard, unsupportedCard } from './index';
 
 const CREATURE = ofType('Creature');
@@ -271,32 +271,30 @@ export function registerW2RemainingOverrides(): void {
       repeatable: true,
     },
     triggers: [
-      {
-        kind: 'triggered',
-        trigger: { when: 'enters', subject: { kind: 'self' } },
-        targets: [],
-        effects: [
-          {
-            op: 'createTokenCopyOf',
-            ref: 'source',
-            count: { kind: 'optionalCostCount', mechanic: 'squad' },
-          },
-        ],
-        description: 'Squad — create copies for each squad cost paid',
-      },
-      {
-        kind: 'triggered',
-        trigger: {
-          when: 'enters',
-          subject: {
-            kind: 'permanent',
-            selector: allOf(CREATURE, YOURS, OTHER, { kind: 'isToken' }),
-          },
+      triggered(
+        { when: 'enters', subject: { kind: 'self' } },
+        {
+          effects: [
+            {
+              op: 'createTokenCopyOf',
+              ref: 'source',
+              count: { kind: 'optionalCostCount', mechanic: 'squad' },
+            },
+          ],
+          description: 'Squad — create copies for each squad cost paid',
         },
-        targets: [],
-        effects: [{ op: 'putCounters', target: 'triggerObject', counter: '+1/+1', count: 1 }],
-        description: 'A creature token you control enters — put a +1/+1 counter on it',
-      },
+      ),
+      // No "another": a squad copy sees its own entry and counters itself (CR 603.6a).
+      triggered(
+        {
+          when: 'enters',
+          subject: { kind: 'permanent', selector: allOf(CREATURE, YOURS, { kind: 'isToken' }) },
+        },
+        {
+          effects: [{ op: 'putCounters', target: 'triggerObject', counter: '+1/+1', count: 1 }],
+          description: 'A creature token you control enters — put a +1/+1 counter on it',
+        },
+      ),
     ],
   });
 

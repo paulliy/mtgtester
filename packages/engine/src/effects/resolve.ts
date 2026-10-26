@@ -2,7 +2,7 @@ import { targetingSourceFields } from '../targets/context';
 import type { TargetingSource } from '../targets/context';
 import { copyData } from '../state/copy-data';
 import { offBattlefieldTypes } from '../state/off-battlefield-types';
-import { HUMAN_SOLDIER_1_1_WHITE } from '../cards/tokens';
+import { HUMAN_SOLDIER_1_1_WHITE, TREASURE } from '../cards/tokens';
 import {
   discover,
   revealUntilAura,
@@ -4346,20 +4346,37 @@ export function* executeAbility(
         break;
       }
       case 'damageEachCreatureController': {
-        // This is intentionally one resolving effect. It deals one damage per creature, but
-        // never creates one player decision/trigger per creature.
+        // Rakdos Charm: each creature is the source of its own damage (so its lifelink, infect
+        // and "deals damage" triggers apply), and all of it is dealt at once (CR 120.3). Every
+        // modifier is planned before any life total changes; observations run afterwards.
         const amount = amountOf(effect.amount);
         const creatures = ctx.state.battlefield.filter((perm) =>
           computeCharacteristics(ctx, perm).types.includes('Creature'),
         );
+        const plans: { creature: EnginePermanent; player: EnginePlayerState; amount: number }[] =
+          [];
         for (const creature of creatures) {
-          const owner = playerById(ctx, creature.controllerId);
-          yield* dealDamageToPlayer(ctx, source, owner, amount, {
+          const player = playerById(ctx, creature.controllerId);
+          if (player.hasLost) continue;
+          const adjusted = yield* applyDamageModifiers(ctx, {
+            source: permanentSource(creature),
+            recipient: { kind: 'player', player },
+            amount,
+            combat: false,
+          });
+          plans.push({ creature, player, amount: adjusted.amount });
+        }
+        const observations: (() => void)[] = [];
+        for (const plan of plans)
+          yield* dealDamageToPlayer(ctx, permanentSource(plan.creature), plan.player, plan.amount, {
             combat: false,
             sourceIsCommander: false,
-            sourceHasLifelink: false,
+            sourceHasLifelink: hasKeyword(ctx, plan.creature, 'lifelink'),
+            sourceHasInfect: hasKeyword(ctx, plan.creature, 'infect'),
+            preparedAmount: true,
+            deferredObservations: observations,
           });
-        }
+        for (const observe of observations) observe();
         break;
       }
       case 'angelGrace':
@@ -4591,34 +4608,8 @@ export function* executeAbility(
             ],
           };
           if (outcome.index === 0) {
-            createToken(
-              ctx,
-              {
-                name: 'Treasure',
-                typeLine: 'Artifact — Treasure',
-                types: ['Artifact'],
-                subtypes: ['Treasure'],
-                colors: [],
-                power: null,
-                toughness: null,
-                manaAbilities: [{ units: [['W', 'U', 'B', 'R', 'G']] }],
-              },
-              controller.id,
-            );
-            createToken(
-              ctx,
-              {
-                name: 'Treasure',
-                typeLine: 'Artifact — Treasure',
-                types: ['Artifact'],
-                subtypes: ['Treasure'],
-                colors: [],
-                power: null,
-                toughness: null,
-                manaAbilities: [{ units: [['W', 'U', 'B', 'R', 'G']] }],
-              },
-              opponent.id,
-            );
+            createToken(ctx, TREASURE, controller.id);
+            createToken(ctx, TREASURE, opponent.id);
           } else if (outcome.index === 1) {
             createToken(
               ctx,
@@ -5807,20 +5798,7 @@ export function* executeAbility(
         break;
       case 'createTreasureForDeaths':
         for (let i = 0; i < ctx.state.creaturesDiedThisTurn; i++) {
-          createToken(
-            ctx,
-            {
-              name: 'Treasure',
-              typeLine: 'Artifact — Treasure',
-              types: ['Artifact'],
-              subtypes: ['Treasure'],
-              colors: [],
-              power: null,
-              toughness: null,
-              manaAbilities: [{ units: [['W', 'U', 'B', 'R', 'G']] }],
-            },
-            controller.id,
-          );
+          createToken(ctx, TREASURE, controller.id);
         }
         break;
       case 'preventCombatDamageAll':
@@ -7497,13 +7475,16 @@ export function* executeAbility(
               : []),
           ],
         };
-        const paid = outcome.index === 1 && canPayAmount ? amount : 0;
+        // Paying an amount of 0 is still paying (CR 118.5): Confiscation Coup takes a mana
+        // value 0 permanent for no energy.
+        const didPay = outcome.index === 1 && canPayAmount;
+        const paid = didPay ? amount : 0;
         if (paid > 0) {
           controller.energy -= paid;
           emit(ctx, 'energy', { amount: -paid, total: controller.energy }, controller.id);
         }
         scope.energyPaid = paid;
-        if (paid > 0 && effect.then !== undefined) {
+        if (didPay && effect.then !== undefined) {
           yield* executeAbility(
             ctx,
             source,
