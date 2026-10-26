@@ -17090,6 +17090,160 @@
         "pr11b-mila-crafty-companion-viewer-lukka-emblem"
       ],
       "gameplayAiScenarioIds": []
+    },
+    "18ed0c8a-db8f-4247-87c4-544b833f01bd": {
+      "name": "Master of Ceremonies",
+      "oracleSha256": "e600c54e98c1050cd0d2a24e8c15263b2bb8c206c2d2d007a496c9fb12e74445",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": ["models the complete pinned Oracle text for real and fixture IDs"],
+      "clauses": [
+        {
+          "id": "pr13-master-of-ceremonies-clause-1",
+          "oracleText": "At the beginning of your upkeep, each opponent chooses money, friends, or secrets. For each player who chose money, you and that player each create a Treasure token. For each player who chose friends, you and that player each create a 1/1 green and white Citizen creature token. For each player who chose secrets, you and that player each draw a card.",
+          "implementation": [
+            "TriggerSpec.upkeep (your upkeep)",
+            "Effect.masterOfCeremonies: each opponent chooses money, friends, or secrets",
+            "money: catalog TREASURE token ({T}, sacrifice) for you and that player",
+            "friends: 1/1 green and white Citizen for you and that player",
+            "secrets: you and that player each draw"
+          ],
+          "engineTestIds": [
+            "master-money-makes-treasures-for-both: opponent money choice creates Treasures for each of you",
+            "master-secrets-draws-both: opponent secrets choice draws you and them",
+            "master-not-on-opponent-upkeep"
+          ],
+          "viewerScenarioIds": ["pr13-master-of-ceremonies-viewer-money"]
+        }
+      ],
+      "viewerScenarioIds": ["pr13-master-of-ceremonies-viewer-money"],
+      "gameplayAiScenarioIds": []
+    },
+    "96312b75-3110-4506-9f95-0c6c17d9da11": {
+      "name": "Securitron Squadron",
+      "oracleSha256": "3db94733b1abcfae54bce169a795378f4e2edacbc9cbdfab1258d3983cd83a90",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": ["models the complete pinned Oracle text for real and fixture IDs"],
+      "clauses": [
+        {
+          "id": "pr13-securitron-squadron-clause-3",
+          "oracleText": "Whenever a creature token you control enters, put a +1/+1 counter on it.",
+          "implementation": [
+            "TriggerSpec.enters (creature token you control, including this permanent as a token copy, CR 603.6a)",
+            "Effect.putCounters +1/+1 on the entering token"
+          ],
+          "engineTestIds": [
+            "securitron-puts-a-counter-on-a-creature-token",
+            "securitron-token-copy-counters-itself-as-it-enters",
+            "securitron-does-not-counter-a-nontoken-creature"
+          ],
+          "viewerScenarioIds": [
+            "pr13-securitron-squadron-viewer-squad-copy",
+            "pr13-securitron-squadron-viewer-nontoken"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr13-securitron-squadron-viewer-nontoken",
+        "pr13-securitron-squadron-viewer-squad-copy"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c246cdb4-2fd8-487e-944e-3e52fbd1bbaa": {
+      "name": "Confiscation Coup",
+      "oracleSha256": "1fadc07ec77f7f2fe95bfb6763d9fe34ee120d2fa8aa0fda9074291b8c68ccd8",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": ["models the complete pinned Oracle text for real and fixture IDs"],
+      "clauses": [
+        {
+          "id": "pr13-confiscation-coup-clause-1",
+          "oracleText": "Choose target artifact or creature. You get {E}{E}{E}{E} (four energy counters), then you may pay an amount of {E} equal to that permanent's mana value. If you do, gain control of it.",
+          "implementation": [
+            "spell target: artifact or creature",
+            "Effect.gainEnergy 4",
+            "Effect.mayPayEnergy equal to the target’s mana value; paying 0 is a payment (CR 118.5)",
+            "Effect.gainControlTarget when paid"
+          ],
+          "engineTestIds": [
+            "coup-steals-only-when-you-pay-the-targets-mana-value",
+            "coup-steals-a-mana-value-0-token-for-no-energy",
+            "coup-cannot-target-a-land"
+          ],
+          "viewerScenarioIds": [
+            "pr13-confiscation-coup-viewer-zero-mana-value",
+            "pr13-confiscation-coup-viewer-pay-mana-value"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr13-confiscation-coup-viewer-pay-mana-value",
+        "pr13-confiscation-coup-viewer-zero-mana-value"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9ba89c25-5302-414f-a2ec-436b8981999d": {
+      "name": "Overwhelming Instinct",
+      "oracleSha256": "36384c4717eb98cb0c4b0d99f53f8926e38be5eaf929cc46a2d73fc78583599b",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": ["models the complete pinned Oracle text for real and fixture IDs"],
+      "clauses": [
+        {
+          "id": "pr13-overwhelming-instinct-clause-1",
+          "oracleText": "Whenever you attack with three or more creatures, draw a card.",
+          "implementation": [
+            "TriggerSpec.attacks aggregate (creatures you control)",
+            "eventCondition: three or more of your creatures attacking, checked at the attack only (not an intervening-if, CR 603.4)",
+            "Effect.draw 1"
+          ],
+          "engineTestIds": [
+            "instinct-draws-when-you-attack-with-three-or-more",
+            "instinct-still-draws-after-an-attacker-leaves-combat",
+            "instinct-does-not-draw-for-two-attackers-or-an-opponent-attack"
+          ],
+          "viewerScenarioIds": [
+            "pr13-overwhelming-instinct-viewer-attacker-removed",
+            "pr13-overwhelming-instinct-viewer-two-attackers"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr13-overwhelming-instinct-viewer-attacker-removed",
+        "pr13-overwhelming-instinct-viewer-two-attackers"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5e62b51d-faec-4aa0-9504-cf2c282d08ea": {
+      "name": "Rakdos Charm",
+      "oracleSha256": "9a0e59d80b1bbc7de43858d5ed720217e11ecd7c85afc8c65ac96fae7e1f24e2",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": ["models the complete pinned Oracle text for real and fixture IDs"],
+      "clauses": [
+        {
+          "id": "pr13-rakdos-charm-clause-1",
+          "oracleText": "Choose one —",
+          "implementation": ["SpellAbility.modes choose one"],
+          "engineTestIds": [
+            "rakdos-charm-exiles-target-graveyard",
+            "rakdos-charm-destroys-artifact-not-creature",
+            "rakdos-charm-each-creature-damages-its-controller"
+          ],
+          "viewerScenarioIds": ["pr13-rakdos-charm-viewer-creature-sources"]
+        },
+        {
+          "id": "pr13-rakdos-charm-clause-4",
+          "oracleText": "• Each creature deals 1 damage to its controller.",
+          "implementation": [
+            "Effect.damageEachCreatureController: each creature is the source of 1 damage to its controller, dealt simultaneously (CR 120.3)",
+            "creature lifelink and infect apply"
+          ],
+          "engineTestIds": [
+            "rakdos-charm-each-creature-damages-its-controller",
+            "rakdos-charm-each-creature-is-the-damage-source"
+          ],
+          "viewerScenarioIds": ["pr13-rakdos-charm-viewer-creature-sources"]
+        }
+      ],
+      "viewerScenarioIds": ["pr13-rakdos-charm-viewer-creature-sources"],
+      "gameplayAiScenarioIds": []
     }
   }
 }

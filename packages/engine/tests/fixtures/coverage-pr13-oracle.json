@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "pinnedAt": "2026-10-26",
+  "cards": [
+    {
+      "sha256": "e600c54e98c1050cd0d2a24e8c15263b2bb8c206c2d2d007a496c9fb12e74445",
+      "card": {
+        "oracleId": "18ed0c8a-db8f-4247-87c4-544b833f01bd",
+        "scryfallId": "d152cfa8-00b7-4aa0-855e-bbd57a5f4b23",
+        "name": "Master of Ceremonies",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Rhino Druid",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Rhino",
+          "Druid"
+        ],
+        "oracleText": "At the beginning of your upkeep, each opponent chooses money, friends, or secrets. For each player who chose money, you and that player each create a Treasure token. For each player who chose friends, you and that player each create a 1/1 green and white Citizen creature token. For each player who chose secrets, you and that player each draw a card.",
+        "power": "3",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Treasure"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "3db94733b1abcfae54bce169a795378f4e2edacbc9cbdfab1258d3983cd83a90",
+      "card": {
+        "oracleId": "96312b75-3110-4506-9f95-0c6c17d9da11",
+        "scryfallId": "b689a206-aec3-4a31-95cf-3d4b840db04c",
+        "name": "Securitron Squadron",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Artifact Creature — Robot",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Robot"
+        ],
+        "oracleText": "Squad {3} (As an additional cost to cast this spell, you may pay {3} any number of times. When this creature enters, create that many tokens that are copies of it.)\nVigilance\nWhenever a creature token you control enters, put a +1/+1 counter on it.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Vigilance",
+          "Squad"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "1fadc07ec77f7f2fe95bfb6763d9fe34ee120d2fa8aa0fda9074291b8c68ccd8",
+      "card": {
+        "oracleId": "c246cdb4-2fd8-487e-944e-3e52fbd1bbaa",
+        "scryfallId": "6daf453f-54be-4346-831d-a0434aa086fe",
+        "name": "Confiscation Coup",
+        "manaCost": "{3}{U}{U}",
+        "cmc": 5,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Choose target artifact or creature. You get {E}{E}{E}{E} (four energy counters), then you may pay an amount of {E} equal to that permanent's mana value. If you do, gain control of it.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "36384c4717eb98cb0c4b0d99f53f8926e38be5eaf929cc46a2d73fc78583599b",
+      "card": {
+        "oracleId": "9ba89c25-5302-414f-a2ec-436b8981999d",
+        "scryfallId": "2d9e3793-7ddc-45c5-b25d-acd5cb96026f",
+        "name": "Overwhelming Instinct",
+        "manaCost": "{2}{G}",
+        "cmc": 3,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever you attack with three or more creatures, draw a card.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "9a0e59d80b1bbc7de43858d5ed720217e11ecd7c85afc8c65ac96fae7e1f24e2",
+      "card": {
+        "oracleId": "5e62b51d-faec-4aa0-9504-cf2c282d08ea",
+        "scryfallId": "64b67170-1602-4050-80c0-ade2a6cac211",
+        "name": "Rakdos Charm",
+        "manaCost": "{B}{R}",
+        "cmc": 2,
+        "colors": [
+          "B",
+          "R"
+        ],
+        "colorIdentity": [
+          "B",
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Choose one —\n• Exile target player's graveyard.\n• Destroy target artifact.\n• Each creature deals 1 damage to its controller.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}
