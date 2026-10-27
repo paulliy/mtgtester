@@ -9,13 +9,15 @@ import type {
   TableMessage,
   ThreatReason,
 } from '@mtg/shared';
-import { judgeDecision, ownerLookup, stackLookup, type OwnerOf } from './compliance';
-import { estimateTable, type TableEstimate } from './estimate';
-import type { ActiveObligation, BreachReason, DiplomacyPlay } from './play';
-import { bestDealWith, chooseProposal } from './propose';
-import { TrustLedger } from './trust';
-import { answerDeal, valueDeal, type DealContext } from './value';
 import { WEIGHTS } from '../weights';
+import { judgeDecision, offeredBreach, ownerLookup, stackLookup, type OwnerOf } from './compliance';
+import { couldKill, estimateTable, type TableEstimate } from './estimate';
+import type { ActiveObligation, BreachReason, DiplomacyPlay } from './play';
+import { bestDealWith, rankedProposals } from './propose';
+import { TrustLedger } from './trust';
+import { answerDeal, roundOf, validateDeal, valueDeal, type DealContext } from './value';
+
+const D = WEIGHTS.deals;
 
 export interface DiplomacyTableOptions {
   /** Game seed; seeds every threshold's noise, so a fixed-seed game negotiates the same way. */
@@ -29,6 +31,12 @@ export interface DiplomacyTableOptions {
    * phase 3) are never offered deals, but their decisions are still observed.
    */
   negotiates: (seat: PlayerId) => boolean;
+  /**
+   * How many attack declarations the engine has repaired so far (its public
+   * `attackDeclarationRepaired` events). A repaired declaration is the engine's choice, not the
+   * seat's, so it is never judged. Without this, a held declaration is judged as submitted.
+   */
+  repairedAttacks?: () => number;
 }
 
 export interface DiplomacyStats {
@@ -40,22 +48,25 @@ export interface DiplomacyStats {
   voided: number;
 }
 
+/** What became of an offer made through `offer`. */
+export type OfferOutcome =
+  | { kind: 'accepted'; deal: Deal }
+  | { kind: 'declined'; counter?: Deal }
+  /** Not considered: invalid, rate-limited, or the same terms declined too recently. */
+  | { kind: 'refused'; reason: 'invalid' | 'rateLimited' | 'cooldown' | 'notNegotiating' };
+
 interface DealRecord {
   deal: Deal;
-  /** Stake at acceptance, credited to both parties' trust when the deal is kept. */
+  /** Stake at acceptance, credited to a party's trust when it keeps a deal it was tempted by. */
   stake: number;
   /** One-shot obligations already met, by index in `deal.obligations`. */
   met: Set<number>;
   /** The leader when the deal started; the escape clause fires only on a party BECOMING leader. */
   leaderAtStart: PlayerId | null;
-}
-
-/** An attack declaration held back from judgment until the engine has accepted it. */
-interface HeldAttack {
-  request: DecisionRequest;
-  response: DecisionResponse;
-  ownerOf: OwnerOf;
-  isStack: (id: ObjectId) => boolean;
+  /** Turns each party has started since the deal was accepted, the accepting turn included. */
+  turnsTaken: Map<PlayerId, number>;
+  /** Parties that were offered a way to break the deal and did not take it. */
+  tested: Set<PlayerId>;
 }
 
 interface Decline {
@@ -65,9 +76,18 @@ interface Decline {
   round: number;
 }
 
-/** Canonical form of a deal's terms, ignoring length and ids, for the re-proposal cooldown. */
-function termsKey(deal: Deal): string {
-  return deal.obligations
+/** An attack declaration held back from judgment until the engine has accepted it. */
+interface HeldAttack {
+  request: DecisionRequest;
+  response: DecisionResponse;
+  ownerOf: OwnerOf;
+  isStack: (id: ObjectId) => boolean;
+  repairedBefore: number;
+}
+
+/** Canonical form of a deal's terms and length, for the re-proposal cooldown. */
+function termsKey(deal: Pick<Deal, 'obligations' | 'rounds'>): string {
+  const terms = deal.obligations
     .map((o) =>
       o.kind === 'attackPlayer'
         ? `${o.kind}:${o.by}>${o.target}`
@@ -75,7 +95,13 @@ function termsKey(deal: Deal): string {
     )
     .sort()
     .join('|');
+  return `${terms}#${deal.rounds}`;
 }
+
+const pairKey = (a: PlayerId, b: PlayerId) => [a, b].sort().join('+');
+
+/** A deep copy for the message log, so later status changes never rewrite what was said. */
+const snapshot = (deal: Deal): Deal => structuredClone(deal);
 
 /** Short public reasons a seat leads, for a threat call. */
 function threatReasons(table: TableEstimate, leader: PlayerId): ThreatReason[] {
@@ -100,21 +126,24 @@ function threatReasons(table: TableEstimate, leader: PlayerId): ThreatReason[] {
 
 /**
  * One game's deals, trust and table talk (ADR 0031 decision 20). Pure logic: the driver calls
- * `beforeDecision` and `afterDecision` around every surfaced decision and gives each bot seat
- * `playFor(seat)`. Everything is synchronous and seeded, so it adds no latency and keeps fixed-seed
- * games reproducible.
+ * `beforeDecision` and `afterDecision` around every surfaced decision, `flush` when the game
+ * ends, and gives each bot seat `playFor(seat)`. Everything is synchronous and seeded, so it adds
+ * no latency and keeps fixed-seed games reproducible.
  */
 export class DiplomacyTable {
   private readonly opts: DiplomacyTableOptions;
   private readonly trust = new TrustLedger();
   private readonly records: DealRecord[] = [];
   private readonly declines: Decline[] = [];
+  private readonly lastEnded = new Map<string, number>();
+  private readonly proposedThisTurn = new Set<PlayerId>();
   private readonly log: TableMessage[] = [];
   private readonly pendingBreach = new Map<string, BreachReason>();
   private heldAttack: HeldAttack | null = null;
   private drained = 0;
   private nextDealId = 1;
   private turnSeen = -1;
+  private activeNow: PlayerId | null = null;
   private announcedLeader: PlayerId | null = null;
   readonly stats: DiplomacyStats = {
     proposals: 0,
@@ -172,8 +201,13 @@ export class DiplomacyTable {
       trust: this.trust,
       activeDeals: this.activeDeals(),
       turn,
+      startingSeats: this.opts.seats.length,
       seed: this.opts.seed,
     };
+  }
+
+  private round(turn: number): number {
+    return roundOf(turn, this.opts.seats.length);
   }
 
   /** Call before a seat answers any surfaced decision. Opens the turn's negotiation window. */
@@ -181,20 +215,32 @@ export class DiplomacyTable {
     if (this.heldAttack !== null && !this.isRetryOfHeld(request)) this.flush();
     if (request.turn < 1 || request.turn === this.turnSeen) return;
     this.turnSeen = request.turn;
+    this.activeNow = request.activePlayer;
+    this.proposedThisTurn.clear();
     this.openWindow(request.turn, request.activePlayer);
   }
 
   /**
    * Call with the decision a seat submitted, before the engine applies it. An attack declaration
-   * is held until the next decision shows the engine accepted it: a rejected one is asked again
-   * (and after two rejections repaired by the engine), and only what actually happened counts.
+   * is held until the next decision shows the engine accepted it: a rejected one is asked again,
+   * and one the engine repairs after two rejections is not the seat's choice and is not judged.
    */
   afterDecision(request: DecisionRequest, response: DecisionResponse): void {
+    if (this.records.every((r) => r.deal.status !== 'active')) {
+      this.pendingBreach.clear();
+      return;
+    }
     const view = this.opts.viewOf(request.decidingPlayer);
     const ownerOf = ownerLookup(view);
     const isStack = stackLookup(view);
     if (request.decisionType === 'declareAttackers') {
-      this.heldAttack = { request, response, ownerOf, isStack };
+      this.heldAttack = {
+        request,
+        response,
+        ownerOf,
+        isStack,
+        repairedBefore: this.opts.repairedAttacks?.() ?? 0,
+      };
       return;
     }
     this.judge(request, response, ownerOf, isStack);
@@ -205,6 +251,11 @@ export class DiplomacyTable {
     const held = this.heldAttack;
     if (held === null) return;
     this.heldAttack = null;
+    const repaired = (this.opts.repairedAttacks?.() ?? 0) > held.repairedBefore;
+    if (repaired) {
+      this.pendingBreach.clear();
+      return;
+    }
     this.judge(held.request, held.response, held.ownerOf, held.isStack);
   }
 
@@ -231,13 +282,19 @@ export class DiplomacyTable {
         if (record.met.has(i)) continue;
         const obligation = record.deal.obligations[i]!;
         const verdict = judgeDecision(obligation, request, response, ownerOf, isStack);
-        if (verdict === 'kept' && obligation.kind === 'attackPlayer') record.met.add(i);
         if (verdict === 'violated') {
           this.breach(record, obligation, request.turn);
           break;
         }
+        if (verdict === 'kept' && obligation.kind === 'attackPlayer') {
+          record.met.add(i);
+          record.tested.add(obligation.by);
+        } else if (offeredBreach(obligation, request, ownerOf, isStack)) {
+          record.tested.add(obligation.by);
+        }
       }
     }
+    this.pendingBreach.clear();
   }
 
   private breach(record: DealRecord, obligation: DealObligation, turn: number): void {
@@ -245,14 +302,14 @@ export class DiplomacyTable {
     record.deal.breachedBy = obligation.by;
     this.trust.recordBroken(obligation.by);
     this.stats.broken++;
+    this.lastEnded.set(pairKey(...record.deal.parties), this.round(turn));
     const reason = this.pendingBreach.get(record.deal.id);
-    this.pendingBreach.delete(record.deal.id);
     this.log.push({
       kind: 'breach',
       turn,
       from: obligation.by,
       dealId: record.deal.id,
-      obligation,
+      obligation: { ...obligation },
       ...(reason !== undefined ? { reason } : {}),
     });
   }
@@ -263,19 +320,38 @@ export class DiplomacyTable {
     const table = estimateTable(view);
 
     for (const record of this.records) {
+      if (record.deal.status !== 'active') continue;
       const deal = record.deal;
-      if (deal.status !== 'active') continue;
       if (!deal.parties.every((p) => living.has(p))) {
-        // A party left the game: nothing more is owed, and nobody broke anything.
-        this.end(record, 'void', turn);
-      } else if (
+        this.end(record, 'void', turn, 'partyLeft');
+        continue;
+      }
+      if (
         table.leader !== null &&
         table.leader !== record.leaderAtStart &&
         deal.parties.includes(table.leader)
       ) {
-        this.end(record, 'void', turn);
-      } else if (deal.untilTurn !== undefined && turn > deal.untilTurn) {
-        this.end(record, 'kept', turn);
+        this.end(record, 'void', turn, 'leader');
+        continue;
+      }
+      // Deals do not survive lethal: once a promiser could kill the seat it promised to spare,
+      // the deal is called off in the open rather than broken by surprise.
+      if (
+        deal.obligations.some((o) => o.kind === 'noAttack' && couldKill(table, o.by, o.against))
+      ) {
+        this.end(record, 'void', turn, 'lethal');
+        continue;
+      }
+      if (deal.parties.every((p) => (record.turnsTaken.get(p) ?? 0) >= deal.rounds)) {
+        const unmet = deal.obligations.some(
+          (o, i) => o.kind === 'attackPlayer' && !record.met.has(i),
+        );
+        if (unmet) this.end(record, 'void', turn, 'unmet');
+        else this.end(record, 'kept', turn);
+        continue;
+      }
+      if (deal.parties.includes(activePlayer)) {
+        record.turnsTaken.set(activePlayer, (record.turnsTaken.get(activePlayer) ?? 0) + 1);
       }
     }
 
@@ -284,15 +360,30 @@ export class DiplomacyTable {
     if (this.opts.negotiates(activePlayer)) this.negotiate(activePlayer, turn);
   }
 
-  private end(record: DealRecord, outcome: 'kept' | 'void', turn: number): void {
+  private end(
+    record: DealRecord,
+    outcome: 'kept' | 'void',
+    turn: number,
+    reason?: 'partyLeft' | 'leader' | 'lethal' | 'unmet',
+  ): void {
     record.deal.status = outcome;
     if (outcome === 'kept') {
-      for (const party of record.deal.parties) this.trust.recordKept(party, record.stake);
+      // Keeping a deal one was never tempted to break proves nothing, so it earns nothing.
+      for (const party of record.deal.parties) {
+        if (record.tested.has(party)) this.trust.recordKept(party, record.stake);
+      }
       this.stats.kept++;
     } else {
       this.stats.voided++;
     }
-    this.log.push({ kind: 'dealEnded', turn, dealId: record.deal.id, outcome });
+    this.lastEnded.set(pairKey(...record.deal.parties), this.round(turn));
+    this.log.push({
+      kind: 'dealEnded',
+      turn,
+      dealId: record.deal.id,
+      outcome,
+      ...(reason !== undefined ? { reason } : {}),
+    });
   }
 
   /** Name a new leader once, from the first negotiating seat in turn order that is not it. */
@@ -315,43 +406,52 @@ export class DiplomacyTable {
     });
   }
 
-  private hasActiveDeal(a: PlayerId, b: PlayerId): boolean {
-    return this.activeDeals().some((d) => d.parties.includes(a) && d.parties.includes(b));
+  private canDeal(a: PlayerId, b: PlayerId, turn: number): boolean {
+    if (this.activeDeals().some((d) => d.parties.includes(a) && d.parties.includes(b))) {
+      return false;
+    }
+    const ended = this.lastEnded.get(pairKey(a, b));
+    return ended === undefined || this.round(turn) - ended >= D.pairCooldownRounds;
   }
 
-  private recentlyDeclined(
-    proposer: PlayerId,
-    to: PlayerId,
-    terms: string,
-    round: number,
-  ): boolean {
+  private recentlyDeclined(proposer: PlayerId, to: PlayerId, terms: string, turn: number): boolean {
+    const round = this.round(turn);
     return this.declines.some(
       (d) =>
         d.proposer === proposer &&
         d.to === to &&
         d.terms === terms &&
-        round - d.round < WEIGHTS.deals.reproposeCooldownRounds,
+        round - d.round < D.reproposeCooldownRounds,
     );
   }
 
-  /** The active player's one proposal for the turn, answered at once (decisions 15 and 18). */
-  private negotiate(proposer: PlayerId, turn: number): void {
-    const ctx = this.contextFor(proposer, turn);
-    const round = Math.ceil(turn / Math.max(1, ctx.table.seats.length));
-    const chosen = chooseProposal(
-      proposer,
-      ctx,
-      (other) => this.opts.negotiates(other) && !this.hasActiveDeal(proposer, other),
-      `t${turn}-${proposer}`,
-    );
-    if (chosen === null) return;
-    const terms = termsKey(chosen.deal);
-    const to = chosen.deal.parties[1];
-    if (this.recentlyDeclined(proposer, to, terms, round)) return;
+  /**
+   * Offer a deal to its second party, who answers at once (decisions 15 and 18). Every proposer
+   * goes through here, so the limits hold for whoever offers: one offer per proposer per turn,
+   * no repeat of declined terms inside the cooldown, a pair cooldown between deals, and the
+   * structural checks. A bot that declines counters with its own best terms, and the proposer, if
+   * it negotiates here, answers that counter in turn.
+   */
+  offer(proposal: Omit<Deal, 'id' | 'status'>, turn: number): OfferOutcome {
+    const proposer = proposal.proposer;
+    const to = proposal.parties[1];
+    if (!this.opts.negotiates(to)) return { kind: 'refused', reason: 'notNegotiating' };
+    if (this.proposedThisTurn.has(proposer)) return { kind: 'refused', reason: 'rateLimited' };
+    const probe: Deal = { ...structuredClone(proposal), id: 'probe', status: 'proposed' };
+    const living = new Set(estimateTable(this.opts.viewOf(to)).seats.map((s) => s.seat));
+    if (proposal.parties[0] !== proposer || validateDeal(probe, living).length > 0) {
+      return { kind: 'refused', reason: 'invalid' };
+    }
+    if (!this.canDeal(proposer, to, turn)) return { kind: 'refused', reason: 'cooldown' };
+    const terms = termsKey(probe);
+    if (this.recentlyDeclined(proposer, to, terms, turn)) {
+      return { kind: 'refused', reason: 'cooldown' };
+    }
 
-    const deal: Deal = { ...chosen.deal, id: `deal-${this.nextDealId++}` };
+    this.proposedThisTurn.add(proposer);
+    const deal: Deal = { ...probe, id: `deal-${this.nextDealId++}` };
     this.stats.proposals++;
-    this.log.push({ kind: 'proposal', turn, from: proposer, to, deal });
+    this.log.push({ kind: 'proposal', turn, from: proposer, to, deal: snapshot(deal) });
 
     const theirCtx = this.contextFor(to, turn);
     const answer = answerDeal(deal, to, theirCtx);
@@ -364,12 +464,12 @@ export class DiplomacyTable {
         dealId: deal.id,
         answer: 'accept',
       });
-      this.activate(deal, answer.valuation.stake, turn, theirCtx.table);
-      return;
+      this.activate(deal, answer.valuation.stake, theirCtx.table);
+      return { kind: 'accepted', deal };
     }
 
     deal.status = 'declined';
-    this.declines.push({ proposer, to, terms, round });
+    this.declines.push({ proposer, to, terms, round: this.round(turn) });
     const counter = bestDealWith(to, proposer, theirCtx, `t${turn}-${to}-counter`);
     if (counter === null || termsKey(counter.deal) === terms) {
       this.log.push({
@@ -380,7 +480,7 @@ export class DiplomacyTable {
         dealId: deal.id,
         answer: 'decline',
       });
-      return;
+      return { kind: 'declined' };
     }
     const counterDeal: Deal = { ...counter.deal, id: `deal-${this.nextDealId++}` };
     this.stats.counters++;
@@ -391,37 +491,67 @@ export class DiplomacyTable {
       to: proposer,
       dealId: deal.id,
       answer: 'decline',
-      counter: counterDeal,
+      counter: snapshot(counterDeal),
     });
+    if (!this.opts.negotiates(proposer)) return { kind: 'declined', counter: counterDeal };
+
+    const ctx = this.contextFor(proposer, turn);
     const back = answerDeal(counterDeal, proposer, ctx);
+    this.log.push({
+      kind: 'response',
+      turn,
+      from: proposer,
+      to,
+      dealId: counterDeal.id,
+      answer: back.accept ? 'accept' : 'decline',
+    });
     if (back.accept) {
-      this.log.push({
-        kind: 'response',
-        turn,
-        from: proposer,
-        to,
-        dealId: counterDeal.id,
-        answer: 'accept',
-      });
-      this.activate(counterDeal, back.valuation.stake, turn, ctx.table);
-    } else {
-      counterDeal.status = 'declined';
-      this.log.push({
-        kind: 'response',
-        turn,
-        from: proposer,
-        to,
-        dealId: counterDeal.id,
-        answer: 'decline',
-      });
+      this.activate(counterDeal, back.valuation.stake, ctx.table);
+      return { kind: 'accepted', deal: counterDeal };
+    }
+    counterDeal.status = 'declined';
+    return { kind: 'declined', counter: counterDeal };
+  }
+
+  /** The active bot's one proposal for the turn: its best candidate not recently declined. */
+  private negotiate(proposer: PlayerId, turn: number): void {
+    const ctx = this.contextFor(proposer, turn);
+    const ranked = rankedProposals(
+      proposer,
+      ctx,
+      (other) => this.opts.negotiates(other) && this.canDeal(proposer, other, turn),
+      `t${turn}-${proposer}`,
+    );
+    for (const candidate of ranked) {
+      const to = candidate.deal.parties[1];
+      if (this.recentlyDeclined(proposer, to, termsKey(candidate.deal), turn)) continue;
+      const { id: _id, status: _status, ...proposal } = candidate.deal;
+      this.offer(proposal, turn);
+      return;
     }
   }
 
-  private activate(deal: Deal, stake: number, turn: number, table: TableEstimate): void {
+  private activate(deal: Deal, stake: number, table: TableEstimate): void {
     deal.status = 'active';
-    deal.untilTurn = turn + deal.rounds * table.seats.length - 1;
-    this.records.push({ deal, stake, met: new Set(), leaderAtStart: table.leader });
+    const turnsTaken = new Map<PlayerId, number>(deal.parties.map((p) => [p, 0]));
+    // The accepting turn counts for whichever party is taking it.
+    if (this.activeNow !== null && turnsTaken.has(this.activeNow)) {
+      turnsTaken.set(this.activeNow, 1);
+    }
+    this.records.push({
+      deal,
+      stake,
+      met: new Set(),
+      leaderAtStart: table.leader,
+      turnsTaken,
+      tested: new Set(),
+    });
     this.stats.accepted++;
+  }
+
+  /** A seat's public record of deals kept and broken. */
+  trustRecord(seat: PlayerId): { kept: number; broken: number; biggestKept: number } {
+    return this.trust.snapshot(seat);
   }
 
   /** A seat's value for a deal right now, for reports and tests. */

@@ -45,10 +45,12 @@ export interface Deal {
   obligations: DealObligation[];
   /** Game turn the deal was proposed on. */
   proposedTurn: number;
-  /** Rounds the deal lasts once accepted; one round is one turn for each living player. */
+  /**
+   * How long the deal lasts: until each party has taken this many turns of its own since it was
+   * accepted (the accepting turn counts for whoever is active). Counted in turns rather than game
+   * turn numbers so eliminations and extra turns cannot stretch or shrink it.
+   */
   rounds: number;
-  /** Last game turn (inclusive) the deal covers. Set when the deal is accepted. */
-  untilTurn?: number;
   status: DealStatus;
   /** The seat that broke the deal, when `status` is `'broken'`. */
   breachedBy?: PlayerId;
@@ -87,14 +89,19 @@ export type TableMessage =
       from: PlayerId;
       dealId: string;
       obligation: DealObligation;
-      /** Why the breaker broke it, when it says: e.g. `'lethal'`. */
-      reason?: 'lethal' | 'worthIt';
+      /** Why the breaker broke it, when it says. */
+      reason?: 'lethal' | 'worthIt' | 'selfDefense';
     }
   | {
       kind: 'dealEnded';
       turn: number;
       dealId: string;
       outcome: 'kept' | 'void';
+      /**
+       * Why a deal was void: a party left the game or became the leader, one party could now
+       * kill the other, or a promised attack never came. A void deal credits no trust.
+       */
+      reason?: 'partyLeft' | 'leader' | 'lethal' | 'unmet';
     };
 
 export type TableMessageKind = TableMessage['kind'];

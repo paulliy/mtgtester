@@ -2,7 +2,7 @@ import type { DecisionRequest, DecisionResponse } from '@mtg/shared';
 import type { DiplomacyTable } from './table';
 
 export { DiplomacyTable } from './table';
-export type { DiplomacyStats, DiplomacyTableOptions } from './table';
+export type { DiplomacyStats, DiplomacyTableOptions, OfferOutcome } from './table';
 export type { ActiveObligation, BreachReason, DiplomacyPlay } from './play';
 export { estimateTable } from './estimate';
 export type { SeatEstimate, TableEstimate } from './estimate';
@@ -22,6 +22,23 @@ export function withDiplomacy<P extends { decide(request: DecisionRequest): Deci
     decide(request) {
       table.beforeDecision(request);
       const response = provider.decide(request);
+      table.afterDecision(request, response);
+      return response;
+    },
+  };
+}
+
+/** `withDiplomacy` for providers that answer asynchronously: a human, a model, a socket. */
+export function withDiplomacyAsync<
+  P extends { decide(request: DecisionRequest): Promise<DecisionResponse> },
+>(
+  table: DiplomacyTable,
+  provider: P,
+): { decide(request: DecisionRequest): Promise<DecisionResponse> } {
+  return {
+    async decide(request) {
+      table.beforeDecision(request);
+      const response = await provider.decide(request);
       table.afterDecision(request, response);
       return response;
     },

@@ -1,7 +1,7 @@
 import type { DealObligation, LegalAction } from '@mtg/shared';
 import { NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
-import { judgeDecision, ownerLookup, stackLookup } from './compliance';
+import { judgeDecision, offeredBreach, ownerLookup, stackLookup } from './compliance';
 import {
   attackAction,
   creature,
@@ -116,5 +116,32 @@ describe('judgeDecision — targets', () => {
     expect(judge(noCounter, counter, ['s1'])).toBe('violated');
     expect(judge(noCounter, removal, [theirs.id])).toBe('kept');
     expect(judge(noTarget, counter, ['s1'])).toBe('violated');
+  });
+});
+
+describe('attackPlayer needs a real attack, and temptation is recorded', () => {
+  const big = creature('P1', 6);
+  const token = creature('P1', 1);
+  const owe: DealObligation = { kind: 'attackPlayer', by: 'P1', target: 'P2' };
+
+  it('does not count a token attack as keeping the promise', () => {
+    const attack = attackAction([big, token], () => ['P2', 'P3', NO_ATTACK_TARGET]);
+    expect(judge(owe, attack, ['P3', 'P2'], 'declareAttackers')).toBe('violated');
+    expect(judge(owe, attack, ['P2', 'P3'], 'declareAttackers')).toBe('kept');
+  });
+
+  it('knows when a decision offered a way to break a promise', () => {
+    const attack = attackAction([mine], () => ['P2', 'P3', NO_ATTACK_TARGET]);
+    const elsewhere = attackAction([mine], () => ['P3', NO_ATTACK_TARGET]);
+    const req = (a: LegalAction) => request('P1', [a], { decisionType: 'declareAttackers' });
+    expect(offeredBreach(noAttack, req(attack), ownerOf, isStack)).toBe(true);
+    expect(offeredBreach(noAttack, req(elsewhere), ownerOf, isStack)).toBe(false);
+  });
+
+  it('protects cards in the protected seat graveyard from targeting', () => {
+    const withGrave = view('P1', 30, [
+      opponent('P2', 30, { graveyard: [{ id: 'g1', name: 'Dead Thing' }] }),
+    ]);
+    expect(ownerLookup(withGrave)('g1')).toBe('P2');
   });
 });

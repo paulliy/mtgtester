@@ -35,6 +35,7 @@ export {
   describeObligation,
   estimateTable,
   withDiplomacy,
+  withDiplomacyAsync,
 } from './diplomacy';
 export type {
   ActiveObligation,
@@ -42,6 +43,7 @@ export type {
   DiplomacyPlay,
   DiplomacyStats,
   DiplomacyTableOptions,
+  OfferOutcome,
   SeatEstimate,
   SeatName,
   TableEstimate,

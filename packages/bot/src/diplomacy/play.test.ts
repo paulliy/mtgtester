@@ -38,14 +38,24 @@ function everyone(attacker: PermanentView): string[] {
   return ['P2', 'P3', 'P4', NO_ATTACK_TARGET].filter(() => attacker !== undefined);
 }
 
-/** P1 attacks with a 4 and a 2. P2 leads on board; P3 is low but out of reach; P4 is even. */
-function board(p3Life = 12): { v: PlayerView; attackers: PermanentView[] } {
+/**
+ * P1 attacks with a 4 and a 2. P2 leads on board, its creatures tapped from attacking; P3 is low
+ * but out of reach; P4 is even and has one untapped blocker.
+ */
+function board(p3Life = 12, p2Tapped = true): { v: PlayerView; attackers: PermanentView[] } {
   const attackers = [creature('P1', 4), creature('P1', 2)];
+  const tapped = { tapped: p2Tapped };
   const v = view(
     'P1',
     30,
     [opponent('P2', 40), opponent('P3', p3Life), opponent('P4', 30)],
-    [...attackers, creature('P2', 8), creature('P2', 8), creature('P2', 8), creature('P4', 3)],
+    [
+      ...attackers,
+      creature('P2', 8, 8, tapped),
+      creature('P2', 8, 8, tapped),
+      creature('P2', 8, 8, tapped),
+      creature('P4', 3),
+    ],
   );
   return { v, attackers };
 }
@@ -55,6 +65,29 @@ describe('planAttackDeclaration — threat-aware targets (ADR 0031 decision 16)'
     const { v, attackers } = board();
     const plan = planAttackDeclaration(attackAction(attackers, everyone), v, dip([]));
     expect(plan.targets.map((t) => t.choice)).toEqual(['P2', 'P2']);
+  });
+
+  it('does not attack into a wall of untapped blockers', () => {
+    const { v, attackers } = board(12, false);
+    const plan = planAttackDeclaration(attackAction(attackers, everyone), v, dip([]));
+    expect(plan.targets.some((t) => t.choice === 'P2')).toBe(false);
+  });
+
+  it('does not count a kill that blockers would stop', () => {
+    const attackers = [creature('P1', 4), creature('P1', 3)];
+    const v = view(
+      'P1',
+      30,
+      [opponent('P2', 6), opponent('P3', 30)],
+      [...attackers, creature('P2', 1)],
+    );
+    const d = dip([{ kind: 'noAttack', by: 'P1', against: 'P2' }]);
+    const plan = planAttackDeclaration(
+      attackAction(attackers, () => ['P2', 'P3', NO_ATTACK_TARGET]),
+      v,
+      d,
+    );
+    expect(plan.breach).toBeUndefined();
   });
 
   it('goes for the kill when the attack is lethal', () => {
@@ -82,11 +115,34 @@ describe('planAttackDeclaration — keeping and breaking deals (decision 17)', (
     expect(plan.breach).toEqual({ dealId: 'deal-1', reason: 'lethal' });
   });
 
-  it('sends its smallest attacker to honor an attackPlayer promise', () => {
+  it('honors an attackPlayer promise with enough power, using as little as it can', () => {
     const { v, attackers } = board();
     const d = dip([{ kind: 'attackPlayer', by: 'P1', target: 'P4' }]);
     const plan = planAttackDeclaration(attackAction(attackers, everyone), v, d);
-    expect(plan.targets.map((t) => t.choice)).toEqual(['P2', 'P4']);
+    // Half of 6 power is owed: the 4 alone meets it, so the 2 stays free.
+    expect(plan.targets.map((t) => t.choice)).toEqual(['P4', 'P2']);
+    expect(plan.breach).toBeUndefined();
+  });
+
+  it('keeps an attackPlayer promise from spoiling a kill, or breaks it for lethal', () => {
+    const attackers = [creature('P1', 10), creature('P1', 5), creature('P1', 1)];
+    const v = view(
+      'P1',
+      30,
+      [opponent('P2', 16), opponent('P4', 40)],
+      [...attackers, creature('P4', 9, 9, { tapped: true })],
+    );
+    const d = dip([{ kind: 'attackPlayer', by: 'P1', target: 'P4' }]);
+    const plan = planAttackDeclaration(
+      attackAction(attackers, () => ['P2', 'P4', NO_ATTACK_TARGET]),
+      v,
+      d,
+    );
+    const atP2 = plan.targets
+      .filter((t) => t.choice === 'P2')
+      .reduce((sum, t) => sum + attackers[t.slot]!.power!, 0);
+    expect(atP2).toBeGreaterThanOrEqual(16);
+    expect(plan.breach).toEqual({ dealId: 'deal-1', reason: 'lethal' });
   });
 
   it('holds back a creature whose only targets are protected', () => {

@@ -179,6 +179,22 @@ export const WEIGHTS = {
     targetInteractionValue: 3,
     /** Flat per-round value of not having one seat target your spells. */
     counterInteractionValue: 1.5,
+    /**
+     * Hand size at which a seat counts as fully able to interact. A promise not to target or
+     * counter is worth `handSize / this` (capped at 1) of the flat value: a seat with no cards
+     * promises nothing.
+     */
+    fullInteractionHandSize: 4,
+    /**
+     * Share of the flat interaction value the promiser itself gives up per round: it still
+     * interacts, but at whoever it would have liked less.
+     */
+    interactionForegoneShare: 0.5,
+    /**
+     * Share of its attack power a seat must send at the target to meet `attackPlayer`. A token
+     * attack does not count, and the deal is valued at this share, not the seat's whole attack.
+     */
+    attackPlayerShare: 0.5,
 
     // --- Deal value (decision 11) ---
     /** λ: how much an opponent's gain costs us at an even win share. */
@@ -186,12 +202,16 @@ export const WEIGHTS = {
     /** Each later round of a deal counts this much of the one before it. */
     roundDiscount: 0.7,
     maxRounds: 2,
+    /** Most obligations one side may owe in a deal; more is padding (ADR 0031 decision 15). */
+    maxObligationsPerSide: 2,
 
     // --- Trust (decision 12) ---
     basePKeep: 0.6,
     maxPKeep: 0.95,
     /** Each breach multiplies the breaker's keep probability by this. */
     brokenDecay: 0.4,
+    /** A seat with this many breaches is refused outright. */
+    maxBreachesTolerated: 2,
 
     // --- Acceptance (decision 15) ---
     acceptThreshold: 1,
@@ -202,6 +222,8 @@ export const WEIGHTS = {
     investmentAllowance: 2,
     /** Rounds before the same proposer may propose the same terms again after a decline. */
     reproposeCooldownRounds: 2,
+    /** Rounds a pair waits after one deal ends before starting another: no endless renewal. */
+    pairCooldownRounds: 1,
 
     // --- Keeping, breaking and proposing (decisions 17 and 18) ---
     /**

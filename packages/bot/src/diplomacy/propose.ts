@@ -60,17 +60,17 @@ export interface ScoredCandidate {
 }
 
 /**
- * The candidate with the best value for `me` among those `other` should accept and `me` would
- * accept itself. This is also the counter-offer: the bot's terms come from its own best
- * candidate, never from splitting the difference with what it was offered.
+ * Every candidate `other` should accept and `me` would accept itself, best for `me` first. The
+ * first is also the counter-offer: the bot's terms come from its own best candidate, never from
+ * splitting the difference with what it was offered.
  */
-export function bestDealWith(
+export function acceptableDeals(
   me: PlayerId,
   other: PlayerId,
   ctx: DealContext,
   idPrefix: string,
-): ScoredCandidate | null {
-  let best: ScoredCandidate | null = null;
+): ScoredCandidate[] {
+  const out: ScoredCandidate[] = [];
   for (const deal of candidateDeals(me, other, ctx, idPrefix)) {
     const mine = valueDeal(deal, me, ctx);
     if (mine.vetoes.length > 0 || mine.value <= acceptBar(deal, me, ctx, { noise: false })) {
@@ -80,11 +80,19 @@ export function bestDealWith(
     if (theirs.vetoes.length > 0 || theirs.value <= acceptBar(deal, other, ctx, { noise: false })) {
       continue;
     }
-    if (best === null || mine.value > best.value) {
-      best = { deal, value: mine.value, theirValue: theirs.value };
-    }
+    out.push({ deal, value: mine.value, theirValue: theirs.value });
   }
-  return best;
+  return out.sort((a, b) => b.value - a.value);
+}
+
+/** The best acceptable candidate with `other`, or null. */
+export function bestDealWith(
+  me: PlayerId,
+  other: PlayerId,
+  ctx: DealContext,
+  idPrefix: string,
+): ScoredCandidate | null {
+  return acceptableDeals(me, other, ctx, idPrefix)[0] ?? null;
 }
 
 /**
@@ -107,18 +115,20 @@ export function proposalPartners(me: PlayerId, ctx: DealContext): PlayerId[] {
   return partners;
 }
 
-/** The single proposal `me` makes this window, if any: its best candidate across partners. */
-export function chooseProposal(
+/**
+ * Everything `me` could propose this window, best first, across every partner it has a reason
+ * to deal with. The table proposes the first one not recently declined.
+ */
+export function rankedProposals(
   me: PlayerId,
   ctx: DealContext,
   eligible: (other: PlayerId) => boolean,
   idPrefix: string,
-): ScoredCandidate | null {
-  let best: ScoredCandidate | null = null;
+): ScoredCandidate[] {
+  const all: ScoredCandidate[] = [];
   for (const other of proposalPartners(me, ctx)) {
     if (!eligible(other)) continue;
-    const candidate = bestDealWith(me, other, ctx, `${idPrefix}-${other}`);
-    if (candidate !== null && (best === null || candidate.value > best.value)) best = candidate;
+    all.push(...acceptableDeals(me, other, ctx, `${idPrefix}-${other}`));
   }
-  return best;
+  return all.sort((a, b) => b.value - a.value);
 }

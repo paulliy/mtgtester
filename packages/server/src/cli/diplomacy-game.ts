@@ -23,6 +23,11 @@ export interface DiplomacyGameRequest {
   turnCap: number;
   /** Seats that negotiate and play deal-aware. The rest are the plain heuristic bot. */
   diplomacySeats: readonly PlayerId[];
+  /**
+   * False keeps the diplomacy seats' threat-aware attack targets but makes no deals, so a sweep
+   * can tell what deals add from what the targeting alone does.
+   */
+  negotiate?: boolean;
   decks: readonly { commander: OracleCard; cards: OracleCard[] }[];
 }
 
@@ -56,7 +61,9 @@ export function playDiplomacyGame(request: DiplomacyGameRequest): DiplomacyGameR
     seed: request.seed,
     seats: players.map((p) => p.id),
     viewOf: (seat) => engine.view(seat),
-    negotiates: (seat) => diplomats.has(seat),
+    negotiates: (seat) => request.negotiate !== false && diplomats.has(seat),
+    repairedAttacks: () =>
+      engine.getState().eventLog.filter((e) => e.type === 'attackDeclarationRepaired').length,
   });
 
   // Every seat goes through the table, so the window opens on whoever decides first in a turn

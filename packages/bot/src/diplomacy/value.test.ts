@@ -1,20 +1,31 @@
-import type { Deal, PlayerView } from '@mtg/shared';
+import type { Deal, DealObligation, PlayerView } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { WEIGHTS } from '../weights';
 import { estimateTable } from './estimate';
 import { creature, deal, opponent, view } from './fixtures.test-helpers';
 import { TrustLedger } from './trust';
-import { acceptBar, answerDeal, thresholdNoise, valueDeal, type DealContext } from './value';
+import {
+  acceptBar,
+  answerDeal,
+  thresholdNoise,
+  validateDeal,
+  valueDeal,
+  type DealContext,
+} from './value';
 
 const D = WEIGHTS.deals;
 
 /** P1 (us) at 30; P2 an aggressive 35; P3 a quiet 30; P4 the leader with a big board. */
-function table(overrides: { myLife?: number; p2Power?: number } = {}): PlayerView {
+function table(overrides: { myLife?: number; p2Power?: number; p2Hand?: number } = {}): PlayerView {
   const p2 = overrides.p2Power ?? 10;
   return view(
     'P1',
     overrides.myLife ?? 30,
-    [opponent('P2', 35), opponent('P3', 30), opponent('P4', 40)],
+    [
+      opponent('P2', 35, { handSize: overrides.p2Hand ?? 3 }),
+      opponent('P3', 30),
+      opponent('P4', 40),
+    ],
     [
       creature('P1', 4),
       creature('P2', p2 / 2),
@@ -33,6 +44,7 @@ function ctx(v: PlayerView, extra: Partial<DealContext> = {}): DealContext {
     trust: new TrustLedger(),
     activeDeals: [],
     turn: 40,
+    startingSeats: 4,
     seed: 'seed',
     ...extra,
   };
@@ -46,6 +58,49 @@ const truce: Deal = deal(
   ],
 );
 
+const LIVING = new Set(['P1', 'P2', 'P3', 'P4']);
+
+describe('validateDeal — deals are untrusted input (decision 15)', () => {
+  it('refuses duplicated or padded obligations', () => {
+    const dup = deal(
+      ['P1', 'P2'],
+      [
+        { kind: 'noCounter', by: 'P2', against: 'P1' },
+        { kind: 'noCounter', by: 'P2', against: 'P1' },
+      ],
+    );
+    expect(validateDeal(dup, LIVING)).toContain('padded');
+    const many: DealObligation[] = [
+      { kind: 'noAttack', by: 'P2', against: 'P1' },
+      { kind: 'noTarget', by: 'P2', against: 'P1' },
+      { kind: 'attackPlayer', by: 'P2', target: 'P4' },
+    ];
+    expect(validateDeal(deal(['P1', 'P2'], many), LIVING)).toContain('padded');
+  });
+
+  it('refuses impossible lengths and seats outside the game', () => {
+    for (const rounds of [0, -3, 1.5]) {
+      expect(validateDeal({ ...truce, rounds }, LIVING)).toContain('malformed');
+    }
+    expect(validateDeal({ ...truce, rounds: D.maxRounds + 1 }, LIVING)).toContain('tooLong');
+    const ghost = deal(['P1', 'P2'], [{ kind: 'attackPlayer', by: 'P2', target: 'P9' }]);
+    expect(validateDeal(ghost, LIVING)).toContain('malformed');
+    const thirdParty = deal(['P1', 'P2'], [{ kind: 'noAttack', by: 'P3', against: 'P1' }]);
+    expect(validateDeal(thirdParty, LIVING)).toContain('malformed');
+  });
+
+  it('refuses obligations that contradict each other', () => {
+    const both = deal(
+      ['P1', 'P2'],
+      [
+        { kind: 'noAttack', by: 'P2', against: 'P4' },
+        { kind: 'attackPlayer', by: 'P2', target: 'P4' },
+      ],
+    );
+    expect(validateDeal(both, LIVING)).toContain('conflicting');
+  });
+});
+
 describe('valueDeal — weighing everyone, not just ourselves (decisions 10 and 11)', () => {
   it('values a truce that also points the partner at the leader above a plain truce', () => {
     const c = ctx(table());
@@ -57,8 +112,27 @@ describe('valueDeal — weighing everyone, not just ourselves (decisions 10 and 
     expect(valueDeal(redirect, 'P1', c).value).toBeGreaterThan(valueDeal(truce, 'P1', c).value);
   });
 
-  it('prices protecting the leader as a loss and refuses it', () => {
-    const c = ctx(table());
+  it('charges the giver for sparing the stronger seat, and refuses a one-sided ask', () => {
+    const c = ctx(
+      view(
+        'P1',
+        30,
+        [opponent('P2', 38), opponent('P3', 30)],
+        [creature('P1', 4), creature('P2', 6), creature('P3', 4)],
+      ),
+    );
+    const ask = deal(['P2', 'P1'], [{ kind: 'noAttack', by: 'P1', against: 'P2' }]);
+    expect(valueDeal(ask, 'P1', c).value).toBeLessThan(0);
+    expect(answerDeal(ask, 'P1', { ...c, turn: 1 }).accept).toBe(false);
+  });
+
+  it('prices a promise not to interact by what the promiser can do', () => {
+    const gift = deal(['P2', 'P1'], [{ kind: 'noTarget', by: 'P2', against: 'P1' }]);
+    expect(valueDeal(gift, 'P1', ctx(table({ p2Hand: 6 }))).value).toBeGreaterThan(0);
+    expect(valueDeal(gift, 'P1', ctx(table({ p2Hand: 0 }))).value).toBe(0);
+  });
+
+  it('refuses to protect the leader unless in danger, but takes a gift from it', () => {
     const shield = deal(
       ['P1', 'P2'],
       [
@@ -66,28 +140,39 @@ describe('valueDeal — weighing everyone, not just ourselves (decisions 10 and 
         { kind: 'noAttack', by: 'P2', against: 'P1' },
       ],
     );
-    const mine = deal(['P1', 'P2'], [{ kind: 'noAttack', by: 'P1', against: 'P4' }]);
-    expect(valueDeal(mine, 'P1', c).value).toBeLessThan(0);
-    expect(valueDeal(shield, 'P1', c).vetoes).toContain('protectsLeader');
+    expect(valueDeal(shield, 'P1', ctx(table())).vetoes).toContain('protectsLeader');
+    expect(valueDeal(shield, 'P1', ctx(table({ myLife: 8 }))).vetoes).not.toContain(
+      'protectsLeader',
+    );
+    const gift = deal(['P4', 'P1'], [{ kind: 'noAttack', by: 'P4', against: 'P1' }]);
+    expect(valueDeal(gift, 'P1', ctx(table())).vetoes).toEqual([]);
   });
 
-  it('refuses a deal with the leader unless we are in danger', () => {
-    const withLeader = deal(
-      ['P1', 'P4'],
+  it('will not sell interaction without the same promise back, or for long', () => {
+    const c = ctx(table());
+    const sold = deal(
+      ['P2', 'P1'],
       [
-        { kind: 'noAttack', by: 'P1', against: 'P4' },
-        { kind: 'noAttack', by: 'P4', against: 'P1' },
+        { kind: 'noCounter', by: 'P1', against: 'P2' },
+        { kind: 'noAttack', by: 'P2', against: 'P1' },
       ],
     );
-    expect(valueDeal(withLeader, 'P1', ctx(table())).vetoes).toContain('leaderCounterparty');
-    const desperate = ctx(table({ myLife: 8 }));
-    const vetoes = valueDeal(withLeader, 'P1', desperate).vetoes;
-    expect(vetoes).not.toContain('leaderCounterparty');
-    expect(vetoes).not.toContain('protectsLeader');
+    expect(valueDeal(sold, 'P1', c).vetoes).toContain('unmirroredInteraction');
+    const mirrored = deal(
+      ['P2', 'P1'],
+      [
+        { kind: 'noCounter', by: 'P1', against: 'P2' },
+        { kind: 'noCounter', by: 'P2', against: 'P1' },
+      ],
+    );
+    expect(valueDeal(mirrored, 'P1', c).vetoes).not.toContain('unmirroredInteraction');
+    expect(valueDeal({ ...mirrored, rounds: 2 }, 'P1', c).vetoes).toContain(
+      'unmirroredInteraction',
+    );
   });
 });
 
-describe('trust and delivery order (decisions 12-14)', () => {
+describe('trust and temptation (decisions 12 and 13)', () => {
   it('credits kept deals only up to their own size, and decays on a breach', () => {
     const trust = new TrustLedger();
     expect(trust.pKeep('P2', 10)).toBeCloseTo(D.basePKeep);
@@ -100,37 +185,32 @@ describe('trust and delivery order (decisions 12-14)', () => {
     expect(trust.pKeep('P2', 3)).toBeCloseTo(small * D.brokenDecay);
   });
 
-  it('scales a mutual continuous truce wholly by trust, since either side can stop', () => {
+  it('discounts only the counterparty side by trust; our own promises cost in full', () => {
     const fresh = ctx(table());
     const burned = ctx(table());
     burned.trust.recordBroken('P2');
-    const ratio = valueDeal(truce, 'P1', burned).value / valueDeal(truce, 'P1', fresh).value;
-    expect(ratio).toBeCloseTo(D.brokenDecay);
+    expect(valueDeal(truce, 'P1', burned).value).toBeLessThan(valueDeal(truce, 'P1', fresh).value);
+    const mine = deal(['P1', 'P2'], [{ kind: 'attackPlayer', by: 'P1', target: 'P4' }]);
+    expect(valueDeal(mine, 'P1', burned).value).toBeCloseTo(valueDeal(mine, 'P1', fresh).value);
   });
 
-  it('counts a one-shot obligation we deliver in full whatever the trust', () => {
-    const mine = deal(['P1', 'P2'], [{ kind: 'attackPlayer', by: 'P1', target: 'P4' }]);
-    const burned = ctx(table());
-    burned.trust.recordBroken('P2');
-    expect(valueDeal(mine, 'P1', burned).value).toBeCloseTo(
-      valueDeal(mine, 'P1', ctx(table())).value,
-    );
+  it('refuses a seat that keeps breaking deals, and gives it no early-game allowance', () => {
+    const c = ctx(table(), { turn: 2 });
+    c.trust.recordBroken('P2');
+    expect(acceptBar(truce, 'P1', c, { noise: false })).toBe(D.acceptThreshold);
+    c.trust.recordBroken('P2');
+    expect(valueDeal(truce, 'P1', c).vetoes).toContain('untrusted');
   });
 
   it('treats a promise not to attack us as worthless when that seat could kill us', () => {
     const gift = deal(['P1', 'P2'], [{ kind: 'noAttack', by: 'P2', against: 'P1' }]);
     expect(valueDeal(gift, 'P1', ctx(table())).value).toBeGreaterThan(0);
-    expect(valueDeal(gift, 'P1', ctx(table({ myLife: 9 }))).value).toBe(0);
+    expect(valueDeal(gift, 'P1', ctx(table({ myLife: 5 }))).value).toBe(0);
   });
 });
 
 describe('acceptance (decision 15)', () => {
-  it('refuses deals that are too long, malformed, or leave nobody to attack', () => {
-    const c = ctx(table());
-    expect(valueDeal({ ...truce, rounds: D.maxRounds + 1 }, 'P1', c).vetoes).toContain('tooLong');
-    const thirdParty = deal(['P1', 'P2'], [{ kind: 'noAttack', by: 'P3', against: 'P1' }]);
-    expect(valueDeal(thirdParty, 'P1', c).vetoes).toContain('malformed');
-
+  it('refuses a deal that leaves nobody to attack', () => {
     const two = ctx(view('P1', 30, [opponent('P2', 30), opponent('P3', 30)], [creature('P2', 4)]));
     two.activeDeals = [
       {
@@ -151,19 +231,26 @@ describe('acceptance (decision 15)', () => {
     expect(spread.size).toBeGreaterThan(10);
   });
 
-  it('lowers the bar early in the game for a counterparty that does not lead', () => {
+  it('lowers the bar early only for a reciprocal deal with a clean seat that does not lead', () => {
     const early = ctx(table(), { turn: 2 });
-    const late = ctx(table(), { turn: 40 });
     expect(acceptBar(truce, 'P1', early, { noise: false })).toBe(
       D.acceptThreshold - D.investmentAllowance,
     );
-    expect(acceptBar(truce, 'P1', late, { noise: false })).toBe(D.acceptThreshold);
+    expect(acceptBar(truce, 'P1', ctx(table()), { noise: false })).toBe(D.acceptThreshold);
+    const oneSided = deal(['P2', 'P1'], [{ kind: 'noAttack', by: 'P1', against: 'P2' }]);
+    expect(acceptBar(oneSided, 'P1', early, { noise: false })).toBe(D.acceptThreshold);
   });
 
   it('never accepts a vetoed deal, however good it looks', () => {
-    const gift = deal(['P1', 'P4'], [{ kind: 'noAttack', by: 'P4', against: 'P1' }]);
-    const answer = answerDeal(gift, 'P1', ctx(table()));
-    expect(answer.valuation.vetoes).toContain('leaderCounterparty');
+    const padded = deal(
+      ['P2', 'P1'],
+      [
+        { kind: 'noAttack', by: 'P2', against: 'P1' },
+        { kind: 'noAttack', by: 'P2', against: 'P1' },
+      ],
+    );
+    const answer = answerDeal(padded, 'P1', ctx(table()));
+    expect(answer.valuation.vetoes).toContain('padded');
     expect(answer.accept).toBe(false);
   });
 });

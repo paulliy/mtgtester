@@ -3,12 +3,13 @@
  * heuristic seats on the same seeds, before deals are offered anywhere by default.
  *
  *   bun run diplomacy-sweep [--games N] [--seed S] [--turn-cap N] [--game-timeout SECONDS]
- *                           [--all] [--talk] [--oracle-fixture FILE] [--json out.json]
+ *                           [--all] [--no-deals] [--talk] [--oracle-fixture FILE] [--json out.json]
  *
  * Two seats negotiate and two play the plain bot; which pair alternates by game, so each arm
  * holds the first-player seat half the time (as in `combat-sweep`). `--all` makes every seat a
- * diplomat instead, which measures how the table behaves rather than who wins. `--talk` prints
- * each game's table talk.
+ * diplomat instead, which measures how the table behaves rather than who wins. `--no-deals` keeps
+ * the diplomacy seats' threat-aware attack targets but makes no deals: run it beside the default
+ * to tell what deals add from what the targeting does. `--talk` prints each game's table talk.
  *
  * Card data comes from the Scryfall bulk file when it exists, otherwise from the committed
  * coverage fixture, so the sweep runs offline. Each game runs in a child process with a wall-clock
@@ -74,6 +75,7 @@ interface Args {
   turnCap: number;
   gameTimeoutMs: number;
   all: boolean;
+  noDeals: boolean;
   talk: boolean;
   oracleFixture?: string;
   json?: string;
@@ -86,6 +88,7 @@ function parseArgs(argv: string[]): Args {
     turnCap: 200,
     gameTimeoutMs: 120_000,
     all: false,
+    noDeals: false,
     talk: false,
   };
   for (let i = 0; i < argv.length; i++) {
@@ -98,6 +101,7 @@ function parseArgs(argv: string[]): Args {
       const seconds = Number.parseInt(argv[++i] ?? '', 10);
       if (Number.isFinite(seconds) && seconds > 0) args.gameTimeoutMs = seconds * 1000;
     } else if (arg === '--all') args.all = true;
+    else if (arg === '--no-deals') args.noDeals = true;
     else if (arg === '--talk') args.talk = true;
     else if (arg === '--oracle-fixture') {
       const value = argv[++i];
@@ -140,6 +144,8 @@ interface Totals {
   errors: string[];
   turns: number;
   deals: DiplomacyStats;
+  /** Why deals ended other than kept, and why breakers said they broke them. */
+  reasons: Record<string, number>;
 }
 
 function addStats(into: DiplomacyStats, from: DiplomacyStats): void {
@@ -165,6 +171,7 @@ function main(): void {
     errors: [],
     turns: 0,
     deals: { proposals: 0, accepted: 0, counters: 0, kept: 0, broken: 0, voided: 0 },
+    reasons: {},
   };
 
   for (let game = 0; game < args.games; game++) {
@@ -185,6 +192,7 @@ function main(): void {
         seed,
         turnCap: args.turnCap,
         diplomacySeats: diplomats,
+        negotiate: !args.noDeals,
         decks: decks.map((deck) => ({ commander: deck.commander, cards: deck.cards })),
       },
       args.gameTimeoutMs,
@@ -193,6 +201,15 @@ function main(): void {
       const result = run.result;
       totals.turns += result.turns;
       addStats(totals.deals, result.stats);
+      for (const m of result.messages) {
+        const key =
+          m.kind === 'breach'
+            ? `breach:${m.reason ?? 'unstated'}`
+            : m.kind === 'dealEnded' && m.outcome === 'void'
+              ? `void:${m.reason ?? 'unstated'}`
+              : null;
+        if (key !== null) totals.reasons[key] = (totals.reasons[key] ?? 0) + 1;
+      }
       if (result.halted) totals.halted++;
       if (result.winner === null) {
         totals.draws++;
@@ -231,7 +248,7 @@ function main(): void {
   console.log('\nDiplomacy sweep (ADR 0031)');
   console.log('─'.repeat(26));
   console.log(
-    `  ${totals.games} games, seed prefix "${args.seed}", ${args.all ? 'all seats negotiate' : '2 diplomacy seats vs 2 plain seats'}`,
+    `  ${totals.games} games, seed prefix "${args.seed}", ${args.all ? 'all seats negotiate' : '2 diplomacy seats vs 2 plain seats'}${args.noDeals ? ' (no deals: threat-aware targets only)' : ''}`,
   );
   if (!args.all) {
     console.log(`  diplomacy wins: ${totals.diplomacyWins}`);
@@ -246,6 +263,10 @@ function main(): void {
     `  deals: ${d.proposals} proposed, ${d.accepted} accepted (${d.counters} counters), ` +
       `${d.kept} kept, ${d.broken} broken, ${d.voided} void`,
   );
+  const reasons = Object.entries(totals.reasons)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => `${k} ${v}`);
+  if (reasons.length > 0) console.log(`  reasons: ${reasons.join(', ')}`);
   for (const error of totals.errors) console.log(`  error: ${error}`);
 }
 

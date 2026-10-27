@@ -15,7 +15,7 @@ export function describeObligation(o: DealObligation, name: SeatName = (s) => s)
     case 'noCounter':
       return `${name(o.by)} won't target ${name(o.against)}'s spells`;
     case 'attackPlayer':
-      return `${name(o.by)} attacks ${name(o.target)}`;
+      return `${name(o.by)} attacks ${name(o.target)} in earnest`;
   }
 }
 
@@ -39,11 +39,28 @@ export function describeMessage(m: TableMessage, name: SeatName = (s) => s): str
       return `${name(m.from)}: no. Counter: ${m.counter.obligations
         .map((o) => describeObligation(o, name))
         .join('; ')}, ${roundsText(m.counter.rounds)}.`;
-    case 'breach':
-      return `${name(m.from)} breaks the deal (${describeObligation(m.obligation, name)})${
-        m.reason === 'lethal' ? ': nothing personal, it was lethal.' : '.'
-      }`;
-    case 'dealEnded':
-      return m.outcome === 'kept' ? `Deal ${m.dealId} ran its course.` : `Deal ${m.dealId} is off.`;
+    case 'breach': {
+      const why =
+        m.reason === 'lethal'
+          ? ': nothing personal, it was lethal.'
+          : m.reason === 'selfDefense'
+            ? ': you were about to beat me.'
+            : '.';
+      return `${name(m.from)} breaks the deal (${describeObligation(m.obligation, name)})${why}`;
+    }
+    case 'dealEnded': {
+      if (m.outcome === 'kept') return `Deal ${m.dealId} ran its course.`;
+      const why =
+        m.reason === 'leader'
+          ? ': a party took the lead'
+          : m.reason === 'lethal'
+            ? ': one side could now kill the other'
+            : m.reason === 'unmet'
+              ? ': the promised attack never came'
+              : m.reason === 'partyLeft'
+                ? ': a party left the game'
+                : '';
+      return `Deal ${m.dealId} is off${why}.`;
+    }
   }
 }

@@ -17,6 +17,10 @@ export interface SeatEstimate {
   handSize: number;
   /** Total power of creatures that could attack on this seat's next turn. */
   attackPower: number;
+  /** The same creatures' powers, largest first. */
+  attackPowers: number[];
+  /** Creatures that could block on another seat's turn (all of them untap first). */
+  blockers: number;
   boardValue: number;
   position: number;
   winShare: number;
@@ -100,20 +104,25 @@ export function estimateTable(view: PlayerView): TableEstimate {
 
   const seats: SeatEstimate[] = living.map((s) => {
     let boardValue = 0;
-    let attackPower = 0;
+    let blockers = 0;
+    const attackPowers: number[] = [];
     for (const p of view.battlefield) {
       if (p.controller !== s.seat) continue;
-      if (isCreature(p)) boardValue += creatureWorth(p);
-      else if (isLand(p)) boardValue += D.landValue;
+      if (isCreature(p)) {
+        boardValue += creatureWorth(p);
+        blockers++;
+      } else if (isLand(p)) boardValue += D.landValue;
       else boardValue += D.noncreaturePermanentValue;
-      if (canAttack(p)) attackPower += p.power ?? 0;
+      if (canAttack(p)) attackPowers.push(p.power ?? 0);
     }
+    attackPowers.sort((a, b) => b - a);
+    const attackPower = attackPowers.reduce((sum, p) => sum + p, 0);
     const position =
       lifeValue(s.life) +
       boardValue +
       s.handSize * D.cardInHandValue -
       s.poison * D.poisonCounterValue;
-    return { ...s, attackPower, boardValue, position, winShare: 0 };
+    return { ...s, attackPower, attackPowers, blockers, boardValue, position, winShare: 0 };
   });
 
   const shares = softmax(
@@ -183,14 +192,22 @@ export function pressureOn(table: TableEstimate, attacker: PlayerId, defender: P
 }
 
 /**
- * Whether `seat` is in danger: low life, within one swing of some opponent's full attack, or
- * close to commander-damage death. Commander damage is only known for the viewer.
+ * Power that gets through when the defender blocks the biggest attackers one each: a crude
+ * stand-in for combat that still keeps a wall of blockers from reading as an open board.
+ */
+export function unblockedPower(powersLargestFirst: readonly number[], blockers: number): number {
+  return powersLargestFirst.slice(Math.max(0, blockers)).reduce((sum, p) => sum + p, 0);
+}
+
+/**
+ * Whether `seat` is in danger: low life, within one swing of some opponent's attack after
+ * blocks, or close to commander-damage death. Commander damage is only known for the viewer.
  */
 export function inDanger(table: TableEstimate, seat: PlayerId): boolean {
   const s = table.bySeat.get(seat);
   if (s === undefined) return false;
   if (s.life <= WEIGHTS.dangerousLifeThreshold) return true;
-  if (table.seats.some((o) => o.seat !== seat && o.attackPower >= s.life)) return true;
+  if (table.seats.some((o) => o.seat !== seat && couldKill(table, o.seat, seat))) return true;
   if (seat === table.viewer) {
     for (const dealt of table.commanderDamageToViewer.values()) {
       if (dealt >= D.commanderDamageDanger) return true;
@@ -199,15 +216,19 @@ export function inDanger(table: TableEstimate, seat: PlayerId): boolean {
   return false;
 }
 
-/** Whether `attacker`'s full attack could kill `defender` (life or commander damage). */
+/**
+ * Whether `attacker`'s next attack could kill `defender` once `defender` blocks its biggest
+ * attackers (life, or commander damage when the defender is the viewer).
+ */
 export function couldKill(table: TableEstimate, attacker: PlayerId, defender: PlayerId): boolean {
   const a = table.bySeat.get(attacker);
   const d = table.bySeat.get(defender);
   if (a === undefined || d === undefined) return false;
-  if (a.attackPower >= d.life) return true;
+  const through = unblockedPower(a.attackPowers, d.blockers);
+  if (through >= d.life) return true;
   if (defender === table.viewer) {
     const dealt = table.commanderDamageToViewer.get(attacker) ?? 0;
-    if (dealt > 0 && a.attackPower >= COMMANDER_DAMAGE_LETHAL - dealt) return true;
+    if (dealt > 0 && through >= COMMANDER_DAMAGE_LETHAL - dealt) return true;
   }
   return false;
 }

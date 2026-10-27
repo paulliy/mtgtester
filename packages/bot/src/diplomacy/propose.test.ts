@@ -25,6 +25,7 @@ function ctx(myLife = 30): DealContext {
     trust: new TrustLedger(),
     activeDeals: [],
     turn: 20,
+    startingSeats: 4,
     seed: 's',
   };
 }
