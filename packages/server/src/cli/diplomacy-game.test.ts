@@ -20,7 +20,7 @@ const decks = Array.from({ length: 4 }, (_, i) =>
 );
 const TURN_CAP = 14;
 
-describe('playDiplomacyGame (ADR 0031)', () => {
+describe('playDiplomacyGame (ADR 0035)', () => {
   it('plays a real seeded game with every seat negotiating, identically each time', () => {
     const run = () =>
       playDiplomacyGame({

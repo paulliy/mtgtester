@@ -295,7 +295,7 @@ export class StatsRepository {
    * Post-game reviews for a finished game (ADR 0022 Â§7), so commentary survives a page reload and
    * a historical game can be read back. Ordered by seat, not by when the model happened to answer.
    */
-  /** A game's table talk (ADR 0031), in the order it was said. */
+  /** A game's table talk (ADR 0035), in the order it was said. */
   gameTableTalk(gameId: string): TableTalkLine[] {
     return rows(
       this.db,

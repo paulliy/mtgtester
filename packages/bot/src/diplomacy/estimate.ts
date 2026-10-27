@@ -2,7 +2,7 @@ import type { PermanentView, PlayerId, PlayerView } from '@mtg/shared';
 import { WEIGHTS } from '../weights';
 
 /**
- * A public-information estimate of the whole table from one seat's `PlayerView` (ADR 0031
+ * A public-information estimate of the whole table from one seat's `PlayerView` (ADR 0035
  * decisions 7-10): each living seat's position in LEP, its rough win share, who leads, and where
  * each seat's attacks are likely to go.
  *

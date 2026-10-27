@@ -7,7 +7,7 @@
  * §15's debug-log-only rule). It renders *beside* each line, never inside `SpectatorLogLine` —
  * the engine emits the log and knows nothing about the AI.
  *
- * Table talk (ADR 0031) renders the same way: deals, answers, breaches and threat calls under the
+ * Table talk (ADR 0035) renders the same way: deals, answers, breaches and threat calls under the
  * play they came with. It is public, so its toggle is a view preference, on by default.
  */
 import { computed, nextTick, ref, watch } from 'vue';
@@ -23,7 +23,7 @@ const props = defineProps<{
   /** Hidden entirely when reasoning cannot exist — a random-provider game has none. */
   canShowReasoning?: boolean;
   showReasoning?: boolean;
-  /** Table talk keyed by the line sequence it sits under (ADR 0031). */
+  /** Table talk keyed by the line sequence it sits under (ADR 0035). */
   talk?: Map<number, TableTalkLine[]>;
   /** Hidden entirely in a game without diplomacy. */
   canShowTalk?: boolean;
@@ -272,7 +272,7 @@ h3 {
   opacity: 1;
   font-weight: 700;
 }
-/* Table talk (ADR 0031) sits like a note but reads as speech, not reasoning: upright, and a
+/* Table talk (ADR 0035) sits like a note but reads as speech, not reasoning: upright, and a
    breach stands out the way a fallback does. */
 .talk {
   margin: 0 0 0.15rem 0.5rem;

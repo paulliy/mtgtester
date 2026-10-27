@@ -143,7 +143,7 @@ export interface GameStartedPayload {
   paceMs?: number;
   startedAt: string;
   cardTestScenario?: CardTestScenarioMetadata;
-  /** True when the bots negotiate and talk at this table (ADR 0031). */
+  /** True when the bots negotiate and talk at this table (ADR 0035). */
   diplomacy?: boolean;
 }
 
@@ -187,7 +187,7 @@ export interface EventBatchPayload {
    */
   annotations?: AiAnnotation[];
   /**
-   * Table talk anchored to these lines (ADR 0031): deals, answers, breaches and threat calls.
+   * Table talk anchored to these lines (ADR 0035): deals, answers, breaches and threat calls.
    * Absent unless the game was started with `diplomacy`, so the default payload does not grow.
    */
   tableTalk?: TableTalkLine[];
@@ -378,7 +378,7 @@ interface StartGameCommon {
    */
   reflectionEnabled?: boolean;
   /**
-   * Let the bots make deals and talk at the table (ADR 0031). Honored only in a spectator game
+   * Let the bots make deals and talk at the table (ADR 0035). Honored only in a spectator game
    * of heuristic bots for now; the model-driven seats and the human seat join in later phases.
    * Off when omitted, and an off game is byte-identical to one from before diplomacy existed.
    */

@@ -77,7 +77,7 @@ const providerKind = ref<ProviderKind>('random');
  */
 const reflectionEnabled = ref(false);
 /**
- * Table talk and deals between the bots (ADR 0031). Offered only when watching rule-based bots:
+ * Table talk and deals between the bots (ADR 0035). Offered only when watching rule-based bots:
  * the deals run inside the heuristic bot, and a human seat cannot take part yet.
  */
 const diplomacy = ref(false);

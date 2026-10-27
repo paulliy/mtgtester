@@ -54,7 +54,7 @@ function runTurns(table: DiplomacyTable, w: World, from: number, to: number): vo
   }
 }
 
-describe('DiplomacyTable — negotiation windows (ADR 0031 decisions 18 and 20)', () => {
+describe('DiplomacyTable — negotiation windows (ADR 0035 decisions 18 and 20)', () => {
   it('calls the leader, then lets each active seat make one proposal that is answered at once', () => {
     const w = world();
     const table = setup(w);

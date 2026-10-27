@@ -1,5 +1,5 @@
 /**
- * Table talk on the spectator board (ADR 0031): which deals are in force at a point in the log,
+ * Table talk on the spectator board (ADR 0035): which deals are in force at a point in the log,
  * and how each seat's side of one reads. Derived from the talk lines alone, so scrubbing back in
  * the timeline shows the deals as they stood then.
  */

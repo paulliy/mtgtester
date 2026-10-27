@@ -1,5 +1,5 @@
 /**
- * Table talk in a spectator game (ADR 0031 phase 2): the session runs the table, anchors what it
+ * Table talk in a spectator game (ADR 0035 phase 2): the session runs the table, anchors what it
  * says to the log, releases it with the lines, and leaves games without diplomacy untouched.
  */
 
@@ -63,7 +63,7 @@ async function play(options: { diplomacy?: boolean; gameMode?: 'singlePlayer' } 
   return { session, batches };
 }
 
-describe('MatchSession — table talk (ADR 0031)', () => {
+describe('MatchSession — table talk (ADR 0035)', () => {
   it('delivers the table talk with the log lines it belongs to', async () => {
     const { session, batches } = await play({ diplomacy: true });
     expect(session.hasDiplomacy()).toBe(true);

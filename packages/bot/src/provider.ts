@@ -41,7 +41,7 @@ export interface HeuristicProviderOptions {
    * differently-configured seats inside one game.
    */
   combatSearch?: CombatSearchOptions;
-  /** Table diplomacy for this seat (ADR 0031). Omitted, the bot plays exactly as before. */
+  /** Table diplomacy for this seat (ADR 0035). Omitted, the bot plays exactly as before. */
   diplomacy?: DiplomacyPlay;
 }
 

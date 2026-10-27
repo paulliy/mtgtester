@@ -11,7 +11,7 @@ import { ATTACKS_TARGET, NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
 import { WEIGHTS } from '../weights';
 
 /**
- * Judging obligations from submitted decisions (ADR 0031 decision 6). Only chosen target ids are
+ * Judging obligations from submitted decisions (ADR 0035 decision 6). Only chosen target ids are
  * read, so compliance needs no hidden information.
  */
 export type ComplianceVerdict =
@@ -160,7 +160,7 @@ export function judgeDecision(
 
 /**
  * Whether this decision offered `o`'s obligor a way to break it: the test of whether keeping a
- * deal cost anything. Trust is only credited for deals a party was tempted to break (ADR 0031
+ * deal cost anything. Trust is only credited for deals a party was tempted to break (ADR 0035
  * decision 12); keeping a truce with no attackers proves nothing.
  */
 export function offeredBreach(

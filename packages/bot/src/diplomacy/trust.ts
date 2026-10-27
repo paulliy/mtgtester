@@ -9,7 +9,7 @@ export interface TrustRecord {
 }
 
 /**
- * The public record of who keeps deals (ADR 0031 decision 12). Every seat sees every breach, so
+ * The public record of who keeps deals (ADR 0035 decision 12). Every seat sees every breach, so
  * there is one record per seat, not one per pair.
  */
 export class TrustLedger {

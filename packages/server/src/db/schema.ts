@@ -209,7 +209,7 @@ CREATE TABLE IF NOT EXISTS game_reflections (
   PRIMARY KEY (game_id, seat)
 );
 
--- Table talk and deals (ADR 0031): one row per line, in the order the table said it, anchored to
+-- Table talk and deals (ADR 0035): one row per line, in the order the table said it, anchored to
 -- the game_events.sequence it sits under. Public by design, so stored and served like the log.
 CREATE TABLE IF NOT EXISTS game_table_talk (
   game_id      TEXT NOT NULL REFERENCES games(id),

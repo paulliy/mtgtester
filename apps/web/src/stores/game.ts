@@ -160,7 +160,7 @@ export const useGameStore = defineStore('game', () => {
   }
 
   /**
-   * Table talk and deals (ADR 0031): on only for a game started with them. Kept in the order it
+   * Table talk and deals (ADR 0035): on only for a game started with them. Kept in the order it
    * was said, since a deal's lines must be read in order; `talkBySequence` groups it for the log.
    */
   const diplomacy = ref(false);
@@ -548,7 +548,7 @@ export const useGameStore = defineStore('game', () => {
       // Only sent when asked for, so a game that does not want commentary leaves the server's own
       // `AI_REFLECTION_ENABLED` default in charge.
       ...(reflectionEnabled && kind === 'ai' && { reflectionEnabled: true }),
-      // Deals and table talk are for spectator games of rule-based bots (ADR 0031 phase 2).
+      // Deals and table talk are for spectator games of rule-based bots (ADR 0035 phase 2).
       ...(options.diplomacy === true &&
         mode === 'spectator' &&
         kind === 'random' && { diplomacy: true }),

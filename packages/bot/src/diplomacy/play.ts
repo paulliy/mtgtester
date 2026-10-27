@@ -34,7 +34,7 @@ export interface ActiveObligation {
 export type BreachReason = 'lethal' | 'worthIt' | 'selfDefense';
 
 /**
- * What a seat's decisions need from the diplomacy table (ADR 0031 decisions 16 and 17). Present
+ * What a seat's decisions need from the diplomacy table (ADR 0035 decisions 16 and 17). Present
  * only when diplomacy is on; its presence is also what switches on threat-aware attack targets.
  */
 export interface DiplomacyPlay {

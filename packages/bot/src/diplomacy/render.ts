@@ -1,7 +1,7 @@
 import type { DealObligation, PlayerId, TableMessage } from '@mtg/shared';
 
 /**
- * Plain sentences for table talk (ADR 0031 decision 1). `name` turns a seat id into what the
+ * Plain sentences for table talk (ADR 0035 decision 1). `name` turns a seat id into what the
  * viewer calls it; the default prints the id.
  */
 export type SeatName = (seat: PlayerId) => string;

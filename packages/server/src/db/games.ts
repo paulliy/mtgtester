@@ -238,7 +238,7 @@ export class GameRecorder {
   }
 
   /**
-   * Append table talk (ADR 0031) after the lines already stored for this game. Positions continue
+   * Append table talk (ADR 0035) after the lines already stored for this game. Positions continue
    * from the stored count, so a resumed session appends rather than overwrites.
    */
   saveTableTalk(lines: readonly TableTalkLine[]): void {

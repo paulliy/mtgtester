@@ -33,7 +33,7 @@ export interface DiplomacyTableOptions {
   /** The current `PlayerView` for a seat. Only public fields of it are used. */
   viewOf: (seat: PlayerId) => PlayerView;
   /**
-   * Whether a seat negotiates through this table. Seats that do not (a human, until ADR 0031's
+   * Whether a seat negotiates through this table. Seats that do not (a human, until ADR 0035's
    * phase 3) are never offered deals, but their decisions are still observed.
    */
   negotiates: (seat: PlayerId) => boolean;
@@ -116,7 +116,7 @@ interface HeldAttack {
 export const DIPLOMACY_STATE_VERSION = 1;
 
 /**
- * Everything a `DiplomacyTable` knows, as plain JSON (ADR 0031 decision 22). A table rebuilt from
+ * Everything a `DiplomacyTable` knows, as plain JSON (ADR 0035 decision 22). A table rebuilt from
  * it with `DiplomacyTable.fromState` and the same options continues exactly as the original would
  * have, so a game can be saved and resumed in the middle of a negotiation.
  */
@@ -187,7 +187,7 @@ function threatReasons(table: TableEstimate, leader: PlayerId): ThreatReason[] {
 }
 
 /**
- * One game's deals, trust and table talk (ADR 0031 decision 20). Pure logic: the driver calls
+ * One game's deals, trust and table talk (ADR 0035 decision 20). Pure logic: the driver calls
  * `beforeDecision` and `afterDecision` around every surfaced decision, `flush` when the game
  * ends, and gives each bot seat `playFor(seat)`. Everything is synchronous and seeded, so it adds
  * no latency and keeps fixed-seed games reproducible.

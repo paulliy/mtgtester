@@ -34,7 +34,7 @@ const props = defineProps<{
   exile?: SpectatorCard[];
   /** Object id -> permanent name, table-wide, for naming an attacker's/blocker's target. */
   nameById?: Map<string, string>;
-  /** Deals this seat is in right now, one line each (ADR 0031), when the game has table talk. */
+  /** Deals this seat is in right now, one line each (ADR 0035), when the game has table talk. */
   deals?: string[];
 }>();
 

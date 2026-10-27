@@ -30,7 +30,7 @@ function ctx(myLife = 30): DealContext {
   };
 }
 
-describe('proposals (ADR 0031 decision 18)', () => {
+describe('proposals (ADR 0035 decision 18)', () => {
   it('offers a truce, a truce that points the partner at the leader, and an attack on the leader', () => {
     const deals = candidateDeals('P1', 'P2', ctx(), 'x');
     const shapes = new Set(deals.map((d) => d.obligations.map((o) => o.kind).join('+')));

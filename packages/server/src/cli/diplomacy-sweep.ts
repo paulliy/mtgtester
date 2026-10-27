@@ -1,5 +1,5 @@
 /**
- * Self-play measurement for table diplomacy (ADR 0031 decision 21): diplomacy seats against plain
+ * Self-play measurement for table diplomacy (ADR 0035 decision 21): diplomacy seats against plain
  * heuristic seats on the same seeds, before deals are offered anywhere by default.
  *
  *   bun run diplomacy-sweep [--games N] [--seed S] [--turn-cap N] [--game-timeout SECONDS]
@@ -245,7 +245,7 @@ function main(): void {
   }
 
   const played = totals.games - totals.errored - totals.timedOut;
-  console.log('\nDiplomacy sweep (ADR 0031)');
+  console.log('\nDiplomacy sweep (ADR 0035)');
   console.log('─'.repeat(26));
   console.log(
     `  ${totals.games} games, seed prefix "${args.seed}", ${args.all ? 'all seats negotiate' : '2 diplomacy seats vs 2 plain seats'}${args.noDeals ? ' (no deals: threat-aware targets only)' : ''}`,

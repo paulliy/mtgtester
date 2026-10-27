@@ -10,7 +10,7 @@ import {
 } from './estimate';
 import { creature, opponent, view } from './fixtures.test-helpers';
 
-describe('estimateTable — positions and win shares (ADR 0031 decisions 7-9)', () => {
+describe('estimateTable — positions and win shares (ADR 0035 decisions 7-9)', () => {
   it('counts life at or below the danger threshold double', () => {
     expect(lifeLoss(40, 1)).toBe(1);
     expect(lifeLoss(10, 1)).toBe(2);

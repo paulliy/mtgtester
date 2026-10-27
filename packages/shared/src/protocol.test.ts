@@ -232,7 +232,7 @@ describe('isClientToServerMessage', () => {
         },
       }),
     ).toBe(true);
-    // The diplomacy switch (ADR 0031) is a boolean or absent, nothing else.
+    // The diplomacy switch (ADR 0035) is a boolean or absent, nothing else.
     for (const [diplomacy, valid] of [
       [true, true],
       [false, true],

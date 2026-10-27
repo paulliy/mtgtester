@@ -17,7 +17,7 @@ export { describeMessage, describeObligation } from './render';
 export type { SeatName } from './render';
 
 /**
- * Route one seat's decisions through the table (ADR 0031 decision 20): the turn's negotiation
+ * Route one seat's decisions through the table (ADR 0035 decision 20): the turn's negotiation
  * window opens before the first decision of a turn, and every submitted decision is judged for
  * compliance. Works for any synchronous provider, including seats that do not negotiate.
  */

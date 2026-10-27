@@ -44,7 +44,7 @@ function judge(
   );
 }
 
-describe('judgeDecision — attacks (ADR 0031 decision 6)', () => {
+describe('judgeDecision — attacks (ADR 0035 decision 6)', () => {
   const attack = attackAction([mine], () => ['P2', walker.id, 'P3', NO_ATTACK_TARGET]);
 
   it('flags an attack at the protected seat or its planeswalker', () => {

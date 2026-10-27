@@ -37,7 +37,7 @@ bun run coverage:snapshot [url...]
 bun run snapshot:oracle
 bun run modelled-cards
 bun run combat-sweep [--games N] [--seed S] [--json out.json]
-bun run diplomacy-sweep [--games N] [--seed S] [--turn-cap N] [--all] [--talk]   # ADR 0031 self-play
+bun run diplomacy-sweep [--games N] [--seed S] [--turn-cap N] [--all] [--talk]   # ADR 0035 self-play
 bun run ai-bench                        # AI benchmark harness (ADR 0026)
 bun run agent-client [--seat P1] [--seed S] [--port N] [--provider random|ai]
 ```

@@ -308,7 +308,7 @@ export class GameServer {
         const talkMatch = /^\/api\/games\/([^/]+)\/table-talk$/.exec(url.pathname);
         if (talkMatch !== null) {
           const gameId = decodeURIComponent(talkMatch[1] ?? '');
-          // Table talk is public (ADR 0031), so no single-player lock. The live session is the
+          // Table talk is public (ADR 0035), so no single-player lock. The live session is the
           // source of truth for the running game; the store serves finished ones.
           if (this.startedPayload?.gameId === gameId && this.session !== null) {
             return Response.json({ tableTalk: this.session.tableTalk() });

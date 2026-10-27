@@ -118,7 +118,7 @@ export interface MatchSessionOptions {
    */
   reflectionEnabled?: boolean;
   /**
-   * Let the bots make deals and talk at the table (ADR 0031). Honored only for a spectator game of
+   * Let the bots make deals and talk at the table (ADR 0035). Honored only for a spectator game of
    * heuristic bots; ignored otherwise, so an AI or player game is unaffected.
    */
   diplomacy?: boolean;
@@ -183,7 +183,7 @@ export class MatchSession {
   private pendingAnnotations: AiAnnotation[] = [];
   /** Every note produced this game — the single-player end-of-game release reads this. */
   private readonly allAnnotations: AiAnnotation[] = [];
-  /** The table's deals and talk (ADR 0031), when this game has diplomacy on. */
+  /** The table's deals and talk (ADR 0035), when this game has diplomacy on. */
   private readonly diplomacy: DiplomacyTable | null;
   /** Table talk awaiting a log line to attach to, released with the lines like annotations. */
   private pendingTalk: TableTalkLine[] = [];
@@ -707,7 +707,7 @@ export class MatchSession {
     });
   }
 
-  // ── Table talk (ADR 0031) ─────────────────────────────────────────────────────────────────
+  // ── Table talk (ADR 0035) ─────────────────────────────────────────────────────────────────
 
   private countRepairedAttacks(): number {
     for (const event of this.engine.eventsSince(this.repairCursor)) {
@@ -773,7 +773,7 @@ export class MatchSession {
     return this.allTalk;
   }
 
-  /** Whether the bots at this table negotiate (ADR 0031). */
+  /** Whether the bots at this table negotiate (ADR 0035). */
   hasDiplomacy(): boolean {
     return this.diplomacy !== null;
   }

@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { expect, it } from 'vitest';
 
 /**
- * Table talk (ADR 0031) against real SQLite: lines come back in the order they were said, appends
+ * Table talk (ADR 0035) against real SQLite: lines come back in the order they were said, appends
  * continue the positions, and the structured message survives the round trip.
  */
 it('stores table talk in order and reads it back intact', () => {

@@ -39,7 +39,7 @@ export interface EvaluateOptions {
    */
   combatSearch?: CombatSearchOptions;
   /**
-   * Table diplomacy (ADR 0031). Absent unless a game turns deals on; when present, attack targets
+   * Table diplomacy (ADR 0035). Absent unless a game turns deals on; when present, attack targets
    * become threat-aware and this seat's deal obligations shape its targets and scores.
    */
   diplomacy?: DiplomacyPlay;

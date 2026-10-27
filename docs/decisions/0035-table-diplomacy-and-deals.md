@@ -1,4 +1,4 @@
-# ADR 0031: Table diplomacy and deals
+# ADR 0035: Table diplomacy and deals
 
 Status: Accepted
 

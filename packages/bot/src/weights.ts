@@ -146,7 +146,7 @@ export const WEIGHTS = {
   },
 
   /**
-   * Table diplomacy (ADR 0031). Off unless a game enables it, and every number here is a starting
+   * Table diplomacy (ADR 0035). Off unless a game enables it, and every number here is a starting
    * value for the self-play comparison the ADR asks for, not a measured one.
    */
   deals: {
@@ -202,7 +202,7 @@ export const WEIGHTS = {
     /** Each later round of a deal counts this much of the one before it. */
     roundDiscount: 0.7,
     maxRounds: 2,
-    /** Most obligations one side may owe in a deal; more is padding (ADR 0031 decision 15). */
+    /** Most obligations one side may owe in a deal; more is padding (ADR 0035 decision 15). */
     maxObligationsPerSide: 2,
 
     // --- Trust (decision 12) ---

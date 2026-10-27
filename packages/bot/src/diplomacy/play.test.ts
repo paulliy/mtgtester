@@ -60,7 +60,7 @@ function board(p3Life = 12, p2Tapped = true): { v: PlayerView; attackers: Perman
   return { v, attackers };
 }
 
-describe('planAttackDeclaration — threat-aware targets (ADR 0031 decision 16)', () => {
+describe('planAttackDeclaration — threat-aware targets (ADR 0035 decision 16)', () => {
   it('attacks the leader rather than the lowest life total when no kill is on', () => {
     const { v, attackers } = board();
     const plan = planAttackDeclaration(attackAction(attackers, everyone), v, dip([]));

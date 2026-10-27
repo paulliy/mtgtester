@@ -1,5 +1,5 @@
 /**
- * Table diplomacy (ADR 0031): structured messages and two-party deals.
+ * Table diplomacy (ADR 0035): structured messages and two-party deals.
  *
  * Everything here is typed rather than free text so a bot can read and answer it without a model
  * call, and so every deal can be checked mechanically against the decisions players submit. A
@@ -10,7 +10,7 @@ import type { PlayerId } from './ids';
 
 /**
  * One promise owed by one seat (`by`). Obligations only ever name seats, never cards, so a deal
- * cannot carry hidden information (ADR 0031 decision 23).
+ * cannot carry hidden information (ADR 0035 decision 23).
  *
  * None of them constrains blocks: deals cover offense only (decision 4).
  */
@@ -63,7 +63,7 @@ export interface ThreatReason {
   detail: string;
 }
 
-/** One line of table talk (ADR 0031 decision 2). */
+/** One line of table talk (ADR 0035 decision 2). */
 export type TableMessage =
   | {
       kind: 'threatCall';
@@ -119,7 +119,7 @@ export type TableMessage =
 export type TableMessageKind = TableMessage['kind'];
 
 /**
- * One line of table talk as the spectator log shows it (ADR 0031 phase 2): the structured message,
+ * One line of table talk as the spectator log shows it (ADR 0035 phase 2): the structured message,
  * its sentence, and the `GameEvent.sequence` it sits under, like an AI annotation (ADR 0022).
  * Table talk is public, so unlike reasoning it is never withheld.
  */

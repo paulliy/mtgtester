@@ -1,5 +1,5 @@
 /**
- * One seeded heuristic-bot game with table diplomacy (ADR 0031) on for some seats.
+ * One seeded heuristic-bot game with table diplomacy (ADR 0035) on for some seats.
  *
  * `diplomacy-sweep` runs this file as a child process per game (payload path in argv, JSON reply
  * on stdout), so a slow game can be killed without losing the run, the same arrangement as

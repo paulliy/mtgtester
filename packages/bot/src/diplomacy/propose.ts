@@ -6,7 +6,7 @@ import { acceptBar, valueDeal, type DealContext } from './value';
 const D = WEIGHTS.deals;
 
 /**
- * The few deal shapes a bot offers `other` (ADR 0031 decision 18), each at every allowed length:
+ * The few deal shapes a bot offers `other` (ADR 0035 decision 18), each at every allowed length:
  * a mutual truce; a truce where `other` also attacks the leader; and `me` attacking the leader in
  * return for `other` leaving `me` alone.
  */
