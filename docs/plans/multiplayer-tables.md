@@ -1,14 +1,16 @@
 # Multiplayer tables
 
 Decision record: [ADR 0031](../decisions/0031-multiplayer-tables.md). Status: proposed and awaiting
-approval. No milestone after M1 starts until ADR 0031 is accepted, because M3 opens a
-non-loopback listener ([testing discipline](../guides/testing-discipline.md)).
+approval. M1 and M2 improve the tester on their own and can start now. Later milestones wait for
+ADR 0031 to be accepted; M4 is the one that opens a non-loopback listener
+([testing discipline](../guides/testing-discipline.md)).
 
 ## Purpose
 
 Let one to four people play one Commander game from their own browsers, with bots in the empty
-seats, without weakening the tester. The engine stays authoritative and unchanged, each seat sees
-only what its player may see, and the tester's debug and analysis surfaces stay on loopback.
+seats, without weakening the tester. The engine stays authoritative, each seat sees only what its
+player may see, the server does the calculations and the browser renders them, and the tester's
+debug and analysis surfaces stay on loopback.
 
 ## Player outcome
 
@@ -34,27 +36,34 @@ In scope:
   host-configured key);
 - invite-link tables, seat tokens, display names, and per-player deck import;
 - per-seat projections, logs and errors; decision clocks; fallback bots; reconnects;
+- server-computed presentation, so browsers render rather than derive (M2);
 - a loopback-default table server with opt-in LAN or internet binding behind an origin allowlist;
 - one web app with a table build that hides tester routes.
 
-Out of scope (revisit after M5):
+Out of scope (revisit after M6):
 
 - accounts, friend lists, public matchmaking, ranking;
 - live spectators who watch a table (a hidden-information design of its own);
-- restoring a live game after a server restart (see M6, optional);
+- restoring a live game after a server restart (see M7, optional);
 - in-app chat beyond a fixed set of short messages;
-- engine changes. If a milestone appears to need one, stop and write it up as a separate ADR.
+- rules changes in the engine. M2 adds typed descriptive presentation fields to engine output,
+  which is not a rules change. If a milestone appears to need a rules change, stop and write a
+  separate ADR.
 
 ## Ground rules for every milestone
 
 - `Engine.submit()` with an offered action id remains the only authority. The browser and
   the table server never build legality themselves.
+- **The server computes; the client renders** (ADR 0031 decision 12). Once a calculation has
+  moved to the server under M2, a new client feature may not bring it back. The client-boundary
+  lint test from M2 enforces this.
 - No live payload carries `spectatorState()`, the seed, AI notes, debug events or another
   seat's private data. Every new message type gets a privacy test before it ships.
 - Fixed-seed games with no human seats are bit-for-bit unchanged. Run the existing spectator and
   combat-sweep tests on every milestone.
-- Wire types go in `packages/shared/src/protocol.ts`, and every consumer is updated in the same
-  change (web store, agent client, tests).
+- AI prompts are unchanged. Presentation data never enters `server/src/ai/context.ts`.
+- Wire types go in `packages/shared`, and every consumer is updated in the same change (web
+  store, agent client, tests).
 - Run what CI runs: `typecheck`, `typecheck:tests`, `lint`, `format:check`, `test`, the web
   build, and `test:e2e` plus `test:e2e:setup` for viewer changes.
 
@@ -78,7 +87,7 @@ behave exactly as today. This milestone is worth doing even if the table server 
 2. **`MatchSession` options** (`packages/server/src/match/session.ts`)
    - Replace `gameMode?` + `humanSeat?` with `seatControllers: SeatControllers` and
      `gameMode: GameMode`. Derive `humanSeats: ReadonlySet<PlayerId>`.
-   - Replace the `isPlayerGame` checks (about 15 `gameMode === 'singlePlayer'` branches) with
+   - Replace the player-game checks (about 15 `gameMode === 'singlePlayer'` branches) with
      `humanSeats.size > 0`, plus mode-specific helpers where single-player and table actually
      differ (seed disclosure, debug unlock).
    - Turn each per-player field into a `Map<PlayerId, …>` held in one `HumanSeatState` record:
@@ -131,7 +140,122 @@ remain, and no session field is single-player-only by accident.
 
 ---
 
-## M2 — Table server skeleton on loopback
+## M2 — Server-computed presentation (thin client)
+
+Goal: the browser only lays out, animates, and collects input. Every value it shows that
+comes from rules or engine data is computed on the server, typed, and projected per seat.
+
+Why this matters for multiplayer:
+
+- **Clients must agree.** With several players, two browsers deriving the same fact separately
+  can disagree. The current views already do (item 1 below).
+- **Every client would repeat the work.** The web app, the JSON agent client and any later
+  client would each have to reimplement these derivations.
+- **Text parsing fails silently.** A changed engine string or a renamed `data` key drops a cost
+  from a confirm dialog without any test failing.
+- **Rules knowledge belongs with the rules.** A client-side constant such as 21 commander
+  damage is a second copy of a rule.
+
+### Client boundary (ADR 0031 decision 12)
+
+The client may lay out the board, animate, remember unsent input, and keep display preferences.
+It may not:
+
+- parse engine text (prompts, log lines, action descriptions);
+- read `LegalAction.data`;
+- classify cards from `typeLine`;
+- hold rules constants;
+- infer game events by comparing one board snapshot with the next.
+
+### Audit of current client calculations
+
+| #   | Today                                                                                                                                                    | Problem                                                                                                                                                                     | Server-side replacement                                                                                                                                                                    |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | `PlayerGameView.vue:129` `isPiledLand` (regex); `SeatPanel.vue:62` `typeLine.includes('Land')`; `lib/card.ts:2` `isTokenTypeLine`; `lib/tokenArt.ts:40`  | The two views disagree: a land creature (Dryad Arbor) is in the lands pile in the spectator seat panel and on the battlefield in the player board. Type checks by substring | `types`, `supertypes`, `subtypes` arrays and a required `isToken` on every presented card and permanent, plus a `boardGroup` (`lands`, `creatures`, `other`) chosen by one server function |
+| 2   | `PlayerGameView.vue:1064` `actionCost`, `:1105` `pendingSummary`; `lib/actionLabels.ts` (cast-variant labels, enters-tapped notes, optional-cost labels) | Reads untyped `LegalAction.data`                                                                                                                                            | `ActionPresentation.label`, `costLabels`, `entryNote`                                                                                                                                      |
+| 3   | `PlayerGameView.vue:491` X-value grouping by `data.x` and `data.modeLabel`                                                                               | Same                                                                                                                                                                        | `ActionPresentation.xFamily` (`key`, `x`) and `DecisionPresentation.xFamilies` (`key`, `min`, `max`, action ids by X)                                                                      |
+| 4   | `PlayerGameView.vue:1178-1198` payment sources from `data.paymentSourceIds` and `data.paymentSourceNames`                                                | Same                                                                                                                                                                        | `ActionPresentation.payment` (`sourceIds`, `summary`)                                                                                                                                      |
+| 5   | `PlayerGameView.vue:591` playable-source ranking; `:1142` `isLegalTarget` scanning every legal action on each hover                                      | An index of the menu rebuilt in the browser                                                                                                                                 | `DecisionPresentation.sources`, keyed by object id: `verb`, `actionIds`, `targetIds`. Built once per decision                                                                              |
+| 6   | `lib/turnLabels.ts:38` `playerFacingPrompt` rewrites the engine prompt with a regex                                                                      | Breaks when prompt wording changes                                                                                                                                          | `DecisionPresentation.prompt`, the player-facing string. The engine's `prompt` stays as it is for the AI                                                                                   |
+| 7   | `PlayerGameView.vue:182` finds the game-over line by matching log text                                                                                   | Text matching                                                                                                                                                               | A `summary` string on the `gameOver` payload                                                                                                                                               |
+| 8   | `CommanderDamageGrid.vue:17` `LETHAL = 21`                                                                                                               | A rules constant in the client                                                                                                                                              | Per cell: `amount`, `lethal`, `remaining`                                                                                                                                                  |
+| 9   | `composables/useCombatStrikes.ts`, `useLifeFlash.ts`, `useBoardFlash.ts` infer hits and life changes by diffing snapshots                                | Its own comment admits misattribution (non-combat damage to an attacker, trample)                                                                                           | Per-seat `presentationEvents` (`damage`, `lifeChange`, `counterChange`) derived on the server from engine events, filtered by the same visibility projection as the player log             |
+| 10  | `PlayerGameView.vue:644` `needsLandReminder`                                                                                                             | Decides whether to interrupt the player. Under a decision clock (M5), a client-side prompt can cost clock time that the server's auto-pass logic does not know about        | A per-seat server preference next to smart yield, so the reminder and automatic passing agree                                                                                              |
+
+Stays in the client: visual stacking of identical permanents (`lib/stackPermanents.ts`, which
+uses server fields only), widths and column layout, grouping of already-projected log lines by
+seat, the phase and step name lookup in `turnPositionLabel`, confirmation preferences
+(`confirmRoutineActions`), and reduced motion.
+
+### Where the code goes
+
+- **Engine** (`packages/engine`): typed descriptive facts only, added to the existing
+  producers. `actions/legal.ts` already builds `DecisionPresentation`; cost components, X value,
+  cast variant and the payment plan move from `data` into typed presentation fields. The view
+  projections (`view/`) add card type arrays and a required `isToken`. No rules logic and no
+  new player-facing strings. AI prompts are unaffected, because `presentation` is never sent to
+  the AI (existing rule in `shared/src/engine.ts`).
+- **Server** (`packages/server/src/match/presentation.ts`, new): pure per-seat functions that
+  compose labels, cost labels, X families, the source index, the player-facing prompt,
+  commander-damage cells and presentation events. The session calls it just before
+  `playerActionRequired` and `playerStateSnapshot` go out.
+- **Shared**: the new types in `shared/src/engine.ts` and `shared/src/view.ts`.
+- **Web**: render the fields and delete the derivations.
+
+### Approach: move, don't rewrite
+
+For each audit item:
+
+1. Port the client function to the server verbatim.
+2. Add a parity test showing the server output matches the old client function for every
+   decision in a fixed-seed single-player game.
+3. Point the client at the new field.
+4. Delete the client copy.
+
+Intentional behavior fixes, such as item 1's land-creature placement, land in a separate commit
+after parity, with their own test.
+
+### Order
+
+1. **Item 1, card types.** Small, and fixes a visible inconsistency. Decide where land
+   creatures go; default: with creatures, as the player board does today, because they can
+   attack and block.
+2. **Items 2–5, action presentation.** The largest piece.
+3. **Items 6–8,** prompt, game-over summary and commander damage.
+4. **Item 10,** the land reminder moves to the server.
+5. **Item 9,** presentation events. Coordinate with the Phase 8 animation work
+   (`docs/plans/phase-8-action-animations.md`).
+6. **Close the boundary.**
+   - Stop sending `LegalAction.data` to player sockets, by stripping it in the server's player
+     projection. The AI path keeps it.
+   - Add `apps/web/src/client-boundary-lint.test.ts`, modeled on
+     `packages/engine/tests/casting-boundary-lint.test.ts`. It fails on reads of
+     `LegalAction.data`, `typeLine` substring or regex checks, regex matching on log or prompt
+     text, and listed rules constants, with an allowlist file for reviewed exceptions.
+
+### Tests
+
+- `match/presentation.test.ts`: unit tests for each function, using fixtures from existing card
+  tests (a painland's cost labels, an X spell's family, a commander-tax cast, Dryad Arbor's board
+  group, a partner commander-damage cell).
+- Parity tests as described above, one per item, deleted after the client copy is removed.
+- AI prompt unchanged: the existing `ai/context.test.ts` passes, plus one assertion that no
+  presentation field appears in a built prompt.
+- Privacy: `presentationEvents` and `sources` pass the raw-frame scan. A presentation event
+  about a hidden object, such as damage to a face-down creature, carries only what the player
+  log would show.
+- Player frames no longer contain `data` on legal actions.
+- `test:e2e` `player-game.spec.ts` and the Card Test Lab spec pass.
+
+### Exit criteria
+
+The client-boundary lint passes with an empty allowlist, or with each remaining exception
+reviewed. CI is green. The web bundle no longer imports `lib/actionLabels.ts` or
+`lib/card.ts`.
+
+---
+
+## M3 — Table server skeleton on loopback
 
 Goal: `bun run serve:table` runs several tables at once on 127.0.0.1, each with multiple human
 seats, playable from several browser tabs on one machine.
@@ -172,7 +296,7 @@ The seat comes from the socket's authenticated seat token, never from the payloa
 
 Server to client: `tableState` (public lobby: seats, display names, bot or human, ready flags,
 clock settings; no deck contents), `seatGranted {seat, seatToken}`, `deckProblems` (to that
-seat only), the existing in-game player messages, and `tableClosed`.
+seat only), the existing in-game player messages with M2's presentation, and `tableClosed`.
 
 The table server never registers `startGame`, `startCardTestScenario`, `jumpToTurn`,
 `setPlaybackMode`, `resolveHeldDecision`, `setDebugFlags` or `abandonGame`. They are
@@ -193,7 +317,7 @@ unknown messages there.
    `GameStartedPayload` and update the web store). The post-game unlock sends it.
 6. A `tableGame` flag in the session: no debug unlock at game end, and the AI-notes release
    includes only notes from bot seats.
-7. Request checks: reuse `isAllowedLocalRequest` unchanged (still loopback only in M2).
+7. Request checks: reuse `isAllowedLocalRequest` unchanged (still loopback only in M3).
 
 ### Tests
 
@@ -216,7 +340,7 @@ passes.
 
 ---
 
-## M3 — Network exposure (needs ADR 0031 accepted)
+## M4 — Network exposure (needs ADR 0031 accepted)
 
 Goal: friends on a LAN, or over the internet behind a TLS proxy, can join safely.
 
@@ -257,7 +381,7 @@ findings.
 
 ---
 
-## M4 — Clocks, fallback bots and disconnects
+## M5 — Clocks, fallback bots and disconnects
 
 Goal: one slow or absent player cannot stall a table indefinitely.
 
@@ -265,7 +389,8 @@ Goal: one slow or absent player cannot stall a table indefinitely.
 
 1. `match/decision-clock.ts`: a per-seat `DecisionClock { perDecisionMs, bankMs }` with the
    presets from the ADR. The clock starts when `playerActionRequired` goes out and stops on an
-   accepted submission. Time beyond the per-decision allowance comes out of the bank.
+   accepted submission. Time beyond the per-decision allowance comes out of the bank. The
+   server owns the clock; the client only displays `clockState`.
 2. `TimedHumanProvider` wraps `HumanDecisionProvider`: it races the human's answer against the
    clock. On expiry it asks the seat's fallback provider (the table's bot kind) to decide the
    same `DecisionRequest` and submits its answer through the same path. A late human answer is
@@ -275,12 +400,12 @@ Goal: one slow or absent player cannot stall a table indefinitely.
    to the bot and the clock is paused. The player's next `resumeSeat` or accepted action ends
    takeover at the next decision.
 4. Decision history. Live games currently store only `game_events` and turn snapshots, so this
-   is new. Add a `game_decisions` table
-   (`game_id, idx, seat, source, request_json, response_json, request_hash, response_hash,
-state_hash_before, state_hash_after`) as an additive migration in `db/schema.ts`. Write rows
-   from the runner's `onDecision` for every seat, bots included, using the hashing helpers in
-   `benchmark/replay.ts` rather than new ones. `source` is `human`, `timeout`, `fallback` or
-   `bot`. Old games have no rows and stay that way, with no backfill.
+   is new. Add a `game_decisions` table as an additive migration in `db/schema.ts`, with these
+   columns: game id, index, seat, source, request JSON, response JSON, request hash, response
+   hash, state hash before, state hash after. Write rows from the runner's `onDecision` for every
+   seat, bots included, using the hashing helpers in `benchmark/replay.ts` rather than new ones.
+   `source` is `human`, `timeout`, `fallback` or `bot`. Old games have no rows and stay that way,
+   with no backfill.
 5. Protocol: `clockState {seat, remainingMs, bankMs, running}` (public; it reveals only who is
    deciding, which the table already knows), and `seatStatus {seat, connected, fallback}`.
 6. The connection gate on disconnect: it waits only for the grace period, then releases into
@@ -293,7 +418,7 @@ state_hash_before, state_hash_after`) as an additive migration in `db/schema.ts`
 - A timeout chooses a legal action that the engine accepts, and the decision is recorded with
   source `timeout`.
 - Replaying a recorded table game (a fresh engine with the seed and `game_decisions` rows
-  submitted in order, with no clocks) matches every recorded `state_hash_after` and the final
+  submitted in order, with no clocks) matches every recorded state hash and the final
   `game_events` stream. This is the determinism guarantee from ADR decision 8.
 - Disconnecting P1 for longer than the grace period puts P1 into takeover while P2 keeps playing;
   P1 reconnects and gets the board, yield preferences and pending choice back.
@@ -307,10 +432,10 @@ player can rejoin.
 
 ---
 
-## M5 — Web app: lobby, table play, and the table build
+## M6 — Web app: lobby, table play, and the table build
 
 Goal: lobby and table play in the existing Vue app, with tester routes absent from the table
-build.
+build. New views consume only M2's server-computed fields.
 
 ### Tasks
 
@@ -324,6 +449,8 @@ build.
    player's own clock and bank; a disconnected or bot-controlled marker.
 4. Lobby view: seat grid, deck import with private problem list, ready toggle, host controls
    (bot kind per seat, clock preset, kick, reissue token, start), and copying the invite link.
+   Lobby readiness (every seat filled, decks valid, can start) comes from `tableState`; the
+   client does not work it out.
 5. `scripts/dev.ts`: a `--table` option to run `serve:table` with the table web build.
 6. Single-player in the tester build: no visible change.
 
@@ -336,6 +463,7 @@ build.
 - E2E: the table build has no route to `/debug`, `/stats`, `/batch` or the lab (direct
   navigation 404s or redirects).
 - `player-game.spec.ts` still passes in the tester build.
+- The client-boundary lint from M2 covers the new views.
 
 ### Exit criteria
 
@@ -343,19 +471,21 @@ The player outcome list at the top of this plan works end to end in E2E.
 
 ---
 
-## M6 — Hardening and optional follow-ups
+## M7 — Hardening and optional follow-ups
 
 Do these on evidence, not by default.
 
 1. **Event-loop isolation.** Measure p95 event-loop lag with 8 tables of 2 humans and 2
    heuristic bots. If it exceeds 100 ms, run each table's `MatchSession` in a Bun Worker, with
-   the table server relaying messages. Worker messages reuse the shared protocol types.
-2. **Restore after restart.** Because M4 records the game as seed plus decisions, a table can
+   the table server relaying messages. Worker messages reuse the shared protocol types. M2's
+   presentation work runs in the worker with its session.
+2. **Restore after restart.** Because M5 records the game as seed plus decisions, a table can
    be rebuilt by replaying recorded decisions into a fresh engine and re-issuing seat tokens to
    the host. This needs a design note on token re-issue and on human actions that were taken
    but not yet recorded.
 3. **Agent client at a table.** Allow `agent-client --table <invite> --name bot1` to claim a
-   seat. This enables scripted multi-human soak tests.
+   seat. This enables scripted multi-human soak tests. The agent client can read M2's
+   presentation instead of action descriptions.
 4. **Extracting `packages/match`.** Only if a trigger from ADR 0031's Consequences applies.
 5. **Spectators.** A separate ADR: spectating a live table needs a delayed public-only
    projection.
@@ -364,32 +494,50 @@ Do these on evidence, not by default.
 
 ## Order and sizing
 
-| Milestone                    | Depends on                | Relative size               | Can ship alone              |
-| ---------------------------- | ------------------------- | --------------------------- | --------------------------- |
-| M1 Seat controllers          | —                         | L (mostly mechanical, wide) | Yes (cleaner single-player) |
-| M2 Table server (loopback)   | M1                        | M                           | Yes (local multi-tab play)  |
-| M3 Network exposure          | M2, ADR accepted          | M                           | Yes (LAN play)              |
-| M4 Clocks and fallback       | M2                        | M                           | Yes                         |
-| M5 Web lobby and table build | M2 (M4 for clock display) | M                           | —                           |
-| M6 Hardening                 | M5                        | varies                      | per item                    |
+| Milestone                    | Depends on             | Relative size               | Can ship alone                         |
+| ---------------------------- | ---------------------- | --------------------------- | -------------------------------------- |
+| M1 Seat controllers          | —                      | L (mostly mechanical, wide) | Yes (cleaner single-player)            |
+| M2 Server presentation       | —                      | L (many small moves)        | Yes (fixes view inconsistencies today) |
+| M3 Table server (loopback)   | M1                     | M                           | Yes (local multi-tab play)             |
+| M4 Network exposure          | M3, ADR accepted       | M                           | Yes (LAN play)                         |
+| M5 Clocks and fallback       | M3                     | M                           | Yes                                    |
+| M6 Web lobby and table build | M2, M3 (M5 for clocks) | M                           | —                                      |
+| M7 Hardening                 | M6                     | varies                      | per item                               |
 
-M3 and M4 can run in parallel after M2. M5's lobby work can start against M2.
+M1 and M2 touch different code (the session's seat handling versus the presentation path) and
+can run in parallel. M4 and M5 can run in parallel after M3. M6's lobby work can start against
+M3.
 
 ## Delegation notes
 
-Per `CLAUDE.md`: the M1 field-to-map refactor and its test updates suit a Sonnet `implementer`
-given this plan's M1 task list as the checklist. The privacy frame-scan tests and the M3
-security review stay on the main thread. Haiku `explorer` tasks: list every caller of the
-`MatchSession` methods gaining a `seat` parameter, and every consumer of `GameStartedPayload.seed`.
+Per `CLAUDE.md`:
+
+- **Sonnet `implementer`:**
+  - the M1 field-to-map refactor and its test updates, using this plan's M1 task list as the
+    checklist;
+  - M2's port-and-parity steps, one audit item per task, with that row of the audit table as the
+    brief.
+- **Main thread:**
+  - deciding M2's typed engine fields, since they are in `packages/engine`;
+  - the privacy frame-scan tests;
+  - the M4 security review.
+- **Haiku `explorer`:**
+  - list every caller of the `MatchSession` methods gaining a `seat` parameter;
+  - list every consumer of `GameStartedPayload.seed`;
+  - list every `LegalAction.data` key the web app reads.
 
 ## Risks
 
-| Risk                                               | Mitigation                                                                               |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| A refactor slip sends one seat's board to another  | Frame-scan privacy tests from M1 onward; `sendToSeat` throws on an unknown seat in tests |
-| The seed leaks through a report, error or log line | A raw frame scan for the seed string in M2 and M4 tests                                  |
-| Tester-only messages reachable from a table        | Separate handler that never registers them; refusal test                                 |
-| Bot CPU starves other tables                       | Table caps; measurement and the Worker option in M6                                      |
-| Timeouts break deterministic replay                | Decisions are recorded with their source; replay test in M4                              |
-| A host exposes `serve` instead of `serve:table`    | `serve` keeps refusing non-loopback; hosting guide warns                                 |
-| Deck import as a parsing attack surface            | Size limits before parsing; existing pipeline already rejects unknown cards              |
+| Risk                                               | Mitigation                                                                                                      |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| A refactor slip sends one seat's board to another  | Frame-scan privacy tests from M1 onward; `sendToSeat` throws on an unknown seat in tests                        |
+| The seed leaks through a report, error or log line | A raw frame scan for the seed string in M3 and M5 tests                                                         |
+| Tester-only messages reachable from a table        | Separate handler that never registers them; refusal test                                                        |
+| Moving a calculation changes what players see      | Move-don't-rewrite with parity tests; intentional fixes in separate commits                                     |
+| Presentation leaks hidden information              | Presentation is built per seat from the player projection, never from `GameState`; frame scan covers its fields |
+| Presentation bloats AI prompts                     | It stays in `presentation`, which never reaches the AI; `ai/context.test.ts` assertion                          |
+| Client logic creeps back                           | Client-boundary lint test with a reviewed allowlist                                                             |
+| Bot CPU starves other tables                       | Table caps; measurement and the Worker option in M7                                                             |
+| Timeouts break deterministic replay                | Decisions are recorded with their source; replay test in M5                                                     |
+| A host exposes `serve` instead of `serve:table`    | `serve` keeps refusing non-loopback; hosting guide warns                                                        |
+| Deck import as a parsing attack surface            | Size limits before parsing; existing pipeline already rejects unknown cards                                     |

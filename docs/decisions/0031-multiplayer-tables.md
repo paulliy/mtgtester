@@ -124,6 +124,26 @@ by design, and must never be reachable from a table other people can join.
     ADR 0018. Restoring a game by replaying the seed with its recorded decisions is a possible
     later step (see the plan) and is not promised here.
 
+12. **The server computes; the client renders.** Every value a player sees that comes from
+    rules or engine data is computed on the server, typed, and projected per seat before it is
+    sent. The client may lay out the board, animate, remember unsent input and keep display
+    preferences. It may not parse engine text (prompts, log lines, action descriptions), read
+    `LegalAction.data`, classify cards from `typeLine`, hold rules constants, or infer game
+    events by comparing board snapshots. The work splits three ways:
+    - **Engine:** typed descriptive facts added to its existing presentation output
+      (`DecisionPresentation` and the view projections). Card types, cost components, X values
+      and payment plans move out of untyped `data`. This adds no rules logic, and presentation
+      never reaches the AI, so prompts are unchanged.
+    - **Server:** a per-seat presentation module composes labels, cost labels, X families, a
+      per-source index of the legal menu, the player-facing prompt, commander-damage cells and
+      presentation events. It reads the seat's player projection, never `GameState`.
+    - **Client:** renders those fields.
+
+    Player sockets stop receiving `LegalAction.data`. A lint test in `apps/web` fails on the
+    forbidden patterns. Preferences that decide when a seat is asked to act, such as the
+    unplayed-land reminder, move to the server alongside smart yield, so they agree with
+    automatic passing and the decision clock.
+
 ## Consequences
 
 - A table seats one to four humans with bots in the rest. A one-human table on the table server
@@ -141,6 +161,14 @@ by design, and must never be reachable from a table other people can join.
 - New hidden-information leak paths, all of which need tests: cross-seat message routing, the
   seed, per-seat logs, setup errors, post-game unlock timing, and lobby metadata (deck names
   and commanders are hidden from other players until the game starts; display names are shown).
+- Decision 12 has an audit of today's client calculations in the plan (milestone M2). It fixes
+  an existing inconsistency: a land creature is in the lands pile in the spectator seat panel
+  but on the battlefield in the player board, because each view checks `typeLine` its own way.
+  It is worth doing before any multiplayer work, and it makes the JSON agent client and any later
+  client simpler, since none of them re-derive presentation.
+- The engine produces a little more presentation data and the server a little more work per
+  decision: indexing one legal menu per human decision, which is small next to bot search. Player
+  frames get slightly larger, offset by dropping `LegalAction.data` from them.
 - **When to extract a `packages/match` package:** when the table server must be deployed without
   the tester's AI-bench, batch or coverage dependencies, or when the lint boundary in decision 1
   needs more than a handful of exceptions. Until then, a separate package only adds build and
@@ -157,6 +185,12 @@ by design, and must never be reachable from a table other people can join.
   `startCardTestScenario`) and its "everything unlocks at game end" debug surfaces would all
   have to be fenced off one by one behind a mode check, and missing one would leak. A separate
   entry point that never registers those handlers fails closed.
+- **Keep presentation derivation in the browser.** Rejected. With several players, each
+  browser would derive the same facts separately and could disagree. Every client would repeat
+  the logic. Parsing engine text and untyped `data` breaks silently when the engine changes.
+- **Build presentation inside the engine as finished strings.** Rejected. The rules-engine
+  constraints keep UI logic out of `packages/engine`. The engine supplies typed facts and the
+  server writes the words.
 - **Peer-to-peer or client-hosted engine.** Rejected. It puts every hand and the seed on every
   player's machine.
 - **Accounts and public matchmaking first.** Deferred. Invite-link tables cover play among
@@ -172,3 +206,8 @@ These have defaults above. Changing one changes the plan, not this ADR's structu
 3. Clock default: `relaxed` (default) or `off` for casual tables?
 4. Timeout policy: fallback bot (default) or always pass when a pass is legal?
 5. Do humans bring their own decks (default), or can the host assign supported-pool decks?
+6. Decision 12 goes as far as presentation. Should combat-plan composition
+   (`apps/web/src/stores/combatPlan.ts`) also move to the server as an incremental proposal
+   that the server validates on each click? Default: no. It already composes only from
+   engine-offered options and submits one proposal the engine validates, so moving it would add a
+   round trip per click for little gain.
