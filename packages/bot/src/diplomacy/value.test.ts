@@ -193,6 +193,21 @@ describe('pricing against deals already in force', () => {
       'noTargetsLeft',
     );
   });
+
+  it('prices a promise to attack a seat already owed an attack as no new commitment', () => {
+    const v = table();
+    // Attacking quiet P3 is not what P1 would do on its own, so the promise costs it something.
+    const attackP3: DealObligation = { kind: 'attackPlayer', by: 'P1', target: 'P3' };
+    const offer = deal(['P1', 'P2'], [attackP3]);
+    const owedToP4: Deal = { ...deal(['P1', 'P4'], [attackP3], 1, 'old'), status: 'active' };
+    const fresh = valueDeal(offer, 'P2', ctx(v));
+    expect(fresh.ownCost.get('P1')!).toBeGreaterThan(0);
+    expect(fresh.stake).toBeGreaterThan(0);
+    // One attack meets both promises: the second moves nothing and costs P1 nothing more.
+    const repeated = valueDeal(offer, 'P2', ctx(v, { activeDeals: [owedToP4] }));
+    expect(repeated.ownCost.get('P1')).toBe(0);
+    expect(repeated.stake).toBe(0);
+  });
 });
 
 describe('trust and temptation (decisions 12 and 13)', () => {

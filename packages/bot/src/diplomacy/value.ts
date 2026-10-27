@@ -225,7 +225,8 @@ export interface ObligorParts {
 
 /**
  * Position change for every seat, per obligor, over the whole deal (rounds discounted), on top of
- * the `noAttack` promises each obligor already owes in `inForce`.
+ * the promises each obligor already owes in `inForce`: `noAttack` ones shape the baseline, and a
+ * promise to attack a seat it already owes an attack adds nothing, since one attack meets both.
  */
 export function dealParts(
   table: TableEstimate,
@@ -242,7 +243,15 @@ export function dealParts(
     );
     const owed = deal.obligations.filter((o) => o.by === by);
     const spared = new Set(owed.filter((o) => o.kind === 'noAttack').map(obligationSubject));
-    const target = owed.find((o) => o.kind === 'attackPlayer');
+    const alreadyAttacking = new Set(
+      inForce
+        .flatMap((d) => d.obligations)
+        .filter((o) => o.by === by && o.kind === 'attackPlayer')
+        .map(obligationSubject),
+    );
+    const target = owed.find(
+      (o) => o.kind === 'attackPlayer' && !alreadyAttacking.has(obligationSubject(o)),
+    );
     const noTarget = new Set(owed.filter((o) => o.kind === 'noTarget').map(obligationSubject));
     // `noTarget` already covers spells on the stack, so a matching `noCounter` adds nothing.
     const noCounter = new Set(
