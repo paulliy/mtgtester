@@ -129,8 +129,10 @@ benchmarks and debug views show every hand by design and must never be reachable
    - the public game label;
    - debug events;
    - AI annotations, per seat;
+   - AI cost reports;
    - raw error and halt reasons;
    - archetype tags;
+   - decklists and the RNG key;
    - the full-state replay unlock.
 
    Every field defaults to deny. The tester's policy reproduces today's behavior. The table's
@@ -139,12 +141,21 @@ benchmarks and debug views show every hand by design and must never be reachable
    - never sends debug events;
    - never sends raw errors or halt reasons, only a fixed message;
    - never sends another seat's AI notes;
-   - never sends a human seat's archetype tag to anyone but that seat;
+   - never sends an archetype tag before the game ends: a human seat's tag goes only to that
+     seat, and a bot's tag, which a classifier computes from its secret generated list, is
+     withheld from everyone;
    - never sends AI cost reports (`apiWaiting`), because token counts track a bot's hand.
 
    Per-seat content goes only to that seat's socket, and public frames go only to sockets bound
-   to a seat at that table. Both send paths check an allowlist of message types; anything else
-   throws in tests and is dropped in production.
+   to a seat at that table. Both send paths check an allowlist of message types, and the
+   allowlist depends on the table's phase. Full-state types (`replayUnlocked`, `replayTurnState`)
+   are allowed only once the table is `finished`. The check runs on the main thread, after the
+   worker boundary, so a worker bug cannot route them early. Anything not allowed throws in tests
+   and is dropped in production.
+
+   After the game ends, the main thread serves the post-game view and replay from the stored
+   game in the table database, never from the worker. A worker that was terminated for a hang
+   therefore still lets players see the results, the decklists and the key.
 
    A **halted** game counts as finished for the table. That covers an engine halt, the step
    budget, an unmodeled card and a draw loop. Players get a fixed message, the table moves to
@@ -212,7 +223,12 @@ benchmarks and debug views show every hand by design and must never be reachable
        ids, pool decks and URL imports are not accepted from remote players.
      - **The host approves each claim by its claim id.** That stops one client filling every
        seat with one shared invite, and approval by claim id cannot pick the wrong claimant.
-     - Pending claims are capped per table and per socket.
+     - Pending claims are capped per table, per socket and per client address.
+     - The host and the claimant both see a short verification code for each claim, so the host
+       can tell the person who asked from someone using their name. Display names are also
+       compared after removing lookalike characters.
+     - The host can rotate the invite code while the table is `open`, which cuts off a denied or
+       kicked player.
      - Deck problems go only to that player.
      - A deck is written to the table server's database only after approval, under table-scoped
        ids.
@@ -247,8 +263,19 @@ benchmarks and debug views show every hand by design and must never be reachable
    - The game has a wall-clock cap: 4 hours relaxed, 3 hours standard. These are well beyond a
      normal game and exist only to end abandoned tables. When the cap is reached, the server
      ends the game as a draw for every player still in it, through a new engine entry point,
-     `Engine.concede(players, 'drawByTimeLimit')`. That entry point emits an event and uses the
-     existing game-over path, and replay applies it like `yieldCancelled`.
+     `Engine.concede(players, 'drawByTimeLimit')`, which emits an event and replay applies like
+     `yieldCancelled`. The event is emitted from `playGame`'s catch, after the casting
+     checkpoint's rewind (`casting/cast.ts:1225-1234`) has restored the event log, so a game
+     conceded mid-cast does not lose it.
+   - **A deliberate draw is a real outcome, not a halt.** Today every result with no winner is
+     recorded as a halt labeled "probable rules bug" (`match/runner.ts:598-606`, brief §4). A
+     game result gains an `endReason` (`'rules'` by default, or `'timeLimit'`, `'allAway'`). The
+     runner records a no-winner result as a halt only when `endReason` is `'rules'`. A
+     `'timeLimit'` or `'allAway'` result goes through `persistOutcome` and `onGameOver` as a draw,
+     shows the standings with that reason, and counts in stats as a draw. This amends brief §4:
+     a drawn game is a bug only when the rules engine produced it.
+   - **When every human has been gone past their disconnect budget,** the table ends the same
+     way, with `'allAway'`.
    - **The fallback bot** answers when the clock runs out or the grace period ends. It is always
      a heuristic bot, never an LLM.
      - It sees the menu without manual-mana options (the amendment to 0030).
@@ -270,7 +297,9 @@ benchmarks and debug views show every hand by design and must never be reachable
        checked after both `advance()` and `submit()`, and fails loudly on any mismatch.
      - `yieldCancelled` is filtered out of the AI's recent log (`view/view.ts` `visibleEvent`),
        so it never changes an AI prompt.
-   - The `games` row stores `config_json`: deck snapshot ids rather than full card objects, plus
+   - The `games` row stores `config_json`: a hash of the card data the game ran on (the same
+     sha256 the game report already computes, since the Oracle data is not in git), deck snapshot
+     ids rather than full card objects, plus
      manual mana per seat, turn cap, RNG kind and key, and the engine options, including the step
      budget. It also stores the build commit and dirty flag from `build-info.ts`. Card Test Lab
      games, which start from a prepared engine, store none.
@@ -294,7 +323,10 @@ benchmarks and debug views show every hand by design and must never be reachable
      generous enough for a legitimate long combat search; the engine step budget below handles
      tight loops much sooner.
    - **The engine gains a deterministic step budget.** It is counted in the event emitter, so a
-     runaway inside a single generator step is caught. The halt event is exempt from it. It is set
+     runaway inside a single generator step is caught. The counter is a shared object, because effect
+     resolution copies the context by spreading it (`effects/resolve.ts:1693`), and a plain number
+     would be copied by value. The halt event is exempt, and `advance()` handles the budget error
+     in its own branch. It is set
      in `EngineOptions`, so it stays out of state hashes, and it is stored with the game. Pure
      computation that emits nothing is bounded only by the worker.
    - **Development mode** (`--dev`) is the only mode that allows clock `off` and a fixed test RNG
@@ -307,8 +339,11 @@ benchmarks and debug views show every hand by design and must never be reachable
      from `TABLE_PUBLIC_ORIGIN`.
    - It requires an origin allowlist, a host-name allowlist, and TLS, through a proxy or a
      certificate. The server refuses to start without them.
-   - `--insecure-lan` allows plain `ws://` on a private network. Every player then sees a
-     warning that tokens can be sniffed on that network.
+   - `--insecure-lan` allows plain `ws://` on a private network. It requires peers in private
+     address ranges, and refuses a loopback peer that sends a non-loopback `Host` unless a proxy
+     is configured. Every player sees a warning that tokens can be sniffed on that network.
+   - Throttles delay a client address rather than lock it out, so one outsider cannot shut
+     everyone else out of a table.
    - Origin checks are defense in depth; tokens are the access control.
    - Limits:
      - `maxPayloadLength` on the socket;
@@ -316,13 +351,18 @@ benchmarks and debug views show every hand by design and must never be reachable
      - concurrent sockets per client address, using the rightmost forwarded-for entry added
        by the configured proxy, and only when one is configured;
      - outbound backpressure and an idle limit per socket;
-     - total objects created per game, enforced by the engine step budget;
+     - a cumulative cap on objects created per game, enforced by the engine and halting the game
+       (the per-advance step budget cannot bound a total);
      - messages per socket;
      - claims per socket;
      - decklist size.
    - Pages are sent with a `frame-ancestors 'none'` content security policy, so the lobby cannot
      be framed and clicked through.
    - The protocol carries a version, and a stale tab reloads.
+   - Static files are served only from the web build's manifest, never from a directory path. The
+     table database lives outside the served directory. Tests cover encoded `..` paths.
+   - **Until M5 lands, `serve:table` refuses to start without `--dev`.** Production mode and its
+     gates ship together, so no earlier build can be exposed.
 
 10. **LLM seats are not offered at tables yet.** Their cost reports leak, as decision 3 notes. No
     per-game call cap exists to bound a host's spending. And a table must answer within its clock.
@@ -368,7 +408,12 @@ benchmarks and debug views show every hand by design and must never be reachable
   appear only where the projection already shows a card, and cues use object ids, so this reveals
   nothing a player cannot already see.
 - **The public commander narrows a bot's deck.** A bot's generated deck has its own secret stream,
-  but its commander is public. That is no more than a human player's commander reveals.
+  but its commander is public. That is no more than a human player's commander reveals. Its
+  archetype tag, which would reveal more, is withheld until the game ends.
+- **What per-seat ids buy.** Request ids, revisions, frame cadence and log sequences hide how often
+  other seats had a real choice and how many private events happened. Object-id gaps reveal a
+  different count (hidden moves and effects). Both are counts, not contents. Hiding the first
+  set is cheap and ships in M3; hiding the second needs per-viewer object ids and is a follow-up.
 
 ## Consequences
 

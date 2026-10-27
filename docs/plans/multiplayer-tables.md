@@ -7,7 +7,7 @@ approval. Presentation work is a separate track,
 
 **Order:**
 
-1. M1, then M2a and M2b. P1 can run alongside them.
+1. M1, then M2a and M2b. P1 and P3 have no dependencies and can start at any time.
 2. P2 to P5.
 3. M3, then M4, then M5. P6 can run during M3 to M5.
 4. M6.
@@ -37,8 +37,9 @@ A guest should be able to:
 1. Open the invite link, choose a display name, paste a decklist, and see private deck problems.
 2. Play with the same board, controls, smart yield and manual mana as single-player.
 3. See whose decision the table is waiting on and how much time they have left.
-4. Close the tab or browser and reopen the invite link in the same browser within the disconnect
-   budget, then continue from the same pending choice.
+4. Close the tab or browser and reopen the invite link in the same browser within the 60-second
+   grace period, then continue from the same pending choice. After that a fallback bot plays the
+   seat until the player takes control back.
 5. After the game, or after an engine halt, see the results, every decklist, a turn-by-turn
    replay and the RNG key.
 
@@ -124,7 +125,7 @@ ADR.
    `ws/server.ts`, `match/annotations.ts` and `match/preview.ts`. Each becomes a `switch` on
    `GameMode` ending in `assertNever`, which is added to `packages/shared`. Each branch is one of
    two kinds:
-   - **Flow branches** (`onEvents`, `onProgress`, `start()`, bot pacing, presentation clock):
+   - **Flow branches** (`onEvents`, `onProgress`, `start()`, the pace delay):
      `'table'` behaves like single-player, per human seat. It never falls into the spectator
      branch, which would start `startPresenting` and send `spectatorState`.
    - **Fence branches** (halt reason, debug, legal-menu escalation, annotations, errors):
@@ -160,8 +161,9 @@ ADR.
 
 - **Wire transcript.** Record every `ServerToClientMessage` of a fixed-seed single-player game
   with a scripted human, before and after M1. Normalize the game id, session token and
-  timestamps; everything else must match byte for byte. M2a re-baselines this file once for its
-  documented privacy fixes.
+  timestamps; everything else must match byte for byte. Each later step that changes
+  single-player frames (M2a, P2, P4, P5) re-baselines this file in its own PR, with the diff
+  explained.
 - **`match/session-multi-human.test.ts`,** in-process with `gameMode: 'table'`:
   - two human seats and two random bots reach a turn cap of 6;
   - each seat's stream holds only its own hand;
@@ -199,8 +201,10 @@ These fixes also apply to single-player. No network port opens.
 2. **Seed in player frames.** `PlayerBoardState` makes `seed` optional. `buildPlayerBoardState`
    includes it only when the policy allows. `gameReport()` and `gameStarted` take the seed from
    the policy. The tester's policy still shows it.
-3. **Halts are terminal.** `MatchRunner.finish` calls a new `onHalted` hook. The session treats a
-   halt as terminal for the policy's post-game unlock, and sends a fixed message in table mode.
+3. **Halts are terminal.** `MatchRunner` already has `onHalt` (`runner.ts:99,624`), reached from
+   `finish` and from the loop's own halts (`maxDecisions`, `engineError`). The session uses it to
+   treat a halt as terminal for the policy's post-game unlock, and sends a fixed message in table
+   mode.
 4. **Allowlist redaction** (`view/spectator.ts`).
    - Face-down permanents and exile cards are built field by field.
    - `moveObject` sets a `faceDown` flag on exile objects moved face down.
@@ -213,12 +217,15 @@ These fixes also apply to single-player. No network port opens.
    - The viewer-aware commander view returns `zone: 'hidden'`, `objectId: null` and
      `scryfallId: null` to non-owners for a commander in a hand or library, or face down.
    - `yieldingUntilEndOfTurn` goes only to its own seat.
+   - The AI's own copy of the commander view (`view/view.ts:54,254`) is left alone, to keep AI
+     prompts byte-identical. Only the player-bound projection changes.
 6. **Replay inputs.**
    - `Engine.cancelYield` emits `yieldCancelled { player }` only when it changes state.
      `view/view.ts` `visibleEvent` hides it from the AI's recent log.
    - The `games` row gains three columns:
-     - `config_json`: deck snapshot ids, manual mana per seat, turn cap, RNG kind and key, and
-       engine options;
+     - `config_json`: the card-data hash (the sha256 the game report already computes, because
+       the Oracle data is not in git and `card_cache` is overwritten by re-imports), deck
+       snapshot ids, manual mana per seat, turn cap, RNG kind and key, and engine options;
      - `build_commit`;
      - `build_dirty`, which `readBuildInfo` may leave null outside git.
 
@@ -234,11 +241,15 @@ These fixes also apply to single-player. No network port opens.
    - Apply each `yieldCancelled` (and, from M4, each `concede` event) when the engine's next
      event sequence equals the event's. Check after both `advance()` and `submit()`.
    - Fail loudly on a request id or sequence mismatch.
-   - Compare the final state hash.
+   - Refuse to run when the stored card-data hash differs from the current one.
+   - Compare the final state hash. The hash excludes `sequenceSnapshots` and
+     `pendingSnapshotSequence`, which depend on drain timing.
 8. **Docs.**
    - Amend `docs/guides/rules-engine-constraints.md`, rewording the timing line per ADR 0031
      decision 8.
    - Add an "Amended by 0031" line to `docs/decisions/0030-manual-mana-activation.md`.
+   - Add a "Superseded in part by 0031" line to `docs/decisions/0018-single-player-mode.md`, and
+     an "Amended by 0032" line to `docs/decisions/0019-direct-player-controls.md`.
 
 ### Tests
 
@@ -282,10 +293,18 @@ These fixes also apply to single-player. No network port opens.
      - `5 + seat` for each fallback bot;
      - `9 + seat` for each bot seat's generated deck.
    - `HeuristicDecisionProvider` accepts `string | { nextInt }`. A string keeps today's `Rng`,
-     so legacy output and the benchmark and CLI call sites are unchanged.
+     so legacy output and the benchmark and CLI call sites are unchanged. `evaluate.decide`
+     takes the `Rng` class, which has a private field, so its parameter type widens to an
+     interface first.
+   - The provider kind `'random'` builds a `HeuristicDecisionProvider` for the whole session
+     (`session.ts:71,1209`), not per seat. The nonces above apply to that provider.
    - The bot's own `Rng.nextInt(0)` returns 0. The injected source wraps ChaCha20 to match that,
      so the bot sees the same contract.
-   - `setupPoolSeat` takes its deck RNG from the bot seat's deck stream for `chacha20` games.
+   - `generateCommanderDeck` builds its own `Prng(options.seed)` (`decks/generate.ts:95`). It
+     takes an injected RNG, and `setupPoolSeat` passes the bot seat's deck stream for
+     `chacha20` games.
+   - A pool deck id is `pool:${seed}` today (`setup.ts:124`) and travels in `seats[].deckId`. In
+     `chacha20` games it is a random alias, never derived from the seed.
    - `ai/provider.ts:227`'s `HeuristicRng(request.requestId)` is seeded from a public id. It is
      listed in the RNG inventory and left alone, since it reveals nothing.
 
@@ -348,6 +367,7 @@ seat changes revoke the affected seat token.
   - **Lobby connection, from the host-token holder, after `hostAuth {hostToken}`:**
     - `hostApprove {claimId}` and `hostDeny {claimId}`;
     - `hostSetSeat {seat, controller}` and `hostKick {seat}`;
+    - `hostRotateInvite`;
     - `hostStart` and `hostAbandon`.
   - **Game connection, from a seat-token holder:**
     - `resumeSeat {seatToken, protocolVersion, capabilities}`;
@@ -378,14 +398,20 @@ read-only message, accepted only in `finished`.
    - Parse the plaintext decklist in memory with `parsePlaintextDeck` (not `importDeck`) and
      validate it.
    - Write it to the table database under a table-scoped id only after approval.
-   - Pending claims are capped per table (8) and per socket (1).
+   - Pending claims are capped per table (8), per socket (1) and per client address (2).
+   - Each claim shows a short verification code to the claimant and the host. Display names
+     are compared after removing lookalike characters.
+   - `hostRotateInvite` replaces the invite code while the table is `open`.
 3. **Workers.**
    - `TableSessionPort` is an async interface, so the table calls the session the same way
      whatever runs it.
-   - The worker implementation runs its own `GameStore` on the table database, with `busy_timeout`
-     set, and its own `MatchSession`.
-   - The main thread treats a worker as dead after 30 s without a reply and `terminate()`s it,
-     and the table ends with a fixed message.
+   - The main thread migrates the table database once, before any worker starts. Each worker's
+     `GameStore` sets `busy_timeout` before it runs the schema, because the constructor's
+     catch-all migration loop would otherwise hide a `SQLITE_BUSY` (`db/index.ts:45-56`).
+   - The worker runs its own `MatchSession`.
+   - The main thread treats a worker as dead after 30 s without a reply (injectable in tests) and
+     `terminate()`s it. The table moves to `finished` with a fixed message, and the post-game view
+     is served from the stored game by the main thread, never from the worker.
    - Tests may use the in-process implementation. `serve:table` always uses workers.
 4. **Start.**
    - Build `seatControllers`, the table `DisclosurePolicy`, and the `chacha20` config with a
@@ -399,30 +425,42 @@ read-only message, accepted only in `finished`.
    - Each seat's revision counts only that seat's frames.
    - Per-viewer log sequences.
    - A board snapshot is sent only when that seat's projection changed.
-   - The game report is mapped the same way.
+   - The game report's pending request id is mapped the same way. The report carries no raw
+     `data`.
 6. **Engine step budget.**
-   - `EngineOptions.maxStepWork` counts events emitted in one `advance()`, through a counter on
-     `GameContext` incremented in `emit()`.
-   - The `engineHalt` emit is exempt.
+   - `EngineOptions.maxStepWork` counts events emitted in one `advance()`, through a shared
+     `{ count }` object on `GameContext` incremented in `emit()`. It is a shared object because
+     effect resolution copies the context by spreading it (`effects/resolve.ts:1693`,
+     `casting/preview.ts:58`), and a number would be copied by value. `advance()` resets it.
+   - `EngineOptions.maxObjects` is a cumulative cap on objects created in the whole game.
+   - The `engineHalt` emit is exempt from both.
    - Probe contexts (`stateful-payment.ts`) default to unlimited.
-   - Exceeding the budget halts through the existing path. It is unlimited for the tester, set
-     for tables, and stored with the game.
-7. **Same-origin web.** `table-http.ts` serves the `VITE_APP_MODE=table` build (from M6; until
+   - Exceeding either halts through the existing path, handled in its own branch in `advance()`
+     (today it catches only `UnmodeledCardError`, `engine.ts:181-195`). Both are unlimited for
+     the tester, set for tables, and stored with the game.
+   - **Values.** Defaults are 50,000 events per `advance()` and 20,000 objects per game. A
+     calibration task runs the combat sweep and the heaviest Card Test Lab scenarios, and sets
+     each default to ten times the largest value observed.
+7. **Gate.** Until M5 lands, `serve:table` refuses to start without `--dev`.
+8. **Same-origin web.** `table-http.ts` serves the `VITE_APP_MODE=table` build (from M6; until
    then, a placeholder page) and builds invite links from `TABLE_PUBLIC_ORIGIN`, which defaults
    to the loopback URL.
-8. **Dev mode** (`--dev`). Clock `off` and the test key are allowed. Requests whose `Host` or
+9. **Dev mode** (`--dev`). Clock `off` and the test key are allowed. Requests whose `Host` or
    `Origin` is not loopback are refused. The server refuses to start in dev mode with any proxy
    or allowlist setting.
-9. **`PROTOCOL_VERSION`** in `shared`.
-10. **Module-graph test** for `cli/serve-table.ts` and `table/table-worker.ts`.
+10. **`PROTOCOL_VERSION`** in `shared`.
+11. **Static files.** Only files in the web build's manifest are served, and the table database
+    lives outside the served directory. Tests cover encoded `..` paths.
+12. **Module-graph test** for `cli/serve-table.ts` and `table/table-worker.ts`.
     - Use `bun build --metafile`, checking it on the CI-pinned Bun version first.
-    - Fail on `batch/`, `benchmark/` runtime modules, or any `createCardTestScenario` module.
+    - Fail on `batch/`, `benchmark/` runtime modules, or any module that imports
+      `cards/card-test-scenarios`.
       Type-only imports do not appear in the bundle graph and are allowed.
     - Add `no-restricted-imports` for `table/**`.
-11. **Agent client table mode.** Add `agent-client --table <url> --invite <code> --name <n>`,
+13. **Agent client table mode.** Add `agent-client --table <url> --invite <code> --name <n>`,
     with `--policy first-legal`. It sends the `rawActionData` capability (P5) and re-sends it on
     resume. Loopback only in M3.
-12. **`package.json` and docs.** Add `"serve:table"`, and update `docs/guides/project-commands.md`
+14. **`package.json` and docs.** Add `"serve:table"`, and update `docs/guides/project-commands.md`
     and `docs/guides/json-agent-client.md` (table mode, capabilities).
 
 ### Tests
@@ -443,9 +481,14 @@ read-only message, accepted only in `finished`.
     - hidden commander zones;
     - other seats' yield flags;
     - global request ids, sequences or revisions;
-    - card ids in cues.
+    - card ids in cues, once P6 has landed (P6 adds that case to this scan);
+    - a pool deck alias derived from the seed.
+  - Phase check: `replayUnlocked`, `replayTurnState` and any spectator-shaped payload are
+    refused by the outbound allowlist until the table is `finished`, and the check holds even if
+    a worker sends one early.
   - Frame timing: a seat's frame count does not change when a different seat makes a hidden
-    decision. That is tested with a scripted opponent scry.
+    decision. That is tested with a scripted opponent scry. M4 extends the test to `clockState`
+    and `seatStatus`.
   - Tester messages are refused, and a forged seat in a payload is ignored.
   - Two tables run concurrently without cross-talk.
   - A stale protocol version gets `protocolMismatch`.
@@ -453,11 +496,17 @@ read-only message, accepted only in `finished`.
   - Host messages without `hostAuth` are refused.
   - An unapproved client cannot take a seat.
   - A kicked player's token cannot `resumeSeat`.
+  - A second claim under a lookalike name is flagged, and a rotated invite refuses the old code.
+  - Static serving refuses encoded `..` paths and serves nothing outside the manifest.
+  - A terminated worker still lets players open the post-game view.
   - After the game, `replayTurn` works; before it, `replayTurn` is refused.
 - **Further tests:**
   - `tokens.test.ts`, `wire-ids.test.ts`;
   - a step-budget test with a forced-trigger loop fixture;
-  - a worker test in which a hung worker is terminated while another table keeps running;
+  - a worker test in which a hung worker is terminated (with the timeout shortened by the test
+    hook) while another table keeps running;
+  - a startup test that `serve:table` without `--dev` refuses to start;
+  - the step-budget calibration run, recorded in the PR;
   - a dev-mode test that a non-loopback `Host` header is refused.
 
 ### Exit
@@ -479,13 +528,21 @@ read-only message, accepted only in `finished`.
      paused during grace.
    - Game cap: 4 hours relaxed, 3 hours standard.
    - `off` is allowed only in dev mode.
-2. **`Engine.concede(players, reason)`.**
-   - Emits a `conceded` event and ends the game through the existing game-over path as a draw
-     for those players.
-   - The replay harness applies it like `yieldCancelled`.
+2. **`Engine.concede(players, reason)` and deliberate draws.**
+   - `GameResult` gains `endReason` (`'rules'` by default, `'timeLimit'` or `'allAway'`).
+   - `concede` throws a game-over signal into the generator. `playGame`'s catch emits the
+     `conceded` event after the casting checkpoint's rewind (`casting/cast.ts:1225-1234`), so the
+     event is not rolled back, and the result is a draw for the remaining players.
+   - `MatchRunner.finish` records a no-winner result as a halt only when `endReason` is
+     `'rules'`. Otherwise it goes through `persistOutcome` and `onGameOver` as a draw, and stats
+     count it as a draw. Brief §4 is amended in the ADR for this.
+   - The replay harness applies the event like `yieldCancelled`.
    - The player-log filter and `visibleEvent` classify it.
+   - The table ends with `'allAway'` when every human is past their disconnect budget.
 3. **`TimedHumanProvider`.** On expiry:
-   1. bump the seat's revision;
+   1. clear or replace `HumanDecisionProvider`'s `pending` entry, which holds the revision it
+      compares against (`human-provider.ts:93-110`), so a late human answer is rejected and the
+      decision cannot resolve twice;
    2. ask the heuristic bot (on the seat's fallback stream) with `activateManaAbility` options
       filtered out, keeping ids, as the smart-yield filter in `sendPlayerActionRequired` does;
    3. strip `note`;
@@ -495,6 +552,9 @@ read-only message, accepted only in `finished`.
 5. **Protocol.**
    - `clockState {seat, remainingMs, bankMs, running}` goes to seat-bound sockets.
    - `seatStatus {seat, connected, fallback}`.
+   - A clock starts only for a decision actually shown to the human: not for a smart-yield
+     auto-pass (`session.ts:943-956`) and not for the engine's quiet passes. This is the same
+     visible wait that the ADR accepts as a tell.
 
 ### Tests
 
@@ -504,13 +564,16 @@ read-only message, accepted only in `finished`.
   - three timeouts in a row;
   - grace pausing the clock;
   - budget exhaustion;
-  - the game cap ending in a draw.
+  - the game cap ending in a draw that is stored and shown as a draw, not a halt.
 - **Late answers.** A late human answer is stale.
 - **Manual mana.** The fallback bot on a manual-mana seat never taps a source by hand.
 - **Replay.** The M2a harness replays a game with `human`, `auto`, `timeout` and `fallback`
   sources, and one that ends at the cap.
 - **Disconnect.** P1 disconnects past grace and goes to fallback while P2 plays on. P1 resumes,
   sends `resumeControl`, and gets the next decision.
+- **Frame timing.** The M3 cadence test also holds for `clockState` and `seatStatus`: neither is
+  sent for an auto-passed decision.
+- **Concede mid-cast.** A game conceded while a spell is being cast keeps its `conceded` event.
 - **Bots never get clocks.** Spectator and bot-only games construct no clock or fallback.
 
 ### Exit
@@ -528,7 +591,8 @@ Four scripted clients, one of which disconnects and rejoins, finish a game.
    - `TABLE_ALLOWED_ORIGINS` and `TABLE_ALLOWED_HOSTS`;
    - TLS (certificate paths, or `TABLE_BEHIND_TLS_PROXY` with the proxy's address for
      forwarded-for);
-   - `--insecure-lan`.
+   - `--insecure-lan`, which requires peers in private address ranges and refuses a loopback
+     peer that sends a non-loopback `Host` unless a proxy is configured.
 
    Without `--dev`, the server refuses to start without the allowlists, and without TLS unless
    `--insecure-lan` is set. This applies whatever address it binds, because a tunnel or proxy can
@@ -565,8 +629,11 @@ Four scripted clients, one of which disconnects and rejoins, finish a game.
 - Oversize frames and decks are rejected.
 - The display-name table.
 - The CSP header.
-- **In-process TLS:** a test starts a local TLS proxy (self-signed certificate) in front of the
-  table server, and two scripted clients finish a game through it.
+- **In-process TLS:** a test generates a self-signed certificate at run time, starts a local TLS
+  proxy in front of the table server, and two scripted clients finish a game through it.
+- Throttles delay rather than lock out: after an outsider exhausts its allowance, a different
+  client address still connects.
+- A `--insecure-lan` run refuses a public-range peer.
 
 ### Exit
 
@@ -607,8 +674,9 @@ Four scripted clients, one of which disconnects and rejoins, finish a game.
    - Copy the invite link.
 5. **Dev and CI.**
    - `scripts/dev.ts --table`.
-   - `playwright.table.config.ts`, with its own server and web ports, `--dev`,
-     `TABLE_TEST_RNG_KEY`, and the committed Oracle fixture.
+   - `playwright.table.config.ts`, which runs the table server alone on one port, serving the
+     built table bundle from the same origin (the production arrangement), with `--dev`,
+     `TABLE_TEST_RNG_KEY`, a shortened clock (`--clock-scale`), and the committed Oracle fixture.
    - A `table-e2e` job in `.github/workflows/ci.yml`, alongside the viewer job. It uses the same
      `changes` and `full` gating and the same trace check, and its spec patterns are added to the
      existing configs' `testIgnore`.
@@ -625,7 +693,12 @@ Four scripted clients, one of which disconnects and rejoins, finish a game.
   - one closes and reopens, then resumes;
   - the host abandons;
   - both see the post-game view with the key;
-  - both can step the replay back one turn.
+  - both can step the replay back one turn;
+  - a forced engine halt unlocks the post-game view;
+  - the clock display counts down and a timeout hands the seat to the fallback bot, with a
+    shortened clock;
+  - smart yield skips a quiet priority window, and a manual-mana tap pays for a spell;
+  - everything above runs through the same-origin bundle.
 - The bundle-manifest test.
 - `player-game.spec.ts` still passes in the tester build.
 
@@ -648,27 +721,27 @@ The player outcome list works end to end in `table-e2e`.
 
 ## Order and sizing
 
-| Milestone                 | Depends on                       | Size | Ships alone                          |
-| ------------------------- | -------------------------------- | ---- | ------------------------------------ |
-| M1 Seat controllers       | —                                | L    | Yes (refactor)                       |
-| M2a Hidden info, replay   | M1                               | M    | Yes (single-player privacy fixes)    |
-| M2b ChaCha20 RNG          | M1                               | M    | Yes (unused until M3)                |
-| P1–P5 Presentation        | P2 after M2a task 4; P4 after M1 | M    | Yes (animated-land fix, thin client) |
-| M3 Table server, loopback | M2a, M2b, P5, ADR 0031 accepted  | L    | Yes (scripted local tables)          |
-| M4 Clocks and fallback    | M3                               | M    | Yes                                  |
-| M5 Exposure               | M4                               | M    | Yes (LAN or TLS, scripted clients)   |
-| M6 Web and CI             | M5, P6                           | M    | —                                    |
-| M7 Follow-ups             | M6                               | —    | per item                             |
+| Milestone                 | Depends on                                               | Size | Ships alone                          |
+| ------------------------- | -------------------------------------------------------- | ---- | ------------------------------------ |
+| M1 Seat controllers       | —                                                        | L    | Yes (refactor)                       |
+| M2a Hidden info, replay   | M1                                                       | M    | Yes (single-player privacy fixes)    |
+| M2b ChaCha20 RNG          | M1                                                       | M    | Yes (unused until M3)                |
+| P1–P5 Presentation        | P2 after M2a task 4; P4 needs P1, P3 and M1; P5 needs P4 | M    | Yes (animated-land fix, thin client) |
+| M3 Table server, loopback | M2a, M2b, P5, ADR 0031 accepted                          | L    | Yes (scripted local tables)          |
+| M4 Clocks and fallback    | M3                                                       | M    | Yes                                  |
+| M5 Exposure               | M4                                                       | M    | Yes (LAN or TLS, scripted clients)   |
+| M6 Web and CI             | M5, P6                                                   | M    | —                                    |
+| M7 Follow-ups             | M6                                                       | —    | per item                             |
 
 Files both tracks touch, and who goes first:
 
 | File                     | First                  | Then                          |
 | ------------------------ | ---------------------- | ----------------------------- |
 | `shared/src/protocol.ts` | M1                     | P4, P5, then M3               |
-| `match/session.ts`       | M1                     | M2a, P4, P5, then M3          |
+| `match/session.ts`       | M1                     | M2a, M2b, P4, P5, then M3     |
 | `view/spectator.ts`      | M2a tasks 4–5          | P2                            |
-| `agent-client-core.ts`   | M1                     | P4, P5, then M3 task 11       |
-| `eslint.config.js`       | P4 and P5 (web blocks) | M3 task 10 (`table/**` block) |
+| `agent-client-core.ts`   | M1                     | P4, P5, then M3 task 13       |
+| `eslint.config.js`       | P4 and P5 (web blocks) | M3 task 12 (`table/**` block) |
 
 ## Delegation notes
 
@@ -681,13 +754,13 @@ Per `CLAUDE.md`:
 - **Main thread:**
   - M1 task 3 (every branch is a flow or disclosure decision);
   - all of M2a and M2b;
-  - M3 tasks 3, 5 and 6;
+  - M3 tasks 3, 5 and 6, and the budget calibration;
   - M5's security review;
   - every frame-scan test.
 - **Haiku `explorer`:**
   - list `GameMode` consumers;
   - list every `seed` read in `packages/server` and `apps/web`;
-  - list every `createCardTestScenario` module.
+  - list every module that imports `cards/card-test-scenarios`.
 
 ## Risks
 

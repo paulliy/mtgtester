@@ -5,10 +5,12 @@ Decision record: [ADR 0032](../decisions/0032-server-computed-presentation.md). 
 This track runs between multiplayer milestones M2 and M3
 ([multiplayer plan](multiplayer-tables.md)):
 
-- **P1** can start alongside M2a.
+- **P1** has no dependencies and can start at any time.
 - **P2** waits for M2a's allowlist redaction.
-- **P5** lands before M3.
-- **P6** lands before M6.
+- **P3** has no dependencies.
+- **P4** needs P1 and P3, and lands after M1 (they both change `session.ts`).
+- **P5** needs P4, and lands before M3.
+- **P6** lands during M3 to M5, before M6.
 
 ## Goal
 
@@ -18,17 +20,19 @@ and fixed-seed engine event streams do not change.
 
 ## Audit of today's client calculations
 
-| #   | Today                                                                                                                                                                 | Problem                                                                     | Replacement                                                                           |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| 1   | `PlayerGameView.vue:129` `isPiledLand`; `SeatPanel.vue:62-63`; `lib/card.ts:2` `isTokenTypeLine`                                                                      | Printed type line matched as text; views disagree; wrong for animated lands | Projection `types`, `supertypes`, `subtypes`, `isToken`; shared `boardGroupOf(types)` |
-| 2   | `PlayerGameView.vue:1064` `actionCost`, `:1105` `pendingSummary`, `:1880` (`sourceName`); `lib/actionLabels.ts` (variant labels, enters-tapped notes, optional costs) | Reads untyped `data`                                                        | `ActionPresentation.label`, `summary`, `costLabels`, `entryNote`                      |
-| 3   | `PlayerGameView.vue:491` X-value grouping by `data.x` and `data.modeLabel`                                                                                            | Same                                                                        | `ActionPresentation.xFamily`                                                          |
-| 4   | `PlayerGameView.vue:1178-1198` payment sources                                                                                                                        | Same                                                                        | `ActionPresentation.payment`                                                          |
-| 5   | `components/ManaTaps.vue:12` `data.symbols`; `lib/actionLabels.ts:80` `data.targetReductionSlot`                                                                      | Same                                                                        | `ActionPresentation.manaSymbols`, `targetHint`                                        |
-| 6   | `lib/turnLabels.ts:39` `playerFacingPrompt`, used at `DecisionPanel.vue:80` and `PlayerGameView.vue:2050`                                                             | Regex over engine prompt text                                               | `DecisionPresentation.playerPrompt`                                                   |
-| 7   | `PlayerGameView.vue:182` game-over line found by matching log text                                                                                                    | Text matching                                                               | `GameOverPayload.summary`                                                             |
-| 8   | `CommanderDamageGrid.vue:17` `LETHAL = 21`                                                                                                                            | Rules constant in the client                                                | `lethal` and `remaining` on commander-damage entries                                  |
-| 9   | `useCombatStrikes.ts`, `useLifeFlash.ts`                                                                                                                              | Diff snapshots to guess who hit what                                        | Server-built `damage` and `lifeChange` cues (ADR 0032 decision 8)                     |
+| #   | Today                                                                                                                                                                 | Problem                                                                     | Replacement                                                                                 |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| 1   | `PlayerGameView.vue:129` `isPiledLand`; `SeatPanel.vue:62-63`; `lib/card.ts:2` `isTokenTypeLine`                                                                      | Printed type line matched as text; views disagree; wrong for animated lands | Projection `types`, `supertypes`, `subtypes`, `isToken`, and a server-computed `boardGroup` |
+| 2   | `PlayerGameView.vue:1064` `actionCost`, `:1105` `pendingSummary`, `:1880` (`sourceName`); `lib/actionLabels.ts` (variant labels, enters-tapped notes, optional costs) | Reads untyped `data`                                                        | `ActionPresentation.label`, `summary`, `costLabels`, `entryNote`                            |
+| 3   | `PlayerGameView.vue:491` X-value grouping by `data.x` and `data.modeLabel`                                                                                            | Same                                                                        | `ActionPresentation.xFamily`                                                                |
+| 4   | `PlayerGameView.vue:1178-1198` payment sources                                                                                                                        | Same                                                                        | `ActionPresentation.payment`                                                                |
+| 5   | `components/ManaTaps.vue:12` `data.symbols`; `lib/actionLabels.ts:80` `data.targetReductionSlot`                                                                      | Same                                                                        | `ActionPresentation.manaSymbols`, `targetHint`                                              |
+| 6   | `lib/turnLabels.ts:39` `playerFacingPrompt`, used at `DecisionPanel.vue:80` and `PlayerGameView.vue:2050`                                                             | Regex over engine prompt text                                               | `DecisionPresentation.playerPrompt`                                                         |
+| 7   | `PlayerGameView.vue:182` game-over line found by matching log text                                                                                                    | Text matching                                                               | `GameOverPayload.summary`                                                                   |
+| 8   | `CommanderDamageGrid.vue:17` `LETHAL = 21`                                                                                                                            | Rules constant in the client                                                | `lethal` and `remaining` on commander-damage entries                                        |
+| 9   | `useCombatStrikes.ts`, `useLifeFlash.ts`                                                                                                                              | Diff snapshots to guess who hit what                                        | Server-built `damage` and `lifeChange` cues (ADR 0032 decision 8)                           |
+| 10  | `components/ManaTaps.vue:24` `action.description.split(': add ')`                                                                                                     | Parses engine action text                                                   | `ActionPresentation.label` and `manaSymbols` for mana abilities                             |
+| 11  | `lib/lossReasons.ts:22` regex `.replace` of the elimination log line (used by `ActionLog.vue`)                                                                        | Rewrites engine log text                                                    | The server writes the player-facing elimination line                                        |
 
 The browser reads 17 `data` keys today:
 
@@ -71,13 +75,15 @@ Stays in the client:
   `none`).
 - `packages/server/src/cards/action-data-keys.test.ts` collects keys and value types from two
   sources:
-  - the first surfaced decision of every scenario registered through `createCardTestScenario`;
+  - the first surfaced decision of every scenario id in `CARD_TEST_SCENARIO_IDS`, built with
+    `createCardTestScenario` (which looks scenarios up; it does not register them);
   - four fixed-seed four-bot games.
 
   It fails on any of these:
   - an unregistered key;
   - a value type outside the registered set;
-  - a key that presentation handles but nothing emits.
+  - a key that presentation handles but nothing emits, unless the registry lists it as
+    `rare` (for example `payLifeToUntap`, which the sweep may not reach).
 
   Its runtime is measured in the PR and must stay under CI's test budget.
 
@@ -95,8 +101,10 @@ Stays in the client:
   - face-down permanents get `types: ['Creature']` and empty subtypes;
   - redacted exile cards get no types;
   - the coverage test includes the new keys.
-- `shared` gains `boardGroupOf(types)`. The client switches item 1 to it, and `lib/card.ts` is
-  deleted.
+- The projection also carries `boardGroup` (`lands`, `creatures`, `other`) for each permanent,
+  computed by one function in `view/spectator.ts`. The client reads it and `lib/card.ts`'s
+  `isTokenTypeLine` is deleted. `scryfallImageUrl` stays in `lib/card.ts`, because
+  `CardImage.vue`, `SetupView.vue` and `PermanentChip.vue` use it.
 - Intentional fixes, each with a test:
   - an attacking animated manland groups with creatures;
   - Dryad Arbor groups with creatures in both views.
@@ -114,6 +122,9 @@ Stays in the client:
   shipped behavior must not change.
 - **Why `shared`.** Both the web, until P4, and the server import from it. There is one copy, so
   parity holds by construction.
+- **Subpath export.** `@mtg/shared` exports only `"."` today (`packages/shared/package.json`).
+  The code lives behind a new `./presentation` subpath that the package index does not
+  re-export, so a path-based `no-restricted-imports` rule can ban it from `apps/web/src`.
 
 ### P4 — Server enrichment and client switch (one PR, after M1)
 
@@ -123,15 +134,17 @@ Stays in the client:
     action, with the verb derived from the action type and empty subjects.
   - **Choice decisions:** add the new fields to the engine's entries.
   - **Every decision:** set `playerPrompt`.
-  - **Game over and commander damage:** `GameOverPayload.summary`, and `lethal` and `remaining`
-    on commander-damage entries.
+  - **Game over, eliminations and commander damage:** `GameOverPayload.summary`, the
+    player-facing elimination log line, and `lethal` and `remaining` on commander-damage entries.
+  - **Mana abilities:** `label` and `manaSymbols`, replacing the split in `ManaTaps.vue`.
 - **Session.** `MatchSession.sendPlayerActionRequired` calls it after smart-yield filtering.
-  The game report path calls it too.
 - **Client switch, in the same PR.** `PlayerGameView.vue`, `DecisionPanel.vue`, `ManaTaps.vue`,
   `CommanderDamageGrid.vue`, `HandStrip.vue`, `ZoneStrip.vue` and `PermanentChip.vue` read the
-  new fields. The web stops importing `shared/src/presentation/`, enforced by a
-  `no-restricted-imports` rule for `apps/web/src`. `playerFacingPrompt` and the log-text
-  game-over search are deleted.
+  new fields. The web stops importing `@mtg/shared/presentation`, enforced by a
+  `no-restricted-imports` rule for `apps/web/src`. `playerFacingPrompt`, `lib/lossReasons.ts` and
+  the log-text game-over search are deleted.
+- **Re-baseline.** The single-player wire transcript (multiplayer plan M1) changes here, and the
+  PR re-baselines it with the diff explained.
 - **Agent client.** `agent-client-core.ts`'s `projectAgentGameOver` allowlist adds `summary`.
 - **Property tests over the P1 sweep:**
   - every cast, activation and land play has a non-empty `label`;
@@ -145,12 +158,16 @@ Stays in the client:
   `capabilities: { rawActionData?: boolean }`. On the tester those messages are `startGame`,
   `startCardTestScenario` and `resumeGame`; on the table server, `joinTable` and `resumeSeat`.
 - **The agent client asks for raw data** (`agent-client-core.ts`). Without the capability, the
-  session strips `data` from player-bound legal actions and from the game report. Tests cover
-  both settings.
+  session strips `data` from player-bound legal actions. Tests cover both settings. The game
+  report carries no raw `data`, so it needs no stripping.
+- **Table messages.** M3 adds the same `capabilities` field to `joinTable` and `resumeSeat`. Until
+  then, this step defines it on the tester messages only.
+- **Re-baseline.** The single-player wire transcript changes here too, and the PR re-baselines it.
 - **Browser type.** The web's protocol types use `Omit<LegalAction, 'data'>`.
 - **Two syntactic rules** for `apps/web/src` in `eslint.config.js`. `lib/tokenArt.ts` is exempt.
   - No string or regex calls on a `typeLine` member.
-  - No regex `.test` on `prompt` or `text` members.
+  - No `.test`, `.match`, `.split`, `.replace` or `.includes` on `description`, `prompt` or `text`
+    members.
 
 ### P6 — Damage and life cues (before M6)
 
@@ -160,7 +177,11 @@ Stays in the client:
     flag.
     - Permanent targets are resolved from `targetCardId` to an object id on either board, and
       player targets use the player id. Both payload shapes in `effects/resolve.ts` are handled.
+    - The source is looked up on the before board, including objects on the stack, so a
+      spell's damage keeps its source. A source that is on neither board is left out of the cue,
+      and the target still animates.
     - A cue never carries a card id.
+    - Cues are grouped per damage step (first strike, regular), one group per step.
   - **`lifeChange`:** comes from `lifeGain` and `lifeLoss`.
   - Each cue carries its log line's sequence: the per-viewer sequence at tables, the event
     sequence elsewhere.
@@ -177,6 +198,8 @@ Stays in the client:
 - **Events unchanged:** a fixed-seed four-bot game has the same `game_events` hash.
   `SpectatorState` JSON gains fields in P2, so tests that compare whole snapshots are updated
   there, and the PR explains the change.
+- **Wire transcript:** each step that changes single-player frames (P2, P4, P5) re-baselines the
+  normalized transcript in its own PR.
 - **Privacy:**
   - an opponent's face-down permanent has `types: ['Creature']`, no subtypes and no name;
   - redacted exile has no types;

@@ -25,9 +25,12 @@ however, derive game facts on its own, and one of those derivations is wrong.
   to build cost lines, cast-variant labels, X-value groups, payment summaries and mana symbols
   (`PlayerGameView.vue`, `lib/actionLabels.ts`, `ManaTaps.vue`). A renamed key silently drops a
   cost from a confirm dialog.
-- **Text is parsed.** The engine's prompt is rewritten by regex (`lib/turnLabels.ts:39`, used at
-  `DecisionPanel.vue:80` and `PlayerGameView.vue:2050`). The game-over line is found by matching
-  log text (`PlayerGameView.vue:182`).
+- **Text is parsed in more places than one.**
+  - `ManaTaps.vue:24` builds button text with `action.description.split(': add ')`.
+  - `lib/lossReasons.ts:22` rewrites the elimination log line with a regex `.replace`.
+  - The engine's prompt is rewritten by regex (`lib/turnLabels.ts:39`, used at
+    `DecisionPanel.vue:80` and `PlayerGameView.vue:2050`). The game-over line is found by matching
+    log text (`PlayerGameView.vue:182`).
 - **Rules are copied.** The 21-point commander-damage rule is a constant in
   `CommanderDamageGrid.vue:17`.
 - **Events are guessed.** Combat-strike and life-flash animations guess what happened by diffing
@@ -79,9 +82,10 @@ Constraints found in the code:
 2. **Card types come from characteristics.** `permanentView` adds optional `types`,
    `supertypes` and `subtypes` from the `computeCharacteristics` result it already computes.
    `cardView` adds `isToken` and printed types. A face-down permanent computes as a plain
-   Creature (CR 708.2). `shared` gains one pure helper, `boardGroupOf(types)`, that every view
-   uses to group lands, creatures and other permanents. A land creature groups with creatures,
-   because it can attack and block. `PlayerView` and `view.ts` are unchanged.
+   Creature (CR 708.2). The projection also sends a `boardGroup` for each permanent (`lands`,
+   `creatures`, `other`), computed on the server by one function. A land creature groups with
+   creatures, because it can attack and block. The client does not classify; it reads the field.
+   `PlayerView` and `view.ts` are unchanged.
 
 3. **Every action gets a presentation entry, through the existing structure.**
    - `DecisionPresentation` gains a `'priority'` layout and `playerPrompt`.
@@ -113,8 +117,13 @@ Constraints found in the code:
    The card-coverage workflow therefore adds a step: a change that adds a `data` key registers
    it.
 
-5. **Game over and commander damage.** `GameOverPayload` gains `summary`. Commander-damage
-   entries gain `lethal` and `remaining`.
+5. **Game over, eliminations and commander damage.**
+   - `GameOverPayload` gains `summary`.
+   - The player-facing elimination log line is written on the server, with the reason in player
+     terms, replacing `lib/lossReasons.ts`.
+   - Commander-damage entries gain `lethal` and `remaining`.
+   - Mana-ability actions get a presentation `label` and `manaSymbols`, replacing the split in
+     `ManaTaps.vue`.
 
 6. **The new projection fields are optional.** No read-time migration is needed, because no
    screen shows an old game's snapshot. If a historical replay screen is added later, it must
@@ -124,8 +133,8 @@ Constraints found in the code:
 7. **Raw `data` reaches a player socket only on request.** A player connection declares
    `capabilities` in its first message, and again on every resume. Only the JSON agent client
    asks for `rawActionData`, which keeps its documented contract. The browser never asks. Every
-   server follows this one rule, including for the game report, which today echoes the pending
-   request.
+   server follows this one rule. (The game report carries only the pending request's id, type,
+   prompt and option descriptions, so it has no raw `data` to strip.)
 
    This is a consistency rule, not a security boundary, because `data` holds only the deciding
    player's own options. The browser's protocol types use a `LegalAction` without `data`, so a
@@ -140,6 +149,8 @@ Constraints found in the code:
    - Cues are built per seat from engine events, with object ids looked up on the boards before
      and after the event batch, so an event about a creature that just died is kept.
    - A cue carries only what the seat's projection shows.
+   - Damage cues are grouped per damage step (first strike, regular), one group per step, so
+     Phase 8's per-step animation can extend them without changing their shape.
    - Spectator and replay views get the same cues built with no seat filter, so their
      animations keep working.
    - Tap and untap flashes are state, not events, so they keep comparing consecutive boards. That
@@ -152,7 +163,8 @@ Constraints found in the code:
    rule cannot tell a `LegalAction` from anything else. `eslint.config.js` gains only two
    syntactic rules for `apps/web/src`:
    - string or regex calls on a `typeLine` member;
-   - regex `.test` calls on `prompt` or `text` members.
+   - string or regex calls (`.test`, `.match`, `.split`, `.replace`, `.includes`) on
+     `description`, `prompt` or `text` members.
 
    Reading `data` is prevented by the browser's protocol type and by run-time stripping
    (decision 7), and the deleted modules cannot be re-imported because they no longer exist.
