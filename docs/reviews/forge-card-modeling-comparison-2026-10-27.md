@@ -158,8 +158,7 @@ Two Forge lessons apply directly. First, a prepared position plus a script of ac
 unit; our `PreparedScenarioSpec` already is the first half, and ADR 0032 decision 10 adds the
 script and expectations and uses it for engine tests as well as the Card Test Lab. Second, a suite
 can stop running parts of itself without failing: Forge added `TestSuiteIntegrityTest` after eight
-classes stopped running for a year. Our `test:card-gate` passes 158 explicit paths and prefixes to
-Vitest, and Vitest ignores one that matches no file (checked: a nonexistent path beside a real one
+classes stopped running for a year. Our `test:card-gate` passes 158 entries to Vitest as substring filters, and Vitest ignores one that matches no file (checked: a nonexistent path beside a real one
 exits 0). All 158 match today; ADR 0032 decision 9 makes that a check.
 
 ## What not to copy

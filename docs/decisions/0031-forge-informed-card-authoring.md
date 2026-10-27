@@ -64,32 +64,44 @@ validator and the evidence standard of the card modeling guide unchanged.
 
 ### 1. Keywords are a registry
 
-`packages/engine/src/cards/keywords/` holds one module per keyword that expands into behavior:
+`packages/engine/src/cards/keywords/` holds one module per keyword. A module declares how the
+keyword is read and what it contributes:
 
 ```ts
 export const prowess = defineKeyword({
   name: 'prowess',
   cr: '702.108a',
+  flag: true,
+  grantable: true,
   parse: (element) => (element === 'prowess' ? {} : null),
-  expand: () => ({
+  expand: (_args, line) => ({
     triggers: [
       triggered(onCast('you', not(ofType('Creature'))), {
         effects: [{ op: 'pumpUntilEot', target: 'source', power: 1, toughness: 1 }],
-        description: 'Prowess — this creature gets +1/+1 until end of turn',
+        description: line,
       }),
     ],
   }),
 });
 ```
 
-- `parseKeywordLine` offers each comma-separated element to the registry. Flags that the engine
-  reads directly (flying, reach, trample, …) stay in `IMPLEMENTED_KEYWORDS`; the registry holds
-  keywords that become abilities, costs, statics or replacements.
-- A grant ("has annihilator 2", "Other Dragons you control have ward {2}") reads the same registry,
-  so the keyword is written once whether it is printed or granted. Layer 6 already carries
-  `addTrigger`, `addActivatedAbility`, `addManaAbility`, `addKeyword`, `addWard` and
-  `addProtection`; a keyword whose expansion needs something else (an alternative cost, a casting
-  permission) declares itself not grantable, and a grant of it stays unmodeled.
+- `flag: true` keeps the keyword in the definition's `keywords` list, so `hasKeyword`,
+  `denyKeywords`, `loseAllAbilities` and counting multiple instances keep working.
+  `IMPLEMENTED_KEYWORDS` becomes the list of registered keywords with a flag, generated from the
+  registry; a flag-only keyword (flying) has no `expand`.
+- `expand(args, line)` returns `CardDefinition` fragments for any list the current branches fill:
+  `triggers`, `activatedAbilities`, `manaAbilities`, `ruleStatics`, `staticEffects`,
+  `alternativeCasts` and the keyword's flag. Each fragment is tagged with the keyword name for
+  provenance (decision 6).
+- Parsing stays atomic. `parseKeywordLine` (11 call sites, several of them grants,
+  `interpret.ts:430-512`) still accepts a line only when every comma-separated element parses, and
+  modules carry an explicit priority where order matters (Equip commander before Equip).
+  Expansions are emitted at the same position in the line loop where the inline branch emitted
+  them today, so list order, and with it the snapshot, is unchanged.
+- A grant ("has annihilator 2", "Other Dragons you control have ward {2}") reads the same registry.
+  Layer 6 already carries `addTrigger`, `addActivatedAbility`, `addManaAbility`, `addKeyword`,
+  `addWard` and `addProtection`. A keyword whose expansion needs anything else (an alternative cost,
+  a casting permission, a rule static) sets `grantable: false`, and a grant of it stays unmodeled.
 - An override whose `handledLines` contains a line the registry parses is an authoring issue
   naming the keyword. A card never re-authors a registered keyword.
 - Each keyword has one primitive contract with positive and negative cases. Every card printing it
@@ -97,43 +109,69 @@ export const prowess = defineKeyword({
   under the card modeling guide.
 
 The existing inline keyword branches move into the registry first, one commit per keyword, with
-the interpretation and override snapshots byte-identical, the method ADR 0025 used. New keywords
-follow in order of frequency in the Oracle population.
+the interpretation and override snapshots byte-identical, the method ADR 0025 used. The four
+constraints above (flag kept, any list, atomic parse with priority, same emission position) are
+what make byte-identical realistic. A branch that cannot meet them stays inline with a comment
+saying why. New keywords follow in order of frequency in the Oracle population.
 
 ### 2. Instructions publish typed results
 
-Any effect may carry `as: '<name>'`. Each op's contract declares what it publishes: the objects it
-affected (`'permanent' | 'card' | 'player'`, with last known information for objects that left,
-CR 608.2h) and, where meaningful, an amount (life actually lost, damage actually dealt, cards
-actually drawn). Later effects of the same ability refer to a result:
+Any effect may carry `as: '<name>'`. Each op's contract declares what it publishes:
+
+- **objects**: the objects the instruction actually changed, typed `'permanent' | 'card' |
+'player'`, each with last known information if it left (CR 608.2h). A destroy that a
+  regeneration or indestructible stopped publishes nothing for that object; an exile that a
+  replacement sent elsewhere publishes the object where it went, if the rules let the instruction
+  find it (CR 400.7j), and otherwise nothing.
+- **amount**: where meaningful, what actually happened, summed across all affected players or
+  objects: life actually lost after floors and replacements, damage actually dealt after
+  prevention, cards actually drawn. To make this possible, `loseLife`, `gainLife` and `drawCards`
+  return the actual amount; today they return nothing and the accumulator diffs life totals
+  (`resolve.ts:4314-4337`), which is wrong when another effect changes life in between.
+
+Later effects of the same ability refer to a result:
 
 - `EffectRef` gains `{ result: name }` and `{ controllerOfResult: name }`;
-- `Value` gains `{ kind: 'resultCount', result }` and `{ kind: 'resultAmount', result }`.
+- `Selector` gains `{ kind: 'inResult', result }` for "those cards" and "those creatures";
+- `Value` gains `{ kind: 'resultCount', result }` (objects actually changed) and
+  `{ kind: 'resultAmount', result }` (the summed amount).
 
 ```ts
+// "Each opponent loses 2 life. You gain life equal to the life lost this way."
 effects: [
-  { op: 'eachPlayerLosesLife', amount: constant(2), as: 'drain' },
+  { op: 'eachOpponentLosesLife', amount: constant(2), as: 'drain' },
   { op: 'gainLife', amount: { kind: 'resultAmount', result: 'drain' } },
 ];
 ```
 
-The validator checks that every result name is published earlier in the same ability and mode with
-a compatible kind (ADR 0032 decision 1), so a typo or an op that publishes nothing is an authoring
-issue, never a silent zero. The executor keeps one `results` map per resolution. It follows a
-moved object only where CR 400.7j allows, through the existing `movedReferent` tracking.
+Scope. A results map belongs to one resolution of one ability. `executeAbility` re-enters itself
+for nested bodies (modes, `then` bodies, reflexive and per-player bodies: `resolve.ts:1729, 2048,
+4804` and others); the outer map is passed down by reference, so a nested body can read the outer
+results and publish into the same map. Names are unique within an ability across all modes, which
+the validator enforces (ADR 0032 decision 1), so folded modes cannot collide. Results never cross
+a resolution: a delayed trigger that later needs "those cards" captures them explicitly when it is
+created (a `remember: '<result>'` field on `registerDelayedTrigger`), as object ids with their zone, and an
+object that has since changed zones is a new object it does not follow (CR 400.7, 603.7c), exactly
+as delayed-object identity works today.
 
-`bind`/`untapBoundIf`, `lifeLostThisWay`/`gainLifeEqualToLifeLostThisWay` and
-`createdThisResolution` become uses of results. No new compound op is added. An existing compound
-op is rewritten as a composition only when its card is touched for another reason, with its
-behavior tests unchanged and the override snapshot changing for that card alone.
+Each op that publishes has a contract case proving the "actually" part with a negative: a
+prevented damage, a life-loss floor, a replaced destroy.
+
+The validator checks every result name, order, scope and kind, so a typo or an op that publishes
+nothing is an authoring issue, never a silent zero. `bind`/`untapBoundIf`,
+`lifeLostThisWay`/`gainLifeEqualToLifeLostThisWay` and `createdThisResolution` become uses of
+results. No new compound op is added. An existing compound op is rewritten as a composition only
+when its card is touched for another reason, with its behavior tests unchanged and the override
+snapshot changing for that card alone.
 
 ### 3. Parameterize instead of minting
 
 A new `Effect` op, `RuleStatic`, `Condition`, `Value` or `Selector` kind must:
 
-- be named after the mechanic, not a card. A check compares new discriminant names against card
-  name slugs in the pinned Oracle population; the 11 existing card-named ops are listed and may
-  only be removed;
+- be named after the mechanic, not a card. A check compares discriminant names against a committed
+  list of card-name slugs generated from the pinned fixtures and the verification manifest (the
+  bulk Oracle file is not available in CI); the 11 existing card-named ops are listed and may only
+  be removed;
 - take selectors, values and references as parameters instead of fixing "opponent", "creature" or
   "basic land" in its name;
 - state in its pull request why existing primitives composed with results cannot express the clause.
@@ -159,15 +197,26 @@ export const surveil = definePrimitive({
 });
 ```
 
-`rc` is a `ResolutionContext`: the helpers `executeAbility` keeps as closures today (`ref`,
-`amountOf`, `sourcePermanent`, `legalChosenPermanents`, the results map) as one object. The
-registry spreads each module's contract, expression and capability rows into the existing tables,
-which keep their `satisfies` exhaustiveness checks. `executeAbility`'s `default` dispatches to the
-registry before `assertNever`. Legacy ops stay in the switch and move into modules only when they
-are touched.
+The four tables are mapped types over `Effect['op']` (`effect-reference-contracts.ts:29-35`,
+`expression-validation.ts:736`, `capabilities.ts`, the executor switch), so a runtime spread alone
+would lose their exhaustiveness. The op union is therefore split: `Effect = LegacyEffect |
+ModuleEffect`, where `ModuleEffect` is the union of the types the modules export. The legacy tables
+stay mapped over `LegacyEffect['op']`; the module rows are mapped over `ModuleEffect['op']` by the
+registry's type, and a compile-time check fails if a module op is missing from any of the four.
+`executeAbility`'s `default` dispatches module ops to the registry before `assertNever`.
 
-A new primitive then costs one module, one line in the `Effect` union, one registry line and its
-contract test, instead of six coordinated edits.
+`rc` is a `ResolutionContext`: what `executeAbility` keeps as closures and mutable locals today
+(`ref`, `amountOf`, `sourcePermanent`, `legalChosenPermanents`, the target caches, the results map),
+as one object. `executeAbility` reassigns `ctx` (`resolve.ts:1693`) and re-enters itself for nested
+bodies, so `rc.child()` states explicitly what a nested body shares (the game, the results map, the
+transition tracking) and what it gets fresh (its own target slots). The post-effect damage
+reflection flush stays in the effect loop, not in modules.
+
+Adding `as?` to effects is an envelope field, not an op field, so `overload.ts`'s per-field tables
+(`:41-56`) gain one row for it.
+
+Legacy ops stay in the switch and move into modules only when they are touched. A new primitive
+then costs one module, one registry line and its contract test, instead of six coordinated edits.
 
 ### 5. An authoring workbench starts each card
 
@@ -192,9 +241,13 @@ on `todo`. The workbench speeds up the start; it never decides semantics.
 ### 6. The interpreter reports where each ability came from
 
 `interpretCard` records which Oracle line produced each ability, static, keyword expansion and
-replacement field. The record travels beside the definition (to `applyOverride`, and through
-`interpretCardWithProvenance` to tools); it is not stored on `CardDefinition`, so neither snapshot
-changes. ADR 0032 uses it for the override merge check and the facet check, and the workbench uses it
+replacement field. It does so from the change in each list's length across one iteration of its
+line loop. Entries the interpreter rewrites after the loop (a Pathway clearing `manaAbilities`,
+reasons reset, `interpret.ts:9095-9114`) are marked unattributed rather than guessed.
+
+The record travels beside the definition: `applyOverride(def, provenance)` gains the parameter at
+its two call sites (`interpret.ts:7526, 9118`), and `interpretCardWithProvenance` exposes it to
+tools. It is not stored on `CardDefinition`, so neither snapshot changes. ADR 0032 uses it for the override merge check and the facet check, and the workbench uses it
 for step 3.
 
 ### 7. Descriptions default to generated text
@@ -202,7 +255,11 @@ for step 3.
 `describeEffect` renders the most-used ops (chosen by measured frequency, as ADR 0025 chose
 builders) into the house description style. `spell()`, `triggered()` and `activated()` use it
 when `description` is omitted and the renderer covers every effect, and require one otherwise.
-Existing descriptions are not changed, so AI benchmark inputs stay stable.
+
+A description reaches the event log (the stack's `resolved` event), the `PlayerView` stack and the
+tactician's input, so the renderer is golden-tested against the house text for each op it covers,
+and a reviewed card's generated description is read in review like a hand-written one. Existing
+descriptions are not changed, so AI benchmark inputs stay stable.
 
 ## What we do not adopt from Forge
 
