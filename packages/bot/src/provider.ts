@@ -1,5 +1,6 @@
 import type { DecisionRequest, DecisionResponse, LegalAction, PlayerView } from '@mtg/shared';
 import type { CombatSearchOptions } from './combat-search';
+import type { DiplomacyPlay } from './diplomacy/play';
 import { decide } from './evaluate';
 import { Rng } from './rng';
 
@@ -40,6 +41,8 @@ export interface HeuristicProviderOptions {
    * differently-configured seats inside one game.
    */
   combatSearch?: CombatSearchOptions;
+  /** Table diplomacy for this seat (ADR 0031). Omitted, the bot plays exactly as before. */
+  diplomacy?: DiplomacyPlay;
 }
 
 export class HeuristicDecisionProvider implements DecisionProviderLike {
@@ -72,6 +75,7 @@ export class HeuristicDecisionProvider implements DecisionProviderLike {
         return key === null ? 0 : (this.activationsThisTurn.get(key) ?? 0);
       },
       ...(this.opts.combatSearch !== undefined ? { combatSearch: this.opts.combatSearch } : {}),
+      ...(this.opts.diplomacy !== undefined ? { diplomacy: this.opts.diplomacy } : {}),
     });
 
     const chosen = request.legalActions.find((a) => a.id === response.actionId);

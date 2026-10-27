@@ -144,4 +144,73 @@ export const WEIGHTS = {
      */
     lethalSwingValue: 100,
   },
+
+  /**
+   * Table diplomacy (ADR 0031). Off unless a game enables it, and every number here is a starting
+   * value for the self-play comparison the ADR asks for, not a measured one.
+   */
+  deals: {
+    // --- Position (decision 7) ---
+    /** Each life point at or below `dangerousLifeThreshold` counts this many times. */
+    lowLifeMultiplier: 2,
+    /** Per noncreature, nonland permanent: an engine piece is worth something, but not a body. */
+    noncreaturePermanentValue: 3,
+    landValue: 1,
+    cardInHandValue: 1.5,
+    /** Per poison counter: ten of them are a loss, like 40 life. */
+    poisonCounterValue: 4,
+
+    // --- Win share and leader (decisions 8 and 9) ---
+    /** Softmax temperature over positions, in LEP. Lower makes the leader look more certain. */
+    winShareTemperature: 20,
+    /** A seat is the leader when its win share is at least this many times the mean. */
+    leaderShareRatio: 1.5,
+    /** Commander damage taken from one opponent at which a seat counts as in danger. */
+    commanderDamageDanger: 15,
+
+    // --- Pressure and attack preference (decisions 10 and 16) ---
+    /** How much more damage to the leader is worth, per unit of win share above the mean. */
+    leaderFocus: 1,
+    /** A planeswalker as an attack target, as a fraction of attacking its controller. */
+    planeswalkerFactor: 0.5,
+    /** Softmax temperature for where a seat's attacks are predicted to go, in LEP. */
+    attackPreferenceTemperature: 2.5,
+    /** Flat per-round value of not being targeted by one seat's spells and abilities. */
+    targetInteractionValue: 3,
+    /** Flat per-round value of not having one seat target your spells. */
+    counterInteractionValue: 1.5,
+
+    // --- Deal value (decision 11) ---
+    /** λ: how much an opponent's gain costs us at an even win share. */
+    opponentGainWeight: 0.5,
+    /** Each later round of a deal counts this much of the one before it. */
+    roundDiscount: 0.7,
+    maxRounds: 2,
+
+    // --- Trust (decision 12) ---
+    basePKeep: 0.6,
+    maxPKeep: 0.95,
+    /** Each breach multiplies the breaker's keep probability by this. */
+    brokenDecay: 0.4,
+
+    // --- Acceptance (decision 15) ---
+    acceptThreshold: 1,
+    /** Seeded uniform noise on the threshold, ±this, so probing cannot find it. */
+    thresholdNoise: 1,
+    /** Early-game rounds in which a slightly bad deal may be accepted to build trust. */
+    investmentRounds: 3,
+    investmentAllowance: 2,
+    /** Rounds before the same proposer may propose the same terms again after a decline. */
+    reproposeCooldownRounds: 2,
+
+    // --- Keeping, breaking and proposing (decisions 17 and 18) ---
+    /**
+     * Reputation cost of a breach with every starting opponent still alive. Above a typical
+     * redirected swing (a few LEP) so deals hold in ordinary turns, far below the lethal term so
+     * no deal survives a kill.
+     */
+    breakPenalty: 10,
+    /** Propose when one seat's predicted attack could take at least this share of our life. */
+    proposePressureShare: 0.25,
+  },
 } as const;

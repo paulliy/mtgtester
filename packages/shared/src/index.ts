@@ -166,6 +166,17 @@ export type {
   ResumeGamePayload,
 } from './protocol';
 
+// --- Table diplomacy (ADR 0031) ---
+export type {
+  Deal,
+  DealObligation,
+  DealObligationKind,
+  DealStatus,
+  TableMessage,
+  TableMessageKind,
+  ThreatReason,
+} from './diplomacy';
+
 // --- Copy game report ---
 export type {
   GameReport,

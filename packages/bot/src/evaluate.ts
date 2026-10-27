@@ -14,6 +14,12 @@ import {
   staticDamageSplit,
 } from './combat-search';
 import type { CombatSearchOptions } from './combat-search';
+import {
+  complyingTargets,
+  planAttackDeclaration,
+  targetBreachPenalty,
+  type DiplomacyPlay,
+} from './diplomacy/play';
 import type { Rng } from './rng';
 import { passesVeto, totalDiscardCount, totalLifeCost, totalSacrificeCount } from './veto';
 import { WEIGHTS } from './weights';
@@ -32,6 +38,11 @@ export interface EvaluateOptions {
    * same seeds in one process. See `CombatSearchOptions`.
    */
   combatSearch?: CombatSearchOptions;
+  /**
+   * Table diplomacy (ADR 0031). Absent unless a game turns deals on; when present, attack targets
+   * become threat-aware and this seat's deal obligations shape its targets and scores.
+   */
+  diplomacy?: DiplomacyPlay;
 }
 
 function firstTargets(action: LegalAction): TargetChoice[] {
@@ -124,9 +135,20 @@ function targetsFor(
   action: LegalAction,
   view: PlayerView,
   opts: CombatSearchOptions | undefined,
+  diplomacy?: DiplomacyPlay,
 ): TargetChoice[] {
-  if (action.type === 'attackDeclaration') return attackDeclarationTargets(action, view);
+  if (action.type === 'attackDeclaration') {
+    if (diplomacy !== undefined && action.data?.['chooseAttackers'] !== true) {
+      const plan = planAttackDeclaration(action, view, diplomacy);
+      if (plan.breach !== undefined) {
+        diplomacy.reportBreach?.(plan.breach.dealId, plan.breach.reason);
+      }
+      return plan.targets;
+    }
+    return attackDeclarationTargets(action, view);
+  }
   if (action.type === 'blockDeclaration') return blockDeclarationTargets(action, view, opts);
+  if (diplomacy !== undefined) return complyingTargets(action, view, diplomacy);
   return firstTargets(action);
 }
 
@@ -195,6 +217,7 @@ export function evaluate(
   opts: EvaluateOptions = {},
 ): ScoredAction[] {
   const repeatCount = opts.repeatCount ?? (() => 0);
+  const diplomacy = request.decisionType === 'priority' ? opts.diplomacy : undefined;
   return request.legalActions
     .filter((action) => passesVeto(action, view.life))
     .map((action) => {
@@ -211,7 +234,8 @@ export function evaluate(
       const score =
         baseValue(action) * decay -
         costValue(action, view) -
-        repeats * WEIGHTS.repeatActivationPenalty;
+        repeats * WEIGHTS.repeatActivationPenalty -
+        (diplomacy === undefined ? 0 : targetBreachPenalty(action, view, diplomacy));
       return { action, score };
     })
     .sort((a, b) => b.score - a.score);
@@ -254,7 +278,7 @@ export function decide(
     if (fallback === undefined) {
       throw new Error(`decision ${request.requestId} has no legal actions`);
     }
-    const targets = targetsFor(fallback, view, opts.combatSearch);
+    const targets = targetsFor(fallback, view, opts.combatSearch, opts.diplomacy);
     const response: DecisionResponse = { requestId: request.requestId, actionId: fallback.id };
     if (targets.length > 0) response.targets = targets;
     response.note = 'Heuristic bot: veto excluded every candidate, using first legal action';
@@ -264,7 +288,7 @@ export function decide(
   const topScore = ranked[0]!.score;
   const tied = ranked.filter((r) => r.score === topScore);
   const chosen = (tied[rng.nextInt(tied.length)] ?? ranked[0]!).action;
-  const targets = targetsFor(chosen, view, opts.combatSearch);
+  const targets = targetsFor(chosen, view, opts.combatSearch, opts.diplomacy);
   const response: DecisionResponse = { requestId: request.requestId, actionId: chosen.id };
   if (targets.length > 0) response.targets = targets;
   response.note = `Heuristic bot: ${chosen.type} (score ${topScore.toFixed(2)})`;

@@ -32,6 +32,7 @@
     "scryfall:update": "bun run scripts/update-scryfall-bank.ts",
     "play-decks": "bun run packages/server/src/cli/play-decks.ts",
     "combat-sweep": "bun run packages/server/src/cli/combat-sweep.ts",
+    "diplomacy-sweep": "bun run packages/server/src/cli/diplomacy-sweep.ts",
     "ai-bench": "bun run packages/server/src/cli/ai-bench.ts",
     "agent-client": "bun run packages/server/src/cli/agent-client.ts",
     "coverage": "bun run packages/server/src/cli/coverage.ts",
