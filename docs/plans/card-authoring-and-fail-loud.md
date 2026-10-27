@@ -9,314 +9,192 @@ strict tests). The evidence behind both is in the
 
 ## Goals
 
-1. A card whose clauses are keywords or compositions of existing primitives needs no engine change.
-2. A card that needs a new primitive needs one module and its contract.
-3. A wrong reference, a dropped parsed ability, an out-of-range answer, a guessed test decision, a
-   clause no test executed, a test that stopped running, and corrupt state each fail loudly at the
-   line responsible.
-4. New tests are strict and come from one scenario format that also yields the viewer scenario.
+1. The mechanical tail of a card batch (snapshots, rehash, scenario binding, manifest skeleton,
+   gate list) is generated and reviewed, not typed.
+2. A card whose clauses are keywords or compositions of existing primitives needs no engine change.
+3. A wrong reference, a misapplied override, an out-of-range test answer, a guessed test decision, a
+   test that does not depend on its card, a test that stopped running, and corrupt state each fail
+   loudly at the line responsible.
 
 ## Constraints
 
 These hold in every phase, and every phase's exit checks them.
 
 - The [card modeling guide](../guides/card-modeling-and-testing.md) stays the completion standard.
-  Nothing here replaces a manifest clause, a normal-path engine scenario or viewer evidence.
-- The [rules-engine constraints](../guides/rules-engine-constraints.md) hold: the engine stays free of
-  I/O and provider policy, games stay seeded, and `PlayerView` stays the privacy boundary.
-- Fixed-seed replay, the game event log, the persisted debug log and AI benchmark inputs do not
-  change unless a step says so and says why. Diagnostics and invariants run only in tests and tools.
-- A refactor is proven by unchanged interpretation and override snapshots (`bun run snapshots:check`)
-  and an unchanged determinism test. A behavior change changes the snapshot for its own cards
-  only, and each changed card has a regression test.
-- Every new check starts as a report, is run over the reviewed cards, and becomes a gate only after
-  each finding is fixed or waived with a reason. Gates cover `implemented-reviewed` cards and cards
-  changed in the pull request; other cards get reports, so unrelated work is never blocked.
-- Every exemption, waiver and known-failure list is committed JSON keyed by oracle id (or file),
-  carries a reason per entry, and is enforced as shrink-only by `scripts/check-ratchets.ts`.
-- Each new CI step's added minutes are measured and recorded before it becomes required.
-
-## Evidence compatibility
-
-The existing evidence machinery is not replaced, and each phase must leave it working:
-
-- **Primitive contract evidence** (`bun run test:primitive-contracts`) hashes the test dependency
-  closure, all engine sources and the execution configuration, and needs a clean tree. Any engine
-  change invalidates current receipts; regenerate them after the phase lands. New test helpers live
-  in their own modules, and new Vitest configuration goes in separate config files or CLI flags, so
-  `vitest.config.ts` and `tests/fixtures.ts` change only where a step says so.
-- **Viewer evidence** binds Card Test Lab scenarios through `VIEWER_CATALOG` entries (`file`, `key`),
-  the discovery identity, `card-evidence-input` and trace hashes. New scenarios are added to the
-  catalog the same way; capture is a fresh Playwright run from a clean tree.
-- **Manifest pins** (`oracleSha256`) must equal the hashes in any new pin store.
+- The [rules-engine constraints](../guides/rules-engine-constraints.md) hold: no I/O or provider
+  policy in the engine, seeded games, `PlayerView` as the privacy boundary.
+- Decision requests, seeded choices, the game event log and the persisted debug log do not change
+  unless a step says so. Benchmark compatibility pins hash every engine source file, so an
+  engine-changing pull request re-seals them with `bun run ai-bench refresh --suite core-fast
+--write` in a `chore(benchmarks)` commit, as today.
+- A refactor is proven by unchanged snapshots (`bun run snapshots:check`) and an unchanged
+  determinism test; a behavior change changes the snapshot for its own cards only, each with a
+  regression test.
+- Primitive contract evidence hashes engine sources, the test dependency closure, `package.json`,
+  `bun.lock`, `ci.yml`, the manifest and the evidence scripts. Receipts are not committed: each
+  phase's exit includes `bun run test:primitive-contracts --output <new dir>` passing on a clean tree.
+  New Vitest settings that only some runs need go in a separate config (`mergeConfig` over the base).
+- Each new CI step's added minutes are measured and recorded before it is required.
 
 ## Work split
 
-Per `CLAUDE.md`, subagents run on Sonnet or Haiku only. The main thread decides anything about rules
-correctness: the reason given to each executor guard and every promotion to an invariant (phase 2),
-each decision-index site's class (phase 1), facet waivers (phase 4), keyword semantics (phase 5) and
-result semantics (phase 6). Sonnet implementers do the mechanical work once a decision is written
-down: converting guards from a given reason table, moving inline keyword branches, normalizing
-manifest IDs, writing tests from a manifest. Haiku explorers run audits and summarize test output to
-the scratchpad.
+Per `CLAUDE.md`, subagents run on Sonnet or Haiku only. The main thread decides rules questions:
+the index-site table (phase 1), each `invariant` promotion (phase 4), equivalent mutations and facet
+notes (phase 3), keyword semantics (phase 5) and result semantics (phase 6). Sonnet implementers do
+mechanical work from written decisions; Haiku explorers run audits and summarize output to the
+scratchpad.
 
-## Phase 0: baseline measurements
+## Phase 0: baseline
 
-Add `scripts/card-authoring-metrics.ts`, which prints JSON and Markdown for:
+`scripts/card-authoring-metrics.ts` prints JSON and Markdown, with the exact regex or AST rule and
+commit hashes behind every number:
 
-- `Effect` ops and `RuleStatic` kinds with their authoring-site counts, and the compound (`…And…`) and
-  card-named lists;
-- the keyword probe from ADR 0031, over the pinned fixtures and, when `data/` holds it, the bulk
-  Oracle file, ranked by the number of cards printing each unmodeled keyword;
-- executor guard count, decision-index fallback sites, one-argument `pump()` calls per file, and
-  test files defining their own `game()`/`pod()`, `pinned()` or cast helper;
-- manifest `engineTestIds` by shape (`file::title`, prefix, computed), by how many test files
-  contain them, and whether those files are in `test:card-gate`;
-- per card, over a commit range: every commit that touched the card's override, tests, manifest
-  entry or scenarios, with files and lines touched, and whether any file under
-  `packages/engine/src/effects/` or `cards/ability.ts` changed.
+- per card, for a named commit range: every commit touching its override, tests, manifest entry or
+  scenarios; lines changed by category (generated, tests, engine `src` outside `cards/`, the per-op
+  tables); commit-time span; and follow-up `fix` commits naming the card within 30 days;
+- op, rule-static, compound and card-named counts; one-argument `pump()` calls (AST); manifest test
+  ID shapes;
+- the keyword frequency ranking, computed locally from the bulk Oracle file and committed with that
+  file's SHA-256, so the ranking is reproducible without the file in CI.
 
-Commit the first output as `docs/reviews/card-authoring-baseline-<date>.md`. Recorded at `8b93725`:
-344 ops, 32 with `And` in the name and at least 15 card-named; 48 rule-static kinds; 5 of 37
-gap-selected keywords and 11 of 17 others modeled; about 200 executor guards; about 21
-index-fallback sites; about 1,940 one-argument `pump()` calls in 280 files; about 216 local
-`game()`/`pod()`/`setup()` helpers, 44 `pinned()` helpers and 60 per-batch Oracle fixtures; 2,446 manifest test IDs, of which 231 live outside the card-gate files. The
-per-card cost of PR11 and PR11b, under the counting rule above, is computed by the script; the
-draft figure of a median 9.5 files covers only 18 `feat(cards)` commits (the later hash of each
-rebased pair; the earlier hashes give 8.0) and is not the baseline. The report lists the exact
-regexes and commit hashes behind every number.
+Exit: the report is committed as `docs/reviews/card-authoring-baseline-<date>.md`; the script runs
+offline in under a minute.
 
-Exit: the script runs offline in under a minute and the report is committed.
+## Phase 1: the harness runs, and cheap loudness
 
-## Phase 1: fail-loud quick wins
+1. Delete the tracked `packages/engine/tests/fixtures.js`, `.js.map`, `.d.ts` and `.d.ts.map`; fix
+   whatever the real `fixtures.ts` breaks, each as a separate commit with its reason. Add a check
+   that fails on a tracked `.js` or `.d.ts` beside a same-named `.ts` under `packages/*/tests`.
+2. `EngineInvariantError`, halted `GameResult` in `Engine.advance`, and
+   `EngineOptions.strictInvariants` to rethrow. Tests for both paths.
+3. Reference validation (ADR 0032 decision 2): same-list, unconditional `bind` scope; the three
+   accumulator feeders. Tests: Fabled Passage's misspelled binding; a bind in a conditional branch;
+   `eachPlayerLosesLife` then `gainLifeEqualToLifeLostThisWay`. `bun run audit:card-ir` reports
+   nothing new. Then the never-set binding throws.
+4. The main thread commits the index-site table. True fallbacks use `optionAt()`, each with a test
+   that an out-of-range answer throws; decline sites read a named `DECLINE_INDEX`. No menu changes.
+5. The inline-`TokenSpec` lint over `packages/engine/src`, ordered before the existing
+   `no-restricted-syntax` entries; the 13 literals move to `tokens.ts` or carry a reasoned disable.
+6. `RuleBasedProvider(rules, { fallback: 'first' })` and `drive()` failing on unfired `once` rules.
+   Consumers: `engine.test.ts`, `token-triumph-deck.test.ts`, `packages/server/src/cli/test-cards-l4-l6.ts`.
+7. `expect.requireAssertions` on; fix the four tests it finds.
+8. Suite integrity: every tracked test or spec file claimed by exactly one runner and collecting at
+   least one test; skip and `.only` lint with `// allowed-skip:` reasons.
 
-1. Add `EngineInvariantError` to `errors.ts`. `Engine.advance` turns it into `engineHalt` and a
-   halted `GameResult`, like `UnmodeledCardError`; with `strictInvariants` it rethrows. Tests for
-   both paths.
-2. Validate references between instructions (ADR 0032 decision 1): `binding` names an earlier `bind`
-   in the same ability; names are unique across modes; `gainLifeEqualToLifeLostThisWay` follows an
-   op that feeds the accumulator. Tests: Fabled Passage with a misspelled binding becomes
-   unsupported with the path; two modes binding the same name are rejected; `eachPlayerLosesLife`
-   then `gainLifeEqualToLifeLostThisWay` is rejected; `bun run audit:card-ir` reports nothing new.
-3. Only then, a binding that was never set (not one set to `[]`) throws `EngineInvariantError`.
-4. Sort the 21 decision-index sites into true fallbacks, decline option already present and decline
-   implied, in a table in the pull request. True fallbacks use `optionAt()`, with a test per site
-   that an out-of-range answer throws. Decline-option-present sites make the read explicit with no
-   menu change. Decline-implied sites gain an option, each in its own commit with its benchmark
-   rehash, after confirming which presentation fields feed AI hashes.
-5. Extend the inline-`TokenSpec` lint to all of `packages/engine/src` except `cards/tokens.ts` and
-   `parseTokenFace`. Fix or catalogue anything it finds.
-6. `RuleBasedProvider` records which `once` rules fired; `drive()` fails on any that did not. First-
-   option fallback is opt-in per rule. Update its consumers: `engine.test.ts`,
-   `token-triumph-deck.test.ts`, `packages/server/src/cli/test-cards-l4-l6.ts`,
-   `pr09-choice-scenarios.test.ts` and `pr08-agitator-ant-scenarios.test.ts`; delete the stale
-   tracked `tests/fixtures.d.ts` or regenerate it.
-7. `scripts/check-ratchets.ts`: compares every shrink-only list against the base commit and fails on
-   an added entry without a reason or a raised count. Wire it into the card-gate job, which already
-   has the base SHA.
-8. A pre-step script resolves each `test:card-gate` entry as a substring filter over test file
-   paths and fails if one matches no file.
-9. Turn on `expect.requireAssertions`, fixing the tests it exposes, each as a correction with its
-   own regression or a recorded reason.
+Exit: full suite, card gate, `snapshots:check` and primitive contracts pass; each new check has a
+test proving it fires.
 
-Exit: full suite, card gate and `snapshots:check` pass; snapshots and determinism unchanged; each
-new check has a test proving it fires; `check-ratchets` and the gate-path script run in CI.
+## Phase 2: the authoring commands and the gate list
 
-## Phase 2: diagnostics, invariants and fuzzing
+1. `bun run card:check "<name>"`: interpret, validate, this card's snapshot diff (facets join in
+   phase 3).
+2. `bun run card:new "<name>" [--batch <id>]` (ADR 0031 decision 1), including the interaction
+   prompts and nearest-card list, writing scaffolds the gates reject until filled. It uses the pin
+   store from step 4.
+3. `test:card-gate` becomes `scripts/card-gate.ts` reading a committed list of directories and
+   globs; an entry matching no file fails. The 158 current entries move over unchanged first, and a
+   test proves the same file set runs.
+4. The content-addressed pin store and `pin(name)` (ADR 0032 decision 10), throwing on unknown
+   names; existing per-batch fixtures stay.
+5. `bun run card:finish [--batch <id>]`: snapshots with a per-card semantic diff, benchmark
+   re-seal, scenario registration and evidence-generator binding, containment retirements, and the
+   manifest and progress skeleton.
+6. `card:new --primitive <op>` stub rows in the five files plus a contract-test skeleton.
 
-1. `createGame` takes a sink from `GameConfig.diagnostics` or, failing that, from the test-only
-   `installDefaultDiagnostics()`. The cast preview drops it explicitly; `castingCheckpoint` records
-   its length and truncates on rollback. Tests: preview, payment probe and a rolled-back cast record
-   nothing.
-2. `noop(ctx, reason, detail?)` and `invariant(ctx, reason, detail?)`, with `detail` lazy. The main
-   thread writes the guard table (site, op, reason, CR rule) for every guard; a Sonnet
-   implementer converts them in batches by op family. Nothing throws yet. Snapshots, determinism
-   and benchmark hashes unchanged.
-3. Stack objects carry an `origin` (oracle id and ability path; `copy` and `external` marks), and
-   records carry `abilityPath` and `effectIndex`. `applied` is written when an effect finishes
-   without a `noop`.
-4. `checkStateInvariants(ctx)` with the list in ADR 0032 decision 8. A test runs the determinism
-   scenario with the checker on and off and requires identical event logs and RNG state. An import
-   lint forbids `testing/invariants.ts` outside tests, tools and the scenario runner.
-5. Wire invariants and `strictInvariants` into `drive()` and the Card Test Lab scenario tests. The
-   first run's violations become fixes with regressions or reasoned exceptions in the checker.
-6. `bun run fuzz [--games N] [--seed S]` over the committed coverage decks with the pinned
-   `coverage-oracle.json`, leaving out decks with unsupported cards and reporting them. Measure
-   per-game time with invariants on, then pick the CI seed count. Add it as its own parallel CI job,
-   a scheduled workflow with a larger budget, and `fuzz-known-failures.json` under the ratchet.
-7. Commit the histogram of `noop` reasons by site from the suite and fuzz.
+Exit: re-running PR12's tail with `card:finish` on a scratch branch reproduces its committed
+snapshot, benchmark and binding changes; `card:new` on a PR12 card reproduces its `handledLines`.
 
-Exit: suite and fixed-seed fuzz pass with invariants on; the determinism on/off test and the import
-lint pass; the histogram and the measured fuzz time are committed.
+## Phase 3: tests that depend on the card
 
-## Phase 3: strict drivers and one scenario format
+1. Strict drivers: `pump(..., { strict: true })`, `script([...])`, and a diff-based check rejecting
+   one-argument `pump()` and `() => ({ index: 0 })` in added lines.
+2. The scenario runner on `PreparedScenarioSpec` with seed, script, expectations, end condition and
+   `strictInvariants`; the generic per-card modifier list; the server adapter producing a
+   `CardTestScenario` registered like `PR11_SCENARIOS`, with derived scenario-ID lists; an import
+   lint keeping contract tests from importing the runner.
+3. Manifest references (ADR 0032 decision 5): the matcher, a report of every ID with zero or several
+   matches, explicit titles for the 47 computed names, disambiguation of the 18 duplicates,
+   `notExecutableInCi` for bulk-only IDs; then the check is required in the card gate.
+4. IR mutation: `installDefinitionTransform()`, the fixed mutation set, and
+   `scripts/mutate-cards.ts` running changed cards' manifest tests once per mutation. Run it over
+   all 168 reviewed cards once as a report; fix weak tests or record equivalent mutations; then
+   require it on non-draft pull requests for changed reviewed cards.
+5. Facet warnings in `card:check` and the card gate, with `facetNotes` on manifest entries. The
+   test is the two pre-fix definitions from `5c8e41f`.
+6. Pilot: re-express Chrome Mox's clauses with the runner beside its existing tests.
 
-1. `pump(gen, answer, { strict: true })` and `script([...])` (ADR 0032 decision 9), with tests for
-   an unexpected decision and a leftover entry.
-2. A custom `card-authoring` ESLint rule reports one-argument `pump()`;
-   `tests/fixtures/lenient-pump-counts.json` holds per-file counts under the ratchet.
-3. The skip reporter, sharing code with `scripts/contracts/primitive-reporter.ts` and keyed by file,
-   count and reason, run through CLI flags rather than `vitest.config.ts`. A scheduled job supplies
-   the bulk Oracle file and fails on any skip.
-4. A content-addressed Oracle pin store with `pin(name)`, whose hashes equal the manifest's
-   `oracleSha256`. Existing per-batch fixtures stay.
-5. The scenario runner (`packages/engine/tests/scenario/`) on `PreparedScenarioSpec`: setup, a
-   decision script, expectations, `Engine.advance`/`Engine.submit` only, `strictInvariants`,
-   invariants and the sink (from phase 2). Contract tests do not import it.
-6. A server adapter registers the same spec as a Card Test Lab scenario and adds its
-   `VIEWER_CATALOG` entry.
-7. Pilot: re-express Chrome Mox's clauses (PR11) with the runner, beside its existing tests.
+Exit: for the pilot, the card gate, primitive contracts, the `card-evidence-input` tests,
+`test:e2e` and a fresh viewer capture pass; the mutation report over the reviewed cards is
+committed; its added CI minutes are recorded.
 
-Exit: for the pilot, the card gate accepts the new evidence IDs, and `test:primitive-contracts`,
-the `card-evidence-input` tests, `test:e2e` and a fresh viewer capture all pass; new tests cannot
-add lenient `pump()` calls.
+## Phase 4: invariants and fuzz
 
-## Phase 4: provenance, merge check, IR coverage and facets
+1. `checkStateInvariants(ctx)` and the test-only checkpoint hook in `flow/game.ts`; the
+   on/off determinism test; the import lint.
+2. Wire it into `drive()`, the scenario runner and the Card Test Lab scenario tests; fix or encode
+   the first run's violations.
+3. `packages/server/src/cli/fuzz.ts` over the coverage decks and pinned Oracle, with changed-card
+   pods; measure per-game time; an advisory PR job on engine changes and an authoritative nightly
+   job that opens an issue.
+4. The nightly bulk job: bulk-data suites with no skips and the whole-population interpret and
+   validate smoke, against a checksum-pinned download.
+5. The diagnostics sink and `noop`/`invariant` helpers, used from here on as cards touch ops. A
+   guard becomes `invariant` only with a written unreachability argument and a malformed-IR test.
 
-1. Line provenance from per-iteration list-length deltas, post-loop rewrites unattributed;
-   `applyOverride(def, provenance)` at both call sites; `interpretCardWithProvenance` for tools.
-   Snapshots unchanged.
-2. The merge check with `replacesLines` (ADR 0032 decision 7). Desolate Mire moves to
-   `replacesLines`; a reconstruction of its old failure is the test. Existing violations go to an
-   exemptions list under the ratchet.
-3. IR coverage, in order: the separate config `vitest.ir-coverage.config.ts`, `task.meta`
-   collection and a main-process reporter; the matcher (file equal if given, ID a prefix of the full
-   title); a report of every ID with zero or several matches; normalization (explicit titles for the
-   47 computed names, the 18 duplicates disambiguated, the 5 bulk-only IDs marked
-   `notExecutableInCi`); then the gate for reviewed and changed cards, run after the full-suite job
-   on non-draft pull requests. Measure the added time before the gate is required.
-4. `cards/facets.ts`. Its test is the two pre-fix definitions from `5c8e41f`, committed as a fixture:
-   both flagged, both fixes clean. Run it over the 168 reviewed cards; gate `other`,
-   `interveningIf` and `untilEndOfTurn` once each meets the 90% bar with every finding fixed or
-   waived; `optional` and `targetCount` stay reports until they do. Waivers are keyed by oracle id,
-   facet and clause hash. Commit the population report as an audit backlog.
+Exit: suite and fuzz seeds pass with invariants on; the determinism on/off test passes; fuzz time is
+recorded.
 
-Exit: the facet gate runs in the card-gate job and the IR coverage gate after the full suite; both
-population reports are committed.
+## Phase 5: keyword registry, card by card
 
-## Phase 5: keyword registry
+1. `defineKeyword` with `flag`, `multiple`, derived grantability and `expand(args, line)`;
+   `IMPLEMENTED_KEYWORDS` generated from it; the meta-tests; the keyword-claim authoring check.
+2. Line provenance (ADR 0031 decision 6) and the two-sided merge check (ADR 0032 decision 7), tested
+   with a test-local `registerOverride`.
+3. Each keyword a pilot card needs is added with its contract and the card's evidence. Each inline
+   branch a pilot card touches moves byte-identically in its own commit.
 
-1. `defineKeyword` and the registry with `flag`, `grantable`, priority and `expand(args, line)`;
-   `IMPLEMENTED_KEYWORDS` generated from it. `parseKeywordLine` stays atomic.
-2. Move each inline keyword branch into a module, one commit per keyword, emitted at the same loop
-   position: both snapshots byte-identical. A branch that cannot meet that stays inline with a
-   comment.
-3. Grants read the registry. Eldrazi Conscription's annihilator becomes a grant of the registered
-   keyword; its snapshot entry is the only possible change.
-4. The authoring check rejects an override claiming a line the registry parses, and a ratchet-listed
-   check (`registered-keyword-overrides.json`, empty) proves none remain. Harmonic Prodigy's Prowess
-   moves to the registry; its snapshot entry is the only change.
-5. Add keywords in the phase 0 frequency order, each with its primitive contract (positive and
-   negative), one pinned card's full evidence under the card modeling guide, and its capability
-   registration.
+Exit: no override hand-authors a registered keyword; each moved branch left both snapshots
+byte-identical.
 
-Exit: the phase 0 probe shows each added keyword modeled; the registered-keyword check is empty.
+## Phase 6: pilot batch
 
-## Phase 6: results and parameterization
+1. Draw 20 unmodeled cards by one rule from the EDH staples and fixture reports, and assign 10 at
+   random to the new workflow and 10 to the current one.
+2. Build typed results (ADR 0031 decision 3) when the first new-workflow card needs one, with their
+   contracts, and re-express `bind`/`untapBoundIf` and `lifeLostThisWay` then.
+3. Merge a duplicate rule-static family when one of its cards is touched.
+4. Measure both groups with the phase 0 rule: commit-time span per card, engine lines outside
+   `cards/` and the per-op tables, and follow-up fixes within 30 days.
 
-1. `loseLife`, `gainLife` and `drawCards` return the actual amount, with tests under a floor and a
-   replacement.
-2. Op contracts declare what they publish. `EffectRef` gains `{ result }` and
-   `{ controllerOfResult }`, `Selector` gains `inResult`, `Value` gains `resultCount` and
-   `resultAmount`. The validator resolves name, order, scope and kind. One results map per
-   resolution, passed by reference into nested bodies; `registerDelayedTrigger` gains `remember`.
-   Each publishing op has a contract case for its "actually" negative.
-3. Re-express `bind`/`untapBoundIf` and `lifeLostThisWay` as results. Their cards' behavior tests are
-   unchanged; their snapshot entries are the only changes.
-4. The card-name check runs against a committed slug list; `card-named-ops.json` and
-   `compound-ops.json` hold the existing names under the ratchet, so adding one fails CI.
-5. Merge `triggerAdditionalForShamanOrOtherWizard` into `triggerAdditionalTime`, add the event filter
-   Panharmonicon needs, and merge the three damage-multiplier statics into `damageModifier`. Each
-   merge keeps its cards' behavior tests unchanged.
-
-Exit: the compound and card-named lists have not grown; the two families are merged; their cards'
-tests are unchanged.
-
-## Phase 7: primitive modules, workbench and descriptions
-
-1. Extract `ResolutionContext` with `child()`. Snapshots, determinism and the full suite unchanged.
-2. Split `Effect` into `LegacyEffect | ModuleEffect`; `definePrimitive` and the registry, with the
-   compile-time check that every module op is in all four tables. The next new primitive is the
-   pilot; one simple legacy op moves as a second pilot.
-3. `bun run card:new` (ADR 0031 decision 5). Its scaffolds are rejected by the gates until filled.
-   Its `it.todo` placeholders fail the skip reporter by design; locally, `bun run test <file>`
-   shows them as todo while authoring.
-4. `describeEffect` for the most-used ops by phase 0 counts, golden-tested; builders default to it
-   only when every effect is covered. Existing descriptions unchanged.
-
-Exit: a module-form primitive's pull request touches the module, the registry and its contract
-test, and no other engine file.
-
-## Phase 8: pilot batch and promotion
-
-1. Choose ten unmodeled cards from the EDH staples and fixture reports, drawn at random from those
-   whose clauses the workbench reports as keywords or compositions, and a matched control of ten
-   cards from PR11 and PR11b with similar clause counts. Model the ten with `card:new`, the scenario
-   runner, results and the registry, to the full standard of the card modeling guide.
-2. Measure both groups with the phase 0 per-card rule and record the result in `docs/reviews/`.
-3. Promote `noop` sites to `invariant` where a written argument shows a validated definition cannot
-   reach them, one commit per site, each with a test that reaches it through malformed IR.
-
-Success targets:
-
-- primary: no pilot card changes a file under `packages/engine/src/effects/` or
-  `cards/ability.ts`;
-- the pilot's median and p90 files and lines per card are below the control's, counted the same
-  way;
-- no pilot card adds to the compound or card-named lists;
-- every pilot card passes IR coverage and the gated facets without a waiver.
-
-If a target is missed, the review records why and which phase's assumption failed. The phases are
-not rolled back for missing a target; each must already have met its own exit.
+Targets: the new-workflow group's median time per card and follow-up fixes are below the control's;
+no new-workflow card adds a card-named op; every new-workflow reviewed card passes manifest
+references and mutation. The review records the result either way.
 
 ## Order and dependencies
 
-Phase 0 comes first. Phases 1 and 2 are independent of each other. Phase 3 needs phase 2's sink,
-invariants and `strictInvariants`. Phase 4's provenance and facets need nothing; its IR coverage
-gate needs phase 2's guard conversion and origins. Phase 5 needs phase 4's provenance. Phase 6
-needs phase 1's reference validation. Phase 7's workbench needs phases 3, 4 and 5, and its
-primitive modules need phase 6's result contracts. Phase 8 needs all of them.
-
-## Gates per phase
-
-Every phase runs what CI runs for its surfaces:
-
-```bash
-bun run typecheck
-bun run typecheck:tests
-bun run lint
-bun run format:check
-bun run test
-bun run test:card-gate
-bun run snapshots:check
-```
-
-Phases that change engine sources regenerate primitive contract evidence. Phases touching the
-scenario runner or Card Test Lab also run `bun run test:e2e`. Phases 2 and 8 run `bun run fuzz` with
-the CI seeds. Phase 5 and phase 8 card additions run the coverage tools and the evidence generators
-the card modeling guide lists.
+Phase 0 first. Phase 1 next, because every later test result depends on the real harness running.
+Phase 2 delivers the first speed gain and needs only phase 1. Phase 3 needs phase 2's pin store.
+Phase 4 needs phase 1's `strictInvariants` and can run beside phase 3. Phase 5 needs phase 2's
+`card:new`. Phase 6 needs all of them.
 
 ## CI placement
 
-| Check                                 | Where                                   |
-| ------------------------------------- | --------------------------------------- |
-| Ratchets, gate-path check, facets     | Card-gate job (runs on drafts)          |
-| IR coverage                           | After the full-suite job, non-draft PRs |
-| Fuzz, fixed seeds                     | Its own parallel job                    |
-| Fuzz, larger budget; bulk-data suites | Scheduled workflow                      |
+| Check                                                             | Where                          |
+| ----------------------------------------------------------------- | ------------------------------ |
+| Harness, suite-integrity, ratchets, manifest refs, facet warnings | Card-gate job (runs on drafts) |
+| IR mutation on changed reviewed cards                             | Its own job, non-draft PRs     |
+| Fuzz on engine changes                                            | Its own job, advisory          |
+| Fuzz at larger budget; bulk-data suites and population smoke      | Nightly                        |
 
 ## Risks
 
-| Risk                                                    | Mitigation                                                                                                        |
-| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| A promoted invariant halts correct games                | Promotion needs a written unreachability argument and a malformed-IR test; live matches halt visibly, never crash |
-| Facets flag correct cards                               | Only one-to-one facets gate first; each gated facet needs 90% precision on the reviewed set                       |
-| A waiver hides a later clause change                    | Waivers are keyed by clause hash and expire on mismatch                                                           |
-| IR coverage misattributes copied or granted abilities   | Records carry the stack object's origin; copies and grants count only for the printing card                       |
-| Manifest test IDs do not match executed tests uniquely  | Matcher, report and normalization before the gate                                                                 |
-| The keyword move changes behavior                       | One keyword per commit at the same emission position, both snapshots byte-identical                               |
-| `ResolutionContext` extraction breaks nested resolution | `child()` states what is shared; determinism and full suite unchanged before any module uses it                   |
-| Results change LKI or zone-tracking semantics           | Results follow objects only through `movedReferent`; contract negatives for each publishing op                    |
-| CI time grows                                           | Each step measured and placed per the table above; fuzz in parallel                                               |
-| A fuzz seed fails after an unrelated change             | Treated as a real bug: fix, or list with an issue under the ratchet and keep reporting it                         |
-| Evidence receipts go stale                              | Regenerated after every engine-changing phase; new config outside `vitest.config.ts`                              |
+| Risk                                             | Mitigation                                                                   |
+| ------------------------------------------------ | ---------------------------------------------------------------------------- |
+| Deleting the stale harness exposes failing tests | Each fix is its own commit with its reason; this is the point of phase 1     |
+| `card:finish` writes something wrong unread      | It prints a per-card diff; reproducing PR12's tail is the exit               |
+| Mutation runs are slow                           | Changed reviewed cards only; time measured before it is required             |
+| Equivalent mutations are misjudged               | Main-thread decision with a reason on the manifest clause                    |
+| Facets warn on correct cards                     | Warnings only, with `facetNotes`, until a real defect is found               |
+| A keyword move changes behavior                  | One keyword per commit, byte-identical snapshots, same emission position     |
+| Results change LKI or zone tracking              | Built only for a real card, through `movedReferent`, with contract negatives |
+| Fuzz fails unrelated pull requests               | Advisory on PRs; nightly is authoritative                                    |

@@ -11,74 +11,102 @@ Evidence: [Forge comparison](../reviews/forge-card-modeling-comparison-2026-10-2
 
 ## Context
 
-ADR 0004 made card behavior data. ADR 0025 made that data uniform to write. Neither made it fast to
-write a card whose clause is not already a primitive, and that is where the time goes. Measured at
-`8b93725`:
+ADR 0004 made card behavior data. ADR 0025 made that data uniform to write. Neither made a card fast
+to finish. Measured at `8b93725`:
 
-- **A new primitive is a change to five files.** The `Effect` type in `ability.ts`, its case in
-  `resolve.ts`, and its rows in three tables: `expression-validation.ts`,
-  `effect-reference-contracts.ts` and `capabilities.ts`, before any test. Card commits that added
-  primitives were large: Chrome Mox (`c3a0dbf`) touched 10 files and 267 lines, Intermediate
-  Chirography (`82a4682`) 15 files and 832 lines. Each table is type-checked, so this is safe, but
-  it is slow.
-- **Primitives are minted per card.** The `Effect` union has 344 ops. 32 have `And` joining two
-  instructions in their name, most of them two clauses fused into one op
-  (`destroyTargetAndControllerMaySearchBasicTypedLand`, `exileCreatureAndControllerSearchBasicLand`,
-  `counterAndCreateTokenForController`, `reanimateAndLoseLife`, …; a few such as
-  `doublePowerAndToughnessEachUntilEot` are not), and more are fused with `Then`
-  (`sacrificeOneThen`, `mayPayManaThenReflexive`). At least 15 are named after a card
+- **Most of a card's cost is evidence, not engine code.** Across 19 recent `feat(cards)` commits
+  (PR11, PR11b, PR12), generated snapshots and benchmark fixtures are 46% of changed lines, tests
+  33%, engine source outside `resolve.ts` 10%, `resolve.ts` 3.5%, and the per-op validation tables
+  2%. The ten PR11 `feat` commits span 59 minutes of commit time; the tail after them took many
+  hours: Card Test Lab scenarios (`e61a3d9`, 1,805 lines), manifest, ledger and progress docs
+  (`e039bc8`, 647 lines), binding scenario IDs into five evidence generators (`5861a5f`,
+  `fedd925`), retiring stale containment expectations (`98a1b20`, `63dd312`), benchmark rehashes
+  (`da2e2c6`), snapshot regeneration, and edits to the 14 KB `test:card-gate` line in
+  `package.json`.
+- **Escaped bugs are rules interactions.** The last 400 non-merge commits hold 84 `feat(cards)` and
+  97 `fix(cards|engine)` commits. The fixes are edge cases of copies, phasing, last known
+  information, per-player grouping, graveyard cast permissions and type reads (`2ac4b96` CR 722.3c,
+  `dc7b7c6`, `03e6854`, `393851e`), not malformed IR.
+- **Few keywords expand by themselves.** Of 37 keyword lines chosen to find gaps, only Cycling,
+  Basic landcycling, Undying, Persist and Riot come out of `interpretCard` modeled; a second sample of
+  17 other keywords found 11 modeled (Equip, Flashback, Ward, Crew, Unearth, Cascade, Protection,
+  Morph, Rebound, Escape, Menace) and Kicker, Scavenge, Madness, Suspend, Exploit and Mutate not.
+  Where a keyword works, it is a branch of the interpreter cascade (Equip and Equip commander are two
+  copies of one block, `interpret.ts:8611-8650`), a regex for one card (annihilator exists only in
+  Eldrazi Conscription's grant, `interpret.ts:6664-6668`), or re-authored per card (Harmonic
+  Prodigy's Prowess, `overrides/reviewed-five.ts:128-145`).
+- **Primitives are minted per card.** The `Effect` union has 344 ops. 32 join two instructions with
+  `And` in the name, most of them two clauses fused into one op
+  (`destroyTargetAndControllerMaySearchBasicTypedLand`, `counterAndCreateTokenForController`,
+  `reanimateAndLoseLife`, …), and others with `Then`. At least 15 are named after a card
   (`angelGrace`, `gisela`, `humbleDefector`, `kambal`, `etaliPrimalConqueror`, `druidPurification`,
   `livingDeath`, `huntingWilds`, `chaosWarp`, `inkshield`, `capstoneParadigm`, `masterOfCeremonies`,
-  `vindictiveLichModes`, `shadrixModes`, `schemingSymmetry`). `RuleStatic` has 48 kinds, including `triggerAdditionalForShamanOrOtherWizard` beside the general
-  `triggerAdditionalTime { filter }` that could express it, and three damage-multiplier kinds.
-  Rakdos Charm's own op re-implemented damage and got source attribution wrong (fixed in `5c8e41f`).
-- **Few keywords expand by themselves.** Running 37 common keyword lines through `interpretCard`,
-  only Cycling, Basic landcycling, Undying, Persist and Riot come out modeled. Prowess, Exalted,
-  Afterlife, Annihilator, Toxic, Dash, Evoke, Mentor, Ninjutsu, Buyback, Delve, Training, Bushido,
-  Flanking, Wither, Myriad, Battle cry, Extort, Embalm, Encore, Blitz, Squad, Backup, Bloodthirst,
-  Fabricate, Modular, Living weapon, Shadow, Horsemanship, Skulk, Fear and Intimidate do not.
-  The 37 were chosen to find gaps; a second sample of 17 other keywords found 11 modeled (Equip,
-  Flashback, Ward, Crew, Unearth, Cascade, Protection, Morph, Rebound, Escape, Menace) and Kicker,
-  Scavenge, Madness, Suspend, Exploit and Mutate not. Where
-  a keyword works, it is a branch in `interpret.ts`'s 9,225-line cascade (Equip and Equip commander
-  are two copies of the same block, `interpret.ts:8611-8650`), or a regex for one card (annihilator
-  exists only inside Eldrazi Conscription's grant, `interpret.ts:6664-6668`), or authored again on
-  each card (Harmonic Prodigy's Prowess, `overrides/reviewed-five.ts:128-145`).
+  `vindictiveLichModes`, `shadrixModes`, `schemingSymmetry`). `RuleStatic` has 48 kinds, including
+  `triggerAdditionalForShamanOrOtherWizard` beside the general `triggerAdditionalTime { filter }`
+  that could express it, and three damage-multiplier kinds. Rakdos Charm's own op re-implemented
+  damage and got source attribution wrong (fixed in `5c8e41f`).
 - **A later instruction cannot name what an earlier one did, except by special case.** `EffectRef`
-  has six forms. "Life lost this way" is a hidden accumulator fed by three of the ten life-loss ops
-  (`resolve.ts:4306-4340`), so `eachPlayerLosesLife` followed by `gainLifeEqualToLifeLostThisWay`
-  validates and gains nothing. "Those cards" is a free-string `bind` read with `?? []`. Each new
-  "and then its controller…" clause therefore became a new compound op.
-- **Descriptions are typed by hand.** Overrides carry 519 `description` strings. The AI tactician
-  reads them to pick an action (ADR 0025), so each is a correctness surface as well as a chore.
-- **Every batch rebuilds its test scaffolding** (about 216 test files with their own `game()`,
-  `pod()` or `setup()`, 44 with their own `pinned()`, 60 per-batch `*-oracle.json` fixtures). ADR 0032 decision 10 covers
-  this.
+  has six forms. "Life lost this way" is an accumulator three of the ten life-loss ops feed
+  (`resolve.ts:4306-4340`); "those cards" is a free-string `bind` read with `?? []`. Each new "and
+  then its controller…" clause therefore became a new compound op.
 
 [Forge](https://github.com/Card-Forge/forge) models its 34,131 card scripts with no text parser.
-Its speed comes from four things the comparison review documents with source references: 202
-keywords are data expanded once in the engine; 204 generic, parameterized effect types are chained
-by `SubAbility$` with shared references to targets and earlier results (`Defined$ Targeted`,
-`TargetedController`, `Remembered`, `TriggeredCard`); 858 token scripts and `Count$` values are
-shared vocabularies; and a new card usually starts as a copy of a similar card's script. Its weaknesses are the other side of the same choices: parameters
-are untyped strings, many mistakes surface only at run time or never, and card-level tests are rare.
+Its speed comes from 202 keywords expanded once in the engine, 204 generic effect types chained by
+`SubAbility$` with shared references (`Defined$ Targeted`, `TargetedController`, `Remembered`,
+`TriggeredCard`), and starting each card from a similar card's script. Its weaknesses are the other
+side of the same choices: untyped string parameters that fail open, errors that surface only in a
+game, and tests touching about 1.4% of card faces.
 
 ## Decision
 
-Adopt Forge's four sources of speed in typed form. Keep the interpreter, the typed IR, the
-validator and the evidence standard of the card modeling guide unchanged.
+Attack the measured cost first: the evidence tail and the start of each card. Then adopt Forge's
+vocabulary ideas in typed form, each when a real card needs it. Keep the interpreter, the typed IR,
+the validator and the evidence standard of the card modeling guide unchanged.
 
-### 1. Keywords are a registry
+### 1. Three commands carry a card from start to finish
 
-`packages/engine/src/cards/keywords/` holds one module per keyword. A module declares how the
-keyword is read and what it contributes:
+**`bun run card:new "<card name>" [--batch <id>]`** starts a card:
+
+1. finds it in the pinned fixtures (or, locally, the bulk Oracle file) and adds it to the shared
+   pin store (ADR 0032 decision 10), throwing on an unknown name;
+2. runs `interpretCard` and prints `unmodeledReasons` verbatim, the exact strings `handledLines`
+   needs, and which lines the parser or the keyword registry already model;
+3. lists the nearest modeled cards for each unparsed line, ranked by similarity of normalized text,
+   with the `file:line` of their definitions, and never copies one;
+4. prints **interaction prompts** for the clause shapes behind recent escaped bugs: copies, phasing,
+   last known information, per-player grouping, graveyard cast permissions, type reads off the
+   battlefield, "another", "you may", intervening "if";
+5. writes an `unimplemented()` stub with the exact `handledLines`, manifest clause entries without
+   test IDs, and a scenario-runner test file with `it.todo` placeholders for each clause's positive
+   and negative case.
+
+**`bun run card:check "<card name>"`** is the edit loop: interpret, validate, facet warnings (ADR
+0032 decision 6) and this card's snapshot diff, for one card, in seconds.
+
+**`bun run card:finish [--batch <id>]`** does the mechanical tail: regenerates both snapshots and
+prints a per-card semantic diff to read; re-seals benchmark compatibility
+(`bun run ai-bench refresh --suite core-fast --write`); registers the batch's scenarios and binds
+their IDs into the evidence generators; derives which containment expectations the batch retires;
+and emits the manifest and progress skeleton. It writes nothing a gate would accept unread: the
+snapshot diff and the manifest skeleton are still reviewed, and every scaffold stays rejected until
+filled.
+
+The explicit 158-entry list of `test:card-gate` becomes a committed list of directories and globs
+read by a small runner script, so a new batch adds a directory once instead of editing
+`package.json`, and an entry that matches nothing fails (ADR 0032 decision 9).
+
+### 2. Keywords are a registry, adopted card by card
+
+`packages/engine/src/cards/keywords/` holds one module per keyword, or per family of keywords that
+share one expansion (Forge's Graft, Fading, Vanishing and Bloodthirst share one counter
+replacement):
 
 ```ts
 export const prowess = defineKeyword({
   name: 'prowess',
   cr: '702.108a',
   flag: true,
-  grantable: true,
+  multiple: 'cumulative', // CR 702.108b: each instance triggers separately
   parse: (element) => (element === 'prowess' ? {} : null),
   expand: (_args, line) => ({
     triggers: [
@@ -92,55 +120,46 @@ export const prowess = defineKeyword({
 ```
 
 - `flag: true` keeps the keyword in the definition's `keywords` list, so `hasKeyword`,
-  `denyKeywords`, `loseAllAbilities` and counting multiple instances keep working.
-  `IMPLEMENTED_KEYWORDS` becomes the list of registered keywords with a flag, generated from the
-  registry; a flag-only keyword (flying) has no `expand`.
-- `expand(args, line)` returns `CardDefinition` fragments for any list the current branches fill:
-  `triggers`, `activatedAbilities`, `manaAbilities`, `ruleStatics`, `staticEffects`,
-  `alternativeCasts` and the keyword's flag. Each fragment is tagged with the keyword name for
-  provenance (decision 6).
-- Parsing stays atomic. `parseKeywordLine` (11 call sites, several of them grants,
-  `interpret.ts:430-512`) still accepts a line only when every comma-separated element parses, and
-  modules carry an explicit priority where order matters (Equip commander before Equip).
-  Expansions are emitted at the same position in the line loop where the inline branch emitted
-  them today, so list order, and with it the snapshot, is unchanged.
-- A grant ("has annihilator 2", "Other Dragons you control have ward {2}") reads the same registry.
-  Layer 6 already carries `addTrigger`, `addActivatedAbility`, `addManaAbility`, `addKeyword`,
-  `addWard` and `addProtection`. A keyword whose expansion needs anything else (an alternative cost,
-  a casting permission, a rule static) sets `grantable: false`, and a grant of it stays unmodeled.
-- An override whose `handledLines` contains a line the registry parses is an authoring issue
-  naming the keyword. A card never re-authors a registered keyword.
-- Each keyword has one primitive contract with positive and negative cases. Every card printing it
-  inherits that evidence through the capability fingerprint, and still needs its own card evidence
-  under the card modeling guide.
+  `denyKeywords`, `loseAllAbilities` and counting instances keep working. `multiple` (redundant,
+  cumulative or special, with its CR cite) states what a second instance does.
+- `expand(args, line)` returns `CardDefinition` fragments for any list a keyword can fill. Whether a
+  keyword can be granted is derived from those fragment kinds: layer 6 carries `addTrigger`,
+  `addActivatedAbility`, `addManaAbility`, `addKeyword`, `addWard` and `addProtection`. A keyword
+  needing anything else cannot be granted, and a grant of it stays unmodeled.
+- Parsing stays atomic: `parseKeywordLine` (13 call sites, several of them grants) accepts a line
+  only when every element parses.
+- An override whose `handledLines` contains a line the registry parses is an authoring issue.
+- Registry meta-tests: each `cr` cite exists in `docs/rules/` and names the keyword; `parse` of a
+  keyword's own name round-trips; no element is accepted by two modules.
+- Each keyword or family has one primitive contract with positive and negative cases, inherited by
+  every card printing it through the capability fingerprint. Each card still needs its own evidence.
 
-The existing inline keyword branches move into the registry first, one commit per keyword, with
-the interpretation and override snapshots byte-identical, the method ADR 0025 used. The four
-constraints above (flag kept, any list, atomic parse with priority, same emission position) are
-what make byte-identical realistic. A branch that cannot meet them stays inline with a comment
-saying why. New keywords follow in order of frequency in the Oracle population.
+New keywords are added as cards need them, guided by a committed frequency ranking (the plan pins
+the bulk Oracle file's hash beside it). An existing inline branch moves into the registry only when
+a card touches it, in its own commit, with both snapshots byte-identical: it is emitted at the same
+position in the line loop, and order-sensitive branches (Equip commander before Equip) keep their
+order. A branch that cannot move byte-identically stays inline with a comment saying why.
 
-### 2. Instructions publish typed results
+### 3. Instructions publish typed results, when the first card needs them
 
-Any effect may carry `as: '<name>'`. Each op's contract declares what it publishes:
+Results are built when the first card in the plan's pilot needs "its controller", "those cards" or
+"that much" after another instruction. Until then the existing special cases stay, validated by ADR
+0032 decision 1.
 
-- **objects**: the objects the instruction actually changed, typed `'permanent' | 'card' |
-'player'`, each with last known information if it left (CR 608.2h). A destroy that a
-  regeneration or indestructible stopped publishes nothing for that object; an exile that a
-  replacement sent elsewhere publishes the object where it went, if the rules let the instruction
-  find it (CR 400.7j), and otherwise nothing.
-- **amount**: where meaningful, what actually happened, summed across all affected players or
-  objects: life actually lost after floors and replacements, damage actually dealt after
-  prevention, cards actually drawn. To make this possible, `loseLife`, `gainLife` and `drawCards`
-  return the actual amount; today they return nothing and the accumulator diffs life totals
-  (`resolve.ts:4314-4337`), which is wrong when another effect changes life in between.
+Any effect may carry `as: '<name>'`. Each publishing op's contract declares what it publishes:
 
-Later effects of the same ability refer to a result:
+- **objects**, typed `'permanent' | 'player' | 'card'`, that the instruction actually changed, with
+  last known information for objects that left (CR 608.2h). A destroy that regeneration or
+  indestructible stopped publishes nothing for that object. An object moved to a public zone is
+  followed only as CR 400.7j allows, through the existing `movedReferent`; one moved to a hidden
+  zone is not followed;
+- **amount**, where meaningful, summed across everything affected: life actually lost (zero for a
+  player whose life can't change), damage actually dealt after prevention, cards actually drawn
+  (`drawCards` already returns this count).
 
-- `EffectRef` gains `{ result: name }` and `{ controllerOfResult: name }`;
-- `Selector` gains `{ kind: 'inResult', result }` for "those cards" and "those creatures";
-- `Value` gains `{ kind: 'resultCount', result }` (objects actually changed) and
-  `{ kind: 'resultAmount', result }` (the summed amount).
+Later effects refer to a result: `EffectRef` gains `{ result }` and `{ controllerOfResult }`;
+`Selector` gains `{ kind: 'inResult', result }`, for permanents and public-zone cards, accepted only
+by ops whose contract takes a set; `Value` gains `resultCount` and `resultAmount`.
 
 ```ts
 // "Each opponent loses 2 life. You gain life equal to the life lost this way."
@@ -150,155 +169,99 @@ effects: [
 ];
 ```
 
-Scope. A results map belongs to one resolution of one ability. `executeAbility` re-enters itself
-for nested bodies (modes, `then` bodies, reflexive and per-player bodies: `resolve.ts:1729, 2048,
-4804` and others); the outer map is passed down by reference, so a nested body can read the outer
-results and publish into the same map. Names are unique within an ability across all modes, which
-the validator enforces (ADR 0032 decision 1), so folded modes cannot collide. Results never cross
-a resolution: a delayed trigger that later needs "those cards" captures them explicitly when it is
-created (a `remember: '<result>'` field on `registerDelayedTrigger`), as object ids with their zone, and an
-object that has since changed zones is a new object it does not follow (CR 400.7, 603.7c), exactly
-as delayed-object identity works today.
+Scope rules, checked by the validator:
 
-Each op that publishes has a contract case proving the "actually" part with a negative: a
-prevented damage, a life-loss floor, a replaced destroy.
+- a reference resolves to an unconditional publisher earlier in the same effect list, or earlier in
+  an enclosing list before the nested body that holds the reference. A name published inside a
+  conditional branch, a repeatable mode or a per-player body is not visible after it;
+- names are unique within an ability across all modes;
+- result references may not appear in anything stored past the resolution (continuous-effect
+  selectors, grants, delayed-trigger bodies). A delayed trigger that needs "those cards" captures
+  them with `remember: '<result>'` on `registerDelayedTrigger`, stored as a list of object ids; an
+  object that has since changed zones is a new object it does not follow (CR 400.7, 603.7c).
 
-The validator checks every result name, order, scope and kind, so a typo or an op that publishes
-nothing is an authoring issue, never a silent zero. `bind`/`untapBoundIf`,
-`lifeLostThisWay`/`gainLifeEqualToLifeLostThisWay` and `createdThisResolution` become uses of
-results. No new compound op is added. An existing compound op is rewritten as a composition only
-when its card is touched for another reason, with its behavior tests unchanged and the override
-snapshot changing for that card alone.
+The executor keeps one results map per resolution, passed by reference into nested bodies. Each
+publishing op has a contract case for its "actually" negative: life that can't change, prevented
+damage, a replaced destroy. `bind`/`untapBoundIf`, `lifeLostThisWay` and `createdThisResolution`
+then become uses of results, with their cards' behavior tests unchanged.
 
-### 3. Parameterize instead of minting
+### 4. Parameterize instead of minting
 
-A new `Effect` op, `RuleStatic`, `Condition`, `Value` or `Selector` kind must:
+A new `Effect` op, `RuleStatic`, `Condition`, `Value` or `Selector` kind:
 
-- be named after the mechanic, not a card. A check compares discriminant names against a committed
-  list of card-name slugs generated from the pinned fixtures and the verification manifest (the
-  bulk Oracle file is not available in CI); the existing card-named ops (at least the 15 above;
-  phase 0 of the plan generates the full list) are listed and may only be removed;
-- take selectors, values and references as parameters instead of fixing "opponent", "creature" or
+- is named after the mechanic. A check fails on a discriminant equal to a card-name slug from a
+  committed slug list (generated from the pinned fixtures and the manifest, since the bulk file is
+  not in CI). A name containing `And` or `Then` produces a warning, not a failure;
+- takes selectors, values and references as parameters instead of fixing "opponent", "creature" or
   "basic land" in its name;
-- state in its pull request why existing primitives composed with results cannot express the clause.
+- carries a one-line justification in its pull request of why existing primitives cannot express
+  the clause.
 
-The measured duplicate families are merged: `triggerAdditionalForShamanOrOtherWizard` into
-`triggerAdditionalTime { filter }`, with an optional event filter added for Panharmonicon's
-`triggerAdditionalOnArtifactOrCreatureEntry`; `damageDoubled`, `damageDoubledToOpponents` and
-`damageHalvedToYou` into one `damageModifier { source, recipient, factor }`. Each merge keeps the
-affected cards' behavior tests unchanged.
+The two measured duplicate families are merged when one of their cards is next touched:
+`triggerAdditionalForShamanOrOtherWizard` into `triggerAdditionalTime { filter }` (with an event
+filter for Panharmonicon), and the three damage-multiplier statics into one `damageModifier`.
 
-### 4. A new primitive is one module
+### 5. A new primitive starts from a generated scaffold
 
-New ops are written as one module under `packages/engine/src/effects/ops/`:
-
-```ts
-export const surveil = definePrimitive({
-  op: 'surveil',
-  references: {},
-  expressions: { count: value },
-  capability: { … },
-  publishes: { objects: 'card' },
-  *execute(rc, effect) { … },
-});
-```
-
-The four tables are mapped types over `Effect['op']` (`effect-reference-contracts.ts:29-35`,
-`expression-validation.ts:736`, `capabilities.ts`, the executor switch), so a runtime spread alone
-would lose their exhaustiveness. The op union is therefore split: `Effect = LegacyEffect |
-ModuleEffect`, where `ModuleEffect` is the union of the types the modules export. The legacy tables
-stay mapped over `LegacyEffect['op']`; the module rows are mapped over `ModuleEffect['op']` by the
-registry's type, and a compile-time check fails if a module op is missing from any of the four.
-`executeAbility`'s `default` dispatches module ops to the registry before `assertNever`.
-
-`rc` is a `ResolutionContext`: what `executeAbility` keeps as closures and mutable locals today
-(`ref`, `amountOf`, `sourcePermanent`, `legalChosenPermanents`, the target caches, the results map),
-as one object. `executeAbility` reassigns `ctx` (`resolve.ts:1693`) and re-enters itself for nested
-bodies, so `rc.child()` states explicitly what a nested body shares (the game, the results map, the
-transition tracking) and what it gets fresh (its own target slots). The post-effect damage
-reflection flush stays in the effect loop, not in modules.
-
-Adding `as?` to effects is an envelope field, not an op field, so `overload.ts`'s per-field tables
-(`:41-56`) gain one row for it.
-
-Legacy ops stay in the switch and move into modules only when they are touched. A new primitive
-then costs one module, one registry line and its contract test, instead of five coordinated edits.
-
-### 5. An authoring workbench starts each card
-
-`bun run card:new "<card name>" [--batch <id>]`:
-
-1. finds the card in the pinned fixtures or the bulk Oracle file and adds it to the shared pin store
-   (ADR 0032 decision 10);
-2. runs `interpretCard` and prints `unmodeledReasons` verbatim, the exact strings `handledLines`
-   needs;
-3. shows, per line, whether the parser or the keyword registry already models it, and the facets
-   of ADR 0032 decision 6 ("another", "you may", target count, …);
-4. lists the nearest modeled cards for each unparsed line, ranked by similarity of normalized text,
-   with the `file:line` of their definitions, and never copies one;
-5. writes an `unimplemented()` stub with the exact `handledLines`, manifest clause entries with no
-   test IDs, and a scenario-runner test file with `it.todo` placeholders for each clause's positive
-   and negative case.
-
-Every scaffold is something the existing gates reject until it is filled: `unimplemented()` leaves
-the card unsupported, the card gate fails on clauses without evidence, and ADR 0032's reporter fails
-on `todo`. The workbench speeds up the start; it never decides semantics.
+`bun run card:new --primitive <op>` writes the stub rows a new op needs in its five places
+(`ability.ts`, `resolve.ts`, `expression-validation.ts`, `effect-reference-contracts.ts`,
+`capabilities.ts`) and a contract-test skeleton. The tables, their exhaustiveness and the executor
+switch stay as they are.
 
 ### 6. The interpreter reports where each ability came from
 
 `interpretCard` records which Oracle line produced each ability, static, keyword expansion and
-replacement field. It does so from the change in each list's length across one iteration of its
-line loop. Entries the interpreter rewrites after the loop (a Pathway clearing `manaAbilities`,
-reasons reset, `interpret.ts:9095-9114`) are marked unattributed rather than guessed.
+replacement field, so the override merge check (ADR 0032 decision 7), the keyword-claim check and
+`card:new` can name lines.
+
+The line loop (`interpret.ts:8002-9065`) leaves each iteration through many `continue`s, so the
+change in each list's length is taken at the start of the next iteration, not the end. Constructs
+that consume several lines record a line range; split and multi-face cards tag the face. Entries the
+interpreter rewrites outside the loop (`reasons.length = 0` sites before it, `interpret.ts:7766-7936`;
+a Pathway clearing `manaAbilities` after it, `interpret.ts:9090-9113`) are unattributed rather than
+guessed.
 
 The record travels beside the definition: `applyOverride(def, provenance)` gains the parameter at
 its two call sites (`interpret.ts:7526, 9118`), and `interpretCardWithProvenance` exposes it to
-tools. It is not stored on `CardDefinition`, so neither snapshot changes. ADR 0032 uses it for the override merge check and the facet check, and the workbench uses it
-for step 3.
-
-### 7. Descriptions default to generated text
-
-`describeEffect` renders the most-used ops (chosen by measured frequency, as ADR 0025 chose
-builders) into the house description style. `spell()`, `triggered()` and `activated()` use it
-when `description` is omitted and the renderer covers every effect, and require one otherwise.
-
-A description reaches the event log (the stack's `resolved` event), the `PlayerView` stack and the
-tactician's input, so the renderer is golden-tested against the house text for each op it covers,
-and a reviewed card's generated description is read in review like a hand-written one. Existing
-descriptions are not changed, so AI benchmark inputs stay stable.
+tools. It is not stored on `CardDefinition`, so neither snapshot changes.
 
 ## What we do not adopt from Forge
 
-- **A string script language.** Forge's parameters are `Map<String, String>`; a misspelled key is
-  ignored. Our IR is a discriminated union the compiler and validator check.
+- **A string script language.** Its speed comes from terseness and its failures from untyped
+  strings. Our builders and typed IR give most of the terseness without the failures.
 - **Hand-scripting every card.** The interpreter models thousands of templated cards with no
-  per-card work. It stays, and it emits through the same builders, keyword registry and results.
+  per-card work.
+- **Keyword macros that build and re-parse strings.** Forge's own test of one asserts on a
+  generated string and says it cannot drive the real cast; typed fragments and engine scenarios are
+  stronger.
 - **AI hints in card data** (`AI:RemoveDeck`, `AILogic$`, `SVar:PlayMain1`). Provider policy stays
-  out of the engine (rules-engine constraints).
-- **Its evidence level.** Forge has few card-level tests. The card modeling guide's standard is
-  unchanged; this ADR and ADR 0032 make meeting it cheaper.
+  out of the engine.
+- **Its evidence level.** The card modeling guide's standard is unchanged.
 
 ## Consequences
 
-- A card whose clauses are keywords or compositions of existing primitives needs an override (or
-  nothing), a manifest entry and scenarios, and no engine change.
-- A card that does need a new primitive needs one module and its contract, not six edits.
-- The `Effect` union stops growing by one op per unusual card. Compound and card-named ops shrink
-  as their cards are touched.
-- Keywords become a coverage lever: one keyword module plus its contract covers every printing.
-- Snapshots stay the proof for each migration. The keyword move and the module move are
-  byte-identical refactors; each merge or composition rewrite changes the snapshot for its own cards
-  only.
-- The success measures are in the plan: files and lines touched per new card, the share of new
-  cards needing a new primitive, keyword lines modeled by the registry, and scaffolding lines per
-  card, each measured against the PR11 and PR11b commits.
+- The mechanical tail of a card batch becomes three commands whose output is reviewed, not typed.
+- A card whose clauses are registered keywords or compositions of existing primitives needs an
+  override (or nothing), a manifest entry and scenarios, and no engine change.
+- Keywords become a coverage lever: one module and its contract cover every printing.
+- The `Effect` union stops gaining card-named ops; compound ops are discouraged and, once results
+  exist, unnecessary.
+- Snapshots stay the proof for every migration: each keyword move is byte-identical, and each
+  results or family rewrite changes the snapshot for its own cards only.
+- Success is measured in the plan by wall-clock time, engine lines and follow-up fixes per card on a
+  randomized pilot, not by files touched.
 
 ## Alternatives rejected
 
-- **Port Forge's script format or its card scripts.** It would trade compile-time checking for
-  speed, and Forge's GPL-3.0 scripts cannot be copied into this repository's code.
-- **Effect builders for every op.** ADR 0025 rejected this: effects are already a typed union, and a
-  builder per op only renames them. Results and keywords remove more code than builders would.
+- **One module per primitive, with a `ResolutionContext` and a split `Effect` union.** The per-op
+  table rows are 2% of a card's changed lines, while the refactor would touch an 11,000-line
+  generator that re-enters itself eleven times. The `--primitive` scaffold removes the chore
+  without the risk.
+- **Generated default descriptions.** Each rendering would be a maintained surface feeding the AI
+  tactician, to save a one-line chore.
+- **Migrate every inline keyword branch up front.** It buys no speed; branches move when a card
+  touches them.
+- **Port Forge's script format or scripts.** It would trade compile-time checking for terseness,
+  and Forge's GPL-3.0 scripts cannot be copied into this repository's code.
 - **Rewrite `interpret.ts` around a grammar library.** The parser's problem is not its regexes but
-  that its output is checked only by snapshots; ADR 0032's facets and provenance address that at a
-  fraction of the risk.
+  that its output is checked only by snapshots; ADR 0032 addresses that.
