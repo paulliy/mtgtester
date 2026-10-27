@@ -495,8 +495,14 @@ export class DiplomacyTable {
       }
       if (deal.parties.includes(activePlayer)) {
         record.turnsTaken.set(activePlayer, (record.turnsTaken.get(activePlayer) ?? 0) + 1);
+        // Only an attack on a seat still in the game could have been made: a promise whose
+        // target is gone before the obligor's turn ends void, not broken.
         const owesAttack = deal.obligations.some(
-          (o, i) => o.kind === 'attackPlayer' && o.by === activePlayer && !record.met.has(i),
+          (o, i) =>
+            o.kind === 'attackPlayer' &&
+            o.by === activePlayer &&
+            !record.met.has(i) &&
+            living.has(o.target),
         );
         if (owesAttack && (table.bySeat.get(activePlayer)?.attackPower ?? 0) > 0) {
           record.couldAttack.add(activePlayer);
@@ -717,7 +723,12 @@ export class DiplomacyTable {
     if (this.activeNow !== null && turnsTaken.has(this.activeNow)) {
       const active = this.activeNow;
       turnsTaken.set(active, 1);
-      const owesAttack = deal.obligations.some((o) => o.kind === 'attackPlayer' && o.by === active);
+      const owesAttack = deal.obligations.some(
+        (o) =>
+          o.kind === 'attackPlayer' &&
+          o.by === active &&
+          table.seats.some((s) => s.seat === o.target),
+      );
       if (owesAttack && (table.bySeat.get(active)?.attackPower ?? 0) > 0) couldAttack.add(active);
     }
     const credit = new Map(

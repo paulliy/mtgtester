@@ -284,6 +284,17 @@ describe('DiplomacyTable — keeping, breaking and ending deals', () => {
     expect(outcome.deal.breachedBy).toBe('P2');
   });
 
+  it('ends a deal void when the promised target is eliminated before the attacker takes its turn', () => {
+    const { w, table, deal } = withDeal();
+    const owed = deal.obligations.find((o) => o.kind === 'attackPlayer')!;
+    if (owed.kind !== 'attackPlayer') throw new Error('expected an attackPlayer obligation');
+    expect(owed.by).not.toBe('P1');
+    w.life[owed.target] = 0;
+    runOut(w, table, deal, 2);
+    expect(deal.status).toBe('void');
+    expect(table.trustRecord(owed.by).broken).toBe(0);
+  });
+
   it('ends a deal void when the promised attack could never be made, charging nobody', () => {
     const { w, table, deal } = withDeal();
     const owed = deal.obligations.find((o) => o.kind === 'attackPlayer')!;
