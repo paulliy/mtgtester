@@ -317,6 +317,48 @@ describe('DiplomacyTable — keeping, breaking and ending deals', () => {
     expect(table.trustRecord(owed.by).broken).toBe(0);
   });
 
+  it('still charges an earlier skipped turn when a later turn is excused or repaired', () => {
+    for (const later of ['excused', 'repaired'] as const) {
+      const w = world();
+      let repaired = 0;
+      const table = new DiplomacyTable({
+        seed: 'seed',
+        seats: w.order,
+        viewOf: (seat) => viewFrom(w, seat),
+        negotiates: () => true,
+        repairedAttacks: () => repaired,
+      });
+      runTurns(table, w, 1, 1);
+      const deal = table.activeDeals()[0]!;
+      const owed = deal.obligations.find((o) => o.kind === 'attackPlayer')!;
+      if (owed.kind !== 'attackPlayer') throw new Error('expected an attackPlayer obligation');
+      const elsewhere = w.order.find((s) => !deal.parties.includes(s) && s !== owed.target)!;
+      const attacker = w.battlefield.find((p) => p.controller === owed.by)!;
+      let obligorTurns = 0;
+      for (let turn = 2; turn < 20 && deal.status === 'active'; turn++) {
+        const active = w.order[(turn - 1) % w.order.length]!;
+        table.beforeDecision(priority(turn, active));
+        if (active !== owed.by || deal.status !== 'active') continue;
+        // The first turn is skipped with attackers on board; the second is excused or repaired.
+        if (obligorTurns++ === 0) continue;
+        const choices = later === 'excused' ? [elsewhere] : [owed.target];
+        const action = attackAction([attacker], () => [...choices, NO_ATTACK_TARGET]);
+        table.afterDecision(
+          { ...priority(turn, owed.by, [action]), decisionType: 'declareAttackers' },
+          {
+            requestId: `r${turn}`,
+            actionId: action.id,
+            targets: [{ slot: 0, choice: choices[0]! }],
+          },
+        );
+        if (later === 'repaired') repaired++;
+        table.flush();
+      }
+      expect(deal.status, later).toBe('broken');
+      expect(deal.breachedBy, later).toBe(owed.by);
+    }
+  });
+
   it('ends a deal void when the promised attack could never be made, charging nobody', () => {
     const { w, table, deal } = withDeal();
     const owed = deal.obligations.find((o) => o.kind === 'attackPlayer')!;

@@ -86,8 +86,17 @@ interface DealRecord {
   tested: Set<PlayerId>;
   /** Parties freed from their side because the other party became the leader. */
   freed: Set<PlayerId>;
-  /** Parties owing an attack that started a turn inside the deal with attackers on board. */
+  /**
+   * Parties owing an attack that had a turn inside the deal with attackers on board and did not
+   * attack. Only finished turns are here: the turn in progress is in `couldAttackNow`.
+   */
   couldAttack: Set<PlayerId>;
+  /**
+   * The same for the turn in progress. An excused or engine-repaired declaration clears it for
+   * this turn only, so an earlier turn the seat really skipped still counts; it moves into
+   * `couldAttack` when the next turn opens.
+   */
+  couldAttackNow: Set<PlayerId>;
 }
 
 interface PairEnd {
@@ -132,6 +141,7 @@ export interface DiplomacyState {
     tested: PlayerId[];
     freed: PlayerId[];
     couldAttack: PlayerId[];
+    couldAttackNow: PlayerId[];
   }>;
   declines: Decline[];
   lastEnded: Array<[string, PairEnd]>;
@@ -234,6 +244,7 @@ export class DiplomacyTable {
         tested: [...r.tested],
         freed: [...r.freed],
         couldAttack: [...r.couldAttack],
+        couldAttackNow: [...r.couldAttackNow],
       })),
       declines: this.declines,
       lastEnded: [...this.lastEnded],
@@ -268,6 +279,7 @@ export class DiplomacyTable {
         tested: new Set(r.tested),
         freed: new Set(r.freed),
         couldAttack: new Set(r.couldAttack),
+        couldAttackNow: new Set(r.couldAttackNow),
       });
     }
     table.declines.push(...state.declines);
@@ -381,7 +393,9 @@ export class DiplomacyTable {
       // The engine chose this attack, not the seat: it is not judged, and the turn does not count
       // as one in which the seat could have made a promised attack and chose not to.
       for (const record of this.records) {
-        if (record.deal.status === 'active') record.couldAttack.delete(held.request.decidingPlayer);
+        if (record.deal.status === 'active') {
+          record.couldAttackNow.delete(held.request.decidingPlayer);
+        }
       }
       this.pendingBreach.clear();
       return;
@@ -425,7 +439,7 @@ export class DiplomacyTable {
           // The seat declared attacks but could not legally send any at the promised target
           // (Pramikon, Propaganda-style limits): creatures on board proved nothing, so an attack
           // still unmade when the deal runs out ends it void rather than broken.
-          record.couldAttack.delete(obligation.by);
+          record.couldAttackNow.delete(obligation.by);
         } else if (offeredBreach(obligation, request, ownerOf, isStack)) {
           record.tested.add(obligation.by);
         }
@@ -461,6 +475,9 @@ export class DiplomacyTable {
 
     for (const record of this.records) {
       if (record.deal.status !== 'active') continue;
+      // The previous turn is over: an attack it offered and the seat did not make now counts.
+      for (const seat of record.couldAttackNow) record.couldAttack.add(seat);
+      record.couldAttackNow.clear();
       const deal = record.deal;
       if (!deal.parties.every((p) => living.has(p))) {
         this.end(record, 'void', turn, 'partyLeft');
@@ -515,7 +532,7 @@ export class DiplomacyTable {
             living.has(o.target),
         );
         if (owesAttack && (table.bySeat.get(activePlayer)?.attackPower ?? 0) > 0) {
-          record.couldAttack.add(activePlayer);
+          record.couldAttackNow.add(activePlayer);
         }
       }
     }
@@ -727,7 +744,7 @@ export class DiplomacyTable {
   private activate(deal: Deal, valuation: DealValuation, table: TableEstimate): void {
     deal.status = 'active';
     const turnsTaken = new Map<PlayerId, number>(deal.parties.map((p) => [p, 0]));
-    const couldAttack = new Set<PlayerId>();
+    const couldAttackNow = new Set<PlayerId>();
     // The accepting turn counts for whichever party is taking it, and so does whether that party
     // could make an attack it promises this turn: the window's own check ran before the deal.
     if (this.activeNow !== null && turnsTaken.has(this.activeNow)) {
@@ -739,7 +756,8 @@ export class DiplomacyTable {
           o.by === active &&
           table.seats.some((s) => s.seat === o.target),
       );
-      if (owesAttack && (table.bySeat.get(active)?.attackPower ?? 0) > 0) couldAttack.add(active);
+      if (owesAttack && (table.bySeat.get(active)?.attackPower ?? 0) > 0)
+        couldAttackNow.add(active);
     }
     const credit = new Map(
       deal.parties.map((p) => [p, Math.min(valuation.stake, valuation.ownCost.get(p) ?? 0)]),
@@ -752,7 +770,8 @@ export class DiplomacyTable {
       turnsTaken,
       tested: new Set(),
       freed: new Set(),
-      couldAttack,
+      couldAttack: new Set(),
+      couldAttackNow,
     });
     this.stats.accepted++;
   }
