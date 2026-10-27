@@ -416,6 +416,11 @@ export class DiplomacyTable {
         if (verdict === 'kept' && obligation.kind === 'attackPlayer') {
           record.met.add(i);
           record.tested.add(obligation.by);
+        } else if (verdict === 'excused' && obligation.kind === 'attackPlayer') {
+          // The seat declared attacks but could not legally send any at the promised target
+          // (Pramikon, Propaganda-style limits): creatures on board proved nothing, so an attack
+          // still unmade when the deal runs out ends it void rather than broken.
+          record.couldAttack.delete(obligation.by);
         } else if (offeredBreach(obligation, request, ownerOf, isStack)) {
           record.tested.add(obligation.by);
         }
