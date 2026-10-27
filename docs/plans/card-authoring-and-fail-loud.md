@@ -89,8 +89,10 @@ test proving it fires.
 1. `bun run card:check "<name>"`: interpret, validate, this card's snapshot diff (facets join in
    phase 3).
 2. `bun run card:new "<name>" [--batch <id>]` (ADR 0031 decision 1), including the interaction
-   prompts and nearest-card list, writing scaffolds the gates reject until filled. It uses the pin
-   store from step 4.
+   prompts, the nearest-card list and the Forge script reference (ADR 0031 decision 7: a pinned
+   Forge commit, a gitignored cache, skipped offline and in CI), writing scaffolds the gates reject
+   until filled. It uses the pin store from step 4. A card-gate check rejects Forge script syntax in
+   tracked source files.
 3. `test:card-gate` becomes `scripts/card-gate.ts` reading a committed list of directories and
    globs; an entry matching no file fails. The 158 current entries move over unchanged first, and a
    test proves the same file set runs.

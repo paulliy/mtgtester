@@ -73,10 +73,11 @@ the validator and the evidence standard of the card modeling guide unchanged.
    needs, and which lines the parser or the keyword registry already model;
 3. lists the nearest modeled cards for each unparsed line, ranked by similarity of normalized text,
    with the `file:line` of their definitions, and never copies one;
-4. prints **interaction prompts** for the clause shapes behind recent escaped bugs: copies, phasing,
+4. shows, as a reference only, the card's Forge script when one exists (decision 7);
+5. prints **interaction prompts** for the clause shapes behind recent escaped bugs: copies, phasing,
    last known information, per-player grouping, graveyard cast permissions, type reads off the
    battlefield, "another", "you may", intervening "if";
-5. writes an `unimplemented()` stub with the exact `handledLines`, manifest clause entries without
+6. writes an `unimplemented()` stub with the exact `handledLines`, manifest clause entries without
    test IDs, and a scenario-runner test file with `it.todo` placeholders for each clause's positive
    and negative case.
 
@@ -225,6 +226,20 @@ The record travels beside the definition: `applyOverride(def, provenance)` gains
 its two call sites (`interpret.ts:7526, 9118`), and `interpretCardWithProvenance` exposes it to
 tools. It is not stored on `CardDefinition`, so neither snapshot changes.
 
+### 7. Forge scripts are a reference, never a source
+
+When a card has a Forge script, `card:new` shows it beside the card's unparsed lines and nearest
+modeled cards: the author sees which generic effects, chains and references Forge used, which often
+points at the composition of our primitives the card needs. The script is fetched on demand from a
+pinned Forge commit into a gitignored cache, works only with network access, and is skipped silently
+in CI and offline. It is never translated automatically and never committed.
+
+Forge is GPL-3.0 and this repository is not, so its script text must not enter the repository,
+directly or through a translator. A card-gate check fails on Forge script syntax (`SP$`, `AB$`,
+`DB$`, `SVar:`, `Execute$`) in tracked source files. Card rules themselves are not Forge's; the
+Oracle text, the Comprehensive Rules and our own tests remain the only sources of a card's
+behavior, and Forge's scripts, which fail open and are rarely tested, are a hint, not evidence.
+
 ## What we do not adopt from Forge
 
 - **A string script language.** Its speed comes from terseness and its failures from untyped
@@ -261,7 +276,10 @@ tools. It is not stored on `CardDefinition`, so neither snapshot changes.
   tactician, to save a one-line chore.
 - **Migrate every inline keyword branch up front.** It buys no speed; branches move when a card
   touches them.
-- **Port Forge's script format or scripts.** It would trade compile-time checking for terseness,
-  and Forge's GPL-3.0 scripts cannot be copied into this repository's code.
+- **Port Forge's script format, or translate its scripts into our IR.** A translator would map
+  204 effect types and about 1,300 parameter names onto our ops for partial coverage, start from
+  scripts that fail open, and still leave every card needing our full evidence. Translated scripts
+  would also be derivative works of GPL-3.0 code, which would require licensing this repository
+  GPL-3.0. Showing the script as a reference (decision 7) keeps most of the benefit.
 - **Rewrite `interpret.ts` around a grammar library.** The parser's problem is not its regexes but
   that its output is checked only by snapshots; ADR 0032 addresses that.
