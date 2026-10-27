@@ -28,6 +28,8 @@ const props = defineProps<{
   /** Hidden entirely in a game without diplomacy. */
   canShowTalk?: boolean;
   showTalk?: boolean;
+  /** The game is over, so talk past the last line is what the table said as it ended. */
+  ended?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -41,9 +43,12 @@ function talkFor(sequence: number): TableTalkLine[] {
   return props.talk?.get(sequence) ?? [];
 }
 
-/** Talk after the last line shown, e.g. what the table said as the game ended. */
+/**
+ * Talk after the last line shown: what the table said as the game ended. Only once it has ended;
+ * before then, talk past the last line belongs to plays not presented yet and must wait for them.
+ */
 const trailingTalk = computed(() => {
-  if (props.showTalk !== true || props.talk === undefined) return [];
+  if (props.showTalk !== true || props.ended !== true || props.talk === undefined) return [];
   const last = props.lines.at(-1)?.sequence ?? -1;
   return [...props.talk.entries()]
     .filter(([sequence]) => sequence > last)

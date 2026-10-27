@@ -180,9 +180,16 @@ export const useGameStore = defineStore('game', () => {
     return grouped;
   });
 
-  /** Deals in force at the action the viewer stands on, or at the latest one shown. */
+  /**
+   * Deals in force at the action the viewer stands on, or at the latest one shown. Talk past the
+   * last line shown counts only once the game is over: before then it belongs to plays not
+   * presented yet.
+   */
   const dealsNow = computed(() =>
-    dealsInForce(tableTalk.value, activeSequence.value ?? log.value.at(-1)?.sequence ?? null),
+    dealsInForce(
+      tableTalk.value,
+      activeSequence.value ?? (gameOver.value !== null ? null : (log.value.at(-1)?.sequence ?? -1)),
+    ),
   );
 
   /** Backfill table talk for a game already in progress or finished (survives a reload). */

@@ -293,6 +293,7 @@ const roundLabel = computed(() => {
           :talk="store.talkBySequence"
           :can-show-talk="store.diplomacy"
           :show-talk="store.showTableTalk"
+          :ended="store.gameOver !== null"
           @select-sequence="store.jumpToSequence"
           @update:show-talk="store.showTableTalk = $event"
           @update:show-reasoning="
