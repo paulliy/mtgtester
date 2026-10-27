@@ -2,8 +2,8 @@
 
 This review compares how [Forge](https://github.com/Card-Forge/forge) models cards with how this
 repository does, to decide what would make our card modeling faster and less error-prone. It is the
-evidence for [ADR 0031](../decisions/0031-forge-informed-card-authoring.md) and
-[ADR 0032](../decisions/0032-fail-loud-execution-and-strict-tests.md).
+evidence for [ADR 0033](../decisions/0033-forge-informed-card-authoring.md) and
+[ADR 0034](../decisions/0034-fail-loud-execution-and-strict-tests.md).
 
 Method. Forge was read at commit `6a2dcdc` (2026-10-27) from source; nothing was compiled or run.
 Corpus counts come from regex scans of all 34,131 card scripts and are good to a few percent. Forge
@@ -40,8 +40,8 @@ Forge's script for reference, and generate the evidence tail that dominates a ca
 
 | Concern                 | Forge                                                                                                                                                                    | MTG Tester                                                                                                                                                                 | Lesson                                                                                                  |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Card source             | One hand-written `.txt` script per card; `Oracle:` line synced from Scryfall by a script and never compared with the logic                                               | Oracle text parsed by `interpret.ts` (9,225 lines); unparsed lines need a TypeScript override naming them in `handledLines`                                                | Keep the parser; it models thousands of cards with no per-card work. Check its output (ADR 0032 facets) |
-| Keywords                | `Keyword` enum, 202 real keywords; `CardFactoryUtil` expands each into abilities, triggers, statics or replacements (194 branches, 4,165 lines)                          | 23 flag keywords plus ward and protection; others are branches of the interpreter cascade, single-card regexes or re-authored per card; 5 of 37 probed keyword lines model | Keyword registry (ADR 0031 decision 2)                                                                  |
+| Card source             | One hand-written `.txt` script per card; `Oracle:` line synced from Scryfall by a script and never compared with the logic                                               | Oracle text parsed by `interpret.ts` (9,225 lines); unparsed lines need a TypeScript override naming them in `handledLines`                                                | Keep the parser; it models thousands of cards with no per-card work. Check its output (ADR 0034 facets) |
+| Keywords                | `Keyword` enum, 202 real keywords; `CardFactoryUtil` expands each into abilities, triggers, statics or replacements (194 branches, 4,165 lines)                          | 23 flag keywords plus ward and protection; others are branches of the interpreter cascade, single-card regexes or re-authored per card; 5 of 37 probed keyword lines model | Keyword registry (ADR 0033 decision 2)                                                                  |
 | Effect vocabulary       | `ApiType`, 204 types over 201 effect classes, each generic and parameterized                                                                                             | `Effect` union, 344 ops; 32 with `And` in the name, at least 15 named after a card                                                                                         | Parameterize instead of minting (decision 4)                                                            |
 | Composition             | `SubAbility$` chains; `Defined$ Targeted`, `TargetedController`, `Remembered`, `Imprinted`, `Triggered<Key>`, `…LKI`                                                     | `effects: Effect[]` in order; `EffectRef` has six forms; `bind` strings and a hidden `lifeLostThisWay` accumulator                                                         | Typed results (decision 3)                                                                              |
 | Cross-instruction state | `Remember`/`Imprint` lists on the card, cleared by hand with `DB$ Cleanup` (3,043 uses); LKI versus live object chosen by spelling (`Remembered` versus `RememberedLKI`) | Resolution-scoped `effectBindings` and `resolutionObjectFacts`; LKI tracked by `movedReferent`                                                                             | Results are resolution-scoped (no cleanup step) and carry LKI by type, not by spelling                  |
@@ -50,14 +50,14 @@ Forge's script for reference, and generate the evidence tail that dominates a ca
 | Triggers                | `TriggerType` enum, 149 modes; filters are params                                                                                                                        | `TriggerSpec` (`TriggerHead` plus `condition`, the intervening if, and `eventCondition`)                                                                                   | Equivalent; we separate intervening-if from qualification explicitly                                    |
 | Statics                 | `StaticAbilityMode`, 90 modes; `Continuous` is 4,881 of 7,190 static lines                                                                                               | `staticEffects` (layers) and `RuleStatic` (48 kinds, several near-duplicates)                                                                                              | Merge duplicate rule statics (decision 4)                                                               |
 | Replacements            | `ReplacementType`, 40 events, scripted with `ReplaceWith$`                                                                                                               | Dedicated fields (`entersTapped`, `entersWithCounters`) and replacement statics                                                                                            | No change                                                                                               |
-| Tokens                  | 858 named token scripts referenced by `TokenScript$`                                                                                                                     | `tokens.ts` catalog, lint against inline tokens in `overrides/**` and `interpret.ts`                                                                                       | Extend the lint to all engine source (ADR 0032 decision 7)                                              |
-| New primitive           | `ApiType` entry, an effect class, an AI mapping: three files                                                                                                             | Type, executor case and three validation or capability tables: five files                                                                                                  | Generated stub rows (ADR 0031 decision 5); the evidence tail is the bigger cost (decision 1)            |
+| Tokens                  | 858 named token scripts referenced by `TokenScript$`                                                                                                                     | `tokens.ts` catalog, lint against inline tokens in `overrides/**` and `interpret.ts`                                                                                       | Extend the lint to all engine source (ADR 0034 decision 7)                                              |
+| New primitive           | `ApiType` entry, an effect class, an AI mapping: three files                                                                                                             | Type, executor case and three validation or capability tables: five files                                                                                                  | Generated stub rows (ADR 0033 decision 5); the evidence tail is the bigger cost (decision 1)            |
 | Descriptions            | Hand-written `SpellDescription$`/`TriggerDescription$`; effects generate stack text from params                                                                          | Hand-written `description` strings (519 in overrides), read by the AI tactician                                                                                            | Keep hand-written; generated text was rejected as a new AI-facing surface                               |
-| Validation              | Enum names throw at card instantiation; free strings fail open; no test instantiates every card                                                                          | Compiler, `validateCardDefinition` on every merged definition, `audit-card-ir`, drift guard                                                                                | Ours is stronger; close the gaps in ADR 0032                                                            |
+| Validation              | Enum names throw at card instantiation; free strings fail open; no test instantiates every card                                                                          | Compiler, `validateCardDefinition` on every merged definition, `audit-card-ir`, drift guard                                                                                | Ours is stronger; close the gaps in ADR 0034                                                            |
 | AI hints                | In card data: `AILogic$` on 2,036 lines, `AI:RemoveDeck` on 4,669 files, about 5,800 AI-only `SVar` lines                                                                | None in card data; provider policy is outside the engine                                                                                                                   | Do not adopt                                                                                            |
-| Card tests              | 163 test files in the desktop module, about 470 game-level tests touching about 500 card names (1.4% of faces); puzzles (376 `.pzl`) not run in CI                       | Manifest per card, positive and negative engine scenarios, Card Test Lab viewer evidence, primitive contracts                                                              | Keep our standard; make it cheaper (ADR 0032 decision 10)                                               |
-| Test harness            | `AITest.addCardToZone`, `devModeSet` phase, `GameSimulator`; a declarative `GameStateSpecificationBuilder` used by two suites                                            | `PreparedScenarioSpec` for the lab; over 200 test files with their own `game()`/`pod()`/`setup()`, about 60 with a local `pinned()`                                        | One scenario format (ADR 0032 decision 10)                                                              |
-| Suite integrity         | `TestSuiteIntegrityTest` exists because eight test classes stopped running and CI stayed green for a year                                                                | `test:card-gate` passes 158 substring filters; Vitest ignores one that matches no file; a stale compiled `fixtures.js` shadows `fixtures.ts`                               | Suite integrity check (ADR 0032 decision 9)                                                             |
+| Card tests              | 163 test files in the desktop module, about 470 game-level tests touching about 500 card names (1.4% of faces); puzzles (376 `.pzl`) not run in CI                       | Manifest per card, positive and negative engine scenarios, Card Test Lab viewer evidence, primitive contracts                                                              | Keep our standard; make it cheaper (ADR 0034 decision 10)                                               |
+| Test harness            | `AITest.addCardToZone`, `devModeSet` phase, `GameSimulator`; a declarative `GameStateSpecificationBuilder` used by two suites                                            | `PreparedScenarioSpec` for the lab; over 200 test files with their own `game()`/`pod()`/`setup()`, about 60 with a local `pinned()`                                        | One scenario format (ADR 0034 decision 10)                                                              |
+| Suite integrity         | `TestSuiteIntegrityTest` exists because eight test classes stopped running and CI stayed green for a year                                                                | `test:card-gate` passes 158 substring filters; Vitest ignores one that matches no file; a stale compiled `fixtures.js` shadows `fixtures.ts`                               | Suite integrity check (ADR 0034 decision 9)                                                             |
 
 ## Keywords
 
@@ -85,7 +85,7 @@ found 11 modeled (Equip, Flashback, Ward, Crew, Unearth, Cascade, Protection, Mo
 Escape, Menace) and Kicker, Scavenge, Madness, Suspend, Exploit and Mutate not. Annihilator exists
 only inside Eldrazi Conscription's grant (`interpret.ts:6664-6668`); Prowess is authored again on
 Harmonic Prodigy (`overrides/reviewed-five.ts:128-145`); Equip and Equip commander are two copies of
-one block (`interpret.ts:8611-8650`). ADR 0031 decision 2 takes Forge's design with a typed
+one block (`interpret.ts:8611-8650`). ADR 0033 decision 2 takes Forge's design with a typed
 registry, a contract per keyword, and an authoring check that rejects re-authoring a registered
 keyword.
 
@@ -115,7 +115,7 @@ special cases with silent failure modes: a free-string `bind` read with `?? []`,
 Forge's own result mechanism shows what to avoid. `Remember` and `Imprint` are lists on the card
 that persist across zone changes and must be cleared by an explicit `DB$ Cleanup` link, the sixth
 most used effect type; whether a reference reads last known information depends on its spelling. ADR
-0031 decision 3 makes results resolution-scoped (nothing to clean up), typed by what they hold, and
+0033 decision 3 makes results resolution-scoped (nothing to clean up), typed by what they hold, and
 resolved by the validator.
 
 ## Adding a primitive
@@ -129,7 +129,7 @@ We add an op in five places, all type-checked: the union in `ability.ts`, its ca
 and rows in `expression-validation.ts`, `effect-reference-contracts.ts` and `capabilities.ts`. The
 checking is worth keeping. The scattering is a chore, but a measured small one: the per-op table
 rows are 2% of a recent card commit's changed lines, while snapshots, benchmark fixtures and tests
-are 79%. ADR 0031 therefore generates the stub rows (`card:new --primitive`) and spends its effort
+are 79%. ADR 0033 therefore generates the stub rows (`card:new --primitive`) and spends its effort
 on the evidence tail instead.
 
 ## Silent failures
@@ -152,7 +152,7 @@ on the evidence tail instead.
 Forge's rule of thumb is that enum-typed names throw and free-string names fail open. Ours is that
 anything the compiler or validator can see is checked, and four things still fail open: references
 between instructions, values read from a scope the ability does not have, decision answers in tests,
-and meaning. ADR 0032 addresses each.
+and meaning. ADR 0034 addresses each.
 
 ## Testing
 
@@ -166,12 +166,12 @@ run). Puzzles are a good prepared-position format, `[metadata]` plus a `[state]`
 counters, but none run in CI.
 
 Two Forge lessons apply directly. First, a prepared position plus a script of actions is the right
-unit; our `PreparedScenarioSpec` already is the first half, and ADR 0032 decision 10 adds the script
+unit; our `PreparedScenarioSpec` already is the first half, and ADR 0034 decision 10 adds the script
 and expectations and uses it for engine tests as well as the Card Test Lab. Second, a suite can stop
 running parts of itself without failing: Forge added `TestSuiteIntegrityTest` after eight classes
 stopped running for a year. Our `test:card-gate` passes 158 entries to Vitest as substring filters,
 and Vitest ignores one that matches no file (checked: a nonexistent path beside a real one exits 0).
-All 158 match today; ADR 0032 decision 9 makes that a check.
+All 158 match today; ADR 0034 decision 9 makes that a check.
 
 ## What not to copy
 

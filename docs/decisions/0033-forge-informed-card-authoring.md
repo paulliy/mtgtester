@@ -1,10 +1,10 @@
-# ADR 0031: Faster card authoring, informed by Forge
+# ADR 0033: Faster card authoring, informed by Forge
 
 Status: Proposed
 
 Date: 2026-10-27
 
-Companion: [ADR 0032](0032-fail-loud-execution-and-strict-tests.md) (fail-loud execution and strict
+Companion: [ADR 0034](0034-fail-loud-execution-and-strict-tests.md) (fail-loud execution and strict
 tests) and the implementation plan
 [card authoring speed and fail-loud execution](../plans/card-authoring-and-fail-loud.md). Evidence:
 [Forge comparison](../reviews/forge-card-modeling-comparison-2026-10-27.md).
@@ -68,7 +68,7 @@ the validator and the evidence standard of the card modeling guide unchanged.
 **`bun run card:new "<card name>" [--batch <id>]`** starts a card:
 
 1. finds it in the pinned fixtures (or, locally, the bulk Oracle file) and adds it to the shared pin
-   store (ADR 0032 decision 10), throwing on an unknown name;
+   store (ADR 0034 decision 10), throwing on an unknown name;
 2. runs `interpretCard` and prints `unmodeledReasons` verbatim, the exact strings `handledLines`
    needs, and which lines the parser or the keyword registry already model;
 3. lists the nearest modeled cards for each unparsed line, ranked by similarity of normalized text,
@@ -85,7 +85,7 @@ The commands import the engine's own interpreter, validator, keyword registry an
 they carry no copy of any vocabulary, which is how Forge's Workshop parser drifted from its engine.
 
 **`bun run card:check "<card name>"`** is the edit loop: interpret, validate, facet warnings (ADR
-0032 decision 6) and this card's snapshot diff, for one card, in seconds.
+0034 decision 6) and this card's snapshot diff, for one card, in seconds.
 
 **`bun run card:finish [--batch <id>]`** does the mechanical tail: regenerates both snapshots and
 prints a per-card semantic diff to read; re-seals benchmark compatibility
@@ -97,7 +97,7 @@ filled.
 
 The explicit 158-entry list of `test:card-gate` becomes a committed list of directories and globs
 read by a small runner script, so a new batch adds a directory once instead of editing
-`package.json`, and an entry that matches nothing fails (ADR 0032 decision 9).
+`package.json`, and an entry that matches nothing fails (ADR 0034 decision 9).
 
 ### 2. Keywords are a registry, adopted card by card
 
@@ -149,7 +149,7 @@ order. A branch that cannot move byte-identically stays inline with a comment sa
 
 Results are built when the first card in the plan's pilot needs "its controller", "those cards" or
 "that much" after another instruction. Until then the existing special cases stay, validated by ADR
-0032 decision 2.
+0034 decision 2.
 
 Any effect may carry `as: '<name>'`. Each publishing op's contract declares what it publishes:
 
@@ -218,7 +218,7 @@ switch stay as they are.
 ### 6. The interpreter reports where each ability came from
 
 `interpretCard` records which Oracle line produced each ability, static, keyword expansion and
-replacement field, so the override merge check (ADR 0032 decision 7), the keyword-claim check and
+replacement field, so the override merge check (ADR 0034 decision 7), the keyword-claim check and
 `card:new` can name lines.
 
 The line loop (`interpret.ts:8002-9065`) leaves each iteration through many `continue`s, so the
@@ -294,4 +294,4 @@ hint, not evidence.
   also be derivative works of GPL-3.0 code, which would require licensing this repository GPL-3.0.
   Showing the script as a reference (decision 7) keeps most of the benefit.
 - **Rewrite `interpret.ts` around a grammar library.** The parser's problem is not its regexes but
-  that its output is checked only by snapshots; ADR 0032 addresses that.
+  that its output is checked only by snapshots; ADR 0034 addresses that.

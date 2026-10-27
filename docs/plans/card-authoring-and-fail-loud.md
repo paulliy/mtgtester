@@ -2,8 +2,8 @@
 
 Status: Proposed. Baseline: `8b93725` (2026-10-27).
 
-Implements [ADR 0031](../decisions/0031-forge-informed-card-authoring.md) (faster card authoring)
-and [ADR 0032](../decisions/0032-fail-loud-execution-and-strict-tests.md) (fail-loud execution and
+Implements [ADR 0033](../decisions/0033-forge-informed-card-authoring.md) (faster card authoring)
+and [ADR 0034](../decisions/0034-fail-loud-execution-and-strict-tests.md) (fail-loud execution and
 strict tests). The evidence behind both is in the
 [Forge comparison](../reviews/forge-card-modeling-comparison-2026-10-27.md).
 
@@ -69,11 +69,11 @@ offline in under a minute.
 2. `EngineInvariantError` (with `site`), the halted `GameResult` in `Engine.advance` keeping site
    and seed, and `GameConfig.strictInvariants` (copied onto `GameContext`, passed through
    `EngineOptions`) to rethrow. Tests for both paths. `drive()` fails on a halted result.
-3. Reference validation (ADR 0032 decision 2): same-list, unconditional `bind` scope; the three
+3. Reference validation (ADR 0034 decision 2): same-list, unconditional `bind` scope; the three
    accumulator feeders. Tests: Fabled Passage's misspelled binding; a bind in a conditional branch;
    `eachPlayerLosesLife` then `gainLifeEqualToLifeLostThisWay`. `bun run audit:card-ir` reports
    nothing new. Then the never-set binding throws.
-4. Scope contracts (ADR 0032 decision 2): the table of scope fields each `Value` and `Condition`
+4. Scope contracts (ADR 0034 decision 2): the table of scope fields each `Value` and `Condition`
    kind needs and each trigger head, cast path and activation provides; validation against it, with
    the Nissa `damageDealt` probe as the test; `audit:card-ir` over the fixtures. Executor reads of
    absent fields become invariants one kind per commit afterwards.
@@ -98,17 +98,17 @@ check has a test proving it fires.
 
 ## Phase 2: the authoring commands and the gate list
 
-1. The content-addressed pin store, `pinStore.get(name)` (ADR 0032 decision 10), throwing on unknown
+1. The content-addressed pin store, `pinStore.get(name)` (ADR 0034 decision 10), throwing on unknown
    names; existing per-batch fixtures and `pinned()` helpers stay.
-2. `script([...])` and `pumpStrict()` (ADR 0032 decision 9), which the runner needs.
+2. `script([...])` and `pumpStrict()` (ADR 0034 decision 9), which the runner needs.
 3. The scenario runner on `PreparedScenarioSpec` with seed, script, expectations, end condition,
    `strictInvariants` and failure on a halted result; the generic per-card modifier list; the server
    adapter producing a `CardTestScenario` registered like `PR11_SCENARIOS`, with derived scenario-ID
    lists; an import lint keeping contract tests from importing the runner.
 4. `bun run card:check "<name>"`: interpret, validate, this card's snapshot diff (facets join in
    phase 3).
-5. `bun run card:new "<name>" [--batch <id>]` (ADR 0031 decision 1): the interaction prompts, the
-   nearest-card list and the Forge script reference (ADR 0031 decision 7: commit `6a2dcdc`,
+5. `bun run card:new "<name>" [--batch <id>]` (ADR 0033 decision 1): the interaction prompts, the
+   nearest-card list and the Forge script reference (ADR 0033 decision 7: commit `6a2dcdc`,
    `.cache/forge/`, skipped offline and in CI), writing an `unimplemented()` stub, manifest entries
    and a runner test file whose `it.todo` placeholders intentionally fail the skip lint until
    filled. The Forge-script-line check joins the card gate.
@@ -130,8 +130,8 @@ recorded.
 
 ## Phase 3: tests that depend on the card
 
-1. The pull-request `pump()` check (ADR 0032 decision 9), AST-based.
-2. Manifest references (ADR 0032 decision 5): the matcher, a report of every ID with zero or several
+1. The pull-request `pump()` check (ADR 0034 decision 9), AST-based.
+2. Manifest references (ADR 0034 decision 5): the matcher, a report of every ID with zero or several
    matches, explicit titles for the 47 computed names, disambiguation of the 18 duplicates,
    `notExecutableInCi` for bulk-only IDs; then the check is required in the card gate.
 3. IR mutation: `installDefinitionTransform()` at the public `interpretCard` and `createGame`'s
@@ -176,7 +176,7 @@ card is modeled.
 
 1. `defineKeyword` with `flag`, `multiple`, derived grantability and `expand(args, line)`;
    `IMPLEMENTED_KEYWORDS` generated from it; the meta-tests; the keyword-claim authoring check.
-2. Line provenance (ADR 0031 decision 6) and the two-sided merge check (ADR 0032 decision 7), tested
+2. Line provenance (ADR 0033 decision 6) and the two-sided merge check (ADR 0034 decision 7), tested
    with a test-local `registerOverride`.
 3. Each keyword a pilot card needs is added with its contract and the card's evidence. Each inline
    branch a pilot card touches moves byte-identically in its own commit.
@@ -189,7 +189,7 @@ byte-identical.
 1. Draw 20 unmodeled cards by one rule from the EDH staples and fixture reports, and assign 10 at
    random to the new workflow and 10 to the current one. With 10 per arm and one agent working both,
    the result is indicative, not a statistical proof; it is reported with that caveat.
-2. Build typed results (ADR 0031 decision 3) when the first new-workflow card needs one, with their
+2. Build typed results (ADR 0033 decision 3) when the first new-workflow card needs one, with their
    contracts, and re-express `bind`/`untapBoundIf` and `lifeLostThisWay` then.
 3. Merge a duplicate rule-static family when one of its cards is touched.
 4. Measure both groups with the phase 0 rule: commit-time span per card, engine lines outside
@@ -252,7 +252,7 @@ The ADRs and this plan went through three rounds of independent review before be
    wholesale guard conversion, menu changes and central count files. Found the stale compiled
    `fixtures.js` shadowing `fixtures.ts`. Added Forge's suite-integrity method, keyword families and
    `multiple`, registry meta-tests, and loaders that throw on unknown input. The user chose Forge
-   scripts as a reference only (ADR 0031 decision 7).
+   scripts as a reference only (ADR 0033 decision 7).
 3. **Red team on silent failures, consistency, final defense.** Added scope contracts for values and
    conditions (a probe-confirmed silent zero), fuzz failure on halted games and livelocks, sampled
    layer-cache verification, the zone-mutation lint and tap-site table, the mutation hook points,
@@ -260,5 +260,5 @@ The ADRs and this plan went through three rounds of independent review before be
    mini-pilot and a keyword go/no-go, and fixed cross-references and wrapping.
 
 Consciously left open, and named where they belong: non-damage replacement ordering, reminder-text
-stripping, dead exports and empty server `catch` blocks (ADR 0032 decision 11); bugs no mutation
+stripping, dead exports and empty server `catch` blocks (ADR 0034 decision 11); bugs no mutation
 operator models; and the small, single-agent pilot (phase 6).

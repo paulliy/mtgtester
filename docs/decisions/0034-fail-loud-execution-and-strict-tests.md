@@ -1,10 +1,10 @@
-# ADR 0032: Fail loud in card execution and in the tests that prove it
+# ADR 0034: Fail loud in card execution and in the tests that prove it
 
 Status: Proposed
 
 Date: 2026-10-27
 
-Companion: [ADR 0031](0031-forge-informed-card-authoring.md) (faster card modeling) and the
+Companion: [ADR 0033](0033-forge-informed-card-authoring.md) (faster card modeling) and the
 implementation plan
 [card authoring speed and fail-loud execution](../plans/card-authoring-and-fail-loud.md). Evidence:
 [Forge comparison](../reviews/forge-card-modeling-comparison-2026-10-27.md).
@@ -88,7 +88,7 @@ game that keeps running or a test that keeps passing.
     files the card gate does not run. Forge added `TestSuiteIntegrityTest` after eight test classes
     stopped running and its CI stayed green for a year.
 
-Recent escaped bugs are mostly rules interactions (ADR 0031 context), which no check below can find
+Recent escaped bugs are mostly rules interactions (ADR 0033 context), which no check below can find
 by inspecting IR. Only tests that depend on behavior (decision 5) and games that explore states
 nobody scripted (decision 8) reach that class.
 
@@ -107,7 +107,7 @@ executor actually has. `executeAbility` re-enters itself for nested bodies with 
 `bind` earlier in the same effect list, published unconditionally. A bind inside a conditional
 branch, a repeatable mode or another invocation does not count. `gainLifeEqualToLifeLostThisWay`
 must follow one of the three ops that feed its accumulator. Anything else is an authoring issue: the
-card becomes `modeled: false` with the exact path. When ADR 0031's results exist, they follow the
+card becomes `modeled: false` with the exact path. When ADR 0033's results exist, they follow the
 scope rules stated there.
 
 Only after this ships does the executor change: a binding that was never set (not one set to `[]` by
@@ -238,7 +238,7 @@ real defect outside that fixture.
   `parseTokenFace`. The 13 literals it finds move into `tokens.ts` or carry an inline disable with a
   reason. The new flat-config entry is ordered before the existing `no-restricted-syntax` entries,
   which replace one another.
-- `applyOverride(def, provenance)` (ADR 0031 decision 6) checks both directions of rule 4. An
+- `applyOverride(def, provenance)` (ADR 0033 decision 6) checks both directions of rule 4. An
   override that replaces a list and removes a parsed entry from a line it neither claims in
   `handledLines` nor names in a new `replacesLines` field leaves the card `modeled: false` with the
   line named. And every line in `handledLines` or `replacesLines` must have no parsed entry left in
@@ -325,7 +325,7 @@ decks. Per-game time is measured before the PR seed count is chosen.
   invalid IR in a modeled card, or a drop in the modeled count.
 - Suite integrity, as Forge's `TestSuiteIntegrityTest` does it: every tracked `*.test.ts` and
   `*.spec.ts` is claimed by exactly one runner (Vitest `include` or Playwright `testMatch`) and
-  collects at least one test, and every entry of the card-gate list (ADR 0031 decision 1) matches at
+  collects at least one test, and every entry of the card-gate list (ADR 0033 decision 1) matches at
   least one file.
 
 Lists that must not grow (card-named ops, `notExecutableInCi` IDs) are checked against the base
