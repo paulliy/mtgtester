@@ -20,8 +20,9 @@ breaks the trust assumptions below and would need its own ADR.
 
 - **Amends** [0030](0030-manual-mana-activation.md). The fallback bot of decision 7 sees its
   seat's menu without manual-mana options. Ordinary bots still never opt in.
-- **Amends** [rules-engine constraints](../guides/rules-engine-constraints.md). "Timing must not
-  alter fixed-seed outcomes" is restated as decision 8 has it.
+- **Amends** [rules-engine constraints](../guides/rules-engine-constraints.md). The rule
+  "timing, wall clocks, and provider/network behavior must not alter fixed-seed engine
+  outcomes" is restated as decision 8 has it.
 
 Plan: [multiplayer tables](../plans/multiplayer-tables.md). Related:
 [ADR 0032](0032-server-computed-presentation.md) (server-computed presentation).
@@ -42,7 +43,7 @@ What already works:
 - **Decisions are sequential.** They come one at a time, and the rules make mulligans and votes
   sequential in turn order (CR 103.5, CR 701.38).
 - **Decisions are logged.** Every surfaced decision is logged as a `decision` event with the exact
-  `submittedResponse` (`engine.ts:235-275`).
+  `submittedResponse` (`engine.ts:235-287`).
 
 What assumes one trusted human:
 
@@ -138,10 +139,17 @@ benchmarks and debug views show every hand by design and must never be reachable
    - never sends debug events;
    - never sends raw errors or halt reasons, only a fixed message;
    - never sends another seat's AI notes;
-   - never sends archetype tags for human seats.
+   - never sends a human seat's archetype tag to anyone but that seat;
+   - never sends AI cost reports (`apiWaiting`), because token counts track a bot's hand.
 
    Per-seat content goes only to that seat's socket, and public frames go only to sockets bound
-   to a seat at that table. Raw `LegalAction.data` is not a policy field. ADR 0032 decision 7
+   to a seat at that table. Both send paths check an allowlist of message types; anything else
+   throws in tests and is dropped in production.
+
+   A **halted** game counts as finished for the table. That covers an engine halt, the step
+   budget, an unmodeled card and a draw loop. Players get a fixed message, the table moves to
+   `finished`, and the post-game unlock applies. Today a halt goes to `recordHalt` and never
+   reaches `onGameOver` (`match/runner.ts:589-611`). Raw `LegalAction.data` is not a policy field. ADR 0032 decision 7
    handles it as a client capability on every server.
 
 4. **Table games use a cryptographic RNG whose key never enters game state.**
@@ -150,26 +158,46 @@ benchmarks and debug views show every hand by design and must never be reachable
      randomness.
    - The key lives only in the RNG object and in the stored config. It is never in
      `EngineState`, events, snapshots or frames until the game ends.
-   - The table server refuses to start a game unless `rng` is `chacha20` with a 32-byte key from
-     `crypto.getRandomValues`, so a missing field cannot silently downgrade.
+   - The table server refuses to start a game unless `rng` is `chacha20` with a 32-byte key, so
+     a missing field cannot silently downgrade.
+   - The key comes from `crypto.getRandomValues`. The only exception is a fixed test key, allowed
+     under the development mode in decision 9.
    - The engine's RNG becomes an `EngineRng` interface. Today it is the `Prng` class type
      (`state/types.ts:986`).
    - The ChaCha20 implementation holds all mutable state as plain number properties, because the
      casting checkpoint rewinds `ctx.rng` by walking and reassigning its own properties
      (`casting/checkpoint.ts:43`). Typed arrays and private fields would break that rewind.
    - `clone()` keeps its meaning: an independent stream at the current position.
-   - Bots and the random provider take an injected `{ nextInt }` source. Each bot seat gets its
-     own domain-separated stream (a distinct nonce), so bot tie-breaks reveal nothing about the
-     game stream. The bot package does not import the engine.
+   - **Every consumer gets its own stream.** Each stream has a fixed, distinct nonce:
+     - the game;
+     - each bot seat;
+     - each fallback bot;
+     - each bot seat's generated decklist.
+
+     A test asserts that no two consumers share a key and nonce. A `random` bot's choices are
+     raw draws from its stream, so a shared stream would reveal the game's shuffles.
+
+   - Bots take an injected `{ nextInt }` source. The bot package does not import the engine.
+   - Pool decks for bot seats are generated from their own stream, not from the public label.
+     Today they use `Prng(gameSeed-seatN)` (`match/setup.ts:290`).
    - **Why pure TypeScript:**
      - the engine is synchronous, and WebCrypto's cipher API is asynchronous;
      - the engine must stay free of platform I/O;
      - ChaCha20 is short to implement and has published test vectors (RFC 8439).
    - The tester keeps `legacy`, so fixed-seed games, benchmarks and stored replays are unchanged.
 
-5. **Per-seat wire ids.** Table frames carry a request id that is a per-seat counter, which the
-   server maps back on submit. Log lines carry a per-viewer sequence. Object ids are not
-   translated; their gaps are an accepted risk, stated below.
+5. **Per-seat wire ids and cadence.** Table frames hide counters and timing that reveal other
+   seats' activity.
+   - **Request ids** are a per-seat counter. The session translates them back to engine ids
+     before the human provider sees them, and memoizes the mapping so re-sent requests keep their
+     id. Auto-passed decisions do not advance the counter.
+   - **Log lines and cues** carry a per-viewer sequence.
+   - **A seat's revision** counts only frames sent to that seat.
+   - **Board snapshots** are sent only when that seat's projection changed. Today the revision is
+     bumped, and a snapshot sent, on every engine advance (`session.ts:274-278`), so the frame
+     rate tracks every seat's activity.
+   - **Object ids and card ids** are not translated, and their gaps are an accepted risk stated
+     below. Cues never carry card ids.
 
 6. **Tables, hosts, seats and tokens.**
    - **Creating a table.** The server prints a **host secret** at startup, and it is used only to
@@ -178,11 +206,19 @@ benchmarks and debug views show every hand by design and must never be reachable
    - **Failed attempts are throttled.** Failed host-secret, host-token and invite attempts are
      throttled per client address, and every comparison is constant-time.
    - **Claiming a seat needs the host's approval.** A player claims a seat with a unique display
-     name and a **plaintext** decklist. Saved-deck ids, pool decks and URL imports are not
-     accepted from remote players. **The host approves each claim.** That is what stops one
-     client filling every seat with one shared invite. Deck problems go only to that player.
-     Table decks are stored in the table server's own database under table-scoped ids, and
-     unclaimed ones are removed.
+     name and a **plaintext** decklist.
+     - The decklist is parsed in memory with the plaintext parser directly, not through
+       `importDeck`, which sniffs for a URL and would fetch it (`decks/source.ts:33`). Saved-deck
+       ids, pool decks and URL imports are not accepted from remote players.
+     - **The host approves each claim by its claim id.** That stops one client filling every
+       seat with one shared invite, and approval by claim id cannot pick the wrong claimant.
+     - Pending claims are capped per table and per socket.
+     - Deck problems go only to that player.
+     - A deck is written to the table server's database only after approval, under table-scoped
+       ids.
+   - **The host plays like any other player.** The host's own seat is a claim the host approves.
+     The host's browser holds the host token on its lobby connection and a seat token on its
+     game connection, one seat per game connection.
    - **Seat tokens.** An approved claim gets a seat token (256 bits): the seat's identity on
      every message, alongside the existing revision, ownership, action-id and target checks. The
      browser keeps it in `localStorage` under the table id until the table ends.
@@ -192,19 +228,27 @@ benchmarks and debug views show every hand by design and must never be reachable
        rate-limited.
    - **What the host can and cannot do.** The host never sees a seat token. Kick, approve, seat
      changes and start are allowed only before the game starts, and joining closes at the start.
-     A player who loses their token after the start loses the seat to the fallback bot.
+     Kick, deny, leave and seat changes revoke the old seat token. A player who loses their token
+     after the start loses the seat to the fallback bot. An eliminated player's seat has no clock.
+     That player keeps receiving their own redacted view until the game ends.
 
 7. **Clocks bound stalling.**
-   - Presets are `relaxed` and `standard`. `off` is allowed only on a loopback bind.
+   - Presets are `relaxed` and `standard`. `off` is allowed only in development mode
+     (decision 9).
    - Each decision has a free 10-second allowance. Most priority responses take less, so
      routine play costs nothing. Smart yield and the engine's quiet-window passing skip routine
      windows entirely.
-   - Time beyond the allowance comes from a bank: 10 minutes relaxed, 5 standard. That allows a
-     few long turns per game, about what friends playing paper Commander tolerate.
+   - Time beyond the allowance comes from a bank: 20 minutes relaxed, 10 standard. That allows
+     several long turns and combats per player in a game that commonly runs 60–90 minutes in
+     paper. The values are starting points, to be tuned from recorded table games.
    - A disconnected seat waits for a 60-second grace period, charged to a cumulative 5-minute
-     disconnect budget.
-   - The game has a wall-clock cap: 3 hours relaxed, 2 hours standard. When it is reached, the
-     game ends as a draw for every player still in it.
+     disconnect budget. The decision clock is paused while the grace period runs, so the same
+     time is never charged twice.
+   - The game has a wall-clock cap: 4 hours relaxed, 3 hours standard. These are well beyond a
+     normal game and exist only to end abandoned tables. When the cap is reached, the server
+     ends the game as a draw for every player still in it, through a new engine entry point,
+     `Engine.concede(players, 'drawByTimeLimit')`. That entry point emits an event and uses the
+     existing game-over path, and replay applies it like `yieldCancelled`.
    - **The fallback bot** answers when the clock runs out or the grace period ends. It is always
      a heuristic bot, never an LLM.
      - It sees the menu without manual-mana options (the amendment to 0030).
@@ -220,11 +264,16 @@ benchmarks and debug views show every hand by design and must never be reachable
    inputs.
 
    Three changes make that true:
-   - `Engine.cancelYield` emits `yieldCancelled` when it changes state. Replay applies the
-     cancel when the engine's next event sequence equals the event's sequence, and fails loudly
-     on any mismatch.
-   - The `games` row stores `config_json` (the full `GameConfig`: decks, manual mana per seat,
-     turn cap, RNG kind and key) and the build commit and dirty flag from `build-info.ts`.
+   - `Engine.cancelYield` emits `yieldCancelled` when it changes state, and `Engine.concede`
+     emits its own event.
+     - Replay applies each one when the engine's next event sequence equals the event's sequence,
+       checked after both `advance()` and `submit()`, and fails loudly on any mismatch.
+     - `yieldCancelled` is filtered out of the AI's recent log (`view/view.ts` `visibleEvent`),
+       so it never changes an AI prompt.
+   - The `games` row stores `config_json`: deck snapshot ids rather than full card objects, plus
+     manual mana per seat, turn cap, RNG kind and key, and the engine options, including the step
+     budget. It also stores the build commit and dirty flag from `build-info.ts`. Card Test Lab
+     games, which start from a prepared engine, store none.
    - Replay is checked with state hashes, in tests only. It is promised only on the same build,
      and it ends at the last recorded event, whether a game ended, was capped or was abandoned.
 
@@ -232,49 +281,68 @@ benchmarks and debug views show every hand by design and must never be reachable
    smart-yield pass), `timeout`, `fallback` or `bot`. That is for attribution and stats; replay
    does not need it.
 
-   Games that never call `cancelYield` (every game with no human seat) keep byte-identical
-   event streams.
+   Games that never call `cancelYield` or `concede` (every game with no human seat) keep
+   byte-identical event streams.
 
-9. **Isolation and network exposure.** Two mechanisms bound runaway steps:
-   - **An engine budget.** The engine gains a deterministic step budget for each `advance()`:
-     a cap on forced resolutions and events. Hitting it halts the game with the existing
-     engine-halt path.
-   - **One Bun Worker per table.** It is required before any non-loopback bind. The table server
-     relays messages and `terminate()`s a worker that misses a heartbeat.
+9. **Isolation and exposure do not depend on the bind address.** A reverse proxy or a tunnel
+   (cloudflared, Tailscale Funnel) connects to 127.0.0.1, so a loopback bind can still face the
+   internet.
 
-   Exposure is opt-in:
-   - `serve:table` binds loopback by default.
-   - Any other bind needs an origin allowlist, a host-name allowlist, and TLS, through a proxy
-     or a certificate. The server refuses to start without them.
+   Three rules follow:
+   - **The table server always runs each table in its own Bun Worker.** The main thread relays
+     messages. It ends and `terminate()`s a worker that has not answered for 30 seconds. That is
+     generous enough for a legitimate long combat search; the engine step budget below handles
+     tight loops much sooner.
+   - **The engine gains a deterministic step budget.** It is counted in the event emitter, so a
+     runaway inside a single generator step is caught. The halt event is exempt from it. It is set
+     in `EngineOptions`, so it stays out of state hashes, and it is stored with the game. Pure
+     computation that emits nothing is bounded only by the worker.
+   - **Development mode** (`--dev`) is the only mode that allows clock `off` and a fixed test RNG
+     key. In it the server refuses any request whose `Host` or `Origin` is not loopback, and it
+     refuses to start with any proxy or allowlist setting.
+
+   Everything else is production mode:
+   - It serves the table web build itself, from the same origin as its WebSocket, so the
+     invite link, the origin check and `wss` all refer to one origin. It builds invite links
+     from `TABLE_PUBLIC_ORIGIN`.
+   - It requires an origin allowlist, a host-name allowlist, and TLS, through a proxy or a
+     certificate. The server refuses to start without them.
    - `--insecure-lan` allows plain `ws://` on a private network. Every player then sees a
      warning that tokens can be sniffed on that network.
    - Origin checks are defense in depth; tokens are the access control.
    - Limits:
      - `maxPayloadLength` on the socket;
      - a pre-authentication timeout;
-     - concurrent sockets per client address, using a trusted forwarded-for header only when
-       behind the configured proxy;
+     - concurrent sockets per client address, using the rightmost forwarded-for entry added
+       by the configured proxy, and only when one is configured;
+     - outbound backpressure and an idle limit per socket;
+     - total objects created per game, enforced by the engine step budget;
      - messages per socket;
      - claims per socket;
      - decklist size.
+   - Pages are sent with a `frame-ancestors 'none'` content security policy, so the lobby cannot
+     be framed and clicked through.
    - The protocol carries a version, and a stale tab reloads.
 
-10. **LLM seats are off by default.** A table may use an LLM bot only when the host's environment
-    configures a key. Such a table has a fixed call budget (ADR 0010) shown in the lobby.
-    Post-game reflection (ADR 0022) is off for tables unless the host enables it.
+10. **LLM seats are not offered at tables yet.** Their cost reports leak, as decision 3 notes. No
+    per-game call cap exists to bound a host's spending. And a table must answer within its clock.
+    Table bot seats are heuristic or random. LLM seats at tables need their own design, with a
+    per-table call cap. Post-game reflection (ADR 0022) is off for tables.
 
 11. **Persistence.** Table games are recorded in the table server's own SQLite file through
     additive migrations, and no historical rows are rewritten. A restart ends live games.
     Restoring one from stored inputs is possible later and is not promised here.
 
 12. **Hidden-information fixes for every player game.** These also apply to single-player:
-    - **Commander views** show a hand or library zone and object id only to the owner. Others see
-      `hidden`.
+    - **Commander views** show a commander's zone, object id and art only to its owner, when it is
+      in a hand or library or is face down. Others see `hidden`.
     - **`yieldingUntilEndOfTurn`** goes only to its own seat.
     - **Allowlists, with a coverage test.** These become allowlists:
       - face-down permanent redaction;
       - exile redaction;
-      - the player-log decision-type filter, using `satisfies Record<DecisionType, boolean>`.
+      - the player-log filter, which classifies every decision type
+        (`satisfies Record<DecisionType, boolean>`) and keeps an explicit list for event types
+        (`draw`, `scry`, `surveil`, and the new `yieldCancelled`).
 
       A test fails when a projected type gains a field the allowlist doesn't cover.
 
@@ -296,6 +364,11 @@ benchmarks and debug views show every hand by design and must never be reachable
   many hidden moves and effect creations happened, not what they were. Per-viewer object ids are
   a follow-up. Until then this is accepted for tables among friends.
 - **The fallback bot plays your hand** while you are away or out of time.
+- **Card ids follow decklist order.** They persist across zones (`state/game.ts:48-71`). They
+  appear only where the projection already shows a card, and cues use object ids, so this reveals
+  nothing a player cannot already see.
+- **The public commander narrows a bot's deck.** A bot's generated deck has its own secret stream,
+  but its commander is public. That is no more than a human player's commander reveals.
 
 ## Consequences
 

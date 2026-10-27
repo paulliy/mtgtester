@@ -18,15 +18,14 @@ however, derive game facts on its own, and one of those derivations is wrong.
 - **Card types come from the printed type line.** The projection's `typeLine` is the printed line
   (`perm.typeLine`, `view/spectator.ts:55`), while power, toughness, keywords and colors in the
   same function come from `computeCharacteristics`. The browser classifies cards by matching text
-  in that line (`PlayerGameView.vue:129`, `SeatPanel.vue:62-63`, `lib/card.ts:2`,
-  `lib/tokenArt.ts:40`). So an attacking animated manland still reads "Land" and the player board
+  in that line (`PlayerGameView.vue:129`, `SeatPanel.vue:62-63`, `lib/card.ts:2`). So an attacking animated manland still reads "Land" and the player board
   piles it with lands. The spectator `SeatPanel` and the player board also disagree about land
   creatures.
 - **Labels and costs come from the untyped `LegalAction.data`.** The browser reads 17 keys of it
   to build cost lines, cast-variant labels, X-value groups, payment summaries and mana symbols
   (`PlayerGameView.vue`, `lib/actionLabels.ts`, `ManaTaps.vue`). A renamed key silently drops a
   cost from a confirm dialog.
-- **Text is parsed.** The engine's prompt is rewritten by regex (`lib/turnLabels.ts:38`, used at
+- **Text is parsed.** The engine's prompt is rewritten by regex (`lib/turnLabels.ts:39`, used at
   `DecisionPanel.vue:80` and `PlayerGameView.vue:2050`). The game-over line is found by matching
   log text (`PlayerGameView.vue:182`).
 - **Rules are copied.** The 21-point commander-damage rule is a constant in
@@ -44,9 +43,14 @@ Constraints found in the code:
 - **Presentation exists only for choice decisions.** `ActionPresentation` (verb, subjects, role)
   and `DecisionPresentation` (layout and per-action entries) exist in `shared/src/engine.ts`, but
   the engine fills them only for choice decisions (`decisions.ts`, helpers in `present.ts`).
-  Priority actions — casts, activations, land plays — have none, and the player board does not
-  read `presentation` today. The typed `interaction` field already carries source ids and target
+  Priority actions — casts, activations, land plays — have none. The browser reads `presentation`
+  in two places:
+  - `DecisionPanel.vue`, which uses `actions[id].verb` in place of the description when present;
+  - `stores/combatPlan.ts`, which reads the attack and block declarations.
+
+  The typed `interaction` field already carries source ids and target
   slots for every action.
+
 - **AI prompts never see the spectator projection.** They read `PlayerView` and `PermanentView`,
   so new `SpectatorPermanent` fields cannot reach them, but changing `view/view.ts` would.
 - **Old snapshots are not displayed.** Turn snapshots are read back only for the game the current
@@ -83,8 +87,11 @@ Constraints found in the code:
    - `DecisionPresentation` gains a `'priority'` layout and `playerPrompt`.
    - `ActionPresentation` gains optional `label`, `summary`, `costLabels`, `entryNote`,
      `xFamily`, `payment`, `manaSymbols` and `targetHint`.
-   - For priority decisions the server creates the entries, with the verb `Cast`, `Play`,
-     `Activate` or `Pass`, and empty subjects.
+   - For priority decisions the server creates the entries. Each verb is derived from the action
+     type (`Cast`, `Play`, `Activate`, `Tap for mana`, `Pass`, and so on), and subjects are
+     empty. Because `DecisionPanel.vue` already shows `verb` in place of the description, the
+     server enrichment and the client switch land in one change, so no button text changes
+     before its view is ready.
    - For choice decisions the server adds the new fields to the engine's existing entries.
    - This is the first time priority actions carry presentation. It uses the existing types
      rather than a second per-action structure.
@@ -95,9 +102,16 @@ Constraints found in the code:
 
 4. **The `data` keys are registered and checked at run time.** `data` stays
    `Record<string, unknown>`. A registry in `shared` names each key the engine emits, the set of
-   value types seen for it, and its consumers. A test runs every registered Card Test Lab
-   scenario and a fixed-seed game. It fails on an unregistered key, on a value type outside the
-   registered set, or on a presentation key that nothing emits.
+   value types seen for it, and its consumers.
+
+   A test collects keys from two sources:
+   - the first surfaced decision of every registered Card Test Lab scenario;
+   - several fixed-seed four-bot games.
+
+   It fails on an unregistered key, on a value type outside the registered set, or on a
+   presentation key that nothing emits. It proves coverage only of the keys those runs reach.
+   The card-coverage workflow therefore adds a step: a change that adds a `data` key registers
+   it.
 
 5. **Game over and commander damage.** `GameOverPayload` gains `summary`. Commander-damage
    entries gain `lethal` and `remaining`.
@@ -110,15 +124,26 @@ Constraints found in the code:
 7. **Raw `data` reaches a player socket only on request.** A player connection declares
    `capabilities` in its first message, and again on every resume. Only the JSON agent client
    asks for `rawActionData`, which keeps its documented contract. The browser never asks. Every
-   server follows this one rule.
+   server follows this one rule, including for the game report, which today echoes the pending
+   request.
+
+   This is a consistency rule, not a security boundary, because `data` holds only the deciding
+   player's own options. The browser's protocol types use a `LegalAction` without `data`, so a
+   web read of `data` fails typecheck.
 
 8. **Server-built animation cues.** This ADR defines the first slice of Phase 8's planned
    `ActionCue` contract (`docs/plans/phase-8-action-animations.md`): `damage` and `lifeChange`
    cues.
-   - Each cue carries the event sequence and object or player ids.
+   - Each cue carries the same sequence as the log line it accompanies: per viewer at tables
+     (ADR 0031 decision 5), the event sequence elsewhere.
+   - It carries object or player ids, never card ids.
    - Cues are built per seat from engine events, with object ids looked up on the boards before
      and after the event batch, so an event about a creature that just died is kept.
    - A cue carries only what the seat's projection shows.
+   - Spectator and replay views get the same cues built with no seat filter, so their
+     animations keep working.
+   - Tap and untap flashes are state, not events, so they keep comparing consecutive boards. That
+     is a display of state, not an inference of what happened.
 
    Phase 8 had keyed cues to spectator snapshots and had no per-seat rule, so these are new
    requirements on that plan. Phase 8 extends this slice instead of defining its own.
@@ -129,14 +154,17 @@ Constraints found in the code:
    - string or regex calls on a `typeLine` member;
    - regex `.test` calls on `prompt` or `text` members.
 
-   Reading `data` is prevented at run time (decision 7, since the browser never receives it), and
-   the deleted modules cannot be re-imported because they no longer exist.
+   Reading `data` is prevented by the browser's protocol type and by run-time stripping
+   (decision 7), and the deleted modules cannot be re-imported because they no longer exist.
+   Token-art lookup (`lib/tokenArt.ts`) is exempt: it splits the type line only to build a
+   Scryfall search for the printed token's picture. That is a cosmetic lookup, not a rules
+   classification.
 
 ## Consequences
 
 - The animated-land bug and the spectator/player disagreement are fixed, each with its own test.
-- `lib/actionLabels.ts`, `lib/card.ts`, `playerFacingPrompt` and the three snapshot-diffing
-  composables are removed from the browser.
+- `lib/actionLabels.ts`, `lib/card.ts` and `playerFacingPrompt` are removed from the browser.
+  The combat-strike and life-flash composables stop diffing snapshots and read cues instead.
 - AI prompts, bot behavior and fixed-seed engine event streams are unchanged. `SpectatorState`
   JSON gains fields, so tests that compare whole snapshots are updated in the same change.
 - The server does a little more work per human decision, building one menu's presentation. The
