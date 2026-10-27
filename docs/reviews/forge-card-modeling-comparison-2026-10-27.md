@@ -29,7 +29,7 @@ and only when a card is put into a game. About 500 of 35,058 card faces appear i
 We have the opposite trade. Our IR is a discriminated union checked by the compiler and by
 `validateCardDefinition`; our evidence standard is far stronger. But our vocabulary grows by one op
 per unusual card, keywords mostly do not expand by themselves, effects cannot name what an earlier
-effect did except through special cases, and each new primitive is six coordinated edits.
+effect did except through special cases, and each new primitive is five coordinated edits.
 
 The lesson is to take Forge's vocabulary design and keep our typing and evidence: a keyword
 registry, typed results between instructions, a rule against card-shaped primitives, one module per
@@ -41,16 +41,16 @@ primitive, and an authoring tool that starts from the nearest modeled card.
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | Card source             | One hand-written `.txt` script per card; `Oracle:` line synced from Scryfall by a script and never compared with the logic                                               | Oracle text parsed by `interpret.ts` (9,225 lines); unparsed lines need a TypeScript override naming them in `handledLines`                                                | Keep the parser; it models thousands of cards with no per-card work. Check its output (ADR 0032 facets) |
 | Keywords                | `Keyword` enum, 202 real keywords; `CardFactoryUtil` expands each into abilities, triggers, statics or replacements (194 branches, 4,165 lines)                          | 23 flag keywords plus ward and protection; others are branches of the interpreter cascade, single-card regexes or re-authored per card; 5 of 37 probed keyword lines model | Keyword registry (ADR 0031 decision 1)                                                                  |
-| Effect vocabulary       | `ApiType`, 204 types over 201 effect classes, each generic and parameterized                                                                                             | `Effect` union, 344 ops; at least 32 compound and 11 named after a card                                                                                                    | Parameterize instead of minting (decision 3)                                                            |
+| Effect vocabulary       | `ApiType`, 204 types over 201 effect classes, each generic and parameterized                                                                                             | `Effect` union, 344 ops; 32 with `And` in the name, at least 15 named after a card                                                                                         | Parameterize instead of minting (decision 3)                                                            |
 | Composition             | `SubAbility$` chains; `Defined$ Targeted`, `TargetedController`, `Remembered`, `Imprinted`, `Triggered<Key>`, `…LKI`                                                     | `effects: Effect[]` in order; `EffectRef` has six forms; `bind` strings and a hidden `lifeLostThisWay` accumulator                                                         | Typed results (decision 2)                                                                              |
 | Cross-instruction state | `Remember`/`Imprint` lists on the card, cleared by hand with `DB$ Cleanup` (3,043 uses); LKI versus live object chosen by spelling (`Remembered` versus `RememberedLKI`) | Resolution-scoped `effectBindings` and `resolutionObjectFacts`; LKI tracked by `movedReferent`                                                                             | Results are resolution-scoped (no cleanup step) and carry LKI by type, not by spelling                  |
 | Filters                 | Valid expressions `Creature.Other+YouCtrl+cmcLE3`; unknown properties evaluate false                                                                                     | `Selector` union, 45 kinds, validated                                                                                                                                      | Ours is safer; keep it                                                                                  |
 | Values                  | `Count$` expressions in SVars, about 190 heads; unknown text evaluates to 0                                                                                              | `Value` union, 56 kinds, validated                                                                                                                                         | Ours is safer; keep it                                                                                  |
-| Triggers                | `TriggerType` enum, 149 modes; filters are params                                                                                                                        | `TriggerHead` union with `condition` (intervening if) and `eventCondition`                                                                                                 | Equivalent; we separate intervening-if from qualification explicitly                                    |
-| Statics                 | `StaticAbilityMode`, 90 modes; `Continuous` is 4,881 of 7,190 static lines                                                                                               | `staticEffects` (layers) and `RuleStatic` (51 kinds, several near-duplicates)                                                                                              | Merge duplicate rule statics (decision 3)                                                               |
+| Triggers                | `TriggerType` enum, 149 modes; filters are params                                                                                                                        | `TriggerSpec` (`TriggerHead` plus `condition`, the intervening if, and `eventCondition`)                                                                                   | Equivalent; we separate intervening-if from qualification explicitly                                    |
+| Statics                 | `StaticAbilityMode`, 90 modes; `Continuous` is 4,881 of 7,190 static lines                                                                                               | `staticEffects` (layers) and `RuleStatic` (48 kinds, several near-duplicates)                                                                                              | Merge duplicate rule statics (decision 3)                                                               |
 | Replacements            | `ReplacementType`, 40 events, scripted with `ReplaceWith$`                                                                                                               | Dedicated fields (`entersTapped`, `entersWithCounters`) and replacement statics                                                                                            | No change                                                                                               |
 | Tokens                  | 858 named token scripts referenced by `TokenScript$`                                                                                                                     | `tokens.ts` catalog, lint against inline tokens in `overrides/**` and `interpret.ts`                                                                                       | Extend the lint to the executor (ADR 0032 decision 7)                                                   |
-| New primitive           | `ApiType` entry, an effect class, an AI mapping: three files                                                                                                             | Type, executor case and four validation or capability tables: six or more files                                                                                            | One module per primitive (decision 4)                                                                   |
+| New primitive           | `ApiType` entry, an effect class, an AI mapping: three files                                                                                                             | Type, executor case and four validation or capability tables: five files                                                                                                   | One module per primitive (decision 4)                                                                   |
 | Descriptions            | Hand-written `SpellDescription$`/`TriggerDescription$`; effects generate stack text from params                                                                          | Hand-written `description` strings (519 in overrides), read by the AI tactician                                                                                            | Generated default descriptions (decision 7)                                                             |
 | Validation              | Enum names throw at card instantiation; free strings fail open; no test instantiates every card                                                                          | Compiler, `validateCardDefinition` on every merged definition, `audit-card-ir`, drift guard                                                                                | Ours is stronger; close the gaps in ADR 0032                                                            |
 | AI hints                | In card data: `AILogic$` on 2,036 lines, `AI:RemoveDeck` on 4,669 files, about 5,800 AI-only `SVar` lines                                                                | None in card data; provider policy is outside the engine                                                                                                                   | Do not adopt                                                                                            |
@@ -77,8 +77,10 @@ inherits it. The implementation is weak: an unknown keyword head becomes an iner
 plain-text rules).
 
 We have the opposite: our implemented keywords are correct and validated, but few expand by
-themselves. Of 37 common keyword lines run through `interpretCard`, only Cycling, Basic
-landcycling, Undying, Persist and Riot come out modeled. Annihilator exists only inside Eldrazi
+themselves. Of 37 keyword lines chosen to find gaps and run through `interpretCard`, only Cycling,
+Basic landcycling, Undying, Persist and Riot come out modeled; a second sample of 17 other keywords
+found 11 modeled (Equip, Flashback, Ward, Crew, Unearth, Cascade, Protection, Morph, Rebound, Escape,
+Menace) and Kicker, Scavenge, Madness, Suspend, Exploit and Mutate not. Annihilator exists only inside Eldrazi
 Conscription's grant (`interpret.ts:6664-6668`); Prowess is authored again on Harmonic Prodigy
 (`overrides/reviewed-five.ts:128-145`); Equip and Equip commander are two copies of one block
 (`interpret.ts:8611-8650`). ADR 0031 decision 1 takes Forge's design with a typed registry, a
@@ -98,9 +100,11 @@ We have the sequence but not the vocabulary. `EffectRef` names a target slot, th
 the source, the attached object, the event player or a slot's controller. Anything else became an
 op: `destroyTargetAndControllerMaySearchBasicTypedLand`,
 `exileCreatureAndControllerSearchBasicLand`, `reanimateAndLoseLife`, `sacrificeAndDrawForPower`,
-and 28 more compound ops, plus ops named after Angel's Grace, Gisela, Humble Defector, Kambal,
-Etali, Druid of Purification, Living Death, Hunting Wilds, Chaos Warp, Inkshield and Capstone
-Paradigm. Rakdos Charm's own op re-implemented damage and got its sources wrong until `5c8e41f`.
+and more: 32 op names join two instructions with `And` (a few, like
+`doublePowerAndToughnessEachUntilEot`, are not fused clauses) and others with `Then`. At least 15
+ops are named after a card, among them Angel's Grace, Gisela, Humble Defector, Kambal, Etali, Druid
+of Purification, Living Death, Hunting Wilds, Chaos Warp, Inkshield, Capstone Paradigm, Master of
+Ceremonies, Vindictive Lich, Shadrix Silverquill and Scheming Symmetry. Rakdos Charm's own op re-implemented damage and got its sources wrong until `5c8e41f`.
 Where we do have results, they are special cases with silent failure modes: a free-string `bind`
 read with `?? []`, and a `lifeLostThisWay` accumulator only three of ten life-loss ops feed.
 
@@ -113,12 +117,12 @@ and resolved by the validator.
 ## Adding a primitive
 
 Forge adds an effect type in three places: the `ApiType` enum, an effect class, and the AI mapping
-in `forge-ai` (`SpellApiToAi`). Nine effect types have no AI mapping and are silently never played
-by the AI. Adding a trigger mode is an enum entry plus a class found by reflection.
+in `forge-ai` (`SpellApiToAi`). Nine effect types have no AI mapping; each logs "No AI assigned" to stderr
+and is never played by the AI. Adding a trigger mode is an enum entry plus a class found by reflection.
 
-We add an op in six or more places, all type-checked: the union in `ability.ts`, its case in
-`resolve.ts`, and rows in `authoring-validation.ts`, `expression-validation.ts`,
-`effect-reference-contracts.ts` and `capabilities.ts`. The checking is worth keeping; the scattering
+We add an op in five places, all type-checked: the union in `ability.ts`, its case in
+`resolve.ts`, and rows in `expression-validation.ts`, `effect-reference-contracts.ts` and
+`capabilities.ts`. The checking is worth keeping; the scattering
 is not. ADR 0031 decision 4 puts a primitive's type, contracts and executor in one module and
 spreads its rows into the existing exhaustive tables.
 

@@ -77,11 +77,14 @@ Add `scripts/card-authoring-metrics.ts`, which prints JSON and Markdown for:
   `packages/engine/src/effects/` or `cards/ability.ts` changed.
 
 Commit the first output as `docs/reviews/card-authoring-baseline-<date>.md`. Recorded at `8b93725`:
-344 ops, 32 compound and 11 card-named; 51 rule-static kinds; 5 of 37 probed keywords modeled; 198
-executor guards; 21 index-fallback sites; about 1,236 one-argument `pump()` calls; 216, 44 and 33
-local harness helpers; 2,446 manifest test IDs, of which 231 live outside the card-gate files. The
+344 ops, 32 with `And` in the name and at least 15 card-named; 48 rule-static kinds; 5 of 37
+gap-selected keywords and 11 of 17 others modeled; about 200 executor guards; about 21
+index-fallback sites; about 1,940 one-argument `pump()` calls in 280 files; about 216 local
+`game()`/`pod()`/`setup()` helpers, 44 `pinned()` helpers and 60 per-batch Oracle fixtures; 2,446 manifest test IDs, of which 231 live outside the card-gate files. The
 per-card cost of PR11 and PR11b, under the counting rule above, is computed by the script; the
-draft figure of a median 9.5 files covers only the 18 `feat(cards)` commits and is not the baseline.
+draft figure of a median 9.5 files covers only 18 `feat(cards)` commits (the later hash of each
+rebased pair; the earlier hashes give 8.0) and is not the baseline. The report lists the exact
+regexes and commit hashes behind every number.
 
 Exit: the script runs offline in under a minute and the report is committed.
 
@@ -104,7 +107,10 @@ Exit: the script runs offline in under a minute and the report is committed.
 5. Extend the inline-`TokenSpec` lint to all of `packages/engine/src` except `cards/tokens.ts` and
    `parseTokenFace`. Fix or catalogue anything it finds.
 6. `RuleBasedProvider` records which `once` rules fired; `drive()` fails on any that did not. First-
-   option fallback is opt-in per rule. Update the six files that use it.
+   option fallback is opt-in per rule. Update its consumers: `engine.test.ts`,
+   `token-triumph-deck.test.ts`, `packages/server/src/cli/test-cards-l4-l6.ts`,
+   `pr09-choice-scenarios.test.ts` and `pr08-agitator-ant-scenarios.test.ts`; delete the stale
+   tracked `tests/fixtures.d.ts` or regenerate it.
 7. `scripts/check-ratchets.ts`: compares every shrink-only list against the base commit and fails on
    an added entry without a reason or a raised count. Wire it into the card-gate job, which already
    has the base SHA.
@@ -123,7 +129,7 @@ new check has a test proving it fires; `check-ratchets` and the gate-path script
    its length and truncates on rollback. Tests: preview, payment probe and a rolled-back cast record
    nothing.
 2. `noop(ctx, reason, detail?)` and `invariant(ctx, reason, detail?)`, with `detail` lazy. The main
-   thread writes the guard table (site, op, reason, CR rule) for all 198 guards; a Sonnet
+   thread writes the guard table (site, op, reason, CR rule) for every guard; a Sonnet
    implementer converts them in batches by op family. Nothing throws yet. Snapshots, determinism
    and benchmark hashes unchanged.
 3. Stack objects carry an `origin` (oracle id and ability path; `copy` and `external` marks), and

@@ -35,12 +35,12 @@ a game that keeps running and a test that keeps passing.
    land would never untap. "Life lost this way" is a hidden accumulator that three of the ten
    life-loss ops feed (`resolve.ts:4306-4340`), so `eachPlayerLosesLife` followed by
    `gainLifeEqualToLifeLostThisWay` validates and gains nothing.
-2. **Every executor early exit looks the same.** The `executeAbility` switch has 198 one-line
+2. **Every executor early exit looks the same.** The `executeAbility` switch has about 200 one-line
    `if (x === undefined | null) break | return | continue` guards. Some are the rules (CR
    608.2b: an illegal target is not affected; "if you do" after a declined choice). Others are
    authoring or engine bugs (an unbound reference, a slot an earlier effect emptied by mistake).
    Nothing records which one happened.
-3. **Decision answers fall back to option 0.** 21 sites read `options[outcome.index] ?? options[0]`
+3. **Decision answers fall back to option 0.** About 21 sites read `options[outcome.index] ?? options[0]`
    or an equivalent (`resolve.ts:1725, 2046, 2844, 4529, 5166, 5355, 7443, 9184` and others in
    `resolve.ts`, `sba.ts`, `damage-modifiers.ts`, `choose.ts`). `Engine.submit` validates
    production answers, so in a real game these are unreachable. Tests drive generators directly
@@ -57,9 +57,11 @@ a game that keeps running and a test that keeps passing.
    checks it.
 6. **Catalog bypass outside lint scope.** The inline-`TokenSpec` lint covers `overrides/**` and
    `interpret.ts`. Master of Ceremonies' Treasure without its sacrifice cost lived in
-   `resolve.ts` (`createTreasureForDeaths`), where the lint does not apply.
+   `resolve.ts` (its `masterOfCeremonies` case, with a copy in the unused `createTreasureForDeaths`),
+   where the lint does not apply.
 7. **Test drivers guess.** `pump()` answers every unforced decision it is not told about with
-   index 0 (`tests/fixtures.ts:337-355`); about 1,236 of its 2,639 calls pass no answer at all.
+   index 0 (`tests/fixtures.ts:337-355`); about 1,940 of its 2,638 calls, in 280 of the 303
+   files that use it, pass no answer at all.
    `RuleBasedProvider` falls back to the first option and never reports a rule that did not fire
    (`tests/fixtures.ts:370-398`). A `whenChoose` with a misspelled option silently does nothing.
 8. **A test can claim a clause without executing it.** The verification manifest maps each Oracle

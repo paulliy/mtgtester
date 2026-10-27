@@ -15,25 +15,31 @@ ADR 0004 made card behavior data. ADR 0025 made that data uniform to write. Neit
 write a card whose clause is not already a primitive, and that is where the time goes. Measured at
 `8b93725`:
 
-- **A new primitive is a change to six or more files.** The `Effect` type in `ability.ts`, its case
-  in `resolve.ts`, and its rows in `authoring-validation.ts`, `expression-validation.ts`,
-  `effect-reference-contracts.ts` and `capabilities.ts`, before any test. Chrome Mox (`c3a0dbf`)
-  touched 10 files and 267 lines; Intermediate Chirography (`82a4682`) 15 files and 832 lines; Mana
-  Vault and Mystic Remora (`73ac3c0`) 8 files and 547 lines. Each table is type-checked, so this is
-  safe, but it is slow.
-- **Primitives are minted per card.** The `Effect` union has 344 ops. At least 32 are compound
+- **A new primitive is a change to five files.** The `Effect` type in `ability.ts`, its case in
+  `resolve.ts`, and its rows in three tables: `expression-validation.ts`,
+  `effect-reference-contracts.ts` and `capabilities.ts`, before any test. Card commits that added
+  primitives were large: Chrome Mox (`c3a0dbf`) touched 10 files and 267 lines, Intermediate
+  Chirography (`82a4682`) 15 files and 832 lines. Each table is type-checked, so this is safe, but
+  it is slow.
+- **Primitives are minted per card.** The `Effect` union has 344 ops. 32 have `And` joining two
+  instructions in their name, most of them two clauses fused into one op
   (`destroyTargetAndControllerMaySearchBasicTypedLand`, `exileCreatureAndControllerSearchBasicLand`,
-  `counterAndCreateTokenForController`, `reanimateAndLoseLife`, …) and at least 11 are named after a
-  card (`angelGrace`, `gisela`, `humbleDefector`, `kambal`, `etaliPrimalConqueror`,
-  `druidPurification`, `livingDeath`, `huntingWilds`, `chaosWarp`, `inkshield`, `capstoneParadigm`).
-  `RuleStatic` has 51 kinds, including `triggerAdditionalForShamanOrOtherWizard` beside the general
+  `counterAndCreateTokenForController`, `reanimateAndLoseLife`, …; a few such as
+  `doublePowerAndToughnessEachUntilEot` are not), and more are fused with `Then`
+  (`sacrificeOneThen`, `mayPayManaThenReflexive`). At least 15 are named after a card
+  (`angelGrace`, `gisela`, `humbleDefector`, `kambal`, `etaliPrimalConqueror`, `druidPurification`,
+  `livingDeath`, `huntingWilds`, `chaosWarp`, `inkshield`, `capstoneParadigm`, `masterOfCeremonies`,
+  `vindictiveLichModes`, `shadrixModes`, `schemingSymmetry`). `RuleStatic` has 48 kinds, including `triggerAdditionalForShamanOrOtherWizard` beside the general
   `triggerAdditionalTime { filter }` that could express it, and three damage-multiplier kinds.
   Rakdos Charm's own op re-implemented damage and got source attribution wrong (fixed in `5c8e41f`).
 - **Few keywords expand by themselves.** Running 37 common keyword lines through `interpretCard`,
   only Cycling, Basic landcycling, Undying, Persist and Riot come out modeled. Prowess, Exalted,
   Afterlife, Annihilator, Toxic, Dash, Evoke, Mentor, Ninjutsu, Buyback, Delve, Training, Bushido,
   Flanking, Wither, Myriad, Battle cry, Extort, Embalm, Encore, Blitz, Squad, Backup, Bloodthirst,
-  Fabricate, Modular, Living weapon, Shadow, Horsemanship, Skulk, Fear and Intimidate do not. Where
+  Fabricate, Modular, Living weapon, Shadow, Horsemanship, Skulk, Fear and Intimidate do not.
+  The 37 were chosen to find gaps; a second sample of 17 other keywords found 11 modeled (Equip,
+  Flashback, Ward, Crew, Unearth, Cascade, Protection, Morph, Rebound, Escape, Menace) and Kicker,
+  Scavenge, Madness, Suspend, Exploit and Mutate not. Where
   a keyword works, it is a branch in `interpret.ts`'s 9,225-line cascade (Equip and Equip commander
   are two copies of the same block, `interpret.ts:8611-8650`), or a regex for one card (annihilator
   exists only inside Eldrazi Conscription's grant, `interpret.ts:6664-6668`), or authored again on
@@ -44,9 +50,9 @@ write a card whose clause is not already a primitive, and that is where the time
   validates and gains nothing. "Those cards" is a free-string `bind` read with `?? []`. Each new
   "and then its controller…" clause therefore became a new compound op.
 - **Descriptions are typed by hand.** Overrides carry 519 `description` strings. The AI tactician
-  chooses from them (ADR 0016), so each is a correctness surface as well as a chore.
-- **Every batch rebuilds its test scaffolding** (216 files with their own `game()` or `pod()`, 44
-  with their own `pinned()`, about 40 per-batch Oracle fixture files). ADR 0032 decision 10 covers
+  reads them to pick an action (ADR 0025), so each is a correctness surface as well as a chore.
+- **Every batch rebuilds its test scaffolding** (about 216 test files with their own `game()`,
+  `pod()` or `setup()`, 44 with their own `pinned()`, 60 per-batch `*-oracle.json` fixtures). ADR 0032 decision 10 covers
   this.
 
 [Forge](https://github.com/Card-Forge/forge) models its 34,131 card scripts with no text parser.
@@ -170,8 +176,8 @@ A new `Effect` op, `RuleStatic`, `Condition`, `Value` or `Selector` kind must:
 
 - be named after the mechanic, not a card. A check compares discriminant names against a committed
   list of card-name slugs generated from the pinned fixtures and the verification manifest (the
-  bulk Oracle file is not available in CI); the 11 existing card-named ops are listed and may only
-  be removed;
+  bulk Oracle file is not available in CI); the existing card-named ops (at least the 15 above;
+  phase 0 of the plan generates the full list) are listed and may only be removed;
 - take selectors, values and references as parameters instead of fixing "opponent", "creature" or
   "basic land" in its name;
 - state in its pull request why existing primitives composed with results cannot express the clause.
@@ -216,7 +222,7 @@ Adding `as?` to effects is an envelope field, not an op field, so `overload.ts`'
 (`:41-56`) gain one row for it.
 
 Legacy ops stay in the switch and move into modules only when they are touched. A new primitive
-then costs one module, one registry line and its contract test, instead of six coordinated edits.
+then costs one module, one registry line and its contract test, instead of five coordinated edits.
 
 ### 5. An authoring workbench starts each card
 
