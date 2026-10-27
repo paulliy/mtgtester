@@ -185,6 +185,63 @@ describe('spectator store — where am I in the action log', () => {
   });
 });
 
+describe('spectator store — deals on the board being viewed', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    sent.length = 0;
+  });
+
+  it('shows the deals in force at the start of a turn picked with the slider', () => {
+    const store = useGameStore();
+    store.connect();
+    const deal = {
+      id: 'deal-1',
+      proposer: 'P1',
+      parties: ['P1', 'P3'] as [string, string],
+      obligations: [{ kind: 'noAttack' as const, by: 'P1', against: 'P3' }],
+      proposedTurn: 1,
+      rounds: 2,
+      status: 'proposed' as const,
+    };
+    store.tableTalk = [
+      {
+        sequence: 12,
+        turn: 1,
+        text: '',
+        message: { kind: 'proposal', turn: 1, from: 'P1', to: 'P3', deal },
+      },
+      {
+        sequence: 12,
+        turn: 1,
+        text: '',
+        message: {
+          kind: 'response',
+          turn: 1,
+          from: 'P3',
+          to: 'P1',
+          dealId: 'deal-1',
+          answer: 'accept',
+        },
+      },
+      {
+        sequence: 25,
+        turn: 3,
+        text: '',
+        message: { kind: 'dealEnded', turn: 3, dealId: 'deal-1', outcome: 'kept' },
+      },
+    ];
+    // At the latest board the deal has ended.
+    seed(store, 3, null);
+    expect(store.dealsNow).toEqual([]);
+    // Scrubbed back to the start of turn 2: agreed on turn 1, not yet ended.
+    seed(store, 2, null);
+    expect(store.dealsNow.map((d) => d.deal.id)).toEqual(['deal-1']);
+    // The start of turn 1 comes before the deal was proposed.
+    seed(store, 1, null);
+    expect(store.dealsNow).toEqual([]);
+  });
+});
+
 describe('spectator store — server-confirmed position', () => {
   let store: Store;
 

@@ -378,6 +378,11 @@ export class DiplomacyTable {
     this.heldAttack = null;
     const repaired = (this.opts.repairedAttacks?.() ?? 0) > held.repairedBefore;
     if (repaired) {
+      // The engine chose this attack, not the seat: it is not judged, and the turn does not count
+      // as one in which the seat could have made a promised attack and chose not to.
+      for (const record of this.records) {
+        if (record.deal.status === 'active') record.couldAttack.delete(held.request.decidingPlayer);
+      }
       this.pendingBreach.clear();
       return;
     }

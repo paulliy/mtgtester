@@ -388,6 +388,38 @@ describe('DiplomacyTable — keeping, breaking and ending deals', () => {
     expect(deal.status).toBe('active');
   });
 
+  it('does not charge a promised attack the engine repaired as one the seat skipped', () => {
+    const w = world();
+    let repaired = 0;
+    const table = new DiplomacyTable({
+      seed: 'seed',
+      seats: w.order,
+      viewOf: (seat) => viewFrom(w, seat),
+      negotiates: () => true,
+      repairedAttacks: () => repaired,
+    });
+    runTurns(table, w, 1, 1);
+    const deal = table.activeDeals()[0]!;
+    const owed = deal.obligations.find((o) => o.kind === 'attackPlayer')!;
+    if (owed.kind !== 'attackPlayer') throw new Error('expected an attackPlayer obligation');
+    const attacker = w.battlefield.find((p) => p.controller === owed.by)!;
+    const action = attackAction([attacker], () => [owed.target, NO_ATTACK_TARGET]);
+    // Every declaration the obligor makes is repaired by the engine after two rejections.
+    for (let turn = 2; turn < 20 && deal.status === 'active'; turn++) {
+      const active = w.order[(turn - 1) % w.order.length]!;
+      table.beforeDecision(priority(turn, active));
+      if (active !== owed.by || deal.status !== 'active') continue;
+      table.afterDecision(
+        { ...priority(turn, owed.by, [action]), decisionType: 'declareAttackers' },
+        { requestId: `r${turn}`, actionId: action.id, targets: [{ slot: 0, choice: owed.target }] },
+      );
+      repaired++;
+      table.flush();
+    }
+    expect(deal.status).toBe('void');
+    expect(table.trustRecord(owed.by).broken).toBe(0);
+  });
+
   it('frees the other party when one becomes the leader, but holds the leader to its word', () => {
     const { w, table, deal } = withDeal();
     const riser = deal.parties[0];

@@ -181,16 +181,22 @@ export const useGameStore = defineStore('game', () => {
   });
 
   /**
-   * Deals in force at the action the viewer stands on, or at the latest one shown. Talk past the
-   * last line shown counts only once the game is over: before then it belongs to plays not
-   * presented yet.
+   * Deals in force on the board the viewer is looking at: at the action it stands on; on an
+   * earlier turn picked with the slider (a snapshot of that turn's start, so only talk from turns
+   * before it); or at the latest line shown. Talk past the last line shown counts only once the
+   * game is over: before then it belongs to plays not presented yet.
    */
-  const dealsNow = computed(() =>
-    dealsInForce(
+  const dealsNow = computed(() => {
+    if (activeSequence.value !== null) return dealsInForce(tableTalk.value, activeSequence.value);
+    if (viewTurn.value < frontierTurn.value) {
+      const before = tableTalk.value.filter((line) => line.turn < viewTurn.value);
+      return dealsInForce(before, null);
+    }
+    return dealsInForce(
       tableTalk.value,
-      activeSequence.value ?? (gameOver.value !== null ? null : (log.value.at(-1)?.sequence ?? -1)),
-    ),
-  );
+      gameOver.value !== null ? null : (log.value.at(-1)?.sequence ?? -1),
+    );
+  });
 
   /** Backfill table talk for a game already in progress or finished (survives a reload). */
   async function loadTableTalk(): Promise<void> {
