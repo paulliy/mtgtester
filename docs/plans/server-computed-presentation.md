@@ -175,14 +175,24 @@ Stays in the client:
   cues and `lifeChange` cues.
   - **`damage`:** carries the source and target object or player ids, the amount and the combat
     flag.
-    - Permanent targets are resolved from `targetCardId` to an object id on either board, and
-      player targets use the player id. Both payload shapes in `effects/resolve.ts` are handled.
+    - Damage events carry card ids, but the projection (`SpectatorCard`) carries only object
+      ids. `buildCues` therefore takes a server-private card-to-object map, built from engine
+      state (`cardId` to current object id, stack objects included) before and after the event
+      batch. It never leaves the server.
+    - Permanent targets and sources are resolved through that map, and player targets use the
+      player id. Both payload shapes in `effects/resolve.ts` are handled.
     - The source is looked up on the before board, including objects on the stack, so a
       spell's damage keeps its source. A source that is on neither board is left out of the cue,
       and the target still animates.
     - A cue never carries a card id.
     - Cues are grouped per damage step (first strike, regular), one group per step.
-  - **`lifeChange`:** comes from `lifeGain` and `lifeLoss`.
+  - **`lifeChange`:** one cue per player whose life total differs between the before and after
+    boards of a batch, carrying the real delta and the sequence of the last life-affecting event
+    (`damage`, `lifeGain` or `lifeLoss`) in the batch. Damage to a player changes life inside
+    `applyDamageToPlayer` and emits only `damage`, and the damage amount is not always the life
+    lost (infect adds counters instead; Angel's Grace holds life at 1), so the delta comes from
+    the totals. Adding a life field to the `damage` event is not an option, because it would
+    change legacy event streams.
   - Each cue carries its log line's sequence: the per-viewer sequence at tables, the event
     sequence elsewhere.
   - A cue whose objects are on neither board is dropped.

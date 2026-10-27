@@ -145,7 +145,11 @@ Constraints found in the code:
    cues.
    - Each cue carries the same sequence as the log line it accompanies: per viewer at tables
      (ADR 0031 decision 5), the event sequence elsewhere.
-   - It carries object or player ids, never card ids.
+   - It carries object or player ids, never card ids. The server maps card ids from engine
+     events to object ids with a private map built from engine state before and after the batch.
+   - A `lifeChange` cue carries the real change in a player's life total over the batch, taken
+     from the before and after totals, because damage to a player emits no life field and the
+     damage amount is not always the life lost (infect, Angel's Grace).
    - Cues are built per seat from engine events, with object ids looked up on the boards before
      and after the event batch, so an event about a creature that just died is kept.
    - A cue carries only what the seat's projection shows.
