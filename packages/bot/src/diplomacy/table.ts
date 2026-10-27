@@ -711,9 +711,14 @@ export class DiplomacyTable {
   private activate(deal: Deal, valuation: DealValuation, table: TableEstimate): void {
     deal.status = 'active';
     const turnsTaken = new Map<PlayerId, number>(deal.parties.map((p) => [p, 0]));
-    // The accepting turn counts for whichever party is taking it.
+    const couldAttack = new Set<PlayerId>();
+    // The accepting turn counts for whichever party is taking it, and so does whether that party
+    // could make an attack it promises this turn: the window's own check ran before the deal.
     if (this.activeNow !== null && turnsTaken.has(this.activeNow)) {
-      turnsTaken.set(this.activeNow, 1);
+      const active = this.activeNow;
+      turnsTaken.set(active, 1);
+      const owesAttack = deal.obligations.some((o) => o.kind === 'attackPlayer' && o.by === active);
+      if (owesAttack && (table.bySeat.get(active)?.attackPower ?? 0) > 0) couldAttack.add(active);
     }
     const credit = new Map(
       deal.parties.map((p) => [p, Math.min(valuation.stake, valuation.ownCost.get(p) ?? 0)]),
@@ -726,7 +731,7 @@ export class DiplomacyTable {
       turnsTaken,
       tested: new Set(),
       freed: new Set(),
-      couldAttack: new Set(),
+      couldAttack,
     });
     this.stats.accepted++;
   }

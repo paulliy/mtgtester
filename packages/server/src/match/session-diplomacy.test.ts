@@ -69,7 +69,9 @@ describe('MatchSession — table talk (ADR 0035)', () => {
     expect(session.hasDiplomacy()).toBe(true);
     const talk: TableTalkLine[] = batches.flatMap((b) => b.tableTalk ?? []);
     expect(talk.length).toBeGreaterThan(0);
-    expect(talk.length).toBe(session.tableTalk().length);
+    // History is exactly what viewers were streamed, snapped anchors included, so a reload
+    // finds each line beside the same log line.
+    expect(session.tableTalk()).toEqual(talk);
     const sequences = new Set(batches.flatMap((b) => b.lines.map((l) => l.sequence)));
     for (const batch of batches) {
       for (const line of batch.tableTalk ?? []) {

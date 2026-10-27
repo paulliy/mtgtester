@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Deal, TableMessage, TableTalkLine } from '@mtg/shared';
-import { dealLinesFor, dealsInForce } from './tableTalk';
+import { dealLinesFor, dealsInForce, mergeTalk } from './tableTalk';
 
 const deal: Deal = {
   id: 'deal-1',
@@ -68,5 +68,27 @@ describe('dealLinesFor', () => {
     expect(dealLinesFor('P1', deals)).toEqual(["with P3: won't attack P3"]);
     expect(dealLinesFor('P2', deals)).toEqual([]);
     expect(dealLinesFor('P1', dealsInForce(talk, 60))).toEqual(['with P3: released']);
+  });
+});
+
+describe('mergeTalk', () => {
+  it('puts history fetched after a live breach back in the order it was said', () => {
+    const breach = line(60, {
+      kind: 'breach',
+      turn: 5,
+      from: 'P1',
+      dealId: 'deal-1',
+      obligation: deal.obligations[0]!,
+    });
+    // A reload: the breach arrives live while the history request is still in flight, and the
+    // history (proposal and acceptance) lands after it.
+    const merged = mergeTalk([talk[0]!, talk[1]!], [breach]);
+    expect(merged).toEqual([talk[0], talk[1], breach]);
+    expect(dealsInForce(merged, null)).toEqual([]);
+  });
+
+  it('keeps lines sharing an anchor in history order and drops duplicates', () => {
+    const live = [talk[1]!];
+    expect(mergeTalk([talk[0]!, talk[1]!], live)).toEqual([talk[0], talk[1]]);
   });
 });

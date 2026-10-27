@@ -730,9 +730,16 @@ export class MatchSession {
       message,
       text: describeMessage(message),
     }));
+    this.pendingTalk.push(...lines);
+  }
+
+  /**
+   * Keep and store talk as it is released, with the anchor viewers were sent: history and the live
+   * stream then agree on every line's sequence, so a reload finds each line beside its log line.
+   */
+  private recordTalk(lines: readonly TableTalkLine[]): void {
     if (lines.length === 0) return;
     this.allTalk.push(...lines);
-    this.pendingTalk.push(...lines);
     this.recorder?.saveTableTalk(lines);
   }
 
@@ -741,6 +748,7 @@ export class MatchSession {
     if (this.pendingTalk.length === 0) return {};
     const { due, held } = releaseAnchored(this.pendingTalk, lines);
     this.pendingTalk = held;
+    this.recordTalk(due);
     return due.length > 0 ? { tableTalk: due } : {};
   }
 
@@ -756,6 +764,7 @@ export class MatchSession {
     if (this.pendingTalk.length === 0) return;
     const tableTalk = this.pendingTalk;
     this.pendingTalk = [];
+    this.recordTalk(tableTalk);
     this.opts.send({
       type: 'eventBatch',
       payload: {
@@ -768,7 +777,7 @@ export class MatchSession {
     });
   }
 
-  /** Every line of table talk so far, for a viewer who reconnects or reloads. */
+  /** Every line of table talk released so far, for a viewer who reconnects or reloads. */
   tableTalk(): readonly TableTalkLine[] {
     return this.allTalk;
   }

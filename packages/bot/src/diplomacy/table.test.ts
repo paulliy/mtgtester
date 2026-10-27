@@ -262,6 +262,28 @@ describe('DiplomacyTable — keeping, breaking and ending deals', () => {
     expect(table.trustRecord(owed.by).broken).toBe(1);
   });
 
+  it('counts a promised attack skipped on the accepting turn as a breach', () => {
+    const w = world();
+    // Only P3 answers offers, so no other deal crowds this one out.
+    const table = setup(w, (seat) => seat === 'P3');
+    runTurns(table, w, 1, 2);
+    // P2 promises, on its own turn, to attack the leader this turn, then never declares.
+    const outcome = table.offer({
+      proposer: 'P2',
+      to: 'P3',
+      rounds: 1,
+      obligations: [
+        { kind: 'attackPlayer', by: 'P2', target: 'P4' },
+        { kind: 'noAttack', by: 'P3', against: 'P2' },
+      ],
+    });
+    expect(outcome.kind).toBe('accepted');
+    if (outcome.kind !== 'accepted') return;
+    runTurns(table, w, 3, 4);
+    expect(outcome.deal.status).toBe('broken');
+    expect(outcome.deal.breachedBy).toBe('P2');
+  });
+
   it('ends a deal void when the promised attack could never be made, charging nobody', () => {
     const { w, table, deal } = withDeal();
     const owed = deal.obligations.find((o) => o.kind === 'attackPlayer')!;

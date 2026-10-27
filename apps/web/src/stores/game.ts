@@ -35,7 +35,7 @@ import { GameSocket, type ConnectionState } from '../lib/socket';
 import { resetBoardAnchors } from '../composables/useBoardAnchors';
 import { resetCombatStrikes } from '../composables/useCombatStrikes';
 import { pushRecentId, readRecentIds, saveRecentIds } from '../lib/recentSetup';
-import { dealsInForce } from '../lib/tableTalk';
+import { dealsInForce, mergeTalk } from '../lib/tableTalk';
 
 /** Log lines kept in memory. A long game emits thousands; the scroller only shows the tail. */
 const MAX_LOG_LINES = 4_000;
@@ -169,10 +169,7 @@ export const useGameStore = defineStore('game', () => {
 
   function addTableTalk(incoming: TableTalkLine[] | undefined): void {
     if (incoming === undefined || incoming.length === 0) return;
-    const seen = new Set(tableTalk.value.map((line) => JSON.stringify(line)));
-    // The same line can arrive live and again from the history endpoint after a reload.
-    const fresh = incoming.filter((line) => !seen.has(JSON.stringify(line)));
-    if (fresh.length > 0) tableTalk.value = [...tableTalk.value, ...fresh];
+    tableTalk.value = mergeTalk(tableTalk.value, incoming);
   }
 
   const talkBySequence = computed(() => {
@@ -190,11 +187,16 @@ export const useGameStore = defineStore('game', () => {
 
   /** Backfill table talk for a game already in progress or finished (survives a reload). */
   async function loadTableTalk(): Promise<void> {
-    if (gameId.value === null) return;
+    const id = gameId.value;
+    if (id === null) return;
     try {
-      const response = await fetch(`/api/games/${encodeURIComponent(gameId.value)}/table-talk`);
+      const response = await fetch(`/api/games/${encodeURIComponent(id)}/table-talk`);
       if (!response.ok) return;
-      addTableTalk((await response.json()).tableTalk as TableTalkLine[]);
+      const history = (await response.json()).tableTalk as TableTalkLine[];
+      if (gameId.value !== id) return;
+      // Live lines may have arrived while this was in flight. History goes first: it holds every
+      // line said before them, and any it shares with them are dropped as duplicates.
+      tableTalk.value = mergeTalk(history, tableTalk.value);
     } catch {
       // History is a nicety; the live stream is the source of truth.
     }

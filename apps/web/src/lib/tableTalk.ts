@@ -12,6 +12,23 @@ export interface DealInForce {
 }
 
 /**
+ * `base` plus the lines of `extra` it does not already hold, in the order they were said. Lines
+ * are ordered by their anchor; lines sharing one keep `base`'s order first, so pass the server's
+ * history as `base` when it arrives after live lines (a reload): it holds every earlier line in
+ * order, and live lines only ever follow it. The same line can come from both, so equal lines are
+ * dropped.
+ */
+export function mergeTalk(
+  base: readonly TableTalkLine[],
+  extra: readonly TableTalkLine[],
+): TableTalkLine[] {
+  const seen = new Set(base.map((line) => JSON.stringify(line)));
+  const fresh = extra.filter((line) => !seen.has(JSON.stringify(line)));
+  // Array.prototype.sort is stable, so equal anchors keep the order above.
+  return [...base, ...fresh].sort((a, b) => a.sequence - b.sequence);
+}
+
+/**
  * Deals in force once every talk line at or before `upTo` has been said (`null`: all of them).
  * A deal is in force from the answer that accepts it until it is broken or ends.
  */
