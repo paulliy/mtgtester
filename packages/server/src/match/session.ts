@@ -7,7 +7,12 @@
 
 import { Engine, formatPlayerLog, formatSpectatorLog } from '@mtg/engine';
 import type { AsyncDecisionProvider, DecisionProvider } from '@mtg/engine';
-import { HeuristicDecisionProvider } from '@mtg/bot';
+import {
+  describeMessage,
+  DiplomacyTable,
+  HeuristicDecisionProvider,
+  withDiplomacy,
+} from '@mtg/bot';
 import type {
   AiAnnotation,
   AiReflection,
@@ -25,6 +30,7 @@ import type {
   ProviderKind,
   ServerToClientMessage,
   SpectatorLogLine,
+  TableTalkLine,
   TargetChoice,
   SubmitPlayerActionPayload,
   YieldPlayerAbilityPayload,
@@ -48,7 +54,7 @@ import {
 } from '../ai';
 import type { GameStore } from '../db';
 import { finishingPositions, type GameRecorder } from '../db/games';
-import { releaseAnnotations } from './annotations';
+import { releaseAnchored, releaseAnnotations } from './annotations';
 import { MatchRunner } from './runner';
 import {
   HumanDecisionProvider,
@@ -111,6 +117,11 @@ export interface MatchSessionOptions {
    * Omit to fall back to `AI_REFLECTION_ENABLED`, which is off.
    */
   reflectionEnabled?: boolean;
+  /**
+   * Let the bots make deals and talk at the table (ADR 0031). Honored only for a spectator game of
+   * heuristic bots; ignored otherwise, so an AI or player game is unaffected.
+   */
+  diplomacy?: boolean;
   /** Pre-arranged deterministic lab engine; omitted for every ordinary match. */
   engine?: Engine;
   /** Deterministic non-human decisions for Card Test Lab evidence; omitted for ordinary matches. */
@@ -172,6 +183,15 @@ export class MatchSession {
   private pendingAnnotations: AiAnnotation[] = [];
   /** Every note produced this game — the single-player end-of-game release reads this. */
   private readonly allAnnotations: AiAnnotation[] = [];
+  /** The table's deals and talk (ADR 0031), when this game has diplomacy on. */
+  private readonly diplomacy: DiplomacyTable | null;
+  /** Table talk awaiting a log line to attach to, released with the lines like annotations. */
+  private pendingTalk: TableTalkLine[] = [];
+  /** Every line of table talk so far, for a reconnecting viewer. */
+  private readonly allTalk: TableTalkLine[] = [];
+  /** Engine repairs of attack declarations seen so far, counted incrementally. */
+  private repairedAttacks = 0;
+  private repairCursor = 0;
   /** Post-game reviews that have landed so far (ADR 0022 §7). */
   private readonly reflections: AiReflection[] = [];
   /** Seats already written to `game_reflections`; progress fires repeatedly with a growing list. */
@@ -205,6 +225,19 @@ export class MatchSession {
       });
     if (this.humanSeat !== null) this.engine.enableManualMana(this.humanSeat);
     this.recorder = opts.store?.recorderFor(opts.gameId) ?? null;
+    this.diplomacy =
+      opts.diplomacy === true &&
+      this.gameMode === 'spectator' &&
+      opts.providerKind !== 'ai' &&
+      opts.decisionProviderOverrides === undefined
+        ? new DiplomacyTable({
+            seed: opts.seed,
+            seats: opts.seats.map((s) => s.seat),
+            viewOf: (seat) => this.engine.view(seat),
+            negotiates: () => true,
+            repairedAttacks: () => this.countRepairedAttacks(),
+          })
+        : null;
     this.logger =
       opts.providerKind === 'ai' ? new AiCallLogger(opts.store?.raw ?? null, opts.gameId) : null;
     this.humanProvider =
@@ -262,6 +295,7 @@ export class MatchSession {
             frontierTurn,
             snapshotTurns,
             ...this.annotationField(lines),
+            ...this.talkField(lines),
           },
         });
       },
@@ -291,6 +325,7 @@ export class MatchSession {
         this.aiCoordinator?.cancel();
         this.aiJev?.cancel?.();
         this.publishFinalState();
+        this.finishTalk();
         opts.send({
           type: 'computeHalted',
           payload: {
@@ -326,6 +361,7 @@ export class MatchSession {
           this.ensureAiCoordinator().recordDecision(request, response, 'human');
         }
         this.logger?.recordAnchor(request.requestId, anchorSequence);
+        this.collectTalk(anchorSequence);
         // The note is the gate, not the provider kind: a random provider never writes one, and
         // the human seat's own choices are theirs rather than reasoning to be explained back.
         if (request.decidingPlayer !== this.humanSeat && response.note !== undefined) {
@@ -666,8 +702,80 @@ export class MatchSession {
         frontierTurn: this.runner.getFrontierTurn(),
         snapshotTurns: this.runner.getSnapshotTurns(),
         ...this.annotationField(lines),
+        ...this.talkField(lines),
       },
     });
+  }
+
+  // ── Table talk (ADR 0031) ─────────────────────────────────────────────────────────────────
+
+  private countRepairedAttacks(): number {
+    for (const event of this.engine.eventsSince(this.repairCursor)) {
+      if (event.type === 'attackDeclarationRepaired') this.repairedAttacks++;
+      this.repairCursor = event.sequence + 1;
+    }
+    return this.repairedAttacks;
+  }
+
+  /**
+   * Take whatever the table said since the last decision and anchor it to `sequence`, the first
+   * event of the decision just made: talk from a turn's negotiation window and judgments of the
+   * previous decision both land beside the play that follows them.
+   */
+  private collectTalk(sequence: number): void {
+    if (this.diplomacy === null) return;
+    const lines = this.diplomacy.drain().map((message) => ({
+      sequence,
+      turn: message.turn,
+      message,
+      text: describeMessage(message),
+    }));
+    if (lines.length === 0) return;
+    this.allTalk.push(...lines);
+    this.pendingTalk.push(...lines);
+    this.recorder?.saveTableTalk(lines);
+  }
+
+  /** Talk to ship with a batch of lines, absent when there is none (so the payload never grows). */
+  private talkField(lines: readonly SpectatorLogLine[]): { tableTalk?: TableTalkLine[] } {
+    if (this.pendingTalk.length === 0) return {};
+    const { due, held } = releaseAnchored(this.pendingTalk, lines);
+    this.pendingTalk = held;
+    return due.length > 0 ? { tableTalk: due } : {};
+  }
+
+  /**
+   * Close the table at game end: judge a held attack, then send what is left at once, since no
+   * later log line will carry it.
+   */
+  private finishTalk(): void {
+    if (this.diplomacy === null) return;
+    this.diplomacy.flush();
+    const last = this.engine.eventsSince(0).at(-1)?.sequence ?? 0;
+    this.collectTalk(last);
+    if (this.pendingTalk.length === 0) return;
+    const tableTalk = this.pendingTalk;
+    this.pendingTalk = [];
+    this.opts.send({
+      type: 'eventBatch',
+      payload: {
+        gameId: this.opts.gameId,
+        lines: [],
+        frontierTurn: this.runner.getFrontierTurn(),
+        snapshotTurns: this.runner.getSnapshotTurns(),
+        tableTalk,
+      },
+    });
+  }
+
+  /** Every line of table talk so far, for a viewer who reconnects or reloads. */
+  tableTalk(): readonly TableTalkLine[] {
+    return this.allTalk;
+  }
+
+  /** Whether the bots at this table negotiate (ADR 0031). */
+  hasDiplomacy(): boolean {
+    return this.diplomacy !== null;
   }
 
   // ── AI reasoning annotations (ADR 0022) ───────────────────────────────────────────────────
@@ -1016,6 +1124,7 @@ export class MatchSession {
 
   private publishGameOver(result: NonNullable<ReturnType<Engine['getResult']>>): void {
     this.publishFinalState();
+    this.finishTalk();
     if (this.gameMode === 'singlePlayer') {
       this.opts.send({
         type: 'replayUnlocked',
@@ -1202,14 +1311,17 @@ export class MatchSession {
       return provider;
     }
 
+    const table = this.diplomacy;
+    const heuristic = (): DecisionProvider => {
+      const bot = new HeuristicDecisionProvider(
+        `${this.opts.seed}-${playerId}`,
+        () => this.engine.view(playerId),
+        table === null ? {} : { diplomacy: table.playFor(playerId) },
+      );
+      return table === null ? bot : withDiplomacy(table, bot);
+    };
     const inner: AsyncDecisionProvider =
-      this.opts.providerKind === 'ai'
-        ? this.buildAiProvider()
-        : new AsyncAdapter(
-            new HeuristicDecisionProvider(`${this.opts.seed}-${playerId}`, () =>
-              this.engine.view(playerId),
-            ),
-          );
+      this.opts.providerKind === 'ai' ? this.buildAiProvider() : new AsyncAdapter(heuristic());
     const pacedProvider: AsyncDecisionProvider =
       this.gameMode === 'singlePlayer'
         ? {

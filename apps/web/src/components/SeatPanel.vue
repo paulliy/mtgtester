@@ -34,6 +34,8 @@ const props = defineProps<{
   exile?: SpectatorCard[];
   /** Object id -> permanent name, table-wide, for naming an attacker's/blocker's target. */
   nameById?: Map<string, string>;
+  /** Deals this seat is in right now, one line each (ADR 0031), when the game has table talk. */
+  deals?: string[];
 }>();
 
 const zonesExpanded = ref(false);
@@ -185,6 +187,12 @@ onBeforeUnmount(() => unregisterAnchor(props.seat.seat));
       :counters="seat.counters"
       compact
     />
+
+    <div v-if="deals && deals.length > 0" class="deal-container">
+      <span v-for="line in deals" :key="line" class="deal-badge" :title="`Deal ${line}`">
+        🤝 {{ line }}
+      </span>
+    </div>
 
     <div v-if="cmdDamageTaken.length > 0" class="cmd-damage-container">
       <span
@@ -367,6 +375,21 @@ header {
 }
 .meta-item.warn {
   color: var(--danger);
+}
+.deal-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+.deal-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #93c5fd;
+  background: rgb(96 165 250 / 0.12);
+  border: 1px solid rgb(96 165 250 / 0.35);
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
 }
 .cmd-damage-container {
   display: flex;

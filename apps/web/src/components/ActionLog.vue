@@ -6,9 +6,12 @@
  * AI reasoning is off by default and opt-in via the header toggle (ADR 0022, superseding brief
  * §15's debug-log-only rule). It renders *beside* each line, never inside `SpectatorLogLine` —
  * the engine emits the log and knows nothing about the AI.
+ *
+ * Table talk (ADR 0031) renders the same way: deals, answers, breaches and threat calls under the
+ * play they came with. It is public, so its toggle is a view preference, on by default.
  */
 import { computed, nextTick, ref, watch } from 'vue';
-import type { AiAnnotation, SpectatorLogLine } from '@mtg/shared';
+import type { AiAnnotation, SpectatorLogLine, TableTalkLine } from '@mtg/shared';
 import { playerFacingLogText } from '../lib/lossReasons';
 
 const props = defineProps<{
@@ -20,12 +23,33 @@ const props = defineProps<{
   /** Hidden entirely when reasoning cannot exist — a random-provider game has none. */
   canShowReasoning?: boolean;
   showReasoning?: boolean;
+  /** Table talk keyed by the line sequence it sits under (ADR 0031). */
+  talk?: Map<number, TableTalkLine[]>;
+  /** Hidden entirely in a game without diplomacy. */
+  canShowTalk?: boolean;
+  showTalk?: boolean;
 }>();
 
 const emit = defineEmits<{
   (event: 'selectSequence', sequence: number, turn: number): void;
   (event: 'update:showReasoning', value: boolean): void;
+  (event: 'update:showTalk', value: boolean): void;
 }>();
+
+function talkFor(sequence: number): TableTalkLine[] {
+  if (props.showTalk !== true) return [];
+  return props.talk?.get(sequence) ?? [];
+}
+
+/** Talk after the last line shown, e.g. what the table said as the game ended. */
+const trailingTalk = computed(() => {
+  if (props.showTalk !== true || props.talk === undefined) return [];
+  const last = props.lines.at(-1)?.sequence ?? -1;
+  return [...props.talk.entries()]
+    .filter(([sequence]) => sequence > last)
+    .sort(([a], [b]) => a - b)
+    .flatMap(([, lines]) => lines);
+});
 
 function notesFor(sequence: number): AiAnnotation[] {
   if (props.showReasoning !== true) return [];
@@ -72,6 +96,14 @@ watch(
         />
         AI reasoning
       </label>
+      <label v-if="canShowTalk" class="reasoning-toggle">
+        <input
+          :checked="showTalk === true"
+          type="checkbox"
+          @change="emit('update:showTalk', ($event.target as HTMLInputElement).checked)"
+        />
+        Table talk
+      </label>
       <!-- Header controls a host view adds, e.g. the player's "Copy report". -->
       <slot name="actions" />
       <span class="hint">Click line to jump</span>
@@ -96,7 +128,25 @@ watch(
           <span class="note-source">{{ note.kind === 'strategy' ? 'plan' : note.source }}</span>
           <span class="note-text">{{ note.text }}</span>
         </p>
+        <p
+          v-for="(said, index) in talkFor(line.sequence)"
+          :key="`${line.sequence}-talk-${index}`"
+          class="talk"
+          :class="said.message.kind"
+        >
+          <span class="note-source">table</span>
+          <span class="note-text">{{ said.text }}</span>
+        </p>
       </template>
+      <p
+        v-for="(said, index) in trailingTalk"
+        :key="`trailing-talk-${index}`"
+        class="talk"
+        :class="said.message.kind"
+      >
+        <span class="note-source">table</span>
+        <span class="note-text">{{ said.text }}</span>
+      </p>
       <p v-if="lines.length === 0" class="empty">nothing yet</p>
       <p v-else-if="showReasoning === true && !hasAnyReasoning" class="empty">
         no AI reasoning recorded yet
@@ -221,6 +271,24 @@ h3 {
   color: var(--danger);
   opacity: 1;
   font-weight: 700;
+}
+/* Table talk (ADR 0031) sits like a note but reads as speech, not reasoning: upright, and a
+   breach stands out the way a fallback does. */
+.talk {
+  margin: 0 0 0.15rem 0.5rem;
+  padding: 0.05rem 0.2rem 0.05rem 2.1rem;
+  display: flex;
+  gap: 0.4rem;
+  font-size: 0.66rem;
+  color: var(--text);
+  border-left: 2px dashed var(--accent);
+}
+.talk.breach {
+  border-left-color: var(--danger);
+}
+.talk.breach .note-source {
+  color: var(--danger);
+  opacity: 1;
 }
 .empty {
   color: var(--muted);

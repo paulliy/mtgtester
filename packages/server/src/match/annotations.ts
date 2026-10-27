@@ -38,16 +38,27 @@ export interface AnnotationReleaseOptions {
  */
 export function releaseAnnotations(options: AnnotationReleaseOptions): AnnotationRelease {
   const { gameMode, showReasoning, pending, lines } = options;
-  const held = [...pending];
+  if (gameMode === 'singlePlayer' || !showReasoning) return { due: [], held: [...pending] };
+  return releaseAnchored(pending, lines);
+}
 
-  if (gameMode === 'singlePlayer' || !showReasoning) return { due: [], held };
+/**
+ * The placement rule on its own, for anything anchored to a log sequence (reasoning, table talk):
+ * snap each item forward to the first line at or after its anchor, and hold anything anchored past
+ * the end of this batch for a later one.
+ */
+export function releaseAnchored<T extends { sequence: number }>(
+  pending: readonly T[],
+  lines: readonly SpectatorLogLine[],
+): { due: T[]; held: T[] } {
+  const held = [...pending];
   if (pending.length === 0 || lines.length === 0) return { due: [], held };
 
   const sequences = lines.map((line) => line.sequence).sort((a, b) => a - b);
   const last = sequences[sequences.length - 1] as number;
 
-  const due: AiAnnotation[] = [];
-  const stillHeld: AiAnnotation[] = [];
+  const due: T[] = [];
+  const stillHeld: T[] = [];
   for (const annotation of pending) {
     if (annotation.sequence > last) {
       stillHeld.push(annotation);

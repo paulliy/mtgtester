@@ -174,6 +174,7 @@ export type {
   DealStatus,
   TableMessage,
   TableMessageKind,
+  TableTalkLine,
   ThreatReason,
 } from './diplomacy';
 

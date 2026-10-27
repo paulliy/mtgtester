@@ -3,7 +3,7 @@ import { NO_ATTACK_TARGET } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { attackAction, creature } from './fixtures.test-helpers';
 import { describeMessage } from './render';
-import { DiplomacyTable } from './table';
+import { DiplomacyTable, type DiplomacyState } from './table';
 import { viewFrom, type World } from './world.test-helpers';
 import { withDiplomacy } from './index';
 
@@ -84,6 +84,34 @@ describe('DiplomacyTable — negotiation windows (ADR 0031 decisions 18 and 20)'
     };
     expect(lines()).toEqual(lines());
     expect(lines().length).toBeGreaterThan(3);
+  });
+
+  it('saves and restores mid-game, then negotiates exactly as if it had never stopped', () => {
+    const w = world();
+    const original = setup(w);
+    runTurns(original, w, 1, 6);
+    // Through JSON, as a database round trip would.
+    const saved = JSON.parse(JSON.stringify(original.toState())) as DiplomacyState;
+    const restored = DiplomacyTable.fromState(
+      { seed: 'seed', seats: w.order, viewOf: (seat) => viewFrom(w, seat), negotiates: () => true },
+      saved,
+    );
+    expect(restored.toState()).toEqual(original.toState());
+    runTurns(original, w, 7, 20);
+    runTurns(restored, w, 7, 20);
+    expect(restored.messages()).toEqual(original.messages());
+    expect(restored.stats).toEqual(original.stats);
+  });
+
+  it('refuses a saved state from another version', () => {
+    const w = world();
+    const saved = { ...setup(w).toState(), version: 99 } as unknown as DiplomacyState;
+    expect(() =>
+      DiplomacyTable.fromState(
+        { seed: 's', seats: w.order, viewOf: (seat) => viewFrom(w, seat), negotiates: () => true },
+        saved,
+      ),
+    ).toThrow(/version/);
   });
 
   it('never offers a deal to a seat that does not negotiate', () => {

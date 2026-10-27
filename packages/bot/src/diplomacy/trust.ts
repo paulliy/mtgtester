@@ -1,7 +1,7 @@
 import type { PlayerId } from '@mtg/shared';
 import { WEIGHTS } from '../weights';
 
-interface TrustRecord {
+export interface TrustRecord {
   kept: number;
   broken: number;
   /** Stake (LEP) of the biggest deal this seat has kept. */
@@ -32,6 +32,17 @@ export class TrustLedger {
 
   recordBroken(seat: PlayerId): void {
     this.recordFor(seat).broken++;
+  }
+
+  /** Every seat's record, as plain data for `DiplomacyTable.toState`. */
+  toJSON(): Record<PlayerId, TrustRecord> {
+    return Object.fromEntries([...this.records].map(([seat, r]) => [seat, { ...r }]));
+  }
+
+  static fromJSON(data: Record<PlayerId, TrustRecord>): TrustLedger {
+    const ledger = new TrustLedger();
+    for (const [seat, r] of Object.entries(data)) ledger.records.set(seat, { ...r });
+    return ledger;
   }
 
   snapshot(seat: PlayerId): Readonly<TrustRecord> {

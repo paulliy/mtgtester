@@ -30,6 +30,7 @@ export type {
 } from './combat-search';
 export { HeuristicDecisionProvider } from './provider';
 export {
+  DIPLOMACY_STATE_VERSION,
   DiplomacyTable,
   describeMessage,
   describeObligation,
@@ -41,6 +42,7 @@ export type {
   ActiveObligation,
   BreachReason,
   DiplomacyPlay,
+  DiplomacyState,
   DiplomacyStats,
   DiplomacyTableOptions,
   OfferOutcome,

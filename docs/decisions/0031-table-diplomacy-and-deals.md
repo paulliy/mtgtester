@@ -232,13 +232,19 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
     (`bun run diplomacy-sweep`), the same way combat search was in ADR 0024. The sweep has a
     `--no-deals` arm, threat-aware targeting without deals, so what deals add can be told apart
     from what the targeting does.
-22. **Replay.** Bot-only negotiation is a pure function of the seed and the views, so a spectator
-    game replays exactly. Before phase 2 persists anything, the table must become an
-    event-sourced reducer: a versioned, serializable state rebuilt from an append-only log of
-    negotiation events (offers, answers, judgments, window openings), with an explicit
-    proposed/pending/decided lifecycle. Human proposals and answers (phase 3) are inputs in that
-    log, persisted with the game the same way human actions are. Today the table's state lives in
-    private fields and cannot be saved or resumed mid-game.
+22. **Replay and saved state.** Bot-only negotiation is a pure function of the seed and the views,
+    so a spectator game replays exactly. The table's whole state is plain data:
+    `DiplomacyTable.toState()` returns a versioned `DiplomacyState` (deals, trust records, proposal
+    history, cooldowns, the message log and any attack still waiting to be judged, which keeps the
+    seat's `PlayerView` rather than closures over it), and `DiplomacyTable.fromState` rebuilds a
+    table that behaves identically from there, refusing a state of another version. This replaces
+    the event-sourced reducer an earlier draft asked for. A reducer earns its keep only when the
+    inputs must be replayed one at a time or audited; here every input is already derived from the
+    game, which the server persists and replays, so a snapshot is all a resume needs, and it costs
+    one serialize call instead of a second log with its own ordering rules. Spectator sessions are
+    not resumed across a server restart today, so the server does not store the snapshot yet; phase
+    3, where a human's pending offer must survive a reconnect, stores it with the game, and human
+    proposals and answers become part of that saved state the same way human actions are.
 23. **Hidden information.** Obligations can only name seats, and compliance reads only chosen
     target ids and public owners. Valuation reads only public fields of the deciding seat's
     `PlayerView` (its own hand only as a count, through the same position function used for
@@ -253,9 +259,15 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
   plain seats (`--all` for four diplomats, `--no-deals` for targeting only) and reports wins, deal
   outcomes and the reasons deals broke or were called off. It runs offline on the committed
   coverage fixture when the Scryfall bulk file is absent.
-- **Phase 2:** the event-sourced table of decision 22, then spectator delivery: a `tableTalk`
-  server message carrying `TableMessage`s, a log filter and deal lines between seat panels, and a
-  deals toggle on the new-game screen.
+- **Phase 2 (done):** the saved table state of decision 22, then spectator delivery. The server
+  renders each new `TableMessage` as a `TableTalkLine` anchored to the latest game event sequence
+  and sends it on the next `eventBatch` (`tableTalk`), released by the same snapping rule as AI
+  annotations, so lines arrive with the events they follow in every playback mode. Lines are
+  stored in `game_table_talk` and served by `GET /api/games/:id/table-talk`, so a late viewer or a
+  replay sees the same talk. The log shows talk inline behind a "Table talk" filter, each seat
+  panel shows the deals that seat is in at the viewed moment, and the new-game screen has a "Table
+  talk and deals" toggle when watching rule-based bots (`StartGame.diplomacy`, off by default; a
+  game with any human or AI seat ignores it).
 - **Phase 3:** single-player. A pending state for offers to and from a human (the human answers
   asynchronously; bots answer at once), a "propose deal" panel built on `offer`, accept, decline
   and counter cards for bot proposals, negotiation slots after attackers are declared as well as at
@@ -313,7 +325,8 @@ kills and danger that ignored blockers; `attackPlayer` keeping that could spoil 
 broke for lethal; the leader with no diplomatic route at all (it may now give without receiving);
 unmet promises credited as kept; endless renewal; repaired attack declarations judged as the seat's
 choice; mutable deals in the message log; and per-decision compliance work with no deal active.
-Deferred, and recorded in the phases above: the event-sourced, resumable table; asynchronous
+Deferred, and recorded in the phases above: the resumable table (done in phase 2 as a saved
+state, decision 22); asynchronous
 answers and a post-declaration negotiation slot for humans; the broader vocabulary; and the
 adversarial exploiter in the sweep.
 

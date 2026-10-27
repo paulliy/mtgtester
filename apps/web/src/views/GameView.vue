@@ -11,6 +11,7 @@ import type { SpectatorCard, SpectatorPermanent } from '@mtg/shared';
 import ActionLog from '../components/ActionLog.vue';
 import { CONNECTION_LABELS } from '../lib/socket';
 import { turnPositionLabel } from '../lib/turnLabels';
+import { dealLinesFor } from '../lib/tableTalk';
 import CombatOverlay from '../components/CombatOverlay.vue';
 import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
 import CopyGameReportButton from '../components/CopyGameReportButton.vue';
@@ -268,6 +269,7 @@ const roundLabel = computed(() => {
           :commander-damage="state.commanderDamage"
           :exile="exileFor(seat.seat)"
           :name-by-id="permanentNameById"
+          :deals="store.diplomacy ? dealLinesFor(seat.seat, store.dealsNow) : []"
         />
       </div>
 
@@ -288,7 +290,11 @@ const roundLabel = computed(() => {
           :annotations="store.annotations"
           :can-show-reasoning="store.providerKind === 'ai'"
           :show-reasoning="store.debugFlags.showAIResponses"
+          :talk="store.talkBySequence"
+          :can-show-talk="store.diplomacy"
+          :show-talk="store.showTableTalk"
           @select-sequence="store.jumpToSequence"
+          @update:show-talk="store.showTableTalk = $event"
           @update:show-reasoning="
             store.setDebugFlags({ ...store.debugFlags, showAIResponses: $event })
           "

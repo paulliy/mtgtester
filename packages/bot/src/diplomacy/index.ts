@@ -2,7 +2,14 @@ import type { DecisionRequest, DecisionResponse } from '@mtg/shared';
 import type { DiplomacyTable } from './table';
 
 export { DiplomacyTable } from './table';
-export type { DiplomacyStats, DiplomacyTableOptions, OfferOutcome, OfferTerms } from './table';
+export { DIPLOMACY_STATE_VERSION } from './table';
+export type {
+  DiplomacyState,
+  DiplomacyStats,
+  DiplomacyTableOptions,
+  OfferOutcome,
+  OfferTerms,
+} from './table';
 export type { ActiveObligation, BreachReason, DiplomacyPlay } from './play';
 export { estimateTable } from './estimate';
 export type { SeatEstimate, TableEstimate } from './estimate';

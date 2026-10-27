@@ -1,6 +1,6 @@
 /** Phase 5 read models: aggregate deck statistics and one-game debug/export payloads. */
 
-import type { AiAnnotation, AiReflection, ReflectionMoment } from '@mtg/shared';
+import type { AiAnnotation, AiReflection, ReflectionMoment, TableTalkLine } from '@mtg/shared';
 import type { SqliteLike } from './games';
 
 type Row = Record<string, unknown>;
@@ -295,6 +295,21 @@ export class StatsRepository {
    * Post-game reviews for a finished game (ADR 0022 Â§7), so commentary survives a page reload and
    * a historical game can be read back. Ordered by seat, not by when the model happened to answer.
    */
+  /** A game's table talk (ADR 0031), in the order it was said. */
+  gameTableTalk(gameId: string): TableTalkLine[] {
+    return rows(
+      this.db,
+      `SELECT sequence, turn, message_json, text
+         FROM game_table_talk WHERE game_id = ? ORDER BY position`,
+      gameId,
+    ).map((row) => ({
+      sequence: number(row['sequence']),
+      turn: number(row['turn']),
+      message: JSON.parse(String(row['message_json'])) as TableTalkLine['message'],
+      text: String(row['text'] ?? ''),
+    }));
+  }
+
   gameReflections(gameId: string): AiReflection[] {
     const stored = rows(
       this.db,

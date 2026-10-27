@@ -232,6 +232,20 @@ describe('isClientToServerMessage', () => {
         },
       }),
     ).toBe(true);
+    // The diplomacy switch (ADR 0031) is a boolean or absent, nothing else.
+    for (const [diplomacy, valid] of [
+      [true, true],
+      [false, true],
+      ['on', false],
+      [1, false],
+    ] as const) {
+      expect(
+        isClientToServerMessage({
+          type: 'startGame',
+          payload: { seats: [{ kind: 'pool' }], providerKind: 'random', diplomacy },
+        }),
+      ).toBe(valid);
+    }
     expect(
       isClientToServerMessage({
         type: 'setPlaybackMode',

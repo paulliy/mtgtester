@@ -209,6 +209,18 @@ CREATE TABLE IF NOT EXISTS game_reflections (
   PRIMARY KEY (game_id, seat)
 );
 
+-- Table talk and deals (ADR 0031): one row per line, in the order the table said it, anchored to
+-- the game_events.sequence it sits under. Public by design, so stored and served like the log.
+CREATE TABLE IF NOT EXISTS game_table_talk (
+  game_id      TEXT NOT NULL REFERENCES games(id),
+  position     INTEGER NOT NULL,
+  sequence     INTEGER NOT NULL,
+  turn         INTEGER NOT NULL,
+  message_json TEXT NOT NULL,
+  text         TEXT NOT NULL,
+  PRIMARY KEY (game_id, position)
+);
+
 -- TODO(phase-2/5): per-turn mana efficiency metrics.
 CREATE TABLE IF NOT EXISTS mana_metrics (
   game_id                 TEXT NOT NULL REFERENCES games(id),

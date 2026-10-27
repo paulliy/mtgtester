@@ -3,18 +3,17 @@ import type {
   DealObligation,
   DecisionRequest,
   DecisionResponse,
-  ObjectId,
   PlayerId,
   PlayerView,
   TableMessage,
   ThreatReason,
 } from '@mtg/shared';
 import { WEIGHTS } from '../weights';
-import { judgeDecision, offeredBreach, ownerLookup, stackLookup, type OwnerOf } from './compliance';
+import { judgeDecision, offeredBreach, ownerLookup, stackLookup } from './compliance';
 import { couldKill, estimateTable, type TableEstimate } from './estimate';
 import { released, type ActiveObligation, type BreachReason, type DiplomacyPlay } from './play';
 import { bestDealWith, rankedProposals } from './propose';
-import { TrustLedger } from './trust';
+import { TrustLedger, type TrustRecord } from './trust';
 import {
   answerDeal,
   roundOf,
@@ -108,11 +107,44 @@ interface Decline {
 interface HeldAttack {
   request: DecisionRequest;
   response: DecisionResponse;
-  ownerOf: OwnerOf;
-  isStack: (id: ObjectId) => boolean;
-  /** The deciding seat's table when it decided, for the self-defense release. */
-  estimate: TableEstimate;
+  /** The deciding seat's view when it decided: owners and the table are read from it. */
+  view: PlayerView;
   repairedBefore: number;
+}
+
+/** Version of `DiplomacyState`; bumped on any change to its shape. */
+export const DIPLOMACY_STATE_VERSION = 1;
+
+/**
+ * Everything a `DiplomacyTable` knows, as plain JSON (ADR 0031 decision 22). A table rebuilt from
+ * it with `DiplomacyTable.fromState` and the same options continues exactly as the original would
+ * have, so a game can be saved and resumed in the middle of a negotiation.
+ */
+export interface DiplomacyState {
+  version: typeof DIPLOMACY_STATE_VERSION;
+  trust: Record<PlayerId, TrustRecord>;
+  records: Array<{
+    deal: Deal;
+    credit: Array<[PlayerId, number]>;
+    met: number[];
+    leaderAtStart: PlayerId | null;
+    turnsTaken: Array<[PlayerId, number]>;
+    tested: PlayerId[];
+    freed: PlayerId[];
+    couldAttack: PlayerId[];
+  }>;
+  declines: Decline[];
+  lastEnded: Array<[string, PairEnd]>;
+  proposedThisTurn: PlayerId[];
+  log: TableMessage[];
+  pendingBreach: Array<[string, BreachReason]>;
+  heldAttack: HeldAttack | null;
+  drained: number;
+  nextDealId: number;
+  turnSeen: number;
+  activeNow: PlayerId | null;
+  announcedLeader: PlayerId | null;
+  stats: DiplomacyStats;
 }
 
 /** Canonical form of a deal's terms and length, for the re-proposal cooldown. */
@@ -162,7 +194,7 @@ function threatReasons(table: TableEstimate, leader: PlayerId): ThreatReason[] {
  */
 export class DiplomacyTable {
   private readonly opts: DiplomacyTableOptions;
-  private readonly trust = new TrustLedger();
+  private trust = new TrustLedger();
   private readonly records: DealRecord[] = [];
   private readonly declines: Decline[] = [];
   private readonly lastEnded = new Map<string, PairEnd>();
@@ -186,6 +218,71 @@ export class DiplomacyTable {
 
   constructor(opts: DiplomacyTableOptions) {
     this.opts = opts;
+  }
+
+  /** The table's whole state as plain, versioned JSON. */
+  toState(): DiplomacyState {
+    return structuredClone({
+      version: DIPLOMACY_STATE_VERSION,
+      trust: this.trust.toJSON(),
+      records: this.records.map((r) => ({
+        deal: r.deal,
+        credit: [...r.credit],
+        met: [...r.met],
+        leaderAtStart: r.leaderAtStart,
+        turnsTaken: [...r.turnsTaken],
+        tested: [...r.tested],
+        freed: [...r.freed],
+        couldAttack: [...r.couldAttack],
+      })),
+      declines: this.declines,
+      lastEnded: [...this.lastEnded],
+      proposedThisTurn: [...this.proposedThisTurn],
+      log: this.log,
+      pendingBreach: [...this.pendingBreach],
+      heldAttack: this.heldAttack,
+      drained: this.drained,
+      nextDealId: this.nextDealId,
+      turnSeen: this.turnSeen,
+      activeNow: this.activeNow,
+      announcedLeader: this.announcedLeader,
+      stats: this.stats,
+    });
+  }
+
+  /** Rebuild a table from `toState`. Options are not state: pass the same ones the game uses. */
+  static fromState(opts: DiplomacyTableOptions, saved: DiplomacyState): DiplomacyTable {
+    if (saved.version !== DIPLOMACY_STATE_VERSION) {
+      throw new Error(`unsupported diplomacy state version ${String(saved.version)}`);
+    }
+    const state = structuredClone(saved);
+    const table = new DiplomacyTable(opts);
+    table.trust = TrustLedger.fromJSON(state.trust);
+    for (const r of state.records) {
+      table.records.push({
+        deal: r.deal,
+        credit: new Map(r.credit),
+        met: new Set(r.met),
+        leaderAtStart: r.leaderAtStart,
+        turnsTaken: new Map(r.turnsTaken),
+        tested: new Set(r.tested),
+        freed: new Set(r.freed),
+        couldAttack: new Set(r.couldAttack),
+      });
+    }
+    table.declines.push(...state.declines);
+    for (const [key, end] of state.lastEnded) table.lastEnded.set(key, end);
+    for (const seat of state.proposedThisTurn) table.proposedThisTurn.add(seat);
+    table.log.push(...state.log);
+    for (const [dealId, reason] of state.pendingBreach) table.pendingBreach.set(dealId, reason);
+    table.heldAttack = state.heldAttack;
+    table.drained = state.drained;
+    table.nextDealId = state.nextDealId;
+    table.turnSeen = state.turnSeen;
+    table.activeNow = state.activeNow;
+    table.announcedLeader = state.announcedLeader;
+    Object.assign(table.stats, state.stats);
+    return table;
   }
 
   /** Every message so far. */
@@ -262,21 +359,16 @@ export class DiplomacyTable {
       return;
     }
     const view = this.opts.viewOf(request.decidingPlayer);
-    const ownerOf = ownerLookup(view);
-    const isStack = stackLookup(view);
-    const estimate = estimateTable(view);
     if (request.decisionType === 'declareAttackers') {
       this.heldAttack = {
         request,
         response,
-        ownerOf,
-        isStack,
-        estimate,
+        view,
         repairedBefore: this.opts.repairedAttacks?.() ?? 0,
       };
       return;
     }
-    this.judge(request, response, ownerOf, isStack, estimate);
+    this.judge(request, response, view);
   }
 
   /** Judge a held attack declaration now. Drivers call this once the game is over. */
@@ -289,7 +381,7 @@ export class DiplomacyTable {
       this.pendingBreach.clear();
       return;
     }
-    this.judge(held.request, held.response, held.ownerOf, held.isStack, held.estimate);
+    this.judge(held.request, held.response, held.view);
   }
 
   private isRetryOfHeld(request: DecisionRequest): boolean {
@@ -303,13 +395,10 @@ export class DiplomacyTable {
     return presentation.attackDeclaration?.rejection !== undefined;
   }
 
-  private judge(
-    request: DecisionRequest,
-    response: DecisionResponse,
-    ownerOf: OwnerOf,
-    isStack: (id: ObjectId) => boolean,
-    estimate: TableEstimate,
-  ): void {
+  private judge(request: DecisionRequest, response: DecisionResponse, view: PlayerView): void {
+    const ownerOf = ownerLookup(view);
+    const isStack = stackLookup(view);
+    const estimate = estimateTable(view);
     for (const record of this.records) {
       if (record.deal.status !== 'active') continue;
       for (let i = 0; i < record.deal.obligations.length; i++) {

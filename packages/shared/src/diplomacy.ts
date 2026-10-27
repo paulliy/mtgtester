@@ -117,3 +117,15 @@ export type TableMessage =
     };
 
 export type TableMessageKind = TableMessage['kind'];
+
+/**
+ * One line of table talk as the spectator log shows it (ADR 0031 phase 2): the structured message,
+ * its sentence, and the `GameEvent.sequence` it sits under, like an AI annotation (ADR 0022).
+ * Table talk is public, so unlike reasoning it is never withheld.
+ */
+export interface TableTalkLine {
+  sequence: number;
+  turn: number;
+  message: TableMessage;
+  text: string;
+}
