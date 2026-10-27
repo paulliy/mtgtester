@@ -4,165 +4,162 @@ Status: Proposed
 
 Date: 2026-10-27
 
+Amends: [0019](0019-direct-player-controls.md) decision 5. Presentation facts for casts and
+abilities move from `LegalAction.data` to server-built presentation.
+
 Plan: [server-computed presentation](../plans/server-computed-presentation.md). Related:
-[ADR 0031](0031-multiplayer-tables.md) (multiplayer tables), which depends on this ADR only for
-the views it adds.
+[ADR 0031](0031-multiplayer-tables.md) (multiplayer tables).
 
 ## Context
 
 The engine decides legality and the browser never does (ADR 0018, ADR 0019). The browser does,
-however, derive game facts on its own, and some of what it derives is wrong.
+however, derive game facts on its own, and one of those derivations is wrong.
 
-- **Card types come from the printed type line.** The projection's `typeLine` is
-  `perm.typeLine` (`view/spectator.ts:55`), the printed line, while power, toughness, keywords
-  and colors in the same function come from `computeCharacteristics`. The browser classifies
-  cards by matching text in that line:
-  - `PlayerGameView.vue:129` `isPiledLand`;
-  - `SeatPanel.vue:62-63`;
-  - `lib/card.ts:2`;
-  - `lib/tokenArt.ts:40`.
-
-  So an animated manland that is attacking still reads "Land", and the player board piles it
-  with lands. The spectator `SeatPanel` and the player board also disagree about land creatures,
-  because each checks the text its own way.
-
-- **Labels and costs come from the untyped `LegalAction.data`.** The browser reads 17 keys of
-  `LegalAction.data` (`Record<string, unknown>`) to build cost lines, cast-variant labels,
-  X-value groups, payment summaries and mana symbols. Those reads are in `PlayerGameView.vue`,
-  `lib/actionLabels.ts` and `ManaTaps.vue`. A renamed key silently drops a cost from a confirm
-  dialog.
-- **Text is parsed.** The engine's prompt is rewritten with a regex (`lib/turnLabels.ts:38`,
-  used by `DecisionPanel.vue:80` and `PlayerGameView.vue:2050`). The game-over line is found by
-  matching log text (`PlayerGameView.vue:182`).
+- **Card types come from the printed type line.** The projection's `typeLine` is the printed line
+  (`perm.typeLine`, `view/spectator.ts:55`), while power, toughness, keywords and colors in the
+  same function come from `computeCharacteristics`. The browser classifies cards by matching text
+  in that line (`PlayerGameView.vue:129`, `SeatPanel.vue:62-63`, `lib/card.ts:2`,
+  `lib/tokenArt.ts:40`). So an attacking animated manland still reads "Land" and the player board
+  piles it with lands. The spectator `SeatPanel` and the player board also disagree about land
+  creatures.
+- **Labels and costs come from the untyped `LegalAction.data`.** The browser reads 17 keys of it
+  to build cost lines, cast-variant labels, X-value groups, payment summaries and mana symbols
+  (`PlayerGameView.vue`, `lib/actionLabels.ts`, `ManaTaps.vue`). A renamed key silently drops a
+  cost from a confirm dialog.
+- **Text is parsed.** The engine's prompt is rewritten by regex (`lib/turnLabels.ts:38`, used at
+  `DecisionPanel.vue:80` and `PlayerGameView.vue:2050`). The game-over line is found by matching
+  log text (`PlayerGameView.vue:182`).
 - **Rules are copied.** The 21-point commander-damage rule is a constant in
   `CommanderDamageGrid.vue:17`.
+- **Events are guessed.** Combat-strike and life-flash animations guess what happened by diffing
+  snapshots (`useCombatStrikes.ts`, `useLifeFlash.ts`, `useBoardFlash.ts`).
 
 Every client repeats this work: the web app, the JSON agent client, and any later client.
 
 Constraints found in the code:
 
-- **`LegalAction.data` cannot change shape.** `ai/context.ts:186` puts `legalActions` into AI
-  prompts verbatim. The heuristic bot reads `data` (`bot/src/evaluate.ts:59,107`,
-  `combat-search.ts:109`, `veto.ts:16`), and so do `match/player-yield.ts:22`,
-  `match/human-provider.ts:53`, `ai/primer.ts` and `ai/heuristics.ts`. Moving or renaming keys
-  would change prompts, AI benchmark baselines and fixed-seed bot games.
-- **There are already typed per-action UI structures.** `ActionInteraction`
-  (`shared/src/engine.ts`) carries source ids and target slots. `DecisionPresentation` and
-  `ActionPresentation` carry a verb, subjects and a role per action id. Neither reaches the AI.
-  Any new presentation must extend these rather than run alongside them.
-- **Saved snapshots lack new fields.** Turn snapshots of `SpectatorState` are stored as JSON in
-  `game_state_snapshots`, and read back only through `GameRecorder.loadTurnSnapshot`
-  (`db/games.ts:198`). Any new projection field is missing from older games. The repository
-  rule is to document derivations, and to show legacy values as unavailable rather than guess
-  them.
-- **AI prompts never see the spectator projection.** They read `PlayerView` and
-  `PermanentView` (`view/view.ts`, `ai/card-summary.ts`). New `SpectatorPermanent` fields cannot
-  reach AI prompts, but changing `view.ts` would.
+- **`LegalAction.data` cannot change shape.** AI prompts include `legalActions` verbatim
+  (`ai/context.ts:186`). The bot (`evaluate.ts`, `combat-search.ts`, `veto.ts`), `match/`
+  (`player-yield.ts`, `human-provider.ts`) and `ai/` (`primer.ts`, `heuristics.ts`) all read it.
+- **Presentation exists only for choice decisions.** `ActionPresentation` (verb, subjects, role)
+  and `DecisionPresentation` (layout and per-action entries) exist in `shared/src/engine.ts`, but
+  the engine fills them only for choice decisions (`decisions.ts`, helpers in `present.ts`).
+  Priority actions — casts, activations, land plays — have none, and the player board does not
+  read `presentation` today. The typed `interaction` field already carries source ids and target
+  slots for every action.
+- **AI prompts never see the spectator projection.** They read `PlayerView` and `PermanentView`,
+  so new `SpectatorPermanent` fields cannot reach them, but changing `view/view.ts` would.
+- **Old snapshots are not displayed.** Turn snapshots are read back only for the game the current
+  server is running (`GameRecorder.loadTurnSnapshot`, reached through `recorderFor` on the live
+  game). No screen shows a saved snapshot from an older game, so new optional fields need no
+  read-time migration today.
 
 ## Decision
 
 1. **The server computes; the client renders.** Every value a player sees that comes from rules
-   or engine data is computed on the server, typed, and sent. The client may:
+   or engine data is computed on the server, typed, and sent.
+
+   The client may:
    - lay out the board and animate it;
-   - keep interactive state: hover, drag, partly chosen targets, the combat plan being
-     composed, unsent input;
-   - keep display preferences, including cosmetic thresholds such as low-life styling.
+   - keep interactive state (hover, drag, partly chosen targets, the combat plan being composed,
+     unsent input and its confirmations);
+   - keep display preferences.
 
    It may not:
-   - parse engine text (prompts, log lines, action descriptions);
+   - parse engine text;
    - read `LegalAction.data`;
    - classify cards from `typeLine`;
    - hold rules constants;
-   - infer game events by comparing board snapshots.
+   - infer game events from board snapshots.
 
 2. **Card types come from characteristics.** `permanentView` adds optional `types`,
    `supertypes` and `subtypes` from the `computeCharacteristics` result it already computes.
-   `cardView` adds `isToken`, which permanents already carry, and printed types for cards off
-   the battlefield. A face-down permanent computes as a plain Creature (CR 708.2).
-   `PlayerView` and `view.ts` do not change, so AI prompts do not change.
+   `cardView` adds `isToken` and printed types. A face-down permanent computes as a plain
+   Creature (CR 708.2). `shared` gains one pure helper, `boardGroupOf(types)`, that every view
+   uses to group lands, creatures and other permanents. A land creature groups with creatures,
+   because it can attack and block. `PlayerView` and `view.ts` are unchanged.
 
-3. **Per-action presentation extends `ActionPresentation`.** The engine keeps building
-   `request.presentation` as it does now. Before a request reaches a browser, the server
-   enriches a copy of it in a new `match/presentation.ts`. Each `ActionPresentation` gains
-   optional `label`, `summary`, `costLabels`, `entryNote`, `xFamily`, `payment`, `manaSymbols`
-   and `targetHint`. `DecisionPresentation` gains `playerPrompt` and `xFamilies`.
-   - There is no second per-action structure, and no new index of sources: the client keeps
-     grouping by the typed `interaction`, as ADR 0019 decision 2 specifies.
-   - `presentation.ts` is one more reader of `data`, alongside the engine, AI, bot and `match/`
-     readers listed above, and it is the only one that feeds a browser.
-   - It builds from the already-filtered menu and the seat's player projection, never from
-     `GameState`.
+3. **Every action gets a presentation entry, through the existing structure.**
+   - `DecisionPresentation` gains a `'priority'` layout and `playerPrompt`.
+   - `ActionPresentation` gains optional `label`, `summary`, `costLabels`, `entryNote`,
+     `xFamily`, `payment`, `manaSymbols` and `targetHint`.
+   - For priority decisions the server creates the entries, with the verb `Cast`, `Play`,
+     `Activate` or `Pass`, and empty subjects.
+   - For choice decisions the server adds the new fields to the engine's existing entries.
+   - This is the first time priority actions carry presentation. It uses the existing types
+     rather than a second per-action structure.
+   - The client keeps grouping actions by the typed `interaction`, as ADR 0019 decision 2
+     specifies.
+   - The new `match/presentation.ts` builds entries from the already-filtered menu and the seat's
+     player projection, never from `GameState`.
 
-4. **`data` keys are checked at run time, not by retyping `data`.** `data` stays
-   `Record<string, unknown>`. Closing the type would touch every construction site in
-   `legal.ts`, `resolve.ts`, `combat.ts`, `cast.ts`, `condition.ts` and `manual.ts`, and every
-   reader. A registry in `shared` names each `data` key the engine emits and which consumer
-   handles it. A test runs the Card Test Lab scenarios and a fixed-seed game, collects every
-   emitted key, and fails on an unregistered key, or on a registered key that presentation reads
-   but nothing emits.
+4. **The `data` keys are registered and checked at run time.** `data` stays
+   `Record<string, unknown>`. A registry in `shared` names each key the engine emits, the set of
+   value types seen for it, and its consumers. A test runs every registered Card Test Lab
+   scenario and a fixed-seed game. It fails on an unregistered key, on a value type outside the
+   registered set, or on a presentation key that nothing emits.
 
-5. **Board, game-over and commander damage.**
-   - The server adds `boardGroup` (`lands`, `creatures`, `other`) per permanent from the
-     characteristic types, so every view groups the same way. A land creature groups with
-     creatures, because it can attack and block.
-   - `GameOverPayload` gains `summary`.
-   - Commander-damage entries gain `lethal` and `remaining`.
+5. **Game over and commander damage.** `GameOverPayload` gains `summary`. Commander-damage
+   entries gain `lethal` and `remaining`.
 
-6. **Legacy snapshots are labeled, not guessed.** A snapshot saved without `types` is filled on
-   load from the printed type line, ignoring the `Token` word. It is marked
-   `typesFrom: 'printed'`, and the replay view shows a one-line note that older games group cards
-   by printed type. `GameRecorder.loadTurnSnapshot` is the only reader of `state_json`, so this
-   is the only place that needs it. Stored rows are never rewritten.
+6. **The new projection fields are optional.** No read-time migration is needed, because no
+   screen shows an old game's snapshot. If a historical replay screen is added later, it must
+   show missing types as unavailable rather than derive them from the printed line, as the
+   repository's rule on legacy data requires.
 
-7. **Raw `data` reaches a player socket only on request.** A player connection says in its first
-   message whether it wants raw `LegalAction.data`. The JSON agent client asks for it, keeping
-   its documented contract that `legalActions` are published exactly as received. The browser
-   never asks. Both the tester and the table server follow this one rule.
+7. **Raw `data` reaches a player socket only on request.** A player connection declares
+   `capabilities` in its first message, and again on every resume. Only the JSON agent client
+   asks for `rawActionData`, which keeps its documented contract. The browser never asks. Every
+   server follows this one rule.
 
-8. **Animation cues belong to Phase 8.** Combat-strike and life-flash cues currently diff
-   snapshots. They move to the typed, server-built cue contract that
-   `docs/plans/phase-8-action-animations.md` already plans. That contract has two requirements:
-   - it is built per seat from engine events, with object ids looked up on the board both
-     before and after the event batch, so an event about a creature that just died is kept;
-   - it carries only what the seat's projection shows.
+8. **Server-built animation cues.** This ADR defines the first slice of Phase 8's planned
+   `ActionCue` contract (`docs/plans/phase-8-action-animations.md`): `damage` and `lifeChange`
+   cues.
+   - Each cue carries the event sequence and object or player ids.
+   - Cues are built per seat from engine events, with object ids looked up on the boards before
+     and after the event batch, so an event about a creature that just died is kept.
+   - A cue carries only what the seat's projection shows.
 
-   This ADR does not define a second cue type.
+   Phase 8 had keyed cues to spectator snapshots and had no per-seat rule, so these are new
+   requirements on that plan. Phase 8 extends this slice instead of defining its own.
 
-9. **A lint rule keeps the boundary.** `eslint.config.js` gains `no-restricted-syntax` and
-   `vue/no-restricted-syntax` selectors for `apps/web/src`, the same approach the repository
-   already uses for card authoring. They reject member access to `.data` on a legal action,
-   string matching on `typeLine`, regex calls on log or prompt text, and the named rules
-   constants. Reviewed exceptions use an inline disable with a reason.
+9. **Lint is narrow; run-time checks do the rest.** The repository's lint config is untyped, so a
+   rule cannot tell a `LegalAction` from anything else. `eslint.config.js` gains only two
+   syntactic rules for `apps/web/src`:
+   - string or regex calls on a `typeLine` member;
+   - regex `.test` calls on `prompt` or `text` members.
+
+   Reading `data` is prevented at run time (decision 7, since the browser never receives it), and
+   the deleted modules cannot be re-imported because they no longer exist.
 
 ## Consequences
 
-- The animated-land bug and the spectator/player disagreement are fixed, and the fix shows up
-  as an intentional, documented change in golden tests.
-- The browser stops importing `lib/actionLabels.ts`, `lib/card.ts` and `playerFacingPrompt`.
-  `PlayerGameView.vue` loses its derivation helpers.
-- The agent client and any later client get labels and costs without re-deriving them.
+- The animated-land bug and the spectator/player disagreement are fixed, each with its own test.
+- `lib/actionLabels.ts`, `lib/card.ts`, `playerFacingPrompt` and the three snapshot-diffing
+  composables are removed from the browser.
 - AI prompts, bot behavior and fixed-seed engine event streams are unchanged. `SpectatorState`
-  bytes do change (the new fields), so any test comparing whole snapshots is updated in the same
-  change.
-- The server does a little more work per human decision: enriching one menu. The projection
-  gains three short arrays per permanent. `computeCharacteristics` already runs for each
-  projected permanent and is cached.
-- What stays in the client is listed in the plan. Moving combat-plan composition to the server
-  was considered and rejected: it already offers only engine-provided options and submits one
-  proposal the engine validates, so moving it would add a round trip on every click.
+  JSON gains fields, so tests that compare whole snapshots are updated in the same change.
+- The server does a little more work per human decision, building one menu's presentation. The
+  projection gains three short arrays per permanent, and `computeCharacteristics` is already
+  cached.
+- Combat-plan composition stays in the client. It offers only engine-provided options and submits
+  one proposal the engine validates, and moving it would add a round trip on every click.
 
 ## Alternatives considered
 
-- **Keep derivation in the browser.** Rejected. It is already wrong once, it is repeated in
-  every client, and it fails silently when engine wording or keys change.
-- **Move `data` into typed presentation.** Rejected. It would change AI prompts and bot behavior.
-- **Close the `data` type and use `satisfies`.** Rejected for now. It is a wide refactor across
-  the engine and its readers, and a runtime key registry catches the same renames with a smaller
-  change.
-- **A new parallel `SeatDecisionPresentation` type.** Rejected. It would put two per-action UI
-  structures in one frame.
-- **Build finished strings in the engine.** Rejected. The rules-engine constraints keep UI logic
-  out of `packages/engine`. The engine supplies typed facts and the server writes the words.
-- **Move the unplayed-land reminder to the server.** Rejected. It is a confirmation of unsent
-  input. Under a decision clock the clock keeps running whether or not a dialog is open, so the
-  server loses nothing by leaving it in the client.
+- **Keep derivation in the browser.** Rejected. It is wrong once already, every client repeats it,
+  and it fails silently when engine wording or keys change.
+- **Move `data` into typed presentation.** Rejected. That would change AI prompts and bot
+  behavior.
+- **Close the `data` type with `satisfies`.** Rejected for now. It touches every construction
+  site (`legal.ts`, `resolve.ts`, `combat.ts`, `cast.ts`, `condition.ts`, `manual.ts`) and every
+  reader. The runtime registry catches the same renames with a smaller change.
+- **A parallel per-seat presentation type.** Rejected. It would put two per-action structures in
+  one frame.
+- **A per-source index of the menu.** Rejected. It duplicates the typed `interaction`.
+- **Finished strings built in the engine.** Rejected. The rules-engine constraints keep UI logic
+  out of `packages/engine`.
+- **Move the unplayed-land reminder to the server.** Rejected. It confirms unsent input, and a
+  running clock keeps running either way.
+- **Fill old snapshots' types from the printed line.** Rejected. Nothing reads them today, and
+  guessing would break the repository's rule on legacy data.
