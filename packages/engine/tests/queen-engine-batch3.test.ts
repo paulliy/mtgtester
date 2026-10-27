@@ -273,6 +273,49 @@ describe('Rakdos Charm', () => {
     expect(playerOf(ctx, 'P1').life).toBe(youLife - 2);
     expect(playerOf(ctx, 'P2').life).toBe(oppLife - 1);
   });
+
+  it('rakdos-charm-each-creature-is-the-damage-source', () => {
+    // The creature deals the damage, not the Charm, so its lifelink and infect apply.
+    const ctx = pod('rakdos-source');
+    spawn(ctx, 'P1', swamp());
+    spawn(ctx, 'P1', mountain());
+    const linker = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Charm Lifelinker',
+        typeLine: 'Creature — Bat',
+        oracleText: 'Lifelink',
+        keywords: ['Lifelink'],
+        power: '1',
+        toughness: '1',
+      }),
+    );
+    spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Charm Infector',
+        typeLine: 'Creature — Phyrexian',
+        oracleText: 'Infect',
+        keywords: ['Infect'],
+        power: '1',
+        toughness: '1',
+      }),
+    );
+    const youLife = playerOf(ctx, 'P1').life;
+    const oppLife = playerOf(ctx, 'P2').life;
+    const spell = conjure(ctx, 'P1', card, 'hand');
+    castMode(ctx, playerOf(ctx, 'P1'), spell.id, 2, new Map());
+    expect(playerOf(ctx, 'P1').life).toBe(youLife);
+    expect(playerOf(ctx, 'P2').life).toBe(oppLife);
+    expect(playerOf(ctx, 'P2').poisonCounters).toBe(1);
+    expect(
+      ctx.state.eventLog.some(
+        (event) => event.type === 'damage' && event.payload['sourceCardId'] === linker.cardId,
+      ),
+    ).toBe(true);
+  });
 });
 
 describe('Karoo bounce lands', () => {

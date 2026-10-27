@@ -137,7 +137,7 @@ describe('Endless Foot Assault', () => {
 describe('Securitron Squadron', () => {
   const card = pinned('Securitron Squadron');
 
-  it('securitron-puts-a-counter-only-on-another-creature-token', () => {
+  it('securitron-puts-a-counter-on-a-creature-token', () => {
     const ctx = pod('securitron-counter');
     const squadron = spawn(ctx, 'P1', card);
     const token = spawn(ctx, 'P1', oracle({ name: 'Securitron Friend' }));
@@ -156,6 +156,29 @@ describe('Securitron Squadron', () => {
         ),
       ),
     ).toBe(false);
+  });
+
+  it('securitron-token-copy-counters-itself-as-it-enters', () => {
+    // No "another": a squad copy sees its own entry (CR 603.6a), so it triggers once for itself
+    // and once from the original Squadron.
+    const ctx = pod('securitron-self');
+    const original = spawn(ctx, 'P1', card);
+    const copy = spawn(ctx, 'P1', card);
+    copy.isToken = true;
+    queueTriggersForObject(ctx, 'enters', copy);
+    const counterTriggers = ctx.state.pendingTriggers.filter((trigger) =>
+      trigger.ability.effects.some(
+        (effect) => effect.op === 'putCounters' && effect.counter === '+1/+1',
+      ),
+    );
+    expect(counterTriggers.map((trigger) => trigger.sourceCardId).sort()).toEqual(
+      [original.cardId, copy.cardId].sort(),
+    );
+    for (const trigger of counterTriggers) {
+      const source = trigger.sourceCardId === copy.cardId ? copy : original;
+      pump(executeAbility(ctx, source, trigger.ability, [], copy.cardId));
+    }
+    expect(copy.counters['+1/+1']).toBe(2);
   });
 
   it('securitron-does-not-counter-a-nontoken-creature', () => {

@@ -14,6 +14,7 @@ import { createGame } from '../src/state/game';
 import { moveObject, queueTriggersForEvent } from '../src/state/objects';
 import { manaSourcesFor } from '../src/state/queries';
 import type { GameContext } from '../src/state/types';
+import { priorityCheckpoint } from '../src/sba/sba';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { queueStepTriggers } from '../src/turn/turn';
 import {
@@ -266,6 +267,30 @@ describe('Overwhelming Instinct', () => {
     );
     expect(ctx.state.pendingTriggers).toHaveLength(1);
     resolvePending(ctx);
+    expect(playerOf(ctx, 'P1').hand.length).toBe(hand + 1);
+  });
+
+  it('instinct-still-draws-after-an-attacker-leaves-combat', () => {
+    // The card has no "if": the attack count qualifies the event and is not rechecked on
+    // resolution (CR 603.4 applies only to intervening-if clauses).
+    const ctx = pod('instinct-removed');
+    spawn(ctx, 'P1', card);
+    const attackers = [
+      spawn(ctx, 'P1', bear()),
+      spawn(ctx, 'P1', bear()),
+      spawn(ctx, 'P1', bear()),
+    ];
+    for (const attacker of attackers) attacker.attacking = 'P2';
+    const hand = playerOf(ctx, 'P1').hand.length;
+    queueTriggersForEvent(
+      ctx,
+      'attacks',
+      attackers.map((permanent) => ({ permanent, playerId: 'P2' })),
+    );
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    attackers[0]!.attacking = null;
+    pump(resolveTopOfStack(ctx));
     expect(playerOf(ctx, 'P1').hand.length).toBe(hand + 1);
   });
 

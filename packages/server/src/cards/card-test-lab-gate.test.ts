@@ -15,6 +15,7 @@ import { PR09_ALL_SCENARIO_IDS } from './pr09-scenario-catalog';
 import { PR10_ALL_SCENARIO_IDS } from './pr10-scenario-catalog';
 import { PR11_ALL_SCENARIO_IDS } from './pr11-scenario-catalog';
 import { PR12_ALL_SCENARIO_IDS } from './pr12-scenario-catalog';
+import { PR13_ALL_SCENARIO_IDS } from './pr13-scenario-catalog';
 import { PR11B_ALL_SCENARIO_IDS } from './pr11b-scenario-catalog';
 import {
   CARD_TEST_SCENARIO_IDS,
@@ -70,6 +71,28 @@ describe('Card Test Lab viewer-evidence gate', () => {
     expect(labSpec).toContain('!PR12_ALL_SCENARIO_IDS.includes(scenarioId)');
     expect(labSpec).toContain('!PR12_ALL_SCENARIO_IDS.includes(id)');
     const spec = readFileSync(resolve('apps/web/e2e/pr12-card-test-lab.spec.ts'), 'utf8');
+    expect(spec).toContain('exercised.add(id)');
+    expect(spec).toContain('test.afterAll(');
+    expect(spec).toContain("trace: 'on'");
+    expect(spec).not.toContain('routeWebSocket');
+    expect(spec).not.toContain('page.route(');
+  });
+  it('requires the dedicated PR11b browser batch and excludes it from generic walkthroughs', () => {
+    for (const id of PR11B_ALL_SCENARIO_IDS) expect(CARD_TEST_SCENARIO_IDS).toContain(id);
+    expect(labSpec).toContain('!PR11B_ALL_SCENARIO_IDS.includes(scenarioId)');
+    expect(labSpec).toContain('!PR11B_ALL_SCENARIO_IDS.includes(id)');
+    const spec = readFileSync(resolve('apps/web/e2e/pr11b-card-test-lab.spec.ts'), 'utf8');
+    expect(spec).toContain('exercised.add(id)');
+    expect(spec).toContain('test.afterAll(');
+    expect(spec).toContain("trace: 'on'");
+    expect(spec).not.toContain('routeWebSocket');
+    expect(spec).not.toContain('page.route(');
+  });
+  it('requires the dedicated PR13 browser batch and excludes it from generic walkthroughs', () => {
+    for (const id of PR13_ALL_SCENARIO_IDS) expect(CARD_TEST_SCENARIO_IDS).toContain(id);
+    expect(labSpec).toContain('!PR13_ALL_SCENARIO_IDS.includes(scenarioId)');
+    expect(labSpec).toContain('!PR13_ALL_SCENARIO_IDS.includes(id)');
+    const spec = readFileSync(resolve('apps/web/e2e/pr13-card-test-lab.spec.ts'), 'utf8');
     expect(spec).toContain('exercised.add(id)');
     expect(spec).toContain('test.afterAll(');
     expect(spec).toContain("trace: 'on'");

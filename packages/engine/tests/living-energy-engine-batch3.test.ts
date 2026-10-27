@@ -204,6 +204,19 @@ describe('Confiscation Coup', () => {
     expect(kept.controllerId).toBe('P2');
   });
 
+  it('coup-steals-a-mana-value-0-token-for-no-energy', () => {
+    // Paying zero energy is still paying, so "If you do" is satisfied (CR 118.5).
+    const ctx = pod('coup-zero');
+    const treasure = createToken(ctx, TREASURE, 'P2');
+    playerOf(ctx, 'P1').energy = 0;
+    pump(
+      executeAbility(ctx, sourceOf(card), interpretCard(card).spellAbility!, [treasure.id]),
+      (decision) => pick(decision, /Pay/),
+    );
+    expect(playerOf(ctx, 'P1').energy).toBe(4);
+    expect(treasure.controllerId).toBe('P1');
+  });
+
   it('coup-cannot-target-a-land', () => {
     const ctx = pod('coup-land');
     const land = spawn(ctx, 'P2', forest());

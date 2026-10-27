@@ -6,7 +6,7 @@ import {
   SOLDIER_1_1_LIFELINK,
 } from '../tokens';
 import { defineCard } from './index';
-import { TAP, mana, manaCost, spell } from '../templates';
+import { TAP, mana, manaCost, spell, triggered } from '../templates';
 import { constant } from '../value';
 import {
   HAS_ANY_COUNTER,
@@ -177,24 +177,26 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
     ['Whenever you attack with three or more creatures, draw a card.'],
     {
       triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
+        triggered(
+          {
             when: 'attacks',
             subject: { kind: 'permanent', selector: allOf(ofType('Creature'), YOURS) },
             aggregate: true,
-            condition: {
+          },
+          {
+            // Not an intervening-if: the attack count qualifies the event only, so removing an
+            // attacker before resolution keeps the draw.
+            eventCondition: {
               kind: 'countPermanents',
               selector: allOf(ofType('Creature'), YOURS, IN_COMBAT),
               scope: 'you',
               cmp: '>=',
               n: 3,
             },
+            effects: [{ op: 'draw', count: constant(1) }],
+            description: 'Draw a card',
           },
-          targets: [],
-          effects: [{ op: 'draw', count: constant(1) }],
-          description: 'Draw a card',
-        },
+        ),
       ],
     },
   );

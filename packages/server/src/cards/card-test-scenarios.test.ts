@@ -46,6 +46,14 @@ describe('deterministic Card Test Lab scenarios', () => {
 
   it('lists every registered scenario in catalog order', () => {
     expect(listCardTestScenarios().map((entry) => entry.id)).toEqual([
+      'pr13-master-of-ceremonies-viewer-money',
+      'pr13-securitron-squadron-viewer-squad-copy',
+      'pr13-securitron-squadron-viewer-nontoken',
+      'pr13-confiscation-coup-viewer-zero-mana-value',
+      'pr13-confiscation-coup-viewer-pay-mana-value',
+      'pr13-overwhelming-instinct-viewer-attacker-removed',
+      'pr13-overwhelming-instinct-viewer-two-attackers',
+      'pr13-rakdos-charm-viewer-creature-sources',
       'pr12-black-bolt-inhuman-king-viewer-lethal-voice',
       'pr12-black-bolt-inhuman-king-viewer-noncreature-pump',
       'pr12-black-bolt-inhuman-king-viewer-creature-spell',
