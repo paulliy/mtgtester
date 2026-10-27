@@ -81,6 +81,8 @@ Exit: the script runs in under a minute offline, and the baseline report is comm
    the provider was built with `{ fallback: 'first' }`. Update the six files that use it.
 7. Add a Vitest reporter that fails on skipped or `todo` tests missing from
    `tests/fixtures/allowed-skips.json`; list the bulk-data `skipIf` suites with their reasons.
+8. Add a suite integrity test: every path or prefix in `test:card-gate` matches at least one test
+   file, and every test file collects at least one test.
 
 Exit: full suite, card gate and `snapshots:check` pass; snapshots and determinism unchanged; every
 new check has a test that proves it fires.

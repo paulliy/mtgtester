@@ -49,12 +49,12 @@ write a card whose clause is not already a primitive, and that is where the time
   with their own `pinned()`, about 40 per-batch Oracle fixture files). ADR 0032 decision 10 covers
   this.
 
-[Forge](https://github.com/Card-Forge/forge) models more than 30,000 cards with no text parser. Its
-speed comes from four things the comparison review documents with source references: keywords are
-data expanded once in the engine; about two hundred generic, parameterized effects are chained by
-`SubAbility$` with shared references to earlier results (`Defined$ Targeted`, `Remembered`,
-`TriggeredCard`); tokens and values come from shared vocabularies; and a new card usually starts as a
-copy of a similar card's script. Its weaknesses are the other side of the same choices: parameters
+[Forge](https://github.com/Card-Forge/forge) models its 34,131 card scripts with no text parser.
+Its speed comes from four things the comparison review documents with source references: 202
+keywords are data expanded once in the engine; 204 generic, parameterized effect types are chained
+by `SubAbility$` with shared references to targets and earlier results (`Defined$ Targeted`,
+`TargetedController`, `Remembered`, `TriggeredCard`); 858 token scripts and `Count$` values are
+shared vocabularies; and a new card usually starts as a copy of a similar card's script. Its weaknesses are the other side of the same choices: parameters
 are untyped strings, many mistakes surface only at run time or never, and card-level tests are rare.
 
 ## Decision

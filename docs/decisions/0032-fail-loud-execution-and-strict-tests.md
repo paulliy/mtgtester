@@ -67,6 +67,10 @@ a game that keeps running and a test that keeps passing.
 9. **State corruption shows up late or not at all.** No routine check confirms that object ids
    are unique, that each card is in one zone, that attachments point at live permanents, or that a
    `PlayerView` hides other players' hands, except where a specific test happens to look.
+10. **A listed test can stop running.** `test:card-gate` passes 158 paths and prefixes to Vitest,
+    and Vitest ignores one that matches no file: a nonexistent path beside a real one exits 0. All
+    158 match today. Forge added `TestSuiteIntegrityTest` after eight test classes stopped running
+    and its CI stayed green for a year.
 
 Forge, the reference engine compared in the companion review, does not solve these either: most of
 its script errors surface at run time or not at all, and it has few card-level tests. This ADR is
@@ -225,6 +229,8 @@ workflow runs a larger budget. No AI provider is used, so CI stays deterministic
   first option needs `{ fallback: 'first' }` on the provider.
 - A Vitest reporter fails CI on a skipped or `todo` test not listed with a reason in
   `tests/fixtures/allowed-skips.json` (the bulk-data `skipIf` suites are listed).
+- A suite integrity test fails when a path or prefix listed in `test:card-gate` matches no test
+  file, or when a test file collects no tests.
 - Lenient `pump()` calls stay where they are. A lint rule rejects a one-argument `pump()` in any
   test file not in a committed list of current files, and that list may only shrink. New tests are
   strict without any migration of the 1,236 existing calls.
