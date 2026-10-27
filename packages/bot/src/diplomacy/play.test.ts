@@ -124,6 +124,26 @@ describe('planAttackDeclaration — keeping and breaking deals (decision 17)', (
     expect(plan.breach).toBeUndefined();
   });
 
+  it('meets two promises to attack the same seat with one attack', () => {
+    const attackers = [1, 2, 3, 4].map(() => creature('P1', 4));
+    const v = view('P1', 30, [opponent('P2', 8), opponent('P4', 40)], attackers);
+    const d = dip([
+      { kind: 'attackPlayer', by: 'P1', target: 'P4' },
+      { kind: 'attackPlayer', by: 'P1', target: 'P4' },
+    ]);
+    const plan = planAttackDeclaration(
+      attackAction(attackers, () => ['P2', 'P4', NO_ATTACK_TARGET]),
+      v,
+      d,
+    );
+    // Half the power at P4 keeps both promises; the other half kills P2.
+    const powerAt = (seat: string) =>
+      plan.targets.filter((t) => t.choice === seat).reduce((sum) => sum + 4, 0);
+    expect(powerAt('P4')).toBe(8);
+    expect(powerAt('P2')).toBe(8);
+    expect(plan.breach).toBeUndefined();
+  });
+
   it('keeps an attackPlayer promise from spoiling a kill, or breaks it for lethal', () => {
     const attackers = [creature('P1', 10), creature('P1', 5), creature('P1', 1)];
     const v = view(

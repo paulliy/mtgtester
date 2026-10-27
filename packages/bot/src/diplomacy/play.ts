@@ -355,9 +355,12 @@ export function planAttackDeclaration(
     const live = offense.filter((a) => a.dealId !== ignoreDeal);
     const allowed = (option: ObjectId) =>
       !live.some((a) => forbidsOption(a.obligation, option, ownerOf, isStack));
-    const promised = live.flatMap((a) =>
-      a.obligation.kind === 'attackPlayer' ? [a.obligation.target] : [],
-    );
+    // One attack meets every promise to attack the same seat, so each target is owed once.
+    const promised = [
+      ...new Set(
+        live.flatMap((a) => (a.obligation.kind === 'attackPlayer' ? [a.obligation.target] : [])),
+      ),
+    ];
     return buildPlan(table, action, slots, ownerOf, blockers, allowed, promised);
   };
 

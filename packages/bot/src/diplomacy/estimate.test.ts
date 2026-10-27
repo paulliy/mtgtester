@@ -32,6 +32,13 @@ describe('estimateTable — positions and win shares (ADR 0035 decisions 7-9)', 
     expect(table.leader).toBe('P2');
   });
 
+  it('gives a seat the same position from every chair, poison or not', () => {
+    // The viewer's own poison is not in its view, so poison must not count for anyone.
+    const fromP1 = estimateTable(view('P1', 40, [opponent('P2', 40, { poisonCounters: 9 })]));
+    const fromP2 = estimateTable(view('P2', 40, [opponent('P1', 40)]));
+    expect(fromP1.bySeat.get('P2')!.position).toBe(fromP2.bySeat.get('P2')!.position);
+  });
+
   it('names no leader when the table is even', () => {
     const table = estimateTable(view('P1', 40, [opponent('P2', 40), opponent('P3', 40)]));
     expect(table.leader).toBeNull();
