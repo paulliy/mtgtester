@@ -101,11 +101,41 @@ describe('danger checks', () => {
     const lethal = estimateTable(view('P1', 12, [opponent('P2', 40)], [creature('P2', 12)]));
     expect(inDanger(lethal, 'P1')).toBe(true);
     expect(couldKill(lethal, 'P2', 'P1')).toBe(true);
+    const onBoard = { name: 'Atraxa', zone: 'battlefield', castCount: 1 };
     const commander = estimateTable(
-      view('P1', 40, [opponent('P2', 40, { commanderDamageDealtToYou: 16 })], [creature('P2', 5)]),
+      view(
+        'P1',
+        40,
+        [opponent('P2', 40, { commanderDamageDealtToYou: 16, commanders: [onBoard] })],
+        [creature('P2', 5, 5, { name: 'Atraxa' })],
+      ),
     );
     expect(inDanger(commander, 'P1')).toBe(true);
     expect(couldKill(commander, 'P2', 'P1')).toBe(true);
     expect(inDanger(estimateTable(view('P1', 40, [opponent('P2', 40)])), 'P1')).toBe(false);
+  });
+
+  it('counts only the commander itself toward commander-damage lethal', () => {
+    const inCommandZone = { name: 'Atraxa', zone: 'command', castCount: 1 };
+    const others = estimateTable(
+      view(
+        'P1',
+        40,
+        [opponent('P2', 40, { commanderDamageDealtToYou: 20, commanders: [inCommandZone] })],
+        [creature('P2', 1)],
+      ),
+    );
+    expect(couldKill(others, 'P2', 'P1')).toBe(false);
+    // A blocked commander deals nothing; the one blocker takes the commander, tied for biggest.
+    const onBoard = { ...inCommandZone, zone: 'battlefield' };
+    const blocked = estimateTable(
+      view(
+        'P1',
+        40,
+        [opponent('P2', 40, { commanderDamageDealtToYou: 16, commanders: [onBoard] })],
+        [creature('P2', 5, 5, { name: 'Atraxa' }), creature('P2', 5), creature('P1', 1)],
+      ),
+    );
+    expect(couldKill(blocked, 'P2', 'P1')).toBe(false);
   });
 });

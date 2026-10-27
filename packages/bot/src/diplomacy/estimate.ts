@@ -19,6 +19,11 @@ export interface SeatEstimate {
   attackPower: number;
   /** The same creatures' powers, largest first. */
   attackPowers: number[];
+  /**
+   * Whether each of those creatures is one of this seat's commanders, in the same order. Only
+   * commanders deal commander damage, so only their power counts toward that kind of lethal.
+   */
+  attackIsCommander: boolean[];
   /** Creatures that could block on another seat's turn (all of them untap first). */
   blockers: number;
   boardValue: number;
@@ -102,10 +107,20 @@ export function estimateTable(view: PlayerView): TableEstimate {
     })),
   ];
 
+  // Commanders on the battlefield, by seat. The view names them, so a permanent with that name
+  // under that seat's control is taken to be the commander.
+  const commandersOf = new Map<PlayerId, Set<string>>(
+    [{ seat: view.seat, commanders: view.commanders }, ...view.opponents].map((o) => [
+      o.seat,
+      new Set(o.commanders.filter((c) => c.zone === 'battlefield').map((c) => c.name)),
+    ]),
+  );
+
   const seats: SeatEstimate[] = living.map((s) => {
     let boardValue = 0;
     let blockers = 0;
-    const attackPowers: number[] = [];
+    const attackers: { power: number; commander: boolean }[] = [];
+    const commanders = commandersOf.get(s.seat);
     for (const p of view.battlefield) {
       if (p.controller !== s.seat) continue;
       if (isCreature(p)) {
@@ -113,16 +128,30 @@ export function estimateTable(view: PlayerView): TableEstimate {
         blockers++;
       } else if (isLand(p)) boardValue += D.landValue;
       else boardValue += D.noncreaturePermanentValue;
-      if (canAttack(p)) attackPowers.push(p.power ?? 0);
+      if (canAttack(p)) {
+        attackers.push({ power: p.power ?? 0, commander: commanders?.has(p.name) ?? false });
+      }
     }
-    attackPowers.sort((a, b) => b - a);
+    // Largest first; among equal powers a commander first, since the defender would block it.
+    attackers.sort((a, b) => b.power - a.power || Number(b.commander) - Number(a.commander));
+    const attackPowers = attackers.map((a) => a.power);
+    const attackIsCommander = attackers.map((a) => a.commander);
     const attackPower = attackPowers.reduce((sum, p) => sum + p, 0);
     const position =
       lifeValue(s.life) +
       boardValue +
       s.handSize * D.cardInHandValue -
       s.poison * D.poisonCounterValue;
-    return { ...s, attackPower, attackPowers, blockers, boardValue, position, winShare: 0 };
+    return {
+      ...s,
+      attackPower,
+      attackPowers,
+      attackIsCommander,
+      blockers,
+      boardValue,
+      position,
+      winShare: 0,
+    };
   });
 
   const shares = softmax(
@@ -228,7 +257,12 @@ export function couldKill(table: TableEstimate, attacker: PlayerId, defender: Pl
   if (through >= d.life) return true;
   if (defender === table.viewer) {
     const dealt = table.commanderDamageToViewer.get(attacker) ?? 0;
-    if (dealt > 0 && through >= COMMANDER_DAMAGE_LETHAL - dealt) return true;
+    // Only an unblocked commander adds commander damage; other creatures count toward life only.
+    let commanderThrough = 0;
+    for (let i = Math.max(0, d.blockers); i < a.attackPowers.length; i++) {
+      if (a.attackIsCommander[i]) commanderThrough += a.attackPowers[i] ?? 0;
+    }
+    if (dealt > 0 && commanderThrough >= COMMANDER_DAMAGE_LETHAL - dealt) return true;
   }
   return false;
 }
