@@ -10,6 +10,7 @@ breaks the trust assumptions below and would need its own ADR.
 **What this changes in earlier decisions.**
 
 - **Supersedes in part** [0018](0018-single-player-mode.md):
+
   - decision 1 (one human seat);
   - decision 4 (the human is untimed);
   - decision 5 (every bot pauses while the human is away);
@@ -56,6 +57,7 @@ What assumes one trusted human:
   - Every bot decision waits on the single connection gate.
 - **Mode branches fail open.** About 38 branches test `gameMode === 'singlePlayer'`. Some are
   information fences:
+
   - the halt reason (`session.ts:300`);
   - debug events;
   - escalation of a failed legal menu;
@@ -106,6 +108,7 @@ benchmarks and debug views show every hand by design and must never be reachable
    `bun run serve:table` runs table games only. Both share `packages/engine`, `packages/bot`,
    `packages/shared` and `packages/server/src/match`. Table code lives in
    `packages/server/src/table/`.
+
    - `no-restricted-imports` blocks direct imports from `table/` into tester modules.
    - A module-graph test of the table entry fails if it reaches `batch/`, `benchmark/`, or any
      module that registers Card Test Lab scenarios. This is needed because imports are
@@ -114,6 +117,7 @@ benchmarks and debug views show every hand by design and must never be reachable
    - A `packages/match` package is extracted only if that list grows past a handful of entries.
 
 2. **Each seat gets its own controller, and mode checks fail closed.**
+
    - The session takes `seatControllers: Record<PlayerId, SeatControllerKind>`, and `GameMode`
      gains `'table'`. Every per-player structure becomes a map keyed by seat, including the
      strategy coordinator's human seats.
@@ -126,6 +130,7 @@ benchmarks and debug views show every hand by design and must never be reachable
 
 3. **Disclosure is an injected, deny-by-default policy.** Each entry point constructs the session
    with a `DisclosurePolicy` covering:
+
    - the public game label;
    - debug events;
    - AI annotations, per seat;
@@ -137,6 +142,7 @@ benchmarks and debug views show every hand by design and must never be reachable
 
    Every field defaults to deny. The tester's policy reproduces today's behavior. The table's
    policy:
+
    - unlocks replay, decklists and the RNG key only after the game ends;
    - never sends debug events;
    - never sends raw errors or halt reasons, only a fixed message;
@@ -154,8 +160,19 @@ benchmarks and debug views show every hand by design and must never be reachable
    and is dropped in production.
 
    After the game ends, the main thread serves the post-game view and replay from the stored
-   game in the table database, never from the worker. A worker that was terminated for a hang
-   therefore still lets players see the results, the decklists and the key.
+   game in the table database, never from the worker. Before worker startup, the main thread
+   commits a start-attempt manifest containing approved deck snapshots, the game id, key,
+   build/card-data identity and limits. If a worker is terminated, the main thread atomically
+   records `workerFailure` for a still-running game and finishes the table. A failure before
+   game creation is `setupFailed`; neither creates an engine result or counts as a win/draw.
+   A genuine already-committed outcome wins a race with termination. Players can still see the
+   decks, key, fixed interruption reason and the explicitly bounded committed replay range;
+   a manifest-only attempt has no replay. No interrupted turn is presented as a complete game.
+   A typed preparation/validation failure instead retires its private attempt and returns to
+   `open`, sending only private deck problems and no key/replay unlock. A corrected retry gets
+   a fresh attempt/key; bot snapshots must be persisted before a worker reports ready.
+   Worker generations are fenced and terminated before terminal commit and full unlock.
+   `hostAbandon` follows that same sequence with a distinct `hostAbandoned` interruption reason.
 
    A **halted** game counts as finished for the table. That covers an engine halt, the step
    budget, an unmodeled card and a draw loop. Players get a fixed message, the table moves to
@@ -164,6 +181,7 @@ benchmarks and debug views show every hand by design and must never be reachable
    handles it as a client capability on every server.
 
 4. **Table games use a cryptographic RNG whose key never enters game state.**
+
    - `GameConfig` gains `rng: 'legacy' | 'chacha20'` and `rngKey`, a 32-byte key.
    - `seed` remains a public label. For `chacha20` it is a random display id and never feeds
      randomness.
@@ -180,6 +198,7 @@ benchmarks and debug views show every hand by design and must never be reachable
      (`casting/checkpoint.ts:43`). Typed arrays and private fields would break that rewind.
    - `clone()` keeps its meaning: an independent stream at the current position.
    - **Every consumer gets its own stream.** Each stream has a fixed, distinct nonce:
+
      - the game;
      - each bot seat;
      - each fallback bot;
@@ -199,11 +218,14 @@ benchmarks and debug views show every hand by design and must never be reachable
 
 5. **Per-seat wire ids and cadence.** Table frames hide counters and timing that reveal other
    seats' activity.
+
    - **Request ids** are a per-seat counter. The session translates them back to engine ids
      before the human provider sees them, and memoizes the mapping so re-sent requests keep their
      id. Auto-passed decisions do not advance the counter.
    - **Log lines and cues** carry a per-viewer sequence.
-   - **A seat's revision** counts only frames sent to that seat.
+   - **A seat's board/decision revision** counts only board/decision frames sent to that seat.
+     A pending action pins its own revision; clock/status telemetry and health probes never
+     invalidate it. Display revisions and current socket authority are separate concerns.
    - **Board snapshots** are sent only when that seat's projection changed. Today the revision is
      bumped, and a snapshot sent, on every engine advance (`session.ts:274-278`), so the frame
      rate tracks every seat's activity.
@@ -211,6 +233,7 @@ benchmarks and debug views show every hand by design and must never be reachable
      below. Cues never carry card ids.
 
 6. **Tables, hosts, seats and tokens.**
+
    - **Creating a table.** The server prints a **host secret** at startup, and it is used only to
      create a table. Creating one returns a table-scoped **host token** (256 bits) and an
      **invite code** (128 bits, in the URL fragment). Table ids are random.
@@ -242,6 +265,9 @@ benchmarks and debug views show every hand by design and must never be reachable
      - A second socket with the same token takes over the seat, and the first socket is told.
        A client told it was taken over does not reconnect on its own, and takeovers are
        rate-limited.
+     - Every inbound game message must come from the current socket generation bound to that
+       table and seat. A superseded socket is refused even when its request id/revision are valid.
+       Invite-only lobby sockets never receive player frames after game start.
    - **What the host can and cannot do.** The host never sees a seat token. Kick, approve, seat
      changes and start are allowed only before the game starts, and joining closes at the start.
      Kick, deny, leave and seat changes revoke the old seat token. A player who loses their token
@@ -249,6 +275,7 @@ benchmarks and debug views show every hand by design and must never be reachable
      That player keeps receiving their own redacted view until the game ends.
 
 7. **Clocks bound stalling.**
+
    - Presets are `relaxed` and `standard`. `off` is allowed only in development mode
      (decision 9).
    - Each decision has a free 10-second allowance. Most priority responses take less, so
@@ -260,6 +287,8 @@ benchmarks and debug views show every hand by design and must never be reachable
    - A disconnected seat waits for a 60-second grace period, charged to a cumulative 5-minute
      disconnect budget. The decision clock is paused while the grace period runs, so the same
      time is never charged twice.
+     Reconnect resumes the same pending choice and remaining allowance/bank. It does not renew
+     spent grace or budget; repeated disconnects during that choice share its remaining grace.
    - The game has a wall-clock cap: 4 hours relaxed, 3 hours standard. These are well beyond a
      normal game and exist only to end abandoned tables. When the cap is reached, the server
      ends the game as a draw for every player still in it, through a new engine entry point,
@@ -291,6 +320,7 @@ benchmarks and debug views show every hand by design and must never be reachable
    inputs.
 
    Three changes make that true:
+
    - `Engine.cancelYield` emits `yieldCancelled` when it changes state, and `Engine.concede`
      emits its own event.
      - Replay applies each one when the engine's next event sequence equals the event's sequence,
@@ -318,10 +348,13 @@ benchmarks and debug views show every hand by design and must never be reachable
    internet.
 
    Three rules follow:
+
    - **The table server always runs each table in its own Bun Worker.** The main thread relays
-     messages. It ends and `terminate()`s a worker that has not answered for 30 seconds. That is
-     generous enough for a legitimate long combat search; the engine step budget below handles
-     tight loops much sooner.
+     messages and probes worker health every 5 seconds. A worker answers probes while waiting
+     for a human or timer. Thirty seconds of unanswered probes ends that worker; lack of game
+     progress alone does not. A blocked synchronous computation cannot answer and is terminated.
+     The engine step budget handles tight emitting loops sooner. Worker generations fence late
+     replies, and health traffic is never forwarded to players or counted in seat revisions.
    - **The engine gains a deterministic step budget.** It is counted in the event emitter, so a
      runaway inside a single generator step is caught. The counter is a shared object, because effect
      resolution copies the context by spreading it (`effects/resolve.ts:1693`), and a plain number
@@ -334,6 +367,7 @@ benchmarks and debug views show every hand by design and must never be reachable
      refuses to start with any proxy or allowlist setting.
 
    Everything else is production mode:
+
    - It serves the table web build itself, from the same origin as its WebSocket, so the
      invite link, the origin check and `wss` all refer to one origin. It builds invite links
      from `TABLE_PUBLIC_ORIGIN`.
@@ -374,10 +408,12 @@ benchmarks and debug views show every hand by design and must never be reachable
     Restoring one from stored inputs is possible later and is not promised here.
 
 12. **Hidden-information fixes for every player game.** These also apply to single-player:
+
     - **Commander views** show a commander's zone, object id and art only to its owner, when it is
       in a hand or library or is face down. Others see `hidden`.
     - **`yieldingUntilEndOfTurn`** goes only to its own seat.
     - **Allowlists, with a coverage test.** These become allowlists:
+
       - face-down permanent redaction;
       - exile redaction;
       - the player-log filter, which classifies every decision type

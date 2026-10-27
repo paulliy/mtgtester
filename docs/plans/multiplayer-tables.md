@@ -16,6 +16,17 @@ M1, M2 and the presentation track improve the tester on their own and stay on lo
 onward waits for ADR 0031 to be accepted. M5 is the milestone that allows exposure beyond the
 host's machine ([testing discipline](../guides/testing-discipline.md)).
 
+Optional deals are a separate proposed track:
+[multiplayer diplomacy integration](multiplayer-diplomacy-integration.md). It researches
+`claude/happy-cori-fe78h7`, identifies the ADR 0031 numbering collision, and defines the reducer,
+human negotiation, clock, privacy and replay work needed to use its bot deals at tables. M1–M6
+can ship with diplomacy disabled; enabling it adds that track's acceptance checks and exposure
+review. It does not add LLM seats or general chat to this plan.
+
+The [standalone deals and communication plan](table-diplomacy-and-communication.md) refines
+that feature's own terms and player experience. Independent reviews of both source designs are
+recorded in [the plan review](../reviews/multiplayer-and-deals-plan-review-2026-10-27.md).
+
 ## Purpose
 
 Let one to four people who know each other play one Commander game from their own browsers,
@@ -77,6 +88,7 @@ ADR.
 - **Disclosure** goes through the injected `DisclosurePolicy` and the outbound message-type
   allowlist. Every mode branch is a `switch` ending in `assertNever`.
 - **What a live player frame may not carry:**
+
   - `spectatorState()`;
   - the RNG key or seed (in table mode);
   - AI notes or cost reports;
@@ -151,6 +163,7 @@ ADR.
 ### Tests
 
 - **Existing tests still pass,** with their assertions unchanged:
+
   - `match/*.test.ts`;
   - `ws/*.test.ts`;
   - `stores/game.test.ts`;
@@ -220,9 +233,11 @@ These fixes also apply to single-player. No network port opens.
    - The AI's own copy of the commander view (`view/view.ts:54,254`) is left alone, to keep AI
      prompts byte-identical. Only the player-bound projection changes.
 6. **Replay inputs.**
+
    - `Engine.cancelYield` emits `yieldCancelled { player }` only when it changes state.
      `view/view.ts` `visibleEvent` hides it from the AI's recent log.
    - The `games` row gains three columns:
+
      - `config_json`: the card-data hash (the sha256 the game report already computes, because
        the Oracle data is not in git and `card_cache` is overwritten by re-imports), deck
        snapshot ids, manual mana per seat, turn cap, RNG kind and key, and engine options;
@@ -394,6 +409,9 @@ read-only message, accepted only in `finished`.
    - Failed attempts are throttled per client address.
    - Table ids are random.
    - Display names must be unique within a table.
+   - Bind every game socket to its table, seat and current connection generation. Check this
+     binding before dispatch, including after takeover; request ids/revisions alone are not
+     socket authority. Invite-only lobby sockets remain excluded from all live player frames.
 2. **Claims.**
    - Parse the plaintext decklist in memory with `parsePlaintextDeck` (not `importDeck`) and
      validate it.
@@ -409,20 +427,54 @@ read-only message, accepted only in `finished`.
      `GameStore` sets `busy_timeout` before it runs the schema, because the constructor's
      catch-all migration loop would otherwise hide a `SQLITE_BUSY` (`db/index.ts:45-56`).
    - The worker runs its own `MatchSession`.
-   - The main thread treats a worker as dead after 30 s without a reply (injectable in tests) and
-     `terminate()`s it. The table moves to `finished` with a fixed message, and the post-game view
-     is served from the stored game by the main thread, never from the worker.
+   - Worker health is independent of game progress. The main thread sends an internal ping every
+     5 seconds; the worker answers while awaiting a human, disconnect grace or a clock. A worker
+     is dead after 30 seconds of unanswered health probes (injectable in tests), not 30 seconds
+     without a game event or action response. A blocked synchronous computation cannot answer
+     these probes and is terminated. Health traffic never becomes player traffic or advances a
+     seat's revision. Game/time caps remain independent of a healthy heartbeat.
+   - Assign a worker generation to each start attempt. Ignore late replies and queued frames from
+     a terminated generation. A single terminal transition wins over a racing timeout or result.
+   - Before starting the worker, persist a private start-attempt manifest with approved deck
+     snapshots, bot deck/generation configurations, game id, RNG kind/key, build/card-data
+     identity and configured limits. This provides a readable failure record even if the worker
+     never creates its `games` row. The worker persists resolved bot deck snapshots before its
+     ready acknowledgement; a setup interruption cannot promise a deck that was never generated.
+   - Claim-time plaintext validation runs before approval. If worker preparation returns typed
+     `setupProblems` while `starting`, fence/stop that worker, privately retire the attempt as
+     rejected and return the table to `open` with problems only for their authorized seats.
+     Do not create a started game/result or unlock its key/replay. A corrected retry gets one
+     fresh attempt id, key and worker; retired attempt messages cannot affect it. An unexpected
+     setup crash/hang instead follows the terminal `setupFailed` path below.
+   - Fence the worker generation, stop routing its frames, and await its termination before the
+     main thread atomically marks the attempt/table terminal and any still-
+     running game row interrupted (stored as a halt with a distinct `workerFailure` reason).
+     Preserve an already committed genuine outcome. If setup never reached game start, show
+     `setupFailed` with no invented game result. An interruption is not a win, draw or rules bug.
+     Unlock full post-game views only after termination and the terminal commit, so a failed
+     health probe cannot expose a game that is still running.
+   - `hostAbandon` uses the same fence/stop/terminal-commit sequence, with `hostAbandoned` as
+     the interruption reason. It does not fabricate a rules result or a deliberate clock draw.
+   - The table moves to `finished` with a fixed message. The main thread serves approved decks,
+     the committed key and the available replay after termination. Show the last committed
+     snapshot/turn and event range explicitly; do not imply that the interrupted turn or outcome
+     was saved. A manifest-only failure has no replay. This is post-game reading, not live restore.
    - Tests may use the in-process implementation. `serve:table` always uses workers.
 4. **Start.**
    - Build `seatControllers`, the table `DisclosurePolicy`, and the `chacha20` config with a
      fresh key.
    - Close joining.
+   - Complete the manifest commit before sending its configuration to the worker. The host's
+     `hostStart` transition enters `starting` before awaiting setup, so duplicate starts cannot
+     launch a second worker or allocate another key for the same attempt.
    - In `--dev` mode only, `TABLE_TEST_RNG_KEY` is accepted, so e2e hands are reproducible.
 5. **`wire-ids.ts`.**
    - Per-seat request ids are translated back to engine ids before the human provider, and the
      mapping is memoized so re-sent requests keep their id. Auto-passed decisions do not advance
      the counter.
-   - Each seat's revision counts only that seat's frames.
+   - Each seat's board/decision revision counts only that seat's board/decision frames, not every
+     outbound message. A pending action pins the revision against which it is checked.
+     Clock ticks, connection badges, health probes and unrelated display updates cannot stale it.
    - Per-viewer log sequences.
    - A board snapshot is sent only when that seat's projection changed.
    - The game report's pending request id is mapped the same way. The report carries no raw
@@ -508,6 +560,16 @@ read-only message, accepted only in `finished`.
   - a startup test that `serve:table` without `--dev` refuses to start;
   - the step-budget calibration run, recorded in the PR;
   - a dev-mode test that a non-loopback `Host` header is refused.
+  - a healthy worker waits on a human beyond the watchdog interval and continues answering pings;
+  - a stuck worker misses health probes and is terminated while another table keeps running;
+  - death during setup produces readable `setupFailed` metadata without a fake result;
+  - typed deck problems return to `open`, reveal only private problems, and emit no key/replay
+    unlock; a corrected retry launches exactly one fresh attempt and worker;
+  - death mid-turn preserves decks/key and reports the actual committed replay range;
+  - a committed game result racing worker death wins once, and stale worker frames are ignored;
+  - duplicate `hostStart` messages create one start attempt, manifest and worker;
+  - a superseded socket cannot answer the current request even with its valid id/revision;
+  - a connected invite-only lobby socket receives no live player frames after start.
 
 ### Exit
 
@@ -528,6 +590,10 @@ read-only message, accepted only in `finished`.
      paused during grace.
    - Game cap: 4 hours relaxed, 3 hours standard.
    - `off` is allowed only in dev mode.
+   - Reconnect resumes the existing pending choice with its remaining decision allowance/bank;
+     it never grants a fresh allowance or restores spent disconnect budget. Repeated disconnects
+     during one pending choice share its remaining grace, bounded by the cumulative budget.
+     Record deadlines/remaining durations on the server; a socket or tab cannot supply them.
 2. **`Engine.concede(players, reason)` and deliberate draws.**
    - `GameResult` gains `endReason` (`'rules'` by default, `'timeLimit'` or `'allAway'`).
    - `concede` throws a game-over signal into the generator. `playGame`'s catch emits the
@@ -555,6 +621,9 @@ read-only message, accepted only in `finished`.
    - A clock starts only for a decision actually shown to the human: not for a smart-yield
      auto-pass (`session.ts:943-956`) and not for the engine's quiet passes. This is the same
      visible wait that the ADR accepts as a tell.
+   - Telemetry has no authority over the pending action revision. On takeover, authenticate
+     inbound actions against the currently bound socket generation before forwarding them to
+     the human provider. A retired socket cannot act or reconnect itself.
 
 ### Tests
 
@@ -571,6 +640,10 @@ read-only message, accepted only in `finished`.
   sources, and one that ends at the cap.
 - **Disconnect.** P1 disconnects past grace and goes to fallback while P2 plays on. P1 resumes,
   sends `resumeControl`, and gets the next decision.
+- **Reconnect accounting.** Rejoin just before grace expires and disconnect repeatedly during
+  the same pending choice; neither the free allowance nor already-spent grace/budget is renewed.
+- **Telemetry and takeover.** Submit the originally offered action after multiple display ticks;
+  accept it from the current socket and reject the identical payload from its retired predecessor.
 - **Frame timing.** The M3 cadence test also holds for `clockState` and `seatStatus`: neither is
   sent for an auto-passed decision.
 - **Concede mid-cast.** A game conceded while a spell is being cast keeps its `conceded` event.
@@ -587,6 +660,7 @@ Four scripted clients, one of which disconnects and rejoins, finish a game.
 ### Tasks
 
 1. **Production mode config.**
+
    - `TABLE_PUBLIC_ORIGIN`;
    - `TABLE_ALLOWED_ORIGINS` and `TABLE_ALLOWED_HOSTS`;
    - TLS (certificate paths, or `TABLE_BEHIND_TLS_PROXY` with the proxy's address for
