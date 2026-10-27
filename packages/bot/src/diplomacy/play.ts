@@ -60,7 +60,7 @@ export function breachCost(dip: DiplomacyPlay, view: PlayerView): number {
  * could kill us: no deal stops a seat from answering what is about to beat it. Attack promises
  * are not released this way; breaking them goes through the reputation comparison instead.
  */
-function released(o: DealObligation, table: TableEstimate): boolean {
+export function released(o: DealObligation, table: TableEstimate): boolean {
   if (o.kind !== 'noTarget' && o.kind !== 'noCounter') return false;
   return table.leader === o.against || couldKill(table, o.against, table.viewer);
 }
@@ -151,26 +151,53 @@ interface AttackPlan {
   value: number;
 }
 
-/** Creatures that can block right now: the defender's untapped creatures. */
-function blockersNow(view: PlayerView): (seat: PlayerId) => number {
-  const counts = new Map<PlayerId, number>();
+/**
+ * Each defender's possible blockers: `now` counts its untapped creatures, for how much damage an
+ * attack is likely to deal; `any` counts all of them, for whether it kills. A kill has to hold even
+ * if tapped creatures untap or flash blockers appear, because breaking a deal for a kill that then
+ * fails costs a breach for nothing. It also matches the table's own lethal check.
+ */
+interface Blockers {
+  now: (seat: PlayerId) => number;
+  any: (seat: PlayerId) => number;
+}
+
+function blockersOf(view: PlayerView): Blockers {
+  const untapped = new Map<PlayerId, number>();
+  const all = new Map<PlayerId, number>();
   for (const p of view.battlefield) {
     const creature =
       p.typeLine?.includes('Creature') ?? (p.power !== undefined && p.power !== null);
-    if (creature && !p.tapped) counts.set(p.controller, (counts.get(p.controller) ?? 0) + 1);
+    if (!creature) continue;
+    all.set(p.controller, (all.get(p.controller) ?? 0) + 1);
+    if (!p.tapped) untapped.set(p.controller, (untapped.get(p.controller) ?? 0) + 1);
   }
-  return (seat) => counts.get(seat) ?? 0;
+  return { now: (seat) => untapped.get(seat) ?? 0, any: (seat) => all.get(seat) ?? 0 };
 }
 
 const sortedDesc = (powers: readonly number[]) => [...powers].sort((a, b) => b - a);
 
+function killsSeat(
+  table: TableEstimate,
+  seat: PlayerId,
+  powers: readonly number[],
+  blockers: Blockers,
+): boolean {
+  const life = table.bySeat.get(seat)?.life ?? Infinity;
+  return unblockedPower(sortedDesc(powers), blockers.any(seat)) >= life;
+}
+
+/** Value of sending `powers` at `seat`: the likely damage, and the lethal term only for a sure kill. */
 function seatValue(
   table: TableEstimate,
   seat: PlayerId,
   powers: readonly number[],
-  blockers: number,
+  blockers: Blockers,
 ): number {
-  return damageValue(table, seat, unblockedPower(sortedDesc(powers), blockers));
+  const life = table.bySeat.get(seat)?.life ?? Infinity;
+  let damage = unblockedPower(sortedDesc(powers), blockers.now(seat));
+  if (damage >= life && !killsSeat(table, seat, powers, blockers)) damage = life - 1;
+  return damageValue(table, seat, damage);
 }
 
 /**
@@ -189,7 +216,7 @@ function buildPlan(
   action: LegalAction,
   slots: readonly AttackSlot[],
   ownerOf: OwnerOf,
-  blockers: (seat: PlayerId) => number,
+  blockers: Blockers,
   allowed: (option: ObjectId) => boolean,
   promisedTargets: readonly PlayerId[],
 ): AttackPlan {
@@ -233,7 +260,7 @@ function buildPlan(
     for (const t of table.seats) {
       if (t.seat === table.viewer) continue;
       const already = powersAt.get(t.seat) ?? [];
-      if (unblockedPower(sortedDesc(already), blockers(t.seat)) >= t.life) continue;
+      if (killsSeat(table, t.seat, already, blockers)) continue;
       const reach = free()
         .filter((s) => s.options.includes(t.seat) && allowed(t.seat) && s.power > 0)
         .sort((a, b) => b.power - a.power || a.slot - b.slot);
@@ -242,7 +269,7 @@ function buildPlan(
       for (const s of reach) {
         use.push(s);
         const powers = [...already, ...use.map((u) => u.power)];
-        if (unblockedPower(sortedDesc(powers), blockers(t.seat)) >= t.life) {
+        if (killsSeat(table, t.seat, powers, blockers)) {
           enough = true;
           break;
         }
@@ -275,8 +302,8 @@ function buildPlan(
       if (seat === option) {
         const already = powersAt.get(seat) ?? [];
         gain =
-          seatValue(table, seat, [...already, s.power], blockers(seat)) -
-          seatValue(table, seat, already, blockers(seat));
+          seatValue(table, seat, [...already, s.power], blockers) -
+          seatValue(table, seat, already, blockers);
       } else {
         gain = pf * damageValue(table, seat, s.power);
       }
@@ -289,7 +316,7 @@ function buildPlan(
   }
 
   let value = walkerValue;
-  for (const [seat, powers] of powersAt) value += seatValue(table, seat, powers, blockers(seat));
+  for (const [seat, powers] of powersAt) value += seatValue(table, seat, powers, blockers);
   return { choices, powersAt, walkerValue, value };
 }
 
@@ -313,7 +340,7 @@ export function planAttackDeclaration(
   const table = estimateTable(view);
   const ownerOf = ownerLookup(view);
   const isStack = stackLookup(view);
-  const blockers = blockersNow(view);
+  const blockers = blockersOf(view);
   const powers = attackSlotPowers(action, view);
   const slots: AttackSlot[] = (action.targets ?? []).map((slot, i) => ({
     slot: slot.slot,
@@ -337,10 +364,7 @@ export function planAttackDeclaration(
   const kills = (plan: AttackPlan) =>
     new Set(
       [...plan.powersAt]
-        .filter(([seat, p]) => {
-          const life = table.bySeat.get(seat)?.life ?? Infinity;
-          return unblockedPower(sortedDesc(p), blockers(seat)) >= life;
-        })
+        .filter(([seat, p]) => killsSeat(table, seat, p, blockers))
         .map(([seat]) => seat),
     );
 

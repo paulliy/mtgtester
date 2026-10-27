@@ -225,8 +225,19 @@ describe('DiplomacyTable — keeping, breaking and ending deals', () => {
     return turn;
   }
 
-  it('ends a deal void when a promised attack never came, crediting nobody', () => {
+  it('treats a promised attack skipped with attackers on board as a breach', () => {
     const { w, table, deal } = withDeal();
+    const owed = deal.obligations.find((o) => o.kind === 'attackPlayer')!;
+    runOut(w, table, deal, 2);
+    expect(deal.status).toBe('broken');
+    expect(deal.breachedBy).toBe(owed.by);
+    expect(table.trustRecord(owed.by).broken).toBe(1);
+  });
+
+  it('ends a deal void when the promised attack could never be made, charging nobody', () => {
+    const { w, table, deal } = withDeal();
+    const owed = deal.obligations.find((o) => o.kind === 'attackPlayer')!;
+    w.battlefield = w.battlefield.filter((p) => p.controller !== owed.by);
     const end = runOut(w, table, deal, 2);
     expect(deal.status).toBe('void');
     expect(table.messages()).toContainEqual({
@@ -236,17 +247,18 @@ describe('DiplomacyTable — keeping, breaking and ending deals', () => {
       outcome: 'void',
       reason: 'unmet',
     });
-    for (const party of deal.parties) expect(table.trustRecord(party).kept).toBe(0);
+    for (const party of deal.parties) {
+      expect(table.trustRecord(party)).toEqual({ kept: 0, broken: 0, biggestKept: 0 });
+    }
   });
 
-  it('ends a deal kept once both sides had their turns, crediting only a party that was tempted', () => {
+  it('ends a deal kept once both sides had their turns, but earns no trust for free keeping', () => {
     const { w, table, deal } = withDeal();
-    const owed = deliverPromise(w, table, deal, 2);
+    deliverPromise(w, table, deal, 2);
     runOut(w, table, deal, 2);
     expect(deal.status).toBe('kept');
-    expect(table.trustRecord(owed.by).kept).toBe(1);
-    const other = deal.parties.find((p) => p !== owed.by)!;
-    expect(table.trustRecord(other).kept).toBe(0);
+    // Attacking the leader was what this seat wanted anyway: keeping that promise cost it nothing.
+    for (const party of deal.parties) expect(table.trustRecord(party).kept).toBe(0);
   });
 
   it('calls a deal off in the open once one side could kill the other', () => {
@@ -293,57 +305,125 @@ describe('DiplomacyTable — keeping, breaking and ending deals', () => {
     expect(deal.status).toBe('active');
   });
 
-  it('voids a deal when one of its parties becomes the leader', () => {
+  it('frees the other party when one becomes the leader, but holds the leader to its word', () => {
     const { w, table, deal } = withDeal();
     const riser = deal.parties[0];
+    const other = deal.parties[1];
     w.battlefield.push(creature(riser, 12), creature(riser, 12), creature(riser, 12));
     runTurns(table, w, 2, 2);
-    expect(deal.status).toBe('void');
-    expect(table.stats.voided).toBe(1);
+    expect(table.messages()).toContainEqual({
+      kind: 'released',
+      turn: 2,
+      dealId: deal.id,
+      seat: other,
+      reason: 'leader',
+    });
+    expect(table.playFor(other).obligations()).toEqual([]);
+    expect(table.playFor(riser).obligations().length).toBeGreaterThan(0);
   });
 
-  it('limits every proposer: one offer a turn, valid terms only, and no immediate renewal', () => {
+  it('ends a deal void, not broken, when a seat answers a protected seat that took the lead', () => {
     const w = world();
     const table = setup(w);
     runTurns(table, w, 1, 1);
-    const base = { proposer: 'P2', parties: ['P2', 'P4'] as [string, string], proposedTurn: 1 };
-    const padded = table.offer(
-      {
-        ...base,
-        rounds: 1,
-        obligations: [
-          { kind: 'noAttack', by: 'P2', against: 'P4' },
-          { kind: 'noAttack', by: 'P2', against: 'P4' },
-        ],
-      },
-      1,
+    table.beforeDecision(priority(2, 'P2'));
+    const outcome = table.offer({
+      proposer: 'P2',
+      to: 'P3',
+      rounds: 1,
+      obligations: [
+        { kind: 'noTarget', by: 'P2', against: 'P3' },
+        { kind: 'noTarget', by: 'P3', against: 'P2' },
+      ],
+    });
+    expect(outcome.kind).toBe('accepted');
+    if (outcome.kind !== 'accepted') return;
+    // P3 dumps a huge board mid-turn; P2 answers it with removal before any window reruns.
+    const bomb = creature('P3', 20);
+    w.battlefield.push(bomb, creature('P3', 20), creature('P3', 20));
+    const removal: LegalAction = {
+      id: 3,
+      type: 'castSpell',
+      description: 'Cast Removal',
+      targets: [{ slot: 0, options: [bomb.id] }],
+    };
+    table.afterDecision(priority(2, 'P2', [removal]), {
+      requestId: 'r2',
+      actionId: 3,
+      targets: [{ slot: 0, choice: bomb.id }],
+    });
+    expect(outcome.deal.status).toBe('void');
+    expect(table.trustRecord('P2').broken).toBe(0);
+    expect(table.messages()).toContainEqual(
+      expect.objectContaining({
+        kind: 'dealEnded',
+        dealId: outcome.deal.id,
+        reason: 'selfDefense',
+      }),
     );
+  });
+
+  it('limits every proposer: one offer a turn, valid terms only', () => {
+    const w = world();
+    const table = setup(w);
+    runTurns(table, w, 1, 1);
+    const base = { proposer: 'P2', to: 'P4', rounds: 1 };
+    const padded = table.offer({
+      ...base,
+      obligations: [
+        { kind: 'noAttack', by: 'P2', against: 'P4' },
+        { kind: 'noAttack', by: 'P2', against: 'P4' },
+      ],
+    });
     expect(padded).toEqual({ kind: 'refused', reason: 'invalid' });
-    const first = table.offer(
-      { ...base, rounds: 1, obligations: [{ kind: 'noAttack', by: 'P4', against: 'P2' }] },
-      1,
-    );
+    const first = table.offer({
+      ...base,
+      obligations: [{ kind: 'noAttack', by: 'P4', against: 'P2' }],
+    });
     expect(first.kind).not.toBe('refused');
-    const second = table.offer(
-      { ...base, rounds: 1, obligations: [{ kind: 'noAttack', by: 'P2', against: 'P4' }] },
-      1,
-    );
+    const second = table.offer({
+      ...base,
+      obligations: [{ kind: 'noAttack', by: 'P2', against: 'P4' }],
+    });
     expect(second).toEqual({ kind: 'refused', reason: 'rateLimited' });
+  });
+
+  it('takes the turn from the table, never from the caller', () => {
+    const w = world();
+    const table = setup(w);
+    // Before any window opens there is no turn to offer in.
+    const early = table.offer({
+      proposer: 'P2',
+      to: 'P4',
+      rounds: 1,
+      obligations: [{ kind: 'noAttack', by: 'P4', against: 'P2' }],
+    });
+    expect(early).toEqual({ kind: 'refused', reason: 'invalid' });
+    runTurns(table, w, 1, 9);
+    const outcome = table.offer({
+      proposer: 'P2',
+      to: 'P4',
+      rounds: 1,
+      obligations: [{ kind: 'noAttack', by: 'P4', against: 'P2' }],
+    });
+    expect(outcome.kind).not.toBe('refused');
+    const proposal = table
+      .messages()
+      .filter((m) => m.kind === 'proposal')
+      .at(-1);
+    expect(proposal?.turn).toBe(9);
   });
 
   it('refuses offers to a seat that does not negotiate', () => {
     const w = world();
     const table = setup(w, (seat) => seat !== 'P4');
-    const outcome = table.offer(
-      {
-        proposer: 'P2',
-        parties: ['P2', 'P4'],
-        proposedTurn: 1,
-        rounds: 1,
-        obligations: [{ kind: 'noAttack', by: 'P4', against: 'P2' }],
-      },
-      1,
-    );
+    runTurns(table, w, 1, 1);
+    const outcome = table.offer({
+      proposer: 'P2',
+      to: 'P4',
+      rounds: 1,
+      obligations: [{ kind: 'noAttack', by: 'P4', against: 'P2' }],
+    });
     expect(outcome).toEqual({ kind: 'refused', reason: 'notNegotiating' });
   });
 

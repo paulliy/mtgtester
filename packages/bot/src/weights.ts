@@ -210,6 +210,12 @@ export const WEIGHTS = {
     maxPKeep: 0.95,
     /** Each breach multiplies the breaker's keep probability by this. */
     brokenDecay: 0.4,
+    /**
+     * Least a party's own promises must have cost it (LEP) for keeping them to earn any trust. A
+     * deal kept for free (a gift, a promise not to attack someone it never wanted to) earns none,
+     * and a deal earns at most what it cost the keeper, never its full size.
+     */
+    minTrustCost: 1,
     /** A seat with this many breaches is refused outright. */
     maxBreachesTolerated: 2,
 

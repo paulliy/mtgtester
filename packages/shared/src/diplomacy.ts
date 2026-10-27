@@ -93,15 +93,27 @@ export type TableMessage =
       reason?: 'lethal' | 'worthIt' | 'selfDefense';
     }
   | {
+      /**
+       * One party is freed from its side of a deal while the other's promises stand: the freed
+       * party's counterpart became the table leader, and nobody owes a leader restraint.
+       */
+      kind: 'released';
+      turn: number;
+      dealId: string;
+      seat: PlayerId;
+      reason: 'leader';
+    }
+  | {
       kind: 'dealEnded';
       turn: number;
       dealId: string;
       outcome: 'kept' | 'void';
       /**
-       * Why a deal was void: a party left the game or became the leader, one party could now
-       * kill the other, or a promised attack never came. A void deal credits no trust.
+       * Why a deal was void: a party left the game, one party could now kill the other, a promised
+       * attack never came and could not have, or a party answered a seat that now led the table or
+       * threatened it with lethal. A void deal credits no trust and charges none.
        */
-      reason?: 'partyLeft' | 'leader' | 'lethal' | 'unmet';
+      reason?: 'partyLeft' | 'lethal' | 'unmet' | 'selfDefense';
     };
 
 export type TableMessageKind = TableMessage['kind'];

@@ -48,15 +48,17 @@ export function describeMessage(m: TableMessage, name: SeatName = (s) => s): str
             : '.';
       return `${name(m.from)} breaks the deal (${describeObligation(m.obligation, name)})${why}`;
     }
+    case 'released':
+      return `${name(m.seat)} is free of deal ${m.dealId}: the other side took the lead.`;
     case 'dealEnded': {
       if (m.outcome === 'kept') return `Deal ${m.dealId} ran its course.`;
       const why =
-        m.reason === 'leader'
-          ? ': a party took the lead'
+        m.reason === 'selfDefense'
+          ? ': a party answered a threat to itself'
           : m.reason === 'lethal'
             ? ': one side could now kill the other'
             : m.reason === 'unmet'
-              ? ': the promised attack never came'
+              ? ': the promised attack could not be made'
               : m.reason === 'partyLeft'
                 ? ': a party left the game'
                 : '';

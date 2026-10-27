@@ -12,10 +12,17 @@ import type {
 import { WEIGHTS } from '../weights';
 import { judgeDecision, offeredBreach, ownerLookup, stackLookup, type OwnerOf } from './compliance';
 import { couldKill, estimateTable, type TableEstimate } from './estimate';
-import type { ActiveObligation, BreachReason, DiplomacyPlay } from './play';
+import { released, type ActiveObligation, type BreachReason, type DiplomacyPlay } from './play';
 import { bestDealWith, rankedProposals } from './propose';
 import { TrustLedger } from './trust';
-import { answerDeal, roundOf, validateDeal, valueDeal, type DealContext } from './value';
+import {
+  answerDeal,
+  roundOf,
+  validateDeal,
+  valueDeal,
+  type DealContext,
+  type DealValuation,
+} from './value';
 
 const D = WEIGHTS.deals;
 
@@ -48,6 +55,14 @@ export interface DiplomacyStats {
   voided: number;
 }
 
+/** The terms a proposer offers: the table supplies the id, the turn and the status. */
+export interface OfferTerms {
+  proposer: PlayerId;
+  to: PlayerId;
+  obligations: DealObligation[];
+  rounds: number;
+}
+
 /** What became of an offer made through `offer`. */
 export type OfferOutcome =
   | { kind: 'accepted'; deal: Deal }
@@ -57,8 +72,11 @@ export type OfferOutcome =
 
 interface DealRecord {
   deal: Deal;
-  /** Stake at acceptance, credited to a party's trust when it keeps a deal it was tempted by. */
-  stake: number;
+  /**
+   * Trust each party can earn by keeping the deal: what its own promises cost it, capped by the
+   * deal's size, as priced at acceptance. Zero when keeping was free.
+   */
+  credit: Map<PlayerId, number>;
   /** One-shot obligations already met, by index in `deal.obligations`. */
   met: Set<number>;
   /** The leader when the deal started; the escape clause fires only on a party BECOMING leader. */
@@ -67,6 +85,16 @@ interface DealRecord {
   turnsTaken: Map<PlayerId, number>;
   /** Parties that were offered a way to break the deal and did not take it. */
   tested: Set<PlayerId>;
+  /** Parties freed from their side because the other party became the leader. */
+  freed: Set<PlayerId>;
+  /** Parties owing an attack that started a turn inside the deal with attackers on board. */
+  couldAttack: Set<PlayerId>;
+}
+
+interface PairEnd {
+  round: number;
+  /** Rounds the pair waits before another deal: longer after a breach. */
+  cooldown: number;
 }
 
 interface Decline {
@@ -82,6 +110,8 @@ interface HeldAttack {
   response: DecisionResponse;
   ownerOf: OwnerOf;
   isStack: (id: ObjectId) => boolean;
+  /** The deciding seat's table when it decided, for the self-defense release. */
+  estimate: TableEstimate;
   repairedBefore: number;
 }
 
@@ -135,7 +165,7 @@ export class DiplomacyTable {
   private readonly trust = new TrustLedger();
   private readonly records: DealRecord[] = [];
   private readonly declines: Decline[] = [];
-  private readonly lastEnded = new Map<string, number>();
+  private readonly lastEnded = new Map<string, PairEnd>();
   private readonly proposedThisTurn = new Set<PlayerId>();
   private readonly log: TableMessage[] = [];
   private readonly pendingBreach = new Map<string, BreachReason>();
@@ -188,6 +218,7 @@ export class DiplomacyTable {
     const out: ActiveObligation[] = [];
     for (const r of this.records) {
       if (r.deal.status !== 'active') continue;
+      if (r.freed.has(seat)) continue;
       r.deal.obligations.forEach((obligation, i) => {
         if (obligation.by === seat && !r.met.has(i)) out.push({ dealId: r.deal.id, obligation });
       });
@@ -233,17 +264,19 @@ export class DiplomacyTable {
     const view = this.opts.viewOf(request.decidingPlayer);
     const ownerOf = ownerLookup(view);
     const isStack = stackLookup(view);
+    const estimate = estimateTable(view);
     if (request.decisionType === 'declareAttackers') {
       this.heldAttack = {
         request,
         response,
         ownerOf,
         isStack,
+        estimate,
         repairedBefore: this.opts.repairedAttacks?.() ?? 0,
       };
       return;
     }
-    this.judge(request, response, ownerOf, isStack);
+    this.judge(request, response, ownerOf, isStack, estimate);
   }
 
   /** Judge a held attack declaration now. Drivers call this once the game is over. */
@@ -256,7 +289,7 @@ export class DiplomacyTable {
       this.pendingBreach.clear();
       return;
     }
-    this.judge(held.request, held.response, held.ownerOf, held.isStack);
+    this.judge(held.request, held.response, held.ownerOf, held.isStack, held.estimate);
   }
 
   private isRetryOfHeld(request: DecisionRequest): boolean {
@@ -275,15 +308,20 @@ export class DiplomacyTable {
     response: DecisionResponse,
     ownerOf: OwnerOf,
     isStack: (id: ObjectId) => boolean,
+    estimate: TableEstimate,
   ): void {
     for (const record of this.records) {
       if (record.deal.status !== 'active') continue;
       for (let i = 0; i < record.deal.obligations.length; i++) {
         if (record.met.has(i)) continue;
         const obligation = record.deal.obligations[i]!;
+        if (record.freed.has(obligation.by)) continue;
         const verdict = judgeDecision(obligation, request, response, ownerOf, isStack);
         if (verdict === 'violated') {
-          this.breach(record, obligation, request.turn);
+          // Answering a seat that now leads or threatens lethal is not a breach (decision 17):
+          // the same release test the bot used ends the deal without charging anyone.
+          if (released(obligation, estimate)) this.end(record, 'void', request.turn, 'selfDefense');
+          else this.breach(record, obligation, request.turn);
           break;
         }
         if (verdict === 'kept' && obligation.kind === 'attackPlayer') {
@@ -302,7 +340,10 @@ export class DiplomacyTable {
     record.deal.breachedBy = obligation.by;
     this.trust.recordBroken(obligation.by);
     this.stats.broken++;
-    this.lastEnded.set(pairKey(...record.deal.parties), this.round(turn));
+    this.lastEnded.set(pairKey(...record.deal.parties), {
+      round: this.round(turn),
+      cooldown: Math.max(D.pairCooldownRounds, D.reproposeCooldownRounds),
+    });
     const reason = this.pendingBreach.get(record.deal.id);
     this.log.push({
       kind: 'breach',
@@ -326,32 +367,51 @@ export class DiplomacyTable {
         this.end(record, 'void', turn, 'partyLeft');
         continue;
       }
-      if (
-        table.leader !== null &&
-        table.leader !== record.leaderAtStart &&
-        deal.parties.includes(table.leader)
-      ) {
-        this.end(record, 'void', turn, 'leader');
-        continue;
+      // A party that became the leader frees the other party; its own promises stand, so taking
+      // the lead is no way out of a deal (decision 5).
+      const leader = table.leader;
+      if (leader !== null && leader !== record.leaderAtStart && deal.parties.includes(leader)) {
+        const other = deal.parties[0] === leader ? deal.parties[1] : deal.parties[0];
+        if (!record.freed.has(other)) {
+          record.freed.add(other);
+          this.log.push({ kind: 'released', turn, dealId: deal.id, seat: other, reason: 'leader' });
+        }
       }
       // Deals do not survive lethal: once a promiser could kill the seat it promised to spare,
       // the deal is called off in the open rather than broken by surprise.
       if (
-        deal.obligations.some((o) => o.kind === 'noAttack' && couldKill(table, o.by, o.against))
+        deal.obligations.some(
+          (o) =>
+            o.kind === 'noAttack' && !record.freed.has(o.by) && couldKill(table, o.by, o.against),
+        )
       ) {
         this.end(record, 'void', turn, 'lethal');
         continue;
       }
       if (deal.parties.every((p) => (record.turnsTaken.get(p) ?? 0) >= deal.rounds)) {
-        const unmet = deal.obligations.some(
-          (o, i) => o.kind === 'attackPlayer' && !record.met.has(i),
+        const unmet = deal.obligations.find(
+          (o, i) => o.kind === 'attackPlayer' && !record.met.has(i) && !record.freed.has(o.by),
         );
-        if (unmet) this.end(record, 'void', turn, 'unmet');
-        else this.end(record, 'kept', turn);
+        // A promised attack skipped by a seat that had attackers is a breach: holding creatures
+        // back, or tapping them before combat, is not a way out. One that could never be made
+        // ends the deal void.
+        if (unmet !== undefined && record.couldAttack.has(unmet.by)) {
+          this.breach(record, unmet, turn);
+        } else if (unmet !== undefined) {
+          this.end(record, 'void', turn, 'unmet');
+        } else {
+          this.end(record, 'kept', turn);
+        }
         continue;
       }
       if (deal.parties.includes(activePlayer)) {
         record.turnsTaken.set(activePlayer, (record.turnsTaken.get(activePlayer) ?? 0) + 1);
+        const owesAttack = deal.obligations.some(
+          (o, i) => o.kind === 'attackPlayer' && o.by === activePlayer && !record.met.has(i),
+        );
+        if (owesAttack && (table.bySeat.get(activePlayer)?.attackPower ?? 0) > 0) {
+          record.couldAttack.add(activePlayer);
+        }
       }
     }
 
@@ -364,19 +424,26 @@ export class DiplomacyTable {
     record: DealRecord,
     outcome: 'kept' | 'void',
     turn: number,
-    reason?: 'partyLeft' | 'leader' | 'lethal' | 'unmet',
+    reason?: 'partyLeft' | 'lethal' | 'unmet' | 'selfDefense',
   ): void {
     record.deal.status = outcome;
     if (outcome === 'kept') {
-      // Keeping a deal one was never tempted to break proves nothing, so it earns nothing.
+      // Keeping a deal one was never tempted to break, or that cost nothing to keep, proves
+      // nothing, so it earns nothing; otherwise it earns at most what keeping it cost.
       for (const party of record.deal.parties) {
-        if (record.tested.has(party)) this.trust.recordKept(party, record.stake);
+        const credit = record.credit.get(party) ?? 0;
+        if (record.tested.has(party) && !record.freed.has(party) && credit >= D.minTrustCost) {
+          this.trust.recordKept(party, credit);
+        }
       }
       this.stats.kept++;
     } else {
       this.stats.voided++;
     }
-    this.lastEnded.set(pairKey(...record.deal.parties), this.round(turn));
+    this.lastEnded.set(pairKey(...record.deal.parties), {
+      round: this.round(turn),
+      cooldown: D.pairCooldownRounds,
+    });
     this.log.push({
       kind: 'dealEnded',
       turn,
@@ -411,7 +478,7 @@ export class DiplomacyTable {
       return false;
     }
     const ended = this.lastEnded.get(pairKey(a, b));
-    return ended === undefined || this.round(turn) - ended >= D.pairCooldownRounds;
+    return ended === undefined || this.round(turn) - ended.round >= ended.cooldown;
   }
 
   private recentlyDeclined(proposer: PlayerId, to: PlayerId, terms: string, turn: number): boolean {
@@ -426,25 +493,34 @@ export class DiplomacyTable {
   }
 
   /**
-   * Offer a deal to its second party, who answers at once (decisions 15 and 18). Every proposer
-   * goes through here, so the limits hold for whoever offers: one offer per proposer per turn,
-   * no repeat of declined terms inside the cooldown, a pair cooldown between deals, and the
-   * structural checks. A bot that declines counters with its own best terms, and the proposer, if
-   * it negotiates here, answers that counter in turn.
+   * Offer a deal to `to`, who answers at once (decisions 15 and 18). Every proposer goes through
+   * here, so the limits hold for whoever offers: one offer per proposer per turn, no repeat of
+   * declined terms inside the cooldown, the pair cooldown between deals, and the structural checks.
+   * Only the terms are taken from the caller; the turn is the table's own, so no caller can claim
+   * the early-game allowance or step around a cooldown. A bot that declines counters with its own
+   * best terms, and the proposer, if it negotiates here, answers that counter in turn.
    */
-  offer(proposal: Omit<Deal, 'id' | 'status'>, turn: number): OfferOutcome {
-    const proposer = proposal.proposer;
-    const to = proposal.parties[1];
+  offer(terms: OfferTerms): OfferOutcome {
+    const turn = this.turnSeen;
+    const { proposer, to } = terms;
     if (!this.opts.negotiates(to)) return { kind: 'refused', reason: 'notNegotiating' };
     if (this.proposedThisTurn.has(proposer)) return { kind: 'refused', reason: 'rateLimited' };
-    const probe: Deal = { ...structuredClone(proposal), id: 'probe', status: 'proposed' };
+    const probe: Deal = {
+      id: 'probe',
+      proposer,
+      parties: [proposer, to],
+      obligations: structuredClone(terms.obligations),
+      proposedTurn: turn,
+      rounds: terms.rounds,
+      status: 'proposed',
+    };
     const living = new Set(estimateTable(this.opts.viewOf(to)).seats.map((s) => s.seat));
-    if (proposal.parties[0] !== proposer || validateDeal(probe, living).length > 0) {
+    if (turn < 1 || validateDeal(probe, living).length > 0) {
       return { kind: 'refused', reason: 'invalid' };
     }
     if (!this.canDeal(proposer, to, turn)) return { kind: 'refused', reason: 'cooldown' };
-    const terms = termsKey(probe);
-    if (this.recentlyDeclined(proposer, to, terms, turn)) {
+    const key = termsKey(probe);
+    if (this.recentlyDeclined(proposer, to, key, turn)) {
       return { kind: 'refused', reason: 'cooldown' };
     }
 
@@ -464,14 +540,14 @@ export class DiplomacyTable {
         dealId: deal.id,
         answer: 'accept',
       });
-      this.activate(deal, answer.valuation.stake, theirCtx.table);
+      this.activate(deal, answer.valuation, theirCtx.table);
       return { kind: 'accepted', deal };
     }
 
     deal.status = 'declined';
-    this.declines.push({ proposer, to, terms, round: this.round(turn) });
+    this.declines.push({ proposer, to, terms: key, round: this.round(turn) });
     const counter = bestDealWith(to, proposer, theirCtx, `t${turn}-${to}-counter`);
-    if (counter === null || termsKey(counter.deal) === terms) {
+    if (counter === null || termsKey(counter.deal) === key) {
       this.log.push({
         kind: 'response',
         turn,
@@ -506,10 +582,18 @@ export class DiplomacyTable {
       answer: back.accept ? 'accept' : 'decline',
     });
     if (back.accept) {
-      this.activate(counterDeal, back.valuation.stake, ctx.table);
+      this.activate(counterDeal, back.valuation, ctx.table);
       return { kind: 'accepted', deal: counterDeal };
     }
     counterDeal.status = 'declined';
+    // A declined counter is on the same cooldown as any declined offer, so counters cannot be used
+    // to keep re-asking.
+    this.declines.push({
+      proposer: to,
+      to: proposer,
+      terms: termsKey(counterDeal),
+      round: this.round(turn),
+    });
     return { kind: 'declined', counter: counterDeal };
   }
 
@@ -525,26 +609,35 @@ export class DiplomacyTable {
     for (const candidate of ranked) {
       const to = candidate.deal.parties[1];
       if (this.recentlyDeclined(proposer, to, termsKey(candidate.deal), turn)) continue;
-      const { id: _id, status: _status, ...proposal } = candidate.deal;
-      this.offer(proposal, turn);
+      this.offer({
+        proposer,
+        to,
+        obligations: candidate.deal.obligations,
+        rounds: candidate.deal.rounds,
+      });
       return;
     }
   }
 
-  private activate(deal: Deal, stake: number, table: TableEstimate): void {
+  private activate(deal: Deal, valuation: DealValuation, table: TableEstimate): void {
     deal.status = 'active';
     const turnsTaken = new Map<PlayerId, number>(deal.parties.map((p) => [p, 0]));
     // The accepting turn counts for whichever party is taking it.
     if (this.activeNow !== null && turnsTaken.has(this.activeNow)) {
       turnsTaken.set(this.activeNow, 1);
     }
+    const credit = new Map(
+      deal.parties.map((p) => [p, Math.min(valuation.stake, valuation.ownCost.get(p) ?? 0)]),
+    );
     this.records.push({
       deal,
-      stake,
+      credit,
       met: new Set(),
       leaderAtStart: table.leader,
       turnsTaken,
       tested: new Set(),
+      freed: new Set(),
+      couldAttack: new Set(),
     });
     this.stats.accepted++;
   }

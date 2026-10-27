@@ -59,12 +59,20 @@ mostly about closing those openings. They were revised after an adversarial revi
 5. Deals are short and are counted in turns, not turn numbers: a deal lasts until each party has
    taken `rounds` turns of its own since it was accepted (the accepting turn counts for whoever is
    active), with `rounds` an integer from 1 to `maxRounds`. Eliminations and extra turns cannot
-   stretch or shrink it. At each turn's window a deal ends early, without a breach and without
-   trust credit, when a party left the game, when a party became the table leader after the deal
-   started (decision 9), or when a promiser could now kill the seat it promised to spare: deals
-   do not survive lethal, and calling one off in the open beats breaking it by surprise. A deal
-   whose `attackPlayer` promise was never met ends void, not kept. After a deal ends, the same pair
-   waits `pairCooldownRounds` before another, so a deal cannot be renewed forever.
+   stretch or shrink it. At each turn's window:
+   - a party that left the game ends the deal void;
+   - a promiser that could now kill the seat it promised to spare ends it void: deals do not
+     survive lethal, and calling one off in the open beats breaking it by surprise;
+   - a party that became the table leader after the deal started frees the other party (a
+     `released` message), while its own promises stand: nobody owes a leader restraint, and taking
+     the lead is no way out of a deal.
+
+   When the deal runs out, an unmet `attackPlayer` promise is a breach if its seat started a turn
+   inside the deal with attackers on board (holding creatures back, or tapping them before combat,
+   is no way out), and ends the deal void if it could never have been made. A void deal credits
+   and charges nobody. After a deal ends, the pair waits `pairCooldownRounds` before another, or
+   `reproposeCooldownRounds` after a breach, so a deal cannot be renewed forever.
+
 6. Compliance is judged from decisions, not prose. A submitted decision violates an obligation
    when one of its chosen targets (attack slots for `noAttack`, every other slot for `noTarget`
    and `noCounter`) belongs to the protected seat. A violation is excused only in a forced
@@ -96,9 +104,15 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
 10. **Pricing obligations.** Everything one seat owes is priced jointly, per round, on public
     information, so two obligations cannot count the same pressure twice:
     - Attack obligations move that seat's predicted attack (its own threat-aware preference,
-      decision 16): spared seats are removed, and an `attackPlayer` target takes
-      `attackPlayerShare` of it. Each other seat gains the position it no longer loses. The
-      obligor pays what the attack it gave up was worth to it, so a promise is never free to make.
+      decision 16), on top of what it already owes in deals in force, so chained deals cannot each
+      pretend the seat still attacks the others: spared seats are removed, and an `attackPlayer`
+      target takes `attackPlayerShare` of it. Each other seat gains the position it no longer
+      loses. The obligor pays the value of the best attack it gives up (its best defender before
+      against its best one still allowed, plus the share sent at a worse target). That cost is
+      never negative, and it is zero when another target is just as good: sparing one of two equal
+      opponents costs nothing, which is why a one-sided ask is refused by the bar, not the price.
+      Each side's gain and the obligor's cost use the bot's existing scale, own life at 1 and an
+      opponent's at `opponentLifePointValue`.
     - `noTarget` and `noCounter` move a flat per-round interaction value the same way, scaled by
       the promiser's ability to interact (`handSize / fullInteractionHandSize`, capped at 1), and
       the promiser pays `interactionForegoneShare` of what it moved. A seat with no cards promises
@@ -119,8 +133,10 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
 
     Trust earned keeping small deals barely transfers to a large one, which defeats "build trust,
     then cash it in". A kept deal credits a party only if some decision during it offered that
-    party a way to break it (or, for `attackPlayer`, the attack was made): keeping a truce with no
-    attackers proves nothing. Every seat sees every breach, so trust is a public record per seat.
+    party a way to break it (or, for `attackPlayer`, the attack was made), and then only as much
+    as keeping it cost that party (its own priced cost, capped at the deal's size), and nothing
+    below `minTrustCost`. Keeping a truce with no attackers, or a gift that cost nothing, proves
+    nothing. Every seat sees every breach, so trust is a public record per seat.
 
 13. **Temptation.** A promise the counterparty would want to break is assumed broken: its attack
     promises are worth nothing to `me` while its attack could kill `me`.
@@ -142,13 +158,19 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
       not in danger. A deal in which the leader only gives is allowed: that is the leader's way to
       buy relief;
     - `me` would promise not to target or counter without the same promise back, or for more than
-      one round: interaction is how a table stops a combo, and it is not for sale;
+      one round: interaction is how a table stops a combo, and a bot does not sell it. A human may
+      still offer its own interaction one-way; that only binds the human;
     - the counterparty has broken `maxBreachesTolerated` deals;
-    - `me` would owe `noAttack` against every living opponent.
+    - with the new deal, `me` would have fewer than two opponents left to attack when it has three
+      or more, or none left otherwise: chained truces must not funnel all of a seat's pressure
+      onto one player.
 
     The table enforces the rest for every proposer, bot or human (`DiplomacyTable.offer`): one
-    offer per proposer per turn, no repeat of declined terms (including length) within
-    `reproposeCooldownRounds`, and the pair cooldown of decision 5.
+    offer per proposer per turn, no repeat of declined terms (including length, and including a
+    declined counter) within `reproposeCooldownRounds`, and the pair cooldown of decision 5.
+    `offer` takes only the terms (proposer, recipient, obligations, length); the turn, id and
+    status are the table's own, so a caller cannot claim the early-game allowance or step around a
+    cooldown.
 
 ### Deal-aware play
 
@@ -163,17 +185,25 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
     `opponentLifePointValue`, weighted up for the leader by `leaderFocus`, plus combat search's
     lethal term when the damage gets through and eliminates that player. Planeswalkers count as
     their controller at `planeswalkerFactor`. The blocker model is crude (one blocker stops one
-    attacker), and evasion is ignored.
+    attacker), and evasion is ignored. Likely damage counts the defender's untapped creatures as
+    blockers, but a kill must hold against all of them, tapped or not, so the bot never breaks a
+    deal for a kill that an untap or a flash blocker would stop. This is the same count the table
+    uses to call a deal off for lethal.
 17. **Keeping and breaking.** For attacks, the bot builds the best plan that keeps every deal and,
     for each deal it owes anything on offense (`noAttack` or `attackPlayer`), the best plan that
     ignores only that deal; it breaks when the gain exceeds the reputation cost
     `breakPenalty · (living opponents / starting opponents)`, which shrinks late in the game, and
     says `lethal` when the broken plan eliminates someone the kept plan does not. A real kill
-    always clears the cost. For other targets, the bot keeps the plain bot's first option when it
+    always clears the cost. Short of a kill, the gain rarely does, so in practice bots break attack
+    deals for lethal and almost never otherwise. For other targets, the bot keeps the plain bot's first option when it
     complies, else picks a complying option, and otherwise scores the action down by the same
     cost, so it usually does something else. A `noTarget` or `noCounter` promise stops binding when
     the protected seat leads the table or could kill the promiser: no deal stops a seat from
-    answering what is about to beat it, and such a breach is announced as `selfDefense`.
+    answering what is about to beat it. The table applies the same test when it judges the
+    decision, so answering such a seat ends the deal void (`selfDefense`) and costs no trust; a
+    seat cannot bait a breach by taking the lead in the middle of a turn. The target penalty is on
+    the same scale as spell scores, so a bot may still break a `noTarget` promise for a spell it
+    rates far above the penalty.
 18. **Proposing.** At its negotiation window a bot makes at most one proposal, and only with a
     reason: some seat's predicted attack takes at least `proposePressureShare` of its life, or a
     leader exists and another seat could be pointed at it. It generates a few candidates (mutual
@@ -190,7 +220,8 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
     compliance are all heuristic, synchronous and seeded. They add no API calls and no latency.
     The table skips all compliance work while no deal is active.
 20. **`DiplomacyTable`** in `@mtg/bot` owns active deals, trust records, proposal history, and the
-    message log for one game. It is pure logic with no I/O. The driver calls `beforeDecision`
+    message log for one game. It is pure logic with no I/O. Offers enter only through `offer`.
+    The driver calls `beforeDecision`
     before every surfaced decision (the first one in a turn opens that turn's negotiation window,
     the same point the strategist runs in ADR 0016), `afterDecision` with every submitted decision,
     and `flush` when the game ends, and gives each bot its obligations through
@@ -251,7 +282,12 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
   promises are released against a seat that leads or threatens lethal, and deals are short, which
   together bound that blind spot without closing it.
 - Commander damage between two opponents is not in `PlayerView`, so it does not enter their
-  positions; the viewer's own poison count is not in `PlayerView` either and reads as zero.
+  positions, and a bot predicting a counterparty's answer cannot see the commander damage that
+  counterparty has taken; the viewer's own poison count is not in `PlayerView` either and reads as
+  zero.
+- A leader is the natural target of every other seat's proposals, so the table tends to gang up on
+  it. That is how Commander tables play, but the sweep should watch whether it decides too many
+  games.
 - `noTarget` treats any targeting of a protected seat as a violation, helpful or harmful, because
   target polarity is not known. In practice a seat rarely targets an opponent's permanents
   helpfully.
@@ -280,3 +316,15 @@ choice; mutable deals in the message log; and per-decision compliance work with 
 Deferred, and recorded in the phases above: the event-sourced, resumable table; asynchronous
 answers and a post-declaration negotiation slot for humans; the broader vocabulary; and the
 adversarial exploiter in the sweep.
+
+A second review checked those fixes and found more, fixed in a follow-up: a self-defense answer
+was still charged as a breach; trust could be farmed with gifts that cost the keeper nothing (now
+credited only up to the keeper's own cost); the giver's cost could turn into a payment (now
+clamped, and taken from the best attack given up rather than an average); chained deals were each
+priced as if the seat still attacked the others (now priced on top of deals in force, with at
+least two opponents left open); the caller of `offer` chose the turn; a seat could skip a promised
+attack for free by holding its creatures; taking the lead voided a deal for both sides (now it
+frees only the other party); a declined counter could be re-asked at once; a breaker could re-deal
+after one round; and the planner and the table counted blockers differently for lethal. Still
+open: `attackPlayer` is not judged when another player chooses which creatures attack (Master
+Warcraft's chooser mode).

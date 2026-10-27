@@ -172,6 +172,29 @@ describe('valueDeal — weighing everyone, not just ourselves (decisions 10 and 
   });
 });
 
+describe('pricing against deals already in force', () => {
+  it('charges more for sparing a second seat once one is already spared', () => {
+    const v = view(
+      'P1',
+      30,
+      [opponent('P2', 30), opponent('P3', 25), opponent('P4', 30)],
+      [creature('P1', 6), creature('P2', 3), creature('P3', 3), creature('P4', 3)],
+    );
+    const spareP2 = deal(['P1', 'P2'], [{ kind: 'noAttack', by: 'P1', against: 'P2' }]);
+    const spareP3: Deal = {
+      ...deal(['P1', 'P3'], [{ kind: 'noAttack', by: 'P1', against: 'P3' }], 1, 'old'),
+      status: 'active',
+    };
+    const alone = valueDeal(spareP2, 'P1', ctx(v)).ownCost.get('P1')!;
+    const chained = valueDeal(spareP2, 'P1', ctx(v, { activeDeals: [spareP3] })).ownCost.get('P1')!;
+    expect(chained).toBeGreaterThanOrEqual(alone);
+    // With three opponents, two spared would leave one open: refused.
+    expect(valueDeal(spareP2, 'P1', ctx(v, { activeDeals: [spareP3] })).vetoes).toContain(
+      'noTargetsLeft',
+    );
+  });
+});
+
 describe('trust and temptation (decisions 12 and 13)', () => {
   it('credits kept deals only up to their own size, and decays on a breach', () => {
     const trust = new TrustLedger();

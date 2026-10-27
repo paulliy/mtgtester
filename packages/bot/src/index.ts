@@ -44,6 +44,7 @@ export type {
   DiplomacyStats,
   DiplomacyTableOptions,
   OfferOutcome,
+  OfferTerms,
   SeatEstimate,
   SeatName,
   TableEstimate,

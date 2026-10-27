@@ -44,6 +44,8 @@ export type DealVeto =
 export interface DealValuation {
   /** V from decision 11, after trust and temptation. */
   value: number;
+  /** What each party's own promises cost it (LEP, ≥ 0): the most trust keeping them can earn. */
+  ownCost: Map<PlayerId, number>;
   /** Size of the deal in LEP: half the total position it moves, before trust. */
   stake: number;
   /** Probability the counterparty keeps it, at this stake. */
@@ -139,15 +141,19 @@ function addInto(into: Map<PlayerId, number>, from: Map<PlayerId, number>, scale
 }
 
 /**
- * One round of everything `by` owes on offense, priced jointly (decision 10): its attack goes
- * where its preferences send it with the spared seats removed, and, when it owes an attack on a
- * target, `attackPlayerShare` of it goes there instead. Each other seat gains the position it no
- * longer loses; `by` itself pays what the attack it gives up was worth to it (`damageValue`
- * expected over its preferences), which is why a promise is never free to make.
+ * One round of everything `by` owes on offense, priced jointly (decision 10), on top of what `by`
+ * already owes in deals in force (`baseline`), so chained deals cannot each pretend the seat still
+ * attacks the others. Its attack goes where its preferences send it with the spared seats
+ * removed, and, when it owes an attack on a target, `attackPlayerShare` of it goes there instead.
+ * Each other seat gains the position it no longer loses. `by` pays the value of the best attack
+ * it gives up: its best defender before against its best one still allowed, and the share it must
+ * send at a worse target. That cost is never negative (a promise is never a payment) and is zero
+ * when another target is just as good.
  */
 function attackRound(
   table: TableEstimate,
   by: PlayerId,
+  baseline: ReadonlySet<PlayerId>,
   spared: ReadonlySet<PlayerId>,
   target: PlayerId | null,
 ): Map<PlayerId, number> {
@@ -156,24 +162,28 @@ function attackRound(
   if (seat === undefined || seat.attackPower <= 0) return delta;
   if (spared.size === 0 && target === null) return delta;
   const power = seat.attackPower;
-  const before = attackPreference(table, by);
-  const after = new Map(attackPreference(table, by, spared));
+  const allSpared = new Set([...baseline, ...spared]);
+  const before = attackPreference(table, by, baseline);
+  const after = new Map(attackPreference(table, by, allSpared));
   if (target !== null) {
     for (const [d, w] of after) after.set(d, w * (1 - D.attackPlayerShare));
     after.set(target, (after.get(target) ?? 0) + D.attackPlayerShare);
   }
-  let worthBefore = 0;
-  let worthAfter = 0;
+  const best = (seats: Iterable<PlayerId>) =>
+    Math.max(0, ...[...seats].map((d) => damageValue(table, d, power)));
   for (const s of table.seats) {
     if (s.seat === by) continue;
     const wb = before.get(s.seat) ?? 0;
     const wa = after.get(s.seat) ?? 0;
     delta.set(s.seat, lifeLoss(s.life, power * wb) - lifeLoss(s.life, power * wa));
-    const full = damageValue(table, s.seat, power);
-    worthBefore += wb * full;
-    worthAfter += wa * full;
   }
-  delta.set(by, worthAfter - worthBefore);
+  const bestBefore = best(before.keys());
+  const bestAllowed = best(attackPreference(table, by, allSpared).keys());
+  let cost = Math.max(0, bestBefore - bestAllowed);
+  if (target !== null) {
+    cost += D.attackPlayerShare * Math.max(0, bestAllowed - damageValue(table, target, power));
+  }
+  delta.set(by, -cost);
   return delta;
 }
 
@@ -213,10 +223,23 @@ export interface ObligorParts {
   interaction: Map<PlayerId, number>;
 }
 
-/** Position change for every seat, per obligor, over the whole deal (rounds discounted). */
-export function dealParts(table: TableEstimate, deal: Deal): ObligorParts[] {
+/**
+ * Position change for every seat, per obligor, over the whole deal (rounds discounted), on top of
+ * the `noAttack` promises each obligor already owes in `inForce`.
+ */
+export function dealParts(
+  table: TableEstimate,
+  deal: Deal,
+  inForce: readonly Deal[] = [],
+): ObligorParts[] {
   const rounds = Math.max(1, Math.min(D.maxRounds, Math.floor(deal.rounds)));
   return deal.parties.map((by) => {
+    const baseline = new Set(
+      inForce
+        .flatMap((d) => d.obligations)
+        .filter((o) => o.by === by && o.kind === 'noAttack')
+        .map(obligationSubject),
+    );
     const owed = deal.obligations.filter((o) => o.by === by);
     const spared = new Set(owed.filter((o) => o.kind === 'noAttack').map(obligationSubject));
     const target = owed.find((o) => o.kind === 'attackPlayer');
@@ -227,8 +250,9 @@ export function dealParts(table: TableEstimate, deal: Deal): ObligorParts[] {
     );
 
     const attack = new Map<PlayerId, number>();
-    addInto(attack, attackRound(table, by, spared, target ? obligationSubject(target) : null));
-    addInto(attack, attackRound(table, by, spared, null), roundWeight(1, rounds));
+    const owedTarget = target ? obligationSubject(target) : null;
+    addInto(attack, attackRound(table, by, baseline, spared, owedTarget));
+    addInto(attack, attackRound(table, by, baseline, spared, null), roundWeight(1, rounds));
 
     const interaction = new Map<PlayerId, number>();
     const weight = roundWeight(0, rounds);
@@ -281,8 +305,11 @@ function vetoesFor(deal: Deal, me: PlayerId, ctx: DealContext): DealVeto[] {
   const spared = new Set(
     inForce.filter((o) => o.by === me && o.kind === 'noAttack').map(obligationSubject),
   );
+  // Chained truces must not funnel all of a seat's pressure onto one unaligned player: with three
+  // or more opponents, at least two stay open; with fewer, at least one.
   const opponents = table.seats.filter((s) => s.seat !== me);
-  if (opponents.length > 0 && opponents.every((s) => spared.has(s.seat))) {
+  const open = opponents.filter((s) => !spared.has(s.seat)).length;
+  if (opponents.length > 0 && open < (opponents.length >= 3 ? 2 : 1)) {
     vetoes.add('noTargetsLeft');
   }
   return [...vetoes];
@@ -299,7 +326,7 @@ function vetoesFor(deal: Deal, me: PlayerId, ctx: DealContext): DealVeto[] {
 export function valueDeal(deal: Deal, me: PlayerId, ctx: DealContext): DealValuation {
   const { table } = ctx;
   const other = counterpartyOf(deal, me);
-  const parts = dealParts(table, deal);
+  const parts = dealParts(table, deal, ctx.activeDeals);
 
   let stake = 0;
   for (const part of parts) {
@@ -322,7 +349,13 @@ export function valueDeal(deal: Deal, me: PlayerId, ctx: DealContext): DealValua
     value += interactionKeep * weightedValue(table, me, part.interaction);
   }
 
-  return { value, stake, pKeep, vetoes: vetoesFor(deal, me, ctx) };
+  const ownCost = new Map(
+    parts.map((part) => [
+      part.by,
+      Math.max(0, -((part.attack.get(part.by) ?? 0) + (part.interaction.get(part.by) ?? 0))),
+    ]),
+  );
+  return { value, ownCost, stake, pKeep, vetoes: vetoesFor(deal, me, ctx) };
 }
 
 /** The game round a turn falls in, counted against the seats the game started with. */
