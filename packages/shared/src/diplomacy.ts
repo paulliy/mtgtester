@@ -176,7 +176,11 @@ export interface DiplomacySeatState {
   canPropose: boolean;
   /** Offers waiting on this seat's answer. */
   offers: Deal[];
-  /** Every deal in force at the table: deals are public. */
+  /**
+   * Every deal in force at the table (deals are public), with only the promises still binding: a
+   * promised attack already made, or a side released because the other party took the lead, is
+   * left out.
+   */
   deals: Deal[];
   trust: TrustSummary[];
   /** Seats this seat could offer a deal to right now (living, negotiating, off cooldown). */
@@ -185,4 +189,6 @@ export interface DiplomacySeatState {
   maxRounds: number;
   /** Most obligations one side of a deal may carry. */
   maxObligationsPerSide: number;
+  /** Share of the power that could attack that a promised attack must send at its target. */
+  attackPlayerShare: number;
 }

@@ -998,7 +998,9 @@ export class DiplomacyTable {
       offers: this.pendingOffers
         .filter((p) => p.deal.parties[1] === seat)
         .map((p) => snapshot(p.deal)),
-      deals: this.activeDeals().map(snapshot),
+      // Only the promises still binding: one already kept, or whose party was released, binds
+      // nobody, and the player's warnings and a model seat's prompt must not say it does.
+      deals: this.bindingDeals().map(snapshot),
       trust: this.opts.seats.map((s) => {
         const record = this.trust.snapshot(s);
         return { seat: s, kept: record.kept, broken: record.broken };
@@ -1012,6 +1014,7 @@ export class DiplomacyTable {
             ),
       maxRounds: D.maxRounds,
       maxObligationsPerSide: D.maxObligationsPerSide,
+      attackPlayerShare: D.attackPlayerShare,
     };
   }
 

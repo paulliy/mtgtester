@@ -29,9 +29,11 @@ const attack: LegalAction = {
   type: 'attackDeclaration',
   description: 'Declare attackers',
   targets: [
-    { slot: 0, options: [NO_ATTACK_TARGET, 'P2', 'P3'] },
-    { slot: 1, options: [NO_ATTACK_TARGET, 'P2', 'P3'] },
+    { slot: 0, options: [NO_ATTACK_TARGET, 'P2', 'P3', 'p3-walker'] },
+    { slot: 1, options: [NO_ATTACK_TARGET, 'P2', 'P3', 'p3-walker'] },
   ],
+  // A 1-power and a 9-power attacker.
+  data: { subjects: [{ power: 1 }, { power: 9 }] },
 } as unknown as LegalAction;
 const removal = {
   id: 3,
@@ -95,13 +97,32 @@ describe('dealWarnings (ADR 0035)', () => {
       'Deal deal-1 with P2: you promised to attack P3, and this attack sends nothing at P3.',
     ]);
     expect(
-      dealWarnings('P1', [promised], attack, [{ slot: 0, choice: 'p3-walker' }], board),
+      dealWarnings('P1', [promised], attack, [{ slot: 1, choice: 'p3-walker' }], board),
     ).toEqual([]);
   });
 
   it('does not remind of a promised attack the declaration could not make', () => {
     const promised = deal([{ kind: 'attackPlayer', by: 'P1', target: 'P4' }]);
     expect(dealWarnings('P1', [promised], attack, [{ slot: 0, choice: 'P2' }], board)).toEqual([]);
+  });
+
+  it('warns when a promised attack sends only a token at the target', () => {
+    const promised = deal([{ kind: 'attackPlayer', by: 'P1', target: 'P3' }]);
+    const token = [
+      { slot: 0, choice: 'P3' },
+      { slot: 1, choice: 'P2' },
+    ];
+    // Half of 10 power is 5; the 1-power attacker falls short.
+    expect(dealWarnings('P1', [promised], attack, token, board)).toEqual([
+      'Deal deal-1 with P2: you promised to attack P3, and this attack sends 1 of the 5 power it needs at P3.',
+    ]);
+    const earnest = [
+      { slot: 0, choice: 'P2' },
+      { slot: 1, choice: 'P3' },
+    ];
+    expect(dealWarnings('P1', [promised], attack, earnest, board)).toEqual([]);
+    // A lower share from the table lowers the bar.
+    expect(dealWarnings('P1', [promised], attack, token, board, 0.1)).toEqual([]);
   });
 
   it('never warns about blocks', () => {

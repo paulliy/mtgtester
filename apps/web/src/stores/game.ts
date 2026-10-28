@@ -787,6 +787,7 @@ export const useGameStore = defineStore('game', () => {
         pending.request.legalActions.find((action) => action.id === actionId),
         targets,
         pending.state,
+        seat.attackPlayerShare,
       );
       if (messages.length > 0) {
         dealWarning.value = {

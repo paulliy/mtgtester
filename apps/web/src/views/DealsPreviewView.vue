@@ -58,6 +58,7 @@ function seatState(): DiplomacySeatState {
     partners: ['P2', 'P3'],
     maxRounds: 2,
     maxObligationsPerSide: 2,
+    attackPlayerShare: 0.5,
   };
 }
 

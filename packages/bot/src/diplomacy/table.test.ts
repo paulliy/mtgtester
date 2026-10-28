@@ -230,6 +230,15 @@ describe('DiplomacyTable — keeping, breaking and ending deals', () => {
     ).toBe(false);
   });
 
+  it('shows a seat only the promises still binding once one is kept', () => {
+    const { w, table, deal } = withDeal();
+    const owed = deliverPromise(w, table, deal, 2);
+    const shown = table.seatState('P1').deals.find((d) => d.id === deal.id);
+    expect(shown).toBeDefined();
+    expect(shown?.obligations).not.toContainEqual(owed);
+    expect(shown?.obligations).toHaveLength(deal.obligations.length - 1);
+  });
+
   function deliverPromise(w: World, table: DiplomacyTable, deal: Deal, turn: number) {
     const owed = deal.obligations.find((o) => o.kind === 'attackPlayer');
     if (owed?.kind !== 'attackPlayer') throw new Error('expected an attackPlayer obligation');

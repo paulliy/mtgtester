@@ -620,6 +620,7 @@ describe('store — deals with the human seat (ADR 0035 phase 3)', () => {
     partners: ['P2'],
     maxRounds: 3,
     maxObligationsPerSide: 2,
+    attackPlayerShare: 0.5,
   };
   let store: Store;
 

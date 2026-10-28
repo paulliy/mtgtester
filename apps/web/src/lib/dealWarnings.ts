@@ -37,6 +37,39 @@ function ownerLookup(board: PlayerBoardState): {
   return { ownerOf: (id) => owners.get(id), isStack: (id) => stack.has(id) };
 }
 
+/** Each attack slot's attacker power, from its subject data, as the table reads it. */
+function slotPowers(action: LegalAction): number[] {
+  const subjects = action.data?.['subjects'];
+  return (action.targets ?? []).map((_, i) => {
+    const subject = Array.isArray(subjects)
+      ? (subjects[i] as { power?: unknown } | undefined)
+      : undefined;
+    return typeof subject?.power === 'number' ? Math.max(0, subject.power) : 0;
+  });
+}
+
+/**
+ * Power a promised attack must send at `target`, as the table requires it: `share` of the power
+ * that could attack at all, never more than could reach the target. Zero when it is out of reach.
+ */
+function requiredPower(
+  action: LegalAction,
+  powers: readonly number[],
+  target: PlayerId,
+  ownerOf: (id: ObjectId) => PlayerId | undefined,
+  share: number,
+): number {
+  let available = 0;
+  let reachable = 0;
+  (action.targets ?? []).forEach((slot, i) => {
+    const real = slot.options.filter((id) => !SENTINELS.has(id));
+    if (real.length > 0) available += powers[i] ?? 0;
+    if (real.some((id) => ownerOf(id) === target)) reachable += powers[i] ?? 0;
+  });
+  if (reachable <= 0) return 0;
+  return Math.min(reachable, Math.max(1, Math.ceil(share * available)));
+}
+
 function promise(o: DealObligation): string {
   switch (o.kind) {
     case 'noAttack':
@@ -60,6 +93,8 @@ export function dealWarnings(
   action: LegalAction | undefined,
   targets: readonly TargetChoice[] | undefined,
   board: PlayerBoardState,
+  /** `DiplomacySeatState.attackPlayerShare`: how much of a seat's attack a promise needs. */
+  attackPlayerShare = 0.5,
 ): string[] {
   if (action === undefined || action.type === 'blockDeclaration') return [];
   const mine = deals.flatMap((deal) =>
@@ -75,12 +110,24 @@ export function dealWarnings(
   for (const { deal, o } of mine) {
     const yours = `Deal ${deal.id} with ${other(deal)}: you promised ${promise(o)}`;
     if (o.kind === 'attackPlayer') {
-      // As on the server, a promised attack the declaration could not have made is excused.
-      const reachable = (action.targets ?? []).some((slot) =>
-        slot.options.some((id) => !SENTINELS.has(id) && ownerOf(id) === o.target),
-      );
-      if (attack && reachable && !chosen.some((id) => ownerOf(id) === o.target)) {
-        warnings.push(`${yours}, and this attack sends nothing at ${o.target}.`);
+      if (!attack) continue;
+      // As on the server: a token attack does not keep the promise, and one the declaration
+      // could not have made is excused.
+      const powers = slotPowers(action);
+      const required = requiredPower(action, powers, o.target, ownerOf, attackPlayerShare);
+      if (required <= 0) continue;
+      const chosenBySlot = new Map((targets ?? []).map((t) => [t.slot, t.choice]));
+      let sent = 0;
+      (action.targets ?? []).forEach((slot, i) => {
+        const choice = chosenBySlot.get(slot.slot);
+        if (choice !== undefined && ownerOf(choice) === o.target) sent += powers[i] ?? 0;
+      });
+      if (sent < required) {
+        warnings.push(
+          sent === 0
+            ? `${yours}, and this attack sends nothing at ${o.target}.`
+            : `${yours}, and this attack sends ${sent} of the ${required} power it needs at ${o.target}.`,
+        );
       }
       continue;
     }
