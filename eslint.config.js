@@ -71,6 +71,25 @@ export default tseslint.config(
     rules: { 'casting-boundary/constructors': 'error' },
   },
   {
+    // The inline-`TokenSpec` ban covers all of the engine, not only card data: Master of Ceremonies'
+    // Treasure lost its sacrifice cost in `resolve.ts`, outside the old `overrides/**` scope. Only
+    // the catalog itself (`cards/tokens.ts`) may build a token from a literal, and the one
+    // phrase-parsing site in `interpret.ts` (`parseTokenFace`) carries its own inline disable.
+    //
+    // Flat-config rule arrays replace earlier ones per matching entry, so this entry must stay
+    // ordered before every other `no-restricted-syntax` entry. The later entries that match these
+    // files repeat the token selector (`OVERRIDE_RESTRICTIONS`) or, for test files, deliberately
+    // drop it.
+    files: ['packages/engine/src/**/*.ts'],
+    ignores: ['packages/engine/src/cards/tokens.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        { selector: TOKEN_SPEC_LITERAL_SELECTOR, message: TOKEN_SPEC_LITERAL_MESSAGE },
+      ],
+    },
+  },
+  {
     // Authored card overrides go through the shared builders (`cards/templates.ts`). The point of
     // that layer is that the same mechanic is written the same way everywhere, which only holds if
     // new cards cannot quietly go back to raw literals — the drift these rules block is exactly
@@ -104,23 +123,6 @@ export default tseslint.config(
             "Property:matches([key.name='target'], [key.name='targetSlot'], [key.name='cardsSlot'], [key.name='playerSlot'])[value.type='Literal'][value.value>=0]",
           message:
             'Use targetSlots() named indexes in reviewed card definitions instead of bare numeric target references.',
-        },
-      ],
-    },
-  },
-  {
-    // The generic "create a token" grammar (`parseTokenFace` in interpret.ts) is the one place
-    // outside `cards/tokens.ts` allowed to build a `TokenSpec` at all — it is reading a phrase off
-    // the card, not choosing from the catalog, so there is nothing to reference by name. It
-    // canonicalizes its result against the catalog immediately afterward (`canonicalizeToken`) and
-    // the one construction site carries its own inline disable.
-    files: ['packages/engine/src/cards/interpret.ts'],
-    rules: {
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: TOKEN_SPEC_LITERAL_SELECTOR,
-          message: TOKEN_SPEC_LITERAL_MESSAGE,
         },
       ],
     },

@@ -1,4 +1,5 @@
 import { copyData } from './copy-data';
+import { THOPTER_1_1_FLYING } from '../cards/tokens';
 import { counterCount, setCounterCount } from './counters';
 import { offBattlefieldTypes } from './off-battlefield-types';
 import { playerProtectedFromEverything } from './phasing';
@@ -1478,6 +1479,7 @@ export function* moveObjects(
  * only what is public.
  */
 export function faceDownSpellOracleId(ctx: GameContext): OracleId {
+  // eslint-disable-next-line no-restricted-syntax -- a face-down spell's definition (CR 708.2a), not a printed token; no catalog entry describes it
   return registerTokenDef(ctx, {
     name: 'Face-down creature spell',
     typeLine: 'Creature',
@@ -1758,16 +1760,7 @@ export function applyTokenCreationReplacements(
       return def?.ruleStatics.some((rs) => rs.kind === 'artifactTokenCreatesThopter') ?? false;
     })
   ) {
-    createAdditional({
-      name: 'Thopter',
-      typeLine: 'Artifact Creature — Thopter',
-      types: ['Artifact', 'Creature'],
-      subtypes: ['Thopter'],
-      colors: [],
-      power: 1,
-      toughness: 1,
-      keywords: ['flying'],
-    });
+    createAdditional(THOPTER_1_1_FLYING);
   }
 }
 
@@ -1944,8 +1937,10 @@ export function tokenSpecCopying(
       cantBlock,
       cantBeBlocked,
     } = back;
+    // eslint-disable-next-line no-restricted-syntax -- wraps the copied permanent's back face (see below); the selector sees the nested face's fields
     copyDefinition = {
       ...front,
+      // eslint-disable-next-line no-restricted-syntax -- the copied permanent's own back face (CR 707.2), read from its definition; not a catalog token
       backFace: {
         name,
         typeLine,
@@ -1979,6 +1974,7 @@ export function tokenSpecCopying(
       },
     };
   }
+  // eslint-disable-next-line no-restricted-syntax -- a copy token takes its characteristics from the permanent it copies (CR 707.2), not from the catalog
   const spec: CopyTokenSpec = {
     copyDefinition,
     oracleText: perm.faceDown ? '' : perm.oracleText,

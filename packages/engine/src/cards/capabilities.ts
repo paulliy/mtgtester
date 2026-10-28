@@ -109,6 +109,7 @@ const shapes = {
     escaped: leaf,
     fused: leaf,
   } satisfies Fields<Objects<AlternativeCast>>,
+  // eslint-disable-next-line no-restricted-syntax -- field-schema table keyed by property name, not a token
   MdfcLandFace: {
     name: leaf,
     typeLine: leaf,
@@ -432,6 +433,7 @@ const shapes = {
     newTargets: leaf,
     oncePerTurn: leaf,
   } satisfies Fields<Objects<Effect>>,
+  // eslint-disable-next-line no-restricted-syntax -- field-schema table describing TokenSpec's own properties, not a token
   TokenSpec: {
     name: leaf,
     typeLine: leaf,
@@ -531,6 +533,7 @@ const shapes = {
     },
     functionsInGraveyard: leaf,
   } satisfies Fields<Objects<Ability>>,
+  // eslint-disable-next-line no-restricted-syntax -- field-schema table keyed by property name, not a token
   BackFace: {
     name: leaf,
     typeLine: leaf,

@@ -2,7 +2,12 @@ import { targetingSourceFields } from '../targets/context';
 import type { TargetingSource } from '../targets/context';
 import { copyData } from '../state/copy-data';
 import { offBattlefieldTypes } from '../state/off-battlefield-types';
-import { HUMAN_SOLDIER_1_1_WHITE, TREASURE } from '../cards/tokens';
+import {
+  CITIZEN_1_1_GREEN_WHITE,
+  HUMAN_SOLDIER_1_1_WHITE,
+  INKLING_2_1_FLYING,
+  TREASURE,
+} from '../cards/tokens';
 import {
   discover,
   revealUntilAura,
@@ -2847,6 +2852,7 @@ export function* executeAbility(
           const chars = computeCharacteristics(ctx, chosenToken);
           createToken(
             ctx,
+            // eslint-disable-next-line no-restricted-syntax -- populate copies the chosen token's current characteristics (CR 701.36), which no catalog entry can name
             {
               name: chosenToken.name,
               typeLine: chosenToken.typeLine,
@@ -4485,16 +4491,7 @@ export function* executeAbility(
         ctx.state.combatDamagePrevention.players[controller.id] = true;
         if (ctx.state.combatDamagePrevention.tokenSpecs === undefined)
           ctx.state.combatDamagePrevention.tokenSpecs = {};
-        ctx.state.combatDamagePrevention.tokenSpecs[controller.id] = {
-          name: 'Inkling',
-          typeLine: 'Creature — Inkling',
-          types: ['Creature'],
-          subtypes: ['Inkling'],
-          colors: ['W', 'B'],
-          power: 2,
-          toughness: 1,
-          keywords: ['flying'],
-        };
+        ctx.state.combatDamagePrevention.tokenSpecs[controller.id] = INKLING_2_1_FLYING;
         break;
       case 'gisela':
         emit(ctx, 'damageReplacement', {
@@ -4574,21 +4571,7 @@ export function* executeAbility(
           [second.index, secondPlayer],
         ] as [number, PlayerId][]) {
           const player = playerById(ctx, playerId);
-          if (mode === 0)
-            createToken(
-              ctx,
-              {
-                name: 'Inkling',
-                typeLine: 'Creature — Inkling',
-                types: ['Creature'],
-                subtypes: ['Inkling'],
-                colors: ['W', 'B'],
-                power: 2,
-                toughness: 1,
-                keywords: ['flying'],
-              },
-              player.id,
-            );
+          if (mode === 0) createToken(ctx, INKLING_2_1_FLYING, player.id);
           else if (mode === 1) {
             yield* drawCards(ctx, player, 1);
             loseLife(ctx, player, 1);
@@ -4618,32 +4601,8 @@ export function* executeAbility(
             createToken(ctx, TREASURE, controller.id);
             createToken(ctx, TREASURE, opponent.id);
           } else if (outcome.index === 1) {
-            createToken(
-              ctx,
-              {
-                name: 'Citizen',
-                typeLine: 'Creature — Citizen',
-                types: ['Creature'],
-                subtypes: ['Citizen'],
-                colors: ['G', 'W'],
-                power: 1,
-                toughness: 1,
-              },
-              controller.id,
-            );
-            createToken(
-              ctx,
-              {
-                name: 'Citizen',
-                typeLine: 'Creature — Citizen',
-                types: ['Creature'],
-                subtypes: ['Citizen'],
-                colors: ['G', 'W'],
-                power: 1,
-                toughness: 1,
-              },
-              opponent.id,
-            );
+            createToken(ctx, CITIZEN_1_1_GREEN_WHITE, controller.id);
+            createToken(ctx, CITIZEN_1_1_GREEN_WHITE, opponent.id);
           } else {
             yield* drawCards(ctx, controller, 1);
             yield* drawCards(ctx, opponent, 1);
