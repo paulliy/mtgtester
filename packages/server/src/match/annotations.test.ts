@@ -7,6 +7,7 @@
 import { describe, expect, it } from 'vitest';
 import type { AiAnnotation, SpectatorLogLine } from '@mtg/shared';
 import { releaseAnnotations } from './annotations';
+import { DENY_ALL, tablePolicy, testerPolicy } from './disclosure';
 
 function line(sequence: number, turn = 1): SpectatorLogLine {
   return { sequence, turn, actorSeat: 'P1', text: `line ${sequence}` };
@@ -16,13 +17,18 @@ function note(sequence: number, text = 'because it was the best play'): AiAnnota
   return { sequence, turn: 1, seat: 'P1', kind: 'decision', text, source: 'primary' };
 }
 
-const SPECTATOR = { gameMode: 'spectator', showReasoning: true } as const;
+const SPECTATOR = {
+  gameMode: 'spectator',
+  policy: testerPolicy('spectator'),
+  showReasoning: true,
+} as const;
 
 describe('releaseAnnotations — the hidden-information gate', () => {
   it('withholds every annotation in a single-player game, holding rather than dropping them', () => {
     const pending = [note(1), note(5)];
     const result = releaseAnnotations({
       gameMode: 'singlePlayer',
+      policy: testerPolicy('singlePlayer'),
       showReasoning: true,
       pending,
       lines: [line(1), line(5)],
@@ -37,9 +43,23 @@ describe('releaseAnnotations — the hidden-information gate', () => {
     const pending = [note(1), note(5)];
     const result = releaseAnnotations({
       gameMode: 'table',
+      policy: tablePolicy(),
       showReasoning: true,
       pending,
       lines: [line(1), line(5)],
+    });
+
+    expect(result.due).toEqual([]);
+    expect(result.held).toEqual(pending);
+  });
+
+  it('releases nothing live when the policy does not say live, whatever the mode', () => {
+    const pending = [note(1)];
+    const result = releaseAnnotations({
+      ...SPECTATOR,
+      policy: DENY_ALL,
+      pending,
+      lines: [line(1)],
     });
 
     expect(result.due).toEqual([]);

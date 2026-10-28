@@ -12,6 +12,7 @@ import { generateCommanderDeck } from '../decks/generate';
 import { RandomDecisionProvider } from '@mtg/engine';
 import { MatchSession } from './session';
 import type { SeatSetup } from './setup';
+import { testerPolicy } from './disclosure';
 
 const pool = buildSupportedPool(
   JSON.parse(
@@ -48,6 +49,7 @@ function seats(): SeatSetup[] {
 async function play(options: { diplomacy?: boolean; gameMode?: 'singlePlayer' } = {}) {
   const sent: ServerToClientMessage[] = [];
   const session = new MatchSession({
+    disclosure: testerPolicy('spectator'),
     gameId: 'g-diplomacy',
     seed: SEED,
     seats: seats(),
@@ -97,6 +99,7 @@ describe('MatchSession — the player at the table (ADR 0035 phase 3)', () => {
   it('lets the player propose and answer deals while the bots play on', async () => {
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
       gameId: 'g-diplomacy-player',
       seed: SEED,
       seats: seats(),
@@ -198,6 +201,7 @@ describe('MatchSession — the player at the table (ADR 0035 phase 3)', () => {
   it('refuses deal messages in a game without deals', () => {
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
       gameId: 'g-no-deals',
       seed: SEED,
       seats: seats(),

@@ -30,6 +30,7 @@ import type {
   GameEvent,
   GameMode,
   GameReport,
+  GameResult,
   GameReportBuild,
   GameReportCardData,
   IgnoredPlayerAbility,
@@ -67,8 +68,15 @@ import {
   type ReflectionContext,
 } from '../ai';
 import type { GameStore } from '../db';
-import { finishingPositions, type GameRecorder } from '../db/games';
+import { finishingPositions, type DecisionSource, type GameRecorder } from '../db/games';
 import { releaseAnchored, releaseAnnotations } from './annotations';
+import {
+  checkOutbound,
+  mayShowArchetypeTag,
+  mayShowDecklists,
+  seedLabel,
+  type DisclosurePolicy,
+} from './disclosure';
 import {
   MatchRunner,
   type DecisionEscalation,
@@ -90,6 +98,7 @@ import {
   reportLogLine,
   type ReportSeatSource,
 } from './report';
+import { buildReplayRecord, type ReplayIdentity } from './replay-config';
 import type { SeatSetup } from './setup';
 import { SmartYieldMemory, playerYieldKey } from './player-yield';
 
@@ -109,6 +118,9 @@ class AsyncAdapter implements AsyncDecisionProvider {
  */
 export const LIVE_PACE_MS = 1_200;
 
+/** What a reader without raw error text is told when the engine stops. */
+const HALT_NOTICE = 'The rules engine could not continue this game.';
+
 const DEFAULT_DEBUG_FLAGS: DebugFlags = {
   showAIRequests: false,
   showAIResponses: false,
@@ -125,6 +137,17 @@ export interface MatchSessionOptions {
   seats: readonly SeatSetup[];
   providerKind: ProviderKind;
   gameMode?: GameMode;
+  /**
+   * What this game's frames may carry (ADR 0031 decision 3). Required: each entry point decides,
+   * and none inherits another's. `GameServer` passes `testerPolicy(gameMode)`.
+   */
+  disclosure: DisclosurePolicy;
+  /**
+   * What `games.config_json` and the build columns record so the game can be replayed from its
+   * stored inputs (ADR 0031 decision 8). Omit for a game that starts from a prepared engine
+   * (Card Test Lab), which stores none.
+   */
+  replay?: ReplayIdentity;
   /** The one human seat of a `'singlePlayer'` game. */
   humanSeat?: PlayerId;
   /**
@@ -224,6 +247,13 @@ export class MatchSession {
   private draftInFlight = false;
   private debugFlags: DebugFlags = { ...DEFAULT_DEBUG_FLAGS };
   private readonly gameMode: GameMode;
+  /** What this game's frames may carry; every fence below reads it. */
+  private readonly policy: DisclosurePolicy;
+  /**
+   * Who answered each request, tagged before `onDecision` fires. A request with no tag was
+   * answered by its seat's own provider: the person at a human seat, the bot elsewhere.
+   */
+  private readonly decisionSources = new Map<string, DecisionSource>();
   /** Who answers each seat; a seat is `human` exactly when it is in `humanSeats`. */
   private readonly seatControllers: SeatControllers;
   private readonly humanSeats: ReadonlySet<PlayerId>;
@@ -273,6 +303,7 @@ export class MatchSession {
       throw new Error('decision provider overrides require a prepared Card Test Lab engine');
     }
     this.gameMode = opts.gameMode ?? 'spectator';
+    this.policy = opts.disclosure;
     this.seatControllers = resolveSeatControllers(opts, this.gameMode);
     this.humanSeats = new Set(
       opts.seats.map((s) => s.seat).filter((seat) => this.seatControllers[seat] === 'human'),
@@ -333,6 +364,7 @@ export class MatchSession {
       })),
       providerFor: (playerId) => this.providerFor(playerId),
       recorder: this.recorder,
+      ...this.replayRecord(),
       gameMode: this.gameMode,
       // Every human decision is untimed, so the engine never computes ahead of what they have seen.
       ...(this.humanSeats.size > 0 ? { lookaheadTurns: 0 } : {}),
@@ -413,16 +445,16 @@ export class MatchSession {
       },
       onDecisionPending: (request, invalidResponse, timeoutMs) => {
         switch (this.gameMode) {
-          // fence: `decisionPending` carries the request; only a spectator is shown one (m1
-          // row 341).
+          // fence: `decisionPending` carries the request and the failed model's raw detail, so
+          // only a policy that shows raw error text sends one (m1 row 341).
           case 'spectator':
+          case 'singlePlayer':
+          case 'table':
+            if (!this.policy.rawErrorText) return;
             this.sendPublic({
               type: 'decisionPending',
               payload: { request, invalidResponse, timeoutMs },
             });
-            return;
-          case 'singlePlayer':
-          case 'table':
             return;
           default:
             assertNever(this.gameMode, 'decision pending');
@@ -441,6 +473,11 @@ export class MatchSession {
           type: 'computeHalted',
           payload: this.haltPayload(info),
         });
+        // A halt is the end of the game for the policy's post-game unlock (ADR 0031 decision 3),
+        // when it says so. The runner has no result when the loop itself threw.
+        if (this.policy.haltIsTerminal) {
+          this.publishGameOver(this.runner.getResult() ?? this.haltResult(info));
+        }
       },
       onGameOver: (result) => {
         this.publishGameOver(result);
@@ -457,6 +494,7 @@ export class MatchSession {
             ]),
           };
         }
+        this.recordDecisionSource(request);
         this.aiCoordinator?.recordAcceptedDecision(request, response);
         if (decidingHuman !== undefined && this.opts.providerKind === 'ai') {
           this.ensureAiCoordinator().recordDecision(request, response, 'human');
@@ -498,11 +536,12 @@ export class MatchSession {
       },
       onDebug: (entries) => {
         switch (this.gameMode) {
-          // fence: debug events can show a hidden zone, so a player never gets them (m1 row 412).
+          // fence: debug events can show a hidden zone, so only a policy that allows them sends
+          // any (m1 row 412).
+          case 'spectator':
           case 'singlePlayer':
           case 'table':
-            return;
-          case 'spectator':
+            if (!this.policy.debugEvents) return;
             break;
           default:
             assertNever(this.gameMode, 'debug events');
@@ -543,22 +582,24 @@ export class MatchSession {
   }
 
   /**
-   * The halt notice. A player is told one fixed line and never the card, since both can name
-   * hidden information; a spectator gets the real reason (m1 rows 360, 364).
+   * The halt notice. Unless the policy shows raw error text, the reader is told one fixed line
+   * and never the card, since both can name hidden information (m1 rows 360, 364).
    *
-   * fence: `'table'` takes the player's fixed message.
+   * fence: the policy's `rawErrorText`.
    */
   private haltPayload(info: HaltInfo): ComputeHaltedPayload {
     switch (this.gameMode) {
+      case 'spectator':
       case 'singlePlayer':
       case 'table':
-        return {
-          gameId: this.opts.gameId,
-          kind: info.kind,
-          reason: 'The rules engine could not continue this game.',
-          turn: info.turn,
-        };
-      case 'spectator':
+        if (!this.policy.rawErrorText) {
+          return {
+            gameId: this.opts.gameId,
+            kind: info.kind,
+            reason: HALT_NOTICE,
+            turn: info.turn,
+          };
+        }
         return {
           gameId: this.opts.gameId,
           kind: info.kind,
@@ -568,6 +609,75 @@ export class MatchSession {
         };
       default:
         return assertNever(this.gameMode, 'halt notice');
+    }
+  }
+
+  /** The result of a game that halted before the engine produced one: nobody won, nothing raw. */
+  private haltResult(info: HaltInfo): GameResult {
+    return {
+      gameId: this.opts.gameId,
+      winnerSeat: null,
+      finishingOrder: [...this.engine.getState().eliminatedPlayers],
+      turnCount: info.turn,
+      halted: true,
+      haltReason: null,
+    };
+  }
+
+  /**
+   * A result as the policy lets it out. A halted result carries the engine's raw reason and the
+   * code site that raised it, which a policy without raw error text must not send.
+   */
+  private disclosedResult(result: GameResult): GameResult {
+    if (this.policy.rawErrorText || !result.halted) return result;
+    const { haltSite: _site, ...rest } = result;
+    return { ...rest, haltReason: null };
+  }
+
+  /**
+   * The replay inputs for the `games` row (ADR 0031 decision 8), or nothing for a game that does
+   * not store them: no recorder, a prepared Card Test Lab engine, or an entry point that named no
+   * build.
+   */
+  private replayRecord(): Pick<MatchRunnerOptions, 'replay'> {
+    const identity = this.opts.replay;
+    if (identity === undefined || this.recorder === null || this.opts.engine !== undefined) {
+      return {};
+    }
+    return {
+      replay: buildReplayRecord({
+        identity,
+        // The same fallback the runner's seat records use: setup always writes a real snapshot
+        // when a store exists, and without a store there is no recorder to get here.
+        seats: this.opts.seats.map((s) => ({
+          seat: s.seat,
+          deckSnapshotId: s.deckSnapshotId ?? s.config.deckId,
+        })),
+        manualMana: this.humanSeats,
+        turnCap: engineTurnCap(this.engine),
+      }),
+    };
+  }
+
+  /** Tag the answer to a request, before the runner reports it (`onDecision`). First tag wins. */
+  private tagDecisionSource(requestId: string, source: DecisionSource): void {
+    if (!this.decisionSources.has(requestId)) this.decisionSources.set(requestId, source);
+  }
+
+  /**
+   * Write who answered a request. Only games with a human seat record it: it is attribution for
+   * the people at the table, and a no-human game would add one row per bot decision for nothing.
+   */
+  private recordDecisionSource(request: DecisionRequest): void {
+    const tagged = this.decisionSources.get(request.requestId);
+    this.decisionSources.delete(request.requestId);
+    if (this.humanSeats.size === 0) return;
+    const source: DecisionSource =
+      tagged ?? (this.humanSeats.has(request.decidingPlayer) ? 'human' : 'bot');
+    try {
+      this.recorder?.saveDecisionSource(request.requestId, request.decidingPlayer, source);
+    } catch {
+      // Attribution must never stop a game.
     }
   }
 
@@ -611,16 +721,17 @@ export class MatchSession {
   }
 
   /**
-   * A runner error's message. A player is told one fixed line and never the raw error (m1 row 430).
+   * A runner error's message. Unless the policy shows raw error text, the reader is told one
+   * fixed line and never the raw error (m1 row 430).
    *
-   * fence: `'table'` takes the fixed message.
+   * fence: the policy's `rawErrorText`.
    */
   private runnerErrorMessage(err: unknown): string {
     switch (this.gameMode) {
+      case 'spectator':
       case 'singlePlayer':
       case 'table':
-        return 'The game runner stopped unexpectedly.';
-      case 'spectator':
+        if (!this.policy.rawErrorText) return 'The game runner stopped unexpectedly.';
         return err instanceof Error ? err.message : String(err);
       default:
         return assertNever(this.gameMode, 'runner error');
@@ -681,14 +792,53 @@ export class MatchSession {
     return status === 'finished' || status === 'halted' || status === 'abandoned';
   }
 
+  getDisclosurePolicy(): DisclosurePolicy {
+    return this.policy;
+  }
+
   getHumanSeats(): ReadonlySet<PlayerId> {
     return this.humanSeats;
   }
 
   // ── Output routing (ADR 0031 decision 3) ──────────────────────────────────────────────────
 
+  /**
+   * The game can no longer change the answer to "what may be shown": it finished or halted. An
+   * abandoned game is not terminal here, because nothing is sent to it again.
+   */
+  private isTerminal(): boolean {
+    const status = this.runner.getStatus();
+    return status === 'finished' || status === 'halted';
+  }
+
+  /** Whether a full-state frame may go out now under the policy's `fullState`. */
+  private fullStateAvailable(): boolean {
+    switch (this.policy.fullState) {
+      case 'always':
+        return true;
+      case 'afterGame':
+        // A halted game is not a finished one: a halt unlocks only through `haltIsTerminal`.
+        return this.runner.getStatus() === 'finished';
+      case 'never':
+        return false;
+      default:
+        return assertNever(this.policy.fullState, 'full state release');
+    }
+  }
+
+  /** Whether every seat's notes (and the reviews built on them) may go out once the game ends. */
+  private mayReleaseAnnotationsAfterGame(): boolean {
+    return this.policy.annotations === 'afterGame' || this.policy.annotations === 'live';
+  }
+
+  /** The last hop: a message the policy does not allow is never sent. */
+  private mayLeave(message: ServerToClientMessage): boolean {
+    return checkOutbound(this.policy, message.type, { terminal: this.isTerminal() });
+  }
+
   /** A frame any viewer of the game may see. Nothing seat-private goes through here. */
   private sendPublic(message: ServerToClientMessage): void {
+    if (!this.mayLeave(message)) return;
     this.opts.send(message);
   }
 
@@ -698,6 +848,7 @@ export class MatchSession {
    */
   private sendToSeat(seat: PlayerId, message: ServerToClientMessage): void {
     if (!this.humanSeats.has(seat)) throw new Error(`cannot send to ${seat}: not a human seat`);
+    if (!this.mayLeave(message)) return;
     switch (this.gameMode) {
       // flow: output routing (m1 task 4). A single-player game has one stream, and it is the
       // player's; a table routes each frame to its seat.
@@ -734,16 +885,15 @@ export class MatchSession {
     else this.sendToSeat(only, message);
   }
 
-  /** The board a seat is shown. A table never carries the seed (ADR 0031 decision 4). */
+  /** The board a seat is shown. A policy that hides the seed blanks it (ADR 0031 decision 4). */
   private playerStateFor(seat: PlayerId): PlayerBoardState {
     const state = this.engine.playerState(seat);
     switch (this.gameMode) {
-      // fence: no seed in player-bound state at a table; single-player wire output is unchanged.
+      // fence: the policy's `showSeed`; the tester's wire output is unchanged.
       case 'table':
-        return { ...state, seed: '' };
       case 'singlePlayer':
       case 'spectator':
-        return state;
+        return this.policy.showSeed ? state : { ...state, seed: '' };
       default:
         return assertNever(this.gameMode, 'player state');
     }
@@ -842,7 +992,7 @@ export class MatchSession {
       cardData: context.cardData,
       game: {
         id: this.opts.gameId,
-        seed: this.opts.seed,
+        seed: seedLabel(this.policy, this.opts.seed),
         gameMode: reportMode,
         humanSeat,
         providerKind: this.opts.providerKind,
@@ -865,17 +1015,27 @@ export class MatchSession {
         priorityPlayer: board.priorityPlayer,
       },
       seats: this.opts.seats.map((setup, index) => {
-        const reveal = mayRevealSeat(setup.seat, humanSeat, over);
+        const reveal = mayRevealSeat(setup.seat, humanSeat, mayShowDecklists(this.policy, over));
         const seat = board.seats.find((candidate) => candidate.seat === setup.seat);
+        const source = reportDeckSource(context.sources[index], index, this.opts.seed, reveal);
         return {
           seat: setup.seat,
           controller: this.seatControllers[setup.seat] ?? this.opts.providerKind,
           label: setup.summary.label,
           commanderNames: [...setup.summary.commanderNames],
           colorIdentity: [...setup.summary.colorIdentity],
-          archetypeTag: setup.summary.archetypeTag,
+          archetypeTag: mayShowArchetypeTag(this.policy, {
+            owner: setup.seat,
+            viewer: humanSeat,
+            ownerIsHuman: this.humanSeats.has(setup.seat),
+            gameOver: over,
+          })
+            ? setup.summary.archetypeTag
+            : '',
           deckSnapshotId: setup.deckSnapshotId,
-          source: reportDeckSource(context.sources[index], index, this.opts.seed, reveal),
+          // A pool deck's default seed is derived from the game's, so it hides with it.
+          source:
+            source.kind === 'pool' && !this.policy.showSeed ? { kind: 'pool', seed: '' } : source,
           decklist: reveal ? orderedDecklist(setup.config) : null,
           life: seat?.life ?? 0,
           poisonCounters: seat?.poisonCounters ?? 0,
@@ -923,13 +1083,12 @@ export class MatchSession {
 
   setDebugFlags(flags: DebugFlags): void {
     switch (this.gameMode) {
-      // fence: a player never turns on reasoning or debug, which would show hidden information
-      // (m1 row 615). A table ignores the flags too.
+      // fence: reasoning and debug show hidden information, so only a policy that allows debug
+      // can turn them on (m1 row 615). Otherwise the flags are ignored.
+      case 'spectator':
       case 'singlePlayer':
       case 'table':
-        return;
-      case 'spectator':
-        this.debugFlags = { ...flags };
+        if (this.policy.debugEvents) this.debugFlags = { ...flags };
         return;
       default:
         assertNever(this.gameMode, 'debug flags');
@@ -1351,6 +1510,7 @@ export class MatchSession {
   private takeAnnotationsFor(lines: readonly SpectatorLogLine[]): AiAnnotation[] | undefined {
     const { due, held } = releaseAnnotations({
       gameMode: this.gameMode,
+      policy: this.policy,
       showReasoning: this.debugFlags.showAIResponses,
       pending: this.pendingAnnotations,
       lines,
@@ -1369,11 +1529,13 @@ export class MatchSession {
       payload: { message: 'Timeline seeking unlocks after a single-player game ends.' },
     };
     switch (this.gameMode) {
-      // fence: timeline seeking serves full boards, so a player waits for the game to end
-      // (m1 row 1027). A table is refused with the same fixed message even then: its post-game
-      // replay is served from the table database (multiplayer M3), never from a live session.
+      // fence: timeline seeking serves full boards, so it follows the policy's `fullState`
+      // (m1 row 1027). A table is refused with the same fixed message even after the game: its
+      // post-game replay is served from the table database (multiplayer M3), never from a live
+      // session.
+      case 'spectator':
       case 'singlePlayer':
-        if (this.runner.getStatus() !== 'finished') {
+        if (!this.fullStateAvailable()) {
           this.sendPublic(refusal);
           return;
         }
@@ -1381,8 +1543,6 @@ export class MatchSession {
       case 'table':
         this.sendPublic(refusal);
         return;
-      case 'spectator':
-        break;
       default:
         assertNever(this.gameMode, 'timeline seeking');
     }
@@ -1451,6 +1611,7 @@ export class MatchSession {
       rejected(error);
       return;
     }
+    this.tagDecisionSource(payload.requestId, 'human');
     // Record only an accepted pass, before the runner advances the board. A stale or
     // invalid response must never silence a future opportunity.
     if (
@@ -1654,7 +1815,14 @@ export class MatchSession {
       // Only the player's explicit preference removes optional choices. Keep costs, targeting,
       // combat declarations and every unyielded action in the ordinary human decision flow.
       this.publishPlayerState(seat, false);
-      human.provider.submit({ requestId: request.requestId, revision, actionId: pass.id });
+      // Tagged before the submit, which resolves the provider; the runner reads the tag after.
+      this.tagDecisionSource(request.requestId, 'auto');
+      const refused = human.provider.submit({
+        requestId: request.requestId,
+        revision,
+        actionId: pass.id,
+      });
+      if (refused !== null) this.decisionSources.delete(request.requestId);
       return;
     }
     this.sendToSeat(seat, {
@@ -1738,10 +1906,11 @@ export class MatchSession {
     this.publishFinalState();
     this.finishTalk();
     switch (this.gameMode) {
-      // fence: `replayUnlocked` carries the full state and the whole log, so only the single
-      // player gets it (m1 row 1339). A table's post-game replay is served from the table
+      // fence: `replayUnlocked` carries the full state and the whole log, so it follows the
+      // policy's `fullState` (m1 row 1339). A table's post-game replay is served from the table
       // database (multiplayer M3), never from a live session.
       case 'singlePlayer':
+        if (this.policy.fullState === 'never') break;
         this.sendToSeat(only ?? this.soleHumanSeat(), {
           type: 'replayUnlocked',
           payload: {
@@ -1751,7 +1920,9 @@ export class MatchSession {
             frontierTurn: result.turnCount,
             // The game is over, so the reasoning withheld all game is safe to release in full
             // (ADR 0022 §3) — this is the only path by which a player ever sees it.
-            ...(this.debugFlags.showAIResponses && this.allAnnotations.length > 0
+            ...(this.debugFlags.showAIResponses &&
+            this.allAnnotations.length > 0 &&
+            this.mayReleaseAnnotationsAfterGame()
               ? { annotations: [...this.allAnnotations] }
               : {}),
           },
@@ -1767,7 +1938,7 @@ export class MatchSession {
     this.emit(only, {
       type: 'gameOver',
       payload: {
-        result,
+        result: this.disclosedResult(result),
         standings: this.standings(),
         ...(reflectingSeats.length > 0 ? { reflectingSeats } : {}),
       },
@@ -1794,14 +1965,14 @@ export class MatchSession {
    * choice wins over the env default so the toggle on the new-game screen actually decides it.
    */
   private reflectionSeats(): PlayerId[] {
-    // fence: post-game commentary is model reasoning about hidden hands, and a table's policy for
-    // it is not decided (ADR 0031 decision 3), so a table has none.
+    // fence: post-game commentary is model reasoning about hidden hands, so it follows the
+    // policy's `annotations`: only a policy that releases every seat's notes has any.
     switch (this.gameMode) {
       case 'spectator':
       case 'singlePlayer':
-        break;
       case 'table':
-        return [];
+        if (!this.mayReleaseAnnotationsAfterGame()) return [];
+        break;
       default:
         return assertNever(this.gameMode, 'reflection seats');
     }
@@ -1918,13 +2089,13 @@ export class MatchSession {
   private reportAiCost(): void {
     if (this.logger === null) return;
     switch (this.gameMode) {
-      // fence: token counts track a bot's hand, so a table never gets `apiWaiting` (ADR 0031
-      // decision 3). Spectator and single-player output is unchanged.
+      // fence: token counts track a bot's hand, so only a policy with AI cost reports sends
+      // `apiWaiting` (ADR 0031 decision 3).
       case 'spectator':
       case 'singlePlayer':
-        break;
       case 'table':
-        return;
+        if (!this.policy.aiCostReports) return;
+        break;
       default:
         assertNever(this.gameMode, 'AI cost report');
     }
@@ -2026,16 +2197,16 @@ export class MatchSession {
   /**
    * The hook that shows a failed legal menu to a person to pick from.
    *
-   * fence: never surface an opponent's failed legal menu to a player (m1 row 1597); only a
-   * spectator is consulted. `'table'` takes the same restrictive choice.
+   * fence: never surface an opponent's failed legal menu to a player (m1 row 1597). The menu
+   * and the model's raw failure detail go out as `decisionPending`, so only a policy that shows
+   * raw error text consults anyone.
    */
   private escalation(): DecisionEscalation | undefined {
     switch (this.gameMode) {
+      case 'spectator':
       case 'singlePlayer':
       case 'table':
-        return undefined;
-      case 'spectator':
-        return this.runner.escalation();
+        return this.policy.rawErrorText ? this.runner.escalation() : undefined;
       default:
         return assertNever(this.gameMode, 'legal-menu escalation');
     }
@@ -2122,6 +2293,13 @@ export class MatchSession {
     }
     return this.aiCoordinator;
   }
+}
+
+/** The cap the engine is running with. `turnCap` is engine-internal, so read it defensively. */
+function engineTurnCap(engine: Engine): number {
+  const cap = (engine.getState() as { turnCap?: unknown }).turnCap;
+  if (typeof cap !== 'number') throw new Error('the engine reports no turn cap');
+  return cap;
 }
 
 /**

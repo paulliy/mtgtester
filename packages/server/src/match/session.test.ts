@@ -45,6 +45,7 @@ import {
 import { MatchSession } from './session';
 import { createCardTestScenario } from '../cards/card-test-scenarios';
 import type { SeatSetup } from './setup';
+import { testerPolicy } from './disclosure';
 
 function forest(n: number): OracleCard {
   return {
@@ -120,6 +121,7 @@ interface Harness {
 function harness(options: { livePaceMs?: number; playbackMode?: 'live' | 'manual' } = {}): Harness {
   const sent: ServerToClientMessage[] = [];
   const session = new MatchSession({
+    disclosure: testerPolicy('spectator'),
     gameId: 'g-session-test',
     seed: 'session-test',
     seats: seats(),
@@ -151,6 +153,7 @@ describe('MatchSession — live pacing and the compute-ahead cap (brief §10.1)'
     let surfaced: DecisionRequest | undefined;
     let abandonedInSend = false;
     const session = new MatchSession({
+      disclosure: testerPolicy('spectator'),
       gameId: 'g-strategist-event-abandon',
       seed: 'strategist-event-abandon',
       seats: seats(),
@@ -316,6 +319,7 @@ describe('MatchSession — live pacing and the compute-ahead cap (brief §10.1)'
     expect(
       () =>
         new MatchSession({
+          disclosure: testerPolicy('spectator'),
           gameId: 'ordinary-match-provider-override',
           seed: 'ordinary-match-provider-override',
           seats: seats(),
@@ -395,6 +399,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
   it('echoes the rejected submission request and revision to the player', async () => {
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
       gameId: 'g-player-rejection',
       seed: 'player-rejection',
       seats: seats(),
@@ -432,6 +437,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
   it('waits without a timeout for the human and advances only after submission', async () => {
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
       gameId: 'g-player-test',
       seed: 'player-test',
       seats: seats(),
@@ -478,6 +484,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
   it('offers the human its mana abilities, and never stops for them alone (ADR 0030)', async () => {
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
       gameId: 'g-player-mana',
       seed: 'player-mana',
       seats: seats(),
@@ -533,6 +540,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
   it('refuses timeline seeking before a player game has ended', () => {
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
       gameId: 'g-player-seek',
       seed: 'player-seek',
       seats: seats(),
@@ -552,6 +560,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
   it('plays through with a human provider and restores the unlocked replay on resync', async () => {
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
       gameId: 'g-player-complete',
       seed: 'player-complete',
       seats: seats(),
@@ -676,6 +685,7 @@ describe('MatchSession — post-game reflection stays out of the way when off', 
   } {
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('spectator'),
       gameId: 'g-reflection-off',
       seed: 'reflection-off',
       seats: seats(),
@@ -757,6 +767,7 @@ describe('MatchSession — presentation survives a gap in turn numbering', () =>
   it('presents through to the final turn at pace 0 without hanging, even with a deck-out gap', async () => {
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('spectator'),
       gameId: 'g-presentation-gap',
       seed: 'reflection-off', // same fixture as above — its 20-card decks run out well before turn 200
       seats: seats(),
@@ -808,6 +819,7 @@ describe('MatchSession — a prepared scenario flushes its own outcome before th
     if (scenario === null) throw new Error('missing War Room lab scenario');
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
       gameId,
       seed: scenario.seed,
       seats: scenario.seats,

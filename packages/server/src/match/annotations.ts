@@ -8,6 +8,7 @@
 
 import { assertNever } from '@mtg/shared';
 import type { AiAnnotation, GameMode, SpectatorLogLine } from '@mtg/shared';
+import type { DisclosurePolicy } from './disclosure';
 
 export interface AnnotationRelease {
   /** Safe to send with this batch of lines, already snapped to a line the viewer can see. */
@@ -18,6 +19,8 @@ export interface AnnotationRelease {
 
 export interface AnnotationReleaseOptions {
   gameMode: GameMode;
+  /** Only `annotations: 'live'` releases anything while the game runs. */
+  policy: DisclosurePolicy;
   /** `DebugFlags.showAIResponses` — reasoning is opt-in and off by default. */
   showReasoning: boolean;
   pending: readonly AiAnnotation[];
@@ -38,14 +41,14 @@ export interface AnnotationReleaseOptions {
  *      rather than snapped backward, which would show reasoning before the play it explains.
  */
 export function releaseAnnotations(options: AnnotationReleaseOptions): AnnotationRelease {
-  const { gameMode, showReasoning, pending, lines } = options;
+  const { gameMode, policy, showReasoning, pending, lines } = options;
   switch (gameMode) {
-    // fence: no seat sees another seat's notes while the game runs (m1 annotations row). A table
-    // takes the most restrictive choice; the single player gets theirs at game over.
+    // fence: no seat sees another seat's notes while the game runs (m1 annotations row), unless
+    // the policy releases them live. The single player gets theirs at game over instead.
+    case 'spectator':
     case 'singlePlayer':
     case 'table':
-      return { due: [], held: [...pending] };
-    case 'spectator':
+      if (policy.annotations !== 'live') return { due: [], held: [...pending] };
       break;
     default:
       return assertNever(gameMode, 'annotation release');

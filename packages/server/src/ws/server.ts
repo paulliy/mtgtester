@@ -31,12 +31,18 @@ import type { SupportedPool } from '../cards/pool';
 import type { GameStore } from '../db';
 import type { BannedList } from '../decks/banned';
 import type { ReportSeatSource } from '../match/report';
+import type { ReplayIdentity } from '../match/replay-config';
 import { MatchSession } from '../match/session';
+import { seedLabel, testerPolicy } from '../match/disclosure';
 import { BatchManager, validateBatch } from '../batch/manager';
 import { setupSeats } from '../match/setup';
 import { previewMatchup, type PreviewRequest } from '../match/preview';
 import { createCardTestScenario, listCardTestScenarios } from '../cards/card-test-scenarios';
 import { projectSetupProblems, SETUP_REFUSED_MESSAGE } from './setup-privacy';
+
+function replayOption(identity: ReplayIdentity | undefined): { replay?: ReplayIdentity } {
+  return identity === undefined ? {} : { replay: identity };
+}
 
 /**
  * Where a game's frames go. `GameServer` runs spectator and single-player games only; a table
@@ -465,18 +471,21 @@ export class GameServer {
    * Whether `gameId` is a game in progress whose reasoning and debug data would hand its players
    * what the live stream withholds (ADR 0022 §3).
    *
-   * fence: annotations and debug routes (m1 rows 298, 336). `'table'` locks as single-player does.
+   * fence: annotations and debug routes (m1 rows 298, 336). They are open from the start only
+   * when the policy releases both live; otherwise they wait for the game to end, as single-player.
    */
   private holdsUnfinishedGame(gameId: string): boolean {
     const session = this.session;
     if (this.startedPayload?.gameId !== gameId || session === null) return false;
     const mode = session.getGameMode();
     switch (mode) {
-      case 'singlePlayer':
-      case 'table':
-        return session.runner.getStatus() !== 'finished';
       case 'spectator':
-        return false;
+      case 'singlePlayer':
+      case 'table': {
+        const policy = session.getDisclosurePolicy();
+        if (policy.annotations === 'live' && policy.debugEvents) return false;
+        return session.runner.getStatus() !== 'finished';
+      }
       default:
         return assertNever(mode, 'unfinished game lock');
     }
@@ -1073,7 +1082,11 @@ export class GameServer {
         // the same private-data path a `SeatProblem` does. Only a spectator sees the list.
         this.sendTo(socket, {
           type: 'error',
-          payload: { message: seatScoped ? SETUP_REFUSED_MESSAGE : fresh.blockers.join('\n') },
+          payload: {
+            message: testerPolicy(gameMode).rawErrorText
+              ? fresh.blockers.join('\n')
+              : SETUP_REFUSED_MESSAGE,
+          },
         });
         return;
       }
@@ -1113,12 +1126,15 @@ export class GameServer {
 
     const gameId = `g-${crypto.randomUUID()}`;
     const route = routeOf(gameMode);
+    const policy = testerPolicy(gameMode);
     const session = new MatchSession({
       gameId,
       seed,
       seats: setup.seats,
       providerKind,
       gameMode,
+      disclosure: policy,
+      ...replayOption(this.replayIdentity()),
       ...(humanSeat !== undefined && { humanSeat }),
       store: this.deps.store,
       ...(playbackMode !== undefined && { playbackMode }),
@@ -1145,7 +1161,7 @@ export class GameServer {
 
     const startedPayload: GameStartedPayload = {
       gameId,
-      seed,
+      seed: seedLabel(policy, seed),
       seats: setup.seats.map((s) => s.summary),
       providerKind,
       gameMode,
@@ -1168,6 +1184,16 @@ export class GameServer {
     session.start();
   }
 
+  /**
+   * What the `games` row records about the process (ADR 0031 decision 8). Omitted when the server
+   * was given no build, so a bare `GameServer` in a test stores nothing it cannot name.
+   */
+  private replayIdentity(): ReplayIdentity | undefined {
+    const build = this.deps.build;
+    if (build === undefined) return undefined;
+    return { cardDataSha256: this.deps.cardData?.sha256 ?? null, build };
+  }
+
   private startCardTestScenario(socket: ServerWebSocket<SocketData>, scenarioId: string): void {
     const gameId = `card-lab-${crypto.randomUUID()}` as GameStartedPayload['gameId'];
     const scenario = createCardTestScenario(scenarioId, gameId);
@@ -1185,6 +1211,7 @@ export class GameServer {
       seats: scenario.seats,
       providerKind: 'random',
       gameMode: 'singlePlayer',
+      disclosure: testerPolicy('singlePlayer'),
       humanSeat: 'P1',
       livePaceMs: 0,
       engine: scenario.engine,
@@ -1206,7 +1233,7 @@ export class GameServer {
 
     const startedPayload: GameStartedPayload = {
       gameId,
-      seed: scenario.seed,
+      seed: seedLabel(testerPolicy('singlePlayer'), scenario.seed),
       seats: scenario.seats.map((seat) => seat.summary),
       providerKind: 'random',
       gameMode: 'singlePlayer',

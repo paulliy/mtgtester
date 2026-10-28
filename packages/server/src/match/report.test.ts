@@ -16,6 +16,7 @@ import {
 } from './report';
 import { MatchSession } from './session';
 import type { SeatSetup } from './setup';
+import { testerPolicy } from './disclosure';
 
 function card(name: string, n = 0): OracleCard {
   return {
@@ -96,6 +97,7 @@ const CONTEXT = {
 
 function session(sent: ServerToClientMessage[], turnCap = 200): MatchSession {
   return new MatchSession({
+    disclosure: testerPolicy('singlePlayer'),
     gameId: 'g-report',
     seed: 'report-seed',
     seats: seats(),
@@ -268,5 +270,45 @@ describe('MatchSession.gameReport', () => {
     expect(report.seats[2]?.source).toEqual({ kind: 'url', url: 'https://example.test/decks/p3' });
     expect(report.recentLog.length).toBeLessThanOrEqual(REPORT_LOG_LINES);
     expect(report.recentLog.at(-1)).toMatch(/^T\d+/);
+  });
+
+  it('reads the seed, tags and decklists from the policy, not from the mode', async () => {
+    const sent: ServerToClientMessage[] = [];
+    const sealed = {
+      ...testerPolicy('singlePlayer'),
+      showSeed: false,
+      archetypeTags: 'ownHumanSeat',
+      decklistsAfterGame: false,
+    } as const;
+    const match = new MatchSession({
+      disclosure: sealed,
+      gameId: 'g-report',
+      seed: 'report-seed',
+      seats: seats(),
+      providerKind: 'random',
+      gameMode: 'singlePlayer',
+      humanSeat: 'P1',
+      turnCap: 20,
+      livePaceMs: 0,
+      send: (message) => sent.push(message),
+    });
+    match.start();
+    await waitFor(() => expect(sent.some((m) => m.type === 'playerActionRequired')).toBe(true));
+
+    const report = match.gameReport(CONTEXT);
+    expect(report.game.seed).toBe('');
+    expect(report.seats.map((seat) => seat.archetypeTag)).toEqual(['G — test', '', '', '']);
+    // The pool seed a seat defaulted to is derived from the game's, so it hides with it.
+    expect(report.seats[0]?.source).toEqual({ kind: 'pool', seed: '' });
+    expect(JSON.stringify(report)).not.toContain('report-seed');
+
+    match.abandon();
+    await match.settled();
+    // The tester's own policy still shows all of it.
+    const open = session([]);
+    const shown = open.gameReport(CONTEXT);
+    expect(shown.game.seed).toBe('report-seed');
+    expect(shown.seats.map((seat) => seat.archetypeTag)).toEqual(Array(4).fill('G — test'));
+    open.abandon();
   });
 });

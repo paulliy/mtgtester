@@ -9,6 +9,7 @@ import type { SeatSetup } from '../match/setup';
 import { parsePlaintextDeck } from '../decks/plaintext';
 import { loadScryfallBulkOrNull } from './scryfall-bulk-fixture';
 import { toOracleCard } from './scryfall';
+import { testerPolicy } from '../match/disclosure';
 
 const scryfallCards = loadScryfallBulkOrNull();
 // data/scryfall-oracle-cards.json is gitignored and not fetched by CI (see scryfall-bulk-fixture.ts).
@@ -113,6 +114,7 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       const deckData = deck(slug);
       const sent: ServerToClientMessage[] = [];
       const session = new MatchSession({
+        disclosure: testerPolicy('singlePlayer'),
         gameId: `coverage-${slug}-single-player`,
         seed: `coverage-${slug}-single-player`,
         seats: ['P1', 'P2', 'P3', 'P4'].map((seatId) => seat(seatId, deckData)),

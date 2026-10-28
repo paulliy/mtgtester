@@ -12,6 +12,7 @@ import type { SeatSetup } from '../match/setup';
 import { parsePlaintextDeck } from '../decks/plaintext';
 import { loadScryfallBulkOrNull } from './scryfall-bulk-fixture';
 import { toOracleCard } from './scryfall';
+import { testerPolicy } from '../match/disclosure';
 
 const scryfallCards = loadScryfallBulkOrNull();
 // data/scryfall-oracle-cards.json is gitignored and not fetched by CI (see scryfall-bulk-fixture.ts).
@@ -104,6 +105,7 @@ describe.skipIf(SKIP)('Living Energy modeled-card and player-experience checks',
     const { commander, cards } = livingDeckCards();
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
       gameId: 'living-energy-single-player',
       seed: 'living-energy-single-player',
       seats: ['P1', 'P2', 'P3', 'P4'].map((seat) => livingSeat(seat, commander, cards)),

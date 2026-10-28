@@ -16,8 +16,12 @@ import type {
 } from '@mtg/shared';
 import { RandomDecisionProvider } from '@mtg/engine';
 import { DEFAULT_AI_CONFIG, StrategyCoordinator, type AiClient, type AiConfig } from '../ai';
+import type { GameStore } from '../db';
+import { GameRecorder, type SqliteLike } from '../db/games';
+import type { ReplayIdentity } from './replay-config';
 import { MatchSession } from './session';
 import type { SeatSetup } from './setup';
+import { tablePolicy, testerPolicy } from './disclosure';
 
 const SEED = 'multi-human-secret-seed';
 const HUMANS = ['P1', 'P3'] as const;
@@ -94,10 +98,18 @@ interface Table {
   all: () => ServerToClientMessage[];
 }
 
-function table(options: { providerKind?: 'random' | 'ai'; turnCap?: number } = {}): Table {
+function table(
+  options: {
+    providerKind?: 'random' | 'ai';
+    turnCap?: number;
+    store?: GameStore;
+    replay?: ReplayIdentity;
+  } = {},
+): Table {
   const pub: ServerToClientMessage[] = [];
   const bySeat: Record<PlayerId, ServerToClientMessage[]> = { P1: [], P3: [] };
   const session = new MatchSession({
+    disclosure: tablePolicy(),
     gameId: 'g-multi-human',
     seed: SEED,
     seats: seats(),
@@ -110,6 +122,8 @@ function table(options: { providerKind?: 'random' | 'ai'; turnCap?: number } = {
       P4: options.providerKind ?? 'random',
     },
     turnCap: options.turnCap ?? 6,
+    ...(options.store !== undefined ? { store: options.store } : {}),
+    ...(options.replay !== undefined ? { replay: options.replay } : {}),
     livePaceMs: 0,
     send: (message) => pub.push(message),
     sendToSeat: (seat, message) => {
@@ -374,4 +388,218 @@ describe('MatchSession - a table with two human seats', () => {
     coordinator.cancel();
     t.session.abandon();
   });
+});
+
+describe('MatchSession - the disclosure policy at a table', () => {
+  const send = (session: MatchSession) =>
+    session as unknown as {
+      sendPublic(message: ServerToClientMessage): void;
+      sendToSeat(seat: string, message: ServerToClientMessage): void;
+    };
+
+  it('treats a halt as the end of the game and sends only the fixed message', async () => {
+    const t = table();
+    await playScripted(t);
+
+    const halted = t.pub.find((m) => m.type === 'computeHalted');
+    expect(halted).toBeDefined();
+    if (halted?.type !== 'computeHalted') throw new Error('unreachable');
+    expect(halted.payload.reason).toBe('The rules engine could not continue this game.');
+    expect(halted.payload).not.toHaveProperty('cardName');
+
+    // The halt is terminal for the post-game unlock: the result follows, with nothing raw in it.
+    const over = t.pub.find((m) => m.type === 'gameOver');
+    if (over?.type !== 'gameOver') throw new Error('a halted table game announces its result');
+    expect(t.pub.indexOf(over)).toBeGreaterThan(t.pub.indexOf(halted));
+    expect(over.payload.result.halted).toBe(true);
+    expect(over.payload.result.haltReason).toBeNull();
+    expect(over.payload.result).not.toHaveProperty('haltSite');
+    const raw = t.session.runner.getHalt()?.reason;
+    expect(raw).toBeTruthy();
+    for (const frame of [...t.pub, ...Object.values(t.bySeat).flat()]) {
+      if (frame.type === 'eventBatch') continue;
+      expect(JSON.stringify(frame)).not.toContain(raw as string);
+    }
+    expect(t.pub.map((m) => m.type)).not.toContain('replayUnlocked');
+  }, 30_000);
+
+  it('sends no debug events, cost reports or seed, and ignores the debug flags', async () => {
+    const t = table();
+    t.session.setDebugFlags({
+      showAIRequests: true,
+      showAIResponses: true,
+      showLegalActions: true,
+      showSBAChecks: true,
+      showPriorityPasses: true,
+      showTokenUsage: true,
+      verboseEngine: true,
+    });
+    await playScripted(t);
+
+    const types = new Set(t.all().map((m) => m.type));
+    expect(types.has('debugEvents')).toBe(false);
+    expect(types.has('apiWaiting')).toBe(false);
+    expect(types.has('decisionPending')).toBe(false);
+    expect(JSON.stringify(t.all())).not.toContain(SEED);
+    for (const seat of HUMANS) {
+      for (const state of boards(t.bySeat[seat] ?? [])) expect(state.seed).toBe('');
+    }
+  }, 30_000);
+
+  it('stops a message the policy does not allow at the last hop, in tests by throwing', () => {
+    const t = table();
+    const debug: ServerToClientMessage = {
+      type: 'debugEvents',
+      payload: { gameId: 'g-multi-human', entries: [] },
+    };
+    expect(() => send(t.session).sendPublic(debug)).toThrow(/debugEvents/);
+    expect(() => send(t.session).sendToSeat('P1', debug)).toThrow(/debugEvents/);
+    // Nothing reached either stream.
+    expect(t.all()).toEqual([]);
+  });
+
+  it('holds full-state frames until the game is over, then lets them through', async () => {
+    const t = table();
+    const replay: ServerToClientMessage = {
+      type: 'replayUnlocked',
+      payload: {
+        state: t.session.engine.spectatorState(),
+        lines: [],
+        snapshotTurns: [],
+        frontierTurn: 0,
+      },
+    };
+    const snapshot: ServerToClientMessage = {
+      type: 'stateSnapshot',
+      payload: {
+        turn: 0,
+        state: t.session.engine.spectatorState(),
+        frontierTurn: 0,
+        atFrontier: true,
+        sequence: null,
+      },
+    };
+    for (const message of [replay, snapshot]) {
+      expect(() => send(t.session).sendPublic(message)).toThrow(new RegExp(message.type));
+      expect(() => send(t.session).sendToSeat('P1', message)).toThrow(new RegExp(message.type));
+    }
+
+    await playScripted(t);
+    const before = t.all().length;
+    send(t.session).sendToSeat('P1', replay);
+    expect(t.all().length).toBe(before + 1);
+  }, 30_000);
+
+  it('drops, rather than throws, outside a test run', () => {
+    vi.stubEnv('VITEST', '');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      const t = table();
+      send(t.session).sendPublic({
+        type: 'debugEvents',
+        payload: { gameId: 'g-multi-human', entries: [] },
+      });
+      expect(t.all()).toEqual([]);
+      expect(warn).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllEnvs();
+      vi.restoreAllMocks();
+    }
+  });
+
+  it('stores the replay inputs, and who answered each request', async () => {
+    const calls: Array<{ sql: string; args: unknown[] }> = [];
+    const db: SqliteLike = {
+      query: (sql: string) => ({
+        run: (...args: unknown[]) => {
+          calls.push({ sql, args });
+        },
+        all: () => [],
+        get: () => null,
+      }),
+    };
+    const store = { recorderFor: (id: string) => new GameRecorder(db, id) } as unknown as GameStore;
+    const t = table({
+      store,
+      replay: {
+        cardDataSha256: 'card-data-hash',
+        build: { commit: 'abc123', branch: 'main', dirty: true },
+      },
+    });
+    await playScripted(t);
+
+    const update = calls.find((c) => c.sql.includes('UPDATE games SET config_json'));
+    expect(update).toBeDefined();
+    expect(JSON.parse(String(update?.args[0]))).toEqual({
+      schemaVersion: 1,
+      cardDataSha256: 'card-data-hash',
+      seats: [
+        { seat: 'P1', deckSnapshotId: 'deck-P1', manualMana: true },
+        { seat: 'P2', deckSnapshotId: 'deck-P2', manualMana: false },
+        { seat: 'P3', deckSnapshotId: 'deck-P3', manualMana: true },
+        { seat: 'P4', deckSnapshotId: 'deck-P4', manualMana: false },
+      ],
+      turnCap: 6,
+      rng: { kind: 'legacy', key: '' },
+      engineOptions: { maxDecisions: 100000 },
+    });
+    expect(update?.args.slice(1)).toEqual(['abc123', 1, 'g-multi-human']);
+
+    const sources = calls
+      .filter((c) => c.sql.includes('INSERT INTO game_decision_sources'))
+      .map((c) => ({ seat: c.args[2] as number, source: c.args[3] as string }));
+    expect(sources.length).toBeGreaterThan(0);
+    for (const row of sources) {
+      expect(row.seat === 1 || row.seat === 3 ? ['human', 'auto'] : ['bot']).toContain(row.source);
+    }
+    expect(sources.some((row) => row.source === 'human')).toBe(true);
+    expect(sources.some((row) => row.source === 'bot')).toBe(true);
+  }, 30_000);
+
+  it('stores no replay inputs when the entry point names no identity', async () => {
+    const calls: string[] = [];
+    const db: SqliteLike = {
+      query: (sql: string) => ({
+        run: () => {
+          calls.push(sql);
+        },
+        all: () => [],
+        get: () => null,
+      }),
+    };
+    const store = { recorderFor: (id: string) => new GameRecorder(db, id) } as unknown as GameStore;
+    const t = table({ store });
+    await playScripted(t);
+    expect(calls.some((sql) => sql.includes('config_json'))).toBe(false);
+  }, 30_000);
+
+  it('records no decision sources for a game with no human seat', async () => {
+    const calls: string[] = [];
+    const db: SqliteLike = {
+      query: (sql: string) => ({
+        run: () => {
+          calls.push(sql);
+        },
+        all: () => [],
+        get: () => null,
+      }),
+    };
+    const store = { recorderFor: (id: string) => new GameRecorder(db, id) } as unknown as GameStore;
+    const session = new MatchSession({
+      disclosure: testerPolicy('spectator'),
+      gameId: 'g-no-human',
+      seed: SEED,
+      seats: seats(),
+      providerKind: 'random',
+      turnCap: 4,
+      store,
+      playbackMode: 'manual',
+      livePaceMs: 0,
+      send: () => undefined,
+    });
+    session.start();
+    await session.settled();
+    expect(calls.some((sql) => sql.includes('INSERT INTO game_events'))).toBe(true);
+    expect(calls.some((sql) => sql.includes('game_decision_sources'))).toBe(false);
+  }, 30_000);
 });
