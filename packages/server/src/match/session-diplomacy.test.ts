@@ -184,6 +184,15 @@ describe('MatchSession — the player at the table (ADR 0035 phase 3)', () => {
     const states = sent.flatMap((m) => (m.type === 'diplomacyState' ? [m.payload.state] : []));
     expect(states.some((st) => st.deals.some((d) => d.parties.includes('P1')))).toBe(true);
     expect(session.tableTalk()).toEqual(talk);
+    // Every decision the player is asked for comes after the table state for its own turn, so
+    // the panel never shows the previous turn's offers or proposal slot while the player decides.
+    let lastTurn = -1;
+    for (const m of sent) {
+      if (m.type === 'diplomacyState') lastTurn = m.payload.state.turn;
+      if (m.type === 'playerActionRequired' && m.payload.request.turn >= 1) {
+        expect(lastTurn).toBe(m.payload.request.turn);
+      }
+    }
   }, 120_000);
 
   it('refuses deal messages in a game without deals', () => {

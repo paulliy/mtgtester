@@ -9,6 +9,7 @@ import {
   NoAvailableModelError,
 } from './errors';
 import { DEFAULT_AI_CONFIG } from './config';
+import { StrategyCoordinator } from './strategy-coordinator';
 import { AiCallLogger } from './logger';
 import type { Engine } from '@mtg/engine';
 import type { JevTacticalPolicy } from './jev-policy';
@@ -481,6 +482,39 @@ describe('OpenAiDecisionProvider — local short-circuits', () => {
     expect(second.note).toContain('Cache');
     expect(client.requestDecision).toHaveBeenCalledTimes(1);
     expect(queue.enqueue).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not cache an answer whose deals changed while the model was thinking', async () => {
+    const queue = makeQueue();
+    const client = makeClient(1);
+    const coordinator = new StrategyCoordinator(null, queue, mockEngine, DEFAULT_AI_CONFIG);
+    let promises: string[] = [];
+    coordinator.diplomacyFor = () =>
+      promises.length === 0
+        ? null
+        : { yourPromises: promises, promisesToYou: [], otherDeals: [], records: [] };
+    const answer = client.requestDecision as ReturnType<typeof vi.fn>;
+    const respond = answer.getMockImplementation()!;
+    // A deal is made while the first call is in flight.
+    answer.mockImplementationOnce((prompt: unknown, request: DecisionRequest) => {
+      promises = ["you won't attack P2 (deal deal-1, one round)"];
+      return respond(prompt, request);
+    });
+    const provider = new OpenAiDecisionProvider(
+      client,
+      queue,
+      mockEngine,
+      DEFAULT_AI_CONFIG,
+      undefined,
+      undefined,
+      coordinator,
+    );
+
+    await provider.decide(realChoice);
+    const second = await provider.decide({ ...realChoice, requestId: 'req-m2', turn: 12 });
+
+    expect(second.note ?? '').not.toContain('Cache');
+    expect(client.requestDecision).toHaveBeenCalledTimes(2);
   });
 
   it('calls the model again when the cache is disabled', async () => {

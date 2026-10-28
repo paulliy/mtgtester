@@ -1513,10 +1513,25 @@ export class MatchSession {
     if (playerId === this.humanSeat && this.humanProvider !== null) {
       // The player's decisions open negotiation windows and are judged for compliance like any
       // seat's; offers to the player wait for their answer rather than this decision.
+      const table = this.diplomacy;
+      const humanProvider = this.humanProvider;
       const human: AsyncDecisionProvider =
-        this.diplomacy === null
-          ? this.humanProvider
-          : withDiplomacyAsync(this.diplomacy, this.humanProvider);
+        table === null
+          ? humanProvider
+          : {
+              decide: async (request) => {
+                table.beforeDecision(request);
+                // Opening a turn's window or the after-attackers slot changes what the player may
+                // do at the table; the board already went out, so send the table's state (and
+                // any talk) before waiting on them.
+                this.collectTalk(Math.max(0, this.runner.nextSequence() - 1));
+                this.sendTalkNow();
+                this.sendDiplomacyState();
+                const response = await humanProvider.decide(request);
+                table.afterDecision(request, response);
+                return response;
+              },
+            };
       this.providers.set(playerId, human);
       return human;
     }
