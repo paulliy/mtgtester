@@ -285,6 +285,7 @@ const SOURCE_FILES = [
   'packages/engine/src/cards/cost-contracts.ts',
   'packages/engine/src/cards/target-builders.ts',
   'packages/engine/src/cards/trigger-contracts.ts',
+  'packages/engine/src/cards/scope-contracts.ts',
   'packages/engine/src/state/counters.ts',
   'packages/engine/src/cards/effect-builders.ts',
   'packages/engine/tests/fixtures/selected-spell-faces-oracle.json',
