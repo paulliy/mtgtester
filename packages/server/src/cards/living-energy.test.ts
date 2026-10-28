@@ -58,6 +58,7 @@ function livingSeat(seat: string, commander: OracleCard, cards: OracleCard[]): S
   };
 }
 
+// allowed-skip: needs the Scryfall bulk file (data/scryfall-oracle-cards.json, gitignored)
 describe.skipIf(SKIP)('Living Energy modeled-card and player-experience checks', () => {
   it('models every unique card except the catalog-contained backlog', () => {
     const names = new Set([

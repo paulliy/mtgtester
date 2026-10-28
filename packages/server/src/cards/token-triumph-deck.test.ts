@@ -43,6 +43,7 @@ function loadTokenTriumphDeckCards(): { commanderCard: OracleCard; deckCards: Or
   return { commanderCard, deckCards };
 }
 
+// allowed-skip: needs the Scryfall bulk file (data/scryfall-oracle-cards.json, gitignored)
 describe.skipIf(SKIP)('Token Triumph Deck — L1-L7 Test Suite', () => {
   // `describe.skipIf` still calls this factory to collect its `it`s (only the `it` bodies
   // themselves are skipped) — so without this guard, `loadTokenTriumphDeckCards()` below would

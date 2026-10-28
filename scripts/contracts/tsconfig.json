@@ -11,6 +11,7 @@
     "../test-primitive-contracts.ts",
     "../card-capability-impact.ts",
     "../check-primitive-promotions.ts",
+    "../check-suite-integrity.ts",
     "../run-pr08-verification.ts",
     "../pr08-verification-report.ts"
   ]

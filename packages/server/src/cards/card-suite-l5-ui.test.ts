@@ -86,6 +86,7 @@ function expectAllReachable(ctx: GameContext, decisions: PendingDecision[]): voi
   }
 }
 
+// allowed-skip: needs the Scryfall bulk file (data/scryfall-oracle-cards.json, gitignored)
 describe.skipIf(SKIP)('L5: Human UI Reachability Tests', () => {
   it('validates UI decision reachability for Path to Exile', () => {
     const ctx = pod();

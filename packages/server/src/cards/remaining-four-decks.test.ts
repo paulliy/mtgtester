@@ -69,6 +69,7 @@ function seat(seatId: string, deckData: ReturnType<typeof deck>): SeatSetup {
   };
 }
 
+// allowed-skip: needs the Scryfall bulk file (data/scryfall-oracle-cards.json, gitignored)
 describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke checks', () => {
   it('models every unique card except the explicit fail-closed backlog', () => {
     const expectedUnmodeled = new Set([

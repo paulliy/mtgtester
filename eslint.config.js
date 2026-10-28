@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import { cardAuthoringPlugin } from './scripts/eslint/card-authoring.js';
 import { castingBoundaryPlugin } from './scripts/eslint/casting-boundary.js';
+import { testSkipsPlugin } from './scripts/eslint/test-skips.js';
 import tseslint from 'typescript-eslint';
 import vue from 'eslint-plugin-vue';
 
@@ -140,6 +141,13 @@ export default tseslint.config(
         },
       ],
     },
+  },
+  {
+    // A skipped or focused test keeps the suite green while proving nothing (ADR 0034 decision 9).
+    // Each use carries `// allowed-skip: <reason>` beside it.
+    files: ['**/*.test.ts', '**/*.spec.ts'],
+    plugins: { 'test-skips': testSkipsPlugin },
+    rules: { 'test-skips/annotated-skips': 'error' },
   },
   ...vue.configs['flat/essential'],
   {
