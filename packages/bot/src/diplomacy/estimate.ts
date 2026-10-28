@@ -13,6 +13,7 @@ import { WEIGHTS } from '../weights';
 export interface SeatEstimate {
   seat: PlayerId;
   life: number;
+  poison: number;
   handSize: number;
   /** Total power of creatures that could attack on this seat's next turn. */
   attackPower: number;
@@ -96,12 +97,19 @@ function softmax(values: readonly number[], temperature: number): number[] {
 }
 
 export function estimateTable(view: PlayerView): TableEstimate {
-  // Poison is left out of position like commander damage: `PlayerView` carries every opponent's
-  // count but not the viewer's own, and counting it for some seats only would make the same table
-  // read differently from each chair.
-  const living: { seat: PlayerId; life: number; handSize: number }[] = [
-    { seat: view.seat, life: view.life, handSize: view.hand.length },
-    ...view.opponents.map((o) => ({ seat: o.seat, life: o.life, handSize: o.handSize })),
+  const living: { seat: PlayerId; life: number; poison: number; handSize: number }[] = [
+    {
+      seat: view.seat,
+      life: view.life,
+      poison: view.poisonCounters ?? 0,
+      handSize: view.hand.length,
+    },
+    ...view.opponents.map((o) => ({
+      seat: o.seat,
+      life: o.life,
+      poison: o.poisonCounters,
+      handSize: o.handSize,
+    })),
   ];
 
   // Commanders on the battlefield, by seat. The view names them, so a permanent with that name
@@ -134,7 +142,11 @@ export function estimateTable(view: PlayerView): TableEstimate {
     const attackPowers = attackers.map((a) => a.power);
     const attackIsCommander = attackers.map((a) => a.commander);
     const attackPower = attackPowers.reduce((sum, p) => sum + p, 0);
-    const position = lifeValue(s.life) + boardValue + s.handSize * D.cardInHandValue;
+    const position =
+      lifeValue(s.life) +
+      boardValue +
+      s.handSize * D.cardInHandValue -
+      s.poison * D.poisonCounterValue;
     return {
       ...s,
       attackPower,

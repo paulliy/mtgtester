@@ -107,6 +107,10 @@ export function assemblePrompt(
       manaSources: view.manaSources,
       commanders: view.commanders,
       ...(includePublicZones ? { graveyard: view.graveyard } : {}),
+      // Only when present, so the usual poison-free context (and its cache keys) is unchanged.
+      ...(includePublicZones && (view.poisonCounters ?? 0) > 0
+        ? { poison: view.poisonCounters }
+        : {}),
       hand: view.hand.map((card) => {
         if (useCardSummaries) return summarizeHandCard(card, request, true);
         const isBasic = BASIC_LAND_NAMES.has(card.name);

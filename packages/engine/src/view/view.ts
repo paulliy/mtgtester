@@ -291,6 +291,7 @@ export function buildPlayerView(ctx: GameContext, playerId: PlayerId): PlayerVie
     commanders: commanderViews(ctx, viewer),
     availableMana,
     energy: viewer.energy,
+    poisonCounters: viewer.poisonCounters,
     manaSources,
     opponents,
     revealedLibraryTops,

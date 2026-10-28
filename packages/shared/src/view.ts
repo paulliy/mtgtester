@@ -103,6 +103,8 @@ export interface PlayerView {
   availableMana: Record<string, number>;
   /** Public energy counters held by the viewing player. */
   energy?: number;
+  /** Public poison counters on the viewing player, as `OpponentView.poisonCounters` is for others. */
+  poisonCounters?: number;
   /**
    * Per-permanent mana-production breakdown — what EACH source could make, not summed into
    * `availableMana`'s flat per-symbol counts. Lets the AI reason "this land taps for any of

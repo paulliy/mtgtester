@@ -157,6 +157,8 @@ export const WEIGHTS = {
     noncreaturePermanentValue: 3,
     landValue: 1,
     cardInHandValue: 1.5,
+    /** Per poison counter: ten of them are a loss, like 40 life. */
+    poisonCounterValue: 4,
 
     // --- Win share and leader (decisions 8 and 9) ---
     /** Softmax temperature over positions, in LEP. Lower makes the leader look more certain. */

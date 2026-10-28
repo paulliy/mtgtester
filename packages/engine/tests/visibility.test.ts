@@ -211,6 +211,15 @@ describe('PlayerView visibility (brief §7.1)', () => {
     expect(beast?.keywords).toContain('trample');
   });
 
+  it('shows the viewer its own poison counters, as its opponents see them', () => {
+    const ctx = createGame(secretPod());
+    const p1 = ctx.state.players.find((p) => p.id === 'P1')!;
+    p1.poisonCounters = 6;
+    expect(buildPlayerView(ctx, 'P1').poisonCounters).toBe(6);
+    const fromP2 = buildPlayerView(ctx, 'P2').opponents.find((o) => o.seat === 'P1');
+    expect(fromP2?.poisonCounters).toBe(6);
+  });
+
   it('includes power and toughness for creature cards in hand', () => {
     const ctx = createGame(secretPod());
     const bearCard = oracle({

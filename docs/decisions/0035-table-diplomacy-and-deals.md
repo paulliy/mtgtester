@@ -92,11 +92,11 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
 7. **Position.** Each living seat's position is computed from public information only: life
    (points at or below `dangerousLifeThreshold` count `lowLifeMultiplier` times), board value
    (creature values as in combat search, plus a flat value per noncreature nonland permanent),
-   cards in hand, and lands. Commander damage is left out of position because a seat only sees
-   the commander damage it has taken itself, and counting it for one seat only would bias every
-   comparison; it enters the danger and temptation checks instead. Poison is left out for the
-   mirror reason: `PlayerView` carries every opponent's count but not the viewer's own, so the
-   same table would read differently from each chair.
+   cards in hand, and lands. Poison counters reduce position; `PlayerView` carries the viewer's
+   own count as well as every opponent's, so every seat reads poison the same way. Commander
+   damage is left out of position because a seat only sees the commander damage it has taken
+   itself, and counting it for one seat only would bias every comparison; it enters the danger
+   and temptation checks instead.
 8. **Win share.** `w_s = softmax(position_s / τ)` across living seats. It is a rough probability
    that each seat wins, used to weigh everyone's gains against each other.
 9. **Leader and danger.** The seat with the highest win share is the leader when its share is at
@@ -296,9 +296,7 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
   together bound that blind spot without closing it.
 - Commander damage between two opponents is not in `PlayerView`, so it does not enter their
   positions, and a bot predicting a counterparty's answer cannot see the commander damage that
-  counterparty has taken. The viewer's own poison count is not in `PlayerView` either, so poison
-  does not enter position at all; a seat close to a poison loss looks healthier than it is until
-  the view carries that count.
+  counterparty has taken.
 - A leader is the natural target of every other seat's proposals, so the table tends to gang up on
   it. That is how Commander tables play, but the sweep should watch whether it decides too many
   games.
