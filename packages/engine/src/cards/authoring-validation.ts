@@ -1334,6 +1334,65 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
   }
 }
 
+/** Ops whose actual life loss feeds a following `gainLifeEqualToLifeLostThisWay`. */
+const LIFE_LOST_THIS_WAY_FEEDERS: ReadonlySet<Effect['op']> = new Set([
+  'eachOpponentLosesLife',
+  'loseLifeTarget',
+  'loseHalfLifeTarget',
+]);
+
+function isEffectList(value: unknown[]): value is Effect[] {
+  return (
+    value.length > 0 &&
+    value.every(
+      (entry) =>
+        entry !== null &&
+        typeof entry === 'object' &&
+        typeof (entry as { op?: unknown }).op === 'string',
+    )
+  );
+}
+
+/**
+ * Every reference from one effect to another must resolve within the scope the executor has
+ * (ADR 0034 decision 2). `executeAbility` starts each effect list, including every nested body,
+ * with fresh bindings and a zero "life lost this way" accumulator, so a reference resolves only
+ * to an earlier effect of the same list. A bind or loss inside a nested body (a conditional
+ * branch, a mode, a per-player body) is not visible after it.
+ */
+function validateEffectReferences(value: unknown, path: string, issues: AuthoringIssue[]): void {
+  if (Array.isArray(value)) {
+    if (isEffectList(value)) {
+      const bound = new Set<string>();
+      let lifeLossBefore = false;
+      value.forEach((effect, index) => {
+        if (effect.op === 'untapBoundIf' && !bound.has(effect.binding))
+          issues.push({
+            path: `${path}[${index}].binding`,
+            message: `binding "${effect.binding}" is not bound by an earlier effect in the same effect list`,
+          });
+        if (effect.op === 'gainLifeEqualToLifeLostThisWay' && !lifeLossBefore)
+          issues.push({
+            path: `${path}[${index}]`,
+            message:
+              'life lost this way needs an earlier eachOpponentLosesLife, loseLifeTarget or loseHalfLifeTarget in the same effect list',
+          });
+        if (
+          (effect.op === 'searchLibrary' || effect.op === 'searchLibraryGroup') &&
+          effect.bind !== undefined
+        )
+          bound.add(effect.bind);
+        if (LIFE_LOST_THIS_WAY_FEEDERS.has(effect.op)) lifeLossBefore = true;
+      });
+    }
+    value.forEach((entry, index) => validateEffectReferences(entry, `${path}[${index}]`, issues));
+    return;
+  }
+  if (value === null || typeof value !== 'object') return;
+  for (const [key, entry] of Object.entries(value))
+    validateEffectReferences(entry, `${path}.${key}`, issues);
+}
+
 /** Validate the fully merged executable definition rather than trusting an override patch alone. */
 export function validateCardDefinition(definition: CardDefinition): AuthoringIssue[] {
   const issues: AuthoringIssue[] = [];
@@ -1369,6 +1428,7 @@ export function validateCardDefinition(definition: CardDefinition): AuthoringIss
     });
   visit(definition, 'definition', issues);
   validateFields(definition, 'definition', issues);
+  validateEffectReferences(definition, 'definition', issues);
   return issues;
 }
 

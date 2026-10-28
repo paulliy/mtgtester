@@ -65,7 +65,7 @@ import { queueBecomesTargetedTriggers, queueWardTriggers } from '../actions/appl
 import { evaluateCondition, isChoiceCondition, resolveCondition } from '../cards/condition';
 import { allOf, ofSupertype, ofType, selectMatches, YOURS } from '../cards/selector';
 import type { GameGen } from '../decisions';
-import { UnmodeledCardError } from '../errors';
+import { EngineInvariantError, UnmodeledCardError } from '../errors';
 import {
   candidateOf,
   computeCharacteristics,
@@ -6794,7 +6794,15 @@ export function* executeAbility(
       }
       case 'untapBoundIf': {
         if (!evaluateCondition(ctx, effect.condition, source)) break;
-        for (const cardId of effectBindings.get(effect.binding) ?? []) {
+        const bound = effectBindings.get(effect.binding);
+        // Validation requires an earlier bind in this list, and a search that finds nothing
+        // still binds `[]`, so an unset binding is an engine bug (ADR 0034 decision 2).
+        if (bound === undefined)
+          throw new EngineInvariantError(
+            'resolve.untapBoundIf',
+            `${source.name}: binding "${effect.binding}" was never set`,
+          );
+        for (const cardId of bound) {
           const permanent = ctx.state.battlefield.find((candidate) => candidate.cardId === cardId);
           if (permanent !== undefined) permanent.tapped = false;
         }
