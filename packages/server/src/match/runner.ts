@@ -32,9 +32,18 @@ import type {
   TargetChoice,
 } from '@mtg/shared';
 import { LOOKAHEAD_TURNS } from '@mtg/shared';
-import type { GameRecorder, GameSeatRecord, GameStatus, ManaMetricRecord } from '../db/games';
+import type {
+  GameRecorder,
+  GameReplayRecord,
+  GameSeatRecord,
+  GameStatus,
+  ManaMetricRecord,
+} from '../db/games';
 
 export { LOOKAHEAD_TURNS } from '@mtg/shared';
+
+/** Surfaced decisions a game may take before it halts as a runaway (a replay input, ADR 0031 decision 8). */
+export const DEFAULT_MAX_DECISIONS = 100_000;
 
 /**
  * How many per-action board states to keep for seeking. The client keeps the last 4 000 log
@@ -142,6 +151,8 @@ export interface MatchRunnerOptions extends MatchRunnerHooks {
   seats: readonly GameSeatRecord[];
   providerFor: (playerId: PlayerId) => AsyncDecisionProvider;
   recorder?: GameRecorder | null;
+  /** Written to the `games` row with the rest of its first insert; omit to store none. */
+  replay?: GameReplayRecord;
   lookaheadTurns?: number;
   maxDecisions?: number;
   escalationTimeoutMs?: number;
@@ -328,7 +339,12 @@ export class MatchRunner {
   async run(): Promise<void> {
     if (this.status !== 'idle') return;
     this.setStatus('running');
-    this.opts.recorder?.start(this.opts.seed, this.opts.seats, this.opts.gameMode ?? 'spectator');
+    const mode = this.opts.gameMode ?? 'spectator';
+    if (this.opts.replay === undefined) {
+      this.opts.recorder?.start(this.opts.seed, this.opts.seats, mode);
+    } else {
+      this.opts.recorder?.start(this.opts.seed, this.opts.seats, mode, this.opts.replay);
+    }
     // A prepared-scenario engine (Card Test Lab) starts mid-game: its first snapshot is already
     // past turn 0, so a viewer anchored at turn 0 would park compute before the first decision.
     this.viewTurn = this.opts.engine.getState().turnNumber;
@@ -359,7 +375,7 @@ export class MatchRunner {
   // ── The pump ──────────────────────────────────────────────────────────────────────────────
 
   private async loop(): Promise<void> {
-    const maxDecisions = this.opts.maxDecisions ?? 100_000;
+    const maxDecisions = this.opts.maxDecisions ?? DEFAULT_MAX_DECISIONS;
     let stepsSinceYield = 0;
 
     for (;;) {

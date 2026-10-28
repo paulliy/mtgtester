@@ -24,6 +24,11 @@ export const MIGRATIONS_SQL: readonly string[] = [
   `ALTER TABLE decks ADD COLUMN archetype_features_json TEXT`,
   `ALTER TABLE deck_snapshots ADD COLUMN companion_oracle_id TEXT`,
   `ALTER TABLE deck_snapshots ADD COLUMN commander_oracle_ids TEXT`,
+  // Replay inputs (ADR 0031 decision 8). Null for every game recorded before these existed, and
+  // for Card Test Lab games, which start from a prepared engine and store none.
+  `ALTER TABLE games ADD COLUMN config_json TEXT`,
+  `ALTER TABLE games ADD COLUMN build_commit TEXT`,
+  `ALTER TABLE games ADD COLUMN build_dirty INTEGER`,
 ];
 
 export const SCHEMA_SQL = `
@@ -95,7 +100,13 @@ CREATE TABLE IF NOT EXISTS games (
   turn_count  INTEGER,
   winner_seat INTEGER,
   status      TEXT,
-  game_mode   TEXT NOT NULL DEFAULT 'spectator'
+  game_mode   TEXT NOT NULL DEFAULT 'spectator',
+  -- Replay inputs (ADR 0031 decision 8): the card-data hash, deck snapshot ids, manual mana, turn
+  -- cap, RNG kind and key, and engine options as JSON, plus the build the game ran on. Null for
+  -- Card Test Lab games and for games recorded before these columns existed.
+  config_json  TEXT,
+  build_commit TEXT,
+  build_dirty  INTEGER
 );
 
 -- TODO(phase-2): per-seat outcome of each game.
@@ -111,6 +122,17 @@ CREATE TABLE IF NOT EXISTS game_players (
   opening_hand_size  INTEGER,
   controller_kind    TEXT NOT NULL DEFAULT 'ai',
   PRIMARY KEY (game_id, seat)
+);
+
+-- Who answered each request (ADR 0031 decision 8): 'human' | 'auto' | 'timeout' | 'fallback' |
+-- 'bot'. For attribution and statistics; replay does not read it. Written for games with a human
+-- seat only.
+CREATE TABLE IF NOT EXISTS game_decision_sources (
+  game_id    TEXT NOT NULL REFERENCES games(id),
+  request_id TEXT NOT NULL,
+  seat       INTEGER NOT NULL,
+  source     TEXT NOT NULL,
+  PRIMARY KEY (game_id, request_id)
 );
 
 -- TODO(phase-2): the full replayable action log.

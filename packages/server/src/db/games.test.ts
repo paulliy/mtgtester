@@ -6,7 +6,14 @@
 
 import { describe, expect, it } from 'vitest';
 import type { GameEvent, GameResult, SpectatorState } from '@mtg/shared';
-import { finishingPositions, GameRecorder, seatIndex, type SqliteLike } from './games';
+import {
+  DECISION_SOURCES,
+  finishingPositions,
+  GameRecorder,
+  seatIndex,
+  type GameReplayConfig,
+  type SqliteLike,
+} from './games';
 
 interface Call {
   sql: string;
@@ -139,6 +146,86 @@ describe('GameRecorder', () => {
     const players = calls.filter((call) => call.sql.includes('INSERT INTO game_players'));
     expect(players[0]?.args.at(-1)).toBe('human');
     expect(players[1]?.args.at(-1)).toBe('ai');
+  });
+
+  it('stores the replay inputs and the build in the same transaction as the game row', () => {
+    const { db, calls } = fakeDb();
+    const config: GameReplayConfig = {
+      schemaVersion: 1,
+      cardDataSha256: 'sha',
+      seats: [{ seat: 'P1', deckSnapshotId: 'snap-1', manualMana: true }],
+      turnCap: 500,
+      rng: { kind: 'legacy', key: '' },
+      engineOptions: { maxDecisions: 100_000 },
+    };
+    new GameRecorder(db, 'g1').start(
+      'seed-x',
+      [{ seat: 'P1', deckSnapshotId: 'snap-1' }],
+      'singlePlayer',
+      { config, buildCommit: 'abc', buildDirty: false },
+    );
+
+    // The insert is the one every game makes; the replay columns are a separate update after it.
+    expect(calls[0]?.sql).toContain('INSERT INTO games');
+    expect(calls[0]?.sql).not.toContain('config_json');
+    expect(calls[1]?.sql).toContain('UPDATE games SET config_json');
+    expect(JSON.parse(String(calls[1]?.args[0]))).toEqual(config);
+    expect(calls[1]?.args.slice(1)).toEqual(['abc', 0, 'g1']);
+  });
+
+  it('records an unknown build as null, and stores nothing for a game without replay inputs', () => {
+    const config: GameReplayConfig = {
+      schemaVersion: 1,
+      cardDataSha256: null,
+      seats: [],
+      turnCap: 500,
+      rng: { kind: 'legacy', key: '' },
+      engineOptions: { maxDecisions: 100_000 },
+    };
+    const unknown = fakeDb();
+    new GameRecorder(unknown.db, 'g1').start('s', [], 'spectator', {
+      config,
+      buildCommit: null,
+      buildDirty: null,
+    });
+    expect(unknown.calls[1]?.args.slice(1)).toEqual([null, null, 'g1']);
+
+    const lab = fakeDb();
+    new GameRecorder(lab.db, 'g1').start('s', [], 'singlePlayer');
+    expect(lab.calls.some((call) => call.sql.includes('config_json'))).toBe(false);
+  });
+
+  it('reads the replay inputs back, or null for a game that stored none', () => {
+    const config: GameReplayConfig = {
+      schemaVersion: 1,
+      cardDataSha256: 'sha',
+      seats: [],
+      turnCap: 40,
+      rng: { kind: 'chacha20', key: 'ab'.repeat(32) },
+      engineOptions: { maxDecisions: 7 },
+    };
+    const stored = fakeDb({
+      get: [{ config_json: JSON.stringify(config), build_commit: 'abc', build_dirty: 1 }],
+    });
+    expect(new GameRecorder(stored.db, 'g1').loadReplayRecord()).toEqual({
+      config,
+      buildCommit: 'abc',
+      buildDirty: true,
+    });
+    const none = fakeDb({ get: [{ config_json: null, build_commit: null, build_dirty: null }] });
+    expect(new GameRecorder(none.db, 'g1').loadReplayRecord()).toBeNull();
+    expect(new GameRecorder(fakeDb().db, 'g1').loadReplayRecord()).toBeNull();
+  });
+
+  it('records who answered a request, once per request', () => {
+    const { db, calls } = fakeDb();
+    const recorder = new GameRecorder(db, 'g1');
+    recorder.saveDecisionSource('g1:7', 'P3', 'auto');
+
+    expect(calls[0]?.sql).toContain('INSERT INTO game_decision_sources');
+    expect(calls[0]?.sql).toContain('ON CONFLICT(game_id, request_id) DO NOTHING');
+    expect(calls[0]?.args).toEqual(['g1', 'g1:7', 3, 'auto']);
+    expect(DECISION_SOURCES).toEqual(['human', 'auto', 'timeout', 'fallback', 'bot']);
   });
 
   it('appends events keyed by sequence, and ignores a replayed flush', () => {

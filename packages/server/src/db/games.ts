@@ -36,6 +36,53 @@ export interface SqliteLike {
 /** Status of a game row. `halted` is brief §4's "probable rules bug" state, not a loss. */
 export type GameStatus = 'running' | 'finished' | 'halted' | 'abandoned';
 
+/**
+ * Why a response was the response, for attribution and statistics (ADR 0031 decision 8). Replay
+ * does not read it. `timeout` and `fallback` belong to the table's clocks (multiplayer M4); the
+ * tester's server writes `human`, `auto` and `bot`.
+ *
+ * - `human`: a person chose it.
+ * - `auto`: the smart-yield pass answered because every other option was one the person yielded.
+ * - `timeout`: a clock chose a legal action for a missing person.
+ * - `fallback`: a fallback bot answered for a missing person.
+ * - `bot`: the seat's own bot.
+ */
+export type DecisionSource = 'human' | 'auto' | 'timeout' | 'fallback' | 'bot';
+
+export const DECISION_SOURCES: readonly DecisionSource[] = [
+  'human',
+  'auto',
+  'timeout',
+  'fallback',
+  'bot',
+];
+
+/**
+ * What `games.config_json` holds (ADR 0031 decision 8): everything but the recorded decisions that
+ * a game is reproducible from. Deck snapshot ids stand in for card objects, and the Oracle data
+ * itself is pinned by `cardDataSha256`, because it lives outside git and `card_cache` is
+ * overwritten by every re-import.
+ */
+export interface GameReplayConfig {
+  schemaVersion: 1;
+  /** SHA-256 of the card-data file the game ran on (the one the game report names); null if unknown. */
+  cardDataSha256: string | null;
+  seats: Array<{ seat: PlayerId; deckSnapshotId: string; manualMana: boolean }>;
+  turnCap: number;
+  /** `key` is the empty string for `legacy`, which is seeded from the game's public seed. */
+  rng: { kind: 'legacy' | 'chacha20'; key: string };
+  /** The runner's step budget: surfaced decisions allowed before the game halts. */
+  engineOptions: { maxDecisions: number };
+}
+
+/** The `games` row's replay columns. Absent for Card Test Lab games, which store none. */
+export interface GameReplayRecord {
+  config: GameReplayConfig;
+  /** From `build-info.ts`; null outside a git checkout. */
+  buildCommit: string | null;
+  buildDirty: boolean | null;
+}
+
 export interface GameSeatRecord {
   seat: PlayerId;
   deckSnapshotId: string;
@@ -51,6 +98,10 @@ export interface GameRow {
   winnerSeat: string | null;
   status: GameStatus | null;
   gameMode?: GameMode | null;
+  /** Null for a game that stored none (Card Test Lab, or one recorded before the column existed). */
+  config?: GameReplayConfig | null;
+  buildCommit?: string | null;
+  buildDirty?: boolean | null;
 }
 
 /** Raw inputs retained so mana thresholds can be adjusted without replaying games. */
@@ -82,11 +133,26 @@ export class GameRecorder {
   ) {}
 
   /** Open a game row and its four seats. Called once, before the first turn. */
-  start(seed: string, seats: readonly GameSeatRecord[], gameMode: GameMode = 'spectator'): void {
+  start(
+    seed: string,
+    seats: readonly GameSeatRecord[],
+    gameMode: GameMode = 'spectator',
+    replay?: GameReplayRecord,
+  ): void {
     const insert = () => {
       this.db
         .query(`INSERT INTO games (id, seed, started_at, status, game_mode) VALUES (?, ?, ?, ?, ?)`)
         .run(this.gameId, seed, new Date().toISOString(), 'running' satisfies GameStatus, gameMode);
+      if (replay !== undefined) {
+        this.db
+          .query(`UPDATE games SET config_json = ?, build_commit = ?, build_dirty = ? WHERE id = ?`)
+          .run(
+            JSON.stringify(replay.config),
+            replay.buildCommit,
+            replay.buildDirty === null ? null : replay.buildDirty ? 1 : 0,
+            this.gameId,
+          );
+      }
       for (const seat of seats) {
         this.db
           .query(
@@ -129,6 +195,36 @@ export class GameRecorder {
     };
     if (this.db.transaction !== undefined) this.db.transaction(write)();
     else write();
+  }
+
+  /**
+   * Record who answered a request (ADR 0031 decision 8). Idempotent per request: a re-send of the
+   * same request keeps the first attribution.
+   */
+  saveDecisionSource(requestId: string, seat: PlayerId, source: DecisionSource): void {
+    this.db
+      .query(
+        `INSERT INTO game_decision_sources (game_id, request_id, seat, source)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(game_id, request_id) DO NOTHING`,
+      )
+      .run(this.gameId, requestId, seatIndex(seat), source);
+  }
+
+  /** The stored replay inputs, or null for a game that stored none. */
+  loadReplayRecord(): GameReplayRecord | null {
+    const row = this.db
+      .query(`SELECT config_json, build_commit, build_dirty FROM games WHERE id = ?`)
+      .get(this.gameId) as
+      | { config_json: string | null; build_commit: string | null; build_dirty: number | null }
+      | undefined
+      | null;
+    if (row === undefined || row === null || row.config_json === null) return null;
+    return {
+      config: JSON.parse(row.config_json) as GameReplayConfig,
+      buildCommit: row.build_commit,
+      buildDirty: row.build_dirty === null ? null : row.build_dirty !== 0,
+    };
   }
 
   appendDebug(entries: readonly DebugEntry[]): void {
