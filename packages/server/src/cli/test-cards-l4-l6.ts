@@ -119,10 +119,10 @@ function runRuleBasedBoundedSmoke(id: string, label: string, seed: string): Chec
   const engine = makeEngine([{ commander, cards: supportedDeck }, { cards: p2Cards }], {
     seed,
   });
-  const provider = new RuleBasedProvider([
-    whenChoose({ option: /^Play /, once: false }),
-    whenChoose({ option: /^Cast /, once: false }),
-  ]);
+  const provider = new RuleBasedProvider(
+    [whenChoose({ option: /^Play /, once: false }), whenChoose({ option: /^Cast /, once: false })],
+    { fallback: 'first' },
+  );
   const observed = runBoundedMatch(engine, provider, 20_000);
   const status =
     !observed.halted &&

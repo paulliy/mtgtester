@@ -74,7 +74,7 @@ describe.skipIf(SKIP)('Token Triumph Deck — L1-L7 Test Suite', () => {
     const engine = makeEngine([{ cards: deckCards }, { cards: opponentDeck }], {
       seed: 'token-triumph-l3-seed',
     });
-    const provider = new RuleBasedProvider([whenChoose({ option: /./ })]);
+    const provider = new RuleBasedProvider([whenChoose({ option: /./ })], { fallback: 'first' });
     for (let i = 0; i < 20_000; i++) {
       const step = engine.advance();
       if (step.kind === 'gameOver') break;
@@ -103,7 +103,7 @@ describe.skipIf(SKIP)('Token Triumph Deck — L1-L7 Test Suite', () => {
     const engine = makeEngine([{ cards: playableDeck }, { cards: opponentDeck }], {
       seed: 'token-triumph-supported-subset',
     });
-    const provider = new RuleBasedProvider([whenChoose({ option: /./ })]);
+    const provider = new RuleBasedProvider([whenChoose({ option: /./ })], { fallback: 'first' });
     for (let i = 0; i < 20_000; i++) {
       const step = engine.advance();
       if (step.kind === 'gameOver') break;

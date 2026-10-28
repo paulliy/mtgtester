@@ -5,7 +5,7 @@ import { RuleBasedProvider, drive, forestsPod, makeEngine, oracle } from './fixt
 describe('Engine driver (brief §5.1)', () => {
   it('plays a do-nothing pod to a winner by deckout', () => {
     const engine = makeEngine(forestsPod(12), { seed: 'deckout-1' });
-    const provider = new RuleBasedProvider([]);
+    const provider = new RuleBasedProvider([], { fallback: 'first' });
     const result = drive(engine, provider);
 
     expect(result.halted).toBe(false);
@@ -22,7 +22,7 @@ describe('Engine driver (brief §5.1)', () => {
 
   it('never surfaces a forced decision (single option ⇒ no AI call, brief §5.1)', () => {
     const engine = makeEngine(forestsPod(8), { seed: 'auto-1' });
-    const provider = new RuleBasedProvider([]);
+    const provider = new RuleBasedProvider([], { fallback: 'first' });
     drive(engine, provider);
     for (const request of provider.seen) {
       expect(request.legalActions.length).toBeGreaterThan(1);
@@ -33,7 +33,7 @@ describe('Engine driver (brief §5.1)', () => {
     // In a forests-only pod, nobody can respond to anything: every surfaced priority
     // decision belongs to the active player (land play windows).
     const engine = makeEngine(forestsPod(8), { seed: 'auto-2' });
-    const provider = new RuleBasedProvider([]);
+    const provider = new RuleBasedProvider([], { fallback: 'first' });
     drive(engine, provider);
     for (const request of provider.seen) {
       if (request.decisionType === 'priority') {
@@ -82,7 +82,9 @@ describe('Engine driver (brief §5.1)', () => {
       ),
     ];
     const engine = makeEngine(pod, { seed: 'halt-1' });
-    const result = drive(engine, new RuleBasedProvider([]), { allowHalt: true });
+    const result = drive(engine, new RuleBasedProvider([], { fallback: 'first' }), {
+      allowHalt: true,
+    });
     expect(result.halted).toBe(true);
     expect(result.haltReason).toContain('Mystery Box');
   });
