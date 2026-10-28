@@ -204,6 +204,8 @@ const SOURCE_FILES = [
   'packages/engine/src/mana/manual.ts',
   'packages/engine/src/present.ts',
   'packages/engine/src/providers/providers.ts',
+  'packages/engine/src/rng/chacha20.ts',
+  'packages/engine/src/rng/engine-rng.ts',
   'packages/engine/src/rng/prng.ts',
   'packages/engine/src/sba/sba.ts',
   'packages/engine/src/signals.ts',

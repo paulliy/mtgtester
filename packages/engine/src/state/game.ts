@@ -9,7 +9,10 @@ import { interpretCard } from '../cards/interpret';
 import { assertValidModeledDefinition } from '../cards/authoring-validation';
 import type { CardDefinition } from '../cards/definition';
 import { emptyPool } from '../mana/cost';
+import { ChaCha20Rng, bytesOfHex, streamNonce } from '../rng/chacha20';
+import type { EngineRng } from '../rng/engine-rng';
 import { Prng } from '../rng/prng';
+import { EngineUsageError } from '../errors';
 import type {
   EngineCardObject,
   EnginePlayerState,
@@ -20,6 +23,20 @@ import type {
 
 const DEFAULT_TURN_CAP = 500;
 const STARTING_LIFE = 40; // brief §5.7
+
+/** Stream 0 of the game's key is the game's own (ADR 0031 decision 4). */
+const GAME_STREAM = 0;
+
+function gameRng(config: GameConfig): EngineRng {
+  if ((config.rng ?? 'legacy') === 'legacy') {
+    if (config.rngKey !== undefined)
+      throw new EngineUsageError('rngKey is set but the game uses the legacy RNG');
+    return new Prng(config.seed);
+  }
+  if (config.rngKey === undefined || !/^[0-9a-fA-F]{64}$/.test(config.rngKey))
+    throw new EngineUsageError('a chacha20 game needs an rngKey of 32 bytes as 64 hex digits');
+  return new ChaCha20Rng(bytesOfHex(config.rngKey, 32), streamNonce(GAME_STREAM));
+}
 
 export function createGame(config: GameConfig): GameContext {
   if (config.players.length < 2) {
@@ -166,7 +183,7 @@ export function createGame(config: GameConfig): GameContext {
   return {
     state,
     defs,
-    rng: new Prng(config.seed),
+    rng: gameRng(config),
     debugLog: [],
     ...(config.strictInvariants === true && { strictInvariants: true }),
   };

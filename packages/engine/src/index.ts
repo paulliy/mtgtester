@@ -59,6 +59,8 @@ export {
 
 // Seeded PRNG (exposed for providers/tests; the engine owns its own instance).
 export { Prng } from './rng/prng';
+export { ChaCha20Rng, streamNonce } from './rng/chacha20';
+export type { EngineRng } from './rng/engine-rng';
 
 // The anti-cheat projection (brief §7.1).
 export { buildPlayerView } from './view/view';

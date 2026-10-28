@@ -39,7 +39,7 @@ import type { ObjectFacts } from '../cards/source-identity';
 import type { Selector, SelectorCandidate } from '../cards/selector';
 import type { TriggerScope } from '../cards/value';
 import type { RoomDoor } from '../cards/spell-faces';
-import type { Prng } from '../rng/prng';
+import type { EngineRng } from '../rng/engine-rng';
 
 /** Stable physical-card identity, assigned once at game creation. */
 export type CardId = string;
@@ -983,7 +983,7 @@ export interface EngineState extends GameState {
 export interface GameContext {
   state: EngineState;
   defs: Map<OracleId, CardDefinition>;
-  rng: Prng;
+  rng: EngineRng;
   debugLog: DebugEntry[];
   /**
    * Resolution-local CR 400.7j transitions. Only the context executing this effect carries
@@ -1054,6 +1054,14 @@ export interface GameConfig {
    * failing test points at the line responsible. Never set in production paths.
    */
   strictInvariants?: boolean;
+  /**
+   * The random source (ADR 0031 decision 4). `legacy` (the default) seeds `Prng` from `seed`, so
+   * fixed-seed games, benchmarks and stored replays are unchanged. `chacha20` keys a ChaCha20
+   * stream with `rngKey`, 32 bytes as 64 hex digits, and `seed` is only a public label. The key
+   * stays in the RNG and the stored config; it never enters `EngineState`, events or snapshots.
+   */
+  rng?: 'legacy' | 'chacha20';
+  rngKey?: string;
 }
 
 export type { GameEvent };

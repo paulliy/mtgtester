@@ -231,17 +231,13 @@ export function gameConfig(
   seats: SeatSpec[],
   overrides?: Partial<Omit<GameConfig, 'players'>>,
 ): GameConfig {
+  // Every other field passes through, so a new GameConfig option cannot be silently dropped.
+  const { gameId, seed, ...rest } = overrides ?? {};
   return {
-    gameId: overrides?.gameId ?? 'test-game',
-    seed: overrides?.seed ?? 'test-seed',
+    gameId: gameId ?? 'test-game',
+    seed: seed ?? 'test-seed',
     players: seats.map((s, i) => seat(s, i)),
-    ...(overrides?.turnCap !== undefined ? { turnCap: overrides.turnCap } : {}),
-    ...(overrides?.customDefinitions !== undefined
-      ? { customDefinitions: overrides.customDefinitions }
-      : {}),
-    ...(overrides?.strictInvariants !== undefined
-      ? { strictInvariants: overrides.strictInvariants }
-      : {}),
+    ...rest,
   };
 }
 
