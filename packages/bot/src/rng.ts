@@ -6,7 +6,17 @@
  * `RandomDecisionProvider`, this generator belongs to the *player*, not the engine, and never
  * touches rules state directly. `Math.random()` is never used (brief §4, §5.9).
  */
-export class Rng {
+/**
+ * The only thing the bot asks of a random source. `@mtg/bot` cannot import the engine, so a keyed
+ * stream (ADR 0031 decision 4) is injected through this shape. The contract is `Rng`'s: a bound
+ * of zero or less returns 0 rather than throwing.
+ */
+export interface RandomSource {
+  /** An integer in `[0, maxExclusive)`; 0 when `maxExclusive <= 0`. */
+  nextInt(maxExclusive: number): number;
+}
+
+export class Rng implements RandomSource {
   private state: number;
 
   constructor(seed: string) {
