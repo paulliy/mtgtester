@@ -1,5 +1,5 @@
 import type { Deal, DecisionRequest, DecisionResponse, LegalAction, PlayerId } from '@mtg/shared';
-import { NO_ATTACK_TARGET } from '@mtg/shared';
+import { ATTACKS_TARGET, NO_ATTACK_TARGET } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { attackAction, creature } from './fixtures.test-helpers';
 import { describeMessage } from './render';
@@ -402,6 +402,44 @@ describe('DiplomacyTable — keeping, breaking and ending deals', () => {
     runTurns(table, w, 5, 6);
     expect(outcome.deal.status).toBe('broken');
     expect(outcome.deal.breachedBy).toBe('P3');
+  });
+
+  it('does not charge a promised attack when another player chose no attackers for the seat', () => {
+    const { w, table, deal } = withDeal();
+    const owed = deal.obligations.find((o) => o.kind === 'attackPlayer')!;
+    if (owed.kind !== 'attackPlayer') throw new Error('expected an attackPlayer obligation');
+    const chooser = w.order.find((s) => s !== owed.by)!;
+    const attacker = w.battlefield.find((p) => p.controller === owed.by)!;
+    // Master Warcraft: on each of the obligor's turns the chooser picks which of its creatures
+    // attack, and picks none.
+    const pick = {
+      ...attackAction([attacker], () => [ATTACKS_TARGET, NO_ATTACK_TARGET]),
+      data: { chooseAttackers: true },
+    };
+    for (let turn = 2; turn < 20 && deal.status === 'active'; turn++) {
+      const active = w.order[(turn - 1) % w.order.length]!;
+      table.beforeDecision(priority(turn, active));
+      if (active !== owed.by || deal.status !== 'active') continue;
+      table.afterDecision(
+        {
+          ...priority(turn, chooser, [pick]),
+          activePlayer: owed.by,
+          decisionType: 'declareAttackers',
+          presentation: {
+            layout: 'attackDeclaration',
+            attackDeclaration: { subjects: [], mode: 'chooseAttackers', attackingPlayer: owed.by },
+          },
+        },
+        {
+          requestId: `r${turn}`,
+          actionId: pick.id,
+          targets: [{ slot: 0, choice: NO_ATTACK_TARGET }],
+        },
+      );
+      table.flush();
+    }
+    expect(deal.status).toBe('void');
+    expect(table.trustRecord(owed.by).broken).toBe(0);
   });
 
   it('ends a deal void when the promised attack could never be made, charging nobody', () => {

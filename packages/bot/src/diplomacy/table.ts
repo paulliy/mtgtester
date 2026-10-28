@@ -384,6 +384,17 @@ export class DiplomacyTable {
       return;
     }
     const view = this.opts.viewOf(request.decidingPlayer);
+    const declaration = request.presentation?.attackDeclaration;
+    if (declaration?.mode === 'chooseAttackers') {
+      // Another player chose which of the attacking seat's creatures attack (Master Warcraft):
+      // whatever that seat sends this turn is not its own choice, so a promised attack left
+      // unmade this turn is not charged to it. The targets it assigns the chosen creatures are
+      // still its own and are judged as usual.
+      const attacker = declaration.attackingPlayer ?? request.activePlayer;
+      for (const record of this.records) {
+        if (record.deal.status === 'active') record.couldAttackNow.delete(attacker);
+      }
+    }
     if (request.decisionType === 'declareAttackers') {
       this.heldAttack = {
         request,

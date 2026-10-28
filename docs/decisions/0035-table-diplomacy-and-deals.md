@@ -340,6 +340,7 @@ priced as if the seat still attacked the others (now priced on top of deals in f
 least two opponents left open); the caller of `offer` chose the turn; a seat could skip a promised
 attack for free by holding its creatures; taking the lead voided a deal for both sides (now it
 frees only the other party); a declined counter could be re-asked at once; a breaker could re-deal
-after one round; and the planner and the table counted blockers differently for lethal. Still
-open: `attackPlayer` is not judged when another player chooses which creatures attack (Master
-Warcraft's chooser mode).
+after one round; and the planner and the table counted blockers differently for lethal. When another
+player chooses which creatures attack (Master Warcraft's chooser mode), the attacking seat is not
+charged for a promised attack left unmade that turn, since it did not choose its attackers; the
+targets it assigns the chosen creatures are still judged as its own.
