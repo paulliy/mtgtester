@@ -249,6 +249,22 @@ describe('agent client startup', () => {
     expect(JSON.stringify(h.events)).not.toContain('secret-token');
   });
 
+  it.each(['table', 'spectator'] as const)(
+    'ignores a gameStarted frame for a %s game and still adopts its own',
+    (gameMode) => {
+      const h = harness();
+      h.session.begin();
+      h.session.receive({
+        type: 'gameStarted',
+        payload: { ...gameStarted(), gameId: 'other', gameMode, humanSeat: 'P1' },
+      });
+      expect(h.events).toEqual([]);
+      expect(h.diagnostics).toEqual([`ignored a gameStarted frame for a ${gameMode} game.`]);
+      h.session.receive({ type: 'gameStarted', payload: gameStarted() });
+      expect(h.events.map((event) => event.type)).toEqual(['game-started']);
+    },
+  );
+
   it('treats a setup error before gameStarted as fatal without republishing its text', () => {
     const h = harness();
     h.session.begin();

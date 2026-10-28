@@ -6,6 +6,7 @@
  * inside a send method.
  */
 
+import { assertNever } from '@mtg/shared';
 import type { AiAnnotation, GameMode, SpectatorLogLine } from '@mtg/shared';
 
 export interface AnnotationRelease {
@@ -28,7 +29,7 @@ export interface AnnotationReleaseOptions {
  *
  * Two rules do the work:
  *
- *   1. **Single-player withholds everything.** Live opponent reasoning is hidden information —
+ *   1. **Single-player withholds everything.** So does a table. Live opponent reasoning is hidden information —
  *      "holding removal for your commander" would decide the human's next turn for them. A player
  *      game releases the whole set at game over instead, so nothing is ever dropped, only delayed.
  *   2. **An annotation snaps forward to the first line at or after its anchor.** A decision's
@@ -38,7 +39,18 @@ export interface AnnotationReleaseOptions {
  */
 export function releaseAnnotations(options: AnnotationReleaseOptions): AnnotationRelease {
   const { gameMode, showReasoning, pending, lines } = options;
-  if (gameMode === 'singlePlayer' || !showReasoning) return { due: [], held: [...pending] };
+  switch (gameMode) {
+    // fence: no seat sees another seat's notes while the game runs (m1 annotations row). A table
+    // takes the most restrictive choice; the single player gets theirs at game over.
+    case 'singlePlayer':
+    case 'table':
+      return { due: [], held: [...pending] };
+    case 'spectator':
+      break;
+    default:
+      return assertNever(gameMode, 'annotation release');
+  }
+  if (!showReasoning) return { due: [], held: [...pending] };
   return releaseAnchored(pending, lines);
 }
 

@@ -9,8 +9,10 @@ import type {
   SetupPreviewSeat,
   ProviderKind,
   GameMode,
+  SeatControllerKind,
+  SeatControllers,
 } from '@mtg/shared';
-import { ALL_COLORS } from '@mtg/shared';
+import { ALL_COLORS, assertNever } from '@mtg/shared';
 import { generateCommanderDeck } from '../decks/generate';
 import { inferArchetype } from '../decks/archetype';
 import { importDeck } from '../decks/source';
@@ -25,6 +27,27 @@ export interface PreviewRequest {
   providerKind: ProviderKind;
   gameMode: GameMode;
   humanSeat?: PlayerId;
+  /** Who answers each seat of a `'table'` preview. */
+  seatControllers?: SeatControllers;
+}
+
+/**
+ * Who a preview shows as answering a seat.
+ *
+ * flow: a seat's provider kind in the preview (m1 row preview.ts:129). A table shows `human` for
+ * every seat its controllers name as human.
+ */
+function previewController(input: PreviewRequest, seat: PlayerId): SeatControllerKind {
+  switch (input.gameMode) {
+    case 'spectator':
+      return input.providerKind;
+    case 'singlePlayer':
+      return input.humanSeat === seat ? 'human' : input.providerKind;
+    case 'table':
+      return input.seatControllers?.[seat] === 'human' ? 'human' : input.providerKind;
+    default:
+      return assertNever(input.gameMode, 'preview controller');
+  }
 }
 
 /** Rebuild from stable Oracle IDs and validate against today's rules/model. Never trust cached names. */
@@ -125,8 +148,7 @@ export async function previewMatchup(
   const blockers: string[] = [];
   for (const [index, source] of input.seats.entries()) {
     const seat = `P${index + 1}` as PlayerId;
-    const controller =
-      input.gameMode === 'singlePlayer' && input.humanSeat === seat ? 'human' : input.providerKind;
+    const controller = previewController(input, seat);
     const summary: SetupPreviewSeat = {
       seat,
       commanderNames: [],

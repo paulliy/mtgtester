@@ -348,6 +348,19 @@ export const useGameStore = defineStore('game', () => {
     }
     switch (message.type) {
       case 'gameStarted': {
+        const startedMode = message.payload.gameMode ?? 'spectator';
+        switch (startedMode) {
+          case 'spectator':
+          case 'singlePlayer':
+            break;
+          case 'table':
+            // The tester viewer has no table UI (multiplayer M6); a table game is not adopted.
+            resumePending = false;
+            errors.value = ['This viewer cannot join a table game.'];
+            return;
+          default:
+            assertNever(startedMode, 'gameStarted gameMode');
+        }
         resumePending = false;
         if (pendingRecentDeckSeat !== null) {
           const selected = message.payload.seats.find(
@@ -364,19 +377,7 @@ export const useGameStore = defineStore('game', () => {
         seed.value = message.payload.seed;
         seats.value = message.payload.seats;
         providerKind.value = message.payload.providerKind;
-        const startedMode = message.payload.gameMode ?? 'spectator';
-        switch (startedMode) {
-          case 'spectator':
-          case 'singlePlayer':
-            gameMode.value = startedMode;
-            break;
-          case 'table':
-            // The tester viewer has no table UI (multiplayer M6); a table game is not adopted.
-            errors.value = ['This viewer cannot join a table game.'];
-            return;
-          default:
-            assertNever(startedMode, 'gameStarted gameMode');
-        }
+        gameMode.value = startedMode;
         humanSeat.value = message.payload.humanSeat ?? null;
         cardTestScenario.value = message.payload.cardTestScenario ?? null;
         diplomacy.value = message.payload.diplomacy === true;

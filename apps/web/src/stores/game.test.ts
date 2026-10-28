@@ -381,6 +381,31 @@ describe('spectator store — server-confirmed position', () => {
     expect(sent.map((message) => message.type)).toEqual(['startGame']);
   });
 
+  it('does not adopt a table game: the tester viewer has no table UI', () => {
+    store.startGame(
+      Array.from({ length: 4 }, () => ({ kind: 'pool' as const })),
+      'random',
+      'game-seed',
+      'singlePlayer',
+      'P1',
+    );
+    inbound?.({
+      type: 'gameStarted',
+      payload: {
+        gameId: 'g-table',
+        seed: 'game-seed',
+        seats: [],
+        providerKind: 'random',
+        gameMode: 'table',
+        startedAt: new Date().toISOString(),
+      },
+    });
+
+    expect(store.gameId).toBeNull();
+    expect(store.gameMode).not.toBe('table');
+    expect(store.errors).toEqual(['This viewer cannot join a table game.']);
+  });
+
   it('remembers a newly imported player deck by the snapshot ID returned at start', () => {
     const values = new Map<string, string>();
     vi.stubGlobal('localStorage', {

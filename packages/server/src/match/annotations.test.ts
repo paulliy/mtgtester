@@ -33,6 +33,19 @@ describe('releaseAnnotations — the hidden-information gate', () => {
     expect(result.held).toEqual(pending);
   });
 
+  it('withholds every annotation at a table, as a single-player game does', () => {
+    const pending = [note(1), note(5)];
+    const result = releaseAnnotations({
+      gameMode: 'table',
+      showReasoning: true,
+      pending,
+      lines: [line(1), line(5)],
+    });
+
+    expect(result.due).toEqual([]);
+    expect(result.held).toEqual(pending);
+  });
+
   it('sends nothing while the viewer has not opted in', () => {
     const result = releaseAnnotations({
       ...SPECTATOR,

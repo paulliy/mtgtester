@@ -21,7 +21,13 @@
  * socket, a process, or stdio.
  */
 
-import { LOSS_REASONS, isPlayerSeatId, parseStrictJson, type StrictJsonFailure } from '@mtg/shared';
+import {
+  LOSS_REASONS,
+  assertNever,
+  isPlayerSeatId,
+  parseStrictJson,
+  type StrictJsonFailure,
+} from '@mtg/shared';
 import { projectSetupErrorPayload } from '../ws/setup-privacy';
 import type {
   ClientToServerMessage,
@@ -444,9 +450,20 @@ export class AgentClientSession {
         const payload = message.payload;
         // A spectator game belongs to some other client: the server broadcasts those to every
         // socket, and adopting one would have this agent answer for a seat it does not hold.
-        if (payload.gameMode !== 'singlePlayer') {
-          this.opts.io.diagnostic('ignored a gameStarted frame for a spectator game.');
-          return;
+        // flow: which gameStarted frames the agent adopts (m1 row agent-client-core:447). A table
+        // game is ignored until the agent's table mode (multiplayer M3).
+        const startedMode = payload.gameMode ?? 'spectator';
+        switch (startedMode) {
+          case 'singlePlayer':
+            break;
+          case 'spectator':
+            this.opts.io.diagnostic('ignored a gameStarted frame for a spectator game.');
+            return;
+          case 'table':
+            this.opts.io.diagnostic('ignored a gameStarted frame for a table game.');
+            return;
+          default:
+            return assertNever(startedMode, 'gameStarted game mode');
         }
         // Exactly one game is ever adopted. A later start frame is some other client's game, and
         // letting it overwrite `activeGameId` would move the terminal scope off this game — the run
