@@ -250,6 +250,7 @@ const SOURCE_FILES = [
   'packages/server/src/benchmark/hash.ts',
   'packages/server/src/benchmark/replay.ts',
   'packages/shared/package.json',
+  'packages/shared/src/action-data-keys.ts',
   'packages/shared/src/batch.ts',
   'packages/shared/src/cards.ts',
   'packages/shared/src/decks.ts',
