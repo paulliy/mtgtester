@@ -780,3 +780,30 @@ describe('StrategyCoordinator — table diplomacy (ADR 0035 phase 4)', () => {
     expect(prompt.messages[1]!.content).not.toContain('tableDiplomacy');
   });
 });
+
+describe('StrategyCoordinator — plans and deals made after them (ADR 0035)', () => {
+  it('stops executing a plan once the seat has made a deal the plan never weighed', async () => {
+    const engine = { view: vi.fn().mockReturnValue(view), addDebug: vi.fn() } as unknown as Engine;
+    const queue = { enqueue: <T>(fn: () => Promise<T>) => fn() };
+    const coordinator = new StrategyCoordinator(strategist(), queue, engine, DEFAULT_AI_CONFIG);
+    let promised = false;
+    coordinator.diplomacyFor = () =>
+      promised
+        ? {
+            yourPromises: ["you won't target P2 (deal deal-1, one round)"],
+            promisesToYou: [],
+            otherDeals: [],
+            records: [],
+          }
+        : null;
+    const req = request();
+    coordinator.prepare(req);
+    await coordinator.settled();
+    // The deal is made after the plan was built, before its step runs.
+    promised = true;
+    expect(coordinator.tryExecutePlan(req)).toBeNull();
+    // With the deals back as the plan saw them, the same step runs.
+    promised = false;
+    expect(coordinator.tryExecutePlan(req)?.actionId).toBe(1);
+  });
+});

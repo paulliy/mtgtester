@@ -180,6 +180,8 @@ export class StrategyCoordinator {
   private plannedPlayer: string | null = null;
   private strategy: TurnStrategy | null = null;
   private strategyAttempted = false;
+  /** The planned seat's deals when its plan's prompt was built (see `tryExecutePlan`). */
+  private planDealsKey = '';
   /** One re-plan is allowed per turn after an opponent intervention invalidates the strategy. */
   private replanned = false;
   /** Generation tracking for strategist calls to reject stale/invalidated in-flight plans. */
@@ -345,6 +347,7 @@ export class StrategyCoordinator {
     const generationStartedAt = new Date().toISOString();
     const recent = this.recentFor(activePlayer);
     const diplomacy = this.diplomacyFor?.(activePlayer, 'strategist') ?? null;
+    const dealsKey = this.dealsKey(activePlayer);
     const assembledPrompt = assembleStrategistPrompt(
       strategyRequest,
       view,
@@ -399,6 +402,7 @@ export class StrategyCoordinator {
         return;
       }
       this.strategy = strategy;
+      this.planDealsKey = dealsKey;
       const metadata: PlanArtifactMetadata = {
         planId: `${strategyRequest.requestId}:g${generation}`,
         generationId: generation,
@@ -476,7 +480,21 @@ export class StrategyCoordinator {
   }
 
   tryExecutePlan(request: DecisionRequest): DecisionResponse | null {
+    // A plan made before the seat's deals changed never weighed them (ADR 0035): a queued step
+    // could break a promise made since. Let the tactician, which sees the deals, decide instead.
+    if (
+      request.decidingPlayer === this.plannedPlayer &&
+      this.dealsKey(request.decidingPlayer) !== this.planDealsKey
+    ) {
+      return null;
+    }
     return this.turnPlan.tryExecutePlan(request, this.engine);
+  }
+
+  /** The seat's own deals as its tactician sees them, as a comparable key; '' without deals. */
+  private dealsKey(seat: PlayerId): string {
+    const deals = this.diplomacyFor?.(seat, 'tactician') ?? null;
+    return deals === null ? '' : JSON.stringify(deals);
   }
 
   recordAcceptedDecision(request: DecisionRequest, response: DecisionResponse): void {
