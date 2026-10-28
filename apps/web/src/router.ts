@@ -6,7 +6,6 @@ import DebugView from './views/DebugView.vue';
 import BatchSetupView from './views/BatchSetupView.vue';
 import BatchResultsView from './views/BatchResultsView.vue';
 import CardTestLabView from './views/CardTestLabView.vue';
-import DealsPreviewView from './views/DealsPreviewView.vue';
 
 /**
  * Two routes in Phase 4. The stats screen and the debug panel (brief §10.2, §13) are Phase 5
@@ -23,7 +22,12 @@ const routes: RouteRecordRaw[] = [
     ? [
         { path: '/card-test-lab', name: 'card-test-lab', component: CardTestLabView },
         // The deal UI with sample data and no game (ADR 0035).
-        { path: '/deals-preview', name: 'deals-preview', component: DealsPreviewView },
+        {
+          path: '/deals-preview',
+          name: 'deals-preview',
+          // Loaded on demand, so its sample data never ships in a production bundle.
+          component: () => import('./views/DealsPreviewView.vue'),
+        },
       ]
     : []),
 ];

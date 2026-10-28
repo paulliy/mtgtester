@@ -696,6 +696,27 @@ describe('store — deals with the human seat (ADR 0035 phase 3)', () => {
       },
     ]);
     expect(store.dealWarning).toBeNull();
+
+    // A warning outlives its decision only until the decision is gone: then confirming sends
+    // nothing for whatever comes next.
+    store.submitPlayerAction(4, [{ slot: 0, choice: 'P2' }]);
+    expect(store.dealWarning).not.toBeNull();
+    store.playerAction = {
+      ...(store.playerAction as object),
+      request: { requestId: 'r10', legalActions: [] },
+    } as never;
+    sent.length = 0;
+    store.confirmDealWarning();
+    expect(sent).toEqual([]);
+    expect(store.dealWarning).toBeNull();
+  });
+
+  it('ignores a draft reading nobody is waiting for', () => {
+    inbound?.({ type: 'dealDraft', payload: { text: 'x', terms: null, message: 'late' } });
+    expect(store.dealDraft).toBeNull();
+    store.requestDealDraft('truce?');
+    inbound?.({ type: 'dealDraft', payload: { text: 'truce?', terms: null, message: 'no' } });
+    expect(store.dealDraft?.message).toBe('no');
   });
 
   it('keeps the table state and the outcome of the last answer', () => {

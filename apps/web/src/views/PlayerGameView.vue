@@ -968,8 +968,10 @@ function confirmCombatPlan(): void {
   if (request.value === null || combatPlan.mode !== 'composing') return;
   combatPlan.confirm();
   const submission = combatPlan.pendingSubmission(request.value);
-  if (submission !== null) store.submitPlayerAction(submission.actionId, submission.targets);
-  else combatPlan.reopen(request.value);
+  // Held behind a deal warning: keep composing, so "Go back" returns to the plan as it was.
+  if (submission === null || !store.submitPlayerAction(submission.actionId, submission.targets)) {
+    combatPlan.reopen(request.value);
+  }
 }
 
 function cancelCombatPlan(): void {
@@ -999,7 +1001,7 @@ function onKeyDown(event: KeyboardEvent): void {
   )
     return;
   // An open dialog owns the keyboard: Space on its focused button must not also pass priority.
-  if (confirmingAbandon.value || pendingPass.value !== null) return;
+  if (confirmingAbandon.value || pendingPass.value !== null || store.dealWarning !== null) return;
 
   if (event.key === 'Enter') {
     if (selectedAction.value !== null && canConfirm.value) {

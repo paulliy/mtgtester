@@ -183,6 +183,8 @@ export const useGameStore = defineStore('game', () => {
    * confirms it (`confirmDealWarning`) or goes back and chooses again (`cancelDealWarning`).
    */
   const dealWarning = ref<{
+    /** The decision it was raised on: confirming it for any other decision does nothing. */
+    requestId: string;
     actionId: number;
     targets?: TargetChoice[];
     messages: string[];
@@ -408,6 +410,7 @@ export const useGameStore = defineStore('game', () => {
         state.value = null;
         playerState.value = null;
         playerAction.value = null;
+        dealWarning.value = null;
         playerRevision.value = 0;
         ignoredAbilities.value = [];
         break;
@@ -443,6 +446,8 @@ export const useGameStore = defineStore('game', () => {
         break;
 
       case 'dealDraft':
+        // A reading that lands after the game it was asked in has nothing to fill.
+        if (gameId.value === null || !dealDraftPending.value) break;
         dealDraft.value = message.payload;
         dealDraftPending.value = false;
         break;
@@ -475,6 +480,7 @@ export const useGameStore = defineStore('game', () => {
         ignoredAbilities.value = message.payload.ignoredAbilities;
         if (playerAction.value !== null && message.payload.revision > playerAction.value.revision) {
           playerAction.value = null;
+          dealWarning.value = null;
         }
         viewTurn.value = message.payload.state.turnNumber;
         frontierTurn.value = message.payload.state.turnNumber;
@@ -516,6 +522,7 @@ export const useGameStore = defineStore('game', () => {
         reflectingSeats.value = message.payload.reflectingSeats ?? [];
         heldDecision.value = null;
         playerAction.value = null;
+        dealWarning.value = null;
         break;
 
       case 'gameReflections':
@@ -758,13 +765,20 @@ export const useGameStore = defineStore('game', () => {
     heldDecision.value = null;
   }
 
+  /**
+   * Send the player's choice. Returns false when nothing was sent: no decision is pending, or the
+   * action was held behind a deal warning (the caller keeps its own state composing).
+   */
   function submitPlayerAction(
     actionId: number,
     targets?: TargetChoice[],
     options: { dealConfirmed?: boolean } = {},
-  ): void {
+  ): boolean {
     const pending = playerAction.value;
-    if (pending === null) return;
+    if (pending === null) {
+      dealWarning.value = null;
+      return false;
+    }
     const seat = diplomacySeat.value;
     if (options.dealConfirmed !== true && seat !== null && humanSeat.value !== null) {
       const messages = dealWarnings(
@@ -775,8 +789,13 @@ export const useGameStore = defineStore('game', () => {
         pending.state,
       );
       if (messages.length > 0) {
-        dealWarning.value = { actionId, ...(targets !== undefined ? { targets } : {}), messages };
-        return;
+        dealWarning.value = {
+          requestId: pending.request.requestId,
+          actionId,
+          ...(targets !== undefined ? { targets } : {}),
+          messages,
+        };
+        return false;
       }
     }
     dealWarning.value = null;
@@ -793,11 +812,16 @@ export const useGameStore = defineStore('game', () => {
         ...(targets !== undefined && targets.length > 0 ? { targets } : {}),
       },
     });
+    return true;
   }
 
   function confirmDealWarning(): void {
     const warning = dealWarning.value;
     if (warning === null) return;
+    if (playerAction.value?.request.requestId !== warning.requestId) {
+      dealWarning.value = null;
+      return;
+    }
     submitPlayerAction(warning.actionId, warning.targets, { dealConfirmed: true });
   }
 
@@ -870,6 +894,7 @@ export const useGameStore = defineStore('game', () => {
     state.value = null;
     playerState.value = null;
     playerAction.value = null;
+    dealWarning.value = null;
     activeSequence.value = null;
     heldDecision.value = null;
     cardTestScenario.value = null;

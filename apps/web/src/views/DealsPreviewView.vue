@@ -82,8 +82,14 @@ function patch(fn: (state: DiplomacySeatState) => DiplomacySeatState): void {
 }
 
 let stopListening: (() => void) | null = null;
+/**
+ * The preview fills the shared game store with sample data, which would wipe a game in progress
+ * (and the panel would send real proposals to it), so it only runs with no game loaded.
+ */
+const blocked = store.gameId !== null;
 
 onMounted(() => {
+  if (blocked) return;
   store.humanSeat = 'P1';
   store.diplomacy = true;
   store.playerState = {
@@ -186,6 +192,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  if (blocked) return;
   stopListening?.();
   for (const timer of timers) clearTimeout(timer);
   store.diplomacySeat = null;
@@ -200,6 +207,7 @@ onUnmounted(() => {
 
 function showWarning(): void {
   store.dealWarning = {
+    requestId: 'preview',
     actionId: 0,
     messages: ['Deal deal-3 with P3: you promised not to attack P3. This may break it.'],
   };
@@ -228,17 +236,21 @@ function moveSlot(): void {
         Sample data, no game: you are P1, P4 leads, P3 has an offer waiting on you. Bot answers are
         faked in the browser. Development builds only.
       </p>
-      <div class="controls">
+      <div v-if="!blocked" class="controls">
         <button type="button" @click="showWarning">Show the deal warning</button>
         <button type="button" @click="moveSlot">Switch negotiation slot</button>
         <button type="button" @click="reset">Reset sample</button>
       </div>
     </header>
-    <div class="rail">
+    <p v-if="blocked" class="blocked" role="status">
+      A game is loaded. Abandon it, or reload the page, to open the preview: it would overwrite the
+      game's state.
+    </p>
+    <div v-else class="rail">
       <DealPanel />
     </div>
     <ConfirmDialog
-      v-if="store.dealWarning"
+      v-if="!blocked && store.dealWarning"
       title="This may break a deal"
       :message="`${store.dealWarning.messages.join(' ')} Everyone at the table sees a broken deal.`"
       confirm-label="Do it anyway"

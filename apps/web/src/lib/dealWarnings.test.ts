@@ -99,6 +99,11 @@ describe('dealWarnings (ADR 0035)', () => {
     ).toEqual([]);
   });
 
+  it('does not remind of a promised attack the declaration could not make', () => {
+    const promised = deal([{ kind: 'attackPlayer', by: 'P1', target: 'P4' }]);
+    expect(dealWarnings('P1', [promised], attack, [{ slot: 0, choice: 'P2' }], board)).toEqual([]);
+  });
+
   it('never warns about blocks', () => {
     const block = { ...attack, type: 'blockDeclaration' } as LegalAction;
     expect(dealWarnings('P1', [truce], block, [{ slot: 0, choice: 'P2' }], board)).toEqual([]);

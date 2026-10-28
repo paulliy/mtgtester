@@ -75,7 +75,11 @@ export function dealWarnings(
   for (const { deal, o } of mine) {
     const yours = `Deal ${deal.id} with ${other(deal)}: you promised ${promise(o)}`;
     if (o.kind === 'attackPlayer') {
-      if (attack && !chosen.some((id) => ownerOf(id) === o.target)) {
+      // As on the server, a promised attack the declaration could not have made is excused.
+      const reachable = (action.targets ?? []).some((slot) =>
+        slot.options.some((id) => !SENTINELS.has(id) && ownerOf(id) === o.target),
+      );
+      if (attack && reachable && !chosen.some((id) => ownerOf(id) === o.target)) {
         warnings.push(`${yours}, and this attack sends nothing at ${o.target}.`);
       }
       continue;

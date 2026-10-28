@@ -108,11 +108,29 @@ function reset(): void {
   rounds.value = 1;
 }
 
+/** Keep only rows the builder can show: owed by a side of the deal, about another living seat. */
+function usableRows(list: BuilderRow[]): BuilderRow[] {
+  return list.filter(
+    (row) => sides.value.includes(row.by) && otherChoices(row.by).includes(row.other),
+  );
+}
+
 function startCounter(deal: Deal): void {
   counterTo.value = deal;
-  rows.value = deal.obligations.map(obligationToRow);
+  rows.value = usableRows(deal.obligations.map(obligationToRow));
   rounds.value = deal.rounds;
 }
+
+// A counter whose offer has lapsed or been withdrawn has nothing left to answer.
+watch(
+  () => seat.value?.offers.map((d) => d.id) ?? [],
+  (ids) => {
+    if (counterTo.value !== null && !ids.includes(counterTo.value.id)) {
+      reset();
+      store.lastDealOutcome = { kind: 'refused', reason: 'noSuchOffer' };
+    }
+  },
+);
 
 function submit(): void {
   if (!canSubmit.value || otherParty.value === '') return;
@@ -139,7 +157,7 @@ watch(
     if (draft === null || draft.terms === null) return;
     counterTo.value = null;
     partner.value = draft.terms.to;
-    rows.value = draft.terms.obligations.map(obligationToRow);
+    rows.value = usableRows(draft.terms.obligations.map(obligationToRow));
     rounds.value = draft.terms.rounds;
   },
 );
@@ -173,9 +191,27 @@ function dealWords(deal: Deal): string {
           <strong>{{ deal.proposer }}</strong> offers: {{ dealWords(deal) }}
         </p>
         <div class="buttons">
-          <button type="button" @click="store.answerDeal(deal.id, 'accept')">Accept</button>
-          <button type="button" @click="store.answerDeal(deal.id, 'decline')">Decline</button>
-          <button type="button" @click="startCounter(deal)">Counter</button>
+          <button
+            type="button"
+            :aria-label="`Accept ${deal.proposer}'s offer`"
+            @click="store.answerDeal(deal.id, 'accept')"
+          >
+            Accept
+          </button>
+          <button
+            type="button"
+            :aria-label="`Decline ${deal.proposer}'s offer`"
+            @click="store.answerDeal(deal.id, 'decline')"
+          >
+            Decline
+          </button>
+          <button
+            type="button"
+            :aria-label="`Counter ${deal.proposer}'s offer`"
+            @click="startCounter(deal)"
+          >
+            Counter
+          </button>
         </div>
       </li>
     </ul>
