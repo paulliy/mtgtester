@@ -73,11 +73,11 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 
 ## Progress
 
-| Step | State       | Done so far                                                                               | Pull request |
-| ---- | ----------- | ----------------------------------------------------------------------------------------- | ------------ |
-| 1    | done        | stale harness deleted; harness-integrity guard                                            | #44          |
-| 2    | done        | `scripts/card-authoring-metrics.ts`; `docs/reviews/card-authoring-baseline-2026-10-28.md` | #44          |
-| 3    | in progress | phase 1 steps 2 to 10 done; open: executor invariants for scope reads, empty suites       | #44          |
-| 4    | done        | P1 data-key registry; P3 label code in `@mtg/shared/presentation`                         | #44          |
-| 5    | done        | M1 seat controllers: `'table'` mode, per-seat state, fail-closed switches                 | #44          |
-| 6    | in progress | M2b engine core (`EngineRng`, ChaCha20); open: M2a, M2b streams                           | #44          |
+| Step | State       | Done so far                                                                                                | Pull request |
+| ---- | ----------- | ---------------------------------------------------------------------------------------------------------- | ------------ |
+| 1    | done        | stale harness deleted; harness-integrity guard                                                             | #44          |
+| 2    | done        | `scripts/card-authoring-metrics.ts`; `docs/reviews/card-authoring-baseline-2026-10-28.md`                  | #44          |
+| 3    | in progress | phase 1 steps 2 to 10 done; open: executor invariants for scope reads, empty suites                        | #44          |
+| 4    | done        | P1 data-key registry; P3 label code in `@mtg/shared/presentation`                                          | #44          |
+| 5    | done        | M1 seat controllers: `'table'` mode, per-seat state, fail-closed switches                                  | #44          |
+| 6    | in progress | M2a done (disclosure policy, privacy fixes, replay inputs and harness); M2b engine core; open: M2b streams | #44          |
