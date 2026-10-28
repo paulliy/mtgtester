@@ -8,9 +8,8 @@
  * only in tests. It fails loudly on anything it cannot explain: a request id or sequence that
  * differs, a log that outruns the engine, card data that is not the card data the game saw.
  *
- * Out-of-band inputs are applied by `applyOutOfBandEvent` below. Today `Engine.cancelYield` emits
- * no event, so no log contains one and that function refuses; the main thread fills it in with the
- * engine change that makes `yieldCancelled` (and, from M4, `concede`) real.
+ * Out-of-band inputs are applied by `applyOutOfBandEvent` below: a recorded `yieldCancelled` is
+ * the same `Engine.cancelYield` call the live game made. `concede` joins it in M4.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -108,11 +107,26 @@ function nextSequenceOf(engine: Engine): number {
  * Until `Engine.cancelYield` emits `yieldCancelled` there is nothing correct to do, so this
  * refuses rather than skip an input and replay a different game.
  */
-export function applyOutOfBandEvent(_engine: Engine, event: GameEvent): void {
-  throw new ReplayRefusedError(
-    `the log holds a '${event.type}' event at sequence ${event.sequence}, and replay of ` +
-      `out-of-band inputs is not implemented yet (it needs the engine to emit them)`,
-  );
+export function applyOutOfBandEvent(engine: Engine, event: GameEvent): void {
+  switch (event.type) {
+    case 'yieldCancelled': {
+      const player = event.payload['player'];
+      if (typeof player !== 'string')
+        throw new ReplayMismatchError(
+          `'yieldCancelled' at sequence ${event.sequence} names no player`,
+        );
+      // The live call changed state, which is the only time it emits; replay must too.
+      if (!engine.cancelYield(player))
+        throw new ReplayMismatchError(
+          `${player} was not yielding when 'yieldCancelled' was recorded at sequence ${event.sequence}`,
+        );
+      return;
+    }
+    default:
+      throw new ReplayRefusedError(
+        `the log holds a '${event.type}' event at sequence ${event.sequence}, which replay does not know`,
+      );
+  }
 }
 
 export function replayFromLog(input: ReplayInput): ReplayResult {
@@ -379,7 +393,9 @@ type ActionRequired = Extract<ServerToClientMessage, { type: 'playerActionRequir
  * A scripted human plays seat P1 to the end of a game, with manual mana on and no yield ever
  * cancelled. The other seats are random bots. Everything is seeded.
  */
-async function playScriptedGame(options: { stopAfterDecisions?: number } = {}): Promise<Played> {
+async function playScriptedGame(
+  options: { stopAfterDecisions?: number; yieldThenCancel?: boolean } = {},
+): Promise<Played> {
   const recorded = new RecordedGame();
   const sent: ServerToClientMessage[] = [];
   const session = new MatchSession({
@@ -417,13 +433,29 @@ async function playScriptedGame(options: { stopAfterDecisions?: number } = {}): 
     manualManaOffered ||= next.payload.request.legalActions.some(
       (action) => action.type === 'activateManaAbility',
     );
-    const answer = chooser.decide(next.payload.request);
+    // Yield and take it back until one cancellation has reached the log, then play on.
+    const cancelledOnce = session.engine
+      .eventsSince(0)
+      .some((event) => event.type === 'yieldCancelled');
+    const yieldAction =
+      options.yieldThenCancel === true && !cancelledOnce
+        ? next.payload.request.legalActions.find((action) => action.type === 'passAndYieldTurn')
+        : undefined;
+    const answer =
+      yieldAction !== undefined
+        ? { requestId: next.payload.request.requestId, actionId: yieldAction.id }
+        : chooser.decide(next.payload.request);
     session.submitPlayerAction('P1', {
       requestId: answer.requestId,
       actionId: answer.actionId,
       revision: next.payload.revision,
-      ...(answer.targets !== undefined ? { targets: answer.targets } : {}),
+      ...('targets' in answer && answer.targets !== undefined ? { targets: answer.targets } : {}),
     });
+    if (yieldAction !== undefined) {
+      // Change of mind while the yield runs: the same call the player's Cancel button makes.
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      session.cancelYield('P1');
+    }
   }
   if (options.stopAfterDecisions === undefined) {
     await session.settled();
@@ -573,7 +605,7 @@ describe('replay from the stored log', () => {
     expect(other.hash).not.toBe(replayed.hash);
   }, 30_000);
 
-  it('hands a recorded yieldCancelled to applyOutOfBandEvent, which refuses until it is filled in', async () => {
+  it('fails on a recorded yieldCancelled for a player who was not yielding', async () => {
     const played = await playScriptedGame();
     const events = played.recorded.sorted().map((event) => structuredClone(event));
     // Recorded where the engine sits right after its first `advance()`: the first decision.
@@ -585,15 +617,16 @@ describe('replay from the stored log', () => {
     });
 
     expect(() => replayFromLog(inputFor(played, { events }))).toThrow(
-      /'yieldCancelled' event at sequence .* not implemented/,
+      /P1 was not yielding when 'yieldCancelled' was recorded/,
     );
   }, 30_000);
 
-  // allowed-skip: needs the M2a engine change (Engine.cancelYield emits yieldCancelled)
-  it.skip('replays a game in which the human cancelled a yield', () => {
-    // Play a scripted game, call `session.cancelYield('P1')` while the human is yielding, then
-    // `replayFromLog` it: the recorded `yieldCancelled` is applied through `applyOutOfBandEvent`
-    // at the sequence it was emitted at, after both `advance()` and `submit()`, and the final
-    // hashes match.
-  });
+  it('replays a game in which the human cancelled a yield', async () => {
+    const played = await playScriptedGame({ yieldThenCancel: true });
+    const events = played.recorded.sorted();
+    expect(events.filter((event) => event.type === 'yieldCancelled').length).toBeGreaterThan(0);
+
+    const replayed = replayFromLog(inputFor(played));
+    expect(replayed.hash).toBe(replayStateHash(played.session.engine));
+  }, 30_000);
 });

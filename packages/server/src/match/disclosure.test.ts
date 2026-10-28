@@ -99,7 +99,7 @@ describe('testerPolicy', () => {
       annotations: 'afterGame',
       aiCostReports: true,
       rawErrorText: false,
-      archetypeTags: 'all',
+      archetypeTags: 'ownHumanSeat',
       fullState: 'afterGame',
       decklistsAfterGame: true,
       haltIsTerminal: false,

@@ -33,7 +33,7 @@ import type { BannedList } from '../decks/banned';
 import type { ReportSeatSource } from '../match/report';
 import type { ReplayIdentity } from '../match/replay-config';
 import { MatchSession } from '../match/session';
-import { seedLabel, testerPolicy } from '../match/disclosure';
+import { disclosedSeatSummaries, seedLabel, testerPolicy } from '../match/disclosure';
 import { BatchManager, validateBatch } from '../batch/manager';
 import { setupSeats } from '../match/setup';
 import { previewMatchup, type PreviewRequest } from '../match/preview';
@@ -1162,7 +1162,11 @@ export class GameServer {
     const startedPayload: GameStartedPayload = {
       gameId,
       seed: seedLabel(policy, seed),
-      seats: setup.seats.map((s) => s.summary),
+      seats: disclosedSeatSummaries(
+        policy,
+        setup.seats.map((s) => s.summary),
+        humanSeat,
+      ),
       providerKind,
       gameMode,
       controllers: setup.seats.map((seat) => ({
@@ -1234,7 +1238,11 @@ export class GameServer {
     const startedPayload: GameStartedPayload = {
       gameId,
       seed: seedLabel(testerPolicy('singlePlayer'), scenario.seed),
-      seats: scenario.seats.map((seat) => seat.summary),
+      seats: disclosedSeatSummaries(
+        testerPolicy('singlePlayer'),
+        scenario.seats.map((seat) => seat.summary),
+        'P1',
+      ),
       providerKind: 'random',
       gameMode: 'singlePlayer',
       controllers: scenario.seats.map((seat) => ({

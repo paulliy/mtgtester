@@ -304,11 +304,12 @@ describe('MatchSession.gameReport', () => {
 
     match.abandon();
     await match.settled();
-    // The tester's own policy still shows all of it.
+    // The tester's own policy still shows the seed; another seat's tag, read from its hidden
+    // list, waits for the game to end there too.
     const open = session([]);
     const shown = open.gameReport(CONTEXT);
     expect(shown.game.seed).toBe('report-seed');
-    expect(shown.seats.map((seat) => seat.archetypeTag)).toEqual(Array(4).fill('G — test'));
+    expect(shown.seats.map((seat) => seat.archetypeTag)).toEqual(['G — test', '', '', '']);
     open.abandon();
   });
 });

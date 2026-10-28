@@ -3,12 +3,10 @@
  * scripted single-player game is checked against what the player may not be told.
  *
  * A scan is only worth anything if it can fail, so each rule is also run against a frame that
- * breaks it. The rules that depend on the engine's player projection (commander zones and the
- * yield flag) are skipped, in plain view, until that change lands.
+ * breaks it.
  *
- * What counts as "another seat's archetype tag" is the disclosure policy's call, not the scan's:
- * the tester's policy shows every seat's tag in `gameStarted` today, so the scan passes it, and the
- * same frames fail under the table's policy.
+ * What counts as "another seat's archetype tag" is the disclosure policy's call, not the scan's;
+ * single-player and the table both show a player only its own tag until the game ends.
  */
 
 import { describe, expect, it, vi } from 'vitest';
@@ -117,16 +115,35 @@ interface ScannedFrame {
   json: string;
   /** Object ids sitting in another seat's hand at the instant the frame was sent. */
   hiddenHandIds: ReadonlySet<string>;
+  /** Card ids of another seat's commanders in a hand, a library or face down at that instant. */
+  hiddenCommanderCardIds?: ReadonlySet<string>;
 }
 
 export interface Violation {
   frame: number;
-  rule: 'otherSeatHand' | 'otherSeatArchetypeTag' | 'noteKey' | 'rawHaltText';
+  rule:
+    | 'otherSeatHand'
+    | 'otherSeatArchetypeTag'
+    | 'noteKey'
+    | 'rawHaltText'
+    | 'otherSeatCommander'
+    | 'otherSeatYield';
   detail: string;
 }
 
 /** Frames that legitimately carry the whole game: they are sent only once it is over. */
 const POST_GAME_TYPES = new Set(['replayUnlocked', 'gameReflections']);
+
+/** Every object in a parsed frame, at any depth. */
+function objectsOf(value: unknown, out: Record<string, unknown>[] = []): Record<string, unknown>[] {
+  if (Array.isArray(value)) {
+    for (const item of value) objectsOf(item, out);
+  } else if (typeof value === 'object' && value !== null) {
+    out.push(value as Record<string, unknown>);
+    for (const item of Object.values(value)) objectsOf(item, out);
+  }
+  return out;
+}
 
 function keysOf(value: unknown, out: Set<string>): Set<string> {
   if (Array.isArray(value)) {
@@ -173,6 +190,24 @@ export function scanFrames(
       if (!allowed && frame.json.includes(tag)) flag('otherSeatArchetypeTag', `${seat}: ${tag}`);
     }
     if (keysOf(parsed, new Set()).has('note')) flag('noteKey', 'a `note` key');
+    for (const object of objectsOf(parsed)) {
+      const seat = object['seat'];
+      if (typeof seat !== 'string' || seat === options.viewer) continue;
+      if (object['yieldingUntilEndOfTurn'] === true) flag('otherSeatYield', seat);
+      const commanders = object['commanders'];
+      if (!Array.isArray(commanders)) continue;
+      for (const commander of commanders as Record<string, unknown>[]) {
+        const cardId = commander['cardId'];
+        if (typeof cardId !== 'string' || frame.hiddenCommanderCardIds?.has(cardId) !== true)
+          continue;
+        if (
+          commander['zone'] !== 'hidden' ||
+          commander['objectId'] !== null ||
+          commander['scryfallId'] !== null
+        )
+          flag('otherSeatCommander', `${seat}: ${cardId} in ${String(commander['zone'])}`);
+      }
+    }
     for (const text of options.rawHaltText) {
       if (text !== '' && frame.json.includes(JSON.stringify(text).slice(1, -1))) {
         flag('rawHaltText', text);
@@ -223,7 +258,14 @@ async function playScriptedGame(turnCap: number): Promise<Played> {
           everHidden.add(card.id);
         }
       }
-      frames.push({ json, hiddenHandIds: hidden });
+      const hiddenCommanders = new Set<string>();
+      for (const seat of seam.session?.engine.spectatorState().seats ?? []) {
+        if (seat.seat === VIEWER) continue;
+        for (const commander of seat.commanders)
+          if (commander.zone === 'hand' || commander.zone === 'library')
+            hiddenCommanders.add(commander.cardId);
+      }
+      frames.push({ json, hiddenHandIds: hidden, hiddenCommanderCardIds: hiddenCommanders });
     },
   };
   seam.onSocketOpen(socket);
@@ -311,7 +353,7 @@ describe('every frame of a scripted single-player game', () => {
     ).toEqual([]);
   }, 30_000);
 
-  it('would flag the other seats tags under the table policy, which withholds them', async () => {
+  it('carries no other seat tag, even judged by the table policy', async () => {
     const played = await playScriptedGame(40);
     const violations = scanFrames(played.frames, {
       viewer: VIEWER,
@@ -320,14 +362,11 @@ describe('every frame of a scripted single-player game', () => {
       rawHaltText: [],
     });
 
-    // `gameStarted` names all four seats; the table's policy lets the viewer read only its own.
-    expect(violations.filter((v) => v.rule === 'otherSeatArchetypeTag')).not.toEqual([]);
-    expect(
-      violations.some((v) => v.rule === 'otherSeatArchetypeTag' && v.detail.includes(tagOf('P2'))),
-    ).toBe(true);
-    expect(
-      violations.some((v) => v.rule === 'otherSeatArchetypeTag' && v.detail.includes(tagOf('P1'))),
-    ).toBe(false);
+    // A bot's tag is a classifier's reading of its hidden list, so it waits for the game's end.
+    expect(violations.filter((v) => v.rule === 'otherSeatArchetypeTag')).toEqual([]);
+    // The viewer's own tag is there to read.
+    const started = played.messages.find((m) => m.type === 'gameStarted');
+    expect(JSON.stringify(started)).toContain(tagOf(VIEWER));
   }, 30_000);
 });
 
@@ -382,16 +421,49 @@ describe('the scan itself', () => {
     ).toEqual([]);
   });
 
-  // allowed-skip: needs the M2a engine projection change (viewer-aware commander views)
-  it.skip('fails on another seat commander zone or art while it is hidden', () => {
-    // Once the engine projects a hidden commander as `zone: 'hidden'` with `objectId: null` and
-    // `scryfallId: null` to non-owners, scan every frame for a commander of another seat that
-    // is in a hand, a library or face down, by object id and by scryfall id.
+  it('fails on another seat commander zone or art while it is hidden', () => {
+    const hiddenCommander = {
+      json: JSON.stringify({
+        type: 'playerStateSnapshot',
+        payload: {
+          seats: [
+            {
+              seat: 'P2',
+              commanders: [{ cardId: 'c9', zone: 'hand', objectId: 'o9', scryfallId: 'art' }],
+            },
+          ],
+        },
+      }),
+      hiddenHandIds: new Set<string>(),
+      hiddenCommanderCardIds: new Set(['c9']),
+    };
+    expect(scan([hiddenCommander])).toEqual([
+      expect.objectContaining({ rule: 'otherSeatCommander' }),
+    ]);
+    const redacted = {
+      ...hiddenCommander,
+      json: hiddenCommander.json
+        .replace('"zone":"hand"', '"zone":"hidden"')
+        .replace('"objectId":"o9"', '"objectId":null')
+        .replace('"scryfallId":"art"', '"scryfallId":null'),
+    };
+    expect(scan([redacted])).toEqual([]);
   });
 
-  // allowed-skip: needs the M2a engine projection change (yieldingUntilEndOfTurn to its own seat)
-  it.skip('fails on another seat yield flag', () => {
-    // Once `yieldingUntilEndOfTurn` goes only to its own seat, scan every frame for the key on a
-    // seat other than the viewer's.
+  it('fails on another seat yield flag', () => {
+    const found = scan([
+      frame({
+        type: 'playerStateSnapshot',
+        payload: {
+          seats: [
+            { seat: 'P1', yieldingUntilEndOfTurn: true },
+            { seat: 'P3', yieldingUntilEndOfTurn: true },
+          ],
+        },
+      }),
+    ]);
+    expect(found).toEqual([
+      expect.objectContaining({ rule: 'otherSeatYield', detail: expect.stringContaining('P3') }),
+    ]);
   });
 });

@@ -620,7 +620,7 @@ export class MatchSession {
       finishingOrder: [...this.engine.getState().eliminatedPlayers],
       turnCount: info.turn,
       halted: true,
-      haltReason: null,
+      haltReason: this.policy.rawErrorText ? info.reason : HALT_NOTICE,
     };
   }
 
@@ -631,7 +631,7 @@ export class MatchSession {
   private disclosedResult(result: GameResult): GameResult {
     if (this.policy.rawErrorText || !result.halted) return result;
     const { haltSite: _site, ...rest } = result;
-    return { ...rest, haltReason: null };
+    return { ...rest, haltReason: HALT_NOTICE };
   }
 
   /**

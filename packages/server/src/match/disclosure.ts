@@ -13,7 +13,7 @@
  */
 
 import { assertNever, SERVER_TO_CLIENT_TYPES } from '@mtg/shared';
-import type { GameMode, PlayerId, ServerToClientType } from '@mtg/shared';
+import type { GameMode, PlayerId, SeatSummary, ServerToClientType } from '@mtg/shared';
 
 /** When a frame that carries the whole game state (a spectator board, the full log) may go out. */
 export type FullStateRelease = 'never' | 'afterGame' | 'always';
@@ -102,7 +102,7 @@ export function testerPolicy(gameMode: GameMode): Readonly<DisclosurePolicy> {
         showSeed: true,
         annotations: 'afterGame',
         aiCostReports: true,
-        archetypeTags: 'all',
+        archetypeTags: 'ownHumanSeat',
         fullState: 'afterGame',
         decklistsAfterGame: true,
       });
@@ -161,6 +161,27 @@ export function mayShowArchetypeTag(
     default:
       return assertNever(policy.archetypeTags, 'archetype tag disclosure');
   }
+}
+
+/**
+ * Seat summaries as `viewer` may read them before the game ends: a tag the policy withholds is
+ * blank, the same way the game report blanks it.
+ */
+export function disclosedSeatSummaries(
+  policy: DisclosurePolicy,
+  summaries: readonly SeatSummary[],
+  viewer: PlayerId | undefined,
+): SeatSummary[] {
+  return summaries.map((summary) =>
+    mayShowArchetypeTag(policy, {
+      owner: summary.seat,
+      viewer: viewer ?? '',
+      ownerIsHuman: summary.seat === viewer,
+      gameOver: false,
+    })
+      ? summary
+      : { ...summary, archetypeTag: '' },
+  );
 }
 
 // ── The outbound allowlist ──────────────────────────────────────────────────────────────────

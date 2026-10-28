@@ -412,7 +412,7 @@ describe('MatchSession - the disclosure policy at a table', () => {
     if (over?.type !== 'gameOver') throw new Error('a halted table game announces its result');
     expect(t.pub.indexOf(over)).toBeGreaterThan(t.pub.indexOf(halted));
     expect(over.payload.result.halted).toBe(true);
-    expect(over.payload.result.haltReason).toBeNull();
+    expect(over.payload.result.haltReason).toBe('The rules engine could not continue this game.');
     expect(over.payload.result).not.toHaveProperty('haltSite');
     const raw = t.session.runner.getHalt()?.reason;
     expect(raw).toBeTruthy();
