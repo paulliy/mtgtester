@@ -17,7 +17,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type {
   Color,
-  GameMode,
+  StartGameMode,
   ProviderKind,
   SavedDeckOption,
   SeatSource,
@@ -68,7 +68,7 @@ function freshSeed(): string {
   ).join('');
 }
 
-const gameMode = ref<GameMode>('singlePlayer');
+const gameMode = ref<StartGameMode>('singlePlayer');
 const humanSeat = ref<string>('P1');
 const providerKind = ref<ProviderKind>('random');
 /**
@@ -107,7 +107,7 @@ const quickError = ref('');
 /** Which start is in flight or last failed, so its outcome shows beside the button pressed. */
 const startedFrom = ref<'quick' | 'custom' | null>(null);
 const quickBusy = ref(false);
-const quickMode = ref<GameMode | null>(null);
+const quickMode = ref<StartGameMode | null>(null);
 /** Commander art that failed to load, by URL, so the tile falls back to its color band. */
 const brokenArt = ref<string[]>([]);
 
@@ -403,7 +403,7 @@ function start(): void {
 }
 
 /** One click: four generated decks, built-in bots, a fresh seed. */
-async function quickStart(mode: GameMode): Promise<void> {
+async function quickStart(mode: StartGameMode): Promise<void> {
   if (quickBusy.value || starting.value) return;
   quickBusy.value = true;
   quickMode.value = mode;

@@ -71,8 +71,16 @@ export type ClientToServerType = (typeof CLIENT_TO_SERVER_TYPES)[number];
  * budget on every non-local decision (ADR 0010, ADR 0011). See ADR 0012 §4.
  */
 export type ProviderKind = 'random' | 'ai';
-export type GameMode = 'spectator' | 'singlePlayer';
+/**
+ * How a game is presented and who may see what. `'table'` is a multi-human game run by the table
+ * server (ADR 0031); the tester's `StartGamePayload` never carries it, and `GameServer` refuses it.
+ */
+export type GameMode = 'spectator' | 'singlePlayer' | 'table';
 export type SeatControllerKind = ProviderKind | 'human';
+/** The modes a `startGame` request may name. `'table'` is started only by the table server. */
+export type StartGameMode = Exclude<GameMode, 'table'>;
+/** Who answers each seat's decisions. A session takes this instead of a single human seat. */
+export type SeatControllers = Readonly<Record<PlayerId, SeatControllerKind>>;
 
 /** Live-ish compute-ahead vs. the user stepping it forward (brief §10.1). */
 export type PlaybackMode = 'live' | 'manual';

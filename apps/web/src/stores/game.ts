@@ -20,6 +20,7 @@ import type {
   DebugFlags,
   DecisionPendingPayload,
   GameMode,
+  StartGameMode,
   DiplomacySeatState,
   GameOverPayload,
   IgnoredPlayerAbility,
@@ -36,6 +37,7 @@ import type {
   TableTalkLine,
   TargetChoice,
 } from '@mtg/shared';
+import { assertNever } from '@mtg/shared';
 import { GameSocket, type ConnectionState } from '../lib/socket';
 import { resetBoardAnchors } from '../composables/useBoardAnchors';
 import { resetCombatStrikes } from '../composables/useCombatStrikes';
@@ -362,7 +364,19 @@ export const useGameStore = defineStore('game', () => {
         seed.value = message.payload.seed;
         seats.value = message.payload.seats;
         providerKind.value = message.payload.providerKind;
-        gameMode.value = message.payload.gameMode ?? 'spectator';
+        const startedMode = message.payload.gameMode ?? 'spectator';
+        switch (startedMode) {
+          case 'spectator':
+          case 'singlePlayer':
+            gameMode.value = startedMode;
+            break;
+          case 'table':
+            // The tester viewer has no table UI (multiplayer M6); a table game is not adopted.
+            errors.value = ['This viewer cannot join a table game.'];
+            return;
+          default:
+            assertNever(startedMode, 'gameStarted gameMode');
+        }
         humanSeat.value = message.payload.humanSeat ?? null;
         cardTestScenario.value = message.payload.cardTestScenario ?? null;
         diplomacy.value = message.payload.diplomacy === true;
@@ -588,7 +602,7 @@ export const useGameStore = defineStore('game', () => {
     sources: SeatSource[],
     kind: ProviderKind,
     requestedSeed?: string,
-    mode: GameMode = 'spectator',
+    mode: StartGameMode = 'spectator',
     selectedHumanSeat?: PlayerId,
     reflectionEnabled = false,
     previewId?: string,

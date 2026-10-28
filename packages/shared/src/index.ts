@@ -23,6 +23,7 @@ export {
 } from './protocol';
 export { ATTACKS_TARGET, NO_ATTACK_TARGET, NO_BLOCK_TARGET } from './engine';
 export { parseStrictJson, STRICT_JSON_MAX_DEPTH } from './json';
+export { assertNever } from './assert-never';
 
 // --- LegalAction.data key registry (ADR 0032) ---
 export {
@@ -142,7 +143,9 @@ export type {
   ClientMessageOf,
   ProviderKind,
   GameMode,
+  StartGameMode,
   SeatControllerKind,
+  SeatControllers,
   PlaybackMode,
   SeatSource,
   SeatSummary,
