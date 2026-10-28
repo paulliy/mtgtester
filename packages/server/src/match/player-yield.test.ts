@@ -178,7 +178,7 @@ describe('smart player yield', () => {
       const first = requests().at(-1)!.payload;
       const cast = first.request.legalActions.find((a) => a.type === 'castSpell')!;
       expect(cast).toBeDefined();
-      session.yieldPlayerAbility({
+      session.yieldPlayerAbility('P1', {
         requestId: first.request.requestId,
         revision: first.revision,
         actionId: cast.id,
@@ -191,19 +191,19 @@ describe('smart player yield', () => {
       expect(requests().filter((m) => m.payload.request.phase === 'precombatMain')).toHaveLength(1);
       // Rejected passes cannot consume the opportunity. Reconnection keeps it offered.
       const pass = combat.request.legalActions.find((a) => a.type === 'pass')!;
-      session.submitPlayerAction({
+      session.submitPlayerAction('P1', {
         requestId: combat.request.requestId,
         revision: combat.revision - 1,
         actionId: pass.id,
       });
       expect(sent.at(-1)?.type).toBe('error');
-      session.resyncPlayer();
+      session.resyncPlayer('P1');
       expect(
         requests()
           .at(-1)!
           .payload.request.legalActions.some((a) => a.type === 'castSpell'),
       ).toBe(true);
-      session.submitPlayerAction({
+      session.submitPlayerAction('P1', {
         requestId: combat.request.requestId,
         revision: combat.revision,
         actionId: pass.id,
@@ -218,9 +218,9 @@ describe('smart player yield', () => {
       expect(requests().filter((m) => m.payload.request.decisionType === 'priority')).toHaveLength(
         3,
       );
-      session.resumePlayerAbility(combat.ignoredAbilities[0]!.key);
+      session.resumePlayerAbility('P1', combat.ignoredAbilities[0]!.key);
       expect(requests().at(-1)!.payload.ignoredAbilities).toEqual([]);
-      session.yieldPlayerAbility({
+      session.yieldPlayerAbility('P1', {
         requestId: combat.request.requestId,
         revision: combat.revision - 1,
         actionId: cast.id,
@@ -457,7 +457,7 @@ describe('smart player yield', () => {
       const first = requests().at(-1)!.payload;
       const draw = first.request.legalActions.find((action) => action.type === 'activateAbility')!;
       expect(draw.data?.['abilityEffectOps']).toEqual(['draw']);
-      session.yieldPlayerAbility({
+      session.yieldPlayerAbility('P1', {
         requestId: first.request.requestId,
         revision: first.revision,
         actionId: draw.id,
@@ -470,7 +470,7 @@ describe('smart player yield', () => {
       expect(lastEnd.request.legalActions.some((action) => action.type === 'activateAbility')).toBe(
         true,
       );
-      session.submitPlayerAction({
+      session.submitPlayerAction('P1', {
         requestId: lastEnd.request.requestId,
         revision: lastEnd.revision,
         actionId: lastEnd.request.legalActions.find((action) => action.type === 'pass')!.id,

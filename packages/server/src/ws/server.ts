@@ -125,6 +125,8 @@ export class GameServer {
   private orphanTimer: ReturnType<typeof setTimeout> | null = null;
   private playerIdleTimer: ReturnType<typeof setTimeout> | null = null;
   private playerSocket: ServerWebSocket<SocketData> | null = null;
+  /** The seat `playerSocket` plays: the one human seat of the single-player game it holds. */
+  private playerSeat: PlayerId | null = null;
   private sessionToken: string | null = null;
   private startedPayload: GameStartedPayload | null = null;
   /** How each seat's deck was chosen, and the lab scenario if any — for "Copy game report". */
@@ -603,6 +605,7 @@ export class GameServer {
         }
         this.session = null;
         this.playerSocket = null;
+        this.playerSeat = null;
         this.sessionToken = null;
         this.startedPayload = null;
         this.reportSources = null;
@@ -620,7 +623,9 @@ export class GameServer {
           });
           return;
         }
-        this.requireSession(socket)?.submitPlayerAction(message.payload);
+        this.withPlayerSeat(socket, (session, seat) => {
+          session.submitPlayerAction(seat, message.payload);
+        });
         return;
 
       case 'yieldPlayerAbility':
@@ -631,7 +636,9 @@ export class GameServer {
           });
           return;
         }
-        this.requireSession(socket)?.yieldPlayerAbility(message.payload);
+        this.withPlayerSeat(socket, (session, seat) => {
+          session.yieldPlayerAbility(seat, message.payload);
+        });
         return;
 
       case 'resumePlayerAbility':
@@ -642,7 +649,9 @@ export class GameServer {
           });
           return;
         }
-        this.requireSession(socket)?.resumePlayerAbility(message.payload.key);
+        this.withPlayerSeat(socket, (session, seat) => {
+          session.resumePlayerAbility(seat, message.payload.key);
+        });
         return;
 
       case 'cancelYield':
@@ -653,7 +662,9 @@ export class GameServer {
           });
           return;
         }
-        this.requireSession(socket)?.cancelYield();
+        this.withPlayerSeat(socket, (session, seat) => {
+          session.cancelYield(seat);
+        });
         return;
 
       case 'proposeDeal':
@@ -667,10 +678,11 @@ export class GameServer {
           return;
         }
         const session = this.requireSession(socket);
-        if (session === null) return;
-        if (message.type === 'proposeDeal') session.proposeDeal(message.payload);
-        else if (message.type === 'answerDeal') session.answerDeal(message.payload);
-        else await session.draftDeal(message.payload);
+        const seat = this.playerSeat;
+        if (session === null || seat === null) return;
+        if (message.type === 'proposeDeal') session.proposeDeal(seat, message.payload);
+        else if (message.type === 'answerDeal') session.answerDeal(seat, message.payload);
+        else await session.draftDeal(seat, message.payload);
         return;
       }
 
@@ -698,7 +710,7 @@ export class GameServer {
             },
           });
         }
-        this.session.setPlayerConnected(true);
+        if (this.playerSeat !== null) this.session.setPlayerConnected(this.playerSeat, true);
         return;
     }
   }
@@ -728,7 +740,7 @@ export class GameServer {
     if (socket === this.startingSocket) this.startGeneration++;
     if (socket === this.playerSocket) {
       this.playerSocket = null;
-      this.session?.setPlayerConnected(false);
+      if (this.playerSeat !== null) this.session?.setPlayerConnected(this.playerSeat, false);
       this.startPlayerIdleTimer();
     }
     if (this.session?.getGameMode() === 'singlePlayer') return;
@@ -750,6 +762,7 @@ export class GameServer {
       if (this.session !== session || this.playerSocket !== null) return;
       session.abandon();
       this.session = null;
+      this.playerSeat = null;
       this.sessionToken = null;
       this.startedPayload = null;
       this.reportSources = null;
@@ -785,6 +798,24 @@ export class GameServer {
     if (this.orphanTimer === null) return;
     clearTimeout(this.orphanTimer);
     this.orphanTimer = null;
+  }
+
+  /** Run a seat-scoped call for the one connection that holds the player's seat. */
+  private withPlayerSeat(
+    socket: ServerWebSocket<SocketData>,
+    run: (session: MatchSession, seat: PlayerId) => void,
+  ): void {
+    const session = this.requireSession(socket);
+    if (session === null) return;
+    const seat = this.playerSeat;
+    if (seat === null) {
+      this.sendTo(socket, {
+        type: 'error',
+        payload: { message: 'This is not a single-player game.' },
+      });
+      return;
+    }
+    run(session, seat);
   }
 
   private requireSession(socket: ServerWebSocket<SocketData>): MatchSession | null {
@@ -927,6 +958,7 @@ export class GameServer {
     this.session = session;
     this.sessionToken = gameMode === 'singlePlayer' ? crypto.randomUUID() : null;
     this.playerSocket = gameMode === 'singlePlayer' ? socket : null;
+    this.playerSeat = humanSeat ?? null;
 
     const startedPayload: GameStartedPayload = {
       gameId,
@@ -987,6 +1019,7 @@ export class GameServer {
     this.session = session;
     this.sessionToken = crypto.randomUUID();
     this.playerSocket = socket;
+    this.playerSeat = 'P1';
 
     const startedPayload: GameStartedPayload = {
       gameId,

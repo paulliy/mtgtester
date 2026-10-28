@@ -416,7 +416,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
       revision: request.payload.revision,
       actionId: 999_999,
     };
-    session.submitPlayerAction(rejected);
+    session.submitPlayerAction('P1', rejected);
     expect(sent.at(-1)).toEqual({
       type: 'error',
       payload: {
@@ -458,7 +458,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
       countBefore,
     );
 
-    session.submitPlayerAction({
+    session.submitPlayerAction('P1', {
       requestId: first!.payload.request.requestId,
       actionId: first!.payload.request.legalActions[0]!.id,
       revision: first!.payload.revision,
@@ -518,7 +518,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
         expect(types.every((type) => quiet.includes(type))).toBe(false);
       }
       const response = chooser.decide(request);
-      session.submitPlayerAction({
+      session.submitPlayerAction('P1', {
         requestId: response.requestId,
         actionId: response.actionId,
         revision: next.payload.revision,
@@ -579,7 +579,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
       }
       consumedRequests += 1;
       const response = chooser.decide(next.payload.request);
-      session.submitPlayerAction({
+      session.submitPlayerAction('P1', {
         requestId: response.requestId,
         actionId: response.actionId,
         revision: next.payload.revision,
@@ -599,7 +599,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
 
     const replayCount = sent.filter((message) => message.type === 'replayUnlocked').length;
     const gameOverCount = sent.filter((message) => message.type === 'gameOver').length;
-    session.resyncPlayer();
+    session.resyncPlayer('P1');
     expect(sent.filter((message) => message.type === 'replayUnlocked')).toHaveLength(
       replayCount + 1,
     );
@@ -848,7 +848,7 @@ describe('MatchSession — a prepared scenario flushes its own outcome before th
       (action) => action.type === 'activateAbility' && action.description === ACTIVATION,
     );
     expect(activation).toBeDefined();
-    session.submitPlayerAction({
+    session.submitPlayerAction('P1', {
       requestId: opening.request.requestId,
       actionId: activation!.id,
       revision: opening.revision,

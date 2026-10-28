@@ -219,7 +219,7 @@ describe('MatchSession.gameReport', () => {
     expect(JSON.stringify(before)).not.toContain('Secret Card');
 
     const chosen = required.payload.request.legalActions[0]!;
-    match.submitPlayerAction({
+    match.submitPlayerAction('P1', {
       requestId: required.payload.request.requestId,
       actionId: chosen.id,
       revision: required.payload.revision,
@@ -251,7 +251,7 @@ describe('MatchSession.gameReport', () => {
       }
       consumed += 1;
       const answer = chooser.decide(next.payload.request);
-      match.submitPlayerAction({
+      match.submitPlayerAction('P1', {
         requestId: next.payload.request.requestId,
         actionId: answer.actionId,
         revision: next.payload.revision,

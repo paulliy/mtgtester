@@ -132,7 +132,7 @@ describe.skipIf(SKIP)('Living Energy modeled-card and player-experience checks',
 
     const chooser = new RandomDecisionProvider('living-energy-human-check');
     const response = chooser.decide(required!.payload.request);
-    session.submitPlayerAction({
+    session.submitPlayerAction('P1', {
       requestId: response.requestId,
       actionId: response.actionId,
       revision: required!.payload.revision,

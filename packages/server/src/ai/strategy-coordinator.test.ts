@@ -121,7 +121,7 @@ describe('StrategyCoordinator', () => {
       engine,
       DEFAULT_AI_CONFIG,
       undefined,
-      'P1',
+      new Set(['P1']),
     );
     const req = request();
 

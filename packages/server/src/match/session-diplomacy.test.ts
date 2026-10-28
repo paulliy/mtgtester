@@ -128,11 +128,11 @@ describe('MatchSession — the player at the table (ADR 0035 phase 3)', () => {
         for (const offer of state.offers) {
           if (answered.has(offer.id)) continue;
           answered.add(offer.id);
-          session.answerDeal({ dealId: offer.id, answer: 'accept' });
+          session.answerDeal('P1', { dealId: offer.id, answer: 'accept' });
         }
         if (!invalidChecked && state.turn >= 1) {
           invalidChecked = true;
-          session.proposeDeal({ to: 'P2', rounds: 9, obligations: [] });
+          session.proposeDeal('P1', { to: 'P2', rounds: 9, obligations: [] });
           const reply = sent.at(-1);
           expect(reply).toMatchObject({
             type: 'diplomacyState',
@@ -142,7 +142,7 @@ describe('MatchSession — the player at the table (ADR 0035 phase 3)', () => {
         const partner = state.partners[0];
         if (state.canPropose && partner !== undefined && proposedOnTurn !== state.turn) {
           proposedOnTurn = state.turn;
-          session.proposeDeal({
+          session.proposeDeal('P1', {
             to: partner,
             rounds: 1,
             obligations: [
@@ -159,7 +159,7 @@ describe('MatchSession — the player at the table (ADR 0035 phase 3)', () => {
       }
       consumed += 1;
       const response = chooser.decide(next.payload.request);
-      session.submitPlayerAction({
+      session.submitPlayerAction('P1', {
         requestId: response.requestId,
         actionId: response.actionId,
         revision: next.payload.revision,
@@ -206,7 +206,7 @@ describe('MatchSession — the player at the table (ADR 0035 phase 3)', () => {
       humanSeat: 'P1',
       send: (message) => sent.push(message),
     });
-    session.proposeDeal({ to: 'P2', rounds: 1, obligations: [] });
+    session.proposeDeal('P1', { to: 'P2', rounds: 1, obligations: [] });
     expect(sent.at(-1)).toEqual({
       type: 'error',
       payload: { message: 'Deals are off in this game.' },

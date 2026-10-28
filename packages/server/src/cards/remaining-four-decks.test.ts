@@ -143,7 +143,7 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       const response = new RandomDecisionProvider(`coverage-${slug}-human-check`).decide(
         required!.payload.request,
       );
-      session.submitPlayerAction({
+      session.submitPlayerAction('P1', {
         requestId: response.requestId,
         actionId: response.actionId,
         revision: required!.payload.revision,

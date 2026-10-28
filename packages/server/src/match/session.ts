@@ -5,6 +5,7 @@
  * broadcasts what comes back.
  */
 
+import { assertNever } from '@mtg/shared';
 import { Engine, formatPlayerLog, formatSpectatorLog } from '@mtg/engine';
 import type { AsyncDecisionProvider, DecisionProvider } from '@mtg/engine';
 import {
@@ -34,6 +35,7 @@ import type {
   PlaybackMode,
   PlayerId,
   ProviderKind,
+  SeatControllers,
   ServerToClientMessage,
   SpectatorLogLine,
   TableTalkLine,
@@ -115,7 +117,14 @@ export interface MatchSessionOptions {
   seats: readonly SeatSetup[];
   providerKind: ProviderKind;
   gameMode?: GameMode;
+  /** The one human seat of a `'singlePlayer'` game. */
   humanSeat?: PlayerId;
+  /**
+   * Who answers each seat of a `'table'` game (ADR 0031 decision 2): at least one `human`, and
+   * every other seat the session's `providerKind`. Not accepted for other modes, which derive
+   * theirs from `humanSeat`.
+   */
+  seatControllers?: SeatControllers;
   store?: GameStore | undefined;
   playbackMode?: PlaybackMode;
   turnCap?: number;
@@ -141,6 +150,33 @@ export interface MatchSessionOptions {
 
 /** Free-text deal readings (ADR 0035 phase 4) one game may ask for: each is a paid call. */
 const MAX_DEAL_DRAFTS_PER_GAME = 20;
+
+/** What the human's last surfaced decision and answer were, for "Copy game report". */
+interface LastHumanDecision {
+  request: DecisionRequest;
+  response: DecisionResponse;
+  /** Target names as of the decision, before the targets can die or resolve. */
+  names: Record<string, string>;
+}
+
+/** Everything the session keeps for one human seat; a table has one per human. */
+class HumanSeatState {
+  readonly provider: HumanDecisionProvider;
+  readonly connectionGate = new PlayerConnectionGate();
+  readonly ignoredAbilities = new Map<string, IgnoredPlayerAbility>();
+  readonly smartYieldMemory = new SmartYieldMemory();
+  playerRevision = 0;
+  lastHumanDecision: LastHumanDecision | null = null;
+
+  constructor(onRequired: (request: DecisionRequest, revision: number) => void) {
+    this.provider = new HumanDecisionProvider(
+      () => ++this.playerRevision,
+      ({ request, revision }) => {
+        onRequired(request, revision);
+      },
+    );
+  }
+}
 
 export class MatchSession {
   private abandoned = false;
@@ -171,19 +207,11 @@ export class MatchSession {
   private draftInFlight = false;
   private debugFlags: DebugFlags = { ...DEFAULT_DEBUG_FLAGS };
   private readonly gameMode: GameMode;
-  private readonly humanSeat: PlayerId | null;
-  private readonly humanProvider: HumanDecisionProvider | null;
-  private readonly connectionGate = new PlayerConnectionGate();
-  private readonly ignoredAbilities = new Map<string, IgnoredPlayerAbility>();
-  private readonly smartYieldMemory = new SmartYieldMemory();
-  private playerRevision = 0;
-  /** The human's most recent surfaced decision and answer, for "Copy game report". */
-  private lastHumanDecision: {
-    request: DecisionRequest;
-    response: DecisionResponse;
-    /** Target names as of the decision, before the targets can die or resolve. */
-    names: Record<string, string>;
-  } | null = null;
+  /** Who answers each seat; a seat is `human` exactly when it is in `humanSeats`. */
+  private readonly seatControllers: SeatControllers;
+  private readonly humanSeats: ReadonlySet<PlayerId>;
+  /** Per-human-seat state, keyed by the same seats as `humanSeats`. */
+  private readonly humanStates = new Map<PlayerId, HumanSeatState>();
 
   // ── Live presentation (brief §10.1) ───────────────────────────────────────────────────────
   //
@@ -228,9 +256,17 @@ export class MatchSession {
       throw new Error('decision provider overrides require a prepared Card Test Lab engine');
     }
     this.gameMode = opts.gameMode ?? 'spectator';
-    this.humanSeat = this.gameMode === 'singlePlayer' ? (opts.humanSeat ?? null) : null;
-    if (this.gameMode === 'singlePlayer' && this.humanSeat === null) {
-      throw new Error('single-player session requires a human seat');
+    this.seatControllers = resolveSeatControllers(opts, this.gameMode);
+    this.humanSeats = new Set(
+      opts.seats.map((s) => s.seat).filter((seat) => this.seatControllers[seat] === 'human'),
+    );
+    for (const seat of this.humanSeats) {
+      this.humanStates.set(
+        seat,
+        new HumanSeatState((request, revision) => {
+          this.sendPlayerActionRequired(seat, request, revision);
+        }),
+      );
     }
     this.playbackMode = opts.playbackMode ?? 'live';
     this.livePaceMs = opts.livePaceMs ?? LIVE_PACE_MS;
@@ -241,13 +277,13 @@ export class MatchSession {
         seed: opts.seed,
         // The human taps lands by hand if they like (ADR 0030); bots leave payment to the engine.
         players: opts.seats.map((s) =>
-          s.seat === this.humanSeat ? { ...s.config, manualMana: true } : s.config,
+          this.humanSeats.has(s.seat) ? { ...s.config, manualMana: true } : s.config,
         ),
         ...(opts.turnCap !== undefined && { turnCap: opts.turnCap }),
       });
-    if (this.humanSeat !== null) this.engine.enableManualMana(this.humanSeat);
+    for (const seat of this.humanSeats) this.engine.enableManualMana(seat);
     this.recorder = opts.store?.recorderFor(opts.gameId) ?? null;
-    const humanSeat = this.humanSeat;
+    const humanSeats = this.humanSeats;
     this.diplomacy =
       opts.diplomacy === true && opts.decisionProviderOverrides === undefined
         ? new DiplomacyTable({
@@ -256,24 +292,15 @@ export class MatchSession {
             viewOf: (seat) => this.engine.view(seat),
             negotiates: () => true,
             // The player answers offers in their own time, and the table never speaks for them.
-            answersLater: (seat) => seat === humanSeat,
+            answersLater: (seat) => humanSeats.has(seat),
             // A model seat proposes through its strategist (phase 4), not the heuristic proposer;
             // it still answers offers at once with the same evaluator, with no model call.
-            proposesOnItsOwn: (seat) => seat !== humanSeat && opts.providerKind !== 'ai',
+            proposesOnItsOwn: (seat) => !humanSeats.has(seat) && opts.providerKind !== 'ai',
             repairedAttacks: () => this.countRepairedAttacks(),
           })
         : null;
     this.logger =
       opts.providerKind === 'ai' ? new AiCallLogger(opts.store?.raw ?? null, opts.gameId) : null;
-    this.humanProvider =
-      this.humanSeat === null
-        ? null
-        : new HumanDecisionProvider(
-            () => ++this.playerRevision,
-            ({ request, revision }) => {
-              this.sendPlayerActionRequired(request, revision);
-            },
-          );
 
     this.runner = new MatchRunner({
       engine: this.engine,
@@ -285,15 +312,16 @@ export class MatchSession {
         // Setup always writes one when a store exists — including for generated decks — and
         // when no store exists there is no recorder to insert the row at all.
         deckSnapshotId: s.deckSnapshotId ?? s.config.deckId,
-        controllerKind: s.seat === this.humanSeat ? 'human' : opts.providerKind,
+        controllerKind: this.seatControllers[s.seat] ?? opts.providerKind,
       })),
       providerFor: (playerId) => this.providerFor(playerId),
       recorder: this.recorder,
       gameMode: this.gameMode,
-      ...(this.humanSeat !== null
+      // Every human decision is untimed, so the engine never computes ahead of what they have seen.
+      ...(this.humanSeats.size > 0
         ? {
             lookaheadTurns: 0,
-            formatEvents: (events) => formatPlayerLog(events, this.humanSeat as PlayerId),
+            formatEvents: (events) => formatPlayerLog(events, this.soleHumanSeat()),
           }
         : {}),
       onEvents: (lines, frontierTurn, snapshotTurns) => {
@@ -334,7 +362,7 @@ export class MatchSession {
         if (this.gameMode === 'singlePlayer') {
           // Player mode has one clock: every authoritative advance is immediately presented.
           this.runner.setViewTurn(frontierTurn);
-          this.publishPlayerState(true);
+          for (const seat of this.humanSeats) this.publishPlayerState(seat, true);
         }
       },
       onDecisionPending: (request, invalidResponse, timeoutMs) => {
@@ -371,8 +399,9 @@ export class MatchSession {
         this.publishGameOver(result);
       },
       onDecision: (request, response, anchorSequence) => {
-        if (request.decidingPlayer === this.humanSeat) {
-          this.lastHumanDecision = {
+        const decidingHuman = this.humanStates.get(request.decidingPlayer);
+        if (decidingHuman !== undefined) {
+          decidingHuman.lastHumanDecision = {
             request,
             response,
             names: publicNames(this.engine.getState(), [
@@ -382,7 +411,7 @@ export class MatchSession {
           };
         }
         this.aiCoordinator?.recordAcceptedDecision(request, response);
-        if (request.decidingPlayer === this.humanSeat && this.opts.providerKind === 'ai') {
+        if (decidingHuman !== undefined && this.opts.providerKind === 'ai') {
           this.ensureAiCoordinator().recordDecision(request, response, 'human');
         }
         this.logger?.recordAnchor(request.requestId, anchorSequence);
@@ -391,7 +420,7 @@ export class MatchSession {
         if (this.gameMode === 'singlePlayer') this.sendTalkNow();
         // The note is the gate, not the provider kind: a random provider never writes one, and
         // the human seat's own choices are theirs rather than reasoning to be explained back.
-        if (request.decidingPlayer !== this.humanSeat && response.note !== undefined) {
+        if (!this.humanSeats.has(request.decidingPlayer) && response.note !== undefined) {
           this.recordAnnotation({
             sequence: anchorSequence,
             turn: request.turn,
@@ -440,8 +469,9 @@ export class MatchSession {
         // there will ever be, so let the clock drain it and stop.
         if (this.gameMode === 'spectator') this.startPresenting();
       });
-    if (this.gameMode === 'singlePlayer') this.publishPlayerState(true);
-    else if (this.playbackMode === 'live') this.startPresenting();
+    if (this.gameMode === 'singlePlayer') {
+      for (const seat of this.humanSeats) this.publishPlayerState(seat, true);
+    } else if (this.playbackMode === 'live') this.startPresenting();
   }
 
   /** Wait for the match to stop computing — used by tests and by clean shutdown. */
@@ -491,8 +521,29 @@ export class MatchSession {
     return status === 'finished' || status === 'halted' || status === 'abandoned';
   }
 
-  getHumanSeat(): PlayerId | null {
-    return this.humanSeat;
+  getHumanSeats(): ReadonlySet<PlayerId> {
+    return this.humanSeats;
+  }
+
+  /**
+   * The seat of a game with exactly one human, for the surfaces that only exist for one: the
+   * single-player event log and "Copy game report". A table with several humans has none.
+   */
+  private soleHumanSeat(): PlayerId {
+    const [seat] = this.humanSeats;
+    if (seat === undefined || this.humanSeats.size !== 1) {
+      throw new Error('this surface needs a game with exactly one human seat');
+    }
+    return seat;
+  }
+
+  private humanState(seat: PlayerId): HumanSeatState | undefined {
+    return this.humanStates.get(seat);
+  }
+
+  /** The connection gate bots wait on in a single-player game. */
+  private soleGate(): PlayerConnectionGate {
+    return (this.humanStates.get(this.soleHumanSeat()) as HumanSeatState).connectionGate;
   }
 
   getLivePaceMs(): number {
@@ -511,14 +562,17 @@ export class MatchSession {
     sources: readonly ReportSeatSource[];
     cardTestScenarioId: string | null;
   }): GameReport {
-    const humanSeat = this.humanSeat;
-    if (humanSeat === null) throw new Error('only a single-player session has a game report');
+    if (this.humanSeats.size !== 1) {
+      throw new Error('only a single-player session has a game report');
+    }
+    const humanSeat = this.soleHumanSeat();
+    const human = this.humanStates.get(humanSeat) as HumanSeatState;
     const over = this.isOver();
     const board = this.engine.playerState(humanSeat);
     const halt = this.runner.getHalt();
     const result = this.runner.getResult();
-    const pending = this.humanProvider?.current() ?? null;
-    const last = this.lastHumanDecision;
+    const pending = human.provider.current();
+    const last = human.lastHumanDecision;
     const lastAction =
       last === null
         ? undefined
@@ -559,7 +613,7 @@ export class MatchSession {
         const seat = board.seats.find((candidate) => candidate.seat === setup.seat);
         return {
           seat: setup.seat,
-          controller: setup.seat === humanSeat ? 'human' : this.opts.providerKind,
+          controller: this.seatControllers[setup.seat] ?? this.opts.providerKind,
           label: setup.summary.label,
           commanderNames: [...setup.summary.commanderNames],
           colorIdentity: [...setup.summary.colorIdentity],
@@ -583,7 +637,7 @@ export class MatchSession {
               decisionType: pending.request.decisionType,
               prompt: pending.request.prompt,
               options: pending.request.legalActions
-                .filter((action) => !this.isIgnoredAbility(action))
+                .filter((action) => !this.isIgnoredAbility(humanSeat, action))
                 .map((action) => action.description),
             },
       lastSubmittedAction:
@@ -826,24 +880,24 @@ export class MatchSession {
   }
 
   /** The player's seat state at the table, after anything that may have changed it. */
-  private sendDiplomacyState(outcome?: DealOutcomeNotice): void {
-    if (this.diplomacy === null || this.humanSeat === null) return;
+  private sendDiplomacyState(seat: PlayerId, outcome?: DealOutcomeNotice): void {
+    if (this.diplomacy === null || !this.humanSeats.has(seat)) return;
     this.opts.send({
       type: 'diplomacyState',
       payload: {
         gameId: this.opts.gameId,
-        state: this.diplomacy.seatState(this.humanSeat),
+        state: this.diplomacy.seatState(seat),
         ...(outcome !== undefined ? { outcome } : {}),
       },
     });
   }
 
   /** Anchor talk the player started to the last event so far, and send it with the new state. */
-  private afterPlayerDeal(outcome: OfferOutcome): void {
+  private afterPlayerDeal(seat: PlayerId, outcome: OfferOutcome): void {
     const last = this.runner.nextSequence() - 1;
     this.collectTalk(Math.max(0, last));
     this.sendTalkNow();
-    this.sendDiplomacyState(noticeOf(outcome));
+    this.sendDiplomacyState(seat, noticeOf(outcome));
   }
 
   /**
@@ -871,7 +925,7 @@ export class MatchSession {
     if (this.gameMode === 'singlePlayer') {
       this.collectTalk(Math.max(0, this.runner.nextSequence() - 1));
       this.sendTalkNow();
-      this.sendDiplomacyState();
+      for (const seat of this.humanSeats) this.sendDiplomacyState(seat);
     }
   }
 
@@ -883,22 +937,23 @@ export class MatchSession {
   }
 
   /** The player offers a deal (ADR 0035 phase 3). The table checks it like any other offer. */
-  proposeDeal(payload: ProposeDealPayload): void {
-    if (this.diplomacy === null || this.humanSeat === null || this.isOver()) {
+  proposeDeal(seat: PlayerId, payload: ProposeDealPayload): void {
+    if (this.diplomacy === null || !this.humanSeats.has(seat) || this.isOver()) {
       this.opts.send({ type: 'error', payload: { message: 'Deals are off in this game.' } });
       return;
     }
-    this.afterPlayerDeal(this.diplomacy.offer({ proposer: this.humanSeat, ...payload }));
+    this.afterPlayerDeal(seat, this.diplomacy.offer({ proposer: seat, ...payload }));
   }
 
   /** The player answers an offer waiting on them, optionally with terms of their own. */
-  answerDeal(payload: AnswerDealPayload): void {
-    if (this.diplomacy === null || this.humanSeat === null || this.isOver()) {
+  answerDeal(seat: PlayerId, payload: AnswerDealPayload): void {
+    if (this.diplomacy === null || !this.humanSeats.has(seat) || this.isOver()) {
       this.opts.send({ type: 'error', payload: { message: 'Deals are off in this game.' } });
       return;
     }
     this.afterPlayerDeal(
-      this.diplomacy.answer(this.humanSeat, payload.dealId, payload.answer, payload.counter),
+      seat,
+      this.diplomacy.answer(seat, payload.dealId, payload.answer, payload.counter),
     );
   }
 
@@ -907,12 +962,11 @@ export class MatchSession {
    * reading back for the deal panel. Nothing is offered: the player checks the terms and sends
    * them, and they go through `offer` like any other proposal.
    */
-  async draftDeal(payload: DraftDealPayload): Promise<void> {
-    if (this.diplomacy === null || this.humanSeat === null || this.isOver()) {
+  async draftDeal(seat: PlayerId, payload: DraftDealPayload): Promise<void> {
+    if (this.diplomacy === null || !this.humanSeats.has(seat) || this.isOver()) {
       this.opts.send({ type: 'error', payload: { message: 'Deals are off in this game.' } });
       return;
     }
-    const seat = this.humanSeat;
     const busy = this.draftInFlight
       ? 'A reading is already in progress.'
       : this.draftsUsed >= MAX_DEAL_DRAFTS_PER_GAME
@@ -1078,19 +1132,20 @@ export class MatchSession {
    * tell a rejection from an unrelated server error by message text, and guessing either drops the
    * decision or resubmits it.
    */
-  submitPlayerAction(payload: SubmitPlayerActionPayload): void {
+  submitPlayerAction(seat: PlayerId, payload: SubmitPlayerActionPayload): void {
     const rejected = (message: string): void => {
       this.opts.send({
         type: 'error',
         payload: { message, requestId: payload.requestId, revision: payload.revision },
       });
     };
-    if (this.humanProvider === null) {
+    const human = this.humanState(seat);
+    if (human === undefined) {
       rejected('This is not a single-player game.');
       return;
     }
-    const pending = this.humanProvider.current();
-    const error = this.humanProvider.submit(payload);
+    const pending = human.provider.current();
+    const error = human.provider.submit(payload);
     if (error !== null) {
       rejected(error);
       return;
@@ -1103,17 +1158,18 @@ export class MatchSession {
         pending.request.legalActions.find((action) => action.id === payload.actionId)?.type ?? '',
       )
     ) {
-      this.smartYieldMemory.dismiss(
+      human.smartYieldMemory.dismiss(
         pending.request.legalActions,
-        this.ignoredAbilities,
-        this.engine.playerState(this.humanSeat!),
+        human.ignoredAbilities,
+        this.engine.playerState(seat),
       );
     }
   }
 
-  yieldPlayerAbility(payload: YieldPlayerAbilityPayload): void {
-    const pending = this.humanProvider?.current();
-    if (pending === null || pending === undefined) {
+  yieldPlayerAbility(seat: PlayerId, payload: YieldPlayerAbilityPayload): void {
+    const human = this.humanState(seat);
+    const pending = human?.provider.current();
+    if (human === undefined || pending === null || pending === undefined) {
       this.opts.send({
         type: 'error',
         payload: { message: 'No player action is currently required.' },
@@ -1142,35 +1198,36 @@ export class MatchSession {
       return;
     }
     const key = playerYieldKey(action)!;
-    this.ignoredAbilities.set(key, {
+    human.ignoredAbilities.set(key, {
       key,
       label: action.description,
       mode: payload.mode ?? 'always',
     });
     // Choosing yield also declines the current opportunity, including every mode/X
     // value sharing this preference. It must not immediately reoffer the same choice.
-    this.smartYieldMemory.dismiss(
+    human.smartYieldMemory.dismiss(
       pending.request.legalActions.filter((candidate) => playerYieldKey(candidate) === key),
-      this.ignoredAbilities,
-      this.engine.playerState(this.humanSeat!),
+      human.ignoredAbilities,
+      this.engine.playerState(seat),
     );
-    this.sendPlayerActionRequired(pending.request, pending.revision);
+    this.sendPlayerActionRequired(seat, pending.request, pending.revision);
   }
 
-  resumePlayerAbility(key: string): void {
-    if (!this.ignoredAbilities.delete(key)) {
+  resumePlayerAbility(seat: PlayerId, key: string): void {
+    const human = this.humanState(seat);
+    if (human === undefined || !human.ignoredAbilities.delete(key)) {
       this.opts.send({
         type: 'error',
         payload: { message: 'That yielded ability is no longer available.' },
       });
       return;
     }
-    this.smartYieldMemory.resume(key);
-    const pending = this.humanProvider?.current();
-    if (pending !== null && pending !== undefined) {
-      this.sendPlayerActionRequired(pending.request, pending.revision);
+    human.smartYieldMemory.resume(key);
+    const pending = human.provider.current();
+    if (pending !== null) {
+      this.sendPlayerActionRequired(seat, pending.request, pending.revision);
     }
-    this.publishPlayerState(false);
+    this.publishPlayerState(seat, false);
   }
 
   /**
@@ -1179,41 +1236,44 @@ export class MatchSession {
    * usual request/revision submission path — it mutates engine state directly and republishes
    * the board so the yield banner clears.
    */
-  cancelYield(): void {
-    if (this.humanSeat === null) {
+  cancelYield(seat: PlayerId): void {
+    if (!this.humanSeats.has(seat)) {
       this.opts.send({ type: 'error', payload: { message: 'This is not a single-player game.' } });
       return;
     }
-    if (this.engine.cancelYield(this.humanSeat)) this.publishPlayerState(false);
+    if (this.engine.cancelYield(seat)) this.publishPlayerState(seat, false);
   }
 
-  setPlayerConnected(connected: boolean): void {
+  setPlayerConnected(seat: PlayerId, connected: boolean): void {
     if (this.gameMode !== 'singlePlayer') return;
-    this.connectionGate.setConnected(connected);
-    if (connected) this.resyncPlayer();
+    const human = this.humanState(seat);
+    if (human === undefined) return;
+    human.connectionGate.setConnected(connected);
+    if (connected) this.resyncPlayer(seat);
   }
 
-  resyncPlayer(): void {
-    if (this.humanSeat === null) return;
+  resyncPlayer(seat: PlayerId): void {
+    const human = this.humanState(seat);
+    if (human === undefined) return;
     this.opts.send({
       type: 'eventBatch',
       payload: {
         gameId: this.opts.gameId,
-        lines: formatPlayerLog(this.engine.eventsSince(0), this.humanSeat),
+        lines: formatPlayerLog(this.engine.eventsSince(0), seat),
         frontierTurn: this.engine.getState().turnNumber,
         snapshotTurns: [],
         ...(this.allTalk.length > 0 ? { tableTalk: [...this.allTalk] } : {}),
       },
     });
-    this.publishPlayerState(false);
+    this.publishPlayerState(seat, false);
     const result = this.runner.getResult();
     if (result !== null) {
       this.publishGameOver(result);
       return;
     }
-    const pending = this.humanProvider?.current();
-    if (pending !== null && pending !== undefined) {
-      this.sendPlayerActionRequired(pending.request, pending.revision);
+    const pending = human.provider.current();
+    if (pending !== null) {
+      this.sendPlayerActionRequired(seat, pending.request, pending.revision);
     }
   }
 
@@ -1224,39 +1284,47 @@ export class MatchSession {
     this.aiCoordinator?.cancel();
     this.aiJev?.cancel?.();
     this.runner.abandon();
-    this.humanProvider?.releaseForAbandon();
-    this.connectionGate.release();
+    for (const human of this.humanStates.values()) {
+      human.provider.releaseForAbandon();
+      human.connectionGate.release();
+    }
   }
 
-  private publishPlayerState(bump: boolean): void {
-    if (this.humanSeat === null) return;
-    if (bump) this.playerRevision += 1;
+  private publishPlayerState(seat: PlayerId, bump: boolean): void {
+    const human = this.humanState(seat);
+    if (human === undefined) return;
+    if (bump) human.playerRevision += 1;
     if (this.diplomacy !== null) {
       // What the table said since the last decision (an offer made to the player as a turn
       // opened) goes out with the state that shows it, not after the player's next decision.
       this.collectTalk(Math.max(0, this.runner.nextSequence() - 1));
       this.sendTalkNow();
     }
-    this.sendDiplomacyState();
+    this.sendDiplomacyState(seat);
     this.opts.send({
       type: 'playerStateSnapshot',
       payload: {
         gameId: this.opts.gameId,
-        state: this.engine.playerState(this.humanSeat),
-        revision: this.playerRevision,
-        connected: this.connectionGate.isConnected(),
-        ignoredAbilities: this.ignoredAbilityList(),
+        state: this.engine.playerState(seat),
+        revision: human.playerRevision,
+        connected: human.connectionGate.isConnected(),
+        ignoredAbilities: this.ignoredAbilityList(seat),
       },
     });
   }
 
-  private sendPlayerActionRequired(request: DecisionRequest, revision: number): void {
-    if (this.humanSeat === null) return;
-    const state = this.engine.playerState(this.humanSeat);
+  private sendPlayerActionRequired(
+    seat: PlayerId,
+    request: DecisionRequest,
+    revision: number,
+  ): void {
+    const human = this.humanState(seat);
+    if (human === undefined) return;
+    const state = this.engine.playerState(seat);
     const legalActions =
       request.decisionType === 'priority'
         ? request.legalActions.filter(
-            (action) => !this.smartYieldMemory.isYielded(action, this.ignoredAbilities, state),
+            (action) => !human.smartYieldMemory.isYielded(action, human.ignoredAbilities, state),
           )
         : request.legalActions;
     const pass = legalActions.find((action) => action.type === 'pass');
@@ -1272,8 +1340,8 @@ export class MatchSession {
     ) {
       // Only the player's explicit preference removes optional choices. Keep costs, targeting,
       // combat declarations and every unyielded action in the ordinary human decision flow.
-      this.publishPlayerState(false);
-      this.humanProvider?.submit({ requestId: request.requestId, revision, actionId: pass.id });
+      this.publishPlayerState(seat, false);
+      human.provider.submit({ requestId: request.requestId, revision, actionId: pass.id });
       return;
     }
     this.opts.send({
@@ -1285,22 +1353,26 @@ export class MatchSession {
         },
         revision,
         state,
-        ignoredAbilities: this.ignoredAbilityList(),
+        ignoredAbilities: this.ignoredAbilityList(seat),
       },
     });
   }
 
-  private isIgnoredAbility(action: DecisionRequest['legalActions'][number]): boolean {
-    if (this.humanSeat === null || this.ignoredAbilities.size === 0) return false;
-    return this.smartYieldMemory.isYielded(
+  private isIgnoredAbility(
+    seat: PlayerId,
+    action: DecisionRequest['legalActions'][number],
+  ): boolean {
+    const human = this.humanState(seat);
+    if (human === undefined || human.ignoredAbilities.size === 0) return false;
+    return human.smartYieldMemory.isYielded(
       action,
-      this.ignoredAbilities,
-      this.engine.playerState(this.humanSeat),
+      human.ignoredAbilities,
+      this.engine.playerState(seat),
     );
   }
 
-  private ignoredAbilityList(): IgnoredPlayerAbility[] {
-    return [...this.ignoredAbilities.values()];
+  private ignoredAbilityList(seat: PlayerId): IgnoredPlayerAbility[] {
+    return [...(this.humanState(seat)?.ignoredAbilities.values() ?? [])];
   }
 
   /**
@@ -1386,7 +1458,7 @@ export class MatchSession {
     if (this.opts.providerKind !== 'ai') return [];
     const config = (this.aiConfig ??= loadAiConfig(process.env));
     if (!(this.opts.reflectionEnabled ?? config.reflectionEnabled)) return [];
-    return this.opts.seats.map((seat) => seat.seat).filter((seat) => seat !== this.humanSeat);
+    return this.opts.seats.map((seat) => seat.seat).filter((seat) => !this.humanSeats.has(seat));
   }
 
   private sendReflections(reflections: readonly AiReflection[], complete: boolean): void {
@@ -1510,11 +1582,12 @@ export class MatchSession {
     const existing = this.providers.get(playerId);
     if (existing !== undefined) return existing;
 
-    if (playerId === this.humanSeat && this.humanProvider !== null) {
+    const humanState = this.humanState(playerId);
+    if (humanState !== undefined) {
       // The player's decisions open negotiation windows and are judged for compliance like any
       // seat's; offers to the player wait for their answer rather than this decision.
       const table = this.diplomacy;
-      const humanProvider = this.humanProvider;
+      const humanProvider = humanState.provider;
       const human: AsyncDecisionProvider =
         table === null
           ? humanProvider
@@ -1526,7 +1599,7 @@ export class MatchSession {
                 // any talk) before waiting on them.
                 this.collectTalk(Math.max(0, this.runner.nextSequence() - 1));
                 this.sendTalkNow();
-                this.sendDiplomacyState();
+                this.sendDiplomacyState(playerId);
                 const response = await humanProvider.decide(request);
                 table.afterDecision(request, response);
                 return response;
@@ -1562,9 +1635,9 @@ export class MatchSession {
       this.gameMode === 'singlePlayer'
         ? {
             decide: async (request) => {
-              await this.connectionGate.wait();
+              await this.soleGate().wait();
               const response = await inner.decide(request);
-              await this.connectionGate.wait();
+              await this.soleGate().wait();
               const delayMs = Math.min(500, Math.floor(this.livePaceMs / 3));
               if (delayMs > 0) {
                 await new Promise<void>((resolve) => setTimeout(resolve, delayMs));
@@ -1630,7 +1703,7 @@ export class MatchSession {
         this.engine,
         config,
         this.logger ?? undefined,
-        this.humanSeat,
+        this.humanSeats,
         // Each bot is told what its *own* deck is built to do (ADR 0022 §5). The map is keyed by
         // seat and read only for the seat being planned, so no seat ever sees another's.
         new Map(this.opts.seats.map((seat) => [seat.seat, seat.summary.archetypeTag])),
@@ -1680,6 +1753,53 @@ export class MatchSession {
       };
     }
     return this.aiCoordinator;
+  }
+}
+
+/**
+ * Who answers each seat.
+ *
+ * flow: who the human seats are. A spectator game has none; a single-player game has the one the
+ * start request named; a table has every seat whose controller is `human`, and at least one.
+ */
+function resolveSeatControllers(
+  opts: Pick<MatchSessionOptions, 'seats' | 'providerKind' | 'humanSeat' | 'seatControllers'>,
+  gameMode: GameMode,
+): SeatControllers {
+  const seats = opts.seats.map((s) => s.seat);
+  const bots = (human: ReadonlySet<PlayerId>): SeatControllers =>
+    Object.fromEntries(
+      seats.map((seat) => [seat, human.has(seat) ? 'human' : opts.providerKind] as const),
+    );
+  switch (gameMode) {
+    case 'spectator':
+      return bots(new Set());
+    case 'singlePlayer': {
+      if (opts.seatControllers !== undefined) {
+        throw new Error(
+          'seatControllers apply to table games; a single-player game names humanSeat',
+        );
+      }
+      if (opts.humanSeat === undefined || !seats.includes(opts.humanSeat)) {
+        throw new Error('single-player session requires a human seat');
+      }
+      return bots(new Set([opts.humanSeat]));
+    }
+    case 'table': {
+      const given = opts.seatControllers;
+      if (given === undefined) throw new Error('a table session requires seatControllers');
+      const human = new Set(seats.filter((seat) => given[seat] === 'human'));
+      if (human.size === 0) throw new Error('a table session requires at least one human seat');
+      for (const seat of seats) {
+        // Mixed bot kinds in one session are not supported yet: one provider kind drives every bot.
+        if (!human.has(seat) && given[seat] !== opts.providerKind) {
+          throw new Error(`table seat ${seat} must be human or ${opts.providerKind}`);
+        }
+      }
+      return bots(human);
+    }
+    default:
+      return assertNever(gameMode, 'session game mode');
   }
 }
 

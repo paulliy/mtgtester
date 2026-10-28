@@ -7,10 +7,12 @@ function serverSeam() {
   const session = { submitPlayerAction: vi.fn(), getGameMode: vi.fn(() => 'singlePlayer') };
   const server = new GameServer({} as GameServerDeps) as unknown as {
     playerSocket: typeof socket;
+    playerSeat: string;
     session: typeof session;
     handleMessage(socketArg: typeof socket, raw: string): Promise<void>;
   };
   server.playerSocket = socket;
+  server.playerSeat = 'P1';
   server.session = session;
   return { server, socket, session };
 }
@@ -151,7 +153,7 @@ describe('ambiguous inbound frames', () => {
     );
 
     expect(socket.send).not.toHaveBeenCalled();
-    expect(session.submitPlayerAction).toHaveBeenCalledExactlyOnceWith({
+    expect(session.submitPlayerAction).toHaveBeenCalledExactlyOnceWith('P1', {
       requestId: 'request-1',
       revision: 3,
       actionId: 2,

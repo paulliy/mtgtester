@@ -114,6 +114,7 @@ describe('disconnected player session', () => {
       session: typeof session | null;
       sessionToken: string | null;
       playerSocket: unknown;
+      playerSeat: string;
       onSocketClose(socket: unknown): void;
       handleMessage(socket: unknown, raw: string): Promise<void>;
     };
@@ -121,6 +122,7 @@ describe('disconnected player session', () => {
     seam.session = session;
     seam.sessionToken = 'token';
     seam.playerSocket = player;
+    seam.playerSeat = 'P1';
     return { seam, session, player };
   }
 
@@ -135,7 +137,7 @@ describe('disconnected player session', () => {
     const other = { send: vi.fn() };
 
     seam.onSocketClose(player);
-    expect(session.setPlayerConnected).toHaveBeenCalledWith(false);
+    expect(session.setPlayerConnected).toHaveBeenCalledWith('P1', false);
     await seam.handleMessage(other, start);
     expect(other.send).toHaveBeenCalledWith(expect.stringContaining('Resume the active player'));
     expect(mocks.setup).not.toHaveBeenCalled();
