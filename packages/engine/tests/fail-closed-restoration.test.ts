@@ -118,6 +118,10 @@ const engineSourcesFor = (name: string): string =>
 
 describe('fail-closed restoration baseline', () => {
   it('keeps the remaining restoration cards explicitly contained for the documented reason', () => {
+    // A card is either still contained or restored, never both.
+    expect(
+      expected.filter((card) => restored.some((entry) => entry.oracleId === card.oracleId)),
+    ).toEqual([]);
     for (const card of expected) {
       const pinned = fixture.cards.find((entry) => entry.card.oracleId === card.oracleId);
       expect(pinned?.sha256, card.name).toBe(card.sha256);

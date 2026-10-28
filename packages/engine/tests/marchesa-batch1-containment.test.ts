@@ -336,6 +336,17 @@ describe('Marchesa catalog audit containment', () => {
   });
 
   it('marks both real IDs and fixture aliases explicitly unsupported', () => {
+    // A restored card must have left containment: no leftover "explicitly unsupported" demotion
+    // under either its real Oracle id or its fixture alias.
+    for (const { card } of fixture.cards.filter(({ card }) => restoredCards.has(card.name))) {
+      const alias = interpretCard({ ...card, oracleId: fixtureOracleId(card.name) });
+      expect(interpretCard(card).unmodeledReasons.join('\n'), card.name).not.toContain(
+        'explicitly unsupported',
+      );
+      expect(alias.unmodeledReasons.join('\n'), `${card.name} alias`).not.toContain(
+        'explicitly unsupported',
+      );
+    }
     for (const { card } of fixture.cards.filter(({ card }) => !restoredCards.has(card.name))) {
       const reason = REASONS[card.name]!;
       const real = interpretCard(card);
@@ -351,6 +362,10 @@ describe('Marchesa catalog audit containment', () => {
   });
 
   it('does not leave an executable substitute for the contained cards', () => {
+    // A restored card's override carries a real definition, not the empty containment stub.
+    for (const { card } of fixture.cards.filter(({ card }) => restoredCards.has(card.name))) {
+      expect(getOverride(card.oracleId)?.unsupportedReason, card.name).toBeUndefined();
+    }
     for (const { card } of fixture.cards.filter(({ card }) => !restoredCards.has(card.name))) {
       const override = getOverride(card.oracleId)!;
       expect(override.unsupportedReason, card.name).toBeDefined();
