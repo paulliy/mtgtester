@@ -34,6 +34,8 @@ export type DecisionSource =
   | 'strategist'
   | 'human'
   | 'reflection'
+  /** Reading a player's free-text deal into terms (ADR 0035 phase 4). */
+  | 'dealDraft'
   | 'jev';
 
 /** Sources answered locally: recorded, but never billed and never rate-limited. */

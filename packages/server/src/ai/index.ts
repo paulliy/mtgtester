@@ -29,3 +29,4 @@ export * from './jev-context';
 export * from './jev-client';
 export * from './jev-policy';
 export * from './jev-runtime';
+export * from './deal-draft';

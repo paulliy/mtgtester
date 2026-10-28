@@ -64,5 +64,9 @@ export function describeMessage(m: TableMessage, name: SeatName = (s) => s): str
                 : '';
       return `Deal ${m.dealId} is off${why}.`;
     }
+    case 'withdrawn':
+      return m.reason === 'expired'
+        ? `${name(m.from)}'s offer lapsed unanswered.`
+        : `${name(m.from)} withdraws the offer: it no longer holds.`;
   }
 }

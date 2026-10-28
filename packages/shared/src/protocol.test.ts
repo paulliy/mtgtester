@@ -28,6 +28,8 @@ describe('protocol message names', () => {
       'replayUnlocked',
       'gameOver',
       'gameReflections',
+      'diplomacyState',
+      'dealDraft',
       'error',
     ]);
     expect([...CLIENT_TO_SERVER_TYPES]).toEqual([
@@ -43,6 +45,9 @@ describe('protocol message names', () => {
       'resumePlayerAbility',
       'cancelYield',
       'resumeGame',
+      'proposeDeal',
+      'answerDeal',
+      'draftDeal',
     ]);
   });
 });
@@ -107,8 +112,51 @@ describe('isClientToServerMessage', () => {
       { type: 'resumePlayerAbility', payload: { key: 'card-1:0' } },
       { type: 'cancelYield', payload: {} },
       { type: 'resumeGame', payload: { sessionToken: 'opaque-token' } },
+      {
+        type: 'proposeDeal',
+        payload: {
+          to: 'P2',
+          rounds: 1,
+          obligations: [{ kind: 'noAttack', by: 'P1', against: 'P2' }],
+        },
+      },
+      {
+        type: 'answerDeal',
+        payload: {
+          dealId: 'deal-3',
+          answer: 'decline',
+          counter: { rounds: 2, obligations: [{ kind: 'attackPlayer', by: 'P2', target: 'P4' }] },
+        },
+      },
+      { type: 'draftDeal', payload: { text: 'leave me alone and I will leave you alone' } },
     ];
     expect(messages.map(isClientToServerMessage)).toEqual(CLIENT_TO_SERVER_TYPES.map(() => true));
+  });
+
+  it('rejects malformed deal messages before the table ever sees them', () => {
+    const bad = [
+      // An unknown obligation kind, and an extra field on a known one.
+      { type: 'proposeDeal', payload: { to: 'P2', rounds: 1, obligations: [{ kind: 'gift' }] } },
+      {
+        type: 'proposeDeal',
+        payload: {
+          to: 'P2',
+          rounds: 1,
+          obligations: [{ kind: 'noAttack', by: 'P1', against: 'P2', card: 'x' }],
+        },
+      },
+      { type: 'proposeDeal', payload: { to: 'P9', rounds: 1, obligations: [] } },
+      { type: 'proposeDeal', payload: { to: 'P2', rounds: 1.5, obligations: [] } },
+      // A counter only travels with a decline.
+      {
+        type: 'answerDeal',
+        payload: { dealId: 'd', answer: 'accept', counter: { rounds: 1, obligations: [] } },
+      },
+      { type: 'answerDeal', payload: { dealId: '', answer: 'accept' } },
+      { type: 'draftDeal', payload: { text: '   ' } },
+      { type: 'draftDeal', payload: { text: 'x'.repeat(501) } },
+    ];
+    expect(bad.map(isClientToServerMessage)).toEqual(bad.map(() => false));
   });
 
   it('rejects malformed player submissions and resume attempts', () => {

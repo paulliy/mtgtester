@@ -693,3 +693,210 @@ describe('DiplomacyTable — keeping, breaking and ending deals', () => {
     expect(table.messages().length).toBeGreaterThan(0);
   });
 });
+
+describe('DiplomacyTable — seats that answer later (ADR 0035 phase 3)', () => {
+  /** P2 is a human: it answers later, and the table never proposes or speaks for it. */
+  function humanTable(w: World, proposesOnItsOwn: (seat: PlayerId) => boolean = () => false) {
+    return new DiplomacyTable({
+      seed: 'seed',
+      seats: w.order,
+      viewOf: (seat) => viewFrom(w, seat),
+      negotiates: () => true,
+      answersLater: (seat) => seat === 'P2',
+      proposesOnItsOwn,
+    });
+  }
+  const truce = [
+    { kind: 'noAttack', by: 'P1', against: 'P2' },
+    { kind: 'noAttack', by: 'P2', against: 'P1' },
+  ] as const;
+
+  it('leaves an offer to the human pending until it answers, then activates it', () => {
+    const w = world();
+    const table = humanTable(w);
+    runTurns(table, w, 1, 1);
+    const outcome = table.offer({ proposer: 'P1', to: 'P2', rounds: 1, obligations: [...truce] });
+    expect(outcome.kind).toBe('pending');
+    if (outcome.kind !== 'pending') return;
+    expect(table.activeDeals()).toHaveLength(0);
+    expect(table.seatState('P2').offers.map((d) => d.id)).toEqual([outcome.deal.id]);
+    expect(table.seatState('P1').offers).toHaveLength(0);
+
+    const answered = table.answer('P2', outcome.deal.id, 'accept');
+    expect(answered.kind).toBe('accepted');
+    expect(table.activeDeals().map((d) => d.id)).toEqual([outcome.deal.id]);
+    expect(table.seatState('P2').offers).toHaveLength(0);
+    expect(table.messages().at(-1)).toMatchObject({
+      kind: 'response',
+      from: 'P2',
+      answer: 'accept',
+    });
+  });
+
+  it('lets only the recipient answer, and only once', () => {
+    const w = world();
+    const table = humanTable(w);
+    runTurns(table, w, 1, 1);
+    const outcome = table.offer({ proposer: 'P1', to: 'P2', rounds: 1, obligations: [...truce] });
+    if (outcome.kind !== 'pending') throw new Error('expected a pending offer');
+    expect(table.answer('P3', outcome.deal.id, 'accept')).toEqual({
+      kind: 'refused',
+      reason: 'noSuchOffer',
+    });
+    table.answer('P2', outcome.deal.id, 'decline');
+    expect(table.answer('P2', outcome.deal.id, 'accept')).toEqual({
+      kind: 'refused',
+      reason: 'noSuchOffer',
+    });
+    expect(table.activeDeals()).toHaveLength(0);
+  });
+
+  it('lets an unanswered offer lapse when the next turn starts', () => {
+    const w = world();
+    const table = humanTable(w);
+    runTurns(table, w, 1, 1);
+    const outcome = table.offer({ proposer: 'P1', to: 'P2', rounds: 1, obligations: [...truce] });
+    if (outcome.kind !== 'pending') throw new Error('expected a pending offer');
+    runTurns(table, w, 2, 2);
+    expect(table.seatState('P2').offers).toHaveLength(0);
+    expect(table.messages()).toContainEqual({
+      kind: 'withdrawn',
+      turn: 2,
+      from: 'P1',
+      dealId: outcome.deal.id,
+      reason: 'expired',
+    });
+    expect(table.answer('P2', outcome.deal.id, 'accept').kind).toBe('refused');
+  });
+
+  it('withdraws an accepted offer the proposer no longer wants', () => {
+    const w = world();
+    const table = humanTable(w);
+    runTurns(table, w, 1, 1);
+    // A one-sided gift from P1: valid to offer, but P1's own evaluator never wants it.
+    const outcome = table.offer({
+      proposer: 'P1',
+      to: 'P2',
+      rounds: 2,
+      obligations: [{ kind: 'noAttack', by: 'P1', against: 'P2' }],
+    });
+    if (outcome.kind !== 'pending') throw new Error('expected a pending offer');
+    expect(table.answer('P2', outcome.deal.id, 'accept').kind).toBe('withdrawn');
+    expect(table.activeDeals()).toHaveLength(0);
+    expect(table.messages().at(-1)).toMatchObject({ kind: 'withdrawn', reason: 'stale' });
+  });
+
+  it("sends a bot's counter to the human as a pending offer", () => {
+    const w = world();
+    const table = humanTable(w);
+    runTurns(table, w, 1, 1);
+    // P1 will not turn on P3 for nothing, and counters with terms of its own.
+    const outcome = table.offer({
+      proposer: 'P2',
+      to: 'P1',
+      rounds: 2,
+      obligations: [{ kind: 'attackPlayer', by: 'P1', target: 'P3' }],
+    });
+    expect(outcome).toMatchObject({ kind: 'declined', counterPending: true });
+    if (outcome.kind !== 'declined' || outcome.counter === undefined) return;
+    const offers = table.seatState('P2').offers;
+    expect(offers.map((d) => d.id)).toEqual([outcome.counter.id]);
+    expect(offers[0]?.proposer).toBe('P1');
+    expect(table.answer('P2', outcome.counter.id, 'accept').kind).toBe('accepted');
+  });
+
+  it("puts the human's counter to the bot, which answers at once", () => {
+    const w = world();
+    const table = humanTable(w);
+    runTurns(table, w, 1, 1);
+    const outcome = table.offer({ proposer: 'P1', to: 'P2', rounds: 1, obligations: [...truce] });
+    if (outcome.kind !== 'pending') throw new Error('expected a pending offer');
+    table.offer({
+      proposer: 'P2',
+      to: 'P3',
+      rounds: 1,
+      obligations: [{ kind: 'noAttack', by: 'P3', against: 'P2' }],
+    });
+    // The human has used its own proposal, but a counter answers an offer made to it.
+    const counter = table.answer('P2', outcome.deal.id, 'decline', {
+      rounds: 2,
+      obligations: [...truce],
+    });
+    expect(['accepted', 'declined']).toContain(counter.kind);
+    const said = table.messages().filter((m) => m.kind === 'response');
+    expect(said.find((m) => m.dealId === outcome.deal.id)).toMatchObject({
+      from: 'P2',
+      answer: 'decline',
+      counter: { rounds: 2 },
+    });
+  });
+
+  it('opens a second slot to propose once attackers are declared', () => {
+    const w = world();
+    const table = humanTable(w);
+    runTurns(table, w, 1, 1);
+    const ask = (to: PlayerId) =>
+      table.offer({
+        proposer: 'P2',
+        to,
+        rounds: 1,
+        obligations: [{ kind: 'noAttack', by: to, against: 'P2' }],
+      });
+    expect(table.seatState('P2')).toMatchObject({ slot: 'turnStart', canPropose: true });
+    expect(ask('P3').kind).not.toBe('refused');
+    expect(table.seatState('P2').canPropose).toBe(false);
+    expect(ask('P4')).toEqual({ kind: 'refused', reason: 'rateLimited' });
+
+    const declare: DecisionRequest = { ...priority(1, 'P1'), decisionType: 'declareAttackers' };
+    table.beforeDecision(declare);
+    table.afterDecision(declare, { requestId: declare.requestId, actionId: 0 });
+    // A declaration asked again is still the declaration.
+    table.beforeDecision(declare);
+    expect(table.seatState('P2').slot).toBe('turnStart');
+    table.beforeDecision({ ...priority(1, 'P1'), requestId: 'after' });
+    expect(table.seatState('P2')).toMatchObject({ slot: 'afterAttackers', canPropose: true });
+    expect(ask('P4').kind).not.toBe('refused');
+  });
+
+  it('never proposes or calls the threat for the human, but still offers it deals', () => {
+    const w = world();
+    // P2 calls the threat when it is active and negotiates; as a human it must not.
+    const table = humanTable(w, (seat) => seat !== 'P2');
+    runTurns(table, w, 2, 6);
+    const spoken = table.messages().filter((m) => 'from' in m && m.from === 'P2');
+    expect(spoken.filter((m) => m.kind !== 'response')).toEqual([]);
+    expect(table.messages().filter((m) => m.kind === 'threatCall')[0]?.from).not.toBe('P2');
+  });
+
+  it('keeps a pending offer across a save and restore', () => {
+    const w = world();
+    const table = humanTable(w);
+    runTurns(table, w, 1, 1);
+    const outcome = table.offer({ proposer: 'P1', to: 'P2', rounds: 1, obligations: [...truce] });
+    if (outcome.kind !== 'pending') throw new Error('expected a pending offer');
+    const restored = DiplomacyTable.fromState(
+      {
+        seed: 'seed',
+        seats: w.order,
+        viewOf: (seat) => viewFrom(w, seat),
+        negotiates: () => true,
+        answersLater: (seat) => seat === 'P2',
+        proposesOnItsOwn: () => false,
+      },
+      JSON.parse(JSON.stringify(table.toState())) as DiplomacyState,
+    );
+    expect(restored.seatState('P2')).toEqual(table.seatState('P2'));
+    expect(restored.answer('P2', outcome.deal.id, 'accept').kind).toBe('accepted');
+  });
+
+  it("names the human's possible partners and every seat's record", () => {
+    const w = world();
+    const table = humanTable(w);
+    runTurns(table, w, 1, 1);
+    const state = table.seatState('P2');
+    expect(state.partners).toEqual(expect.arrayContaining(['P1', 'P3', 'P4']));
+    expect(state.trust.map((t) => t.seat)).toEqual(['P1', 'P2', 'P3', 'P4']);
+    table.offer({ proposer: 'P1', to: 'P2', rounds: 1, obligations: [...truce] });
+    expect(table.seatState('P2').partners).not.toContain('P1');
+  });
+});
