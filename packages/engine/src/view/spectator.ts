@@ -11,6 +11,7 @@
 
 import type {
   CommanderDamageEntry,
+  DecisionType,
   GameEvent,
   PlayerBoardState,
   SpectatorCard,
@@ -293,6 +294,106 @@ function viewerMana(ctx: GameContext, playerId: string): PlayerBoardState['viewe
  * Active-player browser projection. Build it inside the engine so hidden cards never cross the
  * server/browser boundary and face-down objects are redacted before serialization.
  */
+/** Whether another player sees a field of a hidden object as it is, or a redacted value. */
+type Disclosure = 'keep' | 'redact';
+
+/**
+ * Another player's view of a face-down permanent (CR 708.2): a 2/2 creature with no name, text,
+ * mana cost or colors, whose public state (tapped, counters, combat) is still visible. Every
+ * projected field is classified, so a new one fails typecheck until it is decided (ADR 0031
+ * decision 12); a field the table does not list is dropped.
+ */
+const FACE_DOWN_PERMANENT_FIELDS = {
+  id: 'keep',
+  name: 'redact',
+  typeLine: 'redact',
+  manaCost: 'redact',
+  oracleText: 'redact',
+  scryfallId: 'redact',
+  owner: 'keep',
+  imageFace: 'redact',
+  controller: 'keep',
+  tapped: 'keep',
+  power: 'keep',
+  toughness: 'keep',
+  damageMarked: 'keep',
+  counters: 'keep',
+  statuses: 'keep',
+  summoningSick: 'keep',
+  attachedTo: 'keep',
+  attacking: 'keep',
+  attackingPlaneswalker: 'keep',
+  blocking: 'keep',
+  blockedBy: 'keep',
+  keywords: 'keep',
+  isToken: 'redact',
+  colors: 'redact',
+} satisfies Record<keyof SpectatorPermanent, Disclosure>;
+
+/** Another player's view of a card exiled face down: whose it is, and nothing about it. */
+const FACE_DOWN_CARD_FIELDS = {
+  id: 'keep',
+  name: 'redact',
+  typeLine: 'redact',
+  manaCost: 'redact',
+  oracleText: 'redact',
+  scryfallId: 'redact',
+  owner: 'keep',
+} satisfies Record<keyof SpectatorCard, Disclosure>;
+
+/** Another player's view of a commander in a hidden zone: its public identity and tax only. */
+const HIDDEN_COMMANDER_FIELDS = {
+  cardId: 'keep',
+  objectId: 'redact',
+  name: 'keep',
+  zone: 'redact',
+  castCount: 'keep',
+  taxGeneric: 'keep',
+  scryfallId: 'redact',
+  colorIdentity: 'keep',
+} satisfies Record<keyof SpectatorCommander, Disclosure>;
+
+function disclose<T extends object>(
+  value: T,
+  fields: Record<keyof T, Disclosure>,
+  redacted: Partial<T>,
+): T {
+  const out: Partial<T> = { ...redacted };
+  for (const field of Object.keys(fields) as (keyof T)[]) {
+    if (fields[field] === 'keep' && field in value) out[field] = value[field];
+  }
+  return out as T;
+}
+
+/** The redaction tables, for the test that every key a real projection carries is classified. */
+export const PLAYER_BOARD_DISCLOSURE = {
+  faceDownPermanent: FACE_DOWN_PERMANENT_FIELDS,
+  faceDownCard: FACE_DOWN_CARD_FIELDS,
+  hiddenCommander: HIDDEN_COMMANDER_FIELDS,
+} as const;
+
+/**
+ * A card exiled face down. `moveObject` sets the flag; foretold and hideaway cards are also
+ * recognized directly, so a path that marks one without the flag still fails closed.
+ */
+function isExiledFaceDown(card: EngineCardObject | undefined): boolean {
+  return (
+    card !== undefined &&
+    (card.exiledFaceDown === true ||
+      card.foretold !== undefined ||
+      card.attachedToCardId !== undefined)
+  );
+}
+
+/** Is a commander somewhere only its owner may look: a hand, a library, or face down? */
+function commanderHidden(ctx: GameContext, commander: SpectatorCommander): boolean {
+  if (commander.zone === 'hand' || commander.zone === 'library') return true;
+  const permanent = ctx.state.battlefield.find((p) => p.cardId === commander.cardId);
+  if (permanent?.faceDown === true) return true;
+  const exiled = ctx.state.exile.find((card) => card.cardId === commander.cardId);
+  return isExiledFaceDown(exiled);
+}
+
 export function buildPlayerBoardState(ctx: GameContext, playerId: string): PlayerBoardState {
   const spectator = buildSpectatorState(ctx);
   return {
@@ -303,42 +404,50 @@ export function buildPlayerBoardState(ctx: GameContext, playerId: string): Playe
       player,
       card: cardView(ctx, card),
     })),
-    seats: spectator.seats.map((seat) => ({
-      ...seat,
-      handSize: seat.hand.length,
-      hand: seat.seat === playerId ? seat.hand : null,
-    })),
-    battlefield: spectator.battlefield.map((permanent) => {
-      if (!permanent.statuses.includes('faceDown') || permanent.controller === playerId) {
-        return permanent;
-      }
+    seats: spectator.seats.map((seat) => {
+      const own = seat.seat === playerId;
       return {
-        ...permanent,
-        name: 'Face-down permanent',
-        typeLine: 'Creature',
-        manaCost: null,
-        oracleText: '',
-        scryfallId: null,
-        isToken: false,
-        colors: [],
+        ...seat,
+        handSize: seat.hand.length,
+        hand: own ? seat.hand : null,
+        // Another seat's yield is its own intent, not game state the table can see.
+        yieldingUntilEndOfTurn: own && seat.yieldingUntilEndOfTurn,
+        commanders: own
+          ? seat.commanders
+          : seat.commanders.map((commander) =>
+              commanderHidden(ctx, commander)
+                ? disclose(commander, HIDDEN_COMMANDER_FIELDS, {
+                    zone: 'hidden',
+                    objectId: null,
+                    scryfallId: null,
+                  })
+                : commander,
+            ),
       };
     }),
+    battlefield: spectator.battlefield.map((permanent) =>
+      !permanent.statuses.includes('faceDown') || permanent.controller === playerId
+        ? permanent
+        : disclose(permanent, FACE_DOWN_PERMANENT_FIELDS, {
+            name: 'Face-down permanent',
+            typeLine: 'Creature',
+            manaCost: null,
+            oracleText: '',
+            scryfallId: null,
+            isToken: false,
+            colors: [],
+          }),
+    ),
     exile: spectator.exile.map((card) => {
       const engineCard = ctx.state.exile.find((candidate) => candidate.id === card.id);
-      if (
-        (engineCard?.attachedToCardId === undefined && engineCard?.foretold === undefined) ||
-        engineCard.ownerId === playerId
-      ) {
-        return card;
-      }
-      return {
-        ...card,
+      if (!isExiledFaceDown(engineCard) || engineCard?.ownerId === playerId) return card;
+      return disclose(card, FACE_DOWN_CARD_FIELDS, {
         name: 'Face-down card',
         typeLine: '',
         manaCost: null,
         oracleText: '',
         scryfallId: null,
-      };
+      });
     }),
   };
 }
@@ -599,6 +708,43 @@ export function formatSpectatorLog(events: readonly GameEvent[]): SpectatorLogLi
 }
 
 /**
+ * Whether another seat's decision line reaches a player (ADR 0031 decision 12). Every decision
+ * type is classified, so a new one fails typecheck until it is decided; a type this table does
+ * not know is withheld.
+ */
+const DECISION_VISIBLE_TO_OTHERS = {
+  priority: true,
+  mulligan: false,
+  bottomCards: false,
+  declareAttackers: true,
+  declareBlockers: true,
+  chooseTargets: true,
+  chooseModes: true,
+  chooseX: true,
+  orderTriggers: true,
+  optionalTrigger: true,
+  commanderReplacement: true,
+  legendRule: true,
+  assignCombatDamage: true,
+  general: false,
+} satisfies Record<DecisionType, boolean>;
+
+/**
+ * Event types only their own seat sees: another seat's draws and library manipulation reveal
+ * hidden information, and a cancelled yield reveals a seat's intent. Their public consequences
+ * (discard, mill) are still narrated by later events.
+ */
+const PRIVATE_EVENT_TYPES: ReadonlySet<string> = new Set([
+  'draw',
+  'scry',
+  'surveil',
+  'yieldCancelled',
+]);
+
+/** What a player reads in place of the engine's own halt reason. */
+export const PLAYER_HALT_TEXT = 'The rules engine could not continue this game.';
+
+/**
  * Hidden-information-safe live log. Private bottoming and catch-all card choices made by
  * another seat are omitted; their public consequences are still narrated by later events.
  */
@@ -609,6 +755,8 @@ export function formatPlayerLog(
   return formatSpectatorLog(
     events
       .map((event) => {
+        // The raw halt reason names engine internals; a player reads a fixed text.
+        if (event.type === 'engineHalt') return { ...event, payload: { reason: PLAYER_HALT_TEXT } };
         // Another seat's hidden-information action (a face-down cast) reads as its public
         // description, never its card's name.
         const publicDescription = event.payload['publicDescription'];
@@ -623,15 +771,13 @@ export function formatPlayerLog(
       })
       .filter((event) => {
         if (event.actorSeat === playerId) return true;
-        // Opponents' draws and library manipulation reveal hidden information only to the
-        // spectator projection. Their public zone changes (discard and mill) remain narrated.
-        if (['draw', 'scry', 'surveil'].includes(event.type)) return false;
+        if (PRIVATE_EVENT_TYPES.has(event.type)) return false;
         if (event.type !== 'decision') return true;
         const decisionType = event.payload['decisionType'];
         return (
-          decisionType !== 'mulligan' &&
-          decisionType !== 'bottomCards' &&
-          decisionType !== 'general'
+          typeof decisionType === 'string' &&
+          Object.hasOwn(DECISION_VISIBLE_TO_OTHERS, decisionType) &&
+          DECISION_VISIBLE_TO_OTHERS[decisionType as DecisionType]
         );
       }),
   );

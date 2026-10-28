@@ -1258,6 +1258,7 @@ export function* moveObject(
         owner.commandZone.push(next);
         break;
       case 'exile':
+        if (target.faceDown === true) next.exiledFaceDown = true;
         ctx.state.exile.push(next);
         break;
       case 'library':

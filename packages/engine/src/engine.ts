@@ -337,6 +337,9 @@ export class Engine implements EngineDriver {
     const player = this.ctx.state.players.find((p) => p.id === playerId);
     if (player === undefined || player.yieldUntilEndOfTurn !== true) return false;
     player.yieldUntilEndOfTurn = false;
+    // The change is an input like a decision, so it is logged for replay (ADR 0031 decision 8).
+    // Only a human seat cancels a yield, so games without one keep identical event streams.
+    emit(this.ctx, 'yieldCancelled', { player: player.id }, player.id);
     return true;
   }
 

@@ -449,6 +449,11 @@ export interface EngineCardObject extends EngineObject, CastRecord {
   leftBattlefieldObjectId?: ObjectId;
   /** 903.9a flag — see `EnginePermanent.commanderSbaPending`. */
   commanderSbaPending?: boolean;
+  /**
+   * Exiled face down (CR 406.3): foretold, hideaway and similar. Only its owner may see it, and
+   * a later zone change makes a new object without the flag.
+   */
+  exiledFaceDown?: true;
   /** For cards exiled by Hideaway (Spinerock Knoll, Mosswort Bridge). */
   attachedToCardId?: string;
   /**
