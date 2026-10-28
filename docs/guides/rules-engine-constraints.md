@@ -6,7 +6,7 @@ Read before changing `packages/engine`, `packages/bot`, or any provider code.
 - Auto-resolve only mathematically forced actions. Strategic filtering belongs in provider policy or explicit player preference, not legal-action generation.
 - Games are fully seeded. Do not use `Math.random()` in engine or bot paths; use the project PRNG/RNG.
 - Providers receive a `PlayerView`, never `GameState`. Protect hidden information in UI, logs, events, action presentation, and AI context.
-- Preserve deterministic replay: timing, wall clocks, and provider/network behavior must not alter fixed-seed engine outcomes.
+- Preserve reproducible replay: a game is reproducible from its stored config, key and recorded inputs. A clock decides when a timeout fires, not what the engine does with a recorded input, and provider or network behavior must not alter the outcome of the same inputs. Out-of-band inputs (a cancelled yield, a concession) are recorded as events and replayed at their sequence. Replay is promised only on the same build and card data, and is checked with state hashes in tests ([ADR 0031](../decisions/0031-multiplayer-tables.md) decision 8).
 - Prefer `unimplemented()` to an approximate card implementation. A modeled card must faithfully implement the semantics it claims.
 - Coverage is evidence, not a general Commander-support claim. Add behavior tests and run coverage tools before reporting a card as modeled.
 - Keep `packages/engine` free of I/O, network access, UI logic, and provider policy.
