@@ -73,8 +73,8 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 
 ## Progress
 
-| Step | State       | Done so far                                                              | Pull request |
-| ---- | ----------- | ------------------------------------------------------------------------ | ------------ |
-| 1    | done        | stale harness deleted; harness-integrity guard                           | #44          |
-| 3    | in progress | phase 1 steps 2, 3 and 5: `EngineInvariantError`, references, `optionAt` | #44          |
-| 4    | in progress | P1 data-key registry done; P3 in review                                  | #44          |
+| Step | State       | Done so far                                    | Pull request |
+| ---- | ----------- | ---------------------------------------------- | ------------ |
+| 1    | done        | stale harness deleted; harness-integrity guard | #44          |
+| 3    | in progress | phase 1 steps 2, 3, 4 (validation), 5, 7 and 8 | #44          |
+| 4    | in progress | P1 data-key registry done; P3 in review        | #44          |
