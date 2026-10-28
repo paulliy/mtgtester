@@ -4,6 +4,7 @@
  */
 
 import type { DecisionRequest, PlayerId, PlayerView, TurnStrategy } from '@mtg/shared';
+import type { SeatDiplomacyContext } from './diplomacy-context';
 import { summarizeHandCard, summarizePermanent } from './card-summary';
 import { budgetContext, type ContextBudgetReport } from './context-budget';
 import { RULES_PRIMER, tacticianPrimerFor } from './primer';
@@ -36,6 +37,8 @@ export interface TacticalGuidance {
   recentDecisions: readonly RecentSeatDecision[];
   publicMemory?: PublicMemorySnapshot;
   stateFeatures?: StateFeatures;
+  /** The seat's own deals (ADR 0035 phase 4); absent when it has none, so the prompt is unchanged. */
+  deals?: SeatDiplomacyContext;
 }
 
 export interface ContextOptions {
@@ -176,6 +179,7 @@ export function assemblePrompt(
       : {
           turnStrategy: guidance.strategy,
           yourRecentDecisions: guidance.recentDecisions,
+          ...(guidance.deals !== undefined ? { tableDeals: guidance.deals } : {}),
           ...(options.publicMemory === undefined &&
           options.includeMemory === true &&
           guidance.publicMemory !== undefined

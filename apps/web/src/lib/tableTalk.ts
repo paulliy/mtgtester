@@ -60,6 +60,8 @@ export function dealsInForce(talk: readonly TableTalkLine[], upTo: number | null
         inForce.delete(m.dealId);
         break;
       case 'threatCall':
+      case 'withdrawn':
+        // An offer leaving the table puts no deal in force and ends none.
         break;
     }
   }
@@ -93,4 +95,27 @@ export function dealLinesFor(seat: PlayerId, deals: readonly DealInForce[]): str
             .join(', ') || 'owes nothing';
       return `with ${other}: ${owed}`;
     });
+}
+
+/** An obligation in words, naming seats by `name` (the seat id by default). */
+export function describeObligation(
+  o: DealObligation,
+  name: (seat: PlayerId) => string = (seat) => seat,
+): string {
+  const by = name(o.by);
+  switch (o.kind) {
+    case 'noAttack':
+      return `${by} won't attack ${name(o.against)}`;
+    case 'noTarget':
+      return `${by} won't target ${name(o.against)}`;
+    case 'noCounter':
+      return `${by} won't counter ${name(o.against)}'s spells`;
+    case 'attackPlayer':
+      return `${by} attacks ${name(o.target)}`;
+  }
+}
+
+/** A deal's length in words. */
+export function describeRounds(rounds: number): string {
+  return rounds === 1 ? 'for 1 round' : `for ${rounds} rounds`;
 }

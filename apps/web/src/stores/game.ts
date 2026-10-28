@@ -13,9 +13,14 @@ import type {
   AiReflection,
   CardTestScenarioMetadata,
   ComputeHaltedPayload,
+  DealDraftPayload,
+  DealObligation,
+  DealOutcomeNotice,
+  DealTerms,
   DebugFlags,
   DecisionPendingPayload,
   GameMode,
+  DiplomacySeatState,
   GameOverPayload,
   IgnoredPlayerAbility,
   PlayerActionRequiredPayload,
@@ -166,6 +171,18 @@ export const useGameStore = defineStore('game', () => {
   const diplomacy = ref(false);
   const tableTalk = ref<TableTalkLine[]>([]);
   const showTableTalk = ref(true);
+  /** The human seat's view of the table (ADR 0035 phase 3): offers, deals, records, slot. */
+  const diplomacySeat = ref<DiplomacySeatState | null>(null);
+  const lastDealOutcome = ref<DealOutcomeNotice | null>(null);
+  const dealDraft = ref<DealDraftPayload | null>(null);
+  const dealDraftPending = ref(false);
+
+  function resetDiplomacySeat(): void {
+    diplomacySeat.value = null;
+    lastDealOutcome.value = null;
+    dealDraft.value = null;
+    dealDraftPending.value = false;
+  }
 
   function addTableTalk(incoming: TableTalkLine[] | undefined): void {
     if (incoming === undefined || incoming.length === 0) return;
@@ -366,6 +383,7 @@ export const useGameStore = defineStore('game', () => {
         heldDecision.value = null;
         annotations.value = new Map();
         tableTalk.value = [];
+        resetDiplomacySeat();
         reflections.value = [];
         reflectingSeats.value = [];
         reflectionsComplete.value = false;
@@ -404,6 +422,17 @@ export const useGameStore = defineStore('game', () => {
         snapshotTurns.value = message.payload.snapshotTurns;
         addAnnotations(message.payload.annotations);
         addTableTalk(message.payload.tableTalk);
+        break;
+
+      case 'diplomacyState':
+        if (message.payload.gameId !== gameId.value) break;
+        diplomacySeat.value = message.payload.state;
+        if (message.payload.outcome !== undefined) lastDealOutcome.value = message.payload.outcome;
+        break;
+
+      case 'dealDraft':
+        dealDraft.value = message.payload;
+        dealDraftPending.value = false;
         break;
 
       case 'decisionPending':
@@ -563,10 +592,8 @@ export const useGameStore = defineStore('game', () => {
       // Only sent when asked for, so a game that does not want commentary leaves the server's own
       // `AI_REFLECTION_ENABLED` default in charge.
       ...(reflectionEnabled && kind === 'ai' && { reflectionEnabled: true }),
-      // Deals and table talk are for spectator games of rule-based bots (ADR 0035 phase 2).
-      ...(options.diplomacy === true &&
-        mode === 'spectator' &&
-        kind === 'random' && { diplomacy: true }),
+      // Deals and table talk (ADR 0035): any table, any seat kind. Sent only when asked for.
+      ...(options.diplomacy === true && { diplomacy: true }),
       ...(requestedSeed !== undefined && requestedSeed !== '' && { seed: requestedSeed }),
       ...(previewId !== undefined && { previewId }),
     };
@@ -762,9 +789,36 @@ export const useGameStore = defineStore('game', () => {
     if (!wasShowingReasoning && next.showAIResponses) void loadAnnotations();
   }
 
+  function proposeDeal(terms: DealTerms): void {
+    lastDealOutcome.value = null;
+    socket?.send({ type: 'proposeDeal', payload: terms });
+  }
+
+  function answerDeal(
+    dealId: string,
+    answer: 'accept' | 'decline',
+    counter?: { obligations: DealObligation[]; rounds: number },
+  ): void {
+    lastDealOutcome.value = null;
+    socket?.send({
+      type: 'answerDeal',
+      payload:
+        answer === 'decline' && counter !== undefined
+          ? { dealId, answer, counter }
+          : { dealId, answer },
+    });
+  }
+
+  function requestDealDraft(text: string): void {
+    dealDraft.value = null;
+    dealDraftPending.value = true;
+    socket?.send({ type: 'draftDeal', payload: { text } });
+  }
+
   function abandonGame(): void {
     socket?.send({ type: 'abandonGame', payload: {} });
     gameId.value = null;
+    resetDiplomacySeat();
     state.value = null;
     playerState.value = null;
     playerAction.value = null;
@@ -815,6 +869,13 @@ export const useGameStore = defineStore('game', () => {
     showTableTalk,
     dealsNow,
     loadTableTalk,
+    diplomacySeat,
+    lastDealOutcome,
+    dealDraft,
+    dealDraftPending,
+    proposeDeal,
+    answerDeal,
+    requestDealDraft,
     reflections,
     reflectingSeats,
     reflectionsComplete,

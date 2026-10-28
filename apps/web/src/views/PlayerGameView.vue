@@ -11,6 +11,7 @@ import CombatOverlay from '../components/CombatOverlay.vue';
 import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import CopyGameReportButton from '../components/CopyGameReportButton.vue';
+import DealPanel from '../components/DealPanel.vue';
 import DecisionPanel from '../components/DecisionPanel.vue';
 import DeckColors from '../components/DeckColors.vue';
 import ManaTaps from '../components/ManaTaps.vue';
@@ -2141,6 +2142,7 @@ function abandon(): void {
           :is-chosen-target="isChosenTarget"
           @select="selectSource"
         />
+        <DealPanel v-if="store.diplomacy && store.diplomacySeat" />
       </aside>
       <!-- Commander damage and the log stay mounted while hidden, so the log keeps following play
            and opening the drawer shows it already at the present. -->

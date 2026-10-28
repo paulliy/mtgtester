@@ -77,8 +77,8 @@ const providerKind = ref<ProviderKind>('random');
  */
 const reflectionEnabled = ref(false);
 /**
- * Table talk and deals between the bots (ADR 0035). Offered only when watching rule-based bots:
- * the deals run inside the heuristic bot, and a human seat cannot take part yet.
+ * Table talk and deals (ADR 0035), for any table, watching or playing. Rule-based bots negotiate
+ * on their own; model-driven seats propose through their strategist, with no extra calls.
  */
 const diplomacy = ref(false);
 /** A replay seed the user typed. Blank means the session's own seed below. */
@@ -396,8 +396,7 @@ function start(): void {
       matchup.previewId,
       undefined,
       {
-        diplomacy:
-          gameMode.value === 'spectator' && providerKind.value === 'random' && diplomacy.value,
+        diplomacy: diplomacy.value,
       },
     ),
   );
@@ -691,12 +690,14 @@ const seatRows = computed(() =>
           >
         </label>
 
-        <label v-if="gameMode === 'spectator' && providerKind === 'random'" class="check">
+        <label class="check">
           <input v-model="diplomacy" type="checkbox" />
           <span
             >Table talk and deals
             <span class="hint"
-              >Bots call out threats and make short deals, shown in the log and on each seat.</span
+              >Bots call out threats and make short deals{{
+                gameMode === 'singlePlayer' ? ' with you' : ''
+              }}.</span
             ></span
           >
         </label>

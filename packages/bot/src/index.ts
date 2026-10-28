@@ -32,9 +32,12 @@ export { HeuristicDecisionProvider } from './provider';
 export {
   DIPLOMACY_STATE_VERSION,
   DiplomacyTable,
+  Exploiter,
+  MAX_CONCESSION_PER_DEAL,
   describeMessage,
   describeObligation,
   estimateTable,
+  summarizeExploits,
   withDiplomacy,
   withDiplomacyAsync,
 } from './diplomacy';
@@ -45,6 +48,9 @@ export type {
   DiplomacyState,
   DiplomacyStats,
   DiplomacyTableOptions,
+  ExploitRecord,
+  ExploitSummary,
+  ExploitTactic,
   OfferOutcome,
   OfferTerms,
   SeatEstimate,

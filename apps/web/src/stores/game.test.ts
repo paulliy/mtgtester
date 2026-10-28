@@ -608,3 +608,117 @@ it('rejects late state and log frames from a replaced game', () => {
   expect(store.viewTurn).toBe(4);
   expect(store.log.some((entry) => entry.text === 'retired game log')).toBe(false);
 });
+
+describe('store — deals with the human seat (ADR 0035 phase 3)', () => {
+  const seatState = {
+    turn: 2,
+    slot: 'turnStart' as const,
+    canPropose: true,
+    offers: [],
+    deals: [],
+    trust: [],
+    partners: ['P2'],
+    maxRounds: 3,
+    maxObligationsPerSide: 2,
+  };
+  let store: Store;
+
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    sent.length = 0;
+    store = useGameStore();
+    store.connect();
+    inbound?.(podGameStarted('g1'));
+  });
+
+  it('keeps the table state and the outcome of the last answer', () => {
+    inbound?.({
+      type: 'diplomacyState',
+      payload: { gameId: 'g1', state: seatState, outcome: { kind: 'pending' } },
+    });
+    expect(store.diplomacySeat).toEqual(seatState);
+    expect(store.lastDealOutcome).toEqual({ kind: 'pending' });
+    inbound?.({
+      type: 'diplomacyState',
+      payload: { gameId: 'g1', state: { ...seatState, turn: 3 } },
+    });
+    expect(store.diplomacySeat?.turn).toBe(3);
+    expect(store.lastDealOutcome).toEqual({ kind: 'pending' });
+  });
+
+  it('ignores state for another game and clears it on a new one', () => {
+    inbound?.({ type: 'diplomacyState', payload: { gameId: 'other', state: seatState } });
+    expect(store.diplomacySeat).toBeNull();
+    inbound?.({ type: 'diplomacyState', payload: { gameId: 'g1', state: seatState } });
+    inbound?.(podGameStarted('g2'));
+    expect(store.diplomacySeat).toBeNull();
+    expect(store.lastDealOutcome).toBeNull();
+  });
+
+  it('sends proposals, answers and drafts', () => {
+    const terms = {
+      to: 'P2' as const,
+      obligations: [{ kind: 'noAttack' as const, by: 'P1' as const, against: 'P2' as const }],
+      rounds: 2,
+    };
+    store.proposeDeal(terms);
+    store.answerDeal('d1', 'accept');
+    store.answerDeal('d2', 'decline', { obligations: terms.obligations, rounds: 1 });
+    store.requestDealDraft('leave me alone');
+    expect(sent).toEqual([
+      { type: 'proposeDeal', payload: terms },
+      { type: 'answerDeal', payload: { dealId: 'd1', answer: 'accept' } },
+      {
+        type: 'answerDeal',
+        payload: {
+          dealId: 'd2',
+          answer: 'decline',
+          counter: { obligations: terms.obligations, rounds: 1 },
+        },
+      },
+      { type: 'draftDeal', payload: { text: 'leave me alone' } },
+    ]);
+    expect(store.dealDraftPending).toBe(true);
+    inbound?.({
+      type: 'dealDraft',
+      payload: { text: 'leave me alone', terms: null, message: 'no' },
+    });
+    expect(store.dealDraftPending).toBe(false);
+    expect(store.dealDraft?.message).toBe('no');
+  });
+
+  it('asks for diplomacy at any table when chosen', () => {
+    const seats = Array.from({ length: 4 }, () => ({ kind: 'pool' as const }));
+    const start = (kind: 'random' | 'ai', mode: 'singlePlayer' | 'spectator'): unknown => {
+      sent.length = 0;
+      store.startGame(seats, kind, 's', mode, 'P1', false, undefined, undefined, {
+        diplomacy: true,
+      });
+      return (sent.find((m) => m.type === 'startGame') as { payload: { diplomacy?: boolean } })
+        .payload.diplomacy;
+    };
+    expect(start('random', 'singlePlayer')).toBe(true);
+    expect(start('random', 'spectator')).toBe(true);
+    expect(start('ai', 'singlePlayer')).toBe(true);
+    sent.length = 0;
+    store.startGame(seats, 'random', 's', 'spectator');
+    expect(
+      (sent.find((m) => m.type === 'startGame') as { payload: { diplomacy?: boolean } }).payload
+        .diplomacy,
+    ).toBeUndefined();
+  });
+
+  it('merges table talk from a player-mode batch', () => {
+    const talk = {
+      sequence: 4,
+      turn: 1,
+      message: { kind: 'threatCall', turn: 1, from: 'P2', leader: 'P3', reasons: [] },
+      text: 'P3 is ahead',
+    } as never;
+    inbound?.({
+      type: 'eventBatch',
+      payload: { gameId: 'g1', lines: [], frontierTurn: 1, snapshotTurns: [1], tableTalk: [talk] },
+    });
+    expect(store.tableTalk).toHaveLength(1);
+  });
+});

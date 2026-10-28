@@ -51,8 +51,10 @@ import {
   OpenAiDecisionProvider,
   publishReflections,
   RequestQueue,
+  readStrategistProposal,
   runDealDraft,
   runReflection,
+  seatDiplomacyContext,
   StrategyCoordinator,
   type AiClient,
   type AiConfig,
@@ -125,9 +127,9 @@ export interface MatchSessionOptions {
    */
   reflectionEnabled?: boolean;
   /**
-   * Let the seats make deals and talk at the table (ADR 0035): heuristic bots, and in a
-   * single-player game the player too (phase 3). Ignored for a game of model-driven seats, so an
-   * AI game is unaffected.
+   * Let the seats make deals and talk at the table (ADR 0035): heuristic bots, model-driven seats
+   * (phase 4, proposing through their strategist), and in a single-player game the player too
+   * (phase 3).
    */
   diplomacy?: boolean;
   /** Pre-arranged deterministic lab engine; omitted for every ordinary match. */
@@ -201,6 +203,8 @@ export class MatchSession {
   private pendingTalk: TableTalkLine[] = [];
   /** Every line of table talk so far, for a reconnecting viewer. */
   private readonly allTalk: TableTalkLine[] = [];
+  /** Strategist proposals made ahead of the turn they are for (ADR 0035 phase 4). */
+  private deferredProposals: Array<{ turn: number; seat: PlayerId; raw: unknown }> = [];
   /** Engine repairs of attack declarations seen so far, counted incrementally. */
   private repairedAttacks = 0;
   private repairCursor = 0;
@@ -239,9 +243,7 @@ export class MatchSession {
     this.recorder = opts.store?.recorderFor(opts.gameId) ?? null;
     const humanSeat = this.humanSeat;
     this.diplomacy =
-      opts.diplomacy === true &&
-      opts.providerKind !== 'ai' &&
-      opts.decisionProviderOverrides === undefined
+      opts.diplomacy === true && opts.decisionProviderOverrides === undefined
         ? new DiplomacyTable({
             seed: opts.seed,
             seats: opts.seats.map((s) => s.seat),
@@ -249,6 +251,9 @@ export class MatchSession {
             negotiates: () => true,
             // The player answers offers in their own time, and the table never speaks for them.
             answersLater: (seat) => seat === humanSeat,
+            // A model seat proposes through its strategist (phase 4), not the heuristic proposer;
+            // it still answers offers at once with the same evaluator, with no model call.
+            proposesOnItsOwn: (seat) => seat !== humanSeat && opts.providerKind !== 'ai',
             repairedAttacks: () => this.countRepairedAttacks(),
           })
         : null;
@@ -375,6 +380,7 @@ export class MatchSession {
           this.ensureAiCoordinator().recordDecision(request, response, 'human');
         }
         this.logger?.recordAnchor(request.requestId, anchorSequence);
+        this.offerDeferredProposals();
         this.collectTalk(anchorSequence);
         if (this.gameMode === 'singlePlayer') this.sendTalkNow();
         // The note is the gate, not the provider kind: a random provider never writes one, and
@@ -832,6 +838,42 @@ export class MatchSession {
     this.collectTalk(Math.max(0, last));
     this.sendTalkNow();
     this.sendDiplomacyState(noticeOf(outcome));
+  }
+
+  /**
+   * A strategist's `dealProposal` (phase 4), offered through the table like any other proposal.
+   * A plan made ahead of its turn waits until the table has opened that turn; one for a turn
+   * already past is dropped.
+   */
+  private offerFromStrategist(turn: number, seat: PlayerId, raw: unknown): void {
+    const table = this.diplomacy;
+    if (table === null || this.isOver()) return;
+    const state = table.seatState(seat);
+    if (turn < state.turn) return;
+    if (turn > state.turn) {
+      this.deferredProposals.push({ turn, seat, raw });
+      return;
+    }
+    const terms = readStrategistProposal(
+      raw,
+      seat,
+      this.engine.view(seat).opponents.map((o) => o.seat),
+      state,
+    );
+    if (terms === null) return;
+    table.offer({ proposer: seat, ...terms });
+    if (this.gameMode === 'singlePlayer') {
+      this.collectTalk(Math.max(0, this.runner.nextSequence() - 1));
+      this.sendTalkNow();
+      this.sendDiplomacyState();
+    }
+  }
+
+  private offerDeferredProposals(): void {
+    if (this.deferredProposals.length === 0) return;
+    const waiting = this.deferredProposals;
+    this.deferredProposals = [];
+    for (const p of waiting) this.offerFromStrategist(p.turn, p.seat, p.raw);
   }
 
   /** The player offers a deal (ADR 0035 phase 3). The table checks it like any other offer. */
@@ -1460,7 +1502,11 @@ export class MatchSession {
       return table === null ? bot : withDiplomacy(table, bot);
     };
     const inner: AsyncDecisionProvider =
-      this.opts.providerKind === 'ai' ? this.buildAiProvider() : new AsyncAdapter(heuristic());
+      this.opts.providerKind !== 'ai'
+        ? new AsyncAdapter(heuristic())
+        : table === null
+          ? this.buildAiProvider()
+          : withDiplomacyAsync(table, this.buildAiProvider());
     const pacedProvider: AsyncDecisionProvider =
       this.gameMode === 'singlePlayer'
         ? {
@@ -1548,6 +1594,26 @@ export class MatchSession {
           }),
         ),
       );
+      const table = this.diplomacy;
+      if (table !== null) {
+        this.aiCoordinator.diplomacyFor = (seat, role) => {
+          const state = table.seatState(seat);
+          return seatDiplomacyContext(
+            seat,
+            {
+              deals: state.deals,
+              records: state.trust,
+              canPropose: state.canPropose,
+              maxRounds: state.maxRounds,
+              maxObligationsPerSide: state.maxObligationsPerSide,
+            },
+            role,
+          );
+        };
+        this.aiCoordinator.onDealProposal = (turn, seat, raw) => {
+          this.offerFromStrategist(turn, seat, raw);
+        };
+      }
       // A strategist plan has no decision of its own and lands asynchronously, so it anchors to
       // wherever the log has reached — which is the point it actually started steering play.
       this.aiCoordinator.onStrategy = (turn, activePlayer, intent, model) => {

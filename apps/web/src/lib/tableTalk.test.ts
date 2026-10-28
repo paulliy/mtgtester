@@ -35,6 +35,14 @@ describe('dealsInForce', () => {
     expect(dealsInForce(talk, null)).toEqual([]);
   });
 
+  it('ignores a withdrawn offer', () => {
+    const withdrawn: TableTalkLine[] = [
+      ...talk.slice(0, 2),
+      line(20, { kind: 'withdrawn', turn: 2, from: 'P2', dealId: 'deal-9', reason: 'expired' }),
+    ];
+    expect(dealsInForce(withdrawn, null).map((d) => d.deal.id)).toEqual(['deal-1']);
+  });
+
   it('puts a counter-offer in force when it is accepted', () => {
     const counter: Deal = { ...deal, id: 'deal-2', proposer: 'P3' };
     const countered: TableTalkLine[] = [
