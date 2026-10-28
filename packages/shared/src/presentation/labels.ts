@@ -1,4 +1,4 @@
-import type { LegalAction } from '@mtg/shared';
+import type { LegalAction } from '../engine';
 
 function data(action: LegalAction, key: string): unknown {
   return action.data?.[key];

@@ -5,6 +5,15 @@ import { ATTACKS_TARGET } from '@mtg/shared';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import type { DecisionRequest, LegalAction, ObjectId, TargetChoice } from '@mtg/shared';
+import {
+  actionCost,
+  actionLabel,
+  groupXActions,
+  paymentSourceNames,
+  paymentSourceSummary,
+  pendingSummary,
+} from '@mtg/shared/presentation';
+import type { XActionGroup } from '@mtg/shared/presentation';
 import ActionLog from '../components/ActionLog.vue';
 import CardImage from '../components/CardImage.vue';
 import CombatOverlay from '../components/CombatOverlay.vue';
@@ -24,7 +33,6 @@ import ZoneStrip from '../components/ZoneStrip.vue';
 import { useBoardAnchors } from '../composables/useBoardAnchors';
 import { useCombatStrikes } from '../composables/useCombatStrikes';
 import { useLifeFlash, useLifeFlashBySeat } from '../composables/useLifeFlash';
-import { actionLabel } from '../lib/actionLabels';
 import { isTokenTypeLine } from '../lib/card';
 import { CONNECTION_LABELS } from '../lib/socket';
 import { playerFacingPrompt, turnPositionLabel } from '../lib/turnLabels';
@@ -471,62 +479,7 @@ const selectedSourceActions = computed(() =>
     ? []
     : sourceActions.value.filter((action) => sourceId(action) === focusedSourceId.value),
 );
-interface XActionGroup {
-  key: string;
-  actions: LegalAction[];
-  /** Same as `actions[0]`/`actions[actions.length - 1]` — stored so callers never index an
-   * array TS can't prove is non-empty. */
-  first: LegalAction;
-  min: number;
-  max: number;
-}
-
-/**
- * A {X} spell/ability offers one whole `LegalAction` per affordable X (brief: "the option menu
- * is the contract" — `legal.ts` enumerates every value up front so nothing needs a second
- * legality check). Rendered flat that's one button per value — up to however much mana the
- * player has, sometimes dozens. Collapsed here into a single numeric-input row per X-family
- * (same source, same mode); picking a number just looks up the matching pre-enumerated action,
- * so legality is still exactly what the engine offered, nothing computed client-side.
- */
-const selectedSourceGrouped = computed(() => {
-  const plain: LegalAction[] = [];
-  const byKey = new Map<string, LegalAction[]>();
-  for (const action of selectedSourceActions.value) {
-    const x = actionData(action, 'x');
-    if (typeof x !== 'number') {
-      plain.push(action);
-      continue;
-    }
-    const modeLabel = actionData(action, 'modeLabel');
-    const key = `${action.type}|${typeof modeLabel === 'string' ? modeLabel : ''}`;
-    const list = byKey.get(key);
-    if (list === undefined) byKey.set(key, [action]);
-    else list.push(action);
-  }
-  const xGroups: XActionGroup[] = [];
-  for (const [key, actions] of byKey) {
-    // Only one affordable X value: no real choice to make, render it like any other button.
-    if (actions.length < 2) {
-      plain.push(...actions);
-      continue;
-    }
-    const sorted = [...actions].sort(
-      (a, b) => (actionData(a, 'x') as number) - (actionData(b, 'x') as number),
-    );
-    const first = sorted[0];
-    const last = sorted[sorted.length - 1];
-    if (first === undefined || last === undefined) continue; // unreachable: length >= 2
-    xGroups.push({
-      key,
-      actions: sorted,
-      first,
-      min: actionData(first, 'x') as number,
-      max: actionData(last, 'x') as number,
-    });
-  }
-  return { plain, xGroups };
-});
+const selectedSourceGrouped = computed(() => groupXActions(selectedSourceActions.value));
 
 /** One typed X value per open group, defaulting to the largest affordable amount. */
 const xInputs = ref<Record<string, number>>({});
@@ -1064,56 +1017,6 @@ function actionData(action: LegalAction, key: string): unknown {
   return action.data?.[key];
 }
 
-function actionCost(action: LegalAction): string[] {
-  const mana = actionData(action, 'manaCost');
-  const costs = actionData(action, 'abilityCosts');
-  const labels: string[] = [];
-  if (typeof mana === 'string') labels.push(mana);
-  if (Array.isArray(costs)) {
-    for (const cost of costs) {
-      if (typeof cost !== 'object' || cost === null) continue;
-      const value = cost as {
-        kind?: unknown;
-        amount?: unknown;
-        counter?: unknown;
-        count?: unknown;
-      };
-      if (value.kind === 'tap') labels.push('Tap this');
-      if (value.kind === 'sacrificeSelf') labels.push('Sacrifice this');
-      if (value.kind === 'payLife' && typeof value.amount === 'number')
-        labels.push(`Pay ${value.amount} life`);
-      if (
-        value.kind === 'removeCounters' &&
-        typeof value.counter === 'string' &&
-        typeof value.count === 'number'
-      ) {
-        labels.push(
-          `Remove ${value.count} ${value.counter} counter${value.count === 1 ? '' : 's'}`,
-        );
-      }
-      if (
-        value.kind === 'removeCountersFromAmong' &&
-        typeof value.counter === 'string' &&
-        typeof value.count === 'number'
-      ) {
-        labels.push(
-          `Remove ${value.count} ${value.counter} counter${value.count === 1 ? '' : 's'} from a permanent you control`,
-        );
-      }
-    }
-  }
-  return labels;
-}
-
-function pendingSummary(action: LegalAction): string {
-  const source = actionData(action, 'sourceName');
-  const label = typeof source === 'string' ? source : actionLabel(action);
-  if (action.type === 'playLand') return `Play ${label}`;
-  if (action.type === 'castSpell') return `Cast ${label}`;
-  if (action.type === 'activateAbility') return `Activate ${label}`;
-  return action.description;
-}
-
 function showCardPreview(
   card: { scryfallId: string | null; name: string },
   event: MouseEvent,
@@ -1184,20 +1087,6 @@ function isPaymentSource(id: ObjectId): boolean {
       ? undefined
       : actionData(selectedAction.value, 'paymentSourceIds');
   return Array.isArray(sources) && sources.includes(id);
-}
-
-function paymentSourceNames(action: LegalAction): string[] {
-  const names = actionData(action, 'paymentSourceNames');
-  return Array.isArray(names) && names.every((name) => typeof name === 'string')
-    ? (names as string[])
-    : [];
-}
-
-/** "Forest ×2, Sol Ring" — repeated sources counted rather than listed again. */
-function paymentSourceSummary(action: LegalAction): string {
-  const counts = new Map<string, number>();
-  for (const name of paymentSourceNames(action)) counts.set(name, (counts.get(name) ?? 0) + 1);
-  return [...counts].map(([name, count]) => (count > 1 ? `${name} ×${count}` : name)).join(', ');
 }
 
 function selectedTargetLabel(slot: string, choice: ObjectId): string {

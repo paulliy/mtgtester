@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { LegalAction } from '@mtg/shared';
-import { actionLabel } from './actionLabels';
+import type { LegalAction } from '../engine';
+import { actionLabel } from './labels';
 
 function action(over: Partial<LegalAction>): LegalAction {
   return { id: 1, type: 'castSpell', description: 'Cast Something', ...over } as LegalAction;
