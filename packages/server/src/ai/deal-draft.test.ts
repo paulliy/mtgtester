@@ -78,6 +78,16 @@ describe('readDealDraft (ADR 0035 phase 4)', () => {
       { to: 'P2', rounds: 1, obligations: [{ kind: 'noAttack', by: 'P3', against: 'P1' }] },
       { to: 'P2', rounds: 1, obligations: [{ kind: 'noAttack', by: 'P1', against: 'P1' }] },
       { to: 'P2', rounds: 1, obligations: [ok, { kind: 'shareCards', by: 'P1' }] },
+      // More promises on one side than a deal may carry.
+      {
+        to: 'P2',
+        rounds: 1,
+        obligations: [
+          ok,
+          { kind: 'noTarget', by: 'P1', against: 'P2' },
+          { kind: 'noCounter', by: 'P1', against: 'P2' },
+        ],
+      },
     ];
     for (const raw of bad) expect(readDealDraft(raw, ctx)).toBeNull();
   });

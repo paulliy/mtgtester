@@ -139,6 +139,9 @@ export interface MatchSessionOptions {
   send(message: ServerToClientMessage): void;
 }
 
+/** Free-text deal readings (ADR 0035 phase 4) one game may ask for: each is a paid call. */
+const MAX_DEAL_DRAFTS_PER_GAME = 20;
+
 export class MatchSession {
   private abandoned = false;
   readonly engine: Engine;
@@ -163,6 +166,9 @@ export class MatchSession {
   private aiDraftClient: AiClient | null | undefined;
   private aiDraftQueue: RequestQueue | null = null;
   private draftLogger: AiCallLogger | null = null;
+  /** Free-text readings asked for this game, and whether one is running: each is a paid call. */
+  private draftsUsed = 0;
+  private draftInFlight = false;
   private debugFlags: DebugFlags = { ...DEFAULT_DEBUG_FLAGS };
   private readonly gameMode: GameMode;
   private readonly humanSeat: PlayerId | null;
@@ -907,7 +913,31 @@ export class MatchSession {
       return;
     }
     const seat = this.humanSeat;
-    const state = this.diplomacy.seatState(seat);
+    const busy = this.draftInFlight
+      ? 'A reading is already in progress.'
+      : this.draftsUsed >= MAX_DEAL_DRAFTS_PER_GAME
+        ? 'No free-text readings left this game. Use the deal panel.'
+        : null;
+    if (busy !== null) {
+      this.opts.send({
+        type: 'dealDraft',
+        payload: { text: payload.text, terms: null, message: busy },
+      });
+      return;
+    }
+    this.draftsUsed++;
+    this.draftInFlight = true;
+    try {
+      await this.runDraft(seat, payload);
+    } finally {
+      this.draftInFlight = false;
+    }
+  }
+
+  private async runDraft(seat: PlayerId, payload: DraftDealPayload): Promise<void> {
+    const table = this.diplomacy;
+    if (table === null) return;
+    const state = table.seatState(seat);
     const config = (this.aiConfig ??= loadAiConfig(process.env));
     if (this.aiDraftClient === undefined) {
       this.aiDraftClient =
@@ -1201,6 +1231,12 @@ export class MatchSession {
   private publishPlayerState(bump: boolean): void {
     if (this.humanSeat === null) return;
     if (bump) this.playerRevision += 1;
+    if (this.diplomacy !== null) {
+      // What the table said since the last decision (an offer made to the player as a turn
+      // opened) goes out with the state that shows it, not after the player's next decision.
+      this.collectTalk(Math.max(0, this.runner.nextSequence() - 1));
+      this.sendTalkNow();
+    }
     this.sendDiplomacyState();
     this.opts.send({
       type: 'playerStateSnapshot',
@@ -1643,6 +1679,7 @@ function noticeOf(outcome: OfferOutcome): DealOutcomeNotice {
         kind: 'declined',
         ...(outcome.counter !== undefined ? { dealId: outcome.counter.id } : {}),
         ...(outcome.counterPending === true ? { counterPending: true } : {}),
+        ...(outcome.counterRefused !== undefined ? { reason: outcome.counterRefused } : {}),
       };
     case 'refused':
       return { kind: 'refused', reason: outcome.reason };

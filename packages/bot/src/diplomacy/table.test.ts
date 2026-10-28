@@ -900,3 +900,135 @@ describe('DiplomacyTable — seats that answer later (ADR 0035 phase 3)', () => 
     expect(table.seatState('P2').partners).not.toContain('P1');
   });
 });
+
+describe('DiplomacyTable — review fixes (ADR 0035 phase 3)', () => {
+  function humanTable(w: World) {
+    return new DiplomacyTable({
+      seed: 'seed',
+      seats: w.order,
+      viewOf: (seat) => viewFrom(w, seat),
+      negotiates: () => true,
+      answersLater: (seat) => seat === 'P2',
+      proposesOnItsOwn: () => false,
+    });
+  }
+  const declare = (turn: number, seat: PlayerId): DecisionRequest => ({
+    ...priority(turn, seat),
+    requestId: `declare-${turn}`,
+    decisionType: 'declareAttackers',
+  });
+  function openAfterAttackers(table: DiplomacyTable, turn: number, seat: PlayerId): void {
+    const d = declare(turn, seat);
+    table.beforeDecision(d);
+    table.afterDecision(d, { requestId: d.requestId, actionId: 0 });
+    table.beforeDecision({ ...priority(turn, seat), requestId: `after-${turn}` });
+  }
+
+  it('starts a deal accepted after attackers with the active party next turn, not this one', () => {
+    const w = world();
+    const table = humanTable(w);
+    runTurns(table, w, 1, 1);
+    openAfterAttackers(table, 1, 'P1');
+    // P1 has already attacked this turn: a one-round promise to attack must not be charged now.
+    const outcome = table.offer({
+      proposer: 'P2',
+      to: 'P1',
+      rounds: 1,
+      obligations: [
+        { kind: 'attackPlayer', by: 'P1', target: 'P4' },
+        { kind: 'noAttack', by: 'P2', against: 'P1' },
+      ],
+    });
+    if (outcome.kind !== 'accepted') return; // the bot may simply refuse; nothing to judge
+    runTurns(table, w, 2, 4);
+    const state = table.toState();
+    const record = state.records.find((r) => r.deal.id === outcome.deal.id);
+    expect(record?.turnsTaken).toContainEqual(['P1', 0]);
+    expect(table.messages().some((m) => m.kind === 'breach')).toBe(false);
+  });
+
+  it('opens the after-attackers slot once a turn, however many declarations it has', () => {
+    const w = world();
+    const table = humanTable(w);
+    runTurns(table, w, 1, 1);
+    openAfterAttackers(table, 1, 'P1');
+    const ask = () =>
+      table.offer({
+        proposer: 'P2',
+        to: 'P3',
+        rounds: 1,
+        obligations: [{ kind: 'noAttack', by: 'P3', against: 'P2' }],
+      });
+    expect(ask().kind).not.toBe('refused');
+    // An extra combat: a second declaration does not reopen the slot.
+    openAfterAttackers(table, 1, 'P1');
+    expect(table.seatState('P2').canPropose).toBe(false);
+  });
+
+  it('puts an offer left to lapse on the declined cooldown', () => {
+    const w = world();
+    const table = humanTable(w);
+    runTurns(table, w, 1, 1);
+    const terms = {
+      proposer: 'P1',
+      to: 'P2',
+      rounds: 1,
+      obligations: [
+        { kind: 'noAttack' as const, by: 'P1', against: 'P2' },
+        { kind: 'noAttack' as const, by: 'P2', against: 'P1' },
+      ],
+    };
+    expect(table.offer(terms).kind).toBe('pending');
+    runTurns(table, w, 2, 2);
+    expect(table.offer(terms)).toEqual({ kind: 'refused', reason: 'cooldown' });
+  });
+
+  it('reports a decline whose counter was refused as a decline', () => {
+    const w = world();
+    const table = humanTable(w);
+    runTurns(table, w, 1, 1);
+    const outcome = table.offer({
+      proposer: 'P1',
+      to: 'P2',
+      rounds: 1,
+      obligations: [
+        { kind: 'noAttack', by: 'P1', against: 'P2' },
+        { kind: 'noAttack', by: 'P2', against: 'P1' },
+      ],
+    });
+    if (outcome.kind !== 'pending') throw new Error('expected a pending offer');
+    const answered = table.answer('P2', outcome.deal.id, 'decline', { rounds: 9, obligations: [] });
+    expect(answered).toEqual({ kind: 'declined', counterRefused: 'invalid' });
+  });
+
+  it('never lets an eliminated or silent seat propose', () => {
+    const w = world();
+    const table = new DiplomacyTable({
+      seed: 'seed',
+      seats: w.order,
+      viewOf: (seat) => viewFrom(w, seat),
+      negotiates: (seat) => seat !== 'P3',
+    });
+    runTurns(table, w, 1, 1);
+    expect(table.seatState('P3').canPropose).toBe(false);
+    w.life['P4'] = 0;
+    expect(table.seatState('P4').canPropose).toBe(false);
+  });
+
+  it('keeps a turn whose attackers another player chose excused for a deal made later', () => {
+    const w = world();
+    const table = humanTable(w);
+    runTurns(table, w, 1, 1);
+    const chooser: DecisionRequest = {
+      ...declare(1, 'P1'),
+      decidingPlayer: 'P3',
+      presentation: { attackDeclaration: { mode: 'chooseAttackers', attackingPlayer: 'P1' } },
+    } as DecisionRequest;
+    table.beforeDecision(chooser);
+    table.afterDecision(chooser, { requestId: chooser.requestId, actionId: 0 });
+    const state = table.toState();
+    expect(state.attackNotOwnChoice).toEqual(['P1']);
+    runTurns(table, w, 2, 2);
+    expect(table.toState().attackNotOwnChoice).toEqual([]);
+  });
+});

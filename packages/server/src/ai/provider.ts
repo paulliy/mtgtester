@@ -389,7 +389,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     }
 
     if (this.config.decisionCacheEnabled) {
-      const cached = this.cache.get(request, view);
+      const cached = this.cache.get(request, view, this.cacheContext(request));
       if (cached !== null) {
         this.engine.addDebug?.(
           'decision',
@@ -410,6 +410,17 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     view: PlayerView,
     response: DecisionResponse,
   ): void {
-    if (this.config.decisionCacheEnabled) this.cache.set(request, view, response);
+    if (this.config.decisionCacheEnabled) {
+      this.cache.set(request, view, response, this.cacheContext(request));
+    }
+  }
+
+  /**
+   * The seat's deals as its prompt shows them (ADR 0035): an answer given before a deal was made
+   * must not be replayed after it, so they are part of the cache key. Undefined without deals.
+   */
+  private cacheContext(request: DecisionRequest): string | undefined {
+    const deals = this.strategy.diplomacyFor?.(request.decidingPlayer, 'tactician') ?? null;
+    return deals === null ? undefined : JSON.stringify(deals);
   }
 }

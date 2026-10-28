@@ -62,6 +62,9 @@ export function describeOutcome(outcome: DealOutcomeNotice): string {
     case 'accepted':
       return 'Deal made.';
     case 'declined':
+      if (outcome.reason !== undefined) {
+        return `Declined. Your counter was not sent: ${REFUSALS[outcome.reason]}`;
+      }
       return outcome.counterPending ? 'Declined. A counter-offer is waiting.' : 'Declined.';
     case 'pending':
       return 'Offer made; waiting for an answer.';

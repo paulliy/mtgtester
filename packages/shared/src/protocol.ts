@@ -369,7 +369,10 @@ export type ServerToClientMessage =
 export interface DealOutcomeNotice {
   kind: 'accepted' | 'declined' | 'pending' | 'withdrawn' | 'refused';
   dealId?: string;
-  /** Why it was refused: `noSuchOffer` when the offer answered had already lapsed. */
+  /**
+   * Why it was refused: `noSuchOffer` when the offer answered had already lapsed. On `declined`,
+   * why the counter sent with the decline was refused (the decline itself stands).
+   */
   reason?: OfferRefusal | 'noSuchOffer';
   /** The other side declined and its counter now waits on the player. */
   counterPending?: boolean;

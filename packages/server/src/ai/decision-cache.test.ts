@@ -217,3 +217,20 @@ it('preserves complete split responses on cache hits without sharing mutable dat
     cache.get({ ...request, combatDamageSplit: { amount: 3, targets: ['b3', 'b4'] } }, makeView()),
   ).toBeNull();
 });
+
+describe("digestDecision — deals and the viewer's own poison (ADR 0035)", () => {
+  it('keeps the old key without deals or poison, and splits it on either', () => {
+    const request = makeRequest();
+    const base = digestDecision(request, makeView());
+    expect(digestDecision(request, makeView({ poisonCounters: 0 }))).toBe(base);
+    expect(digestDecision(request, makeView({ poisonCounters: 3 }))).not.toBe(base);
+    expect(digestDecision(request, makeView(), '{"yourPromises":["x"]}')).not.toBe(base);
+  });
+
+  it('does not replay an answer given before a deal once the deal exists', () => {
+    const cache = new DecisionCache();
+    cache.set(makeRequest(), makeView(), ANSWER);
+    expect(cache.get(makeRequest(), makeView(), '{"yourPromises":["x"]}')).toBeNull();
+    expect(cache.get(makeRequest(), makeView())?.actionId).toBe(1);
+  });
+});

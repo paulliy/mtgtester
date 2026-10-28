@@ -278,14 +278,21 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
 - **Phase 3 (done):** single-player.
   - The table takes `answersLater` seats. An offer to the human, or a bot's counter to the
     human's offer, waits as a pending offer until the human answers (`DiplomacyTable.answer`) or
-    the next turn opens, when it lapses (`withdrawn: expired`). Bots still answer at once. One
-    pending offer per pair at a time. Accepting re-checks the deal and asks a proposer that
+    the next turn opens, when it lapses (`withdrawn: expired`) and goes on the same cooldown as a
+    declined offer, so an ignored offer is not repeated every turn. Bots still answer at once.
+    One pending offer per pair at a time. Accepting re-checks the deal and asks a proposer that
     answers at once whether it still wants it, else the offer is withdrawn (`stale`). A declined
     offer may carry the human's own terms, which go to the bot as a counter through the same
     checks as any offer; a counter answers an offer, so it does not use up the human's proposal.
+    A bot no longer counters with terms that were declined within the cooldown, in any game: the
+    cooldown on declined counters applies to the counterer too.
   - Two negotiation slots a turn: the start of the turn, and once the turn's attackers are
     declared (`afterAttackers`), when who is attacking whom is known. Every proposer may offer
-    once per slot. Bots propose only in the first, so spectator games are unchanged.
+    once per slot; the second slot opens once a turn, however many combats it has. Bots propose
+    only in the first. A deal accepted after the active seat's attackers are declared starts
+    with that seat's next turn: its attack this turn is already made, so its promises would bind
+    nothing, and a promised attack is not charged for it. A turn whose attackers another player
+    chose, or the engine repaired, stays excused for deals made later in that turn.
   - The table never speaks or proposes for the human: threat calls come only from seats it
     plays for. The human's decisions go through `withDiplomacyAsync`, so they open windows and
     are judged like any seat's.
@@ -307,17 +314,22 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
     `tableDiplomacy`: its own promises and the promises made to it, the other deals in force,
     every seat's record, and, while it may still propose, how to. Its tactician gets only its
     own deals (`tableDeals`), and nothing when it has none. Both are tokens on calls already made;
-    a game without deals sends exactly the prompts it did before.
+    deals add nothing to the prompts of a game without them. The tactical decision cache keys on
+    the seat's deals, so an answer given before a deal is never replayed after it.
   - The strategist proposes with an optional `turnStrategy.dealProposal`. The session reads it
     with a fail-closed reader and offers it through `offer`. A plan made ahead of its turn waits
-    until the table opens that turn; one for a turn already past is dropped. The table does not
-    run the heuristic proposer for a model seat (`proposesOnItsOwn`).
+    until the table opens that turn; one for a turn already past is dropped, and so is one that
+    comes with an unusable plan. The table does not run the heuristic proposer for a model seat
+    (`proposesOnItsOwn`), but it does answer for it: a bot's counter to a model seat's proposal
+    is answered with the heuristic evaluator, so a model seat can enter a deal its strategist did
+    not write, the same way it accepts offers.
   - `draftDeal`: one cheap call (the tactician lane, its own queue, logged as `dealDraft`) reads
     a human's free text as typed terms. The reading only fills the deal panel; the player checks
     and sends it, and it goes through `offer` like any proposal. The reader fails closed: one
     malformed obligation, a party other than the player and one living opponent, or a length out
     of range returns no terms. Without a model connection, or on any failure, the panel is the
-    fallback.
+    fallback. One reading runs at a time, at most 20 a game, and it is left out of the decision
+    latency figures as post-game reviews are.
 - **Later vocabulary**, in rough order of value: block deals ("I won't block X", "I'll chump for
   you"); non-targeted hostility ("don't wrath", edicts, "each opponent" effects); protecting a
   specific permanent or commander; conditional terms ("if you attack X, I won't..."); table-wide

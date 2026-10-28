@@ -96,6 +96,9 @@ export function readDealDraft(raw: unknown, ctx: DealDraftContext): DealTerms | 
         return null;
     }
   }
+  for (const party of parties) {
+    if (obligations.filter((o) => o.by === party).length > ctx.maxObligationsPerSide) return null;
+  }
   return { to, obligations, rounds };
 }
 

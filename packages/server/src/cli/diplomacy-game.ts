@@ -67,6 +67,9 @@ export function playDiplomacyGame(request: DiplomacyGameRequest): DiplomacyGameR
 
   const diplomats = new Set(request.diplomacySeats);
   const exploiterSeat = request.exploiterSeat;
+  if (exploiterSeat !== undefined && diplomats.has(exploiterSeat)) {
+    throw new Error(`seat ${exploiterSeat} cannot be both the exploiter and a diplomat`);
+  }
   const table = new DiplomacyTable({
     seed: request.seed,
     seats: players.map((p) => p.id),
