@@ -25,7 +25,13 @@ import {
 const DECK_SIZE = 100;
 
 export interface GenerateOptions {
-  seed: string;
+  /** Seeds a `Prng`. Required unless `rng` is given. */
+  seed?: string;
+  /**
+   * An injected random source, used instead of `seed` (a table game's keyed deck stream, ADR 0031
+   * decision 4: the public seed must not decide a bot's deck).
+   */
+  rng?: { nextInt(bound: number): number };
   /** Force a commander by exact name; otherwise one is chosen from the pool by seed. */
   commanderName?: string;
   /** Lands in the 99 (basics fill this). Real precons sit around 36. */
@@ -39,7 +45,7 @@ export interface GeneratedDeck {
 }
 
 /** Fisher–Yates over a copy, driven by the seeded PRNG so the order is reproducible. */
-function shuffled<T>(items: readonly T[], rng: Prng): T[] {
+function shuffled<T>(items: readonly T[], rng: { nextInt(bound: number): number }): T[] {
   const out = [...items];
   for (let i = out.length - 1; i > 0; i--) {
     const j = rng.nextInt(i + 1);
@@ -92,7 +98,9 @@ export function generateCommanderDeck(
   pool: SupportedPool,
   options: GenerateOptions,
 ): GeneratedDeck {
-  const rng = new Prng(options.seed);
+  if (options.rng === undefined && options.seed === undefined)
+    throw new Error('generateCommanderDeck needs a seed or an rng');
+  const rng = options.rng ?? new Prng(options.seed as string);
   const landCount = options.landCount ?? 36;
 
   const candidates = commandersIn(pool);

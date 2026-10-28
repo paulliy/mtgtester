@@ -312,4 +312,33 @@ describe('MatchSession.gameReport', () => {
     expect(shown.seats.map((seat) => seat.archetypeTag)).toEqual(['G — test', '', '', '']);
     open.abandon();
   });
+
+  it('carries no RNG key, and names no seed for a pool deck, in a chacha20 game', async () => {
+    const key = 'e4a1c07d93b25f68a0d4173c8be96f2501d7ac3948e6b0f1725d8c4e9a3b60d7';
+    const sent: ServerToClientMessage[] = [];
+    const match = new MatchSession({
+      // The tester's policy shows the seed; a keyed game has none to show for a generated deck.
+      disclosure: testerPolicy('singlePlayer'),
+      gameId: 'g-report',
+      seed: 'report-label',
+      rng: 'chacha20',
+      rngKey: key,
+      seats: seats(),
+      providerKind: 'random',
+      gameMode: 'singlePlayer',
+      humanSeat: 'P1',
+      turnCap: 20,
+      livePaceMs: 0,
+      send: (message) => sent.push(message),
+    });
+    match.start();
+    await waitFor(() => expect(sent.some((m) => m.type === 'playerActionRequired')).toBe(true));
+
+    const report = match.gameReport(CONTEXT);
+    expect(report.seats[0]?.source).toEqual({ kind: 'pool', seed: '' });
+    const text = JSON.stringify([report, sent]).toLowerCase();
+    expect(text).not.toContain(key);
+    match.abandon();
+    await match.settled();
+  });
 });

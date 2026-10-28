@@ -99,6 +99,7 @@ import {
   type ReportSeatSource,
 } from './report';
 import { buildReplayRecord, type ReplayIdentity } from './replay-config';
+import { botRandomSource, resolveRngKey, seatIndex } from './rng-streams';
 import type { SeatSetup } from './setup';
 import { SmartYieldMemory, playerYieldKey } from './player-yield';
 
@@ -137,6 +138,14 @@ export interface MatchSessionOptions {
   seats: readonly SeatSetup[];
   providerKind: ProviderKind;
   gameMode?: GameMode;
+  /**
+   * The game's random generator (ADR 0031 decision 4). Omitted is `'legacy'`, seeded from `seed`,
+   * which every tester game keeps. `'chacha20'` needs `rngKey`, 32 bytes as 64 hex digits: the
+   * engine, each bot seat and each generated deck read their own stream of it, and it reaches no
+   * frame, event or snapshot before the game ends. `seed` is then only a public label.
+   */
+  rng?: 'legacy' | 'chacha20';
+  rngKey?: string;
   /**
    * What this game's frames may carry (ADR 0031 decision 3). Required: each entry point decides,
    * and none inherits another's. `GameServer` passes `testerPolicy(gameMode)`.
@@ -225,6 +234,8 @@ export class MatchSession {
   private readonly logger: AiCallLogger | null;
   private readonly recorder: GameRecorder | null;
   private readonly providers = new Map<PlayerId, AsyncDecisionProvider>();
+  /** The `chacha20` key, or null for a legacy game. Held here and in the engine's stream only. */
+  private readonly rngKey: string | null;
   private playbackMode: PlaybackMode;
   private running: Promise<void> | null = null;
   /** One client and one queue per session: the RPM ceiling is an account property, not a seat's. */
@@ -302,6 +313,10 @@ export class MatchSession {
     if (opts.decisionProviderOverrides !== undefined && opts.engine === undefined) {
       throw new Error('decision provider overrides require a prepared Card Test Lab engine');
     }
+    this.rngKey = resolveRngKey(opts);
+    if (this.rngKey !== null && opts.engine !== undefined) {
+      throw new Error('a prepared engine brings its own random source');
+    }
     this.gameMode = opts.gameMode ?? 'spectator';
     this.policy = opts.disclosure;
     this.seatControllers = resolveSeatControllers(opts, this.gameMode);
@@ -323,6 +338,7 @@ export class MatchSession {
       new Engine({
         gameId: opts.gameId,
         seed: opts.seed,
+        ...(this.rngKey !== null && { rng: 'chacha20' as const, rngKey: this.rngKey }),
         // The human taps lands by hand if they like (ADR 0030); bots leave payment to the engine.
         players: opts.seats.map((s) =>
           this.humanSeats.has(s.seat) ? { ...s.config, manualMana: true } : s.config,
@@ -655,6 +671,7 @@ export class MatchSession {
         })),
         manualMana: this.humanSeats,
         turnCap: engineTurnCap(this.engine),
+        rng: { kind: this.rngKey === null ? 'legacy' : 'chacha20', key: this.rngKey ?? '' },
       }),
     };
   }
@@ -1033,9 +1050,12 @@ export class MatchSession {
             ? setup.summary.archetypeTag
             : '',
           deckSnapshotId: setup.deckSnapshotId,
-          // A pool deck's default seed is derived from the game's, so it hides with it.
+          // A pool deck's default seed is derived from the game's, so it hides with it. A keyed
+          // game drew the deck from a stream, so no seed names it.
           source:
-            source.kind === 'pool' && !this.policy.showSeed ? { kind: 'pool', seed: '' } : source,
+            source.kind === 'pool' && (!this.policy.showSeed || this.rngKey !== null)
+              ? { kind: 'pool', seed: '' }
+              : source,
           decklist: reveal ? orderedDecklist(setup.config) : null,
           life: seat?.life ?? 0,
           poisonCounters: seat?.poisonCounters ?? 0,
@@ -2155,7 +2175,10 @@ export class MatchSession {
     const table = this.diplomacy;
     const heuristic = (): DecisionProvider => {
       const bot = new HeuristicDecisionProvider(
-        `${this.opts.seed}-${playerId}`,
+        // A keyed game gives each bot seat its own stream; a legacy one seeds from the label.
+        this.rngKey === null
+          ? `${this.opts.seed}-${playerId}`
+          : botRandomSource(this.rngKey, seatIndex(playerId)),
         () => this.engine.view(playerId),
         table === null ? {} : { diplomacy: table.playFor(playerId) },
       );

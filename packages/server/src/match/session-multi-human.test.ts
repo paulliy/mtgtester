@@ -104,6 +104,9 @@ function table(
     turnCap?: number;
     store?: GameStore;
     replay?: ReplayIdentity;
+    seed?: string;
+    rng?: 'legacy' | 'chacha20';
+    rngKey?: string;
   } = {},
 ): Table {
   const pub: ServerToClientMessage[] = [];
@@ -111,7 +114,9 @@ function table(
   const session = new MatchSession({
     disclosure: tablePolicy(),
     gameId: 'g-multi-human',
-    seed: SEED,
+    seed: options.seed ?? SEED,
+    ...(options.rng !== undefined ? { rng: options.rng } : {}),
+    ...(options.rngKey !== undefined ? { rngKey: options.rngKey } : {}),
     seats: seats(),
     providerKind: options.providerKind ?? 'random',
     gameMode: 'table',
@@ -601,5 +606,102 @@ describe('MatchSession - the disclosure policy at a table', () => {
     await session.settled();
     expect(calls.some((sql) => sql.includes('INSERT INTO game_events'))).toBe(true);
     expect(calls.some((sql) => sql.includes('game_decision_sources'))).toBe(false);
+  }, 30_000);
+});
+
+describe('MatchSession - a chacha20 table (ADR 0031 decision 4)', () => {
+  const KEY = '5d0e8a47c1f3926b7e04d8a5319cb6f2a87d40e1935b6c28f4a0d7e3918c5b6a';
+  const OTHER_KEY = 'b81f3c6a09d47e52c8a1f40d6e37b92a5c0e8d14f7a369b2e508c1d4a7f3e690';
+  const chacha = (rngKey: string, seed?: string) =>
+    table({ rng: 'chacha20', rngKey, ...(seed !== undefined ? { seed } : {}) });
+
+  async function eventLog(t: Table): Promise<string> {
+    await playScripted(t);
+    return JSON.stringify(t.session.engine.eventsSince(0));
+  }
+
+  it('is deterministic given its key, whatever the public label says', async () => {
+    const first = await eventLog(chacha(KEY));
+    const again = await eventLog(chacha(KEY));
+    // The `gameStart` event names the public label; nothing else in the log may depend on it.
+    const relabelled = (await eventLog(chacha(KEY, 'a-different-public-label'))).replaceAll(
+      'a-different-public-label',
+      SEED,
+    );
+    expect(first.length).toBeGreaterThan(1000);
+    expect(again).toBe(first);
+    expect(relabelled).toBe(first);
+  }, 60_000);
+
+  it('plays differently under another key, and differently from the legacy generator', async () => {
+    const keyed = await eventLog(chacha(KEY));
+    expect(await eventLog(chacha(OTHER_KEY))).not.toBe(keyed);
+    expect(await eventLog(table())).not.toBe(keyed);
+  }, 60_000);
+
+  it('refuses a chacha20 table with no key, or a key on a legacy one', () => {
+    expect(() => table({ rng: 'chacha20' })).toThrow(/needs an rngKey/);
+    expect(() => table({ rng: 'chacha20', rngKey: 'abcd' })).toThrow(/64 hex digits/);
+    expect(() => table({ rngKey: KEY })).toThrow(/legacy/);
+  });
+
+  it('puts the key in no frame, event, snapshot or board, and the seed in none either', async () => {
+    const t = chacha(KEY, 'public-label-xyz');
+    await playScripted(t);
+    const engine = t.session.engine;
+
+    const needles = [
+      KEY,
+      KEY.toUpperCase(),
+      // The first half also catches a truncated or re-wrapped copy.
+      KEY.slice(0, 32),
+      Buffer.from(KEY, 'hex').toString('base64'),
+      JSON.stringify([...Buffer.from(KEY, 'hex')]),
+    ];
+    const surfaces: Record<string, string> = {
+      frames: JSON.stringify(t.all()),
+      events: JSON.stringify(engine.eventsSince(0)),
+      state: JSON.stringify(engine.getState()),
+      spectator: JSON.stringify(engine.spectatorState()),
+      boards: JSON.stringify(SEATS.map((seat) => engine.playerState(seat))),
+      views: JSON.stringify(SEATS.map((seat) => engine.view(seat))),
+      debug: JSON.stringify(engine.getDebugLog()),
+    };
+    for (const [surface, text] of Object.entries(surfaces)) {
+      expect(text.length, surface).toBeGreaterThan(2);
+      for (const needle of needles) expect(text, `${surface} holds the key`).not.toContain(needle);
+    }
+    expect(surfaces['frames']).not.toContain('public-label-xyz');
+    // The frames the humans saw are real: they carry the game.
+    expect(required(t.bySeat['P1'] ?? []).length).toBeGreaterThan(0);
+  }, 60_000);
+
+  it('stores the key only in the replay config, as the stored config is where it lives', async () => {
+    const calls: Array<{ sql: string; args: unknown[] }> = [];
+    const db: SqliteLike = {
+      query: (sql: string) => ({
+        run: (...args: unknown[]) => {
+          calls.push({ sql, args });
+        },
+        all: () => [],
+        get: () => null,
+      }),
+    };
+    const store = { recorderFor: (id: string) => new GameRecorder(db, id) } as unknown as GameStore;
+    const t = table({
+      store,
+      rng: 'chacha20',
+      rngKey: KEY,
+      replay: {
+        cardDataSha256: 'card-data-hash',
+        build: { commit: 'abc123', branch: 'main', dirty: false },
+      },
+    });
+    await playScripted(t);
+
+    const holders = calls.filter((c) => JSON.stringify(c.args).includes(KEY));
+    expect(holders.map((c) => c.sql.includes('UPDATE games SET config_json'))).toEqual([true]);
+    const update = holders[0]!;
+    expect(JSON.parse(String(update.args[0])).rng).toEqual({ kind: 'chacha20', key: KEY });
   }, 30_000);
 });

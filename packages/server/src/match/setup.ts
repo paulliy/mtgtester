@@ -33,6 +33,7 @@ import { inferArchetype } from '../decks/archetype';
 import { generateCommanderDeck } from '../decks/generate';
 import { runDeckPipeline } from '../decks/pipeline';
 import { resolveSavedSeat } from './preview';
+import { deckRng, newDeckAlias, resolveRngKey, seatIndex, type RngSelection } from './rng-streams';
 
 export interface SeatSetupDeps {
   pool: SupportedPool;
@@ -96,10 +97,20 @@ function problem(seat: PlayerId, message: string, extra?: Partial<SeatProblem>):
  * `deck_snapshots`, and `game_players.deck_snapshot_id` is a foreign key into it, so a
  * generated deck that skipped the table could not be recorded as having played at all.
  */
-function setupPoolSeat(seat: PlayerId, deps: SeatSetupDeps, seed: string): SeatSetup | SeatProblem {
+function setupPoolSeat(
+  seat: PlayerId,
+  deps: SeatSetupDeps,
+  seed: string,
+  rngKey: string | null,
+): SeatSetup | SeatProblem {
   let deck;
   try {
-    deck = generateCommanderDeck(deps.pool, { seed });
+    // A `chacha20` game draws the deck from the seat's own keyed stream: the public seed label
+    // must not decide it (ADR 0031 decision 4).
+    deck = generateCommanderDeck(
+      deps.pool,
+      rngKey === null ? { seed } : { rng: deckRng(rngKey, seatIndex(seat)) },
+    );
   } catch (err) {
     return problem(
       seat,
@@ -121,7 +132,8 @@ function setupPoolSeat(seat: PlayerId, deps: SeatSetupDeps, seed: string): SeatS
   const label = `${deck.commander.name} (generated)`;
 
   let deckSnapshotId: string | null = null;
-  let deckId = `pool:${seed}`;
+  // In a `chacha20` game the id is a random alias, never derived from the seed or the key.
+  let deckId = rngKey === null ? `pool:${seed}` : newDeckAlias();
   if (deps.store !== undefined) {
     const store = deps.store;
     store.cacheCards([deck.commander, ...deck.cards]);
@@ -281,13 +293,17 @@ export async function setupSeats(
   sources: readonly SeatSource[],
   deps: SeatSetupDeps,
   gameSeed: string,
+  rng: RngSelection = {},
 ): Promise<SetupResult> {
+  const rngKey = resolveRngKey(rng);
   const results: Array<SeatSetup | SeatProblem> = [];
 
   for (const [index, source] of sources.entries()) {
     const seat: PlayerId = `P${index + 1}`;
     if (source.kind === 'pool') {
-      results.push(setupPoolSeat(seat, deps, source.seed ?? `${gameSeed}-seat${index + 1}`));
+      results.push(
+        setupPoolSeat(seat, deps, source.seed ?? `${gameSeed}-seat${index + 1}`, rngKey),
+      );
     } else if (source.kind === 'snapshot') {
       results.push(resolveSavedSeat(seat, source.snapshotId, deps));
     } else if (deps.store === undefined) {
