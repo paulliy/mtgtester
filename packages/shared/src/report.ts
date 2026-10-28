@@ -15,7 +15,7 @@ import type {
   HaltKind,
   PlaybackMode,
   ProviderKind,
-  GameMode,
+  StartGameMode,
   SeatControllerKind,
 } from './protocol';
 import type { GameId, PlayerId } from './ids';
@@ -88,7 +88,7 @@ export interface GameReport {
   game: {
     id: GameId;
     seed: string;
-    gameMode: GameMode;
+    gameMode: StartGameMode;
     humanSeat: PlayerId | null;
     providerKind: ProviderKind;
     playbackMode: PlaybackMode;

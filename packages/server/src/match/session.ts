@@ -20,6 +20,7 @@ import type {
   AiAnnotation,
   AiReflection,
   AnswerDealPayload,
+  ComputeHaltedPayload,
   DealOutcomeNotice,
   DraftDealPayload,
   ProposeDealPayload,
@@ -33,10 +34,12 @@ import type {
   GameReportCardData,
   IgnoredPlayerAbility,
   PlaybackMode,
+  PlayerBoardState,
   PlayerId,
   ProviderKind,
   SeatControllers,
   ServerToClientMessage,
+  StartGameMode,
   SpectatorLogLine,
   TableTalkLine,
   TargetChoice,
@@ -66,7 +69,12 @@ import {
 import type { GameStore } from '../db';
 import { finishingPositions, type GameRecorder } from '../db/games';
 import { releaseAnchored, releaseAnnotations } from './annotations';
-import { MatchRunner } from './runner';
+import {
+  MatchRunner,
+  type DecisionEscalation,
+  type HaltInfo,
+  type MatchRunnerOptions,
+} from './runner';
 import {
   HumanDecisionProvider,
   PersistentAbilityYieldProvider,
@@ -145,7 +153,16 @@ export interface MatchSessionOptions {
   engine?: Engine;
   /** Deterministic non-human decisions for Card Test Lab evidence; omitted for ordinary matches. */
   decisionProviderOverrides?: Partial<Record<PlayerId, DecisionProvider>>;
+  /**
+   * Frames every viewer of the game may see. A single-player game's one stream is the player's,
+   * so everything it sends, public or seat-scoped, arrives here.
+   */
   send(message: ServerToClientMessage): void;
+  /**
+   * Frames for one human seat of a `'table'` game. Required there, and never called for another
+   * mode; the table server routes each frame to that seat's own sockets only.
+   */
+  sendToSeat?(seat: PlayerId, message: ServerToClientMessage): void;
 }
 
 /** Free-text deal readings (ADR 0035 phase 4) one game may ask for: each is a paid call. */
@@ -318,19 +335,29 @@ export class MatchSession {
       recorder: this.recorder,
       gameMode: this.gameMode,
       // Every human decision is untimed, so the engine never computes ahead of what they have seen.
-      ...(this.humanSeats.size > 0
-        ? {
-            lookaheadTurns: 0,
-            formatEvents: (events) => formatPlayerLog(events, this.soleHumanSeat()),
-          }
-        : {}),
-      onEvents: (lines, frontierTurn, snapshotTurns) => {
-        if (this.gameMode === 'singlePlayer') {
-          opts.send({
-            type: 'eventBatch',
-            payload: { gameId: opts.gameId, lines, frontierTurn, snapshotTurns: [] },
-          });
-          return;
+      ...(this.humanSeats.size > 0 ? { lookaheadTurns: 0 } : {}),
+      ...this.eventFormatting(),
+      onEvents: (lines, frontierTurn, snapshotTurns, seat) => {
+        switch (this.gameMode) {
+          // flow: event batches go to the player, formatted for that seat (m1 row 300). A table
+          // gets one batch per human seat from the runner's per-seat formatter.
+          case 'singlePlayer':
+            this.sendToSeat(this.soleHumanSeat(), {
+              type: 'eventBatch',
+              payload: { gameId: opts.gameId, lines, frontierTurn, snapshotTurns: [] },
+            });
+            return;
+          case 'table':
+            if (seat === undefined) throw new Error('a table event batch names its seat');
+            this.sendToSeat(seat, {
+              type: 'eventBatch',
+              payload: { gameId: opts.gameId, lines, frontierTurn, snapshotTurns: [] },
+            });
+            return;
+          case 'spectator':
+            break;
+          default:
+            assertNever(this.gameMode, 'event batch game mode');
         }
         // In live mode the log is released in step with the board. Sending every line the
         // instant it is computed is how the action log ends up describing a turn the board has
@@ -340,7 +367,7 @@ export class MatchSession {
           this.releaseLines();
           return;
         }
-        opts.send({
+        this.sendPublic({
           type: 'eventBatch',
           payload: {
             gameId: opts.gameId,
@@ -356,18 +383,49 @@ export class MatchSession {
         // A newly computed turn is not a newly *presented* turn. In live mode the presentation
         // clock decides when the viewer moves; in manual mode the viewer's position is theirs
         // and pushing anything would yank them.
-        if (this.gameMode === 'spectator' && this.playbackMode === 'live') this.startPresenting();
+        switch (this.gameMode) {
+          // flow: live spectator presentation after events (m1 row 331). A player has no
+          // presentation clock, and a table never starts one: it would send `spectatorState`.
+          case 'spectator':
+            if (this.playbackMode === 'live') this.startPresenting();
+            return;
+          case 'singlePlayer':
+          case 'table':
+            return;
+          default:
+            assertNever(this.gameMode, 'snapshot presentation');
+        }
       },
       onProgress: (frontierTurn) => {
-        if (this.gameMode === 'singlePlayer') {
-          // Player mode has one clock: every authoritative advance is immediately presented.
-          this.runner.setViewTurn(frontierTurn);
-          for (const seat of this.humanSeats) this.publishPlayerState(seat, true);
+        switch (this.gameMode) {
+          // flow: player mode has one clock: every authoritative advance is immediately presented
+          // to each human seat (m1 row 334).
+          case 'singlePlayer':
+          case 'table':
+            this.runner.setViewTurn(frontierTurn);
+            for (const seat of this.humanSeats) this.publishPlayerState(seat, true);
+            return;
+          case 'spectator':
+            return;
+          default:
+            assertNever(this.gameMode, 'progress presentation');
         }
       },
       onDecisionPending: (request, invalidResponse, timeoutMs) => {
-        if (this.gameMode === 'spectator') {
-          opts.send({ type: 'decisionPending', payload: { request, invalidResponse, timeoutMs } });
+        switch (this.gameMode) {
+          // fence: `decisionPending` carries the request; only a spectator is shown one (m1
+          // row 341).
+          case 'spectator':
+            this.sendPublic({
+              type: 'decisionPending',
+              payload: { request, invalidResponse, timeoutMs },
+            });
+            return;
+          case 'singlePlayer':
+          case 'table':
+            return;
+          default:
+            assertNever(this.gameMode, 'decision pending');
         }
       },
       onHalt: (info) => {
@@ -379,20 +437,9 @@ export class MatchSession {
         this.aiJev?.cancel?.();
         this.publishFinalState();
         this.finishTalk();
-        opts.send({
+        this.sendPublic({
           type: 'computeHalted',
-          payload: {
-            gameId: opts.gameId,
-            kind: info.kind,
-            reason:
-              this.gameMode === 'singlePlayer'
-                ? 'The rules engine could not continue this game.'
-                : info.reason,
-            turn: info.turn,
-            ...(this.gameMode === 'spectator' && info.cardName !== undefined
-              ? { cardName: info.cardName }
-              : {}),
-          },
+          payload: this.haltPayload(info),
         });
       },
       onGameOver: (result) => {
@@ -417,9 +464,21 @@ export class MatchSession {
         this.logger?.recordAnchor(request.requestId, anchorSequence);
         this.offerDeferredProposals();
         this.collectTalk(anchorSequence);
-        if (this.gameMode === 'singlePlayer') this.sendTalkNow();
+        switch (this.gameMode) {
+          // flow: table talk goes out at once, to each human seat (m1 row 391). A spectator's
+          // talk rides the presentation clock with the log lines instead.
+          case 'singlePlayer':
+          case 'table':
+            this.sendTalkNow();
+            break;
+          case 'spectator':
+            break;
+          default:
+            assertNever(this.gameMode, 'table talk delivery');
+        }
         // The note is the gate, not the provider kind: a random provider never writes one, and
-        // the human seat's own choices are theirs rather than reasoning to be explained back.
+        // a human seat's own choices are theirs rather than reasoning to be explained back
+        // (m1 row 394: a seat test, not a mode branch).
         if (!this.humanSeats.has(request.decidingPlayer) && response.note !== undefined) {
           this.recordAnnotation({
             sequence: anchorSequence,
@@ -438,8 +497,18 @@ export class MatchSession {
         }
       },
       onDebug: (entries) => {
-        if (this.gameMode === 'singlePlayer' || !this.debugFlags.verboseEngine) return;
-        opts.send({
+        switch (this.gameMode) {
+          // fence: debug events can show a hidden zone, so a player never gets them (m1 row 412).
+          case 'singlePlayer':
+          case 'table':
+            return;
+          case 'spectator':
+            break;
+          default:
+            assertNever(this.gameMode, 'debug events');
+        }
+        if (!this.debugFlags.verboseEngine) return;
+        this.sendPublic({
           type: 'debugEvents',
           payload: { gameId: opts.gameId, entries },
         });
@@ -447,31 +516,115 @@ export class MatchSession {
     });
   }
 
+  /**
+   * How the runner formats the log for the people who play.
+   *
+   * flow: event formatting by mode (m1 row 300's formatter). A single player gets one stream; a
+   * table gets one per human seat, each through that seat's own `formatPlayerLog`.
+   */
+  private eventFormatting(): Pick<MatchRunnerOptions, 'formatEvents' | 'seatEvents'> {
+    switch (this.gameMode) {
+      case 'spectator':
+        return {};
+      case 'singlePlayer':
+        return {
+          formatEvents: (events) => formatPlayerLog(events, this.soleHumanSeat()),
+        };
+      case 'table':
+        return {
+          seatEvents: {
+            seats: [...this.humanSeats],
+            format: (events, seat) => formatPlayerLog(events, seat),
+          },
+        };
+      default:
+        return assertNever(this.gameMode, 'event formatting');
+    }
+  }
+
+  /**
+   * The halt notice. A player is told one fixed line and never the card, since both can name
+   * hidden information; a spectator gets the real reason (m1 rows 360, 364).
+   *
+   * fence: `'table'` takes the player's fixed message.
+   */
+  private haltPayload(info: HaltInfo): ComputeHaltedPayload {
+    switch (this.gameMode) {
+      case 'singlePlayer':
+      case 'table':
+        return {
+          gameId: this.opts.gameId,
+          kind: info.kind,
+          reason: 'The rules engine could not continue this game.',
+          turn: info.turn,
+        };
+      case 'spectator':
+        return {
+          gameId: this.opts.gameId,
+          kind: info.kind,
+          reason: info.reason,
+          turn: info.turn,
+          ...(info.cardName !== undefined ? { cardName: info.cardName } : {}),
+        };
+      default:
+        return assertNever(this.gameMode, 'halt notice');
+    }
+  }
+
   start(): void {
     if (this.running !== null) return;
     this.running = this.runner
       .run()
       .catch((err: unknown) => {
-        this.opts.send({
+        this.sendPublic({
           type: 'error',
-          payload: {
-            message:
-              this.gameMode === 'singlePlayer'
-                ? 'The game runner stopped unexpectedly.'
-                : err instanceof Error
-                  ? err.message
-                  : String(err),
-          },
+          payload: { message: this.runnerErrorMessage(err) },
         });
       })
       .finally(() => {
         // Compute is done; anything still queued behind the presentation clock is now all
         // there will ever be, so let the clock drain it and stop.
-        if (this.gameMode === 'spectator') this.startPresenting();
+        switch (this.gameMode) {
+          // flow: presentation when compute ends (m1 row 441).
+          case 'spectator':
+            this.startPresenting();
+            return;
+          case 'singlePlayer':
+          case 'table':
+            return;
+          default:
+            assertNever(this.gameMode, 'compute end presentation');
+        }
       });
-    if (this.gameMode === 'singlePlayer') {
-      for (const seat of this.humanSeats) this.publishPlayerState(seat, true);
-    } else if (this.playbackMode === 'live') this.startPresenting();
+    switch (this.gameMode) {
+      // flow: the player's first board, per human seat, and no presentation clock (m1 row 443).
+      case 'singlePlayer':
+      case 'table':
+        for (const seat of this.humanSeats) this.publishPlayerState(seat, true);
+        return;
+      case 'spectator':
+        if (this.playbackMode === 'live') this.startPresenting();
+        return;
+      default:
+        assertNever(this.gameMode, 'start presentation');
+    }
+  }
+
+  /**
+   * A runner error's message. A player is told one fixed line and never the raw error (m1 row 430).
+   *
+   * fence: `'table'` takes the fixed message.
+   */
+  private runnerErrorMessage(err: unknown): string {
+    switch (this.gameMode) {
+      case 'singlePlayer':
+      case 'table':
+        return 'The game runner stopped unexpectedly.';
+      case 'spectator':
+        return err instanceof Error ? err.message : String(err);
+      default:
+        return assertNever(this.gameMode, 'runner error');
+    }
   }
 
   /** Wait for the match to stop computing — used by tests and by clean shutdown. */
@@ -484,10 +637,17 @@ export class MatchSession {
    * 0012 applied to the compute frontier. 0 means "as fast as it computes".
    */
   setPlaybackMode(mode: PlaybackMode, paceMs?: number): void {
-    if (this.gameMode === 'singlePlayer') {
-      this.playbackMode = 'live';
-      if (paceMs !== undefined) this.livePaceMs = Math.max(0, paceMs);
-      return;
+    switch (this.gameMode) {
+      // flow: a player game is live only, whatever the client asks (m1 row 457). A table is too.
+      case 'singlePlayer':
+      case 'table':
+        this.playbackMode = 'live';
+        if (paceMs !== undefined) this.livePaceMs = Math.max(0, paceMs);
+        return;
+      case 'spectator':
+        break;
+      default:
+        assertNever(this.gameMode, 'playback mode');
     }
     const previous = this.playbackMode;
     this.playbackMode = mode;
@@ -525,6 +685,70 @@ export class MatchSession {
     return this.humanSeats;
   }
 
+  // ── Output routing (ADR 0031 decision 3) ──────────────────────────────────────────────────
+
+  /** A frame any viewer of the game may see. Nothing seat-private goes through here. */
+  private sendPublic(message: ServerToClientMessage): void {
+    this.opts.send(message);
+  }
+
+  /**
+   * A frame for one human seat only. Anything but a human seat throws: a frame addressed to a bot
+   * or an unknown seat is a bug, and dropping it silently would hide a leak.
+   */
+  private sendToSeat(seat: PlayerId, message: ServerToClientMessage): void {
+    if (!this.humanSeats.has(seat)) throw new Error(`cannot send to ${seat}: not a human seat`);
+    switch (this.gameMode) {
+      // flow: output routing (m1 task 4). A single-player game has one stream, and it is the
+      // player's; a table routes each frame to its seat.
+      case 'singlePlayer':
+        this.opts.send(message);
+        return;
+      case 'table': {
+        const out = this.opts.sendToSeat;
+        if (out === undefined) throw new Error('a table session requires sendToSeat');
+        out(seat, message);
+        return;
+      }
+      case 'spectator':
+        throw new Error('a spectator game has no seats to send to');
+      default:
+        assertNever(this.gameMode, 'seat output');
+    }
+  }
+
+  /** The same frame to every human seat (table talk, which is public to the players). */
+  private sendToHumans(message: ServerToClientMessage): void {
+    for (const seat of this.humanSeats) this.sendToSeat(seat, message);
+  }
+
+  /** An answer to a seat's request: to the seat when it is one, else to everyone (a fixed line). */
+  private reply(seat: PlayerId, message: ServerToClientMessage): void {
+    if (this.humanSeats.has(seat)) this.sendToSeat(seat, message);
+    else this.sendPublic(message);
+  }
+
+  /** A post-game frame for everyone, or for one seat resyncing. */
+  private emit(only: PlayerId | undefined, message: ServerToClientMessage): void {
+    if (only === undefined) this.sendPublic(message);
+    else this.sendToSeat(only, message);
+  }
+
+  /** The board a seat is shown. A table never carries the seed (ADR 0031 decision 4). */
+  private playerStateFor(seat: PlayerId): PlayerBoardState {
+    const state = this.engine.playerState(seat);
+    switch (this.gameMode) {
+      // fence: no seed in player-bound state at a table; single-player wire output is unchanged.
+      case 'table':
+        return { ...state, seed: '' };
+      case 'singlePlayer':
+      case 'spectator':
+        return state;
+      default:
+        return assertNever(this.gameMode, 'player state');
+    }
+  }
+
   /**
    * The seat of a game with exactly one human, for the surfaces that only exist for one: the
    * single-player event log and "Copy game report". A table with several humans has none.
@@ -539,6 +763,37 @@ export class MatchSession {
 
   private humanState(seat: PlayerId): HumanSeatState | undefined {
     return this.humanStates.get(seat);
+  }
+
+  /**
+   * How a bot is paced against the humans.
+   *
+   * flow: bots wait on the human's connection gate (m1 row 1562, task 6). A single-player bot
+   * waits on the one human's gate and pauses briefly so the player can follow; at a table a bot
+   * waits on no gate and never delays (ADR 0031 decision 2): a disconnected human must not stall
+   * the others, and the table's clocks (M4) decide what a missing human does.
+   */
+  private pacedBot(inner: AsyncDecisionProvider): AsyncDecisionProvider {
+    switch (this.gameMode) {
+      case 'singlePlayer':
+        return {
+          decide: async (request) => {
+            await this.soleGate().wait();
+            const response = await inner.decide(request);
+            await this.soleGate().wait();
+            const delayMs = Math.min(500, Math.floor(this.livePaceMs / 3));
+            if (delayMs > 0) {
+              await new Promise<void>((resolve) => setTimeout(resolve, delayMs));
+            }
+            return response;
+          },
+        };
+      case 'spectator':
+      case 'table':
+        return inner;
+      default:
+        return assertNever(this.gameMode, 'bot pacing');
+    }
   }
 
   /** The connection gate bots wait on in a single-player game. */
@@ -562,6 +817,7 @@ export class MatchSession {
     sources: readonly ReportSeatSource[];
     cardTestScenarioId: string | null;
   }): GameReport {
+    const reportMode = reportableMode(this.gameMode);
     if (this.humanSeats.size !== 1) {
       throw new Error('only a single-player session has a game report');
     }
@@ -587,7 +843,7 @@ export class MatchSession {
       game: {
         id: this.opts.gameId,
         seed: this.opts.seed,
-        gameMode: this.gameMode,
+        gameMode: reportMode,
         humanSeat,
         providerKind: this.opts.providerKind,
         playbackMode: this.playbackMode,
@@ -666,8 +922,18 @@ export class MatchSession {
   }
 
   setDebugFlags(flags: DebugFlags): void {
-    if (this.gameMode === 'singlePlayer') return;
-    this.debugFlags = { ...flags };
+    switch (this.gameMode) {
+      // fence: a player never turns on reasoning or debug, which would show hidden information
+      // (m1 row 615). A table ignores the flags too.
+      case 'singlePlayer':
+      case 'table':
+        return;
+      case 'spectator':
+        this.debugFlags = { ...flags };
+        return;
+      default:
+        assertNever(this.gameMode, 'debug flags');
+    }
   }
 
   // ── The presentation clock ────────────────────────────────────────────────────────────────
@@ -745,7 +1011,7 @@ export class MatchSession {
     this.hasPresented = true;
     this.runner.setViewTurn(turn);
     const frontierTurn = this.runner.getFrontierTurn();
-    this.opts.send({
+    this.sendPublic({
       type: 'stateSnapshot',
       payload: {
         turn,
@@ -775,7 +1041,7 @@ export class MatchSession {
   }
 
   private sendLines(lines: SpectatorLogLine[]): void {
-    this.opts.send({
+    this.sendPublic({
       type: 'eventBatch',
       payload: {
         gameId: this.opts.gameId,
@@ -846,7 +1112,7 @@ export class MatchSession {
     const tableTalk = this.pendingTalk;
     this.pendingTalk = [];
     this.recordTalk(tableTalk);
-    this.opts.send({
+    const batch: ServerToClientMessage = {
       type: 'eventBatch',
       payload: {
         gameId: this.opts.gameId,
@@ -855,19 +1121,31 @@ export class MatchSession {
         snapshotTurns: this.runner.getSnapshotTurns(),
         tableTalk,
       },
-    });
+    };
+    switch (this.gameMode) {
+      // flow: the last of the talk goes to the viewers the game has (m1 rows 391, 871).
+      case 'spectator':
+        this.sendPublic(batch);
+        return;
+      case 'singlePlayer':
+      case 'table':
+        this.sendToHumans(batch);
+        return;
+      default:
+        assertNever(this.gameMode, 'closing table talk');
+    }
   }
 
   /**
    * Player mode has no presentation clock, so talk goes out as soon as it is said, on a batch of
-   * its own. Talk is public; the player sees every line, whoever said it.
+   * its own, to every human seat. Talk is public; a player sees every line, whoever said it.
    */
   private sendTalkNow(): void {
     if (this.pendingTalk.length === 0) return;
     const tableTalk = this.pendingTalk;
     this.pendingTalk = [];
     this.recordTalk(tableTalk);
-    this.opts.send({
+    this.sendToHumans({
       type: 'eventBatch',
       payload: {
         gameId: this.opts.gameId,
@@ -882,7 +1160,7 @@ export class MatchSession {
   /** The player's seat state at the table, after anything that may have changed it. */
   private sendDiplomacyState(seat: PlayerId, outcome?: DealOutcomeNotice): void {
     if (this.diplomacy === null || !this.humanSeats.has(seat)) return;
-    this.opts.send({
+    this.sendToSeat(seat, {
       type: 'diplomacyState',
       payload: {
         gameId: this.opts.gameId,
@@ -922,10 +1200,18 @@ export class MatchSession {
     );
     if (terms === null) return;
     table.offer({ proposer: seat, ...terms });
-    if (this.gameMode === 'singlePlayer') {
-      this.collectTalk(Math.max(0, this.runner.nextSequence() - 1));
-      this.sendTalkNow();
-      for (const seat of this.humanSeats) this.sendDiplomacyState(seat);
+    switch (this.gameMode) {
+      // flow: a proposal's talk and deal state go out at once, to each human seat (m1 row 871).
+      case 'singlePlayer':
+      case 'table':
+        this.collectTalk(Math.max(0, this.runner.nextSequence() - 1));
+        this.sendTalkNow();
+        for (const humanSeat of this.humanSeats) this.sendDiplomacyState(humanSeat);
+        return;
+      case 'spectator':
+        return;
+      default:
+        assertNever(this.gameMode, 'strategist proposal delivery');
     }
   }
 
@@ -939,7 +1225,7 @@ export class MatchSession {
   /** The player offers a deal (ADR 0035 phase 3). The table checks it like any other offer. */
   proposeDeal(seat: PlayerId, payload: ProposeDealPayload): void {
     if (this.diplomacy === null || !this.humanSeats.has(seat) || this.isOver()) {
-      this.opts.send({ type: 'error', payload: { message: 'Deals are off in this game.' } });
+      this.reply(seat, { type: 'error', payload: { message: 'Deals are off in this game.' } });
       return;
     }
     this.afterPlayerDeal(seat, this.diplomacy.offer({ proposer: seat, ...payload }));
@@ -948,7 +1234,7 @@ export class MatchSession {
   /** The player answers an offer waiting on them, optionally with terms of their own. */
   answerDeal(seat: PlayerId, payload: AnswerDealPayload): void {
     if (this.diplomacy === null || !this.humanSeats.has(seat) || this.isOver()) {
-      this.opts.send({ type: 'error', payload: { message: 'Deals are off in this game.' } });
+      this.reply(seat, { type: 'error', payload: { message: 'Deals are off in this game.' } });
       return;
     }
     this.afterPlayerDeal(
@@ -964,7 +1250,7 @@ export class MatchSession {
    */
   async draftDeal(seat: PlayerId, payload: DraftDealPayload): Promise<void> {
     if (this.diplomacy === null || !this.humanSeats.has(seat) || this.isOver()) {
-      this.opts.send({ type: 'error', payload: { message: 'Deals are off in this game.' } });
+      this.reply(seat, { type: 'error', payload: { message: 'Deals are off in this game.' } });
       return;
     }
     const busy = this.draftInFlight
@@ -973,7 +1259,7 @@ export class MatchSession {
         ? 'No free-text readings left this game. Use the deal panel.'
         : null;
     if (busy !== null) {
-      this.opts.send({
+      this.sendToSeat(seat, {
         type: 'dealDraft',
         payload: { text: payload.text, terms: null, message: busy },
       });
@@ -1022,7 +1308,7 @@ export class MatchSession {
       { logger: this.draftLogger ?? undefined },
     );
     if (this.abandoned) return;
-    this.opts.send({ type: 'dealDraft', payload: draft });
+    this.sendToSeat(seat, { type: 'dealDraft', payload: draft });
   }
 
   /** Every line of table talk released so far, for a viewer who reconnects or reloads. */
@@ -1078,12 +1364,27 @@ export class MatchSession {
    * frontier unparks compute up to lookahead turns ahead (brief §10.1).
    */
   jumpToTurn(requestedTurn: number, requestedSequence?: number): void {
-    if (this.gameMode === 'singlePlayer' && this.runner.getStatus() !== 'finished') {
-      this.opts.send({
-        type: 'error',
-        payload: { message: 'Timeline seeking unlocks after a single-player game ends.' },
-      });
-      return;
+    const refusal: ServerToClientMessage = {
+      type: 'error',
+      payload: { message: 'Timeline seeking unlocks after a single-player game ends.' },
+    };
+    switch (this.gameMode) {
+      // fence: timeline seeking serves full boards, so a player waits for the game to end
+      // (m1 row 1027). A table is refused with the same fixed message even then: its post-game
+      // replay is served from the table database (multiplayer M3), never from a live session.
+      case 'singlePlayer':
+        if (this.runner.getStatus() !== 'finished') {
+          this.sendPublic(refusal);
+          return;
+        }
+        break;
+      case 'table':
+        this.sendPublic(refusal);
+        return;
+      case 'spectator':
+        break;
+      default:
+        assertNever(this.gameMode, 'timeline seeking');
     }
     const turn = Math.max(0, requestedTurn);
     this.runner.setViewTurn(turn);
@@ -1097,14 +1398,14 @@ export class MatchSession {
     if (found === null) {
       const status = this.runner.getStatus();
       if (status === 'finished' || status === 'halted' || status === 'abandoned') {
-        this.opts.send({
+        this.sendPublic({
           type: 'error',
           payload: { message: `Turn ${turn} has not been computed yet.` },
         });
       }
       return;
     }
-    this.opts.send({
+    this.sendPublic({
       type: 'stateSnapshot',
       payload: {
         turn,
@@ -1119,7 +1420,7 @@ export class MatchSession {
   resolveHeldDecision(requestId: string, actionId: number, targets?: TargetChoice[]): void {
     const accepted = this.runner.resolveHeldDecision(requestId, actionId, targets);
     if (!accepted) {
-      this.opts.send({
+      this.sendPublic({
         type: 'error',
         payload: { message: `No decision is being held for ${requestId}.` },
       });
@@ -1134,7 +1435,7 @@ export class MatchSession {
    */
   submitPlayerAction(seat: PlayerId, payload: SubmitPlayerActionPayload): void {
     const rejected = (message: string): void => {
-      this.opts.send({
+      this.reply(seat, {
         type: 'error',
         payload: { message, requestId: payload.requestId, revision: payload.revision },
       });
@@ -1170,14 +1471,14 @@ export class MatchSession {
     const human = this.humanState(seat);
     const pending = human?.provider.current();
     if (human === undefined || pending === null || pending === undefined) {
-      this.opts.send({
+      this.reply(seat, {
         type: 'error',
         payload: { message: 'No player action is currently required.' },
       });
       return;
     }
     if (payload.requestId !== pending.request.requestId || payload.revision !== pending.revision) {
-      this.opts.send({ type: 'error', payload: { message: 'That ability choice is stale.' } });
+      this.reply(seat, { type: 'error', payload: { message: 'That ability choice is stale.' } });
       return;
     }
     const action = pending.request.legalActions.find(
@@ -1191,7 +1492,7 @@ export class MatchSession {
       playerYieldKey(action) === null ||
       (action.type === 'castSpell' && payload.mode !== 'smart')
     ) {
-      this.opts.send({
+      this.reply(seat, {
         type: 'error',
         payload: { message: 'Yield an optional activation, or smart yield an optional spell.' },
       });
@@ -1216,7 +1517,7 @@ export class MatchSession {
   resumePlayerAbility(seat: PlayerId, key: string): void {
     const human = this.humanState(seat);
     if (human === undefined || !human.ignoredAbilities.delete(key)) {
-      this.opts.send({
+      this.reply(seat, {
         type: 'error',
         payload: { message: 'That yielded ability is no longer available.' },
       });
@@ -1238,14 +1539,26 @@ export class MatchSession {
    */
   cancelYield(seat: PlayerId): void {
     if (!this.humanSeats.has(seat)) {
-      this.opts.send({ type: 'error', payload: { message: 'This is not a single-player game.' } });
+      this.reply(seat, {
+        type: 'error',
+        payload: { message: 'This is not a single-player game.' },
+      });
       return;
     }
     if (this.engine.cancelYield(seat)) this.publishPlayerState(seat, false);
   }
 
   setPlayerConnected(seat: PlayerId, connected: boolean): void {
-    if (this.gameMode !== 'singlePlayer') return;
+    switch (this.gameMode) {
+      // flow: the player connection gate, per human seat (m1 row 1191).
+      case 'singlePlayer':
+      case 'table':
+        break;
+      case 'spectator':
+        return;
+      default:
+        assertNever(this.gameMode, 'player connection');
+    }
     const human = this.humanState(seat);
     if (human === undefined) return;
     human.connectionGate.setConnected(connected);
@@ -1255,7 +1568,7 @@ export class MatchSession {
   resyncPlayer(seat: PlayerId): void {
     const human = this.humanState(seat);
     if (human === undefined) return;
-    this.opts.send({
+    this.sendToSeat(seat, {
       type: 'eventBatch',
       payload: {
         gameId: this.opts.gameId,
@@ -1268,7 +1581,7 @@ export class MatchSession {
     this.publishPlayerState(seat, false);
     const result = this.runner.getResult();
     if (result !== null) {
-      this.publishGameOver(result);
+      this.publishGameOver(result, seat);
       return;
     }
     const pending = human.provider.current();
@@ -1301,11 +1614,11 @@ export class MatchSession {
       this.sendTalkNow();
     }
     this.sendDiplomacyState(seat);
-    this.opts.send({
+    this.sendToSeat(seat, {
       type: 'playerStateSnapshot',
       payload: {
         gameId: this.opts.gameId,
-        state: this.engine.playerState(seat),
+        state: this.playerStateFor(seat),
         revision: human.playerRevision,
         connected: human.connectionGate.isConnected(),
         ignoredAbilities: this.ignoredAbilityList(seat),
@@ -1320,7 +1633,7 @@ export class MatchSession {
   ): void {
     const human = this.humanState(seat);
     if (human === undefined) return;
-    const state = this.engine.playerState(seat);
+    const state = this.playerStateFor(seat);
     const legalActions =
       request.decisionType === 'priority'
         ? request.legalActions.filter(
@@ -1344,7 +1657,7 @@ export class MatchSession {
       human.provider.submit({ requestId: request.requestId, revision, actionId: pass.id });
       return;
     }
-    this.opts.send({
+    this.sendToSeat(seat, {
       type: 'playerActionRequired',
       payload: {
         request: {
@@ -1387,13 +1700,23 @@ export class MatchSession {
    * unaffected: it gets a full `replayUnlocked` state separately.
    */
   private publishFinalState(): void {
-    if (this.gameMode !== 'spectator') return;
+    switch (this.gameMode) {
+      // flow: spectator final state (m1 row 1318). A player has `replayUnlocked`, and a table
+      // would be sent `spectatorState`, which no live player frame may carry.
+      case 'spectator':
+        break;
+      case 'singlePlayer':
+      case 'table':
+        return;
+      default:
+        assertNever(this.gameMode, 'final state');
+    }
     this.stopPresenting();
     this.flushPendingLines();
     const turn = this.engine.getState().turnNumber;
     this.presentedTurn = turn;
     this.runner.setViewTurn(turn);
-    this.opts.send({
+    this.sendPublic({
       type: 'stateSnapshot',
       payload: {
         turn,
@@ -1405,27 +1728,43 @@ export class MatchSession {
     });
   }
 
-  private publishGameOver(result: NonNullable<ReturnType<Engine['getResult']>>): void {
+  /**
+   * Announce the result. `only` addresses a seat that is resyncing; otherwise it is for everyone.
+   */
+  private publishGameOver(
+    result: NonNullable<ReturnType<Engine['getResult']>>,
+    only?: PlayerId,
+  ): void {
     this.publishFinalState();
     this.finishTalk();
-    if (this.gameMode === 'singlePlayer') {
-      this.opts.send({
-        type: 'replayUnlocked',
-        payload: {
-          state: this.engine.spectatorState(),
-          lines: formatSpectatorLog(this.engine.eventsSince(0)),
-          snapshotTurns: this.runner.getSnapshotTurns(),
-          frontierTurn: result.turnCount,
-          // The game is over, so the reasoning withheld all game is safe to release in full
-          // (ADR 0022 §3) — this is the only path by which a player ever sees it.
-          ...(this.debugFlags.showAIResponses && this.allAnnotations.length > 0
-            ? { annotations: [...this.allAnnotations] }
-            : {}),
-        },
-      });
+    switch (this.gameMode) {
+      // fence: `replayUnlocked` carries the full state and the whole log, so only the single
+      // player gets it (m1 row 1339). A table's post-game replay is served from the table
+      // database (multiplayer M3), never from a live session.
+      case 'singlePlayer':
+        this.sendToSeat(only ?? this.soleHumanSeat(), {
+          type: 'replayUnlocked',
+          payload: {
+            state: this.engine.spectatorState(),
+            lines: formatSpectatorLog(this.engine.eventsSince(0)),
+            snapshotTurns: this.runner.getSnapshotTurns(),
+            frontierTurn: result.turnCount,
+            // The game is over, so the reasoning withheld all game is safe to release in full
+            // (ADR 0022 §3) — this is the only path by which a player ever sees it.
+            ...(this.debugFlags.showAIResponses && this.allAnnotations.length > 0
+              ? { annotations: [...this.allAnnotations] }
+              : {}),
+          },
+        });
+        break;
+      case 'spectator':
+      case 'table':
+        break;
+      default:
+        assertNever(this.gameMode, 'replay unlock');
     }
     const reflectingSeats = this.reflectionSeats();
-    this.opts.send({
+    this.emit(only, {
       type: 'gameOver',
       payload: {
         result,
@@ -1439,7 +1778,7 @@ export class MatchSession {
     // (ADR 0022 §7). On a resync the game is long over and the reviews already exist, so they are
     // simply re-sent.
     if (this.reflections.length > 0)
-      this.sendReflections(this.reflections, this.reflectionsComplete);
+      this.sendReflections(this.reflections, this.reflectionsComplete, only);
     this.reflectionRun = this.startReflections(result);
   }
 
@@ -1455,14 +1794,29 @@ export class MatchSession {
    * choice wins over the env default so the toggle on the new-game screen actually decides it.
    */
   private reflectionSeats(): PlayerId[] {
+    // fence: post-game commentary is model reasoning about hidden hands, and a table's policy for
+    // it is not decided (ADR 0031 decision 3), so a table has none.
+    switch (this.gameMode) {
+      case 'spectator':
+      case 'singlePlayer':
+        break;
+      case 'table':
+        return [];
+      default:
+        return assertNever(this.gameMode, 'reflection seats');
+    }
     if (this.opts.providerKind !== 'ai') return [];
     const config = (this.aiConfig ??= loadAiConfig(process.env));
     if (!(this.opts.reflectionEnabled ?? config.reflectionEnabled)) return [];
     return this.opts.seats.map((seat) => seat.seat).filter((seat) => !this.humanSeats.has(seat));
   }
 
-  private sendReflections(reflections: readonly AiReflection[], complete: boolean): void {
-    this.opts.send({
+  private sendReflections(
+    reflections: readonly AiReflection[],
+    complete: boolean,
+    only?: PlayerId,
+  ): void {
+    this.emit(only, {
       type: 'gameReflections',
       payload: { gameId: this.opts.gameId, reflections: [...reflections], complete },
     });
@@ -1563,8 +1917,19 @@ export class MatchSession {
    */
   private reportAiCost(): void {
     if (this.logger === null) return;
+    switch (this.gameMode) {
+      // fence: token counts track a bot's hand, so a table never gets `apiWaiting` (ADR 0031
+      // decision 3). Spectator and single-player output is unchanged.
+      case 'spectator':
+      case 'singlePlayer':
+        break;
+      case 'table':
+        return;
+      default:
+        assertNever(this.gameMode, 'AI cost report');
+    }
     const stats = this.logger.summary();
-    this.opts.send({
+    this.sendPublic({
       type: 'apiWaiting',
       payload: {
         queueDepth: 0,
@@ -1631,21 +1996,7 @@ export class MatchSession {
         : table === null
           ? this.buildAiProvider()
           : withDiplomacyAsync(table, this.buildAiProvider());
-    const pacedProvider: AsyncDecisionProvider =
-      this.gameMode === 'singlePlayer'
-        ? {
-            decide: async (request) => {
-              await this.soleGate().wait();
-              const response = await inner.decide(request);
-              await this.soleGate().wait();
-              const delayMs = Math.min(500, Math.floor(this.livePaceMs / 3));
-              if (delayMs > 0) {
-                await new Promise<void>((resolve) => setTimeout(resolve, delayMs));
-              }
-              return response;
-            },
-          }
-        : inner;
+    const pacedProvider = this.pacedBot(inner);
 
     // Bots retain an explicit decline of a sacrifice-style optional activation across turns in
     // both spectator and player games, avoiding a new model call for the same non-plan each turn.
@@ -1666,11 +2017,28 @@ export class MatchSession {
       this.engine,
       config,
       this.logger ?? undefined,
-      // Never surface an opponent's failed legal menu to the active player.
-      this.gameMode === 'singlePlayer' ? undefined : this.runner.escalation(),
+      this.escalation(),
       coordinator,
       this.aiJev ?? undefined,
     );
+  }
+
+  /**
+   * The hook that shows a failed legal menu to a person to pick from.
+   *
+   * fence: never surface an opponent's failed legal menu to a player (m1 row 1597); only a
+   * spectator is consulted. `'table'` takes the same restrictive choice.
+   */
+  private escalation(): DecisionEscalation | undefined {
+    switch (this.gameMode) {
+      case 'singlePlayer':
+      case 'table':
+        return undefined;
+      case 'spectator':
+        return this.runner.escalation();
+      default:
+        return assertNever(this.gameMode, 'legal-menu escalation');
+    }
   }
 
   private ensureAiCoordinator(): StrategyCoordinator {
@@ -1800,6 +2168,23 @@ function resolveSeatControllers(
     }
     default:
       return assertNever(gameMode, 'session game mode');
+  }
+}
+
+/**
+ * The mode a "Copy game report" can name: the tester's own.
+ *
+ * fence: a table has no report from the tester (m1 report consumer); asking for one throws.
+ */
+function reportableMode(gameMode: GameMode): StartGameMode {
+  switch (gameMode) {
+    case 'spectator':
+    case 'singlePlayer':
+      return gameMode;
+    case 'table':
+      throw new Error('a table game has no tester game report');
+    default:
+      return assertNever(gameMode, 'game report mode');
   }
 }
 

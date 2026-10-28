@@ -96,8 +96,16 @@ export interface DecisionEscalation {
 }
 
 export interface MatchRunnerHooks {
-  /** New spectator log lines, with the advancing compute frontier. */
-  onEvents?(lines: SpectatorLogLine[], frontierTurn: number, snapshotTurns: number[]): void;
+  /**
+   * New log lines, with the advancing compute frontier. `seat` names the viewer the lines were
+   * formatted for when the runner has `seatEvents`; otherwise there is one stream and it is absent.
+   */
+  onEvents?(
+    lines: SpectatorLogLine[],
+    frontierTurn: number,
+    snapshotTurns: number[],
+    seat?: PlayerId,
+  ): void;
   onSnapshot?(turn: number, state: SpectatorState, atFrontier: boolean): void;
   onHalt?(info: HaltInfo): void;
   onGameOver?(result: GameResult): void;
@@ -139,6 +147,14 @@ export interface MatchRunnerOptions extends MatchRunnerHooks {
   escalationTimeoutMs?: number;
   gameMode?: GameMode;
   formatEvents?: (events: readonly GameEvent[]) => SpectatorLogLine[];
+  /**
+   * One log stream per viewing seat (a table's human seats): `format` is called once per seat per
+   * batch, and each seat's lines reach `onEvents` with that seat. Replaces the single stream.
+   */
+  seatEvents?: {
+    seats: readonly PlayerId[];
+    format: (events: readonly GameEvent[], seat: PlayerId) => SpectatorLogLine[];
+  };
 }
 
 /** Classify a halt reason string the engine produced into a protocol `HaltKind`. */
@@ -494,9 +510,19 @@ export class MatchRunner {
     this.eventCursor = (events[events.length - 1]?.sequence ?? this.eventCursor) + 1;
     this.opts.recorder?.appendEvents(events);
     this.indexMetricEvents(events);
-    const lines = this.opts.formatEvents?.(events) ?? formatSpectatorLog(events);
-    if (lines.length > 0) {
-      this.opts.onEvents?.(lines, this.frontierTurn, this.getSnapshotTurns());
+    const { seatEvents } = this.opts;
+    if (seatEvents !== undefined) {
+      for (const seat of seatEvents.seats) {
+        const seatLines = seatEvents.format(events, seat);
+        if (seatLines.length > 0) {
+          this.opts.onEvents?.(seatLines, this.frontierTurn, this.getSnapshotTurns(), seat);
+        }
+      }
+    } else {
+      const lines = this.opts.formatEvents?.(events) ?? formatSpectatorLog(events);
+      if (lines.length > 0) {
+        this.opts.onEvents?.(lines, this.frontierTurn, this.getSnapshotTurns());
+      }
     }
     this.opts.onProgress?.(this.frontierTurn);
   }
