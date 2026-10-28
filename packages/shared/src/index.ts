@@ -24,6 +24,18 @@ export {
 export { ATTACKS_TARGET, NO_ATTACK_TARGET, NO_BLOCK_TARGET } from './engine';
 export { parseStrictJson, STRICT_JSON_MAX_DEPTH } from './json';
 
+// --- LegalAction.data key registry (ADR 0032) ---
+export {
+  ACTION_DATA_KEYS,
+  ACTION_DATA_VALUE_TYPES,
+  ACTION_DATA_CONSUMERS,
+} from './action-data-keys';
+export type {
+  ActionDataKeyInfo,
+  ActionDataValueType,
+  ActionDataConsumer,
+} from './action-data-keys';
+
 // --- Strict inbound JSON (duplicate-key rejection ahead of the native parse) ---
 export type { StrictJsonFailure, StrictJsonResult } from './json';
 
