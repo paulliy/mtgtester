@@ -29,4 +29,26 @@ export type {
   DamageSplitSpec,
 } from './combat-search';
 export { HeuristicDecisionProvider } from './provider';
+export {
+  DIPLOMACY_STATE_VERSION,
+  DiplomacyTable,
+  describeMessage,
+  describeObligation,
+  estimateTable,
+  withDiplomacy,
+  withDiplomacyAsync,
+} from './diplomacy';
+export type {
+  ActiveObligation,
+  BreachReason,
+  DiplomacyPlay,
+  DiplomacyState,
+  DiplomacyStats,
+  DiplomacyTableOptions,
+  OfferOutcome,
+  OfferTerms,
+  SeatEstimate,
+  SeatName,
+  TableEstimate,
+} from './diplomacy';
 export type { DecisionProviderLike, HeuristicProviderOptions } from './provider';

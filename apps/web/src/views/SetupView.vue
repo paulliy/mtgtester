@@ -76,6 +76,11 @@ const providerKind = ref<ProviderKind>('random');
  * budget after the game is already over, so it is an explicit per-game choice.
  */
 const reflectionEnabled = ref(false);
+/**
+ * Table talk and deals between the bots (ADR 0035). Offered only when watching rule-based bots:
+ * the deals run inside the heuristic bot, and a human seat cannot take part yet.
+ */
+const diplomacy = ref(false);
 /** A replay seed the user typed. Blank means the session's own seed below. */
 const customSeed = ref('');
 const sessionSeed = ref(freshSeed());
@@ -389,6 +394,11 @@ function start(): void {
       humanSeat.value,
       providerKind.value === 'ai' && reflectionEnabled.value,
       matchup.previewId,
+      undefined,
+      {
+        diplomacy:
+          gameMode.value === 'spectator' && providerKind.value === 'random' && diplomacy.value,
+      },
     ),
   );
 }
@@ -677,6 +687,16 @@ const seatRows = computed(() =>
             >Post-game commentary
             <span class="hint"
               >Each bot reviews its own play once the game ends. One extra call per bot.</span
+            ></span
+          >
+        </label>
+
+        <label v-if="gameMode === 'spectator' && providerKind === 'random'" class="check">
+          <input v-model="diplomacy" type="checkbox" />
+          <span
+            >Table talk and deals
+            <span class="hint"
+              >Bots call out threats and make short deals, shown in the log and on each seat.</span
             ></span
           >
         </label>

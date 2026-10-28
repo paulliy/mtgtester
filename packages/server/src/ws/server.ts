@@ -305,6 +305,18 @@ export class GameServer {
           }
           return Response.json({ annotations: this.deps.store.stats().gameAnnotations(gameId) });
         }
+        const talkMatch = /^\/api\/games\/([^/]+)\/table-talk$/.exec(url.pathname);
+        if (talkMatch !== null) {
+          const gameId = decodeURIComponent(talkMatch[1] ?? '');
+          // Table talk is public (ADR 0035), so no single-player lock. The live session is the
+          // source of truth for the running game; the store serves finished ones.
+          if (this.startedPayload?.gameId === gameId && this.session !== null) {
+            return Response.json({ tableTalk: this.session.tableTalk() });
+          }
+          if (this.deps.store === undefined)
+            return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          return Response.json({ tableTalk: this.deps.store.stats().gameTableTalk(gameId) });
+        }
         const reflectionMatch = /^\/api\/games\/([^/]+)\/reflections$/.exec(url.pathname);
         if (reflectionMatch !== null) {
           if (this.deps.store === undefined)
@@ -882,6 +894,7 @@ export class GameServer {
       ...(payload.reflectionEnabled !== undefined && {
         reflectionEnabled: payload.reflectionEnabled,
       }),
+      ...(payload.diplomacy === true && { diplomacy: true }),
       send: (message) => {
         if (this.session !== session) return;
         if (gameMode === 'singlePlayer') {
@@ -911,6 +924,7 @@ export class GameServer {
       ...(this.sessionToken !== null && { sessionToken: this.sessionToken }),
       paceMs: session.getLivePaceMs(),
       startedAt: new Date().toISOString(),
+      ...(session.hasDiplomacy() && { diplomacy: true }),
     };
     this.startedPayload = startedPayload;
     this.reportSources = { sources: [...seats], cardTestScenarioId: null };

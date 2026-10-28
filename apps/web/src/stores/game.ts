@@ -28,12 +28,14 @@ import type {
   ServerToClientMessage,
   SpectatorLogLine,
   SpectatorState,
+  TableTalkLine,
   TargetChoice,
 } from '@mtg/shared';
 import { GameSocket, type ConnectionState } from '../lib/socket';
 import { resetBoardAnchors } from '../composables/useBoardAnchors';
 import { resetCombatStrikes } from '../composables/useCombatStrikes';
 import { pushRecentId, readRecentIds, saveRecentIds } from '../lib/recentSetup';
+import { dealsInForce, mergeTalk } from '../lib/tableTalk';
 
 /** Log lines kept in memory. A long game emits thousands; the scroller only shows the tail. */
 const MAX_LOG_LINES = 4_000;
@@ -158,6 +160,62 @@ export const useGameStore = defineStore('game', () => {
   }
 
   /**
+   * Table talk and deals (ADR 0035): on only for a game started with them. Kept in the order it
+   * was said, since a deal's lines must be read in order; `talkBySequence` groups it for the log.
+   */
+  const diplomacy = ref(false);
+  const tableTalk = ref<TableTalkLine[]>([]);
+  const showTableTalk = ref(true);
+
+  function addTableTalk(incoming: TableTalkLine[] | undefined): void {
+    if (incoming === undefined || incoming.length === 0) return;
+    tableTalk.value = mergeTalk(tableTalk.value, incoming);
+  }
+
+  const talkBySequence = computed(() => {
+    const grouped = new Map<number, TableTalkLine[]>();
+    for (const line of tableTalk.value) {
+      grouped.set(line.sequence, [...(grouped.get(line.sequence) ?? []), line]);
+    }
+    return grouped;
+  });
+
+  /**
+   * Deals in force on the board the viewer is looking at: at the action it stands on; on an
+   * earlier turn picked with the slider (a snapshot of that turn's start, so only talk from turns
+   * before it); or at the latest line shown. Talk past the last line shown counts only once the
+   * game is over: before then it belongs to plays not presented yet.
+   */
+  const dealsNow = computed(() => {
+    if (activeSequence.value !== null) return dealsInForce(tableTalk.value, activeSequence.value);
+    if (viewTurn.value < frontierTurn.value) {
+      const before = tableTalk.value.filter((line) => line.turn < viewTurn.value);
+      return dealsInForce(before, null);
+    }
+    return dealsInForce(
+      tableTalk.value,
+      gameOver.value !== null ? null : (log.value.at(-1)?.sequence ?? -1),
+    );
+  });
+
+  /** Backfill table talk for a game already in progress or finished (survives a reload). */
+  async function loadTableTalk(): Promise<void> {
+    const id = gameId.value;
+    if (id === null) return;
+    try {
+      const response = await fetch(`/api/games/${encodeURIComponent(id)}/table-talk`);
+      if (!response.ok) return;
+      const history = (await response.json()).tableTalk as TableTalkLine[];
+      if (gameId.value !== id) return;
+      // Live lines may have arrived while this was in flight. History goes first: it holds every
+      // line said before them, and any it shares with them are dropped as duplicates.
+      tableTalk.value = mergeTalk(history, tableTalk.value);
+    } catch {
+      // History is a nicety; the live stream is the source of truth.
+    }
+  }
+
+  /**
    * Post-game commentary (ADR 0022 §7). `reflectingSeats` arrives on `gameOver` and says which
    * seats are *going* to review; `reflections` fills in as each one lands. Two refs rather than
    * one because "waiting on P3" and "P3 had nothing to say" must look different on screen.
@@ -276,6 +334,7 @@ export const useGameStore = defineStore('game', () => {
         gameMode.value = message.payload.gameMode ?? 'spectator';
         humanSeat.value = message.payload.humanSeat ?? null;
         cardTestScenario.value = message.payload.cardTestScenario ?? null;
+        diplomacy.value = message.payload.diplomacy === true;
         if (message.payload.paceMs !== undefined) paceMs.value = message.payload.paceMs;
         if (message.payload.sessionToken !== undefined) {
           sessionToken.value = message.payload.sessionToken;
@@ -288,6 +347,9 @@ export const useGameStore = defineStore('game', () => {
             localStorage.removeItem('mtg-player-session');
           }
         }
+        // A viewer who reconnects or reloads missed whatever was said meanwhile; the endpoint has
+        // all of it. It resolves after the reset below, and duplicates are dropped on arrival.
+        if (diplomacy.value) void loadTableTalk();
         if (resuming) break;
         log.value = [];
         lastPlayerActionSequence.value = null;
@@ -303,6 +365,7 @@ export const useGameStore = defineStore('game', () => {
         activeSequence.value = null;
         heldDecision.value = null;
         annotations.value = new Map();
+        tableTalk.value = [];
         reflections.value = [];
         reflectingSeats.value = [];
         reflectionsComplete.value = false;
@@ -340,6 +403,7 @@ export const useGameStore = defineStore('game', () => {
         frontierTurn.value = Math.max(frontierTurn.value, message.payload.frontierTurn);
         snapshotTurns.value = message.payload.snapshotTurns;
         addAnnotations(message.payload.annotations);
+        addTableTalk(message.payload.tableTalk);
         break;
 
       case 'decisionPending':
@@ -475,6 +539,7 @@ export const useGameStore = defineStore('game', () => {
     previewId?: string,
     /** A named bot pod to remember, but only once the server confirms this start. */
     recentPodId?: string,
+    options: { diplomacy?: boolean } = {},
   ): void {
     connect();
     errors.value = [];
@@ -498,6 +563,10 @@ export const useGameStore = defineStore('game', () => {
       // Only sent when asked for, so a game that does not want commentary leaves the server's own
       // `AI_REFLECTION_ENABLED` default in charge.
       ...(reflectionEnabled && kind === 'ai' && { reflectionEnabled: true }),
+      // Deals and table talk are for spectator games of rule-based bots (ADR 0035 phase 2).
+      ...(options.diplomacy === true &&
+        mode === 'spectator' &&
+        kind === 'random' && { diplomacy: true }),
       ...(requestedSeed !== undefined && requestedSeed !== '' && { seed: requestedSeed }),
       ...(previewId !== undefined && { previewId }),
     };
@@ -740,6 +809,12 @@ export const useGameStore = defineStore('game', () => {
     liveDebug,
     annotations,
     loadAnnotations,
+    diplomacy,
+    tableTalk,
+    talkBySequence,
+    showTableTalk,
+    dealsNow,
+    loadTableTalk,
     reflections,
     reflectingSeats,
     reflectionsComplete,

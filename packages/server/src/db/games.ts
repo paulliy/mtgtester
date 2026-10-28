@@ -19,6 +19,7 @@ import type {
   PlayerId,
   SeatControllerKind,
   SpectatorState,
+  TableTalkLine,
 } from '@mtg/shared';
 import type { DebugEntry } from '@mtg/engine';
 
@@ -234,6 +235,37 @@ export class GameRecorder {
       type: r.event_type,
       payload: JSON.parse(r.payload_json) as Record<string, unknown>,
     }));
+  }
+
+  /**
+   * Append table talk (ADR 0035) after the lines already stored for this game. Positions continue
+   * from the stored count, so a resumed session appends rather than overwrites.
+   */
+  saveTableTalk(lines: readonly TableTalkLine[]): void {
+    if (lines.length === 0) return;
+    const insert = () => {
+      const row = this.db
+        .query(`SELECT COUNT(*) AS n FROM game_table_talk WHERE game_id = ?`)
+        .get(this.gameId) as { n: number } | null;
+      let position = row?.n ?? 0;
+      for (const line of lines) {
+        this.db
+          .query(
+            `INSERT INTO game_table_talk (game_id, position, sequence, turn, message_json, text)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+          )
+          .run(
+            this.gameId,
+            position++,
+            line.sequence,
+            line.turn,
+            JSON.stringify(line.message),
+            line.text,
+          );
+      }
+    };
+    if (this.db.transaction !== undefined) this.db.transaction(insert)();
+    else insert();
   }
 
   /**

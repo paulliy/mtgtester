@@ -15,6 +15,7 @@ import type { GameResult } from './state';
 import type { PlayerBoardState } from './player';
 import type { AiAnnotation, AiReflection, SpectatorLogLine, SpectatorState } from './spectator';
 import type { ValidationIssue } from './decks';
+import type { TableTalkLine } from './diplomacy';
 
 /** Server → client message types (brief §11). */
 export const SERVER_TO_CLIENT_TYPES = [
@@ -142,6 +143,8 @@ export interface GameStartedPayload {
   paceMs?: number;
   startedAt: string;
   cardTestScenario?: CardTestScenarioMetadata;
+  /** True when the bots negotiate and talk at this table (ADR 0035). */
+  diplomacy?: boolean;
 }
 
 export interface CardTestScenarioMetadata {
@@ -183,6 +186,11 @@ export interface EventBatchPayload {
    * this never carries another seat's reasoning — see `MatchSession` for that gate.
    */
   annotations?: AiAnnotation[];
+  /**
+   * Table talk anchored to these lines (ADR 0035): deals, answers, breaches and threat calls.
+   * Absent unless the game was started with `diplomacy`, so the default payload does not grow.
+   */
+  tableTalk?: TableTalkLine[];
 }
 
 /**
@@ -369,6 +377,12 @@ interface StartGameCommon {
    * the game has already ended.
    */
   reflectionEnabled?: boolean;
+  /**
+   * Let the bots make deals and talk at the table (ADR 0035). Honored only in a spectator game
+   * of heuristic bots for now; the model-driven seats and the human seat join in later phases.
+   * Off when omitted, and an off game is byte-identical to one from before diplomacy existed.
+   */
+  diplomacy?: boolean;
 }
 
 /** The selected human seat is part of the single-player discriminant, never ambient state. */
@@ -556,7 +570,8 @@ export function isClientToServerMessage(value: unknown): value is ClientToServer
         (payload['paceMs'] === undefined ||
           (isFiniteNumber(payload['paceMs']) && payload['paceMs'] >= 0)) &&
         (payload['reflectionEnabled'] === undefined ||
-          typeof payload['reflectionEnabled'] === 'boolean')
+          typeof payload['reflectionEnabled'] === 'boolean') &&
+        (payload['diplomacy'] === undefined || typeof payload['diplomacy'] === 'boolean')
       );
     case 'startCardTestScenario':
       return typeof payload['scenarioId'] === 'string' && payload['scenarioId'].length > 0;
