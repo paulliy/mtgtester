@@ -6,6 +6,7 @@ import { HeuristicDecisionProvider } from '@mtg/bot';
 import { describe, expect, it } from 'vitest';
 import { buildSupportedPool } from '../cards/pool';
 import { generateCommanderDeck } from '../decks/generate';
+import { MAX_CONCESSION_PER_DEAL, summarizeExploits } from '@mtg/bot';
 import { playDiplomacyGame } from './diplomacy-game';
 
 const pool = buildSupportedPool(
@@ -66,4 +67,30 @@ describe('playDiplomacyGame (ADR 0035)', () => {
       Object.fromEntries(engine.getState().players.map((p) => [p.id, p.life])),
     );
   }, 120_000);
+});
+
+describe('playDiplomacyGame — an exploiter at the table (ADR 0035 phase 3)', () => {
+  it('cannot pad, cannot deal past its breaches, and gets at most the bounded concession per deal', () => {
+    const result = playDiplomacyGame({
+      seed,
+      turnCap: 20,
+      diplomacySeats: ['P2', 'P3', 'P4'],
+      exploiterSeat: 'P1',
+      decks,
+    });
+    const exploits = result.exploits ?? [];
+    expect(exploits.length).toBeGreaterThan(0);
+    // Padding is refused before it is ever put to a bot.
+    expect(
+      exploits.filter((r) => r.tactic === 'padding').every((r) => r.outcome === 'refused'),
+    ).toBe(true);
+    const summary = summarizeExploits(exploits);
+    expect(summary.paddingAccepted).toBe(0);
+    expect(summary.acceptedPastTolerance).toBe(0);
+    expect(summary.worstConcession).toBeLessThanOrEqual(MAX_CONCESSION_PER_DEAL);
+    // The table never speaks for the exploiter: everything it said was an offer.
+    for (const m of result.messages) {
+      if ('from' in m && m.from === 'P1') expect(['proposal', 'breach']).toContain(m.kind);
+    }
+  }, 180_000);
 });

@@ -67,6 +67,8 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
   /** Per-provider (therefore per-seat, per-game) — never shared between games. */
   private readonly cache = new DecisionCache();
   private readonly strategy: StrategyCoordinator;
+  /** The deal context the current request's prompt was built from (ADR 0035). */
+  private decisionContext: { requestId: string; context: string | undefined } | null = null;
 
   constructor(
     private readonly client: AiClient,
@@ -98,6 +100,9 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     // 1. Obtain hidden-information-safe view (brief §7.1 anti-cheat boundary). Local and
     //    cheap, and both short-circuits below read it, so it is built first either way.
     const view = this.engine.view(request.decidingPlayer);
+    // The deals the prompt is built from. A seat decides one request at a time, so one slot is
+    // enough; the answer is cached only if the deals are still the same when it lands.
+    this.decisionContext = { requestId: request.requestId, context: this.cacheContext(request) };
 
     if (this.config.strategyRouterShadowEnabled) {
       const route = routeStrategy({
@@ -389,7 +394,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     }
 
     if (this.config.decisionCacheEnabled) {
-      const cached = this.cache.get(request, view);
+      const cached = this.cache.get(request, view, this.cacheContext(request));
       if (cached !== null) {
         this.engine.addDebug?.(
           'decision',
@@ -410,6 +415,21 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     view: PlayerView,
     response: DecisionResponse,
   ): void {
-    if (this.config.decisionCacheEnabled) this.cache.set(request, view, response);
+    if (!this.config.decisionCacheEnabled) return;
+    const context = this.cacheContext(request);
+    const asked = this.decisionContext;
+    // A deal made while the model was thinking: the answer never saw it, so it is not cached
+    // under either key.
+    if (asked?.requestId === request.requestId && asked.context !== context) return;
+    this.cache.set(request, view, response, context);
+  }
+
+  /**
+   * The seat's deals as its prompt shows them (ADR 0035): an answer given before a deal was made
+   * must not be replayed after it, so they are part of the cache key. Undefined without deals.
+   */
+  private cacheContext(request: DecisionRequest): string | undefined {
+    const deals = this.strategy.diplomacyFor?.(request.decidingPlayer, 'tactician') ?? null;
+    return deals === null ? undefined : JSON.stringify(deals);
   }
 }

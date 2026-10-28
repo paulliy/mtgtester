@@ -11,6 +11,7 @@ import CombatOverlay from '../components/CombatOverlay.vue';
 import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import CopyGameReportButton from '../components/CopyGameReportButton.vue';
+import DealPanel from '../components/DealPanel.vue';
 import DecisionPanel from '../components/DecisionPanel.vue';
 import DeckColors from '../components/DeckColors.vue';
 import ManaTaps from '../components/ManaTaps.vue';
@@ -967,8 +968,10 @@ function confirmCombatPlan(): void {
   if (request.value === null || combatPlan.mode !== 'composing') return;
   combatPlan.confirm();
   const submission = combatPlan.pendingSubmission(request.value);
-  if (submission !== null) store.submitPlayerAction(submission.actionId, submission.targets);
-  else combatPlan.reopen(request.value);
+  // Held behind a deal warning: keep composing, so "Go back" returns to the plan as it was.
+  if (submission === null || !store.submitPlayerAction(submission.actionId, submission.targets)) {
+    combatPlan.reopen(request.value);
+  }
 }
 
 function cancelCombatPlan(): void {
@@ -998,7 +1001,7 @@ function onKeyDown(event: KeyboardEvent): void {
   )
     return;
   // An open dialog owns the keyboard: Space on its focused button must not also pass priority.
-  if (confirmingAbandon.value || pendingPass.value !== null) return;
+  if (confirmingAbandon.value || pendingPass.value !== null || store.dealWarning !== null) return;
 
   if (event.key === 'Enter') {
     if (selectedAction.value !== null && canConfirm.value) {
@@ -2141,6 +2144,7 @@ function abandon(): void {
           :is-chosen-target="isChosenTarget"
           @select="selectSource"
         />
+        <DealPanel v-if="store.diplomacy && store.diplomacySeat" />
       </aside>
       <!-- Commander damage and the log stay mounted while hidden, so the log keeps following play
            and opening the drawer shows it already at the present. -->
@@ -2178,6 +2182,15 @@ function abandon(): void {
       tone="primary"
       @cancel="pendingPass = null"
       @confirm="passAnyway"
+    />
+    <ConfirmDialog
+      v-if="store.dealWarning"
+      title="This may break a deal"
+      :message="`${store.dealWarning.messages.join(' ')} Everyone at the table sees a broken deal.`"
+      confirm-label="Do it anyway"
+      cancel-label="Go back"
+      @cancel="store.cancelDealWarning()"
+      @confirm="store.confirmDealWarning()"
     />
     <ConfirmDialog
       v-if="confirmingAbandon"

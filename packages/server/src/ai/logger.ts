@@ -34,6 +34,8 @@ export type DecisionSource =
   | 'strategist'
   | 'human'
   | 'reflection'
+  /** Reading a player's free-text deal into terms (ADR 0035 phase 4). */
+  | 'dealDraft'
   | 'jev';
 
 /** Sources answered locally: recorded, but never billed and never rate-limited. */
@@ -302,8 +304,12 @@ export class AiCallLogger {
       // A post-game review is not a decision, and a 20s one would otherwise drag the headline
       // "average decision latency" upward after every game.
       const reflectionLatency = this.latencyBySource.get('reflection');
-      const decidingCalls = totalCalls - (reflectionLatency?.count ?? 0);
-      const decidingLatencyMs = this.totalLatencyMs - (reflectionLatency?.sum ?? 0);
+      // Nor is reading a player's free-text deal (ADR 0035 phase 4).
+      const draftLatency = this.latencyBySource.get('dealDraft');
+      const decidingCalls =
+        totalCalls - (reflectionLatency?.count ?? 0) - (draftLatency?.count ?? 0);
+      const decidingLatencyMs =
+        this.totalLatencyMs - (reflectionLatency?.sum ?? 0) - (draftLatency?.sum ?? 0);
       const tacticianSources: DecisionSource[] = ['primary', 'retry', 'fallback', 'jev'];
       let tacticianSum = 0;
       let tacticianCount = 0;
@@ -355,7 +361,7 @@ export class AiCallLogger {
           SUM(cost_usd) as totalCostUsd,
           SUM(CASE WHEN source = 'strategist' THEN 1 ELSE 0 END) as strategistCalls,
           SUM(CASE WHEN source = 'plan' THEN 1 ELSE 0 END) as planExecutions,
-          AVG(CASE WHEN source IS NULL OR source <> 'reflection' THEN latency_ms END) as avgLatencyMs,
+          AVG(CASE WHEN source IS NULL OR source NOT IN ('reflection', 'dealDraft') THEN latency_ms END) as avgLatencyMs,
           AVG(CASE WHEN source = 'strategist' THEN latency_ms END) as avgStrategistLatencyMs,
           AVG(CASE WHEN source IN ('primary', 'retry', 'fallback', 'jev') THEN latency_ms END) as avgTacticianLatencyMs
         FROM ai_calls WHERE game_id = ?`,

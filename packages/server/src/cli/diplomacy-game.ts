@@ -11,11 +11,13 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { OracleCard, PlayerId, TableMessage } from '@mtg/shared';
 import { Engine, runToCompletion, type EnginePlayerConfig } from '@mtg/engine';
+import type { DecisionRequest, DecisionResponse } from '@mtg/shared';
 import {
   DiplomacyTable,
+  Exploiter,
   HeuristicDecisionProvider,
-  withDiplomacy,
   type DiplomacyStats,
+  type ExploitRecord,
 } from '@mtg/bot';
 
 export interface DiplomacyGameRequest {
@@ -28,6 +30,11 @@ export interface DiplomacyGameRequest {
    * can tell what deals add from what the targeting alone does.
    */
   negotiate?: boolean;
+  /**
+   * An adversarial seat (ADR 0035 phase 3) that tries padding, threshold probing and trust
+   * farming against the others. It must not also be in `diplomacySeats`.
+   */
+  exploiterSeat?: PlayerId;
   decks: readonly { commander: OracleCard; cards: OracleCard[] }[];
 }
 
@@ -40,6 +47,8 @@ export interface DiplomacyGameResult {
   finalLife: Record<PlayerId, number>;
   stats: DiplomacyStats;
   messages: TableMessage[];
+  /** Every offer the exploiter made, when there was one. */
+  exploits?: ExploitRecord[];
 }
 
 export function playDiplomacyGame(request: DiplomacyGameRequest): DiplomacyGameResult {
@@ -57,27 +66,55 @@ export function playDiplomacyGame(request: DiplomacyGameRequest): DiplomacyGameR
   });
 
   const diplomats = new Set(request.diplomacySeats);
+  const exploiterSeat = request.exploiterSeat;
+  if (exploiterSeat !== undefined && diplomats.has(exploiterSeat)) {
+    throw new Error(`seat ${exploiterSeat} cannot be both the exploiter and a diplomat`);
+  }
   const table = new DiplomacyTable({
     seed: request.seed,
     seats: players.map((p) => p.id),
     viewOf: (seat) => engine.view(seat),
-    negotiates: (seat) => request.negotiate !== false && diplomats.has(seat),
+    negotiates: (seat) =>
+      request.negotiate !== false && (diplomats.has(seat) || seat === exploiterSeat),
+    // The exploiter proposes only its own way, and lets every counter and offer to it lapse.
+    answersLater: (seat) => seat === exploiterSeat,
     repairedAttacks: () =>
       engine.getState().eventLog.filter((e) => e.type === 'attackDeclarationRepaired').length,
   });
+  const exploiter =
+    exploiterSeat === undefined ? null : new Exploiter(exploiterSeat, table, players.length);
 
   // Every seat goes through the table, so the window opens on whoever decides first in a turn
   // and every decision is judged. Plain seats never hold a deal, so judging them is a no-op.
-  const providers = new Map<PlayerId, ReturnType<typeof withDiplomacy>>();
+  let exploitedTurn = 0;
+  const providers = new Map<PlayerId, { decide(r: DecisionRequest): DecisionResponse }>();
   const providerFor = (seat: PlayerId) => {
     let provider = providers.get(seat);
     if (provider === undefined) {
+      const play =
+        seat === exploiterSeat && exploiter !== null
+          ? exploiter.play()
+          : diplomats.has(seat)
+            ? table.playFor(seat)
+            : undefined;
       const bot = new HeuristicDecisionProvider(
         `${request.seed}-${seat}`,
         () => engine.view(seat),
-        diplomats.has(seat) ? { diplomacy: table.playFor(seat) } : {},
+        play !== undefined ? { diplomacy: play } : {},
       );
-      provider = withDiplomacy(table, bot);
+      provider = {
+        decide(r) {
+          table.beforeDecision(r);
+          // The exploiter tries its tactics once a turn, once the turn's window is open.
+          if (exploiter !== null && request.negotiate !== false && r.turn > exploitedTurn) {
+            exploitedTurn = r.turn;
+            exploiter.act(r.turn);
+          }
+          const response = bot.decide(r);
+          table.afterDecision(r, response);
+          return response;
+        },
+      };
       providers.set(seat, provider);
     }
     return provider;
@@ -93,6 +130,7 @@ export function playDiplomacyGame(request: DiplomacyGameRequest): DiplomacyGameR
     finalLife: Object.fromEntries(engine.getState().players.map((p) => [p.id, p.life])),
     stats: { ...table.stats },
     messages: [...table.messages()],
+    ...(exploiter !== null ? { exploits: [...exploiter.records] } : {}),
   };
 }
 

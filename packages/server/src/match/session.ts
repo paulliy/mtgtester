@@ -12,10 +12,16 @@ import {
   DiplomacyTable,
   HeuristicDecisionProvider,
   withDiplomacy,
+  withDiplomacyAsync,
+  type OfferOutcome,
 } from '@mtg/bot';
 import type {
   AiAnnotation,
   AiReflection,
+  AnswerDealPayload,
+  DealOutcomeNotice,
+  DraftDealPayload,
+  ProposeDealPayload,
   DecisionRequest,
   DecisionResponse,
   DebugFlags,
@@ -45,7 +51,10 @@ import {
   OpenAiDecisionProvider,
   publishReflections,
   RequestQueue,
+  readStrategistProposal,
+  runDealDraft,
   runReflection,
+  seatDiplomacyContext,
   StrategyCoordinator,
   type AiClient,
   type AiConfig,
@@ -118,8 +127,9 @@ export interface MatchSessionOptions {
    */
   reflectionEnabled?: boolean;
   /**
-   * Let the bots make deals and talk at the table (ADR 0035). Honored only for a spectator game of
-   * heuristic bots; ignored otherwise, so an AI or player game is unaffected.
+   * Let the seats make deals and talk at the table (ADR 0035): heuristic bots, model-driven seats
+   * (phase 4, proposing through their strategist), and in a single-player game the player too
+   * (phase 3).
    */
   diplomacy?: boolean;
   /** Pre-arranged deterministic lab engine; omitted for every ordinary match. */
@@ -128,6 +138,9 @@ export interface MatchSessionOptions {
   decisionProviderOverrides?: Partial<Record<PlayerId, DecisionProvider>>;
   send(message: ServerToClientMessage): void;
 }
+
+/** Free-text deal readings (ADR 0035 phase 4) one game may ask for: each is a paid call. */
+const MAX_DEAL_DRAFTS_PER_GAME = 20;
 
 export class MatchSession {
   private abandoned = false;
@@ -149,6 +162,13 @@ export class MatchSession {
   /** Undefined until configured, null when explicitly disabled, otherwise the session's Jev lane. */
   private aiJev: JevPolicyBinding | null | undefined;
   private aiReflectionClient: AiClient | null = null;
+  /** The cheap lane that reads a player's free-text deal (ADR 0035 phase 4); null without a key. */
+  private aiDraftClient: AiClient | null | undefined;
+  private aiDraftQueue: RequestQueue | null = null;
+  private draftLogger: AiCallLogger | null = null;
+  /** Free-text readings asked for this game, and whether one is running: each is a paid call. */
+  private draftsUsed = 0;
+  private draftInFlight = false;
   private debugFlags: DebugFlags = { ...DEFAULT_DEBUG_FLAGS };
   private readonly gameMode: GameMode;
   private readonly humanSeat: PlayerId | null;
@@ -189,6 +209,8 @@ export class MatchSession {
   private pendingTalk: TableTalkLine[] = [];
   /** Every line of table talk so far, for a reconnecting viewer. */
   private readonly allTalk: TableTalkLine[] = [];
+  /** Strategist proposals made ahead of the turn they are for (ADR 0035 phase 4). */
+  private deferredProposals: Array<{ turn: number; seat: PlayerId; raw: unknown }> = [];
   /** Engine repairs of attack declarations seen so far, counted incrementally. */
   private repairedAttacks = 0;
   private repairCursor = 0;
@@ -225,16 +247,19 @@ export class MatchSession {
       });
     if (this.humanSeat !== null) this.engine.enableManualMana(this.humanSeat);
     this.recorder = opts.store?.recorderFor(opts.gameId) ?? null;
+    const humanSeat = this.humanSeat;
     this.diplomacy =
-      opts.diplomacy === true &&
-      this.gameMode === 'spectator' &&
-      opts.providerKind !== 'ai' &&
-      opts.decisionProviderOverrides === undefined
+      opts.diplomacy === true && opts.decisionProviderOverrides === undefined
         ? new DiplomacyTable({
             seed: opts.seed,
             seats: opts.seats.map((s) => s.seat),
             viewOf: (seat) => this.engine.view(seat),
             negotiates: () => true,
+            // The player answers offers in their own time, and the table never speaks for them.
+            answersLater: (seat) => seat === humanSeat,
+            // A model seat proposes through its strategist (phase 4), not the heuristic proposer;
+            // it still answers offers at once with the same evaluator, with no model call.
+            proposesOnItsOwn: (seat) => seat !== humanSeat && opts.providerKind !== 'ai',
             repairedAttacks: () => this.countRepairedAttacks(),
           })
         : null;
@@ -361,7 +386,9 @@ export class MatchSession {
           this.ensureAiCoordinator().recordDecision(request, response, 'human');
         }
         this.logger?.recordAnchor(request.requestId, anchorSequence);
+        this.offerDeferredProposals();
         this.collectTalk(anchorSequence);
+        if (this.gameMode === 'singlePlayer') this.sendTalkNow();
         // The note is the gate, not the provider kind: a random provider never writes one, and
         // the human seat's own choices are theirs rather than reasoning to be explained back.
         if (request.decidingPlayer !== this.humanSeat && response.note !== undefined) {
@@ -777,6 +804,173 @@ export class MatchSession {
     });
   }
 
+  /**
+   * Player mode has no presentation clock, so talk goes out as soon as it is said, on a batch of
+   * its own. Talk is public; the player sees every line, whoever said it.
+   */
+  private sendTalkNow(): void {
+    if (this.pendingTalk.length === 0) return;
+    const tableTalk = this.pendingTalk;
+    this.pendingTalk = [];
+    this.recordTalk(tableTalk);
+    this.opts.send({
+      type: 'eventBatch',
+      payload: {
+        gameId: this.opts.gameId,
+        lines: [],
+        frontierTurn: this.runner.getFrontierTurn(),
+        snapshotTurns: [],
+        tableTalk,
+      },
+    });
+  }
+
+  /** The player's seat state at the table, after anything that may have changed it. */
+  private sendDiplomacyState(outcome?: DealOutcomeNotice): void {
+    if (this.diplomacy === null || this.humanSeat === null) return;
+    this.opts.send({
+      type: 'diplomacyState',
+      payload: {
+        gameId: this.opts.gameId,
+        state: this.diplomacy.seatState(this.humanSeat),
+        ...(outcome !== undefined ? { outcome } : {}),
+      },
+    });
+  }
+
+  /** Anchor talk the player started to the last event so far, and send it with the new state. */
+  private afterPlayerDeal(outcome: OfferOutcome): void {
+    const last = this.runner.nextSequence() - 1;
+    this.collectTalk(Math.max(0, last));
+    this.sendTalkNow();
+    this.sendDiplomacyState(noticeOf(outcome));
+  }
+
+  /**
+   * A strategist's `dealProposal` (phase 4), offered through the table like any other proposal.
+   * A plan made ahead of its turn waits until the table has opened that turn; one for a turn
+   * already past is dropped.
+   */
+  private offerFromStrategist(turn: number, seat: PlayerId, raw: unknown): void {
+    const table = this.diplomacy;
+    if (table === null || this.isOver()) return;
+    const state = table.seatState(seat);
+    if (turn < state.turn) return;
+    if (turn > state.turn) {
+      this.deferredProposals.push({ turn, seat, raw });
+      return;
+    }
+    const terms = readStrategistProposal(
+      raw,
+      seat,
+      this.engine.view(seat).opponents.map((o) => o.seat),
+      state,
+    );
+    if (terms === null) return;
+    table.offer({ proposer: seat, ...terms });
+    if (this.gameMode === 'singlePlayer') {
+      this.collectTalk(Math.max(0, this.runner.nextSequence() - 1));
+      this.sendTalkNow();
+      this.sendDiplomacyState();
+    }
+  }
+
+  private offerDeferredProposals(): void {
+    if (this.deferredProposals.length === 0) return;
+    const waiting = this.deferredProposals;
+    this.deferredProposals = [];
+    for (const p of waiting) this.offerFromStrategist(p.turn, p.seat, p.raw);
+  }
+
+  /** The player offers a deal (ADR 0035 phase 3). The table checks it like any other offer. */
+  proposeDeal(payload: ProposeDealPayload): void {
+    if (this.diplomacy === null || this.humanSeat === null || this.isOver()) {
+      this.opts.send({ type: 'error', payload: { message: 'Deals are off in this game.' } });
+      return;
+    }
+    this.afterPlayerDeal(this.diplomacy.offer({ proposer: this.humanSeat, ...payload }));
+  }
+
+  /** The player answers an offer waiting on them, optionally with terms of their own. */
+  answerDeal(payload: AnswerDealPayload): void {
+    if (this.diplomacy === null || this.humanSeat === null || this.isOver()) {
+      this.opts.send({ type: 'error', payload: { message: 'Deals are off in this game.' } });
+      return;
+    }
+    this.afterPlayerDeal(
+      this.diplomacy.answer(this.humanSeat, payload.dealId, payload.answer, payload.counter),
+    );
+  }
+
+  /**
+   * Read the player's free text as deal terms with one cheap call (ADR 0035 phase 4) and send the
+   * reading back for the deal panel. Nothing is offered: the player checks the terms and sends
+   * them, and they go through `offer` like any other proposal.
+   */
+  async draftDeal(payload: DraftDealPayload): Promise<void> {
+    if (this.diplomacy === null || this.humanSeat === null || this.isOver()) {
+      this.opts.send({ type: 'error', payload: { message: 'Deals are off in this game.' } });
+      return;
+    }
+    const seat = this.humanSeat;
+    const busy = this.draftInFlight
+      ? 'A reading is already in progress.'
+      : this.draftsUsed >= MAX_DEAL_DRAFTS_PER_GAME
+        ? 'No free-text readings left this game. Use the deal panel.'
+        : null;
+    if (busy !== null) {
+      this.opts.send({
+        type: 'dealDraft',
+        payload: { text: payload.text, terms: null, message: busy },
+      });
+      return;
+    }
+    this.draftsUsed++;
+    this.draftInFlight = true;
+    try {
+      await this.runDraft(seat, payload);
+    } finally {
+      this.draftInFlight = false;
+    }
+  }
+
+  private async runDraft(seat: PlayerId, payload: DraftDealPayload): Promise<void> {
+    const table = this.diplomacy;
+    if (table === null) return;
+    const state = table.seatState(seat);
+    const config = (this.aiConfig ??= loadAiConfig(process.env));
+    if (this.aiDraftClient === undefined) {
+      this.aiDraftClient =
+        config.apiKey === ''
+          ? null
+          : new OpenAiCompatibleClient(configForRole(config, 'tactician'));
+      this.draftLogger =
+        this.logger ?? new AiCallLogger(this.opts.store?.raw ?? null, this.opts.gameId);
+      this.aiDraftClient?.setAttemptObserver?.(this.draftLogger.attemptObserver());
+    }
+    // Its own lane, so a draft never waits behind a model seat's tactical decision.
+    const queue = (this.aiDraftQueue ??= new RequestQueue({
+      rpmLimit: config.rpmLimit,
+      concurrency: 1,
+    }));
+    const draft = await runDealDraft(
+      this.aiDraftClient,
+      queue,
+      payload.text,
+      {
+        gameId: this.opts.gameId,
+        turn: state.turn,
+        seat,
+        opponents: this.engine.view(seat).opponents.map((o) => o.seat),
+        maxRounds: state.maxRounds,
+        maxObligationsPerSide: state.maxObligationsPerSide,
+      },
+      { logger: this.draftLogger ?? undefined },
+    );
+    if (this.abandoned) return;
+    this.opts.send({ type: 'dealDraft', payload: draft });
+  }
+
   /** Every line of table talk released so far, for a viewer who reconnects or reloads. */
   tableTalk(): readonly TableTalkLine[] {
     return this.allTalk;
@@ -1008,6 +1202,7 @@ export class MatchSession {
         lines: formatPlayerLog(this.engine.eventsSince(0), this.humanSeat),
         frontierTurn: this.engine.getState().turnNumber,
         snapshotTurns: [],
+        ...(this.allTalk.length > 0 ? { tableTalk: [...this.allTalk] } : {}),
       },
     });
     this.publishPlayerState(false);
@@ -1036,6 +1231,13 @@ export class MatchSession {
   private publishPlayerState(bump: boolean): void {
     if (this.humanSeat === null) return;
     if (bump) this.playerRevision += 1;
+    if (this.diplomacy !== null) {
+      // What the table said since the last decision (an offer made to the player as a turn
+      // opened) goes out with the state that shows it, not after the player's next decision.
+      this.collectTalk(Math.max(0, this.runner.nextSequence() - 1));
+      this.sendTalkNow();
+    }
+    this.sendDiplomacyState();
     this.opts.send({
       type: 'playerStateSnapshot',
       payload: {
@@ -1309,8 +1511,29 @@ export class MatchSession {
     if (existing !== undefined) return existing;
 
     if (playerId === this.humanSeat && this.humanProvider !== null) {
-      this.providers.set(playerId, this.humanProvider);
-      return this.humanProvider;
+      // The player's decisions open negotiation windows and are judged for compliance like any
+      // seat's; offers to the player wait for their answer rather than this decision.
+      const table = this.diplomacy;
+      const humanProvider = this.humanProvider;
+      const human: AsyncDecisionProvider =
+        table === null
+          ? humanProvider
+          : {
+              decide: async (request) => {
+                table.beforeDecision(request);
+                // Opening a turn's window or the after-attackers slot changes what the player may
+                // do at the table; the board already went out, so send the table's state (and
+                // any talk) before waiting on them.
+                this.collectTalk(Math.max(0, this.runner.nextSequence() - 1));
+                this.sendTalkNow();
+                this.sendDiplomacyState();
+                const response = await humanProvider.decide(request);
+                table.afterDecision(request, response);
+                return response;
+              },
+            };
+      this.providers.set(playerId, human);
+      return human;
     }
 
     const decisionProviderOverride = this.opts.decisionProviderOverrides?.[playerId];
@@ -1330,7 +1553,11 @@ export class MatchSession {
       return table === null ? bot : withDiplomacy(table, bot);
     };
     const inner: AsyncDecisionProvider =
-      this.opts.providerKind === 'ai' ? this.buildAiProvider() : new AsyncAdapter(heuristic());
+      this.opts.providerKind !== 'ai'
+        ? new AsyncAdapter(heuristic())
+        : table === null
+          ? this.buildAiProvider()
+          : withDiplomacyAsync(table, this.buildAiProvider());
     const pacedProvider: AsyncDecisionProvider =
       this.gameMode === 'singlePlayer'
         ? {
@@ -1418,6 +1645,26 @@ export class MatchSession {
           }),
         ),
       );
+      const table = this.diplomacy;
+      if (table !== null) {
+        this.aiCoordinator.diplomacyFor = (seat, role) => {
+          const state = table.seatState(seat);
+          return seatDiplomacyContext(
+            seat,
+            {
+              deals: state.deals,
+              records: state.trust,
+              canPropose: state.canPropose,
+              maxRounds: state.maxRounds,
+              maxObligationsPerSide: state.maxObligationsPerSide,
+            },
+            role,
+          );
+        };
+        this.aiCoordinator.onDealProposal = (turn, seat, raw) => {
+          this.offerFromStrategist(turn, seat, raw);
+        };
+      }
       // A strategist plan has no decision of its own and lands asynchronously, so it anchors to
       // wherever the log has reached — which is the point it actually started steering play.
       this.aiCoordinator.onStrategy = (turn, activePlayer, intent, model) => {
@@ -1433,5 +1680,23 @@ export class MatchSession {
       };
     }
     return this.aiCoordinator;
+  }
+}
+
+function noticeOf(outcome: OfferOutcome): DealOutcomeNotice {
+  switch (outcome.kind) {
+    case 'accepted':
+    case 'pending':
+    case 'withdrawn':
+      return { kind: outcome.kind, dealId: outcome.deal.id };
+    case 'declined':
+      return {
+        kind: 'declined',
+        ...(outcome.counter !== undefined ? { dealId: outcome.counter.id } : {}),
+        ...(outcome.counterPending === true ? { counterPending: true } : {}),
+        ...(outcome.counterRefused !== undefined ? { reason: outcome.counterRefused } : {}),
+      };
+    case 'refused':
+      return { kind: 'refused', reason: outcome.reason };
   }
 }

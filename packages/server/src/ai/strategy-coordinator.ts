@@ -23,6 +23,7 @@ import { observationHash, type PlanArtifactMetadata } from './plan-lifecycle';
 import { extractStateFeatures } from './state-features';
 import { TurnPlanManager, type AcceptedPlanAction } from './turn-plan';
 import { AI_VERSIONS } from './versions';
+import type { SeatDiplomacyContext } from './diplomacy-context';
 import { preparePromptForCaching } from './prompt-cache';
 
 interface QueueLike {
@@ -179,6 +180,8 @@ export class StrategyCoordinator {
   private plannedPlayer: string | null = null;
   private strategy: TurnStrategy | null = null;
   private strategyAttempted = false;
+  /** The planned seat's deals when its plan's prompt was built (see `tryExecutePlan`). */
+  private planDealsKey = '';
   /** One re-plan is allowed per turn after an opponent intervention invalidates the strategy. */
   private replanned = false;
   /** Generation tracking for strategist calls to reject stale/invalidated in-flight plans. */
@@ -196,6 +199,14 @@ export class StrategyCoordinator {
    * turns this into a log annotation; nothing here depends on it being set.
    */
   onStrategy?: (turn: number, activePlayer: PlayerId, intent: string, model: string) => void;
+  /**
+   * Table diplomacy (ADR 0035 phase 4), set only in a game with deals. `diplomacyFor` gives a
+   * seat's deal context for a role (null leaves the prompt as it was), and `onDealProposal`
+   * receives a strategist's raw `dealProposal`, which the session reads and offers through the
+   * table like any other proposal.
+   */
+  diplomacyFor?: (seat: PlayerId, role: 'strategist' | 'tactician') => SeatDiplomacyContext | null;
+  onDealProposal?: (turn: number, seat: PlayerId, raw: unknown) => void;
 
   constructor(
     private readonly strategistClient: AiClient | null,
@@ -335,6 +346,8 @@ export class StrategyCoordinator {
     const sourceSequence = sourceEvents.at(-1)?.sequence ?? 0;
     const generationStartedAt = new Date().toISOString();
     const recent = this.recentFor(activePlayer);
+    const diplomacy = this.diplomacyFor?.(activePlayer, 'strategist') ?? null;
+    const dealsKey = this.dealsKey(activePlayer);
     const assembledPrompt = assembleStrategistPrompt(
       strategyRequest,
       view,
@@ -344,6 +357,7 @@ export class StrategyCoordinator {
         ...(this.deckProfiles?.get(activePlayer) === undefined
           ? {}
           : { profile: this.deckProfiles.get(activePlayer)! }),
+        ...(diplomacy === null ? {} : { diplomacy }),
         context: {
           includeMemory: this.config.contextMemoryEnabled,
           includeFeatures: this.config.contextFeaturesEnabled,
@@ -388,6 +402,7 @@ export class StrategyCoordinator {
         return;
       }
       this.strategy = strategy;
+      this.planDealsKey = dealsKey;
       const metadata: PlanArtifactMetadata = {
         planId: `${strategyRequest.requestId}:g${generation}`,
         generationId: generation,
@@ -415,6 +430,11 @@ export class StrategyCoordinator {
       });
       this.logger?.log(strategyRequest, result, false, false, 'strategist');
       this.onStrategy?.(strategyRequest.turn, activePlayer, strategy.intent, result.meta.model);
+      const proposal = (result.response.turnStrategy as { dealProposal?: unknown } | undefined)
+        ?.dealProposal;
+      if (proposal !== undefined && diplomacy !== null) {
+        this.onDealProposal?.(strategyRequest.turn, activePlayer, proposal);
+      }
       this.engine.addDebug(
         'decision',
         `strategist call completed for ${activePlayer} [model: ${result.meta.model}, latency: ${result.meta.latencyMs}ms, tokens: ${result.meta.promptTokens}+${result.meta.responseTokens}]`,
@@ -446,6 +466,7 @@ export class StrategyCoordinator {
     return {
       strategy: playerId === this.plannedPlayer ? this.strategy : null,
       recentDecisions: this.recentFor(playerId),
+      ...this.dealsGuidance(playerId),
       ...(this.config.contextMemoryEnabled ? { publicMemory: this.publicMemory.snapshot() } : {}),
       ...(this.config.contextFeaturesEnabled && request !== undefined && view !== undefined
         ? { stateFeatures: extractStateFeatures(request, view) }
@@ -453,8 +474,27 @@ export class StrategyCoordinator {
     };
   }
 
+  private dealsGuidance(seat: PlayerId): { deals?: SeatDiplomacyContext } {
+    const deals = this.diplomacyFor?.(seat, 'tactician') ?? null;
+    return deals === null ? {} : { deals };
+  }
+
   tryExecutePlan(request: DecisionRequest): DecisionResponse | null {
+    // A plan made before the seat's deals changed never weighed them (ADR 0035): a queued step
+    // could break a promise made since. Let the tactician, which sees the deals, decide instead.
+    if (
+      request.decidingPlayer === this.plannedPlayer &&
+      this.dealsKey(request.decidingPlayer) !== this.planDealsKey
+    ) {
+      return null;
+    }
     return this.turnPlan.tryExecutePlan(request, this.engine);
+  }
+
+  /** The seat's own deals as its tactician sees them, as a comparable key; '' without deals. */
+  private dealsKey(seat: PlayerId): string {
+    const deals = this.diplomacyFor?.(seat, 'tactician') ?? null;
+    return deals === null ? '' : JSON.stringify(deals);
   }
 
   recordAcceptedDecision(request: DecisionRequest, response: DecisionResponse): void {

@@ -4,6 +4,7 @@
  */
 
 import type { DecisionRequest, PlayerId, PlayerView, TurnStrategy } from '@mtg/shared';
+import type { SeatDiplomacyContext } from './diplomacy-context';
 import { summarizeHandCard, summarizePermanent } from './card-summary';
 import { budgetContext, type ContextBudgetReport } from './context-budget';
 import { RULES_PRIMER, tacticianPrimerFor } from './primer';
@@ -36,6 +37,8 @@ export interface TacticalGuidance {
   recentDecisions: readonly RecentSeatDecision[];
   publicMemory?: PublicMemorySnapshot;
   stateFeatures?: StateFeatures;
+  /** The seat's own deals (ADR 0035 phase 4); absent when it has none, so the prompt is unchanged. */
+  deals?: SeatDiplomacyContext;
 }
 
 export interface ContextOptions {
@@ -107,6 +110,10 @@ export function assemblePrompt(
       manaSources: view.manaSources,
       commanders: view.commanders,
       ...(includePublicZones ? { graveyard: view.graveyard } : {}),
+      // Only when present, so the usual poison-free context (and its cache keys) is unchanged.
+      ...(includePublicZones && (view.poisonCounters ?? 0) > 0
+        ? { poison: view.poisonCounters }
+        : {}),
       hand: view.hand.map((card) => {
         if (useCardSummaries) return summarizeHandCard(card, request, true);
         const isBasic = BASIC_LAND_NAMES.has(card.name);
@@ -172,6 +179,7 @@ export function assemblePrompt(
       : {
           turnStrategy: guidance.strategy,
           yourRecentDecisions: guidance.recentDecisions,
+          ...(guidance.deals !== undefined ? { tableDeals: guidance.deals } : {}),
           ...(options.publicMemory === undefined &&
           options.includeMemory === true &&
           guidance.publicMemory !== undefined

@@ -11,6 +11,8 @@ export type {
   OfferTerms,
 } from './table';
 export type { ActiveObligation, BreachReason, DiplomacyPlay } from './play';
+export { Exploiter, MAX_CONCESSION_PER_DEAL, summarizeExploits } from './exploiter';
+export type { ExploitRecord, ExploitSummary, ExploitTactic } from './exploiter';
 export { estimateTable } from './estimate';
 export type { SeatEstimate, TableEstimate } from './estimate';
 export { describeMessage, describeObligation } from './render';

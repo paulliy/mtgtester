@@ -41,8 +41,17 @@ function hashNumber(h: number, n: number | null | undefined): number {
  * Digest of everything an answer could legitimately depend on. Excludes `requestId` and
  * `turn`: an idle upkeep on turn 8 and on turn 12 are the same decision if nothing else moved.
  */
-export function digestDecision(request: DecisionRequest, view: PlayerView): number {
+export function digestDecision(
+  request: DecisionRequest,
+  view: PlayerView,
+  /**
+   * Anything else the prompt carries that should split the key: the seat's deals (ADR 0035).
+   * Absent leaves the key as it always was.
+   */
+  context?: string,
+): number {
   let h = 0x811c9dc5;
+  if (context !== undefined) h = hashString(h, context);
 
   h = hashString(h, request.decidingPlayer);
   h = hashString(h, request.activePlayer);
@@ -108,6 +117,9 @@ export function digestDecision(request: DecisionRequest, view: PlayerView): numb
     for (const target of item.targets) h = hashString(h, target);
   }
 
+  // The viewer's own poison, now in its view and its prompt. Absent and zero hash the same, so a
+  // seat without poison keeps the key it always had.
+  if ((view.poisonCounters ?? 0) > 0) h = hashNumber(h, view.poisonCounters);
   for (const opp of view.opponents) {
     h = hashString(h, opp.seat);
     h = hashNumber(h, opp.life);
@@ -136,8 +148,8 @@ export class DecisionCache {
   }
 
   /** The previous answer to this exact decision, re-stamped with the current request id. */
-  get(request: DecisionRequest, view: PlayerView): DecisionResponse | null {
-    const key = digestDecision(request, view);
+  get(request: DecisionRequest, view: PlayerView, context?: string): DecisionResponse | null {
+    const key = digestDecision(request, view, context);
     const hit = this.entries.get(key);
     if (hit === undefined) return null;
 
@@ -153,8 +165,13 @@ export class DecisionCache {
     return response;
   }
 
-  set(request: DecisionRequest, view: PlayerView, response: DecisionResponse): void {
-    const key = digestDecision(request, view);
+  set(
+    request: DecisionRequest,
+    view: PlayerView,
+    response: DecisionResponse,
+    context?: string,
+  ): void {
+    const key = digestDecision(request, view, context);
     const { requestId: _requestId, note: _note, ...answer } = structuredClone(response);
 
     this.entries.delete(key);

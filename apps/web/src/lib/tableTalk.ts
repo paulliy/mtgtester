@@ -60,6 +60,8 @@ export function dealsInForce(talk: readonly TableTalkLine[], upTo: number | null
         inForce.delete(m.dealId);
         break;
       case 'threatCall':
+      case 'withdrawn':
+        // An offer leaving the table puts no deal in force and ends none.
         break;
     }
   }
@@ -93,4 +95,32 @@ export function dealLinesFor(seat: PlayerId, deals: readonly DealInForce[]): str
             .join(', ') || 'owes nothing';
       return `with ${other}: ${owed}`;
     });
+}
+
+/** An obligation in words, naming seats by `name` (the seat id by default). */
+export function describeObligation(
+  o: DealObligation,
+  name: (seat: PlayerId) => string = (seat) => seat,
+): string {
+  const by = name(o.by);
+  // A seat the viewer calls "you" reads as the sentence's object in lower case, and "you" takes
+  // the plain verb: "you attack P4", "P3 won't attack you", "your spells".
+  const them = (seat: PlayerId) => (name(seat) === 'You' ? 'you' : name(seat));
+  switch (o.kind) {
+    case 'noAttack':
+      return `${by} won't attack ${them(o.against)}`;
+    case 'noTarget':
+      return `${by} won't target ${them(o.against)}`;
+    case 'noCounter': {
+      const whose = them(o.against);
+      return `${by} won't counter ${whose === 'you' ? 'your' : `${whose}'s`} spells`;
+    }
+    case 'attackPlayer':
+      return `${by} ${by === 'You' ? 'attack' : 'attacks'} ${them(o.target)}`;
+  }
+}
+
+/** A deal's length in words. */
+export function describeRounds(rounds: number): string {
+  return rounds === 1 ? 'for 1 round' : `for ${rounds} rounds`;
 }

@@ -224,6 +224,7 @@ describe('Context Assembler', () => {
     view.exile = [{ id: 'ex1', name: 'Public Exile Card' }];
     view.revealedLibraryTops = [{ player: 'P2', card: { id: 'top', name: 'Revealed Top' } }];
     view.opponents[0]!.poisonCounters = 4;
+    view.poisonCounters = 3;
     view.battlefield[0]!.typeLine = 'Basic Land — Forest';
     view.battlefield[0]!.keywords = ['Indestructible'];
     const payload = JSON.parse(assemblePrompt(fixtureRequest(), view).messages[1]!.content);
@@ -231,9 +232,17 @@ describe('Context Assembler', () => {
     expect(payload.you.graveyard[0].name).toBe('Giant Growth');
     expect(payload.opponents[0].graveyard[0].name).toBe('Sol Ring');
     expect(payload.opponents[0].poison).toBe(4);
+    expect(payload.you.poison).toBe(3);
     expect(payload.publicExile[0].name).toBe('Public Exile Card');
     expect(payload.revealedLibraryTops[0].card.name).toBe('Revealed Top');
     expect(payload.battlefield[0].keywords).toEqual(['Indestructible']);
+  });
+
+  it('leaves own poison out of the payload when the viewer has none', () => {
+    const payload = JSON.parse(
+      assemblePrompt(fixtureRequest(), fixtureView()).messages[1]!.content,
+    );
+    expect('poison' in payload.you).toBe(false);
   });
 
   it('keeps a frozen v1 strategist payload without restored-zone fields', () => {

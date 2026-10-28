@@ -1,8 +1,12 @@
 import type {
   Deal,
   DealObligation,
+  DealTerms,
   DecisionRequest,
   DecisionResponse,
+  DiplomacySeatState,
+  NegotiationSlot,
+  OfferRefusal,
   PlayerId,
   PlayerView,
   TableMessage,
@@ -15,6 +19,7 @@ import { released, type ActiveObligation, type BreachReason, type DiplomacyPlay 
 import { bestDealWith, rankedProposals } from './propose';
 import { TrustLedger, type TrustRecord } from './trust';
 import {
+  acceptBar,
   answerDeal,
   roundOf,
   validateDeal,
@@ -33,10 +38,22 @@ export interface DiplomacyTableOptions {
   /** The current `PlayerView` for a seat. Only public fields of it are used. */
   viewOf: (seat: PlayerId) => PlayerView;
   /**
-   * Whether a seat negotiates through this table. Seats that do not (a human, until ADR 0035's
-   * phase 3) are never offered deals, but their decisions are still observed.
+   * Whether a seat negotiates through this table. Seats that do not are never offered deals, but
+   * their decisions are still observed.
    */
   negotiates: (seat: PlayerId) => boolean;
+  /**
+   * Seats that answer later rather than at once (a human, ADR 0035 phase 3). An offer to one, or a
+   * counter to an offer it made, waits as a pending offer until it calls `answer` or the turn
+   * ends. The table never speaks or proposes for such a seat. None by default.
+   */
+  answersLater?: (seat: PlayerId) => boolean;
+  /**
+   * Seats the table proposes for at their turn's window with the heuristic proposer. Defaults to
+   * every negotiating seat that answers at once. A seat whose proposals come from elsewhere (a
+   * model's strategist, phase 4) answers offers here but proposes through `offer` itself.
+   */
+  proposesOnItsOwn?: (seat: PlayerId) => boolean;
   /**
    * How many attack declarations the engine has repaired so far (its public
    * `attackDeclarationRepaired` events). A repaired declaration is the engine's choice, not the
@@ -55,19 +72,30 @@ export interface DiplomacyStats {
 }
 
 /** The terms a proposer offers: the table supplies the id, the turn and the status. */
-export interface OfferTerms {
+export interface OfferTerms extends DealTerms {
   proposer: PlayerId;
-  to: PlayerId;
-  obligations: DealObligation[];
-  rounds: number;
 }
 
-/** What became of an offer made through `offer`. */
+/** What became of an offer made through `offer`, or of an answer given through `answer`. */
 export type OfferOutcome =
   | { kind: 'accepted'; deal: Deal }
-  | { kind: 'declined'; counter?: Deal }
-  /** Not considered: invalid, rate-limited, or the same terms declined too recently. */
-  | { kind: 'refused'; reason: 'invalid' | 'rateLimited' | 'cooldown' | 'notNegotiating' };
+  /** A counter is pending when it waits on a seat that answers later. */
+  | {
+      kind: 'declined';
+      counter?: Deal;
+      counterPending?: boolean;
+      /** From `answer`: the offer was declined, but the counter sent with it was refused. */
+      counterRefused?: OfferRefusal;
+    }
+  /** Waiting on a seat that answers later. */
+  | { kind: 'pending'; deal: Deal }
+  /** The offer was taken off the table when accepted: it no longer held. */
+  | { kind: 'withdrawn'; deal: Deal }
+  /**
+   * Not considered: invalid, rate-limited, the same terms declined too recently, a pair already
+   * waiting on an offer, or (from `answer`) no such offer open to the seat.
+   */
+  | { kind: 'refused'; reason: OfferRefusal | 'noSuchOffer' };
 
 interface DealRecord {
   deal: Deal;
@@ -121,8 +149,15 @@ interface HeldAttack {
   repairedBefore: number;
 }
 
+/** An offer waiting on a seat that answers later. */
+interface PendingOffer {
+  deal: Deal;
+  /** The id of the offer this counters, when it is a counter. */
+  counterOf?: string;
+}
+
 /** Version of `DiplomacyState`; bumped on any change to its shape. */
-export const DIPLOMACY_STATE_VERSION = 1;
+export const DIPLOMACY_STATE_VERSION = 2;
 
 /**
  * Everything a `DiplomacyTable` knows, as plain JSON (ADR 0035 decision 22). A table rebuilt from
@@ -148,6 +183,10 @@ export interface DiplomacyState {
   proposedThisTurn: PlayerId[];
   log: TableMessage[];
   pendingBreach: Array<[string, BreachReason]>;
+  pendingOffers: PendingOffer[];
+  slot: NegotiationSlot;
+  attackDeclared: boolean;
+  attackNotOwnChoice: PlayerId[];
   heldAttack: HeldAttack | null;
   drained: number;
   nextDealId: number;
@@ -211,6 +250,16 @@ export class DiplomacyTable {
   private readonly proposedThisTurn = new Set<PlayerId>();
   private readonly log: TableMessage[] = [];
   private readonly pendingBreach = new Map<string, BreachReason>();
+  private readonly pendingOffers: PendingOffer[] = [];
+  private slot: NegotiationSlot = 'turnStart';
+  /** An attack declaration was submitted this turn; the next other decision opens the slot. */
+  private attackDeclared = false;
+  /**
+   * Seats whose attack this turn was not their own choice (another player chose the attackers,
+   * or the engine repaired the declaration): a promised attack left unmade is not charged to them
+   * for this turn, including by a deal accepted later in the turn.
+   */
+  private readonly attackNotOwnChoice = new Set<PlayerId>();
   private heldAttack: HeldAttack | null = null;
   private drained = 0;
   private nextDealId = 1;
@@ -251,6 +300,10 @@ export class DiplomacyTable {
       proposedThisTurn: [...this.proposedThisTurn],
       log: this.log,
       pendingBreach: [...this.pendingBreach],
+      pendingOffers: this.pendingOffers,
+      slot: this.slot,
+      attackDeclared: this.attackDeclared,
+      attackNotOwnChoice: [...this.attackNotOwnChoice],
       heldAttack: this.heldAttack,
       drained: this.drained,
       nextDealId: this.nextDealId,
@@ -287,6 +340,10 @@ export class DiplomacyTable {
     for (const seat of state.proposedThisTurn) table.proposedThisTurn.add(seat);
     table.log.push(...state.log);
     for (const [dealId, reason] of state.pendingBreach) table.pendingBreach.set(dealId, reason);
+    table.pendingOffers.push(...state.pendingOffers);
+    table.slot = state.slot;
+    table.attackDeclared = state.attackDeclared;
+    for (const seat of state.attackNotOwnChoice) table.attackNotOwnChoice.add(seat);
     table.heldAttack = state.heldAttack;
     table.drained = state.drained;
     table.nextDealId = state.nextDealId;
@@ -363,13 +420,33 @@ export class DiplomacyTable {
     return roundOf(turn, this.opts.seats.length);
   }
 
-  /** Call before a seat answers any surfaced decision. Opens the turn's negotiation window. */
+  /**
+   * Call before a seat answers any surfaced decision. Opens the turn's negotiation window, and
+   * the second slot once the turn's attackers are declared.
+   */
   beforeDecision(request: DecisionRequest): void {
     if (this.heldAttack !== null && !this.isRetryOfHeld(request)) this.flush();
-    if (request.turn < 1 || request.turn === this.turnSeen) return;
+    if (request.turn < 1) return;
+    if (request.turn === this.turnSeen) {
+      // Every proposer may offer once more after attackers are declared (phase 3). A rejected
+      // declaration asked again is still the declaration, not the slot after it.
+      if (
+        this.attackDeclared &&
+        this.slot === 'turnStart' &&
+        request.decisionType !== 'declareAttackers'
+      ) {
+        this.attackDeclared = false;
+        this.slot = 'afterAttackers';
+        this.proposedThisTurn.clear();
+      }
+      return;
+    }
     this.turnSeen = request.turn;
     this.activeNow = request.activePlayer;
     this.proposedThisTurn.clear();
+    this.slot = 'turnStart';
+    this.attackDeclared = false;
+    this.attackNotOwnChoice.clear();
     this.openWindow(request.turn, request.activePlayer);
   }
 
@@ -379,6 +456,21 @@ export class DiplomacyTable {
    * and one the engine repairs after two rejections is not the seat's choice and is not judged.
    */
   afterDecision(request: DecisionRequest, response: DecisionResponse): void {
+    if (request.decisionType === 'declareAttackers' && request.turn === this.turnSeen) {
+      this.attackDeclared = true;
+    }
+    const declaration = request.presentation?.attackDeclaration;
+    if (declaration?.mode === 'chooseAttackers') {
+      // Another player chose which of the attacking seat's creatures attack (Master Warcraft):
+      // whatever that seat sends this turn is not its own choice, so a promised attack left
+      // unmade this turn is not charged to it. The targets it assigns the chosen creatures are
+      // still its own and are judged as usual.
+      const attacker = declaration.attackingPlayer ?? request.activePlayer;
+      this.attackNotOwnChoice.add(attacker);
+      for (const record of this.records) {
+        if (record.deal.status === 'active') record.couldAttackNow.delete(attacker);
+      }
+    }
     if (this.records.every((r) => r.deal.status !== 'active')) {
       this.pendingBreach.clear();
       return;
@@ -405,10 +497,12 @@ export class DiplomacyTable {
     if (repaired) {
       // The engine chose this attack, not the seat: it is not judged, and the turn does not count
       // as one in which the seat could have made a promised attack and chose not to.
+      const attacker =
+        held.request.presentation?.attackDeclaration?.attackingPlayer ??
+        held.request.decidingPlayer;
+      this.attackNotOwnChoice.add(attacker);
       for (const record of this.records) {
-        if (record.deal.status === 'active') {
-          record.couldAttackNow.delete(held.request.decidingPlayer);
-        }
+        if (record.deal.status === 'active') record.couldAttackNow.delete(attacker);
       }
       this.pendingBreach.clear();
       return;
@@ -486,6 +580,9 @@ export class DiplomacyTable {
     const living = new Set([view.seat, ...view.opponents.map((o) => o.seat)]);
     const table = estimateTable(view);
 
+    // Offers still waiting on an answer lapse with the turn they were made in.
+    for (const pending of this.pendingOffers.splice(0)) this.withdraw(pending, turn, 'expired');
+
     for (const record of this.records) {
       if (record.deal.status !== 'active') continue;
       // The previous turn is over: an attack it offered and the seat did not make now counts.
@@ -554,7 +651,37 @@ export class DiplomacyTable {
 
     this.callThreat(table, turn, activePlayer);
 
-    if (this.opts.negotiates(activePlayer)) this.negotiate(activePlayer, turn);
+    if (this.proposesOnItsOwn(activePlayer)) this.negotiate(activePlayer, turn);
+  }
+
+  private answersLater(seat: PlayerId): boolean {
+    return this.opts.answersLater?.(seat) ?? false;
+  }
+
+  private proposesOnItsOwn(seat: PlayerId): boolean {
+    if (this.opts.proposesOnItsOwn !== undefined) return this.opts.proposesOnItsOwn(seat);
+    return this.opts.negotiates(seat) && !this.answersLater(seat);
+  }
+
+  private withdraw(pending: PendingOffer, turn: number, reason: 'expired' | 'stale'): void {
+    pending.deal.status = 'declined';
+    // Silence is an answer: an offer left to lapse is on the same cooldown as one declined, so a
+    // seat that ignores an offer is not asked the same thing again every turn.
+    if (reason === 'expired') {
+      this.declines.push({
+        proposer: pending.deal.proposer,
+        to: pending.deal.parties[1],
+        terms: termsKey(pending.deal),
+        round: this.round(pending.deal.proposedTurn),
+      });
+    }
+    this.log.push({
+      kind: 'withdrawn',
+      turn,
+      from: pending.deal.proposer,
+      dealId: pending.deal.id,
+      reason,
+    });
   }
 
   private end(
@@ -599,7 +726,10 @@ export class DiplomacyTable {
     const order = table.seats.map((s) => s.seat);
     const start = Math.max(0, order.indexOf(activePlayer));
     const rotated = [...order.slice(start), ...order.slice(0, start)];
-    const caller = rotated.find((s) => s !== leader && this.opts.negotiates(s));
+    // The table speaks only for seats it plays for: never for a seat that answers for itself.
+    const caller = rotated.find(
+      (s) => s !== leader && this.opts.negotiates(s) && !this.answersLater(s),
+    );
     if (caller === undefined) return;
     this.log.push({
       kind: 'threatCall',
@@ -614,6 +744,7 @@ export class DiplomacyTable {
     if (this.activeDeals().some((d) => d.parties.includes(a) && d.parties.includes(b))) {
       return false;
     }
+    if (this.pendingBetween(a, b) !== undefined) return false;
     const ended = this.lastEnded.get(pairKey(a, b));
     return ended === undefined || this.round(turn) - ended.round >= ended.cooldown;
   }
@@ -630,18 +761,109 @@ export class DiplomacyTable {
   }
 
   /**
-   * Offer a deal to `to`, who answers at once (decisions 15 and 18). Every proposer goes through
-   * here, so the limits hold for whoever offers: one offer per proposer per turn, no repeat of
-   * declined terms inside the cooldown, the pair cooldown between deals, and the structural checks.
-   * Only the terms are taken from the caller; the turn is the table's own, so no caller can claim
-   * the early-game allowance or step around a cooldown. A bot that declines counters with its own
-   * best terms, and the proposer, if it negotiates here, answers that counter in turn.
+   * Offer a deal to `to` (decisions 15 and 18). Every proposer goes through here, so the limits
+   * hold for whoever offers: one offer per proposer per slot, no repeat of declined terms inside
+   * the cooldown, the pair cooldown between deals, one open offer per pair, and the structural
+   * checks. Only the terms are taken from the caller; the turn is the table's own, so no caller
+   * can claim the early-game allowance or step around a cooldown. A seat that answers at once does
+   * so here, and a bot that declines counters with its own best terms; a seat that answers later
+   * gets a pending offer instead (phase 3).
    */
   offer(terms: OfferTerms): OfferOutcome {
     const turn = this.turnSeen;
     const { proposer, to } = terms;
     if (!this.opts.negotiates(to)) return { kind: 'refused', reason: 'notNegotiating' };
     if (this.proposedThisTurn.has(proposer)) return { kind: 'refused', reason: 'rateLimited' };
+    const checked = this.check(proposer, to, terms, turn);
+    if ('refused' in checked) return { kind: 'refused', reason: checked.refused };
+    this.proposedThisTurn.add(proposer);
+    return this.put(checked.deal, checked.key, turn);
+  }
+
+  /**
+   * Answer an offer waiting on `seat` (phase 3). Accepting re-checks the deal, since time has
+   * passed since it was made: if it is no longer valid, or a proposer that answers at once no
+   * longer wants it, the offer is withdrawn instead. Declining may carry the seat's own terms,
+   * which go to the proposer as a counter through the same checks as any offer; a counter answers
+   * an offer made to the seat, so it does not use up the seat's own proposal for the slot.
+   */
+  answer(
+    seat: PlayerId,
+    dealId: string,
+    reply: 'accept' | 'decline',
+    counter?: Omit<DealTerms, 'to'>,
+  ): OfferOutcome {
+    const turn = this.turnSeen;
+    const index = this.pendingOffers.findIndex(
+      (p) => p.deal.id === dealId && p.deal.parties[1] === seat,
+    );
+    if (index < 0) return { kind: 'refused', reason: 'noSuchOffer' };
+    const [pending] = this.pendingOffers.splice(index, 1) as [PendingOffer];
+    const deal = pending.deal;
+    const proposer = deal.proposer;
+
+    if (reply === 'accept') {
+      const living = new Set(estimateTable(this.opts.viewOf(seat)).seats.map((s) => s.seat));
+      let holds = validateDeal(deal, living).length === 0 && this.canDeal(proposer, seat, turn);
+      if (holds && this.opts.negotiates(proposer) && !this.answersLater(proposer)) {
+        const ctx = this.contextFor(proposer, turn);
+        const mine = valueDeal(deal, proposer, ctx);
+        holds =
+          mine.vetoes.length === 0 && mine.value > acceptBar(deal, proposer, ctx, { noise: false });
+      }
+      if (!holds) {
+        this.withdraw(pending, turn, 'stale');
+        return { kind: 'withdrawn', deal };
+      }
+      this.log.push({
+        kind: 'response',
+        turn,
+        from: seat,
+        to: proposer,
+        dealId: deal.id,
+        answer: 'accept',
+      });
+      const ctx = this.contextFor(seat, turn);
+      this.activate(deal, valueDeal(deal, seat, ctx), ctx.table);
+      return { kind: 'accepted', deal };
+    }
+
+    deal.status = 'declined';
+    this.declines.push({ proposer, to: seat, terms: termsKey(deal), round: this.round(turn) });
+    const checked =
+      counter === undefined ? null : this.check(seat, proposer, { to: proposer, ...counter }, turn);
+    if (checked === null || 'refused' in checked) {
+      this.log.push({
+        kind: 'response',
+        turn,
+        from: seat,
+        to: proposer,
+        dealId: deal.id,
+        answer: 'decline',
+      });
+      return checked === null
+        ? { kind: 'declined' }
+        : { kind: 'declined', counterRefused: checked.refused };
+    }
+    this.log.push({
+      kind: 'response',
+      turn,
+      from: seat,
+      to: proposer,
+      dealId: deal.id,
+      answer: 'decline',
+      counter: snapshot(checked.deal),
+    });
+    return this.put(checked.deal, checked.key, turn, deal.id);
+  }
+
+  /** The structural and cooldown checks every offer and counter passes, and its new deal. */
+  private check(
+    proposer: PlayerId,
+    to: PlayerId,
+    terms: DealTerms,
+    turn: number,
+  ): { deal: Deal; key: string } | { refused: OfferRefusal } {
     const probe: Deal = {
       id: 'probe',
       proposer,
@@ -652,19 +874,36 @@ export class DiplomacyTable {
       status: 'proposed',
     };
     const living = new Set(estimateTable(this.opts.viewOf(to)).seats.map((s) => s.seat));
-    if (turn < 1 || validateDeal(probe, living).length > 0) {
-      return { kind: 'refused', reason: 'invalid' };
-    }
-    if (!this.canDeal(proposer, to, turn)) return { kind: 'refused', reason: 'cooldown' };
+    if (turn < 1 || validateDeal(probe, living).length > 0) return { refused: 'invalid' };
+    if (this.pendingBetween(proposer, to) !== undefined) return { refused: 'pending' };
+    if (!this.canDeal(proposer, to, turn)) return { refused: 'cooldown' };
     const key = termsKey(probe);
-    if (this.recentlyDeclined(proposer, to, key, turn)) {
-      return { kind: 'refused', reason: 'cooldown' };
-    }
+    if (this.recentlyDeclined(proposer, to, key, turn)) return { refused: 'cooldown' };
+    return { deal: { ...probe, id: `deal-${this.nextDealId++}` }, key };
+  }
 
-    this.proposedThisTurn.add(proposer);
-    const deal: Deal = { ...probe, id: `deal-${this.nextDealId++}` };
-    this.stats.proposals++;
-    this.log.push({ kind: 'proposal', turn, from: proposer, to, deal: snapshot(deal) });
+  private pendingBetween(a: PlayerId, b: PlayerId): PendingOffer | undefined {
+    return this.pendingOffers.find((p) => p.deal.parties.includes(a) && p.deal.parties.includes(b));
+  }
+
+  /**
+   * Put a checked offer to its recipient. A seat that answers later gets it as a pending offer;
+   * any other answers now, and a bot that declines counters with its own best terms, which the
+   * proposer then answers in turn: at once, or later if it answers later.
+   */
+  private put(deal: Deal, key: string, turn: number, counterOf?: string): OfferOutcome {
+    const proposer = deal.proposer;
+    const to = deal.parties[1];
+    if (counterOf === undefined) {
+      this.stats.proposals++;
+      this.log.push({ kind: 'proposal', turn, from: proposer, to, deal: snapshot(deal) });
+    } else {
+      this.stats.counters++;
+    }
+    if (this.answersLater(to)) {
+      this.pendingOffers.push({ deal, ...(counterOf !== undefined ? { counterOf } : {}) });
+      return { kind: 'pending', deal };
+    }
 
     const theirCtx = this.contextFor(to, turn);
     const answer = answerDeal(deal, to, theirCtx);
@@ -684,7 +923,11 @@ export class DiplomacyTable {
     deal.status = 'declined';
     this.declines.push({ proposer, to, terms: key, round: this.round(turn) });
     const counter = bestDealWith(to, proposer, theirCtx, `t${turn}-${to}-counter`);
-    if (counter === null || termsKey(counter.deal) === key) {
+    if (
+      counter === null ||
+      termsKey(counter.deal) === key ||
+      this.recentlyDeclined(to, proposer, termsKey(counter.deal), turn)
+    ) {
       this.log.push({
         kind: 'response',
         turn,
@@ -706,6 +949,10 @@ export class DiplomacyTable {
       answer: 'decline',
       counter: snapshot(counterDeal),
     });
+    if (this.answersLater(proposer)) {
+      this.pendingOffers.push({ deal: counterDeal, counterOf: deal.id });
+      return { kind: 'declined', counter: counterDeal, counterPending: true };
+    }
     if (!this.opts.negotiates(proposer)) return { kind: 'declined', counter: counterDeal };
 
     const ctx = this.contextFor(proposer, turn);
@@ -732,6 +979,43 @@ export class DiplomacyTable {
       round: this.round(turn),
     });
     return { kind: 'declined', counter: counterDeal };
+  }
+
+  /** The table as `seat` sees it when it answers for itself: its offers, deals and records. */
+  seatState(seat: PlayerId): DiplomacySeatState {
+    const turn = this.turnSeen;
+    // Who is still in the game, as the active seat sees it: an eliminated seat's own view still
+    // lists itself, the active seat's does not.
+    const living = estimateTable(this.opts.viewOf(this.activeNow ?? seat)).seats.map((s) => s.seat);
+    return {
+      turn: Math.max(0, turn),
+      slot: this.slot,
+      canPropose:
+        turn >= 1 &&
+        this.opts.negotiates(seat) &&
+        living.includes(seat) &&
+        !this.proposedThisTurn.has(seat),
+      offers: this.pendingOffers
+        .filter((p) => p.deal.parties[1] === seat)
+        .map((p) => snapshot(p.deal)),
+      // Only the promises still binding: one already kept, or whose party was released, binds
+      // nobody, and the player's warnings and a model seat's prompt must not say it does.
+      deals: this.bindingDeals().map(snapshot),
+      trust: this.opts.seats.map((s) => {
+        const record = this.trust.snapshot(s);
+        return { seat: s, kept: record.kept, broken: record.broken };
+      }),
+      partners:
+        turn < 1
+          ? []
+          : living.filter(
+              (other) =>
+                other !== seat && this.opts.negotiates(other) && this.canDeal(seat, other, turn),
+            ),
+      maxRounds: D.maxRounds,
+      maxObligationsPerSide: D.maxObligationsPerSide,
+      attackPlayerShare: D.attackPlayerShare,
+    };
   }
 
   /** The active bot's one proposal for the turn: its best candidate not recently declined. */
@@ -762,7 +1046,10 @@ export class DiplomacyTable {
     const couldAttackNow = new Set<PlayerId>();
     // The accepting turn counts for whichever party is taking it, and so does whether that party
     // could make an attack it promises this turn: the window's own check ran before the deal.
-    if (this.activeNow !== null && turnsTaken.has(this.activeNow)) {
+    // Not once its attackers are declared (the `afterAttackers` slot): its attack this turn is
+    // already made, so its promises would bind nothing this turn, and the deal starts with its
+    // next one.
+    if (this.activeNow !== null && turnsTaken.has(this.activeNow) && this.slot === 'turnStart') {
       const active = this.activeNow;
       turnsTaken.set(active, 1);
       const owesAttack = deal.obligations.some(
@@ -771,8 +1058,13 @@ export class DiplomacyTable {
           o.by === active &&
           table.seats.some((s) => s.seat === o.target),
       );
-      if (owesAttack && (table.bySeat.get(active)?.attackPower ?? 0) > 0)
+      if (
+        owesAttack &&
+        !this.attackNotOwnChoice.has(active) &&
+        (table.bySeat.get(active)?.attackPower ?? 0) > 0
+      ) {
         couldAttackNow.add(active);
+      }
     }
     const credit = new Map(
       deal.parties.map((p) => [p, Math.min(valuation.stake, valuation.ownCost.get(p) ?? 0)]),

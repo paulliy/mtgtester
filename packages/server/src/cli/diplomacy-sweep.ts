@@ -3,13 +3,17 @@
  * heuristic seats on the same seeds, before deals are offered anywhere by default.
  *
  *   bun run diplomacy-sweep [--games N] [--seed S] [--turn-cap N] [--game-timeout SECONDS]
- *                           [--all] [--no-deals] [--talk] [--oracle-fixture FILE] [--json out.json]
+ *                           [--all] [--no-deals] [--exploiter] [--talk] [--oracle-fixture FILE]
+ *                           [--json out.json]
  *
  * Two seats negotiate and two play the plain bot; which pair alternates by game, so each arm
  * holds the first-player seat half the time (as in `combat-sweep`). `--all` makes every seat a
  * diplomat instead, which measures how the table behaves rather than who wins. `--no-deals` keeps
  * the diplomacy seats' threat-aware attack targets but makes no deals: run it beside the default
- * to tell what deals add from what the targeting does. `--talk` prints each game's table talk.
+ * to tell what deals add from what the targeting does. `--exploiter` seats an adversarial
+ * proposer (ADR 0035 phase 3) against three diplomats and reports what it got: padding and offers
+ * past its breach tolerance must never be accepted, and no bot may concede more on one deal, by
+ * its own estimate, than `MAX_CONCESSION_PER_DEAL`. `--talk` prints each game's table talk.
  *
  * Card data comes from the Scryfall bulk file when it exists, otherwise from the committed
  * coverage fixture, so the sweep runs offline. Each game runs in a child process with a wall-clock
@@ -23,7 +27,13 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { OracleCard, PlayerId } from '@mtg/shared';
-import { describeMessage, type DiplomacyStats } from '@mtg/bot';
+import {
+  describeMessage,
+  MAX_CONCESSION_PER_DEAL,
+  summarizeExploits,
+  type DiplomacyStats,
+  type ExploitRecord,
+} from '@mtg/bot';
 import { toOracleCard, type RawScryfallCard } from '../cards/scryfall';
 import { buildSupportedPool, type SupportedPool } from '../cards/pool';
 import { generateCommanderDeck } from '../decks/generate';
@@ -76,6 +86,7 @@ interface Args {
   gameTimeoutMs: number;
   all: boolean;
   noDeals: boolean;
+  exploiter: boolean;
   talk: boolean;
   oracleFixture?: string;
   json?: string;
@@ -89,6 +100,7 @@ function parseArgs(argv: string[]): Args {
     gameTimeoutMs: 120_000,
     all: false,
     noDeals: false,
+    exploiter: false,
     talk: false,
   };
   for (let i = 0; i < argv.length; i++) {
@@ -102,6 +114,7 @@ function parseArgs(argv: string[]): Args {
       if (Number.isFinite(seconds) && seconds > 0) args.gameTimeoutMs = seconds * 1000;
     } else if (arg === '--all') args.all = true;
     else if (arg === '--no-deals') args.noDeals = true;
+    else if (arg === '--exploiter') args.exploiter = true;
     else if (arg === '--talk') args.talk = true;
     else if (arg === '--oracle-fixture') {
       const value = argv[++i];
@@ -146,6 +159,9 @@ interface Totals {
   deals: DiplomacyStats;
   /** Why deals ended other than kept, and why breakers said they broke them. */
   reasons: Record<string, number>;
+  /** Every offer an exploiter made, across games (`--exploiter`). */
+  exploits: ExploitRecord[];
+  exploiterWins: number;
 }
 
 function addStats(into: DiplomacyStats, from: DiplomacyStats): void {
@@ -172,6 +188,8 @@ function main(): void {
     turns: 0,
     deals: { proposals: 0, accepted: 0, counters: 0, kept: 0, broken: 0, voided: 0 },
     reasons: {},
+    exploits: [],
+    exploiterWins: 0,
   };
 
   for (let game = 0; game < args.games; game++) {
@@ -179,11 +197,18 @@ function main(): void {
     const decks = Array.from({ length: SEATS }, (_, i) =>
       generateCommanderDeck(pool, { seed: `${seed}-seat${i + 1}` }),
     );
-    const diplomats: PlayerId[] = args.all
-      ? ['P1', 'P2', 'P3', 'P4']
-      : game % 2 === 0
-        ? ['P1', 'P3']
-        : ['P2', 'P4'];
+    // The exploiter takes each seat in turn, so no seat's position decides what it gets.
+    const exploiterSeat: PlayerId | undefined = args.exploiter
+      ? `P${(game % SEATS) + 1}`
+      : undefined;
+    const diplomats: PlayerId[] =
+      exploiterSeat !== undefined
+        ? ['P1', 'P2', 'P3', 'P4'].filter((s) => s !== exploiterSeat)
+        : args.all
+          ? ['P1', 'P2', 'P3', 'P4']
+          : game % 2 === 0
+            ? ['P1', 'P3']
+            : ['P2', 'P4'];
 
     totals.games++;
     let outcome: string;
@@ -193,6 +218,7 @@ function main(): void {
         turnCap: args.turnCap,
         diplomacySeats: diplomats,
         negotiate: !args.noDeals,
+        ...(exploiterSeat !== undefined ? { exploiterSeat } : {}),
         decks: decks.map((deck) => ({ commander: deck.commander, cards: deck.cards })),
       },
       args.gameTimeoutMs,
@@ -211,6 +237,8 @@ function main(): void {
         if (key !== null) totals.reasons[key] = (totals.reasons[key] ?? 0) + 1;
       }
       if (result.halted) totals.halted++;
+      totals.exploits.push(...(result.exploits ?? []));
+      if (result.winner !== null && result.winner === exploiterSeat) totals.exploiterWins++;
       if (result.winner === null) {
         totals.draws++;
         outcome = 'draw';
@@ -248,9 +276,9 @@ function main(): void {
   console.log('\nDiplomacy sweep (ADR 0035)');
   console.log('─'.repeat(26));
   console.log(
-    `  ${totals.games} games, seed prefix "${args.seed}", ${args.all ? 'all seats negotiate' : '2 diplomacy seats vs 2 plain seats'}${args.noDeals ? ' (no deals: threat-aware targets only)' : ''}`,
+    `  ${totals.games} games, seed prefix "${args.seed}", ${args.exploiter ? '1 exploiter vs 3 diplomacy seats' : args.all ? 'all seats negotiate' : '2 diplomacy seats vs 2 plain seats'}${args.noDeals ? ' (no deals: threat-aware targets only)' : ''}`,
   );
-  if (!args.all) {
+  if (!args.all && !args.exploiter) {
     console.log(`  diplomacy wins: ${totals.diplomacyWins}`);
     console.log(`  plain wins:     ${totals.plainWins}`);
   }
@@ -267,6 +295,29 @@ function main(): void {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([k, v]) => `${k} ${v}`);
   if (reasons.length > 0) console.log(`  reasons: ${reasons.join(', ')}`);
+  if (args.exploiter) {
+    const x = summarizeExploits(totals.exploits);
+    const accepted = Object.entries(x.accepted)
+      .map(([tactic, n]) => `${tactic} ${n}`)
+      .join(', ');
+    console.log(
+      `  exploiter: ${totals.exploiterWins} wins, ${x.offers} offers, accepted: ${accepted}`,
+    );
+    console.log(
+      `  padding accepted: ${x.paddingAccepted}, accepted past breach tolerance: ${x.acceptedPastTolerance}`,
+    );
+    console.log(
+      `  concessions (bots' own estimate, LEP): worst ${x.worstConcession.toFixed(2)} ` +
+        `(bound ${MAX_CONCESSION_PER_DEAL}), total ${x.totalConcession.toFixed(2)}, ` +
+        `lost to betrayal ${x.betrayedLoss.toFixed(2)}`,
+    );
+    const ok =
+      x.paddingAccepted === 0 &&
+      x.acceptedPastTolerance === 0 &&
+      x.worstConcession <= MAX_CONCESSION_PER_DEAL;
+    console.log(`  bound ${ok ? 'held' : 'VIOLATED'}`);
+    if (!ok) process.exitCode = 1;
+  }
   for (const error of totals.errors) console.log(`  error: ${error}`);
 }
 

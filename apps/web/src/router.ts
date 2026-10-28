@@ -19,7 +19,16 @@ const routes: RouteRecordRaw[] = [
   { path: '/batch', name: 'batch', component: BatchSetupView },
   { path: '/batch/:id', name: 'batch-results', component: BatchResultsView },
   ...(import.meta.env['DEV'] === true
-    ? [{ path: '/card-test-lab', name: 'card-test-lab', component: CardTestLabView }]
+    ? [
+        { path: '/card-test-lab', name: 'card-test-lab', component: CardTestLabView },
+        // The deal UI with sample data and no game (ADR 0035).
+        {
+          path: '/deals-preview',
+          name: 'deals-preview',
+          // Loaded on demand, so its sample data never ships in a production bundle.
+          component: () => import('./views/DealsPreviewView.vue'),
+        },
+      ]
     : []),
 ];
 

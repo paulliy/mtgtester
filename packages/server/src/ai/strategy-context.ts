@@ -7,6 +7,7 @@ import {
   type ContextOptions,
   type RecentSeatDecision,
 } from './context';
+import type { SeatDiplomacyContext } from './diplomacy-context';
 import { RULES_PRIMER, STRATEGIST_PRIMER } from './primer';
 
 export type StrategyContextVersion = 'v1' | 'v2';
@@ -18,6 +19,8 @@ export interface StrategyContextOptions {
   /** Compatibility input retained for callers that have not loaded a full profile yet. */
   deckArchetype?: string;
   context?: ContextOptions;
+  /** Deals at the table and how to propose one (ADR 0035 phase 4); only in a game with deals. */
+  diplomacy?: SeatDiplomacyContext;
 }
 
 function strategyTask(hasProfile: boolean): Record<string, unknown> {
@@ -95,6 +98,7 @@ Use only information in this PlayerView. Other players' hidden cards, decklists,
     payload['yourStrategyProfile'] = { archetype, provenance: 'legacy-archetype-tag' };
   }
   payload['strategyTask'] = strategyTask(payload['yourStrategyProfile'] !== undefined);
+  if (options.diplomacy !== undefined) payload['tableDiplomacy'] = options.diplomacy;
   const budgeted =
     options.context?.useBudgeter === true
       ? budgetContext(payload, options.context.inputTokenBudget ?? 6_000)

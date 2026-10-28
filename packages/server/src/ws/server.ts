@@ -656,6 +656,24 @@ export class GameServer {
         this.requireSession(socket)?.cancelYield();
         return;
 
+      case 'proposeDeal':
+      case 'answerDeal':
+      case 'draftDeal': {
+        if (socket !== this.playerSocket) {
+          this.sendTo(socket, {
+            type: 'error',
+            payload: { message: 'Only the active player connection may negotiate.' },
+          });
+          return;
+        }
+        const session = this.requireSession(socket);
+        if (session === null) return;
+        if (message.type === 'proposeDeal') session.proposeDeal(message.payload);
+        else if (message.type === 'answerDeal') session.answerDeal(message.payload);
+        else await session.draftDeal(message.payload);
+        return;
+      }
+
       case 'resumeGame':
         if (
           this.session === null ||

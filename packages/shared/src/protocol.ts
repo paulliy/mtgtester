@@ -15,7 +15,13 @@ import type { GameResult } from './state';
 import type { PlayerBoardState } from './player';
 import type { AiAnnotation, AiReflection, SpectatorLogLine, SpectatorState } from './spectator';
 import type { ValidationIssue } from './decks';
-import type { TableTalkLine } from './diplomacy';
+import type {
+  DealObligation,
+  DealTerms,
+  DiplomacySeatState,
+  OfferRefusal,
+  TableTalkLine,
+} from './diplomacy';
 
 /** Server → client message types (brief §11). */
 export const SERVER_TO_CLIENT_TYPES = [
@@ -32,6 +38,8 @@ export const SERVER_TO_CLIENT_TYPES = [
   'replayUnlocked',
   'gameOver',
   'gameReflections',
+  'diplomacyState',
+  'dealDraft',
   'error',
 ] as const;
 export type ServerToClientType = (typeof SERVER_TO_CLIENT_TYPES)[number];
@@ -50,6 +58,9 @@ export const CLIENT_TO_SERVER_TYPES = [
   'resumePlayerAbility',
   'cancelYield',
   'resumeGame',
+  'proposeDeal',
+  'answerDeal',
+  'draftDeal',
 ] as const;
 export type ClientToServerType = (typeof CLIENT_TO_SERVER_TYPES)[number];
 
@@ -350,7 +361,44 @@ export type ServerToClientMessage =
   | { type: 'replayUnlocked'; payload: ReplayUnlockedPayload }
   | { type: 'gameOver'; payload: GameOverPayload }
   | { type: 'gameReflections'; payload: GameReflectionsPayload }
+  | { type: 'diplomacyState'; payload: DiplomacyStatePayload }
+  | { type: 'dealDraft'; payload: DealDraftPayload }
   | { type: 'error'; payload: ErrorPayload };
+
+/** What became of the player's last proposal or answer (ADR 0035 phase 3). */
+export interface DealOutcomeNotice {
+  kind: 'accepted' | 'declined' | 'pending' | 'withdrawn' | 'refused';
+  dealId?: string;
+  /**
+   * Why it was refused: `noSuchOffer` when the offer answered had already lapsed. On `declined`,
+   * why the counter sent with the decline was refused (the decline itself stands).
+   */
+  reason?: OfferRefusal | 'noSuchOffer';
+  /** The other side declined and its counter now waits on the player. */
+  counterPending?: boolean;
+}
+
+/**
+ * The table as the human seat sees it, sent in a single-player game with deals on whenever it may
+ * have changed: on every board update, and after each proposal or answer the player makes.
+ */
+export interface DiplomacyStatePayload {
+  gameId: GameId;
+  state: DiplomacySeatState;
+  /** Present only in the reply to the player's own proposal or answer. */
+  outcome?: DealOutcomeNotice;
+}
+
+/**
+ * The reply to `draftDeal` (ADR 0035 phase 4): the player's free text read as typed terms, for the
+ * deal panel to show before anything is offered. `terms` is null when the text could not be read
+ * or the reading is not a valid deal; the panel is the fallback either way.
+ */
+export interface DealDraftPayload {
+  text: string;
+  terms: DealTerms | null;
+  message?: string;
+}
 
 /** Narrow a server message to one variant, e.g. `ServerMessageOf<'eventBatch'>`. */
 export type ServerMessageOf<T extends ServerToClientType> = Extract<
@@ -378,9 +426,9 @@ interface StartGameCommon {
    */
   reflectionEnabled?: boolean;
   /**
-   * Let the bots make deals and talk at the table (ADR 0035). Honored only in a spectator game
-   * of heuristic bots for now; the model-driven seats and the human seat join in later phases.
-   * Off when omitted, and an off game is byte-identical to one from before diplomacy existed.
+   * Let the seats make deals and talk at the table (ADR 0035): bots, model-driven seats and, in a
+   * single-player game, the player. Off when omitted, and an off game is byte-identical to one
+   * from before diplomacy existed.
    */
   diplomacy?: boolean;
 }
@@ -445,6 +493,24 @@ export interface ResumeGamePayload {
   sessionToken: string;
 }
 
+/** The player's proposal: the table checks it like any other (ADR 0035 decision 15). */
+export type ProposeDealPayload = DealTerms;
+
+/** The player's answer to an offer waiting on it, optionally with terms of its own. */
+export interface AnswerDealPayload {
+  dealId: string;
+  answer: 'accept' | 'decline';
+  counter?: { obligations: DealObligation[]; rounds: number };
+}
+
+/** Free text to read as deal terms with one cheap model call (phase 4). Never offered as is. */
+export interface DraftDealPayload {
+  text: string;
+}
+
+/** Longest free text `draftDeal` accepts. */
+export const DEAL_DRAFT_MAX_CHARS = 500;
+
 export type ClientToServerMessage =
   | { type: 'startGame'; payload: StartGamePayload }
   | { type: 'startCardTestScenario'; payload: StartCardTestScenarioPayload }
@@ -457,7 +523,10 @@ export type ClientToServerMessage =
   | { type: 'yieldPlayerAbility'; payload: YieldPlayerAbilityPayload }
   | { type: 'resumePlayerAbility'; payload: ResumePlayerAbilityPayload }
   | { type: 'cancelYield'; payload: Record<string, never> }
-  | { type: 'resumeGame'; payload: ResumeGamePayload };
+  | { type: 'resumeGame'; payload: ResumeGamePayload }
+  | { type: 'proposeDeal'; payload: ProposeDealPayload }
+  | { type: 'answerDeal'; payload: AnswerDealPayload }
+  | { type: 'draftDeal'; payload: DraftDealPayload };
 
 /** Narrow a client message to one variant, e.g. `ClientMessageOf<'startGame'>`. */
 export type ClientMessageOf<T extends ClientToServerType> = Extract<
@@ -488,6 +557,30 @@ function isTargets(value: unknown): boolean {
           (target['slot'] as number) >= 0 &&
           typeof target['choice'] === 'string',
       ))
+  );
+}
+
+function isObligation(value: unknown): value is DealObligation {
+  if (!isRecord(value) || !isPlayerSeatId(value['by'])) return false;
+  switch (value['kind']) {
+    case 'noAttack':
+    case 'noTarget':
+    case 'noCounter':
+      return Object.keys(value).length === 3 && isPlayerSeatId(value['against']);
+    case 'attackPlayer':
+      return Object.keys(value).length === 3 && isPlayerSeatId(value['target']);
+    default:
+      return false;
+  }
+}
+
+/** Obligations and a length, shaped right; whether they make a valid deal is the table's call. */
+function isTermsBody(value: Record<string, unknown>): boolean {
+  return (
+    Array.isArray(value['obligations']) &&
+    value['obligations'].length <= 8 &&
+    value['obligations'].every(isObligation) &&
+    Number.isInteger(value['rounds'])
   );
 }
 
@@ -635,6 +728,33 @@ export function isClientToServerMessage(value: unknown): value is ClientToServer
       return Object.keys(payload).length === 0;
     case 'resumeGame':
       return typeof payload['sessionToken'] === 'string' && payload['sessionToken'].length > 0;
+    case 'proposeDeal':
+      return (
+        Object.keys(payload).every((key) => ['to', 'obligations', 'rounds'].includes(key)) &&
+        isPlayerSeatId(payload['to']) &&
+        isTermsBody(payload)
+      );
+    case 'answerDeal':
+      return (
+        Object.keys(payload).every((key) => ['dealId', 'answer', 'counter'].includes(key)) &&
+        typeof payload['dealId'] === 'string' &&
+        payload['dealId'].length > 0 &&
+        (payload['answer'] === 'accept' || payload['answer'] === 'decline') &&
+        (payload['counter'] === undefined ||
+          (payload['answer'] === 'decline' &&
+            isRecord(payload['counter']) &&
+            Object.keys(payload['counter']).every((key) =>
+              ['obligations', 'rounds'].includes(key),
+            ) &&
+            isTermsBody(payload['counter'])))
+      );
+    case 'draftDeal':
+      return (
+        Object.keys(payload).length === 1 &&
+        typeof payload['text'] === 'string' &&
+        payload['text'].trim().length > 0 &&
+        payload['text'].length <= DEAL_DRAFT_MAX_CHARS
+      );
     case 'setDebugFlags':
       return isDebugFlags(payload['flags']);
     case 'abandonGame':

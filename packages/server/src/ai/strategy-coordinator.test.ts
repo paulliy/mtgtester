@@ -705,3 +705,105 @@ describe('StrategyCoordinator — whole-game decision digest', () => {
     expect(digest.at(-1)?.action).toBe('turn 200');
   });
 });
+
+describe('StrategyCoordinator — table diplomacy (ADR 0035 phase 4)', () => {
+  const dealContext = {
+    yourPromises: ["you won't attack P2 (deal deal-1, one round)"],
+    promisesToYou: [],
+    otherDeals: [],
+    records: [],
+    howToPropose: 'add dealProposal',
+  };
+
+  it('puts the table in the strategist prompt and hands back a proposal it makes', async () => {
+    const client = strategist();
+    const proposal = { to: 'P3', obligations: [], rounds: 1 };
+    (client.requestDecision as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      response: {
+        requestId: 'strategy',
+        actionId: 0,
+        turnStrategy: { intent: 'Make peace.', plannedActions: [], dealProposal: proposal },
+      },
+      meta: {
+        model: 'm',
+        promptTokens: 1,
+        responseTokens: 1,
+        latencyMs: 1,
+        wasRetry: false,
+        wasFallback: false,
+        rawResponse: '{}',
+      },
+    });
+    const engine = { view: vi.fn().mockReturnValue(view), addDebug: vi.fn() } as unknown as Engine;
+    const queue = { enqueue: <T>(fn: () => Promise<T>) => fn() };
+    const coordinator = new StrategyCoordinator(client, queue, engine, DEFAULT_AI_CONFIG);
+    const roles: string[] = [];
+    coordinator.diplomacyFor = (_seat, role) => {
+      roles.push(role);
+      return dealContext;
+    };
+    const proposals: unknown[] = [];
+    coordinator.onDealProposal = (turn, seat, raw) => proposals.push({ turn, seat, raw });
+
+    coordinator.prepare(request());
+    await coordinator.settled();
+
+    const prompt = (client.requestDecision as ReturnType<typeof vi.fn>).mock.calls[0]![0] as {
+      messages: Array<{ content: string }>;
+    };
+    expect(JSON.parse(prompt.messages[1]!.content).tableDiplomacy).toEqual(dealContext);
+    expect(roles).toContain('strategist');
+    expect(proposals).toEqual([{ turn: 1, seat: 'P1', raw: proposal }]);
+  });
+
+  it('gives the tactician its deals only when it has some', () => {
+    const engine = { view: vi.fn().mockReturnValue(view), addDebug: vi.fn() } as unknown as Engine;
+    const queue = { enqueue: <T>(fn: () => Promise<T>) => fn() };
+    const coordinator = new StrategyCoordinator(strategist(), queue, engine, DEFAULT_AI_CONFIG);
+    expect('deals' in coordinator.guidanceFor('P1')).toBe(false);
+    coordinator.diplomacyFor = () => null;
+    expect('deals' in coordinator.guidanceFor('P1')).toBe(false);
+    coordinator.diplomacyFor = () => dealContext;
+    expect(coordinator.guidanceFor('P1').deals).toEqual(dealContext);
+  });
+
+  it('leaves the strategist prompt exactly as it was in a game without deals', async () => {
+    const plain = strategist();
+    const engine = { view: vi.fn().mockReturnValue(view), addDebug: vi.fn() } as unknown as Engine;
+    const queue = { enqueue: <T>(fn: () => Promise<T>) => fn() };
+    const coordinator = new StrategyCoordinator(plain, queue, engine, DEFAULT_AI_CONFIG);
+    coordinator.prepare(request());
+    await coordinator.settled();
+    const prompt = (plain.requestDecision as ReturnType<typeof vi.fn>).mock.calls[0]![0] as {
+      messages: Array<{ content: string }>;
+    };
+    expect(prompt.messages[1]!.content).not.toContain('tableDiplomacy');
+  });
+});
+
+describe('StrategyCoordinator — plans and deals made after them (ADR 0035)', () => {
+  it('stops executing a plan once the seat has made a deal the plan never weighed', async () => {
+    const engine = { view: vi.fn().mockReturnValue(view), addDebug: vi.fn() } as unknown as Engine;
+    const queue = { enqueue: <T>(fn: () => Promise<T>) => fn() };
+    const coordinator = new StrategyCoordinator(strategist(), queue, engine, DEFAULT_AI_CONFIG);
+    let promised = false;
+    coordinator.diplomacyFor = () =>
+      promised
+        ? {
+            yourPromises: ["you won't target P2 (deal deal-1, one round)"],
+            promisesToYou: [],
+            otherDeals: [],
+            records: [],
+          }
+        : null;
+    const req = request();
+    coordinator.prepare(req);
+    await coordinator.settled();
+    // The deal is made after the plan was built, before its step runs.
+    promised = true;
+    expect(coordinator.tryExecutePlan(req)).toBeNull();
+    // With the deals back as the plan saw them, the same step runs.
+    promised = false;
+    expect(coordinator.tryExecutePlan(req)?.actionId).toBe(1);
+  });
+});

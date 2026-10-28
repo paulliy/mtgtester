@@ -43,8 +43,10 @@ mostly about closing those openings. They were revised after an adversarial revi
 2. Message kinds: `threatCall` (names the table leader and why), `proposal`, `response` (accept,
    decline, or a counter-proposal), `breach` (a deal was broken, with the reason the breaker
    gives: `lethal`, `worthIt` or `selfDefense`), and `dealEnded` (kept, or void with a reason).
-   Logged deals are deep copies, so what was said never changes afterwards. Questions ("who are
-   you attacking?") and requests ("someone deal with that flyer") are later phases.
+   Logged deals are deep copies, so what was said never changes afterwards. A `withdrawn` message
+   takes an offer that waited on a human off the table: unanswered when its turn ended, or no
+   longer valid (or no longer wanted by its proposer) by the time it was accepted. Questions
+   ("who are you attacking?") and requests ("someone deal with that flyer") are later vocabulary.
 3. A deal is two-party and is a list of obligations, each owed by one of the two parties:
    - `noAttack(by, against)`: `by` declares no attacker at `against` or a permanent `against`
      controls. Continuous.
@@ -92,11 +94,11 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
 7. **Position.** Each living seat's position is computed from public information only: life
    (points at or below `dangerousLifeThreshold` count `lowLifeMultiplier` times), board value
    (creature values as in combat search, plus a flat value per noncreature nonland permanent),
-   cards in hand, and lands. Commander damage is left out of position because a seat only sees
-   the commander damage it has taken itself, and counting it for one seat only would bias every
-   comparison; it enters the danger and temptation checks instead. Poison is left out for the
-   mirror reason: `PlayerView` carries every opponent's count but not the viewer's own, so the
-   same table would read differently from each chair.
+   cards in hand, and lands. Poison counters reduce position; `PlayerView` carries the viewer's
+   own count as well as every opponent's, so every seat reads poison the same way. Commander
+   damage is left out of position because a seat only sees the commander damage it has taken
+   itself, and counting it for one seat only would bias every comparison; it enters the danger
+   and temptation checks instead.
 8. **Win share.** `w_s = softmax(position_s / τ)` across living seats. It is a rough probability
    that each seat wins, used to weigh everyone's gains against each other.
 9. **Leader and danger.** The seat with the highest win share is the leader when its share is at
@@ -219,7 +221,9 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
 
 19. **Bots never call a model to negotiate.** Proposing, answering, keeping, breaking and judging
     compliance are all heuristic, synchronous and seeded. They add no API calls and no latency.
-    The table skips all compliance work while no deal is active.
+    The table skips all compliance work while no deal is active. A model-driven seat answers
+    offers with the same evaluator, at once and with no call; only its proposals come from the
+    model, as a field of the strategist call it already makes (phase 4).
 20. **`DiplomacyTable`** in `@mtg/bot` owns active deals, trust records, proposal history, and the
     message log for one game. It is pure logic with no I/O. Offers enter only through `offer`.
     The driver calls `beforeDecision`
@@ -242,10 +246,12 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
     the event-sourced reducer an earlier draft asked for. A reducer earns its keep only when the
     inputs must be replayed one at a time or audited; here every input is already derived from the
     game, which the server persists and replays, so a snapshot is all a resume needs, and it costs
-    one serialize call instead of a second log with its own ordering rules. Spectator sessions are
-    not resumed across a server restart today, so the server does not store the snapshot yet; phase
-    3, where a human's pending offer must survive a reconnect, stores it with the game, and human
-    proposals and answers become part of that saved state the same way human actions are.
+    one serialize call instead of a second log with its own ordering rules. Offers waiting on a
+    human, and the current negotiation slot, are part of the state (version 2). No game, spectator
+    or single-player, is resumed across a server restart today, so the server does not store the
+    snapshot: a player who reconnects rejoins the same in-memory session, which sends the table
+    state and every line of talk again. Storing the snapshot is the one step left for whenever
+    games themselves survive a restart.
 23. **Hidden information.** Obligations can only name seats, and compliance reads only chosen
     target ids and public owners. Valuation reads only public fields of the deciding seat's
     `PlayerView` (its own hand only as a count, through the same position function used for
@@ -269,15 +275,61 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
   panel shows the deals that seat is in at the viewed moment, and the new-game screen has a "Table
   talk and deals" toggle when watching rule-based bots (`StartGame.diplomacy`, off by default; a
   game with any human or AI seat ignores it).
-- **Phase 3:** single-player. A pending state for offers to and from a human (the human answers
-  asynchronously; bots answer at once), a "propose deal" panel built on `offer`, accept, decline
-  and counter cards for bot proposals, negotiation slots after attackers are declared as well as at
-  the start of a turn, and an adversarial "exploiter" seat in the sweep that tries trust farming,
-  threshold probing and padding, with a bound on the value it may extract.
-- **Phase 4:** AI seats. Active deals and trust in the strategist's context (tokens, not calls),
-  proposals in a structured strategist field, and an optional single cheap call to turn a human's
-  free text into typed terms, falling back to the deal panel. All model output goes through
-  `offer` and its validation like any other proposal.
+- **Phase 3 (done):** single-player.
+  - The table takes `answersLater` seats. An offer to the human, or a bot's counter to the
+    human's offer, waits as a pending offer until the human answers (`DiplomacyTable.answer`) or
+    the next turn opens, when it lapses (`withdrawn: expired`) and goes on the same cooldown as a
+    declined offer, so an ignored offer is not repeated every turn. Bots still answer at once.
+    One pending offer per pair at a time. Accepting re-checks the deal and asks a proposer that
+    answers at once whether it still wants it, else the offer is withdrawn (`stale`). A declined
+    offer may carry the human's own terms, which go to the bot as a counter through the same
+    checks as any offer; a counter answers an offer, so it does not use up the human's proposal.
+    A bot no longer counters with terms that were declined within the cooldown, in any game: the
+    cooldown on declined counters applies to the counterer too.
+  - Two negotiation slots a turn: the start of the turn, and once the turn's attackers are
+    declared (`afterAttackers`), when who is attacking whom is known. Every proposer may offer
+    once per slot; the second slot opens once a turn, however many combats it has. Bots propose
+    only in the first. A deal accepted after the active seat's attackers are declared starts
+    with that seat's next turn: its attack this turn is already made, so its promises would bind
+    nothing, and a promised attack is not charged for it. A turn whose attackers another player
+    chose, or the engine repaired, stays excused for deals made later in that turn.
+  - The table never speaks or proposes for the human: threat calls come only from seats it
+    plays for. The human's decisions go through `withDiplomacyAsync`, so they open windows and
+    are judged like any seat's.
+  - Protocol: `proposeDeal`, `answerDeal` and `diplomacyState` (the human's `seatState`: slot,
+    whether it may propose, offers waiting on it, deals in force, every seat's record, possible
+    partners, and the outcome of its last proposal or answer). Talk reaches a player at once,
+    with no presentation clock. The web player view has a deal panel: offer cards with accept,
+    decline and counter, a builder for proposals, deals in force, records, and recent talk.
+    "Table talk and deals" on the new-game screen now applies to any table.
+  - `bun run diplomacy-sweep --exploiter` seats an adversarial proposer (`Exploiter`) against
+    three diplomats. It tries padding, one-sided probes at every length, cheap early truces to
+    farm trust, and, once it has a record, the largest deal it can get, which it then breaks.
+    Its bound: no padded offer and no offer past `maxBreachesTolerated` is ever accepted, and no
+    bot concedes more on one deal, by its own estimate, than `MAX_CONCESSION_PER_DEAL`
+    (`investmentAllowance + thresholdNoise − acceptThreshold`, 2 LEP). The sweep fails when the
+    bound does not hold, and a seeded game in the test suite checks it.
+- **Phase 4 (done):** model-driven seats.
+  - Diplomacy is no longer off for AI games. A model seat's strategist prompt carries
+    `tableDiplomacy`: its own promises and the promises made to it, the other deals in force,
+    every seat's record, and, while it may still propose, how to. Its tactician gets only its
+    own deals (`tableDeals`), and nothing when it has none. Both are tokens on calls already made;
+    deals add nothing to the prompts of a game without them. The tactical decision cache keys on
+    the seat's deals, so an answer given before a deal is never replayed after it.
+  - The strategist proposes with an optional `turnStrategy.dealProposal`. The session reads it
+    with a fail-closed reader and offers it through `offer`. A plan made ahead of its turn waits
+    until the table opens that turn; one for a turn already past is dropped, and so is one that
+    comes with an unusable plan. The table does not run the heuristic proposer for a model seat
+    (`proposesOnItsOwn`), but it does answer for it: a bot's counter to a model seat's proposal
+    is answered with the heuristic evaluator, so a model seat can enter a deal its strategist did
+    not write, the same way it accepts offers.
+  - `draftDeal`: one cheap call (the tactician lane, its own queue, logged as `dealDraft`) reads
+    a human's free text as typed terms. The reading only fills the deal panel; the player checks
+    and sends it, and it goes through `offer` like any proposal. The reader fails closed: one
+    malformed obligation, a party other than the player and one living opponent, or a length out
+    of range returns no terms. Without a model connection, or on any failure, the panel is the
+    fallback. One reading runs at a time, at most 20 a game, and it is left out of the decision
+    latency figures as post-game reviews are.
 - **Later vocabulary**, in rough order of value: block deals ("I won't block X", "I'll chump for
   you"); non-targeted hostility ("don't wrath", edicts, "each opponent" effects); protecting a
   specific permanent or commander; conditional terms ("if you attack X, I won't..."); table-wide
@@ -288,6 +340,18 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
 ## Consequences
 
 - Default behavior, fixed-seed games, and every existing snapshot are unchanged.
+- A human is judged like any seat. The player view warns before an action that may break one of
+  the player's deals (a chosen target owned by a seat it promised to spare, or an attack that
+  leaves out a seat it promised to attack) and sends it only once confirmed. The warning mirrors
+  the table's rules from the player's own board and errs towards warning: it does not know which
+  breaches the table would excuse as self-defense. `/deals-preview` (development builds) shows the
+  panel and the warning with sample data and no game.
+- An offer to a human lapses when the next turn starts. In a fast game that is a short window,
+  chosen over holding the bots: the engine never waits on an answer.
+- A bot accepts a one-sided ask whenever its own estimate says the redirection is worth it to
+  it (sparing a seat it had no reason to attack, while the asker turns on the leader). The
+  exploiter's bound is on that estimate, not on outcomes; the sweep reports what bots lost to
+  betrayal separately.
 - Threat-aware attack targeting exists only under diplomacy for now. Whether it should become the
   heuristic bot's default is a separate measurement, and so is tuning `WEIGHTS.deals`.
 - Position is a public-information estimate and ignores what is in hands and libraries, so a
@@ -296,9 +360,7 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
   together bound that blind spot without closing it.
 - Commander damage between two opponents is not in `PlayerView`, so it does not enter their
   positions, and a bot predicting a counterparty's answer cannot see the commander damage that
-  counterparty has taken. The viewer's own poison count is not in `PlayerView` either, so poison
-  does not enter position at all; a seat close to a poison loss looks healthier than it is until
-  the view carries that count.
+  counterparty has taken.
 - A leader is the natural target of every other seat's proposals, so the table tends to gang up on
   it. That is how Commander tables play, but the sweep should watch whether it decides too many
   games.
@@ -328,9 +390,8 @@ broke for lethal; the leader with no diplomatic route at all (it may now give wi
 unmet promises credited as kept; endless renewal; repaired attack declarations judged as the seat's
 choice; mutable deals in the message log; and per-decision compliance work with no deal active.
 Deferred, and recorded in the phases above: the resumable table (done in phase 2 as a saved
-state, decision 22); asynchronous
-answers and a post-declaration negotiation slot for humans; the broader vocabulary; and the
-adversarial exploiter in the sweep.
+state, decision 22); asynchronous answers and a post-declaration negotiation slot for humans (done
+in phase 3); the broader vocabulary; and the adversarial exploiter in the sweep (done in phase 3).
 
 A second review checked those fixes and found more, fixed in a follow-up: a self-defense answer
 was still charged as a breach; trust could be farmed with gifts that cost the keeper nothing (now
@@ -340,6 +401,7 @@ priced as if the seat still attacked the others (now priced on top of deals in f
 least two opponents left open); the caller of `offer` chose the turn; a seat could skip a promised
 attack for free by holding its creatures; taking the lead voided a deal for both sides (now it
 frees only the other party); a declined counter could be re-asked at once; a breaker could re-deal
-after one round; and the planner and the table counted blockers differently for lethal. Still
-open: `attackPlayer` is not judged when another player chooses which creatures attack (Master
-Warcraft's chooser mode).
+after one round; and the planner and the table counted blockers differently for lethal. When another
+player chooses which creatures attack (Master Warcraft's chooser mode), the attacking seat is not
+charged for a promised attack left unmade that turn, since it did not choose its attackers; the
+targets it assigns the chosen creatures are still judged as its own.

@@ -114,6 +114,18 @@ export type TableMessage =
        * threatened it with lethal. A void deal credits no trust and charges none.
        */
       reason?: 'partyLeft' | 'lethal' | 'unmet' | 'selfDefense';
+    }
+  | {
+      /**
+       * An offer waiting on a seat that answers later (a human) was taken off the table: its turn
+       * ended unanswered (`expired`), or by the time it was accepted the deal was no longer valid
+       * or the proposer no longer wanted it (`stale`).
+       */
+      kind: 'withdrawn';
+      turn: number;
+      from: PlayerId;
+      dealId: string;
+      reason: 'expired' | 'stale';
     };
 
 export type TableMessageKind = TableMessage['kind'];
@@ -128,4 +140,55 @@ export interface TableTalkLine {
   turn: number;
   message: TableMessage;
   text: string;
+}
+
+/**
+ * When a seat may propose (ADR 0035 phase 3): once at the start of a turn, and once more after
+ * attackers are declared, when it is clear who is attacking whom.
+ */
+export type NegotiationSlot = 'turnStart' | 'afterAttackers';
+
+/** The terms of a deal as a proposer writes them: the table supplies the id, turn and status. */
+export interface DealTerms {
+  to: PlayerId;
+  obligations: DealObligation[];
+  rounds: number;
+}
+
+/** Why an offer was not put to its recipient at all. */
+export type OfferRefusal = 'invalid' | 'rateLimited' | 'cooldown' | 'notNegotiating' | 'pending';
+
+/** One seat's public deal record. */
+export interface TrustSummary {
+  seat: PlayerId;
+  kept: number;
+  broken: number;
+}
+
+/**
+ * The table as one seat that answers asynchronously (the human) sees it: its open offers, the
+ * deals in force at the table, every seat's record, and whether it may propose now.
+ */
+export interface DiplomacySeatState {
+  turn: number;
+  slot: NegotiationSlot;
+  /** True when this seat has not yet proposed in the current slot. */
+  canPropose: boolean;
+  /** Offers waiting on this seat's answer. */
+  offers: Deal[];
+  /**
+   * Every deal in force at the table (deals are public), with only the promises still binding: a
+   * promised attack already made, or a side released because the other party took the lead, is
+   * left out.
+   */
+  deals: Deal[];
+  trust: TrustSummary[];
+  /** Seats this seat could offer a deal to right now (living, negotiating, off cooldown). */
+  partners: PlayerId[];
+  /** Longest deal a seat may offer, in rounds. */
+  maxRounds: number;
+  /** Most obligations one side of a deal may carry. */
+  maxObligationsPerSide: number;
+  /** Share of the power that could attack that a promised attack must send at its target. */
+  attackPlayerShare: number;
 }

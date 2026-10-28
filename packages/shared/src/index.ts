@@ -14,6 +14,7 @@ export { DECK_SOURCE_TYPES, VALIDATION_CODES } from './decks';
 export {
   SERVER_TO_CLIENT_TYPES,
   CLIENT_TO_SERVER_TYPES,
+  DEAL_DRAFT_MAX_CHARS,
   LOOKAHEAD_TURNS,
   PLAYER_IDLE_GRACE_MS,
   PLAYER_SEAT_IDS,
@@ -164,6 +165,12 @@ export type {
   YieldPlayerAbilityPayload,
   ResumePlayerAbilityPayload,
   ResumeGamePayload,
+  ProposeDealPayload,
+  AnswerDealPayload,
+  DraftDealPayload,
+  DealOutcomeNotice,
+  DiplomacyStatePayload,
+  DealDraftPayload,
 } from './protocol';
 
 // --- Table diplomacy (ADR 0035) ---
@@ -172,10 +179,15 @@ export type {
   DealObligation,
   DealObligationKind,
   DealStatus,
+  DealTerms,
+  DiplomacySeatState,
+  NegotiationSlot,
+  OfferRefusal,
   TableMessage,
   TableMessageKind,
   TableTalkLine,
   ThreatReason,
+  TrustSummary,
 } from './diplomacy';
 
 // --- Copy game report ---

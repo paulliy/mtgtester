@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 import type { OracleCard, ServerToClientMessage, TableTalkLine } from '@mtg/shared';
 import { buildSupportedPool } from '../cards/pool';
 import { generateCommanderDeck } from '../decks/generate';
+import { RandomDecisionProvider } from '@mtg/engine';
 import { MatchSession } from './session';
 import type { SeatSetup } from './setup';
 
@@ -87,4 +88,129 @@ describe('MatchSession — table talk (ADR 0035)', () => {
     expect(session.hasDiplomacy()).toBe(false);
     expect(batches.every((b) => !('tableTalk' in b))).toBe(true);
   }, 120_000);
+});
+
+describe('MatchSession — the player at the table (ADR 0035 phase 3)', () => {
+  type Required = Extract<ServerToClientMessage, { type: 'playerActionRequired' }>;
+  type DiplomacyMessage = Extract<ServerToClientMessage, { type: 'diplomacyState' }>;
+
+  it('lets the player propose and answer deals while the bots play on', async () => {
+    const sent: ServerToClientMessage[] = [];
+    const session = new MatchSession({
+      gameId: 'g-diplomacy-player',
+      seed: SEED,
+      seats: seats(),
+      providerKind: 'random',
+      gameMode: 'singlePlayer',
+      humanSeat: 'P1',
+      turnCap: 14,
+      livePaceMs: 0,
+      diplomacy: true,
+      send: (message) => sent.push(message),
+    });
+    expect(session.hasDiplomacy()).toBe(true);
+    const chooser = new RandomDecisionProvider('diplomacy-player');
+    const answered = new Set<string>();
+    let consumed = 0;
+    let proposedOnTurn = -1;
+    let invalidChecked = false;
+    session.start();
+
+    const deadline = Date.now() + 60_000;
+    while (
+      !sent.some((m) => m.type === 'gameOver' || m.type === 'computeHalted') &&
+      Date.now() < deadline
+    ) {
+      const latest = sent.filter((m): m is DiplomacyMessage => m.type === 'diplomacyState').at(-1);
+      if (latest !== undefined) {
+        const { state } = latest.payload;
+        // Accept every offer the bots make, once.
+        for (const offer of state.offers) {
+          if (answered.has(offer.id)) continue;
+          answered.add(offer.id);
+          session.answerDeal({ dealId: offer.id, answer: 'accept' });
+        }
+        if (!invalidChecked && state.turn >= 1) {
+          invalidChecked = true;
+          session.proposeDeal({ to: 'P2', rounds: 9, obligations: [] });
+          const reply = sent.at(-1);
+          expect(reply).toMatchObject({
+            type: 'diplomacyState',
+            payload: { outcome: { kind: 'refused', reason: 'invalid' } },
+          });
+        }
+        const partner = state.partners[0];
+        if (state.canPropose && partner !== undefined && proposedOnTurn !== state.turn) {
+          proposedOnTurn = state.turn;
+          session.proposeDeal({
+            to: partner,
+            rounds: 1,
+            obligations: [
+              { kind: 'noAttack', by: 'P1', against: partner },
+              { kind: 'noAttack', by: partner, against: 'P1' },
+            ],
+          });
+        }
+      }
+      const next = sent.filter((m): m is Required => m.type === 'playerActionRequired')[consumed];
+      if (next === undefined) {
+        await new Promise((resolve) => setTimeout(resolve, 1));
+        continue;
+      }
+      consumed += 1;
+      const response = chooser.decide(next.payload.request);
+      session.submitPlayerAction({
+        requestId: response.requestId,
+        actionId: response.actionId,
+        revision: next.payload.revision,
+        ...(response.targets !== undefined ? { targets: response.targets } : {}),
+      });
+    }
+    session.abandon();
+    await session.settled();
+
+    const talk = sent.flatMap((m) => (m.type === 'eventBatch' ? (m.payload.tableTalk ?? []) : []));
+    // The player's own proposals are in the talk, under its own seat.
+    expect(talk.some((l) => l.message.kind === 'proposal' && l.message.from === 'P1')).toBe(true);
+    // The table never speaks for the player: everything P1 "said" is its own proposal or answer.
+    for (const line of talk) {
+      const m = line.message;
+      if ('from' in m && m.from === 'P1') expect(['proposal', 'response']).toContain(m.kind);
+    }
+    const outcomes = sent.flatMap((m) =>
+      m.type === 'diplomacyState' && m.payload.outcome !== undefined ? [m.payload.outcome] : [],
+    );
+    expect(outcomes.some((o) => o.kind === 'accepted')).toBe(true);
+    const states = sent.flatMap((m) => (m.type === 'diplomacyState' ? [m.payload.state] : []));
+    expect(states.some((st) => st.deals.some((d) => d.parties.includes('P1')))).toBe(true);
+    expect(session.tableTalk()).toEqual(talk);
+    // Every decision the player is asked for comes after the table state for its own turn, so
+    // the panel never shows the previous turn's offers or proposal slot while the player decides.
+    let lastTurn = -1;
+    for (const m of sent) {
+      if (m.type === 'diplomacyState') lastTurn = m.payload.state.turn;
+      if (m.type === 'playerActionRequired' && m.payload.request.turn >= 1) {
+        expect(lastTurn).toBe(m.payload.request.turn);
+      }
+    }
+  }, 120_000);
+
+  it('refuses deal messages in a game without deals', () => {
+    const sent: ServerToClientMessage[] = [];
+    const session = new MatchSession({
+      gameId: 'g-no-deals',
+      seed: SEED,
+      seats: seats(),
+      providerKind: 'random',
+      gameMode: 'singlePlayer',
+      humanSeat: 'P1',
+      send: (message) => sent.push(message),
+    });
+    session.proposeDeal({ to: 'P2', rounds: 1, obligations: [] });
+    expect(sent.at(-1)).toEqual({
+      type: 'error',
+      payload: { message: 'Deals are off in this game.' },
+    });
+    expect(sent.some((m) => m.type === 'diplomacyState')).toBe(false);
+  });
 });
