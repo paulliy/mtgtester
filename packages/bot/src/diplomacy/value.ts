@@ -16,7 +16,7 @@ const D = WEIGHTS.deals;
 export interface DealContext {
   table: TableEstimate;
   trust: TrustLedger;
-  /** Deals already in force, for the portfolio checks (decision 15). */
+  /** Deals already in force, holding only the promises still binding (decision 15). */
   activeDeals: readonly Deal[];
   turn: number;
   /** Seats the game started with: rounds are counted against this, so deaths do not skew them. */

@@ -335,11 +335,24 @@ export class DiplomacyTable {
     return out;
   }
 
+  /**
+   * Deals in force with only the promises still binding: a promise already kept, or one whose
+   * party was released, no longer constrains new deals or what they are worth.
+   */
+  private bindingDeals(): Deal[] {
+    return this.records
+      .filter((r) => r.deal.status === 'active')
+      .map((r) => ({
+        ...r.deal,
+        obligations: r.deal.obligations.filter((o, i) => !r.met.has(i) && !r.freed.has(o.by)),
+      }));
+  }
+
   private contextFor(seat: PlayerId, turn: number): DealContext {
     return {
       table: estimateTable(this.opts.viewOf(seat)),
       trust: this.trust,
-      activeDeals: this.activeDeals(),
+      activeDeals: this.bindingDeals(),
       turn,
       startingSeats: this.opts.seats.length,
       seed: this.opts.seed,

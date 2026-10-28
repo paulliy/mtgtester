@@ -253,6 +253,27 @@ describe('DiplomacyTable — keeping, breaking and ending deals', () => {
     return turn;
   }
 
+  it('prices new deals against the promises still binding, not ones already kept', () => {
+    const { w, table, deal } = withDeal();
+    const owed = deal.obligations.find((o) => o.kind === 'attackPlayer')!;
+    if (owed.kind !== 'attackPlayer') throw new Error('expected an attackPlayer obligation');
+    const other = w.order.find((s) => !deal.parties.includes(s) && s !== owed.target)!;
+    const offer: Deal = {
+      id: 'probe',
+      proposer: owed.by,
+      parties: [owed.by, other],
+      obligations: [{ kind: 'attackPlayer', by: owed.by, target: owed.target }],
+      proposedTurn: 2,
+      rounds: 1,
+      status: 'proposed',
+    };
+    // While the first promise is unmet, the same attack is already owed: worth nothing new.
+    expect(table.valueFor(other, offer, 2)).toBe(0);
+    deliverPromise(w, table, deal, 2);
+    // Once kept, a fresh promise to attack that seat is a new commitment again.
+    expect(table.valueFor(other, offer, 2)).not.toBe(0);
+  });
+
   it('treats a promised attack skipped with attackers on board as a breach', () => {
     const { w, table, deal } = withDeal();
     const owed = deal.obligations.find((o) => o.kind === 'attackPlayer')!;
@@ -475,8 +496,19 @@ describe('DiplomacyTable — keeping, breaking and ending deals', () => {
       seat: other,
       reason: 'leader',
     });
-    expect(table.playFor(other).obligations()).toEqual([]);
-    expect(table.playFor(riser).obligations().length).toBeGreaterThan(0);
+    // Released from this deal (a released seat is free to make others).
+    expect(
+      table
+        .playFor(other)
+        .obligations()
+        .filter((a) => a.dealId === deal.id),
+    ).toEqual([]);
+    expect(
+      table
+        .playFor(riser)
+        .obligations()
+        .filter((a) => a.dealId === deal.id).length,
+    ).toBeGreaterThan(0);
   });
 
   it('ends a deal void, not broken, when a seat answers a protected seat that took the lead', () => {
