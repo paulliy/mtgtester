@@ -65,6 +65,7 @@ import { queueBecomesTargetedTriggers, queueWardTriggers } from '../actions/appl
 import { evaluateCondition, isChoiceCondition, resolveCondition } from '../cards/condition';
 import { allOf, ofSupertype, ofType, selectMatches, YOURS } from '../cards/selector';
 import type { GameGen } from '../decisions';
+import { optionAt } from '../decisions';
 import { EngineInvariantError, UnmodeledCardError } from '../errors';
 import {
   candidateOf,
@@ -610,7 +611,7 @@ function* chooseEnteringAttackTarget(
             }),
       ),
     };
-    chosen = choices[outcome.index] ?? chosen;
+    chosen = optionAt(choices, outcome, 'resolve.chooseEnteringAttackTarget');
   }
   return { defenderId: chosen.defenderId, planeswalkerId: chosen.planeswalker?.id ?? null };
 }
@@ -1722,7 +1723,7 @@ export function* executeAbility(
           .join('; '),
       })),
     };
-    const selected = selections[outcome.index] ?? selections[0];
+    const selected = optionAt(selections, outcome, 'resolve.executeAbility.modes');
     if (selected === undefined) return;
     const effects = selected.flatMap((index) => ability.modes?.options[index]?.effects ?? []);
     const { modes: _modes, ...abilityWithoutModes } = ability;
@@ -2043,7 +2044,7 @@ export function* executeAbility(
             description: option.description,
           })),
         };
-        const chosen = effect.options[outcome.index] ?? effect.options[0];
+        const chosen = optionAt(effect.options, outcome, 'resolve.chooseOne');
         if (chosen !== undefined) {
           yield* executeAbility(
             ctx,
@@ -2841,7 +2842,7 @@ export function* executeAbility(
                 description: `${t.name} (${effectivePT(ctx, t).power}/${effectivePT(ctx, t).toughness})`,
               })),
             };
-            chosenToken = myTokens[choice.index] ?? myTokens[0]!;
+            chosenToken = optionAt(myTokens, choice, 'resolve.populate');
           }
           const chars = computeCharacteristics(ctx, chosenToken);
           createToken(
@@ -3812,7 +3813,11 @@ export function* executeAbility(
               }),
             ),
           };
-          selected = candidates[choice.index] ?? selected;
+          selected = optionAt(
+            candidates,
+            choice,
+            'resolve.returnOneFromYourGraveyardToBattlefield',
+          );
         }
         emit(ctx, 'graveyardToBattlefield', { target: selected.name, source: source.name });
         yield* moveObject(ctx, selected, {
@@ -4516,6 +4521,8 @@ export function* executeAbility(
           excluded: PlayerId | undefined,
         ): GameGen<PlayerId> {
           const eligible = players.filter((p) => p.id !== excluded);
+          // Only a game the controller alone survives leaves nobody else to choose.
+          if (eligible.length === 0) return controller.id;
           const outcome = yield {
             decisionType: 'general',
             player: controller.id,
@@ -4526,7 +4533,7 @@ export function* executeAbility(
               payload: p.id,
             })),
           };
-          return eligible[outcome.index]?.id ?? eligible[0]?.id ?? controller.id;
+          return optionAt(eligible, outcome, 'resolve.shadrixModes').id;
         };
         const first = yield {
           decisionType: 'general',
@@ -5163,7 +5170,7 @@ export function* executeAbility(
             }),
           ),
         };
-        const opponent = opponents[selectedOpponent.index] ?? opponents[0]!;
+        const opponent = optionAt(opponents, selectedOpponent, 'resolve.vindictiveLichModes');
         if (mode.index === 0) {
           const creatures = ctx.state.battlefield.filter(
             (perm) =>
@@ -5352,7 +5359,7 @@ export function* executeAbility(
             }),
           ),
         };
-        const opponent = opponents[selected.index] ?? opponents[0]!;
+        const opponent = optionAt(opponents, selected, 'resolve.halfLifeDrainTargetOpponent');
         const lost = Math.ceil(Math.max(0, opponent.life) / 2);
         loseLife(ctx, opponent, lost);
         gainLife(ctx, controller, lost);
@@ -6255,7 +6262,7 @@ export function* executeAbility(
               }),
             ),
           };
-          token = tokens[outcome.index] ?? token;
+          token = optionAt(tokens, outcome, 'resolve.reflexiveOnCreatedToken');
         }
         ctx.state.pendingTriggers.push({
           controllerId: source.controllerId,
@@ -6983,7 +6990,7 @@ export function* executeAbility(
               }),
             ),
           };
-          selected = candidates[choice.index] ?? selected;
+          selected = optionAt(candidates, choice, 'resolve.returnOneToHand');
         }
         emit(ctx, 'returnToHand', { target: selected.name, source: source.name });
         yield* moveObject(ctx, selected, { zone: 'hand' });
@@ -7181,7 +7188,7 @@ export function* executeAbility(
               }),
             ),
           };
-          chosen = opponents[outcome.index] ?? chosen;
+          chosen = optionAt(opponents, outcome, 'resolve.chooseOpponentForSource');
         }
         // Only the permanent itself remembers it: a Stalker that has left has nothing to store on,
         // and the same card back as a new object is not the one whose trigger this is (CR 400.7).
@@ -7448,7 +7455,7 @@ export function* executeAbility(
             }),
           ),
         };
-        const chosen = byName[outcome.index] ?? byName[0]!;
+        const chosen = optionAt(byName, outcome, 'resolve.searchBasicsNamedLikeChosenLand');
         emit(ctx, 'chosen', { name: chosen.name, source: source.name }, controller.id);
         yield* searchLibrary(
           ctx,
@@ -9189,7 +9196,9 @@ function* addManaFromAbility(
         palette.some((allowed) => allowed === sym) && Number.isInteger(count) && count >= 0,
     ) &&
     palette.reduce((total, sym) => total + (split[sym] ?? 0), 0) === amount;
-  const counts = validSplit ? split : { [palette[outcome.index] ?? palette[0]]: amount };
+  const counts = validSplit
+    ? split
+    : { [optionAt(palette, outcome, 'resolve.addManaFromAbility')]: amount };
   const produced: ManaEntry[] = [];
   for (const sym of palette) {
     for (let i = 0; i < (counts[sym] ?? 0); i++) {

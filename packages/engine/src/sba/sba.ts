@@ -21,6 +21,7 @@ import {
 import { computeTargetOptions, withinTotalManaValue } from '../actions/legal';
 import type { Ability, Effect } from '../cards/ability';
 import type { GameGen } from '../decisions';
+import { optionAt } from '../decisions';
 import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
 import { debug, emit } from '../log/log';
@@ -646,7 +647,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
           description: abilityModeLabel(modes, candidate),
         })),
       };
-      selection = selections[outcome.index] ?? selection;
+      selection = optionAt(selections, outcome, 'sba.pushTriggerOnStack.modes');
     }
     ability = abilityForModes(trigger.ability, selection);
     activeSlots = abilityModeTargetSlots(modes, selection);
@@ -880,7 +881,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
             `${describeTargetForLog(ctx, targetId)}?`,
           options: choices.map((n) => ({ type: 'assignDamage', description: `${n}` })),
         };
-        const amount = choices[outcome.index] ?? 1;
+        const amount = optionAt(choices, outcome, 'sba.pushTriggerOnStack.division');
         divisionAmounts[targetId] = amount;
         remaining -= amount;
       }
