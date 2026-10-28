@@ -380,6 +380,30 @@ describe('DiplomacyTable — keeping, breaking and ending deals', () => {
     }
   });
 
+  it("charges a skipped attack even when the other side's promise became impossible", () => {
+    const w = world();
+    // Only P3 answers offers, so no other deal crowds this one out.
+    const table = setup(w, (seat) => seat === 'P3');
+    runTurns(table, w, 1, 2);
+    const outcome = table.offer({
+      proposer: 'P1',
+      to: 'P3',
+      rounds: 1,
+      obligations: [
+        { kind: 'attackPlayer', by: 'P1', target: 'P4' },
+        { kind: 'attackPlayer', by: 'P3', target: 'P4' },
+      ],
+    });
+    expect(outcome.kind).toBe('accepted');
+    if (outcome.kind !== 'accepted') return;
+    // P3 skips its turn-3 attack with attackers on board; P1 loses its creatures before turn 5.
+    runTurns(table, w, 3, 4);
+    w.battlefield = w.battlefield.filter((p) => p.controller !== 'P1');
+    runTurns(table, w, 5, 6);
+    expect(outcome.deal.status).toBe('broken');
+    expect(outcome.deal.breachedBy).toBe('P3');
+  });
+
   it('ends a deal void when the promised attack could never be made, charging nobody', () => {
     const { w, table, deal } = withDeal();
     const owed = deal.obligations.find((o) => o.kind === 'attackPlayer')!;

@@ -518,15 +518,17 @@ export class DiplomacyTable {
         continue;
       }
       if (deal.parties.every((p) => (record.turnsTaken.get(p) ?? 0) >= deal.rounds)) {
-        const unmet = deal.obligations.find(
+        const unmet = deal.obligations.filter(
           (o, i) => o.kind === 'attackPlayer' && !record.met.has(i) && !record.freed.has(o.by),
         );
         // A promised attack skipped by a seat that had attackers is a breach: holding creatures
-        // back, or tapping them before combat, is not a way out. One that could never be made
-        // ends the deal void.
-        if (unmet !== undefined && record.couldAttack.has(unmet.by)) {
-          this.breach(record, unmet, turn);
-        } else if (unmet !== undefined) {
+        // back, or tapping them before combat, is not a way out. Only when every unmet one could
+        // never have been made does the deal end void: one impossible promise does not hide the
+        // other party's skipped one.
+        const skipped = unmet.find((o) => record.couldAttack.has(o.by));
+        if (skipped !== undefined) {
+          this.breach(record, skipped, turn);
+        } else if (unmet.length > 0) {
           this.end(record, 'void', turn, 'unmet');
         } else {
           this.end(record, 'kept', turn);
