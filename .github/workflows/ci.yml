@@ -166,6 +166,12 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup-bun-deps
       - run: bun run test:card-gate
+      # Lists that may shrink but must not grow, compared with the pull request's base (or a push's
+      # `before` SHA); the script falls back to HEAD's first parent as the promotion check does.
+      - name: Check ratchets
+        env:
+          RATCHET_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: bun run check:ratchets
       - run: bun run snapshots:check
       - run: bun run test:primitive-contracts --output test-results/primitive-contracts
       - run: >-

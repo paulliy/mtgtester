@@ -21,6 +21,8 @@ describe('mandatory card CI gate', () => {
   it('runs the offline gate and both authored-data snapshot checks', () => {
     expect(workflow).toContain('bun run test:card-gate');
     expect(workflow).toContain('bun run snapshots:check');
+    expect(workflow).toContain('bun run check:ratchets');
+    expect(packageJson.scripts['test:card-gate']).toContain('check:suite-integrity');
     expect(packageJson.scripts['snapshots:check']).toContain('snapshot-interpret-defs.ts --check');
     expect(packageJson.scripts['snapshots:check']).toContain('snapshot-override-defs.ts --check');
   });

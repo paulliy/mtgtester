@@ -12,6 +12,8 @@
     "../card-capability-impact.ts",
     "../check-primitive-promotions.ts",
     "../check-suite-integrity.ts",
+    "../check-ratchets.ts",
+    "../generate-card-name-slugs.ts",
     "../run-pr08-verification.ts",
     "../pr08-verification-report.ts"
   ]
