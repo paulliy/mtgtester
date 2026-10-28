@@ -1001,6 +1001,8 @@ export interface GameContext {
   enteringTogether?: ReadonlySet<CardId>;
   /** Set while an activation's costs are paid: the life paid as part of them (Verrak). */
   costLifePaid?: { amount: number };
+  /** Copied from `GameConfig.strictInvariants`: rethrow invariant failures instead of halting. */
+  strictInvariants?: boolean;
 }
 
 /** Internal debug log entry (brief §13) — separate from the replayable `GameEvent` log. */
@@ -1047,6 +1049,11 @@ export interface GameConfig {
    * produce yet. Not used in production paths.
    */
   customDefinitions?: CardDefinition[];
+  /**
+   * Test hook (ADR 0034 decision 2): rethrow `EngineInvariantError` instead of halting, so a
+   * failing test points at the line responsible. Never set in production paths.
+   */
+  strictInvariants?: boolean;
 }
 
 export type { GameEvent };

@@ -239,6 +239,9 @@ export function gameConfig(
     ...(overrides?.customDefinitions !== undefined
       ? { customDefinitions: overrides.customDefinitions }
       : {}),
+    ...(overrides?.strictInvariants !== undefined
+      ? { strictInvariants: overrides.strictInvariants }
+      : {}),
   };
 }
 
@@ -442,14 +445,23 @@ export function whenChoose(spec: {
   };
 }
 
-/** Drive an engine to completion with one provider answering every seat. */
+/**
+ * Drive an engine to completion with one provider answering every seat. A halted result fails
+ * the test (ADR 0034) unless the test is about halting and passes `allowHalt`.
+ */
 export function drive(
   engine: Engine,
   provider: RuleBasedProvider,
+  { allowHalt = false }: { allowHalt?: boolean } = {},
 ): import('@mtg/shared').GameResult {
   for (let i = 0; i < 200_000; i++) {
     const step = engine.advance();
-    if (step.kind === 'gameOver') return step.result;
+    if (step.kind === 'gameOver') {
+      if (step.result.halted && !allowHalt) {
+        throw new Error(`drive(): the game halted: ${step.result.haltReason ?? 'no reason'}`);
+      }
+      return step.result;
+    }
     if (step.kind === 'continue') continue;
     engine.submit(provider.decide(step.request));
   }

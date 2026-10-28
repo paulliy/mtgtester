@@ -81,6 +81,9 @@ export interface HaltInfo {
   reason: string;
   turn: number;
   cardName?: string;
+  /** The engine site that raised an invariant halt, with the seed to reproduce it (ADR 0034). */
+  site?: string;
+  seed?: string;
 }
 
 /**
@@ -591,6 +594,7 @@ export class MatchRunner {
         kind: classifyHalt(result.haltReason),
         reason: result.haltReason ?? 'engine halted',
         turn: result.turnCount,
+        ...(result.haltSite !== undefined && { site: result.haltSite, seed: this.opts.seed }),
       });
       return;
     }

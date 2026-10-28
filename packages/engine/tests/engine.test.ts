@@ -82,7 +82,7 @@ describe('Engine driver (brief §5.1)', () => {
       ),
     ];
     const engine = makeEngine(pod, { seed: 'halt-1' });
-    const result = drive(engine, new RuleBasedProvider([]));
+    const result = drive(engine, new RuleBasedProvider([]), { allowHalt: true });
     expect(result.halted).toBe(true);
     expect(result.haltReason).toContain('Mystery Box');
   });

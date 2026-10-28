@@ -27,7 +27,12 @@ import type {
 import { describeDamageSplit } from './combat/combat';
 import type { DecisionOutcome, GameGen, PendingDecision } from './decisions';
 import { forcedOutcome, isForced } from './decisions';
-import { EngineUsageError, IllegalDecisionError, UnmodeledCardError } from './errors';
+import {
+  EngineInvariantError,
+  EngineUsageError,
+  IllegalDecisionError,
+  UnmodeledCardError,
+} from './errors';
 import { playGame, playPreparedScenario } from './flow/game';
 import { debug, emit, settleSpectatorSnapshot } from './log/log';
 import { createGame } from './state/game';
@@ -190,6 +195,21 @@ export class Engine implements EngineDriver {
           turnCount: this.ctx.state.turnNumber,
           halted: true,
           haltReason: err.message,
+        };
+        return { kind: 'gameOver', result: this.finished };
+      }
+      if (err instanceof EngineInvariantError && this.ctx.strictInvariants !== true) {
+        // An authoring or engine bug: halt with the site so the record names it (ADR 0034).
+        emit(this.ctx, 'engineHalt', { reason: err.message, site: err.site });
+        debug(this.ctx, 'engine', `ENGINE HALT: ${err.message}`);
+        this.finished = {
+          gameId: this.ctx.state.gameId,
+          winnerSeat: null,
+          finishingOrder: [...this.ctx.state.eliminatedPlayers],
+          turnCount: this.ctx.state.turnNumber,
+          halted: true,
+          haltReason: err.message,
+          haltSite: err.site,
         };
         return { kind: 'gameOver', result: this.finished };
       }

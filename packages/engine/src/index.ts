@@ -50,7 +50,12 @@ export type {
 export { IMPLEMENTED_KEYWORDS } from './cards/definition';
 
 // Errors.
-export { IllegalDecisionError, EngineUsageError, UnmodeledCardError } from './errors';
+export {
+  EngineInvariantError,
+  EngineUsageError,
+  IllegalDecisionError,
+  UnmodeledCardError,
+} from './errors';
 
 // Seeded PRNG (exposed for providers/tests; the engine owns its own instance).
 export { Prng } from './rng/prng';

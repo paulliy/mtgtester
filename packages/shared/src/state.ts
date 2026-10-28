@@ -77,4 +77,6 @@ export interface GameResult {
   /** True if the engine stopped at a probable-bug/draw state instead of a clean win (brief §4). */
   halted: boolean;
   haltReason: string | null;
+  /** For a halt on an engine invariant (ADR 0034 decision 2): the code site that raised it. */
+  haltSite?: string;
 }

@@ -163,5 +163,11 @@ export function createGame(config: GameConfig): GameContext {
     turnCap: config.turnCap ?? DEFAULT_TURN_CAP,
   };
 
-  return { state, defs, rng: new Prng(config.seed), debugLog: [] };
+  return {
+    state,
+    defs,
+    rng: new Prng(config.seed),
+    debugLog: [],
+    ...(config.strictInvariants === true && { strictInvariants: true }),
+  };
 }

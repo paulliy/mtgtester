@@ -39,3 +39,19 @@ export class EngineUsageError extends Error {
     this.name = 'EngineUsageError';
   }
 }
+
+/**
+ * Thrown where the engine reaches a state a validated card definition cannot produce: an
+ * authoring or engine bug, never a rules outcome (ADR 0034 decision 2). `site` names the code
+ * that raised it. `Engine.advance` turns it into a halted `GameResult` that keeps the site, or
+ * rethrows it under `GameConfig.strictInvariants` so a failing test points at the line.
+ */
+export class EngineInvariantError extends Error {
+  readonly site: string;
+
+  constructor(site: string, message: string) {
+    super(`Engine invariant violated at ${site}: ${message}`);
+    this.name = 'EngineInvariantError';
+    this.site = site;
+  }
+}
