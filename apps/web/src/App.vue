@@ -45,6 +45,7 @@ onUnmounted(() => {
       <RouterLink to="/debug">Debug</RouterLink>
       <RouterLink to="/batch">Batch</RouterLink>
       <RouterLink v-if="showCardTestLab" to="/card-test-lab">Card Test Lab</RouterLink>
+      <RouterLink v-if="showCardTestLab" to="/deals-preview">Deals</RouterLink>
       <!-- The board view fills this with the game's status (round, phase, priority) via a
            Teleport, so the board itself keeps the space a second header bar would take. -->
       <div id="top-bar-status" class="status-slot" />

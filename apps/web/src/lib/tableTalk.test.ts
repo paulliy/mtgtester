@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Deal, TableMessage, TableTalkLine } from '@mtg/shared';
-import { dealLinesFor, dealsInForce, mergeTalk } from './tableTalk';
+import { dealLinesFor, dealsInForce, describeObligation, mergeTalk } from './tableTalk';
 
 const deal: Deal = {
   id: 'deal-1',
@@ -98,5 +98,23 @@ describe('mergeTalk', () => {
   it('keeps lines sharing an anchor in history order and drops duplicates', () => {
     const live = [talk[1]!];
     expect(mergeTalk([talk[0]!, talk[1]!], live)).toEqual([talk[0], talk[1]]);
+  });
+});
+
+describe("describeObligation from the viewer's seat", () => {
+  const you = (seat: string) => (seat === 'P1' ? 'You' : seat);
+  it('reads "you" as a person, not a seat name', () => {
+    expect(describeObligation({ kind: 'attackPlayer', by: 'P1', target: 'P4' }, you)).toBe(
+      'You attack P4',
+    );
+    expect(describeObligation({ kind: 'noAttack', by: 'P3', against: 'P1' }, you)).toBe(
+      "P3 won't attack you",
+    );
+    expect(describeObligation({ kind: 'noCounter', by: 'P3', against: 'P1' }, you)).toBe(
+      "P3 won't counter your spells",
+    );
+    expect(describeObligation({ kind: 'attackPlayer', by: 'P3', target: 'P1' }, you)).toBe(
+      'P3 attacks you',
+    );
   });
 });

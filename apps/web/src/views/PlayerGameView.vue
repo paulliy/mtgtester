@@ -2182,6 +2182,15 @@ function abandon(): void {
       @confirm="passAnyway"
     />
     <ConfirmDialog
+      v-if="store.dealWarning"
+      title="This may break a deal"
+      :message="`${store.dealWarning.messages.join(' ')} Everyone at the table sees a broken deal.`"
+      confirm-label="Do it anyway"
+      cancel-label="Go back"
+      @cancel="store.cancelDealWarning()"
+      @confirm="store.confirmDealWarning()"
+    />
+    <ConfirmDialog
       v-if="confirmingAbandon"
       title="Abandon match?"
       message="Your current game will end and cannot be resumed."

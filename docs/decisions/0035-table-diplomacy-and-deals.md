@@ -328,8 +328,12 @@ All weights live in `WEIGHTS.deals` in `packages/bot/src/weights.ts`, in life-eq
 ## Consequences
 
 - Default behavior, fixed-seed games, and every existing snapshot are unchanged.
-- A human is judged like any seat, but the player view does not yet warn before an action that
-  would break one of the player's deals; the deal panel lists them instead.
+- A human is judged like any seat. The player view warns before an action that may break one of
+  the player's deals (a chosen target owned by a seat it promised to spare, or an attack that
+  leaves out a seat it promised to attack) and sends it only once confirmed. The warning mirrors
+  the table's rules from the player's own board and errs towards warning: it does not know which
+  breaches the table would excuse as self-defense. `/deals-preview` (development builds) shows the
+  panel and the warning with sample data and no game.
 - An offer to a human lapses when the next turn starts. In a fast game that is a short window,
   chosen over holding the bots: the engine never waits on an answer.
 - A bot accepts a one-sided ask whenever its own estimate says the redirection is worth it to

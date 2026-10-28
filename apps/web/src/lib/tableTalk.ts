@@ -103,15 +103,20 @@ export function describeObligation(
   name: (seat: PlayerId) => string = (seat) => seat,
 ): string {
   const by = name(o.by);
+  // A seat the viewer calls "you" reads as the sentence's object in lower case, and "you" takes
+  // the plain verb: "you attack P4", "P3 won't attack you", "your spells".
+  const them = (seat: PlayerId) => (name(seat) === 'You' ? 'you' : name(seat));
   switch (o.kind) {
     case 'noAttack':
-      return `${by} won't attack ${name(o.against)}`;
+      return `${by} won't attack ${them(o.against)}`;
     case 'noTarget':
-      return `${by} won't target ${name(o.against)}`;
-    case 'noCounter':
-      return `${by} won't counter ${name(o.against)}'s spells`;
+      return `${by} won't target ${them(o.against)}`;
+    case 'noCounter': {
+      const whose = them(o.against);
+      return `${by} won't counter ${whose === 'you' ? 'your' : `${whose}'s`} spells`;
+    }
     case 'attackPlayer':
-      return `${by} attacks ${name(o.target)}`;
+      return `${by} ${by === 'You' ? 'attack' : 'attacks'} ${them(o.target)}`;
   }
 }
 

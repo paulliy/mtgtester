@@ -41,6 +41,7 @@ import { resetBoardAnchors } from '../composables/useBoardAnchors';
 import { resetCombatStrikes } from '../composables/useCombatStrikes';
 import { pushRecentId, readRecentIds, saveRecentIds } from '../lib/recentSetup';
 import { dealsInForce, mergeTalk } from '../lib/tableTalk';
+import { dealWarnings } from '../lib/dealWarnings';
 
 /** Log lines kept in memory. A long game emits thousands; the scroller only shows the tail. */
 const MAX_LOG_LINES = 4_000;
@@ -177,8 +178,19 @@ export const useGameStore = defineStore('game', () => {
   const dealDraft = ref<DealDraftPayload | null>(null);
   const dealDraftPending = ref(false);
 
+  /**
+   * An action held back because it may break one of the player's deals (ADR 0035): the player
+   * confirms it (`confirmDealWarning`) or goes back and chooses again (`cancelDealWarning`).
+   */
+  const dealWarning = ref<{
+    actionId: number;
+    targets?: TargetChoice[];
+    messages: string[];
+  } | null>(null);
+
   function resetDiplomacySeat(): void {
     diplomacySeat.value = null;
+    dealWarning.value = null;
     lastDealOutcome.value = null;
     dealDraft.value = null;
     dealDraftPending.value = false;
@@ -469,6 +481,13 @@ export const useGameStore = defineStore('game', () => {
         break;
 
       case 'playerActionRequired':
+        // A held warning belongs to the decision it was raised on, never a later one.
+        if (
+          dealWarning.value !== null &&
+          message.payload.request.requestId !== playerAction.value?.request.requestId
+        ) {
+          dealWarning.value = null;
+        }
         playerState.value = message.payload.state;
         playerAction.value = message.payload;
         playerRevision.value = message.payload.revision;
@@ -739,9 +758,28 @@ export const useGameStore = defineStore('game', () => {
     heldDecision.value = null;
   }
 
-  function submitPlayerAction(actionId: number, targets?: TargetChoice[]): void {
+  function submitPlayerAction(
+    actionId: number,
+    targets?: TargetChoice[],
+    options: { dealConfirmed?: boolean } = {},
+  ): void {
     const pending = playerAction.value;
     if (pending === null) return;
+    const seat = diplomacySeat.value;
+    if (options.dealConfirmed !== true && seat !== null && humanSeat.value !== null) {
+      const messages = dealWarnings(
+        humanSeat.value,
+        seat.deals,
+        pending.request.legalActions.find((action) => action.id === actionId),
+        targets,
+        pending.state,
+      );
+      if (messages.length > 0) {
+        dealWarning.value = { actionId, ...(targets !== undefined ? { targets } : {}), messages };
+        return;
+      }
+    }
+    dealWarning.value = null;
     const type = pending.request.legalActions.find((action) => action.id === actionId)?.type;
     if (type !== 'pass' && type !== 'passAndYieldTurn') {
       lastPlayerActionSequence.value = log.value.at(-1)?.sequence ?? null;
@@ -755,6 +793,16 @@ export const useGameStore = defineStore('game', () => {
         ...(targets !== undefined && targets.length > 0 ? { targets } : {}),
       },
     });
+  }
+
+  function confirmDealWarning(): void {
+    const warning = dealWarning.value;
+    if (warning === null) return;
+    submitPlayerAction(warning.actionId, warning.targets, { dealConfirmed: true });
+  }
+
+  function cancelDealWarning(): void {
+    dealWarning.value = null;
   }
 
   function yieldPlayerAbility(actionId: number, mode: 'always' | 'smart' = 'always'): void {
@@ -901,6 +949,9 @@ export const useGameStore = defineStore('game', () => {
     setReducedMotion,
     resolveHeldDecision,
     submitPlayerAction,
+    dealWarning,
+    confirmDealWarning,
+    cancelDealWarning,
     yieldPlayerAbility,
     resumePlayerAbility,
     cancelYield,

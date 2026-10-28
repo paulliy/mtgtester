@@ -631,6 +631,73 @@ describe('store — deals with the human seat (ADR 0035 phase 3)', () => {
     inbound?.(podGameStarted('g1'));
   });
 
+  it('holds an action that may break a deal until the player confirms it', () => {
+    store.humanSeat = 'P1';
+    inbound?.({
+      type: 'diplomacyState',
+      payload: {
+        gameId: 'g1',
+        state: {
+          ...seatState,
+          deals: [
+            {
+              id: 'deal-1',
+              proposer: 'P2',
+              parties: ['P2', 'P1'],
+              obligations: [{ kind: 'noAttack', by: 'P1', against: 'P2' }],
+              proposedTurn: 1,
+              rounds: 1,
+              status: 'active',
+            },
+          ],
+        },
+      },
+    });
+    store.playerAction = {
+      request: {
+        requestId: 'r9',
+        legalActions: [
+          {
+            id: 4,
+            type: 'attackDeclaration',
+            description: 'Declare attackers',
+            targets: [{ slot: 0, options: ['P2', 'P3'] }],
+          },
+        ],
+      },
+      revision: 2,
+      state: { seats: [{ seat: 'P2', graveyard: [] }], battlefield: [], stack: [] },
+    } as never;
+    sent.length = 0;
+
+    store.submitPlayerAction(4, [{ slot: 0, choice: 'P2' }]);
+    expect(sent).toEqual([]);
+    expect(store.dealWarning?.messages[0]).toContain('not to attack P2');
+
+    store.cancelDealWarning();
+    expect(store.dealWarning).toBeNull();
+    expect(sent).toEqual([]);
+
+    store.submitPlayerAction(4, [{ slot: 0, choice: 'P3' }]);
+    expect(sent.map((m) => m.type)).toEqual(['submitPlayerAction']);
+
+    sent.length = 0;
+    store.submitPlayerAction(4, [{ slot: 0, choice: 'P2' }]);
+    store.confirmDealWarning();
+    expect(sent).toEqual([
+      {
+        type: 'submitPlayerAction',
+        payload: {
+          requestId: 'r9',
+          actionId: 4,
+          revision: 2,
+          targets: [{ slot: 0, choice: 'P2' }],
+        },
+      },
+    ]);
+    expect(store.dealWarning).toBeNull();
+  });
+
   it('keeps the table state and the outcome of the last answer', () => {
     inbound?.({
       type: 'diplomacyState',
