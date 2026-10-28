@@ -136,6 +136,7 @@ const SOURCE_FILES = [
   'packages/bot/src/combat-snapshot.ts',
   'packages/bot/src/diplomacy/compliance.ts',
   'packages/bot/src/diplomacy/estimate.ts',
+  'packages/bot/src/diplomacy/exploiter.ts',
   'packages/bot/src/diplomacy/index.ts',
   'packages/bot/src/diplomacy/play.ts',
   'packages/bot/src/diplomacy/propose.ts',
