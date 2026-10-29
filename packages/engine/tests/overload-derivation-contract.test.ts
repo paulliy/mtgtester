@@ -372,7 +372,7 @@ describe('guarded Overload lowering and casting', () => {
 });
 
 it.each([false, true])(
-  'damn-simultaneous-indestructible is independent of battlefield order %s',
+  'damn-simultaneous-indestructible — is independent of battlefield order %s',
   (reverse) => {
     const state = setup('Damn');
     const pin = JSON.parse(

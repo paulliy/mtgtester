@@ -194,7 +194,7 @@ function setup(input?: OracleCard, printedFaceCost = '{0}') {
 }
 
 describe('independent selected spell face contracts', () => {
-  it('face-pronoun-scope rejects an unbound spell pronoun instead of untapping its source', () => {
+  it('face-pronoun-scope — rejects an unbound spell pronoun instead of untapping its source', () => {
     expect(
       interpretCard(
         oracle({
@@ -221,7 +221,7 @@ describe('independent selected spell face contracts', () => {
     expect(card.backFace?.oracleText).toBeTruthy();
   });
 
-  it('face-stack-characteristics uses selected types, colors, mana value and public name', () => {
+  it('face-stack-characteristics — uses selected types, colors, mana value and public name', () => {
     const state = setup(undefined, '{2}{R}');
     addMana(state.player, [{ symbol: 'C' }, { symbol: 'C' }, { symbol: 'R' }]);
     const target = spawn(state.ctx, 'P2', bear());
@@ -254,7 +254,7 @@ describe('independent selected spell face contracts', () => {
     expect(entry.card?.name).toBe('Face contract dragon');
   });
 
-  it('face-protection uses selected colors at announcement and resolution', () => {
+  it('face-protection — uses selected colors at announcement and resolution', () => {
     const state = setup();
     const target = spawn(state.ctx, 'P2', bear());
     const def = state.ctx.defs.get(target.oracleId)!;
@@ -306,7 +306,7 @@ describe('independent selected spell face contracts', () => {
     expect(state.ctx.state.exile).toEqual([]);
   });
 
-  it('face-restricted-mana cannot spend creature-only mana on the spell half', () => {
+  it('face-restricted-mana — cannot spend creature-only mana on the spell half', () => {
     const state = setup(undefined, '{1}');
     spawn(state.ctx, 'P2', bear());
     addMana(state.player, [
@@ -326,7 +326,7 @@ describe('independent selected spell face contracts', () => {
     expect(state.player.manaEntries).toEqual([]);
   });
 
-  it('face-reduction matches the selected face rather than the front Dragon', () => {
+  it('face-reduction — matches the selected face rather than the front Dragon', () => {
     const state = setup(undefined, '{2}');
     const target = spawn(state.ctx, 'P2', bear());
     const reducer = spawn(state.ctx, 'P1', oracle({ name: 'Face reducer', typeLine: 'Artifact' }));
@@ -346,7 +346,7 @@ describe('independent selected spell face contracts', () => {
     expect(state.player.manaEntries).toEqual([]);
   });
 
-  it('face-cast-triggers count a noncreature spell and capture its own mana value', () => {
+  it('face-cast-triggers — count a noncreature spell and capture its own mana value', () => {
     const state = setup(undefined, '{1}');
     addMana(state.player, [{ symbol: 'C' }]);
     const target = spawn(state.ctx, 'P2', bear());
@@ -446,7 +446,7 @@ describe('independent selected spell face contracts', () => {
   });
 
   it.each(['copyTargetSpell', 'copyEachTargetedSpell'] as const)(
-    'face-copy %s retains original spell characteristics after a differently colored spell copies it',
+    'face-copy — %s retains original spell characteristics after a differently colored spell copies it',
     (op) => {
       const state = setup();
       const target = spawn(
@@ -563,7 +563,7 @@ describe('independent selected spell face contracts', () => {
   });
 
   it.each(faceCases)(
-    'face-canonical-normal-path executes the declared spell clause for $name',
+    'face-canonical-normal-path — executes the declared spell clause for $name',
     (expected: FaceExpectation) => {
       const input = pinned.cards.find((row) => row.card.name.startsWith(expected.name))!.card;
       const state = setup(input);
@@ -686,46 +686,49 @@ describe('independent selected spell face contracts', () => {
     },
   );
 
-  it.each(faceCases)('face-canonical-front-path casts the ordinary front of $name', ({ name }) => {
-    const input = pinned.cards.find((row) => row.card.name.startsWith(name))!.card;
-    const state = setup(input);
-    plentifulMana(state.player);
-    const kind = input.types.includes('Land') ? 'playLand' : 'castSpell';
-    const option = computePriorityOptions(state.ctx, state.player).find((option) => {
-      const payload = option.payload as {
-        kind: string;
-        objectId?: string;
-        alternativeCast?: string;
-      };
-      return (
-        payload.kind === kind &&
-        payload.objectId === state.card.id &&
-        payload.alternativeCast === undefined
+  it.each(faceCases)(
+    'face-canonical-front-path — casts the ordinary front of $name',
+    ({ name }) => {
+      const input = pinned.cards.find((row) => row.card.name.startsWith(name))!.card;
+      const state = setup(input);
+      plentifulMana(state.player);
+      const kind = input.types.includes('Land') ? 'playLand' : 'castSpell';
+      const option = computePriorityOptions(state.ctx, state.player).find((option) => {
+        const payload = option.payload as {
+          kind: string;
+          objectId?: string;
+          alternativeCast?: string;
+        };
+        return (
+          payload.kind === kind &&
+          payload.objectId === state.card.id &&
+          payload.alternativeCast === undefined
+        );
+      });
+      expect(option).toBeDefined();
+      pump(
+        applyPriorityAction(state.ctx, state.player, option!.payload as PriorityActionPayload, {
+          index: 0,
+          targets: new Map(),
+        }),
       );
-    });
-    expect(option).toBeDefined();
-    pump(
-      applyPriorityAction(state.ctx, state.player, option!.payload as PriorityActionPayload, {
-        index: 0,
-        targets: new Map(),
-      }),
-    );
-    if (kind === 'castSpell') pump(resolveTopOfStack(state.ctx));
-    const permanent = state.ctx.state.battlefield.find(
-      (permanent) => permanent.cardId === state.card.cardId,
-    )!;
-    expect(permanent).toBeDefined();
-    const chars = computeCharacteristics(state.ctx, permanent);
-    expect(chars.types).toEqual(input.types);
-    expect(chars.colors).toEqual(input.colors);
-    if (input.power !== null && /^\d+$/.test(input.power))
-      expect(chars.power).toBe(Number(input.power));
-    if (input.toughness !== null && /^\d+$/.test(input.toughness))
-      expect(chars.toughness).toBe(Number(input.toughness));
-  });
+      if (kind === 'castSpell') pump(resolveTopOfStack(state.ctx));
+      const permanent = state.ctx.state.battlefield.find(
+        (permanent) => permanent.cardId === state.card.cardId,
+      )!;
+      expect(permanent).toBeDefined();
+      const chars = computeCharacteristics(state.ctx, permanent);
+      expect(chars.types).toEqual(input.types);
+      expect(chars.colors).toEqual(input.colors);
+      if (input.power !== null && /^\d+$/.test(input.power))
+        expect(chars.power).toBe(Number(input.power));
+      if (input.toughness !== null && /^\d+$/.test(input.toughness))
+        expect(chars.toughness).toBe(Number(input.toughness));
+    },
+  );
 
   it.each(faceCases)(
-    'face-canonical-no-mana rejects an unpaid spell half for $name',
+    'face-canonical-no-mana — rejects an unpaid spell half for $name',
     ({ name }) => {
       const input = pinned.cards.find((row) => row.card.name.startsWith(name))!.card;
       const state = setup(input);
@@ -760,16 +763,19 @@ describe('independent selected spell face contracts', () => {
         !faceCases.some((expected) => row.card.name.startsWith(expected.name)) &&
         !authoredFaces.includes(row.card.name),
     ),
-  )('face-unparsed-clause-contained rejects the normal path for $card.name', ({ card: input }) => {
-    const definition = interpretCard(input);
-    expect(definition.modeled).toBe(false);
-    expect(definition.unmodeledReasons.join('; ')).toContain(input.backFace!.name);
-    const state = setup(input);
-    expect(() => state.options()).toThrow('Unmodeled card');
-  });
+  )(
+    'face-unparsed-clause-contained — rejects the normal path for $card.name',
+    ({ card: input }) => {
+      const definition = interpretCard(input);
+      expect(definition.modeled).toBe(false);
+      expect(definition.unmodeledReasons.join('; ')).toContain(input.backFace!.name);
+      const state = setup(input);
+      expect(() => state.options()).toThrow('Unmodeled card');
+    },
+  );
 });
 
-it('face-commander-tax offers and casts Easy Pickings from the command zone with tax', () => {
+it('face-commander-tax — offers and casts Easy Pickings from the command zone with tax', () => {
   const input = pinned.cards.find(({ card }) => card.name.startsWith('Glóin the Mighty'))!.card;
   const state = setup(input);
   state.player.hand.splice(state.player.hand.indexOf(state.card), 1);
@@ -797,7 +803,7 @@ it('face-commander-tax offers and casts Easy Pickings from the command zone with
 });
 
 it.each(['Foulmire Knight', 'Sagu Wildling'])(
-  'face-impulse-permission pays and resolves the selected face of %s',
+  'face-impulse-permission — pays and resolves the selected face of %s',
   (name) => {
     const input = pinned.cards.find(({ card }) => card.name.startsWith(name))!.card;
     const state = setup(input);

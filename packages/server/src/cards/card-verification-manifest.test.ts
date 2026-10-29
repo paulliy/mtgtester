@@ -46,13 +46,11 @@ describe('card verification manifest', () => {
       ]),
     );
 
-    const testSource = readFileSync(
-      resolve('packages/server/src/cards/card-suite-l1-l3.test.ts'),
-      'utf8',
-    );
-    for (const id of clause.engineTestIds) {
-      expect(testSource, id).toContain(id);
-    }
+    // Its engine tests are the runner scenarios in its committed scenario file.
+    const scenarios = JSON.parse(
+      readFileSync(resolve('packages/engine/tests/scenarios/path-to-exile.json'), 'utf8'),
+    ) as { scenarios: Array<{ id: string }> };
+    expect(clause.engineTestIds).toEqual(scenarios.scenarios.map(({ id }) => id));
     expect(clause.viewerScenarioIds).not.toHaveLength(0);
   });
 

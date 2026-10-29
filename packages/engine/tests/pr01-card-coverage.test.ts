@@ -4998,7 +4998,8 @@ describe('PR01 restoration gate', () => {
         expect(clause.implementation, `${name} implementation`).not.toHaveLength(0);
         expect(clause.engineTestIds, `${name} engine tests`).not.toHaveLength(0);
         expect(clause.viewerScenarioIds, `${name} viewer scenarios`).not.toHaveLength(0);
-        for (const id of clause.engineTestIds) expect(engineSource, id).toContain(`${id} —`);
+        for (const id of clause.engineTestIds)
+          expect(engineSource, id).toContain(`${id.split(' — ')[0]} —`);
         for (const id of clause.viewerScenarioIds) expect(viewerSource, id).toContain(id);
       }
     },

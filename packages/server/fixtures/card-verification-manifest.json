@@ -11,7 +11,6 @@
           "oracleText": "Flying",
           "implementation": ["flying keyword and normal creature cast at {4}{R}{R}{R}"],
           "engineTestIds": [
-            "pins both projections and preserves the same attack event, flying and damage instructions",
             "does not offer the normal cast with only six Mountains",
             "drakuseth-wording-viewer-three-targets casts, attacks, and resolves the printed damage",
             "drakuseth-wording-viewer-decline-others casts, attacks, and resolves the printed damage"
@@ -19,6 +18,9 @@
           "viewerScenarioIds": [
             "drakuseth-wording-viewer-three-targets",
             "drakuseth-wording-viewer-decline-others"
+          ],
+          "contractTestIds": [
+            "pins both projections and preserves the same attack event, flying and damage instructions"
           ]
         },
         {
@@ -29,15 +31,19 @@
             "normal cast, priority, attack declaration and triggered ability resolution"
           ],
           "engineTestIds": [
-            "does not turn damage dealt by another named creature into source damage",
-            "deals 4 to the fixed target and 3 to each of up to two OTHER targets, excluding the fixed pick",
-            "stops early when the controller declines further \"other\" targets",
+            "Drakuseth — 'Drakuseth deals' fixed and other targets > deals 4 to the fixed target and 3 to each of up to two OTHER targets, excluding the fixed pick",
+            "Drakuseth — 'it deals' fixed and other targets > deals 4 to the fixed target and 3 to each of up to two OTHER targets, excluding the fixed pick",
+            "Drakuseth — 'Drakuseth deals' fixed and other targets > stops early when the controller declines further \"other\" targets",
+            "Drakuseth — 'it deals' fixed and other targets > stops early when the controller declines further \"other\" targets",
             "drakuseth-wording-viewer-three-targets casts, attacks, and resolves the printed damage",
             "drakuseth-wording-viewer-decline-others casts, attacks, and resolves the printed damage"
           ],
           "viewerScenarioIds": [
             "drakuseth-wording-viewer-three-targets",
             "drakuseth-wording-viewer-decline-others"
+          ],
+          "contractTestIds": [
+            "does not turn damage dealt by another named creature into source damage"
           ]
         }
       ],
@@ -78,7 +84,7 @@
             "enters tapped",
             "shuffle"
           ],
-          "engineTestIds": ["path-engine-optional-search", "path-engine-normal-cast"],
+          "engineTestIds": ["path-to-exile-search", "path-to-exile-decline-search"],
           "viewerScenarioIds": ["path-viewer-cast-target-resolve"]
         }
       ],
@@ -100,8 +106,6 @@
           ],
           "engineTestIds": [
             "tribute-eligible-artifact-mv2",
-            "tribute-reject-artifact-other-mv",
-            "tribute-reject-nonartifact-mv2",
             "tribute-decline-search",
             "tribute-no-eligible-card",
             "tribute-normal-cast-etb"
@@ -179,7 +183,6 @@
             "nightscape-regeneration-consumed",
             "nightscape-regeneration-expires",
             "nightscape-sacrifice-not-prevented",
-            "nightscape-exile-not-prevented",
             "nightscape-zero-toughness-not-prevented",
             "nightscape-cant-regenerate",
             "nightscape-normal-activation"
@@ -454,7 +457,8 @@
             "cytoplast-pinned-oracle-supported",
             "cytoplast-normal-cast-graft",
             "cytoplast-cast-cost-and-timing",
-            "cytoplast-graft-transfer",
+            "cytoplast-graft-transfer — another creature controlled by P1 receives a counter through the optional trigger",
+            "cytoplast-graft-transfer — another creature controlled by P2 receives a counter through the optional trigger",
             "cytoplast-graft-decline",
             "cytoplast-last-graft-dies"
           ],
@@ -476,7 +480,8 @@
             "cytoplast-activation-costs",
             "cytoplast-counter-removed-before-resolution",
             "cytoplast-source-control-changes-pending",
-            "cytoplast-source-gone-at-resolution",
+            "cytoplast-source-gone-at-resolution — missing source gives no control even when it blinked=false",
+            "cytoplast-source-gone-at-resolution — missing source gives no control even when it blinked=true",
             "cytoplast-target-blink",
             "cytoplast-source-phases"
           ],
@@ -1743,15 +1748,19 @@
             "changing-loyalty-copies-become-aura-tokens",
             "changing-loyalty-copy-may-keep-its-target",
             "changing-loyalty-copies-use-last-known-information",
-            "retains a counted target slot with %i original targets on both copies",
-            "lets a copy keep one counted target and change another to a legal creature",
-            "retargets two copies independently and allows a final-set swap without duplicate targets",
-            "allows a copy to keep an unchanged target that became illegal",
             "changing-loyalty-flash"
           ],
           "viewerScenarioIds": [
             "changing-loyalty-viewer-replicate",
             "changing-loyalty-viewer-replicate-two-original-countered"
+          ],
+          "contractTestIds": [
+            "retains a counted target slot with 0 original targets on both copies",
+            "retains a counted target slot with 1 original targets on both copies",
+            "retains a counted target slot with 2 original targets on both copies",
+            "lets a copy keep one counted target and change another to a legal creature",
+            "retargets two copies independently and allows a final-set swap without duplicate targets",
+            "allows a copy to keep an unchanged target that became illegal"
           ]
         },
         {
@@ -2691,8 +2700,15 @@
           "implementation": ["dynamic commander color-identity life payment"],
           "engineTestIds": [
             "war-room-commander-identity-life-cost",
-            "war-room-dynamic-life-identity-matrix",
-            "war-room-dynamic-life-partner-identity-union",
+            "war-room-dynamic-life-identity-matrix — charges the mono-color identity exactly and draws once",
+            "war-room-dynamic-life-identity-matrix — charges the two-color identity exactly and draws once",
+            "war-room-dynamic-life-identity-matrix — charges the three-color identity exactly and draws once",
+            "war-room-dynamic-life-identity-matrix — charges the four-color identity exactly and draws once",
+            "war-room-dynamic-life-identity-matrix — charges the five-color identity exactly and draws once",
+            "war-room-dynamic-life-partner-identity-union — disjoint partners pay the union, not the sum",
+            "war-room-dynamic-life-partner-identity-union — overlapping partners pay the union, not the sum",
+            "war-room-dynamic-life-partner-identity-union — identical partners pay the union, not the sum",
+            "war-room-dynamic-life-partner-identity-union — colorless plus a mono partner pay the union, not the sum",
             "war-room-dynamic-life-commander-zone-independent",
             "war-room-dynamic-life-insufficient-life",
             "war-room-dynamic-life-colorless-identity-zero",
@@ -2770,7 +2786,8 @@
           ],
           "engineTestIds": [
             "comeuppance-pinned-oracle-supported",
-            "comeuppance-creature-source",
+            "comeuppance-creature-source — combat damage from a creature is prevented and Comeuppance deals that much to that creature, not to its controller",
+            "comeuppance-creature-source — noncombat damage from a creature ability is prevented and reflected to that creature too, and a creature that has left takes nothing and its controller is not hurt instead",
             "comeuppance-order-choice"
           ],
           "viewerScenarioIds": ["comeuppance-viewer-prevent-and-reflect"]
@@ -3111,7 +3128,8 @@
             "humble-defector-normal-cast-unavailable-without-red",
             "humble-defector-normal-cast-rejects-wrong-turn-main-and-combat",
             "humble-defector-activates-after-ready-cast-and-transfers-to-p3",
-            "humble-defector-pending-ability-retains-original-controller-and-target",
+            "humble-defector-pending-ability-retains-original-controller-and-target — temporary controller P2 does not replace the pending ability controller or mask the permanent transfer",
+            "humble-defector-pending-ability-retains-original-controller-and-target — temporary controller P3 does not replace the pending ability controller or mask the permanent transfer",
             "humble-defector-gain-control-target-recipient-preserves-until-eot-and-same-controller"
           ],
           "viewerScenarioIds": ["humble-defector-viewer-draw-then-opponent-takes-control"]
@@ -3168,7 +3186,9 @@
           ],
           "engineTestIds": [
             "selfless-squire-pinned-oracle-supported",
-            "selfless-squire-counters",
+            "selfless-squire-counters — each prevented source puts that many +1/+1 counters on the Squire, once per source: two attackers make two triggers",
+            "selfless-squire-counters — the trigger belongs to the Squire alone: with no shield, a Fog-style combat shield to you still counts, and damage to someone else or to your creature does not",
+            "selfless-squire-counters — Gisela's \"prevent half that damage, rounded up\" is prevention too: with no shield, 3 damage to you is 2 prevented and counted, 1 dealt",
             "selfless-squire-order-choice"
           ],
           "viewerScenarioIds": ["selfless-squire-viewer-prevent-and-grow"]
@@ -3461,7 +3481,9 @@
           ],
           "engineTestIds": [
             "deflecting-palm-pinned-oracle-supported",
-            "deflecting-palm-chosen-source",
+            "deflecting-palm-chosen-source — the chosen creature's combat damage to you is prevented and Deflecting Palm deals that much to its controller, after the combat damage and as itself",
+            "deflecting-palm-chosen-source — damage from a different source is not prevented, and the shield is still there for the chosen one",
+            "deflecting-palm-chosen-source — a chosen spell on the stack is prevented and reflected to its controller, and the choice also offers permanents",
             "deflecting-palm-one-shot",
             "deflecting-palm-this-turn",
             "deflecting-palm-new-object",
@@ -3477,7 +3499,9 @@
           ],
           "engineTestIds": [
             "deflecting-palm-pinned-oracle-supported",
-            "deflecting-palm-chosen-source",
+            "deflecting-palm-chosen-source — the chosen creature's combat damage to you is prevented and Deflecting Palm deals that much to its controller, after the combat damage and as itself",
+            "deflecting-palm-chosen-source — damage from a different source is not prevented, and the shield is still there for the chosen one",
+            "deflecting-palm-chosen-source — a chosen spell on the stack is prevented and reflected to its controller, and the choice also offers permanents",
             "deflecting-palm-reflection-target",
             "deflecting-palm-order-choice"
           ],
@@ -3858,7 +3882,11 @@
           "id": "mob-rule-mode-announcement",
           "oracleText": "Choose one —",
           "implementation": ["announcement-time modal selection"],
-          "engineTestIds": ["mob-rule-normal-cast-modes", "mob-rule-cost-and-timing"],
+          "engineTestIds": [
+            "mob-rule-normal-cast-modes — mode 0 steals exactly its power range, untaps your own creatures too, and expires at cleanup",
+            "mob-rule-normal-cast-modes — mode 1 steals exactly its power range, untaps your own creatures too, and expires at cleanup",
+            "mob-rule-cost-and-timing"
+          ],
           "viewerScenarioIds": ["mob-rule-viewer-large", "mob-rule-viewer-small"]
         },
         {
@@ -3872,7 +3900,8 @@
             "shared cleanup expiry"
           ],
           "engineTestIds": [
-            "mob-rule-normal-cast-modes",
+            "mob-rule-normal-cast-modes — mode 0 steals exactly its power range, untaps your own creatures too, and expires at cleanup",
+            "mob-rule-normal-cast-modes — mode 1 steals exactly its power range, untaps your own creatures too, and expires at cleanup",
             "mob-rule-cost-and-timing",
             "mob-rule-frozen-set"
           ],
@@ -3889,7 +3918,8 @@
             "shared cleanup expiry"
           ],
           "engineTestIds": [
-            "mob-rule-normal-cast-modes",
+            "mob-rule-normal-cast-modes — mode 0 steals exactly its power range, untaps your own creatures too, and expires at cleanup",
+            "mob-rule-normal-cast-modes — mode 1 steals exactly its power range, untaps your own creatures too, and expires at cleanup",
             "mob-rule-cost-and-timing",
             "mob-rule-frozen-set"
           ],
@@ -5103,9 +5133,13 @@
           "engineTestIds": [
             "arcane-denial-pinned-oracle-and-alias",
             "arcane-denial-normal-cast-priority-stack",
-            "arcane-denial-both-draws-fire-at-first-next-upkeep",
+            "arcane-denial-both-draws-fire-at-first-next-upkeep — both triggers fire at P2 upkeep",
+            "arcane-denial-both-draws-fire-at-first-next-upkeep — both triggers fire at P3 upkeep",
+            "arcane-denial-both-draws-fire-at-first-next-upkeep — both triggers fire at P4 upkeep",
             "arcane-denial-fires-once-at-the-first-upkeep-only",
-            "arcane-denial-affected-player-chooses-zero-one-or-two",
+            "arcane-denial-affected-player-chooses-zero-one-or-two — routes draw-0 to the targeted spell controller",
+            "arcane-denial-affected-player-chooses-zero-one-or-two — routes draw-1 to the targeted spell controller",
+            "arcane-denial-affected-player-chooses-zero-one-or-two — routes draw-2 to the targeted spell controller",
             "arcane-denial-short-library-retains-zero-one-two-choice",
             "arcane-denial-illegal-target-schedules-nothing",
             "arcane-denial-uncounterable-target-still-schedules-draws",
@@ -5125,7 +5159,9 @@
           ],
           "engineTestIds": [
             "arcane-denial-schedules-same-next-upkeep-caster-mandatory-draw",
-            "arcane-denial-both-draws-fire-at-first-next-upkeep",
+            "arcane-denial-both-draws-fire-at-first-next-upkeep — both triggers fire at P2 upkeep",
+            "arcane-denial-both-draws-fire-at-first-next-upkeep — both triggers fire at P3 upkeep",
+            "arcane-denial-both-draws-fire-at-first-next-upkeep — both triggers fire at P4 upkeep",
             "arcane-denial-fires-once-at-the-first-upkeep-only",
             "arcane-denial-delayed-routing-clone-hash-hidden-info",
             "arcane-denial-prepared-scenario-deterministic-replay"
@@ -6506,11 +6542,13 @@
           "engineTestIds": [
             "druid-pinned-oracle-supported",
             "druid-all-menus-and-decline",
-            "druid-turn-order",
+            "druid-turn-order — a nonactive controller starts the choices, departed P4=false",
+            "druid-turn-order — a nonactive controller starts the choices, departed P4=true",
             "druid-no-eligible-permanents",
             "druid-duplicate-choice-once",
             "druid-public-choices",
-            "druid-nontargeting",
+            "druid-nontargeting — Shroud does not prevent choosing and destroying the permanent",
+            "druid-nontargeting — Hexproof does not prevent choosing and destroying the permanent",
             "druid-indestructible",
             "druid-regeneration",
             "druid-protection-before-departure",
@@ -7769,7 +7807,9 @@
             "attach before entry triggers",
             "linked exile source incarnation and owner return"
           ],
-          "engineTestIds": ["normally cast Chains of Custody must enter attached"],
+          "engineTestIds": [
+            "a normally cast Chains of Custody must enter attached to the chosen host"
+          ],
           "viewerScenarioIds": ["regression-viewer-aura-attachment"]
         }
       ],
@@ -7785,7 +7825,10 @@
           "implementation": [
             "damage replacement checks source controller, including spell sources"
           ],
-          "engineTestIds": ["Twinflame Tyrant doubles damage only"],
+          "engineTestIds": [
+            "Twinflame Tyrant doubles damage only from its controller (attacker=P1)",
+            "Twinflame Tyrant doubles damage only from its controller (attacker=P2)"
+          ],
           "viewerScenarioIds": ["regression-viewer-damage-source-controller"]
         }
       ],
@@ -7799,7 +7842,10 @@
         {
           "oracleText": "If one or more creature tokens would be created under your control, those tokens plus a 1/1 white Soldier creature token are created instead.",
           "implementation": ["token definition identity includes all copiable characteristics"],
-          "engineTestIds": ["Queen Allenal replacement must not acquire lifelink"],
+          "engineTestIds": [
+            "Queen Allenal replacement must not acquire lifelink (lifelink-first=true)",
+            "Queen Allenal replacement must not acquire lifelink (lifelink-first=false)"
+          ],
           "viewerScenarioIds": ["regression-viewer-token-characteristics"]
         }
       ],
@@ -7816,7 +7862,9 @@
             "resource-aware payment planning",
             "activation ordering before sacrificing a needed source"
           ],
-          "engineTestIds": ["Phyrexian Tower must allow its chosen sacrifice"],
+          "engineTestIds": [
+            "Phyrexian Tower must allow its chosen sacrifice to produce mana first"
+          ],
           "viewerScenarioIds": ["regression-viewer-mana-source-order"]
         }
       ],
@@ -8158,7 +8206,7 @@
             "negate-target-controller-P2",
             "negate-reject-self",
             "negate-spell-only-targets",
-            "Negate-reject-creature"
+            "negate-reject-creature"
           ],
           "viewerScenarioIds": ["negate-viewer-own-counter", "negate-viewer-opponent-counter"]
         }
@@ -8207,7 +8255,7 @@
             "stubborn-denial-target-controller-P2",
             "stubborn-denial-reject-self",
             "stubborn-denial-spell-only-targets",
-            "Stubborn Denial-reject-creature",
+            "stubborn-denial-reject-creature",
             "stubborn-denial-controller-pays-P1",
             "stubborn-denial-controller-pays-P2"
           ],
@@ -8312,7 +8360,7 @@
             "targeted 4 damage to a creature an opponent controls, dealt by the spell"
           ],
           "engineTestIds": [
-            "mizzium-mortars-target",
+            "cards/mini-pilot/mizzium-mortars.test.ts::mizzium-mortars-target",
             "clause 1, negative: only creatures you don't control are offered, and not a hexproof one"
           ],
           "viewerScenarioIds": ["mizzium-mortars-target"]
@@ -8322,7 +8370,7 @@
           "implementation": [
             "authored overload ability: untargeted 4 damage to each creature an opponent controls"
           ],
-          "engineTestIds": ["mizzium-mortars-overload"],
+          "engineTestIds": ["cards/mini-pilot/mizzium-mortars.test.ts::mizzium-mortars-overload"],
           "viewerScenarioIds": ["mizzium-mortars-overload"]
         }
       ],
@@ -8339,7 +8387,7 @@
             "targeted 1 damage to a creature an opponent controls, dealt by the spell"
           ],
           "engineTestIds": [
-            "electrickery-target",
+            "cards/mini-pilot/electrickery.test.ts::electrickery-target",
             "clause 1, negative: your own Squirrel is not offered as a target"
           ],
           "viewerScenarioIds": ["electrickery-target"]
@@ -8349,7 +8397,7 @@
           "implementation": [
             "authored overload ability: untargeted 1 damage to each creature an opponent controls"
           ],
-          "engineTestIds": ["electrickery-overload"],
+          "engineTestIds": ["cards/mini-pilot/electrickery.test.ts::electrickery-overload"],
           "viewerScenarioIds": ["electrickery-overload"]
         }
       ],
@@ -8394,7 +8442,8 @@
           "engineTestIds": [
             "damn-overload-destroys-each-creature-without-regeneration",
             "damn-normal-targets-one-creature-and-prevents-regeneration",
-            "damn-simultaneous-indestructible"
+            "damn-simultaneous-indestructible — is independent of battlefield order false",
+            "damn-simultaneous-indestructible — is independent of battlefield order true"
           ],
           "viewerScenarioIds": ["damn-viewer-normal", "damn-viewer-overload"]
         },
@@ -8450,7 +8499,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["gift-of-the-fae-viewer-normal-face"]
@@ -8478,7 +8528,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["oaken-boon-viewer-normal-face"]
@@ -8540,7 +8591,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["twice-the-rage-viewer-normal-face"]
@@ -8585,10 +8637,12 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana",
-            "free-face",
-            "free-face Cascade limit",
+            "free-face — normal stack resolves the printed alternate of Foulmire Knight",
+            "free-face — Cascade limit 2 excludes Profane Insight even though its front qualifies",
+            "free-face — Cascade limit 3 excludes Profane Insight even though its front qualifies",
             "face-impulse-permission",
             "face-impulse-lab"
           ],
@@ -8740,7 +8794,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["at-the-door-viewer-normal-face"]
@@ -8768,7 +8823,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["desperate-parry-viewer-normal-face"]
@@ -8830,7 +8886,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["shields-might-viewer-normal-face"]
@@ -8858,7 +8915,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["mage-siege-viewer-normal-face"]
@@ -8920,7 +8978,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["scan-the-clouds-viewer-normal-face"]
@@ -8948,7 +9007,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["train-troops-viewer-normal-face"]
@@ -8976,7 +9036,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["battle-display-viewer-normal-face"]
@@ -9072,7 +9133,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana",
             "face-commander-tax"
           ],
@@ -9138,7 +9200,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["usher-to-safety-viewer-normal-face"]
@@ -9200,7 +9263,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana",
             "free-face",
             "face-impulse-permission",
@@ -9248,7 +9312,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["on-alert-viewer-normal-face"]
@@ -9293,7 +9358,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["bring-back-viewer-normal-face"]
@@ -9321,7 +9387,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["cast-off-viewer-normal-face"]
@@ -9417,7 +9484,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["blow-off-steam-viewer-normal-face"]
@@ -9530,7 +9598,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["rider-in-need-viewer-normal-face"]
@@ -9558,7 +9627,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["entropic-cloud-viewer-normal-face"]
@@ -9603,7 +9673,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["ysgards-call-viewer-normal-face"]
@@ -9665,7 +9736,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["ride-the-rails-viewer-normal-face"]
@@ -9684,7 +9756,7 @@
             "Adventure face: destroy target creature with flying; the Adventure exiles it, and Ettercap is cast from exile"
           ],
           "engineTestIds": [
-            "ettercap-web-shot-then-creature",
+            "cards/mini-pilot/ettercap-web-shot.test.ts::ettercap-web-shot-then-creature",
             "Web Shot, negative: a creature without flying is not offered as a target"
           ],
           "viewerScenarioIds": ["ettercap-web-shot-then-creature"]
@@ -9729,7 +9801,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["treats-to-share-viewer-normal-face"]
@@ -9791,7 +9864,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["puny-snack-viewer-normal-face"]
@@ -9836,7 +9910,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["take-a-glance-viewer-normal-face"]
@@ -9864,7 +9939,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["spew-flame-viewer-normal-face"]
@@ -9926,7 +10002,8 @@
             "face-restricted-mana",
             "face-reduction",
             "face-cast-triggers",
-            "face-copy",
+            "face-copy — copyTargetSpell retains original spell characteristics after a differently colored spell copies it",
+            "face-copy — copyEachTargetedSpell retains original spell characteristics after a differently colored spell copies it",
             "face-canonical-no-mana"
           ],
           "viewerScenarioIds": ["sand-augury-viewer-normal-face"]
@@ -9946,8 +10023,9 @@
             "existing first-clause effect",
             "untap the same initially legal target"
           ],
-          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
-          "viewerScenarioIds": ["arachnoid-adaptation-viewer-target-untap"]
+          "engineTestIds": ["target-untap-normal-path"],
+          "viewerScenarioIds": ["arachnoid-adaptation-viewer-target-untap"],
+          "contractTestIds": ["face-pronoun-scope"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -9964,8 +10042,9 @@
             "existing first-clause effect",
             "untap the same initially legal target"
           ],
-          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
-          "viewerScenarioIds": ["riverguards-reflexes-viewer-target-untap"]
+          "engineTestIds": ["target-untap-normal-path"],
+          "viewerScenarioIds": ["riverguards-reflexes-viewer-target-untap"],
+          "contractTestIds": ["face-pronoun-scope"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -9982,8 +10061,9 @@
             "existing first-clause effect",
             "untap the same initially legal target"
           ],
-          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
-          "viewerScenarioIds": ["acrobatic-leap-viewer-target-untap"]
+          "engineTestIds": ["target-untap-normal-path"],
+          "viewerScenarioIds": ["acrobatic-leap-viewer-target-untap"],
+          "contractTestIds": ["face-pronoun-scope"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -10000,8 +10080,9 @@
             "existing first-clause effect",
             "untap the same initially legal target"
           ],
-          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
-          "viewerScenarioIds": ["burst-of-strength-viewer-target-untap"]
+          "engineTestIds": ["target-untap-normal-path"],
+          "viewerScenarioIds": ["burst-of-strength-viewer-target-untap"],
+          "contractTestIds": ["face-pronoun-scope"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -10018,8 +10099,9 @@
             "existing first-clause effect",
             "untap the same initially legal target"
           ],
-          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
-          "viewerScenarioIds": ["vines-of-the-recluse-viewer-target-untap"]
+          "engineTestIds": ["target-untap-normal-path"],
+          "viewerScenarioIds": ["vines-of-the-recluse-viewer-target-untap"],
+          "contractTestIds": ["face-pronoun-scope"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -10036,8 +10118,9 @@
             "existing first-clause effect",
             "untap the same initially legal target"
           ],
-          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
-          "viewerScenarioIds": ["dragonscale-boon-viewer-target-untap"]
+          "engineTestIds": ["target-untap-normal-path"],
+          "viewerScenarioIds": ["dragonscale-boon-viewer-target-untap"],
+          "contractTestIds": ["face-pronoun-scope"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -10054,8 +10137,9 @@
             "existing first-clause effect",
             "untap the same initially legal target"
           ],
-          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
-          "viewerScenarioIds": ["witchs-web-viewer-target-untap"]
+          "engineTestIds": ["target-untap-normal-path"],
+          "viewerScenarioIds": ["witchs-web-viewer-target-untap"],
+          "contractTestIds": ["face-pronoun-scope"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -10072,8 +10156,9 @@
             "existing first-clause effect",
             "untap the same initially legal target"
           ],
-          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
-          "viewerScenarioIds": ["pillar-launch-viewer-target-untap"]
+          "engineTestIds": ["target-untap-normal-path"],
+          "viewerScenarioIds": ["pillar-launch-viewer-target-untap"],
+          "contractTestIds": ["face-pronoun-scope"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -10090,8 +10175,9 @@
             "existing first-clause effect",
             "untap the same initially legal target"
           ],
-          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
-          "viewerScenarioIds": ["bulls-strength-viewer-target-untap"]
+          "engineTestIds": ["target-untap-normal-path"],
+          "viewerScenarioIds": ["bulls-strength-viewer-target-untap"],
+          "contractTestIds": ["face-pronoun-scope"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -10108,8 +10194,9 @@
             "existing first-clause effect",
             "untap the same initially legal target"
           ],
-          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
-          "viewerScenarioIds": ["high-stride-viewer-target-untap"]
+          "engineTestIds": ["target-untap-normal-path"],
+          "viewerScenarioIds": ["high-stride-viewer-target-untap"],
+          "contractTestIds": ["face-pronoun-scope"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -10126,8 +10213,9 @@
             "existing first-clause effect",
             "untap the same initially legal target"
           ],
-          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
-          "viewerScenarioIds": ["wings-of-the-cosmos-viewer-target-untap"]
+          "engineTestIds": ["target-untap-normal-path"],
+          "viewerScenarioIds": ["wings-of-the-cosmos-viewer-target-untap"],
+          "contractTestIds": ["face-pronoun-scope"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -10144,8 +10232,9 @@
             "existing first-clause effect",
             "untap the same initially legal target"
           ],
-          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
-          "viewerScenarioIds": ["tethermages-advantage-viewer-target-untap"]
+          "engineTestIds": ["target-untap-normal-path"],
+          "viewerScenarioIds": ["tethermages-advantage-viewer-target-untap"],
+          "contractTestIds": ["face-pronoun-scope"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -10162,8 +10251,9 @@
             "existing first-clause effect",
             "untap the same initially legal target"
           ],
-          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
-          "viewerScenarioIds": ["vault-skyward-viewer-target-untap"]
+          "engineTestIds": ["target-untap-normal-path"],
+          "viewerScenarioIds": ["vault-skyward-viewer-target-untap"],
+          "contractTestIds": ["face-pronoun-scope"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -10180,8 +10270,9 @@
             "existing first-clause effect",
             "untap the same initially legal target"
           ],
-          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
-          "viewerScenarioIds": ["leaping-ambush-viewer-target-untap"]
+          "engineTestIds": ["target-untap-normal-path"],
+          "viewerScenarioIds": ["leaping-ambush-viewer-target-untap"],
+          "contractTestIds": ["face-pronoun-scope"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -10198,8 +10289,9 @@
             "existing first-clause effect",
             "untap the same initially legal target"
           ],
-          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
-          "viewerScenarioIds": ["escape-from-orthanc-viewer-target-untap"]
+          "engineTestIds": ["target-untap-normal-path"],
+          "viewerScenarioIds": ["escape-from-orthanc-viewer-target-untap"],
+          "contractTestIds": ["face-pronoun-scope"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -10216,8 +10308,9 @@
             "existing first-clause effect",
             "untap the same initially legal target"
           ],
-          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
-          "viewerScenarioIds": ["soldier-on-viewer-target-untap"]
+          "engineTestIds": ["target-untap-normal-path"],
+          "viewerScenarioIds": ["soldier-on-viewer-target-untap"],
+          "contractTestIds": ["face-pronoun-scope"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -10390,7 +10483,8 @@
             "marchesa-viewer-first-zone-no-counter",
             "marchesa-viewer-first-zone-opponent-controlled",
             "marchesa-viewer-first-zone-exiled",
-            "batch-death-first-destination",
+            "batch-death-first-destination — preserves separate identities after stayed",
+            "batch-death-first-destination — preserves separate identities after after registration",
             "marchesa-viewer-simultaneous-deaths"
           ],
           "viewerScenarioIds": [
@@ -10733,7 +10827,8 @@
             "the creature is a choice made on resolution, not a target: a unique least-toughness creature is picked without a prompt, a tie lets the controller choose, and Elite Scaleguard itself is a candidate (it bolsters itself when alone or least tough)"
           ],
           "engineTestIds": [
-            "elite-scaleguard-pinned-oracle-supported",
+            "elite-scaleguard-pinned-oracle-supported — the interpreter models bolster 2 and the defending-player tap trigger",
+            "elite-scaleguard-pinned-oracle-supported — \"one or more creatures attack\" has no single defending player, so it is not read",
             "elite-scaleguard-bolster-least-toughness",
             "elite-scaleguard-bolster-tie-is-a-choice",
             "elite-scaleguard-bolster-itself"
@@ -10748,7 +10843,8 @@
             "the tap target is a creature controlled by the player the attacker is attacking (defendingPlayerIsEventPlayer, target controller eventPlayer), and each such attacker triggers once"
           ],
           "engineTestIds": [
-            "elite-scaleguard-pinned-oracle-supported",
+            "elite-scaleguard-pinned-oracle-supported — the interpreter models bolster 2 and the defending-player tap trigger",
+            "elite-scaleguard-pinned-oracle-supported — \"one or more creatures attack\" has no single defending player, so it is not read",
             "elite-scaleguard-attack-taps-defenders-creature",
             "elite-scaleguard-attack-needs-a-counter",
             "elite-scaleguard-attack-each-attacker"
@@ -10785,7 +10881,8 @@
           ],
           "engineTestIds": [
             "forgotten-ancient-upkeep-divides",
-            "forgotten-ancient-may-move-none",
+            "forgotten-ancient-may-move-none — stopping at once moves nothing, and stopping early keeps the rest",
+            "forgotten-ancient-may-move-none — with no counters, the upkeep asks nothing at all",
             "forgotten-ancient-other-creatures-only",
             "forgotten-ancient-moves-together",
             "forgotten-ancient-your-upkeep-only"
@@ -10865,7 +10962,10 @@
           "id": "the-thing-trample",
           "oracleText": "Trample",
           "implementation": ["keyword trample (interpreted)"],
-          "engineTestIds": ["the-thing-pinned-oracle-supported"],
+          "engineTestIds": [
+            "the-thing-pinned-oracle-supported — the combat counters and the paid reflexive double are modeled",
+            "the-thing-pinned-oracle-supported — a \"when you do\" followed by another sentence stays unmodeled rather than guessing which ability owns it"
+          ],
           "viewerScenarioIds": ["the-thing-viewer-counters-and-double"]
         },
         {
@@ -10874,7 +10974,11 @@
           "implementation": [
             "interpreted beginning-of-combat trigger on its controller's turn with an intervening-if that its controller has cast at least one noncreature spell this turn (checked on trigger and on resolution, CR 603.4); the effect puts four +1/+1 counters on The Thing, and nothing happens on a turn with only creature spells or none"
           ],
-          "engineTestIds": ["the-thing-pinned-oracle-supported", "the-thing-combat-counters"],
+          "engineTestIds": [
+            "the-thing-pinned-oracle-supported — the combat counters and the paid reflexive double are modeled",
+            "the-thing-pinned-oracle-supported — a \"when you do\" followed by another sentence stays unmodeled rather than guessing which ability owns it",
+            "the-thing-combat-counters"
+          ],
           "viewerScenarioIds": ["the-thing-viewer-counters-and-double"]
         },
         {
@@ -10885,7 +10989,8 @@
             "the reflexive trigger lets its controller choose any number (including none) of permanents they control one at a time, never an opponent's, then doubles every kind of counter on each chosen permanent through the counter-adding path so replacements apply"
           ],
           "engineTestIds": [
-            "the-thing-pinned-oracle-supported",
+            "the-thing-pinned-oracle-supported — the combat counters and the paid reflexive double are modeled",
+            "the-thing-pinned-oracle-supported — a \"when you do\" followed by another sentence stays unmodeled rather than guessing which ability owns it",
             "the-thing-pay-then-double",
             "the-thing-decline-no-trigger",
             "the-thing-cannot-pay"
@@ -10992,7 +11097,9 @@
           ],
           "engineTestIds": [
             "crystal-inhuman-princess-pinned-oracle-supported",
-            "crystal-inhuman-princess-colors-of-spell",
+            "crystal-inhuman-princess-colors-of-spell — a two-color instant deals 2 to each opponent, a three-color one 3",
+            "crystal-inhuman-princess-colors-of-spell — with lifelink, her damage to each opponent gains you that much life",
+            "crystal-inhuman-princess-colors-of-spell — with infect, her damage gives poison counters instead of life loss",
             "crystal-inhuman-princess-colorless",
             "crystal-inhuman-princess-noncreature-yours"
           ],
@@ -11080,7 +11187,9 @@
           ],
           "engineTestIds": [
             "unbreakable-formation-pinned-oracle-supported",
-            "unbreakable-formation-main-phase",
+            "unbreakable-formation-main-phase — cast in your main phase, your creatures also get a counter and vigilance; an opponent’s get nothing",
+            "unbreakable-formation-main-phase — a copy was never cast, so it gets no Addendum even in your main phase",
+            "unbreakable-formation-main-phase — the cast phase is what counts, not the phase it resolves in",
             "unbreakable-formation-not-main-phase"
           ],
           "viewerScenarioIds": ["unbreakable-formation-viewer-addendum-main-phase"]
@@ -11093,7 +11202,9 @@
           ],
           "engineTestIds": [
             "unbreakable-formation-pinned-oracle-supported",
-            "unbreakable-formation-main-phase",
+            "unbreakable-formation-main-phase — cast in your main phase, your creatures also get a counter and vigilance; an opponent’s get nothing",
+            "unbreakable-formation-main-phase — a copy was never cast, so it gets no Addendum even in your main phase",
+            "unbreakable-formation-main-phase — the cast phase is what counts, not the phase it resolves in",
             "unbreakable-formation-not-main-phase"
           ],
           "viewerScenarioIds": ["unbreakable-formation-viewer-addendum-main-phase"]
@@ -11287,10 +11398,13 @@
           ],
           "engineTestIds": [
             "guard-gomazoa-pinned-oracle-supported",
-            "guard-gomazoa-combat-prevented",
+            "guard-gomazoa-combat-prevented — it takes no combat damage when it blocks, in the first-strike step and again in the regular step, while a creature beside it takes damage",
+            "guard-gomazoa-combat-prevented — deathtouch combat damage to it is prevented as well, so it does not die",
             "guard-gomazoa-noncombat-damage",
             "guard-gomazoa-loses-abilities",
-            "damage-modifiers-order-choice"
+            "damage-modifiers-order-choice — two replacements that change the outcome ask the damaged player, and each order gives its own amount",
+            "damage-modifiers-order-choice — a choice that cannot change the outcome is not asked: even damage, two doublers, a doubler and a plain prevention, and two plain preventions",
+            "damage-modifiers-order-choice — a prevention with a follow-up counts as a different outcome: a token shield and a halving ask the player, and each order creates its own tokens"
           ],
           "viewerScenarioIds": ["guard-gomazoa-viewer-blocks-and-takes-no-damage"]
         }
@@ -11863,7 +11977,8 @@
             "Faithful authored behavior for Soul Snare: {W}, Sacrifice this enchantment: Exile target creature that's attacking you or a planeswalker you control."
           ],
           "engineTestIds": [
-            "white-black-control-defenders.test.ts::soul-snare-c01 pays W and sacrifices the normally cast enchantment to exile an attacker against ${defender}",
+            "white-black-control-defenders.test.ts::soul-snare-c01 pays W and sacrifices the normally cast enchantment to exile an attacker against you",
+            "white-black-control-defenders.test.ts::soul-snare-c01 pays W and sacrifices the normally cast enchantment to exile an attacker against walker",
             "white-black-control-defenders.test.ts::soul-snare-c01 rechecks an attacking planeswalker target when the defender changes control or leaves"
           ],
           "engineTestSource": ["packages/engine/tests/white-black-control-defenders.test.ts"],
@@ -12021,7 +12136,7 @@
             "Faithful authored behavior for Bottomless Pit: At the beginning of each player's upkeep, that player discards a card at random."
           ],
           "engineTestIds": [
-            "white-black-control-discard.test.ts::%s triggers only for the active player’s upkeep and discards as printed"
+            "white-black-control-discard.test.ts::Bottomless Pit triggers only for the active player’s upkeep and discards as printed"
           ],
           "engineTestSource": ["packages/engine/tests/white-black-control-discard.test.ts"],
           "viewerScenarioIds": ["bottomless-pit-viewer-next-upkeep-random-discard"]
@@ -12041,7 +12156,7 @@
             "Faithful authored behavior for Necrogen Mists: At the beginning of each player's upkeep, that player discards a card."
           ],
           "engineTestIds": [
-            "white-black-control-discard.test.ts::%s triggers only for the active player’s upkeep and discards as printed"
+            "white-black-control-discard.test.ts::Necrogen Mists triggers only for the active player’s upkeep and discards as printed"
           ],
           "engineTestSource": ["packages/engine/tests/white-black-control-discard.test.ts"],
           "viewerScenarioIds": ["necrogen-mists-viewer-next-upkeep-discard-choice"]
@@ -12827,7 +12942,9 @@
           ],
           "engineTestIds": [
             "white-black-control-role-model.test.ts::pins and models the exact Oracle text; its normal cast does not grant printed flying or lifelink",
-            "white-black-control-role-model.test.ts::second-main Survival chooses a %s counter only when tapped",
+            "white-black-control-role-model.test.ts::second-main Survival chooses a flying counter only when tapped",
+            "white-black-control-role-model.test.ts::second-main Survival chooses a lifelink counter only when tapped",
+            "white-black-control-role-model.test.ts::second-main Survival chooses a +1/+1 counter only when tapped",
             "white-black-control-role-model.test.ts::does not trigger in the first or third main phase, for an opponent, or if untapped before resolution"
           ],
           "engineTestSource": ["packages/engine/tests/white-black-control-role-model.test.ts"],
@@ -13194,14 +13311,16 @@
             "white-black-control-perch.test.ts::makes the shielded player an illegal target for every player source, including their own",
             "white-black-control-perch.test.ts::prevents an opponent lifelink attacker from dealing damage or gaining life, while still allowing the attack",
             "white-black-control-perch.test.ts::allows untargeted discard and filters positive pay-life activations while retaining zero-pay activations",
-            "white-black-control-perch.test.ts::turns off a phased source’s global static effect and discard trigger while it is away",
-            "phasing-elimination-contract.test.ts::keeps an owned permanent phased through the immediate extra and normal turns, then phases it in on the next applicable untap"
+            "white-black-control-perch.test.ts::turns off a phased source’s global static effect and discard trigger while it is away"
           ],
           "engineTestSource": [
             "packages/engine/tests/white-black-control-perch.test.ts",
             "packages/engine/tests/phasing-elimination-contract.test.ts"
           ],
-          "viewerScenarioIds": ["perch-protection-viewer-gift-phaseout-next-turn"]
+          "viewerScenarioIds": ["perch-protection-viewer-gift-phaseout-next-turn"],
+          "contractTestIds": [
+            "phasing-elimination-contract.test.ts::keeps an owned permanent phased through the immediate extra and normal turns, then phases it in on the next applicable untap"
+          ]
         },
         {
           "oracleText": "Exile Perch Protection.",
@@ -14294,7 +14413,9 @@
             "councils-judgment-turn-order",
             "councils-judgment-candidate-pool",
             "councils-judgment-control-not-ownership",
-            "councils-judgment-nontargeting",
+            "councils-judgment-nontargeting — Hexproof never removes a vote option",
+            "councils-judgment-nontargeting — Shroud never removes a vote option",
+            "councils-judgment-nontargeting — Protection from spells never removes a vote option",
             "councils-judgment-no-candidates",
             "councils-judgment-no-targets",
             "councils-judgment-public-votes",
@@ -14707,14 +14828,14 @@
             "pr09-skyhunter-decline-equipment-attachment",
             "pr09-skyhunter-decline-placement",
             "pr09-skyhunter-no-hit-short-empty",
-            "pr09-skyhunter-seeded-random-bottom",
-            "pr09-look-failed-aura-bottom-remainder"
+            "pr09-skyhunter-seeded-random-bottom"
           ],
           "viewerScenarioIds": [
             "pr09-armored-skyhunter-viewer-positive",
             "pr09-armored-skyhunter-viewer-negative",
             "pr09-armored-skyhunter-viewer-aura"
-          ]
+          ],
+          "contractTestIds": ["pr09-look-failed-aura-bottom-remainder"]
         }
       ],
       "viewerScenarioIds": [
@@ -15328,14 +15449,12 @@
           "id": "pr09-genesis-ultimatum-clause-1",
           "oracleText": "Look at the top five cards of your library. Put any number of permanent cards from among them onto the battlefield and the rest into your hand. Exile Genesis Ultimatum.",
           "implementation": ["Effect.partitionLibrary", "Effect.exileResolvingSpell"],
-          "engineTestIds": [
-            "pr09-genesis-ultimatum-batch-and-remainder",
-            "pr09-batch-aura-cannot-enchant-fellow-entrant"
-          ],
+          "engineTestIds": ["pr09-genesis-ultimatum-batch-and-remainder"],
           "viewerScenarioIds": [
             "pr09-genesis-ultimatum-viewer-positive",
             "pr09-genesis-ultimatum-viewer-negative"
-          ]
+          ],
+          "contractTestIds": ["pr09-batch-aura-cannot-enchant-fellow-entrant"]
         }
       ],
       "viewerScenarioIds": [
@@ -15996,7 +16115,7 @@
           "engineTestIds": [
             "pr10-cosmic-crucible-copies-noncreature",
             "pr10-cosmic-crucible-once-each-turn",
-            "pr10-cosmic-crucible-decline-keep-turn-use",
+            "pr10-cosmic-crucible-decline-keeps-turn-use",
             "pr10-cosmic-crucible-not-creature",
             "pr10-cosmic-crucible-cant-be-copied"
           ],
@@ -16996,7 +17115,8 @@
             "room-c01-negative-planeswalker",
             "room-c01-multiplayer",
             "room-c01-multiplayer-toy",
-            "room-c01-graveyard"
+            "room-c01-graveyard — Muldrotha casts Dollmaker's Shop and spends only the enchantment budget",
+            "room-c01-graveyard — Muldrotha casts Porcelain Gallery and spends only the enchantment budget"
           ],
           "viewerScenarioIds": [
             "pr11b-dollmaker-s-shop-viewer-toy-attack",
@@ -17101,7 +17221,9 @@
       "name": "Master of Ceremonies",
       "oracleSha256": "e600c54e98c1050cd0d2a24e8c15263b2bb8c206c2d2d007a496c9fb12e74445",
       "implementationStatus": "implemented-unreviewed",
-      "engineTestIds": ["models the complete pinned Oracle text for real and fixture IDs"],
+      "engineTestIds": [
+        "queen-engine-batch1.test.ts::models the complete pinned Oracle text for real and fixture IDs"
+      ],
       "clauses": [
         {
           "id": "pr13-master-of-ceremonies-clause-1",
@@ -17128,7 +17250,9 @@
       "name": "Securitron Squadron",
       "oracleSha256": "3db94733b1abcfae54bce169a795378f4e2edacbc9cbdfab1258d3983cd83a90",
       "implementationStatus": "implemented-unreviewed",
-      "engineTestIds": ["models the complete pinned Oracle text for real and fixture IDs"],
+      "engineTestIds": [
+        "w2-remaining-engine-batch2.test.ts::models the complete pinned Oracle text for real and fixture IDs"
+      ],
       "clauses": [
         {
           "id": "pr13-securitron-squadron-clause-3",
@@ -17158,7 +17282,9 @@
       "name": "Confiscation Coup",
       "oracleSha256": "1fadc07ec77f7f2fe95bfb6763d9fe34ee120d2fa8aa0fda9074291b8c68ccd8",
       "implementationStatus": "implemented-unreviewed",
-      "engineTestIds": ["models the complete pinned Oracle text for real and fixture IDs"],
+      "engineTestIds": [
+        "living-energy-engine-batch3.test.ts::models the complete pinned Oracle text for real and fixture IDs"
+      ],
       "clauses": [
         {
           "id": "pr13-confiscation-coup-clause-1",
@@ -17190,7 +17316,9 @@
       "name": "Overwhelming Instinct",
       "oracleSha256": "36384c4717eb98cb0c4b0d99f53f8926e38be5eaf929cc46a2d73fc78583599b",
       "implementationStatus": "implemented-unreviewed",
-      "engineTestIds": ["models the complete pinned Oracle text for real and fixture IDs"],
+      "engineTestIds": [
+        "token-triumph-engine-batch1.test.ts::models the complete pinned Oracle text for real and fixture IDs"
+      ],
       "clauses": [
         {
           "id": "pr13-overwhelming-instinct-clause-1",
@@ -17221,7 +17349,9 @@
       "name": "Rakdos Charm",
       "oracleSha256": "9a0e59d80b1bbc7de43858d5ed720217e11ecd7c85afc8c65ac96fae7e1f24e2",
       "implementationStatus": "implemented-unreviewed",
-      "engineTestIds": ["models the complete pinned Oracle text for real and fixture IDs"],
+      "engineTestIds": [
+        "queen-engine-batch3.test.ts::models the complete pinned Oracle text for real and fixture IDs"
+      ],
       "clauses": [
         {
           "id": "pr13-rakdos-charm-clause-1",

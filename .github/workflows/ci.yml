@@ -177,6 +177,10 @@ jobs:
           RATCHET_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: bun run check:ratchets
       - run: bun run snapshots:check
+      # Each manifest engine test ID names exactly one collected test that names its card (ADR 0034
+      # decision 5). It lists the Vitest collection without running it: about 2.5 minutes, measured
+      # locally.
+      - run: bun run check:manifest-tests
       - run: bun run test:primitive-contracts --output test-results/primitive-contracts
       - run: >-
           bun run card-capabilities

@@ -166,7 +166,7 @@ describe('pinned combat trigger viewer scenarios', () => {
   });
 
   it.each(COMBAT_TRIGGER_SCENARIO_IDS)(
-    '%s creates a bounded real viewer route and resolves its outcome',
+    '%s — creates a bounded real viewer route and resolves its outcome',
     (id) => {
       const {
         scenario,

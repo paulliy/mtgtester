@@ -142,7 +142,7 @@ describe('Marchesa engine-evidence batch 2 (pinned Oracle)', () => {
 describe('Anathemancer', () => {
   const card = pinned('Anathemancer');
 
-  it('anathemancer-unearth-stays-interpreted: Unearth remains an executable graveyard ability', () => {
+  it('anathemancer-unearth-stays-interpreted — Unearth remains an executable graveyard ability', () => {
     const def = interpretCard(card);
     expect(
       def.activatedAbilities.some(
@@ -151,7 +151,7 @@ describe('Anathemancer', () => {
     ).toBe(true);
   });
 
-  it('anathemancer-etb-nonbasic-damage: ETB deals damage equal to the target player’s nonbasic lands', () => {
+  it('anathemancer-etb-nonbasic-damage — ETB deals damage equal to the target player’s nonbasic lands', () => {
     const ctx = pod('anathemancer-positive');
     spawn(ctx, 'P2', forest());
     spawn(ctx, 'P2', nonbasicLand());
@@ -162,7 +162,7 @@ describe('Anathemancer', () => {
     expect(playerOf(ctx, 'P2').life).toBe(before - 2);
   });
 
-  it('anathemancer-basics-deal-zero: basic lands do not count', () => {
+  it('anathemancer-basics-deal-zero — basic lands do not count', () => {
     const ctx = pod('anathemancer-basics');
     spawn(ctx, 'P2', forest());
     spawn(ctx, 'P2', forest());
@@ -172,7 +172,7 @@ describe('Anathemancer', () => {
     expect(playerOf(ctx, 'P2').life).toBe(before);
   });
 
-  it('anathemancer-normal-etb-targets-player: entering from hand offers a player target', () => {
+  it('anathemancer-normal-etb-targets-player — entering from hand offers a player target', () => {
     const ctx = pod('anathemancer-etb');
     spawn(ctx, 'P2', nonbasicLand());
     const before = playerOf(ctx, 'P2').life;
@@ -188,7 +188,7 @@ describe('Anathemancer', () => {
 describe('Disciple of Bolas', () => {
   const card = pinned('Disciple of Bolas');
 
-  it('disciple-sacrifice-other-draw-life: sacrificing another creature draws and gains life equal to its power', () => {
+  it('disciple-sacrifice-other-draw-life — sacrificing another creature draws and gains life equal to its power', () => {
     const ctx = pod('disciple-positive');
     const victim = spawn(
       ctx,
@@ -209,7 +209,7 @@ describe('Disciple of Bolas', () => {
     expect(playerOf(ctx, 'P1').hand.length).toBe(handBefore + 4);
   });
 
-  it('disciple-cannot-sacrifice-self: the Disciple is not a legal sacrifice', () => {
+  it('disciple-cannot-sacrifice-self — the Disciple is not a legal sacrifice', () => {
     const ctx = pod('disciple-self');
     const source = spawn(ctx, 'P1', card);
     const handBefore = playerOf(ctx, 'P1').hand.length;
@@ -220,7 +220,7 @@ describe('Disciple of Bolas', () => {
     expect(playerOf(ctx, 'P1').hand.length).toBe(handBefore);
   });
 
-  it('disciple-normal-etb-sacrifices-other: entering from hand sacrifices another creature', () => {
+  it('disciple-normal-etb-sacrifices-other — entering from hand sacrifices another creature', () => {
     const ctx = pod('disciple-etb');
     const victim = spawn(
       ctx,
@@ -251,7 +251,7 @@ describe('Fierce Guardianship', () => {
     expect(def.spellAbility?.targets).toEqual([{ kind: 'noncreatureSpell' }]);
   });
 
-  it('fierce-counters-noncreature-including-own: own and opponent instants are legal; creatures are not', () => {
+  it('fierce-counters-noncreature-including-own — own and opponent instants are legal; creatures are not', () => {
     const ctx = pod('fierce-targets');
     for (const land of [island(), island(), island(), mountain()]) spawn(ctx, 'P1', land);
     spawn(ctx, 'P2', forest());
@@ -385,7 +385,7 @@ describe('Fierce Guardianship', () => {
 describe('Forge of Heroes', () => {
   const card = pinned('Forge of Heroes');
 
-  it('forge-mana-ability-kept: {T} add {C} survives the activated-ability override', () => {
+  it('forge-mana-ability-kept — {T} add {C} survives the activated-ability override', () => {
     const ctx = pod('forge-mana');
     const land = spawn(ctx, 'P1', card);
     const source = manaSourcesFor(ctx, 'P1').find((entry) => entry.cardId === land.cardId);
@@ -417,7 +417,7 @@ describe('Forge of Heroes', () => {
     expect(land.tapped).toBe(true);
   });
 
-  it('forge-rejects-stale-commander-and-noncommander: previous-turn commanders and noncommanders are illegal', () => {
+  it('forge-rejects-stale-commander-and-noncommander — previous-turn commanders and noncommanders are illegal', () => {
     const ctx = pod('forge-negative');
     const land = spawn(ctx, 'P1', card);
     const stale = spawn(ctx, 'P1', commanderFor('W', 'Yesterday Hero'), { isCommander: true });
@@ -439,7 +439,7 @@ describe('Forge of Heroes', () => {
 describe('Madame Null, Power Broker', () => {
   const card = pinned('Madame Null, Power Broker');
 
-  it('madame-null-pay-life-for-counters: paying life equal to power puts that many +1/+1 counters', () => {
+  it('madame-null-pay-life-for-counters — paying life equal to power puts that many +1/+1 counters', () => {
     const ctx = pod('madame-pay');
     spawn(ctx, 'P1', card);
     const ox = oracle({ name: 'Ox', typeLine: 'Creature — Ox', power: '3', toughness: '3' });
@@ -451,7 +451,7 @@ describe('Madame Null, Power Broker', () => {
     expect(playerOf(ctx, 'P1').life).toBe(lifeBefore - 3);
   });
 
-  it('madame-null-decline: declining pays no life and adds no counters', () => {
+  it('madame-null-decline — declining pays no life and adds no counters', () => {
     const ctx = pod('madame-decline');
     spawn(ctx, 'P1', card);
     playFromHand(ctx, 'P1', bear());
@@ -462,7 +462,7 @@ describe('Madame Null, Power Broker', () => {
     expect(playerOf(ctx, 'P1').life).toBe(lifeBefore);
   });
 
-  it('madame-null-not-self-or-opponent: own ETB and opponent creatures do not trigger', () => {
+  it('madame-null-not-self-or-opponent — own ETB and opponent creatures do not trigger', () => {
     const ctx = pod('madame-scope');
     playFromHand(ctx, 'P1', card);
     let asked = false;
@@ -483,7 +483,7 @@ describe('Madame Null, Power Broker', () => {
 describe('Mahadi, Emporium Master', () => {
   const card = pinned('Mahadi, Emporium Master');
 
-  it('mahadi-end-step-treasures-for-deaths: your end step creates a Treasure per creature that died this turn', () => {
+  it('mahadi-end-step-treasures-for-deaths — your end step creates a Treasure per creature that died this turn', () => {
     const ctx = pod('mahadi-positive');
     spawn(ctx, 'P1', card);
     const yours = spawn(ctx, 'P1', bear());
@@ -498,7 +498,7 @@ describe('Mahadi, Emporium Master', () => {
     );
   });
 
-  it('mahadi-no-deaths-no-treasures: zero deaths create no tokens', () => {
+  it('mahadi-no-deaths-no-treasures — zero deaths create no tokens', () => {
     const ctx = pod('mahadi-zero');
     spawn(ctx, 'P1', card);
     queueStepTriggers(ctx, 'endStep');

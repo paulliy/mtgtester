@@ -99,7 +99,7 @@ describe('Marchesa engine-evidence batch 1 (pinned Oracle)', () => {
 describe('Grave Pact', () => {
   const gravePact = pinned('Grave Pact');
 
-  it('grave-pact-your-creature-dies-opponents-sacrifice: each other player sacrifices a creature', () => {
+  it('grave-pact-your-creature-dies-opponents-sacrifice — each other player sacrifices a creature', () => {
     const ctx = pod('grave-pact-positive');
     spawn(ctx, 'P1', gravePact);
     const yours = spawn(ctx, 'P1', bear());
@@ -142,7 +142,7 @@ describe('Grave Pact', () => {
     );
   });
 
-  it('grave-pact-opponent-creature-dies-no-trigger: an opponent dying does not make you sacrifice', () => {
+  it('grave-pact-opponent-creature-dies-no-trigger — an opponent dying does not make you sacrifice', () => {
     const ctx = pod('grave-pact-negative-opponent');
     spawn(ctx, 'P1', gravePact);
     const yours = spawn(ctx, 'P1', bear());
@@ -159,7 +159,7 @@ describe('Grave Pact', () => {
     expect(ctx.state.battlefield.some((permanent) => permanent.cardId === yours.cardId)).toBe(true);
   });
 
-  it('grave-pact-no-creature-to-sacrifice: a player with no creature is not asked', () => {
+  it('grave-pact-no-creature-to-sacrifice — a player with no creature is not asked', () => {
     const ctx = pod('grave-pact-empty');
     spawn(ctx, 'P1', gravePact);
     const yours = spawn(ctx, 'P1', bear());
@@ -180,7 +180,7 @@ describe('Grave Pact', () => {
 describe('Herald of Secret Streams', () => {
   const herald = pinned('Herald of Secret Streams');
 
-  it('herald-plus-one-cant-be-blocked: your +1/+1 creature cannot be blocked', () => {
+  it('herald-plus-one-cant-be-blocked — your +1/+1 creature cannot be blocked', () => {
     const ctx = pod('herald-positive', 2);
     spawn(ctx, 'P1', herald);
     const attacker = spawn(ctx, 'P1', bear());
@@ -188,14 +188,14 @@ describe('Herald of Secret Streams', () => {
     expect(computeCharacteristics(ctx, attacker).cantBeBlocked).toBe(true);
   });
 
-  it('herald-no-counter-can-be-blocked: a creature without +1/+1 remains blockable', () => {
+  it('herald-no-counter-can-be-blocked — a creature without +1/+1 remains blockable', () => {
     const ctx = pod('herald-negative-no-counter', 2);
     spawn(ctx, 'P1', herald);
     const attacker = spawn(ctx, 'P1', bear());
     expect(computeCharacteristics(ctx, attacker).cantBeBlocked).toBe(false);
   });
 
-  it('herald-opponent-plus-one-can-be-blocked: an opponent creature with +1/+1 is not granted unblockable', () => {
+  it('herald-opponent-plus-one-can-be-blocked — an opponent creature with +1/+1 is not granted unblockable', () => {
     const ctx = pod('herald-negative-opponent', 2);
     spawn(ctx, 'P1', herald);
     const theirs = spawn(ctx, 'P2', bear());
@@ -203,7 +203,7 @@ describe('Herald of Secret Streams', () => {
     expect(computeCharacteristics(ctx, theirs).cantBeBlocked).toBe(false);
   });
 
-  it('herald-combat-block-menu: the block declaration omits the +1/+1 attacker and still offers the uncountered one', () => {
+  it('herald-combat-block-menu — the block declaration omits the +1/+1 attacker and still offers the uncountered one', () => {
     const ctx = pod('herald-combat', 2);
     ctx.state.phase = 'combat';
     spawn(ctx, 'P1', herald);
@@ -233,7 +233,7 @@ describe('Herald of Secret Streams', () => {
 describe('Pawn of Ulamog', () => {
   const pawn = pinned('Pawn of Ulamog');
 
-  it('pawn-nontoken-dies-accept-spawn: a nontoken you control dying may create an Eldrazi Spawn', () => {
+  it('pawn-nontoken-dies-accept-spawn — a nontoken you control dying may create an Eldrazi Spawn', () => {
     const ctx = pod('pawn-accept', 2);
     spawn(ctx, 'P1', pawn);
     const victim = spawn(ctx, 'P1', bear());
@@ -258,7 +258,7 @@ describe('Pawn of Ulamog', () => {
     expect(computeCharacteristics(ctx, spawnToken!).toughness).toBe(1);
   });
 
-  it('pawn-nontoken-dies-decline: declining the optional trigger creates no token', () => {
+  it('pawn-nontoken-dies-decline — declining the optional trigger creates no token', () => {
     const ctx = pod('pawn-decline', 2);
     spawn(ctx, 'P1', pawn);
     const victim = spawn(ctx, 'P1', bear());
@@ -275,7 +275,7 @@ describe('Pawn of Ulamog', () => {
     expect(ctx.state.eventLog.some((event) => event.type === 'triggerDeclined')).toBe(true);
   });
 
-  it('pawn-token-dies-no-trigger: a token death does not offer a Spawn', () => {
+  it('pawn-token-dies-no-trigger — a token death does not offer a Spawn', () => {
     const ctx = pod('pawn-token', 2);
     spawn(ctx, 'P1', pawn);
     const token = spawn(ctx, 'P1', bear(), { isToken: true });
@@ -293,7 +293,7 @@ describe('Pawn of Ulamog', () => {
     );
   });
 
-  it('pawn-opponent-dies-no-trigger: an opponent nontoken death does not trigger', () => {
+  it('pawn-opponent-dies-no-trigger — an opponent nontoken death does not trigger', () => {
     const ctx = pod('pawn-opponent', 2);
     spawn(ctx, 'P1', pawn);
     const theirs = spawn(ctx, 'P2', bear());
@@ -308,7 +308,7 @@ describe('Pawn of Ulamog', () => {
     expect(asked).toBe(false);
   });
 
-  it('pawn-self-dies-may-spawn: the Pawn itself dying is a qualifying nontoken death', () => {
+  it('pawn-self-dies-may-spawn — the Pawn itself dying is a qualifying nontoken death', () => {
     const ctx = pod('pawn-self', 2);
     const source = spawn(ctx, 'P1', pawn);
 
@@ -323,7 +323,7 @@ describe('Pawn of Ulamog', () => {
     );
   });
 
-  it('pawn-spawn-sac-for-colorless: the token has Sacrifice this token: Add {C}', () => {
+  it('pawn-spawn-sac-for-colorless — the token has Sacrifice this token: Add {C}', () => {
     const ctx = pod('pawn-mana', 2);
     spawn(ctx, 'P1', pawn);
     const victim = spawn(ctx, 'P1', bear());

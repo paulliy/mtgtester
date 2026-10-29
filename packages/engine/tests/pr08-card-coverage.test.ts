@@ -101,7 +101,8 @@ describe('PR08 Oracle pins and containment', () => {
         expect(clause.implementation.length, clause.id).toBeGreaterThan(0);
         expect(clause.engineTestIds.length, clause.id).toBeGreaterThan(0);
         expect(clause.viewerScenarioIds.length, clause.id).toBeGreaterThan(0);
-        for (const id of clause.engineTestIds) expect(source, id).toContain(`${id} —`);
+        for (const id of clause.engineTestIds)
+          expect(source, id).toContain(`${id.split(' — ')[0]} —`);
         for (const id of clause.viewerScenarioIds)
           expect(
             viewerSource +

@@ -70,6 +70,59 @@
           }
         }
       ]
+    },
+    {
+      "id": "path-to-exile-decline-search",
+      "title": "Path to Exile: its controller may decline the search",
+      "clauses": [1],
+      "instructions": [
+        "Cast Path to Exile targeting P2's Scenario Bear.",
+        "P2 declines to search."
+      ],
+      "expectedOutcome": "Scenario Bear is exiled; P2 puts no land onto the battlefield.",
+      "seats": {
+        "P1": {
+          "hand": ["Path to Exile"],
+          "battlefield": ["Plains"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Path to Exile/",
+          "targets": ["Scenario Bear"]
+        },
+        {
+          "player": "P2",
+          "choose": "Don't find a card"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "exile",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "battlefield",
+            "lacks": ["Scenario Bear", "Plains", "Forest", "Swamp"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Path to Exile"]
+          }
+        }
+      ]
     }
   ]
 }

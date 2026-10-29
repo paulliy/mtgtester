@@ -216,7 +216,7 @@ it('face-commander-stack-lab retains a real response choice while Easy Pickings 
 });
 
 it.each(['Foulmire Knight', 'Sagu Wildling'])(
-  'face-impulse-lab casts the pinned spell half of %s through a normal temporary permission',
+  'face-impulse-lab — casts the pinned spell half of %s through a normal temporary permission',
   (name) => {
     const pin = pins.cards.find(({ card }) => card.name.startsWith(name))!.card;
     const engine = createCardTestScenario(

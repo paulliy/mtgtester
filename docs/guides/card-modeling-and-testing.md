@@ -476,6 +476,11 @@ outside `docs/`.
       and content hash.
 - [ ] Every Oracle clause maps to an implementation primitive or explicit unsupported status and
       to positive and negative scenario IDs.
+- [ ] Each manifest `engineTestIds` entry names exactly one test: its whole title, or the title's
+      ID before an em dash (write parametrized titles as `<id> — <what it shows>`, with no `%s`
+      left in the ID). The test's file or title names the card. A shared test built on stand-in
+      cards goes in the clause's `contractTestIds`. `bun run check:manifest-tests` passes (ADR
+      0034 decision 5).
 - [ ] `modeled: true` and empty `unmodeledReasons` hold for both the real Oracle ID and fixture
       alias. This is a prerequisite, not proof.
 - [ ] Normal Vitest callbacks run fixture behavior tests for every ability and applicable

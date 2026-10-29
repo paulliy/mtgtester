@@ -68,7 +68,7 @@ describe('Thran Vigil', () => {
     }
   });
 
-  it('thran-vigil-own-turn-aggregate fires once when multiple qualifying own cards leave together', () => {
+  it('thran-vigil-own-turn-aggregate — fires once when multiple qualifying own cards leave together', () => {
     const ctx = pod('thran-aggregate');
     spawn(ctx, 'P1', thran);
     const relic = conjure(ctx, 'P1', artifact('Relic'), 'graveyard');
@@ -80,7 +80,7 @@ describe('Thran Vigil', () => {
     expect(ctx.state.pendingTriggers[0]?.scope).toMatchObject({ triggerCount: 2 });
   });
 
-  it('thran-separate-events-separate-triggers treats separate departures as separate events', () => {
+  it('thran-separate-events-separate-triggers — treats separate departures as separate events', () => {
     const ctx = pod('thran-separate');
     spawn(ctx, 'P1', thran);
     const first = conjure(ctx, 'P1', artifact('First Relic'), 'graveyard');
@@ -92,7 +92,7 @@ describe('Thran Vigil', () => {
     expect(ctx.state.pendingTriggers).toHaveLength(2);
   });
 
-  it('thran-single-and-entry fires once for one qualifying departure but not battlefield entry from hand', () => {
+  it('thran-single-and-entry — fires once for one qualifying departure but not battlefield entry from hand', () => {
     const ctx = pod('thran-single-and-entry');
     spawn(ctx, 'P1', thran);
     const entering = conjure(ctx, 'P1', creature('Entering Bear'), 'hand');
@@ -104,7 +104,7 @@ describe('Thran Vigil', () => {
     expect(ctx.state.pendingTriggers).toHaveLength(1);
   });
 
-  it('thran-event-restrictions rejects wrong types, owners, and turns', () => {
+  it('thran-event-restrictions — rejects wrong types, owners, and turns', () => {
     const ctx = pod('thran-restrictions');
     spawn(ctx, 'P1', thran);
     const ownSorcery = conjure(
@@ -124,7 +124,7 @@ describe('Thran Vigil', () => {
     expect(ctx.state.pendingTriggers).toHaveLength(0);
   });
 
-  it('thran-mandatory-own-creature puts exactly one counter on its mandatory own target', () => {
+  it('thran-mandatory-own-creature — puts exactly one counter on its mandatory own target', () => {
     const ctx = pod('thran-counter');
     const vigil = spawn(ctx, 'P1', thran);
     const chosen = spawn(ctx, 'P1', creature('Chosen Bear'));
@@ -136,7 +136,7 @@ describe('Thran Vigil', () => {
     expect(opponent.counters['+1/+1'] ?? 0).toBe(0);
   });
 
-  it('thran-invalidated-target fizzles when its chosen target leaves before resolution', () => {
+  it('thran-invalidated-target — fizzles when its chosen target leaves before resolution', () => {
     const ctx = pod('thran-invalidated-target');
     spawn(ctx, 'P1', thran);
     const chosen = spawn(ctx, 'P1', creature('Doomed Bear'));
@@ -166,7 +166,7 @@ describe('Thran Vigil', () => {
     expect(ctx.state.eventLog.some((event) => event.type === 'fizzle')).toBe(true);
   });
 
-  it('thran-normal-cast casts at sorcery speed and resolves as an enchantment', () => {
+  it('thran-normal-cast — casts at sorcery speed and resolves as an enchantment', () => {
     const ctx = pod('thran-cast');
     const player = ctx.state.players[0]!;
     const spell = conjure(ctx, 'P1', thran, 'hand');

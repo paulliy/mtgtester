@@ -225,7 +225,9 @@ describe('fail-closed restoration baseline', () => {
       expect(RESTORED_ENGINE_TEST_FILES[card.name], `${card.name} engine test file`).toBeTruthy();
       const engineSources = engineSourcesFor(card.name);
       for (const clause of entry!.clauses) {
-        for (const id of clause.engineTestIds) expect(engineSources, id).toContain(id);
+        // A parametrized title's ID is literal up to its em dash; check:manifest-tests matches it whole.
+        for (const id of clause.engineTestIds)
+          expect(engineSources, id).toContain(id.split(' — ')[0]);
         for (const id of clause.viewerScenarioIds) expect(viewerSources, id).toContain(id);
       }
       for (const id of entry!.gameplayAiScenarioIds) expect(gameplayAiSource, id).toContain(id);

@@ -185,10 +185,11 @@ describe('white-black-control authored-card verification manifest', () => {
           expect(clause.engineTestSource).toContain(`packages/engine/tests/${source}`);
           expect(existsSync(`packages/engine/tests/${source}`), testId).toBe(true);
           const title = testId.slice(testId.indexOf('::') + 2);
+          const text = readFileSync(`packages/engine/tests/${source}`, 'utf8').replace(/\\'/g, "'");
           expect(
-            readFileSync(`packages/engine/tests/${source}`, 'utf8').replace(/\\'/g, "'"),
+            text.includes(title) || templated(text).some((pattern) => pattern.test(title)),
             testId,
-          ).toContain(title);
+          ).toBe(true);
         }
       }
     }
@@ -791,3 +792,23 @@ describe('white-black-control authored-card verification manifest', () => {
     expect(aven.remainingViewerRequirements).toBeUndefined();
   });
 });
+
+/**
+ * The parametrized test titles in a source, as patterns: `%s`, `%i`, `%d` and `${…}` stand for any
+ * text. check:manifest-tests matches the collected titles exactly; this only ties an ID to its file.
+ */
+function templated(source: string): RegExp[] {
+  const literals = source.match(
+    /(['`])(?:(?!\1)[^\\\n]|\\.)*?(?:%[sid]|\$\{[^}]*\})(?:(?!\1)[^\\\n]|\\.)*\1/g,
+  );
+  return (literals ?? []).map(
+    (literal) =>
+      new RegExp(
+        `^${literal
+          .slice(1, -1)
+          .split(/%[sid]|\$\{[^}]*\}/)
+          .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+          .join('.+')}$`,
+      ),
+  );
+}

@@ -87,7 +87,7 @@ describe('counterspell target controller follows pinned Oracle clauses', () => {
   for (const { card } of fixture.cards) {
     const slug = card.name.toLowerCase().replaceAll(' ', '-');
     it.each(['P1', 'P2'] as const)(
-      `${slug}-target-controller-%s: counters an unpaid spell through normal casting and resolution`,
+      `${slug}-target-controller-%s — counters an unpaid spell through normal casting and resolution`,
       (controller) => {
         const state = setup(card, controller);
         expect(state.options()[0]?.targets?.[0]?.options).toContain(state.targetSpell.id);
@@ -112,7 +112,7 @@ describe('counterspell target controller follows pinned Oracle clauses', () => {
       },
     );
 
-    it(`${slug}-reject-self: rejects its own proposed stack incarnation`, () => {
+    it(`${slug}-reject-self — rejects its own proposed stack incarnation`, () => {
       const state = setup(card);
       const before = cloneContractContext(state.ctx);
       expect(() => state.cast(`o-${state.ctx.state.nextObjectNum}`)).toThrow();
@@ -120,7 +120,7 @@ describe('counterspell target controller follows pinned Oracle clauses', () => {
       expect(state.player.hand).toContain(state.counter);
     });
 
-    it(`${slug}-spell-only-targets: excludes an actual activated ability`, () => {
+    it(`${slug}-spell-only-targets — excludes an actual activated ability`, () => {
       const state = setup(card);
       const permanent = spawn(
         state.ctx,
@@ -154,7 +154,7 @@ describe('counterspell target controller follows pinned Oracle clauses', () => {
 
     if (card.name === 'Mana Leak' || card.name === 'Stubborn Denial') {
       it.each(['P1', 'P2'] as const)(
-        `${slug}-controller-pays-%s: the target's controller can pay the tax`,
+        `${slug}-controller-pays-%s — the target's controller can pay the tax`,
         (controller) => {
           const state = setup(card, controller);
           state.cast(state.targetSpell.id);
@@ -176,7 +176,7 @@ describe('counterspell target controller follows pinned Oracle clauses', () => {
 
     if (card.name === 'Stubborn Denial') {
       it.each(['P1', 'P2'] as const)(
-        `${slug}-ferocious-%s: no tax decision with a power-four creature at resolution`,
+        `${slug}-ferocious-%s — no tax decision with a power-four creature at resolution`,
         (controller) => {
           const state = setup(card, controller);
           state.cast(state.targetSpell.id);
@@ -200,19 +200,19 @@ describe('counterspell target controller follows pinned Oracle clauses', () => {
     }
   }
 
-  it.each(['Negate', 'Stubborn Denial', 'Force of Negation'])(
-    '%s-reject-creature: a noncreature counter rejects a creature spell',
-    (name) => {
-      const card = fixture.cards.find(({ card }) => card.name === name)!.card;
-      const state = setup(card, 'P1', true);
-      expect(state.options()).toHaveLength(0);
-      expect(() => state.cast(state.targetSpell.id)).toThrow();
-      const unrestricted = setup(fixture.cards[0]!.card, 'P1', true);
-      expect(unrestricted.options()[0]?.targets?.[0]?.options).toContain(
-        unrestricted.targetSpell.id,
-      );
-    },
-  );
+  it.each(
+    ['Negate', 'Stubborn Denial', 'Force of Negation'].map((name) => [
+      name.toLowerCase().replaceAll(' ', '-'),
+      name,
+    ]),
+  )('%s-reject-creature — a noncreature counter rejects a creature spell', (_slug, name) => {
+    const card = fixture.cards.find(({ card }) => card.name === name)!.card;
+    const state = setup(card, 'P1', true);
+    expect(state.options()).toHaveLength(0);
+    expect(() => state.cast(state.targetSpell.id)).toThrow();
+    const unrestricted = setup(fixture.cards[0]!.card, 'P1', true);
+    expect(unrestricted.options()[0]?.targets?.[0]?.options).toContain(unrestricted.targetSpell.id);
+  });
 });
 
 it('the pinned Force of Negation clause does not invent a controller restriction and preserves the printed alternative', () => {

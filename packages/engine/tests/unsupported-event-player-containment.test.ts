@@ -52,7 +52,7 @@ describe('printed clauses with unsupported event-player provenance remain contai
     }
   });
   for (const name of names)
-    it(`${caseIds[name]}: ${name} rejects normal action generation for both Oracle identities without mutation`, () => {
+    it(`${caseIds[name]} — ${name} rejects normal action generation for both Oracle identities without mutation`, () => {
       const pin = fixture.cards.find(({ card }) => card.name === name)!;
       expect(pin.sha256).toBe(expectedPins[name]);
       expect(createHash('sha256').update(JSON.stringify(pin.card)).digest('hex')).toBe(pin.sha256);

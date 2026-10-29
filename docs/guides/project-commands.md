@@ -13,6 +13,7 @@ bun run test                            # full Vitest suite
 bun run test <path-or-filter>           # one test file or pattern
 bun run test:card-gate                  # offline card verification gate: every test file in scripts/card-gate.txt
 bun run snapshots:check                 # interpretation/override snapshot drift
+bun run check:manifest-tests [--report] # each manifest engine test ID names one collected test (lists Vitest, ~2.5 min)
 bun run test:e2e                        # Playwright (Card Test Lab + mocked smoke)
 bun run test:e2e:setup                  # Playwright: setup screen + a seeded player game (DB-backed)
 bun run test:e2e:table                  # Playwright: table games in two browsers on the built table bundle

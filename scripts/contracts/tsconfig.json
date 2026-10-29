@@ -14,6 +14,7 @@
     "../check-suite-integrity.ts",
     "../check-suite-collect.ts",
     "../card-gate.ts",
+    "../check-manifest-tests.ts",
     "../pin-store.ts",
     "../cards/*.ts",
     "../check-ratchets.ts",

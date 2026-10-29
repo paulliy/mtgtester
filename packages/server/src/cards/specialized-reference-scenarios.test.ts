@@ -80,88 +80,89 @@ describe('pinned Madame Null real Lab event identity and life-payment scenarios'
       }
     }
   });
-  it.each(expected)('$id follows normal cast, response, payment and priority', (entry) => {
-    const engine = createCardTestScenario(entry.id, `lab-unit-${entry.id}`)!.engine;
-    let cast = false;
-    let responded = false;
-    let choices = 0;
-    let ended = false;
-    let originalId: string | undefined;
-    for (let count = 0; count < 100; count++) {
-      const step = engine.advance();
-      if (step.kind === 'gameOver') {
-        ended = true;
-        break;
-      }
-      if (step.kind !== 'decision') continue;
-      const request = step.request;
-      const state = engine.getState();
-      const witness = state.battlefield.find((card) => card.name === 'Optional-Life Witness');
-      originalId ??= witness?.id;
-      const castAction =
-        request.decidingPlayer === 'P1' &&
-        request.legalActions.find(
+  for (const entry of expected)
+    it(`${entry.id} — follows normal cast, response, payment and priority`, () => {
+      const engine = createCardTestScenario(entry.id, `lab-unit-${entry.id}`)!.engine;
+      let cast = false;
+      let responded = false;
+      let choices = 0;
+      let ended = false;
+      let originalId: string | undefined;
+      for (let count = 0; count < 100; count++) {
+        const step = engine.advance();
+        if (step.kind === 'gameOver') {
+          ended = true;
+          break;
+        }
+        if (step.kind !== 'decision') continue;
+        const request = step.request;
+        const state = engine.getState();
+        const witness = state.battlefield.find((card) => card.name === 'Optional-Life Witness');
+        originalId ??= witness?.id;
+        const castAction =
+          request.decidingPlayer === 'P1' &&
+          request.legalActions.find(
+            (action) =>
+              action.type === 'castSpell' &&
+              ((!cast && action.description.includes('Optional-Life Witness')) ||
+                (entry.response !== null &&
+                  !responded &&
+                  witness !== undefined &&
+                  action.description.includes(entry.response))),
+          );
+        const pay = request.legalActions.find((action) => action.type === 'payLife');
+        const countedTarget = request.legalActions.find(
           (action) =>
-            action.type === 'castSpell' &&
-            ((!cast && action.description.includes('Optional-Life Witness')) ||
-              (entry.response !== null &&
-                !responded &&
-                witness !== undefined &&
-                action.description.includes(entry.response))),
+            action.type === 'pickTarget' &&
+            action.description ===
+              (request.prompt.includes('target 1')
+                ? 'Target Optional-Life Witness'
+                : 'Target Island'),
         );
-      const pay = request.legalActions.find((action) => action.type === 'payLife');
-      const countedTarget = request.legalActions.find(
-        (action) =>
-          action.type === 'pickTarget' &&
-          action.description ===
-            (request.prompt.includes('target 1')
-              ? 'Target Optional-Life Witness'
-              : 'Target Island'),
+        if (pay) {
+          choices++;
+          expect(pay.description).toBe('Pay 2 life and add 2 counter(s)');
+        }
+        const action =
+          castAction ||
+          countedTarget ||
+          (pay &&
+            (entry.id.endsWith('decline')
+              ? request.legalActions.find((action) => action.type === 'decline')
+              : pay)) ||
+          request.legalActions.find((action) => action.type === 'pass') ||
+          request.legalActions[0]!;
+        if (castAction) {
+          if (!cast) cast = true;
+          else responded = true;
+        }
+        const targets =
+          action.targets?.map((slot, index) => ({
+            slot: slot.slot,
+            choice:
+              slot.options.find((id) =>
+                index === 0
+                  ? id === witness?.id
+                  : state.battlefield.some((card) => card.id === id && card.name === 'Island'),
+              ) ?? slot.options[0]!,
+          })) ?? [];
+        engine.submit({ requestId: request.requestId, actionId: action.id, targets });
+      }
+      expect(ended).toBe(true);
+      expect(cast).toBe(true);
+      expect(responded).toBe(entry.response !== null);
+      expect(choices).toBe(entry.choices);
+      const state = engine.getState();
+      expect(state.players[0]!.life).toBe(entry.life);
+      const witness = state.battlefield.find((card) => card.name === 'Optional-Life Witness');
+      expect(witness !== undefined).toBe(entry.present);
+      expect(witness?.counters['+1/+1'] ?? 0).toBe(entry.counters);
+      if (entry.id.endsWith('blink')) expect(witness!.id).not.toBe(originalId);
+      expect(
+        state.players[0]!.graveyard.filter((card) => card.name === 'Optional-Life Witness'),
+      ).toHaveLength(entry.present ? 0 : 1);
+      expect(JSON.stringify(engine.view('P2'))).not.toMatch(
+        /resolutionObjectFacts|lastKnownFacts|firstDestinationObjectId|sourceCastState/,
       );
-      if (pay) {
-        choices++;
-        expect(pay.description).toBe('Pay 2 life and add 2 counter(s)');
-      }
-      const action =
-        castAction ||
-        countedTarget ||
-        (pay &&
-          (entry.id.endsWith('decline')
-            ? request.legalActions.find((action) => action.type === 'decline')
-            : pay)) ||
-        request.legalActions.find((action) => action.type === 'pass') ||
-        request.legalActions[0]!;
-      if (castAction) {
-        if (!cast) cast = true;
-        else responded = true;
-      }
-      const targets =
-        action.targets?.map((slot, index) => ({
-          slot: slot.slot,
-          choice:
-            slot.options.find((id) =>
-              index === 0
-                ? id === witness?.id
-                : state.battlefield.some((card) => card.id === id && card.name === 'Island'),
-            ) ?? slot.options[0]!,
-        })) ?? [];
-      engine.submit({ requestId: request.requestId, actionId: action.id, targets });
-    }
-    expect(ended).toBe(true);
-    expect(cast).toBe(true);
-    expect(responded).toBe(entry.response !== null);
-    expect(choices).toBe(entry.choices);
-    const state = engine.getState();
-    expect(state.players[0]!.life).toBe(entry.life);
-    const witness = state.battlefield.find((card) => card.name === 'Optional-Life Witness');
-    expect(witness !== undefined).toBe(entry.present);
-    expect(witness?.counters['+1/+1'] ?? 0).toBe(entry.counters);
-    if (entry.id.endsWith('blink')) expect(witness!.id).not.toBe(originalId);
-    expect(
-      state.players[0]!.graveyard.filter((card) => card.name === 'Optional-Life Witness'),
-    ).toHaveLength(entry.present ? 0 : 1);
-    expect(JSON.stringify(engine.view('P2'))).not.toMatch(
-      /resolutionObjectFacts|lastKnownFacts|firstDestinationObjectId|sourceCastState/,
-    );
-  });
+    });
 });

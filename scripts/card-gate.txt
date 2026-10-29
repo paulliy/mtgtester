@@ -167,3 +167,4 @@ packages/server/src/cards/card-authoring-metrics.test.ts
 packages/server/src/cards/forge-text.test.ts
 packages/engine/tests/card-new-handled-lines.test.ts
 packages/engine/tests/cards/mini-pilot
+packages/server/src/cards/manifest-tests.test.ts

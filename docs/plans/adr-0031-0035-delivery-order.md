@@ -84,6 +84,7 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 | 8    | done  | phase 2: pin store, script/strict pump, scenario runner and lab adapter, card:check/new/finish, gate list, mini-pilot | #44          |
 | 9    | done  | M3 workers, health, manifest, post-game, agent table mode, scans; M4 clocks, fallback, concede                        | #44          |
 | 10   | done  | P6: server-built damage and life cues on each batch; the board animates from them                                     | #44          |
+| 11   | doing | phase 3 step 2: manifest references resolve to one test each (`check:manifest-tests`, card-verification job)          | #44          |
 | 12   | done  | M5 exposure, TLS run, review; M6 table app, lobby, table bar, post-game, table e2e and CI job                         | #44          |
 
 ## Notes from delivery
@@ -163,5 +164,12 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
   identical to `da2e2c6`; `card-new-handled-lines.test.ts` shows `card:new`'s handledLines
   interpret every PR11b card exactly as the authored lines do. The mini-pilot is recorded in
   [the pilot review](../reviews/card-authoring-mini-pilot-2026-10-29.md).
+- **Manifest references (phase 3 step 2).** The first run found 595 of 3,463 IDs naming no test
+  or several. Most were prose summaries or a test's ID with its description run on; titles now
+  read `<id> — <what it shows>`, and parametrized templates print their IDs unquoted and whole
+  (Vitest truncates a quoted `$id` past 40 characters). Shared tests on stand-in cards moved to a
+  clause's `contractTestIds`. Path to Exile's two IDs named a bulk-only suite; rather than grow the
+  `notExecutableInCi` list, its runner scenarios are its evidence, with a declined search added.
+  The check lists the Vitest collection: about 2.5 minutes in the card-verification job.
 - **Two hash definitions for pins.** Pins before PR08 hashed a card's JSON with sorted keys; later
   ones hash it as written. The pin store keeps the manifest's key and accepts either.

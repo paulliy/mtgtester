@@ -82,7 +82,7 @@ describe('Nightscape Familiar regeneration', () => {
     }
   });
 
-  it('nightscape-regenerate-next-destroy consumes one shield, taps, clears damage, and removes combat', () => {
+  it('nightscape-regenerate-next-destroy — consumes one shield, taps, clears damage, and removes combat', () => {
     const ctx = pod('nightscape-destroy');
     const familiar = spawn(ctx, 'P1', nightscape);
     const blocker = spawn(
@@ -107,7 +107,7 @@ describe('Nightscape Familiar regeneration', () => {
     expect(blocker.blocking).toBeNull();
   });
 
-  it('nightscape-regeneration-consumed protects only the next destruction', () => {
+  it('nightscape-regeneration-consumed — protects only the next destruction', () => {
     const ctx = pod('nightscape-one-shot');
     const familiar = spawn(ctx, 'P1', nightscape);
     familiar.regenerationShields = 1;
@@ -118,7 +118,7 @@ describe('Nightscape Familiar regeneration', () => {
     expect(ctx.state.players[0]!.graveyard).toHaveLength(1);
   });
 
-  it('nightscape-regeneration-expires clears unused shields at cleanup', () => {
+  it('nightscape-regeneration-expires — clears unused shields at cleanup', () => {
     const ctx = pod('nightscape-expiry');
     const familiar = spawn(ctx, 'P1', nightscape);
     familiar.regenerationShields = 2;
@@ -128,7 +128,7 @@ describe('Nightscape Familiar regeneration', () => {
     expect(ctx.state.battlefield).not.toContain(familiar);
   });
 
-  it('nightscape-sacrifice-not-prevented and exile-not-prevented bypass shields', () => {
+  it('nightscape-sacrifice-not-prevented — and exile-not-prevented bypass shields', () => {
     const sacrificeCtx = pod('nightscape-sacrifice');
     const sacrificed = spawn(sacrificeCtx, 'P1', nightscape);
     sacrificed.regenerationShields = 1;
@@ -165,7 +165,7 @@ describe('Nightscape Familiar regeneration', () => {
     expect(exileCtx.state.exile.some((card) => card.cardId === exiled.cardId)).toBe(true);
   });
 
-  it('nightscape-zero-toughness-not-prevented ignores regeneration shields', () => {
+  it('nightscape-zero-toughness-not-prevented — ignores regeneration shields', () => {
     const ctx = pod('nightscape-zero-toughness');
     const familiar = spawn(ctx, 'P1', nightscape);
     familiar.regenerationShields = 1;
@@ -174,7 +174,7 @@ describe('Nightscape Familiar regeneration', () => {
     expect(ctx.state.battlefield).not.toContain(familiar);
   });
 
-  it('nightscape-cant-regenerate bypasses but does not consume the shield', () => {
+  it('nightscape-cant-regenerate — bypasses but does not consume the shield', () => {
     const ctx = pod('nightscape-cant-regenerate');
     const familiar = spawn(ctx, 'P1', nightscape);
     familiar.regenerationShields = 1;
@@ -183,7 +183,7 @@ describe('Nightscape Familiar regeneration', () => {
     expect(familiar.regenerationShields).toBe(1);
   });
 
-  it('nightscape-blue-red-cost-reduction reduces generic costs only for blue or red spells', () => {
+  it('nightscape-blue-red-cost-reduction — reduces generic costs only for blue or red spells', () => {
     const ctx = pod('nightscape-reduction');
     spawn(ctx, 'P1', nightscape);
     const blue = conjure(
@@ -224,7 +224,7 @@ describe('Nightscape Familiar regeneration', () => {
     expect(costReductionFor(ctx, 'P1', black.oracleId, black.cardId).generic).toBe(0);
   });
 
-  it('nightscape-normal-activation uses legality, mana payment, stack, and resolution', () => {
+  it('nightscape-normal-activation — uses legality, mana payment, stack, and resolution', () => {
     const ctx = pod('nightscape-normal-activation');
     const player = ctx.state.players[0]!;
     const familiar = spawn(ctx, 'P1', nightscape);
