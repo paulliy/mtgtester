@@ -14,6 +14,24 @@ export const ENGINE_VERSION = '0.2.0-phase2';
 export { Engine } from './engine';
 export type { EngineDriver, EngineOptions } from './engine';
 export type { PreparedScenarioSpec } from './testing/prepared-scenario';
+export {
+  CARD_SCENARIO_SEATS,
+  buildCardScenario,
+  describeRequest as describeScenarioRequest,
+  parseCardScenarioFile,
+  scenarioAction,
+  scenarioPattern,
+  scenarioTargets,
+  supportCard as scenarioSupportCard,
+} from './testing/card-scenario';
+export type {
+  BuiltScenario,
+  CardResolver,
+  CardScenario,
+  CardScenarioFile,
+  ScenarioExpectation,
+  ScenarioStep,
+} from './testing/card-scenario';
 export { buildGuardedCandidateDefinition } from './testing/candidate-definition';
 export {
   FABLED_PASSAGE_CANDIDATE,

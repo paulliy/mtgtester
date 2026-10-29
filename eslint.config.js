@@ -250,6 +250,31 @@ export default tseslint.config(
     },
   },
   {
+    // Primitive contract evidence hashes each contract test's dependency closure, so contract
+    // tests stay off the scenario runner (ADR 0034 decision 10). The table pattern is repeated
+    // because this block's rule replaces the one above for these files.
+    files: ['packages/**/*-contract.test.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/table', '**/table/**'],
+              message:
+                'Code under server/src/table/ is for the table server only (ADR 0031 decision 1); import it only from cli/serve-table.ts or from table/ itself.',
+            },
+            {
+              group: ['**/scenario/*', '**/scenario'],
+              message:
+                'Contract tests do not use the scenario runner: their evidence hashes their test closure (ADR 0034 decision 10).',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // The table server reaches no batch runner, benchmark runtime or Card Test Lab scenario
     // (plan M3 task 12); `table/module-graph.test.ts` checks the bundled graph as well.
     files: ['packages/server/src/table/**/*.ts', 'packages/server/src/cli/serve-table.ts'],

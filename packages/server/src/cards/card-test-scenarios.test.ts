@@ -1,6 +1,7 @@
 import type { DecisionRequest } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { createCardTestScenario, listCardTestScenarios } from './card-test-scenarios';
+import { RUNNER_SCENARIOS } from './runner-scenarios';
 import type { CardTestScenario } from './card-test-scenarios';
 
 function chooseAction(request: DecisionRequest): number {
@@ -45,7 +46,10 @@ describe('deterministic Card Test Lab scenarios', () => {
   });
 
   it('lists every registered scenario in catalog order', () => {
-    expect(listCardTestScenarios().map((entry) => entry.id)).toEqual([
+    const ids = listCardTestScenarios().map((entry) => entry.id);
+    // Runner scenarios come first, in their files' order; their list is derived, not kept here.
+    expect(ids.slice(0, RUNNER_SCENARIOS.length)).toEqual(RUNNER_SCENARIOS.map(({ id }) => id));
+    expect(ids.slice(RUNNER_SCENARIOS.length)).toEqual([
       'pr13-master-of-ceremonies-viewer-money',
       'pr13-securitron-squadron-viewer-squad-copy',
       'pr13-securitron-squadron-viewer-nontoken',
