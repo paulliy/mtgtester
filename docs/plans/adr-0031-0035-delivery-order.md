@@ -81,3 +81,12 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 | 4    | done        | P1 data-key registry; P3 label code in `@mtg/shared/presentation`                                          | #44          |
 | 5    | done        | M1 seat controllers: `'table'` mode, per-seat state, fail-closed switches                                  | #44          |
 | 6    | in progress | M2a done (disclosure policy, privacy fixes, replay inputs and harness); M2b engine core; open: M2b streams | #44          |
+
+## Notes from delivery
+
+- **Engine work limits (M3 task 6).** Calibrated over every Card Test Lab scenario and six seeded
+  four-bot games capped at 40 turns: at most 63 events in one `advance()` and 436 objects in one
+  game. The defaults stay at 50,000 and 20,000 (`match/engine-limits.ts`), because ten times that
+  sample would halt long games and board wipes it did not cover.
+- **A slow bot game.** One of those six games (`calibrate-0`) took 12 minutes, against 6 to 14
+  seconds for the others. Worth profiling before table clocks depend on bot speed.
