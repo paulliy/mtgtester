@@ -293,6 +293,27 @@ export class Table {
     return blockers;
   }
 
+  /**
+   * What a holder of the invite may read before joining (the summary endpoint): the phase and
+   * who plays each seat. No names, tokens or claims.
+   */
+  publicSummary(): {
+    tableId: string;
+    phase: TablePhase;
+    joinable: boolean;
+    seats: { seat: PlayerId; controller: TableSeatController }[];
+  } {
+    return {
+      tableId: this.id,
+      phase: this.phase,
+      joinable: this.phase === 'open',
+      seats: [...this.seats.values()].map((record) => ({
+        seat: record.seat,
+        controller: record.controller,
+      })),
+    };
+  }
+
   // ── Lobby: any holder of the invite ───────────────────────────────────────────────────────
 
   join(
