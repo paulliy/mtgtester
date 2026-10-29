@@ -11,7 +11,11 @@ import type { Value } from '../src/cards/value';
 import type { ScopeField } from '../src/cards/scope-contracts';
 import { copies, forest, gameConfig } from './fixtures';
 
-const INVARIANT_FIELDS: readonly ScopeField[] = ['treasureManaSpent', 'manaSpent'];
+const INVARIANT_FIELDS: readonly ScopeField[] = [
+  'treasureManaSpent',
+  'manaSpent',
+  'spellManaValue',
+];
 
 describe('scope-read invariants', () => {
   it.each(INVARIANT_FIELDS)('%s throws on an absent field and reads a present one', (field) => {

@@ -222,7 +222,7 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       // case is a scope that was never populated — 1 is the honest floor, not 0.
       return scope.triggerCount ?? 1;
     case 'spellManaValue':
-      return scope.spellManaValue ?? 0;
+      return scopeFact(scope, 'spellManaValue');
     case 'spellColorCount':
       return scope.spellColorCount ?? 0;
     case 'manaSpent':
