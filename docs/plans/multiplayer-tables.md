@@ -1,7 +1,7 @@
 # Multiplayer tables
 
-Decision record: [ADR 0031](../decisions/0031-multiplayer-tables.md). Status: proposed and awaiting
-approval. Presentation work is a separate track,
+Decision record: [ADR 0031](../decisions/0031-multiplayer-tables.md). Status: accepted
+(2026-10-29), in progress. Presentation work is a separate track,
 [server-computed presentation](server-computed-presentation.md)
 ([ADR 0032](../decisions/0032-server-computed-presentation.md)).
 

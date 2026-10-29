@@ -7,10 +7,10 @@ that owns its detail:
 
 | ADR                                                               | Status   | Owning plan                                                                         |
 | ----------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------- |
-| [0031](../decisions/0031-multiplayer-tables.md) multiplayer       | Proposed | [multiplayer tables](multiplayer-tables.md) (M1 to M7)                              |
-| [0032](../decisions/0032-server-computed-presentation.md)         | Proposed | [server-computed presentation](server-computed-presentation.md) (P1 to P6)          |
-| [0033](../decisions/0033-forge-informed-card-authoring.md)        | Proposed | [card authoring and fail-loud](card-authoring-and-fail-loud.md) (phases 2, 5, 6)    |
-| [0034](../decisions/0034-fail-loud-execution-and-strict-tests.md) | Proposed | [card authoring and fail-loud](card-authoring-and-fail-loud.md) (phases 0, 1, 3, 4) |
+| [0031](../decisions/0031-multiplayer-tables.md) multiplayer       | Accepted | [multiplayer tables](multiplayer-tables.md) (M1 to M7)                              |
+| [0032](../decisions/0032-server-computed-presentation.md)         | Accepted | [server-computed presentation](server-computed-presentation.md) (P1 to P6)          |
+| [0033](../decisions/0033-forge-informed-card-authoring.md)        | Accepted | [card authoring and fail-loud](card-authoring-and-fail-loud.md) (phases 2, 5, 6)    |
+| [0034](../decisions/0034-fail-loud-execution-and-strict-tests.md) | Accepted | [card authoring and fail-loud](card-authoring-and-fail-loud.md) (phases 0, 1, 3, 4) |
 | [0035](../decisions/0035-table-diplomacy-and-deals.md) deals      | Accepted | phases 1 to 4 done; [integration](multiplayer-diplomacy-integration.md) for tables  |
 
 ## Why this order
@@ -54,10 +54,9 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 
 ## Decisions needed from the owner
 
-- **Accepting ADRs 0031 to 0034.** Implementation proceeds on the proposed text; the status line
-  changes only on the owner's word. M5 does not start until 0031 is accepted.
-- **ADR 0031 open questions.** Defaults until decided: LAN with `--insecure-lan` first, `relaxed`
-  clock, host cannot assign pool decks.
+- **Accepting ADRs 0031 to 0034.** Decided 2026-10-29: all four accepted, so M5 may start.
+- **ADR 0031 open questions.** Decided 2026-10-29: the defaults stand. LAN with `--insecure-lan`
+  first, `relaxed` clock, host cannot assign pool decks.
 - **Reducer or snapshot for table deals** (step 14), before that step starts.
 
 ## Rules for every step

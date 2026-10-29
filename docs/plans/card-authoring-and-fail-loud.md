@@ -1,6 +1,6 @@
 # Plan: faster card authoring and fail-loud execution
 
-Status: Proposed. Baseline: `8b93725` (2026-10-27).
+Status: In progress (ADRs accepted 2026-10-29). Baseline: `8b93725` (2026-10-27).
 
 Implements [ADR 0033](../decisions/0033-forge-informed-card-authoring.md) (faster card authoring)
 and [ADR 0034](../decisions/0034-fail-loud-execution-and-strict-tests.md) (fail-loud execution and
