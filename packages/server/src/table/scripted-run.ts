@@ -36,6 +36,17 @@ import { wireTables } from './wiring';
 export interface ScriptedRunOptions {
   fixturePath?: string;
   turnCap?: number;
+  /** Human seats: 2 (P1, P2, with bots in P3 and P4) or 4. Default 2. */
+  humans?: 2 | 4;
+  /** The table clock. Default `off`. */
+  clock?: 'off' | 'relaxed' | 'standard';
+  /** Every clock duration divided by this. */
+  clockScale?: number;
+  /**
+   * One seat drops its socket after this many decisions, stays away `awayMs`, then resumes the
+   * seat on a new socket and takes control back from the fallback bot.
+   */
+  disconnect?: { seat: PlayerId; afterDecisions: number; awayMs: number };
   /** 64 hex digits; the run fails if it ever appears in a live frame. */
   rngKey?: string;
   /** Give up after this long. */
@@ -54,10 +65,19 @@ export interface ScriptedSeatReport {
   replayTurnServed: boolean;
 }
 
+export interface ScriptedDisconnectReport {
+  /** The seat was handed to its fallback bot while away. */
+  fallbackSeen: boolean;
+  reconnected: boolean;
+  /** Decisions shown to the player after it took control back. */
+  decisionsAfterResume: number;
+}
+
 export interface ScriptedRunReport {
   ok: boolean;
   problems: string[];
   seats: ScriptedSeatReport[];
+  disconnect: ScriptedDisconnectReport | null;
   scan: FrameScanReport;
   attemptStatus: string | null;
   gameStatus: string | null;
@@ -121,6 +141,8 @@ export async function runScriptedTable(
       TABLE_TURN_CAP: String(options.turnCap ?? 6),
       TABLE_PACE_MS: '0',
       TABLE_PORT: '0',
+      TABLE_CLOCK: options.clock ?? 'off',
+      ...(options.clockScale !== undefined && { TABLE_CLOCK_SCALE: String(options.clockScale) }),
     },
     ['--dev', '--oracle-fixture', fixturePath],
   );
@@ -144,6 +166,12 @@ export async function runScriptedTable(
   };
   const seatReports = new Map<PlayerId, ScriptedSeatReport>();
   const sockets: WebSocket[] = [];
+  const humanCount = options.humans ?? 2;
+  const drop = options.disconnect;
+  const disconnect: ScriptedDisconnectReport | null =
+    drop === undefined
+      ? null
+      : { fallbackSeen: false, reconnected: false, decisionsAfterResume: 0 };
 
   try {
     const created = await fetch(`${server.origin}/tables`, {
@@ -158,7 +186,8 @@ export async function runScriptedTable(
     const wsUrl = `${server.origin.replace('http', 'ws')}/tables/${table.tableId}/ws`;
     const inviteCode = table.inviteUrl.split('#')[1] ?? '';
 
-    // The host: authenticates, makes P3 and P4 bots, approves each claim, starts at two humans.
+    // The host: authenticates, makes the bot seats, approves each claim, starts once every human
+    // seat is approved.
     let approved = 0;
     let startSent = false;
     const host = await openSocket(wsUrl, record, 'host', (frame) => {
@@ -167,93 +196,161 @@ export async function runScriptedTable(
         host.send(JSON.stringify({ type: 'hostApprove', payload: { claimId: claim.claimId } }));
         approved += 1;
       }
-      if (!startSent && frame.payload.canStart && approved >= 2) {
+      if (!startSent && frame.payload.canStart && approved >= humanCount) {
         startSent = true;
         host.send(JSON.stringify({ type: 'hostStart', payload: {} }));
       }
     });
     sockets.push(host);
     host.send(JSON.stringify({ type: 'hostAuth', payload: { hostToken: table.hostToken } }));
-    for (const seat of ['P3', 'P4'] as const) {
-      host.send(JSON.stringify({ type: 'hostSetSeat', payload: { seat, controller: 'bot' } }));
+    if (humanCount === 2) {
+      for (const seat of ['P3', 'P4'] as const) {
+        host.send(JSON.stringify({ type: 'hostSetSeat', payload: { seat, controller: 'bot' } }));
+      }
     }
 
     const players: Array<{ seat: PlayerId; name: string }> = [
       { seat: 'P1', name: 'Ann' },
       { seat: 'P2', name: 'Bo' },
-    ];
-    const finished = players.map(
-      ({ seat, name }) =>
-        new Promise<void>((done, fail) => {
-          const report: ScriptedSeatReport = {
-            seat,
-            exitCode: null,
-            frames: 0,
-            decisionsAnswered: 0,
-            gameOver: false,
-            resultsEnding: null,
-            resultsKeyMatches: false,
-            replayTurns: [],
-            replayTurnServed: false,
-          };
-          seatReports.set(seat, report);
-          let socket: WebSocket | null = null;
-          let askedReplay = false;
-          const maybeDone = (): void => {
-            if (report.gameOver && report.resultsEnding !== null && askedReplay) {
-              if (report.replayTurns.length === 0 || report.replayTurnServed) done();
-            }
-          };
-          const session = new TableAgentSession({
-            io: {
-              event: (event: AgentEvent) => {
-                if (event.type === 'decision-required') report.decisionsAnswered += 1;
-              },
-              diagnostic: () => undefined,
-            },
-            transport: {
-              send: (message) => socket?.send(JSON.stringify(message)),
-              // The run keeps the socket open after `gameOver` to read the post-game record.
-              close: () => undefined,
-            },
-            join: { inviteCode, displayName: name, seat, decklist: decklistFor(cards, seat) },
-            policy: 'first-legal',
-            onDone: (code) => {
-              report.exitCode = code;
-            },
-          });
-          openSocket(wsUrl, record, seat, (frame) => {
-            report.frames += 1;
-            // A turn-capped game ends as a halt, which the agent reports as a failed run; the
-            // seat still receives the game's `gameOver`, and that is what this run waits for.
-            if (frame.type === 'gameOver') report.gameOver = true;
-            if (frame.type === 'tableResults') {
-              report.resultsEnding = frame.payload.ending;
-              report.resultsKeyMatches = frame.payload.rngKey === rngKey;
-              report.replayTurns = frame.payload.replayTurns;
-              const first = frame.payload.replayTurns[0];
-              askedReplay = true;
-              if (first !== undefined) {
-                socket?.send(JSON.stringify({ type: 'replayTurn', payload: { turn: first } }));
+      { seat: 'P3', name: 'Cy' },
+      { seat: 'P4', name: 'Di' },
+    ].slice(0, humanCount);
+    // One claim at a time: every scripted player connects from the same address, and a table
+    // holds at most two pending claims per address (plan M3 task 2).
+    let previousGranted: Promise<void> = Promise.resolve();
+    const finished = players.map(({ seat, name }) => {
+      let markGranted!: () => void;
+      const granted = new Promise<void>((resolveGranted) => {
+        markGranted = resolveGranted;
+      });
+      const after = previousGranted;
+      previousGranted = granted;
+      return new Promise<void>((done, fail) => {
+        const report: ScriptedSeatReport = {
+          seat,
+          exitCode: null,
+          frames: 0,
+          decisionsAnswered: 0,
+          gameOver: false,
+          resultsEnding: null,
+          resultsKeyMatches: false,
+          replayTurns: [],
+          replayTurnServed: false,
+        };
+        seatReports.set(seat, report);
+        let socket: WebSocket | null = null;
+        let askedReplay = false;
+        const dropsHere = drop !== undefined && drop.seat === seat;
+        let away = false;
+        let resumedAt: number | null = null;
+        const maybeDone = (): void => {
+          // A seat that was away at the end gets the results on return, without `gameOver`.
+          if (report.resultsEnding !== null && askedReplay) {
+            if (report.replayTurns.length === 0 || report.replayTurnServed) done();
+          }
+        };
+        const session = new TableAgentSession({
+          io: {
+            event: (event: AgentEvent) => {
+              if (event.type !== 'decision-required') return;
+              report.decisionsAnswered += 1;
+              if (disconnect !== null && resumedAt !== null) disconnect.decisionsAfterResume += 1;
+              if (dropsHere && !away && resumedAt === null) {
+                if (report.decisionsAnswered === drop.afterDecisions) leave();
               }
-              maybeDone();
-              return;
+            },
+            diagnostic: () => undefined,
+          },
+          transport: {
+            send: (message) => {
+              try {
+                socket?.send(JSON.stringify(message));
+              } catch {
+                // Sent on a socket that is going away; the game still has the decision.
+              }
+            },
+            close: () => undefined,
+          },
+          join: { inviteCode, displayName: name, seat, decklist: decklistFor(cards, seat) },
+          policy: 'first-legal',
+          onDone: (code) => {
+            report.exitCode = code;
+          },
+        });
+        const onFrame = (frame: AnyFrame): void => {
+          report.frames += 1;
+          if (frame.type === 'seatGranted') markGranted();
+          if (
+            disconnect !== null &&
+            frame.type === 'seatStatus' &&
+            frame.payload.seat === seat &&
+            frame.payload.fallback
+          ) {
+            disconnect.fallbackSeen = true;
+          }
+          // A turn-capped game ends as a halt, which the agent reports as a failed run; the
+          // seat still receives the game's `gameOver`, and that is what this run waits for.
+          if (frame.type === 'gameOver') report.gameOver = true;
+          if (frame.type === 'tableResults') {
+            report.resultsEnding = frame.payload.ending;
+            report.resultsKeyMatches = frame.payload.rngKey === rngKey;
+            report.replayTurns = frame.payload.replayTurns;
+            const first = frame.payload.replayTurns[0];
+            askedReplay = true;
+            if (first !== undefined) {
+              socket?.send(JSON.stringify({ type: 'replayTurn', payload: { turn: first } }));
             }
-            if (frame.type === 'replayTurnState') {
-              report.replayTurnServed = true;
-              maybeDone();
-              return;
+            maybeDone();
+            return;
+          }
+          if (frame.type === 'replayTurnState') {
+            report.replayTurnServed = true;
+            maybeDone();
+            return;
+          }
+          if (away) return;
+          session.receive(frame);
+        };
+        const transportFor = (target: WebSocket) => ({
+          send: (message: unknown) => {
+            try {
+              target.send(JSON.stringify(message));
+            } catch {
+              // Sent on a socket that is going away; the game still has the decision.
             }
-            session.receive(frame);
+          },
+          // The run keeps the socket open after `gameOver` to read the post-game record.
+          close: () => undefined,
+        });
+        /** Drop the socket mid-game, stay away past the grace, then resume on a new one. */
+        const leave = (): void => {
+          away = true;
+          queueMicrotask(() => {
+            socket?.close();
+            setTimeout(() => {
+              openSocket(wsUrl, record, seat, onFrame)
+                .then((opened) => {
+                  socket = opened;
+                  sockets.push(opened);
+                  away = false;
+                  resumedAt = Date.now();
+                  if (disconnect !== null)
+                    disconnect.reconnected = session.reconnect(transportFor(opened));
+                })
+                .catch(fail);
+            }, drop?.awayMs ?? 0);
+          });
+        };
+        after
+          .then(() => openSocket(wsUrl, record, seat, onFrame))
+          .then((opened) => {
+            socket = opened;
+            sockets.push(opened);
+            session.begin();
           })
-            .then((opened) => {
-              socket = opened;
-              sockets.push(opened);
-              session.begin();
-            })
-            .catch(fail);
-        }),
-    );
+          .catch(fail);
+      });
+    });
 
     const timeout = new Promise<'timeout'>((resolveTimeout) => {
       setTimeout(() => resolveTimeout('timeout'), options.timeoutMs ?? 240_000).unref();
@@ -287,7 +384,9 @@ export async function runScriptedTable(
   if (scan.handIdsTracked === 0) problems.push('frame scan: no hand was ever read from a board');
   const seats = [...seatReports.values()];
   for (const seat of seats) {
-    if (!seat.gameOver) problems.push(`${seat.seat} never saw gameOver`);
+    if (!seat.gameOver && drop?.seat !== seat.seat) {
+      problems.push(`${seat.seat} never saw gameOver`);
+    }
     if (seat.exitCode === null) problems.push(`${seat.seat} agent never finished`);
     if (seat.resultsEnding !== 'gameOver')
       problems.push(`${seat.seat} results: ${seat.resultsEnding}`);
@@ -298,10 +397,18 @@ export async function runScriptedTable(
   }
   if (attempt?.status !== 'finished') problems.push(`attempt status ${String(attempt?.status)}`);
 
+  if (disconnect !== null) {
+    if (!disconnect.reconnected) problems.push('the dropped seat never reconnected');
+    if (!disconnect.fallbackSeen) problems.push('the dropped seat was never handed to its bot');
+    if (disconnect.decisionsAfterResume === 0) {
+      problems.push('the player got no decision after taking control back');
+    }
+  }
   return {
     ok: problems.length === 0,
     problems,
     seats,
+    disconnect,
     scan,
     attemptStatus: attempt?.status ?? null,
     gameStatus: game?.status ?? null,

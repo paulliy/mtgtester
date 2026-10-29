@@ -21,7 +21,9 @@ import type {
   PlayerId,
   ServerToClientMessage,
   SubmitPlayerActionPayload,
+  TableClockMode,
   TableDeckProblem,
+  TableServerToClientMessage,
   YieldPlayerAbilityPayload,
 } from '@mtg/shared';
 
@@ -48,6 +50,10 @@ export interface TableSessionConfig {
   maxStepWork: number;
   maxObjects: number;
   turnCap?: number;
+  /** The table's clock preset; `off` (dev mode only) runs untimed. */
+  clock: TableClockMode;
+  /** Dev mode only: every clock duration divided by this, for end-to-end tests. */
+  clockScale?: number;
   /** The table database the worker's `GameStore` opens. Already migrated by the main thread. */
   dbPath: string;
   /** Use the fixture oracle (`--oracle-fixture`) instead of the full card data. */
@@ -64,6 +70,8 @@ export type TableSessionInput =
   | { type: 'cancelYield'; seat: PlayerId }
   | { type: 'setPlayerConnected'; seat: PlayerId; connected: boolean }
   | { type: 'setRawActionData'; seat: PlayerId; enabled: boolean }
+  /** The seat's player takes it back from the fallback bot (M4). */
+  | { type: 'resumeControl'; seat: PlayerId }
   /** Re-send the seat's board and pending request to a socket that just bound to it. */
   | { type: 'resyncPlayer'; seat: PlayerId };
 
@@ -75,6 +83,8 @@ export type TableSessionOutput =
   | { type: 'seatFrame'; generation: number; seat: PlayerId; message: ServerToClientMessage }
   /** A frame every seated player may receive, still subject to the outbound allowlist. */
   | { type: 'publicFrame'; generation: number; message: ServerToClientMessage }
+  /** A table frame (`clockState`, `seatStatus`) for every seated player, through the allowlist. */
+  | { type: 'tableFrame'; generation: number; message: TableServerToClientMessage }
   /** Setup succeeded and the game is running. Sent once, before any frame. */
   | { type: 'started'; generation: number }
   /** Terminal: deck problems found during preparation. No game row or result was created. */

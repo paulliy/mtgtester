@@ -167,6 +167,7 @@ function makeRig(options: RigOptions = {}) {
         ),
         maxStepWork: 1000,
         maxObjects: 1000,
+        clock: 'off' as const,
         dbPath: ':memory:',
       })),
     ...(options.postGame === undefined ? {} : { postGame: options.postGame }),
@@ -465,14 +466,37 @@ describe('the table message set', () => {
     expect(retry.errors().at(-1)).toBe('This connection holds no seat.');
   });
 
-  it('refuses resumeControl until clocks exist and replayTurn before the game is finished', async () => {
+  it('forwards resumeControl for the bound seat only, and refuses replayTurn before the end', async () => {
     const game = await startedGame();
     game.rig.send(game.aliceGame, 'resumeControl');
+    game.rig.send(game.carol, 'resumeControl');
     game.rig.send(game.aliceGame, 'replayTurn', { turn: 1 });
-    expect(game.aliceGame.errors()).toEqual([
-      'Resuming control is not available yet.',
-      'Replay unlocks when the game is over.',
-    ]);
+    expect(game.port.inputs('resumeControl')).toEqual([{ type: 'resumeControl', seat: 'P1' }]);
+    expect(game.carol.errors()).toEqual(['This connection holds no seat.']);
+    expect(game.aliceGame.errors()).toEqual(['Replay unlocks when the game is over.']);
+  });
+
+  it('sends clock and seat status frames to every bound seat, never to a lobby-only socket', async () => {
+    const game = await startedGame();
+    game.port.emit({
+      type: 'tableFrame',
+      generation: game.port.generation,
+      message: {
+        type: 'clockState',
+        payload: { seat: 'P2', remainingMs: 70_000, bankMs: 60_000, running: true },
+      },
+    });
+    game.port.emit({
+      type: 'tableFrame',
+      generation: game.port.generation,
+      message: { type: 'seatStatus', payload: { seat: 'P2', connected: false, fallback: true } },
+    });
+    for (const socket of [game.aliceGame, game.bobGame]) {
+      expect(socket.of('clockState')).toHaveLength(1);
+      expect(socket.of('seatStatus')).toHaveLength(1);
+    }
+    expect(game.carol.of('clockState')).toEqual([]);
+    expect(game.carol.of('seatStatus')).toEqual([]);
   });
 });
 

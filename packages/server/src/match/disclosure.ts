@@ -225,6 +225,9 @@ const OUTBOUND_GATES = {
 const PLANNED_OUTBOUND_GATES: Readonly<Record<string, OutboundGate>> = {
   replayTurnState: 'fullState',
   tableResults: 'fullState',
+  // A seat's clock and connection are the visible wait the ADR accepts (decision 10).
+  clockState: 'always',
+  seatStatus: 'always',
 };
 
 /** The full-state types, for tests and for the table server's own checks. */

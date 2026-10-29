@@ -59,6 +59,8 @@ export function wireTables(deps: TableWiringDeps): TableWiring {
       ...(config.turnCap !== null && { turnCap: config.turnCap }),
       ...(config.paceMs !== null && { livePaceMs: config.paceMs }),
       ...(config.oracleFixture !== null && { oracleFixture: true }),
+      clock: config.clock,
+      ...(config.clockScale !== null && { clockScale: config.clockScale }),
     });
     // The manifest is committed before the worker exists, so a worker that never reaches game
     // start still leaves a record of what was approved and which key was drawn.

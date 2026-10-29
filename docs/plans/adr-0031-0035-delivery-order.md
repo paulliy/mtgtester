@@ -72,16 +72,16 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 
 ## Progress
 
-| Step | State       | Done so far                                                                                  | Pull request |
-| ---- | ----------- | -------------------------------------------------------------------------------------------- | ------------ |
-| 1    | done        | stale harness deleted; harness-integrity guard                                               | #44          |
-| 2    | done        | `scripts/card-authoring-metrics.ts`; `docs/reviews/card-authoring-baseline-2026-10-28.md`    | #44          |
-| 3    | in progress | phase 1 steps 2 to 10 done; open: executor invariants for scope reads, empty suites          | #44          |
-| 4    | done        | P1 data-key registry; P3 label code in `@mtg/shared/presentation`                            | #44          |
-| 5    | done        | M1 seat controllers: `'table'` mode, per-seat state, fail-closed switches                    | #44          |
-| 6    | done        | M2a disclosure policy, privacy fixes, replay inputs and harness; M2b ChaCha20 and streams    | #44          |
-| 7    | done        | P2 projection types and board groups; P4 server presentation; P5 raw `data` on request, lint | #44          |
-| 9    | in progress | M3 done: workers, health probes, manifest, post-game view, agent table mode, scans; M4 next  | #44          |
+| Step | State       | Done so far                                                                                    | Pull request |
+| ---- | ----------- | ---------------------------------------------------------------------------------------------- | ------------ |
+| 1    | done        | stale harness deleted; harness-integrity guard                                                 | #44          |
+| 2    | done        | `scripts/card-authoring-metrics.ts`; `docs/reviews/card-authoring-baseline-2026-10-28.md`      | #44          |
+| 3    | in progress | phase 1 steps 2 to 10 done; open: executor invariants for scope reads, empty suites            | #44          |
+| 4    | done        | P1 data-key registry; P3 label code in `@mtg/shared/presentation`                              | #44          |
+| 5    | done        | M1 seat controllers: `'table'` mode, per-seat state, fail-closed switches                      | #44          |
+| 6    | done        | M2a disclosure policy, privacy fixes, replay inputs and harness; M2b ChaCha20 and streams      | #44          |
+| 7    | done        | P2 projection types and board groups; P4 server presentation; P5 raw `data` on request, lint   | #44          |
+| 9    | done        | M3 workers, health, manifest, post-game, agent table mode, scans; M4 clocks, fallback, concede | #44          |
 
 ## Notes from delivery
 
@@ -109,5 +109,15 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 - **The scripted run (M3 exit).** `table-scripted-run.ts` plays two `first-legal` agent clients and
   two bots to a 6-turn cap in real workers in about 7 seconds; the scan read 18 hand ids and
   found no violation over 135 frames.
+- **A concession mid-cast (M4).** `Engine.concede` throws into the game generator, so a cast in
+  progress rewinds through its checkpoint, event counter included. Its events may already have
+  been flushed, so the concession carries a sequence floor and `conceded` is numbered after
+  them; otherwise the database would drop it on conflict and the runner's cursor would skip it.
+- **The fallback bot and replay (M4).** Replay reads responses, never who gave them, so a game
+  with timeout and fallback answers that ends at its time limit replays to the same hash
+  (`replay-from-log.test.ts`), now that the harness replays `chacha20` games and `conceded`.
+- **Open from M3: the scry cadence test.** The hub sends a seat a board only when its projection
+  changed and the runner sends no empty batch, which is what keeps another seat's hidden decision
+  from adding frames; an end-to-end test with a scripted opponent scry is still to be written.
 - **Unmodeled cards in a table deck** are reported to that seat as `unresolved` with the card
   name; a dedicated problem code can follow if the lobby needs to tell them apart.

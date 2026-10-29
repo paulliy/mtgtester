@@ -49,6 +49,8 @@ export interface TableConfig {
   turnCap: number | null;
   /** Development mode only: the live presentation pace in ms (`TABLE_PACE_MS`); 0 is no delay. */
   paceMs: number | null;
+  /** Development mode only: every clock duration divided by this (`TABLE_CLOCK_SCALE`). */
+  clockScale: number | null;
 }
 
 export type TableConfigErrorCode =
@@ -273,6 +275,15 @@ export function loadTableConfig(
     return fail('badValue', 'TABLE_PACE_MS must be a whole number of ms.', 'TABLE_PACE_MS');
   }
 
+  const clockScale = wholeSetting(env, 'TABLE_CLOCK_SCALE', 1, 10_000);
+  if (clockScale === 'bad') {
+    return fail(
+      'badValue',
+      'TABLE_CLOCK_SCALE must be a whole number from 1.',
+      'TABLE_CLOCK_SCALE',
+    );
+  }
+
   const webDir = resolve(cwd, setting(env, 'TABLE_WEB_DIR') ?? DEFAULT_TABLE_WEB_DIR);
   const dbPath = resolve(cwd, setting(env, 'TABLE_DB_PATH') ?? DEFAULT_TABLE_DB_PATH);
   if (isInside(webDir, dbPath)) {
@@ -298,6 +309,7 @@ export function loadTableConfig(
       oracleFixture: args.oracleFixture,
       turnCap,
       paceMs,
+      clockScale,
     },
   };
 }

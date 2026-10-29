@@ -102,6 +102,7 @@ function configOf(over: Partial<TableSessionConfig> = {}): TableSessionConfig {
     seats: seatsOf(),
     ...TABLE_ENGINE_LIMITS,
     turnCap: 6,
+    clock: 'off',
     dbPath: ':memory:',
     livePaceMs: 0,
     ...over,

@@ -52,6 +52,8 @@ describe('table protocol vocabulary', () => {
         'tableState',
         'tableResults',
         'replayTurnState',
+        'clockState',
+        'seatStatus',
       ].sort(),
     );
   });

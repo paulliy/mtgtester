@@ -770,6 +770,15 @@ export class AgentClientSession {
     });
   }
 
+  /**
+   * The socket was replaced (a table seat resumed on a new connection). An answer sent on the
+   * old one may never have arrived; the server re-sends the decision if it is still pending, and
+   * that decision may be answered again.
+   */
+  reconnected(): void {
+    this.submitted = false;
+  }
+
   /** The agent closed its input stream. */
   inputClosed(): void {
     if (this.finished) return;

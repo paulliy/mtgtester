@@ -9,7 +9,8 @@
  * differs, a log that outruns the engine, card data that is not the card data the game saw.
  *
  * Out-of-band inputs are applied by `applyOutOfBandEvent` below: a recorded `yieldCancelled` is
- * the same `Engine.cancelYield` call the live game made. `concede` joins it in M4.
+ * the same `Engine.cancelYield` call the live game made, and a recorded `conceded` the same
+ * `Engine.concede` (M4).
  */
 
 import { describe, expect, it } from 'vitest';
@@ -24,7 +25,8 @@ import type {
 import { replayHash } from '../benchmark/replay';
 import type { GameStore } from '../db';
 import { GameRecorder, type GameReplayConfig, type SqliteLike } from '../db/games';
-import { testerPolicy } from './disclosure';
+import type { ClockTimers } from './decision-clock';
+import { tablePolicy, testerPolicy } from './disclosure';
 import { MatchSession } from './session';
 import type { SeatSetup } from './setup';
 
@@ -79,7 +81,7 @@ export interface ReplayResult {
 }
 
 /** Event types that are inputs from outside the decision loop, applied at their sequence. */
-const OUT_OF_BAND_TYPES: ReadonlySet<string> = new Set(['yieldCancelled']);
+const OUT_OF_BAND_TYPES: ReadonlySet<string> = new Set(['yieldCancelled', 'conceded']);
 
 /**
  * The state hash replay compares: the whole state but the two fields that depend on when the
@@ -103,9 +105,10 @@ function nextSequenceOf(engine: Engine): number {
  *
  * Called when the engine's next event sequence equals `event.sequence`, after both `advance()`
  * and `submit()`. For `yieldCancelled` this is `engine.cancelYield(event.payload.player)`, which
- * must emit the event at exactly that sequence (the harness checks). From M4, `concede` joins it.
- * Until `Engine.cancelYield` emits `yieldCancelled` there is nothing correct to do, so this
- * refuses rather than skip an input and replay a different game.
+ * must emit the event at exactly that sequence (the harness checks). For `conceded` it is
+ * `engine.concede(players, reason)`, applied where the live runner applied it: at a decision the
+ * engine was waiting on. Anything else is refused rather than skipped, since skipping an input
+ * replays a different game.
  */
 export function applyOutOfBandEvent(engine: Engine, event: GameEvent): void {
   switch (event.type) {
@@ -120,6 +123,23 @@ export function applyOutOfBandEvent(engine: Engine, event: GameEvent): void {
         throw new ReplayMismatchError(
           `${player} was not yielding when 'yieldCancelled' was recorded at sequence ${event.sequence}`,
         );
+      return;
+    }
+    case 'conceded': {
+      const players = event.payload['players'];
+      const reason = event.payload['reason'];
+      if (
+        !Array.isArray(players) ||
+        !players.every((player) => typeof player === 'string') ||
+        (reason !== 'timeLimit' && reason !== 'allAway')
+      ) {
+        throw new ReplayMismatchError(`'conceded' at sequence ${event.sequence} is malformed`);
+      }
+      if (!engine.concede(players as string[], reason)) {
+        throw new ReplayMismatchError(
+          `the game was already over when 'conceded' was recorded at sequence ${event.sequence}`,
+        );
+      }
       return;
     }
     default:
@@ -146,14 +166,15 @@ export function replayFromLog(input: ReplayInput): ReplayResult {
       `the card data differs (stored ${config.cardDataSha256}, current ${input.currentCardDataSha256})`,
     );
   }
-  if (config.rng.kind !== 'legacy') {
-    throw new ReplayRefusedError(`rng '${config.rng.kind}' is not replayable by this harness yet`);
+  if (config.rng.kind === 'chacha20' && !/^[0-9a-f]{64}$/.test(config.rng.key)) {
+    throw new ReplayRefusedError('the chacha20 key is missing or malformed');
   }
 
   const engine = new Engine(
     {
       gameId: input.gameId,
       seed: input.seed,
+      ...(config.rng.kind === 'chacha20' && { rng: 'chacha20' as const, rngKey: config.rng.key }),
       turnCap: config.turnCap,
       players: config.seats.map((seat) => {
         const deck = input.resolveDeck(seat.deckSnapshotId);
@@ -199,7 +220,7 @@ export function replayFromLog(input: ReplayInput): ReplayResult {
       applyOutOfBandEvent(engine, event);
       nextOutOfBand += 1;
       applied += 1;
-      const emitted = engine.getState().eventLog.at(-1);
+      const emitted = engine.getState().eventLog.find((e) => e.sequence === event.sequence);
       if (emitted?.sequence !== event.sequence || emitted.type !== event.type) {
         throw new ReplayMismatchError(
           `applying '${event.type}' at sequence ${event.sequence} emitted ` +
@@ -212,7 +233,8 @@ export function replayFromLog(input: ReplayInput): ReplayResult {
   for (;;) {
     const step = engine.advance();
     applyDue('after advance()');
-    if (step.kind === 'gameOver') break;
+    // A concession applied at this decision ended the game.
+    if (step.kind === 'gameOver' || engine.getResult() !== null) break;
     if (step.kind === 'continue') continue;
 
     // The log ends at its last recorded event: a game that was abandoned stops here.
@@ -348,6 +370,8 @@ function seatSetups(): SeatSetup[] {
 /** An in-memory stand-in for `game_events` and the `games` replay columns. */
 class RecordedGame {
   readonly events: GameEvent[] = [];
+  /** `game_decision_sources`: request id to source. */
+  readonly sources = new Map<string, string>();
   config: GameReplayConfig | null = null;
   readonly db: SqliteLike = {
     query: (sql: string) => ({
@@ -374,6 +398,8 @@ class RecordedGame {
               payload: JSON.parse(payload) as Record<string, unknown>,
             });
           }
+        } else if (sql.includes('INSERT INTO game_decision_sources')) {
+          this.sources.set(String(args[1]), String(args[3]));
         } else if (sql.includes('UPDATE games SET config_json')) {
           this.config = JSON.parse(String(args[0])) as GameReplayConfig;
         }
@@ -563,13 +589,13 @@ describe('replay from the stored log', () => {
     ).toThrow(ReplayRefusedError);
   }, 30_000);
 
-  it('refuses an rng it cannot replay', async () => {
+  it('refuses a chacha20 config without a usable key', async () => {
     const played = await playScriptedGame();
     const config: GameReplayConfig = {
       ...played.recorded.config!,
-      rng: { kind: 'chacha20', key: 'ab'.repeat(32) },
+      rng: { kind: 'chacha20', key: '' },
     };
-    expect(() => replayFromLog(inputFor(played, { config }))).toThrow(/chacha20/);
+    expect(() => replayFromLog(inputFor(played, { config }))).toThrow(/chacha20 key/);
   }, 30_000);
 
   it('fails loudly when a recorded request id is not the one the engine asks', async () => {
@@ -638,5 +664,125 @@ describe('replay from the stored log', () => {
 
     const replayed = replayFromLog(inputFor(played));
     expect(replayed.hash).toBe(replayStateHash(played.session.engine));
+  }, 30_000);
+
+  it('replays a timed table game with timeout and fallback answers that ends at the time limit', async () => {
+    const recorded = new RecordedGame();
+    let now = 0;
+    const due: Array<{ at: number; callback: () => void; id: number }> = [];
+    let ids = 0;
+    const timers: ClockTimers = {
+      now: () => now,
+      setTimeout: (callback, ms) => {
+        ids += 1;
+        due.push({ at: now + ms, callback, id: ids });
+        return ids;
+      },
+      clearTimeout: (handle) => {
+        const index = due.findIndex((entry) => entry.id === handle);
+        if (index >= 0) due.splice(index, 1);
+      },
+    };
+    const advance = (ms: number): void => {
+      const end = now + ms;
+      for (;;) {
+        due.sort((a, b) => a.at - b.at);
+        const next = due[0];
+        if (next === undefined || next.at > end) break;
+        due.shift();
+        now = next.at;
+        next.callback();
+      }
+      now = end;
+    };
+    const bySeat: Record<string, ServerToClientMessage[]> = { P1: [], P3: [] };
+    const pub: ServerToClientMessage[] = [];
+    const rngKey = '3c'.repeat(32);
+    const session = new MatchSession({
+      disclosure: tablePolicy(),
+      gameId: 'g-replay',
+      seed: 'replay-seed',
+      rng: 'chacha20',
+      rngKey,
+      seats: seatSetups(),
+      providerKind: 'random',
+      gameMode: 'table',
+      seatControllers: { P1: 'human', P2: 'random', P3: 'human', P4: 'random' },
+      store: recorded.store(),
+      replay: {
+        cardDataSha256: CARD_DATA_SHA,
+        build: { commit: 'test-commit', branch: null, dirty: false },
+      },
+      livePaceMs: 0,
+      clock: {
+        settings: {
+          allowanceMs: 1_000,
+          bankMs: 0,
+          graceMs: 60_000,
+          disconnectBudgetMs: 300_000,
+          gameCapMs: 30_000,
+        },
+        timers,
+      },
+      send: (message) => pub.push(message),
+      sendToSeat: (seat, message) => bySeat[seat]!.push(message),
+    });
+    const chooser = new RandomDecisionProvider('replay-p3');
+    let p1Seen = 0;
+    let p3Seen = 0;
+    session.start();
+    const deadline = Date.now() + 20_000;
+    while (!pub.some((m) => m.type === 'gameOver' || m.type === 'computeHalted')) {
+      if (Date.now() > deadline) throw new Error('the timed game did not finish');
+      const p3 = bySeat['P3']!.filter(
+        (m): m is ActionRequired => m.type === 'playerActionRequired',
+      );
+      const p1 = bySeat['P1']!.filter(
+        (m): m is ActionRequired => m.type === 'playerActionRequired',
+      );
+      if ([...recorded.sources.values()].includes('fallback')) {
+        // The fallback bot has answered for P1: the table's time runs out while P3 thinks.
+        advance(30_000);
+      } else if (p3[p3Seen] !== undefined) {
+        const next = p3[p3Seen]!;
+        p3Seen += 1;
+        const answer = chooser.decide(next.payload.request);
+        session.submitPlayerAction('P3', {
+          requestId: answer.requestId,
+          actionId: answer.actionId,
+          revision: next.payload.revision,
+          ...(answer.targets !== undefined ? { targets: answer.targets } : {}),
+        });
+      } else if (p1.length > p1Seen) {
+        // P1 never answers: each shown decision runs out and the fallback bot answers. After the
+        // third the bot keeps the seat.
+        p1Seen = p1.length;
+        advance(1_000);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1));
+    }
+    await session.settled();
+    const result = session.engine.getResult();
+    expect(result?.endReason).toBe('timeLimit');
+    const events = recorded.sorted();
+    expect(events.some((event) => event.type === 'conceded')).toBe(true);
+    // Answers from the player, the clock and the fallback bot all replay alike: replay reads the
+    // responses, never who gave them.
+    const sources = new Set(recorded.sources.values());
+    for (const source of ['human', 'timeout', 'fallback', 'bot']) expect(sources).toContain(source);
+    expect(recorded.config?.rng).toEqual({ kind: 'chacha20', key: rngKey });
+
+    const replayed = replayFromLog({
+      gameId: 'g-replay',
+      seed: 'replay-seed',
+      config: recorded.config!,
+      resolveDeck: (snapshotId) => snapshotTable().get(snapshotId)!,
+      events,
+      currentCardDataSha256: CARD_DATA_SHA,
+    });
+    expect(replayed.outOfBand).toBe(1);
+    expect(replayed.engine.getState().eventLog).toEqual(events);
+    expect(replayed.hash).toBe(replayStateHash(session.engine));
+    expect(replayed.engine.getResult()).toEqual(result);
   }, 30_000);
 });

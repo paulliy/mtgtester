@@ -34,6 +34,9 @@ const ALWAYS = [
   'diplomacyState',
   'dealDraft',
   'error',
+  // A table seat's clock and connection: the visible wait ADR 0031 decision 10 accepts.
+  'clockState',
+  'seatStatus',
 ];
 
 describe('DENY_ALL', () => {

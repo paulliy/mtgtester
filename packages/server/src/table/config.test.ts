@@ -54,6 +54,7 @@ describe('loadTableConfig', () => {
       oracleFixture: null,
       turnCap: null,
       paceMs: null,
+      clockScale: null,
     });
     expect(config.dbPath).toBe('/work/repo/data/tables/tables.sqlite');
     expect(config.webDir).toBe('/work/repo/apps/web/dist-table');

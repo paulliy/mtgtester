@@ -211,6 +211,9 @@ export class MatchRunner {
 
   /** Resolves when something the compute gate cares about changes. */
   private wakeup: (() => void) | null = null;
+  /** A concession asked for (ADR 0031 decision 10), applied at the next decision boundary. */
+  private pendingConcession: { players: PlayerId[]; reason: 'timeLimit' | 'allAway' } | null = null;
+  private wakeConcession: (() => void) | null = null;
   /** The escalation currently awaiting a human pick, if any (brief §7.7 step 2). */
   private heldDecision: {
     requestId: string;
@@ -301,6 +304,22 @@ export class MatchRunner {
     if (targets !== undefined && targets.length > 0) response.targets = targets;
     held.resolve(response);
     return true;
+  }
+
+  /**
+   * End the game by agreement: a table's time limit, or every human gone (ADR 0031 decision 10).
+   * Applied at the decision the runner is waiting on, or at the next one it reaches; the waiting
+   * provider's answer, if it ever comes, is dropped. The result is a draw for the players still
+   * in the game, recorded as an outcome and not a halt.
+   */
+  concede(players: readonly PlayerId[], reason: 'timeLimit' | 'allAway'): void {
+    if (this.status === 'finished' || this.status === 'halted' || this.status === 'abandoned') {
+      return;
+    }
+    if (this.pendingConcession !== null) return;
+    this.pendingConcession = { players: [...players], reason };
+    this.wakeConcession?.();
+    this.wake();
   }
 
   abandon(): void {
@@ -410,6 +429,7 @@ export class MatchRunner {
       }
 
       const request = step.request;
+      if (this.applyConcession()) continue;
       // Bookkeep and flush *before* the provider, not after it. `advance()` has already run this
       // decision's whole forced tail — payments, forced passes, resolutions, draws — and the
       // board it surfaced the request against is settled. Flushing afterwards held those outcome
@@ -424,8 +444,12 @@ export class MatchRunner {
       // match from inside them. The post-await guard below still covers the provider itself.
       if (this.isAbandoned()) return;
 
-      const response = await this.opts.providerFor(request.decidingPlayer).decide(request);
+      const response = await this.decideOrConcede(request);
       if (this.isAbandoned()) return;
+      if (response === null) {
+        this.applyConcession();
+        continue;
+      }
 
       this.opts.engine.submit(response);
       // `eventCursor` still points at the first event the submit above produced — `flushEvents()`
@@ -443,12 +467,42 @@ export class MatchRunner {
     }
   }
 
+  /** The provider's answer, or null when a concession arrives first. */
+  private async decideOrConcede(request: DecisionRequest): Promise<DecisionResponse | null> {
+    if (this.pendingConcession !== null) return null;
+    const conceded = new Promise<null>((resolve) => {
+      this.wakeConcession = () => {
+        resolve(null);
+      };
+    });
+    try {
+      return await Promise.race([
+        this.opts.providerFor(request.decidingPlayer).decide(request),
+        conceded,
+      ]);
+    } finally {
+      this.wakeConcession = null;
+    }
+  }
+
+  /** Concede the engine's waiting decision if a concession is pending. */
+  private applyConcession(): boolean {
+    const concession = this.pendingConcession;
+    if (concession === null) return false;
+    this.pendingConcession = null;
+    return this.opts.engine.concede(concession.players, concession.reason);
+  }
+
   /**
    * Park while the frontier is more than `lookaheadTurns` past the viewer. Everything that can
    * change the answer — `setViewTurn`, `abandon` — calls `wake()`.
    */
   private async awaitComputeBudget(): Promise<void> {
-    while (this.hasComputeBudget() === false && !this.isAbandoned()) {
+    while (
+      this.hasComputeBudget() === false &&
+      !this.isAbandoned() &&
+      this.pendingConcession === null
+    ) {
       this.setStatus('waitingForView');
       await new Promise<void>((resolve) => {
         this.wakeup = resolve;
@@ -638,6 +692,15 @@ export class MatchRunner {
         turn: result.turnCount,
         ...(result.haltSite !== undefined && { site: result.haltSite, seed: this.opts.seed }),
       });
+      return;
+    }
+
+    // A game ended by agreement (a table's time limit, everyone away) is a deliberate draw for
+    // the players still in it: an outcome, not a halt (ADR 0031 decision 10).
+    if (result.endReason !== undefined && result.endReason !== 'rules') {
+      this.setStatus('finished');
+      this.persistOutcome(result, 'finished');
+      this.opts.onGameOver?.(result);
       return;
     }
 

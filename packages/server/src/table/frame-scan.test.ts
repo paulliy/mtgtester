@@ -79,6 +79,7 @@ describe('scanTableFrames', () => {
 
   it('finds a full-state frame before the seat saw gameOver', () => {
     expect(rules(frames(['P1', { type: 'replayUnlocked', payload: {} }]))).toEqual(['fullState']);
+    // A seat that was away at the end gets the record on return, after the game was over.
     expect(
       rules(
         frames(
@@ -86,7 +87,7 @@ describe('scanTableFrames', () => {
           ['P1', { type: 'tableResults', payload: {} }],
         ),
       ),
-    ).toEqual(['fullState']);
+    ).toEqual([]);
   });
 
   it('finds tester-only frame types', () => {

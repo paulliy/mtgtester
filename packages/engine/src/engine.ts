@@ -35,6 +35,7 @@ import {
   UnmodeledCardError,
 } from './errors';
 import { playGame, playPreparedScenario } from './flow/game';
+import { GameConcededSignal } from './signals';
 import { debug, emit, settleSpectatorSnapshot } from './log/log';
 import { createGame } from './state/game';
 import type { DebugEntry, GameConfig, GameContext } from './state/types';
@@ -363,6 +364,34 @@ export class Engine implements EngineDriver {
   enableManualMana(playerId: string): void {
     const player = this.ctx.state.players.find((p) => p.id === playerId);
     if (player !== undefined) player.manualMana = true;
+  }
+
+  /**
+   * End the game by agreement (ADR 0031 decision 10): a table's time limit, or every human seat
+   * gone. Only between steps, while a decision waits; the waiting decision is withdrawn and never
+   * answered. The game generator unwinds from where it stands (a cast in progress rewinds
+   * through its checkpoint), then records `conceded` and a draw for the players still in it.
+   * Returns false when the game has already ended. Like `cancelYield`, the event is a replay
+   * input: a replay applies it when the engine reaches its sequence.
+   */
+  concede(players: readonly string[], reason: 'timeLimit' | 'allAway'): boolean {
+    if (this.finished !== null) return false;
+    if (!this.started || this.pendingRequest === null) {
+      throw new EngineUsageError('concede() needs a game waiting on a decision');
+    }
+    this.pendingDecision = null;
+    this.pendingRequest = null;
+    this.nextOutcome = null;
+    const floor = this.ctx.state.nextEventSequence;
+    const step = this.gen.throw(new GameConcededSignal(players, reason, floor));
+    if (step.done !== true) {
+      throw new EngineInvariantError(
+        'engine.concede',
+        'a conceded game kept running past the concession',
+      );
+    }
+    this.finished = step.value;
+    return true;
   }
 
   cancelYield(playerId: string): boolean {

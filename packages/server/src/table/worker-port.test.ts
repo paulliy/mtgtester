@@ -59,6 +59,7 @@ const CONFIG = {
   seats: [],
   maxStepWork: 10,
   maxObjects: 10,
+  clock: 'off',
   dbPath: ':memory:',
 } satisfies TableSessionConfig;
 

@@ -728,6 +728,16 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
         emphasis: 'warning',
       };
 
+    case 'conceded':
+      return {
+        ...base,
+        text:
+          p['reason'] === 'timeLimit'
+            ? 'the table reached its time limit — the game is a draw'
+            : 'every player at the table is away — the game is a draw',
+        emphasis: 'warning',
+      };
+
     case 'gameOver':
       return {
         ...base,

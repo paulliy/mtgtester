@@ -7,7 +7,8 @@
  *
  * - `key`: the game's RNG key outside the post-game record.
  * - `seed`: a non-empty seed in `gameStarted` or a board.
- * - `fullState`: a spectator-shaped or full-state frame before that seat saw `gameOver`.
+ * - `fullState`: a spectator-shaped or full-state frame before the game was over (the first
+ *   `gameOver` any seat was sent; a seat away at the end gets the post-game record on return).
  * - `forbiddenType`: debug, AI cost, a bot's legal menu or an unknown frame type.
  * - `noteKey`: a `note` key anywhere (AI reasoning).
  * - `rawHaltText`: a halt line other than the fixed player text.
@@ -78,6 +79,9 @@ const LIVE_TYPES = new Set([
   'sessionPaused',
   'gameOver',
   'error',
+  // The visible wait ADR 0031 decision 10 accepts: a seat's clock and connection.
+  'clockState',
+  'seatStatus',
 ]);
 
 /** Full-state frames: allowed only after the seat's own `gameOver`. */
@@ -121,7 +125,7 @@ export function scanTableFrames(
     violations.push({ rule, to: frame.to, order: frame.order, detail });
   };
   const sorted = [...frames].sort((a, b) => a.order - b.order);
-  const gameOverSeen = new Set<PlayerId | 'host'>();
+  let gameOverSeen = false;
   const handOf = new Map<PlayerId, Set<string>>();
   const nextRequest = new Map<PlayerId, number>();
   const lastRequest = new Map<PlayerId, string>();
@@ -142,7 +146,7 @@ export function scanTableFrames(
     const payload = isRecord(message['payload']) ? message['payload'] : {};
     const postGame = POST_GAME_TYPES.has(type);
 
-    if (postGame && !gameOverSeen.has(frame.to)) add(frame, 'fullState', type);
+    if (postGame && !gameOverSeen) add(frame, 'fullState', type);
     else if (!postGame && !LIVE_TYPES.has(type)) add(frame, 'forbiddenType', type);
 
     if (type !== 'tableResults' && frame.text.toLowerCase().includes(key)) {
@@ -193,7 +197,7 @@ export function scanTableFrames(
           for (const id of hand) tracked.add(id);
         }
       }
-      if (type === 'gameOver') gameOverSeen.add(seat);
+      if (type === 'gameOver') gameOverSeen = true;
     }
   }
   return { framesScanned: sorted.length, handIdsTracked: tracked.size, violations };

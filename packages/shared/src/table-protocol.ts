@@ -142,6 +142,8 @@ export const TABLE_SERVER_TO_CLIENT_TYPES = [
   'tableClosed',
   'tableResults',
   'replayTurnState',
+  'clockState',
+  'seatStatus',
 ] as const;
 export type TableServerToClientType = (typeof TABLE_SERVER_TO_CLIENT_TYPES)[number];
 
@@ -255,6 +257,26 @@ export interface ReplayTurnStatePayload {
   state: SpectatorState;
 }
 
+/**
+ * One seat's clock (multiplayer M4), sent to every seated player when it starts, stops, pauses
+ * or resumes. A client counts down from `remainingMs` while `running`; the server's own deadline
+ * is the one that counts. `remainingMs` is the allowance and bank left for the decision being
+ * timed, or the bank when none is.
+ */
+export interface ClockStatePayload {
+  seat: PlayerId;
+  remainingMs: number;
+  bankMs: number;
+  running: boolean;
+}
+
+/** Whether a seat's player is connected, and whether its fallback bot is playing it. */
+export interface SeatStatusPayload {
+  seat: PlayerId;
+  connected: boolean;
+  fallback: boolean;
+}
+
 export type TableServerToClientMessage =
   | { type: 'tableState'; payload: TableStatePayload }
   | { type: 'claimPending'; payload: ClaimPendingPayload }
@@ -264,7 +286,9 @@ export type TableServerToClientMessage =
   | { type: 'protocolMismatch'; payload: ProtocolMismatchPayload }
   | { type: 'tableClosed'; payload: TableClosedPayload }
   | { type: 'tableResults'; payload: TableResultsPayload }
-  | { type: 'replayTurnState'; payload: ReplayTurnStatePayload };
+  | { type: 'replayTurnState'; payload: ReplayTurnStatePayload }
+  | { type: 'clockState'; payload: ClockStatePayload }
+  | { type: 'seatStatus'; payload: SeatStatusPayload };
 
 export type TableServerMessageOf<T extends TableServerToClientType> = Extract<
   TableServerToClientMessage,

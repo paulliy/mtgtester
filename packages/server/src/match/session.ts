@@ -46,6 +46,7 @@ import type {
   TableTalkLine,
   TargetChoice,
   SubmitPlayerActionPayload,
+  TableServerToClientMessage,
   YieldPlayerAbilityPayload,
 } from '@mtg/shared';
 import {
@@ -100,7 +101,9 @@ import {
   type ReportSeatSource,
 } from './report';
 import { buildReplayRecord, type ReplayIdentity } from './replay-config';
-import { botRandomSource, resolveRngKey, seatIndex } from './rng-streams';
+import { botRandomSource, fallbackBotRandomSource, resolveRngKey, seatIndex } from './rng-streams';
+import type { ClockSettings, ClockTimers } from './decision-clock';
+import { fallbackMenu, TableClocks, withoutNote } from './table-clocks';
 import type { SeatSetup } from './setup';
 import { lossReasonLabel } from './loss-reasons';
 import { SmartYieldMemory, playerYieldKey } from './player-yield';
@@ -209,6 +212,14 @@ export interface MatchSessionOptions {
    * mode; the table server routes each frame to that seat's own sockets only.
    */
   sendToSeat?(seat: PlayerId, message: ServerToClientMessage): void;
+  /**
+   * A `'table'` game's clocks (ADR 0031 decision 10): decision allowance and bank, disconnect
+   * grace and budget, the game cap, and fallback bots. Omitted is untimed, as for the tester and
+   * a table with the clock off. Not accepted for other modes.
+   */
+  clock?: { settings: ClockSettings; timers?: ClockTimers };
+  /** Table frames for every seated player (`clockState`, `seatStatus`). Table mode only. */
+  sendTable?(message: TableServerToClientMessage): void;
 }
 
 /** Free-text deal readings (ADR 0035 phase 4) one game may ask for: each is a paid call. */
@@ -289,6 +300,9 @@ export class MatchSession {
   private readonly humanSeats: ReadonlySet<PlayerId>;
   /** Per-human-seat state, keyed by the same seats as `humanSeats`. */
   private readonly humanStates = new Map<PlayerId, HumanSeatState>();
+  /** A timed table's clocks and fallback bots; null for every untimed game. */
+  private readonly clocks: TableClocks | null;
+  private readonly fallbackBots = new Map<PlayerId, HeuristicDecisionProvider>();
 
   // ── Live presentation (brief §10.1) ───────────────────────────────────────────────────────
   //
@@ -476,6 +490,7 @@ export class MatchSession {
           case 'singlePlayer':
           case 'table':
             this.runner.setViewTurn(frontierTurn);
+            this.clocks?.syncEliminations();
             for (const seat of this.humanSeats) this.publishPlayerState(seat, true);
             return;
           case 'spectator':
@@ -502,6 +517,7 @@ export class MatchSession {
         }
       },
       onHalt: (info) => {
+        this.clocks?.stop();
         // A strategist call fired ahead-of-time for a turn boundary reached during compute-ahead
         // is otherwise unstoppable once started — it would keep running (and billing) against a
         // game that just stopped. Reflections deliberately reuse this lane after game-over, so
@@ -593,6 +609,69 @@ export class MatchSession {
           payload: { gameId: opts.gameId, entries },
         });
       },
+    });
+    this.clocks = this.buildClocks();
+  }
+
+  /** A timed table's clocks; null for every other game (bots never get clocks). */
+  private buildClocks(): TableClocks | null {
+    const clock = this.opts.clock;
+    if (clock === undefined) return null;
+    if (this.gameMode !== 'table') throw new Error('clocks are for table games only');
+    return new TableClocks(
+      clock.settings,
+      {
+        humanSeats: this.humanSeats,
+        takeOver: (seat) => this.humanStates.get(seat)?.provider.takeOver() ?? null,
+        fallbackDecide: (seat, request) => this.fallbackDecide(seat, request),
+        tagSource: (requestId, source) => {
+          this.tagDecisionSource(requestId, source);
+        },
+        concede: (reason) => {
+          const remaining = this.engine
+            .getState()
+            .players.filter((player) => !player.hasLost)
+            .map((player) => player.id);
+          this.runner.concede(remaining, reason);
+        },
+        isEliminated: (seat) =>
+          this.engine.getState().players.find((player) => player.id === seat)?.hasLost === true,
+        isConnected: (seat) => this.humanStates.get(seat)?.connectionGate.isConnected() === true,
+        publish: (message) => {
+          this.opts.sendTable?.(message);
+        },
+      },
+      clock.timers,
+    );
+  }
+
+  /**
+   * The fallback bot's answer for `seat`: the heuristic bot on the seat's own fallback stream,
+   * with manual mana activations off its menu and no reasoning note (plan M4 task 3).
+   */
+  private fallbackDecide(seat: PlayerId, request: DecisionRequest): DecisionResponse {
+    let bot = this.fallbackBots.get(seat);
+    if (bot === undefined) {
+      bot = new HeuristicDecisionProvider(
+        this.rngKey === null
+          ? `${this.opts.seed}-fallback-${seat}`
+          : fallbackBotRandomSource(this.rngKey, seatIndex(seat)),
+        () => this.engine.view(seat),
+      );
+      this.fallbackBots.set(seat, bot);
+    }
+    return withoutNote(bot.decide(fallbackMenu(request)));
+  }
+
+  /** The player takes their seat back from its fallback bot (table mode, M4). */
+  resumeControl(seat: PlayerId): void {
+    if (this.clocks?.resumeControl(seat) === true) {
+      this.resyncPlayer(seat);
+      return;
+    }
+    this.reply(seat, {
+      type: 'error',
+      payload: { message: 'Your seat is not being played by the fallback bot.' },
     });
   }
 
@@ -727,6 +806,7 @@ export class MatchSession {
 
   start(): void {
     if (this.running !== null) return;
+    this.clocks?.start();
     this.running = this.runner
       .run()
       .catch((err: unknown) => {
@@ -1659,6 +1739,7 @@ export class MatchSession {
       return;
     }
     this.tagDecisionSource(payload.requestId, 'human');
+    this.clocks?.answered(seat);
     // Record only an accepted pass, before the runner advances the board. A stale or
     // invalid response must never silence a future opportunity.
     if (
@@ -1780,6 +1861,7 @@ export class MatchSession {
     const human = this.humanState(seat);
     if (human === undefined) return;
     human.connectionGate.setConnected(connected);
+    this.clocks?.connection(seat, connected);
     if (connected) this.resyncPlayer(seat);
   }
 
@@ -1810,6 +1892,7 @@ export class MatchSession {
 
   abandon(): void {
     this.abandoned = true;
+    this.clocks?.stop();
     this.stopPresenting();
     this.pendingLines = [];
     this.aiCoordinator?.cancel();
@@ -1874,6 +1957,7 @@ export class MatchSession {
       this.publishPlayerState(seat, false);
       // Tagged before the submit, which resolves the provider; the runner reads the tag after.
       this.tagDecisionSource(request.requestId, 'auto');
+      this.clocks?.closeDecision(seat, request.requestId);
       const refused = human.provider.submit({
         requestId: request.requestId,
         revision,
@@ -1895,6 +1979,8 @@ export class MatchSession {
         ignoredAbilities: this.ignoredAbilityList(seat),
       },
     });
+    // The clock starts for a decision actually shown, never for one passed on the player's behalf.
+    this.clocks?.decisionShown(seat, request.requestId);
   }
 
   private isIgnoredAbility(
@@ -1961,6 +2047,7 @@ export class MatchSession {
     result: NonNullable<ReturnType<Engine['getResult']>>,
     only?: PlayerId,
   ): void {
+    this.clocks?.stop();
     this.publishFinalState();
     this.finishTalk();
     switch (this.gameMode) {
@@ -2186,7 +2273,17 @@ export class MatchSession {
       // The player's decisions open negotiation windows and are judged for compliance like any
       // seat's; offers to the player wait for their answer rather than this decision.
       const table = this.diplomacy;
-      const humanProvider = humanState.provider;
+      const clocks = this.clocks;
+      const humanProvider: AsyncDecisionProvider =
+        clocks === null
+          ? humanState.provider
+          : {
+              // A seat its fallback bot holds is answered at once and never shown or timed.
+              decide: (request) =>
+                clocks.isFallback(playerId)
+                  ? Promise.resolve(clocks.answerAsFallback(playerId, request))
+                  : humanState.provider.decide(request),
+            };
       const human: AsyncDecisionProvider =
         table === null
           ? humanProvider

@@ -147,6 +147,9 @@ bun run agent-client --table 'http://127.0.0.1:3002/t/<table>#<invite>' --name A
   engine's.
 - **Policies.** `stdin` (the default) reads replies as above. `first-legal` answers every decision
   with the first legal action and each target slot's first option, for scripted runs.
+- **Clocks.** At a timed table a decision left unanswered past the seat's allowance and bank is
+  answered by the seat's fallback bot. If a `seatStatus` says the fallback bot holds this seat
+  while the client is connected, the client sends `resumeControl` to take it back.
 - **Leaving.** The game belongs to the table, so the client never sends `abandonGame`; closing
   the process only disconnects the seat. Deck problems, a takeover by another connection, and a
   closed table end the run with a fatal `error`.

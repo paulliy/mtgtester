@@ -22,6 +22,7 @@ import type { OracleIndex } from '../cards/oracle-index';
 import type { SupportedPool } from '../cards/pool';
 import type { GameStore } from '../db';
 import type { BannedList } from '../decks/banned';
+import { scaledSettings } from '../match/decision-clock';
 import { disclosedSeatSummaries, seedLabel, tablePolicy } from '../match/disclosure';
 import type { ReplayIdentity } from '../match/replay-config';
 import { MatchSession } from '../match/session';
@@ -112,6 +113,9 @@ export class InProcessSessionPort implements TableSessionPort {
           break;
         case 'setRawActionData':
           session.setRawActionData(input.seat, input.enabled);
+          break;
+        case 'resumeControl':
+          session.resumeControl(input.seat);
           break;
         case 'resyncPlayer': {
           const started = this.startedFrames.get(input.seat);
@@ -225,6 +229,12 @@ export class InProcessSessionPort implements TableSessionPort {
       },
       sendToSeat: (seat, message) => {
         this.emit({ type: 'seatFrame', generation: this.generation, seat, message });
+      },
+      ...(config.clock !== 'off' && {
+        clock: { settings: scaledSettings(config.clock, config.clockScale ?? 1) },
+      }),
+      sendTable: (message) => {
+        this.emit({ type: 'tableFrame', generation: this.generation, message });
       },
     });
     this.session = session;

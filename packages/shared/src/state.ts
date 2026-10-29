@@ -79,4 +79,12 @@ export interface GameResult {
   haltReason: string | null;
   /** For a halt on an engine invariant (ADR 0034 decision 2): the code site that raised it. */
   haltSite?: string;
+  /**
+   * Why a game that is not a rules outcome ended (ADR 0031 decision 10): a table's time limit,
+   * or every human seat gone past its disconnect budget. Such a game is a deliberate draw for the
+   * players still in it, not a halt. Absent means `'rules'`, so every rules result is unchanged.
+   */
+  endReason?: GameEndReason;
 }
+
+export type GameEndReason = 'rules' | 'timeLimit' | 'allAway';

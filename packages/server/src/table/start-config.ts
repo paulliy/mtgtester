@@ -8,6 +8,7 @@
  * with a new attempt and gets a new key; nothing about an earlier attempt's key is reused.
  */
 
+import type { TableClockMode } from '@mtg/shared';
 import type { StartAttempt } from './table';
 import type { TableSessionConfig, TableSessionSeat } from './session-port';
 import { TABLE_ENGINE_LIMITS } from '../match/engine-limits';
@@ -26,6 +27,10 @@ export interface BuildSessionConfigOptions {
   livePaceMs?: number;
   /** Defaults to a fresh random id. */
   gameId?: string;
+  /** The table's clock preset. Defaults to `relaxed`; `off` only in dev mode. */
+  clock?: TableClockMode;
+  /** Dev mode only: every clock duration divided by this. */
+  clockScale?: number;
 }
 
 const KEY_PATTERN = /^[0-9a-f]{64}$/;
@@ -34,6 +39,11 @@ export function buildSessionConfig(
   attempt: StartAttempt,
   opts: BuildSessionConfigOptions,
 ): TableSessionConfig {
+  const clock = opts.clock ?? 'relaxed';
+  if (clock === 'off' && opts.dev !== true) throw new Error('an untimed table is dev mode only');
+  if (opts.clockScale !== undefined && opts.dev !== true) {
+    throw new Error('a clock scale is accepted only in dev mode');
+  }
   let rngKey: string;
   if (opts.testRngKey !== undefined) {
     if (opts.dev !== true) throw new Error('a fixed rng key is accepted only in dev mode');
@@ -68,6 +78,8 @@ export function buildSessionConfig(
     maxStepWork: TABLE_ENGINE_LIMITS.maxStepWork,
     maxObjects: TABLE_ENGINE_LIMITS.maxObjects,
     ...(opts.turnCap !== undefined && { turnCap: opts.turnCap }),
+    clock,
+    ...(opts.clockScale !== undefined && { clockScale: opts.clockScale }),
     dbPath: opts.dbPath,
     ...(opts.oracleFixture !== undefined && { oracleFixture: opts.oracleFixture }),
     ...(opts.livePaceMs !== undefined && { livePaceMs: opts.livePaceMs }),

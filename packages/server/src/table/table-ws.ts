@@ -455,10 +455,17 @@ export class TableSocketHub {
         this.finish(runtime, socket, result);
         return;
       }
-      case 'resumeControl':
-        // Taking a seat back from the fallback bot arrives with clocks (M4).
-        this.sendTo(runtime, socket.id, errorFrame('Resuming control is not available yet.'));
+      case 'resumeControl': {
+        // Only the socket currently bound to the seat may take it back (M4 task 5).
+        const seat = this.boundSeat(runtime, socket.id);
+        const run = runtime.run;
+        if (seat === null || run === null || run.terminal || !run.started) {
+          this.sendTo(runtime, socket.id, errorFrame(NO_SEAT));
+          return;
+        }
+        this.toPort(run, { type: 'resumeControl', seat });
         return;
+      }
       case 'replayTurn':
         void this.replay(runtime, socket.id, message.payload.turn);
         return;
@@ -891,6 +898,13 @@ export class TableSocketHub {
         return;
       case 'publicFrame':
         this.deliver(runtime, run, [...runtime.seatSockets.keys()], output.message);
+        return;
+      case 'tableFrame':
+        for (const [seat, socketId] of runtime.seatSockets) {
+          if (this.boundSeat(runtime, socketId) === seat) {
+            this.sendGated(runtime, socketId, output.message);
+          }
+        }
         return;
       case 'setupProblems':
         void this.settle(runtime, run, { kind: 'rejected', problems: output.problems });

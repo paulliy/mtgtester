@@ -65,7 +65,7 @@ export type {
   StackObject,
   StackObjectKind,
 } from './objects';
-export type { PlayerState, GameState, GameResult } from './state';
+export type { PlayerState, GameState, GameResult, GameEndReason } from './state';
 export type { ContinuousEffect } from './effects';
 export type { GameEvent } from './events';
 
@@ -254,6 +254,7 @@ export {
 export type {
   ClaimIdPayload,
   ClaimPendingPayload,
+  ClockStatePayload,
   DeckProblemsPayload,
   EmptyPayload,
   HostAuthPayload,
@@ -267,6 +268,7 @@ export type {
   RequestSeatPayload,
   ResumeSeatPayload,
   SeatGrantedPayload,
+  SeatStatusPayload,
   SeatTakenOverPayload,
   TableCapabilities,
   TableClientMessageOf,

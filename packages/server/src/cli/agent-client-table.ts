@@ -58,8 +58,13 @@ export class TableAgentSession {
   private requested = false;
   private resumed = false;
   private done = false;
+  /** The socket in use; `reconnect` swaps it. */
+  private transport: AgentClientTransport;
+  /** Held only in memory, for a reconnect; never written anywhere. */
+  private seatToken: string | null = null;
 
   constructor(private readonly opts: TableAgentSessionOptions) {
+    this.transport = opts.transport;
     const io: AgentClientIo = {
       event: (event) => {
         opts.io.event(event);
@@ -71,7 +76,14 @@ export class TableAgentSession {
     };
     this.game = new AgentClientSession({
       io,
-      transport: opts.transport,
+      transport: {
+        send: (message) => {
+          this.transport.send(message);
+        },
+        close: () => {
+          this.transport.close();
+        },
+      },
       game: { seats: [], providerKind: 'random', humanSeat: opts.join.seat },
       table: { seat: opts.join.seat },
       onDone: (code) => {
@@ -80,9 +92,22 @@ export class TableAgentSession {
     });
   }
 
+  /**
+   * Resume the seat on a new socket after the old one dropped (the game keeps the seat for its
+   * player, and its fallback bot plays it once the grace runs out). Call once the new socket is
+   * open. False when no seat was granted yet.
+   */
+  reconnect(transport: AgentClientTransport): boolean {
+    if (this.seatToken === null || this.done) return false;
+    this.transport = transport;
+    this.game.reconnected();
+    this.sendResume(this.seatToken);
+    return true;
+  }
+
   /** Join the table. Called once the socket is open. */
   begin(): void {
-    this.opts.transport.send({
+    this.transport.send({
       type: 'joinTable',
       payload: {
         inviteCode: this.opts.join.inviteCode,
@@ -121,7 +146,7 @@ export class TableAgentSession {
         const { you, phase } = message.payload;
         if (!this.requested && phase === 'open' && you.seat === null && you.claim === null) {
           this.requested = true;
-          this.opts.transport.send({
+          this.transport.send({
             type: 'requestSeat',
             payload: { seat: this.opts.join.seat, decklist: this.opts.join.decklist },
           });
@@ -137,15 +162,9 @@ export class TableAgentSession {
       case 'seatGranted':
         if (this.resumed) return;
         this.resumed = true;
+        this.seatToken = message.payload.seatToken;
         this.opts.io.diagnostic(`seat ${message.payload.seat} granted; resuming it.`);
-        this.opts.transport.send({
-          type: 'resumeSeat',
-          payload: {
-            seatToken: message.payload.seatToken,
-            protocolVersion: PROTOCOL_VERSION,
-            capabilities: { ...AGENT_CAPABILITIES },
-          },
-        });
+        this.sendResume(message.payload.seatToken);
         return;
       case 'deckProblems': {
         const problems = message.payload.problems.map((problem) => problem.message).join(' ');
@@ -164,6 +183,18 @@ export class TableAgentSession {
       case 'tableClosed':
         this.fail(`the table closed (${message.payload.reason}).`);
         return;
+      case 'seatStatus': {
+        // A connected client that finds its own seat with the fallback bot takes it back: it is
+        // here to play. Another seat's status is the table's news, not this agent's.
+        const { seat, connected, fallback } = message.payload;
+        if (seat !== this.opts.join.seat || !fallback) return;
+        this.opts.io.diagnostic('the fallback bot holds this seat; taking control back.');
+        if (connected) this.transport.send({ type: 'resumeControl', payload: {} });
+        return;
+      }
+      case 'clockState':
+        // The clocks are for people; an agent answers as soon as it can.
+        return;
       case 'tableResults':
       case 'replayTurnState':
         // Post-game data, after this client's run has ended on `gameOver`.
@@ -173,6 +204,17 @@ export class TableAgentSession {
         void unknown;
       }
     }
+  }
+
+  private sendResume(seatToken: string): void {
+    this.transport.send({
+      type: 'resumeSeat',
+      payload: {
+        seatToken,
+        protocolVersion: PROTOCOL_VERSION,
+        capabilities: { ...AGENT_CAPABILITIES },
+      },
+    });
   }
 
   private autoAnswer(event: AgentEvent): void {
@@ -197,7 +239,7 @@ export class TableAgentSession {
 
   private fail(message: string): void {
     this.opts.io.event({ type: 'error', source: 'server', fatal: true, message });
-    this.opts.transport.close();
+    this.transport.close();
     this.end(1);
   }
 
