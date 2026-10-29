@@ -1,6 +1,8 @@
 import { eventObjectFacts, sourceObjectFacts, targetObjectFacts } from '../cards/source-identity';
 import { counterCount } from '../state/counters';
 import { assertNever } from '../utils/assert-never';
+import { EngineInvariantError } from '../errors';
+import type { ScopeField } from '../cards/scope-contracts';
 /**
  * Resolution-time `Value` evaluation — the half that reads *current* characteristics.
  *
@@ -46,6 +48,21 @@ function scopedPermanents(
     if (who === 'opponents') return perm.controllerId !== scope.controllerId;
     return true;
   });
+}
+
+/**
+ * A fact the resolving ability's scope carries (ADR 0034 decision 2). Validation admits the value
+ * only where a trigger head, cast path or cost provides the field, so an absent one is an engine
+ * bug, not a zero.
+ */
+function scopeFact(scope: ValueScope, field: ScopeField): number {
+  const fact = scope[field];
+  if (fact === undefined)
+    throw new EngineInvariantError(
+      `values.${field}`,
+      `the ${field} value was read from a scope that does not carry it`,
+    );
+  return fact;
 }
 
 /** Evaluate any `Value` in the context of a resolving spell or ability. */
@@ -211,7 +228,7 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     case 'manaSpent':
       return scope.manaSpent ?? 0;
     case 'treasureManaSpent':
-      return scope.treasureManaSpent ?? 0;
+      return scopeFact(scope, 'treasureManaSpent');
     case 'energyPaid':
       return scope.energyPaid ?? 0;
     case 'energyAvailable':
