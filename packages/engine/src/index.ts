@@ -51,6 +51,7 @@ export { IMPLEMENTED_KEYWORDS } from './cards/definition';
 
 // Errors.
 export {
+  EngineBudgetError,
   EngineInvariantError,
   EngineUsageError,
   IllegalDecisionError,

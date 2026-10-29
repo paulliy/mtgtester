@@ -32,6 +32,27 @@ export class IllegalDecisionError extends Error {
   }
 }
 
+/**
+ * Thrown when a game exceeds a work limit set through `EngineOptions` (ADR 0031 decision 9): too
+ * many events in one `advance()`, a loop that never yields, or too many objects in one game.
+ * `Engine.advance` turns it into a halted `GameResult`.
+ */
+export class EngineBudgetError extends Error {
+  readonly budget: 'stepWork' | 'objects';
+  readonly limit: number;
+
+  constructor(budget: 'stepWork' | 'objects', limit: number) {
+    super(
+      budget === 'stepWork'
+        ? `the engine emitted more than ${limit} events in one step`
+        : `the game created more than ${limit} objects`,
+    );
+    this.name = 'EngineBudgetError';
+    this.budget = budget;
+    this.limit = limit;
+  }
+}
+
 /** Misuse of the engine driver (submit without a pending decision, advance after end). */
 export class EngineUsageError extends Error {
   constructor(message: string) {

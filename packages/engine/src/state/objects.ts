@@ -1,4 +1,5 @@
 import { copyData } from './copy-data';
+import { EngineBudgetError } from '../errors';
 import { THOPTER_1_1_FLYING } from '../cards/tokens';
 import { counterCount, setCounterCount } from './counters';
 import { offBattlefieldTypes } from './off-battlefield-types';
@@ -76,6 +77,12 @@ import type {
 } from './types';
 
 export function newObjectId(ctx: GameContext): ObjectId {
+  const budget = ctx.budget;
+  if (
+    budget?.maxObjects !== undefined &&
+    ctx.state.nextObjectNum - budget.objectsAtStart >= budget.maxObjects
+  )
+    throw new EngineBudgetError('objects', budget.maxObjects);
   return `o-${ctx.state.nextObjectNum++}`;
 }
 

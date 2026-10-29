@@ -28,6 +28,7 @@ import { describeDamageSplit } from './combat/combat';
 import type { DecisionOutcome, GameGen, PendingDecision } from './decisions';
 import { forcedOutcome, isForced } from './decisions';
 import {
+  EngineBudgetError,
   EngineInvariantError,
   EngineUsageError,
   IllegalDecisionError,
@@ -113,6 +114,14 @@ export interface EngineDriver {
 export interface EngineOptions {
   /** Closed server/test fixture initialization; never populated from arbitrary client state. */
   preparedScenario?: PreparedScenarioSpec;
+  /**
+   * Events one `advance()` may emit before the game halts (ADR 0031 decision 9), which catches a
+   * runaway inside a single generator step. Unlimited when absent, as for every tester game; set
+   * for tables and stored with the game.
+   */
+  maxStepWork?: number;
+  /** Objects the whole game may create before it halts. Unlimited when absent. */
+  maxObjects?: number;
 }
 
 export class Engine implements EngineDriver {
@@ -127,6 +136,14 @@ export class Engine implements EngineDriver {
 
   constructor(config: GameConfig, options: EngineOptions = {}) {
     this.ctx = createGame(config);
+    if (options.maxStepWork !== undefined || options.maxObjects !== undefined) {
+      this.ctx.budget = {
+        ...(options.maxStepWork !== undefined && { maxStepWork: options.maxStepWork }),
+        ...(options.maxObjects !== undefined && { maxObjects: options.maxObjects }),
+        stepWork: { count: 0 },
+        objectsAtStart: this.ctx.state.nextObjectNum,
+      };
+    }
     if (options.preparedScenario !== undefined) {
       prepareScenario(this.ctx, options.preparedScenario);
       this.gen = playPreparedScenario(this.ctx, options.preparedScenario);
@@ -141,6 +158,7 @@ export class Engine implements EngineDriver {
       return { kind: 'decision', request: this.pendingRequest };
     }
 
+    if (this.ctx.budget !== undefined) this.ctx.budget.stepWork.count = 0;
     try {
       for (;;) {
         const step =
@@ -187,6 +205,20 @@ export class Engine implements EngineDriver {
       if (err instanceof UnmodeledCardError) {
         // Halt loudly, never guess (brief §6.3).
         emit(this.ctx, 'engineHalt', { reason: err.message, card: err.cardName });
+        debug(this.ctx, 'engine', `ENGINE HALT: ${err.message}`);
+        this.finished = {
+          gameId: this.ctx.state.gameId,
+          winnerSeat: null,
+          finishingOrder: [...this.ctx.state.eliminatedPlayers],
+          turnCount: this.ctx.state.turnNumber,
+          halted: true,
+          haltReason: err.message,
+        };
+        return { kind: 'gameOver', result: this.finished };
+      }
+      if (err instanceof EngineBudgetError) {
+        // A work limit, not a rules outcome: halt with the limit named (ADR 0031 decision 9).
+        emit(this.ctx, 'engineHalt', { reason: err.message, budget: err.budget });
         debug(this.ctx, 'engine', `ENGINE HALT: ${err.message}`);
         this.finished = {
           gameId: this.ctx.state.gameId,

@@ -1008,6 +1008,23 @@ export interface GameContext {
   costLifePaid?: { amount: number };
   /** Copied from `GameConfig.strictInvariants`: rethrow invariant failures instead of halting. */
   strictInvariants?: boolean;
+  /**
+   * Work limits from `EngineOptions` (ADR 0031 decision 9), absent when unlimited. One shared
+   * object, because effect resolution copies the context by spreading it and a plain number
+   * would be copied by value; payment probes build their own context without it.
+   */
+  budget?: EngineBudget;
+}
+
+export interface EngineBudget {
+  /** Events one `advance()` may emit; `engineHalt` is exempt. */
+  maxStepWork?: number;
+  /** Objects the whole game may create, counted from when the engine was built. */
+  maxObjects?: number;
+  /** Events emitted in the current `advance()`, reset at its start. */
+  stepWork: { count: number };
+  /** `nextObjectNum` when the engine was built: a game's starting cards are not counted. */
+  objectsAtStart: number;
 }
 
 /** Internal debug log entry (brief §13) — separate from the replayable `GameEvent` log. */
