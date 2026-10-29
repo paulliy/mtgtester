@@ -63,6 +63,12 @@ export const ESCALATION_TIMEOUT_MS = 5_000;
  * `jumpToTurn` messages that let compute continue.
  */
 const YIELD_EVERY_STEPS = 200;
+/**
+ * And at least this often, however few steps that is. A late-game bot turn can spend hundreds of
+ * milliseconds in one step, so 200 of them would hold the thread for a minute: a table worker
+ * could answer no health probe and read no `resumeControl` until its game was stopped as hung.
+ */
+const YIELD_EVERY_MS = 50;
 
 export type MatchStatus =
   | 'idle'
@@ -402,6 +408,13 @@ export class MatchRunner {
   private async loop(): Promise<void> {
     const maxDecisions = this.opts.maxDecisions ?? DEFAULT_MAX_DECISIONS;
     let stepsSinceYield = 0;
+    let lastYield = Date.now();
+    const yieldIfDue = async (): Promise<void> => {
+      if (++stepsSinceYield < YIELD_EVERY_STEPS && Date.now() - lastYield < YIELD_EVERY_MS) return;
+      stepsSinceYield = 0;
+      await yieldToEventLoop();
+      lastYield = Date.now();
+    };
 
     for (;;) {
       if (this.isAbandoned()) return;
@@ -420,10 +433,7 @@ export class MatchRunner {
       }
 
       if (step.kind === 'continue') {
-        if (++stepsSinceYield >= YIELD_EVERY_STEPS) {
-          stepsSinceYield = 0;
-          await yieldToEventLoop();
-        }
+        await yieldIfDue();
         continue;
       }
 
@@ -466,10 +476,7 @@ export class MatchRunner {
       this.flushEvents();
       this.flushDebug();
 
-      if (++stepsSinceYield >= YIELD_EVERY_STEPS) {
-        stepsSinceYield = 0;
-        await yieldToEventLoop();
-      }
+      await yieldIfDue();
     }
   }
 
