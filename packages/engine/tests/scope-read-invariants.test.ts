@@ -15,6 +15,8 @@ const INVARIANT_FIELDS: readonly ScopeField[] = [
   'treasureManaSpent',
   'manaSpent',
   'spellManaValue',
+  ,
+  'spellColorCount',
 ];
 
 describe('scope-read invariants', () => {
