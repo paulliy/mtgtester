@@ -12,7 +12,7 @@
  */
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { OracleCard } from '@mtg/shared';
+import type { OracleCard } from '../packages/shared/src';
 import {
   PIN_STORE_PATH,
   oracleHashes,
