@@ -5,12 +5,15 @@
  * for each unparsed line, shows the card's Forge script as a reference when the network allows
  * (decision 7), and prints the interaction questions the card's clause shapes raise.
  *
+ * `--primitive <op>` instead scaffolds a new Effect op in its five places (decision 5).
+ *
  * With `--batch <id>` it also writes the scaffold, every part of which stays rejected until
  * filled: an `unimplemented()` stub (the card stays unmodeled), a manifest entry whose clauses
  * have no test IDs, a runner test file of `it.todo` placeholders that the skip lint refuses, and
  * the test file's card-gate entry. It never copies another card's definition, and it reads the
  * engine's own interpreter rather than any copy of its vocabulary.
  */
+import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { OracleCard } from '../../packages/shared/src';
@@ -333,6 +336,97 @@ export function runnerTestSource(card: OracleCard, batch: string): string {
   ].join('\n');
 }
 
+// ── A new primitive (ADR 0033 decision 5) ──────────────────────────────────────────────────────
+
+export const PRIMITIVE_FILES = {
+  ability: 'packages/engine/src/cards/ability.ts',
+  expressions: 'packages/engine/src/cards/expression-validation.ts',
+  references: 'packages/engine/src/cards/effect-reference-contracts.ts',
+  capabilities: 'packages/engine/src/cards/capabilities.ts',
+  resolve: 'packages/engine/src/effects/resolve.ts',
+} as const;
+export type PrimitiveSources = Record<keyof typeof PRIMITIVE_FILES, string>;
+
+function insertAfter(source: string, anchor: string, text: string, file: string): string {
+  const at = source.indexOf(anchor);
+  if (at === -1) throw new Error(`${file} no longer has the anchor the scaffold writes after`);
+  if (source.indexOf(anchor, at + 1) !== -1) throw new Error(`${file} has the anchor twice`);
+  return `${source.slice(0, at + anchor.length)}${text}${source.slice(at + anchor.length)}`;
+}
+
+/**
+ * The stub rows a new `Effect` op needs in its five places: the union member, an empty
+ * expression-field row, an empty reference contract, its capability tag, and an executor case
+ * that throws. The tables stay exhaustive, so the engine compiles, and the op does nothing until
+ * its executor and contract tests are written.
+ */
+export function primitiveScaffold(op: string, sources: PrimitiveSources): PrimitiveSources {
+  if (!/^[a-z][A-Za-z0-9]*$/.test(op)) throw new Error('an op is a camelCase identifier');
+  if (new RegExp(`op: '${op}'`).test(sources.ability))
+    throw new Error(`the Effect union already has op '${op}'`);
+  return {
+    ability: insertAfter(
+      sources.ability,
+      'export type Effect =\n',
+      `  /** card:new --primitive scaffold: give \`${op}\` its fields and document its rules. */\n  | { op: '${op}' }\n`,
+      PRIMITIVE_FILES.ability,
+    ),
+    expressions: insertAfter(
+      sources.expressions,
+      'const effectExpressions = {\n',
+      `  ${op}: {},\n`,
+      PRIMITIVE_FILES.expressions,
+    ),
+    references: insertAfter(
+      sources.references,
+      'export const EFFECT_REFERENCE_CONTRACTS = {\n',
+      `  ${op}: {},\n`,
+      PRIMITIVE_FILES.references,
+    ),
+    capabilities: insertAfter(
+      sources.capabilities,
+      "  Effect: {\n    prefix: 'Effect',\n    discriminator: 'op',\n    tags: {\n",
+      `      ${op}: true,\n`,
+      PRIMITIVE_FILES.capabilities,
+    ),
+    resolve: insertAfter(
+      sources.resolve,
+      "        throw new Error('engine bug: executable noOp effect is prohibited');\n",
+      [
+        `      case '${op}':`,
+        `        // card:new --primitive scaffold: write the executor, then its contract tests.`,
+        `        throw new EngineInvariantError('resolve.${op}', 'the ${op} primitive has no executor yet');`,
+        '',
+      ].join('\n'),
+      PRIMITIVE_FILES.resolve,
+    ),
+  };
+}
+
+/** The contract-test skeleton for a new op: placeholders the skip lint refuses until filled. */
+export function primitiveContractSource(op: string): string {
+  const cases = [
+    'executes through a real spell or ability, with the engine path',
+    'does nothing it should not: the negative case',
+    'validation rejects malformed IR for it',
+    'every reference it reads or writes resolves (effect-reference-contracts)',
+    'its capability tag matches what the executor supports',
+  ];
+  return [
+    `/**`,
+    ` * Contract tests for the \`${op}\` primitive, started with card:new --primitive. Each`,
+    ` * placeholder becomes a test; the skip lint rejects \`it.todo\`, so this file fails until then.`,
+    ` * Contract tests may not use the scenario runner (their evidence hashes this file's closure).`,
+    ` */`,
+    `import { describe, it } from 'vitest';`,
+    ``,
+    `describe('${op} primitive contract', () => {`,
+    ...cases.map((text) => `  it.todo(${JSON.stringify(text)});`),
+    `});`,
+    ``,
+  ].join('\n');
+}
+
 // ── The command ────────────────────────────────────────────────────────────────────────────────
 
 function pinCard(card: OracleCard): string {
@@ -390,8 +484,42 @@ function writeScaffold(card: OracleCard, sha: string, handled: string[], batch: 
   return written;
 }
 
+/** The scaffold in the repository's own style, so it reads like the code around it. */
+function formatWritten(paths: readonly string[]): void {
+  execFileSync('npx', ['prettier', '--write', ...paths.filter((path) => !path.endsWith('.txt'))], {
+    stdio: 'ignore',
+  });
+}
+
+function writePrimitive(op: string): void {
+  const read = Object.fromEntries(
+    Object.entries(PRIMITIVE_FILES).map(([key, path]) => [key, readFileSync(path, 'utf8')]),
+  ) as PrimitiveSources;
+  const written = primitiveScaffold(op, read);
+  for (const [key, path] of Object.entries(PRIMITIVE_FILES))
+    writeFileSync(path, written[key as keyof PrimitiveSources]);
+  const test = `packages/engine/tests/${slugOf(op.replace(/([A-Z])/g, '-$1'))}-contract.test.ts`;
+  if (!existsSync(test)) writeFileSync(test, primitiveContractSource(op));
+  formatWritten([...Object.values(PRIMITIVE_FILES), test]);
+  console.log(
+    `Scaffolded op '${op}' (rejected until filled):\n${[...Object.values(PRIMITIVE_FILES), test]
+      .map((path) => `  ${path}`)
+      .join('\n')}`,
+  );
+}
+
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
+  const primitive = args.indexOf('--primitive');
+  if (primitive !== -1) {
+    const op = args[primitive + 1];
+    if (op === undefined) {
+      console.error('usage: bun run card:new --primitive <op>');
+      process.exit(2);
+    }
+    writePrimitive(op);
+    return;
+  }
   const batchFlag = args.indexOf('--batch');
   const batch = batchFlag === -1 ? null : args[batchFlag + 1];
   if (batch !== null && (batch === undefined || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(batch))) {
@@ -468,6 +596,7 @@ async function main(): Promise<void> {
     return;
   }
   const written = writeScaffold(card, sha, handled, batch);
+  formatWritten(written);
   console.log(
     `\nScaffold written (rejected until filled):\n${written.map((path) => `  ${path}`).join('\n')}`,
   );

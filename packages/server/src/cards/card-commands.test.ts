@@ -17,10 +17,14 @@ import {
   nearestCards,
   normalizeLine,
   overrideStub,
+  PRIMITIVE_FILES,
+  primitiveContractSource,
+  primitiveScaffold,
   runnerTestSource,
   similarity,
   wireBatch,
 } from '../../../../scripts/cards/card-new';
+import { readFileSync } from 'node:fs';
 import type { OracleCard } from '@mtg/shared';
 
 const card = (name: string, oracleText: string): OracleCard =>
@@ -200,5 +204,33 @@ describe('card:finish', () => {
           `defineCard("7060f2c8-fca0-4b7a-bddf-37682f434596", "Whirler Rogue", [], {});`,
       ),
     ).toEqual(['Sai, Master Thopterist', 'Whirler Rogue']);
+  });
+});
+
+describe('card:new --primitive', () => {
+  const sources = Object.fromEntries(
+    Object.entries(PRIMITIVE_FILES).map(([key, path]) => [key, readFileSync(path, 'utf8')]),
+  ) as Parameters<typeof primitiveScaffold>[1];
+
+  it('adds one stub row to each of the five places a new op needs', () => {
+    const written = primitiveScaffold('probeShuffle', sources);
+    for (const key of Object.keys(PRIMITIVE_FILES) as Array<keyof typeof PRIMITIVE_FILES>)
+      expect(written[key].length).toBeGreaterThan(sources[key].length);
+    expect(written.ability).toContain("| { op: 'probeShuffle' }");
+    expect(written.expressions).toContain('const effectExpressions = {\n  probeShuffle: {},');
+    expect(written.references).toContain('EFFECT_REFERENCE_CONTRACTS = {\n  probeShuffle: {},');
+    expect(written.capabilities).toContain('tags: {\n      probeShuffle: true,');
+    expect(written.resolve).toContain(
+      "case 'probeShuffle':\n        // card:new --primitive scaffold: write the executor, then its contract tests.\n        throw new EngineInvariantError('resolve.probeShuffle'",
+    );
+  });
+
+  it('refuses an op the union already has, and a name that is not an identifier', () => {
+    expect(() => primitiveScaffold('mill', sources)).toThrow(/already has op 'mill'/);
+    expect(() => primitiveScaffold('Mill-Two', sources)).toThrow(/camelCase/);
+  });
+
+  it('writes a contract skeleton the skip lint refuses until filled', () => {
+    expect(primitiveContractSource('probeShuffle').match(/it\.todo\(/g)).toHaveLength(5);
   });
 });
