@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -149,8 +149,11 @@ describe('Marchesa override catalog audit inventory', () => {
       'coverage-pr11b.ts',
       'coverage-pr12.ts',
     ]);
+    // A card:new batch is gated by its own tests in tests/cards/<batch>/ and the card gate.
+    const gatedBatch = (file: string) =>
+      existsSync(new URL(`./cards/${file.replace(/\.ts$/, '')}/`, import.meta.url));
     const remaining = readdirSync(OVERRIDES_DIR)
-      .filter((file) => file.endsWith('.ts') && !skip.has(file))
+      .filter((file) => file.endsWith('.ts') && !skip.has(file) && !gatedBatch(file))
       .sort();
     expect(remaining.map((file) => `packages/engine/src/cards/overrides/${file}`)).toEqual(
       [...listed.keys()].sort(),

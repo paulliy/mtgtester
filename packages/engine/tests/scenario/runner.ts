@@ -192,3 +192,42 @@ export function scenarioFailures(run: ScenarioRun, scenario: CardScenario): stri
   }
   return failures;
 }
+
+/**
+ * The names a scenario's first matching action would offer per target slot, at the first
+ * decision of `player`: what a negative test reads ("you can't target your own creature").
+ */
+export function offeredTargetNames(
+  file: CardScenarioFile,
+  scenario: CardScenario,
+  player: string,
+  choose: string,
+): string[][] {
+  const { engine } = buildCardScenario(file, scenario, resolveScenarioCard, {
+    gameId: `scenario-${scenario.id}-offer`,
+    strictInvariants: true,
+  });
+  for (let count = 0; count < MAX_DECISIONS; count++) {
+    const step = engine.advance();
+    if (step.kind === 'gameOver') throw new Error(`${scenario.id}: the game ended first`);
+    if (step.kind === 'continue') continue;
+    const request = step.request;
+    if (request.decidingPlayer !== player) {
+      const pass = request.legalActions.find((candidate) => candidate.type === 'pass');
+      if (pass === undefined) throw new Error(`${scenario.id}: ${describeRequest(request)}`);
+      engine.submit({ requestId: request.requestId, actionId: pass.id });
+      continue;
+    }
+    const matches = scenarioPattern(choose);
+    const action = request.legalActions.find((candidate) => matches(candidate.description));
+    if (action === undefined)
+      throw new Error(`${scenario.id}: no "${choose}" in:\n${describeRequest(request)}`);
+    const state = engine.getState();
+    const nameOf = (id: string) =>
+      state.battlefield.find((perm) => perm.id === id)?.name ??
+      state.players.find((seat) => seat.id === id)?.id ??
+      id;
+    return (action.targets ?? []).map((slot) => slot.options.map(nameOf));
+  }
+  throw new Error(`${scenario.id}: ${player} was never asked`);
+}

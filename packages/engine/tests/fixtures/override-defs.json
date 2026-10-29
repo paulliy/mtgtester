@@ -5868,6 +5868,79 @@
     }
   },
   {
+    "oracleId": "48ddba1e-2ad7-463f-9307-d2379a800e51",
+    "name": "Mizzium Mortars",
+    "handledLines": [
+      "~ deals 4 damage to target creature you don't control."
+    ],
+    "def": {
+      "alternativeCasts": [
+        {
+          "ability": {
+            "description": "Deal 4 damage to each creature you don't control",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 4
+                },
+                "op": "damageEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "opponents"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "spell",
+            "targets": []
+          },
+          "description": "Overload {3}{R}{R}{R}",
+          "kind": "overload",
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 3,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 3
+          }
+        }
+      ],
+      "spellAbility": {
+        "description": "Deal 4 damage to target creature you don't control",
+        "effects": [
+          {
+            "amount": {
+              "kind": "const",
+              "n": 4
+            },
+            "op": "dealDamage",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "opponent",
+            "kind": "creature"
+          }
+        ]
+      }
+    }
+  },
+  {
     "oracleId": "499a4715-6776-461b-bee4-22ed172d455e",
     "name": "Winds of Abandon",
     "handledLines": [
@@ -12705,6 +12778,79 @@
     "def": {}
   },
   {
+    "oracleId": "99fd4b51-1698-4168-9366-a6ea2df22361",
+    "name": "Electrickery",
+    "handledLines": [
+      "~ deals 1 damage to target creature you don't control."
+    ],
+    "def": {
+      "alternativeCasts": [
+        {
+          "ability": {
+            "description": "Deal 1 damage to each creature you don't control",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "damageEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "opponents"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "spell",
+            "targets": []
+          },
+          "description": "Overload {1}{R}",
+          "kind": "overload",
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 1,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 1
+          }
+        }
+      ],
+      "spellAbility": {
+        "description": "Deal 1 damage to target creature you don't control",
+        "effects": [
+          {
+            "amount": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "dealDamage",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "opponent",
+            "kind": "creature"
+          }
+        ]
+      }
+    }
+  },
+  {
     "oracleId": "9a107e48-3d50-4941-95b1-10f2b29a4245",
     "name": "Stroke of Midnight",
     "handledLines": [],
@@ -18786,6 +18932,34 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "e0b5b3af-af89-4b91-8b55-947ec095d6f2:back",
+    "name": "Web Shot",
+    "handledLines": [
+      "Destroy target creature with flying."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Destroy target creature with flying",
+        "effects": [
+          {
+            "op": "destroy",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "filter": {
+              "keyword": "flying",
+              "kind": "hasKeyword"
+            },
+            "kind": "creature"
+          }
+        ]
+      }
     }
   },
   {
@@ -28951,6 +29125,79 @@
     }
   },
   {
+    "oracleId": "oracle-electrickery",
+    "name": "Electrickery",
+    "handledLines": [
+      "~ deals 1 damage to target creature you don't control."
+    ],
+    "def": {
+      "alternativeCasts": [
+        {
+          "ability": {
+            "description": "Deal 1 damage to each creature you don't control",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "damageEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "opponents"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "spell",
+            "targets": []
+          },
+          "description": "Overload {1}{R}",
+          "kind": "overload",
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 1,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 1
+          }
+        }
+      ],
+      "spellAbility": {
+        "description": "Deal 1 damage to target creature you don't control",
+        "effects": [
+          {
+            "amount": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "dealDamage",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "opponent",
+            "kind": "creature"
+          }
+        ]
+      }
+    }
+  },
+  {
     "oracleId": "oracle-endless-foot-assault",
     "name": "Endless Foot Assault",
     "handledLines": [
@@ -29242,6 +29489,34 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "oracle-ettercap-web-shot:back",
+    "name": "Web Shot",
+    "handledLines": [
+      "Destroy target creature with flying."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Destroy target creature with flying",
+        "effects": [
+          {
+            "op": "destroy",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "filter": {
+              "keyword": "flying",
+              "kind": "hasKeyword"
+            },
+            "kind": "creature"
+          }
+        ]
+      }
     }
   },
   {
@@ -34815,6 +35090,79 @@
           "timing": "any"
         }
       ]
+    }
+  },
+  {
+    "oracleId": "oracle-mizzium-mortars",
+    "name": "Mizzium Mortars",
+    "handledLines": [
+      "~ deals 4 damage to target creature you don't control."
+    ],
+    "def": {
+      "alternativeCasts": [
+        {
+          "ability": {
+            "description": "Deal 4 damage to each creature you don't control",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 4
+                },
+                "op": "damageEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "opponents"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "spell",
+            "targets": []
+          },
+          "description": "Overload {3}{R}{R}{R}",
+          "kind": "overload",
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 3,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 3
+          }
+        }
+      ],
+      "spellAbility": {
+        "description": "Deal 4 damage to target creature you don't control",
+        "effects": [
+          {
+            "amount": {
+              "kind": "const",
+              "n": 4
+            },
+            "op": "dealDamage",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "opponent",
+            "kind": "creature"
+          }
+        ]
+      }
     }
   },
   {

@@ -51,6 +51,39 @@ const scenarioFile = (name: string, text: string): CardScenarioFile =>
  */
 export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScenarioFile }> = [
   {
+    name: 'electrickery.json',
+    file: scenarioFile(
+      'electrickery.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/electrickery.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'ettercap.json',
+    file: scenarioFile(
+      'ettercap.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/ettercap.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'mizzium-mortars.json',
+    file: scenarioFile(
+      'mizzium-mortars.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/mizzium-mortars.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'path-to-exile.json',
     file: scenarioFile(
       'path-to-exile.json',

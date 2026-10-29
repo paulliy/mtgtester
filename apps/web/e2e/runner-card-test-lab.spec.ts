@@ -38,7 +38,89 @@ const confirmButton = (page: Page): Locator =>
 const logLine = (page: Page, text: string | RegExp): Locator =>
   page.locator('.log').getByText(text).first();
 
+/**
+ * Cast from a hand or zone card: pick the cast mode whose button matches `mode` when the card
+ * offers more than one, then each target as [seat, name], then confirm, and wait for it to resolve.
+ */
+async function castWith(
+  page: Page,
+  source: Locator,
+  options: { mode?: RegExp; targets?: Array<[string, string]>; resolves: RegExp },
+): Promise<void> {
+  await passUntil(page, source.and(page.locator('.actionable')));
+  await source.click();
+  const modes = page.locator('.source-actions .source-action-row button');
+  if (options.mode !== undefined) await modes.filter({ hasText: options.mode }).click();
+  else if ((await modes.count()) > 1)
+    await modes
+      .filter({ has: page.locator('span', { hasText: /^Cast$/ }) })
+      .first()
+      .click();
+  for (const [seat, name] of options.targets ?? []) {
+    const target = permanent(page, seat, name).first();
+    await expect(target).toHaveClass(/targetable|actionable/);
+    await target.click();
+  }
+  await confirmButton(page).click();
+  await passStackUntil(page, logLine(page, options.resolves));
+}
+
 const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
+  'mizzium-mortars-target': async (page) => {
+    await castWith(page, hand(page, 'Mizzium Mortars'), {
+      targets: [['P2', 'Scenario Ox']],
+      resolves: /Mizzium Mortars[^]*resolves/,
+    });
+    // The 3/5 Ox survives 4 damage; nothing else was hit.
+    await expect(permanent(page, 'P2', 'Scenario Ox')).toHaveCount(1);
+    await expect(permanent(page, 'P2', 'Scenario Bear')).toHaveCount(1);
+    await expect(permanent(page, 'P1', 'Scenario Bear')).toHaveCount(1);
+  },
+  'mizzium-mortars-overload': async (page) => {
+    await castWith(page, hand(page, 'Mizzium Mortars'), {
+      mode: /overload/i,
+      resolves: /Mizzium Mortars[^]*resolves/,
+    });
+    await expect(permanent(page, 'P2', 'Scenario Bear')).toHaveCount(0);
+    await expect(permanent(page, 'P3', 'Scenario Hexbear')).toHaveCount(0);
+    await expect(permanent(page, 'P2', 'Scenario Ox')).toHaveCount(1);
+    await expect(permanent(page, 'P1', 'Scenario Bear')).toHaveCount(1);
+  },
+  'electrickery-target': async (page) => {
+    await castWith(page, hand(page, 'Electrickery'), {
+      targets: [['P2', 'Scenario Bear']],
+      resolves: /Electrickery[^]*resolves/,
+    });
+    await expect(permanent(page, 'P2', 'Scenario Bear')).toHaveCount(1);
+    await expect(permanent(page, 'P2', 'Scenario Squirrel')).toHaveCount(1);
+    await expect(permanent(page, 'P1', 'Scenario Squirrel')).toHaveCount(1);
+  },
+  'electrickery-overload': async (page) => {
+    await castWith(page, hand(page, 'Electrickery'), {
+      mode: /overload/i,
+      resolves: /Electrickery[^]*resolves/,
+    });
+    await expect(permanent(page, 'P2', 'Scenario Squirrel')).toHaveCount(0);
+    await expect(permanent(page, 'P3', 'Scenario Squirrel')).toHaveCount(0);
+    await expect(permanent(page, 'P2', 'Scenario Bear')).toHaveCount(1);
+    await expect(permanent(page, 'P1', 'Scenario Squirrel')).toHaveCount(1);
+  },
+  'ettercap-web-shot-then-creature': async (page) => {
+    await castWith(page, hand(page, 'Ettercap // Web Shot'), {
+      mode: /adventure/i,
+      targets: [['P2', 'Scenario Bird']],
+      resolves: /Web Shot[^]*resolves/,
+    });
+    await expect(permanent(page, 'P2', 'Scenario Bird')).toHaveCount(0);
+    await expect(permanent(page, 'P2', 'Scenario Bear')).toHaveCount(1);
+    // On an adventure: cast Ettercap from exile.
+    const exiled = seatZone(page, 'P1', 'Exile')
+      .locator('.zone-card-thumb')
+      .filter({ has: page.getByRole('img', { name: 'Ettercap // Web Shot' }) })
+      .first();
+    await castWith(page, exiled, { resolves: /Ettercap[^]*resolves/ });
+    await expect(permanent(page, 'P1', 'Ettercap // Web Shot')).toHaveCount(1);
+  },
   'path-to-exile-search': async (page) => {
     const path = hand(page, 'Path to Exile');
     await passUntil(page, path.and(page.locator('.actionable')));

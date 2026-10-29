@@ -8304,24 +8304,26 @@
     "48ddba1e-2ad7-463f-9307-d2379a800e51": {
       "name": "Mizzium Mortars",
       "oracleSha256": "a8b84af0101a57acbab827a74a893cff542c2df54914b65eda9d28335a16642a",
-      "implementationStatus": "unsupported",
-      "unsupportedReason": "Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted.",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "oracleText": "Mizzium Mortars deals 4 damage to target creature you don't control.",
           "implementation": [
-            "unsupported: Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted."
+            "targeted 4 damage to a creature an opponent controls, dealt by the spell"
           ],
-          "engineTestIds": ["Mizzium Mortars-overload-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "mizzium-mortars-target",
+            "clause 1, negative: only creatures you don't control are offered, and not a hexproof one"
+          ],
+          "viewerScenarioIds": ["mizzium-mortars-target"]
         },
         {
           "oracleText": "Overload {3}{R}{R}{R} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
           "implementation": [
-            "unsupported: Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted."
+            "authored overload ability: untargeted 4 damage to each creature an opponent controls"
           ],
-          "engineTestIds": ["Mizzium Mortars-overload-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": ["mizzium-mortars-overload"],
+          "viewerScenarioIds": ["mizzium-mortars-overload"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -8329,24 +8331,26 @@
     "99fd4b51-1698-4168-9366-a6ea2df22361": {
       "name": "Electrickery",
       "oracleSha256": "ea68376ab3f57c56cfc902f12a38c8a3c0cf553648d70a22cf98d679391c41df",
-      "implementationStatus": "unsupported",
-      "unsupportedReason": "Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted.",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "oracleText": "Electrickery deals 1 damage to target creature you don't control.",
           "implementation": [
-            "unsupported: Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted."
+            "targeted 1 damage to a creature an opponent controls, dealt by the spell"
           ],
-          "engineTestIds": ["Electrickery-overload-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "electrickery-target",
+            "clause 1, negative: your own Squirrel is not offered as a target"
+          ],
+          "viewerScenarioIds": ["electrickery-target"]
         },
         {
           "oracleText": "Overload {1}{R} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
           "implementation": [
-            "unsupported: Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted."
+            "authored overload ability: untargeted 1 damage to each creature an opponent controls"
           ],
-          "engineTestIds": ["Electrickery-overload-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": ["electrickery-overload"],
+          "viewerScenarioIds": ["electrickery-overload"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -9672,19 +9676,21 @@
     "e0b5b3af-af89-4b91-8b55-947ec095d6f2": {
       "name": "Ettercap // Web Shot",
       "oracleSha256": "0b9b3446e1622da54ac9b69423c1f9775d874c51d71794e40a880c90da89bea6",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "oracleText": "Destroy target creature with flying. (Then exile this card. You may cast the creature later from exile.)",
           "implementation": [
-            "explicit unsupported spell clause: Web Shot: unrecognized rules text: \"Destroy target creature with flying.\""
+            "Adventure face: destroy target creature with flying; the Adventure exiles it, and Ettercap is cast from exile"
           ],
-          "engineTestIds": ["face-unparsed-clause-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "ettercap-web-shot-then-creature",
+            "Web Shot, negative: a creature without flying is not offered as a target"
+          ],
+          "viewerScenarioIds": ["ettercap-web-shot-then-creature"]
         }
       ],
-      "gameplayAiScenarioIds": [],
-      "unsupportedReason": "Web Shot: unrecognized rules text: \"Destroy target creature with flying.\""
+      "gameplayAiScenarioIds": []
     },
     "e24916ff-7566-4f27-8e31-732311a4a88c": {
       "name": "Stormshriek Feral // Flush Out",

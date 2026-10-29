@@ -751,9 +751,14 @@ describe('independent selected spell face contracts', () => {
     },
   );
 
+  // Faces authored since this contract was written, each tested with its own batch.
+  const authoredFaces = ['Ettercap // Web Shot']; // mini-pilot batch, tests/cards/mini-pilot
+
   it.each(
     pinned.cards.filter(
-      (row) => !faceCases.some((expected) => row.card.name.startsWith(expected.name)),
+      (row) =>
+        !faceCases.some((expected) => row.card.name.startsWith(expected.name)) &&
+        !authoredFaces.includes(row.card.name),
     ),
   )('face-unparsed-clause-contained rejects the normal path for $card.name', ({ card: input }) => {
     const definition = interpretCard(input);
