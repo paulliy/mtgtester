@@ -9,9 +9,10 @@ import {
   slugTable,
   type SlugFile,
 } from './contracts/ratchets';
+import { strictPumpErrors, type ChangedTestFile } from './contracts/strict-pump';
 
-// ADR 0034 decision 9: lists that may shrink but must not grow, compared with the pull request's
-// base commit. The base comes from RATCHET_BASE (ci.yml passes the pull request's base SHA, or a
+// ADR 0034 decision 9: lists that may shrink but must not grow, and no new guessing pump() call,
+// compared with the pull request's base commit. The base comes from RATCHET_BASE (ci.yml passes the pull request's base SHA, or a
 // push event's `before` SHA) or `--base <sha>`; an unusable base falls back to HEAD's first parent.
 function git(args: string[]): string | undefined {
   try {
@@ -56,9 +57,30 @@ const manifest = checkNotExecutableInCi({
   headManifest: readFileSync(MANIFEST, 'utf8'),
 });
 
+// Test files changed against the base, renames compared with their old version.
+const changedTests: ChangedTestFile[] = (
+  git(['diff', '--name-status', '-M', '--diff-filter=AMR', base.sha, 'HEAD']) ?? ''
+)
+  .split('\n')
+  .map((line) => line.split('\t'))
+  .filter((parts) => parts.length >= 2)
+  .map((parts) => {
+    const status = parts[0]!;
+    const path = parts[parts.length - 1]!;
+    const oldPath = status.startsWith('R') ? parts[1]! : path;
+    return { status, path, oldPath };
+  })
+  .filter(({ path }) => /\.(test|spec)\.ts$/.test(path) || /^packages\/[^/]+\/tests\//.test(path))
+  .map(({ status, path, oldPath }) => ({
+    path,
+    base: status === 'A' ? undefined : baseFile(oldPath),
+    head: readFileSync(path, 'utf8'),
+  }));
+const pumps = strictPumpErrors(changedTests);
+
 warnings.push(...ops.warnings);
 for (const warning of warnings) console.log(`::warning::${warning}`);
-const errors = [...ops.errors, ...manifest.errors];
+const errors = [...ops.errors, ...manifest.errors, ...pumps];
 if (errors.length > 0) {
   for (const error of errors) console.error(`::error::${error}`);
   console.error(`Ratchets failed (${errors.length}) against base ${base.sha}.`);
@@ -66,5 +88,5 @@ if (errors.length > 0) {
 }
 console.log(`card-named Effect ops: ${ops.cardNamed.join(', ')}`);
 console.log(
-  `ratchets ok against ${base.sha.slice(0, 12)}: ${ops.cardNamed.length} card-named Effect ops (may not grow), ${manifest.count} notExecutableInCi IDs (may not grow)`,
+  `ratchets ok against ${base.sha.slice(0, 12)}: ${ops.cardNamed.length} card-named Effect ops (may not grow), ${manifest.count} notExecutableInCi IDs (may not grow), ${changedTests.length} changed test files with no guessing pump() call`,
 );

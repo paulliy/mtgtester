@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { strictPumpErrors } from '../../../../scripts/contracts/strict-pump';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
@@ -200,5 +201,43 @@ describe('base commit resolution (the ci.yml push fallback)', () => {
 
   it('skips the comparison when there is no parent either', () => {
     expect(resolveBase(undefined, git([], undefined))).toMatchObject({ kind: 'none' });
+  });
+});
+
+describe('strict pump() calls in changed tests', () => {
+  const file = (head: string, base?: string) => [
+    { path: 'packages/engine/tests/x.test.ts', head, base },
+  ];
+
+  it('accepts a new call answered by a script or marked strict', () => {
+    expect(
+      strictPumpErrors(
+        file(`pump(gen, script([{ prompt: 'Scry', choose: 'top' }]));
+pump(gen, answer, { strict: true });
+pumpStrict(gen);`),
+      ),
+    ).toEqual([]);
+  });
+
+  it('fires on a new guessing call and on a () => ({ index: 0 }) answer', () => {
+    expect(
+      strictPumpErrors(file(`pump(gen);\npump(gen, () => ({ index: 0, targets: new Map() }));`)),
+    ).toEqual([
+      expect.stringContaining('x.test.ts:1: a new or changed pump() call'),
+      expect.stringContaining('x.test.ts:2: a new or changed pump() call'),
+      expect.stringContaining('x.test.ts:2: () => ({ index: 0 }) guesses'),
+    ]);
+  });
+
+  it('leaves existing calls alone, rewrapped or not, and catches a changed one', () => {
+    const base = 'pump(gen, (d) => answer(d, 1));\npump(other);';
+    expect(
+      strictPumpErrors(file('pump(\n  gen,\n  (d) => answer(d, 1),\n);\npump(other);', base)),
+    ).toEqual([]);
+    expect(strictPumpErrors(file('pump(gen, (d) => answer(d, 2));\npump(other);', base))).toEqual([
+      expect.stringContaining('x.test.ts:1:'),
+    ]);
+    // A second copy of an existing call is new.
+    expect(strictPumpErrors(file('pump(other);\npump(other);', 'pump(other);'))).toHaveLength(1);
   });
 });

@@ -4,6 +4,7 @@
  * scenarios are the bulk of engine coverage).
  */
 
+import { describeDecision, isScript } from './script';
 import type {
   AttackDeclarationSubject,
   BlockDeclarationSubject,
@@ -330,27 +331,42 @@ export function spawn(
 }
 
 /**
- * Pump an internal generator to completion. `answer` maps surfaced decisions to
- * outcomes; forced decisions resolve automatically; the default picks option 0.
+ * Pump an internal generator to completion. `answer` maps surfaced decisions to outcomes; forced
+ * decisions resolve automatically. Without `strict`, an unanswered decision picks option 0; with
+ * `{ strict: true }`, or with a `script()` answer, an unforced decision the answer does not handle
+ * throws with its prompt and options (ADR 0034 decision 9), and a script with unused steps fails
+ * when the generator ends.
  */
 export function pump<T>(
   gen: GameGen<T>,
-  answer?: (decision: PendingDecision, count: number) => DecisionOutcome,
+  answer?: (decision: PendingDecision, count: number) => DecisionOutcome | undefined,
+  options: { strict?: boolean } = {},
 ): { value: T; decisions: PendingDecision[] } {
+  const strict = options.strict === true || isScript(answer);
   const decisions: PendingDecision[] = [];
   let outcome: DecisionOutcome | undefined;
   for (;;) {
     const step = outcome === undefined ? gen.next() : gen.next(outcome);
-    if (step.done === true) return { value: step.value, decisions };
+    if (step.done === true) {
+      if (isScript(answer)) answer.assertDone();
+      return { value: step.value, decisions };
+    }
     const decision = step.value;
     if (isForced(decision)) {
       outcome = forcedOutcome(decision);
       continue;
     }
     decisions.push(decision);
-    outcome =
-      answer?.(decision, decisions.length) ?? ({ index: 0, targets: new Map() } as DecisionOutcome);
+    const answered = answer?.(decision, decisions.length);
+    if (answered === undefined && strict)
+      throw new Error(`An unforced decision nothing answers:\n${describeDecision(decision)}`);
+    outcome = answered ?? ({ index: 0, targets: new Map() } as DecisionOutcome);
   }
+}
+
+/** Pump a generator that should raise no unforced decision; one that does throws. */
+export function pumpStrict<T>(gen: GameGen<T>): { value: T; decisions: PendingDecision[] } {
+  return pump(gen, undefined, { strict: true });
 }
 
 // --- Rule-based provider for whole-game engine tests ---
