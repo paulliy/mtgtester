@@ -13,6 +13,7 @@ import {
   suiteRequirements,
   parsePlaywrightConfig,
   parseVitestConfig,
+  rerunsOf,
 } from '../../../../scripts/contracts/suite-integrity';
 
 const VITEST = `import { defineConfig } from 'vitest/config';
@@ -160,6 +161,19 @@ describe('suite integrity', () => {
         'packages/server/src/cards/b.test.ts: claimed by more than one runner (vitest.config.ts, vitest.integration.config.ts)',
       ),
     ]);
+  });
+
+  it('skips a config that reruns another, and fires when the one it names is missing', () => {
+    const rerun = `// suite-integrity: reruns vitest.config.ts
+import root from './vitest.config';
+export default mergeConfig(root, defineConfig({ test: { setupFiles: ['setup.ts'] } }));`;
+    expect(checkSuiteIntegrity(repo({ 'vitest.mutation.config.ts': rerun })).errors).toEqual([]);
+    const orphan = rerun.replace('reruns vitest.config.ts', 'reruns vitest.gone.config.ts');
+    expect(checkSuiteIntegrity(repo({ 'vitest.mutation.config.ts': orphan })).errors).toEqual([
+      'vitest.mutation.config.ts: reruns vitest.gone.config.ts, which is not a tracked file',
+    ]);
+    // The marker must be a whole comment line.
+    expect(rerunsOf(`const note = '// suite-integrity: reruns vitest.config.ts';`)).toBeNull();
   });
 
   it('fires on a card-gate entry that matches no file', () => {

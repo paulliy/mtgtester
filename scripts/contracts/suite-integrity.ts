@@ -279,13 +279,29 @@ export function isTestFile(path: string): boolean {
   return TEST_FILE.test(path);
 }
 
+const RERUNS = /^\/\/ suite-integrity: reruns (\S+)$/m;
+
+/**
+ * A Vitest config that only reruns another config's tests with something added (IR mutation's
+ * setup file) says so on a `// suite-integrity: reruns <config>` line. It claims no file of its
+ * own, so it is not a runner here; the config it names must be tracked.
+ */
+export function rerunsOf(source: string): string | null {
+  return RERUNS.exec(source)?.[1] ?? null;
+}
+
 export function discoverRunners(input: IntegrityInput): { runners: Runner[]; errors: string[] } {
   const runners: Runner[] = [];
   const errors: string[] = [];
   for (const path of input.files) {
     try {
-      if (VITEST_CONFIG.test(path)) runners.push(parseVitestConfig(path, input.read(path)));
-      else if (PLAYWRIGHT_CONFIG.test(path))
+      if (VITEST_CONFIG.test(path)) {
+        const source = input.read(path);
+        const reruns = rerunsOf(source);
+        if (reruns === null) runners.push(parseVitestConfig(path, source));
+        else if (!input.files.includes(reruns))
+          errors.push(`${path}: reruns ${reruns}, which is not a tracked file`);
+      } else if (PLAYWRIGHT_CONFIG.test(path))
         runners.push(parsePlaywrightConfig(path, input.read(path)));
       else if (VITE_CONFIG.test(path)) {
         // A `test` block in a Vite config is a runner this check would not see.

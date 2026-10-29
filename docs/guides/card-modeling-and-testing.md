@@ -481,6 +481,12 @@ outside `docs/`.
       left in the ID). The test's file or title names the card. A shared test built on stand-in
       cards goes in the clause's `contractTestIds`. `bun run check:manifest-tests` passes (ADR
       0034 decision 5).
+- [ ] `bun run mutate-cards --card "<name>"` kills every mutant: dropping an effect, widening a
+      target, flipping `optional`, nudging a constant and the rest of the operator table each make
+      one of the card's tests fail on an `expect`. A crash or a strict driver's refusal does not
+      count, and a mutant the tests never load (they built the ability by hand) is unreached. A
+      survivor that cannot change anything the card can reach goes in the card's
+      `equivalentMutants` with the reason.
 - [ ] `modeled: true` and empty `unmodeledReasons` hold for both the real Oracle ID and fixture
       alias. This is a prerequisite, not proof.
 - [ ] Normal Vitest callbacks run fixture behavior tests for every ability and applicable

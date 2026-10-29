@@ -53,6 +53,7 @@
     "check:suite-integrity": "bun run scripts/check-suite-integrity.ts",
     "check:suite-collect": "bun run scripts/check-suite-collect.ts",
     "check:manifest-tests": "bun run scripts/check-manifest-tests.ts",
+    "mutate-cards": "bun run scripts/mutate-cards.ts",
     "pin-store": "bun run scripts/pin-store.ts",
     "card:check": "bun run scripts/cards/card-check.ts",
     "card:new": "bun run scripts/cards/card-new.ts",

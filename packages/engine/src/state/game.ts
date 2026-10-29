@@ -4,6 +4,7 @@
  * the game PRNG so the call order is deterministic, brief §5.9).
  */
 
+import { transformDefinition } from '../testing/definition-transform';
 import type { Color, OracleCard, PlayerId } from '@mtg/shared';
 import { interpretCard } from '../cards/interpret';
 import { assertValidModeledDefinition } from '../cards/authoring-validation';
@@ -53,7 +54,7 @@ export function createGame(config: GameConfig): GameContext {
     if (p.companion != null) addDef(p.companion);
   }
   for (const override of config.customDefinitions ?? []) {
-    defs.set(override.oracleId, assertValidModeledDefinition(override));
+    defs.set(override.oracleId, assertValidModeledDefinition(transformDefinition(override)));
   }
 
   let nextObjectNum = 1;

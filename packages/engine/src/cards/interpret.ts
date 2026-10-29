@@ -24,6 +24,7 @@ import type {
   ManaRestriction,
   SearchDestination,
 } from './ability';
+import { transformDefinition } from '../testing/definition-transform';
 import { IMPLEMENTED_KEYWORDS, SELF_SUBJECT } from './ability';
 import type {
   Ability,
@@ -7419,7 +7420,7 @@ function interpretSplitCard(card: OracleCard): CardDefinition | null {
       .join('\n');
   const half = (suffix: string, index: 0 | 1, oracleText: string): CardDefinition => {
     const cost = costs[index]!.trim();
-    return interpretCard({
+    return interpretOracleCard({
       oracleId: `${card.oracleId}:${suffix}` as OracleCard['oracleId'],
       scryfallId: card.scryfallId,
       name: names[index]!,
@@ -7583,7 +7584,7 @@ function interpretSecondFace(card: OracleCard): CardDefinition | null {
     commanderLegality: card.commanderLegality,
     isBasicLand: supertypes.includes('Basic') && types.includes('Land'),
   };
-  return interpretCard(synthetic);
+  return interpretOracleCard(synthetic);
 }
 
 function buildTransformBackFace(card: OracleCard): TransformBackFaceResult | null {
@@ -7653,6 +7654,11 @@ function buildPathwayLand(card: OracleCard): {
 
 /** Interpret one oracle card. Never throws â€” unmodeled cards are reported, not errors. */
 export function interpretCard(card: OracleCard): CardDefinition {
+  return transformDefinition(interpretOracleCard(card));
+}
+
+/** `interpretCard` without the test-only transform: its recursive calls for halves and faces. */
+function interpretOracleCard(card: OracleCard): CardDefinition {
   if (card.layout === 'split') {
     const split = interpretSplitCard(card);
     if (split !== null) return split;
