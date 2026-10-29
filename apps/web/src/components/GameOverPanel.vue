@@ -14,8 +14,7 @@
  * so the board it sent you to is actually visible.
  */
 import { computed } from 'vue';
-import type { AiReflection, GameResult, PlayerId, SeatSummary } from '@mtg/shared';
-import { lossReasonLabel } from '../lib/lossReasons';
+import type { AiReflection, GameOverPayload, GameResult, PlayerId, SeatSummary } from '@mtg/shared';
 
 const props = defineProps<{
   seats: SeatSummary[];
@@ -26,7 +25,7 @@ const props = defineProps<{
   expectedSeats: PlayerId[];
   /** Every seat has answered or failed. A missing review is then final, not pending. */
   complete: boolean;
-  standings: Array<{ seat: PlayerId; position: number; lossReason: string | null }>;
+  standings: GameOverPayload['standings'];
 }>();
 
 const emit = defineEmits<{
@@ -49,10 +48,11 @@ const roundCount = computed(() => {
   return Math.ceil(props.result.turnCount / numSeats);
 });
 
-function outcomeLabel(row: { seat: PlayerId; lossReason: string | null }): string {
+function outcomeLabel(row: GameOverPayload['standings'][number]): string {
   if (row.seat === props.result.winnerSeat) return 'Winner';
   if (row.lossReason === null) return props.result.halted ? 'Still standing' : '—';
-  return lossReasonLabel(row.lossReason);
+  // The server writes the reason in player terms; a frame without one shows a plain fact.
+  return row.lossLabel ?? 'Eliminated';
 }
 
 /** Standings arrive unsorted; 1st belongs at the top of the results table. */

@@ -30,6 +30,7 @@ import type {
   GameEvent,
   GameMode,
   GameReport,
+  GameOverPayload,
   GameResult,
   GameReportBuild,
   GameReportCardData,
@@ -101,7 +102,9 @@ import {
 import { buildReplayRecord, type ReplayIdentity } from './replay-config';
 import { botRandomSource, resolveRngKey, seatIndex } from './rng-streams';
 import type { SeatSetup } from './setup';
+import { lossReasonLabel } from './loss-reasons';
 import { SmartYieldMemory, playerYieldKey } from './player-yield';
+import { enrichPresentation, gameOverSummary, playerFacingEvents } from './presentation';
 
 /** `HeuristicDecisionProvider` (like the engine's `RandomDecisionProvider` before it) is
  * synchronous; the runner awaits every provider. */
@@ -580,16 +583,17 @@ export class MatchSession {
   private eventFormatting(): Pick<MatchRunnerOptions, 'formatEvents' | 'seatEvents'> {
     switch (this.gameMode) {
       case 'spectator':
-        return {};
+        return { formatEvents: (events) => formatSpectatorLog(playerFacingEvents(events)) };
       case 'singlePlayer':
         return {
-          formatEvents: (events) => formatPlayerLog(events, this.soleHumanSeat()),
+          formatEvents: (events) =>
+            formatPlayerLog(playerFacingEvents(events), this.soleHumanSeat()),
         };
       case 'table':
         return {
           seatEvents: {
             seats: [...this.humanSeats],
-            format: (events, seat) => formatPlayerLog(events, seat),
+            format: (events, seat) => formatPlayerLog(playerFacingEvents(events), seat),
           },
         };
       default:
@@ -1753,7 +1757,7 @@ export class MatchSession {
       type: 'eventBatch',
       payload: {
         gameId: this.opts.gameId,
-        lines: formatPlayerLog(this.engine.eventsSince(0), seat),
+        lines: formatPlayerLog(playerFacingEvents(this.engine.eventsSince(0)), seat),
         frontierTurn: this.engine.getState().turnNumber,
         snapshotTurns: [],
         ...(this.allTalk.length > 0 ? { tableTalk: [...this.allTalk] } : {}),
@@ -1848,10 +1852,9 @@ export class MatchSession {
     this.sendToSeat(seat, {
       type: 'playerActionRequired',
       payload: {
-        request: {
-          ...request,
-          legalActions,
-        },
+        // After smart-yield filtering: the presentation is built from the menu the seat is sent
+        // and its own board, never from the engine's state (ADR 0032 decision 3).
+        request: enrichPresentation({ ...request, legalActions }, state),
         revision,
         state,
         ignoredAbilities: this.ignoredAbilityList(seat),
@@ -1935,7 +1938,7 @@ export class MatchSession {
           type: 'replayUnlocked',
           payload: {
             state: this.engine.spectatorState(),
-            lines: formatSpectatorLog(this.engine.eventsSince(0)),
+            lines: formatSpectatorLog(playerFacingEvents(this.engine.eventsSince(0))),
             snapshotTurns: this.runner.getSnapshotTurns(),
             frontierTurn: result.turnCount,
             // The game is over, so the reasoning withheld all game is safe to release in full
@@ -1959,6 +1962,7 @@ export class MatchSession {
       type: 'gameOver',
       payload: {
         result: this.disclosedResult(result),
+        summary: gameOverSummary(result),
         standings: this.standings(),
         ...(reflectingSeats.length > 0 ? { reflectingSeats } : {}),
       },
@@ -2089,17 +2093,21 @@ export class MatchSession {
    * so the screen and the stored row can never disagree. A seat absent from `finishingOrder`
    * did not finish — only possible on a halt — and is reported as position 0.
    */
-  private standings(): Array<{ seat: PlayerId; position: number; lossReason: string | null }> {
+  private standings(): GameOverPayload['standings'] {
     const positions = finishingPositions(
       this.runner.getResult()?.finishingOrder ?? [],
       this.opts.seats.length,
     );
     const state = this.engine.getState();
-    return this.opts.seats.map((seat) => ({
-      seat: seat.seat,
-      position: positions.get(seat.seat) ?? 0,
-      lossReason: state.players.find((p) => p.id === seat.seat)?.lossReason ?? null,
-    }));
+    return this.opts.seats.map((seat) => {
+      const lossReason = state.players.find((p) => p.id === seat.seat)?.lossReason ?? null;
+      return {
+        seat: seat.seat,
+        position: positions.get(seat.seat) ?? 0,
+        lossReason,
+        ...(lossReason === null ? {} : { lossLabel: lossReasonLabel(lossReason) }),
+      };
+    });
   }
 
   /**

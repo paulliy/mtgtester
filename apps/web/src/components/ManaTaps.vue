@@ -3,14 +3,26 @@
  * Mana you can make by hand from one permanent (ADR 0030): a button per kind of mana its mana
  * abilities can make, drawn over the bottom-left corner of its tile.
  */
-import type { LegalAction } from '@mtg/shared';
+import type { ActionPresentation, LegalAction } from '@mtg/shared';
 
-const props = defineProps<{ actions: readonly LegalAction[] }>();
+/**
+ * `presentation` is the request's per-action entries: the server writes each button's label and
+ * its mana symbols, so nothing here reads `data` or splits the engine's description.
+ */
+const props = defineProps<{
+  actions: readonly LegalAction[];
+  presentation?: Record<number, ActionPresentation> | undefined;
+}>();
 const emit = defineEmits<{ tap: [action: LegalAction] }>();
 
+function entry(action: LegalAction): ActionPresentation | undefined {
+  return props.presentation?.[action.id];
+}
 function symbols(action: LegalAction): string[] {
-  const value = action.data?.['symbols'];
-  return Array.isArray(value) ? value.filter((s): s is string => typeof s === 'string') : [];
+  return entry(action)?.manaSymbols ?? [];
+}
+function title(action: LegalAction): string {
+  return entry(action)?.label ?? 'Tap for mana';
 }
 </script>
 
@@ -21,8 +33,8 @@ function symbols(action: LegalAction): string[] {
       :key="action.id"
       type="button"
       class="mana-tap"
-      :title="`Tap for ${action.description.split(': add ')[1] ?? 'mana'}`"
-      :aria-label="`Tap ${action.description}`"
+      :title="title(action)"
+      :aria-label="entry(action)?.summary ?? title(action)"
       @click.stop="emit('tap', action)"
     >
       <span

@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 import type { LegalAction } from '../engine';
 import {
   actionCost,
-  groupXActions,
+  paymentSourceIds,
   paymentSourceNames,
   paymentSourceSummary,
   pendingSummary,
+  xFamily,
 } from './actions';
 
 function action(over: Partial<LegalAction>): LegalAction {
@@ -101,51 +102,43 @@ describe('payment summary', () => {
   });
 });
 
-describe('groupXActions', () => {
-  const x = (id: number, value: number, over: Partial<LegalAction> = {}): LegalAction =>
-    action({ id, data: { x: value }, ...over });
-
-  it('collapses an X family into one group sorted by X, with min/max/first', () => {
-    const a = x(1, 3);
-    const b = x(2, 1);
-    const c = x(3, 2);
-    const { plain, xGroups } = groupXActions([a, b, c]);
-    expect(plain).toEqual([]);
-    expect(xGroups).toHaveLength(1);
-    expect(xGroups[0]).toEqual({
-      key: 'castSpell|',
-      actions: [b, c, a],
-      first: b,
-      min: 1,
-      max: 3,
+describe('xFamily', () => {
+  it('keys a family by action type and mode label, with the announced X', () => {
+    expect(xFamily(action({ data: { x: 3 } }))).toEqual({ key: 'castSpell|', x: 3 });
+    expect(xFamily(action({ data: { x: 0, modeLabel: 'a' } }))).toEqual({
+      key: 'castSpell|a',
+      x: 0,
+    });
+    expect(xFamily(action({ type: 'activateAbility', data: { x: 1 } }))).toEqual({
+      key: 'activateAbility|',
+      x: 1,
     });
   });
 
-  it('keeps non-X actions plain and separates families by type and mode label', () => {
-    const land = action({ id: 9, type: 'playLand' });
-    const castA = [
-      x(1, 0, { data: { x: 0, modeLabel: 'a' } }),
-      x(2, 1, { data: { x: 1, modeLabel: 'a' } }),
-    ];
-    const castB = [
-      x(3, 0, { data: { x: 0, modeLabel: 'b' } }),
-      x(4, 1, { data: { x: 1, modeLabel: 'b' } }),
-    ];
-    const activate = [x(5, 0, { type: 'activateAbility' }), x(6, 1, { type: 'activateAbility' })];
-    const { plain, xGroups } = groupXActions([land, ...castA, ...castB, ...activate]);
-    expect(plain).toEqual([land]);
-    expect(xGroups.map((group) => group.key)).toEqual([
-      'castSpell|a',
-      'castSpell|b',
-      'activateAbility|',
+  it('is null for an option that announces no X', () => {
+    expect(xFamily(action({}))).toBeNull();
+    expect(xFamily(action({ data: { x: '3' } }))).toBeNull();
+  });
+});
+
+describe('paymentSourceIds and mana abilities', () => {
+  it('reads only string ids', () => {
+    expect(paymentSourceIds(action({ data: { paymentSourceIds: ['a', 3, 'b'] } }))).toEqual([
+      'a',
+      'b',
     ]);
+    expect(paymentSourceIds(action({}))).toEqual([]);
   });
 
-  it('renders a family with a single affordable X as a plain button, after the other plain ones', () => {
-    const only = x(1, 4);
-    const land = action({ id: 2, type: 'playLand' });
-    const { plain, xGroups } = groupXActions([only, land]);
-    expect(xGroups).toEqual([]);
-    expect(plain).toEqual([land, only]);
+  it('summarises a by-hand mana activation by its source and symbols', () => {
+    const tap = action({
+      type: 'activateManaAbility',
+      description: 'Forest: add {G}',
+      data: { sourceName: 'Forest', symbols: ['G'] },
+    });
+    expect(pendingSummary(tap)).toBe('Tap Forest for {G}');
+    expect(pendingSummary(action({ type: 'activateManaAbility' }))).toBe(
+      'Tap mana source for mana',
+    );
   });
 });

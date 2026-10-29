@@ -43,14 +43,16 @@ binds loopback only (brief §2), and this client will not be the thing that reac
   server's `sessionToken` is deliberately not republished: v1 does not reconnect.
 - `decision-required` — `requestId`, `revision`, `request`, `state`, `ignoredAbilities`.
   `request` is the `DecisionRequest` verbatim; `request.legalActions` is the complete menu, and the
-  only menu, the agent may choose from.
+  only menu, the agent may choose from. `request.presentation` is the server's own wording for it
+  (ADR 0032): `playerPrompt`, and for each action in the menu a `label`, `summary`, `costLabels`
+  and so on. An agent may read it or ignore it; it never changes which actions are legal.
 - `state-update` — `gameId`, `revision`, `connected`, `state`, `ignoredAbilities`. A new board with
   no decision attached.
 - `error` — `source` (`agent` for a rejected reply, `server` otherwise), `fatal`, `message`,
   `deckIssues`/`unmodeledCards` when setup failed, and `requestId`/`revision` when the server
   correlated the error to a submission it rejected. Only a correlated rejection makes a decision
   answerable again; see below.
-- `game-over` — `result`, `standings`.
+- `game-over` — `result`, `standings`, and the server's one-line `summary` ("Game over — winner P1 after 12 turns") when it sends one.
 
 ## Replies (stdin)
 

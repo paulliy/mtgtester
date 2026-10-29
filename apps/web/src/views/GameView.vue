@@ -6,11 +6,10 @@
  */
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { LOOKAHEAD_TURNS } from '@mtg/shared';
+import { LOOKAHEAD_TURNS, turnPositionLabel } from '@mtg/shared';
 import type { SpectatorCard, SpectatorPermanent } from '@mtg/shared';
 import ActionLog from '../components/ActionLog.vue';
 import { CONNECTION_LABELS } from '../lib/socket';
-import { turnPositionLabel } from '../lib/turnLabels';
 import { dealLinesFor } from '../lib/tableTalk';
 import CombatOverlay from '../components/CombatOverlay.vue';
 import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';

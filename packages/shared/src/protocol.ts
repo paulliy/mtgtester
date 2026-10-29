@@ -311,8 +311,16 @@ export interface ReplayUnlockedPayload {
 
 export interface GameOverPayload {
   result: GameResult;
+  /** The "game over" line in player terms, written by the server (ADR 0032 decision 5). */
+  summary: string;
   /** Finishing positions, 1st through 4th. */
-  standings: Array<{ seat: PlayerId; position: number; lossReason: string | null }>;
+  standings: Array<{
+    seat: PlayerId;
+    position: number;
+    lossReason: string | null;
+    /** `lossReason` in player terms, written by the server; absent when there is no reason. */
+    lossLabel?: string;
+  }>;
   /**
    * Seats whose post-game reflection has been started (ADR 0022 §7). Absent when the feature is
    * off. This ships with `gameOver` — which never waits on a model — so the results screen can

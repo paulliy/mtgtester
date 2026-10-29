@@ -87,10 +87,29 @@ function readGameId(container: unknown): string | null {
   return typeof id === 'string' && id.length > 0 ? id : null;
 }
 
+/** The longest `summary` the agent will pass on: the server's line is one short sentence. */
+const MAX_SUMMARY_LENGTH = 200;
+
+/**
+ * The server's one-line summary of the game's end, when it is plain text of a sane length.
+ * Anything else is not a summary: a control character could drive a terminal, and a long one is
+ * not the line the server writes.
+ */
+function readSummary(value: unknown): string | null {
+  if (typeof value !== 'string' || value.length > MAX_SUMMARY_LENGTH) return null;
+  for (const char of value) {
+    const code = char.codePointAt(0) ?? 0;
+    if (code < 0x20 || code === 0x7f) return null;
+  }
+  return value;
+}
+
 /** Rebuild terminal output from validated public fields, never upstream free text. */
-function projectAgentGameOver(
-  payload: unknown,
-): { result: GameResult; standings: GameOverPayload['standings'] } | null {
+function projectAgentGameOver(payload: unknown): {
+  result: GameResult;
+  standings: GameOverPayload['standings'];
+  summary?: string;
+} | null {
   const frame = readRecord(payload);
   const result = readRecord(frame?.['result']);
   const gameId = readGameId(result);
@@ -115,6 +134,10 @@ function projectAgentGameOver(
     if (!isPlayerSeatId(seat) || order.includes(seat)) return null;
     order.push(seat);
   }
+  // A server older than ADR 0032 sends none; a present one must be plain text.
+  const incomingSummary = frame?.['summary'];
+  const summary = incomingSummary === undefined ? null : readSummary(incomingSummary);
+  if (incomingSummary !== undefined && summary === null) return null;
   const incomingStandings = frame?.['standings'];
   if (!Array.isArray(incomingStandings)) return null;
   const standings: GameOverPayload['standings'] = [];
@@ -139,6 +162,7 @@ function projectAgentGameOver(
   return {
     result: { gameId, winnerSeat, finishingOrder: order, turnCount, halted, haltReason: null },
     standings,
+    ...(summary === null ? {} : { summary }),
   };
 }
 
@@ -206,6 +230,8 @@ export interface AgentGameOverEvent {
   type: 'game-over';
   result: GameResult;
   standings: GameOverPayload['standings'];
+  /** The server's one-line "game over" summary, when it sent one. */
+  summary?: string;
 }
 
 export type AgentEvent =
@@ -562,6 +588,7 @@ export class AgentClientSession {
           type: 'game-over',
           result: projected.result,
           standings: projected.standings,
+          ...(projected.summary === undefined ? {} : { summary: projected.summary }),
         });
         this.finish(0);
         return;

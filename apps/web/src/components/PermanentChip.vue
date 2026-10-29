@@ -5,7 +5,7 @@ import type { SpectatorPermanent } from '@mtg/shared';
 import { useBoardAnchors } from '../composables/useBoardAnchors';
 import { useBoardFlash } from '../composables/useBoardFlash';
 import { STRIKE_MS, useCombatStrikes } from '../composables/useCombatStrikes';
-import { isTokenTypeLine, scryfallImageUrl } from '../lib/card';
+import { scryfallImageUrl } from '../lib/card';
 import type { TokenArtKey } from '../lib/tokenArt';
 import { useCardPreviewStore } from '../stores/cardPreview';
 import { useTokenArtStore } from '../stores/tokenArt';
@@ -25,10 +25,8 @@ const tokenArtStore = useTokenArtStore();
 const { registerAnchor, unregisterAnchor } = useBoardAnchors();
 
 const isCreature = computed(() => props.permanent.power !== null);
-/** The engine's flag; older saved snapshots lack it, so fall back to the type line. */
-const isToken = computed(
-  () => props.permanent.isToken ?? isTokenTypeLine(props.permanent.typeLine),
-);
+/** The engine's flag. A snapshot saved before it existed lacks it and shows no token art. */
+const isToken = computed(() => props.permanent.isToken === true);
 const isAttacking = computed(() => props.permanent.attacking !== null);
 
 /** Board-change feedback (§9.8): a brief flash when this permanent takes or sheds damage. */

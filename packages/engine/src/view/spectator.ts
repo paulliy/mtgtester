@@ -23,6 +23,7 @@ import type {
   SpectatorStackObject,
   SpectatorState,
 } from '@mtg/shared';
+import { COMMANDER_DAMAGE_LETHAL } from '@mtg/shared';
 import { computeCharacteristics } from '../effects/continuous';
 import { manaSourcesFor, scryfallIdOf } from '../state/queries';
 import { copyImageFace, playerById } from '../state/objects';
@@ -218,6 +219,8 @@ function commanderDamage(ctx: GameContext): CommanderDamageEntry[] {
         sourceCardId,
         sourceName: commanderName(ctx, source, sourceCardId),
         damage,
+        lethal: damage >= COMMANDER_DAMAGE_LETHAL,
+        remaining: Math.max(0, COMMANDER_DAMAGE_LETHAL - damage),
       });
     }
   }

@@ -1,5 +1,5 @@
+import { turnPositionLabel } from '@mtg/shared';
 import type { GameReport, GameReportDeckSource } from '@mtg/shared';
-import { turnPositionLabel } from './turnLabels';
 
 function deckSource(source: GameReportDeckSource): string {
   switch (source.kind) {

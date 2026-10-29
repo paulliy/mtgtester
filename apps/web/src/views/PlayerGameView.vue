@@ -1,19 +1,10 @@
 <script setup lang="ts">
 import type { ComponentPublicInstance } from 'vue';
 import type { ManaPool } from '@mtg/shared';
-import { ATTACKS_TARGET } from '@mtg/shared';
+import { ATTACKS_TARGET, turnPositionLabel } from '@mtg/shared';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import type { DecisionRequest, LegalAction, ObjectId, TargetChoice } from '@mtg/shared';
-import {
-  actionCost,
-  actionLabel,
-  groupXActions,
-  paymentSourceNames,
-  paymentSourceSummary,
-  pendingSummary,
-} from '@mtg/shared/presentation';
-import type { XActionGroup } from '@mtg/shared/presentation';
 import ActionLog from '../components/ActionLog.vue';
 import CardImage from '../components/CardImage.vue';
 import CombatOverlay from '../components/CombatOverlay.vue';
@@ -33,9 +24,15 @@ import ZoneStrip from '../components/ZoneStrip.vue';
 import { useBoardAnchors } from '../composables/useBoardAnchors';
 import { useCombatStrikes } from '../composables/useCombatStrikes';
 import { useLifeFlash, useLifeFlashBySeat } from '../composables/useLifeFlash';
-import { isTokenTypeLine } from '../lib/card';
+import {
+  buttonLabel,
+  costChips,
+  entryFor,
+  pendingLabel,
+  promptOf,
+} from '../lib/actionPresentation';
 import { CONNECTION_LABELS } from '../lib/socket';
-import { playerFacingPrompt, turnPositionLabel } from '../lib/turnLabels';
+import { groupByXFamily, type XActionGroup } from '../lib/xFamilies';
 import { groupPermanents, stackKey } from '../lib/stackPermanents';
 import { useCardPreviewStore } from '../stores/cardPreview';
 import { useCombatPlanStore } from '../stores/combatPlan';
@@ -133,10 +130,11 @@ const humanExile = computed(
 
 /**
  * Your lands sit apart from the rest of your board, in a pile you open to see or use them one by
- * one. A land that is also a creature stays on the board, where it can attack and block.
+ * one. A land that is also a creature stays on the board, where it can attack and block: the
+ * server decides the row (`boardGroup`) from the permanent's computed types.
  */
-function isPiledLand(permanent: { typeLine: string }): boolean {
-  return /\bLand\b/.test(permanent.typeLine) && !/\bCreature\b/.test(permanent.typeLine);
+function isPiledLand(permanent: { boardGroup?: string }): boolean {
+  return permanent.boardGroup === 'lands';
 }
 const humanLands = computed(() =>
   human.value === null ? [] : permanentsFor(human.value.seat).filter(isPiledLand),
@@ -182,16 +180,10 @@ function togglePile(pile: Pile): void {
  * window. The drawer remembers whether it was open; the settings menu always starts closed.
  */
 /**
- * The engine's "game over" line, once the game has ended. The log sits in the closed drawer, so
+ * The server's "game over" line, once the game has ended. The log sits in the closed drawer, so
  * the top bar repeats it where it can be seen (a lab scenario keeps this board after its end).
  */
-const gameOverLine = computed(() => {
-  for (let i = store.log.length - 1; i >= 0; i--) {
-    const line = store.log[i]!;
-    if (/^game over/i.test(line.text)) return line.text;
-  }
-  return null;
-});
+const gameOverLine = computed(() => store.gameOver?.summary ?? null);
 
 const INFO_OPEN_KEY = 'mtg.playerGameInfoOpen';
 const settingsOpen = ref(false);
@@ -452,6 +444,7 @@ const nameById = computed(() => {
   }
   for (const permanent of state.value?.battlefield ?? []) names.set(permanent.id, permanent.name);
   for (const card of state.value?.exile ?? []) names.set(card.id, card.name);
+  for (const top of state.value?.revealedLibraryTops ?? []) names.set(top.card.id, top.card.name);
   return names;
 });
 
@@ -479,7 +472,9 @@ const selectedSourceActions = computed(() =>
     ? []
     : sourceActions.value.filter((action) => sourceId(action) === focusedSourceId.value),
 );
-const selectedSourceGrouped = computed(() => groupXActions(selectedSourceActions.value));
+const selectedSourceGrouped = computed(() =>
+  groupByXFamily(selectedSourceActions.value, (action) => entryFor(request.value, action)?.xFamily),
+);
 
 /** One typed X value per open group, defaulting to the largest affordable amount. */
 const xInputs = ref<Record<string, number>>({});
@@ -497,7 +492,7 @@ watch(
  * (a stray value the `min`/`max` on the `<input>` don't strictly enforce). */
 function xGroupAction(group: XActionGroup): LegalAction | undefined {
   const x = xInputs.value[group.key] ?? group.max;
-  return group.actions.find((action) => actionData(action, 'x') === x);
+  return group.actions.find((action) => group.xById.get(action.id) === x);
 }
 
 /** Same, but always returns something to preview a label/cost — falls back to `first` while the
@@ -531,11 +526,6 @@ const actionableSourceIds = computed(
 
 /** The ordinary things a source can do right now, best first: a land plays, a spell casts. */
 const PLAYABLE_VERBS = ['playLand', 'castSpell', 'activateAbility'] as const;
-const VERB_LABELS: Record<(typeof PLAYABLE_VERBS)[number], string> = {
-  playLand: 'Play',
-  castSpell: 'Cast',
-  activateAbility: 'Activate',
-};
 
 /**
  * One entry per card or permanent the engine currently offers to play, cast, or activate, with
@@ -543,18 +533,19 @@ const VERB_LABELS: Record<(typeof PLAYABLE_VERBS)[number], string> = {
  * select the source exactly as clicking the card does, so nothing here decides legality.
  */
 const playableSources = computed(() => {
-  const best = new Map<string, number>();
+  const best = new Map<string, { rank: number; action: LegalAction }>();
   for (const action of sourceActions.value) {
     if (action.interaction?.kind !== 'source') continue;
     const rank = (PLAYABLE_VERBS as readonly string[]).indexOf(action.type);
     if (rank < 0) continue;
     const id = action.interaction.sourceId;
     const current = best.get(id);
-    if (current === undefined || rank < current) best.set(id, rank);
+    if (current === undefined || rank < current.rank) best.set(id, { rank, action });
   }
-  return [...best].map(([id, rank]) => ({
+  // The verb ("Play", "Cast", "Activate") is the server's, from the action's type.
+  return [...best].map(([id, { action }]) => ({
     id,
-    verb: VERB_LABELS[PLAYABLE_VERBS[rank] ?? 'activateAbility'],
+    verb: entryOf(action)?.verb ?? '',
     name: nameById.value.get(id) ?? id,
   }));
 });
@@ -616,6 +607,23 @@ function passAnyway(): void {
 const selectedSourceName = computed(() =>
   focusedSourceId.value === null ? null : (nameById.value.get(focusedSourceId.value) ?? null),
 );
+
+/** The server's presentation entry for an action in the current request. */
+function entryOf(action: LegalAction) {
+  return entryFor(request.value, action);
+}
+/** The text on an action's button in the source panel. */
+function labelOf(action: LegalAction): string {
+  return buttonLabel(action, entryOf(action));
+}
+const selectedEntry = computed(() =>
+  selectedAction.value === null ? undefined : entryOf(selectedAction.value),
+);
+/** The card or permanent an action comes from, by name. */
+function sourceNameOf(action: LegalAction): string | null {
+  const id = sourceId(action);
+  return id === null ? null : (nameById.value.get(id) ?? null);
+}
 
 function targetSlots(action: LegalAction | null) {
   if (action === null) return [];
@@ -1013,10 +1021,6 @@ function dragEnd(): void {
   dragPointer.value = null;
 }
 
-function actionData(action: LegalAction, key: string): unknown {
-  return action.data?.[key];
-}
-
 function showCardPreview(
   card: { scryfallId: string | null; name: string },
   event: MouseEvent,
@@ -1082,11 +1086,8 @@ function isChosenTarget(target: ObjectId | string): boolean {
 }
 
 function isPaymentSource(id: ObjectId): boolean {
-  const sources =
-    selectedAction.value === null
-      ? undefined
-      : actionData(selectedAction.value, 'paymentSourceIds');
-  return Array.isArray(sources) && sources.includes(id);
+  if (selectedAction.value === null) return false;
+  return entryFor(request.value, selectedAction.value)?.payment?.sourceIds.includes(id) ?? false;
 }
 
 function selectedTargetLabel(slot: string, choice: ObjectId): string {
@@ -1570,6 +1571,7 @@ function abandon(): void {
                 <ManaTaps
                   v-if="(manaByGroup.get(group.permanent.id) ?? []).length > 0"
                   :actions="manaByGroup.get(group.permanent.id)!"
+                  :presentation="request?.presentation?.actions"
                   @tap="tapForMana"
                 />
               </div>
@@ -1624,6 +1626,7 @@ function abandon(): void {
                     <ManaTaps
                       v-if="(manaByGroup.get(group.permanent.id) ?? []).length > 0"
                       :actions="manaByGroup.get(group.permanent.id)!"
+                      :presentation="request?.presentation?.actions"
                       @tap="tapForMana"
                     />
                   </div>
@@ -1704,7 +1707,7 @@ function abandon(): void {
               <CardImage
                 :scryfall-id="card.scryfallId"
                 :name="card.name"
-                :is-token="isTokenTypeLine(card.typeLine)"
+                :is-token="card.isToken === true"
                 size="small"
               />
               <span v-if="playableVerbById.get(card.id)" class="play-tag">{{
@@ -1769,20 +1772,21 @@ function abandon(): void {
             <template v-if="selectedAction">
               <div class="tray-heading">
                 <strong>{{
-                  actionData(selectedAction, 'sourceName') ??
-                  selectedSourceName ??
-                  selectedAction.description
+                  sourceNameOf(selectedAction) ?? selectedSourceName ?? selectedAction.description
                 }}</strong>
-                <span v-for="cost in actionCost(selectedAction)" :key="cost" class="cost-chip">{{
+                <span v-for="cost in costChips(selectedEntry)" :key="cost" class="cost-chip">{{
                   cost
                 }}</span>
               </div>
               <div class="pending-stack" aria-live="polite">
                 <span>Pending</span>
-                <strong>{{ pendingSummary(selectedAction) }}</strong>
+                <strong>{{ pendingLabel(selectedAction, selectedEntry) }}</strong>
               </div>
-              <p v-if="paymentSourceNames(selectedAction).length > 0" class="payment-preview">
-                Auto-pay: {{ paymentSourceSummary(selectedAction) }}
+              <p
+                v-if="selectedEntry?.payment !== undefined && selectedEntry.payment.summary !== ''"
+                class="payment-preview"
+              >
+                Auto-pay: {{ selectedEntry.payment.summary }}
               </p>
               <p v-if="targetSlots(selectedAction).length > 0" class="target-instruction">
                 {{
@@ -1897,8 +1901,8 @@ function abandon(): void {
                     :disabled="xGroupAction(group) === undefined"
                     @click="chooseXGroupAction(group)"
                   >
-                    <span>{{ actionLabel(xGroupPreviewAction(group)) }}</span>
-                    <small>{{ actionCost(xGroupPreviewAction(group)).join(' · ') }}</small>
+                    <span>{{ labelOf(xGroupPreviewAction(group)) }}</span>
+                    <small>{{ costChips(entryOf(xGroupPreviewAction(group))).join(' · ') }}</small>
                   </button>
                 </div>
                 <div
@@ -1907,8 +1911,8 @@ function abandon(): void {
                   class="source-action-row"
                 >
                   <button type="button" @click="chooseAction(action)">
-                    <span>{{ actionLabel(action) }}</span>
-                    <small>{{ actionCost(action).join(' · ') }}</small>
+                    <span>{{ labelOf(action) }}</span>
+                    <small>{{ costChips(entryOf(action)).join(' · ') }}</small>
                   </button>
                   <button
                     v-if="action.type === 'activateAbility' && isYieldable(action)"
@@ -1939,7 +1943,7 @@ function abandon(): void {
             />
             <template v-else>
               <h3>Your action</h3>
-              <p class="prompt">{{ playerFacingPrompt(request.prompt) }}</p>
+              <p class="prompt">{{ promptOf(request) }}</p>
               <div v-if="immediateActions.length > 0" class="quick-actions">
                 <button
                   v-for="action in immediateActions"

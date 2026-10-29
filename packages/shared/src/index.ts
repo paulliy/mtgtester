@@ -7,7 +7,15 @@
 
 // --- Runtime values (enum tuples) ---
 export { ALL_COLORS } from './mana';
-export { PHASES, STEPS, ZONES, DECISION_TYPES, LOSS_REASONS } from './enums';
+export { turnPositionLabel } from './turn-labels';
+export {
+  PHASES,
+  STEPS,
+  ZONES,
+  DECISION_TYPES,
+  LOSS_REASONS,
+  COMMANDER_DAMAGE_LETHAL,
+} from './enums';
 export { PERMANENT_STATUSES } from './objects';
 export { COMMANDER_LEGALITIES } from './cards';
 export { DECK_SOURCE_TYPES, VALIDATION_CODES } from './decks';

@@ -1,5 +1,5 @@
 import type { LegalAction } from '../engine';
-import { actionLabel } from './labels';
+import { actionLabel, manaSymbols } from './labels';
 
 /** One entry of an action's free-form `data` bag. */
 export function actionData(action: LegalAction, key: string): unknown {
@@ -51,6 +51,14 @@ export function actionCost(action: LegalAction): string[] {
 /** The one-line "what you are about to do" heading for a selected action. */
 export function pendingSummary(action: LegalAction): string {
   const source = actionData(action, 'sourceName');
+  if (action.type === 'activateManaAbility') {
+    const name = typeof source === 'string' ? source : 'mana source';
+    return `Tap ${name} for ${
+      manaSymbols(action)
+        .map((symbol) => `{${symbol}}`)
+        .join('') || 'mana'
+    }`;
+  }
   const label = typeof source === 'string' ? source : actionLabel(action);
   if (action.type === 'playLand') return `Play ${label}`;
   if (action.type === 'castSpell') return `Cast ${label}`;
@@ -65,6 +73,12 @@ export function paymentSourceNames(action: LegalAction): string[] {
     : [];
 }
 
+/** The ids of the permanents the engine's auto-payment would tap. */
+export function paymentSourceIds(action: LegalAction): string[] {
+  const ids = actionData(action, 'paymentSourceIds');
+  return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string') : [];
+}
+
 /** "Forest ×2, Sol Ring" — repeated sources counted rather than listed again. */
 export function paymentSourceSummary(action: LegalAction): string {
   const counts = new Map<string, number>();
@@ -72,62 +86,18 @@ export function paymentSourceSummary(action: LegalAction): string {
   return [...counts].map(([name, count]) => (count > 1 ? `${name} ×${count}` : name)).join(', ');
 }
 
-export interface XActionGroup {
-  key: string;
-  actions: LegalAction[];
-  /** Same as `actions[0]`/`actions[actions.length - 1]` — stored so callers never index an
-   * array TS can't prove is non-empty. */
-  first: LegalAction;
-  min: number;
-  max: number;
-}
-
 /**
  * A {X} spell/ability offers one whole `LegalAction` per affordable X (brief: "the option menu
  * is the contract" — `legal.ts` enumerates every value up front so nothing needs a second
  * legality check). Rendered flat that's one button per value — up to however much mana the
- * player has, sometimes dozens. Collapsed here into a single numeric-input row per X-family
- * (same source, same mode); picking a number just looks up the matching pre-enumerated action,
- * so legality is still exactly what the engine offered, nothing computed client-side.
+ * player has, sometimes dozens. The family key says which options differ only in X (same type,
+ * same mode); a client collapses each family into a single numeric input, and picking a number
+ * just looks up the matching pre-enumerated action, so legality is still exactly what the
+ * engine offered.
  */
-export function groupXActions(actions: readonly LegalAction[]): {
-  plain: LegalAction[];
-  xGroups: XActionGroup[];
-} {
-  const plain: LegalAction[] = [];
-  const byKey = new Map<string, LegalAction[]>();
-  for (const action of actions) {
-    const x = actionData(action, 'x');
-    if (typeof x !== 'number') {
-      plain.push(action);
-      continue;
-    }
-    const modeLabel = actionData(action, 'modeLabel');
-    const key = `${action.type}|${typeof modeLabel === 'string' ? modeLabel : ''}`;
-    const list = byKey.get(key);
-    if (list === undefined) byKey.set(key, [action]);
-    else list.push(action);
-  }
-  const xGroups: XActionGroup[] = [];
-  for (const [key, group] of byKey) {
-    // Only one affordable X value: no real choice to make, render it like any other button.
-    if (group.length < 2) {
-      plain.push(...group);
-      continue;
-    }
-    const sorted = [...group].sort(
-      (a, b) => (actionData(a, 'x') as number) - (actionData(b, 'x') as number),
-    );
-    const first = sorted[0];
-    const last = sorted[sorted.length - 1];
-    if (first === undefined || last === undefined) continue; // unreachable: length >= 2
-    xGroups.push({
-      key,
-      actions: sorted,
-      first,
-      min: actionData(first, 'x') as number,
-      max: actionData(last, 'x') as number,
-    });
-  }
-  return { plain, xGroups };
+export function xFamily(action: LegalAction): { key: string; x: number } | null {
+  const x = actionData(action, 'x');
+  if (typeof x !== 'number') return null;
+  const modeLabel = actionData(action, 'modeLabel');
+  return { key: `${action.type}|${typeof modeLabel === 'string' ? modeLabel : ''}`, x };
 }

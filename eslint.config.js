@@ -149,6 +149,25 @@ export default tseslint.config(
     plugins: { 'test-skips': testSkipsPlugin },
     rules: { 'test-skips/annotated-skips': 'error' },
   },
+  {
+    // The server writes every label, cost and note the player reads (ADR 0032), so the browser
+    // may not import the code that builds them, or it would build its own.
+    files: ['apps/web/src/**/*.{ts,vue}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@mtg/shared/presentation', '@mtg/shared/presentation/*'],
+              message:
+                'The server builds presentation (server/src/match/presentation.ts); render the fields of DecisionRequest.presentation instead of importing the label code.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   ...vue.configs['flat/essential'],
   {
     files: ['**/*.vue'],

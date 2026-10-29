@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LegalAction } from '../engine';
-import { actionLabel } from './labels';
+import { actionLabel, actionLabelParts, entryNote, manaAbilityLabel } from './labels';
 
 function action(over: Partial<LegalAction>): LegalAction {
   return { id: 1, type: 'castSpell', description: 'Cast Something', ...over } as LegalAction;
@@ -87,5 +87,41 @@ describe('actionLabel', () => {
 
   it('sentence-cases a mode label taken from a lowercased Oracle bullet', () => {
     expect(actionLabel(action({ data: { modeLabel: 'you gain 2 life' } }))).toBe('You gain 2 life');
+  });
+});
+
+describe('actionLabelParts', () => {
+  it('separates the land-entry note and the target hint from the label', () => {
+    expect(
+      actionLabelParts(
+        action({
+          type: 'playLand',
+          data: { castVariant: 'mdfc', sourceName: 'Ondu Skyruins', entersTapped: true },
+        }),
+      ),
+    ).toEqual({ label: 'Play Ondu Skyruins', entryNote: 'enters tapped', targetHint: null });
+    expect(actionLabelParts(action({ data: { targetReductionSlot: 1 } }))).toEqual({
+      label: 'Cast',
+      entryNote: null,
+      targetHint: 'reduced for target slot 2',
+    });
+  });
+
+  it('gives an ordinary land play no entry note, as its button never had one', () => {
+    const land = action({
+      type: 'playLand',
+      data: { sourceName: 'Guildgate', entersTapped: true },
+    });
+    expect(entryNote(land)).toBeNull();
+    expect(actionLabel(land)).toBe('Play land');
+  });
+});
+
+describe('manaAbilityLabel', () => {
+  it('names the mana a by-hand activation makes', () => {
+    const tap = action({ type: 'activateManaAbility', data: { symbols: ['R', 'R'] } });
+    expect(manaAbilityLabel(tap)).toBe('Tap for {R}{R}');
+    expect(actionLabel(tap)).toBe('Tap for {R}{R}');
+    expect(manaAbilityLabel(action({ type: 'activateManaAbility' }))).toBe('Tap for mana');
   });
 });

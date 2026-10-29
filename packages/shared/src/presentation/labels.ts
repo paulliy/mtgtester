@@ -4,17 +4,37 @@ function data(action: LegalAction, key: string): unknown {
   return action.data?.[key];
 }
 
+/** The mana symbols a manual mana activation adds: `["G"]`, `["R", "R"]`. */
+export function manaSymbols(action: LegalAction): string[] {
+  const value = data(action, 'symbols');
+  return Array.isArray(value) ? value.filter((s): s is string => typeof s === 'string') : [];
+}
+
+/** "Tap for {G}": what a by-hand mana activation does. */
+export function manaAbilityLabel(action: LegalAction): string {
+  const symbols = manaSymbols(action).map((symbol) => `{${symbol}}`);
+  return `Tap for ${symbols.length === 0 ? 'mana' : symbols.join('')}`;
+}
+
 function sentenceCase(text: string): string {
   return text.length === 0 ? text : `${text[0]?.toUpperCase()}${text.slice(1)}`;
 }
 
-/** "(enters tapped)" and friends for a land play, from the engine's own entry flags. */
-function landEntryNote(action: LegalAction): string {
+/** How a land enters ("enters tapped"), from the engine's own entry flags; null when untapped. */
+function landEntryNote(action: LegalAction): string | null {
   const payLife = data(action, 'payLifeToUntap');
-  if (typeof payLife === 'number') return ` (enters tapped unless you pay ${payLife} life)`;
-  if (data(action, 'entersTappedConditional') === true) return ' (may enter tapped)';
-  if (data(action, 'entersTapped') === true) return ' (enters tapped)';
-  return '';
+  if (typeof payLife === 'number') return `enters tapped unless you pay ${payLife} life`;
+  if (data(action, 'entersTappedConditional') === true) return 'may enter tapped';
+  if (data(action, 'entersTapped') === true) return 'enters tapped';
+  return null;
+}
+
+/**
+ * The entry note the label of a land-face play carries. Only the double-faced-land variant has
+ * one: an ordinary land play's button has never said how the land enters.
+ */
+export function entryNote(action: LegalAction): string | null {
+  return data(action, 'castVariant') === 'mdfc' ? landEntryNote(action) : null;
 }
 
 /**
@@ -27,7 +47,7 @@ function variantLabel(action: LegalAction, variant: string): string {
   const name = typeof source === 'string' ? source : null;
   switch (variant) {
     case 'mdfc':
-      return `Play ${name ?? 'land face'}${landEntryNote(action)}`;
+      return `Play ${name ?? 'land face'}`;
     case 'commanderFree':
       return 'Cast free (you control a commander)';
     case 'nonMana':
@@ -58,6 +78,7 @@ function primaryActionLabel(action: LegalAction): string {
   if (typeof mode === 'string') return sentenceCase(mode);
   if (typeof variant === 'string') return variantLabel(action, variant);
   if (typeof ability === 'string') return ability;
+  if (action.type === 'activateManaAbility') return manaAbilityLabel(action);
   if (action.type === 'playLand') return 'Play land';
   if (action.type === 'castSpell') {
     // Replicate, squad and kicker counts are separate cast options with the same verb.
@@ -75,10 +96,33 @@ function primaryActionLabel(action: LegalAction): string {
   return action.description;
 }
 
-export function actionLabel(action: LegalAction): string {
-  const label = primaryActionLabel(action);
+/** "reduced for target slot 2": the cost of this option depends on its target. */
+export function targetHint(action: LegalAction): string | null {
   const slot = data(action, 'targetReductionSlot');
   return action.type === 'castSpell' && typeof slot === 'number' && slot >= 0
-    ? `${label} — reduced for target slot ${slot + 1}`
-    : label;
+    ? `reduced for target slot ${slot + 1}`
+    : null;
+}
+
+/**
+ * The button text split into what it names and the notes beside it. The note and the hint are
+ * separate facts so a client can style them; `actionLabel` joins them back.
+ */
+export function actionLabelParts(action: LegalAction): {
+  label: string;
+  entryNote: string | null;
+  targetHint: string | null;
+} {
+  return {
+    label: primaryActionLabel(action),
+    entryNote: entryNote(action),
+    targetHint: targetHint(action),
+  };
+}
+
+export function actionLabel(action: LegalAction): string {
+  const parts = actionLabelParts(action);
+  const note = parts.entryNote === null ? '' : ` (${parts.entryNote})`;
+  const hint = parts.targetHint === null ? '' : ` — ${parts.targetHint}`;
+  return `${parts.label}${note}${hint}`;
 }

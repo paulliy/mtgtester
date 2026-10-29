@@ -8,6 +8,7 @@
  */
 
 import type { TargetingSource } from '../targets/context';
+import { COMMANDER_DAMAGE_LETHAL } from '@mtg/shared';
 import type { LossReason, ObjectId, PlayerId } from '@mtg/shared';
 import { playerProtectedFromEverything } from '../state/phasing';
 import { queueBecomesTargetedTriggers, queueWardTriggers } from '../actions/apply';
@@ -282,7 +283,9 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
     } else if (player.poisonCounters >= 10) {
       markLoss(ctx, player, 'poisonCounters');
       acted = true;
-    } else if (Object.values(player.commanderDamageTaken).some((dmg) => dmg >= 21)) {
+    } else if (
+      Object.values(player.commanderDamageTaken).some((dmg) => dmg >= COMMANDER_DAMAGE_LETHAL)
+    ) {
       markLoss(ctx, player, 'commanderDamage');
       acted = true;
     }
