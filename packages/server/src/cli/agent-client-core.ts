@@ -31,6 +31,7 @@ import {
 import { projectSetupErrorPayload } from '../ws/setup-privacy';
 import type {
   ClientToServerMessage,
+  ClientCapabilities,
   ErrorPayload,
   GameOverPayload,
   GameResult,
@@ -426,6 +427,14 @@ export interface AgentClientSessionOptions {
   onDone?: (code: number) => void;
 }
 
+/**
+ * What this client asks of the server on every first or resume message (ADR 0032 decision 7). It
+ * documents `data` in each legal action (`docs/guides/json-agent-client.md`), and the server
+ * sends no raw `data` to a connection that did not ask. This client never reconnects today; a
+ * `resumeGame` it sends must carry the same declaration.
+ */
+export const AGENT_CAPABILITIES: ClientCapabilities = { rawActionData: true };
+
 /** Build the `startGame` payload. Always single-player: this client is one seat, never a viewer. */
 export function startGamePayload(game: AgentGameOptions): StartGamePayload {
   return {
@@ -433,6 +442,7 @@ export function startGamePayload(game: AgentGameOptions): StartGamePayload {
     providerKind: game.providerKind,
     gameMode: 'singlePlayer',
     humanSeat: game.humanSeat,
+    capabilities: AGENT_CAPABILITIES,
     ...(game.seed !== undefined && { seed: game.seed }),
     ...(game.paceMs !== undefined && { paceMs: game.paceMs }),
   };

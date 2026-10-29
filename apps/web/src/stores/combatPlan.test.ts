@@ -11,7 +11,7 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
-import type { DecisionRequest, LegalAction } from '@mtg/shared';
+import type { DecisionRequest, LegalAction } from '../lib/protocol';
 import { NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
 import { useCombatPlanStore } from './combatPlan';
 
@@ -28,7 +28,6 @@ function attackRequest(
       id: 0,
       type: 'attackDeclaration',
       description: `Declare attackers (${subjectIds.length} eligible creature(s))`,
-      data: { subjectIds },
       targets: subjectIds.map((_, i) => ({ slot: i, options: [...OPPONENTS, NO_ATTACK_TARGET] })),
     },
   ];
@@ -81,7 +80,6 @@ function blockRequest(
       id: 0,
       type: 'blockDeclaration',
       description: `Declare blockers (${subjectIds.length} eligible creature(s))`,
-      data: { subjectIds },
       targets: subjectIds.map((_, i) => ({ slot: i, options: [...ATTACKERS, NO_BLOCK_TARGET] })),
     },
   ];

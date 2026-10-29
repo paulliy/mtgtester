@@ -181,6 +181,7 @@ export type {
   ErrorPayload,
   StartGamePayload,
   StartCardTestScenarioPayload,
+  ClientCapabilities,
   JumpToTurnPayload,
   SetPlaybackModePayload,
   ResolveHeldDecisionPayload,

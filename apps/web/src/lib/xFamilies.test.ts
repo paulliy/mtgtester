@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { LegalAction } from '@mtg/shared';
+import type { LegalAction } from './protocol';
 import { groupByXFamily } from './xFamilies';
 
 function action(id: number, type = 'castSpell'): LegalAction {

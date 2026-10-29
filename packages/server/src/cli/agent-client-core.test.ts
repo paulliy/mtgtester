@@ -224,6 +224,8 @@ describe('agent client startup', () => {
           providerKind: 'random',
           gameMode: 'singlePlayer',
           humanSeat: 'P1',
+          // The documented contract keeps `data` in each legal action (ADR 0032 decision 7).
+          capabilities: { rawActionData: true },
           seed: 'seed1',
           paceMs: 0,
         },

@@ -7,7 +7,8 @@
  * every count; this only reads them from the request and the seat.
  */
 import { computed } from 'vue';
-import type { DecisionRequest, SpectatorCard } from '@mtg/shared';
+import type { SpectatorCard } from '@mtg/shared';
+import type { DecisionRequest } from '../lib/protocol';
 import CardImage from './CardImage.vue';
 
 const props = defineProps<{
@@ -29,8 +30,16 @@ const bottomIfKept = computed(() => Math.max(0, props.mulligansTaken - 1));
 const bottomAfterMulligan = computed(() => props.mulligansTaken);
 const keepCount = computed(() => props.cards.length - bottomIfKept.value);
 
-/** "put 2 more card(s) on the bottom" → 2; the engine asks for one card at a time. */
+/**
+ * "put 2 more card(s) on the bottom" → 2; the engine asks for one card at a time.
+ *
+ * The only engine-prompt read left in the browser. No presentation field carries the count (ADR
+ * 0032 decision 3 lists none), and it cannot be derived from the hand: the engine bottoms
+ * `min(mulligans - 1, hand size)` cards, so a rules constant here would drift. The proper fix is
+ * the engine saying the count (`turn/mulligan.ts` knows it) in a `DecisionPresentation` field.
+ */
 const bottomRemaining = computed(() => {
+  // eslint-disable-next-line no-restricted-syntax -- no typed field carries the remaining count; see above
   const match = /put (\d+) more/.exec(props.request.prompt);
   return match === null ? null : Number(match[1]);
 });

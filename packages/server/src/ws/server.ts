@@ -15,6 +15,7 @@ import {
   type StrictJsonFailure,
 } from '@mtg/shared';
 import type {
+  ClientCapabilities,
   ClientToServerMessage,
   GameReportBuild,
   GameMode,
@@ -33,6 +34,7 @@ import type { BannedList } from '../decks/banned';
 import type { ReportSeatSource } from '../match/report';
 import type { ReplayIdentity } from '../match/replay-config';
 import { MatchSession } from '../match/session';
+import { withoutActionData } from '../match/presentation';
 import { disclosedSeatSummaries, seedLabel, testerPolicy } from '../match/disclosure';
 import { BatchManager, validateBatch } from '../batch/manager';
 import { setupSeats } from '../match/setup';
@@ -225,6 +227,13 @@ export function isAllowedLocalRequest(
 
 export class GameServer {
   private readonly sockets = new Set<ServerWebSocket<SocketData>>();
+  /**
+   * What each connection declared in its latest `startGame`, `startCardTestScenario` or
+   * `resumeGame` (ADR 0032 decision 7). A connection that declared nothing is not in the map. A
+   * resumed connection is a new socket with its own declaration, so nothing carries over from the
+   * one it replaces.
+   */
+  private readonly capabilities = new WeakMap<ServerWebSocket<SocketData>, ClientCapabilities>();
   private session: MatchSession | null = null;
   private startingGame = false;
   private startingSocket: ServerWebSocket<SocketData> | null = null;
@@ -259,10 +268,9 @@ export class GameServer {
 
   /** Broadcast to every connected spectator. One game at a time (brief §15). */
   private broadcast(message: ServerToClientMessage): void {
-    const frame = JSON.stringify(message);
     for (const socket of this.sockets) {
       try {
-        socket.send(frame);
+        socket.send(this.frameFor(socket, message));
       } catch {
         // A socket that died between the readyState check and the send is not an error worth
         // failing a game over; the close handler removes it.
@@ -270,9 +278,24 @@ export class GameServer {
     }
   }
 
+  private wantsRawActionData(socket: ServerWebSocket<SocketData>): boolean {
+    return this.capabilities.get(socket)?.rawActionData === true;
+  }
+
+  /** The frame as this connection may receive it: `decisionPending` loses raw `data` unless asked. */
+  private frameFor(socket: ServerWebSocket<SocketData>, message: ServerToClientMessage): string {
+    if (message.type === 'decisionPending' && !this.wantsRawActionData(socket)) {
+      return JSON.stringify({
+        ...message,
+        payload: { ...message.payload, request: withoutActionData(message.payload.request) },
+      });
+    }
+    return JSON.stringify(message);
+  }
+
   private sendTo(socket: ServerWebSocket<SocketData>, message: ServerToClientMessage): void {
     try {
-      socket.send(JSON.stringify(message));
+      socket.send(this.frameFor(socket, message));
     } catch {
       // The close callback owns connection state. A send racing with it must not fail a match.
     }
@@ -639,6 +662,14 @@ export class GameServer {
     }
 
     const message: ClientToServerMessage = parsed;
+    if (
+      message.type === 'startGame' ||
+      message.type === 'startCardTestScenario' ||
+      message.type === 'resumeGame'
+    ) {
+      // The connection's declaration, read afresh from each of the messages that carry one.
+      this.capabilities.set(socket, { ...message.payload.capabilities });
+    }
     switch (message.type) {
       case 'startCardTestScenario':
         if (this.deps.cardTestLab !== true) {
@@ -833,6 +864,10 @@ export class GameServer {
         }
         this.playerSocket = socket;
         this.cancelPlayerIdleTimer();
+        // The resuming connection's own declaration, before anything is resent to it.
+        if (this.playerSeat !== null) {
+          this.session.setRawActionData(this.playerSeat, this.wantsRawActionData(socket));
+        }
         if (this.startedPayload !== null) {
           this.sendTo(socket, {
             type: 'gameStarted',
@@ -1158,6 +1193,9 @@ export class GameServer {
     this.sessionToken = route === 'player' ? crypto.randomUUID() : null;
     this.playerSocket = route === 'player' ? socket : null;
     this.playerSeat = humanSeat ?? null;
+    if (humanSeat !== undefined) {
+      session.setRawActionData(humanSeat, this.wantsRawActionData(socket));
+    }
 
     const startedPayload: GameStartedPayload = {
       gameId,
@@ -1234,6 +1272,7 @@ export class GameServer {
     this.sessionToken = crypto.randomUUID();
     this.playerSocket = socket;
     this.playerSeat = 'P1';
+    session.setRawActionData('P1', this.wantsRawActionData(socket));
 
     const startedPayload: GameStartedPayload = {
       gameId,

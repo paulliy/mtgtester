@@ -10,12 +10,8 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
-import type {
-  ClientToServerMessage,
-  ServerToClientMessage,
-  SpectatorLogLine,
-  PlayerActionRequiredPayload,
-} from '@mtg/shared';
+import type { ClientToServerMessage, SpectatorLogLine } from '@mtg/shared';
+import type { ServerToClientMessage, PlayerActionRequiredPayload } from '../lib/protocol';
 import type { ConnectionState } from '../lib/socket';
 
 /** Frames the store handed to the socket, newest last. */

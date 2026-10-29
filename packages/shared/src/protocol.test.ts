@@ -308,6 +308,46 @@ describe('isClientToServerMessage', () => {
     ).toBe(false);
   });
 
+  describe('capabilities (ADR 0032 decision 7)', () => {
+    const start = (capabilities: unknown) => ({
+      type: 'startGame',
+      payload: {
+        seats: [{ kind: 'pool' }, { kind: 'pool' }, { kind: 'pool' }, { kind: 'pool' }],
+        providerKind: 'random',
+        gameMode: 'singlePlayer',
+        humanSeat: 'P1',
+        ...(capabilities !== undefined && { capabilities }),
+      },
+    });
+    const lab = (capabilities: unknown) => ({
+      type: 'startCardTestScenario',
+      payload: { scenarioId: 'scenario', ...(capabilities !== undefined && { capabilities }) },
+    });
+    const resume = (capabilities: unknown) => ({
+      type: 'resumeGame',
+      payload: { sessionToken: 'token', ...(capabilities !== undefined && { capabilities }) },
+    });
+
+    it.each([start, lab, resume])('accepts a declaration, an empty one or none', (message) => {
+      expect(isClientToServerMessage(message(undefined))).toBe(true);
+      expect(isClientToServerMessage(message({}))).toBe(true);
+      expect(isClientToServerMessage(message({ rawActionData: true }))).toBe(true);
+      expect(isClientToServerMessage(message({ rawActionData: false }))).toBe(true);
+    });
+
+    it.each([start, lab, resume])('rejects a malformed declaration', (message) => {
+      for (const bad of [
+        null,
+        'raw',
+        ['rawActionData'],
+        { rawActionData: 'yes' },
+        { other: true },
+      ]) {
+        expect(isClientToServerMessage(message(bad))).toBe(false);
+      }
+    });
+  });
+
   it('rejects a server message sent in the wrong direction', () => {
     expect(isClientToServerMessage({ type: 'gameStarted', payload: {} })).toBe(false);
   });

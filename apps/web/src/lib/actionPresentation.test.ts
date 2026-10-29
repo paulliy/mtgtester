@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { DecisionRequest, LegalAction } from '@mtg/shared';
+import type { DecisionRequest, LegalAction } from './protocol';
 import {
   buttonLabel,
   costChips,

@@ -128,6 +128,7 @@ const SOURCE_FILES = [
   'apps/web/src/components/SeatPanel.vue',
   'apps/web/src/components/PermanentChip.vue',
   'apps/web/src/lib/stackPermanents.ts',
+  'apps/web/src/lib/protocol.ts',
   'apps/web/src/components/ActionLog.vue',
   'apps/web/src/stores/game.ts',
   '.prettierrc',

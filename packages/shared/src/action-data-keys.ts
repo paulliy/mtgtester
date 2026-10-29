@@ -11,7 +11,9 @@
  *   - `ai`            the LLM primer or the server AI heuristics (`server/src/ai`)
  *   - `bot`           the heuristic bot (`packages/bot`)
  *   - `match`         match orchestration (`server/src/match`)
- *   - `presentation`  the browser (`apps/web`), until ADR 0032 moves the reads server-side
+ *   - `presentation`  the server's presentation builders (`server/src/match/presentation.ts` and
+ *                     `shared/src/presentation`), which turn it into typed fields. The browser
+ *                     reads no `data` (ADR 0032 decisions 7 and 9)
  *   - `engine`        the engine itself, reading its own menu back
  *   - `none`          nothing reads it. The whole `data` object is still serialized verbatim
  *                     into every LLM prompt (`server/src/ai/context.ts`), so `none` means no
@@ -181,13 +183,13 @@ export const ACTION_DATA_KEYS: Readonly<Record<string, ActionDataKeyInfo>> = {
   subjects: {
     meaning: 'Per-creature stats and flags for an attack or block declaration.',
     types: ['array'],
-    consumers: ['ai', 'bot', 'presentation'],
+    consumers: ['ai', 'bot'],
   },
   chooseAttackers: {
     meaning:
       'The attack declaration only picks which creatures attack; defenders are set elsewhere.',
     types: ['boolean'],
-    consumers: ['ai', 'bot', 'presentation'],
+    consumers: ['ai', 'bot'],
     rare: true,
   },
   blockingPlayer: {

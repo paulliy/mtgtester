@@ -558,6 +558,8 @@ describe('smart player yield', () => {
       livePaceMs: 0,
       send: (message) => sent.push(message),
     });
+    // This test reads the raw `data` the connection asked for (ADR 0032 decision 7).
+    session.setRawActionData('P1', true);
     const requests = () =>
       sent.filter(
         (message): message is Extract<ServerToClientMessage, { type: 'playerActionRequired' }> =>

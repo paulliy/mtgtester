@@ -34,6 +34,11 @@ Exit codes: `0` game over, `1` the run ended without one, `2` bad arguments, `13
 --pace-ms <n>       Bot presentation pace in ms (default 0 — no artificial delay)
 ```
 
+The `startGame` message declares `capabilities: { rawActionData: true }` (ADR 0032 decision 7), so
+each `LegalAction` in `decision-required` keeps its `data`, as documented below. The server sends
+no `data` to a connection that does not ask, which is why the browser never sees it. This client
+does not reconnect; a `resumeGame` it sent would have to declare the same capability again.
+
 Four supported-pool seats, as `bun run pool` builds them. The URL must be loopback: the server
 binds loopback only (brief §2), and this client will not be the thing that reaches past it.
 

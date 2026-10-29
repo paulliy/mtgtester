@@ -3,7 +3,8 @@
  * Mana you can make by hand from one permanent (ADR 0030): a button per kind of mana its mana
  * abilities can make, drawn over the bottom-left corner of its tile.
  */
-import type { ActionPresentation, LegalAction } from '@mtg/shared';
+import type { ActionPresentation } from '@mtg/shared';
+import type { LegalAction } from '../lib/protocol';
 
 /**
  * `presentation` is the request's per-action entries: the server writes each button's label and

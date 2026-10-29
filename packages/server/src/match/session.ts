@@ -104,7 +104,12 @@ import { botRandomSource, resolveRngKey, seatIndex } from './rng-streams';
 import type { SeatSetup } from './setup';
 import { lossReasonLabel } from './loss-reasons';
 import { SmartYieldMemory, playerYieldKey } from './player-yield';
-import { enrichPresentation, gameOverSummary, playerFacingEvents } from './presentation';
+import {
+  enrichPresentation,
+  gameOverSummary,
+  playerFacingEvents,
+  withoutActionData,
+} from './presentation';
 
 /** `HeuristicDecisionProvider` (like the engine's `RandomDecisionProvider` before it) is
  * synchronous; the runner awaits every provider. */
@@ -219,6 +224,11 @@ class HumanSeatState {
   readonly smartYieldMemory = new SmartYieldMemory();
   playerRevision = 0;
   lastHumanDecision: LastHumanDecision | null = null;
+  /**
+   * Whether this seat's connection asked for raw `LegalAction.data` (ADR 0032 decision 7). Set
+   * from the connection's declaration at start and again on every resume; false until then.
+   */
+  rawActionData = false;
 
   constructor(onRequired: (request: DecisionRequest, revision: number) => void) {
     this.provider = new HumanDecisionProvider(
@@ -1733,6 +1743,16 @@ export class MatchSession {
     if (this.engine.cancelYield(seat)) this.publishPlayerState(seat, false);
   }
 
+  /**
+   * Record whether the connection playing `seat` asked for raw `LegalAction.data`. Called at
+   * start and again on every resume, before the seat's pending request is resent. Without it,
+   * every legal action sent to the seat loses its `data` (`withoutActionData`).
+   */
+  setRawActionData(seat: PlayerId, enabled: boolean): void {
+    const human = this.humanState(seat);
+    if (human !== undefined) human.rawActionData = enabled;
+  }
+
   setPlayerConnected(seat: PlayerId, connected: boolean): void {
     switch (this.gameMode) {
       // flow: the player connection gate, per human seat (m1 row 1191).
@@ -1849,12 +1869,14 @@ export class MatchSession {
       if (refused !== null) this.decisionSources.delete(request.requestId);
       return;
     }
+    // After smart-yield filtering: the presentation is built from the menu the seat is sent
+    // and its own board, never from the engine's state (ADR 0032 decision 3). It reads `data`,
+    // so the strip for a connection that did not ask for it comes last.
+    const enriched = enrichPresentation({ ...request, legalActions }, state);
     this.sendToSeat(seat, {
       type: 'playerActionRequired',
       payload: {
-        // After smart-yield filtering: the presentation is built from the menu the seat is sent
-        // and its own board, never from the engine's state (ADR 0032 decision 3).
-        request: enrichPresentation({ ...request, legalActions }, state),
+        request: human.rawActionData ? enriched : withoutActionData(enriched),
         revision,
         state,
         ignoredAbilities: this.ignoredAbilityList(seat),

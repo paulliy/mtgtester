@@ -1,4 +1,4 @@
-import type { LegalAction } from '@mtg/shared';
+import type { LegalAction } from './protocol';
 
 export interface XActionGroup {
   /** The server's family key: options that share it differ only in X. */

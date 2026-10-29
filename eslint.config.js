@@ -16,6 +16,42 @@ const TOKEN_SPEC_LITERAL_MESSAGE =
   'Build a token with creatureToken()/artifactToken() (cards/tokens.ts), or reference a named catalog export directly, rather than a raw TokenSpec object literal — this drift is exactly what produced three different Treasure tokens and a Soldier that disagreed on its own color.';
 
 // Flat-config rule arrays replace earlier arrays; strict files must retain every base ban.
+// The browser renders what the server writes (ADR 0032 decision 9). Two syntactic rules keep it
+// from parsing engine text again: string or regex calls on a `typeLine` member, and the narrower
+// set of calls on `description`, `prompt` and `text` members. The config is untyped, so these
+// match names, not types; `LegalAction.data` is kept out by the browser's protocol type instead.
+// A call on the member (`card.typeLine.includes(...)`) and a regex call that takes it
+// (`/x/.test(card.typeLine)`) are both caught.
+function textCallSelectors(fields, methods, regexMethods) {
+  const member = `:matches(MemberExpression[property.name=/^(${fields})$/], Identifier[name=/^(${fields})$/])`;
+  return [
+    `CallExpression[callee.property.name=/^(${methods})$/] > MemberExpression.callee > ${member}.object`,
+    `CallExpression[callee.property.name=/^(${regexMethods})$/] > ${member}.arguments`,
+  ];
+}
+const TYPE_LINE_CALL_SELECTORS = textCallSelectors(
+  'typeLine',
+  'test|match|split|replace|includes|startsWith|endsWith',
+  'test|exec',
+);
+const ENGINE_TEXT_CALL_SELECTORS = textCallSelectors(
+  'description|prompt|text',
+  'test|match|split|replace|includes',
+  'test|exec',
+);
+const WEB_TEXT_RESTRICTIONS = [
+  ...TYPE_LINE_CALL_SELECTORS.map((selector) => ({
+    selector,
+    message:
+      "Do not classify a card by its printed type line in the browser. Render the projection's `types`, `supertypes`, `subtypes`, `isToken` and `boardGroup` (ADR 0032 decision 2), which the server computes.",
+  })),
+  ...ENGINE_TEXT_CALL_SELECTORS.map((selector) => ({
+    selector,
+    message:
+      'Do not parse engine text in the browser. Render the typed field the server sends (`DecisionRequest.presentation`, ADR 0032), or ask for one; engine wording is not an interface.',
+  })),
+];
+
 const OVERRIDE_RESTRICTIONS = [
   {
     selector: "CallExpression[callee.name='registerOverride']",
@@ -153,10 +189,27 @@ export default tseslint.config(
     // The server writes every label, cost and note the player reads (ADR 0032), so the browser
     // may not import the code that builds them, or it would build its own.
     files: ['apps/web/src/**/*.{ts,vue}'],
+    // `lib/protocol.ts` is where the wire types are retyped for the browser.
+    ignores: ['apps/web/src/lib/protocol.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
         {
+          // The wire types carry `LegalAction.data`; the browser's own do not (ADR 0032 decision 7).
+          paths: [
+            {
+              name: '@mtg/shared',
+              importNames: [
+                'LegalAction',
+                'DecisionRequest',
+                'PlayerActionRequiredPayload',
+                'DecisionPendingPayload',
+                'ServerToClientMessage',
+              ],
+              message:
+                "Import this type from 'lib/protocol': the browser is never sent `LegalAction.data`, and its types say so.",
+            },
+          ],
           patterns: [
             {
               group: ['@mtg/shared/presentation', '@mtg/shared/presentation/*'],
@@ -193,6 +246,15 @@ export default tseslint.config(
         },
       ],
     },
+  },
+  {
+    // Test files keep the generator rule above (a later `no-restricted-syntax` entry would replace
+    // it), and assert on text freely. `lib/tokenArt.ts` splits the type line only to build the
+    // Scryfall search for a printed token's picture, a cosmetic lookup and not a rules
+    // classification (ADR 0032 decision 9).
+    files: ['apps/web/src/**/*.{ts,vue}'],
+    ignores: ['apps/web/src/**/*.test.ts', 'apps/web/src/lib/tokenArt.ts'],
+    rules: { 'no-restricted-syntax': ['error', ...WEB_TEXT_RESTRICTIONS] },
   },
   ...vue.configs['flat/essential'],
   {

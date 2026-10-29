@@ -7,7 +7,7 @@
  * This is not a playable seat (brief §15) — it is an override on a broken response.
  */
 import { computed, onUnmounted, ref, watch } from 'vue';
-import type { DecisionPendingPayload } from '@mtg/shared';
+import type { DecisionPendingPayload } from '../lib/protocol';
 
 const props = defineProps<{ pending: DecisionPendingPayload }>();
 const emit = defineEmits<{ (event: 'choose', actionId: number): void }>();

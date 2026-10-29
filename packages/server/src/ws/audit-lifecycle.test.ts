@@ -108,6 +108,7 @@ describe('disconnected player session', () => {
       getGameMode: () => 'singlePlayer',
       isOver: vi.fn(() => false),
       setPlayerConnected: vi.fn(),
+      setRawActionData: vi.fn(),
       getLivePaceMs: () => 0,
     };
     const seam = server as unknown as {

@@ -6,7 +6,8 @@
  * An entry the server did not send (a request from before the fields existed) shows the engine's
  * own `description` as the button text and no cost chips: the facts are unavailable, not guessed.
  */
-import type { ActionPresentation, DecisionRequest, LegalAction } from '@mtg/shared';
+import type { ActionPresentation } from '@mtg/shared';
+import type { DecisionRequest, LegalAction } from './protocol';
 
 /** The presentation entry the server sent for `action`, if any. */
 export function entryFor(

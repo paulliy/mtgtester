@@ -58,6 +58,10 @@ interface Findings {
   entryForAbsentAction: string[];
   missingPriorityEntry: string[];
   idsOutsideProjection: string[];
+  /** Attack declarations checked, so the next property cannot pass by seeing none. */
+  attackDeclarations: number;
+  /** Where `presentation.attackDeclaration` disagrees with the raw `data` the browser used to read. */
+  attackPresentationMismatch: string[];
 }
 const findings: Findings = {
   decisions: 0,
@@ -66,6 +70,8 @@ const findings: Findings = {
   entryForAbsentAction: [],
   missingPriorityEntry: [],
   idsOutsideProjection: [],
+  attackDeclarations: 0,
+  attackPresentationMismatch: [],
 };
 
 /** Every object and seat id the seat's projection names. */
@@ -126,6 +132,26 @@ function checkPresentation(engine: Engine, request: DecisionRequest, source: str
     }
     if (request.decisionType === 'priority' && entry === undefined) {
       findings.missingPriorityEntry.push(where);
+    }
+  }
+
+  // The browser's deal warnings read each attacker's power and whether the declaration only picks
+  // attackers from `presentation.attackDeclaration`, not from `data` (plan P5). It is in slot
+  // order, one subject per target slot, and says `mode: 'chooseAttackers'` where `data` said so.
+  const declaration = request.presentation?.attackDeclaration;
+  for (const action of request.legalActions) {
+    if (action.type !== 'attackDeclaration') continue;
+    findings.attackDeclarations++;
+    const where = `${source} (attackDeclaration #${action.id})`;
+    const raw = action.data?.['subjects'];
+    const rawPowers = Array.isArray(raw) ? raw.map((s) => (s as { power?: number }).power) : [];
+    const powers = declaration?.subjects.map((subject) => subject.power) ?? [];
+    if (
+      JSON.stringify(powers) !== JSON.stringify(rawPowers) ||
+      powers.length !== (action.targets ?? []).length ||
+      (declaration?.mode === 'chooseAttackers') !== (action.data?.['chooseAttackers'] === true)
+    ) {
+      findings.attackPresentationMismatch.push(where);
     }
   }
 
@@ -256,10 +282,6 @@ describe('LegalAction.data key registry', () => {
     expect(silent, 'nothing emitted these; mark them rare or remove the dead read').toEqual([]);
   });
 
-  // The keys below are still read by the browser's deal warnings (`apps/web/src/lib/dealWarnings.ts`)
-  // and not by the server's presentation. The raw-data step (plan P5) moves them.
-  const READ_BY_BROWSER_UNTIL_P5 = ['subjects', 'chooseAttackers'];
-
   describe('server presentation over the same sweep (ADR 0032, plan P4)', () => {
     it('reached casts, activations, land plays and priority menus to check', () => {
       expect(findings.decisions).toBeGreaterThan(100);
@@ -284,6 +306,11 @@ describe('LegalAction.data key registry', () => {
       expect(findings.idsOutsideProjection).toEqual([]);
     });
 
+    it('carries the attack declaration the browser needs, in slot order, without data', () => {
+      expect(findings.attackDeclarations).toBeGreaterThan(0);
+      expect(findings.attackPresentationMismatch).toEqual([]);
+    });
+
     it('uses every registry key marked for presentation', () => {
       // The server module and the shared label code it calls are where `data` becomes a label.
       const shared = new URL('../../../shared/src/presentation/', import.meta.url);
@@ -296,18 +323,14 @@ describe('LegalAction.data key registry', () => {
       const unused = Object.entries(ACTION_DATA_KEYS)
         .filter(([, info]) => info.consumers.includes('presentation'))
         .map(([key]) => key)
-        .filter((key) => !READ_BY_BROWSER_UNTIL_P5.includes(key))
         .filter((key) => !code.includes(`'${key}'`));
       expect(unused, 'read these in presentation.ts, or drop the presentation consumer').toEqual(
         [],
       );
     });
 
-    it('lists the keys the browser still reads, and no others', () => {
+    it('leaves every key to the server: no browser source reads LegalAction.data', () => {
       const web = new URL('../../../../apps/web/src/', import.meta.url);
-      const reads = readFileSync(new URL('lib/dealWarnings.ts', web), 'utf8');
-      for (const key of READ_BY_BROWSER_UNTIL_P5) expect(reads).toContain(`'${key}'`);
-      // Every other browser source stays off `LegalAction.data`.
       const offenders: string[] = [];
       const visit = (dir: URL): void => {
         for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -316,7 +339,6 @@ describe('LegalAction.data key registry', () => {
           else if (
             /\.(ts|vue)$/.test(entry.name) &&
             !entry.name.endsWith('.test.ts') &&
-            entry.name !== 'dealWarnings.ts' &&
             /\.data\?\.\[|action\.data\b/.test(readFileSync(child, 'utf8'))
           ) {
             offenders.push(child.pathname);

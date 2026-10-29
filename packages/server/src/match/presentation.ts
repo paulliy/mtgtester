@@ -143,6 +143,18 @@ export function enrichPresentation(
   return { ...request, presentation };
 }
 
+/**
+ * The request without raw `LegalAction.data` (ADR 0032 decision 7), for a connection that did not
+ * ask for `rawActionData`. Presentation is built first, because it reads `data`; this runs on the
+ * way out. Returns a new request; the one the engine and the provider hold keeps its `data`.
+ */
+export function withoutActionData(request: DecisionRequest): DecisionRequest {
+  return {
+    ...request,
+    legalActions: request.legalActions.map(({ data: _data, ...action }) => action),
+  };
+}
+
 /** The "game over" line, in player terms. It names no halt reason: a policy decides those. */
 export function gameOverSummary(result: GameResult): string {
   const turns = `${result.turnCount} turn${result.turnCount === 1 ? '' : 's'}`;

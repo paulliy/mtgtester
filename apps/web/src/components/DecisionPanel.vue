@@ -10,7 +10,8 @@
  * option in a details element the player has to find.
  */
 import { computed } from 'vue';
-import type { ActionSubject, DecisionRequest, LegalAction } from '@mtg/shared';
+import type { ActionSubject } from '@mtg/shared';
+import type { DecisionRequest, LegalAction } from '../lib/protocol';
 import CardImage from './CardImage.vue';
 import { panelButtonText, promptOf } from '../lib/actionPresentation';
 import { useCardPreviewStore } from '../stores/cardPreview';

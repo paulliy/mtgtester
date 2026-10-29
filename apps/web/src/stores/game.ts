@@ -18,25 +18,27 @@ import type {
   DealOutcomeNotice,
   DealTerms,
   DebugFlags,
-  DecisionPendingPayload,
   GameMode,
   StartGameMode,
   DiplomacySeatState,
   GameOverPayload,
   IgnoredPlayerAbility,
-  PlayerActionRequiredPayload,
   PlayerBoardState,
   PlayerId,
   PlaybackMode,
   ProviderKind,
   SeatSource,
   SeatSummary,
-  ServerToClientMessage,
   SpectatorLogLine,
   SpectatorState,
   TableTalkLine,
   TargetChoice,
 } from '@mtg/shared';
+import type {
+  DecisionPendingPayload,
+  PlayerActionRequiredPayload,
+  ServerToClientMessage,
+} from '../lib/protocol';
 import { assertNever } from '@mtg/shared';
 import { GameSocket, type ConnectionState } from '../lib/socket';
 import { resetBoardAnchors } from '../composables/useBoardAnchors';
@@ -800,6 +802,7 @@ export const useGameStore = defineStore('game', () => {
         humanSeat.value,
         seat.deals,
         pending.request.legalActions.find((action) => action.id === actionId),
+        pending.request.presentation?.attackDeclaration,
         targets,
         pending.state,
         seat.attackPlayerShare,

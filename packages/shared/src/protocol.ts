@@ -424,7 +424,31 @@ export type ServerMessageOf<T extends ServerToClientType> = Extract<
 
 // ── Client → server ─────────────────────────────────────────────────────────────────────────
 
+/**
+ * What a player connection asks the server to include (ADR 0032 decision 7). Declared in the
+ * first player message (`startGame`, `startCardTestScenario`) and again in every `resumeGame`,
+ * because a resumed connection is a new one. Absent or empty means the default: no raw
+ * `LegalAction.data`. Only the JSON agent client asks for `rawActionData`; the browser never does.
+ */
+export interface ClientCapabilities {
+  /** Keep `LegalAction.data` on the legal actions sent to this player. */
+  rawActionData?: boolean;
+}
+
+/** Whether `value` is a well-formed `ClientCapabilities`, or absent. Unknown keys are refused. */
+function isOptionalCapabilities(value: unknown): value is ClientCapabilities | undefined {
+  if (value === undefined) return true;
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+  const caps = value as Record<string, unknown>;
+  return (
+    Object.keys(caps).every((key) => key === 'rawActionData') &&
+    (caps['rawActionData'] === undefined || typeof caps['rawActionData'] === 'boolean')
+  );
+}
+
 interface StartGameCommon {
+  /** What this connection wants in its frames; see `ClientCapabilities`. */
+  capabilities?: ClientCapabilities;
   /** Four seats in v1 (brief §15). */
   seats: SeatSource[];
   providerKind: ProviderKind;
@@ -458,6 +482,8 @@ export type StartGamePayload = StartGameCommon &
 
 export interface StartCardTestScenarioPayload {
   scenarioId: string;
+  /** What this connection wants in its frames; see `ClientCapabilities`. */
+  capabilities?: ClientCapabilities;
 }
 
 export interface JumpToTurnPayload {
@@ -507,6 +533,8 @@ export interface ResumePlayerAbilityPayload {
 
 export interface ResumeGamePayload {
   sessionToken: string;
+  /** Declared again on every resume: the new connection's own capabilities. */
+  capabilities?: ClientCapabilities;
 }
 
 /** The player's proposal: the table checks it like any other (ADR 0035 decision 15). */
@@ -680,10 +708,15 @@ export function isClientToServerMessage(value: unknown): value is ClientToServer
           (isFiniteNumber(payload['paceMs']) && payload['paceMs'] >= 0)) &&
         (payload['reflectionEnabled'] === undefined ||
           typeof payload['reflectionEnabled'] === 'boolean') &&
-        (payload['diplomacy'] === undefined || typeof payload['diplomacy'] === 'boolean')
+        (payload['diplomacy'] === undefined || typeof payload['diplomacy'] === 'boolean') &&
+        isOptionalCapabilities(payload['capabilities'])
       );
     case 'startCardTestScenario':
-      return typeof payload['scenarioId'] === 'string' && payload['scenarioId'].length > 0;
+      return (
+        typeof payload['scenarioId'] === 'string' &&
+        payload['scenarioId'].length > 0 &&
+        isOptionalCapabilities(payload['capabilities'])
+      );
     case 'jumpToTurn':
       return (
         Number.isInteger(payload['turn']) &&
@@ -743,7 +776,11 @@ export function isClientToServerMessage(value: unknown): value is ClientToServer
     case 'cancelYield':
       return Object.keys(payload).length === 0;
     case 'resumeGame':
-      return typeof payload['sessionToken'] === 'string' && payload['sessionToken'].length > 0;
+      return (
+        typeof payload['sessionToken'] === 'string' &&
+        payload['sessionToken'].length > 0 &&
+        isOptionalCapabilities(payload['capabilities'])
+      );
     case 'proposeDeal':
       return (
         Object.keys(payload).every((key) => ['to', 'obligations', 'rounds'].includes(key)) &&
