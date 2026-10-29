@@ -124,6 +124,7 @@ export type {
   SpectatorSeat,
   SpectatorCard,
   SpectatorPermanent,
+  BoardGroup,
   SpectatorCommander,
   SpectatorStackObject,
   SpectatorLogLine,

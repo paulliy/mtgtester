@@ -35,7 +35,27 @@ export interface SpectatorCard {
    * it and every seat panel reports the table's total.
    */
   owner: PlayerId;
+  /**
+   * Card types, from the engine rather than the printed type line (ADR 0032 decision 2): computed
+   * characteristics on the battlefield, printed ones elsewhere. Optional only because snapshots
+   * saved before them lack the fields; a client shows missing types as unavailable rather than
+   * reading the type line.
+   */
+  types?: string[];
+  supertypes?: string[];
+  subtypes?: string[];
+  /**
+   * True for a token. Token type lines don't say "Token" ("Artifact Creature — Construct"), so the
+   * UI can't tell from the text. Optional only because snapshots saved before it lack the field.
+   */
+  isToken?: boolean;
 }
+
+/**
+ * Which row of a seat's board a permanent sits in, decided by the server (ADR 0032 decision 2).
+ * A land creature groups with creatures, because it can attack and block.
+ */
+export type BoardGroup = 'lands' | 'creatures' | 'other';
 
 /** A permanent, with engine-computed effective characteristics. */
 export interface SpectatorPermanent extends SpectatorCard {
@@ -61,11 +81,8 @@ export interface SpectatorPermanent extends SpectatorCard {
   blockedBy: ObjectId[];
   /** Keyword abilities the engine currently grants this permanent. */
   keywords: string[];
-  /**
-   * True for a token. Token type lines don't say "Token" ("Artifact Creature — Construct"), so the
-   * UI can't tell from the text. Optional only because snapshots saved before it lack the field.
-   */
-  isToken?: boolean;
+  /** Board row, from computed types. Optional only because older snapshots lack it. */
+  boardGroup?: BoardGroup;
   /**
    * Current colors, after effects. The UI matches a token to a printed token's art by them.
    * Optional only because snapshots saved before it lack the field.

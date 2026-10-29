@@ -10,6 +10,7 @@
  */
 
 import type {
+  BoardGroup,
   CommanderDamageEntry,
   DecisionType,
   GameEvent,
@@ -33,7 +34,18 @@ import type {
   GameContext,
 } from '../state/types';
 
+/**
+ * The board row a permanent sits in, from its computed types (ADR 0032 decision 2): an animated
+ * land, or a land creature such as Dryad Arbor, can attack and block, so it groups with creatures.
+ */
+export function boardGroupOf(types: readonly string[]): BoardGroup {
+  if (types.includes('Creature')) return 'creatures';
+  if (types.includes('Land')) return 'lands';
+  return 'other';
+}
+
 function cardView(ctx: GameContext, obj: EngineCardObject): SpectatorCard {
+  const def = ctx.defs.get(obj.oracleId);
   return {
     id: obj.id,
     name: obj.name,
@@ -42,12 +54,20 @@ function cardView(ctx: GameContext, obj: EngineCardObject): SpectatorCard {
     oracleText: obj.oracleText,
     scryfallId: scryfallIdOf(ctx, obj.oracleId),
     owner: obj.ownerId,
+    // Off the battlefield a card has its printed characteristics.
+    ...(def !== undefined && {
+      types: [...def.types],
+      supertypes: [...def.supertypes],
+      subtypes: [...def.subtypes],
+    }),
+    isToken: obj.isToken,
   };
 }
 
 function permanentView(ctx: GameContext, perm: EnginePermanent): SpectatorPermanent {
   const chars = computeCharacteristics(ctx, perm);
   const isCreature = chars.types.includes('Creature');
+  // eslint-disable-next-line no-restricted-syntax -- a player projection or its redaction table, not a TokenSpec
   return {
     id: perm.id,
     // The spectator projection sees everything; `buildPlayerBoardState` redacts a face-down
@@ -91,6 +111,10 @@ function permanentView(ctx: GameContext, perm: EnginePermanent): SpectatorPerman
       ]),
     ],
     isToken: perm.isToken,
+    types: [...chars.types],
+    supertypes: [...chars.supertypes],
+    subtypes: [...chars.subtypes],
+    boardGroup: boardGroupOf(chars.types),
     colors: [...chars.colors],
     imageFace: copyImageFace(ctx, perm),
     scryfallId: scryfallIdOf(ctx, perm.oracleId),
@@ -303,6 +327,7 @@ type Disclosure = 'keep' | 'redact';
  * projected field is classified, so a new one fails typecheck until it is decided (ADR 0031
  * decision 12); a field the table does not list is dropped.
  */
+// eslint-disable-next-line no-restricted-syntax -- a player projection or its redaction table, not a TokenSpec
 const FACE_DOWN_PERMANENT_FIELDS = {
   id: 'keep',
   name: 'redact',
@@ -327,6 +352,10 @@ const FACE_DOWN_PERMANENT_FIELDS = {
   blockedBy: 'keep',
   keywords: 'keep',
   isToken: 'redact',
+  types: 'redact',
+  supertypes: 'redact',
+  subtypes: 'redact',
+  boardGroup: 'redact',
   colors: 'redact',
 } satisfies Record<keyof SpectatorPermanent, Disclosure>;
 
@@ -339,6 +368,10 @@ const FACE_DOWN_CARD_FIELDS = {
   oracleText: 'redact',
   scryfallId: 'redact',
   owner: 'keep',
+  types: 'redact',
+  supertypes: 'redact',
+  subtypes: 'redact',
+  isToken: 'redact',
 } satisfies Record<keyof SpectatorCard, Disclosure>;
 
 /** Another player's view of a commander in a hidden zone: its public identity and tax only. */
@@ -396,6 +429,7 @@ function commanderHidden(ctx: GameContext, commander: SpectatorCommander): boole
 
 export function buildPlayerBoardState(ctx: GameContext, playerId: string): PlayerBoardState {
   const spectator = buildSpectatorState(ctx);
+  // eslint-disable-next-line no-restricted-syntax -- a player projection or its redaction table, not a TokenSpec
   return {
     ...spectator,
     viewerSeat: playerId,
@@ -428,13 +462,19 @@ export function buildPlayerBoardState(ctx: GameContext, playerId: string): Playe
     battlefield: spectator.battlefield.map((permanent) =>
       !permanent.statuses.includes('faceDown') || permanent.controller === playerId
         ? permanent
-        : disclose(permanent, FACE_DOWN_PERMANENT_FIELDS, {
+        : // eslint-disable-next-line no-restricted-syntax -- a player projection or its redaction table, not a TokenSpec
+          disclose(permanent, FACE_DOWN_PERMANENT_FIELDS, {
             name: 'Face-down permanent',
             typeLine: 'Creature',
             manaCost: null,
             oracleText: '',
             scryfallId: null,
             isToken: false,
+            // A face-down permanent is a plain 2/2 Creature with no subtypes (CR 708.2).
+            types: ['Creature'],
+            supertypes: [],
+            subtypes: [],
+            boardGroup: 'creatures',
             colors: [],
           }),
     ),
