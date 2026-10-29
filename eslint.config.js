@@ -168,6 +168,32 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // Table code is reachable only from the table entry point (ADR 0031 decision 1), so tester
+    // modules cannot grow a path into it. Only `table/**` itself and `cli/serve-table.ts` (not
+    // written yet) may import it. `packages/bot` is skipped because its diplomacy module has an
+    // unrelated `table` file, and `apps/web` because its own block above owns that rule.
+    files: ['packages/**/*.ts', 'scripts/**/*.ts'],
+    ignores: [
+      'packages/server/src/table/**',
+      'packages/server/src/cli/serve-table.ts',
+      'packages/bot/**',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/table', '**/table/**'],
+              message:
+                'Code under server/src/table/ is for the table server only (ADR 0031 decision 1); import it only from cli/serve-table.ts or from table/ itself.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   ...vue.configs['flat/essential'],
   {
     files: ['**/*.vue'],
