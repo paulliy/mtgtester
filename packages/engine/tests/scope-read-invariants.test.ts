@@ -21,6 +21,8 @@ const INVARIANT_FIELDS: readonly ScopeField[] = [
   'energyPaid',
   ,
   'stationPower',
+  ,
+  'damageDealt',
 ];
 
 describe('scope-read invariants', () => {

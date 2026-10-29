@@ -212,7 +212,7 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       );
     }
     case 'damageDealt':
-      return scope.damageDealt ?? 0;
+      return scopeFact(scope, 'damageDealt');
     case 'aurasYouControlledAttachedToTriggerObject':
       return (scope.triggerObjectFacts?.attachedAuraControllerIds ?? []).filter(
         (controllerId) => controllerId === scope.controllerId,
