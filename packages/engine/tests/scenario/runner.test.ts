@@ -68,4 +68,17 @@ describe('the scenario runner', () => {
       'expected 1 damage event(s), found 0',
     ]);
   });
+
+  it("reads keywords from the controller's view, after layers", () => {
+    const ettercap = loadScenarioFile(new URL('../scenarios/ettercap.json', import.meta.url));
+    const scenario = ettercap.scenarios[0]!;
+    const run = runScenario(ettercap, scenario);
+    const card = 'Ettercap // Web Shot';
+    expect(
+      scenarioFailures(run, {
+        ...scenario,
+        expect: [{ keywords: { card, player: 'P1', has: ['reach', 'flying'], lacks: ['reach'] } }],
+      }),
+    ).toEqual([`${card} lacks flying`, `${card} has reach`]);
+  });
 });

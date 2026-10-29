@@ -60,7 +60,7 @@
           "event": {
             "type": "damage",
             "count": 1,
-            "payload": "Scenario Ox"
+            "payload": "/\"target\":\"Scenario Ox\".*\"amount\":4,/"
           }
         },
         {
@@ -137,7 +137,8 @@
         {
           "event": {
             "type": "damage",
-            "count": 3
+            "count": 3,
+            "payload": "/\"amount\":4,/"
           }
         }
       ]

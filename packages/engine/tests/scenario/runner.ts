@@ -174,6 +174,19 @@ export function scenarioFailures(run: ScenarioRun, scenario: CardScenario): stri
       const actual = permanent?.counters[counter] ?? 0;
       if (permanent !== undefined && actual !== equals)
         failures.push(`${card} has ${actual} ${counter} counter(s), expected ${equals}`);
+    } else if ('keywords' in expectation) {
+      const { card, has = [], lacks = [], player: controller } = expectation.keywords;
+      const permanent = onePermanent(card, controller);
+      if (permanent !== undefined) {
+        const view = run.engine
+          .view(permanent.controllerId)
+          .battlefield.find((candidate) => candidate.id === permanent.id);
+        const keywords = view?.keywords ?? [];
+        for (const keyword of has)
+          if (!keywords.includes(keyword)) failures.push(`${card} lacks ${keyword}`);
+        for (const keyword of lacks)
+          if (keywords.includes(keyword)) failures.push(`${card} has ${keyword}`);
+      }
     } else if ('tapped' in expectation) {
       const permanent = onePermanent(expectation.tapped.card, expectation.tapped.player);
       if (permanent !== undefined && permanent.tapped !== expectation.tapped.equals)

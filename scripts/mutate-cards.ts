@@ -25,7 +25,7 @@ import { cardMutants } from '../packages/engine/tests/mutation/operators';
 import type { MutationTarget } from '../packages/engine/tests/mutation/setup';
 import { pinStore } from '../packages/engine/tests/scenario/pin-store';
 import { snapshotChanges } from './cards/card-finish';
-import { indexTests, type CollectedTest } from './contracts/manifest-tests';
+import { cardNames, indexTests, type CollectedTest } from './contracts/manifest-tests';
 import {
   cardStatuses,
   cardTests,
@@ -68,7 +68,11 @@ function changedCards(): string[] {
     for (const change of snapshotChanges(before, readFileSync(path, 'utf8')))
       if (change.kind !== 'removed') names.add(change.name);
   }
-  return [...names].filter((name) => statuses.has(name)).sort();
+  // A face's entry ("Web Shot") is its card's ("Ettercap // Web Shot").
+  const cardOf = new Map<string, string>();
+  for (const name of statuses.keys())
+    for (const face of cardNames(name)) if (!cardOf.has(face)) cardOf.set(face, name);
+  return [...new Set([...names].flatMap((name) => cardOf.get(name) ?? []))].sort();
 }
 
 function collect(): CollectedTest[] {

@@ -82,6 +82,8 @@ export type ScenarioExpectation =
   /** `player` picks whose permanent, when more than one has the name. */
   | { counters: { card: string; counter: string; equals: number; player?: Seat } }
   | { tapped: { card: string; equals: boolean; player?: Seat } }
+  /** Keywords the permanent has now, after layers, as its controller's view shows them. */
+  | { keywords: { card: string; has?: string[]; lacks?: string[]; player?: Seat } }
   /** An engine event of this type after the position was arranged; `payload` patterns its JSON. */
   | { event: { type: string; payload?: string; count?: number } };
 
@@ -223,6 +225,7 @@ const expectation = (value: unknown, path: string): void => {
         'equals',
       ]),
       tapped: shaped({ card: str, equals: bool, player: seat }, ['card', 'equals']),
+      keywords: shaped({ card: str, has: list(str), lacks: list(str), player: seat }, ['card']),
       event: shaped({ type: str, payload: str, count: int }, ['type']),
     },
     [],
