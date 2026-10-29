@@ -125,3 +125,29 @@ next `startGame` while it does. So the client sends `abandonGame` when its run e
 no-op on a finished or halted runner (`MatchRunner.abandon`) and therefore leaves the recorded game
 with its real status. Without it one server process would be good for exactly one agent game.
 `SIGINT`/`SIGTERM` abandon the same way before exiting.
+
+## Table mode
+
+`--table` plays one seat at a local table server (ADR 0031) instead of starting a single-player
+game:
+
+```bash
+bun run agent-client --table 'http://127.0.0.1:3002/t/<table>#<invite>' --name Ann \
+  --deck deck.txt --seat P2 [--policy first-legal]
+```
+
+- **Joining.** The client sends `joinTable` with the invite, then `requestSeat` with the decklist
+  file's text. The host approves the claim (stderr shows its verification code). On `seatGranted`
+  the client sends `resumeSeat` on the same socket. The seat token stays inside the process and is
+  never printed.
+- **Capabilities.** `rawActionData` is declared on `joinTable` and again on `resumeSeat`, since a
+  resumed seat starts from what its resume declared.
+- **Playing.** From the table's `gameStarted` for the granted seat on, events and replies are the
+  single-player ones above. Request ids and revisions are the seat's own (`q1`, `q2`, ...), not the
+  engine's.
+- **Policies.** `stdin` (the default) reads replies as above. `first-legal` answers every decision
+  with the first legal action and each target slot's first option, for scripted runs.
+- **Leaving.** The game belongs to the table, so the client never sends `abandonGame`; closing
+  the process only disconnects the seat. Deck problems, a takeover by another connection, and a
+  closed table end the run with a fatal `error`.
+- **Loopback only** until the table server's production mode (plan M5).

@@ -347,6 +347,33 @@ describe('InProcessSessionPort - termination', () => {
     await h.port.terminate('hostAbandoned');
   }, 30_000);
 
+  it("re-sends a seat's game start, without the seed, when it resyncs", async () => {
+    const h = harness({ answer: false });
+    await h.port.start(configOf({ turnCap: 40 }));
+    await h.port.send({ type: 'resyncPlayer', seat: 'P3' });
+    const starts = h.outputs.filter(
+      (o) => o.type === 'seatFrame' && o.message.type === 'gameStarted',
+    );
+    expect(starts).toHaveLength(1);
+    expect(starts[0]).toMatchObject({
+      seat: 'P3',
+      message: {
+        type: 'gameStarted',
+        payload: { gameId: 'game-1', seed: '', gameMode: 'table', humanSeat: 'P3' },
+      },
+    });
+    const payload = (starts[0] as unknown as { message: { payload: Record<string, unknown> } })
+      .message.payload;
+    expect(payload['sessionToken']).toBeUndefined();
+    expect(payload['controllers']).toEqual([
+      { seat: 'P1', kind: 'human' },
+      { seat: 'P2', kind: 'random' },
+      { seat: 'P3', kind: 'human' },
+      { seat: 'P4', kind: 'random' },
+    ]);
+    await h.port.terminate('hostAbandoned');
+  }, 30_000);
+
   it('stops delivering to a listener that unsubscribed', async () => {
     const h = harness({ answer: false });
     const seen: string[] = [];

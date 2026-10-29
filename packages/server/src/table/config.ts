@@ -45,6 +45,10 @@ export interface TableConfig {
   maxTables: number;
   /** A JSON array of `OracleCard`s to load instead of the Scryfall bulk file. */
   oracleFixture: string | null;
+  /** Development mode only: end each game at this turn (`TABLE_TURN_CAP`), for scripted runs. */
+  turnCap: number | null;
+  /** Development mode only: the live presentation pace in ms (`TABLE_PACE_MS`); 0 is no delay. */
+  paceMs: number | null;
 }
 
 export type TableConfigErrorCode =
@@ -260,6 +264,15 @@ export function loadTableConfig(
     maxTables = Number(maxSetting);
   }
 
+  const turnCap = wholeSetting(env, 'TABLE_TURN_CAP', 1, 10_000);
+  if (turnCap === 'bad') {
+    return fail('badValue', 'TABLE_TURN_CAP must be a whole number from 1.', 'TABLE_TURN_CAP');
+  }
+  const paceMs = wholeSetting(env, 'TABLE_PACE_MS', 0, 60_000);
+  if (paceMs === 'bad') {
+    return fail('badValue', 'TABLE_PACE_MS must be a whole number of ms.', 'TABLE_PACE_MS');
+  }
+
   const webDir = resolve(cwd, setting(env, 'TABLE_WEB_DIR') ?? DEFAULT_TABLE_WEB_DIR);
   const dbPath = resolve(cwd, setting(env, 'TABLE_DB_PATH') ?? DEFAULT_TABLE_DB_PATH);
   if (isInside(webDir, dbPath)) {
@@ -283,8 +296,24 @@ export function loadTableConfig(
       clock: clockSetting,
       maxTables,
       oracleFixture: args.oracleFixture,
+      turnCap,
+      paceMs,
     },
   };
+}
+
+/** An optional whole-number setting within bounds: the value, `null` when unset, or `'bad'`. */
+function wholeSetting(
+  env: Readonly<Record<string, string | undefined>>,
+  name: string,
+  min: number,
+  max: number,
+): number | null | 'bad' {
+  const raw = setting(env, name);
+  if (raw === undefined) return null;
+  if (!/^\d{1,6}$/.test(raw)) return 'bad';
+  const value = Number(raw);
+  return value < min || value > max ? 'bad' : value;
 }
 
 /** The invite-link origin: the configured one, else the loopback URL of the port in use. */

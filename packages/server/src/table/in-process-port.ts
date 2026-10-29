@@ -11,6 +11,8 @@
 
 import type {
   GameResult,
+  GameStartedPayload,
+  PlayerId,
   SeatControllers,
   SeatSource,
   ServerToClientMessage,
@@ -20,7 +22,7 @@ import type { OracleIndex } from '../cards/oracle-index';
 import type { SupportedPool } from '../cards/pool';
 import type { GameStore } from '../db';
 import type { BannedList } from '../decks/banned';
-import { tablePolicy } from '../match/disclosure';
+import { disclosedSeatSummaries, seedLabel, tablePolicy } from '../match/disclosure';
 import type { ReplayIdentity } from '../match/replay-config';
 import { MatchSession } from '../match/session';
 import { setupSeats, type SeatProblem } from '../match/setup';
@@ -62,6 +64,8 @@ export class InProcessSessionPort implements TableSessionPort {
   /** Set by `terminate`, so a setup still in flight does not go on to create a game. */
   private stopped = false;
   private rngKey = '';
+  /** Each human seat's `gameStarted`, built once at start and re-sent on a resync. */
+  private readonly startedFrames = new Map<PlayerId, ServerToClientMessage>();
 
   constructor(options: InProcessSessionPortOptions) {
     this.generation = options.generation;
@@ -109,9 +113,19 @@ export class InProcessSessionPort implements TableSessionPort {
         case 'setRawActionData':
           session.setRawActionData(input.seat, input.enabled);
           break;
-        case 'resyncPlayer':
+        case 'resyncPlayer': {
+          const started = this.startedFrames.get(input.seat);
+          if (started !== undefined) {
+            this.emit({
+              type: 'seatFrame',
+              generation: this.generation,
+              seat: input.seat,
+              message: started,
+            });
+          }
           session.resyncPlayer(input.seat);
           break;
+        }
         default: {
           const unknown: never = input;
           throw new Error(`unknown session input: ${JSON.stringify(unknown)}`);
@@ -214,6 +228,33 @@ export class InProcessSessionPort implements TableSessionPort {
       },
     });
     this.session = session;
+
+    // What `GameServer` sends a single player before the first board, per seat and through the
+    // table policy: no seed, and another seat's archetype tag withheld.
+    const policy = tablePolicy();
+    const startedAt = new Date().toISOString();
+    for (const entry of seats) {
+      if (entry.controller !== 'human') continue;
+      const payload: GameStartedPayload = {
+        gameId: config.gameId,
+        seed: seedLabel(policy, config.seed),
+        seats: disclosedSeatSummaries(
+          policy,
+          setup.seats.map((seat) => seat.summary),
+          entry.seat,
+        ),
+        providerKind: 'random',
+        gameMode: 'table',
+        controllers: seats.map((seat) => ({
+          seat: seat.seat,
+          kind: seat.controller === 'human' ? 'human' : 'random',
+        })),
+        humanSeat: entry.seat,
+        paceMs: session.getLivePaceMs(),
+        startedAt,
+      };
+      this.startedFrames.set(entry.seat, { type: 'gameStarted', payload });
+    }
 
     this.emit({ type: 'started', generation: this.generation });
     session.start();

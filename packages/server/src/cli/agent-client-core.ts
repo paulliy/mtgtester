@@ -44,6 +44,7 @@ import type {
   SeatSummary,
   ServerToClientMessage,
   StartGamePayload,
+  TableClientToServerMessage,
   TargetChoice,
 } from '@mtg/shared';
 
@@ -365,7 +366,8 @@ export interface AgentClientIo {
 }
 
 export interface AgentClientTransport {
-  send(message: ClientToServerMessage): void;
+  /** A table client also sends the table's lobby messages on the same socket. */
+  send(message: ClientToServerMessage | TableClientToServerMessage): void;
   close(): void;
 }
 
@@ -423,6 +425,12 @@ export interface AgentClientSessionOptions {
   io: AgentClientIo;
   transport: AgentClientTransport;
   game: AgentGameOptions;
+  /**
+   * Table mode (`agent-client-table.ts`): the seat was granted at a table, so this session asks
+   * for no game, adopts the table's `gameStarted` for that seat, and never abandons the game,
+   * which belongs to the table.
+   */
+  table?: { seat: PlayerId };
   /** Called once with the process exit code when the run is over. */
   onDone?: (code: number) => void;
 }
@@ -474,9 +482,15 @@ export class AgentClientSession {
 
   constructor(private readonly opts: AgentClientSessionOptions) {}
 
-  /** Ask for the game. Called once the socket is open. */
+  /** Ask for the game. Called once the socket is open. A table's game is not asked for. */
   begin(): void {
+    if (this.opts.table !== undefined) return;
     this.opts.transport.send({ type: 'startGame', payload: startGamePayload(this.opts.game) });
+  }
+
+  /** The seat this client plays. */
+  private get seat(): PlayerId {
+    return this.opts.table?.seat ?? this.opts.game.humanSeat;
   }
 
   receive(message: ServerToClientMessage): void {
@@ -486,17 +500,20 @@ export class AgentClientSession {
         const payload = message.payload;
         // A spectator game belongs to some other client: the server broadcasts those to every
         // socket, and adopting one would have this agent answer for a seat it does not hold.
-        // flow: which gameStarted frames the agent adopts (m1 row agent-client-core:447). A table
-        // game is ignored until the agent's table mode (multiplayer M3).
+        // flow: which gameStarted frames the agent adopts (m1 row agent-client-core:447). A
+        // single-player client adopts its own game and a table client its table's, never the other.
         const startedMode = payload.gameMode ?? 'spectator';
+        const wanted = this.opts.table === undefined ? 'singlePlayer' : 'table';
         switch (startedMode) {
           case 'singlePlayer':
+          case 'table':
+            if (startedMode !== wanted) {
+              this.opts.io.diagnostic(`ignored a gameStarted frame for a ${startedMode} game.`);
+              return;
+            }
             break;
           case 'spectator':
             this.opts.io.diagnostic('ignored a gameStarted frame for a spectator game.');
-            return;
-          case 'table':
-            this.opts.io.diagnostic('ignored a gameStarted frame for a table game.');
             return;
           default:
             return assertNever(startedMode, 'gameStarted game mode');
@@ -505,6 +522,8 @@ export class AgentClientSession {
         // letting it overwrite `activeGameId` would move the terminal scope off this game — the run
         // would then end on a stranger's halt and ignore its own.
         if (this.started) {
+          // A table re-sends its start frame to a seat that resumes; it is the same game.
+          if (this.opts.table !== undefined && readGameId(payload) === this.activeGameId) return;
           this.opts.io.diagnostic('ignored a gameStarted frame; this client already holds a game.');
           return;
         }
@@ -515,7 +534,7 @@ export class AgentClientSession {
         }
         // The seat is the one this client asked for, or the frame is not about this client. The
         // server sets `humanSeat` on every single-player start, so an absent one is not ours.
-        if (payload.humanSeat !== this.opts.game.humanSeat) {
+        if (payload.humanSeat !== this.seat) {
           this.opts.io.diagnostic('ignored a gameStarted frame for a seat it did not request.');
           return;
         }
@@ -526,7 +545,7 @@ export class AgentClientSession {
           gameId,
           seed: payload.seed,
           providerKind: payload.providerKind,
-          humanSeat: this.opts.game.humanSeat,
+          humanSeat: this.seat,
           seats: payload.seats,
           startedAt: payload.startedAt,
           // `sessionToken` is deliberately not republished: v1 does not reconnect, so exposing
@@ -537,7 +556,10 @@ export class AgentClientSession {
 
       case 'playerActionRequired': {
         const { request, state, revision, ignoredAbilities } = message.payload;
-        if (request.manaSplit !== undefined || request.combatDamageSplit !== undefined) {
+        if (
+          this.opts.table === undefined &&
+          (request.manaSplit !== undefined || request.combatDamageSplit !== undefined)
+        ) {
           this.fail(
             'agent',
             `decision ${request.requestId} needs a split the v1 submission wire cannot express.`,
@@ -627,12 +649,12 @@ export class AgentClientSession {
         // A refusal reports all four seats at once, so it is the one inbound frame that carries
         // other players' deck data; it is rebuilt from an allowlist keyed on the seat this client
         // asked to play, not forwarded. Its own `message` goes no further than this process.
-        if (!this.started) {
+        if (!this.started && this.opts.table === undefined) {
           this.opts.io.event({
             type: 'error',
             source: 'server',
             fatal: true,
-            ...projectSetupErrorPayload(message.payload, this.opts.game.humanSeat),
+            ...projectSetupErrorPayload(message.payload, this.seat),
           });
           this.finish(1);
           return;
@@ -796,7 +818,7 @@ export class AgentClientSession {
     // it instead leaves this CLI good for exactly one game per server process. Only ever for a
     // game this client started: on someone else's session the server rejects it, and before
     // `gameStarted` there is nothing of ours to release.
-    if (this.started && this.socketOpen) {
+    if (this.started && this.socketOpen && this.opts.table === undefined) {
       this.opts.transport.send({ type: 'abandonGame', payload: {} });
     }
     this.opts.transport.close();

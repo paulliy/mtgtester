@@ -12,6 +12,8 @@
 import { parseStrictJson } from './json';
 import type { PlayerId } from './ids';
 import type { ValidationCode } from './decks';
+import type { GameResult } from './state';
+import type { SpectatorState } from './spectator';
 import { isPlayerSeatId } from './protocol';
 
 /**
@@ -138,6 +140,8 @@ export const TABLE_SERVER_TO_CLIENT_TYPES = [
   'seatTakenOver',
   'protocolMismatch',
   'tableClosed',
+  'tableResults',
+  'replayTurnState',
 ] as const;
 export type TableServerToClientType = (typeof TABLE_SERVER_TO_CLIENT_TYPES)[number];
 
@@ -214,6 +218,43 @@ export interface TableClosedPayload {
   reason: TableClosedReason;
 }
 
+/**
+ * How a started table ended. `gameOver` is a committed game result (a win, a draw, a turn cap or
+ * an engine halt); the others interrupted the game, or its setup, and have no result.
+ */
+export type TableEnding = 'gameOver' | 'setupFailed' | 'workerFailure' | 'hostAbandoned';
+
+/** One seat's deck as the post-game view lists it. */
+export interface TableResultsDeck {
+  seat: PlayerId;
+  controller: 'human' | 'bot';
+  displayName: string | null;
+  commanderNames: string[];
+  cards: Array<{ name: string; quantity: number }>;
+}
+
+/**
+ * The post-game record, sent to each seat once the game's worker has stopped and its end is
+ * committed. Nothing here describes a turn or an outcome that was not saved: an interrupted game
+ * lists the turns its committed snapshots cover, and a game that never started lists none.
+ */
+export interface TableResultsPayload {
+  ending: TableEnding;
+  /** The committed result; null for an interruption. */
+  result: GameResult | null;
+  /** The game's ChaCha20 key, 64 hex digits; null when no key was drawn. */
+  rngKey: string | null;
+  decks: TableResultsDeck[];
+  /** Turns `replayTurn` can show. Empty when nothing was committed. */
+  replayTurns: number[];
+}
+
+/** One turn of the finished game, from the committed snapshot at that turn's start. */
+export interface ReplayTurnStatePayload {
+  turn: number;
+  state: SpectatorState;
+}
+
 export type TableServerToClientMessage =
   | { type: 'tableState'; payload: TableStatePayload }
   | { type: 'claimPending'; payload: ClaimPendingPayload }
@@ -221,7 +262,9 @@ export type TableServerToClientMessage =
   | { type: 'deckProblems'; payload: DeckProblemsPayload }
   | { type: 'seatTakenOver'; payload: SeatTakenOverPayload }
   | { type: 'protocolMismatch'; payload: ProtocolMismatchPayload }
-  | { type: 'tableClosed'; payload: TableClosedPayload };
+  | { type: 'tableClosed'; payload: TableClosedPayload }
+  | { type: 'tableResults'; payload: TableResultsPayload }
+  | { type: 'replayTurnState'; payload: ReplayTurnStatePayload };
 
 export type TableServerMessageOf<T extends TableServerToClientType> = Extract<
   TableServerToClientMessage,

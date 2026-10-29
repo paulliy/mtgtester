@@ -67,6 +67,8 @@ function config(overrides: Partial<TableConfig> = {}): TableConfig {
     clock: 'off',
     maxTables: 8,
     oracleFixture: null,
+    turnCap: null,
+    paceMs: null,
     ...overrides,
   };
 }

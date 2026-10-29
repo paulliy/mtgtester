@@ -15,6 +15,7 @@ import type {
 import type { StrategyProfile } from '../decks/strategy-profile';
 import { GameRecorder, type SqliteLike } from './games';
 import { BatchRepository } from './batches';
+import { TableRepository } from './tables';
 import { StatsRepository } from './stats';
 import { MIGRATIONS_SQL, SCHEMA_SQL } from './schema';
 
@@ -39,11 +40,23 @@ function normalizeDeckName(value: string): string {
   return value.trim().replace(/\s+/g, ' ').toLowerCase();
 }
 
+export interface GameStoreOptions {
+  /**
+   * SQLite `busy_timeout`, set before the schema runs. A table worker shares its database with
+   * the main thread and other workers; without it a `SQLITE_BUSY` during the migration loop
+   * below would be swallowed as if the migration had already applied.
+   */
+  busyTimeoutMs?: number;
+}
+
 export class GameStore {
   private readonly db: Database;
 
-  constructor(path: string) {
+  constructor(path: string, options: GameStoreOptions = {}) {
     this.db = new Database(path);
+    if (options.busyTimeoutMs !== undefined) {
+      this.db.exec(`PRAGMA busy_timeout = ${Math.max(0, Math.floor(options.busyTimeoutMs))}`);
+    }
     this.db.exec(SCHEMA_SQL);
     for (const statement of MIGRATIONS_SQL) {
       // Already-applied migrations throw "duplicate column name"; that is the success case
@@ -343,6 +356,11 @@ export class GameStore {
 
   batches(): BatchRepository {
     return new BatchRepository(this.db as unknown as SqliteLike);
+  }
+
+  /** The table server's approved decks and start-attempt manifests (ADR 0031). */
+  tables(): TableRepository {
+    return new TableRepository(this.db as unknown as SqliteLike);
   }
 
   /** The raw `bun:sqlite` handle, for `AiCallLogger` (brief §9 `ai_calls`). */

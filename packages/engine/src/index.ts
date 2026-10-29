@@ -73,6 +73,7 @@ export {
   formatPlayerLog,
   formatSpectatorLine,
   formatSpectatorLog,
+  PLAYER_HALT_TEXT,
 } from './view/spectator';
 
 // Scripted/random decision providers and the completion driver (Phase 2 — brief §14.1).

@@ -10,37 +10,45 @@
  * a host secret at startup: that secret, and nothing else, creates a table.
  */
 
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import type { OracleCard } from '@mtg/shared';
+import { readBuildInfo } from '../build-info';
 import {
   buildOracleIndex,
   buildOracleIndexFromCards,
   type OracleIndex,
 } from '../cards/oracle-index';
-import type { RawScryfallCard } from '../cards/scryfall';
+import { buildSupportedPool, type SupportedPool } from '../cards/pool';
+import { toOracleCard, type RawScryfallCard } from '../cards/scryfall';
 import { GameStore } from '../db';
 import { loadBannedList } from '../decks/banned';
 import { loadTableConfig, publicOriginFor, type TableConfig } from '../table/config';
-import { createDeckChecker } from '../table/deck-check';
-import { TableRegistry } from '../table/registry';
-import type { TableSessionConfig, TableSessionPort } from '../table/session-port';
 import { startTableServer } from '../table/table-http';
-import { TableSocketHub } from '../table/table-ws';
+import { wireTables } from '../table/wiring';
 
 const BULK_PATH = 'data/scryfall-oracle-cards.json';
 const BANNED_PATH = 'docs/rules/commander-banned-list.md';
 
-function readCards(path: string): unknown[] {
-  const parsed: unknown = JSON.parse(readFileSync(resolve(path), 'utf8'));
+/** Read a card file once, hashing the exact bytes parsed (the replay's card-data identity). */
+function readCards(path: string): { parsed: unknown[]; sha256: string } {
+  const bytes = readFileSync(resolve(path));
+  const parsed: unknown = JSON.parse(bytes.toString('utf8'));
   if (!Array.isArray(parsed)) throw new Error(`Expected a JSON array of cards in "${path}".`);
-  return parsed;
+  return { parsed, sha256: createHash('sha256').update(bytes).digest('hex') };
 }
 
-function loadIndex(config: TableConfig): OracleIndex {
+function loadCards(config: TableConfig): {
+  index: OracleIndex;
+  pool: SupportedPool;
+  sha256: string;
+} {
   if (config.oracleFixture !== null) {
     console.log(`Loading oracle fixture from ${config.oracleFixture} ...`);
-    return buildOracleIndexFromCards(readCards(config.oracleFixture) as OracleCard[]);
+    const { parsed, sha256 } = readCards(config.oracleFixture);
+    const cards = parsed as OracleCard[];
+    return { index: buildOracleIndexFromCards(cards), pool: buildSupportedPool(cards), sha256 };
   }
   if (!existsSync(resolve(BULK_PATH))) {
     console.error(
@@ -49,19 +57,14 @@ function loadIndex(config: TableConfig): OracleIndex {
     process.exit(1);
   }
   console.log(`Loading oracle data from ${BULK_PATH} ...`);
-  return buildOracleIndex(readCards(BULK_PATH) as RawScryfallCard[]);
-}
-
-/**
- * TODO(M3 part C): the worker-backed `TableSessionPort` and the real start configuration are built
- * separately and wired here. Until then a start attempt fails as `setupFailed`.
- */
-const WIRING_PENDING = 'The table game runner is not wired into serve:table yet (plan M3 part C).';
-function portFactory(): TableSessionPort {
-  throw new Error(WIRING_PENDING);
-}
-function buildConfig(): TableSessionConfig {
-  throw new Error(WIRING_PENDING);
+  const { parsed, sha256 } = readCards(BULK_PATH);
+  const raw = parsed as RawScryfallCard[];
+  const cards: OracleCard[] = [];
+  for (const entry of raw) {
+    const card = toOracleCard(entry);
+    if (card !== null) cards.push(card);
+  }
+  return { index: buildOracleIndex(raw), pool: buildSupportedPool(cards), sha256 };
 }
 
 function main(): void {
@@ -72,20 +75,22 @@ function main(): void {
   }
   const config = result.config;
 
-  const index = loadIndex(config);
+  const { index, pool, sha256 } = loadCards(config);
   const banned = loadBannedList(resolve(BANNED_PATH));
 
   // Migrate the table database once, here, before anything else opens it: every worker's
   // `GameStore` then finds the schema in place and never races another to create it.
   mkdirSync(dirname(config.dbPath), { recursive: true });
-  new GameStore(config.dbPath).close();
+  const store = new GameStore(config.dbPath);
 
-  const registry = new TableRegistry({
-    deckChecker: createDeckChecker({ index, banned }),
-    maxTables: config.maxTables,
-    clock: config.clock,
+  const { registry, hub } = wireTables({
+    config,
+    index,
+    pool,
+    banned,
+    store,
+    replay: { cardDataSha256: sha256, build: readBuildInfo(process.cwd()) },
   });
-  const hub = new TableSocketHub({ registry, portFactory, buildConfig });
   const server = startTableServer({ config, registry, hub });
 
   const origin = publicOriginFor(config, server.port);
@@ -97,14 +102,17 @@ function main(): void {
   console.log(`  Clock:          ${config.clock}`);
   console.log(`  Max tables:     ${config.maxTables}`);
   console.log(`  Oracle index:   ${index.size.toLocaleString()} cards`);
+  console.log(`  Supported pool: ${pool.cards.length.toLocaleString()} cards`);
   console.log(`\n  Host secret (creates tables; keep it private):\n    ${registry.hostSecret}`);
   console.log(
     `\n  Create a table:\n    curl -s -X POST -H "Authorization: Bearer <secret>" ${origin}/tables\n`,
   );
-  console.log(`  Note: ${WIRING_PENDING} Games cannot start yet.\n`);
 
   const shutdown = (): void => {
-    void server.stop().finally(() => process.exit(0));
+    void server.stop().finally(() => {
+      store.close();
+      process.exit(0);
+    });
   };
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);

@@ -81,7 +81,7 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 | 5    | done        | M1 seat controllers: `'table'` mode, per-seat state, fail-closed switches                    | #44          |
 | 6    | done        | M2a disclosure policy, privacy fixes, replay inputs and harness; M2b ChaCha20 and streams    | #44          |
 | 7    | done        | P2 projection types and board groups; P4 server presentation; P5 raw `data` on request, lint | #44          |
-| 9    | in progress | M3 engine work budget; table protocol, tokens, wire ids, lobby; workers and sockets next     | #44          |
+| 9    | in progress | M3 done: workers, health probes, manifest, post-game view, agent table mode, scans; M4 next  | #44          |
 
 ## Notes from delivery
 
@@ -99,5 +99,15 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 - **Table routes (M3).** The socket is `GET /tables/:id/ws`, and an invite link is
   `/t/<id>#<invite>`, so the invite stays in the fragment and out of request logs. The summary
   endpoint takes the invite in the POST body. To be confirmed before M6.
+- **Workers get their cards from the main thread (M3).** A worker receives the supported pool
+  and the cards the approved decklists resolve to, not the bulk file, so starting a table game
+  costs no second multi-second Oracle load, and every worker sees exactly the cards the
+  claim-time check resolved against.
+- **A `gameStarted` per seat (M3).** `GameServer` sends a single player's start frame itself, so
+  the session port now builds one per human seat through the table policy (no seed, other seats'
+  tags withheld) and re-sends it when a seat resyncs.
+- **The scripted run (M3 exit).** `table-scripted-run.ts` plays two `first-legal` agent clients and
+  two bots to a 6-turn cap in real workers in about 7 seconds; the scan read 18 hand ids and
+  found no violation over 135 frames.
 - **Unmodeled cards in a table deck** are reported to that seat as `unresolved` with the card
   name; a dedicated problem code can follow if the lobby needs to tell them apart.

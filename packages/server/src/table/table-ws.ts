@@ -34,8 +34,12 @@ import type {
   ClientToServerMessage,
   GameResult,
   PlayerId,
+  ReplayUnlockedPayload,
   ServerToClientMessage,
+  SpectatorState,
   TableClientToServerMessage,
+  TableEnding,
+  TableResultsPayload,
   TableServerToClientMessage,
 } from '@mtg/shared';
 import { isOutboundAllowed, tablePolicy, type DisclosurePolicy } from '../match/disclosure';
@@ -64,14 +68,51 @@ export interface HubSocket {
 }
 
 /**
- * The post-game reader behind `replayTurn`. Answers with a full-state frame for one turn, or
- * `null` when none is available. The default reader is a stub that always answers `null`.
+ * What the post-game view reads (`table/post-game.ts`). It is called only after the attempt's
+ * port has stopped and its end has been committed, so nothing it returns can describe a game that
+ * is still running.
  */
-export type ReplayReader = (query: {
-  tableId: string;
-  seat: PlayerId;
-  turn: number;
-}) => Promise<ServerToClientMessage | null>;
+export interface PostGameReader {
+  /** The post-game record and, when the game committed a log, the replay's unlock frame. */
+  results(query: {
+    tableId: string;
+    attemptId: string;
+    ending: TableEnding;
+    result: GameResult | null;
+  }): Promise<{ results: TableResultsPayload; unlock: ReplayUnlockedPayload | null }>;
+  /** One committed turn of the finished game, or `null`. */
+  turn(query: { tableId: string; attemptId: string; turn: number }): Promise<SpectatorState | null>;
+}
+
+/** How a start attempt ended, as the table database records it. */
+export type AttemptEndStatus =
+  'rejected' | 'finished' | 'setupFailed' | 'workerFailure' | 'hostAbandoned';
+
+/** The timers the health watchdog uses; tests supply their own. */
+export interface HealthTimers {
+  now(): number;
+  every(ms: number, tick: () => void): () => void;
+}
+
+export interface HealthOptions {
+  /** How often a probe is sent. Plan default 5 seconds. */
+  intervalMs: number;
+  /** A worker is dead after this long without an answered probe. Plan default 30 seconds. */
+  timeoutMs: number;
+  timers?: HealthTimers;
+}
+
+export const DEFAULT_HEALTH: HealthOptions = { intervalMs: 5_000, timeoutMs: 30_000 };
+
+const realTimers: HealthTimers = {
+  now: () => Date.now(),
+  every: (ms, tick) => {
+    const handle = setInterval(tick, ms);
+    return () => {
+      clearInterval(handle);
+    };
+  },
+};
 
 export interface TableWsDeps {
   registry: TableRegistry;
@@ -90,7 +131,18 @@ export interface TableWsDeps {
     tableId: string,
     approved: { seat: PlayerId; displayName: string; decklist: string },
   ) => void | Promise<void>;
-  replayReader?: ReplayReader;
+  postGame?: PostGameReader;
+  /**
+   * Commit how an attempt ended (the table database's attempt row, and a still-running game row
+   * closed as a halt for an interruption). Awaited after the port has stopped and before anything
+   * post-game is unlocked. A failure is ignored: the attempt has ended either way.
+   */
+  onAttemptEnded?: (
+    attempt: { tableId: string; attemptId: string },
+    status: AttemptEndStatus,
+  ) => void | Promise<void>;
+  /** Worker health probes. Omit to probe nothing (the in-process port is always reachable). */
+  health?: HealthOptions;
   /** The table's disclosure policy. Defaults to `tablePolicy()`. */
   policy?: Readonly<DisclosurePolicy>;
 }
@@ -102,6 +154,8 @@ export interface TableWsStats {
   droppedStale: number;
   /** Seat frames with no socket currently bound to the seat. */
   droppedUnbound: number;
+  /** Attempts ended because their worker stopped answering health probes. */
+  unhealthy: number;
 }
 
 // ── Fixed texts ─────────────────────────────────────────────────────────────────────────────
@@ -198,6 +252,15 @@ interface AttemptRun {
   wire: WireIds;
   pending: Map<PlayerId, PendingDecision>;
   lastSubmit: Map<PlayerId, LastSubmit>;
+  /** Stops the health watchdog; null when none runs. */
+  stopHealth: (() => void) | null;
+}
+
+/** The finished attempt the post-game view describes. */
+interface Ended {
+  attemptId: string;
+  /** Null until the reader answered; then what every seat socket is sent. */
+  view: { results: TableResultsPayload; unlock: ReplayUnlockedPayload | null } | null;
 }
 
 interface TableRuntime {
@@ -209,6 +272,7 @@ interface TableRuntime {
   seatGenerations: Map<PlayerId, number>;
   nextGeneration: number;
   run: AttemptRun | null;
+  ended: Ended | null;
 }
 
 type Outcome =
@@ -234,6 +298,7 @@ export class TableSocketHub {
     droppedByPolicy: 0,
     droppedStale: 0,
     droppedUnbound: 0,
+    unhealthy: 0,
   };
 
   constructor(private readonly deps: TableWsDeps) {
@@ -308,6 +373,7 @@ export class TableSocketHub {
       if (run !== null) {
         run.terminal = true;
         run.unsubscribe?.();
+        run.stopHealth?.();
         void this.terminateQuiet(run.port, 'workerFailure');
       }
       for (const socketId of runtime.sockets.keys()) this.socketTables.delete(socketId);
@@ -323,6 +389,7 @@ export class TableSocketHub {
       if (run !== null) {
         run.terminal = true;
         run.unsubscribe?.();
+        run.stopHealth?.();
         stops.push(this.terminateQuiet(run.port, 'workerFailure'));
       }
       for (const socket of runtime.sockets.values()) {
@@ -482,6 +549,7 @@ export class TableSocketHub {
     runtime.seatSockets.set(seat, socketId);
     const run = runtime.run;
     if (run !== null && run.started && !run.terminal) this.attachSeat(runtime, run, seat);
+    if (this.isTerminal(runtime)) this.sendPostGame(runtime, socketId);
   }
 
   /** A socket went away or was closed by the table: drop its binding if it is still current. */
@@ -661,24 +729,68 @@ export class TableSocketHub {
       this.sendTo(runtime, socketId, errorFrame(NO_SEAT));
       return;
     }
-    const reader = this.deps.replayReader;
-    let frame: ServerToClientMessage | null = null;
+    const reader = this.deps.postGame;
+    const ended = runtime.ended;
+    let state: SpectatorState | null = null;
     try {
-      frame = reader === undefined ? null : await reader({ tableId: runtime.table.id, seat, turn });
+      state =
+        reader === undefined || ended === null
+          ? null
+          : await reader.turn({ tableId: runtime.table.id, attemptId: ended.attemptId, turn });
     } catch {
-      frame = null;
+      state = null;
     }
     // The phase may have changed while the reader ran; the seat's binding may have too.
-    if (frame === null || this.boundSeat(runtime, socketId) !== seat) {
-      this.sendTo(runtime, socketId, errorFrame('Replay is not available yet.'));
+    if (state === null || this.boundSeat(runtime, socketId) !== seat) {
+      this.sendTo(runtime, socketId, errorFrame('That turn is not in the replay.'));
       return;
     }
-    if (!isOutboundAllowed(this.policy, frame.type, { terminal: this.isTerminal(runtime) })) {
+    this.sendGated(runtime, socketId, { type: 'replayTurnState', payload: { turn, state } });
+  }
+
+  /** The post-game frames, to one socket, once they exist. Each is held to the policy. */
+  private sendPostGame(runtime: TableRuntime, socketId: string): void {
+    const view = runtime.ended?.view;
+    if (view === undefined || view === null) return;
+    if (view.unlock !== null) {
+      this.sendGated(runtime, socketId, { type: 'replayUnlocked', payload: view.unlock });
+    }
+    this.sendGated(runtime, socketId, { type: 'tableResults', payload: view.results });
+  }
+
+  /** Send a full-state frame only if the policy allows it now. */
+  private sendGated(
+    runtime: TableRuntime,
+    socketId: string,
+    message: TableServerToClientMessage | ServerToClientMessage,
+  ): void {
+    if (!isOutboundAllowed(this.policy, message.type, { terminal: this.isTerminal(runtime) })) {
       this.counters.droppedByPolicy += 1;
-      this.sendTo(runtime, socketId, errorFrame('Replay is not available yet.'));
       return;
     }
-    this.sendTo(runtime, socketId, frame);
+    this.sendTo(runtime, socketId, message);
+  }
+
+  /** Read the post-game view once the end is committed, and send it to every seated socket. */
+  private async unlockPostGame(
+    runtime: TableRuntime,
+    attemptId: string,
+    ending: TableEnding,
+    result: GameResult | null,
+  ): Promise<void> {
+    const ended: Ended = { attemptId, view: null };
+    runtime.ended = ended;
+    const reader = this.deps.postGame;
+    if (reader === undefined) return;
+    try {
+      ended.view = await reader.results({ tableId: runtime.table.id, attemptId, ending, result });
+    } catch {
+      return;
+    }
+    if (runtime.ended !== ended || !this.isTerminal(runtime)) return;
+    for (const [seat, socketId] of runtime.seatSockets) {
+      if (this.boundSeat(runtime, socketId) === seat) this.sendPostGame(runtime, socketId);
+    }
   }
 
   // ── Start, outputs and the end of an attempt ──────────────────────────────────────────────
@@ -696,18 +808,60 @@ export class TableSocketHub {
       wire: new WireIds(),
       pending: new Map(),
       lastSubmit: new Map(),
+      stopHealth: null,
     };
     runtime.run = run;
+    runtime.ended = null;
     try {
       const port = this.deps.portFactory(generation);
       run.port = port;
       run.unsubscribe = port.onOutput((output) => this.onOutput(runtime, run, output));
+      this.watchHealth(runtime, run, port);
       const config = await this.deps.buildConfig(attempt, generation);
       if (run.terminal) return;
       await port.start(config);
     } catch {
       await this.settle(runtime, run, { kind: 'failed', reason: 'setupFailed' });
     }
+  }
+
+  /**
+   * Probe the port on a fixed interval, independently of game progress. An unanswered probe
+   * older than the timeout ends the attempt: the port is stopped (which stops a blocked thread)
+   * and the attempt fails as `setupFailed` before the game started, `workerFailure` after.
+   * Probes never reach a player and never move a seat's revision.
+   */
+  private watchHealth(runtime: TableRuntime, run: AttemptRun, port: TableSessionPort): void {
+    const health = this.deps.health;
+    if (health === undefined) return;
+    const timers = health.timers ?? realTimers;
+    let lastAnswer = timers.now();
+    let outstanding = false;
+    run.stopHealth = timers.every(health.intervalMs, () => {
+      if (run.terminal) {
+        run.stopHealth?.();
+        return;
+      }
+      if (timers.now() - lastAnswer >= health.timeoutMs) {
+        this.counters.unhealthy += 1;
+        void this.settle(runtime, run, {
+          kind: 'failed',
+          reason: run.started ? 'workerFailure' : 'setupFailed',
+        });
+        return;
+      }
+      if (outstanding) return;
+      outstanding = true;
+      port.ping().then(
+        () => {
+          outstanding = false;
+          lastAnswer = timers.now();
+        },
+        () => {
+          // A port that cannot be probed is left to age out against the timeout.
+        },
+      );
+    });
   }
 
   private async abandonAttempt(runtime: TableRuntime, attemptId: string): Promise<void> {
@@ -761,12 +915,21 @@ export class TableSocketHub {
     if (run.terminal) return;
     run.terminal = true;
     run.unsubscribe?.();
+    run.stopHealth?.();
     const stopReason = outcome.kind === 'failed' ? outcome.reason : 'workerFailure';
     await this.terminateQuiet(
       run.port,
       stopReason === 'hostAbandoned' ? 'hostAbandoned' : 'workerFailure',
     );
     if (runtime.run !== run) return; // the table was reaped meanwhile
+    const status: AttemptEndStatus =
+      outcome.kind === 'rejected'
+        ? 'rejected'
+        : outcome.kind === 'gameOver'
+          ? 'finished'
+          : outcome.reason;
+    await this.commitEnd(runtime, run.attemptId, status);
+    if (runtime.run !== run) return;
     const table = runtime.table;
     switch (outcome.kind) {
       case 'rejected': {
@@ -778,6 +941,7 @@ export class TableSocketHub {
       }
       case 'gameOver': {
         this.apply(runtime, table.gameFinished(run.attemptId).effects);
+        await this.unlockPostGame(runtime, run.attemptId, 'gameOver', outcome.result);
         return;
       }
       case 'failed': {
@@ -787,10 +951,25 @@ export class TableSocketHub {
           this.sendTo(runtime, socketId, errorFrame(text));
         }
         this.apply(runtime, table.gameFinished(run.attemptId).effects);
+        await this.unlockPostGame(runtime, run.attemptId, outcome.reason, null);
         return;
       }
       default:
         assertNever(outcome, 'attempt outcome');
+    }
+  }
+
+  private async commitEnd(
+    runtime: TableRuntime,
+    attemptId: string,
+    status: AttemptEndStatus,
+  ): Promise<void> {
+    const hook = this.deps.onAttemptEnded;
+    if (hook === undefined) return;
+    try {
+      await hook({ tableId: runtime.table.id, attemptId }, status);
+    } catch {
+      // The attempt has ended either way; the table must not be stranded in `playing`.
     }
   }
 
@@ -949,6 +1128,7 @@ export class TableSocketHub {
       seatGenerations: new Map(),
       nextGeneration: 0,
       run: null,
+      ended: null,
     };
     this.runtimes.set(tableId, runtime);
     return runtime;

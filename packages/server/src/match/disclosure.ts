@@ -218,12 +218,13 @@ const OUTBOUND_GATES = {
 } as const satisfies Record<ServerToClientType, OutboundGate>;
 
 /**
- * Wire types that are not in `ServerToClientType` yet but are full-state by nature. Naming them
- * here means the table server's post-game replay frames are denied until the game ends from the
- * day they are added, not from the day someone remembers to classify them.
+ * The table server's own post-game frames, which are not in `ServerToClientType`. Both are
+ * full-state by nature: every hand of a past turn, and the game's key and every decklist. Gating
+ * them here means the table denies them until the game ends, whatever sends them.
  */
 const PLANNED_OUTBOUND_GATES: Readonly<Record<string, OutboundGate>> = {
   replayTurnState: 'fullState',
+  tableResults: 'fullState',
 };
 
 /** The full-state types, for tests and for the table server's own checks. */

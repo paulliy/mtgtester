@@ -222,14 +222,15 @@ export default tseslint.config(
     },
   },
   {
-    // Table code is reachable only from the table entry point (ADR 0031 decision 1), so tester
-    // modules cannot grow a path into it. Only `table/**` itself and `cli/serve-table.ts` (not
-    // written yet) may import it. `packages/bot` is skipped because its diplomacy module has an
-    // unrelated `table` file, and `apps/web` because its own block above owns that rule.
+    // Table code is reachable only from the table entry points (ADR 0031 decision 1), so tester
+    // modules cannot grow a path into it. Only `table/**` itself, `cli/serve-table.ts` and the
+    // scripted-run CLI may import it. `packages/bot` is skipped because its diplomacy module has
+    // an unrelated `table` file, and `apps/web` because its own block above owns that rule.
     files: ['packages/**/*.ts', 'scripts/**/*.ts'],
     ignores: [
       'packages/server/src/table/**',
       'packages/server/src/cli/serve-table.ts',
+      'packages/server/src/cli/table-scripted-run.ts',
       'packages/bot/**',
     ],
     rules: {
@@ -241,6 +242,30 @@ export default tseslint.config(
               group: ['**/table', '**/table/**'],
               message:
                 'Code under server/src/table/ is for the table server only (ADR 0031 decision 1); import it only from cli/serve-table.ts or from table/ itself.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // The table server reaches no batch runner, benchmark runtime or Card Test Lab scenario
+    // (plan M3 task 12); `table/module-graph.test.ts` checks the bundled graph as well.
+    files: ['packages/server/src/table/**/*.ts', 'packages/server/src/cli/serve-table.ts'],
+    ignores: ['packages/server/src/table/**/*.test.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/batch', '**/batch/**', '**/benchmark', '**/benchmark/**'],
+              message: 'The table server runs no batches or benchmarks (ADR 0031 decision 1).',
+            },
+            {
+              group: ['**/card-test-scenarios*'],
+              message:
+                'Card Test Lab scenarios set up games outside the rules; the table server never loads them.',
             },
           ],
         },

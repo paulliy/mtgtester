@@ -181,7 +181,7 @@ describe('the outbound allowlist', () => {
 
   it('names the full-state types', () => {
     expect([...FULL_STATE_TYPES].sort()).toEqual(
-      ['replayTurnState', 'replayUnlocked', 'stateSnapshot'].sort(),
+      ['replayTurnState', 'replayUnlocked', 'stateSnapshot', 'tableResults'].sort(),
     );
   });
 

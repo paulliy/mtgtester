@@ -50,6 +50,8 @@ describe('table protocol vocabulary', () => {
         'seatTakenOver',
         'tableClosed',
         'tableState',
+        'tableResults',
+        'replayTurnState',
       ].sort(),
     );
   });

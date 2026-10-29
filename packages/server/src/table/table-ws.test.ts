@@ -5,7 +5,9 @@ import type {
   PlayerBoardState,
   PlayerId,
   ServerToClientMessage,
+  SpectatorState,
   TableCapabilities,
+  TableResultsPayload,
 } from '@mtg/shared';
 import { PROTOCOL_VERSION } from '@mtg/shared';
 import { makeResolvedDeck } from '../test-factory';
@@ -18,7 +20,13 @@ import type {
   TableSessionPort,
   TableSetupProblems,
 } from './session-port';
-import { TableSocketHub, type HubSocket, type ReplayReader } from './table-ws';
+import {
+  TableSocketHub,
+  type AttemptEndStatus,
+  type HealthOptions,
+  type HubSocket,
+  type PostGameReader,
+} from './table-ws';
 import type { StartAttempt } from './table';
 
 // ── Harness ─────────────────────────────────────────────────────────────────────────────────
@@ -50,8 +58,12 @@ class FakePort implements TableSessionPort {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
+  /** Set to make probes go unanswered, as a blocked worker's would. */
+  hung = false;
+  pings = 0;
   ping(): Promise<void> {
-    return Promise.resolve();
+    this.pings += 1;
+    return this.hung ? new Promise<void>(() => undefined) : Promise.resolve();
   }
   terminate(reason: 'workerFailure' | 'hostAbandoned'): Promise<void> {
     this.terminations.push(reason);
@@ -115,7 +127,9 @@ const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 
 
 interface RigOptions {
   buildConfig?: (attempt: StartAttempt, generation: number) => TableSessionConfig;
-  replayReader?: ReplayReader;
+  postGame?: PostGameReader;
+  health?: HealthOptions;
+  ended?: Array<{ attemptId: string; status: AttemptEndStatus }>;
 }
 
 function makeRig(options: RigOptions = {}) {
@@ -155,7 +169,15 @@ function makeRig(options: RigOptions = {}) {
         maxObjects: 1000,
         dbPath: ':memory:',
       })),
-    ...(options.replayReader === undefined ? {} : { replayReader: options.replayReader }),
+    ...(options.postGame === undefined ? {} : { postGame: options.postGame }),
+    ...(options.health === undefined ? {} : { health: options.health }),
+    ...(options.ended === undefined
+      ? {}
+      : {
+          onAttemptEnded: ({ attemptId }: { attemptId: string }, status: AttemptEndStatus) => {
+            options.ended?.push({ attemptId, status });
+          },
+        }),
   });
   let nextSocket = 0;
   const connect = (tableId: string, address = `10.0.0.${++nextSocket}`): FakeSocket => {
@@ -963,27 +985,61 @@ describe('the end of an attempt', () => {
   });
 });
 
-// ── Post-game replay ────────────────────────────────────────────────────────────────────────
+// ── Post-game view ──────────────────────────────────────────────────────────────────────────
 
-describe('replayTurn', () => {
-  const replayFrame = {
-    type: 'replayTurnState',
-    payload: { turn: 3 },
-  } as unknown as ServerToClientMessage;
+describe('the post-game view', () => {
+  const STATE = { turnNumber: 3 } as unknown as SpectatorState;
+  const RESULTS: TableResultsPayload = {
+    ending: 'gameOver',
+    result: null,
+    rngKey: 'ab'.repeat(32),
+    decks: [],
+    replayTurns: [1, 2, 3],
+  };
 
-  async function finishedGame(replayReader?: ReplayReader) {
-    const game = await startedGame(makeRig(replayReader === undefined ? {} : { replayReader }));
+  /** A reader that records its calls and answers from a fixed record. */
+  function reader(turns: Record<number, SpectatorState> = { 3: STATE }) {
+    const calls: string[] = [];
+    const postGame: PostGameReader = {
+      results: (query) => {
+        calls.push(`results:${query.ending}`);
+        return Promise.resolve({
+          results: { ...RESULTS, ending: query.ending, result: query.result },
+          unlock: {
+            state: STATE,
+            lines: [],
+            snapshotTurns: [1, 2, 3],
+            frontierTurn: 3,
+          },
+        });
+      },
+      turn: (query) => {
+        calls.push(`turn:${query.turn}`);
+        return Promise.resolve(turns[query.turn] ?? null);
+      },
+    };
+    return { postGame, calls };
+  }
+
+  async function finishedGame(postGame?: PostGameReader) {
+    const game = await startedGame(makeRig(postGame === undefined ? {} : { postGame }));
     game.port.emit({ type: 'gameOver', generation: game.port.generation, result: RESULT });
+    await flush();
     await flush();
     return game;
   }
 
   it('is refused while the game is running, and a full-state frame cannot slip out early', async () => {
-    const game = await startedGame(makeRig({ replayReader: () => Promise.resolve(replayFrame) }));
+    const { postGame, calls } = reader();
+    const game = await startedGame(makeRig({ postGame }));
     game.rig.send(game.aliceGame, 'replayTurn', { turn: 3 });
     await flush();
     expect(game.aliceGame.errors()).toEqual(['Replay unlocks when the game is over.']);
-    game.port.seat('P1', replayFrame);
+    expect(calls).toEqual([]);
+    game.port.seat('P1', {
+      type: 'replayTurnState',
+      payload: { turn: 3 },
+    } as unknown as ServerToClientMessage);
     game.port.publicFrame({
       type: 'replayUnlocked',
       payload: {},
@@ -992,32 +1048,184 @@ describe('replayTurn', () => {
     expect(game.aliceGame.of('replayUnlocked')).toEqual([]);
   });
 
-  it('answers a seated player once the game is finished', async () => {
-    const game = await finishedGame(() => Promise.resolve(replayFrame));
+  it('sends each seated socket the results and the replay once the end is committed', async () => {
+    const ended: Array<{ attemptId: string; status: AttemptEndStatus }> = [];
+    const { postGame, calls } = reader();
+    const game = await startedGame(makeRig({ postGame, ended }));
+    game.port.emit({ type: 'gameOver', generation: game.port.generation, result: RESULT });
+    await flush();
+    await flush();
+    expect(ended.map((entry) => entry.status)).toEqual(['finished']);
+    expect(calls).toEqual(['results:gameOver']);
+    for (const socket of [game.aliceGame, game.bobGame]) {
+      expect(socket.of('tableResults')).toHaveLength(1);
+      expect(socket.of('replayUnlocked')).toHaveLength(1);
+      expect(socket.last('tableResults')['rngKey']).toBe(RESULTS.rngKey);
+    }
+    // A lobby-only socket holds no seat and gets no post-game record.
+    expect(game.carol.of('tableResults')).toEqual([]);
+  });
+
+  it('sends the post-game record to a seat that resumes after the game', async () => {
+    const { postGame } = reader();
+    const game = await finishedGame(postGame);
+    const late = game.rig.connect(game.t.tableId);
+    resume(game.rig, late, game.alice.seatToken);
+    expect(late.of('tableResults')).toHaveLength(1);
+    expect(late.of('replayUnlocked')).toHaveLength(1);
+  });
+
+  it('answers replayTurn for a seated player once the game is finished', async () => {
+    const { postGame } = reader();
+    const game = await finishedGame(postGame);
     game.rig.send(game.aliceGame, 'replayTurn', { turn: 3 });
     await flush();
-    expect(game.aliceGame.of('replayTurnState')).toEqual([replayFrame]);
+    expect(game.aliceGame.of('replayTurnState')).toEqual([
+      { type: 'replayTurnState', payload: { turn: 3, state: STATE } },
+    ]);
+    game.rig.send(game.aliceGame, 'replayTurn', { turn: 9 });
+    await flush();
+    expect(game.aliceGame.errors()).toContain('That turn is not in the replay.');
     // A lobby-only socket has no seat to read for.
     game.rig.send(game.carol, 'replayTurn', { turn: 3 });
     await flush();
     expect(game.carol.errors()).toEqual(['This connection holds no seat.']);
   });
 
-  it('says it is unavailable when no reader is installed (stub)', async () => {
+  it('says the turn is unavailable when no reader is installed', async () => {
     const game = await finishedGame();
     game.rig.send(game.aliceGame, 'replayTurn', { turn: 1 });
     await flush();
-    expect(game.aliceGame.errors()).toEqual(['Replay is not available yet.']);
+    expect(game.aliceGame.errors()).toEqual(['That turn is not in the replay.']);
+    expect(game.aliceGame.of('tableResults')).toEqual([]);
   });
 
-  it('still refuses a frame type the policy does not allow after the game', async () => {
-    const game = await finishedGame(() =>
-      Promise.resolve({ type: 'debugEvents', payload: {} } as unknown as ServerToClientMessage),
-    );
-    game.rig.send(game.aliceGame, 'replayTurn', { turn: 1 });
+  it('records an interruption and shows it without a result', async () => {
+    const ended: Array<{ attemptId: string; status: AttemptEndStatus }> = [];
+    const { postGame, calls } = reader();
+    const game = await startedGame(makeRig({ postGame, ended }));
+    game.port.emit({ type: 'failed', generation: game.port.generation, reason: 'workerFailure' });
     await flush();
-    expect(game.aliceGame.of('debugEvents')).toEqual([]);
-    expect(game.aliceGame.errors()).toEqual(['Replay is not available yet.']);
+    await flush();
+    expect(ended.map((entry) => entry.status)).toEqual(['workerFailure']);
+    expect(calls).toEqual(['results:workerFailure']);
+    expect(game.aliceGame.last('tableResults')).toMatchObject({
+      ending: 'workerFailure',
+      result: null,
+    });
+  });
+
+  it('commits a rejected start without unlocking anything', async () => {
+    const ended: Array<{ attemptId: string; status: AttemptEndStatus }> = [];
+    const { postGame, calls } = reader();
+    const rig = makeRig({ postGame, ended });
+    const t = openTable(rig);
+    seatPlayer(rig, t, 'Alice', 'P1');
+    rig.send(t.host, 'hostSetSeat', { seat: 'P2', controller: 'bot' });
+    rig.send(t.host, 'hostSetSeat', { seat: 'P3', controller: 'bot' });
+    rig.send(t.host, 'hostSetSeat', { seat: 'P4', controller: 'bot' });
+    rig.send(t.host, 'hostStart');
+    await flush();
+    const port = rig.ports[0]!;
+    port.emit({
+      type: 'setupProblems',
+      generation: port.generation,
+      problems: { P1: [{ code: 'parse', message: 'x' }] },
+    });
+    await flush();
+    await flush();
+    expect(ended.map((entry) => entry.status)).toEqual(['rejected']);
+    expect(calls).toEqual([]);
+  });
+});
+
+// ── Worker health ───────────────────────────────────────────────────────────────────────────
+
+describe('worker health', () => {
+  /** Timers the test advances by hand. */
+  function manualTimers() {
+    let now = 0;
+    const ticks: Array<{ every: number; next: number; tick: () => void; stopped: boolean }> = [];
+    return {
+      timers: {
+        now: () => now,
+        every: (ms: number, tick: () => void) => {
+          const entry = { every: ms, next: now + ms, tick, stopped: false };
+          ticks.push(entry);
+          return () => {
+            entry.stopped = true;
+          };
+        },
+      },
+      async advance(ms: number) {
+        const end = now + ms;
+        for (;;) {
+          const due = ticks
+            .filter((entry) => !entry.stopped && entry.next <= end)
+            .sort((a, b) => a.next - b.next)[0];
+          if (due === undefined) break;
+          now = due.next;
+          due.next += due.every;
+          due.tick();
+          await flush();
+        }
+        now = end;
+      },
+      running: () => ticks.filter((entry) => !entry.stopped).length,
+    };
+  }
+
+  it('keeps a healthy game that waits on a human well past the timeout', async () => {
+    const clock = manualTimers();
+    const health = { intervalMs: 5_000, timeoutMs: 30_000, timers: clock.timers };
+    const game = await startedGame(makeRig({ health }));
+    const before = game.aliceGame.frames.length;
+    const inputsBefore = game.port.sent.length;
+    await clock.advance(120_000);
+    expect(game.rig.registry.get(game.t.tableId)?.currentPhase).toBe('playing');
+    expect(game.port.pings).toBeGreaterThan(10);
+    expect(game.port.terminations).toEqual([]);
+    // Probes are never player traffic.
+    expect(game.aliceGame.frames.length).toBe(before);
+    expect(game.port.sent.length).toBe(inputsBefore);
+  });
+
+  it('ends a game whose worker stops answering, while another table keeps running', async () => {
+    const clock = manualTimers();
+    const ended: Array<{ attemptId: string; status: AttemptEndStatus }> = [];
+    const health = { intervalMs: 5_000, timeoutMs: 30_000, timers: clock.timers };
+    const rig = makeRig({ health, ended });
+    const stuck = await startedGame(rig);
+    const healthy = await startedGame(rig);
+    stuck.port.hung = true;
+    await clock.advance(40_000);
+    expect(stuck.port.terminations).toEqual(['workerFailure']);
+    expect(rig.registry.get(stuck.t.tableId)?.currentPhase).toBe('finished');
+    expect(stuck.aliceGame.errors()).toContain('The game was interrupted by a server fault.');
+    expect(ended.map((entry) => entry.status)).toEqual(['workerFailure']);
+    expect(rig.hub.stats.unhealthy).toBe(1);
+    expect(healthy.port.terminations).toEqual([]);
+    expect(rig.registry.get(healthy.t.tableId)?.currentPhase).toBe('playing');
+    // The stuck attempt's watchdog stopped; the healthy one's still runs.
+    expect(clock.running()).toBe(1);
+  });
+
+  it('fails setup, not the game, when a worker hangs before the game starts', async () => {
+    const clock = manualTimers();
+    const ended: Array<{ attemptId: string; status: AttemptEndStatus }> = [];
+    const health = { intervalMs: 5_000, timeoutMs: 30_000, timers: clock.timers };
+    const rig = makeRig({ health, ended });
+    const t = openTable(rig);
+    seatPlayer(rig, t, 'Alice', 'P1');
+    for (const seat of ['P2', 'P3', 'P4'] as const) {
+      rig.send(t.host, 'hostSetSeat', { seat, controller: 'bot' });
+    }
+    rig.send(t.host, 'hostStart');
+    await flush();
+    rig.ports[0]!.hung = true;
+    await clock.advance(40_000);
+    expect(ended.map((entry) => entry.status)).toEqual(['setupFailed']);
+    expect(rig.registry.get(t.tableId)?.currentPhase).toBe('finished');
   });
 });
 

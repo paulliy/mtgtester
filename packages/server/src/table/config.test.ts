@@ -32,6 +32,15 @@ describe('loadTableConfig', () => {
     );
   });
 
+  it('reads a turn cap and pace for scripted runs, and refuses bad values', () => {
+    expect(okConfig({ TABLE_TURN_CAP: '6', TABLE_PACE_MS: '0' })).toMatchObject({
+      turnCap: 6,
+      paceMs: 0,
+    });
+    expect(refusal({ TABLE_TURN_CAP: '0' }, ['--dev']).setting).toBe('TABLE_TURN_CAP');
+    expect(refusal({ TABLE_PACE_MS: 'fast' }, ['--dev']).setting).toBe('TABLE_PACE_MS');
+  });
+
   it('reads the defaults in dev mode: loopback, clock off, no test key', () => {
     const config = okConfig();
     expect(config).toMatchObject({
@@ -43,6 +52,8 @@ describe('loadTableConfig', () => {
       clock: 'off',
       maxTables: 8,
       oracleFixture: null,
+      turnCap: null,
+      paceMs: null,
     });
     expect(config.dbPath).toBe('/work/repo/data/tables/tables.sqlite');
     expect(config.webDir).toBe('/work/repo/apps/web/dist-table');
