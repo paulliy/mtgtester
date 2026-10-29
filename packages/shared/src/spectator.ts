@@ -151,6 +151,13 @@ export interface CommanderDamageEntry {
   sourceCardId: string;
   sourceName: string;
   damage: number;
+  /**
+   * Whether this damage alone eliminates the victim (21 from one commander, CR 903.10a), and how
+   * many more points it would take (0 once lethal). Computed with the engine's own rule so no
+   * client holds the number. Optional only because snapshots saved before them lack the fields.
+   */
+  lethal?: boolean;
+  remaining?: number;
 }
 
 /** Everything the spectator UI needs to draw one moment of the game. */
