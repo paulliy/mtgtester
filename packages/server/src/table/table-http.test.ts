@@ -250,7 +250,7 @@ describe('the table socket route', () => {
     const created = await createTable(ctx);
     const path = `/tables/${created.tableId}/ws`;
     const upgrade = await handle(ctx, request(path, { headers: { upgrade: 'websocket' } }));
-    expect(upgrade).toEqual({ upgrade: { tableId: created.tableId } });
+    expect(upgrade).toEqual({ upgrade: { tableId: created.tableId, address: '10.0.0.1' } });
     expect(asResponse(await handle(ctx, request(path))).status).toBe(426);
     const missing = asResponse(
       await handle(

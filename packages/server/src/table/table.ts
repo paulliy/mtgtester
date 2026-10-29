@@ -67,6 +67,8 @@ export interface TableLimits {
   maxConnections: number;
   /** How long a `finished` table lingers before `reapIfIdle` reaps it. */
   finishedIdleMs: number;
+  /** Takeovers of one seat (a second socket resuming it) allowed per minute (plan M5 task 2). */
+  takeoversPerMinute: number;
 }
 
 export const DEFAULT_TABLE_LIMITS: TableLimits = {
@@ -75,6 +77,7 @@ export const DEFAULT_TABLE_LIMITS: TableLimits = {
   pendingClaimsPerAddress: 2,
   maxConnections: 32,
   finishedIdleMs: 15 * 60_000,
+  takeoversPerMinute: 6,
 };
 
 export interface TableOptions {
@@ -225,6 +228,8 @@ export class Table {
   private finishedAt: number | null = null;
   private attempt: Attempt | null = null;
   private readonly seats = new Map<PlayerId, SeatRecord>();
+  /** When each seat was last taken over by a new socket, for the takeover limit. */
+  private readonly takeovers = new Map<PlayerId, number[]>();
   private readonly conns = new Map<string, Conn>();
   private readonly claims = new Map<string, Claim>();
 
@@ -626,6 +631,15 @@ export class Table {
     const effects: TableEffect[] = [];
     const previous = player.socketId;
     if (previous !== null && previous !== conn.socketId) {
+      // A seat bounced between sockets faster than a person reconnects is refused for a while.
+      const now = this.now();
+      const recent = (this.takeovers.get(seat) ?? []).filter((at) => now - at < 60_000);
+      if (recent.length >= this.limits.takeoversPerMinute) {
+        this.takeovers.set(seat, recent);
+        return refuse('throttled', { retryAfterMs: 60_000 - (now - recent[0]!) });
+      }
+      recent.push(now);
+      this.takeovers.set(seat, recent);
       effects.push(sendTo(previous, { type: 'seatTakenOver', payload: { seat } }), {
         type: 'close',
         socketId: previous,

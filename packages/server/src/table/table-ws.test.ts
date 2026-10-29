@@ -25,6 +25,7 @@ import {
   type AttemptEndStatus,
   type HealthOptions,
   type HubSocket,
+  type SocketLimits,
   type PostGameReader,
 } from './table-ws';
 import type { StartAttempt } from './table';
@@ -130,6 +131,7 @@ interface RigOptions {
   postGame?: PostGameReader;
   health?: HealthOptions;
   ended?: Array<{ attemptId: string; status: AttemptEndStatus }>;
+  socketLimits?: SocketLimits;
 }
 
 function makeRig(options: RigOptions = {}) {
@@ -172,6 +174,7 @@ function makeRig(options: RigOptions = {}) {
       })),
     ...(options.postGame === undefined ? {} : { postGame: options.postGame }),
     ...(options.health === undefined ? {} : { health: options.health }),
+    ...(options.socketLimits === undefined ? {} : { socketLimits: options.socketLimits }),
     ...(options.ended === undefined
       ? {}
       : {
@@ -1250,6 +1253,92 @@ describe('worker health', () => {
     await clock.advance(40_000);
     expect(ended.map((entry) => entry.status)).toEqual(['setupFailed']);
     expect(rig.registry.get(t.tableId)?.currentPhase).toBe('finished');
+  });
+});
+
+// ── Socket limits (M5) ──────────────────────────────────────────────────────────────────────
+
+describe('socket limits', () => {
+  /** Timers the test drives by hand. */
+  function limitTimers() {
+    let now = 0;
+    const due = new Map<number, { at: number; callback: () => void }>();
+    let next = 0;
+    return {
+      timers: {
+        now: () => now,
+        setTimeout: (callback: () => void, ms: number) => {
+          next += 1;
+          due.set(next, { at: now + ms, callback });
+          return next;
+        },
+        clearTimeout: (handle: unknown) => {
+          due.delete(handle as number);
+        },
+      },
+      advance(ms: number) {
+        now += ms;
+        for (const [id, entry] of [...due]) {
+          if (entry.at <= now) {
+            due.delete(id);
+            entry.callback();
+          }
+        }
+      },
+    };
+  }
+
+  it('closes a socket that has not joined, resumed or authenticated in time', () => {
+    const clock = limitTimers();
+    const rig = makeRig({
+      socketLimits: { preAuthMs: 10_000, messagesPerSecond: 20, timers: clock.timers },
+    });
+    const t = rig.newTable();
+    const idle = rig.connect(t.tableId);
+    const joined = rig.connect(t.tableId);
+    join(rig, joined, t.inviteCode, 'Ann');
+    clock.advance(10_000);
+    expect(idle.closed).toBe(true);
+    expect(idle.errors()).toEqual(['Join the table first.']);
+    expect(joined.closed).toBe(false);
+    expect(rig.hub.stats.preAuthClosed).toBe(1);
+  });
+
+  it('closes a socket that sends frames too fast, and lets a steady one through', () => {
+    const clock = limitTimers();
+    const rig = makeRig({
+      socketLimits: { preAuthMs: 10_000, messagesPerSecond: 5, timers: clock.timers },
+    });
+    const t = rig.newTable();
+    const steady = rig.connect(t.tableId);
+    join(rig, steady, t.inviteCode, 'Ann');
+    for (let i = 0; i < 20; i++) {
+      clock.advance(250);
+      rig.send(steady, 'leaveSeat');
+    }
+    expect(steady.closed).toBe(false);
+    const flood = rig.connect(t.tableId);
+    join(rig, flood, t.inviteCode, 'Bo');
+    for (let i = 0; i < 6; i++) rig.send(flood, 'leaveSeat');
+    expect(flood.closed).toBe(true);
+    expect(rig.hub.stats.rateClosed).toBe(1);
+  });
+
+  it('refuses a seat bounced between sockets faster than a person reconnects', () => {
+    const rig = makeRig();
+    const t = openTable(rig);
+    const alice = seatPlayer(rig, t, 'Alice', 'P1');
+    let last: FakeSocket | null = null;
+    for (let i = 0; i < 7; i++) {
+      last = rig.connect(t.tableId);
+      resume(rig, last, alice.seatToken);
+    }
+    // The first resume takes the seat from the lobby socket; six takeovers a minute are allowed.
+    expect(last!.errors()).toEqual(['Too many attempts. Wait a moment and try again.']);
+    rig.clock.t += 61_000;
+    const later = rig.connect(t.tableId);
+    resume(rig, later, alice.seatToken);
+    expect(later.errors()).toEqual([]);
   });
 });
 

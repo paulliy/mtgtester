@@ -20,47 +20,17 @@
 import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
 import { parseStrictJson } from '@mtg/shared';
-import { isLoopbackHostname, publicOriginFor, type TableConfig } from './config';
+import { publicOriginFor, type TableConfig } from './config';
+import { checkExposure, SocketLimiter } from './exposure';
+
+export { isLoopbackRequest } from './exposure';
 import type { TableRegistry } from './registry';
 import { TABLE_MAX_FRAME_CHARS, type HubSocket, type TableSocketHub } from './table-ws';
 import { constantTimeEqual } from './tokens';
 
-/** The Vite dev server's port, accepted as a page origin in development mode like the tester's. */
-const DEV_WEB_PORT = '5173';
 const MAX_BODY_CHARS = 4096;
 const MAX_SECRET_CHARS = 256;
 const TABLE_ID_PATTERN = /^[A-Za-z0-9_-]{16,64}$/;
-
-// ── Loopback check (development mode) ───────────────────────────────────────────────────────
-
-/**
- * Whether a request is loopback by `Host` and `Origin`. The `Host` header decides the target, so
- * a DNS name that resolves to 127.0.0.1 is refused; `Origin`, when present, must be a loopback
- * page on this server's port or the Vite dev server's.
- */
-export function isLoopbackRequest(request: Request, port: number): boolean {
-  let target: URL;
-  try {
-    const host = request.headers.get('host');
-    target = new URL(`http://${host ?? new URL(request.url).host}`);
-  } catch {
-    return false;
-  }
-  if (!isLoopbackHostname(target.hostname)) return false;
-  if (port > 0 && target.port !== String(port)) return false;
-  const origin = request.headers.get('origin');
-  if (origin === null) return true;
-  try {
-    const source = new URL(origin);
-    return (
-      source.protocol === 'http:' &&
-      isLoopbackHostname(source.hostname) &&
-      [String(port), DEV_WEB_PORT].includes(source.port)
-    );
-  } catch {
-    return false;
-  }
-}
 
 // ── Static files ────────────────────────────────────────────────────────────────────────────
 
@@ -247,7 +217,7 @@ export interface TableHttpContext {
 
 /** The request is a WebSocket upgrade for this table; the caller completes it. */
 export interface UpgradeRequest {
-  upgrade: { tableId: string };
+  upgrade: { tableId: string; address: string };
 }
 
 const json = (body: unknown, status = 200, headers: Record<string, string> = {}): Response =>
@@ -282,11 +252,12 @@ async function readBody(request: Request): Promise<string | null> {
 export async function handleTableRequest(
   ctx: TableHttpContext,
   request: Request,
-  address: string,
+  peer: string,
 ): Promise<Response | UpgradeRequest> {
-  if (ctx.config.dev && !isLoopbackRequest(request, ctx.boundPort())) {
-    return new Response('Forbidden origin or host', { status: 403 });
-  }
+  const exposure = checkExposure(ctx.config, request, peer, ctx.boundPort());
+  if (!exposure.ok) return new Response(exposure.reason, { status: exposure.status });
+  // Throttles and per-address caps key on the client, which a trusted proxy names.
+  const address = exposure.address;
   const url = new URL(request.url);
   const path = url.pathname;
   const method = request.method;
@@ -308,7 +279,7 @@ export async function handleTableRequest(
       if (method !== 'GET' || request.headers.get('upgrade')?.toLowerCase() !== 'websocket') {
         return json({ error: 'Upgrade required.' }, 426);
       }
-      return { upgrade: { tableId } };
+      return { upgrade: { tableId, address } };
     }
     if (method !== 'POST') return json({ error: 'Method not allowed.' }, 405, { allow: 'POST' });
     return tableSummary(ctx, request, address, tableId);
@@ -393,7 +364,16 @@ export interface TableServerDeps {
   hub: TableSocketHub;
   /** How often finished tables are checked for reaping. Default one minute. */
   reapIntervalMs?: number;
+  /** Per-address socket caps (plan M5 task 2). */
+  sockets?: SocketLimiter;
 }
+
+/** The largest inbound socket frame, in bytes (plan M5 task 2). */
+export const TABLE_MAX_PAYLOAD_BYTES = 256 * 1024;
+/** A socket silent this long (no frame, no pong) is closed. */
+export const TABLE_IDLE_TIMEOUT_S = 120;
+/** Outbound bytes a socket may have queued before it is closed as too slow to keep up. */
+export const TABLE_BACKPRESSURE_BYTES = 1024 * 1024;
 
 export interface RunningTableServer {
   readonly port: number;
@@ -408,21 +388,38 @@ export function startTableServer(deps: TableServerDeps): RunningTableServer {
   let boundPort = config.port;
   const ctx: TableHttpContext = { config, registry, files, boundPort: () => boundPort };
 
+  const limiter = deps.sockets ?? new SocketLimiter();
   const server = Bun.serve<SocketData, never>({
     port: config.port,
     hostname: config.host,
+    ...(config.tls !== null && {
+      tls: { cert: Bun.file(config.tls.certPath), key: Bun.file(config.tls.keyPath) },
+    }),
     fetch: async (request, srv) => {
-      const address = srv.requestIP(request)?.address ?? 'unknown';
-      const result = await handleTableRequest(ctx, request, address);
+      const peer = srv.requestIP(request)?.address ?? 'unknown';
+      const result = await handleTableRequest(ctx, request, peer);
       if (result instanceof Response) return result;
+      const address = result.upgrade.address;
+      if (!limiter.admit(address)) {
+        return new Response('Too many connections', {
+          status: 429,
+          headers: { 'retry-after': '60' },
+        });
+      }
       const upgraded = srv.upgrade(request, {
         data: { tableId: result.upgrade.tableId, socketId: crypto.randomUUID(), address },
       });
-      return upgraded ? undefined : new Response('WebSocket upgrade failed', { status: 400 });
+      if (upgraded) return undefined;
+      limiter.release(address);
+      return new Response('WebSocket upgrade failed', { status: 400 });
     },
     websocket: {
-      // Binary frames are not part of the protocol; the size cap is in UTF-16 units, bytes are 3x.
-      maxPayloadLength: TABLE_MAX_FRAME_CHARS * 3,
+      // Binary frames are not part of the protocol. The hub also caps a frame's text length.
+      maxPayloadLength: Math.min(TABLE_MAX_PAYLOAD_BYTES, TABLE_MAX_FRAME_CHARS * 3),
+      idleTimeout: TABLE_IDLE_TIMEOUT_S,
+      sendPings: true,
+      backpressureLimit: TABLE_BACKPRESSURE_BYTES,
+      closeOnBackpressureLimit: true,
       open: (ws) => {
         const socket: HubSocket = {
           id: ws.data.socketId,
@@ -436,7 +433,10 @@ export function startTableServer(deps: TableServerDeps): RunningTableServer {
         if (typeof raw !== 'string') return;
         hub.message(ws.data.socketId, raw);
       },
-      close: (ws) => hub.close(ws.data.socketId),
+      close: (ws) => {
+        limiter.release(ws.data.address);
+        hub.close(ws.data.socketId);
+      },
     },
   });
   boundPort = server.port ?? config.port;

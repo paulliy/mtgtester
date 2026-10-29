@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_TABLE_PORT,
+  DEV_ONLY_SETTINGS,
   PROXY_OR_ALLOWLIST_SETTINGS,
   loadTableConfig,
   publicOriginFor,
@@ -8,6 +9,14 @@ import {
 } from './config';
 
 const CWD = '/work/repo';
+/** A complete production configuration with the server's own certificate. */
+const PRODUCTION: Record<string, string> = {
+  TABLE_PUBLIC_ORIGIN: 'https://tables.example.com',
+  TABLE_ALLOWED_ORIGINS: 'https://tables.example.com, https://other.example.com',
+  TABLE_ALLOWED_HOSTS: 'tables.example.com,Tables.Example.com:8443',
+  TABLE_TLS_CERT: 'cert.pem',
+  TABLE_TLS_KEY: 'key.pem',
+};
 const KEY = 'ab'.repeat(32);
 
 function okConfig(env: Record<string, string> = {}, argv: string[] = ['--dev']): TableConfig {
@@ -23,13 +32,94 @@ function refusal(env: Record<string, string>, argv: string[]) {
 }
 
 describe('loadTableConfig', () => {
-  it('refuses to start without --dev (the M5 gate)', () => {
-    const error = refusal({}, []);
-    expect(error.code).toBe('devRequired');
-    expect(error.message).toContain('--dev');
-    expect(refusal({ TABLE_PORT: '4000' }, ['--oracle-fixture', 'f.json']).code).toBe(
-      'devRequired',
+  it('refuses production without the public origin and both allowlists, on any bind', () => {
+    for (const host of ['127.0.0.1', '0.0.0.0']) {
+      const error = refusal({ TABLE_HOST: host }, []);
+      expect(error.code).toBe('allowlistRequired');
+      expect(error.setting).toBe('TABLE_PUBLIC_ORIGIN');
+    }
+    expect(refusal({ ...PRODUCTION, TABLE_ALLOWED_HOSTS: '' }, []).setting).toBe(
+      'TABLE_ALLOWED_HOSTS',
     );
+    expect(refusal({ ...PRODUCTION, TABLE_ALLOWED_ORIGINS: '' }, []).setting).toBe(
+      'TABLE_ALLOWED_ORIGINS',
+    );
+  });
+
+  it('refuses production without TLS unless --insecure-lan', () => {
+    const { TABLE_TLS_CERT: _cert, TABLE_TLS_KEY: _key, ...noTls } = PRODUCTION;
+    expect(refusal(noTls, []).code).toBe('tlsRequired');
+    // An https public origin still needs TLS; --insecure-lan takes http origins.
+    const lan = okConfig(
+      {
+        TABLE_PUBLIC_ORIGIN: 'http://192.168.1.20:3002',
+        TABLE_ALLOWED_ORIGINS: 'http://192.168.1.20:3002',
+        TABLE_ALLOWED_HOSTS: '192.168.1.20:3002',
+        TABLE_HOST: '0.0.0.0',
+      },
+      ['--insecure-lan'],
+    );
+    expect(lan).toMatchObject({ dev: false, insecureLan: true, tls: null, trustedProxy: null });
+    expect(
+      refusal(
+        {
+          ...noTls,
+          TABLE_PUBLIC_ORIGIN: 'http://t.example.com',
+          TABLE_ALLOWED_ORIGINS: 'http://t.example.com',
+        },
+        [],
+      ).setting,
+    ).toBe('TABLE_PUBLIC_ORIGIN');
+  });
+
+  it('reads production with its own certificate or behind a TLS proxy', () => {
+    const own = okConfig(PRODUCTION, []);
+    expect(own).toMatchObject({
+      dev: false,
+      insecureLan: false,
+      publicOrigin: 'https://tables.example.com',
+      allowedOrigins: ['https://tables.example.com', 'https://other.example.com'],
+      allowedHosts: ['tables.example.com', 'tables.example.com:8443'],
+      tls: { certPath: '/work/repo/cert.pem', keyPath: '/work/repo/key.pem' },
+      trustedProxy: null,
+      clock: 'relaxed',
+    });
+    const { TABLE_TLS_CERT: _cert, TABLE_TLS_KEY: _key, ...noTls } = PRODUCTION;
+    const proxied = okConfig(
+      { ...noTls, TABLE_BEHIND_TLS_PROXY: '1', TABLE_TRUSTED_PROXY: '10.0.0.5' },
+      [],
+    );
+    expect(proxied).toMatchObject({ tls: null, trustedProxy: '10.0.0.5' });
+    expect(refusal({ ...noTls, TABLE_BEHIND_TLS_PROXY: '1' }, []).setting).toBe(
+      'TABLE_TRUSTED_PROXY',
+    );
+    expect(refusal({ ...PRODUCTION, TABLE_TLS_KEY: '' }, []).setting).toBe('TABLE_TLS_KEY');
+    expect(
+      refusal({ ...PRODUCTION, TABLE_BEHIND_TLS_PROXY: '1', TABLE_TRUSTED_PROXY: '10.0.0.5' }, [])
+        .code,
+    ).toBe('badValue');
+  });
+
+  it('refuses a public origin outside the allowed origins, and malformed entries', () => {
+    expect(
+      refusal({ ...PRODUCTION, TABLE_ALLOWED_ORIGINS: 'https://other.example.com' }, []).setting,
+    ).toBe('TABLE_ALLOWED_ORIGINS');
+    expect(refusal({ ...PRODUCTION, TABLE_ALLOWED_HOSTS: 'bad host' }, []).setting).toBe(
+      'TABLE_ALLOWED_HOSTS',
+    );
+    expect(
+      refusal({ ...PRODUCTION, TABLE_PUBLIC_ORIGIN: 'https://t.example.com/x' }, []).code,
+    ).toBe('badValue');
+  });
+
+  it('refuses development-only settings and an untimed table in production', () => {
+    for (const name of DEV_ONLY_SETTINGS) {
+      const value = name === 'TABLE_TEST_RNG_KEY' ? KEY : '5';
+      expect(refusal({ ...PRODUCTION, [name]: value }, []).code, name).toBe('devOnlySetting');
+    }
+    expect(refusal({ ...PRODUCTION, TABLE_CLOCK: 'off' }, []).code).toBe('devOnlySetting');
+    expect(okConfig({ ...PRODUCTION, TABLE_CLOCK: 'standard' }, []).clock).toBe('standard');
+    expect(refusal({}, ['--dev', '--insecure-lan']).code).toBe('badArgument');
   });
 
   it('reads a turn cap and pace for scripted runs, and refuses bad values', () => {
@@ -128,7 +218,6 @@ describe('loadTableConfig', () => {
       'fixture.json',
     );
     expect(refusal({}, ['--dev', '--oracle-fixture']).code).toBe('badArgument');
-    expect(refusal({}, ['--dev', '--insecure-lan']).code).toBe('badArgument');
     expect(refusal({}, ['--dev', 'extra']).code).toBe('badArgument');
   });
 

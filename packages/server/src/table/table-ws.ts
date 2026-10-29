@@ -105,6 +105,28 @@ export interface HealthOptions {
 
 export const DEFAULT_HEALTH: HealthOptions = { intervalMs: 5_000, timeoutMs: 30_000 };
 
+export interface SocketLimits {
+  /** A socket that has not joined, resumed a seat or authenticated as host by then is closed. */
+  preAuthMs: number;
+  /** Inbound frames per second a socket may send, in a burst of the same size. Above: closed. */
+  messagesPerSecond: number;
+  timers?: {
+    now(): number;
+    setTimeout(callback: () => void, ms: number): unknown;
+    clearTimeout(handle: unknown): void;
+  };
+}
+
+export const DEFAULT_SOCKET_LIMITS: SocketLimits = { preAuthMs: 10_000, messagesPerSecond: 20 };
+
+const realSocketTimers = {
+  now: () => Date.now(),
+  setTimeout: (callback: () => void, ms: number): unknown => setTimeout(callback, ms),
+  clearTimeout: (handle: unknown): void => {
+    clearTimeout(handle as ReturnType<typeof setTimeout>);
+  },
+};
+
 const realTimers: HealthTimers = {
   now: () => Date.now(),
   every: (ms, tick) => {
@@ -144,6 +166,8 @@ export interface TableWsDeps {
   ) => void | Promise<void>;
   /** Worker health probes. Omit to probe nothing (the in-process port is always reachable). */
   health?: HealthOptions;
+  /** Per-socket limits (plan M5 task 2). Defaults to `DEFAULT_SOCKET_LIMITS`. */
+  socketLimits?: SocketLimits;
   /** The table's disclosure policy. Defaults to `tablePolicy()`. */
   policy?: Readonly<DisclosurePolicy>;
 }
@@ -157,6 +181,10 @@ export interface TableWsStats {
   droppedUnbound: number;
   /** Attempts ended because their worker stopped answering health probes. */
   unhealthy: number;
+  /** Sockets closed for not authenticating in time. */
+  preAuthClosed: number;
+  /** Sockets closed for sending frames too fast. */
+  rateClosed: number;
 }
 
 // ── Fixed texts ─────────────────────────────────────────────────────────────────────────────
@@ -341,10 +369,23 @@ export class TableSocketHub {
     droppedStale: 0,
     droppedUnbound: 0,
     unhealthy: 0,
+    preAuthClosed: 0,
+    rateClosed: 0,
   };
+  private readonly limits: SocketLimits;
+  /** Per socket: its pre-authentication timer (null once authenticated) and its rate bucket. */
+  private readonly guards = new Map<
+    string,
+    { preAuth: unknown; tokens: number; refilledAt: number }
+  >();
 
   constructor(private readonly deps: TableWsDeps) {
     this.policy = deps.policy ?? tablePolicy();
+    this.limits = deps.socketLimits ?? DEFAULT_SOCKET_LIMITS;
+  }
+
+  private get timers(): NonNullable<SocketLimits['timers']> {
+    return this.limits.timers ?? realSocketTimers;
   }
 
   get stats(): Readonly<TableWsStats> {
@@ -359,10 +400,53 @@ export class TableSocketHub {
     if (runtime === null) return false;
     runtime.sockets.set(socket.id, socket);
     this.socketTables.set(socket.id, tableId);
+    const preAuth = this.timers.setTimeout(() => {
+      const guard = this.guards.get(socket.id);
+      if (guard === undefined || guard.preAuth === null) return;
+      this.counters.preAuthClosed += 1;
+      this.sendTo(runtime, socket.id, errorFrame('Join the table first.'));
+      this.closeSocket(runtime, socket.id);
+      this.close(socket.id);
+    }, this.limits.preAuthMs);
+    this.guards.set(socket.id, {
+      preAuth,
+      tokens: this.limits.messagesPerSecond,
+      refilledAt: this.timers.now(),
+    });
     return true;
   }
 
+  /** The socket proved itself: it joined, resumed a seat or authenticated as host. */
+  private authenticated(socketId: string): void {
+    const guard = this.guards.get(socketId);
+    if (guard === undefined || guard.preAuth === null) return;
+    this.timers.clearTimeout(guard.preAuth);
+    guard.preAuth = null;
+  }
+
+  /** Take one frame from the socket's bucket; false when it is sending too fast. */
+  private withinRate(socketId: string): boolean {
+    const guard = this.guards.get(socketId);
+    if (guard === undefined) return true;
+    const now = this.timers.now();
+    const rate = this.limits.messagesPerSecond;
+    guard.tokens = Math.min(rate, guard.tokens + ((now - guard.refilledAt) / 1000) * rate);
+    guard.refilledAt = now;
+    if (guard.tokens < 1) return false;
+    guard.tokens -= 1;
+    return true;
+  }
+
+  private dropGuard(socketId: string): void {
+    const guard = this.guards.get(socketId);
+    if (guard?.preAuth !== null && guard?.preAuth !== undefined) {
+      this.timers.clearTimeout(guard.preAuth);
+    }
+    this.guards.delete(socketId);
+  }
+
   close(socketId: string): void {
+    this.dropGuard(socketId);
     const tableId = this.socketTables.get(socketId);
     this.socketTables.delete(socketId);
     const runtime = tableId === undefined ? undefined : this.runtimes.get(tableId);
@@ -381,6 +465,13 @@ export class TableSocketHub {
     const runtime = tableId === undefined ? undefined : this.runtimes.get(tableId);
     const socket = runtime?.sockets.get(socketId);
     if (runtime === undefined || socket === undefined) return;
+    if (!this.withinRate(socketId)) {
+      this.counters.rateClosed += 1;
+      this.closeSocket(runtime, socketId);
+      // Forget it now: anything else it sent before the close lands is not read.
+      this.close(socketId);
+      return;
+    }
     if (text.length > TABLE_MAX_FRAME_CHARS) {
       this.sendTo(runtime, socketId, errorFrame(FRAME_TOO_LARGE));
       return;
@@ -418,13 +509,17 @@ export class TableSocketHub {
         run.stopHealth?.();
         void this.terminateQuiet(run.port, 'workerFailure');
       }
-      for (const socketId of runtime.sockets.keys()) this.socketTables.delete(socketId);
+      for (const socketId of runtime.sockets.keys()) {
+        this.socketTables.delete(socketId);
+        this.dropGuard(socketId);
+      }
       this.runtimes.delete(tableId);
     }
   }
 
   /** Stop every running game and close every socket (server shutdown). */
   async shutdown(): Promise<void> {
+    for (const socketId of [...this.guards.keys()]) this.dropGuard(socketId);
     const stops: Promise<void>[] = [];
     for (const runtime of this.runtimes.values()) {
       const run = runtime.run;
@@ -455,18 +550,24 @@ export class TableSocketHub {
     const table = runtime.table;
     const conn: Connection = { socketId: socket.id, address: socket.address };
     switch (message.type) {
-      case 'joinTable':
-        this.finish(runtime, socket, table.join(conn, message.payload));
+      case 'joinTable': {
+        const result = table.join(conn, message.payload);
+        if (result.ok) this.authenticated(socket.id);
+        this.finish(runtime, socket, result);
         return;
+      }
       case 'requestSeat':
         this.finish(runtime, socket, table.requestSeat(conn, message.payload));
         return;
       case 'leaveSeat':
         this.finish(runtime, socket, table.leaveSeat(conn));
         return;
-      case 'hostAuth':
-        this.finish(runtime, socket, table.hostAuth(conn, message.payload));
+      case 'hostAuth': {
+        const result = table.hostAuth(conn, message.payload);
+        if (result.ok) this.authenticated(socket.id);
+        this.finish(runtime, socket, result);
         return;
+      }
       case 'hostApprove':
         this.finish(runtime, socket, table.hostApprove(conn, message.payload));
         return;
@@ -493,7 +594,10 @@ export class TableSocketHub {
       case 'resumeSeat': {
         const result = table.resumeSeat(conn, message.payload);
         // Bind before the effects run, so the socket the table closes is already superseded.
-        if (result.ok) this.bindSeat(runtime, socket.id, result.seat);
+        if (result.ok) {
+          this.authenticated(socket.id);
+          this.bindSeat(runtime, socket.id, result.seat);
+        }
         this.finish(runtime, socket, result);
         return;
       }

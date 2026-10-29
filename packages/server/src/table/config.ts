@@ -1,12 +1,19 @@
 /**
- * `TABLE_*` settings and the command line of `serve:table` (ADR 0031 decision 9, plan M3 tasks 7
- * to 9). Pure: `loadTableConfig(env, argv)` reads nothing from the process and returns either the
- * settings or a typed error, so the refusals are testable without starting a server.
+ * `TABLE_*` settings and the command line of `serve:table` (ADR 0031 decision 9; plan M3 tasks 7
+ * to 9, M5 task 1). Pure: `loadTableConfig(env, argv)` reads nothing from the process and returns
+ * either the settings or a typed error, so the refusals are testable without starting a server.
  *
- * Until M5 lands the server runs in development mode only, so `loadTableConfig` refuses any
- * start without `--dev`. In development mode the clock may be off and a fixed test RNG key is
- * accepted, and the server refuses to start with any proxy, TLS or allowlist setting, because a
- * proxy or tunnel makes a loopback bind reachable from the internet (decision 9).
+ * Two modes:
+ *
+ * - **Development (`--dev`).** Loopback only. The clock may be off, and a fixed test RNG key and
+ *   the scripted-run settings are accepted. The server refuses to start with any proxy, TLS or
+ *   allowlist setting, because a proxy or tunnel makes a loopback bind reachable from elsewhere.
+ * - **Production.** Whatever address it binds (a tunnel can expose a loopback bind), the server
+ *   refuses to start without `TABLE_PUBLIC_ORIGIN`, `TABLE_ALLOWED_ORIGINS` and
+ *   `TABLE_ALLOWED_HOSTS`, and without TLS: its own certificate (`TABLE_TLS_CERT` and
+ *   `TABLE_TLS_KEY`), or a TLS proxy in front (`TABLE_BEHIND_TLS_PROXY=1` with the proxy's address
+ *   in `TABLE_TRUSTED_PROXY`). `--insecure-lan` waives TLS for a LAN game and then accepts only
+ *   peers in private address ranges. Development-only settings are refused.
  */
 
 import { isAbsolute, relative, resolve } from 'node:path';
@@ -29,8 +36,18 @@ export const PROXY_OR_ALLOWLIST_SETTINGS = [
 ] as const;
 
 export interface TableConfig {
-  /** Always true in M3: production mode ships with M5. */
-  dev: true;
+  /** Development mode (`--dev`): loopback only, test settings allowed. */
+  dev: boolean;
+  /** Production over plain HTTP on a LAN (`--insecure-lan`): private-range peers only. */
+  insecureLan: boolean;
+  /** Origins a page or socket may come from (production). Empty in development mode. */
+  allowedOrigins: string[];
+  /** `Host` values a request may name, lowercased `host[:port]` (production). */
+  allowedHosts: string[];
+  /** The server's own certificate, read from these files. */
+  tls: { certPath: string; keyPath: string } | null;
+  /** A TLS proxy in front: the peer at `trustedProxy` names the client in `X-Forwarded-For`. */
+  trustedProxy: string | null;
   port: number;
   host: string;
   /** Where invite links point; `null` means the loopback URL of the bound port. */
@@ -54,8 +71,12 @@ export interface TableConfig {
 }
 
 export type TableConfigErrorCode =
-  /** No `--dev`: production mode is not available yet (M5 gate). */
-  | 'devRequired'
+  /** Production mode without the allowlists or the public origin. */
+  | 'allowlistRequired'
+  /** Production mode without TLS and without `--insecure-lan`. */
+  | 'tlsRequired'
+  /** A development-only setting in production mode. */
+  | 'devOnlySetting'
   /** `--dev` with a proxy, TLS or allowlist setting. */
   | 'devWithProxySetting'
   | 'badArgument'
@@ -93,6 +114,7 @@ export function isLoopbackHostname(hostname: string): boolean {
 
 interface ParsedArgs {
   dev: boolean;
+  insecureLan: boolean;
   port: number | null;
   oracleFixture: string | null;
 }
@@ -104,11 +126,13 @@ function parsePort(value: string | undefined): number | null {
 }
 
 function parseArgs(argv: readonly string[]): ParsedArgs | TableConfigError {
-  const args: ParsedArgs = { dev: false, port: null, oracleFixture: null };
+  const args: ParsedArgs = { dev: false, insecureLan: false, port: null, oracleFixture: null };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--dev') {
       args.dev = true;
+    } else if (arg === '--insecure-lan') {
+      args.insecureLan = true;
     } else if (arg === '--oracle-fixture') {
       const value = argv[++i];
       if (value === undefined || value === '' || value.startsWith('--')) {
@@ -132,7 +156,7 @@ function parseArgs(argv: readonly string[]): ParsedArgs | TableConfigError {
     } else {
       return {
         code: 'badArgument',
-        message: `Unknown argument "${String(arg)}". Supported: --dev, --oracle-fixture <file>, --port <n>.`,
+        message: `Unknown argument "${String(arg)}". Supported: --dev, --insecure-lan, --oracle-fixture <file>, --port <n>.`,
         setting: String(arg),
       };
     }
@@ -165,24 +189,12 @@ export function loadTableConfig(
   const args = parseArgs(argv);
   if ('code' in args) return { ok: false, error: args };
 
-  if (!args.dev) {
+  if (args.dev && args.insecureLan) {
     return fail(
-      'devRequired',
-      'serve:table runs only in development mode until production exposure lands (ADR 0031, ' +
-        'plan M5). Re-run with --dev; it binds and serves loopback only.',
-      '--dev',
+      'badArgument',
+      '--insecure-lan is a production setting; development mode is loopback only.',
+      '--insecure-lan',
     );
-  }
-
-  for (const name of PROXY_OR_ALLOWLIST_SETTINGS) {
-    if (setting(env, name) !== undefined) {
-      return fail(
-        'devWithProxySetting',
-        `${name} is set. Development mode is loopback only and refuses to start with any proxy, ` +
-          'TLS or allowlist setting, because a proxy or tunnel can expose a loopback bind.',
-        name,
-      );
-    }
   }
 
   const portSetting = setting(env, 'TABLE_PORT');
@@ -194,45 +206,19 @@ export function loadTableConfig(
     }
     port = parsed;
   }
-
   const host = setting(env, 'TABLE_HOST') ?? DEFAULT_TABLE_HOST;
-  if (!isLoopbackHostname(host)) {
-    return fail(
-      'notLoopback',
-      `TABLE_HOST "${host}" is not a loopback address. Development mode binds loopback only.`,
-      'TABLE_HOST',
-    );
-  }
 
-  let publicOrigin: string | null = null;
-  const originSetting = setting(env, 'TABLE_PUBLIC_ORIGIN');
-  if (originSetting !== undefined) {
-    let url: URL;
-    try {
-      url = new URL(originSetting);
-    } catch {
-      return fail(
-        'badValue',
-        'TABLE_PUBLIC_ORIGIN must be an origin such as http://127.0.0.1:3002.',
-        'TABLE_PUBLIC_ORIGIN',
-      );
-    }
-    if (!isLoopbackHostname(url.hostname)) {
-      return fail(
-        'notLoopback',
-        'TABLE_PUBLIC_ORIGIN is not loopback. Development mode refuses non-loopback origins.',
-        'TABLE_PUBLIC_ORIGIN',
-      );
-    }
-    if (url.protocol !== 'http:' || url.pathname !== '/' || url.search !== '' || url.hash !== '') {
-      return fail(
-        'badValue',
-        'TABLE_PUBLIC_ORIGIN must be a plain http origin with no path.',
-        'TABLE_PUBLIC_ORIGIN',
-      );
-    }
-    publicOrigin = url.origin;
+  let exposure: Exposure;
+  if (args.dev) {
+    const dev = devExposure(env, host);
+    if ('code' in dev) return { ok: false, error: dev };
+    exposure = dev;
+  } else {
+    const production = productionExposure(env, args.insecureLan, cwd);
+    if ('code' in production) return { ok: false, error: production };
+    exposure = production;
   }
+  const publicOrigin = exposure.publicOrigin;
 
   const keySetting = setting(env, 'TABLE_TEST_RNG_KEY');
   let testRngKey: string | null = null;
@@ -247,10 +233,24 @@ export function loadTableConfig(
     testRngKey = keySetting.toLowerCase();
   }
 
-  // Development mode defaults the clock off; a preset may still be asked for.
-  const clockSetting = setting(env, 'TABLE_CLOCK') ?? 'off';
+  // Development mode defaults the clock off; production defaults to relaxed and never runs off.
+  const clockSetting = setting(env, 'TABLE_CLOCK') ?? (args.dev ? 'off' : 'relaxed');
   if (clockSetting !== 'off' && clockSetting !== 'relaxed' && clockSetting !== 'standard') {
     return fail('badValue', 'TABLE_CLOCK must be off, relaxed or standard.', 'TABLE_CLOCK');
+  }
+  if (!args.dev) {
+    if (clockSetting === 'off') {
+      return fail(
+        'devOnlySetting',
+        'An untimed table is for development mode only.',
+        'TABLE_CLOCK',
+      );
+    }
+    for (const name of DEV_ONLY_SETTINGS) {
+      if (setting(env, name) !== undefined) {
+        return fail('devOnlySetting', `${name} is for development mode only.`, name);
+      }
+    }
   }
 
   const maxSetting = setting(env, 'TABLE_MAX_TABLES');
@@ -297,7 +297,12 @@ export function loadTableConfig(
   return {
     ok: true,
     config: {
-      dev: true,
+      dev: args.dev,
+      insecureLan: args.insecureLan,
+      allowedOrigins: exposure.allowedOrigins,
+      allowedHosts: exposure.allowedHosts,
+      tls: exposure.tls,
+      trustedProxy: exposure.trustedProxy,
       port,
       host,
       publicOrigin,
@@ -312,6 +317,218 @@ export function loadTableConfig(
       clockScale,
     },
   };
+}
+
+/** Settings only development mode accepts. */
+export const DEV_ONLY_SETTINGS = [
+  'TABLE_TEST_RNG_KEY',
+  'TABLE_TURN_CAP',
+  'TABLE_PACE_MS',
+  'TABLE_CLOCK_SCALE',
+] as const;
+
+/** Who may reach the server, and how. */
+interface Exposure {
+  publicOrigin: string | null;
+  allowedOrigins: string[];
+  allowedHosts: string[];
+  tls: { certPath: string; keyPath: string } | null;
+  trustedProxy: string | null;
+}
+
+/** Development mode: loopback only, and no proxy, TLS or allowlist setting at all. */
+function devExposure(
+  env: Readonly<Record<string, string | undefined>>,
+  host: string,
+): Exposure | TableConfigError {
+  for (const name of PROXY_OR_ALLOWLIST_SETTINGS) {
+    if (setting(env, name) !== undefined) {
+      return {
+        code: 'devWithProxySetting',
+        message:
+          `${name} is set. Development mode is loopback only and refuses to start with any ` +
+          'proxy, TLS or allowlist setting, because a proxy or tunnel can expose a loopback bind.',
+        setting: name,
+      };
+    }
+  }
+  if (!isLoopbackHostname(host)) {
+    return {
+      code: 'notLoopback',
+      message: `TABLE_HOST "${host}" is not a loopback address. Development mode binds loopback only.`,
+      setting: 'TABLE_HOST',
+    };
+  }
+  let publicOrigin: string | null = null;
+  const originSetting = setting(env, 'TABLE_PUBLIC_ORIGIN');
+  if (originSetting !== undefined) {
+    const origin = parseOrigin(originSetting, 'TABLE_PUBLIC_ORIGIN', ['http:', 'https:']);
+    if (typeof origin !== 'string') return origin;
+    if (!isLoopbackHostname(new URL(origin).hostname)) {
+      return {
+        code: 'notLoopback',
+        message:
+          'TABLE_PUBLIC_ORIGIN is not loopback. Development mode refuses non-loopback origins.',
+        setting: 'TABLE_PUBLIC_ORIGIN',
+      };
+    }
+    if (!origin.startsWith('http:')) {
+      return {
+        code: 'badValue',
+        message: 'TABLE_PUBLIC_ORIGIN must be a plain http origin in development mode.',
+        setting: 'TABLE_PUBLIC_ORIGIN',
+      };
+    }
+    publicOrigin = origin;
+  }
+  return { publicOrigin, allowedOrigins: [], allowedHosts: [], tls: null, trustedProxy: null };
+}
+
+/**
+ * Production: the allowlists and the public origin always, and TLS unless `--insecure-lan`.
+ * The rules hold for any bind address, loopback included.
+ */
+function productionExposure(
+  env: Readonly<Record<string, string | undefined>>,
+  insecureLan: boolean,
+  cwd: string,
+): Exposure | TableConfigError {
+  const schemes = insecureLan ? ['http:', 'https:'] : ['https:'];
+  const originSetting = setting(env, 'TABLE_PUBLIC_ORIGIN');
+  const originsSetting = setting(env, 'TABLE_ALLOWED_ORIGINS');
+  const hostsSetting = setting(env, 'TABLE_ALLOWED_HOSTS');
+  for (const [name, value] of [
+    ['TABLE_PUBLIC_ORIGIN', originSetting],
+    ['TABLE_ALLOWED_ORIGINS', originsSetting],
+    ['TABLE_ALLOWED_HOSTS', hostsSetting],
+  ] as const) {
+    if (value === undefined) {
+      return {
+        code: 'allowlistRequired',
+        message:
+          `${name} is required outside development mode, whatever address the server binds: ` +
+          'a tunnel or proxy can expose a loopback bind.',
+        setting: name,
+      };
+    }
+  }
+  const publicOrigin = parseOrigin(originSetting!, 'TABLE_PUBLIC_ORIGIN', schemes);
+  if (typeof publicOrigin !== 'string') return publicOrigin;
+  const allowedOrigins: string[] = [];
+  for (const entry of originsSetting!.split(',').map((item) => item.trim())) {
+    if (entry === '') continue;
+    const origin = parseOrigin(entry, 'TABLE_ALLOWED_ORIGINS', schemes);
+    if (typeof origin !== 'string') return origin;
+    allowedOrigins.push(origin);
+  }
+  if (!allowedOrigins.includes(publicOrigin)) {
+    return {
+      code: 'badValue',
+      message: 'TABLE_ALLOWED_ORIGINS must include TABLE_PUBLIC_ORIGIN, where invite links point.',
+      setting: 'TABLE_ALLOWED_ORIGINS',
+    };
+  }
+  const allowedHosts: string[] = [];
+  for (const entry of hostsSetting!.split(',').map((item) => item.trim().toLowerCase())) {
+    if (entry === '') continue;
+    if (!/^[a-z0-9.-]+(:\d{1,5})?$|^\[[0-9a-f:]+\](:\d{1,5})?$/.test(entry)) {
+      return {
+        code: 'badValue',
+        message: `TABLE_ALLOWED_HOSTS entry "${entry}" is not a host or host:port.`,
+        setting: 'TABLE_ALLOWED_HOSTS',
+      };
+    }
+    allowedHosts.push(entry);
+  }
+  if (allowedHosts.length === 0) {
+    return {
+      code: 'allowlistRequired',
+      message: 'TABLE_ALLOWED_HOSTS names no host.',
+      setting: 'TABLE_ALLOWED_HOSTS',
+    };
+  }
+
+  const cert = setting(env, 'TABLE_TLS_CERT');
+  const key = setting(env, 'TABLE_TLS_KEY');
+  const behindProxy = setting(env, 'TABLE_BEHIND_TLS_PROXY');
+  const proxy = setting(env, 'TABLE_TRUSTED_PROXY');
+  if ((cert === undefined) !== (key === undefined)) {
+    return {
+      code: 'badValue',
+      message: 'TABLE_TLS_CERT and TABLE_TLS_KEY go together.',
+      setting: cert === undefined ? 'TABLE_TLS_CERT' : 'TABLE_TLS_KEY',
+    };
+  }
+  if (behindProxy !== undefined && behindProxy !== '1') {
+    return {
+      code: 'badValue',
+      message: 'TABLE_BEHIND_TLS_PROXY must be 1 when set.',
+      setting: 'TABLE_BEHIND_TLS_PROXY',
+    };
+  }
+  if ((behindProxy === '1') !== (proxy !== undefined)) {
+    return {
+      code: 'badValue',
+      message:
+        'TABLE_BEHIND_TLS_PROXY=1 and TABLE_TRUSTED_PROXY (the proxy address that may name the ' +
+        'client in X-Forwarded-For) go together.',
+      setting: proxy === undefined ? 'TABLE_TRUSTED_PROXY' : 'TABLE_BEHIND_TLS_PROXY',
+    };
+  }
+  if (cert !== undefined && behindProxy === '1') {
+    return {
+      code: 'badValue',
+      message: 'Use the server certificate or a TLS proxy, not both.',
+      setting: 'TABLE_BEHIND_TLS_PROXY',
+    };
+  }
+  const tls =
+    cert === undefined || key === undefined
+      ? null
+      : { certPath: resolve(cwd, cert), keyPath: resolve(cwd, key) };
+  if (tls === null && behindProxy === undefined && !insecureLan) {
+    return {
+      code: 'tlsRequired',
+      message:
+        'Outside development mode the server needs TLS: set TABLE_TLS_CERT and TABLE_TLS_KEY, ' +
+        'or TABLE_BEHIND_TLS_PROXY=1 with TABLE_TRUSTED_PROXY. For a LAN game without TLS, pass ' +
+        '--insecure-lan.',
+    };
+  }
+  return { publicOrigin, allowedOrigins, allowedHosts, tls, trustedProxy: proxy ?? null };
+}
+
+/** A plain origin with one of `schemes`, normalized, or the error naming `name`. */
+function parseOrigin(
+  value: string,
+  name: string,
+  schemes: readonly string[],
+): string | TableConfigError {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return {
+      code: 'badValue',
+      message: `${name} must be an origin such as https://tables.example.com.`,
+      setting: name,
+    };
+  }
+  if (
+    !schemes.includes(url.protocol) ||
+    url.pathname !== '/' ||
+    url.search !== '' ||
+    url.hash !== '' ||
+    url.username !== '' ||
+    url.password !== ''
+  ) {
+    return {
+      code: 'badValue',
+      message: `${name} must be a plain ${schemes.join(' or ').replaceAll(':', '')} origin with no path.`,
+      setting: name,
+    };
+  }
+  return url.origin;
 }
 
 /** An optional whole-number setting within bounds: the value, `null` when unset, or `'bad'`. */

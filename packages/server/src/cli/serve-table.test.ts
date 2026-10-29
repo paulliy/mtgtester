@@ -14,12 +14,12 @@ function run(args: string[], env: Record<string, string> = {}) {
 }
 
 describe('serve:table startup', () => {
-  it('refuses to start without --dev', () => {
+  it('refuses to start outside dev mode without the allowlists and the public origin', () => {
     const result = run([]);
     expect(result.error).toBeUndefined();
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('refused to start');
-    expect(result.stderr).toContain('--dev');
+    expect(result.stderr).toContain('TABLE_PUBLIC_ORIGIN');
     // It stopped before printing a host secret or listening.
     expect(result.stdout).not.toContain('Host secret');
   });
@@ -32,7 +32,8 @@ describe('serve:table startup', () => {
     expect(result.stdout).not.toContain('Host secret');
   });
 
-  it('refuses an unknown argument', () => {
+  it('refuses an unknown argument, and --insecure-lan in dev mode', () => {
+    expect(run(['--dev', '--everywhere']).stderr).toContain('--everywhere');
     const result = run(['--dev', '--insecure-lan']);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('--insecure-lan');
