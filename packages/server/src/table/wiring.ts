@@ -50,11 +50,12 @@ export function wireTables(deps: TableWiringDeps): TableWiring {
     clock: config.clock,
     // Every player sees the no-TLS banner at an --insecure-lan table (plan M5 task 5).
     insecureLan: config.insecureLan,
+    ...(config.hostSecret !== null && { hostSecret: config.hostSecret }),
   });
   const cardsFor = workerCardsFor({ index: deps.index, pool: deps.pool, banned: deps.banned });
 
   const buildConfig = (attempt: Parameters<typeof buildSessionConfig>[0]): TableSessionConfig => {
-    const session = buildSessionConfig(attempt, {
+    const built = buildSessionConfig(attempt, {
       dbPath: config.dbPath,
       dev: config.dev,
       ...(config.testRngKey !== null && { testRngKey: config.testRngKey }),
@@ -64,6 +65,9 @@ export function wireTables(deps: TableWiringDeps): TableWiring {
       clock: config.clock,
       ...(config.clockScale !== null && { clockScale: config.clockScale }),
     });
+    // Development mode can shrink the engine's budget to force a halt (end-to-end tests).
+    const session =
+      config.maxStepWork === null ? built : { ...built, maxStepWork: config.maxStepWork };
     // The manifest is committed before the worker exists, so a worker that never reaches game
     // start still leaves a record of what was approved and which key was drawn.
     const manifest: TableAttemptManifest = {

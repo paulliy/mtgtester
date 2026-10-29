@@ -177,6 +177,16 @@ describe('suite integrity', () => {
     );
     expect(errors).toEqual([expect.stringContaining('apps/web/vite.config.ts: defines a `test`')]);
   });
+
+  it('reads a Vite config written as a function of the mode', () => {
+    const { errors } = checkSuiteIntegrity(
+      repo({
+        'apps/web/vite.config.ts':
+          'export default defineConfig(({ mode }) => ({ test: { include: [] } }));',
+      }),
+    );
+    expect(errors).toEqual([expect.stringContaining('apps/web/vite.config.ts: defines a `test`')]);
+  });
 });
 
 describe('this repository', () => {

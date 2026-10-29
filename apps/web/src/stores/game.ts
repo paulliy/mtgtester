@@ -12,6 +12,7 @@ import type {
   AiAnnotation,
   AiReflection,
   CardTestScenarioMetadata,
+  ClientToServerMessage,
   ComputeHaltedPayload,
   DealDraftPayload,
   DealObligation,
@@ -303,6 +304,16 @@ export const useGameStore = defineStore('game', () => {
   );
 
   let socket: GameSocket | null = null;
+  /**
+   * Table mode (multiplayer M6): the table store owns the socket, feeds this store its game
+   * frames through `receive`, and carries this store's in-game answers. Null in the tester.
+   */
+  let tableTransport: { send(message: ClientToServerMessage): void } | null = null;
+
+  function send(message: ClientToServerMessage): void {
+    if (tableTransport !== null) tableTransport.send(message);
+    else socket?.send(message);
+  }
   let pendingRecentDeckSeat: PlayerId | null = null;
   /**
    * The named bot pod a start was requested with, held until the server confirms that start.
@@ -363,10 +374,13 @@ export const useGameStore = defineStore('game', () => {
           case 'singlePlayer':
             break;
           case 'table':
-            // The tester viewer has no table UI (multiplayer M6); a table game is not adopted.
-            resumePending = false;
-            errors.value = ['This viewer cannot join a table game.'];
-            return;
+            // Only the table app adopts a table game; the tester viewer never does.
+            if (tableTransport === null) {
+              resumePending = false;
+              errors.value = ['This viewer cannot join a table game.'];
+              return;
+            }
+            break;
           default:
             assertNever(startedMode, 'gameStarted gameMode');
         }
@@ -595,7 +609,15 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  /** Hand the store to a table's socket (`stores/table.ts`), or back to its own with null. */
+  function useTableTransport(
+    transport: { send(message: ClientToServerMessage): void } | null,
+  ): void {
+    tableTransport = transport;
+  }
+
   function connect(): void {
+    if (tableTransport !== null) return;
     socket ??= new GameSocket(handle, (next) => {
       connection.value = next;
       // A start whose answer never arrived is not a start either.
@@ -605,7 +627,7 @@ export const useGameStore = defineStore('game', () => {
       }
       if (next === 'open' && sessionToken.value !== null && gameMode.value === 'singlePlayer') {
         resumePending = true;
-        socket?.send({
+        send({
           type: 'resumeGame',
           payload: { sessionToken: sessionToken.value },
         });
@@ -653,7 +675,7 @@ export const useGameStore = defineStore('game', () => {
       ...(requestedSeed !== undefined && requestedSeed !== '' && { seed: requestedSeed }),
       ...(previewId !== undefined && { previewId }),
     };
-    socket?.send({
+    send({
       type: 'startGame',
       payload:
         mode === 'singlePlayer'
@@ -665,7 +687,7 @@ export const useGameStore = defineStore('game', () => {
   function startCardTestScenario(scenarioId: string): void {
     connect();
     errors.value = [];
-    socket?.send({
+    send({
       type: 'startCardTestScenario',
       payload: { scenarioId },
     });
@@ -676,7 +698,7 @@ export const useGameStore = defineStore('game', () => {
    * past this position (brief §10.1), so watching is what pays for the next turns.
    */
   function jumpToTurn(turn: number, sequence?: number): void {
-    socket?.send({
+    send({
       type: 'jumpToTurn',
       payload: sequence !== undefined ? { turn, sequence } : { turn },
     });
@@ -750,12 +772,12 @@ export const useGameStore = defineStore('game', () => {
 
   function setPlaybackMode(mode: PlaybackMode): void {
     playbackMode.value = mode;
-    socket?.send({ type: 'setPlaybackMode', payload: { mode, paceMs: paceMs.value } });
+    send({ type: 'setPlaybackMode', payload: { mode, paceMs: paceMs.value } });
   }
 
   function setPace(ms: number): void {
     paceMs.value = Math.max(0, ms);
-    socket?.send({
+    send({
       type: 'setPlaybackMode',
       payload: { mode: playbackMode.value, paceMs: paceMs.value },
     });
@@ -788,7 +810,7 @@ export const useGameStore = defineStore('game', () => {
   function resolveHeldDecision(actionId: number): void {
     const held = heldDecision.value;
     if (held === null) return;
-    socket?.send({
+    send({
       type: 'resolveHeldDecision',
       payload: { requestId: held.request.requestId, actionId },
     });
@@ -835,7 +857,7 @@ export const useGameStore = defineStore('game', () => {
     if (type !== 'pass' && type !== 'passAndYieldTurn') {
       lastPlayerActionSequence.value = log.value.at(-1)?.sequence ?? null;
     }
-    socket?.send({
+    send({
       type: 'submitPlayerAction',
       payload: {
         requestId: pending.request.requestId,
@@ -864,7 +886,7 @@ export const useGameStore = defineStore('game', () => {
   function yieldPlayerAbility(actionId: number, mode: 'always' | 'smart' = 'always'): void {
     const pending = playerAction.value;
     if (pending === null) return;
-    socket?.send({
+    send({
       type: 'yieldPlayerAbility',
       payload: {
         requestId: pending.request.requestId,
@@ -876,18 +898,18 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function resumePlayerAbility(key: string): void {
-    socket?.send({ type: 'resumePlayerAbility', payload: { key } });
+    send({ type: 'resumePlayerAbility', payload: { key } });
   }
 
   /** Out-of-band: cancel an active "pass and yield until end of turn" before it lapses on its own. */
   function cancelYield(): void {
-    socket?.send({ type: 'cancelYield', payload: {} });
+    send({ type: 'cancelYield', payload: {} });
   }
 
   function setDebugFlags(next: DebugFlags): void {
     const wasShowingReasoning = debugFlags.value.showAIResponses;
     debugFlags.value = { ...next };
-    socket?.send({ type: 'setDebugFlags', payload: { flags: debugFlags.value } });
+    send({ type: 'setDebugFlags', payload: { flags: debugFlags.value } });
     // The live stream only carries notes recorded while the flag was on, so switching it on
     // mid-game would otherwise show reasoning starting from now with no history behind it.
     if (!wasShowingReasoning && next.showAIResponses) void loadAnnotations();
@@ -895,7 +917,7 @@ export const useGameStore = defineStore('game', () => {
 
   function proposeDeal(terms: DealTerms): void {
     lastDealOutcome.value = null;
-    socket?.send({ type: 'proposeDeal', payload: terms });
+    send({ type: 'proposeDeal', payload: terms });
   }
 
   function answerDeal(
@@ -904,7 +926,7 @@ export const useGameStore = defineStore('game', () => {
     counter?: { obligations: DealObligation[]; rounds: number },
   ): void {
     lastDealOutcome.value = null;
-    socket?.send({
+    send({
       type: 'answerDeal',
       payload:
         answer === 'decline' && counter !== undefined
@@ -916,11 +938,11 @@ export const useGameStore = defineStore('game', () => {
   function requestDealDraft(text: string): void {
     dealDraft.value = null;
     dealDraftPending.value = true;
-    socket?.send({ type: 'draftDeal', payload: { text } });
+    send({ type: 'draftDeal', payload: { text } });
   }
 
   function abandonGame(): void {
-    socket?.send({ type: 'abandonGame', payload: {} });
+    send({ type: 'abandonGame', payload: {} });
     gameId.value = null;
     resetDiplomacySeat();
     state.value = null;
@@ -960,6 +982,9 @@ export const useGameStore = defineStore('game', () => {
     autoConfirmActions,
     reducedMotion,
     cueBatch,
+    /** Table mode: a game frame from the table socket. */
+    receive: handle,
+    useTableTransport,
     halt,
     heldDecision,
     gameOver,

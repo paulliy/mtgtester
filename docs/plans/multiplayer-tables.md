@@ -1,7 +1,8 @@
 # Multiplayer tables
 
 Decision record: [ADR 0031](../decisions/0031-multiplayer-tables.md). Status: accepted
-(2026-10-29), in progress. Presentation work is a separate track,
+(2026-10-29); M1 to M6 delivered on PR #44, M7 open. Two exit items are the owner's: the manual
+LAN game across two machines (M5) and making `table-e2e` a required check (M6). Presentation work is a separate track,
 [server-computed presentation](server-computed-presentation.md)
 ([ADR 0032](../decisions/0032-server-computed-presentation.md)).
 

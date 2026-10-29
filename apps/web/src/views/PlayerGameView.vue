@@ -1283,7 +1283,15 @@ function abandon(): void {
         />
         Reduce motion
       </label>
-      <button type="button" class="abandon" @click="confirmingAbandon = true">Abandon</button>
+      <!-- A table's game belongs to the table: only its host can end it, from the table bar. -->
+      <button
+        v-if="store.gameMode !== 'table'"
+        type="button"
+        class="abandon"
+        @click="confirmingAbandon = true"
+      >
+        Abandon
+      </button>
     </div>
 
     <div v-if="store.connection !== 'open'" class="paused">

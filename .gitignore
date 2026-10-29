@@ -5,6 +5,7 @@ node_modules/
 dist/
 *.tsbuildinfo
 apps/web/dist/
+apps/web/dist-table/
 .vite/
 
 # Test / coverage artifacts

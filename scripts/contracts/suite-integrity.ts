@@ -125,6 +125,9 @@ function configObject(source: ts.SourceFile, path: string): ts.ObjectLiteralExpr
         const first = expression.arguments[0];
         if (first === undefined) break;
         expression = first;
+      } else if (ts.isArrowFunction(expression) && !ts.isBlock(expression.body)) {
+        // `defineConfig(({ mode }) => ({...}))`: the object the function returns.
+        expression = expression.body;
       } else if (
         ts.isAsExpression(expression) ||
         ts.isSatisfiesExpression(expression) ||

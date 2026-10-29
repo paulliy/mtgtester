@@ -131,6 +131,16 @@ describe('loadTableConfig', () => {
     expect(refusal({ TABLE_PACE_MS: 'fast' }, ['--dev']).setting).toBe('TABLE_PACE_MS');
   });
 
+  it('reads a fixed host secret and step budget for end-to-end tests, and refuses bad values', () => {
+    expect(
+      okConfig({ TABLE_HOST_SECRET: 'e2e-host-secret-0001', TABLE_MAX_STEP_WORK: '1' }),
+    ).toMatchObject({ hostSecret: 'e2e-host-secret-0001', maxStepWork: 1 });
+    expect(okConfig()).toMatchObject({ hostSecret: null, maxStepWork: null });
+    expect(refusal({ TABLE_HOST_SECRET: 'short' }, ['--dev']).setting).toBe('TABLE_HOST_SECRET');
+    expect(refusal({ TABLE_HOST_SECRET: 'has spaces in it ok?' }, ['--dev']).code).toBe('badValue');
+    expect(refusal({ TABLE_MAX_STEP_WORK: '0' }, ['--dev']).setting).toBe('TABLE_MAX_STEP_WORK');
+  });
+
   it('reads the defaults in dev mode: loopback, clock off, no test key', () => {
     const config = okConfig();
     expect(config).toMatchObject({
@@ -145,6 +155,8 @@ describe('loadTableConfig', () => {
       turnCap: null,
       paceMs: null,
       clockScale: null,
+      hostSecret: null,
+      maxStepWork: null,
     });
     expect(config.dbPath).toBe('/work/repo/data/tables/tables.sqlite');
     expect(config.webDir).toBe('/work/repo/apps/web/dist-table');

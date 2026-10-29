@@ -79,6 +79,7 @@ export default tseslint.config(
     // Not linted: build output, dependencies, and vendored data/docs.
     ignores: [
       '**/dist/**',
+      '**/dist-table/**',
       '**/node_modules/**',
       '**/*.tsbuildinfo',
       'coverage/**',

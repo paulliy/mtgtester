@@ -4,13 +4,14 @@ This Bun/TypeScript monorepo contains a working local Commander simulator:
 
 - `packages/engine`: authoritative deterministic rules engine.
 - `packages/bot`: seeded heuristic decision provider and bounded combat search.
-- `packages/server`: human/bot/LLM orchestration, deck import, SQLite, batches, AI benchmarks, and HTTP/WebSocket APIs.
-- `apps/web`: Vue 3 spectator and single-player UI, including the Card Test Lab.
+- `packages/server`: human/bot/LLM orchestration, deck import, SQLite, batches, AI benchmarks, and HTTP/WebSocket APIs. `serve:table` is the separate table server ([ADR 0031](../decisions/0031-multiplayer-tables.md)): one worker per game, clocks and fallback bots, and the exposure rules in [table hosting](table-hosting.md).
+- `apps/web`: Vue 3 spectator and single-player UI, including the Card Test Lab. `--mode table` builds the table app (lobby, table board, post-game replay) into `apps/web/dist-table`, a bundle with no tester views.
 - `packages/shared`: cross-package game, protocol, view, database, and batch types.
 
-Spectator play, one-human-versus-three-opponent play, replay, supported-pool decks, imports, batches, and statistics are implemented. The optional LLM provider is OpenAI-compatible (configured through `.env.example`); random and heuristic bot providers do not need an API key.
+Spectator play, one-human-versus-three-opponent play, replay, supported-pool decks, imports, batches, and statistics are implemented. Tables for two to four people with bots in the empty seats are implemented end to end (multiplayer plan M1–M6); `bun run test:e2e:table` plays one in two browser contexts against the built bundle, and `bun run dev --table` runs the table app with a dev server. The optional LLM provider is OpenAI-compatible (configured through `.env.example`); random and heuristic bot providers do not need an API key.
 
 ## Known residual risks
 
 - Full list: [audit remediation](../reviews/audit-remediation-2026-09-05.md).
+- Tables: a manual LAN game across two machines with `--insecure-lan` is still owed, and the served table bundle has not had its own security review. See [table server security](../reviews/table-server-security-2026-10-29.md).
 - Browser-trial payment regression: covered by focused normal-path tests and `scripts/reproduce-browser-payment.ts`, which reuses the original derived seed. The original generated deck configuration was not captured, so do not describe that script as an exact full-game replay. See [browser trial](../reviews/browser-experience-2026-09-05.md).

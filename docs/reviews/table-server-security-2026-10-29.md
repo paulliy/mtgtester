@@ -11,35 +11,35 @@ and accepted items are listed with their reasons.
 
 ## Checklist
 
-| #   | Area          | Check                                                                                                             | Result                                                           |
-| --- | ------------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| 1   | Start-up      | Outside `--dev`: public origin, both allowlists, and TLS or `--insecure-lan`, on any bind                         | Pass (`config.test.ts`, `serve-table.test.ts`)                   |
-| 2   | Start-up      | `--dev` refuses every proxy, TLS and allowlist setting and any non-loopback host or origin                        | Pass                                                             |
-| 3   | Start-up      | Dev-only settings (fixed RNG key, turn cap, pace, clock scale, clock off) refused outside `--dev`                 | Pass                                                             |
-| 4   | Requests      | `Host` in the allowlist and any `Origin` in the allowlist, before routing, socket upgrades included               | Pass (`exposure.test.ts`)                                        |
-| 5   | Requests      | Behind a proxy: only the trusted proxy connects; the client is the rightmost `X-Forwarded-For` entry              | Pass                                                             |
-| 6   | Requests      | `--insecure-lan`: private-range peers only; a loopback peer naming a public host refused without a proxy          | Pass                                                             |
-| 7   | Requests      | Request bodies capped before buffering                                                                            | Fixed here (finding M-2)                                         |
-| 8   | Pages         | `frame-ancestors 'none'`, `nosniff`, `no-referrer`; only manifest files served; encoded `..` refused              | Pass (`table-http.test.ts`)                                      |
-| 9   | Pages         | Table database outside the served directory                                                                       | Pass (refused at start-up)                                       |
-| 10  | Secrets       | Host secret, host tokens and seat tokens 256-bit, invite codes 128-bit, compared in constant time                 | Pass (`tokens.test.ts`)                                          |
-| 11  | Secrets       | Failed secrets, invites and tokens throttled per address with a growing delay, not a lockout                      | Pass                                                             |
-| 12  | Secrets       | Invite code only in the URL fragment and request bodies, never in a path or query                                 | Pass                                                             |
-| 13  | Secrets       | Seat token never printed by the agent client; never reissued to the host mid-game                                 | Pass                                                             |
-| 14  | Sockets       | 256 KiB frames; 10-second pre-authentication; 20 frames a second; idle timeout with pings; backpressure close     | Pass (`table-ws.test.ts`)                                        |
-| 15  | Sockets       | Per-address caps on open sockets and opens a minute, with bounded memory                                          | Fixed here (finding M-1)                                         |
-| 16  | Sockets       | Seat takeovers limited to six a minute; a superseded socket cannot act with a valid id and revision               | Pass                                                             |
-| 17  | Authority     | Seat taken from the socket binding, never from a payload; tester messages refused                                 | Pass                                                             |
-| 18  | Authority     | Host-only messages need `hostAuth`; seats change only in `open`; no seat without approval                         | Pass (`table.test.ts`)                                           |
-| 19  | Disclosure    | Every live frame scanned: key, seed, full state, debug, AI notes, raw halt text, engine ids, other hands, cues    | Pass (`frame-scan.ts` over real worker traffic, three scenarios) |
-| 20  | Disclosure    | Full-state and post-game frames held by the outbound allowlist until the game is over                             | Pass                                                             |
-| 21  | Disclosure    | Per-seat request ids, revisions and log sequences; boards only when the projection changed                        | Pass (`wire-ids.test.ts`)                                        |
-| 22  | Randomness    | ChaCha20 key per attempt from the system CSPRNG; never in a frame, event or snapshot before the end               | Pass (M2b tests, frame scan)                                     |
-| 23  | Isolation     | One worker per game; a blocked worker is stopped after 30 s without a health answer; the table cap bounds workers | Pass (`worker-port.test.ts`, hub health tests)                   |
-| 24  | Isolation     | The bundled graph of `serve:table` and the worker reaches no batch, benchmark or Card Test Lab module             | Pass (`module-graph.test.ts`)                                    |
-| 25  | Input parsing | Strict JSON (duplicate keys refused), closed message set, bounded strings, decklist size and line caps            | Pass (`table-protocol.test.ts`, `deck-check.test.ts`)            |
-| 26  | Display names | 1–24 characters, control and bidirectional-override characters removed, lookalikes folded for uniqueness          | Pass (`tokens.test.ts`)                                          |
-| 27  | Errors        | Refusals and interruptions are fixed sentences; no request text, stack or engine detail is echoed                 | Pass                                                             |
+| #   | Area          | Check                                                                                                                | Result                                                           |
+| --- | ------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 1   | Start-up      | Outside `--dev`: public origin, both allowlists, and TLS or `--insecure-lan`, on any bind                            | Pass (`config.test.ts`, `serve-table.test.ts`)                   |
+| 2   | Start-up      | `--dev` refuses every proxy, TLS and allowlist setting and any non-loopback host or origin                           | Pass                                                             |
+| 3   | Start-up      | Dev-only settings (fixed RNG key and host secret, turn cap, pace, clock scale, step work, clock off) outside `--dev` | Pass                                                             |
+| 4   | Requests      | `Host` in the allowlist and any `Origin` in the allowlist, before routing, socket upgrades included                  | Pass (`exposure.test.ts`)                                        |
+| 5   | Requests      | Behind a proxy: only the trusted proxy connects; the client is the rightmost `X-Forwarded-For` entry                 | Pass                                                             |
+| 6   | Requests      | `--insecure-lan`: private-range peers only; a loopback peer naming a public host refused without a proxy             | Pass                                                             |
+| 7   | Requests      | Request bodies capped before buffering                                                                               | Fixed here (finding M-2)                                         |
+| 8   | Pages         | `frame-ancestors 'none'`, `nosniff`, `no-referrer`; only manifest files served; encoded `..` refused                 | Pass (`table-http.test.ts`)                                      |
+| 9   | Pages         | Table database outside the served directory                                                                          | Pass (refused at start-up)                                       |
+| 10  | Secrets       | Host secret, host tokens and seat tokens 256-bit, invite codes 128-bit, compared in constant time                    | Pass (`tokens.test.ts`)                                          |
+| 11  | Secrets       | Failed secrets, invites and tokens throttled per address with a growing delay, not a lockout                         | Pass                                                             |
+| 12  | Secrets       | Invite code only in the URL fragment and request bodies, never in a path or query                                    | Pass                                                             |
+| 13  | Secrets       | Seat token never printed by the agent client; never reissued to the host mid-game                                    | Pass                                                             |
+| 14  | Sockets       | 256 KiB frames; 10-second pre-authentication; 20 frames a second; idle timeout with pings; backpressure close        | Pass (`table-ws.test.ts`)                                        |
+| 15  | Sockets       | Per-address caps on open sockets and opens a minute, with bounded memory                                             | Fixed here (finding M-1)                                         |
+| 16  | Sockets       | Seat takeovers limited to six a minute; a superseded socket cannot act with a valid id and revision                  | Pass                                                             |
+| 17  | Authority     | Seat taken from the socket binding, never from a payload; tester messages refused                                    | Pass                                                             |
+| 18  | Authority     | Host-only messages need `hostAuth`; seats change only in `open`; no seat without approval                            | Pass (`table.test.ts`)                                           |
+| 19  | Disclosure    | Every live frame scanned: key, seed, full state, debug, AI notes, raw halt text, engine ids, other hands, cues       | Pass (`frame-scan.ts` over real worker traffic, three scenarios) |
+| 20  | Disclosure    | Full-state and post-game frames held by the outbound allowlist until the game is over                                | Pass                                                             |
+| 21  | Disclosure    | Per-seat request ids, revisions and log sequences; boards only when the projection changed                           | Pass (`wire-ids.test.ts`)                                        |
+| 22  | Randomness    | ChaCha20 key per attempt from the system CSPRNG; never in a frame, event or snapshot before the end                  | Pass (M2b tests, frame scan)                                     |
+| 23  | Isolation     | One worker per game; a blocked worker is stopped after 30 s without a health answer; the table cap bounds workers    | Pass (`worker-port.test.ts`, hub health tests)                   |
+| 24  | Isolation     | The bundled graph of `serve:table` and the worker reaches no batch, benchmark or Card Test Lab module                | Pass (`module-graph.test.ts`)                                    |
+| 25  | Input parsing | Strict JSON (duplicate keys refused), closed message set, bounded strings, decklist size and line caps               | Pass (`table-protocol.test.ts`, `deck-check.test.ts`)            |
+| 26  | Display names | 1–24 characters, control and bidirectional-override characters removed, lookalikes folded for uniqueness             | Pass (`tokens.test.ts`)                                          |
+| 27  | Errors        | Refusals and interruptions are fixed sentences; no request text, stack or engine detail is echoed                    | Pass                                                             |
 
 ## Findings
 

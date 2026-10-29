@@ -241,3 +241,33 @@ jobs:
           name: card-test-lab-traces
           path: test-results/
           if-no-files-found: error
+
+  table-e2e:
+    name: Table e2e
+    needs: changes
+    if: needs.changes.outputs.code == 'true' && needs.changes.outputs.full == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-bun-deps
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bunx playwright install-deps chromium
+      - run: bunx playwright install chromium
+      # The built table bundle served by `serve:table --dev` from its own origin, two browser
+      # contexts per table, on the committed Oracle fixture with a fixed test key. The config
+      # builds the bundle and boots the three table servers.
+      - run: bun run test:e2e:table
+      - name: Require table traces
+        if: always()
+        run: test -n "$(find test-results/table -name trace.zip -print -quit 2>/dev/null)"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        continue-on-error: true
+        with:
+          name: table-e2e-traces
+          path: test-results/table/
+          if-no-files-found: error

@@ -26,7 +26,7 @@ binds (a tunnel or proxy can expose a loopback bind):
 - `TABLE_ALLOWED_HOSTS`: comma-separated `host` or `host:port` values a request may name.
 
 It also refuses to start without TLS unless `--insecure-lan` is passed. Development-only settings
-(`TABLE_TEST_RNG_KEY`, `TABLE_TURN_CAP`, `TABLE_PACE_MS`, `TABLE_CLOCK_SCALE`, `TABLE_CLOCK=off`)
+(`TABLE_TEST_RNG_KEY`, `TABLE_TURN_CAP`, `TABLE_PACE_MS`, `TABLE_CLOCK_SCALE`, `TABLE_HOST_SECRET`, `TABLE_MAX_STEP_WORK`, `TABLE_CLOCK=off`)
 are refused outside `--dev`.
 
 ## LAN game

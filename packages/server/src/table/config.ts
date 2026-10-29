@@ -68,6 +68,10 @@ export interface TableConfig {
   paceMs: number | null;
   /** Development mode only: every clock duration divided by this (`TABLE_CLOCK_SCALE`). */
   clockScale: number | null;
+  /** Development mode only: a fixed host secret (`TABLE_HOST_SECRET`), for end-to-end tests. */
+  hostSecret: string | null;
+  /** Development mode only: the engine's events per step (`TABLE_MAX_STEP_WORK`), to force a halt. */
+  maxStepWork: number | null;
 }
 
 export type TableConfigErrorCode =
@@ -284,6 +288,23 @@ export function loadTableConfig(
     );
   }
 
+  const hostSecret = setting(env, 'TABLE_HOST_SECRET') ?? null;
+  if (hostSecret !== null && !/^[A-Za-z0-9_-]{16,128}$/.test(hostSecret)) {
+    return fail(
+      'badValue',
+      'TABLE_HOST_SECRET must be 16 to 128 letters, digits, - or _.',
+      'TABLE_HOST_SECRET',
+    );
+  }
+  const maxStepWork = wholeSetting(env, 'TABLE_MAX_STEP_WORK', 1, 1_000_000);
+  if (maxStepWork === 'bad') {
+    return fail(
+      'badValue',
+      'TABLE_MAX_STEP_WORK must be a whole number from 1.',
+      'TABLE_MAX_STEP_WORK',
+    );
+  }
+
   const webDir = resolve(cwd, setting(env, 'TABLE_WEB_DIR') ?? DEFAULT_TABLE_WEB_DIR);
   const dbPath = resolve(cwd, setting(env, 'TABLE_DB_PATH') ?? DEFAULT_TABLE_DB_PATH);
   if (isInside(webDir, dbPath)) {
@@ -315,6 +336,8 @@ export function loadTableConfig(
       turnCap,
       paceMs,
       clockScale,
+      hostSecret,
+      maxStepWork,
     },
   };
 }
@@ -325,6 +348,8 @@ export const DEV_ONLY_SETTINGS = [
   'TABLE_TURN_CAP',
   'TABLE_PACE_MS',
   'TABLE_CLOCK_SCALE',
+  'TABLE_HOST_SECRET',
+  'TABLE_MAX_STEP_WORK',
 ] as const;
 
 /** Who may reach the server, and how. */

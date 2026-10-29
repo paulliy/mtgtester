@@ -46,6 +46,7 @@
     "snapshots:check": "bun run scripts/snapshot-interpret-defs.ts --check && bun run scripts/snapshot-override-defs.ts --check",
     "test:e2e": "playwright test",
     "test:e2e:setup": "playwright test --config playwright.setup.config.ts",
+    "test:e2e:table": "playwright test --config playwright.table.config.ts",
     "coverage:complete": "bun run coverage --complete && bun run staples --complete",
     "audit:card-ir": "bun run scripts/audit-card-ir.ts",
     "check:suite-integrity": "bun run scripts/check-suite-integrity.ts",

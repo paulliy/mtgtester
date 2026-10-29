@@ -54,8 +54,12 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
   await page.getByRole('button', { name: /^Keep \d+$/ }).click({ timeout: 60_000 });
 
   const playable = page.locator('.playable-now');
-  const playForest = playable.getByRole('button', { name: /^Play Forest(?: ×\d+)?$/ }).first();
-  await expect(playForest).toBeVisible({ timeout: 60_000 });
+  // Whichever basic land the seed's deck has: its colors move with the supported pool.
+  const playBasic = playable
+    .getByRole('button', { name: /^Play (Plains|Island|Swamp|Mountain|Forest)(?: ×\d+)?$/ })
+    .first();
+  await expect(playBasic).toBeVisible({ timeout: 60_000 });
+  const basic = (await playBasic.innerText()).replace(/^Play\s+/, '').replace(/\s+×\d+$/, '');
   await expect(page.locator('.turn-badge')).toContainText('Your turn');
   await expect(page.getByText('Land drop available')).toBeVisible();
 
@@ -66,15 +70,16 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
   await page.getByRole('button', { name: 'Play a land' }).click();
   await expect(reminder).toBeHidden();
 
-  const requestBeforeForest = playerActionRequestIds.at(-1);
-  await playForest.click();
-  await expect(page.locator('.log .line', { hasText: 'plays Forest' }).last()).toBeVisible();
-  let currentRequestId = await waitForNewPlayerAction(requestBeforeForest);
+  const requestBeforeLand = playerActionRequestIds.at(-1);
+  await playBasic.click();
+  await expect(page.locator('.log .line', { hasText: `plays ${basic}` }).last()).toBeVisible();
+  let currentRequestId = await waitForNewPlayerAction(requestBeforeLand);
 
   const castButton = playable.getByRole('button', { name: /^Cast / }).first();
   const playableLand = playable.getByRole('button', { name: /^Play (?!a land\b)/ }).first();
   const passPriority = page.getByRole('button', { name: 'Pass priority', exact: true });
   const passAnyway = page.getByRole('button', { name: 'Pass anyway', exact: true });
+  const discardPrompt = page.locator('.decision .prompt', { hasText: /^Discard down to / });
   let foundCast = await castButton.isVisible();
   for (let actionCount = 0; !foundCast && actionCount < 80; actionCount++) {
     const requestBeforeAction = currentRequestId;
@@ -84,9 +89,16 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
     } else if (await passPriority.isVisible()) {
       await passPriority.click();
       if (await passAnyway.isVisible()) await passAnyway.click();
+    } else if (await discardPrompt.isVisible()) {
+      // A deck with nothing castable yet reaches cleanup with eight cards: discard one by
+      // clicking it in hand.
+      await page.locator('.hand-card.actionable').first().click();
+      const confirm = page.locator('.tray-actions').getByRole('button', { name: 'Confirm' });
+      if (await confirm.isVisible({ timeout: 1000 }).catch(() => false)) await confirm.click();
     } else {
+      const choice = (await page.locator('.decision').innerText()).replace(/\s+/g, ' ').trim();
       throw new Error(
-        'A non-priority human choice appeared before a cast action; this scenario needs an explicit UI step.',
+        `A non-priority human choice appeared before a cast action; this scenario needs an explicit UI step. The choice: ${choice}`,
       );
     }
     currentRequestId = await waitForNewPlayerAction(requestBeforeAction);
@@ -104,10 +116,29 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
     timeout: 30_000,
   });
 
-  // The bots take their turns, and the summary reports what they did since your spell resolved.
-  await expect(page.locator('.turn-badge')).toContainText('Your turn', {
-    timeout: 60_000,
-  });
+  // Pass the rest of this turn; the bots take theirs, and the summary reports what they did
+  // since your spell resolved.
+  const turnOf = async () =>
+    Number(/Turn (\d+)/.exec(await page.locator('.turn-badge').innerText())?.[1] ?? 0);
+  const castTurn = await turnOf();
+  for (let passes = 0; passes < 40; passes++) {
+    if ((await turnOf()) > castTurn && (await passPriority.isVisible())) {
+      if ((await page.locator('.turn-badge').innerText()).includes('Your turn')) break;
+    }
+    // Bots can answer between frames, so bind to whichever request is newest.
+    const requestBeforePass = playerActionRequestIds.at(-1);
+    await expect(page.locator('.decision')).toHaveAttribute('data-request-id', requestBeforePass!);
+    if (await passPriority.isVisible()) {
+      await passPriority.click();
+      if (await passAnyway.isVisible()) await passAnyway.click();
+    } else if (await discardPrompt.isVisible()) {
+      await page.locator('.hand-card.actionable').first().click();
+    }
+    await expect
+      .poll(() => playerActionRequestIds.at(-1), { timeout: 60_000 })
+      .not.toBe(requestBeforePass);
+  }
+  await expect(page.locator('.turn-badge')).toContainText('Your turn');
   const summary = page.locator('.bot-summary');
   await expect(summary.getByText('Since your last action')).toBeVisible();
   await expect(summary.locator('.bot-seat').first()).toBeVisible();
@@ -124,11 +155,17 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
   expect(report).toContain('### P1 decklist (engine order)');
   expect(report).not.toMatch(/### P[234] decklist/);
 
-  // A new turn brings a new land drop, so passing asks again; "Pass anyway" passes.
+  // A new turn brings a new land drop, so with a land in hand passing asks again; "Pass anyway"
+  // passes. Without one there is nothing to remind, which the opening check above covered.
+  const landInHand = await playableLand.isVisible();
   await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
-  await expect(reminder).toBeVisible();
-  await page.getByRole('button', { name: 'Pass anyway' }).click();
-  await expect(reminder).toBeHidden();
+  if (landInHand) {
+    await expect(reminder).toBeVisible();
+    await page.getByRole('button', { name: 'Pass anyway' }).click();
+    await expect(reminder).toBeHidden();
+  } else {
+    await expect(reminder).toBeHidden();
+  }
 
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Abandon', exact: true }).click();

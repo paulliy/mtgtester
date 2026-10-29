@@ -75,6 +75,8 @@ function config(overrides: Partial<TableConfig> = {}): TableConfig {
     turnCap: null,
     paceMs: null,
     clockScale: null,
+    hostSecret: null,
+    maxStepWork: null,
     ...overrides,
   };
 }

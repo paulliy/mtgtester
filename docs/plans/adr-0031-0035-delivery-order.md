@@ -72,18 +72,18 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 
 ## Progress
 
-| Step | State       | Done so far                                                                                         | Pull request |
-| ---- | ----------- | --------------------------------------------------------------------------------------------------- | ------------ |
-| 1    | done        | stale harness deleted; harness-integrity guard                                                      | #44          |
-| 2    | done        | `scripts/card-authoring-metrics.ts`; `docs/reviews/card-authoring-baseline-2026-10-28.md`           | #44          |
-| 3    | in progress | phase 1 steps 2 to 10 done; open: executor invariants for scope reads, empty suites                 | #44          |
-| 4    | done        | P1 data-key registry; P3 label code in `@mtg/shared/presentation`                                   | #44          |
-| 5    | done        | M1 seat controllers: `'table'` mode, per-seat state, fail-closed switches                           | #44          |
-| 6    | done        | M2a disclosure policy, privacy fixes, replay inputs and harness; M2b ChaCha20 and streams           | #44          |
-| 7    | done        | P2 projection types and board groups; P4 server presentation; P5 raw `data` on request, lint        | #44          |
-| 9    | done        | M3 workers, health, manifest, post-game, agent table mode, scans; M4 clocks, fallback, concede      | #44          |
-| 10   | done        | P6: server-built damage and life cues on each batch; the board animates from them                   | #44          |
-| 12   | in progress | M5 done: production config, exposure checks, socket limits, TLS run, hosting guide, review; M6 next | #44          |
+| Step | State       | Done so far                                                                                    | Pull request |
+| ---- | ----------- | ---------------------------------------------------------------------------------------------- | ------------ |
+| 1    | done        | stale harness deleted; harness-integrity guard                                                 | #44          |
+| 2    | done        | `scripts/card-authoring-metrics.ts`; `docs/reviews/card-authoring-baseline-2026-10-28.md`      | #44          |
+| 3    | in progress | phase 1 steps 2 to 10 done; open: executor invariants for scope reads, empty suites            | #44          |
+| 4    | done        | P1 data-key registry; P3 label code in `@mtg/shared/presentation`                              | #44          |
+| 5    | done        | M1 seat controllers: `'table'` mode, per-seat state, fail-closed switches                      | #44          |
+| 6    | done        | M2a disclosure policy, privacy fixes, replay inputs and harness; M2b ChaCha20 and streams      | #44          |
+| 7    | done        | P2 projection types and board groups; P4 server presentation; P5 raw `data` on request, lint   | #44          |
+| 9    | done        | M3 workers, health, manifest, post-game, agent table mode, scans; M4 clocks, fallback, concede | #44          |
+| 10   | done        | P6: server-built damage and life cues on each batch; the board animates from them              | #44          |
+| 12   | done        | M5 exposure, TLS run, review; M6 table app, lobby, table bar, post-game, table e2e and CI job  | #44          |
 
 ## Notes from delivery
 
@@ -123,3 +123,28 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
   from adding frames; an end-to-end test with a scripted opponent scry is still to be written.
 - **Unmodeled cards in a table deck** are reported to that seat as `unresolved` with the card
   name; a dedicated problem code can follow if the lobby needs to tell them apart.
+- **Three table servers in the e2e (M6).** The plan asks for one server; the scenarios need
+  three settings that cannot share a process (a lightly scaled clock for play, a clock scaled
+  down 120 times for a timeout, and a one-event engine budget for a forced halt), so
+  `playwright.table.config.ts` runs three, each serving the same built bundle from its own
+  origin. Two development-only settings serve them: `TABLE_HOST_SECRET` and
+  `TABLE_MAX_STEP_WORK`.
+- **The host plays too (M6).** A host sees the lobby before joining and joins by name like anyone
+  else to take a seat; the invite comes from the address fragment or, for the host, the table
+  state.
+- **Smart yield at a table (M6).** A person is offered priority only when they have something
+  to do, so the e2e yields an instant (Fell the Profane) that opens every window and checks the
+  next opponent's upkeep and draw are no longer offered.
+- **Card Test Lab failures that predate this work.** Four lab scenarios fail on this machine
+  both at `095d955` (before this delivery's code) and now: Master Warcraft, Hunted Phantasm,
+  Vindictive Lich (`chooseTargetPlayer`), and Aetherworks Marvel positive. They are left for the
+  card-coverage track; CI's `viewer-evidence` job is the reference once Actions runs again.
+  `player-game.spec.ts` also failed there: its seed no longer deals Forests. It now plays
+  whichever basic the seed deals, discards at cleanup when it must, and passes into its next turn,
+  so it passes again as M6 requires.
+- **The runner yields on time as well as steps (M6).** With every seat bot-driven (a lone player
+  away at a table), late-game steps took 350 to 400 ms each, so 200 steps between yields held a
+  table worker's thread for over a minute: it answered no health probe and read no
+  `resumeControl`. `MatchRunner` now also yields every 50 ms. The table e2e found it.
+- **Slow steps.** Those 350 to 400 ms `advance()` calls in a four-seat game deserve a profile
+  alongside the slow bot game noted above.
