@@ -150,22 +150,32 @@ export function replayFromLog(input: ReplayInput): ReplayResult {
     throw new ReplayRefusedError(`rng '${config.rng.kind}' is not replayable by this harness yet`);
   }
 
-  const engine = new Engine({
-    gameId: input.gameId,
-    seed: input.seed,
-    turnCap: config.turnCap,
-    players: config.seats.map((seat) => {
-      const deck = input.resolveDeck(seat.deckSnapshotId);
-      return {
-        id: seat.seat,
-        deckId: deck.deckId,
-        commanders: deck.commanders,
-        cards: deck.cards,
-        ...(deck.companion !== undefined ? { companion: deck.companion } : {}),
-        ...(seat.manualMana ? { manualMana: true } : {}),
-      };
-    }),
-  });
+  const engine = new Engine(
+    {
+      gameId: input.gameId,
+      seed: input.seed,
+      turnCap: config.turnCap,
+      players: config.seats.map((seat) => {
+        const deck = input.resolveDeck(seat.deckSnapshotId);
+        return {
+          id: seat.seat,
+          deckId: deck.deckId,
+          commanders: deck.commanders,
+          cards: deck.cards,
+          ...(deck.companion !== undefined ? { companion: deck.companion } : {}),
+          ...(seat.manualMana ? { manualMana: true } : {}),
+        };
+      }),
+    },
+    {
+      ...(config.engineOptions.maxStepWork !== undefined && {
+        maxStepWork: config.engineOptions.maxStepWork,
+      }),
+      ...(config.engineOptions.maxObjects !== undefined && {
+        maxObjects: config.engineOptions.maxObjects,
+      }),
+    },
+  );
 
   const decisions = input.events.filter((event) => event.type === 'decision');
   const outOfBand = input.events.filter((event) => OUT_OF_BAND_TYPES.has(event.type));

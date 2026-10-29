@@ -25,6 +25,8 @@ export function buildReplayRecord(input: {
   manualMana: ReadonlySet<PlayerId>;
   turnCap: number;
   rng: GameReplayConfig['rng'];
+  /** The engine's work limits, when the game set any (a table's). Absent for the tester's. */
+  engineLimits?: { maxStepWork: number; maxObjects: number };
 }): GameReplayRecord {
   const config: GameReplayConfig = {
     schemaVersion: 1,
@@ -38,7 +40,10 @@ export function buildReplayRecord(input: {
     // A `legacy` game's key is empty because the stream is seeded from the public seed in the row.
     // A `chacha20` key lives here, in the stored config, and nowhere a viewer reads before the end.
     rng: input.rng,
-    engineOptions: { maxDecisions: DEFAULT_MAX_DECISIONS },
+    engineOptions: {
+      maxDecisions: DEFAULT_MAX_DECISIONS,
+      ...(input.engineLimits !== undefined && input.engineLimits),
+    },
   };
   return {
     config,

@@ -36,6 +36,13 @@ export function base64url(bytes: Uint8Array): string {
   return out;
 }
 
+/** Lowercase hex, two digits per byte. A 32-byte game key is 64 digits. */
+export function hex(bytes: Uint8Array): string {
+  let out = '';
+  for (const byte of bytes) out += byte.toString(16).padStart(2, '0');
+  return out;
+}
+
 export const HOST_SECRET_BYTES = 32;
 export const HOST_TOKEN_BYTES = 32;
 export const SEAT_TOKEN_BYTES = 32;
@@ -53,6 +60,9 @@ export const generateHostToken = (): string => token(HOST_TOKEN_BYTES);
 export const generateSeatToken = (): string => token(SEAT_TOKEN_BYTES);
 export const generateInviteCode = (): string => token(INVITE_CODE_BYTES);
 export const generateTableId = (): string => token(TABLE_ID_BYTES);
+export const RNG_KEY_BYTES = 32;
+/** A fresh `chacha20` game key: 32 bytes as 64 hex digits. Secret until the game is over. */
+export const generateRngKey = (): string => hex(randomBytes(RNG_KEY_BYTES));
 export const generateClaimId = (): string => token(CLAIM_ID_BYTES);
 /** Opaque id for one start attempt. */
 export const generateAttemptId = (): string => token(INVITE_CODE_BYTES);

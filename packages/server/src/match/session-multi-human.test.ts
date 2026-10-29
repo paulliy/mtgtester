@@ -107,6 +107,7 @@ function table(
     seed?: string;
     rng?: 'legacy' | 'chacha20';
     rngKey?: string;
+    engineLimits?: { maxStepWork: number; maxObjects: number };
   } = {},
 ): Table {
   const pub: ServerToClientMessage[] = [];
@@ -117,6 +118,7 @@ function table(
     seed: options.seed ?? SEED,
     ...(options.rng !== undefined ? { rng: options.rng } : {}),
     ...(options.rngKey !== undefined ? { rngKey: options.rngKey } : {}),
+    ...(options.engineLimits !== undefined ? { engineLimits: options.engineLimits } : {}),
     seats: seats(),
     providerKind: options.providerKind ?? 'random',
     gameMode: 'table',
@@ -559,6 +561,38 @@ describe('MatchSession - the disclosure policy at a table', () => {
     }
     expect(sources.some((row) => row.source === 'human')).toBe(true);
     expect(sources.some((row) => row.source === 'bot')).toBe(true);
+  }, 30_000);
+
+  it('passes the engine limits to the engine and stores them with the replay inputs', async () => {
+    const calls: Array<{ sql: string; args: unknown[] }> = [];
+    const db: SqliteLike = {
+      query: (sql: string) => ({
+        run: (...args: unknown[]) => {
+          calls.push({ sql, args });
+        },
+        all: () => [],
+        get: () => null,
+      }),
+    };
+    const store = { recorderFor: (id: string) => new GameRecorder(db, id) } as unknown as GameStore;
+    const t = table({
+      store,
+      engineLimits: { maxStepWork: 50_000, maxObjects: 20_000 },
+      replay: {
+        cardDataSha256: 'card-data-hash',
+        build: { commit: 'abc123', branch: 'main', dirty: false },
+      },
+    });
+    const budget = (t.session.engine as unknown as { ctx: { budget?: unknown } }).ctx.budget;
+    expect(budget).toMatchObject({ maxStepWork: 50_000, maxObjects: 20_000 });
+    t.session.start();
+    t.session.abandon();
+    await t.session.settled();
+
+    const update = calls.find((c) => c.sql.includes('UPDATE games SET config_json'));
+    expect(JSON.parse(String(update?.args[0]))).toMatchObject({
+      engineOptions: { maxDecisions: 100000, maxStepWork: 50_000, maxObjects: 20_000 },
+    });
   }, 30_000);
 
   it('stores no replay inputs when the entry point names no identity', async () => {

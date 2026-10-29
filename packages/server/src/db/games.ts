@@ -71,8 +71,11 @@ export interface GameReplayConfig {
   turnCap: number;
   /** `key` is the empty string for `legacy`, which is seeded from the game's public seed. */
   rng: { kind: 'legacy' | 'chacha20'; key: string };
-  /** The runner's step budget: surfaced decisions allowed before the game halts. */
-  engineOptions: { maxDecisions: number };
+  /**
+   * The runner's step budget (surfaced decisions allowed before the game halts) and, for a table
+   * game, the engine's work limits (ADR 0031 decision 9). Absent limits mean unlimited.
+   */
+  engineOptions: { maxDecisions: number; maxStepWork?: number; maxObjects?: number };
 }
 
 /** The `games` row's replay columns. Absent for Card Test Lab games, which store none. */

@@ -189,6 +189,12 @@ export interface MatchSessionOptions {
    * (phase 3).
    */
   diplomacy?: boolean;
+  /**
+   * The engine's work limits (ADR 0031 decision 9): events one `advance()` may emit and objects the
+   * whole game may create, before it halts. Omitted is unlimited, as for every tester game. Stored
+   * with the game's replay inputs. Not accepted with a prepared `engine`, which is built already.
+   */
+  engineLimits?: { maxStepWork: number; maxObjects: number };
   /** Pre-arranged deterministic lab engine; omitted for every ordinary match. */
   engine?: Engine;
   /** Deterministic non-human decisions for Card Test Lab evidence; omitted for ordinary matches. */
@@ -330,6 +336,9 @@ export class MatchSession {
     if (this.rngKey !== null && opts.engine !== undefined) {
       throw new Error('a prepared engine brings its own random source');
     }
+    if (opts.engineLimits !== undefined && opts.engine !== undefined) {
+      throw new Error('a prepared engine brings its own work limits');
+    }
     this.gameMode = opts.gameMode ?? 'spectator';
     this.policy = opts.disclosure;
     this.seatControllers = resolveSeatControllers(opts, this.gameMode);
@@ -348,16 +357,19 @@ export class MatchSession {
     this.livePaceMs = opts.livePaceMs ?? LIVE_PACE_MS;
     this.engine =
       opts.engine ??
-      new Engine({
-        gameId: opts.gameId,
-        seed: opts.seed,
-        ...(this.rngKey !== null && { rng: 'chacha20' as const, rngKey: this.rngKey }),
-        // The human taps lands by hand if they like (ADR 0030); bots leave payment to the engine.
-        players: opts.seats.map((s) =>
-          this.humanSeats.has(s.seat) ? { ...s.config, manualMana: true } : s.config,
-        ),
-        ...(opts.turnCap !== undefined && { turnCap: opts.turnCap }),
-      });
+      new Engine(
+        {
+          gameId: opts.gameId,
+          seed: opts.seed,
+          ...(this.rngKey !== null && { rng: 'chacha20' as const, rngKey: this.rngKey }),
+          // The human taps lands by hand if they like (ADR 0030); bots leave payment to the engine.
+          players: opts.seats.map((s) =>
+            this.humanSeats.has(s.seat) ? { ...s.config, manualMana: true } : s.config,
+          ),
+          ...(opts.turnCap !== undefined && { turnCap: opts.turnCap }),
+        },
+        opts.engineLimits ?? {},
+      );
     for (const seat of this.humanSeats) this.engine.enableManualMana(seat);
     this.recorder = opts.store?.recorderFor(opts.gameId) ?? null;
     const humanSeats = this.humanSeats;
@@ -686,6 +698,7 @@ export class MatchSession {
         manualMana: this.humanSeats,
         turnCap: engineTurnCap(this.engine),
         rng: { kind: this.rngKey === null ? 'legacy' : 'chacha20', key: this.rngKey ?? '' },
+        ...(this.opts.engineLimits !== undefined && { engineLimits: this.opts.engineLimits }),
       }),
     };
   }
