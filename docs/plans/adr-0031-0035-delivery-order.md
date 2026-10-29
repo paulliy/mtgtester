@@ -97,3 +97,8 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
   is vacated, so the corrected deck goes through host approval again.
 - **One prompt still parsed in the browser (P5).** `OpeningHand.vue` reads the "put N more" count
   from the mulligan prompt; no presentation field carries it. The fix is an engine-emitted count.
+- **Table routes (M3).** The socket is `GET /tables/:id/ws`, and an invite link is
+  `/t/<id>#<invite>`, so the invite stays in the fragment and out of request logs. The summary
+  endpoint takes the invite in the POST body. To be confirmed before M6.
+- **Unmodeled cards in a table deck** are reported to that seat as `unresolved` with the card
+  name; a dedicated problem code can follow if the lobby needs to tell them apart.
