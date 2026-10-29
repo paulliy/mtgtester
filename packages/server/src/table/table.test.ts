@@ -624,6 +624,27 @@ describe('token revocation', () => {
     expect(h.table.seatOfSocket(second.socketId)).toBe('P1');
   });
 
+  it('lets go of the seat a socket held when it resumes another', () => {
+    const h = setup();
+    const host = hostConn(h);
+    const alice = conn();
+    const bob = conn();
+    const a = seatPlayer(h, host, alice, 'Alice', 'P1');
+    const b = seatPlayer(h, host, bob, 'Bob', 'P2');
+
+    expect(resume(h, alice, b.seatToken).ok).toBe(true);
+    expect(h.table.seatOfSocket(alice.socketId)).toBe('P2');
+    // P1 is no longer bound to Alice's socket, so its next resume takes over nothing.
+    const returning = conn();
+    const back = resume(h, returning, a.seatToken);
+    expect(back.ok).toBe(true);
+    expect(back.effects).not.toContainEqual(
+      expect.objectContaining({ type: 'close', socketId: alice.socketId }),
+    );
+    expect(h.table.seatOfSocket(returning.socketId)).toBe('P1');
+    expect(h.table.seatOfSocket(alice.socketId)).toBe('P2');
+  });
+
   it('resumeSeat refuses a stale protocol version and throttles bad tokens', () => {
     const h = setup();
     const c = conn('4.4.4.4');

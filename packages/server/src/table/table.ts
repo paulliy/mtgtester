@@ -617,6 +617,12 @@ export class Table {
       if (this.conns.size >= this.limits.maxConnections) return refuse('tableFull');
       record = this.register(conn);
     }
+    // One seat per socket: a socket that held another seat lets it go, so that seat's frames
+    // stop reaching it.
+    if (record.seat !== null && record.seat !== seat) {
+      const held = this.seats.get(record.seat)?.player;
+      if (held?.socketId === conn.socketId) held.socketId = null;
+    }
     record.displayName = player.displayName;
     record.normalizedName = player.normalizedName;
     record.seat = seat;
