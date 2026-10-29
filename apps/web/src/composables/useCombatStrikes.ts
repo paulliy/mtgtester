@@ -1,16 +1,13 @@
 /**
- * MTGA-style attack animation: diffs each freshly pushed board against the previous one and, for
- * every damage event attributable to a still-visible `attacking`/`blocking`/`blockedBy` pairing
- * (spectator.ts), records a vector for the striking permanent to lunge toward its target and back.
- * `PermanentChip.vue` reads its own entry by permanent id and animates; this composable only
- * decides *when* and *how far*, reusing the same anchor registry the combat overlay draws lines
- * from (§9.8.1). Presentation only, not a new source of truth: it infers "who hit what" from state
- * deltas rather than a dedicated damage event, so a non-combat damage source hitting a permanent
- * that happens to be attacking/blocking, or trample discounted through a blocker, can misattribute
- * — acceptable for board juice, not for anything the engine treats as authoritative.
+ * MTGA-style attack animation: for every damage cue the server sends (ADR 0032 decision 8), the
+ * striking permanent lunges toward its target and back. `PermanentChip.vue` reads its own entry by
+ * permanent id and animates; this composable only decides *when* and *how far*, reusing the same
+ * anchor registry the combat overlay draws lines from (§9.8.1). The cues say who hit what, so
+ * nothing is inferred from board differences; damage dealt together (one combat damage step)
+ * shares a group, and each later group starts once the one before has played.
  */
 import { reactive } from 'vue';
-import type { ObjectId, PlayerBoardState, PlayerId } from '@mtg/shared';
+import type { ObjectId, PresentationCue } from '@mtg/shared';
 import { useBoardAnchors } from './useBoardAnchors';
 
 export interface StrikeVector {
@@ -27,9 +24,8 @@ const LUNGE_FACTOR = 0.72;
 
 const strikes = reactive(new Map<ObjectId, StrikeVector>());
 const timers = new Map<ObjectId, ReturnType<typeof setTimeout>>();
-let prevDamage = new Map<ObjectId, number>();
-let prevLife = new Map<PlayerId, number>();
-let prevLoyalty = new Map<ObjectId, number>();
+/** Later strike groups of a batch, waiting their turn. */
+const pendingGroups: Array<ReturnType<typeof setTimeout>> = [];
 
 export function useCombatStrikes() {
   const { anchorFor } = useBoardAnchors();
@@ -59,81 +55,41 @@ export function useCombatStrikes() {
     );
   }
 
-  /** Call once per freshly pushed board. Caller skips this entirely under reduced motion. */
-  function observe(state: PlayerBoardState): void {
-    const battlefield = state.battlefield;
-    const pending: Array<{ source: ObjectId; target: string }> = [];
-
-    for (const victim of battlefield) {
-      const before = prevDamage.get(victim.id) ?? victim.damageMarked;
-      if (victim.damageMarked <= before) continue;
-      if (victim.blocking !== null) {
-        pending.push({ source: victim.blocking, target: victim.id });
-      } else if (victim.attacking !== null) {
-        for (const blockerId of victim.blockedBy)
-          pending.push({ source: blockerId, target: victim.id });
-      }
+  /** Call once per batch of cues. Caller skips this entirely under reduced motion. */
+  function observeCues(cues: readonly PresentationCue[]): void {
+    const groups = new Map<number, Array<{ source: ObjectId; target: string }>>();
+    for (const cue of cues) {
+      if (cue.kind !== 'damage' || cue.sourceId === null) continue;
+      const list = groups.get(cue.group) ?? [];
+      list.push({ source: cue.sourceId, target: cue.target.id });
+      groups.set(cue.group, list);
     }
-
-    // A planeswalker that lost loyalty was struck by the unblocked attackers aimed at it.
-    for (const walker of battlefield) {
-      const loyalty = walker.counters['loyalty'];
-      if (loyalty === undefined) continue;
-      const before = prevLoyalty.get(walker.id) ?? loyalty;
-      if (loyalty >= before) continue;
-      for (const attacker of battlefield) {
-        if (attacker.attackingPlaneswalker === walker.id && attacker.blockedBy.length === 0) {
-          pending.push({ source: attacker.id, target: walker.id });
-        }
-      }
-    }
-
-    for (const seat of state.seats) {
-      const before = prevLife.get(seat.seat) ?? seat.life;
-      if (seat.life >= before) continue;
-      for (const attacker of battlefield) {
-        if (
-          attacker.attacking === seat.seat &&
-          (attacker.attackingPlaneswalker ?? null) === null &&
-          attacker.blockedBy.length === 0
-        ) {
-          pending.push({ source: attacker.id, target: seat.seat });
-        }
-      }
-    }
-
-    prevDamage = new Map(battlefield.map((p) => [p.id, p.damageMarked]));
-    prevLife = new Map(state.seats.map((s) => [s.seat, s.life]));
-    prevLoyalty = new Map(
-      battlefield.flatMap((p) =>
-        p.counters['loyalty'] === undefined ? [] : [[p.id, p.counters['loyalty']] as const],
-      ),
-    );
-
-    for (const { source, target } of pending) trigger(source, target);
+    [...groups.keys()]
+      .sort((a, b) => a - b)
+      .forEach((group, index) => {
+        const strikesInGroup = groups.get(group) ?? [];
+        const play = (): void => {
+          for (const { source, target } of strikesInGroup) trigger(source, target);
+        };
+        if (index === 0) play();
+        else pendingGroups.push(setTimeout(play, index * STRIKE_MS));
+      });
   }
 
   function strikeFor(id: ObjectId): StrikeVector | undefined {
     return strikes.get(id);
   }
 
-  return { observe, strikeFor };
+  return { observeCues, strikeFor };
 }
 
 /**
- * Clears every in-flight strike and the previous-board baseline. Without this, a new game's very
- * first `observe()` diffs against the prior game's final board: `prevLife`/`prevDamage` are keyed
- * by seat/object id, and seat ids (`P1`..`P4`) are reused by every game. It happens to be inert
- * today — both comparisons (`damageMarked <=`, `life >=`) treat a fresh game's floor values (0
- * damage, starting life) as "no change" against almost any leftover — but that's incidental to
- * the comparison directions, not a guarantee, so a new game gets a clean baseline explicitly
- * rather than relying on it. Called from `stores/game.ts`'s `gameStarted` handler.
+ * Clears every in-flight strike and every strike group still waiting, so nothing from one game
+ * animates on the next. Called from `stores/game.ts`'s `gameStarted` handler.
  */
 export function resetCombatStrikes(): void {
   for (const timer of timers.values()) clearTimeout(timer);
   timers.clear();
+  for (const timer of pendingGroups.splice(0)) clearTimeout(timer);
   strikes.clear();
-  prevDamage = new Map();
-  prevLife = new Map();
-  prevLoyalty = new Map();
 }

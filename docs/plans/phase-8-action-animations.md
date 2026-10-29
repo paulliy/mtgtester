@@ -33,6 +33,9 @@ changes the event/snapshot protocol, update the cue mapping below before changin
 1. **Use explicit visual cues, not log-text parsing.** A `SpectatorLogLine` is prose and often
    intentionally omits details. The engine/server must derive a compact, typed `ActionCue`
    from a `GameEvent` while the event has stable source, target, and zone identifiers.
+   `ActionCue` extends the `PresentationCue` contract of ADR 0032 decision 8 (plan P6): the
+   damage and life cues already ride on `eventBatch`, carry object ids and never card ids, and
+   take a viewer's own log sequence at a table.
 2. **Key cues to event sequences.** Every cue carries the originating `sequence`; the client
    plays a cue only for the exact action snapshot at that sequence. Seeking, stepping
    backward, reconnecting, and a new game cancel the active cue rather than replaying stale UI.

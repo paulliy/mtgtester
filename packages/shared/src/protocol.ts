@@ -10,7 +10,7 @@
  */
 
 import type { DecisionRequest, TargetChoice } from './engine';
-import type { GameId, PlayerId } from './ids';
+import type { GameId, ObjectId, PlayerId } from './ids';
 import type { GameResult } from './state';
 import type { PlayerBoardState } from './player';
 import type { AiAnnotation, AiReflection, SpectatorLogLine, SpectatorState } from './spectator';
@@ -210,7 +210,40 @@ export interface EventBatchPayload {
    * Absent unless the game was started with `diplomacy`, so the default payload does not grow.
    */
   tableTalk?: TableTalkLine[];
+  /**
+   * What these lines did to the board, for animation (ADR 0032 decision 8): who damaged what, and
+   * whose life changed. Built on the server, so the browser no longer diffs boards to guess.
+   * Absent when the lines changed neither.
+   */
+  cues?: PresentationCue[];
 }
+
+/** A damage or life cue's target: a permanent by its object id, or a player. */
+export type CueTarget = { kind: 'object'; id: ObjectId } | { kind: 'player'; id: PlayerId };
+
+/**
+ * One board change to animate. `sequence` is the log line it belongs to (a viewer's own sequence
+ * at a table). Cues name objects by object id only, never by card id.
+ */
+export type PresentationCue =
+  | {
+      kind: 'damage';
+      sequence: number;
+      /** Null when the source is on neither board (it left before the batch was flushed). */
+      sourceId: ObjectId | null;
+      target: CueTarget;
+      amount: number;
+      combat: boolean;
+      /** Damage dealt together shares a group: one per combat damage step, then one per event. */
+      group: number;
+    }
+  | {
+      kind: 'lifeChange';
+      sequence: number;
+      player: PlayerId;
+      /** The real change in the life total, which damage alone does not always give. */
+      delta: number;
+    };
 
 /**
  * The AI failed twice on a decision the user is currently watching (brief §7.7 step 2). The

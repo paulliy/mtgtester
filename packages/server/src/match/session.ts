@@ -38,6 +38,7 @@ import type {
   PlaybackMode,
   PlayerBoardState,
   PlayerId,
+  PresentationCue,
   ProviderKind,
   SeatControllers,
   ServerToClientMessage,
@@ -318,6 +319,8 @@ export class MatchSession {
   private presentTimer: ReturnType<typeof setInterval> | null = null;
   /** Log lines computed but not yet reached by the presentation clock. */
   private pendingLines: SpectatorLogLine[] = [];
+  /** Cues waiting for their lines to be presented (live spectator pacing). */
+  private pendingCues: PresentationCue[] = [];
   /** ADR 0022 reasoning notes awaiting a log line to attach to. */
   private pendingAnnotations: AiAnnotation[] = [];
   /** Every note produced this game — the single-player end-of-game release reads this. */
@@ -424,21 +427,22 @@ export class MatchSession {
       // Every human decision is untimed, so the engine never computes ahead of what they have seen.
       ...(this.humanSeats.size > 0 ? { lookaheadTurns: 0 } : {}),
       ...this.eventFormatting(),
-      onEvents: (lines, frontierTurn, snapshotTurns, seat) => {
+      onEvents: (lines, frontierTurn, snapshotTurns, seat, cues = []) => {
+        const cueField = cues.length > 0 ? { cues } : {};
         switch (this.gameMode) {
           // flow: event batches go to the player, formatted for that seat (m1 row 300). A table
           // gets one batch per human seat from the runner's per-seat formatter.
           case 'singlePlayer':
             this.sendToSeat(this.soleHumanSeat(), {
               type: 'eventBatch',
-              payload: { gameId: opts.gameId, lines, frontierTurn, snapshotTurns: [] },
+              payload: { gameId: opts.gameId, lines, frontierTurn, snapshotTurns: [], ...cueField },
             });
             return;
           case 'table':
             if (seat === undefined) throw new Error('a table event batch names its seat');
             this.sendToSeat(seat, {
               type: 'eventBatch',
-              payload: { gameId: opts.gameId, lines, frontierTurn, snapshotTurns: [] },
+              payload: { gameId: opts.gameId, lines, frontierTurn, snapshotTurns: [], ...cueField },
             });
             return;
           case 'spectator':
@@ -451,6 +455,7 @@ export class MatchSession {
         // not reached — the same desync from the other side.
         if (this.playbackMode === 'live' && this.livePaceMs > 0) {
           this.pendingLines.push(...lines);
+          this.pendingCues.push(...cues);
           this.releaseLines();
           return;
         }
@@ -463,6 +468,7 @@ export class MatchSession {
             snapshotTurns,
             ...this.annotationField(lines),
             ...this.talkField(lines),
+            ...cueField,
           },
         });
       },
@@ -1326,7 +1332,11 @@ export class MatchSession {
     this.sendLines(lines);
   }
 
+  /** Released lines, with the cues that belong to them (a cue rides with its line). */
   private sendLines(lines: SpectatorLogLine[]): void {
+    const last = lines.at(-1)?.sequence ?? -1;
+    const cues = this.pendingCues.filter((cue) => cue.sequence <= last);
+    this.pendingCues = this.pendingCues.filter((cue) => cue.sequence > last);
     this.sendPublic({
       type: 'eventBatch',
       payload: {
@@ -1336,6 +1346,7 @@ export class MatchSession {
         snapshotTurns: this.runner.getSnapshotTurns(),
         ...this.annotationField(lines),
         ...this.talkField(lines),
+        ...(cues.length > 0 ? { cues } : {}),
       },
     });
   }
@@ -1895,6 +1906,7 @@ export class MatchSession {
     this.clocks?.stop();
     this.stopPresenting();
     this.pendingLines = [];
+    this.pendingCues = [];
     this.aiCoordinator?.cancel();
     this.aiJev?.cancel?.();
     this.runner.abandon();

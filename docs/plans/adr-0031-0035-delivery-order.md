@@ -82,6 +82,7 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 | 6    | done        | M2a disclosure policy, privacy fixes, replay inputs and harness; M2b ChaCha20 and streams      | #44          |
 | 7    | done        | P2 projection types and board groups; P4 server presentation; P5 raw `data` on request, lint   | #44          |
 | 9    | done        | M3 workers, health, manifest, post-game, agent table mode, scans; M4 clocks, fallback, concede | #44          |
+| 10   | done        | P6: server-built damage and life cues on each batch; the board animates from them              | #44          |
 
 ## Notes from delivery
 

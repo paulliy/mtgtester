@@ -34,6 +34,7 @@ import type {
   ClientToServerMessage,
   GameResult,
   PlayerId,
+  PresentationCue,
   ReplayUnlockedPayload,
   ServerToClientMessage,
   SpectatorState,
@@ -287,6 +288,47 @@ const errorFrame = (
   type: 'error',
   payload: { message, ...(correlation ?? {}) },
 });
+
+/**
+ * A batch's cues in this viewer's log numbering: each takes the per-viewer sequence of the first
+ * line at or after its event (its own line, or the next this viewer was shown), and a cue past
+ * the viewer's last line takes that line. Rebuilt field by field, so nothing else rides along.
+ */
+function wireCues(
+  cues: readonly PresentationCue[],
+  lines: ReadonlyArray<{ engine: number; line: { sequence: number } }>,
+): PresentationCue[] {
+  const last = lines.at(-1);
+  if (last === undefined) return [];
+  const wireSequence = (engine: number): number =>
+    (lines.find((entry) => entry.engine >= engine) ?? last).line.sequence;
+  return cues.map((cue): PresentationCue => {
+    switch (cue.kind) {
+      case 'damage':
+        return {
+          kind: 'damage',
+          sequence: wireSequence(cue.sequence),
+          sourceId: cue.sourceId,
+          target:
+            cue.target.kind === 'object'
+              ? { kind: 'object', id: cue.target.id }
+              : { kind: 'player', id: cue.target.id },
+          amount: cue.amount,
+          combat: cue.combat,
+          group: cue.group,
+        };
+      case 'lifeChange':
+        return {
+          kind: 'lifeChange',
+          sequence: wireSequence(cue.sequence),
+          player: cue.player,
+          delta: cue.delta,
+        };
+      default:
+        return assertNever(cue, 'presentation cue');
+    }
+  });
+}
 
 // ── The hub ─────────────────────────────────────────────────────────────────────────────────
 
@@ -1083,16 +1125,19 @@ export class TableSocketHub {
       }
       case 'eventBatch': {
         // Rebuilt from the fields a table sends: no annotations, no table talk, no snapshot turns.
+        const wired = message.payload.lines.map((line) => ({
+          engine: line.sequence,
+          line: { ...line, sequence: run.wire.nextLogSequence(binding.viewer) },
+        }));
+        const cues = wireCues(message.payload.cues ?? [], wired);
         return {
           type: 'eventBatch',
           payload: {
             gameId: message.payload.gameId,
-            lines: message.payload.lines.map((line) => ({
-              ...line,
-              sequence: run.wire.nextLogSequence(binding.viewer),
-            })),
+            lines: wired.map((entry) => entry.line),
             frontierTurn: message.payload.frontierTurn,
             snapshotTurns: [],
+            ...(cues.length > 0 && { cues }),
           },
         };
       }

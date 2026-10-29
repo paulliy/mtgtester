@@ -10,6 +10,7 @@
 import { PHASES, STEPS, turnPositionLabel } from '@mtg/shared';
 import type {
   ActionPresentation,
+  CueTarget,
   DecisionPresentation,
   DecisionRequest,
   GameEvent,
@@ -17,6 +18,8 @@ import type {
   LegalAction,
   Phase,
   PlayerBoardState,
+  PlayerId,
+  PresentationCue,
   Step,
 } from '@mtg/shared';
 import {
@@ -175,4 +178,88 @@ export function playerFacingEvents(events: readonly GameEvent[]): GameEvent[] {
     if (event.type !== 'playerEliminated' || typeof reason !== 'string') return event;
     return { ...event, payload: { ...event.payload, reason: lossReasonLabel(reason) } };
   });
+}
+
+// ── Damage and life cues (ADR 0032 decision 8, plan P6) ──────────────────────────────────────
+
+/**
+ * The server-private board a batch of cues is built against (`Engine.cueBoard`): card ids on the
+ * battlefield and the stack mapped to their object ids, and every life total. It never leaves
+ * the server, so no cue can carry a card id.
+ */
+export interface CueBoard {
+  objects: ReadonlyMap<string, string>;
+  life: ReadonlyMap<PlayerId, number>;
+}
+
+const LIFE_EVENTS: ReadonlySet<string> = new Set(['damage', 'lifeGain', 'lifeLoss']);
+
+/**
+ * What one batch of events did to the board, for animation.
+ *
+ * - **`damage`.** One per damage event. Its source and permanent target are resolved through the
+ *   boards before and after the batch (a spell's source is still on the stack before), and a
+ *   player target is the player's id. A source on neither board is left out; a target on neither
+ *   is dropped with its cue. Combat damage dealt in one step shares a group; every other damage
+ *   event is its own.
+ * - **`lifeChange`.** One per player whose life total differs between the two boards, with the
+ *   real delta (infect and "can't go below" effects make damage a poor guide) and the sequence of
+ *   the last event in the batch that touched that player's life.
+ */
+export function buildCues(
+  events: readonly GameEvent[],
+  before: CueBoard,
+  after: CueBoard,
+): PresentationCue[] {
+  const cues: PresentationCue[] = [];
+  const objectOf = (cardId: unknown): string | null => {
+    if (typeof cardId !== 'string') return null;
+    return before.objects.get(cardId) ?? after.objects.get(cardId) ?? null;
+  };
+  const groups = new Map<string, number>();
+  const lastLifeEvent = new Map<PlayerId, number>();
+  for (const event of events) {
+    if (!LIFE_EVENTS.has(event.type)) continue;
+    const payload = event.payload;
+    if (event.type !== 'damage') {
+      const player = payload['player'];
+      if (typeof player === 'string') lastLifeEvent.set(player, event.sequence);
+      continue;
+    }
+    const amount = payload['amount'];
+    if (typeof amount !== 'number') continue;
+    const combat = payload['combat'] === true;
+    let target: CueTarget | null = null;
+    if (typeof payload['targetCardId'] === 'string') {
+      const id = objectOf(payload['targetCardId']);
+      if (id !== null) target = { kind: 'object', id };
+    } else if (typeof payload['target'] === 'string' && before.life.has(payload['target'])) {
+      target = { kind: 'player', id: payload['target'] };
+      lastLifeEvent.set(payload['target'], event.sequence);
+    }
+    if (target === null) continue;
+    const key = combat ? `combat:${event.turn}:${event.step ?? ''}` : `event:${event.sequence}`;
+    if (!groups.has(key)) groups.set(key, groups.size);
+    cues.push({
+      kind: 'damage',
+      sequence: event.sequence,
+      sourceId: objectOf(payload['sourceCardId']),
+      target,
+      amount,
+      combat,
+      group: groups.get(key)!,
+    });
+  }
+  const lastSequence = events.at(-1)?.sequence;
+  for (const [player, life] of after.life) {
+    const was = before.life.get(player);
+    if (was === undefined || was === life || lastSequence === undefined) continue;
+    cues.push({
+      kind: 'lifeChange',
+      sequence: lastLifeEvent.get(player) ?? lastSequence,
+      player,
+      delta: life - was,
+    });
+  }
+  return cues;
 }

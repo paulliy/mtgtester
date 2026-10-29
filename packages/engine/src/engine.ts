@@ -434,6 +434,24 @@ export class Engine implements EngineDriver {
     return buildSpectatorState(this.ctx);
   }
 
+  /**
+   * What the server needs to turn damage events into animation cues (ADR 0032 decision 8): each
+   * card id on the battlefield or the stack mapped to the object id the projections show, and
+   * every life total. Server-private: card ids never reach a frame.
+   */
+  cueBoard(): { objects: Map<string, string>; life: Map<string, number> } {
+    const s = this.ctx.state;
+    const objects = new Map<string, string>();
+    for (const permanent of s.battlefield) objects.set(permanent.cardId, permanent.id);
+    // A spell's damage keeps its source while the spell is on the stack; an ability's source is
+    // its permanent, already mapped above.
+    for (const entry of s.stack) {
+      if (!objects.has(entry.sourceCardId)) objects.set(entry.sourceCardId, entry.id);
+    }
+    const life = new Map(s.players.map((player) => [player.id, player.life]));
+    return { objects, life };
+  }
+
   /** Hidden-information-safe board projection for an interactive human seat. */
   playerState(playerId: string): import('@mtg/shared').PlayerBoardState {
     return buildPlayerBoardState(this.ctx, playerId);

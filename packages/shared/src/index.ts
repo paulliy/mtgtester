@@ -166,6 +166,8 @@ export type {
   CardTestScenarioMetadata,
   StateSnapshotPayload,
   EventBatchPayload,
+  CueTarget,
+  PresentationCue,
   DecisionPendingPayload,
   ComputeHaltedPayload,
   ApiWaitingPayload,

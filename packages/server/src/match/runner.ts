@@ -27,11 +27,13 @@ import type {
   HaltKind,
   LossReason,
   PlayerId,
+  PresentationCue,
   SpectatorLogLine,
   SpectatorState,
   TargetChoice,
 } from '@mtg/shared';
 import { LOOKAHEAD_TURNS } from '@mtg/shared';
+import { buildCues, type CueBoard } from './presentation';
 import type {
   GameRecorder,
   GameReplayRecord,
@@ -114,6 +116,8 @@ export interface MatchRunnerHooks {
     frontierTurn: number,
     snapshotTurns: number[],
     seat?: PlayerId,
+    /** Damage and life cues for the same events (ADR 0032 decision 8); empty when none. */
+    cues?: PresentationCue[],
   ): void;
   onSnapshot?(turn: number, state: SpectatorState, atFrontier: boolean): void;
   onHalt?(info: HaltInfo): void;
@@ -211,6 +215,8 @@ export class MatchRunner {
 
   /** Resolves when something the compute gate cares about changes. */
   private wakeup: (() => void) | null = null;
+  /** The board the next batch of cues is judged against (`takeCues`). */
+  private cueBoard: CueBoard | null = null;
   /** A concession asked for (ADR 0031 decision 10), applied at the next decision boundary. */
   private pendingConcession: { players: PlayerId[]; reason: 'timeLimit' | 'allAway' } | null = null;
   private wakeConcession: (() => void) | null = null;
@@ -580,21 +586,37 @@ export class MatchRunner {
     this.eventCursor = (events[events.length - 1]?.sequence ?? this.eventCursor) + 1;
     this.opts.recorder?.appendEvents(events);
     this.indexMetricEvents(events);
+    const cues = this.takeCues(events);
     const { seatEvents } = this.opts;
     if (seatEvents !== undefined) {
       for (const seat of seatEvents.seats) {
         const seatLines = seatEvents.format(events, seat);
         if (seatLines.length > 0) {
-          this.opts.onEvents?.(seatLines, this.frontierTurn, this.getSnapshotTurns(), seat);
+          this.opts.onEvents?.(seatLines, this.frontierTurn, this.getSnapshotTurns(), seat, cues);
         }
       }
     } else {
       const lines = this.opts.formatEvents?.(events) ?? formatSpectatorLog(events);
       if (lines.length > 0) {
-        this.opts.onEvents?.(lines, this.frontierTurn, this.getSnapshotTurns());
+        this.opts.onEvents?.(lines, this.frontierTurn, this.getSnapshotTurns(), undefined, cues);
       }
     }
     this.opts.onProgress?.(this.frontierTurn);
+  }
+
+  /**
+   * The cues for a flushed batch, built against the boards before and after it. The board after
+   * one batch is the board before the next, so every event is judged against the board it
+   * changed.
+   */
+  private takeCues(events: readonly GameEvent[]): PresentationCue[] {
+    const engine = this.opts.engine as Partial<Pick<Engine, 'cueBoard'>>;
+    // A stub engine in a runner test has no board to read.
+    if (typeof engine.cueBoard !== 'function') return [];
+    const after = engine.cueBoard();
+    const before = this.cueBoard ?? after;
+    this.cueBoard = after;
+    return buildCues(events, before, after);
   }
 
   /** Persist the engine's separate diagnostic stream with the same incremental cadence as events. */

@@ -16,6 +16,7 @@
  * - `requestOrder`: a seat's request ids not counting `q1`, `q2`, ... in order.
  * - `otherSeatHand`: an object id that was in another seat's hand when the frame was sent.
  * - `rawData`: a legal action's raw `data` sent to a seat that did not ask for it.
+ * - `cueCardId`: a damage or life cue carrying a card id or any field outside the cue shape.
  */
 
 import { PLAYER_HALT_TEXT } from '@mtg/engine';
@@ -39,7 +40,8 @@ export type FrameScanRule =
   | 'engineRequestId'
   | 'requestOrder'
   | 'otherSeatHand'
-  | 'rawData';
+  | 'rawData'
+  | 'cueCardId';
 
 export interface FrameScanViolation {
   rule: FrameScanRule;
@@ -88,6 +90,26 @@ const LIVE_TYPES = new Set([
 const POST_GAME_TYPES = new Set(['replayUnlocked', 'replayTurnState', 'tableResults']);
 
 const ENGINE_REQUEST_ID = /"[^"]*-t\d+-d\d+"/;
+const CARD_ID = /^c-\d+$/;
+const CUE_KEYS: Readonly<Record<string, readonly string[]>> = {
+  damage: ['kind', 'sequence', 'sourceId', 'target', 'amount', 'combat', 'group'],
+  lifeChange: ['kind', 'sequence', 'player', 'delta'],
+};
+
+/** What is wrong with one cue, or null. */
+function cueProblem(cue: unknown): string | null {
+  if (!isRecord(cue)) return 'not an object';
+  const allowed = CUE_KEYS[String(cue['kind'])];
+  if (allowed === undefined) return `unknown kind ${String(cue['kind'])}`;
+  const extra = Object.keys(cue).filter((key) => !allowed.includes(key));
+  if (extra.length > 0) return `extra fields ${extra.join(', ')}`;
+  const target = cue['target'];
+  const ids = [cue['sourceId'], cue['player'], isRecord(target) ? target['id'] : undefined];
+  if (isRecord(target) && Object.keys(target).some((key) => key !== 'kind' && key !== 'id')) {
+    return 'extra target fields';
+  }
+  return ids.some((id) => typeof id === 'string' && CARD_ID.test(id)) ? 'a card id' : null;
+}
 const HALT_LINE = /ENGINE HALT — ([^"]*)"/g;
 
 type Json = Record<string, unknown>;
@@ -164,6 +186,12 @@ export function scanTableFrames(
       if (match[1] !== PLAYER_HALT_TEXT) add(frame, 'rawHaltText', match[1] ?? '');
     }
     if (!postGame && ENGINE_REQUEST_ID.test(frame.text)) add(frame, 'engineRequestId', type);
+    if (type === 'eventBatch' && Array.isArray(payload['cues'])) {
+      for (const cue of payload['cues'] as unknown[]) {
+        const problem = cueProblem(cue);
+        if (problem !== null) add(frame, 'cueCardId', problem);
+      }
+    }
 
     if (frame.to !== 'host') {
       const seat = frame.to;

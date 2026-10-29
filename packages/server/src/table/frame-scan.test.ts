@@ -126,6 +126,27 @@ describe('scanTableFrames', () => {
     ).toEqual(['otherSeatHand']);
   });
 
+  it('finds a card id or a stray field in a cue', () => {
+    const batch = (cue: object) => ({ type: 'eventBatch', payload: { lines: [], cues: [cue] } });
+    const damage = {
+      kind: 'damage',
+      sequence: 3,
+      sourceId: 'o-4',
+      target: { kind: 'object', id: 'o-9' },
+      amount: 2,
+      combat: true,
+      group: 0,
+    };
+    expect(rules(frames(['P1', batch(damage)]))).toEqual([]);
+    expect(rules(frames(['P1', batch({ ...damage, sourceId: 'c-12' })]))).toEqual(['cueCardId']);
+    expect(rules(frames(['P1', batch({ ...damage, sourceCardId: 'c-12' })]))).toEqual([
+      'cueCardId',
+    ]);
+    expect(
+      rules(frames(['P1', batch({ kind: 'lifeChange', sequence: 1, player: 'P2', delta: -3 })])),
+    ).toEqual([]);
+  });
+
   it('finds raw action data sent to a seat that did not ask', () => {
     expect(rules(frames(['P1', decision('q1', true)]), new Set<PlayerId>(['P2']))).toEqual([
       'rawData',

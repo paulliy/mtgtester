@@ -26,6 +26,7 @@ import type {
   PlayerBoardState,
   PlayerId,
   PlaybackMode,
+  PresentationCue,
   ProviderKind,
   SeatSource,
   SeatSummary,
@@ -43,6 +44,7 @@ import { assertNever } from '@mtg/shared';
 import { GameSocket, type ConnectionState } from '../lib/socket';
 import { resetBoardAnchors } from '../composables/useBoardAnchors';
 import { resetCombatStrikes } from '../composables/useCombatStrikes';
+import { applyLifeCues, resetLifeFlashes } from '../composables/useLifeFlash';
 import { pushRecentId, readRecentIds, saveRecentIds } from '../lib/recentSetup';
 import { dealsInForce, mergeTalk } from '../lib/tableTalk';
 import { dealWarnings } from '../lib/dealWarnings';
@@ -126,6 +128,11 @@ export const useGameStore = defineStore('game', () => {
    */
   const storedReducedMotion =
     typeof localStorage !== 'undefined' ? localStorage.getItem('mtg-player-reduced-motion') : null;
+  /**
+   * The latest batch's damage and life cues (ADR 0032 decision 8), with a counter so the same
+   * cues arriving twice still read as a new batch. The board animates from these.
+   */
+  const cueBatch = ref<{ id: number; cues: PresentationCue[] } | null>(null);
   const reducedMotion = ref(
     storedReducedMotion !== null
       ? storedReducedMotion === 'true'
@@ -424,6 +431,8 @@ export const useGameStore = defineStore('game', () => {
         // it up for free the way everything above does.
         resetBoardAnchors();
         resetCombatStrikes();
+        resetLifeFlashes();
+        cueBatch.value = null;
         state.value = null;
         playerState.value = null;
         playerAction.value = null;
@@ -454,6 +463,10 @@ export const useGameStore = defineStore('game', () => {
         snapshotTurns.value = message.payload.snapshotTurns;
         addAnnotations(message.payload.annotations);
         addTableTalk(message.payload.tableTalk);
+        if (message.payload.cues !== undefined && message.payload.cues.length > 0) {
+          applyLifeCues(message.payload.cues);
+          cueBatch.value = { id: (cueBatch.value?.id ?? 0) + 1, cues: message.payload.cues };
+        }
         break;
 
       case 'diplomacyState':
@@ -946,6 +959,7 @@ export const useGameStore = defineStore('game', () => {
     remindUnplayedLand,
     autoConfirmActions,
     reducedMotion,
+    cueBatch,
     halt,
     heldDecision,
     gameOver,

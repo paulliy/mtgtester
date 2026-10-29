@@ -99,15 +99,18 @@ const thinkingLabel = computed(() => {
 });
 
 /**
- * MTGA-style attack animation (extends §9.8.1): every freshly pushed board is diffed for combat
- * damage and translated into a lunge vector for the striking permanent, via anchors already
- * registered for the combat overlay. Skipped entirely under reduced motion, matching how
- * `CombatOverlay.vue` and the drag-cursor line are gated.
+ * MTGA-style attack animation (extends §9.8.1): each batch's damage cues from the server become
+ * lunges for the striking permanents, via anchors already registered for the combat overlay.
+ * Skipped entirely under reduced motion, matching how `CombatOverlay.vue` and the drag-cursor line
+ * are gated.
  */
 const combatStrikes = useCombatStrikes();
-watch(state, (next) => {
-  if (next !== null && !store.reducedMotion) combatStrikes.observe(next);
-});
+watch(
+  () => store.cueBatch,
+  (batch) => {
+    if (batch !== null && !store.reducedMotion) combatStrikes.observeCues(batch.cues);
+  },
+);
 
 const pending = computed(() => store.playerAction);
 const request = computed(() => pending.value?.request ?? null);
@@ -352,10 +355,8 @@ function groupedPermanentsFor(seat: string) {
   return groupPermanents(permanentsFor(seat));
 }
 
-const humanLifeFlash = useLifeFlash(() => human.value?.life ?? 0);
-const opponentLifeFlash = useLifeFlashBySeat(() =>
-  opponents.value.map((opp) => ({ seat: opp.seat, life: opp.life })),
-);
+const humanLifeFlash = useLifeFlash(() => human.value?.seat);
+const opponentLifeFlash = useLifeFlashBySeat();
 
 /**
  * Card size scales inversely with how crowded its zone is (design handoff: "adaptive card
