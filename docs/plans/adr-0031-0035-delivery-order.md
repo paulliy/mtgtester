@@ -72,18 +72,18 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 
 ## Progress
 
-| Step | State       | Done so far                                                                                    | Pull request |
-| ---- | ----------- | ---------------------------------------------------------------------------------------------- | ------------ |
-| 1    | done        | stale harness deleted; harness-integrity guard                                                 | #44          |
-| 2    | done        | `scripts/card-authoring-metrics.ts`; `docs/reviews/card-authoring-baseline-2026-10-28.md`      | #44          |
-| 3    | in progress | phase 1 steps 2 to 10 done; open: executor invariants for scope reads, empty suites            | #44          |
-| 4    | done        | P1 data-key registry; P3 label code in `@mtg/shared/presentation`                              | #44          |
-| 5    | done        | M1 seat controllers: `'table'` mode, per-seat state, fail-closed switches                      | #44          |
-| 6    | done        | M2a disclosure policy, privacy fixes, replay inputs and harness; M2b ChaCha20 and streams      | #44          |
-| 7    | done        | P2 projection types and board groups; P4 server presentation; P5 raw `data` on request, lint   | #44          |
-| 9    | done        | M3 workers, health, manifest, post-game, agent table mode, scans; M4 clocks, fallback, concede | #44          |
-| 10   | done        | P6: server-built damage and life cues on each batch; the board animates from them              | #44          |
-| 12   | done        | M5 exposure, TLS run, review; M6 table app, lobby, table bar, post-game, table e2e and CI job  | #44          |
+| Step | State | Done so far                                                                                                | Pull request |
+| ---- | ----- | ---------------------------------------------------------------------------------------------------------- | ------------ |
+| 1    | done  | stale harness deleted; harness-integrity guard                                                             | #44          |
+| 2    | done  | `scripts/card-authoring-metrics.ts`; `docs/reviews/card-authoring-baseline-2026-10-28.md`                  | #44          |
+| 3    | done  | phase 1 done: scope reads are invariants per kind; every test file collects a test (`check:suite-collect`) | #44          |
+| 4    | done  | P1 data-key registry; P3 label code in `@mtg/shared/presentation`                                          | #44          |
+| 5    | done  | M1 seat controllers: `'table'` mode, per-seat state, fail-closed switches                                  | #44          |
+| 6    | done  | M2a disclosure policy, privacy fixes, replay inputs and harness; M2b ChaCha20 and streams                  | #44          |
+| 7    | done  | P2 projection types and board groups; P4 server presentation; P5 raw `data` on request, lint               | #44          |
+| 9    | done  | M3 workers, health, manifest, post-game, agent table mode, scans; M4 clocks, fallback, concede             | #44          |
+| 10   | done  | P6: server-built damage and life cues on each batch; the board animates from them                          | #44          |
+| 12   | done  | M5 exposure, TLS run, review; M6 table app, lobby, table bar, post-game, table e2e and CI job              | #44          |
 
 ## Notes from delivery
 
@@ -148,3 +148,12 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
   `resumeControl`. `MatchRunner` now also yields every 50 ms. The table e2e found it.
 - **Slow steps.** Those 350 to 400 ms `advance()` calls in a four-seat game deserve a profile
   alongside the slow bot game noted above.
+- **Scope reads (phase 1 step 4 tail).** Every scope-reading `Value` kind throws
+  `EngineInvariantError` at `values.<field>` on an absent field, one kind per commit. Making all
+  eight throw at once over the engine and card suites found one provider gap, the enters scope
+  for a permanent not cast with Treasure mana (Kalain), which now states 0.
+- **Empty suites (phase 1 step 9 tail).** `check:suite-collect` lists every runner's tests and
+  fails on a tracked file that collects none. Five server suites build their tests from the
+  untracked Scryfall bulk file; they declare it with `// suite-requires:` and the run lists them
+  as not run while it is missing, which is always so in CI. About 2.5 minutes, nearly all Vitest
+  collection; it runs after the full suite in the engine job.

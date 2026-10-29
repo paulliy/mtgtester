@@ -4,7 +4,12 @@ import { describe, expect, it } from 'vitest';
 import {
   cardGateEntries,
   checkSuiteIntegrity,
+  countPlaywrightList,
+  countVitestList,
+  discoverRunners,
+  emptySuiteErrors,
   globMatches,
+  suiteRequirements,
   parsePlaywrightConfig,
   parseVitestConfig,
 } from '../../../../scripts/contracts/suite-integrity';
@@ -186,6 +191,94 @@ describe('suite integrity', () => {
       }),
     );
     expect(errors).toEqual([expect.stringContaining('apps/web/vite.config.ts: defines a `test`')]);
+  });
+});
+
+describe('suite collection', () => {
+  const { runners } = discoverRunners(repo());
+  const files = repo().files;
+  const collected = (vitest: Record<string, number>, playwright: Record<string, number>) =>
+    new Map([
+      ['vitest.config.ts', new Map(Object.entries(vitest))],
+      ['playwright.config.ts', new Map(Object.entries(playwright))],
+      ['playwright.setup.config.ts', new Map([['apps/web/e2e/player-game.spec.ts', 1]])],
+    ]);
+
+  it('accepts files that each collect a test from their own runner', () => {
+    const result = emptySuiteErrors(
+      files,
+      runners,
+      collected(
+        { 'packages/engine/tests/a.test.ts': 2, 'packages/server/src/cards/b.test.ts': 1 },
+        { 'apps/web/e2e/lab.spec.ts': 4 },
+      ),
+    );
+    expect(result).toEqual({ errors: [], excused: [] });
+  });
+
+  it('fires on a file its runner collects nothing from, even if another runner lists it', () => {
+    const result = emptySuiteErrors(
+      files,
+      runners,
+      collected({ 'packages/engine/tests/a.test.ts': 2, 'apps/web/e2e/lab.spec.ts': 1 }, {}),
+    );
+    expect(result.errors).toEqual([
+      'packages/server/src/cards/b.test.ts: vitest.config.ts collects no test from it',
+      'apps/web/e2e/lab.spec.ts: playwright.config.ts collects no test from it',
+    ]);
+  });
+
+  it('excuses an empty file only while the untracked data it declares is missing', () => {
+    const counts = collected(
+      { 'packages/engine/tests/a.test.ts': 2 },
+      { 'apps/web/e2e/lab.spec.ts': 1 },
+    );
+    const missing = (file: string) =>
+      file === 'packages/server/src/cards/b.test.ts' ? 'data/bulk.json' : null;
+    expect(emptySuiteErrors(files, runners, counts, missing)).toEqual({
+      errors: [],
+      excused: ['packages/server/src/cards/b.test.ts: needs data/bulk.json, which is not present'],
+    });
+    expect(emptySuiteErrors(files, runners, counts).errors).toHaveLength(1);
+  });
+
+  it('reads the requirement marker only as a whole comment line', () => {
+    expect(
+      suiteRequirements(
+        '// suite-requires: data/a.json\nconst x = 1; // suite-requires: data/b.json\n// suite-requires: data/c.json',
+      ),
+    ).toEqual(['data/a.json', 'data/c.json']);
+  });
+
+  it("counts tests per file from both runners' listings", () => {
+    expect(
+      countVitestList(
+        JSON.stringify([
+          { name: 'a > one', file: '/repo/packages/x.test.ts' },
+          { name: 'a > two', file: '/repo/packages/x.test.ts' },
+          { name: 'b', file: '/repo/packages/y.test.ts' },
+        ]),
+        '/repo',
+      ),
+    ).toEqual(
+      new Map([
+        ['packages/x.test.ts', 2],
+        ['packages/y.test.ts', 1],
+      ]),
+    );
+    expect(
+      countPlaywrightList(
+        JSON.stringify({
+          suites: [
+            {
+              specs: [{ file: 'lab.spec.ts', tests: [{}, {}] }],
+              suites: [{ specs: [{ file: 'lab.spec.ts', tests: [{}] }] }],
+            },
+          ],
+        }),
+        'apps/web/e2e',
+      ),
+    ).toEqual(new Map([['apps/web/e2e/lab.spec.ts', 3]]));
   });
 });
 

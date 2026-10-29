@@ -125,6 +125,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-bun-deps
       - run: bun run test
+      # Every tracked test file collects at least one test from its runner (ADR 0034 decision 9).
+      # It lists every runner's tests without running them: about 2.5 minutes, measured locally,
+      # nearly all of it Vitest importing the suites.
+      - run: bun run check:suite-collect
 
   ai-benchmark-contracts:
     name: AI / Benchmark contracts and privacy

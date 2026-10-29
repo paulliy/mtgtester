@@ -24,6 +24,8 @@ import { toOracleCard } from './scryfall';
 import { VERIFIED_TOKEN_TRIUMPH_CARDS } from './token-triumph-support';
 import type { OracleCard } from '@mtg/shared';
 
+// Builds its tests from the Scryfall bulk file, which is not tracked (data/README.md).
+// suite-requires: data/scryfall-oracle-cards.json
 const scryfallCards = loadScryfallBulkOrNull();
 // data/scryfall-oracle-cards.json is gitignored and not fetched by CI (see scryfall-bulk-fixture.ts).
 const SKIP = scryfallCards === null;

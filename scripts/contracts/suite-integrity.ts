@@ -359,3 +359,75 @@ export function checkSuiteIntegrity(input: IntegrityInput): IntegrityResult {
     cardGateEntries: entries.length,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Collection
+// ---------------------------------------------------------------------------
+
+/** Tests each runner collected, by repository-relative file path. */
+export type CollectedTests = ReadonlyMap<string, ReadonlyMap<string, number>>;
+
+/**
+ * Test files whose own runner collects no test from them (ADR 0034 decision 9): an empty suite,
+ * a `describe` with every test removed, or a file whose tests all sit behind a condition that is
+ * false where the suite runs. Each passes silently, so a test that stopped running looks green.
+ */
+export function emptySuiteErrors(
+  files: string[],
+  runners: Runner[],
+  collected: CollectedTests,
+  missingRequirement: (file: string) => string | null = () => null,
+): { errors: string[]; excused: string[] } {
+  const errors: string[] = [];
+  const excused: string[] = [];
+  for (const file of files.filter(isTestFile)) {
+    const owner = runners.find((runner) => claims(runner, file));
+    if (owner === undefined) continue;
+    const count = collected.get(owner.config)?.get(file) ?? 0;
+    if (count > 0) continue;
+    const missing = missingRequirement(file);
+    if (missing !== null) excused.push(`${file}: needs ${missing}, which is not present`);
+    else errors.push(`${file}: ${owner.config} collects no test from it`);
+  }
+  return { errors, excused };
+}
+
+/**
+ * The files a test file declares it needs (`// suite-requires: <path>` at the start of a line):
+ * data that is not tracked, such as the Scryfall bulk file. While one is missing, the file may
+ * collect nothing; once present, it must collect.
+ */
+export function suiteRequirements(source: string): string[] {
+  return [...source.matchAll(/^\/\/ suite-requires: (\S+)\s*$/gm)].map((match) => match[1]!);
+}
+
+/** `vitest list --json` output: one entry per test, with its absolute file path. */
+export function countVitestList(json: string, root: string): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const entry of JSON.parse(json) as Array<{ file: string }>) {
+    const file = posix.relative(root, entry.file.replaceAll('\\', '/'));
+    counts.set(file, (counts.get(file) ?? 0) + 1);
+  }
+  return counts;
+}
+
+interface PlaywrightSuite {
+  file?: string;
+  specs?: Array<{ file: string; tests?: unknown[] }>;
+  suites?: PlaywrightSuite[];
+}
+
+/** `playwright test --list --reporter=json` output: suites of specs, each with its tests. */
+export function countPlaywrightList(json: string, testDir: string): Map<string, number> {
+  const counts = new Map<string, number>();
+  const walk = (suite: PlaywrightSuite): void => {
+    for (const spec of suite.specs ?? []) {
+      const file = posix.join(testDir, spec.file.replaceAll('\\', '/'));
+      counts.set(file, (counts.get(file) ?? 0) + (spec.tests?.length ?? 1));
+    }
+    for (const child of suite.suites ?? []) walk(child);
+  };
+  for (const suite of (JSON.parse(json) as { suites?: PlaywrightSuite[] }).suites ?? [])
+    walk(suite);
+  return counts;
+}
