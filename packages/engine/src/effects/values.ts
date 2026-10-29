@@ -218,9 +218,7 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
         (controllerId) => controllerId === scope.controllerId,
       ).length;
     case 'triggerCount':
-      // An aggregate trigger always fired because at least one object matched, so the absent
-      // case is a scope that was never populated — 1 is the honest floor, not 0.
-      return scope.triggerCount ?? 1;
+      return scopeFact(scope, 'triggerCount');
     case 'spellManaValue':
       return scopeFact(scope, 'spellManaValue');
     case 'spellColorCount':

@@ -23,6 +23,8 @@ const INVARIANT_FIELDS: readonly ScopeField[] = [
   'stationPower',
   ,
   'damageDealt',
+  ,
+  'triggerCount',
 ];
 
 describe('scope-read invariants', () => {
