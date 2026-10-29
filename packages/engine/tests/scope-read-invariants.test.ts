@@ -17,6 +17,8 @@ const INVARIANT_FIELDS: readonly ScopeField[] = [
   'spellManaValue',
   ,
   'spellColorCount',
+  ,
+  'energyPaid',
 ];
 
 describe('scope-read invariants', () => {

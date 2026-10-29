@@ -230,7 +230,7 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     case 'treasureManaSpent':
       return scopeFact(scope, 'treasureManaSpent');
     case 'energyPaid':
-      return scope.energyPaid ?? 0;
+      return scopeFact(scope, 'energyPaid');
     case 'energyAvailable':
       return ctx.state.players.find((p) => p.id === scope.controllerId)?.energy ?? 0;
     case 'stationPower':
