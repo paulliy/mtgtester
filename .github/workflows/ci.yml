@@ -159,6 +159,24 @@ jobs:
           packages/server/src/benchmark/h-k.test.ts
           packages/server/src/decks/strategy-profile.test.ts
 
+  card-mutation:
+    name: Cards / IR mutation
+    needs: changes
+    # Non-draft pull requests only (ADR 0034 decision 5): a draft skips it, as it skips the full suite.
+    if: needs.changes.outputs.code == 'true' && github.event_name == 'pull_request' && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-bun-deps
+      # Each reviewed card whose definition snapshot entry changed against the base must fail one of
+      # its manifest tests on an assertion under every IR mutant; changed unreviewed cards are
+      # reported. About 1 second per mutant after a 2.5-minute Vitest listing.
+      - run: bun run mutate-cards --changed
+        env:
+          MUTATION_BASE: ${{ github.event.pull_request.base.sha }}
+
   card-verification:
     name: Cards / Offline verification gate
     needs: changes
