@@ -444,7 +444,6 @@ const nameById = computed(() => {
   }
   for (const permanent of state.value?.battlefield ?? []) names.set(permanent.id, permanent.name);
   for (const card of state.value?.exile ?? []) names.set(card.id, card.name);
-  for (const top of state.value?.revealedLibraryTops ?? []) names.set(top.card.id, top.card.name);
   return names;
 });
 
@@ -622,7 +621,10 @@ const selectedEntry = computed(() =>
 /** The card or permanent an action comes from, by name. */
 function sourceNameOf(action: LegalAction): string | null {
   const id = sourceId(action);
-  return id === null ? null : (nameById.value.get(id) ?? null);
+  if (id === null) return null;
+  // A card played from the top of a library is in no zone `nameById` covers.
+  const top = state.value?.revealedLibraryTops?.find((entry) => entry.card.id === id);
+  return nameById.value.get(id) ?? top?.card.name ?? null;
 }
 
 function targetSlots(action: LegalAction | null) {

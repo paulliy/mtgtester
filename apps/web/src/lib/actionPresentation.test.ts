@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { DecisionRequest, LegalAction } from '@mtg/shared';
-import { buttonLabel, costChips, entryFor, pendingLabel, promptOf } from './actionPresentation';
+import {
+  buttonLabel,
+  costChips,
+  entryFor,
+  panelButtonText,
+  pendingLabel,
+  promptOf,
+} from './actionPresentation';
 
 const cast: LegalAction = { id: 4, type: 'castSpell', description: 'Cast Opt (1 mana)' };
 
@@ -53,5 +60,25 @@ describe('server presentation lookup', () => {
     expect(costChips(undefined)).toEqual([]);
     expect(pendingLabel(cast, undefined)).toBe('Cast Opt (1 mana)');
     expect(promptOf(bare)).toBe('You have priority (precombatMain). Choose an action.');
+  });
+});
+
+describe('panelButtonText', () => {
+  it('shows the engine description for a priority option, whose verb is only its kind', () => {
+    const sent = request({
+      layout: 'priority',
+      actions: { 4: { verb: 'Cast', subjects: [] } },
+    });
+    expect(panelButtonText(sent, cast)).toBe('Cast Opt (1 mana)');
+  });
+
+  it('shows the verb of a choice decision, and the description when it has none', () => {
+    const choice = request({
+      layout: 'cards',
+      actions: { 4: { verb: 'Discard', subjects: [] } },
+    });
+    expect(panelButtonText(choice, cast)).toBe('Discard');
+    expect(panelButtonText(request({ layout: 'choices' }), cast)).toBe('Cast Opt (1 mana)');
+    expect(panelButtonText(request(undefined), cast)).toBe('Cast Opt (1 mana)');
   });
 });

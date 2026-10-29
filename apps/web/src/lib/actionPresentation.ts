@@ -38,3 +38,14 @@ export function costChips(entry: ActionPresentation | undefined): readonly strin
 export function promptOf(request: DecisionRequest): string {
   return request.presentation?.playerPrompt ?? request.prompt;
 }
+
+/**
+ * The text on a button in the generic decision panel. A choice decision's entry names the option
+ * ("Discard", "Keep on top"). A priority menu's entry names only a kind of action ("Cast"), shared
+ * by every option of that kind, so the engine's own description is what tells the options apart:
+ * the panel shows it unchanged.
+ */
+export function panelButtonText(request: DecisionRequest, action: LegalAction): string {
+  if (request.presentation?.layout === 'priority') return action.description;
+  return entryFor(request, action)?.verb ?? action.description;
+}

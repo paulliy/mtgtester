@@ -12,7 +12,7 @@
 import { computed } from 'vue';
 import type { ActionSubject, DecisionRequest, LegalAction } from '@mtg/shared';
 import CardImage from './CardImage.vue';
-import { promptOf } from '../lib/actionPresentation';
+import { panelButtonText, promptOf } from '../lib/actionPresentation';
 import { useCardPreviewStore } from '../stores/cardPreview';
 
 const props = defineProps<{ request: DecisionRequest }>();
@@ -29,7 +29,7 @@ function subjectFor(action: LegalAction): ActionSubject | null {
   return props.request.presentation?.actions?.[action.id]?.subjects[0] ?? null;
 }
 function verbFor(action: LegalAction): string {
-  return props.request.presentation?.actions?.[action.id]?.verb ?? action.description;
+  return panelButtonText(props.request, action);
 }
 function roleFor(action: LegalAction): string | undefined {
   return props.request.presentation?.actions?.[action.id]?.role;
