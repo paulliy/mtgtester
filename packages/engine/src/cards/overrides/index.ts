@@ -451,6 +451,14 @@ function quotedBody(reason: string): string | null {
   return m === null ? null : (m[1] as string);
 }
 
+/**
+ * The `handledLines` entry that clears an unmodeled reason: the quoted Oracle line for a reason
+ * that quotes one, the reason itself otherwise. `card:new` prints these for an author to claim.
+ */
+export function handledLineOf(reason: string): string {
+  return quotedBody(reason) ?? reason;
+}
+
 function normalizeLine(line: string): string {
   return line.replace(
     /\bthis (?:creature|artifact|enchantment|land|permanent|token|Vehicle|Equipment|Saga|planeswalker|Aura)\b/gi,

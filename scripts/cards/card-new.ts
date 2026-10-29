@@ -1,0 +1,476 @@
+/**
+ * `bun run card:new "<name>" [--batch <id>]` (ADR 0033 decision 1, plan phase 2 step 5): starts
+ * a card. It pins the card, prints what the engine already makes of it (the exact `handledLines`
+ * an override must claim, and which lines are already modeled), lists the nearest modeled cards
+ * for each unparsed line, shows the card's Forge script as a reference when the network allows
+ * (decision 7), and prints the interaction questions the card's clause shapes raise.
+ *
+ * With `--batch <id>` it also writes the scaffold, every part of which stays rejected until
+ * filled: an `unimplemented()` stub (the card stays unmodeled), a manifest entry whose clauses
+ * have no test IDs, a runner test file of `it.todo` placeholders that the skip lint refuses, and
+ * the test file's card-gate entry. It never copies another card's definition, and it reads the
+ * engine's own interpreter rather than any copy of its vocabulary.
+ */
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import type { OracleCard } from '../../packages/shared/src';
+import { interpretCard } from '../../packages/engine/src/cards/interpret';
+import { handledLineOf } from '../../packages/engine/src/cards/overrides/index';
+import {
+  PIN_STORE_PATH,
+  oracleSha256,
+  pinStore,
+  type PinStoreFile,
+} from '../../packages/engine/tests/scenario/pin-store';
+import { CARD_GATE_LIST } from '../contracts/suite-integrity';
+import { COVERAGE_ORACLE, findCard } from './resolve-card';
+
+const OVERRIDES_DIR = 'packages/engine/src/cards/overrides';
+const OVERRIDES_INDEX = `${OVERRIDES_DIR}/index.ts`;
+const MANIFEST = 'packages/server/fixtures/card-verification-manifest.json';
+const CARD_TESTS_DIR = 'packages/engine/tests/cards';
+export const FORGE_COMMIT = '6a2dcdc';
+const FORGE_CACHE = '.cache/forge';
+
+export const slugOf = (name: string): string =>
+  name
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+
+const pascalOf = (id: string): string =>
+  id
+    .split(/[^a-zA-Z0-9]+/)
+    .filter(Boolean)
+    .map((part) => part[0]!.toUpperCase() + part.slice(1))
+    .join('');
+
+// ── Interaction prompts ────────────────────────────────────────────────────────────────────────
+
+/**
+ * Clause shapes behind recent escaped bugs, and the question each one raises. The shapes are
+ * deliberately loose: a false prompt costs a moment's thought, a missed one costs a bug.
+ */
+const INTERACTION_SHAPES: ReadonlyArray<{ shape: string; pattern: RegExp; question: string }> = [
+  {
+    shape: 'copies',
+    pattern: /\bcop(?:y|ies)\b/i,
+    question:
+      'A copy: which values are copied (CR 707.2), which are not (counters, damage, choices), and is the copy cast?',
+  },
+  {
+    shape: 'phasing',
+    pattern: /\bphases? (?:out|in)\b|\bphasing\b/i,
+    question:
+      'Phasing: do attachments phase with it, and do its effects keep tracking it (CR 702.26)?',
+  },
+  {
+    shape: 'last known information',
+    pattern:
+      /\b(?:dies|leaves the battlefield|is put into a graveyard)\b[^.]*\b(?:its|that creature's|that permanent's)\b/i,
+    question:
+      'Last known information: which values come from the object as it last existed on the battlefield (CR 608.2h)?',
+  },
+  {
+    shape: 'per-player grouping',
+    pattern: /\beach (?:player|opponent)\b|\bfor each (?:player|opponent)\b/i,
+    question:
+      'Per player: in what order do players choose and act, and what happens for a player who cannot (APNAP, CR 101.4)?',
+  },
+  {
+    shape: 'graveyard cast permission',
+    pattern: /\b(?:cast|play)\b[^.]*\bfrom (?:your|a|their) graveyard\b/i,
+    question:
+      'Casting from a graveyard: which costs apply, where does the card go after, and does the permission survive a zone change?',
+  },
+  {
+    shape: 'type read off the battlefield',
+    pattern: /\bif (?:it|that card|that creature) (?:was|is) an?\b|\bif it was a\b/i,
+    question:
+      'A type read after a zone change: is the type checked as it last existed, or in its new zone?',
+  },
+  {
+    shape: '"another"',
+    pattern: /\banother\b/i,
+    question:
+      '"Another": is the source itself excluded everywhere it should be, including from counts?',
+  },
+  {
+    shape: '"you may"',
+    pattern: /\byou may\b/i,
+    question: '"You may": who decides, when, and is declining a separate tested path?',
+  },
+  {
+    shape: 'intervening "if"',
+    pattern: /^(?:When|Whenever|At)\b[^,]*, if\b/m,
+    question:
+      'Intervening "if" (CR 603.4): is the condition checked both when the trigger fires and when it resolves?',
+  },
+];
+
+export function interactionPrompts(oracleText: string): Array<{ shape: string; question: string }> {
+  return INTERACTION_SHAPES.filter(({ pattern }) => pattern.test(oracleText)).map(
+    ({ shape, question }) => ({ shape, question }),
+  );
+}
+
+// ── Nearest modeled cards ──────────────────────────────────────────────────────────────────────
+
+/** A line's words with its card's name, numbers and mana symbols made generic. */
+export function normalizeLine(line: string, cardName: string): string[] {
+  const named = cardName === '' ? line : line.split(cardName).join(' cardname ');
+  return named
+    .toLowerCase()
+    .replace(/\{[^}]+\}/g, ' sym ')
+    .replace(/\b\d+\b/g, ' num ')
+    .split(/[^a-z']+/)
+    .filter(Boolean);
+}
+
+/** Jaccard similarity of two lines' word sets. */
+export function similarity(a: readonly string[], b: readonly string[]): number {
+  const left = new Set(a);
+  const right = new Set(b);
+  if (left.size === 0 && right.size === 0) return 0;
+  let shared = 0;
+  for (const word of left) if (right.has(word)) shared += 1;
+  return shared / (left.size + right.size - shared);
+}
+
+export interface ModeledLine {
+  card: string;
+  line: string;
+  words: string[];
+}
+
+/** Every Oracle line the engine models, across the cards available locally. */
+export function modeledLines(cards: readonly OracleCard[]): ModeledLine[] {
+  const lines: ModeledLine[] = [];
+  const seen = new Set<string>();
+  for (const card of cards) {
+    if (seen.has(card.name)) continue;
+    seen.add(card.name);
+    let unhandled: Set<string>;
+    try {
+      const def = interpretCard(card);
+      if (!def.modeled) continue;
+      unhandled = new Set(def.unmodeledReasons.map(handledLineOf));
+    } catch {
+      continue;
+    }
+    for (const line of card.oracleText.split('\n'))
+      if (
+        line.trim() !== '' &&
+        !unhandled.has(line) &&
+        !unhandled.has(line.split(card.name).join('~'))
+      )
+        lines.push({ card: card.name, line, words: normalizeLine(line, card.name) });
+  }
+  return lines;
+}
+
+export function nearestCards(
+  line: string,
+  cardName: string,
+  corpus: readonly ModeledLine[],
+  count = 5,
+): Array<ModeledLine & { score: number }> {
+  const words = normalizeLine(line, cardName);
+  return corpus
+    .filter((entry) => entry.card !== cardName)
+    .map((entry) => ({ ...entry, score: similarity(words, entry.words) }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score || a.card.localeCompare(b.card))
+    .slice(0, count);
+}
+
+/** Where a card's behavior is defined: its override registration, or the parser. */
+function definitionSite(name: string): string {
+  const quoted = [`'${name}'`, `"${name}"`, `'${name.replaceAll("'", "\\'")}'`];
+  for (const file of readdirSync(OVERRIDES_DIR)
+    .filter((entry) => entry.endsWith('.ts'))
+    .sort()) {
+    const lines = readFileSync(join(OVERRIDES_DIR, file), 'utf8').split('\n');
+    const index = lines.findIndex((text) => quoted.some((needle) => text.includes(needle)));
+    if (index !== -1) return `${OVERRIDES_DIR}/${file}:${index + 1}`;
+  }
+  return 'packages/engine/src/cards/interpret.ts (the parser)';
+}
+
+// ── Forge reference ────────────────────────────────────────────────────────────────────────────
+
+/** The card's script path in the Forge repository: `cardsfolder/<initial>/<name>.txt`. */
+export function forgeScriptPath(name: string): string {
+  const file = name
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9 ]/g, '')
+    .trim()
+    .replace(/ +/g, '_');
+  return `forge-gui/res/cardsfolder/${file[0]}/${file}.txt`;
+}
+
+/** The Forge script, from the gitignored cache or the network; null in CI, offline, or absent. */
+async function forgeScript(name: string): Promise<string | null> {
+  if (process.env['CI'] !== undefined) return null;
+  const path = forgeScriptPath(name);
+  const cached = join(FORGE_CACHE, FORGE_COMMIT, path);
+  if (existsSync(cached)) return readFileSync(cached, 'utf8');
+  try {
+    const response = await fetch(
+      `https://raw.githubusercontent.com/Card-Forge/forge/${FORGE_COMMIT}/${path}`,
+      { signal: AbortSignal.timeout(5000) },
+    );
+    if (!response.ok) return null;
+    const text = await response.text();
+    mkdirSync(dirname(cached), { recursive: true });
+    writeFileSync(cached, text);
+    return text;
+  } catch {
+    return null;
+  }
+}
+
+// ── The scaffold ───────────────────────────────────────────────────────────────────────────────
+
+export function overrideStub(card: OracleCard, handledLines: readonly string[]): string {
+  const lines = handledLines.map((line) => `    ${JSON.stringify(line)},`).join('\n');
+  return [
+    `  // card:new scaffold: the card stays unmodeled until this becomes a real definition.`,
+    `  unimplemented(${JSON.stringify(card.oracleId)}, ${JSON.stringify(card.name)}, [`,
+    lines,
+    `  ]);`,
+  ].join('\n');
+}
+
+export function batchFileSource(batch: string): string {
+  return [
+    `import { unimplemented } from './index';`,
+    ``,
+    `/** Card batch \`${batch}\`, started with card:new. */`,
+    `export function register${pascalOf(batch)}Overrides(): void {`,
+    `}`,
+    ``,
+  ].join('\n');
+}
+
+/** The batch file with `stub` added at the end of its register function. */
+export function insertStub(source: string, stub: string): string {
+  const end = source.lastIndexOf('\n}');
+  if (end === -1) throw new Error('the batch file has no closing brace to insert before');
+  const before = source.slice(0, end).replace(/\n*$/, '');
+  const opening = before.endsWith('{') ? '' : '\n';
+  const withImport = source.includes('import { unimplemented') || /\bunimplemented,/.test(source);
+  const result = `${before}\n${opening}${stub}${source.slice(end)}`;
+  return withImport ? result : `import { unimplemented } from './index';\n${result}`;
+}
+
+/** The overrides index with the batch's register function imported and called, once. */
+export function wireBatch(index: string, batch: string): string {
+  const fn = `register${pascalOf(batch)}Overrides`;
+  if (index.includes(`${fn}(`) || index.includes(`, ${fn});`)) return index;
+  const imports = [...index.matchAll(/^import .*;$/gm)];
+  const lastImport = imports[imports.length - 1]!;
+  const importEnd = lastImport.index! + lastImport[0].length;
+  const withImport = `${index.slice(0, importEnd)}\nimport { ${fn} } from './${batch}';${index.slice(importEnd)}`;
+  const calls = [...withImport.matchAll(/^registerDeck\([^;]*\);$/gms)];
+  const lastCall = calls[calls.length - 1]!;
+  const callEnd = lastCall.index! + lastCall[0].length;
+  return `${withImport.slice(0, callEnd)}\nregisterDeck('${batch}', ${fn});${withImport.slice(callEnd)}`;
+}
+
+export interface ManifestEntry {
+  name: string;
+  oracleSha256: string;
+  implementationStatus: 'implemented-unreviewed';
+  clauses: Array<{ oracleText: string; implementation: string[]; engineTestIds: string[] }>;
+  gameplayAiScenarioIds: string[];
+}
+
+/** A manifest entry whose clauses name no implementation and no test: rejected until filled. */
+export function manifestEntry(card: OracleCard, sha: string): ManifestEntry {
+  return {
+    name: card.name,
+    oracleSha256: sha,
+    implementationStatus: 'implemented-unreviewed',
+    clauses: card.oracleText
+      .split('\n')
+      .filter((line) => line.trim() !== '')
+      .map((oracleText) => ({ oracleText, implementation: [], engineTestIds: [] })),
+    gameplayAiScenarioIds: [],
+  };
+}
+
+/** A runner test file with a positive and a negative placeholder per Oracle line. */
+export function runnerTestSource(card: OracleCard, batch: string): string {
+  const slug = slugOf(card.name);
+  const todos = card.oracleText
+    .split('\n')
+    .filter((line) => line.trim() !== '')
+    .flatMap((line, index) => [
+      `  it.todo(${JSON.stringify(`clause ${index + 1}: ${line}`)});`,
+      `  it.todo(${JSON.stringify(`clause ${index + 1}, negative: when this line must not act`)});`,
+    ]);
+  return [
+    `/**`,
+    ` * ${card.name} (batch ${batch}), started with card:new. Each placeholder becomes a scenario in`,
+    ` * packages/engine/tests/scenarios/${slug}.json run through the scenario runner, for example:`,
+    ` *`,
+    ` *   const file = loadScenarioFile(new URL('../../scenarios/${slug}.json', import.meta.url));`,
+    ` *   for (const scenario of file.scenarios)`,
+    ` *     it(scenario.id, () => expect(scenarioFailures(runScenario(file, scenario), scenario)).toEqual([]));`,
+    ` *`,
+    ` * The skip lint rejects \`it.todo\`, so this file fails until every placeholder is replaced.`,
+    ` */`,
+    `import { describe, it } from 'vitest';`,
+    ``,
+    `describe(${JSON.stringify(card.name)}, () => {`,
+    ...todos,
+    `});`,
+    ``,
+  ].join('\n');
+}
+
+// ── The command ────────────────────────────────────────────────────────────────────────────────
+
+function pinCard(card: OracleCard): string {
+  const store = JSON.parse(readFileSync(PIN_STORE_PATH, 'utf8')) as PinStoreFile;
+  const existing = store.names[card.name];
+  if (existing !== undefined) return existing;
+  const sha = oracleSha256(card);
+  store.cards[sha] = card;
+  store.names[card.name] = sha;
+  const sorted = <T>(record: Record<string, T>): Record<string, T> =>
+    Object.fromEntries(Object.entries(record).sort(([a], [b]) => a.localeCompare(b)));
+  writeFileSync(
+    PIN_STORE_PATH,
+    `${JSON.stringify({ schemaVersion: 1, names: sorted(store.names), cards: sorted(store.cards) }, null, 2)}\n`,
+  );
+  return sha;
+}
+
+function writeScaffold(card: OracleCard, sha: string, handled: string[], batch: string): string[] {
+  const written: string[] = [];
+  const batchFile = `${OVERRIDES_DIR}/${batch}.ts`;
+  const source = existsSync(batchFile) ? readFileSync(batchFile, 'utf8') : batchFileSource(batch);
+  if (source.includes(JSON.stringify(card.oracleId)))
+    throw new Error(`${batchFile} already registers ${card.name}`);
+  writeFileSync(batchFile, insertStub(source, overrideStub(card, handled)));
+  written.push(batchFile);
+  const index = readFileSync(OVERRIDES_INDEX, 'utf8');
+  const wired = wireBatch(index, batch);
+  if (wired !== index) {
+    writeFileSync(OVERRIDES_INDEX, wired);
+    written.push(OVERRIDES_INDEX);
+  }
+
+  const manifest = JSON.parse(readFileSync(MANIFEST, 'utf8')) as {
+    cards: Record<string, unknown>;
+  };
+  if (manifest.cards[card.oracleId] === undefined) {
+    manifest.cards[card.oracleId] = manifestEntry(card, sha);
+    writeFileSync(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
+    written.push(MANIFEST);
+  }
+
+  const testFile = `${CARD_TESTS_DIR}/${batch}/${slugOf(card.name)}.test.ts`;
+  if (!existsSync(testFile)) {
+    mkdirSync(dirname(testFile), { recursive: true });
+    writeFileSync(testFile, runnerTestSource(card, batch));
+    written.push(testFile);
+  }
+  const gate = readFileSync(CARD_GATE_LIST, 'utf8');
+  const entry = `${CARD_TESTS_DIR}/${batch}`;
+  if (!gate.split('\n').includes(entry)) {
+    writeFileSync(CARD_GATE_LIST, `${gate.replace(/\n*$/, '\n')}${entry}\n`);
+    written.push(CARD_GATE_LIST);
+  }
+  return written;
+}
+
+async function main(): Promise<void> {
+  const args = process.argv.slice(2);
+  const batchFlag = args.indexOf('--batch');
+  const batch = batchFlag === -1 ? null : args[batchFlag + 1];
+  if (batch !== null && (batch === undefined || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(batch))) {
+    console.error('--batch needs an id of lowercase words joined by hyphens');
+    process.exit(2);
+  }
+  const name = args
+    .filter((_, index) => batchFlag === -1 || (index !== batchFlag && index !== batchFlag + 1))
+    .join(' ')
+    .trim();
+  if (name === '') {
+    console.error('usage: bun run card:new "<card name>" [--batch <id>]');
+    process.exit(2);
+  }
+  const found = findCard(name);
+  if (found === null) {
+    console.error(
+      `"${name}" is not in the pin store, ${COVERAGE_ORACLE} or the Scryfall bulk file`,
+    );
+    process.exit(1);
+  }
+  const { card, source } = found;
+  const sha = pinStore.has(card.name) ? pinStore.shaOf(card.name) : pinCard(card);
+  console.log(`${card.name}: ${card.typeLine}${card.manaCost === null ? '' : ` ${card.manaCost}`}`);
+  console.log(`from the ${source}; pinned as ${sha}\n`);
+
+  const def = interpretCard(card);
+  const handled = def.unmodeledReasons.map(handledLineOf);
+  // Reasons quote a line with the card's name written as "~".
+  const isUnparsed = (line: string): boolean =>
+    handled.includes(line) || handled.includes(line.split(card.name).join('~'));
+  console.log('Oracle lines:');
+  for (const [index, line] of card.oracleText.split('\n').entries())
+    console.log(`  ${index + 1}. ${isUnparsed(line) ? '[unparsed]' : '[modeled] '} ${line}`);
+  if (def.unmodeledReasons.length === 0) console.log('\nThe engine already models every line.');
+  else {
+    console.log('\nunmodeledReasons, verbatim:');
+    for (const reason of def.unmodeledReasons) console.log(`  ${reason}`);
+    console.log('\nhandledLines an override must claim:');
+    for (const line of handled) console.log(`  ${JSON.stringify(line)}`);
+  }
+
+  const unparsed = card.oracleText.split('\n').filter(isUnparsed);
+  if (unparsed.length > 0) {
+    const pool = JSON.parse(readFileSync(COVERAGE_ORACLE, 'utf8')) as OracleCard[];
+    const store = JSON.parse(readFileSync(PIN_STORE_PATH, 'utf8')) as PinStoreFile;
+    const corpus = modeledLines([...Object.values(store.cards), ...pool]);
+    console.log('\nNearest modeled cards (read them; never copy one):');
+    for (const line of unparsed) {
+      console.log(`  "${line}"`);
+      for (const near of nearestCards(line, card.name, corpus))
+        console.log(
+          `    ${near.score.toFixed(2)} ${near.card} — ${definitionSite(near.card)}\n         "${near.line}"`,
+        );
+    }
+  }
+
+  const script = await forgeScript(card.name);
+  if (script !== null) {
+    console.log(
+      `\nForge script at ${FORGE_COMMIT} (a reference only: never copy it into the repository):`,
+    );
+    for (const line of script.split('\n')) console.log(`  | ${line}`);
+  }
+
+  const prompts = interactionPrompts(card.oracleText);
+  if (prompts.length > 0) {
+    console.log('\nInteraction questions to answer in tests:');
+    for (const { shape, question } of prompts) console.log(`  - ${shape}: ${question}`);
+  }
+
+  if (batch === null) {
+    console.log('\nPass --batch <id> to write the scaffold.');
+    return;
+  }
+  const written = writeScaffold(card, sha, handled, batch);
+  console.log(
+    `\nScaffold written (rejected until filled):\n${written.map((path) => `  ${path}`).join('\n')}`,
+  );
+}
+
+if (import.meta.main) await main();

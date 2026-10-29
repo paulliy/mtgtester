@@ -164,3 +164,4 @@ packages/server/src/cards/suite-integrity.test.ts
 packages/engine/tests/test-skips-lint.test.ts
 packages/server/src/cards/ratchets.test.ts
 packages/server/src/cards/card-authoring-metrics.test.ts
+packages/server/src/cards/forge-text.test.ts

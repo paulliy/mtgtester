@@ -451,7 +451,24 @@ bun run modelled-cards                    # regenerate docs/modelled-cards.md
 bun run play-decks <deckA> <deckB> [--seed S] [--verbose]   # level 4: curated-deck CLI playtest
 bun run pool --play --ai [--seed S] [--benchmark-json f]    # level 6: generated-deck AI-vs-AI
 bun run dev                               # levels 5-6: real client (server :3001 + web :5173)
+
+# Authoring a card (ADR 0033 decision 1)
+bun run card:new "<name>"                 # pin it; unparsed lines, handledLines, nearest modeled cards, Forge reference, questions
+bun run card:new "<name>" --batch <id>    # ...and write the scaffold: unimplemented() stub, manifest clauses, it.todo runner tests, gate entry
+bun run card:check "<name>"               # the edit loop: interpret, validate, this card's override-snapshot diff
+bun run pin-store add "<name>"            # pin a card in packages/engine/tests/fixtures/pin-store.json
 ```
+
+A new card's scenarios are JSON files in `packages/engine/tests/scenarios/`, run by the scenario
+runner (`packages/engine/tests/scenario/`) and loaded by the Card Test Lab from the same file. Every
+scaffold `card:new` writes stays rejected until filled: the stub keeps the card unmodeled, the
+manifest clauses have no test IDs, and the skip lint refuses `it.todo`.
+
+**Forge scripts are a reference, never a source.** `card:new` shows a card's Forge script when the
+network allows; it is GPL-3.0 and must not enter this repository in any form, including retyped by
+hand or translated into our IR. The Oracle text, the Comprehensive Rules and our own tests are the
+only sources of a card's behavior. A card-gate check rejects a Forge script line in any tracked file
+outside `docs/`.
 
 ## 7. Before calling a card done
 

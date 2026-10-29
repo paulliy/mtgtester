@@ -54,6 +54,7 @@
     "check:suite-collect": "bun run scripts/check-suite-collect.ts",
     "pin-store": "bun run scripts/pin-store.ts",
     "card:check": "bun run scripts/cards/card-check.ts",
+    "card:new": "bun run scripts/cards/card-new.ts",
     "check:ratchets": "bun run scripts/check-ratchets.ts",
     "card-slugs:generate": "bun run scripts/generate-card-name-slugs.ts",
     "card-capabilities": "bun run scripts/card-capability-impact.ts",
