@@ -28,7 +28,9 @@ describe('mandatory card CI gate', () => {
   });
 
   it('keeps mandatory card tests independent of the gitignored bulk file', () => {
-    const command = packageJson.scripts['test:card-gate'];
+    // The gate runs every entry of its committed list (`scripts/card-gate.ts`).
+    expect(packageJson.scripts['test:card-gate']).toContain('scripts/card-gate.ts');
+    const command = readFileSync(resolve('scripts/card-gate.txt'), 'utf8');
     expect(command).toContain('card-test-reporting.test.ts');
     expect(command).toContain('reviewed-five-containment.test.ts');
     expect(command).toContain('reviewed-five-pool-containment.test.ts');

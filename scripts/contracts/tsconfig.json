@@ -13,6 +13,7 @@
     "../check-primitive-promotions.ts",
     "../check-suite-integrity.ts",
     "../check-suite-collect.ts",
+    "../card-gate.ts",
     "../pin-store.ts",
     "../cards/*.ts",
     "../check-ratchets.ts",

@@ -319,18 +319,29 @@ export function claimErrors(files: string[], runners: Runner[]): string[] {
 // Card gate
 // ---------------------------------------------------------------------------
 
+/** The committed card-gate list (ADR 0033 decision 1), read by `scripts/card-gate.ts`. */
+export const CARD_GATE_LIST = 'scripts/card-gate.txt';
+
 /**
- * The filters `test:card-gate` hands to Vitest: every token after `vitest run` in the script.
- * Vitest treats each as a substring of a test file path and ignores one that matches nothing.
+ * The card gate's entries: each line that is not blank or a `#` comment. An entry is a test file
+ * or a path prefix; like a Vitest filter, it runs every test file whose path contains it.
  */
-export function cardGateEntries(packageJson: string): string[] {
-  const scripts = (JSON.parse(packageJson) as { scripts?: Record<string, string> }).scripts;
-  const script = scripts?.['test:card-gate'];
-  if (script === undefined) throw new Error('package.json has no `test:card-gate` script');
-  const marker = /\bvitest run\b/.exec(script);
-  if (marker === null) throw new Error('`test:card-gate` has no `vitest run` segment');
-  const segment = script.slice(marker.index + marker[0].length).split('&&')[0]!;
-  return segment.split(/\s+/).filter((token) => token !== '' && !token.startsWith('-'));
+export function cardGateEntries(listText: string): string[] {
+  return listText
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line !== '' && !line.startsWith('#'));
+}
+
+/** The Vitest test files the gate runs: each claimed file whose path contains an entry. */
+export function cardGateFiles(entries: string[], files: string[], runners: Runner[]): string[] {
+  const vitestRunners = runners.filter((runner) => runner.kind === 'vitest');
+  return files.filter(
+    (file) =>
+      isTestFile(file) &&
+      vitestRunners.some((runner) => claims(runner, file)) &&
+      entries.some((entry) => file.includes(entry)),
+  );
 }
 
 /** Entries that no vitest-run test file path contains. */
@@ -343,13 +354,13 @@ export function cardGateErrors(entries: string[], files: string[], runners: Runn
     .filter((entry) => !runnable.some((file) => file.includes(entry)))
     .map(
       (entry) =>
-        `test:card-gate entry \`${entry}\` matches no tracked test file, so Vitest silently ignores it`,
+        `${CARD_GATE_LIST} entry \`${entry}\` matches no tracked Vitest test file, so the gate would silently skip it`,
     );
 }
 
 export function checkSuiteIntegrity(input: IntegrityInput): IntegrityResult {
   const { runners, errors } = discoverRunners(input);
-  const entries = cardGateEntries(input.read('package.json'));
+  const entries = cardGateEntries(input.read(CARD_GATE_LIST));
   errors.push(...claimErrors(input.files, runners));
   errors.push(...cardGateErrors(entries, input.files, runners));
   return {

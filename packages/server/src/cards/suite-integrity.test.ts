@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   cardGateEntries,
   checkSuiteIntegrity,
+  cardGateFiles,
   countPlaywrightList,
   countVitestList,
   discoverRunners,
@@ -36,10 +37,7 @@ export default defineConfig({
   workers: 1,
 });`;
 
-const gate = (...entries: string[]) =>
-  JSON.stringify({
-    scripts: { 'test:card-gate': `bun run audit:card-ir && vitest run ${entries.join(' ')}` },
-  });
+const gate = (...entries: string[]) => `# the card gate\n\n${entries.join('\n')}\n`;
 
 /** A small repository whose layout mirrors the real one. */
 function repo(extra: Record<string, string> = {}, files: string[] = []) {
@@ -47,7 +45,7 @@ function repo(extra: Record<string, string> = {}, files: string[] = []) {
     'vitest.config.ts': VITEST,
     'playwright.config.ts': PLAYWRIGHT,
     'playwright.setup.config.ts': PLAYWRIGHT_SETUP,
-    'package.json': gate('packages/engine/tests/a.test.ts', 'packages/server/src/cards'),
+    'scripts/card-gate.txt': gate('packages/engine/tests/a.test.ts', 'packages/server/src/cards'),
     ...extra,
   };
   const tracked = [
@@ -114,8 +112,16 @@ describe('reading runner configs as source', () => {
 });
 
 describe('card-gate entries', () => {
-  it('lists every filter after `vitest run`', () => {
+  it('reads every line that is not blank or a comment', () => {
     expect(cardGateEntries(gate('a/b.test.ts', 'c/d'))).toEqual(['a/b.test.ts', 'c/d']);
+  });
+
+  it('runs every Vitest test file whose path contains an entry, and no e2e spec', () => {
+    const input = repo();
+    const { runners } = discoverRunners(input);
+    expect(
+      cardGateFiles(['packages/server/src/cards', 'apps/web/e2e'], input.files, runners),
+    ).toEqual(['packages/server/src/cards/b.test.ts']);
   });
 });
 
@@ -159,7 +165,7 @@ describe('suite integrity', () => {
   it('fires on a card-gate entry that matches no file', () => {
     const { errors } = checkSuiteIntegrity(
       repo({
-        'package.json': gate(
+        'scripts/card-gate.txt': gate(
           'packages/engine/tests/a.test.ts',
           'packages/engine/tests/gone.test.ts',
         ),
@@ -171,7 +177,7 @@ describe('suite integrity', () => {
   it('counts a card-gate entry as a match only for a file Vitest runs', () => {
     // The e2e spec exists and is tracked, but the gate hands paths to Vitest, which excludes it.
     const { errors } = checkSuiteIntegrity(
-      repo({ 'package.json': gate('apps/web/e2e/lab.spec.ts') }),
+      repo({ 'scripts/card-gate.txt': gate('apps/web/e2e/lab.spec.ts') }),
     );
     expect(errors).toEqual([expect.stringContaining('`apps/web/e2e/lab.spec.ts`')]);
   });
@@ -294,6 +300,13 @@ describe('this repository', () => {
     });
     expect(result.errors).toEqual([]);
     expect(result.cardGateEntries).toBeGreaterThan(0);
+    // The gate runs the committed list, not a file list kept in package.json.
+    const scripts = (
+      JSON.parse(readFileSync(new URL('package.json', root), 'utf8')) as {
+        scripts: Record<string, string>;
+      }
+    ).scripts;
+    expect(scripts['test:card-gate']).toMatch(/bun run scripts\/card-gate\.ts$/);
     expect(result.runners).toEqual(
       expect.arrayContaining(['vitest.config.ts', 'playwright.config.ts']),
     );
