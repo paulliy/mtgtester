@@ -15,15 +15,10 @@ const INVARIANT_FIELDS: readonly ScopeField[] = [
   'treasureManaSpent',
   'manaSpent',
   'spellManaValue',
-  ,
   'spellColorCount',
-  ,
   'energyPaid',
-  ,
   'stationPower',
-  ,
   'damageDealt',
-  ,
   'triggerCount',
 ];
 
