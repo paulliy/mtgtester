@@ -72,17 +72,18 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 
 ## Progress
 
-| Step | State       | Done so far                                                                                    | Pull request |
-| ---- | ----------- | ---------------------------------------------------------------------------------------------- | ------------ |
-| 1    | done        | stale harness deleted; harness-integrity guard                                                 | #44          |
-| 2    | done        | `scripts/card-authoring-metrics.ts`; `docs/reviews/card-authoring-baseline-2026-10-28.md`      | #44          |
-| 3    | in progress | phase 1 steps 2 to 10 done; open: executor invariants for scope reads, empty suites            | #44          |
-| 4    | done        | P1 data-key registry; P3 label code in `@mtg/shared/presentation`                              | #44          |
-| 5    | done        | M1 seat controllers: `'table'` mode, per-seat state, fail-closed switches                      | #44          |
-| 6    | done        | M2a disclosure policy, privacy fixes, replay inputs and harness; M2b ChaCha20 and streams      | #44          |
-| 7    | done        | P2 projection types and board groups; P4 server presentation; P5 raw `data` on request, lint   | #44          |
-| 9    | done        | M3 workers, health, manifest, post-game, agent table mode, scans; M4 clocks, fallback, concede | #44          |
-| 10   | done        | P6: server-built damage and life cues on each batch; the board animates from them              | #44          |
+| Step | State       | Done so far                                                                                         | Pull request |
+| ---- | ----------- | --------------------------------------------------------------------------------------------------- | ------------ |
+| 1    | done        | stale harness deleted; harness-integrity guard                                                      | #44          |
+| 2    | done        | `scripts/card-authoring-metrics.ts`; `docs/reviews/card-authoring-baseline-2026-10-28.md`           | #44          |
+| 3    | in progress | phase 1 steps 2 to 10 done; open: executor invariants for scope reads, empty suites                 | #44          |
+| 4    | done        | P1 data-key registry; P3 label code in `@mtg/shared/presentation`                                   | #44          |
+| 5    | done        | M1 seat controllers: `'table'` mode, per-seat state, fail-closed switches                           | #44          |
+| 6    | done        | M2a disclosure policy, privacy fixes, replay inputs and harness; M2b ChaCha20 and streams           | #44          |
+| 7    | done        | P2 projection types and board groups; P4 server presentation; P5 raw `data` on request, lint        | #44          |
+| 9    | done        | M3 workers, health, manifest, post-game, agent table mode, scans; M4 clocks, fallback, concede      | #44          |
+| 10   | done        | P6: server-built damage and life cues on each batch; the board animates from them                   | #44          |
+| 12   | in progress | M5 done: production config, exposure checks, socket limits, TLS run, hosting guide, review; M6 next | #44          |
 
 ## Notes from delivery
 

@@ -149,4 +149,21 @@ describe('SocketLimiter', () => {
     now += 60_000;
     expect(limiter.admit('a')).toBe(true);
   });
+
+  it('forgets idle addresses once too many are remembered, never one with a socket open', () => {
+    let now = 0;
+    const limiter = new SocketLimiter({ maxTracked: 3, now: () => now });
+    expect(limiter.admit('held')).toBe(true);
+    for (let i = 0; i < 10; i++) {
+      now += 1;
+      expect(limiter.admit(`a${i}`)).toBe(true);
+      limiter.release(`a${i}`);
+    }
+    expect(limiter.tracked).toBeLessThanOrEqual(3);
+    // The address still holding a socket is still counted against its cap.
+    const capped = new SocketLimiter({ maxTracked: 1, maxConcurrent: 1, now: () => now });
+    expect(capped.admit('held')).toBe(true);
+    expect(capped.admit('other')).toBe(true);
+    expect(capped.admit('held')).toBe(false);
+  });
 });

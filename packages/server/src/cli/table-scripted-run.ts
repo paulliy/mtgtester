@@ -7,7 +7,8 @@
  *
  * The default is two scripted seats and two bots, untimed. `disconnect` seats four scripted
  * players at a relaxed clock scaled 60 times faster; P2 drops its socket after two decisions,
- * stays away past its grace, then resumes on a new socket and takes control back.
+ * stays away past its grace, then resumes on a new socket and takes control back. `tls` runs the
+ * server in production mode behind a TLS proxy with a certificate made at run time.
  */
 
 import { runScriptedTable, type ScriptedRunOptions } from '../table/scripted-run';
@@ -31,7 +32,8 @@ const options: ScriptedRunOptions = {
   }),
   ...(turnCap !== undefined && { turnCap: Number(turnCap) }),
 };
-if (scenario !== 'default' && scenario !== 'disconnect') {
+if (scenario === 'tls') options.tls = true;
+if (scenario !== 'default' && scenario !== 'disconnect' && scenario !== 'tls') {
   process.stderr.write(`unknown scenario ${scenario}\n`);
   process.exit(2);
 }

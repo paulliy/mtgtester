@@ -31,6 +31,7 @@ import { generateCommanderDeck } from '../decks/generate';
 import { loadTableConfig } from './config';
 import { scanTableFrames, type FrameScanReport, type RecordedFrame } from './frame-scan';
 import { startTableServer } from './table-http';
+import { makeTestCertificate, startTlsProxy } from './tls-proxy';
 import { wireTables } from './wiring';
 
 export interface ScriptedRunOptions {
@@ -47,6 +48,11 @@ export interface ScriptedRunOptions {
    * seat on a new socket and takes control back from the fallback bot.
    */
   disconnect?: { seat: PlayerId; afterDecisions: number; awayMs: number };
+  /**
+   * Run the table server in production mode behind a TLS proxy (plan M5 exit): a certificate made
+   * at run time, `TABLE_BEHIND_TLS_PROXY`, and every client over https and wss.
+   */
+  tls?: boolean;
   /** 64 hex digits; the run fails if it ever appears in a live frame. */
   rngKey?: string;
   /** Give up after this long. */
@@ -108,9 +114,11 @@ function openSocket(
   record: (seat: PlayerId | 'host', text: string) => void,
   who: PlayerId | 'host',
   onFrame: (frame: AnyFrame) => void,
+  ca: string | null = null,
 ): Promise<WebSocket> {
   return new Promise((resolvePromise, reject) => {
-    const socket = new WebSocket(url);
+    const socket =
+      ca === null ? new WebSocket(url) : new WebSocket(url, { tls: { ca } } as unknown as string[]);
     socket.addEventListener('open', () => {
       resolvePromise(socket);
     });
@@ -133,21 +141,45 @@ export async function runScriptedTable(
   const fixturePath = resolve(options.fixturePath ?? DEFAULT_FIXTURE);
   const rngKey = options.rngKey ?? DEFAULT_KEY;
   const dir = mkdtempSync(join(tmpdir(), 'mtg-table-run-'));
-  const loaded = loadTableConfig(
-    {
-      TABLE_DB_PATH: join(dir, 'tables.sqlite'),
-      TABLE_WEB_DIR: join(dir, 'web'),
-      TABLE_TEST_RNG_KEY: rngKey,
-      TABLE_TURN_CAP: String(options.turnCap ?? 6),
-      TABLE_PACE_MS: '0',
-      TABLE_PORT: '0',
-      TABLE_CLOCK: options.clock ?? 'off',
-      ...(options.clockScale !== undefined && { TABLE_CLOCK_SCALE: String(options.clockScale) }),
-    },
-    ['--dev', '--oracle-fixture', fixturePath],
-  );
+  const certificate = options.tls === true ? makeTestCertificate(dir) : null;
+  const proxy = certificate === null ? null : startTlsProxy(certificate);
+  const ca = certificate?.ca ?? null;
+  const common = {
+    TABLE_DB_PATH: join(dir, 'tables.sqlite'),
+    TABLE_WEB_DIR: join(dir, 'web'),
+    TABLE_PORT: '0',
+  };
+  const loaded =
+    proxy === null
+      ? loadTableConfig(
+          {
+            ...common,
+            TABLE_TEST_RNG_KEY: rngKey,
+            TABLE_TURN_CAP: String(options.turnCap ?? 6),
+            TABLE_PACE_MS: '0',
+            TABLE_CLOCK: options.clock ?? 'off',
+            ...(options.clockScale !== undefined && {
+              TABLE_CLOCK_SCALE: String(options.clockScale),
+            }),
+          },
+          ['--dev', '--oracle-fixture', fixturePath],
+        )
+      : loadTableConfig(
+          {
+            ...common,
+            TABLE_PUBLIC_ORIGIN: `https://localhost:${proxy.port}`,
+            TABLE_ALLOWED_ORIGINS: `https://localhost:${proxy.port}`,
+            TABLE_ALLOWED_HOSTS: `localhost:${proxy.port}`,
+            TABLE_BEHIND_TLS_PROXY: '1',
+            TABLE_TRUSTED_PROXY: '127.0.0.1',
+          },
+          ['--oracle-fixture', fixturePath],
+        );
   if (!loaded.ok) throw new Error(loaded.error.message);
-  const config = loaded.config;
+  // Production mode refuses the scripted-run settings from the environment; the harness sets
+  // them on the configuration directly so the game stays short. The key stays a fresh one.
+  const config =
+    proxy === null ? loaded.config : { ...loaded.config, turnCap: options.turnCap ?? 6, paceMs: 0 };
   const cards = JSON.parse(readFileSync(fixturePath, 'utf8')) as OracleCard[];
   const store = new GameStore(config.dbPath);
   const { registry, hub } = wireTables({
@@ -159,8 +191,11 @@ export async function runScriptedTable(
     replay: { cardDataSha256: 'scripted-run', build: { commit: null, branch: null, dirty: null } },
   });
   const server = startTableServer({ config, registry, hub });
+  proxy?.setUpstreamPort(server.port);
+  const origin = proxy === null ? server.origin : `https://localhost:${proxy.port}`;
 
   const frames: RecordedFrame[] = [];
+  let gameKey = rngKey;
   const record = (who: PlayerId | 'host', text: string): void => {
     frames.push({ to: who, text, order: frames.length });
   };
@@ -174,33 +209,40 @@ export async function runScriptedTable(
       : { fallbackSeen: false, reconnected: false, decisionsAfterResume: 0 };
 
   try {
-    const created = await fetch(`${server.origin}/tables`, {
+    const created = await fetch(`${origin}/tables`, {
       method: 'POST',
       headers: { authorization: `Bearer ${registry.hostSecret}` },
-    });
+      ...(ca !== null && { tls: { ca } }),
+    } as RequestInit);
     const table = (await created.json()) as {
       tableId: string;
       hostToken: string;
       inviteUrl: string;
     };
-    const wsUrl = `${server.origin.replace('http', 'ws')}/tables/${table.tableId}/ws`;
+    const wsUrl = `${origin.replace('http', 'ws')}/tables/${table.tableId}/ws`;
     const inviteCode = table.inviteUrl.split('#')[1] ?? '';
 
     // The host: authenticates, makes the bot seats, approves each claim, starts once every human
     // seat is approved.
     let approved = 0;
     let startSent = false;
-    const host = await openSocket(wsUrl, record, 'host', (frame) => {
-      if (frame.type !== 'tableState') return;
-      for (const claim of frame.payload.pendingClaims ?? []) {
-        host.send(JSON.stringify({ type: 'hostApprove', payload: { claimId: claim.claimId } }));
-        approved += 1;
-      }
-      if (!startSent && frame.payload.canStart && approved >= humanCount) {
-        startSent = true;
-        host.send(JSON.stringify({ type: 'hostStart', payload: {} }));
-      }
-    });
+    const host = await openSocket(
+      wsUrl,
+      record,
+      'host',
+      (frame) => {
+        if (frame.type !== 'tableState') return;
+        for (const claim of frame.payload.pendingClaims ?? []) {
+          host.send(JSON.stringify({ type: 'hostApprove', payload: { claimId: claim.claimId } }));
+          approved += 1;
+        }
+        if (!startSent && frame.payload.canStart && approved >= humanCount) {
+          startSent = true;
+          host.send(JSON.stringify({ type: 'hostStart', payload: {} }));
+        }
+      },
+      ca,
+    );
     sockets.push(host);
     host.send(JSON.stringify({ type: 'hostAuth', payload: { hostToken: table.hostToken } }));
     if (humanCount === 2) {
@@ -293,7 +335,13 @@ export async function runScriptedTable(
           if (frame.type === 'gameOver') report.gameOver = true;
           if (frame.type === 'tableResults') {
             report.resultsEnding = frame.payload.ending;
-            report.resultsKeyMatches = frame.payload.rngKey === rngKey;
+            // A production table draws a fresh key: check its shape, not its value, and scan the
+            // live frames for the key it turned out to be.
+            if (frame.payload.rngKey !== null) gameKey = frame.payload.rngKey;
+            report.resultsKeyMatches =
+              proxy === null
+                ? frame.payload.rngKey === rngKey
+                : /^[0-9a-f]{64}$/.test(frame.payload.rngKey ?? '');
             report.replayTurns = frame.payload.replayTurns;
             const first = frame.payload.replayTurns[0];
             askedReplay = true;
@@ -328,7 +376,7 @@ export async function runScriptedTable(
           queueMicrotask(() => {
             socket?.close();
             setTimeout(() => {
-              openSocket(wsUrl, record, seat, onFrame)
+              openSocket(wsUrl, record, seat, onFrame, ca)
                 .then((opened) => {
                   socket = opened;
                   sockets.push(opened);
@@ -342,7 +390,7 @@ export async function runScriptedTable(
           });
         };
         after
-          .then(() => openSocket(wsUrl, record, seat, onFrame))
+          .then(() => openSocket(wsUrl, record, seat, onFrame, ca))
           .then((opened) => {
             socket = opened;
             sockets.push(opened);
@@ -360,6 +408,7 @@ export async function runScriptedTable(
   } finally {
     for (const socket of sockets) socket.close();
     await server.stop();
+    proxy?.stop();
   }
 
   const attempts = store.raw
@@ -375,7 +424,7 @@ export async function runScriptedTable(
   store.close();
   rmSync(dir, { recursive: true, force: true });
 
-  const scan = scanTableFrames(frames, { rngKey, protocolVersion: PROTOCOL_VERSION });
+  const scan = scanTableFrames(frames, { rngKey: gameKey, protocolVersion: PROTOCOL_VERSION });
   for (const violation of scan.violations) {
     problems.push(
       `frame scan: ${violation.rule} in a frame to ${violation.to}: ${violation.detail}`,

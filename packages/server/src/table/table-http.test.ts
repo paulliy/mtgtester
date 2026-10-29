@@ -58,6 +58,11 @@ afterAll(() => {
 function config(overrides: Partial<TableConfig> = {}): TableConfig {
   return {
     dev: true,
+    insecureLan: false,
+    allowedOrigins: [],
+    allowedHosts: [],
+    tls: null,
+    trustedProxy: null,
     port: PORT,
     host: '127.0.0.1',
     publicOrigin: null,

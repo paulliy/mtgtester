@@ -154,6 +154,8 @@ export interface SocketLimitOptions {
   maxConcurrent?: number;
   /** Socket opens one client address may make per minute. Default 30. */
   maxOpensPerMinute?: number;
+  /** Addresses remembered at once; the stalest idle one is forgotten first. Default 10,000. */
+  maxTracked?: number;
   now?: () => number;
 }
 
@@ -166,12 +168,19 @@ export class SocketLimiter {
   private readonly opens = new Map<string, number[]>();
   private readonly maxConcurrent: number;
   private readonly maxOpens: number;
+  private readonly maxTracked: number;
   private readonly now: () => number;
 
   constructor(options: SocketLimitOptions = {}) {
     this.maxConcurrent = options.maxConcurrent ?? 8;
     this.maxOpens = options.maxOpensPerMinute ?? 30;
+    this.maxTracked = options.maxTracked ?? 10_000;
     this.now = options.now ?? Date.now;
+  }
+
+  /** How many addresses are remembered, for tests. */
+  get tracked(): number {
+    return this.opens.size;
   }
 
   /** Whether `address` may open one more socket; counts it when it may. */
@@ -183,9 +192,27 @@ export class SocketLimiter {
       return false;
     }
     recent.push(now);
+    // Re-inserted so Map order is least recently opened first, for the pruning below.
+    this.opens.delete(address);
     this.opens.set(address, recent);
     this.open.set(address, (this.open.get(address) ?? 0) + 1);
+    this.prune();
     return true;
+  }
+
+  /**
+   * Bound the memory one client cycling through addresses (an IPv6 block) can make the server
+   * hold: forget addresses with nothing open and no open in the last minute, oldest first, once
+   * more than `maxTracked` are remembered. Addresses with sockets open are never forgotten.
+   */
+  private prune(): void {
+    if (this.opens.size <= this.maxTracked) return;
+    for (const address of this.opens.keys()) {
+      if (this.opens.size <= this.maxTracked) return;
+      // Forgetting an idle address's recent opens only lets it open again sooner; a client
+      // cycling addresses already has that.
+      if ((this.open.get(address) ?? 0) === 0) this.opens.delete(address);
+    }
   }
 
   release(address: string): void {

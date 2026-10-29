@@ -392,6 +392,9 @@ export function startTableServer(deps: TableServerDeps): RunningTableServer {
   const server = Bun.serve<SocketData, never>({
     port: config.port,
     hostname: config.host,
+    // Every request body this server reads is small (a host secret, an invite code); refuse a
+    // large one before it is buffered.
+    maxRequestBodySize: 16 * 1024,
     ...(config.tls !== null && {
       tls: { cert: Bun.file(config.tls.certPath), key: Bun.file(config.tls.keyPath) },
     }),

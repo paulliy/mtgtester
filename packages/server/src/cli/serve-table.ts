@@ -1,13 +1,14 @@
 /**
- * The multiplayer table server (ADR 0031, plan M3).
+ * The multiplayer table server (ADR 0031, plans M3 to M5).
  *
- *   bun run serve:table --dev                 # http://127.0.0.1:3002
- *   bun run serve:table --dev --port 4000
+ *   bun run serve:table --dev                 # http://127.0.0.1:3002, loopback only
  *   bun run serve:table --dev --oracle-fixture packages/server/fixtures/coverage-oracle.json
+ *   bun run serve:table --insecure-lan        # a LAN game; see docs/guides/table-hosting.md
+ *   bun run serve:table                       # production: TLS, or behind a TLS proxy
  *
- * Until production exposure lands (M5) the server refuses to start without `--dev`, and in
- * development mode it refuses any proxy, TLS or allowlist setting (`table/config.ts`). It prints
- * a host secret at startup: that secret, and nothing else, creates a table.
+ * Outside `--dev` it refuses to start without the public origin and both allowlists, and without
+ * TLS unless `--insecure-lan` (`table/config.ts`). It prints a host secret at startup: that
+ * secret, and nothing else, creates a table.
  */
 
 import { createHash } from 'node:crypto';
@@ -94,9 +95,29 @@ function main(): void {
   const server = startTableServer({ config, registry, hub });
 
   const origin = publicOriginFor(config, server.port);
-  console.log(`\nMTG Commander AI Simulator - table server (development mode)`);
+  const mode = config.dev
+    ? 'development mode, loopback only'
+    : config.insecureLan
+      ? 'LAN mode, no TLS'
+      : config.tls !== null
+        ? 'production, TLS'
+        : 'production, behind a TLS proxy';
+  console.log(`\nMTG Commander AI Simulator - table server (${mode})`);
   console.log('-'.repeat(60));
-  console.log(`  Listening:      ${origin}`);
+  console.log(`  Bound:          ${config.host}:${server.port}`);
+  console.log(`  Invite links:   ${origin}`);
+  if (!config.dev) {
+    console.log(`  Allowed hosts:  ${config.allowedHosts.join(', ')}`);
+    console.log(`  Allowed origins: ${config.allowedOrigins.join(', ')}`);
+    if (config.trustedProxy !== null) console.log(`  Trusted proxy:  ${config.trustedProxy}`);
+  }
+  if (config.insecureLan) {
+    console.log(
+      '\n  WARNING: --insecure-lan. Traffic, seat tokens included, crosses your network\n' +
+        '  unencrypted. Only peers in private address ranges are accepted. Every player is\n' +
+        '  shown this.',
+    );
+  }
   console.log(`  Database:       ${config.dbPath}`);
   console.log(`  Web build:      ${config.webDir}`);
   console.log(`  Clock:          ${config.clock}`);

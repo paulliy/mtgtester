@@ -215,6 +215,17 @@ describe('tableSocketTarget', () => {
     });
     expect(tableSocketTarget('http://127.0.0.1:3002/t/abc', undefined).ok).toBe(false);
     expect(tableSocketTarget('http://example.com/t/abc#inv', undefined).ok).toBe(false);
+    expect(tableSocketTarget('https://tables.example.com/t/abc#inv', undefined)).toEqual({
+      ok: true,
+      url: 'wss://tables.example.com/tables/abc/ws',
+      inviteCode: 'inv',
+    });
+    expect(tableSocketTarget('http://192.168.1.20:3002/t/abc#inv', undefined).ok).toBe(false);
+    expect(tableSocketTarget('http://192.168.1.20:3002/t/abc#inv', undefined, true)).toEqual({
+      ok: true,
+      url: 'ws://192.168.1.20:3002/tables/abc/ws',
+      inviteCode: 'inv',
+    });
     expect(tableSocketTarget('http://127.0.0.1/elsewhere#inv', undefined).ok).toBe(false);
   });
 });
@@ -242,6 +253,7 @@ describe('parseTableAgentArgs', () => {
       seat: 'P3',
       deckPath: 'd.txt',
       policy: 'first-legal',
+      insecureLan: false,
     });
     expect(parseTableAgentArgs(['--table', 'http://127.0.0.1/t/a#i', '--name', 'A'])).toEqual({
       kind: 'error',

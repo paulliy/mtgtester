@@ -48,6 +48,8 @@ export function wireTables(deps: TableWiringDeps): TableWiring {
     deckChecker: createDeckChecker({ index: deps.index, banned: deps.banned }),
     maxTables: config.maxTables,
     clock: config.clock,
+    // Every player sees the no-TLS banner at an --insecure-lan table (plan M5 task 5).
+    insecureLan: config.insecureLan,
   });
   const cardsFor = workerCardsFor({ index: deps.index, pool: deps.pool, banned: deps.banned });
 

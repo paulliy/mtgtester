@@ -252,13 +252,15 @@ export class TableAgentSession {
 
 /**
  * The table socket url from what a host hands out: an invite link
- * (`http://host/t/<table>#<invite>`) or the socket url itself (`ws://host/tables/<table>/ws`).
- * The invite comes from the link's fragment unless given separately. Loopback only until the
- * table server's production mode (plan M5).
+ * (`https://host/t/<table>#<invite>`) or the socket url itself (`wss://host/tables/<table>/ws`).
+ * The invite comes from the link's fragment unless given separately. An https or wss table may
+ * be anywhere; a plain http or ws one only on loopback, or on a LAN with `insecureLan` (plan M5
+ * task 6), since its traffic, seat token included, crosses the network unencrypted.
  */
 export function tableSocketTarget(
   table: string,
   invite: string | undefined,
+  insecureLan = false,
 ): { ok: true; url: string; inviteCode: string } | { ok: false; message: string } {
   let parsed: URL;
   try {
@@ -283,10 +285,13 @@ export function tableSocketTarget(
   if (!['http:', 'https:', 'ws:', 'wss:'].includes(parsed.protocol)) {
     return { ok: false, message: `${table} must be an http(s) or ws(s) url.` };
   }
-  if (!['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname)) {
+  const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname);
+  if (scheme === 'ws:' && !loopback && !insecureLan) {
     return {
       ok: false,
-      message: `${table} is not a loopback host; table mode plays a local table server only.`,
+      message:
+        `${table} is not encrypted. Use the https link, or pass --insecure-lan for a table on ` +
+        'your own network.',
     };
   }
   return { ok: true, url: `${scheme}//${parsed.host}/tables/${tableId}/ws`, inviteCode };
@@ -303,6 +308,7 @@ export type TableAgentArgs =
       seat: PlayerId;
       deckPath: string;
       policy: TableAgentPolicy;
+      insecureLan: boolean;
     }
   | { kind: 'help' }
   | { kind: 'error'; message: string };
@@ -312,14 +318,16 @@ export const TABLE_AGENT_USAGE = `Play one seat at a local table server as a JSO
   bun run agent-client --table <link> --name <name> --deck <file> [options]
 
 Options
-  --table <url>         The invite link (http://127.0.0.1:3002/t/<id>#<invite>) or the table's
-                        socket url (ws://127.0.0.1:3002/tables/<id>/ws); loopback only
+  --table <url>         The invite link (https://host/t/<id>#<invite>) or the table's socket
+                        url (wss://host/tables/<id>/ws); plain http/ws only on loopback or with
+                        --insecure-lan
   --invite <code>       The invite code, when the link does not end in #<invite>
   --name <name>         Display name at the table
   --deck <file>         Plaintext decklist to ask for the seat with
   --seat <P1..P4>       Seat to ask for (default P1)
   --policy <policy>     stdin (default): replies on stdin; first-legal: answer every decision
                         with the first legal action
+  --insecure-lan        Allow a plain http/ws table on your own network (no TLS)
   --help                Show this message
 
 The host approves the seat request; the client then plays like a single-player client.`;
@@ -333,6 +341,7 @@ export function parseTableAgentArgs(argv: readonly string[]): TableAgentArgs {
   let deckPath: string | undefined;
   let seat: PlayerId = 'P1';
   let policy: TableAgentPolicy = 'stdin';
+  let insecureLan = false;
   const value = (index: number): string | null => {
     const next = argv[index];
     return next === undefined || next.startsWith('--') ? null : next;
@@ -343,6 +352,9 @@ export function parseTableAgentArgs(argv: readonly string[]): TableAgentArgs {
       case '--help':
       case '-h':
         return { kind: 'help' };
+      case '--insecure-lan':
+        insecureLan = true;
+        break;
       case '--table':
       case '--invite':
       case '--name':
@@ -375,7 +387,7 @@ export function parseTableAgentArgs(argv: readonly string[]): TableAgentArgs {
   if (table === undefined) return { kind: 'error', message: '--table is required.' };
   if (name === undefined) return { kind: 'error', message: '--name is required.' };
   if (deckPath === undefined) return { kind: 'error', message: '--deck is required.' };
-  const target = tableSocketTarget(table, invite);
+  const target = tableSocketTarget(table, invite, insecureLan);
   if (!target.ok) return { kind: 'error', message: target.message };
   return {
     kind: 'run',
@@ -385,5 +397,6 @@ export function parseTableAgentArgs(argv: readonly string[]): TableAgentArgs {
     seat,
     deckPath,
     policy,
+    insecureLan,
   };
 }
