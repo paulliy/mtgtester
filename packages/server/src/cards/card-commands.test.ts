@@ -2,6 +2,13 @@
 import { describe, expect, it } from 'vitest';
 import { lineDiff, snapshotChange } from '../../../../scripts/cards/card-check';
 import {
+  batchCards,
+  bindSources,
+  registerScenarioFiles,
+  snapshotChanges,
+  sourceList,
+} from '../../../../scripts/cards/card-finish';
+import {
   batchFileSource,
   forgeScriptPath,
   insertStub,
@@ -123,5 +130,75 @@ describe('card:new', () => {
     const source = runnerTestSource(card('Mortar', 'Line one.'), 'pilot-one');
     expect(source.match(/it\.todo\(/g)).toHaveLength(2);
     expect(source).toContain('scenarios/mortar.json');
+  });
+});
+
+describe('card:finish', () => {
+  it('names each snapshot entry that was added, removed or changed', () => {
+    const entry = (oracleId: string, name: string, op: string) => ({ oracleId, name, def: { op } });
+    const changes = snapshotChanges(
+      JSON.stringify([entry('a', 'Alpha', 'draw'), entry('b', 'Beta', 'gain')]),
+      JSON.stringify([entry('a', 'Alpha', 'mill'), entry('c', 'Gamma', 'scry')]),
+    );
+    expect(changes.map(({ name, kind }) => [name, kind])).toEqual([
+      ['Alpha', 'changed'],
+      ['Beta', 'removed'],
+      ['Gamma', 'added'],
+    ]);
+  });
+
+  it('binds a missing source beside its closest sibling, as PR11b did by hand', () => {
+    const generator = [
+      'const SOURCE_FILES = [',
+      "  'packages/engine/src/cards/overrides/coverage-pr09.ts',",
+      "  'packages/engine/src/cards/overrides/coverage-pr11.ts',",
+      "  'packages/engine/src/cards/overrides/coverage-pr12.ts',",
+      "  'packages/server/src/cards/pr11-scenarios.ts',",
+      "  'packages/server/src/cards/pr11b-scenarios.ts',",
+      "  'packages/engine/src/cards/overrides/bug-hunt.ts',",
+      "  'packages/server/src/cards/pr08-boseiju-scenarios.ts',",
+      '] as const;',
+    ].join('\n');
+    const bound = bindSources(generator, [
+      'packages/server/src/cards/pr12-scenarios.ts',
+      'packages/engine/src/cards/overrides/coverage-pr11b.ts',
+      'scripts/new-helper.ts',
+    ]);
+    expect(sourceList(bound)).toEqual([
+      'packages/engine/src/cards/overrides/coverage-pr09.ts',
+      'packages/engine/src/cards/overrides/coverage-pr11.ts',
+      'packages/engine/src/cards/overrides/coverage-pr11b.ts',
+      'packages/engine/src/cards/overrides/coverage-pr12.ts',
+      'packages/server/src/cards/pr11-scenarios.ts',
+      'packages/server/src/cards/pr11b-scenarios.ts',
+      'packages/server/src/cards/pr12-scenarios.ts',
+      'packages/engine/src/cards/overrides/bug-hunt.ts',
+      'packages/server/src/cards/pr08-boseiju-scenarios.ts',
+      'scripts/new-helper.ts',
+    ]);
+    expect(bindSources(bound, ['scripts/new-helper.ts'])).toBe(bound);
+  });
+
+  it('registers each scenario file the lab does not read yet, once', () => {
+    const source = [
+      'export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScenarioFile }> = [',
+      '  {',
+      "    name: 'a.json',",
+      '  },',
+      '];',
+    ].join('\n');
+    const registered = registerScenarioFiles(source, ['a.json', 'b.json']);
+    expect(registered.match(/name: 'b\.json'/g)).toHaveLength(1);
+    expect(registered).toContain("packages/engine/tests/scenarios/b.json', import.meta.url)");
+    expect(registerScenarioFiles(registered, ['a.json', 'b.json'])).toBe(registered);
+  });
+
+  it("lists a batch file's cards from their registrations", () => {
+    expect(
+      batchCards(
+        `unimplemented('52241b9c-7a69-4176-9234-8bdab09d8e64', 'Sai, Master Thopterist', []);\n` +
+          `defineCard("7060f2c8-fca0-4b7a-bddf-37682f434596", "Whirler Rogue", [], {});`,
+      ),
+    ).toEqual(['Sai, Master Thopterist', 'Whirler Rogue']);
   });
 });
