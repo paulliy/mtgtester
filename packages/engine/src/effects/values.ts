@@ -234,7 +234,7 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     case 'energyAvailable':
       return ctx.state.players.find((p) => p.id === scope.controllerId)?.energy ?? 0;
     case 'stationPower':
-      return scope.stationPower ?? 0;
+      return scopeFact(scope, 'stationPower');
     case 'countersOnSelf': {
       const facts = sourceObjectFacts(ctx, scope);
       return facts === undefined ? 0 : counterCount(facts.counters, value.counter);
