@@ -10,6 +10,7 @@ import {
 } from '../../../../scripts/cards/card-finish';
 import {
   batchFileSource,
+  faceReasons,
   forgeScriptPath,
   insertStub,
   interactionPrompts,
@@ -86,6 +87,15 @@ describe('card:new', () => {
         (near) => near.card,
       ),
     ).toEqual(['Spit Flame']);
+  });
+
+  it('sends a spell face to defineSpellFace with its own line', () => {
+    expect(
+      faceReasons(card('Ettercap // Web Shot', 'Reach'), [
+        'Web Shot: unrecognized rules text: "Destroy target creature with flying."',
+        'unrecognized rules text: "Reach"',
+      ]),
+    ).toEqual([{ face: 'Web Shot', line: 'Destroy target creature with flying.' }]);
   });
 
   it("finds a card's Forge script path the way Forge names its files", () => {
@@ -191,7 +201,12 @@ describe('card:finish', () => {
       '  },',
       '];',
     ].join('\n');
-    const registered = registerScenarioFiles(source, ['a.json', 'b.json']);
+    const registered = registerScenarioFiles(source, ['c.json', 'a.json', 'b.json']);
+    expect([...registered.matchAll(/name: '([^']+)'/g)].map((match) => match[1])).toEqual([
+      'a.json',
+      'b.json',
+      'c.json',
+    ]);
     expect(registered.match(/name: 'b\.json'/g)).toHaveLength(1);
     expect(registered).toContain("packages/engine/tests/scenarios/b.json', import.meta.url)");
     expect(registerScenarioFiles(registered, ['a.json', 'b.json'])).toBe(registered);

@@ -90,19 +90,24 @@ function main(): void {
   if (def.modeled && issues.length === 0) console.log('  valid IR');
 
   if (existsSync(OVERRIDE_SNAPSHOT)) {
-    const change = snapshotChange(
-      readFileSync(OVERRIDE_SNAPSHOT, 'utf8'),
-      overrideSnapshot(),
-      card.oracleId,
-    );
-    if (change === null) console.log('\noverride snapshot: no override for this card');
-    else if (change.length === 0) console.log('\noverride snapshot: unchanged');
-    else {
-      console.log(
-        `\noverride snapshot: changed (${change.length} lines); bun run snapshots:write records it`,
-      );
-      for (const line of change.slice(0, 80)) console.log(`  ${line}`);
-      if (change.length > 80) console.log(`  … ${change.length - 80} more`);
+    const baseline = readFileSync(OVERRIDE_SNAPSHOT, 'utf8');
+    const current = overrideSnapshot();
+    // A spell face (Adventure, Omen, modal) registers under `<oracleId>:back`.
+    for (const [id, label] of [
+      [card.oracleId, 'override snapshot'],
+      [`${card.oracleId}:back`, 'face override snapshot'],
+    ] as const) {
+      const change = snapshotChange(baseline, current, id);
+      if (change === null) {
+        if (id === card.oracleId) console.log(`\n${label}: no override for this card`);
+      } else if (change.length === 0) console.log(`\n${label}: unchanged`);
+      else {
+        console.log(
+          `\n${label}: changed (${change.length} lines); bun run snapshots:write records it`,
+        );
+        for (const line of change.slice(0, 80)) console.log(`  ${line}`);
+        if (change.length > 80) console.log(`  … ${change.length - 80} more`);
+      }
     }
   }
   process.exit(def.modeled && issues.length === 0 ? 0 : 1);

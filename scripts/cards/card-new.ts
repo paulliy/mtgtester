@@ -118,6 +118,26 @@ export function interactionPrompts(oracleText: string): Array<{ shape: string; q
   );
 }
 
+/**
+ * Reasons a spell face reports as `<Face>: <reason>` (Adventure, Omen and modal faces). The face is
+ * authored on its own with `defineSpellFace`, claiming the face's own line.
+ */
+export function faceReasons(
+  card: OracleCard,
+  reasons: readonly string[],
+): Array<{ face: string; line: string }> {
+  const faces = [
+    ...card.name.split(' // '),
+    ...(card.backFace === undefined ? [] : [card.backFace.name]),
+  ];
+  return reasons.flatMap((reason) => {
+    const face = faces.find((name) => reason.startsWith(`${name}: `));
+    return face === undefined || face === card.name
+      ? []
+      : [{ face, line: handledLineOf(reason.slice(face.length + 2)) }];
+  });
+}
+
 // ── Nearest modeled cards ──────────────────────────────────────────────────────────────────────
 
 /** A line's words with its card's name, numbers and mana symbols made generic. */
@@ -241,7 +261,8 @@ async function forgeScript(name: string): Promise<string | null> {
 export function overrideStub(card: OracleCard, handledLines: readonly string[]): string {
   const lines = handledLines.map((line) => `    ${JSON.stringify(line)},`).join('\n');
   return [
-    `  // card:new scaffold: the card stays unmodeled until this becomes a real definition.`,
+    `  // card:new scaffold: the card stays unmodeled until this becomes a real definition, built`,
+    `  // with spell()/triggered()/activated() and targetSlots() named slots.`,
     `  unimplemented(${JSON.stringify(card.oracleId)}, ${JSON.stringify(card.name)}, [`,
     lines,
     `  ]);`,
@@ -547,6 +568,7 @@ async function main(): Promise<void> {
   console.log(`from the ${source}; pinned as ${sha}\n`);
 
   const def = interpretCard(card);
+  const faces = faceReasons(card, def.unmodeledReasons);
   const handled = def.unmodeledReasons.map(handledLineOf);
   // Reasons quote a line with the card's name written as "~".
   const isUnparsed = (line: string): boolean =>
@@ -560,6 +582,13 @@ async function main(): Promise<void> {
     for (const reason of def.unmodeledReasons) console.log(`  ${reason}`);
     console.log('\nhandledLines an override must claim:');
     for (const line of handled) console.log(`  ${JSON.stringify(line)}`);
+    for (const face of faces)
+      console.log(
+        `\n${face.face} is a spell face: author it with defineSpellFace(${JSON.stringify(card.oracleId)}, ${JSON.stringify(card.name)}, ${JSON.stringify(face.face)}, [...]) claiming:\n  ${JSON.stringify(face.line)}`,
+      );
+    console.log(
+      '\nAuthor with the shared builders (spell(), triggered(), activated()) and targetSlots() named slots; the authoring lint rejects numeric slots.',
+    );
   }
 
   const unparsed = card.oracleText.split('\n').filter(isUnparsed);

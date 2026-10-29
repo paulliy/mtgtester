@@ -63,32 +63,42 @@ export function snapshotChanges(
 
 // ── Scenario registration ──────────────────────────────────────────────────────────────────────
 
-/** The runner-scenarios source with an entry for each listed file it does not read yet. */
+/** One `RUNNER_SCENARIO_FILES` entry, reading the file through its own literal path. */
+function scenarioEntry(name: string): string {
+  return [
+    '  {',
+    `    name: '${name}',`,
+    '    file: scenarioFile(',
+    `      '${name}',`,
+    '      readFileSync(',
+    `        new URL('../../../../packages/engine/tests/scenarios/${name}', import.meta.url),`,
+    "        'utf8',",
+    '      ),',
+    '    ),',
+    '  },',
+  ].join('\n');
+}
+
+/**
+ * The runner-scenarios source with an entry for each listed file it does not read yet, every
+ * entry in file-name order (the order the Card Test Lab lists the scenarios in).
+ */
 export function registerScenarioFiles(source: string, files: readonly string[]): string {
   const marker =
     'export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScenarioFile }> = [';
   const start = source.indexOf(marker);
   if (start === -1) throw new Error(`${RUNNER_SCENARIOS} has no RUNNER_SCENARIO_FILES list`);
+  const bodyStart = start + marker.length;
   const end = source.indexOf('\n];', start);
-  const missing = files.filter((name) => !source.slice(start, end).includes(`'${name}'`));
-  if (missing.length === 0) return source;
-  const entries = missing
-    .map((name) =>
-      [
-        '  {',
-        `    name: '${name}',`,
-        '    file: scenarioFile(',
-        `      '${name}',`,
-        '      readFileSync(',
-        `        new URL('../../../../packages/engine/tests/scenarios/${name}', import.meta.url),`,
-        "        'utf8',",
-        '      ),',
-        '    ),',
-        '  },',
-      ].join('\n'),
-    )
-    .join('\n');
-  return `${source.slice(0, end)}\n${entries}${source.slice(end)}`;
+  const body = source.slice(bodyStart, end);
+  const blocks = body.split(/\n(?= {2}\{\n)/).filter((block) => block.trim() !== '');
+  const entries = new Map(
+    blocks.map((block) => [/name: '([^']+)'/.exec(block)?.[1] ?? '', block.replace(/^\n/, '')]),
+  );
+  for (const name of files) if (!entries.has(name)) entries.set(name, scenarioEntry(name));
+  const ordered = [...entries.keys()].sort().map((name) => entries.get(name)!);
+  const next = `\n${ordered.join('\n')}`;
+  return next === body ? source : `${source.slice(0, bodyStart)}${next}${source.slice(end)}`;
 }
 
 // ── Evidence binding ───────────────────────────────────────────────────────────────────────────
@@ -206,8 +216,13 @@ function main(): void {
     [OVERRIDE_SNAPSHOT, overrideSnapshot()],
   ] as const) {
     const changes = snapshotChanges(readFileSync(path, 'utf8'), current);
-    console.log(`   ${path}: ${changes.length === 0 ? 'unchanged' : `${changes.length} card(s)`}`);
-    for (const change of changes) {
+    // Overrides register under the real Oracle id and the fixture alias: show each card once.
+    const shown = new Map<string, (typeof changes)[number]>();
+    for (const change of changes)
+      if (!shown.has(`${change.kind}:${change.name}`))
+        shown.set(`${change.kind}:${change.name}`, change);
+    console.log(`   ${path}: ${shown.size === 0 ? 'unchanged' : `${shown.size} card(s)`}`);
+    for (const change of shown.values()) {
       console.log(`   ${change.kind}: ${change.name}`);
       for (const line of change.diff.slice(0, 40)) console.log(`     ${line}`);
       if (change.diff.length > 40) console.log(`     … ${change.diff.length - 40} more lines`);

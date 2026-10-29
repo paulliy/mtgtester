@@ -72,18 +72,19 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 
 ## Progress
 
-| Step | State | Done so far                                                                                                | Pull request |
-| ---- | ----- | ---------------------------------------------------------------------------------------------------------- | ------------ |
-| 1    | done  | stale harness deleted; harness-integrity guard                                                             | #44          |
-| 2    | done  | `scripts/card-authoring-metrics.ts`; `docs/reviews/card-authoring-baseline-2026-10-28.md`                  | #44          |
-| 3    | done  | phase 1 done: scope reads are invariants per kind; every test file collects a test (`check:suite-collect`) | #44          |
-| 4    | done  | P1 data-key registry; P3 label code in `@mtg/shared/presentation`                                          | #44          |
-| 5    | done  | M1 seat controllers: `'table'` mode, per-seat state, fail-closed switches                                  | #44          |
-| 6    | done  | M2a disclosure policy, privacy fixes, replay inputs and harness; M2b ChaCha20 and streams                  | #44          |
-| 7    | done  | P2 projection types and board groups; P4 server presentation; P5 raw `data` on request, lint               | #44          |
-| 9    | done  | M3 workers, health, manifest, post-game, agent table mode, scans; M4 clocks, fallback, concede             | #44          |
-| 10   | done  | P6: server-built damage and life cues on each batch; the board animates from them                          | #44          |
-| 12   | done  | M5 exposure, TLS run, review; M6 table app, lobby, table bar, post-game, table e2e and CI job              | #44          |
+| Step | State | Done so far                                                                                                           | Pull request |
+| ---- | ----- | --------------------------------------------------------------------------------------------------------------------- | ------------ |
+| 1    | done  | stale harness deleted; harness-integrity guard                                                                        | #44          |
+| 2    | done  | `scripts/card-authoring-metrics.ts`; `docs/reviews/card-authoring-baseline-2026-10-28.md`                             | #44          |
+| 3    | done  | phase 1 done: scope reads are invariants per kind; every test file collects a test (`check:suite-collect`)            | #44          |
+| 4    | done  | P1 data-key registry; P3 label code in `@mtg/shared/presentation`                                                     | #44          |
+| 5    | done  | M1 seat controllers: `'table'` mode, per-seat state, fail-closed switches                                             | #44          |
+| 6    | done  | M2a disclosure policy, privacy fixes, replay inputs and harness; M2b ChaCha20 and streams                             | #44          |
+| 7    | done  | P2 projection types and board groups; P4 server presentation; P5 raw `data` on request, lint                          | #44          |
+| 8    | done  | phase 2: pin store, script/strict pump, scenario runner and lab adapter, card:check/new/finish, gate list, mini-pilot | #44          |
+| 9    | done  | M3 workers, health, manifest, post-game, agent table mode, scans; M4 clocks, fallback, concede                        | #44          |
+| 10   | done  | P6: server-built damage and life cues on each batch; the board animates from them                                     | #44          |
+| 12   | done  | M5 exposure, TLS run, review; M6 table app, lobby, table bar, post-game, table e2e and CI job                         | #44          |
 
 ## Notes from delivery
 
@@ -157,3 +158,10 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
   untracked Scryfall bulk file; they declare it with `// suite-requires:` and the run lists them
   as not run while it is missing, which is always so in CI. About 2.5 minutes, nearly all Vitest
   collection; it runs after the full suite in the engine job.
+- **Phase 2 exit (card authoring).** In a worktree at `e61a3d9`, `card:finish`'s binding step
+  wrote all five evidence generators byte-identical to `da2e2c6` and its re-seal wrote both pins
+  identical to `da2e2c6`; `card-new-handled-lines.test.ts` shows `card:new`'s handledLines
+  interpret every PR11b card exactly as the authored lines do. The mini-pilot is recorded in
+  [the pilot review](../reviews/card-authoring-mini-pilot-2026-10-29.md).
+- **Two hash definitions for pins.** Pins before PR08 hashed a card's JSON with sorted keys; later
+  ones hash it as written. The pin store keeps the manifest's key and accepts either.
