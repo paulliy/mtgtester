@@ -541,9 +541,8 @@ export function makePermanent(
     ...((obj as EngineCardObject).announcedX !== undefined
       ? { x: (obj as EngineCardObject).announcedX }
       : {}),
-    ...((obj as EngineCardObject).treasureManaSpentToCast !== undefined
-      ? { treasureManaSpent: (obj as EngineCardObject).treasureManaSpentToCast }
-      : {}),
+    // Mana from a Treasure spent to cast it: none when it was not cast, or cast without any.
+    treasureManaSpent: (obj as EngineCardObject).treasureManaSpentToCast ?? 0,
   };
   for (const [counter, value] of Object.entries(
     !faceDown && landFace === undefined ? (def.entersWithCounters ?? {}) : {},
