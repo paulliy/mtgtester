@@ -226,7 +226,7 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     case 'spellColorCount':
       return scope.spellColorCount ?? 0;
     case 'manaSpent':
-      return scope.manaSpent ?? 0;
+      return scopeFact(scope, 'manaSpent');
     case 'treasureManaSpent':
       return scopeFact(scope, 'treasureManaSpent');
     case 'energyPaid':
