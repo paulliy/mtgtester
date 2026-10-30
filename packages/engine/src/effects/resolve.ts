@@ -781,6 +781,7 @@ export function* drawCards(
     }
     const drawn = yield* moveObject(ctx, top, { zone: 'hand' });
     if (drawn?.zone !== 'hand') continue;
+    (drawn as EngineCardObject).drawnOnTurn = ctx.state.turnNumber;
     // The count is banked exactly when this successful emitted draw exists: the card moved
     // to hand and the `draw` event below is about to record it.
     drawnCount += 1;
@@ -9016,6 +9017,46 @@ function* executeAbilityEffects(
       }
       case 'noOp':
         throw new Error('engine bug: executable noOp effect is prohibited');
+      case 'payLifeOrTopDrawnCards': {
+        const count = amountOf(effect.count);
+        const life = amountOf(effect.life);
+        const chosen: EngineCardObject[] = [];
+        for (let i = 0; i < count; i++) {
+          const candidates = controller.hand.filter(
+            (card) => card.drawnOnTurn === ctx.state.turnNumber && !chosen.includes(card),
+          );
+          // "Choose two": as many as possible when fewer were drawn and kept.
+          if (candidates.length === 0) break;
+          const card = yield* chooseCard(ctx, {
+            player: controller.id,
+            prompt: `${source.name}: choose a card in your hand drawn this turn (${i + 1} of ${count})`,
+            cards: candidates,
+            type: 'chooseCard',
+            verb: 'Choose',
+          });
+          if (card === null) break;
+          chosen.push(card);
+        }
+        for (const card of chosen) {
+          if (!controller.hand.includes(card)) continue;
+          const canPay =
+            life === 0 || (controller.life >= life && !playerLifeLocked(ctx, controller.id));
+          const pay = canPay
+            ? (yield {
+                decisionType: 'general',
+                player: controller.id,
+                prompt: `${source.name}: pay ${life} life to keep ${card.name}, or put it on top of your library?`,
+                options: [
+                  { type: 'payLife', description: `Pay ${life} life: keep ${card.name}` },
+                  { type: 'decline', description: `Put ${card.name} on top of your library` },
+                ],
+              }).index === 0
+            : false;
+          if (pay) payLife(ctx, controller, life);
+          else yield* moveObject(ctx, card, { zone: 'library', libraryPosition: 'top' });
+        }
+        break;
+      }
       case 'returnCardFromGraveyardToHand': {
         const selectorSource = { cardId: source.cardId, controllerId: controller.id };
         const chosen = yield* chooseCard(ctx, {

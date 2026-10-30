@@ -608,6 +608,14 @@ export type EffectRef =
  */
 export type Effect =
   /**
+   * "Choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the
+   * card on top of your library." (Sylvan Library): the controller chooses `count` cards in hand
+   * that were drawn this turn (as many as there are, if fewer), then for each, in the order
+   * chosen, pays `life` or puts it on top. Life can be paid only with at least that much life
+   * (CR 119.4); a card that has left the hand meanwhile is skipped.
+   */
+  | { op: 'payLifeOrTopDrawnCards'; count: Value; life: Value }
+  /**
    * "Return a creature or planeswalker card from your graveyard to your hand" (Takenuma): the
    * controller chooses one card matching `filter` in their graveyard as the effect resolves and
    * puts it into their hand. Not a target (CR 115.10), so it may be a card an earlier effect of the

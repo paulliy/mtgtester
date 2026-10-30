@@ -350,6 +350,7 @@ type ExpressionFields<T> = {
   [F in keyof T as Extract<T[F], Selector | Value | Condition> extends never ? never : F]-?: Check;
 };
 const effectExpressions = {
+  payLifeOrTopDrawnCards: { count: numberValue, life: numberValue },
   returnCardFromGraveyardToHand: { filter: selector },
   pumpUntilEot: { power: numericExpression, toughness: numericExpression },
   grantKeywordUntilEot: {},

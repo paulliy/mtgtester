@@ -239,6 +239,7 @@ const shapes = {
     cantRegenerate: leaf,
     spec: { node: 'TokenSpec' },
     count: { union: [{ node: 'Value' }, leaf] },
+    life: { node: 'Value' },
     metric: leaf,
     action: leaf,
     maxManaValue: { union: [leaf, { node: 'Value' }] },
@@ -922,6 +923,7 @@ const families = {
     prefix: 'Effect',
     discriminator: 'op',
     tags: {
+      payLifeOrTopDrawnCards: true,
       returnCardFromGraveyardToHand: true,
       pumpUntilEot: true,
       grantKeywordUntilEot: true,

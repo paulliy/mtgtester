@@ -436,6 +436,11 @@ export interface CastRecord {
 export interface EngineCardObject extends EngineObject, CastRecord {
   /** X announced when this card was cast, retained while it resolves into a permanent. */
   announcedX?: number;
+  /**
+   * The turn this hand card was drawn ("cards in your hand drawn this turn", Sylvan Library). Set
+   * on the hand object by a draw, so it is gone once the card leaves the hand (CR 400.7).
+   */
+  drawnOnTurn?: number;
   optionalCostCounts?: Partial<Record<'kicker' | 'squad' | 'offspring' | 'replicate', number>>;
   /** Mana from Treasure permanents spent to cast this card, retained until it enters. */
   treasureManaSpentToCast?: number;
