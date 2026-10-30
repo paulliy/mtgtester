@@ -9,6 +9,9 @@ import {
   type PriorityActionPayload,
 } from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
+import { allOf, ofSubtype, ofType, type Selector } from '../src/cards/selector';
+import { spell } from '../src/cards/templates';
+import { constant } from '../src/cards/value';
 import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import { moveObject, playerById } from '../src/state/objects';
@@ -16,6 +19,7 @@ import { landPlayLimitFor } from '../src/state/queries';
 import type { GameContext } from '../src/state/types';
 import { pinStore } from './scenario/pin-store';
 import {
+  bear,
   conjure,
   copies,
   forest,
@@ -407,5 +411,86 @@ describe('Secluded Courtyard', () => {
     courtyardChoosing(ctx, undefined);
     const elf = conjure(ctx, 'P1', creature('Pilot Elf', 'Elf'), 'hand');
     expect(castable(ctx, elf.id)).toBe(false);
+  });
+});
+
+const creatureNamed = (name: string, subtype: string) =>
+  oracle({
+    name,
+    typeLine: `Creature — ${subtype}`,
+    manaCost: '{1}',
+    power: '2',
+    toughness: '2',
+    subtypes: [subtype],
+  });
+
+describe('Morbid Opportunist', () => {
+  const opportunist = () => pinStore.get('Morbid Opportunist');
+  const wrath = (selector: Selector) =>
+    spell({ effects: [{ op: 'destroyEach', selector }], description: 'Destroy each' });
+  const bears = allOf(ofType('Creature'), ofSubtype('Bear'));
+  const sorceryCaster = (ctx: GameContext) =>
+    spawn(ctx, 'P1', oracle({ name: 'Pilot Caster', typeLine: 'Artifact', manaCost: '{1}' }));
+  const morbidTriggers = (ctx: GameContext) =>
+    ctx.state.pendingTriggers.filter((trigger) => trigger.sourceName === 'Morbid Opportunist');
+  const destroy = (ctx: GameContext, selector: Selector) =>
+    pump(executeAbility(ctx, sorceryCaster(ctx), wrath(selector), []), () => {
+      throw new Error('destroying asks nothing');
+    });
+
+  it("morbid-opportunist-another-dies — an opponent's creature dying triggers it, and it draws a card", () => {
+    const ctx = mainPhase('morbid-another');
+    spawn(ctx, 'P1', opportunist());
+    spawn(ctx, 'P2', bear());
+    destroy(ctx, bears);
+    const [trigger] = morbidTriggers(ctx);
+    expect(morbidTriggers(ctx)).toHaveLength(1);
+    expect(trigger!.controllerId).toBe('P1');
+    expect(trigger!.ability.effects).toEqual([{ op: 'draw', count: constant(1) }]);
+  });
+
+  it('morbid-opportunist-simultaneous — creatures dying at once make one trigger, not one each', () => {
+    const ctx = mainPhase('morbid-simultaneous');
+    spawn(ctx, 'P1', opportunist());
+    spawn(ctx, 'P1', bear());
+    spawn(ctx, 'P2', bear());
+    spawn(ctx, 'P2', bear());
+    destroy(ctx, bears);
+    expect(morbidTriggers(ctx)).toHaveLength(1);
+  });
+
+  it('morbid-opportunist-once-each-turn — a second death later in the turn does not trigger it', () => {
+    const ctx = mainPhase('morbid-once');
+    spawn(ctx, 'P1', opportunist());
+    spawn(ctx, 'P2', bear());
+    spawn(ctx, 'P2', creatureNamed('Pilot Wolf', 'Wolf'));
+    destroy(ctx, bears);
+    expect(morbidTriggers(ctx)).toHaveLength(1);
+    ctx.state.pendingTriggers.length = 0;
+    destroy(ctx, ofSubtype('Wolf'));
+    expect(morbidTriggers(ctx)).toHaveLength(0);
+  });
+
+  it('morbid-opportunist-not-itself — its own death alone does not trigger it', () => {
+    const ctx = mainPhase('morbid-self');
+    spawn(ctx, 'P1', opportunist());
+    destroy(ctx, ofType('Creature'));
+    expect(morbidTriggers(ctx)).toHaveLength(0);
+  });
+
+  it('morbid-opportunist-dies-with-others — dying alongside another creature, it still triggers (CR 603.10a)', () => {
+    const ctx = mainPhase('morbid-wrath');
+    spawn(ctx, 'P1', opportunist());
+    spawn(ctx, 'P2', bear());
+    destroy(ctx, ofType('Creature'));
+    expect(morbidTriggers(ctx)).toHaveLength(1);
+  });
+
+  it('morbid-opportunist-creatures-only — a noncreature permanent put into the graveyard does not trigger it', () => {
+    const ctx = mainPhase('morbid-noncreature');
+    spawn(ctx, 'P1', opportunist());
+    spawn(ctx, 'P2', oracle({ name: 'Pilot Relic', typeLine: 'Artifact', manaCost: '{1}' }));
+    destroy(ctx, ofType('Artifact'));
+    expect(morbidTriggers(ctx)).toHaveLength(0);
   });
 });

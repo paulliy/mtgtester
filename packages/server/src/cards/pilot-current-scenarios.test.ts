@@ -46,6 +46,16 @@ const PLANS: Record<string, Plan> = {
     steps: [{ play: 'Secluded Courtyard' }],
     answers: [/^Elf$/],
   },
+  'pilot-current-morbid-opportunist-viewer-draw': {
+    steps: [{ cast: 'Pilot Lab Doom', targets: ['Pilot Lab Bear'] }],
+  },
+  'pilot-current-morbid-opportunist-viewer-once': {
+    steps: [
+      { cast: 'Pilot Lab Doom', targets: ['Pilot Lab Bear'] },
+      { cast: 'Pilot Lab Doom', targets: ['Pilot Lab Giant'], whenEmpty: true },
+    ],
+  },
+  'pilot-current-morbid-opportunist-viewer-wrath': { steps: [{ cast: 'Pilot Lab Wrath' }] },
   'pilot-current-secluded-courtyard-viewer-activate': {
     steps: [
       { play: 'Secluded Courtyard' },
@@ -248,6 +258,34 @@ const CHECKS: Record<string, (result: Result) => void> = {
       targets: ['Pilot Lab Elf Warrior'],
       power: 1,
     });
+  },
+  'pilot-current-morbid-opportunist-viewer-draw': (r) => {
+    expect(r.done).toEqual(['Pilot Lab Doom']);
+    expect(r.permanent('Pilot Lab Bear')).toBeUndefined();
+    // The trigger is not a "you may": nothing is asked.
+    expect(r.asked).toEqual([]);
+    // The Trinket and the drawn card.
+    expect(r.player('P1').hand).toHaveLength(2);
+    expect(r.state.eventLog.filter((event) => event.type === 'draw')).toHaveLength(1);
+  },
+  'pilot-current-morbid-opportunist-viewer-once': (r) => {
+    expect(r.done).toEqual(['Pilot Lab Doom', 'Pilot Lab Doom']);
+    expect(r.permanent('Pilot Lab Bear')).toBeUndefined();
+    expect(r.permanent('Pilot Lab Giant')).toBeUndefined();
+    // One Opportunist draw: the second death draws nothing.
+    expect(r.state.eventLog.filter((event) => event.type === 'draw')).toHaveLength(1);
+    expect(r.player('P1').hand).toHaveLength(2);
+  },
+  'pilot-current-morbid-opportunist-viewer-wrath': (r) => {
+    expect(r.done).toEqual(['Pilot Lab Wrath']);
+    expect(r.state.battlefield.filter((perm) => perm.name !== 'Swamp')).toEqual([]);
+    expect(zoneNames(r.player('P1').graveyard).sort()).toEqual([
+      'Morbid Opportunist',
+      'Pilot Lab Bear',
+      'Pilot Lab Wrath',
+    ]);
+    expect(r.state.eventLog.filter((event) => event.type === 'draw')).toHaveLength(1);
+    expect(r.player('P1').hand).toHaveLength(2);
   },
   'pilot-current-gamble-viewer-tutor': (r) => {
     expect(r.done).toEqual(['Gamble']);

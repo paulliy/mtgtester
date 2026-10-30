@@ -101,6 +101,8 @@ export const ELF_WARRIOR = lab(
   ['G'],
   ['1', '1'],
 );
+export const DOOM = lab('Pilot Lab Doom', 'Sorcery', '{B}', 'Destroy target creature.', ['B']);
+export const WRATH = lab('Pilot Lab Wrath', 'Sorcery', '{B}', 'Destroy all creatures.', ['B']);
 /**
  * Always in P1's hand: a free spell P1 can cast whenever it has priority, so the viewer is still
  * given priority when the card under test leaves P1 nothing else to do.
@@ -116,6 +118,8 @@ const SUPPORT_CARDS = [
   ELF,
   GOBLIN,
   ELF_WARRIOR,
+  DOOM,
+  WRATH,
   TRINKET,
 ];
 
@@ -286,6 +290,43 @@ const DEFS: ScenarioDef[] = [
     p1Hand: ['Secluded Courtyard'],
     p1Field: ['Pilot Lab Elf Warrior'],
     p1Top: ['Pilot Lab Goblin'],
+  },
+  {
+    id: 'pilot-current-morbid-opportunist-viewer-draw',
+    cardName: 'Morbid Opportunist',
+    title: "Morbid Opportunist: an opponent's creature dies, and you draw",
+    instructions: ["Cast Pilot Lab Doom on P2's Pilot Lab Bear with your Swamp."],
+    expectedOutcome: 'Pilot Lab Bear dies; Morbid Opportunist triggers and you draw a card.',
+    lines: [1],
+    p1Hand: ['Pilot Lab Doom'],
+    p1Field: ['Morbid Opportunist', 'Swamp'],
+    p2Field: ['Pilot Lab Bear'],
+  },
+  {
+    id: 'pilot-current-morbid-opportunist-viewer-once',
+    cardName: 'Morbid Opportunist',
+    title: 'Morbid Opportunist: a second death the same turn draws nothing',
+    instructions: [
+      "Cast Pilot Lab Doom on P2's Pilot Lab Bear.",
+      "Cast the second Pilot Lab Doom on P2's Pilot Lab Giant.",
+    ],
+    expectedOutcome: 'Both creatures die, but you draw only one card: it triggers once each turn.',
+    lines: [1],
+    p1Hand: ['Pilot Lab Doom', 'Pilot Lab Doom'],
+    p1Field: ['Morbid Opportunist', 'Swamp', 'Swamp'],
+    p2Field: ['Pilot Lab Bear', 'Pilot Lab Giant'],
+  },
+  {
+    id: 'pilot-current-morbid-opportunist-viewer-wrath',
+    cardName: 'Morbid Opportunist',
+    title: 'Morbid Opportunist: dying with two other creatures, it draws one card',
+    instructions: ['Cast Pilot Lab Wrath with your Swamp.'],
+    expectedOutcome:
+      'Every creature dies at once; Morbid Opportunist sees the others die and you draw one card.',
+    lines: [1],
+    p1Hand: ['Pilot Lab Wrath'],
+    p1Field: ['Morbid Opportunist', 'Swamp', 'Pilot Lab Bear'],
+    p2Field: ['Pilot Lab Giant'],
   },
 ];
 

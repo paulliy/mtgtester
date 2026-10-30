@@ -1,6 +1,6 @@
 import { searchLibraryCards } from '../effect-builders';
-import { allOf, CHOSEN_SUBTYPE, ofColor, ofType, YOURS } from '../selector';
-import { costReductionFor, spell } from '../templates';
+import { allOf, CHOSEN_SUBTYPE, ofColor, ofType, OTHER, YOURS } from '../selector';
+import { costReductionFor, spell, triggered } from '../templates';
 import { constant } from '../value';
 import { defineCard } from './index';
 
@@ -105,6 +105,33 @@ export function registerPilotCurrentOverrides(): void {
               'cast a creature spell of the chosen type or activate an ability of a creature source of the chosen type',
           },
         },
+      ],
+    },
+  );
+  // "Whenever one or more other creatures die, draw a card. This ability triggers only once each
+  // turn." Creatures dying at the same time are one event (CR 603.2c), so a board wipe draws one
+  // card; any player's creatures count. The once-each-turn limit is on Opportunist's object, so a
+  // new Opportunist (CR 400.7) may trigger again.
+  defineCard(
+    '322f44f0-e6da-4ee0-b474-e7d5e9a461c5',
+    'Morbid Opportunist',
+    [
+      'Whenever one or more other creatures die, draw a card. This ability triggers only once each turn.',
+    ],
+    {
+      triggers: [
+        triggered(
+          {
+            when: 'dies',
+            subject: { kind: 'permanent', selector: allOf(ofType('Creature'), OTHER) },
+            aggregate: true,
+            oncePerTurn: true,
+          },
+          {
+            effects: [{ op: 'draw', count: constant(1) }],
+            description: 'Whenever one or more other creatures die, draw a card',
+          },
+        ),
       ],
     },
   );

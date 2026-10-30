@@ -4346,6 +4346,51 @@
     }
   },
   {
+    "oracleId": "322f44f0-e6da-4ee0-b474-e7d5e9a461c5",
+    "name": "Morbid Opportunist",
+    "handledLines": [
+      "Whenever one or more other creatures die, draw a card. This ability triggers only once each turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever one or more other creatures die, draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "aggregate": true,
+            "oncePerTurn": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "other"
+                  }
+                ]
+              }
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "333745d9-e930-439b-94d6-3aeea2877f69",
     "name": "Illusionist's Gambit",
     "handledLines": [
@@ -36081,6 +36126,51 @@
               }
             },
             "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-morbid-opportunist",
+    "name": "Morbid Opportunist",
+    "handledLines": [
+      "Whenever one or more other creatures die, draw a card. This ability triggers only once each turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever one or more other creatures die, draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "aggregate": true,
+            "oncePerTurn": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "other"
+                  }
+                ]
+              }
+            },
+            "when": "dies"
           }
         }
       ]

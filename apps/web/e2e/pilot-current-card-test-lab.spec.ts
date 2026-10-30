@@ -47,6 +47,18 @@ async function cast(page: Page, name: string): Promise<void> {
   await passStackUntil(page, logLine(page, new RegExp(`${name}[^]*resolves`)));
 }
 
+/** Cast a hand card at one [seat, name] permanent, confirm, and wait for it to resolve. */
+async function castAt(page: Page, name: string, seat: string, target: string): Promise<void> {
+  const card = hand(page, name).first();
+  await passUntil(page, card.and(page.locator('.actionable')));
+  await card.click();
+  const chosen = permanent(page, seat, target).first();
+  await expect(chosen).toHaveClass(/targetable|actionable/);
+  await chosen.click();
+  await confirmButton(page).click();
+  await passStackUntil(page, logLine(page, new RegExp(`${name}[^]*resolves`)));
+}
+
 /** Play a land from hand and wait for it to leave the hand (the board groups same-name lands). */
 async function playLand(page: Page, name: string): Promise<void> {
   const card = hand(page, name);
@@ -147,6 +159,29 @@ const FLOWS: Record<string, (page: Page) => Promise<void>> = {
     if ((await confirm.isVisible()) && (await confirm.isEnabled())) await confirm.click();
     await passStackUntil(page, warrior.filter({ hasText: '2/2' }));
     await expect(permanent(page, 'P1', 'Secluded Courtyard').locator('.tap-badge')).toHaveCount(1);
+  },
+  'pilot-current-morbid-opportunist-viewer-draw': async (page) => {
+    await castAt(page, 'Pilot Lab Doom', 'P2', 'Pilot Lab Bear');
+    await passStackUntil(page, logLine(page, /Morbid Opportunist[^]*resolves/));
+    await expect(permanent(page, 'P2', 'Pilot Lab Bear')).toHaveCount(0);
+    // The Trinket and the card drawn.
+    await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(2);
+  },
+  'pilot-current-morbid-opportunist-viewer-once': async (page) => {
+    await castAt(page, 'Pilot Lab Doom', 'P2', 'Pilot Lab Bear');
+    await passStackUntil(page, logLine(page, /Morbid Opportunist[^]*resolves/));
+    await castAt(page, 'Pilot Lab Doom', 'P2', 'Pilot Lab Giant');
+    await passUntil(page, hand(page, 'Pilot Lab Trinket').and(page.locator('.actionable')));
+    await expect(permanent(page, 'P2', 'Pilot Lab Giant')).toHaveCount(0);
+    // Both Dooms are gone; the Trinket and one drawn card remain.
+    await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(2);
+  },
+  'pilot-current-morbid-opportunist-viewer-wrath': async (page) => {
+    await cast(page, 'Pilot Lab Wrath');
+    await passStackUntil(page, logLine(page, /Morbid Opportunist[^]*resolves/));
+    await expect(permanent(page, 'P1', 'Morbid Opportunist')).toHaveCount(0);
+    await expect(permanent(page, 'P2', 'Pilot Lab Giant')).toHaveCount(0);
+    await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(2);
   },
   'pilot-current-explore-viewer-second-land': async (page) => {
     await playLand(page, 'Forest');

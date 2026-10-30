@@ -17948,6 +17948,42 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "322f44f0-e6da-4ee0-b474-e7d5e9a461c5": {
+      "name": "Morbid Opportunist",
+      "oracleSha256": "52b40b5cc1baa57d9e37eb5ab165546a80470be365e384b94bd17e2f88704905",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever one or more other creatures die, draw a card. This ability triggers only once each turn.",
+          "implementation": [
+            "dies trigger on other creatures (any controller), aggregate (one firing per event, CR 603.2c) and oncePerTurn on the object; draw 1"
+          ],
+          "engineTestIds": [
+            "morbid-opportunist-another-dies",
+            "morbid-opportunist-simultaneous",
+            "morbid-opportunist-once-each-turn",
+            "morbid-opportunist-not-itself",
+            "morbid-opportunist-dies-with-others",
+            "morbid-opportunist-creatures-only",
+            "pilot-current-morbid-opportunist-viewer-draw",
+            "pilot-current-morbid-opportunist-viewer-once",
+            "pilot-current-morbid-opportunist-viewer-wrath"
+          ],
+          "viewerScenarioIds": [
+            "pilot-current-morbid-opportunist-viewer-draw",
+            "pilot-current-morbid-opportunist-viewer-once",
+            "pilot-current-morbid-opportunist-viewer-wrath"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "equivalentMutants": [
+        {
+          "mutant": "triggers[0]: drop trigger aggregate",
+          "reason": "The ability also triggers only once each turn, and the engine lets an object's first firing be its only one even within one simultaneous event, so creatures dying at once still make one trigger; its draw reads no trigger count."
+        }
+      ]
     }
   }
 }
