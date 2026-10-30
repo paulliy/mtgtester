@@ -5629,6 +5629,9 @@ const MANA_PER_PERMANENT_RE = /^add ((?:\{[wubrgc]\})+) for each (.+)$/;
  */
 const MANA_WITH_SELF_DAMAGE_RE = /^(add [^.]+)\. ~ deals (\d+) damage to you$/;
 
+/** "{T}: Add {G}{G}. You gain 2 life." (The Great Henge): a mana ability with a life rider. */
+const MANA_WITH_LIFE_GAIN_RE = /^(add [^.]+)\. you gain (\d+) life$/;
+
 /** "Add one mana of any color. Activate only if you control a Dragon." (Mox Jasper) */
 const MANA_ACTIVATE_ONLY_IF_RE = /^(add [^.]+)\. activate only if you control (?:a|an) (.+)$/;
 /** "Activate only if you control five or more lands." (Temple of the False God) */
@@ -6236,6 +6239,16 @@ function parseManaProduction(effectText: string, card: OracleCard): ManaAbilityS
       if (base !== null) {
         return { ...base, onActivate: [{ op: 'damageController', amount: Number(m[2]) }] };
       }
+    }
+  }
+  // The same with a life gain: still a mana ability (CR 605.1a), so the life is gained as the
+  // mana is produced, without using the stack (CR 605.3a).
+  {
+    const m = effectText.match(MANA_WITH_LIFE_GAIN_RE);
+    if (m) {
+      const base = parseManaProduction(m[1] as string, card);
+      if (base !== null)
+        return { ...base, onActivate: [{ op: 'gainLife', amount: constant(Number(m[2])) }] };
     }
   }
   return null;

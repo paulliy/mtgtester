@@ -17545,7 +17545,9 @@
             "jet-medallion-not-other-colors",
             "jet-medallion-castable",
             "jet-medallion-colored-only",
-            "jet-medallion-without-it"
+            "jet-medallion-without-it",
+            "pilot-current-jet-medallion-viewer-reduced",
+            "pilot-current-jet-medallion-viewer-not-red"
           ],
           "viewerScenarioIds": [
             "pilot-current-jet-medallion-viewer-reduced",
@@ -17638,14 +17640,15 @@
             "explore-extra-land-play",
             "explore-lapses",
             "explore-twice",
-            "explore-only-you"
+            "explore-only-you",
+            "pilot-current-explore-viewer-second-land"
           ],
           "viewerScenarioIds": ["pilot-current-explore-viewer-second-land"]
         },
         {
           "oracleText": "Draw a card.",
           "implementation": ["draw 1 (parser)"],
-          "engineTestIds": ["explore-extra-land-play"],
+          "engineTestIds": ["explore-extra-land-play", "pilot-current-explore-viewer-second-land"],
           "viewerScenarioIds": ["pilot-current-explore-viewer-second-land"]
         }
       ],
@@ -17692,6 +17695,56 @@
           ],
           "contractTestIds": [
             "returnCardFromGraveyardToHand primitive contract > executes through a real spell or ability, with the engine path"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "78427103-9543-41fb-b6d4-72963fe87275": {
+      "name": "The Great Henge",
+      "oracleSha256": "e4169f26d10da93f3a60339b4ce3032f8f434e6b7566a921e298f2ae5f3f93b7",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {X} less to cast, where X is the greatest power among creatures you control.",
+          "implementation": [
+            "self costReduction rule static: greatestPowerAmong creatures you control, generic only (CR 601.2f)"
+          ],
+          "engineTestIds": [
+            "great-henge-greatest-power",
+            "great-henge-only-yours",
+            "great-henge-castable",
+            "great-henge-floor",
+            "great-henge-no-creatures"
+          ],
+          "viewerScenarioIds": ["pilot-current-great-henge-viewer-cast-reduced"]
+        },
+        {
+          "oracleText": "{T}: Add {G}{G}. You gain 2 life.",
+          "implementation": [
+            "mana ability (parser) with a gainLife rider, CR 605.1a; parsed as a stack ability before the pilot"
+          ],
+          "engineTestIds": [
+            "great-henge-mana-ability",
+            "pilot-current-great-henge-viewer-enter-trigger"
+          ],
+          "viewerScenarioIds": ["pilot-current-great-henge-viewer-enter-trigger"]
+        },
+        {
+          "oracleText": "Whenever a nontoken creature you control enters, put a +1/+1 counter on it and draw a card.",
+          "implementation": [
+            "enter trigger (parser) for a nontoken creature you control: +1/+1 counter on it, draw 1"
+          ],
+          "engineTestIds": [
+            "pilot-current-great-henge-viewer-enter-trigger",
+            "pilot-current-great-henge-viewer-token-ignored",
+            "pilot-current-great-henge-viewer-opponent-creature",
+            "pilot-current-great-henge-viewer-cast-reduced"
+          ],
+          "viewerScenarioIds": [
+            "pilot-current-great-henge-viewer-enter-trigger",
+            "pilot-current-great-henge-viewer-token-ignored",
+            "pilot-current-great-henge-viewer-opponent-creature"
           ]
         }
       ],

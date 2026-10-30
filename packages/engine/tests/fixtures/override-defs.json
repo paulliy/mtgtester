@@ -10510,6 +10510,38 @@
     }
   },
   {
+    "oracleId": "78427103-9543-41fb-b6d4-72963fe87275",
+    "name": "The Great Henge",
+    "handledLines": [
+      "This spell costs {X} less to cast, where X is the greatest power among creatures you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "amount": {
+            "kind": "greatestPowerAmong",
+            "scope": "all",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          },
+          "kind": "costReduction",
+          "selfOnly": true
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "7a2484a9-04fd-41a0-8224-610c1c07ed10",
     "name": "Blasphemous Act",
     "handledLines": [
@@ -42526,6 +42558,38 @@
             }
           ],
           "timing": "sorcery"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-the-great-henge",
+    "name": "The Great Henge",
+    "handledLines": [
+      "This spell costs {X} less to cast, where X is the greatest power among creatures you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "amount": {
+            "kind": "greatestPowerAmong",
+            "scope": "all",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          },
+          "kind": "costReduction",
+          "selfOnly": true
         }
       ]
     }

@@ -27,6 +27,10 @@ interface Plan {
 const PLANS: Record<string, Plan> = {
   'pilot-current-jet-medallion-viewer-reduced': { steps: [{ cast: 'Pilot Lab Black Sorcery' }] },
   'pilot-current-jet-medallion-viewer-not-red': { steps: [] },
+  'pilot-current-great-henge-viewer-cast-reduced': { steps: [{ cast: 'The Great Henge' }] },
+  'pilot-current-great-henge-viewer-enter-trigger': { steps: [{ cast: 'Pilot Lab Bear' }] },
+  'pilot-current-great-henge-viewer-token-ignored': { steps: [{ cast: 'Pilot Lab Saproling' }] },
+  'pilot-current-great-henge-viewer-opponent-creature': { steps: [] },
   'pilot-current-explore-viewer-second-land': {
     steps: [{ play: 'Forest' }, { cast: 'Explore' }, { play: 'Plains', whenEmpty: true }],
   },
@@ -42,6 +46,8 @@ function run(id: string) {
   const done: string[] = [];
   const picked: string[] = [];
   const offered: string[][] = [];
+  /** The prompts of the choices put to P1 other than priority and combat declarations. */
+  const asked: string[] = [];
   const nameOf = (objectId: string) =>
     ctx.state.battlefield.find((perm) => perm.id === objectId)?.name ?? objectId;
   for (let decisions = 0; ; decisions++) {
@@ -78,6 +84,7 @@ function run(id: string) {
       });
     }
     const isPriority = request.legalActions.some((option) => option.type === 'pass');
+    if (!isPriority && action === undefined) asked.push(request.prompt);
     const next = steps[0];
     if (
       action === undefined &&
@@ -124,7 +131,7 @@ function run(id: string) {
   const state = ctx.state;
   const player = (seat: string) => state.players.find((candidate) => candidate.id === seat)!;
   const permanent = (name: string) => state.battlefield.find((perm) => perm.name === name);
-  return { ctx, state, done, picked, offered, steps, player, permanent };
+  return { ctx, state, done, picked, offered, asked, steps, player, permanent };
 }
 
 type Result = ReturnType<typeof run>;
@@ -159,6 +166,38 @@ const CHECKS: Record<string, (result: Result) => void> = {
     expect(hand).toHaveLength(3);
     expect(r.offered.at(-1)!.some((action) => action.startsWith('Play '))).toBe(false);
     expect(zoneNames(r.player('P1').graveyard)).toEqual(['Explore']);
+  },
+  'pilot-current-great-henge-viewer-cast-reduced': (r) => {
+    expect(r.done).toEqual(['The Great Henge']);
+    expect(r.permanent('The Great Henge')).toBeDefined();
+    const forests = r.state.battlefield.filter((perm) => perm.name === 'Forest');
+    expect(forests.map((perm) => perm.tapped)).toEqual([true, true, true, true, true]);
+    // Henge is not a creature: its own entry does not trigger it.
+    expect(r.player('P1').hand).toHaveLength(1);
+    expect(r.permanent('The Great Henge')!.counters['+1/+1']).toBeUndefined();
+  },
+  'pilot-current-great-henge-viewer-enter-trigger': (r) => {
+    expect(r.done).toEqual(['Pilot Lab Bear']);
+    expect(r.player('P1').life).toBe(42);
+    expect(r.permanent('The Great Henge')!.tapped).toBe(true);
+    expect(r.permanent('Pilot Lab Bear')!.counters['+1/+1']).toBe(1);
+    // The Trinket and the drawn card; the trigger asked nothing.
+    expect(r.player('P1').hand).toHaveLength(2);
+    expect(r.asked).toEqual([]);
+  },
+  'pilot-current-great-henge-viewer-opponent-creature': (r) => {
+    expect(r.state.battlefield.find((perm) => perm.name === 'Pilot Lab Bear')?.controllerId).toBe(
+      'P2',
+    );
+    expect(r.permanent('Pilot Lab Bear')!.counters['+1/+1']).toBeUndefined();
+    expect(r.player('P1').hand).toHaveLength(1);
+  },
+  'pilot-current-great-henge-viewer-token-ignored': (r) => {
+    expect(r.done).toEqual(['Pilot Lab Saproling']);
+    const token = r.permanent('Saproling');
+    expect(token).toBeDefined();
+    expect(token!.counters['+1/+1']).toBeUndefined();
+    expect(r.player('P1').hand).toHaveLength(1);
   },
 };
 

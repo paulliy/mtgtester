@@ -69,6 +69,27 @@ const FLOWS: Record<string, (page: Page) => Promise<void>> = {
     await expect(hand(page, 'Pilot Lab Red Sorcery')).toBeVisible();
     await expect(hand(page, 'Pilot Lab Red Sorcery')).not.toHaveClass(/actionable/);
   },
+  'pilot-current-great-henge-viewer-cast-reduced': async (page) => {
+    await cast(page, 'The Great Henge');
+    await expect(permanent(page, 'P1', 'The Great Henge')).toHaveCount(1);
+  },
+  'pilot-current-great-henge-viewer-enter-trigger': async (page) => {
+    await cast(page, 'Pilot Lab Bear');
+    await passStackUntil(page, permanent(page, 'P1', 'Pilot Lab Bear').filter({ hasText: '3/3' }));
+    await expect(life(page, 'P1')).toHaveText('42');
+    // The Trinket and the card drawn.
+    await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(2);
+  },
+  'pilot-current-great-henge-viewer-token-ignored': async (page) => {
+    await cast(page, 'Pilot Lab Saproling');
+    await passStackUntil(page, permanent(page, 'P1', 'Saproling').filter({ hasText: '1/1' }));
+    await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(1);
+  },
+  'pilot-current-great-henge-viewer-opponent-creature': async (page) => {
+    // P2, a scripted seat, casts Pilot Lab Bear on its turn.
+    await passStackUntil(page, permanent(page, 'P2', 'Pilot Lab Bear').filter({ hasText: '2/2' }));
+    await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(1);
+  },
   'pilot-current-explore-viewer-second-land': async (page) => {
     await playLand(page, 'Forest');
     await cast(page, 'Explore');

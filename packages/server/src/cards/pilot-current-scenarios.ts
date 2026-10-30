@@ -82,13 +82,22 @@ export const BLACK_SORCERY = lab(
 export const RED_SORCERY = lab('Pilot Lab Red Sorcery', 'Sorcery', '{1}{R}', 'You gain 2 life.', [
   'R',
 ]);
+export const GIANT = lab('Pilot Lab Giant', 'Creature — Giant', '{4}{G}', '', ['G'], ['4', '4']);
+export const BEAR = lab('Pilot Lab Bear', 'Creature — Bear', '{1}{G}', '', ['G'], ['2', '2']);
+export const SAPROLING = lab(
+  'Pilot Lab Saproling',
+  'Sorcery',
+  '{G}',
+  'Create a 1/1 green Saproling creature token.',
+  ['G'],
+);
 /**
  * Always in P1's hand: a free spell P1 can cast whenever it has priority, so the viewer is still
  * given priority when the card under test leaves P1 nothing else to do.
  */
 export const TRINKET = lab('Pilot Lab Trinket', 'Artifact', '{0}', '', []);
 
-const SUPPORT_CARDS = [BLACK_SORCERY, RED_SORCERY, TRINKET];
+const SUPPORT_CARDS = [BLACK_SORCERY, RED_SORCERY, GIANT, BEAR, SAPROLING, TRINKET];
 
 /** A permanent in a starting position, with what differs from an untapped, counterless one. */
 type FieldEntry = string | { card: string; tapped?: true; counters?: Record<string, number> };
@@ -159,6 +168,50 @@ const DEFS: ScenarioDef[] = [
     lines: [1, 2],
     p1Hand: ['Explore', 'Forest', 'Plains', 'Island'],
     p1Field: ['Forest', 'Forest'],
+  },
+  {
+    id: 'pilot-current-great-henge-viewer-cast-reduced',
+    cardName: 'The Great Henge',
+    title: 'The Great Henge: a 4-power creature makes it cost {3}{G}{G}',
+    instructions: ['Cast The Great Henge with your five Forests.'],
+    expectedOutcome: 'The Great Henge costs {3}{G}{G} and resolves; all five Forests are tapped.',
+    lines: [1],
+    p1Hand: ['The Great Henge'],
+    p1Field: ['Pilot Lab Giant', 'Forest', 'Forest', 'Forest', 'Forest', 'Forest'],
+  },
+  {
+    id: 'pilot-current-great-henge-viewer-enter-trigger',
+    cardName: 'The Great Henge',
+    title: 'The Great Henge: its {G}{G} casts a creature, which gets a counter and draws',
+    instructions: ['Cast Pilot Lab Bear, tapping The Great Henge for {G}{G}.'],
+    expectedOutcome:
+      'You gain 2 life; Pilot Lab Bear enters with a +1/+1 counter and you draw a card.',
+    lines: [2, 3],
+    p1Hand: ['Pilot Lab Bear'],
+    p1Field: ['The Great Henge'],
+  },
+  {
+    id: 'pilot-current-great-henge-viewer-token-ignored',
+    cardName: 'The Great Henge',
+    title: 'The Great Henge: a creature token entering gets nothing',
+    instructions: ['Cast Pilot Lab Saproling with your Forest.'],
+    expectedOutcome: 'The Saproling token enters with no counter and you draw no card.',
+    lines: [3],
+    p1Hand: ['Pilot Lab Saproling'],
+    p1Field: ['The Great Henge', 'Forest'],
+  },
+  {
+    id: 'pilot-current-great-henge-viewer-opponent-creature',
+    cardName: 'The Great Henge',
+    title: "The Great Henge: an opponent's creature entering gets nothing",
+    instructions: ["On P2's turn, P2 casts Pilot Lab Bear; pass priority."],
+    expectedOutcome: "P2's Pilot Lab Bear enters with no counter and you draw no card.",
+    lines: [3],
+    p1Field: ['The Great Henge'],
+    p2Hand: ['Pilot Lab Bear'],
+    p2Field: ['Forest', 'Forest'],
+    opponent: { seat: 'P2', cast: 'Pilot Lab Bear' },
+    prepared: { currentTurnPlayer: 'P2' },
   },
 ];
 

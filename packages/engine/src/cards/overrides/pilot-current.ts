@@ -1,4 +1,4 @@
-import { ofColor } from '../selector';
+import { allOf, ofColor, ofType, YOURS } from '../selector';
 import { costReductionFor, spell } from '../templates';
 import { constant } from '../value';
 import { defineCard } from './index';
@@ -31,6 +31,30 @@ export function registerPilotCurrentOverrides(): void {
         ],
         description: 'You may play an additional land this turn. Draw a card',
       }),
+    },
+  );
+
+  // "This spell costs {X} less to cast, where X is the greatest power among creatures you
+  // control." A self cost reduction, measured as the spell's total cost is determined (CR
+  // 601.2f), so it reduces only the generic {7}: Henge never costs less than {G}{G}.
+  defineCard(
+    '78427103-9543-41fb-b6d4-72963fe87275',
+    'The Great Henge',
+    [
+      'This spell costs {X} less to cast, where X is the greatest power among creatures you control.',
+    ],
+    {
+      ruleStatics: [
+        {
+          kind: 'costReduction',
+          amount: {
+            kind: 'greatestPowerAmong',
+            selector: allOf(ofType('Creature'), YOURS),
+            scope: 'all',
+          },
+          selfOnly: true,
+        },
+      ],
     },
   );
 }

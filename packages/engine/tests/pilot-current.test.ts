@@ -159,3 +159,66 @@ describe('Explore', () => {
     expect(landPlayLimitFor(ctx, 'P2')).toBe(1);
   });
 });
+
+describe('The Great Henge', () => {
+  const creature = (name: string, power: number) =>
+    oracle({
+      name,
+      typeLine: 'Creature — Giant',
+      manaCost: '{G}',
+      power: String(power),
+      toughness: String(power),
+    });
+  const henge = () => pinStore.get('The Great Henge');
+
+  it('great-henge-greatest-power — X is the greatest power among your creatures, not their total', () => {
+    const ctx = mainPhase('henge-greatest');
+    spawn(ctx, 'P1', creature('Pilot Two', 2));
+    spawn(ctx, 'P1', creature('Pilot Four', 4));
+    registerDef(ctx, henge());
+    expect(costReductionFor(ctx, 'P1', henge().oracleId, 'c-henge').generic).toBe(4);
+  });
+
+  it('great-henge-only-yours — an opponent’s bigger creature does not count', () => {
+    const ctx = mainPhase('henge-yours');
+    spawn(ctx, 'P1', creature('Pilot Two', 2));
+    spawn(ctx, 'P2', creature('Pilot Nine', 9));
+    registerDef(ctx, henge());
+    expect(costReductionFor(ctx, 'P1', henge().oracleId, 'c-henge').generic).toBe(2);
+  });
+
+  it('great-henge-castable — a 4-power creature lets five Forests cast it, four do not', () => {
+    const ctx = mainPhase('henge-castable');
+    spawn(ctx, 'P1', creature('Pilot Four', 4));
+    for (let i = 0; i < 4; i++) spawn(ctx, 'P1', forest());
+    const card = conjure(ctx, 'P1', henge(), 'hand');
+    expect(castable(ctx, card.id)).toBe(false);
+    spawn(ctx, 'P1', forest());
+    expect(castable(ctx, card.id)).toBe(true);
+  });
+
+  it('great-henge-floor — however great the power, {G}{G} is still paid (CR 601.2f)', () => {
+    const ctx = mainPhase('henge-floor');
+    spawn(ctx, 'P1', creature('Pilot Twelve', 12));
+    spawn(ctx, 'P1', forest());
+    const card = conjure(ctx, 'P1', henge(), 'hand');
+    expect(castable(ctx, card.id)).toBe(false);
+    spawn(ctx, 'P1', forest());
+    expect(castable(ctx, card.id)).toBe(true);
+  });
+
+  it('great-henge-mana-ability — its {G}{G} is a mana ability that pays for a spell', () => {
+    // CR 605.1a: it has no target and adds mana, so it does not use the stack and can be
+    // activated while paying a cost; the life is gained as the mana is made.
+    const ctx = mainPhase('henge-mana');
+    spawn(ctx, 'P1', henge());
+    const bearCard = conjure(ctx, 'P1', creature('Pilot Two', 2), 'hand');
+    expect(castable(ctx, bearCard.id)).toBe(true);
+  });
+
+  it('great-henge-no-creatures — with no creature it costs the full {7}{G}{G}', () => {
+    const ctx = mainPhase('henge-none');
+    registerDef(ctx, henge());
+    expect(costReductionFor(ctx, 'P1', henge().oracleId, 'c-henge').generic).toBe(0);
+  });
+});
