@@ -17650,6 +17650,52 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "ac2dd694-d2f1-4025-8400-12332bdc882a": {
+      "name": "Takenuma, Abandoned Mire",
+      "oracleSha256": "f550555d41ef39a6664e6bf29761e39a263be4639bd32f70275e3369b574fb80",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{T}: Add {B}.",
+          "implementation": ["mana ability (parser): {T}: Add {B}"],
+          "engineTestIds": [
+            "cards/pilot-new/takenuma-abandoned-mire.test.ts::takenuma-tap-for-black",
+            "clause 1: Takenuma alone pays for a {B} spell"
+          ],
+          "viewerScenarioIds": ["takenuma-tap-for-black"]
+        },
+        {
+          "oracleText": "Channel — {3}{B}, Discard this card: Mill three cards, then return a creature or planeswalker card from your graveyard to your hand. This ability costs {1} less to activate for each legendary creature you control.",
+          "implementation": [
+            "channel: activated from hand, costs {3}{B} and discardSelf; mill 3, then returnCardFromGraveyardToHand (creature or planeswalker, chosen on resolution)",
+            "card-level activation discount: {1} per legendary creature you control (generic only)"
+          ],
+          "engineTestIds": [
+            "cards/pilot-new/takenuma-abandoned-mire.test.ts::takenuma-mill-then-return-milled",
+            "cards/pilot-new/takenuma-abandoned-mire.test.ts::takenuma-return-planeswalker",
+            "cards/pilot-new/takenuma-abandoned-mire.test.ts::takenuma-choose-among",
+            "cards/pilot-new/takenuma-abandoned-mire.test.ts::takenuma-legend-discount",
+            "cards/pilot-new/takenuma-abandoned-mire.test.ts::takenuma-no-discount",
+            "cards/pilot-new/takenuma-abandoned-mire.test.ts::takenuma-nothing-qualifies",
+            "clause 2: two legendary creatures bring channel down to what two Swamps pay",
+            "clause 2, negative: without legendary creatures two Swamps do not pay for channel",
+            "clause 2, negative: a card that is not a creature or planeswalker is never offered"
+          ],
+          "viewerScenarioIds": [
+            "takenuma-mill-then-return-milled",
+            "takenuma-return-planeswalker",
+            "takenuma-choose-among",
+            "takenuma-legend-discount",
+            "takenuma-no-discount",
+            "takenuma-nothing-qualifies"
+          ],
+          "contractTestIds": [
+            "returnCardFromGraveyardToHand primitive contract > executes through a real spell or ability, with the engine path"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

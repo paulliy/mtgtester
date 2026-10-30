@@ -146,6 +146,23 @@ async function targetAndConfirm(page: Page, targets: Array<[string, string]>): P
   await confirmButton(page).click();
 }
 
+/** Activate Takenuma's channel ability from your hand and confirm its payment. */
+async function channelTakenuma(page: Page): Promise<void> {
+  const card = hand(page, 'Takenuma, Abandoned Mire');
+  await passUntil(page, card.and(page.locator('.actionable')));
+  await card.click();
+  await page
+    .locator('.source-actions .source-action-row button')
+    .filter({ hasText: /Discard this card/ })
+    .first()
+    .click();
+  const confirm = confirmButton(page);
+  if ((await confirm.isVisible()) && (await confirm.isEnabled())) await confirm.click();
+}
+
+const inZone = (page: Page, seat: string, zone: string, name: string): Locator =>
+  seatZone(page, seat, zone).getByRole('img', { name, exact: true });
+
 const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
   'mizzium-mortars-target': async (page) => {
     await castWith(page, hand(page, 'Mizzium Mortars'), {
@@ -381,6 +398,51 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
       resolves: /Scenario Shatter[^]*resolves/,
     });
     await expect(permanent(page, 'P1', 'Mithril Coat')).toHaveCount(1);
+  },
+  'takenuma-mill-then-return-milled': async (page) => {
+    await channelTakenuma(page);
+    await passStackUntil(page, hand(page, 'Scenario Bear'));
+    await expect(inZone(page, 'P1', 'Graveyard', 'Takenuma, Abandoned Mire')).toHaveCount(1);
+    await expect(inZone(page, 'P1', 'Graveyard', 'Scenario Bear')).toHaveCount(0);
+  },
+  'takenuma-return-planeswalker': async (page) => {
+    await channelTakenuma(page);
+    await passStackUntil(page, hand(page, 'Scenario Walker'));
+    await expect(inZone(page, 'P1', 'Graveyard', 'Scenario Sorcery')).toHaveCount(1);
+  },
+  'takenuma-choose-among': async (page) => {
+    await channelTakenuma(page);
+    const ox = cardChoice(page, 'Scenario Ox', 'Return');
+    await passStackUntil(page, ox);
+    await ox.click();
+    await passStackUntil(page, hand(page, 'Scenario Ox'));
+    await expect(inZone(page, 'P1', 'Graveyard', 'Scenario Bear')).toHaveCount(1);
+  },
+  'takenuma-legend-discount': async (page) => {
+    await channelTakenuma(page);
+    await passStackUntil(page, hand(page, 'Scenario Bear'));
+  },
+  'takenuma-no-discount': async (page) => {
+    await passUntil(page, hand(page, 'Scenario Sorcery').and(page.locator('.actionable')));
+    // Takenuma can be played as a land, but two Swamps do not pay for its channel ability.
+    await hand(page, 'Takenuma, Abandoned Mire').click();
+    await expect(
+      page.locator('.source-actions .source-action-row button').filter({
+        hasText: /Discard this card/,
+      }),
+    ).toHaveCount(0);
+  },
+  'takenuma-tap-for-black': async (page) => {
+    await castWith(page, hand(page, 'Scenario Sorcery'), {
+      resolves: /Scenario Sorcery[^]*resolves/,
+    });
+    await expect(life(page, 'P1')).toHaveText('41');
+  },
+  'takenuma-nothing-qualifies': async (page) => {
+    await channelTakenuma(page);
+    await passStackUntil(page, inZone(page, 'P1', 'Graveyard', 'Plains'));
+    await expect(inZone(page, 'P1', 'Graveyard', 'Scenario Sorcery')).toHaveCount(1);
+    await expect(hand(page, 'Scenario Sorcery')).toHaveCount(0);
   },
   'chrome-mox-no-artifact-or-land': async (page) => {
     await castChromeMox(page);

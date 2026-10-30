@@ -1,5 +1,5 @@
-import { allOf, ofSubtype, ofSupertype, YOURS } from '../selector';
-import { activated, onEtb, targetSlots, triggered } from '../templates';
+import { allOf, anyOf, ofSubtype, ofSupertype, ofType, YOURS } from '../selector';
+import { activated, mana, onEtb, targetSlots, triggered } from '../templates';
 import { constant } from '../value';
 import { defineCard } from './index';
 
@@ -47,6 +47,49 @@ export function registerPilotNewOverrides(): void {
           description:
             'When Mithril Coat enters, attach it to target legendary creature you control',
         }),
+      ],
+    },
+  );
+
+  // "Channel — {3}{B}, Discard this card: Mill three cards, then return a creature or
+  // planeswalker card from your graveyard to your hand. This ability costs {1} less to activate
+  // for each legendary creature you control." Activated from hand (CR 602.1), discarding Takenuma
+  // as a cost. The returned card is chosen on resolution, after the mill, from the whole
+  // graveyard, so a card just milled may be it; it is not a target. The discount is the card-level
+  // activation reduction the parser gives Boseiju and Otawara, and reduces only generic mana.
+  defineCard(
+    'ac2dd694-d2f1-4025-8400-12332bdc882a',
+    'Takenuma, Abandoned Mire',
+    [
+      '{3}{B}, Discard this card: Mill three cards, then return a creature or planeswalker card from your graveyard to your hand. This ability costs {1} less to activate for each legendary creature you control.',
+    ],
+    {
+      activatedAbilities: [
+        activated({
+          costs: [mana('{3}{B}'), { kind: 'discardSelf' }],
+          zone: 'hand',
+          effects: [
+            { op: 'mill', count: constant(3) },
+            {
+              op: 'returnCardFromGraveyardToHand',
+              filter: anyOf(ofType('Creature'), ofType('Planeswalker')),
+            },
+          ],
+          description:
+            'Channel — {3}{B}, Discard this card: Mill three cards, then return a creature or planeswalker card from your graveyard to your hand',
+        }),
+      ],
+      ruleStatics: [
+        {
+          kind: 'costReduction',
+          appliesTo: 'activate',
+          selfOnly: true,
+          amount: {
+            kind: 'countPermanents',
+            selector: allOf(YOURS, ofSupertype('Legendary'), ofType('Creature')),
+            scope: 'you',
+          },
+        },
       ],
     },
   );

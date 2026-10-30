@@ -262,6 +262,7 @@ const SOURCE_FILES = [
   'packages/engine/tests/scenarios/mizzium-mortars.json',
   'packages/engine/tests/scenarios/path-to-exile.json',
   'packages/engine/tests/scenarios/professional-face-breaker.json',
+  'packages/engine/tests/scenarios/takenuma-abandoned-mire.json',
   'packages/engine/tests/fixtures/silverquill-main-engine-batch1-oracle.json',
   'packages/engine/tests/fixtures/silverquill-remaining-engine-batch1-oracle.json',
   'packages/engine/tests/fixtures/token-triumph-engine-batch1-oracle.json',

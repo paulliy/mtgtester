@@ -14366,6 +14366,98 @@
     }
   },
   {
+    "oracleId": "ac2dd694-d2f1-4025-8400-12332bdc882a",
+    "name": "Takenuma, Abandoned Mire",
+    "handledLines": [
+      "{3}{B}, Discard this card: Mill three cards, then return a creature or planeswalker card from your graveyard to your hand. This ability costs {1} less to activate for each legendary creature you control."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Channel — {3}{B}, Discard this card: Mill three cards, then return a creature or planeswalker card from your graveyard to your hand",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 3
+                },
+                "op": "mill"
+              },
+              {
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Planeswalker"
+                    }
+                  ]
+                },
+                "op": "returnCardFromGraveyardToHand"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 1,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 3
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "discardSelf"
+            }
+          ],
+          "timing": "any",
+          "zone": "hand"
+        }
+      ],
+      "ruleStatics": [
+        {
+          "amount": {
+            "kind": "countPermanents",
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "supertype",
+                  "value": "Legendary"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "appliesTo": "activate",
+          "kind": "costReduction",
+          "selfOnly": true
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "ac675899-25bb-4f06-9c8c-bf188024495f",
     "name": "Firemane Commando",
     "handledLines": [
@@ -41734,6 +41826,98 @@
             },
             "when": "attacks"
           }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-takenuma-abandoned-mire",
+    "name": "Takenuma, Abandoned Mire",
+    "handledLines": [
+      "{3}{B}, Discard this card: Mill three cards, then return a creature or planeswalker card from your graveyard to your hand. This ability costs {1} less to activate for each legendary creature you control."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Channel — {3}{B}, Discard this card: Mill three cards, then return a creature or planeswalker card from your graveyard to your hand",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 3
+                },
+                "op": "mill"
+              },
+              {
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Planeswalker"
+                    }
+                  ]
+                },
+                "op": "returnCardFromGraveyardToHand"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 1,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 3
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "discardSelf"
+            }
+          ],
+          "timing": "any",
+          "zone": "hand"
+        }
+      ],
+      "ruleStatics": [
+        {
+          "amount": {
+            "kind": "countPermanents",
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "supertype",
+                  "value": "Legendary"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "appliesTo": "activate",
+          "kind": "costReduction",
+          "selfOnly": true
         }
       ]
     }

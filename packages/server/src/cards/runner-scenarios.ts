@@ -126,6 +126,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       ),
     ),
   },
+  {
+    name: 'takenuma-abandoned-mire.json',
+    file: scenarioFile(
+      'takenuma-abandoned-mire.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/takenuma-abandoned-mire.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
 ];
 const FILES = RUNNER_SCENARIO_FILES.map(({ file }) => file);
 
