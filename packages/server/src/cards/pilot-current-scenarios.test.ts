@@ -38,6 +38,21 @@ const PLANS: Record<string, Plan> = {
   'pilot-current-explore-viewer-second-land': {
     steps: [{ play: 'Forest' }, { cast: 'Explore' }, { play: 'Plains', whenEmpty: true }],
   },
+  'pilot-current-secluded-courtyard-viewer-cast-chosen': {
+    steps: [{ play: 'Secluded Courtyard' }, { cast: 'Pilot Lab Elf', whenEmpty: true }],
+    answers: [/^Elf$/],
+  },
+  'pilot-current-secluded-courtyard-viewer-other-type': {
+    steps: [{ play: 'Secluded Courtyard' }],
+    answers: [/^Elf$/],
+  },
+  'pilot-current-secluded-courtyard-viewer-activate': {
+    steps: [
+      { play: 'Secluded Courtyard' },
+      { activate: 'Pilot Lab Elf Warrior: {G}', whenEmpty: true },
+    ],
+    answers: [/^Elf$/],
+  },
 };
 
 /** Play a scenario to the end with P1 following its plan and the other seats as the lab runs them. */
@@ -202,6 +217,37 @@ const CHECKS: Record<string, (result: Result) => void> = {
     expect(token).toBeDefined();
     expect(token!.counters['+1/+1']).toBeUndefined();
     expect(r.player('P1').hand).toHaveLength(1);
+  },
+  'pilot-current-secluded-courtyard-viewer-cast-chosen': (r) => {
+    expect(r.done).toEqual(['Secluded Courtyard', 'Pilot Lab Elf']);
+    expect(r.picked).toEqual(['Elf']);
+    expect(r.permanent('Secluded Courtyard')!.chosenOption).toBe('Elf');
+    expect(r.permanent('Secluded Courtyard')!.tapped).toBe(true);
+    expect(r.permanent('Pilot Lab Elf')?.controllerId).toBe('P1');
+  },
+  'pilot-current-secluded-courtyard-viewer-other-type': (r) => {
+    expect(r.done).toEqual(['Secluded Courtyard']);
+    expect(r.picked).toEqual(['Elf']);
+    // After the choice, the Goblin was never offered: only the restricted mana could pay {G}.
+    const afterChoice = r.offered.slice(r.offered.findIndex((actions) => actions.includes('Elf')));
+    expect(afterChoice.length).toBeGreaterThan(1);
+    for (const actions of afterChoice)
+      expect(actions.some((action) => action.startsWith('Cast Pilot Lab Goblin'))).toBe(false);
+    expect(zoneNames(r.player('P1').hand)).toContain('Pilot Lab Goblin');
+    expect(r.permanent('Secluded Courtyard')!.tapped).toBe(false);
+  },
+  'pilot-current-secluded-courtyard-viewer-activate': (r) => {
+    expect(r.done).toEqual(['Secluded Courtyard', 'Pilot Lab Elf Warrior: {G}']);
+    expect(r.picked).toEqual(['Elf']);
+    expect(r.permanent('Secluded Courtyard')!.tapped).toBe(true);
+    // Courtyard paid the {G}, and the pump resolved on the Elf Warrior.
+    const types = r.state.eventLog.map((event) => event.type);
+    expect(types).toContain('tapForMana');
+    expect(types.indexOf('tapForMana')).toBeLessThan(types.indexOf('activateAbility'));
+    expect(r.state.eventLog.find((event) => event.type === 'pump')?.payload).toMatchObject({
+      targets: ['Pilot Lab Elf Warrior'],
+      power: 1,
+    });
   },
   'pilot-current-gamble-viewer-tutor': (r) => {
     expect(r.done).toEqual(['Gamble']);

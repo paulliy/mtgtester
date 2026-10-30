@@ -58,6 +58,19 @@ async function playLand(page: Page, name: string): Promise<void> {
   await expect(permanent(page, 'P1', name).first()).toBeVisible();
 }
 
+/** Play Secluded Courtyard and choose Elf as it enters. */
+async function playCourtyardChoosingElf(page: Page): Promise<void> {
+  const card = hand(page, 'Secluded Courtyard');
+  await passUntil(page, card.and(page.locator('.actionable')));
+  await card.click();
+  const play = page.getByRole('button', { name: /^Play/ });
+  if ((await play.count()) > 0) await play.first().click();
+  const elf = page.getByRole('button', { name: 'Elf', exact: true });
+  await passStackUntil(page, elf);
+  await elf.click();
+  await expect(permanent(page, 'P1', 'Secluded Courtyard')).toHaveCount(1);
+}
+
 const FLOWS: Record<string, (page: Page) => Promise<void>> = {
   'pilot-current-jet-medallion-viewer-reduced': async (page) => {
     await cast(page, 'Pilot Lab Black Sorcery');
@@ -107,6 +120,33 @@ const FLOWS: Record<string, (page: Page) => Promise<void>> = {
     // The Trinket and the Bear were in hand; one was discarded at random.
     await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(1);
     await expect(seatZone(page, 'P1', 'Graveyard').getByRole('img')).toHaveCount(2);
+  },
+  'pilot-current-secluded-courtyard-viewer-cast-chosen': async (page) => {
+    await playCourtyardChoosingElf(page);
+    await cast(page, 'Pilot Lab Elf');
+    await expect(permanent(page, 'P1', 'Pilot Lab Elf')).toHaveCount(1);
+    await expect(permanent(page, 'P1', 'Secluded Courtyard').locator('.tap-badge')).toHaveCount(1);
+  },
+  'pilot-current-secluded-courtyard-viewer-other-type': async (page) => {
+    await playCourtyardChoosingElf(page);
+    // The free Trinket is castable, so P1 has priority; the Goblin is not.
+    await passUntil(page, hand(page, 'Pilot Lab Trinket').and(page.locator('.actionable')));
+    await expect(hand(page, 'Pilot Lab Goblin')).toBeVisible();
+    await expect(hand(page, 'Pilot Lab Goblin')).not.toHaveClass(/actionable/);
+  },
+  'pilot-current-secluded-courtyard-viewer-activate': async (page) => {
+    await playCourtyardChoosingElf(page);
+    const warrior = permanent(page, 'P1', 'Pilot Lab Elf Warrior');
+    await passUntil(page, warrior.and(page.locator('.actionable')));
+    await warrior.click();
+    const ability = page
+      .locator('.source-actions .source-action-row button')
+      .filter({ hasText: /\+1\/\+1/ });
+    if ((await ability.count()) > 0) await ability.first().click();
+    const confirm = confirmButton(page);
+    if ((await confirm.isVisible()) && (await confirm.isEnabled())) await confirm.click();
+    await passStackUntil(page, warrior.filter({ hasText: '2/2' }));
+    await expect(permanent(page, 'P1', 'Secluded Courtyard').locator('.tap-badge')).toHaveCount(1);
   },
   'pilot-current-explore-viewer-second-land': async (page) => {
     await playLand(page, 'Forest');

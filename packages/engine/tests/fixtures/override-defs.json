@@ -10573,6 +10573,54 @@
     }
   },
   {
+    "oracleId": "79ba18fd-f184-43c1-86df-56ee18ce806c",
+    "name": "Secluded Courtyard",
+    "handledLines": [
+      "{T}: Add one mana of any color. Spend this mana only to cast a creature spell of the chosen type or activate an ability of a creature source of the chosen type."
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "units": [
+            [
+              "C"
+            ]
+          ]
+        },
+        {
+          "restriction": {
+            "description": "cast a creature spell of the chosen type or activate an ability of a creature source of the chosen type",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "chosenSubtype"
+                }
+              ]
+            },
+            "purposes": [
+              "castSpell",
+              "activateAbility"
+            ]
+          },
+          "units": [
+            [
+              "W",
+              "U",
+              "B",
+              "R",
+              "G"
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "7a2484a9-04fd-41a0-8224-610c1c07ed10",
     "name": "Blasphemous Act",
     "handledLines": [
@@ -40262,6 +40310,54 @@
             },
             "when": "enters"
           }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-secluded-courtyard",
+    "name": "Secluded Courtyard",
+    "handledLines": [
+      "{T}: Add one mana of any color. Spend this mana only to cast a creature spell of the chosen type or activate an ability of a creature source of the chosen type."
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "units": [
+            [
+              "C"
+            ]
+          ]
+        },
+        {
+          "restriction": {
+            "description": "cast a creature spell of the chosen type or activate an ability of a creature source of the chosen type",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "chosenSubtype"
+                }
+              ]
+            },
+            "purposes": [
+              "castSpell",
+              "activateAbility"
+            ]
+          },
+          "units": [
+            [
+              "W",
+              "U",
+              "B",
+              "R",
+              "G"
+            ]
+          ]
         }
       ]
     }

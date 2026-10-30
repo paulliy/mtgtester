@@ -11,7 +11,7 @@ import {
 import { interpretCard } from '../src/cards/interpret';
 import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
-import { playerById } from '../src/state/objects';
+import { moveObject, playerById } from '../src/state/objects';
 import { landPlayLimitFor } from '../src/state/queries';
 import type { GameContext } from '../src/state/types';
 import { pinStore } from './scenario/pin-store';
@@ -294,5 +294,118 @@ describe('Gamble', () => {
   it('gamble-seeded — the random discard repeats for the same seed', () => {
     const discarded = (seed: string) => names(playerById(gamble(seed, 3), 'P1').graveyard);
     expect(discarded('gamble-seed')).toEqual(discarded('gamble-seed'));
+  });
+});
+
+describe('Secluded Courtyard', () => {
+  const courtyard = () => pinStore.get('Secluded Courtyard');
+  const creature = (name: string, subtype: string, oracleText = '') =>
+    oracle({
+      name,
+      typeLine: `Creature — ${subtype}`,
+      manaCost: '{G}',
+      power: '1',
+      toughness: '1',
+      subtypes: [subtype],
+      colors: ['G'],
+      oracleText,
+    });
+  /** A Courtyard on P1's battlefield, its creature type already chosen. */
+  const courtyardChoosing = (ctx: GameContext, chosen: string | undefined) => {
+    const land = spawn(ctx, 'P1', courtyard());
+    if (chosen !== undefined) land.chosenOption = chosen;
+    return land;
+  };
+  const activatable = (ctx: GameContext, objectId: string): boolean =>
+    computePriorityOptions(ctx, playerById(ctx, 'P1')).some((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind === 'activateAbility' && payload.objectId === objectId;
+    });
+
+  it('secluded-courtyard-chosen-creature — its colored mana casts a creature spell of the chosen type, not another', () => {
+    const ctx = mainPhase('courtyard-creature');
+    courtyardChoosing(ctx, 'Elf');
+    const elf = conjure(ctx, 'P1', creature('Pilot Elf', 'Elf'), 'hand');
+    const goblin = conjure(ctx, 'P1', creature('Pilot Goblin', 'Goblin'), 'hand');
+    expect(castable(ctx, elf.id)).toBe(true);
+    expect(castable(ctx, goblin.id)).toBe(false);
+  });
+
+  it('secluded-courtyard-creature-spell-only — its colored mana does not cast a noncreature spell', () => {
+    const ctx = mainPhase('courtyard-noncreature');
+    courtyardChoosing(ctx, 'Elf');
+    const sorcery = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Pilot Green Sorcery',
+        typeLine: 'Sorcery',
+        manaCost: '{G}',
+        colors: ['G'],
+        oracleText: 'You gain 1 life.',
+      }),
+      'hand',
+    );
+    expect(castable(ctx, sorcery.id)).toBe(false);
+  });
+
+  it('secluded-courtyard-activate — it pays for an ability of a creature of the chosen type, not of another', () => {
+    const ctx = mainPhase('courtyard-activate');
+    courtyardChoosing(ctx, 'Elf');
+    const pump = '{G}: This creature gets +1/+1 until end of turn.';
+    const elf = spawn(ctx, 'P1', creature('Pilot Elf', 'Elf', pump));
+    const goblin = spawn(ctx, 'P1', creature('Pilot Goblin', 'Goblin', pump));
+    expect(activatable(ctx, elf.id)).toBe(true);
+    expect(activatable(ctx, goblin.id)).toBe(false);
+  });
+
+  it('secluded-courtyard-colorless — its {C} pays for anything with a generic cost', () => {
+    const ctx = mainPhase('courtyard-colorless');
+    courtyardChoosing(ctx, 'Elf');
+    const trinket = conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Pilot Trinket', typeLine: 'Artifact', manaCost: '{1}' }),
+      'hand',
+    );
+    const goblin = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Pilot Grey Goblin',
+        typeLine: 'Creature — Goblin',
+        manaCost: '{1}',
+        power: '1',
+        toughness: '1',
+        subtypes: ['Goblin'],
+      }),
+      'hand',
+    );
+    expect(castable(ctx, trinket.id)).toBe(true);
+    expect(castable(ctx, goblin.id)).toBe(true);
+  });
+
+  it('secluded-courtyard-choose-on-enter — it asks for a creature type as it enters and keeps the answer', () => {
+    const ctx = mainPhase('courtyard-enter');
+    // The offered types come from the decklist and the battlefield (see creatureTypeChoicesFor).
+    spawn(ctx, 'P1', creature('Pilot Elf', 'Elf'));
+    spawn(ctx, 'P1', creature('Pilot Goblin', 'Goblin'));
+    const land = conjure(ctx, 'P1', courtyard(), 'hand');
+    const asked: string[][] = [];
+    pump(moveObject(ctx, land, { zone: 'battlefield' }), (decision) => {
+      asked.push(decision.options.map((option) => option.description));
+      return pick(decision, 'Elf');
+    });
+    expect(asked).toHaveLength(1);
+    expect(asked[0]).toEqual(expect.arrayContaining(['Elf', 'Goblin']));
+    const entered = ctx.state.battlefield.find((perm) => perm.name === 'Secluded Courtyard');
+    expect(entered?.chosenOption).toBe('Elf');
+  });
+
+  it('secluded-courtyard-unchosen — with no type chosen, its colored mana pays for nothing', () => {
+    const ctx = mainPhase('courtyard-unchosen');
+    courtyardChoosing(ctx, undefined);
+    const elf = conjure(ctx, 'P1', creature('Pilot Elf', 'Elf'), 'hand');
+    expect(castable(ctx, elf.id)).toBe(false);
   });
 });

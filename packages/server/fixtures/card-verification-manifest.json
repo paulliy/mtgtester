@@ -17868,6 +17868,58 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "79ba18fd-f184-43c1-86df-56ee18ce806c": {
+      "name": "Secluded Courtyard",
+      "oracleSha256": "a3fd538bad9823de3269c43d5faf906abeebfada84e68558ea9d28ac86d512f2",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "As this land enters, choose a creature type.",
+          "implementation": [
+            "as-enters creature type choice (parser), domain from the decklist and battlefield"
+          ],
+          "engineTestIds": [
+            "secluded-courtyard-choose-on-enter",
+            "secluded-courtyard-unchosen",
+            "pilot-current-secluded-courtyard-viewer-cast-chosen",
+            "pilot-current-secluded-courtyard-viewer-other-type",
+            "pilot-current-secluded-courtyard-viewer-activate"
+          ],
+          "viewerScenarioIds": [
+            "pilot-current-secluded-courtyard-viewer-cast-chosen",
+            "pilot-current-secluded-courtyard-viewer-other-type",
+            "pilot-current-secluded-courtyard-viewer-activate"
+          ]
+        },
+        {
+          "oracleText": "{T}: Add {C}.",
+          "implementation": ["mana ability, unrestricted {C}"],
+          "engineTestIds": ["secluded-courtyard-colorless"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "{T}: Add one mana of any color. Spend this mana only to cast a creature spell of the chosen type or activate an ability of a creature source of the chosen type.",
+          "implementation": [
+            "mana ability of any color with a CR 106.6 restriction: castSpell or activateAbility, filter Creature and chosenSubtype, bound to this land's choice as the mana is produced"
+          ],
+          "engineTestIds": [
+            "secluded-courtyard-chosen-creature",
+            "secluded-courtyard-creature-spell-only",
+            "secluded-courtyard-activate",
+            "secluded-courtyard-unchosen",
+            "pilot-current-secluded-courtyard-viewer-cast-chosen",
+            "pilot-current-secluded-courtyard-viewer-other-type",
+            "pilot-current-secluded-courtyard-viewer-activate"
+          ],
+          "viewerScenarioIds": [
+            "pilot-current-secluded-courtyard-viewer-cast-chosen",
+            "pilot-current-secluded-courtyard-viewer-other-type",
+            "pilot-current-secluded-courtyard-viewer-activate"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

@@ -91,13 +91,33 @@ export const SAPROLING = lab(
   'Create a 1/1 green Saproling creature token.',
   ['G'],
 );
+export const ELF = lab('Pilot Lab Elf', 'Creature — Elf', '{G}', '', ['G'], ['1', '1']);
+export const GOBLIN = lab('Pilot Lab Goblin', 'Creature — Goblin', '{G}', '', ['G'], ['1', '1']);
+export const ELF_WARRIOR = lab(
+  'Pilot Lab Elf Warrior',
+  'Creature — Elf Warrior',
+  '{G}',
+  '{G}: This creature gets +1/+1 until end of turn.',
+  ['G'],
+  ['1', '1'],
+);
 /**
  * Always in P1's hand: a free spell P1 can cast whenever it has priority, so the viewer is still
  * given priority when the card under test leaves P1 nothing else to do.
  */
 export const TRINKET = lab('Pilot Lab Trinket', 'Artifact', '{0}', '', []);
 
-const SUPPORT_CARDS = [BLACK_SORCERY, RED_SORCERY, GIANT, BEAR, SAPROLING, TRINKET];
+const SUPPORT_CARDS = [
+  BLACK_SORCERY,
+  RED_SORCERY,
+  GIANT,
+  BEAR,
+  SAPROLING,
+  ELF,
+  GOBLIN,
+  ELF_WARRIOR,
+  TRINKET,
+];
 
 /** A permanent in a starting position, with what differs from an untapped, counterless one. */
 type FieldEntry = string | { card: string; tapped?: true; counters?: Record<string, number> };
@@ -224,6 +244,48 @@ const DEFS: ScenarioDef[] = [
     p1Hand: ['Gamble'],
     p1Field: ['Mountain'],
     p1Top: ['Pilot Lab Bear'],
+  },
+  // The creature types offered as Secluded Courtyard enters come from P1's decklist, so each
+  // scenario keeps a second type in the library.
+  {
+    id: 'pilot-current-secluded-courtyard-viewer-cast-chosen',
+    cardName: 'Secluded Courtyard',
+    title: 'Secluded Courtyard: choose Elf, then its colored mana casts an Elf',
+    instructions: [
+      'Play Secluded Courtyard and choose Elf.',
+      'Cast Pilot Lab Elf, tapping Secluded Courtyard for {G}.',
+    ],
+    expectedOutcome: 'Pilot Lab Elf is cast with the restricted mana and resolves.',
+    lines: [1, 3],
+    p1Hand: ['Secluded Courtyard', 'Pilot Lab Elf'],
+    p1Top: ['Pilot Lab Goblin'],
+  },
+  {
+    id: 'pilot-current-secluded-courtyard-viewer-other-type',
+    cardName: 'Secluded Courtyard',
+    title: 'Secluded Courtyard: choose Elf, and a Goblin cannot be cast with it',
+    instructions: [
+      'Play Secluded Courtyard and choose Elf.',
+      'Try to cast Pilot Lab Goblin with Secluded Courtyard.',
+    ],
+    expectedOutcome: 'Pilot Lab Goblin, not an Elf, cannot be cast with the restricted mana.',
+    lines: [1, 3],
+    p1Hand: ['Secluded Courtyard', 'Pilot Lab Goblin'],
+    p1Top: ['Pilot Lab Elf'],
+  },
+  {
+    id: 'pilot-current-secluded-courtyard-viewer-activate',
+    cardName: 'Secluded Courtyard',
+    title: "Secluded Courtyard: its colored mana pays for an Elf creature's ability",
+    instructions: [
+      'Play Secluded Courtyard and choose Elf.',
+      "Activate Pilot Lab Elf Warrior's {G} ability, tapping Secluded Courtyard for {G}.",
+    ],
+    expectedOutcome: 'Pilot Lab Elf Warrior gets +1/+1 until end of turn: it is 2/2.',
+    lines: [1, 3],
+    p1Hand: ['Secluded Courtyard'],
+    p1Field: ['Pilot Lab Elf Warrior'],
+    p1Top: ['Pilot Lab Goblin'],
   },
 ];
 

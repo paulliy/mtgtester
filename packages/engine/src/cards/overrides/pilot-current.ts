@@ -1,5 +1,5 @@
 import { searchLibraryCards } from '../effect-builders';
-import { allOf, ofColor, ofType, YOURS } from '../selector';
+import { allOf, CHOSEN_SUBTYPE, ofColor, ofType, YOURS } from '../selector';
 import { costReductionFor, spell } from '../templates';
 import { constant } from '../value';
 import { defineCard } from './index';
@@ -79,6 +79,33 @@ export function registerPilotCurrentOverrides(): void {
         description:
           'Search your library for a card, put that card into your hand, discard a card at random, then shuffle',
       }),
+    },
+  );
+  // "{T}: Add one mana of any color. Spend this mana only to cast a creature spell of the chosen
+  // type or activate an ability of a creature source of the chosen type." A CR 106.6 restriction
+  // on the mana, checked as it is spent against the type chosen as the land entered (CR
+  // 614.1c); the parser keeps the choice and the {C} ability. The restriction is matched on the
+  // spell's or source's printed types, so a noncreature source of that type (a Tribal artifact
+  // aside) cannot use it.
+  defineCard(
+    '79ba18fd-f184-43c1-86df-56ee18ce806c',
+    'Secluded Courtyard',
+    [
+      '{T}: Add one mana of any color. Spend this mana only to cast a creature spell of the chosen type or activate an ability of a creature source of the chosen type.',
+    ],
+    {
+      manaAbilities: [
+        { units: [['C']] },
+        {
+          units: [['W', 'U', 'B', 'R', 'G']],
+          restriction: {
+            purposes: ['castSpell', 'activateAbility'],
+            filter: allOf(ofType('Creature'), CHOSEN_SUBTYPE),
+            description:
+              'cast a creature spell of the chosen type or activate an ability of a creature source of the chosen type',
+          },
+        },
+      ],
     },
   );
 }
