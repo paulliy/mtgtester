@@ -11,9 +11,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { interpretCard } from '../../packages/engine/src/cards/interpret';
 import { validateCardDefinition } from '../../packages/engine/src/cards/authoring-validation';
 import { overrideSnapshot } from '../../packages/engine/src/cards/overrides/snapshot';
+import { facetNotes, facetReport } from './facet-report';
 import { findCard } from './resolve-card';
 
 const OVERRIDE_SNAPSHOT = 'packages/engine/tests/fixtures/override-defs.json';
+const MANIFEST = 'packages/server/fixtures/card-verification-manifest.json';
 
 interface SnapshotEntry {
   oracleId: string;
@@ -88,6 +90,11 @@ function main(): void {
   for (const reason of def.unmodeledReasons) console.log(`  unmodeled: ${reason}`);
   for (const issue of issues) console.log(`  invalid at ${issue.path}: ${issue.message}`);
   if (def.modeled && issues.length === 0) console.log('  valid IR');
+  if (def.modeled) {
+    const facets = facetReport(card, def, facetNotes(readFileSync(MANIFEST, 'utf8'), card.name));
+    console.log(`\nfacets: ${facets.length === 0 ? 'the text and the IR agree' : ''}`);
+    for (const line of facets) console.log(`  ${line}`);
+  }
 
   if (existsSync(OVERRIDE_SNAPSHOT)) {
     const baseline = readFileSync(OVERRIDE_SNAPSHOT, 'utf8');

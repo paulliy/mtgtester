@@ -481,6 +481,10 @@ outside `docs/`.
       left in the ID). The test's file or title names the card. A shared test built on stand-in
       cards goes in the clause's `contractTestIds`. `bun run check:manifest-tests` passes (ADR
       0034 decision 5).
+- [ ] `bun run card:check "<name>"` prints no facet warning, or the card's manifest entry
+      explains each in `facetNotes: [{ facet, reason }]`: "another", an intervening "if", "until
+      end of turn", "you may" and "target" are counted in the text and in the IR, and a count
+      that differs is either a modeling choice or a bug.
 - [ ] `bun run mutate-cards --card "<name>"` kills every mutant: dropping an effect, widening a
       target, flipping `optional`, nudging a constant and the rest of the operator table each make
       one of the card's tests fail on an `expect`. A crash or a strict driver's refusal does not

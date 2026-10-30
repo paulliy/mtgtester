@@ -1,0 +1,288 @@
+{
+  "source": "override-defs.json at 5c8e41f^ (before) and 5c8e41f (after): the two definitions whose fixes in 5c8e41f a facet would have caught",
+  "cards": [
+    {
+      "name": "Securitron Squadron",
+      "oracleId": "96312b75-3110-4506-9f95-0c6c17d9da11",
+      "facet": "other",
+      "before": {
+        "optionalAdditionalCost": {
+          "cost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 0,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 3
+          },
+          "mechanic": "squad",
+          "repeatable": true
+        },
+        "triggers": [
+          {
+            "description": "Squad — create copies for each squad cost paid",
+            "effects": [
+              {
+                "count": {
+                  "kind": "optionalCostCount",
+                  "mechanic": "squad"
+                },
+                "op": "createTokenCopyOf",
+                "ref": "source"
+              }
+            ],
+            "kind": "triggered",
+            "targets": [],
+            "trigger": {
+              "subject": {
+                "kind": "self"
+              },
+              "when": "enters"
+            }
+          },
+          {
+            "description": "A creature token you control enters — put a +1/+1 counter on it",
+            "effects": [
+              {
+                "count": 1,
+                "counter": "+1/+1",
+                "op": "putCounters",
+                "target": "triggerObject"
+              }
+            ],
+            "kind": "triggered",
+            "targets": [],
+            "trigger": {
+              "subject": {
+                "kind": "permanent",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "other"
+                    },
+                    {
+                      "kind": "isToken"
+                    }
+                  ]
+                }
+              },
+              "when": "enters"
+            }
+          }
+        ]
+      },
+      "after": {
+        "optionalAdditionalCost": {
+          "cost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 0,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 3
+          },
+          "mechanic": "squad",
+          "repeatable": true
+        },
+        "triggers": [
+          {
+            "description": "Squad — create copies for each squad cost paid",
+            "effects": [
+              {
+                "count": {
+                  "kind": "optionalCostCount",
+                  "mechanic": "squad"
+                },
+                "op": "createTokenCopyOf",
+                "ref": "source"
+              }
+            ],
+            "kind": "triggered",
+            "targets": [],
+            "trigger": {
+              "subject": {
+                "kind": "self"
+              },
+              "when": "enters"
+            }
+          },
+          {
+            "description": "A creature token you control enters — put a +1/+1 counter on it",
+            "effects": [
+              {
+                "count": 1,
+                "counter": "+1/+1",
+                "op": "putCounters",
+                "target": "triggerObject"
+              }
+            ],
+            "kind": "triggered",
+            "targets": [],
+            "trigger": {
+              "subject": {
+                "kind": "permanent",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "isToken"
+                    }
+                  ]
+                }
+              },
+              "when": "enters"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Overwhelming Instinct",
+      "oracleId": "9ba89c25-5302-414f-a2ec-436b8981999d",
+      "facet": "interveningIf",
+      "before": {
+        "triggers": [
+          {
+            "description": "Draw a card",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "triggered",
+            "targets": [],
+            "trigger": {
+              "aggregate": true,
+              "condition": {
+                "cmp": ">=",
+                "kind": "countPermanents",
+                "n": 3,
+                "scope": "you",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "inCombat"
+                    }
+                  ]
+                }
+              },
+              "subject": {
+                "kind": "permanent",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              },
+              "when": "attacks"
+            }
+          }
+        ]
+      },
+      "after": {
+        "triggers": [
+          {
+            "description": "Draw a card",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "triggered",
+            "targets": [],
+            "trigger": {
+              "aggregate": true,
+              "eventCondition": {
+                "cmp": ">=",
+                "kind": "countPermanents",
+                "n": 3,
+                "scope": "you",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "inCombat"
+                    }
+                  ]
+                }
+              },
+              "subject": {
+                "kind": "permanent",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              },
+              "when": "attacks"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

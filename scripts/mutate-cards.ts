@@ -29,8 +29,8 @@ import { interpretCard } from '../packages/engine/src/cards/interpret';
 import { cardMutants } from '../packages/engine/tests/mutation/operators';
 import type { MutationTarget } from '../packages/engine/tests/mutation/setup';
 import { pinStore } from '../packages/engine/tests/scenario/pin-store';
-import { snapshotChanges } from './cards/card-finish';
-import { cardNames, indexTests, type CollectedTest } from './contracts/manifest-tests';
+import { baseCommit, changedCards } from './cards/changed-cards';
+import { indexTests, type CollectedTest } from './contracts/manifest-tests';
 import {
   cardStatuses,
   cardTests,
@@ -42,10 +42,6 @@ import {
 } from './contracts/mutation';
 
 const MANIFEST = 'packages/server/fixtures/card-verification-manifest.json';
-const SNAPSHOTS = [
-  'packages/engine/tests/fixtures/interpret-defs.json',
-  'packages/engine/tests/fixtures/override-defs.json',
-];
 const args = process.argv.slice(2);
 const option = (flag: string) => {
   const at = args.indexOf(flag);
@@ -54,31 +50,6 @@ const option = (flag: string) => {
 const root = `${process.cwd().replaceAll('\\', '/')}/`;
 const manifestJson = readFileSync(MANIFEST, 'utf8');
 const statuses = cardStatuses(manifestJson);
-const git = (...gitArgs: string[]) =>
-  execFileSync('git', gitArgs, { encoding: 'utf8', maxBuffer: 1 << 28 });
-
-function changedCards(): string[] {
-  const candidate = option('--base') ?? process.env['MUTATION_BASE'] ?? '';
-  const base = /^[0-9a-f]{7,40}$/.test(candidate.trim())
-    ? candidate.trim()
-    : git('rev-parse', 'HEAD^').trim();
-  const names = new Set<string>();
-  for (const path of SNAPSHOTS) {
-    let before = '[]';
-    try {
-      before = git('show', `${base}:${path}`);
-    } catch {
-      // A snapshot the base does not have: every entry is new.
-    }
-    for (const change of snapshotChanges(before, readFileSync(path, 'utf8')))
-      if (change.kind !== 'removed') names.add(change.name);
-  }
-  // A face's entry ("Web Shot") is its card's ("Ettercap // Web Shot").
-  const cardOf = new Map<string, string>();
-  for (const name of statuses.keys())
-    for (const face of cardNames(name)) if (!cardOf.has(face)) cardOf.set(face, name);
-  return [...new Set([...names].flatMap((name) => cardOf.get(name) ?? []))].sort();
-}
 
 /** The Vitest listing's path: `--collected`, or a fresh `vitest list` in `scratch`. */
 function listing(scratch: string): string {
@@ -167,7 +138,7 @@ const reportOnly = args.includes('--reviewed');
 const cards = reportOnly
   ? [...statuses].filter(([, status]) => status === 'implemented-reviewed').map(([name]) => name)
   : args.includes('--changed')
-    ? changedCards()
+    ? changedCards(baseCommit(option('--base') ?? process.env['MUTATION_BASE']), statuses.keys())
     : args.flatMap((arg, at) => (args[at - 1] === '--card' ? [arg] : []));
 if (cards.length === 0) {
   console.log('mutate-cards: no cards to mutate');

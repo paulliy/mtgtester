@@ -170,3 +170,5 @@ packages/engine/tests/cards/mini-pilot
 packages/server/src/cards/manifest-tests.test.ts
 packages/engine/tests/mutation
 packages/server/src/cards/mutation.test.ts
+packages/engine/tests/facets.test.ts
+packages/server/src/cards/facet-report.test.ts
