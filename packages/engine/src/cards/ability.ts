@@ -607,6 +607,13 @@ export type EffectRef =
  * (CR 611.2c).
  */
 export type Effect =
+  /**
+   * "Return a creature or planeswalker card from your graveyard to your hand" (Takenuma): the
+   * controller chooses one card matching `filter` in their graveyard as the effect resolves and
+   * puts it into their hand. Not a target (CR 115.10), so it may be a card an earlier effect of the
+   * same ability just put there; mandatory whenever one exists.
+   */
+  | { op: 'returnCardFromGraveyardToHand'; filter: Selector }
   | { op: 'pumpUntilEot'; target: EffectRef; power: Value | number; toughness: Value | number }
   | { op: 'grantKeywordUntilEot'; target: EffectRef; keyword: KeywordAbility }
   /** Target creature cannot be blocked this turn. */

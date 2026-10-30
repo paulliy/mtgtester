@@ -9016,6 +9016,24 @@ function* executeAbilityEffects(
       }
       case 'noOp':
         throw new Error('engine bug: executable noOp effect is prohibited');
+      case 'returnCardFromGraveyardToHand': {
+        const selectorSource = { cardId: source.cardId, controllerId: controller.id };
+        const chosen = yield* chooseCard(ctx, {
+          player: controller.id,
+          prompt: `${source.name}: return a card from your graveyard to your hand`,
+          cards: controller.graveyard.filter((card) =>
+            selectMatches(
+              cardZoneCandidate(ctx, card, controller.id),
+              effect.filter,
+              selectorSource,
+            ),
+          ),
+          type: 'returnToHand',
+          verb: 'Return',
+        });
+        if (chosen !== null) yield* moveObject(ctx, chosen, { zone: 'hand' });
+        break;
+      }
 
       default:
         assertNever(effect, 'Effect executor');

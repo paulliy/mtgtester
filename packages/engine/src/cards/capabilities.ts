@@ -921,6 +921,7 @@ const families = {
     prefix: 'Effect',
     discriminator: 'op',
     tags: {
+      returnCardFromGraveyardToHand: true,
       pumpUntilEot: true,
       grantKeywordUntilEot: true,
       cantBeBlockedUntilEot: true,
