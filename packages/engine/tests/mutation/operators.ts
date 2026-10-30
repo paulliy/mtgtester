@@ -158,6 +158,15 @@ function definitionMutants(node: Node, path: Path, add: AddMutant): void {
       },
       'entersWithCounters',
     );
+  if (node['entersUnlessDiscard'] !== undefined)
+    add(
+      path,
+      'remove entersUnlessDiscard',
+      (definition) => {
+        delete definition['entersUnlessDiscard'];
+      },
+      'entersUnlessDiscard',
+    );
   if (Array.isArray(node['activatedAbilities']))
     (node['activatedAbilities'] as Node[]).forEach((activated, abilityIndex) =>
       (activated['costs'] as Node[]).forEach((cost, costIndex) => {

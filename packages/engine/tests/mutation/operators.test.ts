@@ -17,6 +17,7 @@ const probe = {
   keywords: ['flying'],
   entersTapped: true,
   entersWithCounters: { '+1/+1': 2 },
+  entersUnlessDiscard: { filter: { kind: 'type', value: 'Land' } },
   staticEffects: [{ kind: 'anthem' }],
   manaAbilities: [{ units: [] }],
   activatedAbilities: [
@@ -57,6 +58,7 @@ describe('IR mutation operators', () => {
       'manaAbilities[0] | (card): drop manaAbilities[0]',
       'entersTapped | (card): flip entersTapped to false',
       'entersWithCounters | (card): remove entersWithCounters',
+      'entersUnlessDiscard | (card): remove entersUnlessDiscard',
       'activatedAbilities[0] | (card): drop activatedAbilities[0] cost 1 (tap)',
       'activatedAbilities[0] | activatedAbilities[0].ability: drop effect 0',
       'activatedAbilities[0] | activatedAbilities[0].ability.effects[0].amount: const 0 + 1',
@@ -83,6 +85,7 @@ describe('IR mutation operators', () => {
     expect(at('(card): drop keyword flying').keywords).toEqual([]);
     expect(at('(card): flip entersTapped to false').entersTapped).toBe(false);
     expect(at('(card): remove entersWithCounters')).not.toHaveProperty('entersWithCounters');
+    expect(at('(card): remove entersUnlessDiscard')).not.toHaveProperty('entersUnlessDiscard');
     expect(
       at('(card): drop activatedAbilities[0] cost 1 (tap)').activatedAbilities[0]!.costs,
     ).toEqual([{ kind: 'mana' }]);

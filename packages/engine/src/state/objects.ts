@@ -1035,6 +1035,39 @@ export function* moveObject(
     }
   }
 
+  // "If this would enter, you may discard a land card instead. If you do, put it onto the
+  // battlefield. If you don't, put it into its owner's graveyard." (Mox Diamond): a replacement
+  // (CR 614.1c), applied before it leaves the zone it is in, whichever effect moves it.
+  if (target.zone === 'battlefield' && from !== 'battlefield' && !target.faceDown) {
+    const enterCost = getDefByOracleId(ctx, obj.oracleId, obj.name).entersUnlessDiscard;
+    const controllerId = target.controllerId ?? obj.ownerId;
+    if (enterCost !== undefined && !losesAbilitiesAsItEnters(ctx, obj, controllerId)) {
+      const source = { cardId: obj.cardId, controllerId };
+      const discard = yield* chooseCard(ctx, {
+        player: controllerId,
+        prompt: `${obj.name} would enter: you may discard a card instead. If you don't, it goes to its owner's graveyard.`,
+        cards: playerById(ctx, controllerId).hand.filter(
+          (card) =>
+            card !== obj &&
+            selectMatches(cardZoneCandidate(ctx, card, controllerId), enterCost.filter, source),
+        ),
+        type: 'discard',
+        verb: 'Discard',
+        decline: {
+          type: 'declineDiscard',
+          description: `Discard nothing: put ${obj.name} into its owner's graveyard`,
+          verb: 'Discard nothing',
+        },
+      });
+      if (discard === null)
+        target = {
+          zone: graveyardDestination(ctx, obj, 'graveyard'),
+          ...(target.reason !== undefined ? { reason: target.reason } : {}),
+        };
+      else yield* discardCard(ctx, discard, controllerId);
+    }
+  }
+
   // Its fixed effects stay until leave processing has read its last known characteristics: an
   // animated land that dies is a creature dying (CR 113.7a, 603.10a).
   const keepForLeaveProcessing = from === 'battlefield' && target.zone !== 'battlefield';

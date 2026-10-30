@@ -19,6 +19,7 @@ import type {
 import type { Condition } from './condition';
 import type { ProtectionQuality, StaticEffect } from './continuous-types';
 import type { RuleStatic } from './rule-statics';
+import type { Selector } from './selector';
 
 export type { Condition } from './condition';
 export type { StaticEffect, ContinuousOp, Characteristics } from './continuous-types';
@@ -149,6 +150,13 @@ export interface CardDefinition {
    * via the `chosenColor` selector or a `chosenOptionIs` condition, rather than each card
    * inventing its own memory field.
    */
+  /**
+   * "If this artifact would enter, you may discard a land card instead. If you do, put this
+   * artifact onto the battlefield. If you don't, put it into its owner's graveyard." (Mox Diamond):
+   * a replacement (CR 614.1c) whenever it would enter from another zone. Its controller may
+   * discard a card matching `filter` from their hand; declining sends it to its owner's graveyard.
+   */
+  entersUnlessDiscard?: { filter: Selector };
   entersChoosingOption?: {
     prompt: string;
     /** A printed, closed list — Caged Sun's five colors, Frontier Siege's two modes. */

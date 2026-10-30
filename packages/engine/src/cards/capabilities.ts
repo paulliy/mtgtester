@@ -592,6 +592,7 @@ const shapes = {
     activatedAbilities: { array: { node: 'ActivatedAbility' } },
     entersTapped: leaf,
     entersTappedUnless: { node: 'Condition' },
+    entersUnlessDiscard: { object: { filter: { node: 'Selector' } } },
     entersChoosingOption: {
       object: {
         prompt: leaf,
