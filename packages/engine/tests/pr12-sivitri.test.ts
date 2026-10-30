@@ -266,6 +266,8 @@ describe('Sivitri, Dragon Master', () => {
     spawn(ctx, 'P2', bear());
     spawn(ctx, 'P3', dragon());
     activateIndex(ctx, 'P1', sivitri, 2);
+    // The -7 is paid as a cost: all seven loyalty counters are gone.
+    expect(counterCount(sivitri.counters, 'loyalty')).toBe(0);
     resolveTop(ctx);
     expect(battlefield(ctx, 'Test Bear')).toHaveLength(0);
     expect(battlefield(ctx, 'Test Drake')).toHaveLength(1);

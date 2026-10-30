@@ -4,6 +4,7 @@ import { fixtureOracleId } from '../src/cards/overrides';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { loseLife } from '../src/effects/resolve';
 import { addMana } from '../src/mana/pool';
+import { priorityCheckpoint } from '../src/sba/sba';
 import { moveObject } from '../src/state/objects';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { queueStepTriggers } from '../src/turn/turn';
@@ -30,7 +31,8 @@ function classAt(
   castFromHand(ctx, 'P1', CHIROGRAPHY, new Map(), { B: 1, C: 1 });
   resolve(ctx);
   checkpoint(ctx);
-  resolve(ctx);
+  // The enters trigger is mandatory: no "use this ability?" yes/no is asked.
+  expect(resolve(ctx).map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
   const chirography = battlefield(ctx, 'Intermediate Chirography')[0]!;
   for (let next = 2; next <= level; next++) {
     addMana(player(ctx, 'P1'), [
@@ -57,8 +59,9 @@ describe('Intermediate Chirography', () => {
 
   it('chirography-c01-positive — entering creates a 2/1 white and black flying Inkling', () => {
     const { ctx } = classAt('chirography-enters', 1);
-    const [inkling] = battlefield(ctx, 'Inkling');
-    const chars = computeCharacteristics(ctx, inkling!);
+    const inklings = battlefield(ctx, 'Inkling');
+    expect(inklings).toHaveLength(1);
+    const chars = computeCharacteristics(ctx, inklings[0]!);
     expect([chars.power, chars.toughness, chars.colors, chars.keywords]).toEqual([
       2,
       1,
@@ -99,13 +102,23 @@ describe('Intermediate Chirography', () => {
       'Whenever you lose life for the first time each turn, put a +1/+1 counter on target creature you control',
     );
     const mine = spawn(ctx, 'P1', bear());
+    const theirs = spawn(ctx, 'P2', bear());
     loseLife(ctx, player(ctx, 'P1'), 2);
-    checkpoint(ctx);
+    // "Target creature you control": the targets offered are P1's creatures, never the opponent's.
+    const offered: string[] = [];
+    pump(priorityCheckpoint(ctx), (decision) => {
+      for (const slot of decision.options[0]?.targets ?? []) offered.push(...slot.options);
+      return { index: 0, targets: new Map([[0, mine.id]]) };
+    });
+    expect(offered).toContain(mine.id);
+    expect(offered).not.toContain(theirs.id);
     const trigger = ctx.state.stack.at(-1)!;
     expect(trigger.kind).toBe('triggeredAbility');
-    trigger.targets = [mine.id];
-    resolve(ctx);
+    expect(trigger.targets).toEqual([mine.id]);
+    // The trigger is mandatory: no "use this ability?" yes/no is asked.
+    expect(resolve(ctx).map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(mine.counters['+1/+1']).toBe(1);
+    expect(theirs.counters['+1/+1'] ?? 0).toBe(0);
   });
 
   it('chirography-c03-first-only — a second loss the same turn, and opponents losing life, do not trigger', () => {
@@ -167,12 +180,15 @@ describe('Intermediate Chirography', () => {
     ctx.state.step = 'end';
     queueStepTriggers(ctx, 'endStep');
     checkpoint(ctx);
-    resolve(ctx);
+    expect(ctx.state.stack).toHaveLength(1);
+    // The trigger is mandatory: no "use this ability?" yes/no is asked.
+    expect(resolve(ctx).map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(battlefield(ctx, 'Inkling')).toHaveLength(inklingsBefore + 1);
     // "Each end step": an opponent's end step counts too, the same turn or a later one in it.
     Object.assign(ctx.state, { currentTurnPlayer: 'P2', activePlayerIndex: 1 });
     queueStepTriggers(ctx, 'endStep');
     checkpoint(ctx);
+    expect(ctx.state.stack).toHaveLength(1);
     resolve(ctx);
     expect(battlefield(ctx, 'Inkling')).toHaveLength(inklingsBefore + 2);
   });
@@ -195,6 +211,7 @@ describe('Intermediate Chirography', () => {
     pump(moveObject(ctx, equipped, { zone: 'graveyard' }));
     queueStepTriggers(ctx, 'endStep');
     checkpoint(ctx);
+    expect(ctx.state.stack).toHaveLength(1);
     resolve(ctx);
     expect(battlefield(ctx, 'Inkling')).toHaveLength(before + 1);
   });

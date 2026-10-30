@@ -28,7 +28,9 @@ let applied = 0;
 
 if (target !== null)
   installDefinitionTransform((definition) => {
-    if (definition.name !== target.card) return definition;
+    // A transforming or modal double-faced card's definition carries its front face's name.
+    if (definition.name !== target.card && !target.card.split(' // ').includes(definition.name))
+      return definition;
     const label = cardMutants(definition)[target.index]?.label;
     if (label !== target.label)
       throw new Error(

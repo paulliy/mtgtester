@@ -133,13 +133,15 @@ describe('Bloomvine Regent // Claim Territory', () => {
     const permanent = battlefield(ctx, 'Bloomvine Regent // Claim Territory')[0]!;
     expect(hasKeyword(ctx, permanent, 'flying')).toBe(true);
     checkpoint(ctx);
-    resolve(ctx);
+    // The life-gain triggers are mandatory: nothing asks "use it?" first.
+    const asked = resolve(ctx).map((d) => d.decisionType);
     expect(player(ctx, 'P1').life).toBe(43);
     castFromHand(ctx, 'P1', whelp(), new Map(), { C: 1 });
     resolve(ctx);
     checkpoint(ctx);
-    resolve(ctx);
+    asked.push(...resolve(ctx).map((d) => d.decisionType));
     expect(player(ctx, 'P1').life).toBe(46);
+    expect(asked).not.toContain('optionalTrigger');
   });
 
   it('bloomvine-c02-negative — an opponent’s Dragon or your non-Dragon does not gain you life', () => {
@@ -171,6 +173,8 @@ describe('Bloomvine Regent // Claim Territory', () => {
       offered.push(decision.options.map((option) => option.description));
       return byDescription(/Put Forest onto/, /Put Snow-Covered Forest into/)(decision);
     });
+    // Two searches are made, one per found card.
+    expect(offered).toHaveLength(2);
     // Only basic Forests: not the nonbasic Forest, not the Island.
     expect([...offered[0]!].sort()).toEqual([
       'Find nothing',
@@ -197,7 +201,9 @@ describe('Bloomvine Regent // Claim Territory', () => {
     const card = conjure(ctx, 'P1', BLOOMVINE, 'hand');
     const lands = battlefield(ctx, 'Forest').length;
     castFace(ctx, 'P1', card, 'omen', { G: 1, C: 2 });
-    resolveWith(ctx, byDescription(/Find nothing/));
+    const decisions = resolveWith(ctx, byDescription(/Find nothing/));
+    // Declining the first pick ends the search: there is no second pick to decline.
+    expect(decisions).toHaveLength(1);
     expect(battlefield(ctx, 'Forest')).toHaveLength(lands);
     expect(me.library.map((c) => c.cardId)).toContain(card.cardId);
   });
@@ -242,7 +248,8 @@ describe('Marang River Regent // Coil and Catch', () => {
     // "Other": the Regent itself is never offered; lands are not either.
     expect(seen.flat().some((text) => text.includes('Marang'))).toBe(false);
     expect(seen.flat().some((text) => text.includes('Plains'))).toBe(false);
-    resolve(ctx);
+    // The trigger is mandatory: nothing asks "use it?" first.
+    expect(resolve(ctx).map((d) => d.decisionType)).not.toContain('optionalTrigger');
     expect(player(ctx, 'P2').hand.map((card) => card.cardId)).toContain(theirs.cardId);
     // An owner's hand, not its controller's.
     expect(player(ctx, 'P3').hand.map((card) => card.cardId)).toContain(borrowed.cardId);

@@ -209,6 +209,12 @@ describe('Myriad Landscape product definition', () => {
     );
     expect(found).toHaveLength(expectedCount);
     expect(found.every((entry) => entry.tapped)).toBe(true);
+    // "...then shuffle" happens whether or not anything was found.
+    expect(
+      ctx.state.eventLog.filter(
+        (event) => event.type === 'shuffle' && event.payload['player'] === 'P1',
+      ),
+    ).toHaveLength(1);
   });
 
   it('does not offer the activation when mana is short or the source is tapped', () => {

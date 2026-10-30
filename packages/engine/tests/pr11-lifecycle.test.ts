@@ -16,6 +16,7 @@ import {
   conjure,
   copies,
   declareAttacks,
+  declareBlocks,
   gameConfig,
   oracle,
   plains,
@@ -117,7 +118,9 @@ describe('Mana Vault', () => {
     const vault = spawn(ctx, 'P1', VAULT, { tapped: true });
     lands(ctx, 'P1', 4);
     const life = player(ctx, 'P1').life;
-    nextTurnOf(ctx, 'P1', preferring('payMana'));
+    const asked = nextTurnOf(ctx, 'P1', preferring('payMana'));
+    // "You may pay {4}" is the whole choice: no separate "use this ability?" is asked first.
+    expect(asked.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(vault.tapped).toBe(false);
     expect(player(ctx, 'P1').life).toBe(life);
     expect(battlefield(ctx, 'Plains').every((land) => land.tapped)).toBe(true);
@@ -128,7 +131,9 @@ describe('Mana Vault', () => {
     const vault = spawn(ctx, 'P1', VAULT, { tapped: true });
     lands(ctx, 'P1', 4);
     const life = player(ctx, 'P1').life;
-    nextTurnOf(ctx, 'P1', preferring('decline'));
+    const asked = nextTurnOf(ctx, 'P1', preferring('decline'));
+    // The draw-step damage is mandatory: no "use this ability?" yes/no is asked for it.
+    expect(asked.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(vault.tapped).toBe(true);
     expect(player(ctx, 'P1').life).toBe(life - 1);
   });
@@ -159,7 +164,8 @@ describe('Mana Vault', () => {
     expect(ctx.state.stack.at(-1)?.kind).toBe('triggeredAbility');
     const life = player(ctx, 'P1').life;
     pump(moveObject(ctx, vault, { zone: 'graveyard' }));
-    resolve(ctx);
+    const asked = resolve(ctx);
+    expect(asked.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(player(ctx, 'P1').life).toBe(life - 1);
   });
 });
@@ -169,7 +175,9 @@ describe('Mystic Remora', () => {
     const ctx = game('pr11-remora-upkeep');
     const remora = spawn(ctx, 'P1', REMORA);
     lands(ctx, 'P1', 3);
-    nextTurnOf(ctx, 'P1', preferring('payCost'));
+    const asked = nextTurnOf(ctx, 'P1', preferring('payCost'));
+    // Cumulative upkeep is mandatory: the only choice is paying (or not), never "use this ability?".
+    expect(asked.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(remora.counters['age']).toBe(1);
     expect(battlefield(ctx, 'Mystic Remora')).toEqual([remora]);
     expect(battlefield(ctx, 'Plains').filter((land) => land.tapped)).toHaveLength(1);
@@ -200,8 +208,26 @@ describe('Mystic Remora', () => {
     turnOf(ctx, 'P2');
     castFromHand(ctx, 'P2', opponentSorcery(), new Map(), { C: 1 });
     checkpoint(ctx);
-    resolve(ctx);
+    // "You may draw": Remora's controller is asked, and agreeing draws the card.
+    const asked = resolve(ctx);
+    expect(asked.map((decision) => [decision.decisionType, decision.player])).toContainEqual([
+      'optionalTrigger',
+      'P1',
+    ]);
     expect(player(ctx, 'P1').hand.length).toBe(hand + 1);
+
+    // ... and declining draws nothing.
+    const declined = game('pr11-remora-draw-declined');
+    spawn(declined, 'P1', REMORA);
+    const declinedHand = player(declined, 'P1').hand.length;
+    turnOf(declined, 'P2');
+    castFromHand(declined, 'P2', opponentSorcery(), new Map(), { C: 1 });
+    checkpoint(declined);
+    pump(resolveTopOfStack(declined), (decision) => ({
+      index: decision.options.findIndex((option) => option.type === 'declineTrigger'),
+      targets: new Map(),
+    }));
+    expect(player(declined, 'P1').hand.length).toBe(declinedHand);
   });
 
   it('remora-c02-paid — the opponent paying {4} stops the draw', () => {
@@ -274,7 +300,9 @@ describe('Smokestack', () => {
     lands(ctx, 'P2', 2);
     lands(ctx, 'P1', 2);
     const prompts: string[] = [];
+    const types: string[] = [];
     nextTurnOf(ctx, 'P2', (decision) => {
+      types.push(decision.decisionType);
       if (decision.prompt.includes('choose a permanent to sacrifice')) {
         prompts.push(decision.player);
         const land = decision.options.findIndex(
@@ -284,6 +312,9 @@ describe('Smokestack', () => {
       }
       return { index: 0, targets: new Map() };
     });
+    // The sacrifice is mandatory: no "use this ability?" yes/no is asked.
+    expect(types).not.toContain('optionalTrigger');
+    expect(prompts).toHaveLength(2);
     expect(prompts.every((who) => who === 'P2')).toBe(true);
     expect(ctx.state.battlefield.filter((perm) => perm.controllerId === 'P2')).toEqual([keep]);
     expect(ctx.state.battlefield.filter((perm) => perm.controllerId === 'P1')).toHaveLength(3);
@@ -316,7 +347,9 @@ describe('Out of the Tombs', () => {
     const me = player(ctx, 'P1');
     for (let index = 0; index < 10; index++) conjure(ctx, 'P1', plains(), 'library');
     const graveyard = me.graveyard.length;
-    nextTurnOf(ctx, 'P1');
+    const asked = nextTurnOf(ctx, 'P1');
+    // The upkeep trigger is mandatory: no "use this ability?" yes/no is asked.
+    expect(asked.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(tombs.counters['eon']).toBe(2);
     expect(me.graveyard.length - graveyard).toBe(2);
     nextTurnOf(ctx, 'P1');
@@ -644,7 +677,10 @@ describe('Negative Zone Portal', () => {
     expect(offered).toContain(target.id);
     expect(offered).not.toContain(mine.id);
     const hand = player(ctx, 'P1').hand.length;
+    expect(portal.tapped).toBe(false);
     activate(ctx, 'P1', portal, new Map([[0, target.id]]));
+    // {T} is part of the cost: the Portal is tapped by activating, before the ability resolves.
+    expect(portal.tapped).toBe(true);
     resolve(ctx);
     expect(ctx.state.exile.some((card) => card.cardId === target.cardId)).toBe(true);
     expect(portal.exiledWithIds).toEqual([
@@ -667,11 +703,22 @@ describe('Negative Zone Portal', () => {
     anyMana(ctx, 'P1', 2);
     const hand = player(ctx, 'P1').hand.length;
     activate(ctx, 'P1', portal, new Map([[0, target.id]]));
+    expect(portal.tapped).toBe(true);
     resolve(ctx);
     expect(portal.exiledWithIds).toEqual([
       ctx.state.exile.find((card) => card.cardId === target.cardId)!.id,
     ]);
     expect(player(ctx, 'P1').hand.length).toBe(hand);
+    // Tapped, it cannot be activated again even with more mana and another target.
+    conjure(ctx, 'P2', sorceryCard('Another Sorcery'), 'graveyard');
+    anyMana(ctx, 'P1', 2);
+    expect(
+      priorityOption(
+        ctx,
+        'P1',
+        (payload) => payload.kind === 'activateAbility' && payload.objectId === portal.id,
+      ),
+    ).toBeUndefined();
   });
 
   it('portal-c02-negative — fewer than four creature cards exiled with it: no flip', () => {
@@ -688,7 +735,9 @@ describe('Negative Zone Portal', () => {
     const portal = portalWith(ctx, ['A', 'B', 'C', 'D'].map(creatureCard));
     rig(ctx, 0);
     const before = ctx.state.eventLog.length;
-    nextTurnOf(ctx, 'P1');
+    const asked = nextTurnOf(ctx, 'P1');
+    // The upkeep trigger is mandatory: no "use this ability?" yes/no is asked.
+    expect(asked.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     const flips = ctx.state.eventLog.slice(before).filter((event) => event.type === 'coinFlip');
     expect(flips).toHaveLength(1);
     expect(battlefield(ctx, 'Negative Zone Portal')).toEqual([portal]);
@@ -700,7 +749,8 @@ describe('Negative Zone Portal', () => {
     portalWith(ctx, ['A', 'B', 'C', 'D'].map(creatureCard));
     rig(ctx, 1);
     const theirHand = player(ctx, 'P2').hand.length;
-    nextTurnOf(ctx, 'P1');
+    const asked = nextTurnOf(ctx, 'P1');
+    expect(asked.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(battlefield(ctx, 'Negative Zone Portal')).toEqual([]);
     expect(player(ctx, 'P1').graveyard.some((card) => card.name === 'Negative Zone Portal')).toBe(
       true,
@@ -878,6 +928,26 @@ describe('Gut, True Soul Zealot', () => {
     attack(ctx, gut.id, null);
     expect(battlefield(ctx, 'Test Bear')).toHaveLength(1);
     expect(battlefield(ctx, 'Skeleton')).toEqual([]);
+
+    // "Whenever YOU attack": an opponent's attack offers Gut's controller nothing.
+    const theirs = game('pr11-gut-opponent-attack');
+    spawn(theirs, 'P1', GUT);
+    const mine = spawn(theirs, 'P1', bear());
+    const raider = spawn(theirs, 'P2', bear());
+    turnOf(theirs, 'P2');
+    theirs.state.phase = 'combat';
+    const asked: string[] = [];
+    pump(runCombatPhase(theirs), (decision) => {
+      asked.push(decision.decisionType);
+      if (decision.decisionType === 'declareAttackers')
+        return declareAttacks(decision, (id) => (id === raider.id ? 'P1' : null));
+      if (decision.decisionType === 'declareBlockers') return declareBlocks(decision, () => null);
+      return { index: 0, targets: new Map() };
+    });
+    expect(asked).toContain('declareAttackers');
+    expect(asked).not.toContain('optionalTrigger');
+    expect(battlefield(theirs, 'Skeleton')).toEqual([]);
+    expect(theirs.state.battlefield).toContain(mine);
 
     const alone = game('pr11-gut-alone');
     const lonely = spawn(alone, 'P1', GUT);

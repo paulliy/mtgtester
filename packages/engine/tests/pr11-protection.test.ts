@@ -9,6 +9,7 @@ import { constant } from '../src/cards/value';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { endUntilEotEffects } from '../src/effects/resolve';
 import { addMana } from '../src/mana/pool';
+import { priorityCheckpoint } from '../src/sba/sba';
 import { moveObject } from '../src/state/objects';
 import { hasKeyword, hasProtectionFrom } from '../src/state/queries';
 import { bear, conjure, oracle, pump, spawn } from './fixtures';
@@ -173,13 +174,18 @@ describe("Basri's Lieutenant — protection from multicolored", () => {
     castFromHand(ctx, 'P1', LIEUTENANT, new Map(), { W: 1, C: 3 });
     resolve(ctx);
     const lieutenant = battlefield(ctx, "Basri's Lieutenant")[0]!;
-    checkpoint(ctx);
+    const { decisions: targeting } = pump(priorityCheckpoint(ctx));
+    // Only creatures you control are offered: the opponent's bear is not a legal target.
+    const slot = targeting.find((d) => d.decisionType === 'chooseTargets')?.options[0]
+      ?.targets?.[0];
+    expect([...(slot?.options ?? [])].sort()).toEqual([ally.id, lieutenant.id].sort());
     const stackTop = ctx.state.stack.at(-1);
     expect(stackTop?.kind).toBe('triggeredAbility');
     expect(stackTop?.targets[0]).toBeDefined();
     expect([ally.id, lieutenant.id]).toContain(stackTop!.targets[0]);
     expect(stackTop!.targets[0]).not.toBe(foe.id);
-    resolve(ctx);
+    // The trigger is mandatory: nothing asks "use it?" first.
+    expect(resolve(ctx).map((d) => d.decisionType)).not.toContain('optionalTrigger');
     const chosen = ctx.state.battlefield.find((p) => p.id === stackTop!.targets[0])!;
     expect(chosen.counters['+1/+1']).toBe(1);
   });
@@ -192,7 +198,8 @@ describe("Basri's Lieutenant — protection from multicolored", () => {
     pump(moveObject(ctx, ally, { zone: 'graveyard' }));
     checkpoint(ctx);
     expect(ctx.state.stack.at(-1)?.kind).toBe('triggeredAbility');
-    resolve(ctx);
+    // The trigger is mandatory: nothing asks "use it?" first.
+    expect(resolve(ctx).map((d) => d.decisionType)).not.toContain('optionalTrigger');
     const knights = battlefield(ctx, 'Knight');
     expect(knights).toHaveLength(1);
     const chars = computeCharacteristics(ctx, knights[0]!);
@@ -210,7 +217,7 @@ describe("Basri's Lieutenant — protection from multicolored", () => {
     lieutenant.counters['+1/+1'] = 2;
     pump(moveObject(ctx, lieutenant, { zone: 'graveyard' }));
     checkpoint(ctx);
-    resolve(ctx);
+    expect(resolve(ctx).map((d) => d.decisionType)).not.toContain('optionalTrigger');
     expect(battlefield(ctx, 'Knight')).toHaveLength(1);
   });
 
@@ -225,6 +232,11 @@ describe("Basri's Lieutenant — protection from multicolored", () => {
     pump(moveObject(ctx, plain, { zone: 'graveyard' }));
     pump(moveObject(ctx, foe, { zone: 'graveyard' }));
     pump(moveObject(ctx, exiled, { zone: 'exile' }));
+    // Only creatures "die": a noncreature permanent with a +1/+1 counter going to the graveyard
+    // does not make a Knight.
+    const relic = spawn(ctx, 'P1', oracle({ name: 'Counter Relic', typeLine: 'Artifact' }));
+    relic.counters['+1/+1'] = 1;
+    pump(moveObject(ctx, relic, { zone: 'graveyard' }));
     checkpoint(ctx);
     while (ctx.state.stack.length > 0) resolve(ctx);
     expect(battlefield(ctx, 'Knight')).toHaveLength(0);
@@ -362,7 +374,8 @@ describe('Spirit Mantle and Unquestioned Authority — protection from creatures
     resolve(ctx);
     checkpoint(ctx);
     expect(ctx.state.stack.at(-1)?.kind).toBe('triggeredAbility');
-    resolve(ctx);
+    // "When this Aura enters, draw a card" is mandatory: nothing asks "use it?" first.
+    expect(resolve(ctx).map((d) => d.decisionType)).not.toContain('optionalTrigger');
     expect(player(ctx, 'P1').hand.length).toBe(before + 1);
     const chars = computeCharacteristics(ctx, host);
     expect(chars.protectionFrom).toEqual(['creatures']);

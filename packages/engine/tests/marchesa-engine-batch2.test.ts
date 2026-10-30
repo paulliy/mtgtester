@@ -13,6 +13,7 @@ import { interpretCard } from '../src/cards/interpret';
 import { fixtureOracleId } from '../src/cards/overrides';
 import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
+import { addMana } from '../src/mana/pool';
 import { moveObject } from '../src/state/objects';
 import { manaSourcesFor } from '../src/state/queries';
 import type { GameContext } from '../src/state/types';
@@ -149,6 +150,42 @@ describe('Anathemancer', () => {
         (ability) => ability.zone === 'graveyard' && ability.timing === 'sorcery',
       ),
     ).toBe(true);
+
+    // The printed Unearth really activates: it returns this card with haste, marked to be exiled.
+    const ctx = pod('anathemancer-unearth');
+    const player = playerOf(ctx, 'P1');
+    const dead = conjure(ctx, 'P1', card, 'graveyard');
+    addMana(player, [
+      { symbol: 'B' },
+      { symbol: 'R' },
+      ...Array.from({ length: 5 }, () => ({ symbol: 'C' as const })),
+    ]);
+    const option = computePriorityOptions(ctx, player).find((o) =>
+      o.description.includes('(graveyard): Unearth'),
+    );
+    expect(option).toBeDefined();
+    pump(
+      applyPriorityAction(ctx, player, option!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+    );
+    expect(player.manaEntries).toHaveLength(0);
+    expect(ctx.state.stack.at(-1)?.sourceCardId).toBe(dead.cardId);
+    pump(resolveTopOfStack(ctx));
+    const unearthed = ctx.state.battlefield.find((permanent) => permanent.cardId === dead.cardId);
+    expect(unearthed).toBeDefined();
+    expect(unearthed!.unearthed).toBe(true);
+    expect(player.graveyard.some((c) => c.cardId === dead.cardId)).toBe(false);
+    expect(
+      ctx.state.effects.some(
+        (e) =>
+          e.kind === 'grantKeyword' &&
+          e.keyword === 'haste' &&
+          e.targetCardIds?.includes(dead.cardId),
+      ),
+    ).toBe(true);
+    expect(ctx.state.delayedTriggers.some((t) => t.targetId === dead.cardId)).toBe(true);
   });
 
   it('anathemancer-etb-nonbasic-damage — ETB deals damage equal to the target player’s nonbasic lands', () => {
@@ -177,10 +214,12 @@ describe('Anathemancer', () => {
     spawn(ctx, 'P2', nonbasicLand());
     const before = playerOf(ctx, 'P2').life;
     playFromHand(ctx, 'P1', card);
-    pump(runPrioritySequence(ctx), () => ({
+    const { decisions } = pump(runPrioritySequence(ctx), () => ({
       index: 0,
       targets: new Map([[0, 'P2']]),
     }));
+    // The trigger is mandatory: only the target is chosen, no "use this ability?" first.
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(playerOf(ctx, 'P2').life).toBe(before - 1);
   });
 });
@@ -230,7 +269,9 @@ describe('Disciple of Bolas', () => {
     const lifeBefore = playerOf(ctx, 'P1').life;
     const handBefore = playerOf(ctx, 'P1').hand.length;
     const source = playFromHand(ctx, 'P1', card);
-    pump(runPrioritySequence(ctx));
+    const { decisions } = pump(runPrioritySequence(ctx));
+    // The sacrifice is mandatory: no "use this ability?" yes/no is asked.
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(ctx.state.battlefield.some((permanent) => permanent.cardId === victim.cardId)).toBe(
       false,
     );
@@ -492,7 +533,9 @@ describe('Mahadi, Emporium Master', () => {
     pump(moveObject(ctx, theirs, { zone: 'graveyard' }));
     pump(runPrioritySequence(ctx));
     queueStepTriggers(ctx, 'endStep');
-    pump(runPrioritySequence(ctx));
+    const { decisions } = pump(runPrioritySequence(ctx));
+    // The trigger is mandatory: no "use this ability?" yes/no is asked.
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(ctx.state.battlefield.filter((permanent) => permanent.name === 'Treasure')).toHaveLength(
       2,
     );

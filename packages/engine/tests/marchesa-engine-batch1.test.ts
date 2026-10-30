@@ -157,6 +157,22 @@ describe('Grave Pact', () => {
 
     expect(asked).toEqual([]);
     expect(ctx.state.battlefield.some((permanent) => permanent.cardId === yours.cardId)).toBe(true);
+
+    // Only a creature dying counts: one of your noncreature permanents dying asks no one to sacrifice.
+    const lands = pod('grave-pact-negative-noncreature');
+    spawn(lands, 'P1', gravePact);
+    const land = spawn(lands, 'P1', forest());
+    const p2Creature = spawn(lands, 'P2', bear());
+    const landAsked: string[] = [];
+    pump(moveObject(lands, land, { zone: 'graveyard' }));
+    resolveDeath(lands, (decision) => {
+      landAsked.push(decision.player);
+      return { index: 0, targets: new Map() };
+    });
+    expect(landAsked).toEqual([]);
+    expect(
+      lands.state.battlefield.some((permanent) => permanent.cardId === p2Creature.cardId),
+    ).toBe(true);
   });
 
   it('grave-pact-no-creature-to-sacrifice — a player with no creature is not asked', () => {
@@ -249,6 +265,10 @@ describe('Pawn of Ulamog', () => {
     });
 
     expect(asked).toBe(true);
+    // Exactly one Spawn is created.
+    expect(
+      ctx.state.battlefield.filter((permanent) => permanent.name === 'Eldrazi Spawn'),
+    ).toHaveLength(1);
     const spawnToken = ctx.state.battlefield.find(
       (permanent) => permanent.name === 'Eldrazi Spawn',
     );
@@ -289,6 +309,21 @@ describe('Pawn of Ulamog', () => {
 
     expect(asked).toBe(false);
     expect(ctx.state.battlefield.some((permanent) => permanent.name === 'Eldrazi Spawn')).toBe(
+      false,
+    );
+
+    // A nontoken noncreature permanent you control dying is not a creature dying either.
+    const lands = pod('pawn-noncreature', 2);
+    spawn(lands, 'P1', pawn);
+    const land = spawn(lands, 'P1', forest());
+    let landAsked = false;
+    pump(moveObject(lands, land, { zone: 'graveyard' }));
+    resolveDeath(lands, () => {
+      landAsked = true;
+      return { index: 0, targets: new Map() };
+    });
+    expect(landAsked).toBe(false);
+    expect(lands.state.battlefield.some((permanent) => permanent.name === 'Eldrazi Spawn')).toBe(
       false,
     );
   });

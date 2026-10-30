@@ -53,6 +53,8 @@ function treasureCount(ctx: GameContext, controllerId = 'P1'): number {
 
 function resolveTithe(ctx: GameContext, choice: 'pay' | 'decline' = 'decline') {
   return pump(runPrioritySequence(ctx), (decision) => {
+    // Tithe's trigger is mandatory for its controller: only the drawing opponent chooses, to pay.
+    expect(decision.decisionType).not.toBe('optionalTrigger');
     if (decision.decisionType === 'orderTriggers') {
       return { index: 0, targets: new Map() };
     }

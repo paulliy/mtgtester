@@ -267,7 +267,8 @@ describe("Dollmaker's Shop // Porcelain Gallery", () => {
     const attackers = [ready(spawn(ctx, 'P1', bear())), ready(spawn(ctx, 'P1', bear()))];
     p1Attacks(ctx, attackers, 'P2');
     expect(ctx.state.stack).toHaveLength(1);
-    resolve(ctx);
+    // The trigger is mandatory ("create a Toy"): nothing asks "use it?" first.
+    expect(resolve(ctx).map((d) => d.decisionType)).not.toContain('optionalTrigger');
     const toys = battlefield(ctx, 'Toy');
     expect(toys).toHaveLength(1);
     const chars = computeCharacteristics(ctx, toys[0]!);
@@ -286,8 +287,8 @@ describe("Dollmaker's Shop // Porcelain Gallery", () => {
     const attackers = Array.from({ length: 3 }, () => ready(spawn(ctx, 'P1', bear())));
     p1Attacks(ctx, attackers, (id) => (id === attackers[2]!.id ? 'P3' : 'P2'));
     expect(ctx.state.stack).toHaveLength(2);
-    resolve(ctx);
-    resolve(ctx);
+    const asked = [...resolve(ctx), ...resolve(ctx)].map((d) => d.decisionType);
+    expect(asked).not.toContain('optionalTrigger');
     expect(battlefield(ctx, 'Toy')).toHaveLength(2);
   });
 

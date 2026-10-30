@@ -241,12 +241,15 @@ describe('PR08 modal player targets', () => {
   it('shadrix-choose-two-and-distinct-players — announces two modes and targets self or different players', () => {
     const ctx = pod('shadrix-modes');
     const shadrix = spawn(ctx, 'P1', shadrixPin!.card);
+    const p3HandBefore = playerById(ctx, 'P3').hand.length;
     const decisions = resolveShadrix(
       ctx,
       shadrix,
       ['Target player creates an Inkling', 'Target player draws a card and loses 1 life'],
       ['P2', 'P3'],
     );
+    // Declining lives inside the mode choice ("Choose no modes"); no separate "use it?" is asked.
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     const modeDecision = decisions.find((decision) => decision.prompt.includes('choose modes'))!;
     expect(modeDecision.options).toHaveLength(4);
     expect(modeDecision.options.some((option) => option.description === 'Choose no modes')).toBe(
@@ -268,6 +271,11 @@ describe('PR08 modal player targets', () => {
         (permanent) => permanent.name.includes('Inkling') && permanent.controllerId === 'P2',
       ),
     ).toBe(true);
+    // Exactly one Inkling for P2; P3 draws exactly one card and loses exactly 1 life.
+    expect(
+      ctx.state.battlefield.filter((permanent) => permanent.name.includes('Inkling')),
+    ).toHaveLength(1);
+    expect(playerById(ctx, 'P3').hand).toHaveLength(p3HandBefore + 1);
     expect(playerById(ctx, 'P3').life).toBe(39);
   });
 
@@ -402,6 +410,8 @@ describe('PR08 modal player targets', () => {
     const lich = castLichAndDie(ctx);
     conjure(ctx, 'P3', oracle({ name: 'P3 Card A' }), 'hand');
     conjure(ctx, 'P3', oracle({ name: 'P3 Card B' }), 'hand');
+    // A third card shows the discard is exactly two, not "everything in hand".
+    conjure(ctx, 'P3', oracle({ name: 'P3 Card C' }), 'hand');
     const p3HandBefore = playerById(ctx, 'P3').hand.length;
     const decisions = resolveStack(ctx, (decision) => {
       if (decision.prompt.includes('choose modes'))

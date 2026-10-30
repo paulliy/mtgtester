@@ -185,7 +185,8 @@ describe('Black Bolt, Inhuman King', () => {
     castFromHand(ctx, 'P1', lifeSpell(), new Map(), { C: 1 });
     checkpoint(ctx);
     expect(ctx.state.stack.map((entry) => entry.kind)).toEqual(['spell', 'triggeredAbility']);
-    resolve(ctx);
+    // The pump is mandatory: nothing asks "use it?" first.
+    expect(resolve(ctx).map((d) => d.decisionType)).not.toContain('optionalTrigger');
     expect(computeCharacteristics(ctx, bolt).power).toBe(5);
     expect(computeCharacteristics(ctx, bolt).toughness).toBe(5);
   });
@@ -218,7 +219,8 @@ describe('Black Bolt, Inhuman King', () => {
     if (theirLand !== undefined) expect(offered).not.toContain(theirLand.id);
     expect(offered).not.toContain(bystander.id);
     expect(offered).not.toContain(mine.id);
-    resolve(ctx);
+    // Lethal Voice is mandatory: nothing asks "use it?" first.
+    expect(resolve(ctx).map((d) => d.decisionType)).not.toContain('optionalTrigger');
     expect(
       battlefield(ctx, 'Test Bear')
         .map((p) => p.controllerId)
@@ -249,7 +251,7 @@ describe('Black Bolt, Inhuman King', () => {
     const offered = checkpointTargets(ctx, theirs.id);
     expect(offered).toContain(theirs.id);
     expect(offered).toContain(rod.id);
-    resolve(ctx);
+    expect(resolve(ctx).map((d) => d.decisionType)).not.toContain('optionalTrigger');
     expect(battlefield(ctx, 'Test Bear')).toHaveLength(0);
   });
 
@@ -291,7 +293,8 @@ describe('Dingus Staff', () => {
     resolve(ctx);
     checkpoint(ctx);
     expect(ctx.state.stack).toHaveLength(1);
-    resolve(ctx);
+    // The trigger is mandatory: nothing asks "use it?" first.
+    expect(resolve(ctx).map((d) => d.decisionType)).not.toContain('optionalTrigger');
     expect(player(ctx, 'P2').life).toBe(38);
     expect(player(ctx, 'P1').life).toBe(40);
   });
@@ -383,6 +386,8 @@ describe('Zurgo and Ojutai', () => {
     const prompts: string[] = [];
     attackWith(ctx, [zurgo, other], 'P2', (decision) => {
       prompts.push(decision.prompt);
+      // The trigger is mandatory: only its own look/return choices are asked, never "use it?".
+      expect(decision.decisionType).not.toBe('optionalTrigger');
       if (/put a card from among the top 3/.test(decision.prompt)) {
         expect(decision.options.some((option) => option.type === 'decline')).toBe(false);
         expect(decision.options).toHaveLength(3);

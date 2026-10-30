@@ -7,6 +7,7 @@ import { runCombatPhase } from '../src/combat/combat';
 import { computeCharacteristics } from '../src/effects/continuous';
 import type { PendingDecision } from '../src/decisions';
 import { addMana } from '../src/mana/pool';
+import { moveObject } from '../src/state/objects';
 import { resolveTopOfStack } from '../src/stack/stack';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { bear, conjure, declareAttacks, oracle, pump, spawn } from './fixtures';
@@ -30,6 +31,8 @@ const shock = () =>
     manaCost: '{R}',
     oracleText: 'Test Shock deals 2 damage to any target.',
   });
+const relic = () =>
+  oracle({ name: 'Test Relic', typeLine: 'Artifact', manaCost: '{1}', oracleText: '' });
 const walker = () =>
   oracle({
     name: 'Test Walker',
@@ -89,14 +92,8 @@ function lukkaOut(seed: string): { ctx: GameContext; lukka: EnginePermanent } {
   return { ctx, lukka: battlefield(ctx, 'Lukka, Wayward Bonder')[0]! };
 }
 
-function loyalty(
-  ctx: GameContext,
-  lukka: EnginePermanent,
-  prefix: string,
-  targets: ReadonlyMap<number, string> = new Map(),
-  choose?: (decision: PendingDecision) => { index: number; targets: Map<number, string> },
-): PendingDecision[] {
-  const option = computePriorityOptions(ctx, player(ctx, 'P1')).find((entry) => {
+function loyaltyOption(ctx: GameContext, lukka: EnginePermanent, prefix: string) {
+  return computePriorityOptions(ctx, player(ctx, 'P1')).find((entry) => {
     const payload = entry.payload as PriorityActionPayload;
     return (
       payload.kind === 'activateAbility' &&
@@ -104,6 +101,16 @@ function loyalty(
       entry.description.includes(prefix)
     );
   });
+}
+
+function loyalty(
+  ctx: GameContext,
+  lukka: EnginePermanent,
+  prefix: string,
+  targets: ReadonlyMap<number, string> = new Map(),
+  choose?: (decision: PendingDecision) => { index: number; targets: Map<number, string> },
+): PendingDecision[] {
+  const option = loyaltyOption(ctx, lukka, prefix);
   expect(option, `Lukka ${prefix}`).toBeDefined();
   pump(
     applyPriorityAction(ctx, player(ctx, 'P1'), option!.payload as PriorityActionPayload, {
@@ -142,7 +149,8 @@ describe('Mila, Crafty Companion // Lukka, Wayward Bonder', () => {
     p2Attacks(ctx, attacker, attacked.id);
     const before = [attacked.counters['loyalty'], other.counters['loyalty']];
     expect(ctx.state.stack.at(-1)?.description).toContain('put a loyalty counter');
-    resolve(ctx);
+    // The trigger is mandatory: nothing asks "use it?" first.
+    expect(resolve(ctx).map((d) => d.decisionType)).not.toContain('optionalTrigger');
     expect([attacked.counters['loyalty'], other.counters['loyalty']]).toEqual(
       before.map((n) => (n ?? 0) + 1),
     );
@@ -168,7 +176,9 @@ describe('Mila, Crafty Companion // Lukka, Wayward Bonder', () => {
     checkpoint(ctx);
     const hand = player(ctx, 'P1').hand.length;
     expect(ctx.state.stack.at(-1)?.description).toContain('you may draw a card');
-    pump(resolveTopOfStack(ctx), answer('accept'));
+    const { decisions } = pump(resolveTopOfStack(ctx), answer('accept'));
+    // "You may draw": the yes/no is asked, and accepting draws exactly one card.
+    expect(decisions.map((d) => d.decisionType)).toContain('optionalTrigger');
     expect(player(ctx, 'P1').hand.length).toBe(hand + 1);
   });
 
@@ -234,6 +244,11 @@ describe('Mila, Crafty Companion // Lukka, Wayward Bonder', () => {
   it('lukka-c04-positive — −2 returns a creature card with haste and exiles it at your next upkeep', () => {
     const { ctx, lukka } = lukkaOut('lukka-minus-two');
     const card = conjure(ctx, 'P1', bear(), 'graveyard');
+    const noncreature = conjure(ctx, 'P1', shock(), 'graveyard');
+    // Only creature cards are legal targets.
+    const offered = loyaltyOption(ctx, lukka, 'Return target creature')?.targets?.[0]?.options;
+    expect(offered).toContain(card.id);
+    expect(offered).not.toContain(noncreature.id);
     loyalty(ctx, lukka, 'Return target creature', new Map([[0, card.id]]));
     const [returned] = battlefield(ctx, 'Test Bear');
     expect(returned).toBeDefined();
@@ -250,7 +265,24 @@ describe('Mila, Crafty Companion // Lukka, Wayward Bonder', () => {
     const { ctx, lukka } = lukkaOut('lukka-emblem');
     lukka.counters['loyalty'] = 7;
     loyalty(ctx, lukka, 'emblem');
+    // The -7 is paid as a cost: all seven loyalty counters are gone.
+    expect(lukka.counters['loyalty'] ?? 0).toBe(0);
     expect(player(ctx, 'P1').emblems).toHaveLength(1);
+    // Only creatures entering under your control trigger the emblem.
+    pump(
+      moveObject(ctx, conjure(ctx, 'P1', relic(), 'hand'), {
+        zone: 'battlefield',
+        controllerId: 'P1',
+      }),
+    );
+    pump(
+      moveObject(ctx, conjure(ctx, 'P2', bear(), 'hand'), {
+        zone: 'battlefield',
+        controllerId: 'P2',
+      }),
+    );
+    checkpoint(ctx);
+    expect(ctx.state.stack).toHaveLength(0);
     const life = player(ctx, 'P2').life;
     castFromHand(
       ctx,
@@ -271,7 +303,8 @@ describe('Mila, Crafty Companion // Lukka, Wayward Bonder', () => {
     const trigger = ctx.state.stack.at(-1)!;
     expect(trigger.description).toContain('deals damage equal to its power');
     trigger.targets = ['P2'];
-    resolve(ctx);
+    // The emblem's trigger is mandatory: nothing asks "use it?" first.
+    expect(resolve(ctx).map((d) => d.decisionType)).not.toContain('optionalTrigger');
     expect(player(ctx, 'P2').life).toBe(life - 3);
   });
 });

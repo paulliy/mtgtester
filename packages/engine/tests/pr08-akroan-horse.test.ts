@@ -49,7 +49,10 @@ function answer(decision: PendingDecision, recipient = 'P2') {
   return { index: choose >= 0 ? choose : Math.max(0, pass), targets: new Map<number, string>() };
 }
 function settle(ctx: GameContext, recipient = 'P2') {
-  return pump(runPrioritySequence(ctx), (d) => answer(d, recipient));
+  const result = pump(runPrioritySequence(ctx), (d) => answer(d, recipient));
+  // Both of the Horse's triggers are mandatory: no "use this ability?" yes/no is ever asked.
+  expect(result.decisions.map((d) => d.decisionType)).not.toContain('optionalTrigger');
+  return result;
 }
 const horses = (ctx: GameContext) => ctx.state.battlefield.filter((p) => p.name === 'Akroan Horse');
 const soldiers = (ctx: GameContext) =>

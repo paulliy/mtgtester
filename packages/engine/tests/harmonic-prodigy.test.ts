@@ -119,7 +119,9 @@ describe('Harmonic Prodigy', () => {
 
     castEvent(ctx, 'P1', oracle({ name: 'Prowess Instant', typeLine: 'Instant', manaCost: '{0}' }));
     expect(ctx.state.pendingTriggers).toHaveLength(1);
-    pump(runPrioritySequence(ctx));
+    const { decisions } = pump(runPrioritySequence(ctx));
+    // Prowess is mandatory: nothing asks "use it?" before the pump.
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(computeCharacteristics(ctx, prodigy)).toMatchObject({ power: 2, toughness: 4 });
   });
 

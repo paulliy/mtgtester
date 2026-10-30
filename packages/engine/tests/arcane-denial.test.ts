@@ -4,7 +4,6 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { OracleCard, PlayerId } from '@mtg/shared';
 import { interpretCard } from '../src/cards/interpret';
-import { ARCANE_DENIAL_DEF } from '../src/cards/overrides/living-energy';
 import { executeAbility } from '../src/effects/resolve';
 import { priorityCheckpoint } from '../src/sba/sba';
 import { createGame } from '../src/state/game';
@@ -86,7 +85,8 @@ function targetSpell(
 }
 
 function resolveArcaneDirect(ctx: GameContext, target: EngineStackObject): void {
-  const ability = ARCANE_DENIAL_DEF.spellAbility!;
+  // The card as loaded from its pinned Oracle text, not the override object imported directly.
+  const ability = definition().spellAbility!;
   pump(
     executeAbility(
       ctx,
@@ -336,7 +336,7 @@ describe('Arcane Denial — corrected next-turn upkeep semantics', () => {
       description: 'Arcane Denial',
       targets: ['missing-stack-object'],
       card: null,
-      ability: ARCANE_DENIAL_DEF.spellAbility!,
+      ability: definition().spellAbility!,
       sourceOracleId: pinned.card.oracleId,
       sourceCardId: 'arcane-card',
       isCommanderCast: false,
@@ -356,6 +356,22 @@ describe('Arcane Denial — corrected next-turn upkeep semantics', () => {
     expect(ordering?.player).toBe('P1');
     expect(ordering?.options).toHaveLength(2);
     expect(ctx.state.stack).toHaveLength(2);
+
+    // Resolve both off the stack: neither trigger is a "you may" (the draw-up-to-two carries its
+    // own 0/1/2 choice), so no yes/no is asked, only P4's choice of how many cards to draw.
+    const resolved = [] as ReturnType<typeof pump>['decisions'];
+    while (ctx.state.stack.length > 0) {
+      resolved.push(
+        ...pump(resolveTopOfStack(ctx), (decision) => ({
+          index: decision.options.findIndex((option) => option.description === 'Draw 2 cards'),
+          targets: new Map(),
+        })).decisions,
+      );
+    }
+    expect(resolved.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
+    expect(resolved.map((decision) => decision.player)).toEqual(['P4']);
+    expect(ctx.state.players[3]!.hand).toHaveLength(2);
+    expect(ctx.state.players[0]!.hand).toHaveLength(1);
   });
 
   it('arcane-denial-delayed-routing-clone-hash-hidden-info — preserves state and privacy', () => {

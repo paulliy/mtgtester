@@ -1493,7 +1493,13 @@
         "pr11-gut-true-soul-zealot-viewer-sacrifice",
         "pr11-gut-true-soul-zealot-viewer-decline"
       ],
-      "gameplayAiScenarioIds": []
+      "gameplayAiScenarioIds": [],
+      "equivalentMutants": [
+        {
+          "mutant": "triggers[0]: widen trigger subject (drop condition 0)",
+          "reason": "Only creatures can be declared as attackers (CR 508.1a), so dropping the attack subject's \"creature\" condition matches the same attackers."
+        }
+      ]
     },
     "379ed4ec-8f2e-448b-9ed2-a3181e2f877e": {
       "name": "Nighthawk Scavenger",
@@ -3651,7 +3657,8 @@
             "shadrix-begincombat-owner-and-no-modes",
             "shadrix-choose-two-and-distinct-players",
             "shadrix-modes-need-two-distinct-players",
-            "modal-card-cast-cost-timing"
+            "modal-card-cast-cost-timing",
+            "shadrix-target-player-places-counters"
           ],
           "viewerScenarioIds": [
             "shadrix-viewer-distinct-combat-modes",
@@ -8161,7 +8168,25 @@
         "pr12-bloomvine-regent-claim-territory-viewer-enters",
         "pr12-bloomvine-regent-claim-territory-viewer-claim-territory"
       ],
-      "gameplayAiScenarioIds": []
+      "gameplayAiScenarioIds": [],
+      "equivalentMutants": [
+        {
+          "mutant": "alternativeCasts[0].ability.effects[0].count: const 2 + 1",
+          "reason": "Claim Territory's search has two destinations, one card each, and the search executor reads `count` only for a single destination; changing it changes nothing a game can reach."
+        },
+        {
+          "mutant": "alternativeCasts[0].ability.effects[0].count: const 2 - 1",
+          "reason": "Claim Territory's search has two destinations, one card each, and the search executor reads `count` only for a single destination; changing it changes nothing a game can reach."
+        },
+        {
+          "mutant": "alternativeCasts[0].spellFace.spellAbility.effects[0].count: const 2 + 1",
+          "reason": "Claim Territory's search has two destinations, one card each, and the search executor reads `count` only for a single destination; changing it changes nothing a game can reach."
+        },
+        {
+          "mutant": "alternativeCasts[0].spellFace.spellAbility.effects[0].count: const 2 - 1",
+          "reason": "Claim Territory's search has two destinations, one card each, and the search executor reads `count` only for a single destination; changing it changes nothing a game can reach."
+        }
+      ]
     },
     "cc187110-1148-4090-bbb8-e205694a39f5": {
       "name": "Counterspell",
