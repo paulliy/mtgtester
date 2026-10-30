@@ -1,7 +1,14 @@
 import { copyData } from '../state/copy-data';
 import { playerLifeLocked } from '../state/phasing';
 import type { EnginePlayerState, GameContext } from '../state/types';
-import type { ManaAllowance, ManaSource, ParsedManaCost, PaymentPlan, ProducedMana } from './cost';
+import type {
+  ManaAllowance,
+  ManaSource,
+  ManaUnit,
+  ParsedManaCost,
+  PaymentPlan,
+  ProducedMana,
+} from './cost';
 import { emptyCost, planPayment } from './cost';
 import { payManaCost } from '../effects/resolve';
 import { UnmodeledCardError } from '../errors';
@@ -11,12 +18,40 @@ import { activationInvariantProduction } from '../cards/mana-production';
 import { totalPips } from './cost';
 
 const bounds = { states: 2048, activations: 32, productions: 256 };
+/**
+ * A copy to replay activations on. It leaves out the spectator snapshots and the debug log: no
+ * rule reads them, and where nothing drains them (a bot game, a test) they grow with every event.
+ * Logged events are appended and never edited, and a definition is replaced whole, never edited
+ * (`ctx.defs.set`), so the copy shares both and owns only its log and map. Deep-copying all of it
+ * made each searched state of a 58-turn fuzz game cost over a second.
+ */
 function clone(ctx: GameContext): GameContext {
-  const copied = copyData({ state: ctx.state, defs: ctx.defs, debugLog: ctx.debugLog });
+  const { sequenceSnapshots: _snapshots, eventLog, ...state } = ctx.state;
   return {
-    ...copied,
+    state: { ...copyData(state), eventLog: eventLog.slice() },
+    defs: new Map(ctx.defs),
+    debugLog: [],
     rng: ctx.rng.clone(),
   };
+}
+
+const ANY_TYPE: ManaUnit = ['W', 'U', 'B', 'R', 'G', 'C'];
+
+/**
+ * The most a source can produce while no activation can raise production: its units, or for a
+ * dynamic source one unit of any type (five for `colorsAmongPermanents`, a unit per color). Null
+ * for production no ceiling covers: a state-dependent amount or a rider's addition.
+ */
+function ceilingUnits(source: ManaSource): ManaUnit[] | null {
+  if (source.stateDependentProduction !== true) return source.units;
+  const spec = source.productionSpec;
+  if (
+    spec?.dynamic === undefined ||
+    spec.amount !== undefined ||
+    spec.conditionalUnits !== undefined
+  )
+    return null;
+  return Array.from({ length: spec.dynamic === 'colorsAmongPermanents' ? 5 : 1 }, () => ANY_TYPE);
 }
 
 export function needsStatefulManaPayment(
@@ -65,12 +100,15 @@ export function planStatefulManaPayment(
   // A capacity bound is sound only when no activation can enable another source or increase
   // production. Ignore colors, restrictions, and activation mana costs: that overestimates
   // capacity, so it can only prune an impossible payment. Phyrexian pips may use life instead.
+  // A dynamic source (Exotic Orchard) changes which symbols it makes, not how many: it counts at
+  // its kind's most (`ceilingUnits`).
   const fixedCapacity = ctx.state.battlefield
     .filter((permanent) => permanent.controllerId === player.id)
     .flatMap((permanent) => computeCharacteristics(ctx, permanent).manaAbilities)
     .every(
       (ability) =>
-        activationInvariantProduction(ability) &&
+        ability.amount === undefined &&
+        ability.conditionalUnits === undefined &&
         ability.condition === undefined &&
         (ability.costs === undefined ||
           (ability.costs.some((cost) => cost.kind === 'tap') &&
@@ -132,16 +170,30 @@ export function planStatefulManaPayment(
     if (seen.has(key)) return null;
     seen.add(key);
     const candidates = availableSources.filter((source) => source.convoke !== true);
-    if (fixedCapacity && candidates.every((source) => !source.stateDependentProduction)) {
+    const ceilings = fixedCapacity ? availableSources.map(ceilingUnits) : [];
+    if (fixedCapacity && ceilings.every((units) => units !== null)) {
       const remaining = new Map<string, number>();
-      for (const source of availableSources)
+      for (const [index, source] of availableSources.entries())
         remaining.set(
           source.cardId,
-          Math.max(remaining.get(source.cardId) ?? 0, source.units.length),
+          Math.max(remaining.get(source.cardId) ?? 0, ceilings[index]!.length),
         );
       if (
         payer.manaEntries.length + [...remaining.values()].reduce((sum, count) => sum + count, 0) <
         totalPips(cost) - (cost.phyrexian?.length ?? 0)
+      )
+        return null;
+      // The same bound with colors: each source at its ceiling, a dynamic one making any type.
+      // Nothing an activation does can beat that, so if the static solver cannot pay from it,
+      // no order of activations can, and the search would only exhaust its budget proving so.
+      if (
+        (cost.phyrexian?.length ?? 0) === 0 &&
+        planPayment(
+          cost,
+          payer.manaEntries,
+          availableSources.map((source, index) => ({ ...source, units: ceilings[index]! })),
+          allows,
+        ) === null
       )
         return null;
     }
