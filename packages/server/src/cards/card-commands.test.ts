@@ -14,6 +14,7 @@ import {
   forgeScriptPath,
   insertStub,
   interactionPrompts,
+  lineIsUnparsed,
   manifestEntry,
   nearestCards,
   normalizeLine,
@@ -87,6 +88,43 @@ describe('card:new', () => {
         (near) => near.card,
       ),
     ).toEqual(['Spit Flame']);
+  });
+
+  it('marks a line unparsed when a reason quotes it short-named, without reminder text or ability word', () => {
+    const quoted = (line: string) => [`unrecognized rules text: ${JSON.stringify(line)}`];
+    const etali = 'Etali, Primal Storm';
+    expect(
+      lineIsUnparsed(
+        'Whenever Etali attacks, exile it.',
+        quoted('Whenever ~ attacks, exile it.'),
+        etali,
+      ),
+    ).toBe(true);
+    expect(
+      lineIsUnparsed(
+        'Multikicker {2} (You may pay an additional {2} any number of times as you cast this spell.)',
+        quoted('Multikicker {2}'),
+        'Everflowing Chalice',
+      ),
+    ).toBe(true);
+    expect(
+      lineIsUnparsed(
+        'This artifact enters with a charge counter on it.',
+        quoted('~ enters with a charge counter on it.'),
+        'Everflowing Chalice',
+      ),
+    ).toBe(true);
+    expect(
+      lineIsUnparsed(
+        'Channel — {3}{B}, Discard this card: Mill three cards.',
+        quoted('{3}{B}, Discard this card: Mill three cards.'),
+        'Takenuma, Abandoned Mire',
+      ),
+    ).toBe(true);
+    expect(lineIsUnparsed('Menace', quoted('Flash'), 'Orcish Bowmasters')).toBe(false);
+    expect(lineIsUnparsed('Choose one —', quoted('Choose one —'), 'Untimely Malfunction')).toBe(
+      true,
+    );
   });
 
   it('sends a spell face to defineSpellFace with its own line', () => {

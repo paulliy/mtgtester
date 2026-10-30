@@ -140,6 +140,34 @@ export function faceReasons(
 
 // ── Nearest modeled cards ──────────────────────────────────────────────────────────────────────
 
+/**
+ * A line in the form `unmodeledReasons` quotes it: reminder text and an ability word dropped, and
+ * the card's name, its short name ("Etali" for "Etali, Primal Storm") and "this artifact" written as
+ * "~". Both sides go through it, so a reason matches the Oracle line it came from.
+ */
+export function reasonForm(line: string, cardName: string): string {
+  const names = [cardName, cardName.split(', ')[0]!].filter((name) => name !== '');
+  let form = line
+    .replace(/\s*\([^()]*\)/g, '')
+    .replace(/^[A-Z][A-Za-z' -]* — (?=\S)/, '')
+    .trim();
+  for (const name of names) form = form.split(name).join('~');
+  return form.replace(
+    /\b[Tt]his (?:creature|artifact|enchantment|land|permanent|spell|token|Vehicle|Equipment|Saga|planeswalker|Aura)\b/g,
+    '~',
+  );
+}
+
+/** Whether `line` is one an unmodeled reason quotes. */
+export function lineIsUnparsed(
+  line: string,
+  reasons: readonly string[],
+  cardName: string,
+): boolean {
+  const form = reasonForm(line, cardName);
+  return reasons.some((reason) => reasonForm(handledLineOf(reason), cardName) === form);
+}
+
 /** A line's words with its card's name, numbers and mana symbols made generic. */
 export function normalizeLine(line: string, cardName: string): string[] {
   const named = cardName === '' ? line : line.split(cardName).join(' cardname ');
@@ -174,20 +202,16 @@ export function modeledLines(cards: readonly OracleCard[]): ModeledLine[] {
   for (const card of cards) {
     if (seen.has(card.name)) continue;
     seen.add(card.name);
-    let unhandled: Set<string>;
+    let reasons: readonly string[];
     try {
       const def = interpretCard(card);
       if (!def.modeled) continue;
-      unhandled = new Set(def.unmodeledReasons.map(handledLineOf));
+      reasons = def.unmodeledReasons;
     } catch {
       continue;
     }
     for (const line of card.oracleText.split('\n'))
-      if (
-        line.trim() !== '' &&
-        !unhandled.has(line) &&
-        !unhandled.has(line.split(card.name).join('~'))
-      )
+      if (line.trim() !== '' && !lineIsUnparsed(line, reasons, card.name))
         lines.push({ card: card.name, line, words: normalizeLine(line, card.name) });
   }
   return lines;
@@ -570,9 +594,8 @@ async function main(): Promise<void> {
   const def = interpretCard(card);
   const faces = faceReasons(card, def.unmodeledReasons);
   const handled = def.unmodeledReasons.map(handledLineOf);
-  // Reasons quote a line with the card's name written as "~".
   const isUnparsed = (line: string): boolean =>
-    handled.includes(line) || handled.includes(line.split(card.name).join('~'));
+    lineIsUnparsed(line, def.unmodeledReasons, card.name);
   console.log('Oracle lines:');
   for (const [index, line] of card.oracleText.split('\n').entries())
     console.log(`  ${index + 1}. ${isUnparsed(line) ? '[unparsed]' : '[modeled] '} ${line}`);
