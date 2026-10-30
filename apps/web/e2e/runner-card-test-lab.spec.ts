@@ -38,6 +38,44 @@ const confirmButton = (page: Page): Locator =>
 const logLine = (page: Page, text: string | RegExp): Locator =>
   page.locator('.log').getByText(text).first();
 
+/** The decision-panel button `verb` for the option about the card named `card`. */
+const cardChoice = (page: Page, card: string, verb: string): Locator =>
+  page
+    .locator('.decision-panel .panel-group')
+    .filter({ has: page.getByText(card, { exact: true }) })
+    .getByRole('button', { name: verb, exact: true });
+
+/** Cast Chrome Mox (it costs nothing and targets nothing) and wait for its imprint trigger. */
+async function castChromeMox(page: Page): Promise<void> {
+  const mox = hand(page, 'Chrome Mox');
+  await passUntil(page, mox.and(page.locator('.actionable')));
+  await mox.click();
+  await confirmButton(page).click();
+}
+
+async function expectNotCastable(page: Page, name: string): Promise<void> {
+  const card = hand(page, name);
+  await expect(card).toBeVisible();
+  await expect(card).not.toHaveClass(/actionable/);
+}
+
+/** Cast Path to Exile at P2's Scenario Bear and wait for it to resolve. */
+async function pathTheBear(page: Page): Promise<void> {
+  const path = hand(page, 'Path to Exile');
+  await passUntil(page, path.and(page.locator('.actionable')));
+  await path.click();
+  await expect(confirmButton(page)).toBeVisible();
+  const bear = permanent(page, 'P2', 'Scenario Bear').first();
+  await expect(bear).toHaveClass(/targetable|actionable/);
+  await bear.click();
+  await confirmButton(page).click();
+  await passStackUntil(page, logLine(page, /Path to Exile[^]*resolves/));
+  await expect(permanent(page, 'P2', 'Scenario Bear')).toHaveCount(0);
+  await expect(
+    seatZone(page, 'P2', 'Exile').getByRole('img', { name: 'Scenario Bear' }),
+  ).toHaveCount(1);
+}
+
 /**
  * Cast from a hand or zone card: pick the cast mode whose button matches `mode` when the card
  * offers more than one, then each target as [seat, name], then confirm, and wait for it to resolve.
@@ -122,21 +160,57 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await expect(permanent(page, 'P1', 'Ettercap // Web Shot')).toHaveCount(1);
   },
   'path-to-exile-search': async (page) => {
-    const path = hand(page, 'Path to Exile');
-    await passUntil(page, path.and(page.locator('.actionable')));
-    await path.click();
-    await expect(confirmButton(page)).toBeVisible();
-    const bear = permanent(page, 'P2', 'Scenario Bear').first();
-    await expect(bear).toHaveClass(/targetable|actionable/);
-    await bear.click();
-    await confirmButton(page).click();
-    await passStackUntil(page, logLine(page, /Path to Exile[^]*resolves/));
-    // P2 found a Plains, tapped, and Scenario Bear is in exile.
-    await expect(permanent(page, 'P2', 'Scenario Bear')).toHaveCount(0);
+    await pathTheBear(page);
+    // P2, a scripted seat, found a Plains; it entered tapped.
     await expect(permanent(page, 'P2', 'Plains')).toHaveCount(1);
-    await expect(
-      seatZone(page, 'P2', 'Exile').getByRole('img', { name: 'Scenario Bear' }),
-    ).toHaveCount(1);
+  },
+  'path-to-exile-decline-search': async (page) => {
+    await pathTheBear(page);
+    // P2, a scripted seat, declined: no land entered.
+    await expect(permanent(page, 'P2', 'Plains')).toHaveCount(0);
+  },
+  'chrome-mox-imprint-then-tap': async (page) => {
+    await castChromeMox(page);
+    const exile = cardChoice(page, 'Scenario Flame', 'Exile');
+    await passUntil(page, exile);
+    await exile.click();
+    await passUntil(
+      page,
+      seatZone(page, 'P1', 'Exile').getByRole('img', { name: 'Scenario Flame' }),
+    );
+    // The Mox now makes red: Scenario Imp is castable with it alone.
+    await castWith(page, hand(page, 'Scenario Imp'), { resolves: /Scenario Imp[^]*resolves/ });
+    await expect(permanent(page, 'P1', 'Scenario Imp')).toHaveCount(1);
+    await expect(permanent(page, 'P1', 'Chrome Mox').locator('.tap-badge')).toHaveCount(1);
+  },
+  'chrome-mox-only-the-exiled-colors': async (page) => {
+    await castChromeMox(page);
+    const exile = cardChoice(page, 'Scenario Sprout', 'Exile');
+    await passUntil(page, exile);
+    await exile.click();
+    await passUntil(
+      page,
+      seatZone(page, 'P1', 'Exile').getByRole('img', { name: 'Scenario Sprout' }),
+    );
+    // Green mana only: the red Imp is not castable.
+    await expectNotCastable(page, 'Scenario Imp');
+  },
+  'chrome-mox-decline': async (page) => {
+    await castChromeMox(page);
+    const nothing = page.getByRole('button', { name: 'Exile nothing', exact: true });
+    await passUntil(page, nothing);
+    await nothing.click();
+    await passUntil(page, permanent(page, 'P1', 'Chrome Mox'));
+    await expectNotCastable(page, 'Scenario Imp');
+    await expectNotCastable(page, 'Scenario Flame');
+  },
+  'chrome-mox-no-artifact-or-land': async (page) => {
+    await castChromeMox(page);
+    await passUntil(page, permanent(page, 'P1', 'Chrome Mox'));
+    // Neither the artifact nor the land is offered: no imprint choice appears.
+    await expect(cardChoice(page, 'Scenario Trinket', 'Exile')).toHaveCount(0);
+    await expect(cardChoice(page, 'Mountain', 'Exile')).toHaveCount(0);
+    await expect(hand(page, 'Scenario Trinket')).toHaveCount(1);
   },
 };
 
