@@ -24,7 +24,7 @@ import type { TargetingSource } from '../targets/context';
 import { evaluateCondition } from '../cards/condition';
 import { evaluateValue } from '../cards/value';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
-import { selectMatches } from '../cards/selector';
+import { bindChosenOption, selectMatches } from '../cards/selector';
 import {
   candidateOf,
   computeCharacteristics,
@@ -976,6 +976,16 @@ export function canPayNonManaCosts(
   return true;
 }
 
+/** A mana ability's restriction with "the chosen type" fixed to its permanent's choice. */
+function boundRestriction(
+  restriction: ManaRestriction,
+  chosen: string | undefined,
+): ManaRestriction {
+  return restriction.filter === undefined || chosen === undefined
+    ? restriction
+    : { ...restriction, filter: bindChosenOption(restriction.filter, chosen) };
+}
+
 /**
  * A stable key grouping mana abilities whose PRODUCTION is interchangeable: same activation
  * cost, same CR 106.6 restriction, same spend trigger, same persistence. Two abilities in one
@@ -1186,7 +1196,11 @@ export function manaSourcesFor(
         ...(manaCostComponent(first.costs ?? TAP_COST) !== undefined
           ? { manaCost: manaCostComponent(first.costs ?? TAP_COST) as ParsedManaCost }
           : {}),
-        ...(first.restriction !== undefined ? { restriction: first.restriction } : {}),
+        // "Spend this mana only to cast a creature spell of the chosen type" reads THIS
+        // permanent's choice, and the mana is checked later with no permanent to read it from.
+        ...(first.restriction !== undefined
+          ? { restriction: boundRestriction(first.restriction, perm.chosenOption) }
+          : {}),
         ...(first.spendTrigger !== undefined ? { spendTrigger: first.spendTrigger } : {}),
         ...(first.uncounterableSpell === true ? { uncounterableSpell: true as const } : {}),
         ...(first.persistent === true ? { persistent: true } : {}),

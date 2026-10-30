@@ -19,13 +19,13 @@
 
 import { describe, expect, it } from 'vitest';
 import { interpretCard } from '../src/cards/interpret';
-import { costReductionFor } from '../src/actions/legal';
+import { computePriorityOptions, costReductionFor } from '../src/actions/legal';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { createGame } from '../src/state/game';
-import { creatureTypeChoicesFor } from '../src/state/objects';
+import { creatureTypeChoicesFor, playerById } from '../src/state/objects';
 import { manaSourcesFor } from '../src/state/queries';
 import type { GameContext } from '../src/state/types';
-import { copies, forest, gameConfig, oracle, registerDef, spawn } from './fixtures';
+import { conjure, copies, forest, gameConfig, oracle, registerDef, spawn } from './fixtures';
 
 const patchworkBanner = () =>
   oracle({
@@ -217,5 +217,34 @@ describe('the chosen type in selectors', () => {
     expect(restricted).toBeDefined();
     expect(restricted!.uncounterableSpell).toBe(true);
     expect(restricted!.units[0]!.length).toBe(5);
+  });
+
+  it("Cavern of Souls' restricted mana pays only for a creature spell of the chosen type", () => {
+    const ctx = pod();
+    const cavern = spawn(ctx, 'P1', cavernOfSouls());
+    cavern.chosenOption = 'Elf';
+    const oneDrop = (name: string, subtype: string) =>
+      conjure(
+        ctx,
+        'P1',
+        oracle({
+          name,
+          typeLine: `Creature — ${subtype}`,
+          manaCost: '{G}',
+          power: '1',
+          toughness: '1',
+          subtypes: [subtype],
+          colors: ['G'],
+          oracleText: '',
+        }),
+        'hand',
+      );
+    oneDrop('Test Green Elf', 'Elf');
+    oneDrop('Test Green Goblin', 'Goblin');
+    // The choice is read from the Cavern, not from the spell: only the Elf can be paid for.
+    const casts = computePriorityOptions(ctx, playerById(ctx, 'P1'))
+      .map((option) => option.description)
+      .filter((description) => description.startsWith('Cast '));
+    expect(casts).toEqual(['Cast Test Green Elf ({G})']);
   });
 });
