@@ -139,6 +139,19 @@ function definitionMutants(node: Node, path: Path, add: AddMutant): void {
           `${list}[${index}]`,
         ),
       );
+  // A CR 106.6 restriction dropped is the mana spendable on anything.
+  if (Array.isArray(node['manaAbilities']))
+    (node['manaAbilities'] as Node[]).forEach((ability, index) => {
+      if (ability['restriction'] !== undefined)
+        add(
+          path,
+          `drop manaAbilities[${index}] restriction`,
+          (definition) => {
+            delete (definition['manaAbilities'] as Node[])[index]!['restriction'];
+          },
+          `manaAbilities[${index}]`,
+        );
+    });
   // The replacement field is there only when set: every definition carries `entersTapped: false`.
   if (node['entersTapped'] === true)
     add(

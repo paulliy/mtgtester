@@ -20,7 +20,7 @@ const probe = {
   entersUnlessDiscard: { filter: { kind: 'type', value: 'Land' } },
   optionalAdditionalCost: { mechanic: 'kicker', cost: {}, repeatable: true },
   staticEffects: [{ kind: 'anthem' }],
-  manaAbilities: [{ units: [] }],
+  manaAbilities: [{ units: [] }, { units: [], restriction: { purposes: ['castSpell'] } }],
   activatedAbilities: [
     {
       costs: [{ kind: 'mana' }, { kind: 'tap' }],
@@ -57,6 +57,8 @@ describe('IR mutation operators', () => {
       'keywords | (card): drop keyword flying',
       'staticEffects[0] | (card): drop staticEffects[0]',
       'manaAbilities[0] | (card): drop manaAbilities[0]',
+      'manaAbilities[1] | (card): drop manaAbilities[1]',
+      'manaAbilities[1] | (card): drop manaAbilities[1] restriction',
       'entersTapped | (card): flip entersTapped to false',
       'entersWithCounters | (card): remove entersWithCounters',
       'optionalAdditionalCost | (card): remove optionalAdditionalCost',
@@ -89,6 +91,9 @@ describe('IR mutation operators', () => {
     expect(at('(card): flip entersTapped to false').entersTapped).toBe(false);
     expect(at('(card): remove entersWithCounters')).not.toHaveProperty('entersWithCounters');
     expect(at('(card): remove entersUnlessDiscard')).not.toHaveProperty('entersUnlessDiscard');
+    expect(at('(card): drop manaAbilities[1] restriction').manaAbilities[1]).not.toHaveProperty(
+      'restriction',
+    );
     expect(at('(card): remove optionalAdditionalCost')).not.toHaveProperty(
       'optionalAdditionalCost',
     );
