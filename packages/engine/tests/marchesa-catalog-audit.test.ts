@@ -148,6 +148,8 @@ describe('Marchesa override catalog audit inventory', () => {
       'coverage-pr11.ts',
       'coverage-pr11b.ts',
       'coverage-pr12.ts',
+      // The phase 6 pilot's current-workflow batch, gated by pilot-current.test.ts.
+      'pilot-current.ts',
     ]);
     // A card:new batch is gated by its own tests in tests/cards/<batch>/ and the card gate.
     const gatedBatch = (file: string) =>

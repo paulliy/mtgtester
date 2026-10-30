@@ -17529,6 +17529,31 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "bccb06f1-8839-4104-9ffa-c79a817f8378": {
+      "name": "Jet Medallion",
+      "oracleSha256": "866376c3fcc7989d21904612c55ec4a25368530757e448e7f197553cf76d4cdd",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Black spells you cast cost {1} less to cast.",
+          "implementation": [
+            "costReduction rule static: {1} generic off spells you cast that are black (CR 601.2f)"
+          ],
+          "engineTestIds": [
+            "jet-medallion-reduces-black",
+            "jet-medallion-not-other-colors",
+            "jet-medallion-castable",
+            "jet-medallion-colored-only",
+            "jet-medallion-without-it"
+          ],
+          "viewerScenarioIds": [
+            "pilot-current-jet-medallion-viewer-reduced",
+            "pilot-current-jet-medallion-viewer-not-red"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

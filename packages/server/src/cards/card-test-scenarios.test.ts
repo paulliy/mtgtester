@@ -50,6 +50,8 @@ describe('deterministic Card Test Lab scenarios', () => {
     // Runner scenarios come first, in their files' order; their list is derived, not kept here.
     expect(ids.slice(0, RUNNER_SCENARIOS.length)).toEqual(RUNNER_SCENARIOS.map(({ id }) => id));
     expect(ids.slice(RUNNER_SCENARIOS.length)).toEqual([
+      'pilot-current-jet-medallion-viewer-reduced',
+      'pilot-current-jet-medallion-viewer-not-red',
       'pr13-master-of-ceremonies-viewer-money',
       'pr13-securitron-squadron-viewer-squad-copy',
       'pr13-securitron-squadron-viewer-nontoken',

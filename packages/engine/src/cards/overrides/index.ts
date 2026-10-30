@@ -108,6 +108,7 @@ import { registerWhiteBlackControlAvenOverrides } from './white-black-control-av
 import { registerWhiteBlackControlGiftOverrides } from './white-black-control-gifts';
 import { registerWhiteBlackControlPerchOverrides } from './white-black-control-perch';
 import { registerMiniPilotOverrides } from './mini-pilot';
+import { registerPilotCurrentOverrides } from './pilot-current';
 import { registerPilotNewOverrides } from './pilot-new';
 
 export interface CardOverride {
@@ -259,6 +260,7 @@ registerDeck('coverage-pr11b', registerCoveragePr11bOverrides);
 registerDeck('coverage-pr12', registerCoveragePr12Overrides);
 registerDeck('mini-pilot', registerMiniPilotOverrides);
 registerDeck('pilot-new', registerPilotNewOverrides);
+registerDeck('pilot-current', registerPilotCurrentOverrides);
 
 /** Register an override. Exported for the per-card modules and for tests. */
 export function registerOverride(override: CardOverride): void {
