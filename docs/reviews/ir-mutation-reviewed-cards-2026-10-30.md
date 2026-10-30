@@ -1,8 +1,40 @@
 # IR mutation over the reviewed cards (2026-10-30)
 
-The first run of `bun run mutate-cards --reviewed` (ADR 0034 decision 5, card authoring plan phase 3
-step 3) at `7cc4277`, before any test was strengthened for it. It is a report: the CI job checks
-only reviewed cards a pull request changes.
+The runs of `bun run mutate-cards --reviewed` (ADR 0034 decision 5, card authoring plan phase 3
+step 3): the first at `7cc4277`, before any test was strengthened for it, and the second once its
+survivors were killed. It is a report: the CI job checks only reviewed cards a pull request
+changes.
+
+## Second run: every reviewed card proven
+
+`bun run mutate-cards --reviewed` again at `aabadec`, after the survivors below were killed or
+recorded: all 168 reviewed cards have nothing left to prove, in 24 minutes of runs.
+
+| Measure               | First run (`7cc4277`) | Second run (`aabadec`) |
+| --------------------- | --------------------- | ---------------------- |
+| Mutants               | 859                   | 859                    |
+| Killed                | 602                   | 847                    |
+| Survived              | 197                   | 0                      |
+| Unreached             | 59                    | 0                      |
+| Equivalent (recorded) | 1                     | 12                     |
+| Cards proven          | 66                    | 168                    |
+
+The 245 kills came from strengthened tests, not from changes to the cards: tests that assert a
+mandatory trigger asks no yes/no question, that pin the amount a card deals, draws or makes, and
+that load the card itself where a test built its ability by hand. The twelve equivalents are
+recorded in the manifest's `equivalentMutants` with the reason:
+
+| Card                                | Mutant                                                            | Why nothing can tell it apart                                                                 |
+| ----------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Gut, True Soul Zealot               | widen the trigger subject (drop "creature")                       | only creatures attack (CR 508.1a)                                                             |
+| Kazuul, Tyrant of the Cliffs        | widen the trigger subject (drop "creature"; drop "an opponent's") | only creatures attack, and no player attacks themselves (CR 508.1a, 508.1b)                   |
+| Grenzo, Havoc Raiser                | widen the trigger subject (drop "creature")                       | only creatures deal combat damage (CR 510.2)                                                  |
+| Foe-Razer Regent                    | widen the trigger subject (drop "creature")                       | only creatures fight (CR 701.14)                                                              |
+| Frontier Siege                      | the Khans mode's amount ±1                                        | the mana executor adds the mode's fixed {G}{G} and never reads the amount                     |
+| Bloomvine Regent // Claim Territory | the search count ±1, on the alternative cast and its spell face   | a search with two destinations takes one card each and reads `count` only for one destination |
+| Chrome Mox                          | make the imprint trigger optional                                 | the effect already offers "Exile nothing", so asking first reaches no new state               |
+
+The tables after this section are the first run's.
 
 ## Summary
 

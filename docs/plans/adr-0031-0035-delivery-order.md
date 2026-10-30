@@ -84,7 +84,7 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 | 8    | done  | phase 2: pin store, script/strict pump, scenario runner and lab adapter, card:check/new/finish, gate list, mini-pilot | #44          |
 | 9    | done  | M3 workers, health, manifest, post-game, agent table mode, scans; M4 clocks, fallback, concede                        | #44          |
 | 10   | done  | P6: server-built damage and life cues on each batch; the board animates from them                                     | #44          |
-| 11   | doing | phase 3: manifest references, IR mutation (job, report), facet warnings, Chrome Mox pilot; survivors open             | #44          |
+| 11   | doing | phase 3 done (all 168 reviewed cards mutation-proven); phase 4: invariants, zone lint, tap sites; fuzz next           | #44          |
 | 12   | done  | M5 exposure, TLS run, review; M6 table app, lobby, table bar, post-game, table e2e and CI job                         | #44          |
 
 ## Notes from delivery
@@ -172,9 +172,11 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
   `notExecutableInCi` list, its runner scenarios are its evidence, with a declined search added.
   The check lists the Vitest collection: about 2.5 minutes in the card-verification job.
 - **IR mutation (phase 3 steps 3 to 5).** The first run over the 168 reviewed cards killed 602 of
-  859 mutants; 66 cards have nothing left to prove
-  ([report](../reviews/ir-mutation-reviewed-cards-2026-10-30.md)). Most survivors are a mandatory
-  trigger made optional, which `pump()`'s default yes hides. The run takes 28 minutes for all
+  859 mutants; 66 cards had nothing left to prove
+  ([report](../reviews/ir-mutation-reviewed-cards-2026-10-30.md)). Most survivors were a mandatory
+  trigger made optional, which `pump()`'s default yes hides. Once tests asserted the missing
+  amounts and "no yes/no first", and loaded the card where they had built its ability by hand, the
+  second run killed 847 and recorded 12 as equivalent: every reviewed card is proven. The run takes 28 minutes for all
   reviewed cards at about 1 second per mutant; the CI job runs only a pull request's changed
   reviewed cards after a 2.5-minute listing. Each card runs in its own child process, because a
   mutant can exhaust a test worker's heap (Celebrate the Mountain-king's widened target slot) and
