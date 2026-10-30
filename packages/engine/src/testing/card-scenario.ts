@@ -30,6 +30,8 @@ export interface SupportCardSpec {
   oracleText?: string;
   power?: string;
   toughness?: string;
+  /** A planeswalker's starting loyalty (CR 306.5b). */
+  loyalty?: string;
 }
 
 /** How one arranged permanent differs from an untapped one its owner controls. */
@@ -312,6 +314,7 @@ export function parseCardScenarioFile(json: unknown, path = 'scenario file'): Ca
             oracleText: text,
             power: str,
             toughness: str,
+            loyalty: str,
           },
           ['name', 'typeLine'],
         ),
@@ -392,7 +395,7 @@ export function supportCard(spec: SupportCardSpec): OracleCard {
     oracleText: spec.oracleText ?? '',
     power: spec.power ?? null,
     toughness: spec.toughness ?? null,
-    loyalty: null,
+    loyalty: spec.loyalty ?? null,
     defense: null,
     keywords: [],
     layout: 'normal',
