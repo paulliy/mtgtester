@@ -3,7 +3,7 @@
  * One table's page (plan M6): joining with the invite in the address fragment, then the lobby,
  * then the player board with the table bar, then the post-game view. The phase decides which.
  */
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onUnmounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import PlayerGameView from '../views/PlayerGameView.vue';
 import { useGameStore } from '../stores/game';
@@ -22,9 +22,8 @@ const inviteCode = computed(
   () => decodeURIComponent((route.hash ?? '').replace(/^#/, '')) || (table.state?.inviteCode ?? ''),
 );
 
-onMounted(() => {
-  table.open(tableId.value);
-});
+// Vue Router reuses this view when only the table id changes.
+watch(tableId, (id) => table.open(id), { immediate: true });
 onUnmounted(() => {
   table.close();
 });

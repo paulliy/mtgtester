@@ -148,6 +148,90 @@ describe('table store', () => {
     });
   });
 
+  it('reopens the same table after leaving its page', () => {
+    const { table } = setup();
+    table.open('t1');
+    sockets[0]!.open();
+    table.close();
+    table.open('t1');
+    expect(sockets).toHaveLength(2);
+    sockets[1]!.open();
+    expect(table.connection).toBe('open');
+    expect(table.stopped).toBeNull();
+  });
+
+  it('closes the old transport before switching tables and ignores its late frames', () => {
+    const { table, game } = setup();
+    table.open('t1');
+    const old = sockets[0]!;
+    old.open();
+    memory.set('mtg-table-seat:t2', 'second-seat');
+    table.open('t2');
+    expect(old.closed).toBe(true);
+    expect(sockets[1]?.url).toBe('wss://tables.example.com/tables/t2/ws');
+    old.deliver({ type: 'seatGranted', payload: { seat: 'P1', seatToken: 'old-seat' } });
+    expect(table.seatToken).toBe('second-seat');
+    sockets[1]!.open();
+    game.cancelYield();
+    expect(sockets[1]!.sent.at(-1)?.type).toBe('cancelYield');
+    expect(old.sent).toEqual([]);
+  });
+
+  it('forgets a revoked seat token while keeping the host role', () => {
+    const { table } = setup();
+    memory.set('mtg-table-host:t1', 'host');
+    table.open('t1');
+    sockets[0]!.open();
+    sockets[0]!.deliver({ type: 'seatGranted', payload: { seat: 'P1', seatToken: 'tok' } });
+    sockets[0]!.deliver(tableState({ seat: 'P1', isHost: true }));
+    sockets[0]!.deliver(tableState({ seat: null, isHost: true }));
+    expect(table.seatToken).toBeNull();
+    expect(memory.has('mtg-table-seat:t1')).toBe(false);
+    expect(table.hostToken).toBe('host');
+    expect(memory.get('mtg-table-host:t1')).toBe('host');
+  });
+
+  it('retains the seat token through host authentication on a new connection', () => {
+    vi.useFakeTimers();
+    const { table } = setup();
+    memory.set('mtg-table-host:t1', 'host');
+    memory.set('mtg-table-seat:t1', 'tok');
+    table.open('t1');
+    sockets[0]!.open();
+    sockets[0]!.deliver(tableState({ seat: 'P1', isHost: true }));
+    sockets[0]!.drop();
+    vi.advanceTimersByTime(1_000);
+    sockets[1]!.open();
+    // hostAuth is answered before resumeSeat, on a new socket that does not yet hold a seat.
+    sockets[1]!.deliver(tableState({ seat: null, isHost: true }));
+    sockets[1]!.deliver(tableState({ seat: 'P1', isHost: true }));
+    expect(table.seatToken).toBe('tok');
+    expect(memory.get('mtg-table-seat:t1')).toBe('tok');
+  });
+
+  it('rejoins the lobby after reconnecting before a seat was approved', () => {
+    vi.useFakeTimers();
+    const { table } = setup();
+    table.open('t1');
+    sockets[0]!.open();
+    table.join('invite', 'Ann');
+    sockets[0]!.deliver(tableState({ seat: null }));
+    sockets[0]!.drop();
+    vi.advanceTimersByTime(1_000);
+    sockets[1]!.open();
+    expect(sockets[1]!.sent).toEqual([
+      {
+        type: 'joinTable',
+        payload: {
+          inviteCode: 'invite',
+          displayName: 'Ann',
+          protocolVersion: PROTOCOL_VERSION,
+          capabilities: {},
+        },
+      },
+    ]);
+  });
+
   it('never reconnects after a takeover or a version mismatch', () => {
     vi.useFakeTimers();
     for (const frame of [

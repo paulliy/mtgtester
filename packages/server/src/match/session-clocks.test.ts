@@ -17,7 +17,7 @@ import type { ClockSettings, ClockTimers } from './decision-clock';
 import { tablePolicy } from './disclosure';
 import { MatchSession } from './session';
 import type { SeatSetup } from './setup';
-import { fallbackMenu, withoutNote } from './table-clocks';
+import { fallbackMenu, TableClocks, withoutNote } from './table-clocks';
 
 const SEATS = ['P1', 'P2', 'P3', 'P4'] as const;
 
@@ -120,6 +120,44 @@ const SETTINGS: ClockSettings = {
   disconnectBudgetMs: 20_000,
   gameCapMs: 10_000_000,
 };
+
+describe('all-away termination', () => {
+  it('keeps a returned player in the game, and ends it if that player leaves again', () => {
+    const time = manualTimers();
+    const connected = new Set<PlayerId>(['P1', 'P3']);
+    const endings: string[] = [];
+    const clocks = new TableClocks(
+      SETTINGS,
+      {
+        humanSeats: new Set(['P1', 'P3']),
+        takeOver: () => null,
+        fallbackDecide: () => {
+          throw new Error('no decision is pending');
+        },
+        tagSource: () => undefined,
+        concede: (reason) => endings.push(reason),
+        isEliminated: () => false,
+        isConnected: (seat) => connected.has(seat),
+        publish: () => undefined,
+      },
+      time.timers,
+    );
+    const connection = (seat: PlayerId, present: boolean) => {
+      if (present) connected.add(seat);
+      else connected.delete(seat);
+      clocks.connection(seat, present);
+    };
+    connection('P1', false);
+    time.advance(SETTINGS.disconnectBudgetMs);
+    connection('P1', true);
+    connection('P3', false);
+    time.advance(SETTINGS.disconnectBudgetMs);
+    expect(endings).toEqual([]);
+    connection('P1', false);
+    expect(endings).toEqual(['allAway']);
+    clocks.stop();
+  });
+});
 
 /** A recorder over a fake database: decision sources and game-row updates are captured. */
 function fakeStore() {
@@ -326,6 +364,35 @@ describe('a timed table', () => {
     expect(t.required('P1').length).toBeGreaterThan(shown);
     stopP3();
     t.session.abandon();
+  }, 30_000);
+
+  it('resyncs other seats clocks and fallback badges without renewing their deadlines', async () => {
+    const t = timedTable({ ...SETTINGS, allowanceMs: 1_000_000 });
+    const stopP3 = keepAnswering(t, 'P3');
+    try {
+      t.session.start();
+      await until(() => t.required('P1').length > 0, 'a P1 decision');
+      t.time.advance(123);
+      const before = t.tableFrames.length;
+      t.session.resyncPlayer('P3');
+      const frames = t.tableFrames.slice(before);
+      expect(frames).toContainEqual({
+        type: 'clockState',
+        payload: { seat: 'P1', remainingMs: 999_877, bankMs: 0, running: true },
+      });
+      expect(frames).toContainEqual({
+        type: 'seatStatus',
+        payload: { seat: 'P1', connected: true, fallback: false },
+      });
+      t.time.advance(999_876);
+      expect([...t.sources.values()]).not.toContain('timeout');
+      t.time.advance(1);
+      await until(() => [...t.sources.values()].includes('timeout'), 'the original deadline');
+    } finally {
+      stopP3();
+      t.session.abandon();
+      await t.session.settled();
+    }
   }, 30_000);
 
   it('ends at the game cap as a draw stored as an outcome, not a halt', async () => {

@@ -348,6 +348,26 @@ describe('InProcessSessionPort - termination', () => {
     await h.port.terminate('hostAbandoned');
   }, 30_000);
 
+  it('sends one history after gameStarted when a seat reconnects', async () => {
+    const h = harness({ answer: false });
+    try {
+      await h.port.start(configOf());
+      await settle();
+      const before = h.outputs.length;
+      await h.port.send({ type: 'setPlayerConnected', seat: 'P1', connected: true });
+      await h.port.send({ type: 'resyncPlayer', seat: 'P1' });
+      const frames = h.outputs
+        .slice(before)
+        .flatMap((output) =>
+          output.type === 'seatFrame' && output.seat === 'P1' ? [output.message] : [],
+        );
+      expect(frames[0]?.type).toBe('gameStarted');
+      expect(frames.filter((frame) => frame.type === 'eventBatch')).toHaveLength(1);
+    } finally {
+      await h.port.terminate('hostAbandoned');
+    }
+  });
+
   it("re-sends a seat's game start, without the seed, when it resyncs", async () => {
     const h = harness({ answer: false });
     await h.port.start(configOf({ turnCap: 40 }));
