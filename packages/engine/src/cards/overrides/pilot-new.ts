@@ -146,4 +146,46 @@ export function registerPilotNewOverrides(): void {
       ],
     },
   );
+
+  // "When this creature enters and whenever an opponent draws a card except the first one they
+  // draw in each of their draw steps, this creature deals 1 damage to any target. Then amass Orcs
+  // 1." Two triggers with one body. The exempted draw is only an opponent's first in their own
+  // draw step (CR 504.1); every other draw, in any step or turn, triggers. Amass (CR 701.47a)
+  // follows the damage; if the one target is illegal on resolution the whole ability does
+  // nothing, amass included (CR 608.2b).
+  const bolt = targetSlots({ victim: { kind: 'anyTarget' } });
+  const bowmasters = (description: string) => ({
+    targets: bolt.targets,
+    effects: [
+      { op: 'dealDamage' as const, target: bolt.slot.victim, amount: constant(1) },
+      { op: 'amass' as const, subtype: 'Orc', count: constant(1) },
+    ],
+    description,
+  });
+  defineCard(
+    'ea5103f5-27e0-4eb1-902c-7f34652d6bf3',
+    'Orcish Bowmasters',
+    [
+      'When this creature enters and whenever an opponent draws a card except the first one they draw in each of their draw steps, this creature deals 1 damage to any target. Then amass Orcs 1.',
+    ],
+    {
+      triggers: [
+        triggered(
+          onEtb(),
+          bowmasters(
+            'When Orcish Bowmasters enters, it deals 1 damage to any target. Then amass Orcs 1',
+          ),
+        ),
+        triggered(
+          { when: 'drawsCard', player: 'opponent' },
+          {
+            ...bowmasters(
+              'Whenever an opponent draws a card except the first one they draw in each of their draw steps, Orcish Bowmasters deals 1 damage to any target. Then amass Orcs 1',
+            ),
+            condition: { kind: 'notFirstDrawInOwnDrawStep' },
+          },
+        ),
+      ],
+    },
+  );
 }

@@ -262,6 +262,7 @@ const SOURCE_FILES = [
   'packages/engine/tests/scenarios/mithril-coat.json',
   'packages/engine/tests/scenarios/mizzium-mortars.json',
   'packages/engine/tests/scenarios/mox-diamond.json',
+  'packages/engine/tests/scenarios/orcish-bowmasters.json',
   'packages/engine/tests/scenarios/path-to-exile.json',
   'packages/engine/tests/scenarios/professional-face-breaker.json',
   'packages/engine/tests/scenarios/sylvan-library.json',

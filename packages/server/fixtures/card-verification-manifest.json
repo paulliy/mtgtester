@@ -17984,6 +17984,40 @@
           "reason": "The ability also triggers only once each turn, and the engine lets an object's first firing be its only one even within one simultaneous event, so creatures dying at once still make one trigger; its draw reads no trigger count."
         }
       ]
+    },
+    "ea5103f5-27e0-4eb1-902c-7f34652d6bf3": {
+      "name": "Orcish Bowmasters",
+      "oracleSha256": "3c4bc104923da2a3c0badd8e6b2afa236c76ca356d66962ada12c5f3dfde4b99",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Flash",
+          "implementation": ["parser: flash keyword"],
+          "engineTestIds": [
+            "cards/pilot-new/orcish-bowmasters.test.ts::bowmasters-flash",
+            "clause 1: with flash, it can be cast on an opponent’s turn"
+          ]
+        },
+        {
+          "oracleText": "When this creature enters and whenever an opponent draws a card except the first one they draw in each of their draw steps, this creature deals 1 damage to any target. Then amass Orcs 1.",
+          "implementation": [
+            "two triggers sharing a body: onEtb, and drawsCard (opponent) with notFirstDrawInOwnDrawStep; dealDamage 1 to an anyTarget slot, then amass Orc 1"
+          ],
+          "engineTestIds": [
+            "cards/pilot-new/orcish-bowmasters.test.ts::bowmasters-enters-ping",
+            "cards/pilot-new/orcish-bowmasters.test.ts::bowmasters-opponent-draws",
+            "cards/pilot-new/orcish-bowmasters.test.ts::bowmasters-draws-two",
+            "cards/pilot-new/orcish-bowmasters.test.ts::bowmasters-first-draw-exempt",
+            "cards/pilot-new/orcish-bowmasters.test.ts::bowmasters-own-draw",
+            "cards/pilot-new/orcish-bowmasters.test.ts::bowmasters-existing-army",
+            "clause 2: the enter trigger takes any target, a player or a creature",
+            "clause 2: nothing is left to answer after each trigger is targeted",
+            "clause 2, negative: an opponent's first draw in their draw step asks nothing",
+            "clause 2, negative: your own draw asks nothing after the spell"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

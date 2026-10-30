@@ -127,6 +127,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'orcish-bowmasters.json',
+    file: scenarioFile(
+      'orcish-bowmasters.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/orcish-bowmasters.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'path-to-exile.json',
     file: scenarioFile(
       'path-to-exile.json',

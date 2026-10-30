@@ -20639,6 +20639,84 @@
     }
   },
   {
+    "oracleId": "ea5103f5-27e0-4eb1-902c-7f34652d6bf3",
+    "name": "Orcish Bowmasters",
+    "handledLines": [
+      "When this creature enters and whenever an opponent draws a card except the first one they draw in each of their draw steps, this creature deals 1 damage to any target. Then amass Orcs 1."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Orcish Bowmasters enters, it deals 1 damage to any target. Then amass Orcs 1",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "dealDamage",
+              "target": 0
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "amass",
+              "subtype": "Orc"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "anyTarget"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever an opponent draws a card except the first one they draw in each of their draw steps, Orcish Bowmasters deals 1 damage to any target. Then amass Orcs 1",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "dealDamage",
+              "target": 0
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "amass",
+              "subtype": "Orc"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "anyTarget"
+            }
+          ],
+          "trigger": {
+            "condition": {
+              "kind": "notFirstDrawInOwnDrawStep"
+            },
+            "player": "opponent",
+            "when": "drawsCard"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "ea86abfa-6cab-4ef0-8463-34136fc25b59",
     "name": "Duplicant",
     "handledLines": [
@@ -37274,6 +37352,84 @@
           "trigger": {
             "caster": "each",
             "when": "castsSpell"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-orcish-bowmasters",
+    "name": "Orcish Bowmasters",
+    "handledLines": [
+      "When this creature enters and whenever an opponent draws a card except the first one they draw in each of their draw steps, this creature deals 1 damage to any target. Then amass Orcs 1."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Orcish Bowmasters enters, it deals 1 damage to any target. Then amass Orcs 1",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "dealDamage",
+              "target": 0
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "amass",
+              "subtype": "Orc"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "anyTarget"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever an opponent draws a card except the first one they draw in each of their draw steps, Orcish Bowmasters deals 1 damage to any target. Then amass Orcs 1",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "dealDamage",
+              "target": 0
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "amass",
+              "subtype": "Orc"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "anyTarget"
+            }
+          ],
+          "trigger": {
+            "condition": {
+              "kind": "notFirstDrawInOwnDrawStep"
+            },
+            "player": "opponent",
+            "when": "drawsCard"
           }
         }
       ]

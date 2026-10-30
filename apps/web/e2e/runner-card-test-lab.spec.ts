@@ -194,6 +194,21 @@ async function answerSylvan(page: Page, answer: RegExp): Promise<void> {
   await button.click();
 }
 
+/** Answer Orcish Bowmasters' "any target" prompt with a player seat or a [seat, name] permanent. */
+async function bowmastersTarget(page: Page, target: string | [string, string]): Promise<void> {
+  // A spell's trigger as it resolves says "Target 1 of 1"; one put on the stack during an
+  // opponent's spell says "Choose targets for Orcish Bowmasters".
+  await passUntil(
+    page,
+    page.getByText(/Target 1 of 1|Choose targets for Orcish Bowmasters/).first(),
+  );
+  if (typeof target === 'string')
+    await page.locator(`.opponent[data-seat="${target}"] > header`).click();
+  else await permanent(page, target[0], target[1]).first().click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirmButton(page).click();
+}
+
 const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
   'mizzium-mortars-target': async (page) => {
     await castWith(page, hand(page, 'Mizzium Mortars'), {
@@ -615,6 +630,66 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await passUntil(page, logLine(page, /game over/));
     await expect(page.getByRole('button', { name: 'Yes', exact: true })).toHaveCount(0);
     await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(0);
+  },
+  'bowmasters-enters-ping': async (page) => {
+    await castWith(page, hand(page, 'Orcish Bowmasters'), {
+      resolves: /Orcish Bowmasters[^]*resolves/,
+    });
+    await bowmastersTarget(page, ['P2', 'Scenario Elf']);
+    await passStackUntil(page, permanent(page, 'P1', 'Orc Army').filter({ hasText: '1/1' }));
+    await expect(permanent(page, 'P2', 'Scenario Elf')).toHaveCount(0);
+  },
+  'bowmasters-flash': async (page) => {
+    // It is P2's turn: cast Bowmasters when P2 passes priority to you.
+    await castWith(page, hand(page, 'Orcish Bowmasters'), {
+      resolves: /Orcish Bowmasters[^]*resolves/,
+    });
+    await bowmastersTarget(page, 'P2');
+    await passStackUntil(page, permanent(page, 'P1', 'Orc Army').filter({ hasText: '1/1' }));
+    await expect(life(page, 'P2')).toHaveText('39');
+  },
+  'bowmasters-opponent-draws': async (page) => {
+    await bowmastersTarget(page, 'P2');
+    await passStackUntil(page, permanent(page, 'P1', 'Orc Army').filter({ hasText: '1/1' }));
+    await expect(life(page, 'P2')).toHaveText('39');
+  },
+  'bowmasters-draws-two': async (page) => {
+    const order = page
+      .locator('.decision-panel')
+      .getByRole('button', { name: /Orcish Bowmasters/ })
+      .first();
+    await passUntil(page, order);
+    await order.click();
+    await bowmastersTarget(page, 'P2');
+    await bowmastersTarget(page, 'P2');
+    await passStackUntil(page, permanent(page, 'P1', 'Orc Army').filter({ hasText: '2/2' }));
+    await expect(life(page, 'P2')).toHaveText('38');
+    await expect(permanent(page, 'P1', 'Orc Army')).toHaveCount(1);
+  },
+  'bowmasters-first-draw-exempt': async (page) => {
+    await passUntil(page, logLine(page, /game over/));
+    await expect(life(page, 'P2')).toHaveText('40');
+    await expect(permanent(page, 'P1', 'Orc Army')).toHaveCount(0);
+  },
+  'bowmasters-own-draw': async (page) => {
+    await castWith(page, hand(page, 'Scenario Insight'), {
+      resolves: /Scenario Insight[^]*resolves/,
+    });
+    await passUntil(page, logLine(page, /game over/));
+    await expect(page.getByText(/Target 1 of 1/)).toHaveCount(0);
+    await expect(permanent(page, 'P1', 'Orc Army')).toHaveCount(0);
+  },
+  'bowmasters-existing-army': async (page) => {
+    await castWith(page, hand(page, 'Orcish Bowmasters'), {
+      resolves: /Orcish Bowmasters[^]*resolves/,
+    });
+    await bowmastersTarget(page, 'P2');
+    await passStackUntil(
+      page,
+      permanent(page, 'P1', 'Scenario Zombie Army').filter({ hasText: '2/2' }),
+    );
+    await expect(permanent(page, 'P1', 'Orc Army')).toHaveCount(0);
+    await expect(life(page, 'P2')).toHaveText('39');
   },
   'chrome-mox-no-artifact-or-land': async (page) => {
     await castChromeMox(page);
