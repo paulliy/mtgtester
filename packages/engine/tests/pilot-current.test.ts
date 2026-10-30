@@ -21,6 +21,7 @@ import {
   forest,
   gameConfig,
   oracle,
+  pick,
   pump,
   registerDef,
   spawn,
@@ -220,5 +221,78 @@ describe('The Great Henge', () => {
     const ctx = mainPhase('henge-none');
     registerDef(ctx, henge());
     expect(costReductionFor(ctx, 'P1', henge().oracleId, 'c-henge').generic).toBe(0);
+  });
+});
+
+describe('Gamble', () => {
+  const gambleCard = () => pinStore.get('Gamble');
+  const prize = () =>
+    oracle({
+      name: 'Pilot Prize',
+      typeLine: 'Sorcery',
+      manaCost: '{U}',
+      oracleText: 'Draw a card.',
+    });
+  /** P1's library holds Pilot Prize among Forests; resolve Gamble, finding Pilot Prize. */
+  function gamble(seed: string, handCards: number): GameContext {
+    const ctx = mainPhase(seed);
+    conjure(ctx, 'P1', prize(), 'library');
+    for (let i = 0; i < handCards; i++) conjure(ctx, 'P1', swamp(), 'hand');
+    pump(
+      executeAbility(
+        ctx,
+        spawn(ctx, 'P1', gambleCard()),
+        interpretCard(gambleCard()).spellAbility!,
+        [],
+      ),
+      (decision) => pick(decision, /Pilot Prize/),
+    );
+    return ctx;
+  }
+  const names = (cards: ReadonlyArray<{ name: string }>) => cards.map((card) => card.name);
+
+  it('gamble-tutor-then-random-discard — the found card goes to hand, then one card is discarded at random', () => {
+    const before = mainPhase('gamble-count');
+    const handBefore = playerById(before, 'P1').hand.length;
+    const ctx = gamble('gamble-count', 2);
+    const p1 = playerById(ctx, 'P1');
+    // Two Swamps and the prize came to hand; one of those three was discarded.
+    expect(p1.hand).toHaveLength(handBefore + 2);
+    expect(p1.graveyard).toHaveLength(1);
+    expect(['Swamp', 'Pilot Prize']).toContain(p1.graveyard[0]!.name);
+    expect(
+      [...names(p1.hand), ...names(p1.graveyard)].filter((name) => name === 'Pilot Prize'),
+    ).toHaveLength(1);
+  });
+
+  it('gamble-discards-the-find — with an otherwise empty hand, the found card is the one discarded', () => {
+    const ctx = mainPhase('gamble-empty');
+    const p1 = playerById(ctx, 'P1');
+    p1.hand.splice(0);
+    conjure(ctx, 'P1', prize(), 'library');
+    pump(
+      executeAbility(
+        ctx,
+        spawn(ctx, 'P1', gambleCard()),
+        interpretCard(gambleCard()).spellAbility!,
+        [],
+      ),
+      (decision) => pick(decision, /Pilot Prize/),
+    );
+    expect(names(p1.graveyard)).toEqual(['Pilot Prize']);
+    expect(p1.hand).toHaveLength(0);
+  });
+
+  it('gamble-order — search, then the discard, then the shuffle', () => {
+    const ctx = gamble('gamble-order', 1);
+    const types = ctx.state.eventLog.map((event) => event.type);
+    const discard = types.lastIndexOf('discard');
+    expect(discard).toBeGreaterThan(-1);
+    expect(types.lastIndexOf('shuffle')).toBeGreaterThan(discard);
+  });
+
+  it('gamble-seeded — the random discard repeats for the same seed', () => {
+    const discarded = (seed: string) => names(playerById(gamble(seed, 3), 'P1').graveyard);
+    expect(discarded('gamble-seed')).toEqual(discarded('gamble-seed'));
   });
 });

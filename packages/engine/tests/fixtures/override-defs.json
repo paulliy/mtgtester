@@ -13778,6 +13778,44 @@
     }
   },
   {
+    "oracleId": "a54f0869-94c8-42af-9080-166efb9486a4",
+    "name": "Gamble",
+    "handledLines": [
+      "Search your library for a card, put that card into your hand, discard a card at random, then shuffle."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Search your library for a card, put that card into your hand, discard a card at random, then shuffle",
+        "effects": [
+          {
+            "destinations": [
+              {
+                "zone": "hand"
+              }
+            ],
+            "filter": {
+              "kind": "allOf",
+              "of": []
+            },
+            "op": "searchLibrary"
+          },
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "discardAtRandom"
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "a731e87b-8d99-4b64-8ee3-8e540d652366",
     "name": "Malakir Rebirth // Malakir Mire",
     "handledLines": [
@@ -30962,6 +31000,44 @@
               ]
             },
             "op": "nextCastThisTurn"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
+    "oracleId": "oracle-gamble",
+    "name": "Gamble",
+    "handledLines": [
+      "Search your library for a card, put that card into your hand, discard a card at random, then shuffle."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Search your library for a card, put that card into your hand, discard a card at random, then shuffle",
+        "effects": [
+          {
+            "destinations": [
+              {
+                "zone": "hand"
+              }
+            ],
+            "filter": {
+              "kind": "allOf",
+              "of": []
+            },
+            "op": "searchLibrary"
+          },
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "discardAtRandom"
+          },
+          {
+            "op": "shuffle"
           }
         ],
         "kind": "spell",

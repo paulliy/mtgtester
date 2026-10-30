@@ -2,6 +2,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import {
   hand,
   permanent,
+  seatZone,
   priorityHelpers,
   selectScenario,
   launchScenario,
@@ -89,6 +90,23 @@ const FLOWS: Record<string, (page: Page) => Promise<void>> = {
     // P2, a scripted seat, casts Pilot Lab Bear on its turn.
     await passStackUntil(page, permanent(page, 'P2', 'Pilot Lab Bear').filter({ hasText: '2/2' }));
     await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(1);
+  },
+  'pilot-current-gamble-viewer-tutor': async (page) => {
+    const gamble = hand(page, 'Gamble');
+    await passUntil(page, gamble.and(page.locator('.actionable')));
+    await gamble.click();
+    await confirmButton(page).click();
+    const find = page
+      .locator('.decision-panel .panel-group')
+      .filter({ has: page.getByText('Pilot Lab Bear', { exact: true }) })
+      .getByRole('button')
+      .first();
+    await passStackUntil(page, find);
+    await find.click();
+    await passStackUntil(page, logLine(page, /Gamble[^]*resolves/));
+    // The Trinket and the Bear were in hand; one was discarded at random.
+    await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(1);
+    await expect(seatZone(page, 'P1', 'Graveyard').getByRole('img')).toHaveCount(2);
   },
   'pilot-current-explore-viewer-second-land': async (page) => {
     await playLand(page, 'Forest');

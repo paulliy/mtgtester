@@ -213,6 +213,18 @@ const DEFS: ScenarioDef[] = [
     opponent: { seat: 'P2', cast: 'Pilot Lab Bear' },
     prepared: { currentTurnPlayer: 'P2' },
   },
+  {
+    id: 'pilot-current-gamble-viewer-tutor',
+    cardName: 'Gamble',
+    title: 'Gamble: find a card, then discard one at random',
+    instructions: ['Cast Gamble with your Mountain.', 'Find Pilot Lab Bear in your library.'],
+    expectedOutcome:
+      'Pilot Lab Bear comes to your hand, then one of the two cards in your hand is discarded at random and your library is shuffled.',
+    lines: [1],
+    p1Hand: ['Gamble'],
+    p1Field: ['Mountain'],
+    p1Top: ['Pilot Lab Bear'],
+  },
 ];
 
 export const PILOT_CURRENT_SCENARIOS = DEFS.map(({ id, cardName, title }) => ({

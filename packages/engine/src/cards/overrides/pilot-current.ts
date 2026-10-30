@@ -1,3 +1,4 @@
+import { searchLibraryCards } from '../effect-builders';
 import { allOf, ofColor, ofType, YOURS } from '../selector';
 import { costReductionFor, spell } from '../templates';
 import { constant } from '../value';
@@ -55,6 +56,29 @@ export function registerPilotCurrentOverrides(): void {
           selfOnly: true,
         },
       ],
+    },
+  );
+
+  // "Search your library for a card, put that card into your hand, discard a card at random, then
+  // shuffle." In that order: the found card is in hand before the random discard, so it may be
+  // the card discarded, and the library is shuffled last. The random pick uses the game's seeded
+  // generator.
+  defineCard(
+    'a54f0869-94c8-42af-9080-166efb9486a4',
+    'Gamble',
+    [
+      'Search your library for a card, put that card into your hand, discard a card at random, then shuffle.',
+    ],
+    {
+      spellAbility: spell({
+        effects: [
+          searchLibraryCards(allOf(), [{ zone: 'hand' }]),
+          { op: 'discardAtRandom', count: constant(1) },
+          { op: 'shuffle' },
+        ],
+        description:
+          'Search your library for a card, put that card into your hand, discard a card at random, then shuffle',
+      }),
     },
   );
 }

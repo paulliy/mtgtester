@@ -31,6 +31,10 @@ const PLANS: Record<string, Plan> = {
   'pilot-current-great-henge-viewer-enter-trigger': { steps: [{ cast: 'Pilot Lab Bear' }] },
   'pilot-current-great-henge-viewer-token-ignored': { steps: [{ cast: 'Pilot Lab Saproling' }] },
   'pilot-current-great-henge-viewer-opponent-creature': { steps: [] },
+  'pilot-current-gamble-viewer-tutor': {
+    steps: [{ cast: 'Gamble' }],
+    answers: [/Pilot Lab Bear/],
+  },
   'pilot-current-explore-viewer-second-land': {
     steps: [{ play: 'Forest' }, { cast: 'Explore' }, { play: 'Plains', whenEmpty: true }],
   },
@@ -198,6 +202,17 @@ const CHECKS: Record<string, (result: Result) => void> = {
     expect(token).toBeDefined();
     expect(token!.counters['+1/+1']).toBeUndefined();
     expect(r.player('P1').hand).toHaveLength(1);
+  },
+  'pilot-current-gamble-viewer-tutor': (r) => {
+    expect(r.done).toEqual(['Gamble']);
+    expect(r.picked).toEqual([expect.stringMatching(/Pilot Lab Bear/)]);
+    const hand = zoneNames(r.player('P1').hand);
+    const discarded = zoneNames(r.player('P1').graveyard).filter((name) => name !== 'Gamble');
+    // The Trinket and the found Bear were in hand; one of them was discarded at random.
+    expect(discarded).toHaveLength(1);
+    expect([...hand, ...discarded].sort()).toEqual(['Pilot Lab Bear', 'Pilot Lab Trinket']);
+    const types = r.state.eventLog.map((event) => event.type);
+    expect(types.lastIndexOf('shuffle')).toBeGreaterThan(types.lastIndexOf('discard'));
   },
 };
 

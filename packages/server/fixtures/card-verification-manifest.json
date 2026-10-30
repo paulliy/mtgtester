@@ -17797,6 +17797,28 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "a54f0869-94c8-42af-9080-166efb9486a4": {
+      "name": "Gamble",
+      "oracleSha256": "934d0933d263bf738552d55cfe4dce7a576f04de4afc4177c49721db32f0bee7",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Search your library for a card, put that card into your hand, discard a card at random, then shuffle.",
+          "implementation": [
+            "searchLibrary (any card) to hand; discardAtRandom 1 (seeded PRNG); shuffle, in that order"
+          ],
+          "engineTestIds": [
+            "gamble-tutor-then-random-discard",
+            "gamble-discards-the-find",
+            "gamble-order",
+            "gamble-seeded",
+            "pilot-current-gamble-viewer-tutor"
+          ],
+          "viewerScenarioIds": ["pilot-current-gamble-viewer-tutor"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }
