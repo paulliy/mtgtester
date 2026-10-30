@@ -543,6 +543,11 @@ export function makePermanent(
       : {}),
     // Mana from a Treasure spent to cast it: none when it was not cast, or cast without any.
     treasureManaSpent: (obj as EngineCardObject).treasureManaSpentToCast ?? 0,
+    // "enters with a charge counter on it for each time it was kicked" (Everflowing Chalice):
+    // the spell has left the stack, so its paid optional costs ride on the entering card.
+    ...((obj as EngineCardObject).optionalCostCounts !== undefined
+      ? { resolvingOptionalCostCounts: { ...(obj as EngineCardObject).optionalCostCounts } }
+      : {}),
   };
   for (const [counter, value] of Object.entries(
     !faceDown && landFace === undefined ? (def.entersWithCounters ?? {}) : {},

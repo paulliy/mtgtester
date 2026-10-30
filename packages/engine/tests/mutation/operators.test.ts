@@ -18,6 +18,7 @@ const probe = {
   entersTapped: true,
   entersWithCounters: { '+1/+1': 2 },
   entersUnlessDiscard: { filter: { kind: 'type', value: 'Land' } },
+  optionalAdditionalCost: { mechanic: 'kicker', cost: {}, repeatable: true },
   staticEffects: [{ kind: 'anthem' }],
   manaAbilities: [{ units: [] }],
   activatedAbilities: [
@@ -58,6 +59,8 @@ describe('IR mutation operators', () => {
       'manaAbilities[0] | (card): drop manaAbilities[0]',
       'entersTapped | (card): flip entersTapped to false',
       'entersWithCounters | (card): remove entersWithCounters',
+      'optionalAdditionalCost | (card): remove optionalAdditionalCost',
+      'optionalAdditionalCost | (card): drop optionalAdditionalCost repeatable',
       'entersUnlessDiscard | (card): remove entersUnlessDiscard',
       'activatedAbilities[0] | (card): drop activatedAbilities[0] cost 1 (tap)',
       'activatedAbilities[0] | activatedAbilities[0].ability: drop effect 0',
@@ -86,6 +89,12 @@ describe('IR mutation operators', () => {
     expect(at('(card): flip entersTapped to false').entersTapped).toBe(false);
     expect(at('(card): remove entersWithCounters')).not.toHaveProperty('entersWithCounters');
     expect(at('(card): remove entersUnlessDiscard')).not.toHaveProperty('entersUnlessDiscard');
+    expect(at('(card): remove optionalAdditionalCost')).not.toHaveProperty(
+      'optionalAdditionalCost',
+    );
+    expect(
+      at('(card): drop optionalAdditionalCost repeatable').optionalAdditionalCost,
+    ).not.toHaveProperty('repeatable');
     expect(
       at('(card): drop activatedAbilities[0] cost 1 (tap)').activatedAbilities[0]!.costs,
     ).toEqual([{ kind: 'mana' }]);

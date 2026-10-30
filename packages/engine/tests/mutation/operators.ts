@@ -158,6 +158,25 @@ function definitionMutants(node: Node, path: Path, add: AddMutant): void {
       },
       'entersWithCounters',
     );
+  if (node['optionalAdditionalCost'] !== undefined) {
+    add(
+      path,
+      'remove optionalAdditionalCost',
+      (definition) => {
+        delete definition['optionalAdditionalCost'];
+      },
+      'optionalAdditionalCost',
+    );
+    if ((node['optionalAdditionalCost'] as Node)['repeatable'] === true)
+      add(
+        path,
+        'drop optionalAdditionalCost repeatable',
+        (definition) => {
+          delete (definition['optionalAdditionalCost'] as Node)['repeatable'];
+        },
+        'optionalAdditionalCost',
+      );
+  }
   if (node['entersUnlessDiscard'] !== undefined)
     add(
       path,
