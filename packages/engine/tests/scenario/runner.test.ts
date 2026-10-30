@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseCardScenarioFile, type CardScenario } from '../../src/testing/card-scenario';
-import { loadScenarioFile, runScenario, scenarioFailures } from './runner';
+import { choiceAfterScript, loadScenarioFile, runScenario, scenarioFailures } from './runner';
 
 const file = loadScenarioFile(new URL('../scenarios/path-to-exile.json', import.meta.url));
 const base = file.scenarios[0]!;
@@ -67,6 +67,32 @@ describe('the scenario runner', () => {
       'Plains is tapped',
       'expected 1 damage event(s), found 0',
     ]);
+  });
+
+  it('plays the turn on through combat only when the scenario continues through it', () => {
+    const attack = variant({
+      seats: { P1: { battlefield: ['Scenario Bear'] } },
+      script: [{ player: 'P1', choose: 'Declare attackers', targets: ['P2'] }],
+      expect: [{ life: { player: 'P2', equals: 38 } }],
+    });
+    expect(() => runScenario(file, attack)).toThrow(/unused step/);
+    const through = variant({ ...attack, continue: { throughCombat: true } });
+    expect(scenarioFailures(runScenario(file, through), through)).toEqual([]);
+    expect(() =>
+      parseCardScenarioFile({
+        ...file,
+        scenarios: [{ ...base, continue: { throughCombat: false } }],
+      }),
+    ).toThrow(/continue\.throughCombat: must be true when present/);
+  });
+
+  it('stops at the first choice after the script instead of failing on it', () => {
+    const choice = choiceAfterScript(file, variant({ script: [base.script[0]!] }));
+    expect(choice?.decidingPlayer).toBe('P2');
+    expect(choice?.legalActions.map((action) => action.description)).toContainEqual(
+      expect.stringMatching(/Find Forest/),
+    );
+    expect(choiceAfterScript(file, base)).toBeNull();
   });
 
   it("reads keywords from the controller's view, after layers", () => {

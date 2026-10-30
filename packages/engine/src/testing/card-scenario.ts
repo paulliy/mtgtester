@@ -90,6 +90,20 @@ export type ScenarioExpectation =
 /** Where the run stops: once the script is used up and the stack is empty, at a turn, or at the end. */
 export type ScenarioEnd = 'script' | 'gameOver' | { turn: number };
 
+/**
+ * The production turn structure to run after the arranged priority window, which is all a
+ * scenario plays without one: this turn's combat, postcombat main and end step, the next player's
+ * whole turn, or the next upkeeps or precombat mains (`PreparedScenarioSpec`'s continuations).
+ */
+export interface ScenarioContinue {
+  throughCombat?: true;
+  toPostcombatMain?: true;
+  toEndStep?: true;
+  throughNextTurn?: true;
+  throughUpkeeps?: number;
+  throughPrecombatMains?: number;
+}
+
 export interface CardScenario {
   id: string;
   title: string;
@@ -104,6 +118,7 @@ export interface CardScenario {
   script: ScenarioStep[];
   expect: ScenarioExpectation[];
   end?: ScenarioEnd;
+  continue?: ScenarioContinue;
 }
 
 export interface CardScenarioFile {
@@ -266,6 +281,14 @@ const scenarioShape = shaped(
       if (value === 'script' || value === 'gameOver') return;
       object(value, path, { turn: int }, ['turn']);
     },
+    continue: shaped({
+      throughCombat: yes,
+      toPostcombatMain: yes,
+      toEndStep: yes,
+      throughNextTurn: yes,
+      throughUpkeeps: int,
+      throughPrecombatMains: int,
+    }),
   },
   ['id', 'title', 'clauses', 'instructions', 'expectedOutcome', 'seats', 'script', 'expect'],
 );
@@ -402,6 +425,20 @@ export interface BuiltScenario {
  * The scenario's engine, positioned. Every card a seat needs goes into its library first, so the
  * prepared position draws it out by name, exactly as hand-written Card Test Lab scenarios do.
  */
+function continuation(spec: ScenarioContinue | undefined): Partial<PreparedScenarioSpec> {
+  if (spec === undefined) return {};
+  return {
+    ...(spec.throughCombat === true && { continueThroughCombat: true }),
+    ...(spec.toPostcombatMain === true && { continueToPostcombatMain: true }),
+    ...(spec.toEndStep === true && { continueToEndStep: true }),
+    ...(spec.throughNextTurn === true && { continueThroughNextTurn: true }),
+    ...(spec.throughUpkeeps !== undefined && { continueThroughUpkeeps: spec.throughUpkeeps }),
+    ...(spec.throughPrecombatMains !== undefined && {
+      continueThroughPrecombatMains: spec.throughPrecombatMains,
+    }),
+  };
+}
+
 export function buildCardScenario(
   file: CardScenarioFile,
   scenario: CardScenario,
@@ -486,6 +523,7 @@ export function buildCardScenario(
       cardNames: value.cards,
       reduction: value.reduction,
     })),
+    ...continuation(scenario.continue),
   };
 
   const seed = scenario.seed ?? `scenario-${scenario.id}`;

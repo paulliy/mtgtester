@@ -55,7 +55,16 @@ const MAX_DECISIONS = 2_000;
 
 export { describeRequest };
 
-export function runScenario(file: CardScenarioFile, scenario: CardScenario): ScenarioRun {
+/**
+ * Play a scenario's script, passing priority between its steps. With `stopAtChoice`, a decision
+ * other than priority that arrives after the last step stops the run there (`stoppedAt`) instead
+ * of failing it, so a test can assert what the engine asks next.
+ */
+export function runScenario(
+  file: CardScenarioFile,
+  scenario: CardScenario,
+  options: { stopAtChoice?: true } = {},
+): ScenarioRun {
   const { engine } = buildCardScenario(file, scenario, resolveScenarioCard, {
     gameId: `scenario-${scenario.id}`,
     strictInvariants: true,
@@ -110,6 +119,8 @@ export function runScenario(file: CardScenarioFile, scenario: CardScenario): Sce
       answered.push({ request, step: null });
       continue;
     }
+    if (scriptDone && options.stopAtChoice === true)
+      return { engine, stoppedAt: request, result: null, answered, firstSequence };
     throw new Error(
       `${scenario.id}: a decision the script does not answer${
         step === undefined ? '' : ` (next step: ${step.player} "${step.choose}")`
@@ -204,6 +215,19 @@ export function scenarioFailures(run: ScenarioRun, scenario: CardScenario): stri
     }
   }
   return failures;
+}
+
+/**
+ * The first decision other than priority the engine asks after the script's last step, or null
+ * when the run ends without one: what a negative test reads ("the block is refused", "the trigger
+ * asks nothing").
+ */
+export function choiceAfterScript(
+  file: CardScenarioFile,
+  scenario: CardScenario,
+): DecisionRequest | null {
+  const { stoppedAt } = runScenario(file, scenario, { stopAtChoice: true });
+  return stoppedAt === null || stoppedAt.decisionType === 'priority' ? null : stoppedAt;
 }
 
 /**

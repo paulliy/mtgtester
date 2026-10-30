@@ -205,8 +205,11 @@ function main(): void {
   const bench = !args.includes('--no-bench') && !dryRun;
   const batchFlag = args.indexOf('--batch');
   const batch = batchFlag === -1 ? null : (args[batchFlag + 1] ?? null);
+  // In the repository's own style, as card:new writes its scaffold: a long scenario path wraps.
   const write = (path: string, text: string) => {
-    if (!dryRun) writeFileSync(path, text);
+    if (dryRun) return;
+    writeFileSync(path, text);
+    execFileSync('npx', ['prettier', '--write', path], { stdio: 'ignore' });
   };
 
   console.log('1. Definition snapshots');
