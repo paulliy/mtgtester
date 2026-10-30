@@ -1215,6 +1215,37 @@
     }
   },
   {
+    "oracleId": "0a79237e-0811-4a8a-bd4d-db3ca91bff22",
+    "name": "Everflowing Chalice",
+    "handledLines": [
+      "Multikicker {2}",
+      "~ enters with a charge counter on it for each time it was kicked."
+    ],
+    "def": {
+      "entersWithCounters": {
+        "charge": {
+          "kind": "optionalCostCount",
+          "mechanic": "kicker"
+        }
+      },
+      "optionalAdditionalCost": {
+        "cost": {
+          "colored": {
+            "B": 0,
+            "G": 0,
+            "R": 0,
+            "U": 0,
+            "W": 0
+          },
+          "colorless": 0,
+          "generic": 2
+        },
+        "mechanic": "kicker",
+        "repeatable": true
+      }
+    }
+  },
+  {
     "oracleId": "0ba134d8-ee7d-48ec-8dc6-57942b8e9261",
     "name": "Liliana of the Veil",
     "handledLines": [
@@ -29864,6 +29895,37 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "oracle-everflowing-chalice",
+    "name": "Everflowing Chalice",
+    "handledLines": [
+      "Multikicker {2}",
+      "~ enters with a charge counter on it for each time it was kicked."
+    ],
+    "def": {
+      "entersWithCounters": {
+        "charge": {
+          "kind": "optionalCostCount",
+          "mechanic": "kicker"
+        }
+      },
+      "optionalAdditionalCost": {
+        "cost": {
+          "colored": {
+            "B": 0,
+            "G": 0,
+            "R": 0,
+            "U": 0,
+            "W": 0
+          },
+          "colorless": 0,
+          "generic": 2
+        },
+        "mechanic": "kicker",
+        "repeatable": true
+      }
     }
   },
   {

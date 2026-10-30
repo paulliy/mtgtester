@@ -17819,6 +17819,55 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "0a79237e-0811-4a8a-bd4d-db3ca91bff22": {
+      "name": "Everflowing Chalice",
+      "oracleSha256": "a88d17445c5b3fd89a962f39b17d9370ae0a9f0173ebeeab4d3fcac59f610bb1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Multikicker {2} (You may pay an additional {2} any number of times as you cast this spell.)",
+          "implementation": [
+            "optionalAdditionalCost kicker {2}, repeatable (multikicker, CR 702.33c): one cast choice per affordable count"
+          ],
+          "engineTestIds": [
+            "cards/pilot-new/everflowing-chalice.test.ts::everflowing-chalice-kicked-twice",
+            "cards/pilot-new/everflowing-chalice.test.ts::everflowing-chalice-kicked-once",
+            "clause 1: multikicker is offered once per {2} you can pay, and no further"
+          ],
+          "viewerScenarioIds": [
+            "everflowing-chalice-kicked-twice",
+            "everflowing-chalice-kicked-once"
+          ]
+        },
+        {
+          "oracleText": "This artifact enters with a charge counter on it for each time it was kicked.",
+          "implementation": [
+            "entersWithCounters charge = optionalCostCount kicker, read from the entering spell's paid optional costs (CR 614.1c)"
+          ],
+          "engineTestIds": [
+            "cards/pilot-new/everflowing-chalice.test.ts::everflowing-chalice-kicked-twice",
+            "cards/pilot-new/everflowing-chalice.test.ts::everflowing-chalice-kicked-once",
+            "cards/pilot-new/everflowing-chalice.test.ts::everflowing-chalice-unkicked"
+          ],
+          "viewerScenarioIds": [
+            "everflowing-chalice-kicked-twice",
+            "everflowing-chalice-kicked-once",
+            "everflowing-chalice-unkicked"
+          ]
+        },
+        {
+          "oracleText": "{T}: Add {C} for each charge counter on this artifact.",
+          "implementation": ["mana ability (parser): {C} per charge counter"],
+          "engineTestIds": [
+            "cards/pilot-new/everflowing-chalice.test.ts::everflowing-chalice-kicked-twice",
+            "cards/pilot-new/everflowing-chalice.test.ts::everflowing-chalice-unkicked",
+            "clause 3: kicked twice, its {C}{C} pays for a {2} creature"
+          ],
+          "viewerScenarioIds": ["everflowing-chalice-kicked-twice", "everflowing-chalice-unkicked"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

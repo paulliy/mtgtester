@@ -81,6 +81,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'everflowing-chalice.json',
+    file: scenarioFile(
+      'everflowing-chalice.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/everflowing-chalice.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'mithril-coat.json',
     file: scenarioFile(
       'mithril-coat.json',

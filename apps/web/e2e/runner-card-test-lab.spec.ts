@@ -501,6 +501,36 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await passUntil(page, permanent(page, 'P1', 'Mox Diamond'));
     await expect(inZone(page, 'P1', 'Graveyard', 'Forest')).toHaveCount(1);
   },
+  'everflowing-chalice-kicked-twice': async (page) => {
+    await castWith(page, hand(page, 'Everflowing Chalice'), {
+      mode: /kicker 2/,
+      resolves: /Everflowing Chalice[^]*resolves/,
+    });
+    const chalice = permanent(page, 'P1', 'Everflowing Chalice');
+    await expect(chalice.locator('.counters')).toContainText(/charge.*2/i);
+    // Every Forest paid for the kicker; only Chalice's {C}{C} can pay for the Ox.
+    await castWith(page, hand(page, 'Scenario Ox'), { resolves: /Scenario Ox[^]*resolves/ });
+    await expect(permanent(page, 'P1', 'Scenario Ox')).toHaveCount(1);
+    await expect(chalice.locator('.tap-badge')).toHaveCount(1);
+  },
+  'everflowing-chalice-kicked-once': async (page) => {
+    await castWith(page, hand(page, 'Everflowing Chalice'), {
+      mode: /kicker 1/,
+      resolves: /Everflowing Chalice[^]*resolves/,
+    });
+    await expect(permanent(page, 'P1', 'Everflowing Chalice').locator('.counters')).toContainText(
+      /charge.*1/i,
+    );
+  },
+  'everflowing-chalice-unkicked': async (page) => {
+    await castWith(page, hand(page, 'Everflowing Chalice'), {
+      resolves: /Everflowing Chalice[^]*resolves/,
+    });
+    const chalice = permanent(page, 'P1', 'Everflowing Chalice');
+    await expect(chalice).toHaveCount(1);
+    await expect(chalice.locator('.counters')).toHaveCount(0);
+    await expect(hand(page, 'Scenario Ox')).not.toHaveClass(/actionable/);
+  },
   'chrome-mox-no-artifact-or-land': async (page) => {
     await castChromeMox(page);
     await passUntil(page, permanent(page, 'P1', 'Chrome Mox'));

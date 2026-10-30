@@ -1,5 +1,5 @@
 import { allOf, anyOf, ofSubtype, ofSupertype, ofType, YOURS } from '../selector';
-import { activated, mana, onEtb, targetSlots, triggered } from '../templates';
+import { activated, mana, manaCost, onEtb, targetSlots, triggered } from '../templates';
 import { constant } from '../value';
 import { defineCard } from './index';
 
@@ -105,5 +105,19 @@ export function registerPilotNewOverrides(): void {
       "If this artifact would enter, you may discard a land card instead. If you do, put this artifact onto the battlefield. If you don't, put it into its owner's graveyard.",
     ],
     { entersUnlessDiscard: { filter: ofType('Land') } },
+  );
+
+  // "Multikicker {2}" (CR 702.33c): an optional additional cost, announced with the spell and
+  // payable any number of times. "This artifact enters with a charge counter on it for each time
+  // it was kicked" reads that count as Chalice enters (CR 614.1c); the parser's mana ability adds
+  // {C} per charge counter.
+  defineCard(
+    '0a79237e-0811-4a8a-bd4d-db3ca91bff22',
+    'Everflowing Chalice',
+    ['Multikicker {2}', '~ enters with a charge counter on it for each time it was kicked.'],
+    {
+      optionalAdditionalCost: { mechanic: 'kicker', cost: manaCost('{2}'), repeatable: true },
+      entersWithCounters: { charge: { kind: 'optionalCostCount', mechanic: 'kicker' } },
+    },
   );
 }
