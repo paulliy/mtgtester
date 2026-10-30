@@ -16,6 +16,8 @@
     "../card-gate.ts",
     "../check-manifest-tests.ts",
     "../mutate-cards.ts",
+    "../bulk-smoke.ts",
+    "../update-scryfall-bank.ts",
     "../pin-store.ts",
     "../cards/*.ts",
     "../check-ratchets.ts",

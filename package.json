@@ -31,6 +31,7 @@
     "pool": "bun run packages/server/src/cli/pool.ts",
     "modelled-cards": "bun run packages/server/src/cli/modelled-cards.ts",
     "scryfall:update": "bun run scripts/update-scryfall-bank.ts",
+    "bulk-smoke": "bun run scripts/bulk-smoke.ts",
     "play-decks": "bun run packages/server/src/cli/play-decks.ts",
     "combat-sweep": "bun run packages/server/src/cli/combat-sweep.ts",
     "fuzz": "bun run packages/server/src/cli/fuzz.ts",

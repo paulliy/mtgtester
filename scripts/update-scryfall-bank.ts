@@ -36,7 +36,18 @@ function decodeCards(compressed: ArrayBuffer): ScryfallCard[] {
   return cards;
 }
 
-async function main(): Promise<void> {
+/** The current snapshot from Scryfall, or with `--from <file>` a downloaded `.jsonl.gz`. */
+async function snapshot(): Promise<{ cards: ScryfallCard[]; updatedAt: string | undefined }> {
+  const fromAt = process.argv.indexOf('--from');
+  if (fromAt >= 0) {
+    const path = process.argv[fromAt + 1];
+    if (path === undefined) throw new Error('--from takes a .jsonl.gz file');
+    const bytes = await readFile(path);
+    return {
+      cards: decodeCards(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.length)),
+      updatedAt: `from ${path}`,
+    };
+  }
   const response = await fetch('https://api.scryfall.com/bulk-data', {
     headers: { 'User-Agent': USER_AGENT },
   });
@@ -52,7 +63,11 @@ async function main(): Promise<void> {
     headers: { 'User-Agent': USER_AGENT },
   });
   if (!download.ok) throw new Error(`Scryfall bulk download failed: ${download.status}`);
-  const remoteCards = decodeCards(await download.arrayBuffer());
+  return { cards: decodeCards(await download.arrayBuffer()), updatedAt: bulk.updated_at };
+}
+
+async function main(): Promise<void> {
+  const { cards: remoteCards, updatedAt } = await snapshot();
 
   let existingCards: ScryfallCard[] = [];
   try {
@@ -107,7 +122,7 @@ async function main(): Promise<void> {
   console.log(
     `Updated ${BANK_PATH}: ${added} added, ${changed} changed, ${unchanged} unchanged, ` +
       `${Math.max(0, previousByOracleId.size - unchanged - changed)} removed from Scryfall snapshot ` +
-      `(bulk updated ${bulk.updated_at ?? 'date unknown'}).`,
+      `(bulk updated ${updatedAt ?? 'date unknown'}).`,
   );
 }
 

@@ -30,6 +30,13 @@ The command is manual; it is not scheduled or run automatically.
 The current file was downloaded 2026-08-28 from `oracle-cards-20260828090156.jsonl.gz`
 (38,626 cards, 202,879,599 bytes).
 
+`bun run scryfall:update --from <file>.jsonl.gz` builds the bank from a snapshot already
+downloaded. The nightly bulk-data job (`.github/workflows/bulk-nightly.yml`) does that with the
+checksum-pinned file named by the repository variables `SCRYFALL_BULK_URL` and
+`SCRYFALL_BULK_SHA256`, runs the suites that skip without the bank, and runs `bun run bulk-smoke`
+against the baseline in `packages/server/fixtures/bulk-population.json`. After moving the pin,
+build the bank from the new file and record its baseline with `bun run bulk-smoke --write`.
+
 ### After a refresh
 
 Newer oracle text can make a hand-authored override redundant: Scryfall rewrites older cards
