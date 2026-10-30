@@ -1,5 +1,5 @@
 import { allOf, anyOf, ofSubtype, ofSupertype, ofType, YOURS } from '../selector';
-import { activated, mana, manaCost, onEtb, targetSlots, triggered } from '../templates';
+import { activated, mana, manaCost, onDrawStep, onEtb, targetSlots, triggered } from '../templates';
 import { constant } from '../value';
 import { defineCard } from './index';
 
@@ -118,6 +118,32 @@ export function registerPilotNewOverrides(): void {
     {
       optionalAdditionalCost: { mechanic: 'kicker', cost: manaCost('{2}'), repeatable: true },
       entersWithCounters: { charge: { kind: 'optionalCostCount', mechanic: 'kicker' } },
+    },
+  );
+
+  // "At the beginning of your draw step, you may draw two additional cards. If you do, choose two
+  // cards in your hand drawn this turn. For each of those cards, pay 4 life or put the card on
+  // top of your library." The trigger goes on the stack after the step's draw (CR 504.1-2), so
+  // three cards drawn this turn are in hand to choose from. "If you do" makes the whole trigger
+  // optional: declining draws nothing and keeps everything.
+  defineCard(
+    '92eed395-62ca-4293-882b-8565c40daab5',
+    'Sylvan Library',
+    [
+      'At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the card on top of your library.',
+    ],
+    {
+      triggers: [
+        triggered(onDrawStep('you'), {
+          optional: true,
+          effects: [
+            { op: 'draw', count: constant(2) },
+            { op: 'payLifeOrTopDrawnCards', count: constant(2), life: constant(4) },
+          ],
+          description:
+            'At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards drawn this turn; pay 4 life or put each on top of your library',
+        }),
+      ],
     },
   );
 }

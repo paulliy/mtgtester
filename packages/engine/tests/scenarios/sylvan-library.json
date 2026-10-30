@@ -1,0 +1,427 @@
+{
+  "schemaVersion": 1,
+  "card": "Sylvan Library",
+  "supportCards": [
+    {
+      "name": "Scenario Ant",
+      "typeLine": "Creature — Insect",
+      "manaCost": "{1}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Cat",
+      "typeLine": "Creature — Cat",
+      "manaCost": "{1}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Old Card",
+      "typeLine": "Creature — Elk",
+      "manaCost": "{1}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "sylvan-library-keep-both",
+      "title": "Sylvan Library: draw two more, pay 8 life to keep both",
+      "clauses": [1],
+      "instructions": [
+        "Pass priority until your draw step; you draw Scenario Ant for the turn.",
+        "Use Sylvan Library: draw Scenario Bear and Scenario Cat.",
+        "Choose Scenario Bear and Scenario Cat, and pay 4 life for each."
+      ],
+      "expectedOutcome": "All three drawn cards stay in your hand and you are at 32 life.",
+      "turn": {
+        "player": "P4"
+      },
+      "continue": {
+        "throughPrecombatMains": 1
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Sylvan Library"],
+          "libraryTop": ["Scenario Ant", "Scenario Bear", "Scenario Cat"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Yes"
+        },
+        {
+          "player": "P1",
+          "choose": "Choose Scenario Bear"
+        },
+        {
+          "player": "P1",
+          "choose": "Choose Scenario Cat"
+        },
+        {
+          "player": "P1",
+          "choose": "Pay 4 life: keep Scenario Bear"
+        },
+        {
+          "player": "P1",
+          "choose": "Pay 4 life: keep Scenario Cat"
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 32
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Ant", "Scenario Bear", "Scenario Cat"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "sylvan-library-put-back-both",
+      "title": "Sylvan Library: put both chosen cards back on top",
+      "clauses": [1],
+      "instructions": [
+        "Pass priority until your draw step; you draw Scenario Ant for the turn.",
+        "Use Sylvan Library, choose Scenario Ant and Scenario Cat, and put each back."
+      ],
+      "expectedOutcome": "You keep Scenario Bear at 40 life; Scenario Cat, put back last, is on top of your library.",
+      "turn": {
+        "player": "P4"
+      },
+      "continue": {
+        "throughPrecombatMains": 1
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Sylvan Library"],
+          "libraryTop": ["Scenario Ant", "Scenario Bear", "Scenario Cat"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Yes"
+        },
+        {
+          "player": "P1",
+          "choose": "Choose Scenario Ant"
+        },
+        {
+          "player": "P1",
+          "choose": "Choose Scenario Cat"
+        },
+        {
+          "player": "P1",
+          "choose": "Put Scenario Ant on top of your library"
+        },
+        {
+          "player": "P1",
+          "choose": "Put Scenario Cat on top of your library"
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "library",
+            "has": ["Scenario Ant", "Scenario Cat"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "sylvan-library-pay-one",
+      "title": "Sylvan Library: pay for one card, put the other back",
+      "clauses": [1],
+      "instructions": [
+        "Pass priority until your draw step; you draw Scenario Ant for the turn.",
+        "Use Sylvan Library, choose Scenario Ant and Scenario Bear: pay 4 life for the Ant and put the Bear back."
+      ],
+      "expectedOutcome": "Scenario Ant and Scenario Cat stay in hand at 36 life; Scenario Bear is on top of your library.",
+      "turn": {
+        "player": "P4"
+      },
+      "continue": {
+        "throughPrecombatMains": 1
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Sylvan Library"],
+          "libraryTop": ["Scenario Ant", "Scenario Bear", "Scenario Cat"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Yes"
+        },
+        {
+          "player": "P1",
+          "choose": "Choose Scenario Ant"
+        },
+        {
+          "player": "P1",
+          "choose": "Choose Scenario Bear"
+        },
+        {
+          "player": "P1",
+          "choose": "Pay 4 life: keep Scenario Ant"
+        },
+        {
+          "player": "P1",
+          "choose": "Put Scenario Bear on top of your library"
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 36
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Ant", "Scenario Cat"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "library",
+            "has": ["Scenario Bear"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "sylvan-library-decline",
+      "title": "Sylvan Library: decline, and draw only the turn's card",
+      "clauses": [1],
+      "instructions": [
+        "Pass priority until your draw step; you draw Scenario Ant for the turn.",
+        "Decline Sylvan Library's trigger."
+      ],
+      "expectedOutcome": "You draw only Scenario Ant and stay at 40 life.",
+      "turn": {
+        "player": "P4"
+      },
+      "continue": {
+        "throughPrecombatMains": 1
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Sylvan Library"],
+          "libraryTop": ["Scenario Ant", "Scenario Bear", "Scenario Cat"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "No"
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Ant"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "library",
+            "has": ["Scenario Bear", "Scenario Cat"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "sylvan-library-low-life",
+      "title": "Sylvan Library: at 3 life, both chosen cards go back",
+      "clauses": [1],
+      "instructions": [
+        "Pass priority until your draw step; you draw Scenario Ant for the turn.",
+        "Use Sylvan Library and choose Scenario Bear and Scenario Cat."
+      ],
+      "expectedOutcome": "With less than 4 life you cannot pay, so both go back on top; you keep Scenario Ant.",
+      "turn": {
+        "player": "P4"
+      },
+      "continue": {
+        "throughPrecombatMains": 1
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Sylvan Library"],
+          "libraryTop": ["Scenario Ant", "Scenario Bear", "Scenario Cat"],
+          "life": 3
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Yes"
+        },
+        {
+          "player": "P1",
+          "choose": "Choose Scenario Bear"
+        },
+        {
+          "player": "P1",
+          "choose": "Choose Scenario Cat"
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 3
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Ant"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "library",
+            "has": ["Scenario Bear", "Scenario Cat"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "sylvan-library-old-card-kept",
+      "title": "Sylvan Library: a card already in hand is not a card drawn this turn",
+      "clauses": [1],
+      "instructions": [
+        "Pass priority until your draw step; you draw Scenario Ant for the turn.",
+        "Use Sylvan Library; only the three cards drawn this turn are offered.",
+        "Choose Scenario Ant and Scenario Bear and put both back."
+      ],
+      "expectedOutcome": "Scenario Old Card stays in hand with Scenario Cat; it was never offered.",
+      "turn": {
+        "player": "P4"
+      },
+      "continue": {
+        "throughPrecombatMains": 1
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Sylvan Library"],
+          "libraryTop": ["Scenario Ant", "Scenario Bear", "Scenario Cat"],
+          "hand": ["Scenario Old Card"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Yes"
+        },
+        {
+          "player": "P1",
+          "choose": "Choose Scenario Ant"
+        },
+        {
+          "player": "P1",
+          "choose": "Choose Scenario Bear"
+        },
+        {
+          "player": "P1",
+          "choose": "Put Scenario Ant on top of your library"
+        },
+        {
+          "player": "P1",
+          "choose": "Put Scenario Bear on top of your library"
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Old Card", "Scenario Cat"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "sylvan-library-opponent-draw-step",
+      "title": "Sylvan Library: another player's draw step does not trigger it",
+      "clauses": [1],
+      "instructions": ["End your turn; P2's turn runs through its draw step."],
+      "expectedOutcome": "Sylvan Library does not trigger on P2's draw step: nothing is asked of you and your library is untouched.",
+      "turn": {
+        "player": "P1"
+      },
+      "continue": {
+        "throughPrecombatMains": 1
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Sylvan Library"],
+          "libraryTop": ["Scenario Ant", "Scenario Bear", "Scenario Cat"]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "library",
+            "has": ["Scenario Ant", "Scenario Bear", "Scenario Cat"]
+          }
+        }
+      ]
+    }
+  ]
+}

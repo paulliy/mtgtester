@@ -171,6 +171,29 @@ async function castMoxDiamond(page: Page): Promise<void> {
 const inZone = (page: Page, seat: string, zone: string, name: string): Locator =>
   seatZone(page, seat, zone).getByRole('img', { name, exact: true });
 
+/** Pass to your draw step and use Sylvan Library's trigger. */
+async function useSylvanLibrary(page: Page): Promise<void> {
+  const yes = page.getByRole('button', { name: 'Yes', exact: true });
+  await passUntil(page, yes);
+  await yes.click();
+}
+
+/** Choose the named cards drawn this turn, in order; a last single candidate is chosen for you. */
+async function chooseDrawn(page: Page, names: string[]): Promise<void> {
+  for (const name of names) {
+    const choice = cardChoice(page, name, 'Choose');
+    await passUntil(page, choice.or(page.getByRole('button', { name: /^Pay 4 life|^Put / })));
+    if ((await choice.count()) > 0) await choice.click();
+  }
+}
+
+/** Answer one of Sylvan Library's pay-or-put-back questions. */
+async function answerSylvan(page: Page, answer: RegExp): Promise<void> {
+  const button = page.getByRole('button', { name: answer });
+  await passUntil(page, button);
+  await button.click();
+}
+
 const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
   'mizzium-mortars-target': async (page) => {
     await castWith(page, hand(page, 'Mizzium Mortars'), {
@@ -530,6 +553,68 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await expect(chalice).toHaveCount(1);
     await expect(chalice.locator('.counters')).toHaveCount(0);
     await expect(hand(page, 'Scenario Ox')).not.toHaveClass(/actionable/);
+  },
+  'sylvan-library-keep-both': async (page) => {
+    await useSylvanLibrary(page);
+    await chooseDrawn(page, ['Scenario Bear', 'Scenario Cat']);
+    await answerSylvan(page, /^Pay 4 life: keep Scenario Bear/);
+    await answerSylvan(page, /^Pay 4 life: keep Scenario Cat/);
+    await expect(life(page, 'P1')).toHaveText('32');
+    for (const name of ['Scenario Ant', 'Scenario Bear', 'Scenario Cat'])
+      await expect(hand(page, name)).toHaveCount(1);
+  },
+  'sylvan-library-put-back-both': async (page) => {
+    await useSylvanLibrary(page);
+    await chooseDrawn(page, ['Scenario Ant', 'Scenario Cat']);
+    await answerSylvan(page, /^Put Scenario Ant on top/);
+    await answerSylvan(page, /^Put Scenario Cat on top/);
+    await expect(hand(page, 'Scenario Ant')).toHaveCount(0);
+    await expect(hand(page, 'Scenario Cat')).toHaveCount(0);
+    await expect(hand(page, 'Scenario Bear')).toHaveCount(1);
+    await expect(life(page, 'P1')).toHaveText('40');
+  },
+  'sylvan-library-pay-one': async (page) => {
+    await useSylvanLibrary(page);
+    await chooseDrawn(page, ['Scenario Ant', 'Scenario Bear']);
+    await answerSylvan(page, /^Pay 4 life: keep Scenario Ant/);
+    await answerSylvan(page, /^Put Scenario Bear on top/);
+    await expect(hand(page, 'Scenario Bear')).toHaveCount(0);
+    await expect(hand(page, 'Scenario Ant')).toHaveCount(1);
+    await expect(life(page, 'P1')).toHaveText('36');
+  },
+  'sylvan-library-decline': async (page) => {
+    const no = page.getByRole('button', { name: 'No', exact: true });
+    await passUntil(page, no);
+    await no.click();
+    await passUntil(page, hand(page, 'Scenario Ant'));
+    await expect(hand(page, 'Scenario Bear')).toHaveCount(0);
+    await expect(life(page, 'P1')).toHaveText('40');
+  },
+  'sylvan-library-low-life': async (page) => {
+    await useSylvanLibrary(page);
+    await chooseDrawn(page, ['Scenario Bear', 'Scenario Cat']);
+    // At 3 life there is nothing to pay with: both go back without a question.
+    await expect(hand(page, 'Scenario Bear')).toHaveCount(0);
+    await expect(hand(page, 'Scenario Ant')).toHaveCount(1);
+    await expect(hand(page, 'Scenario Cat')).toHaveCount(0);
+    await expect(life(page, 'P1')).toHaveText('3');
+  },
+  'sylvan-library-old-card-kept': async (page) => {
+    await useSylvanLibrary(page);
+    await passUntil(page, cardChoice(page, 'Scenario Ant', 'Choose'));
+    await expect(cardChoice(page, 'Scenario Old Card', 'Choose')).toHaveCount(0);
+    await chooseDrawn(page, ['Scenario Ant', 'Scenario Bear']);
+    await answerSylvan(page, /^Put Scenario Ant on top/);
+    await answerSylvan(page, /^Put Scenario Bear on top/);
+    await expect(hand(page, 'Scenario Old Card')).toHaveCount(1);
+    await expect(hand(page, 'Scenario Cat')).toHaveCount(1);
+  },
+  'sylvan-library-opponent-draw-step': async (page) => {
+    // P1's turn ends and P2's runs through its draw step; P1 is never asked about the Library.
+    await passUntil(page, logLine(page, /turn 5 — P2/));
+    await passUntil(page, logLine(page, /game over/));
+    await expect(page.getByRole('button', { name: 'Yes', exact: true })).toHaveCount(0);
+    await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(0);
   },
   'chrome-mox-no-artifact-or-land': async (page) => {
     await castChromeMox(page);

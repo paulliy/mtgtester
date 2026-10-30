@@ -17920,6 +17920,34 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "92eed395-62ca-4293-882b-8565c40daab5": {
+      "name": "Sylvan Library",
+      "oracleSha256": "cd4deadd3315a0dc7a4fb3c9bfc11ebd861c095e0b7d5e56383c8e9ba6437678",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the card on top of your library.",
+          "implementation": [
+            "optional triggered ability on your draw step (onDrawStep you): draw 2, then payLifeOrTopDrawnCards count 2, life 4; draws mark the hand card's turn"
+          ],
+          "engineTestIds": [
+            "cards/pilot-new/sylvan-library.test.ts::sylvan-library-keep-both",
+            "cards/pilot-new/sylvan-library.test.ts::sylvan-library-put-back-both",
+            "cards/pilot-new/sylvan-library.test.ts::sylvan-library-pay-one",
+            "cards/pilot-new/sylvan-library.test.ts::sylvan-library-decline",
+            "cards/pilot-new/sylvan-library.test.ts::sylvan-library-low-life",
+            "cards/pilot-new/sylvan-library.test.ts::sylvan-library-old-card-kept",
+            "cards/pilot-new/sylvan-library.test.ts::sylvan-library-opponent-draw-step",
+            "clause 1: only the cards drawn this turn are offered, not one already in hand",
+            "clause 1: it asks whether to draw, as the trigger resolves after the draw for the turn",
+            "clause 1: at 3 life there is no pay option after the choice",
+            "clause 1, negative: an opponent's draw step asks nothing of its controller",
+            "clause 1: two cards are chosen, then each costs exactly 4 life to keep"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

@@ -12438,6 +12438,47 @@
     }
   },
   {
+    "oracleId": "92eed395-62ca-4293-882b-8565c40daab5",
+    "name": "Sylvan Library",
+    "handledLines": [
+      "At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the card on top of your library."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards drawn this turn; pay 4 life or put each on top of your library",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 2
+              },
+              "op": "draw"
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 2
+              },
+              "life": {
+                "kind": "const",
+                "n": 4
+              },
+              "op": "payLifeOrTopDrawnCards"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "drawStep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "932708ae-9d5c-4561-aa8b-0d2222d37fdc",
     "name": "Darkness",
     "handledLines": [
@@ -42029,6 +42070,47 @@
           }
         ]
       }
+    }
+  },
+  {
+    "oracleId": "oracle-sylvan-library",
+    "name": "Sylvan Library",
+    "handledLines": [
+      "At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the card on top of your library."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards drawn this turn; pay 4 life or put each on top of your library",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 2
+              },
+              "op": "draw"
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 2
+              },
+              "life": {
+                "kind": "const",
+                "n": 4
+              },
+              "op": "payLifeOrTopDrawnCards"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "drawStep"
+          }
+        }
+      ]
     }
   },
   {

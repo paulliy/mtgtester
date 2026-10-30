@@ -150,6 +150,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'sylvan-library.json',
+    file: scenarioFile(
+      'sylvan-library.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/sylvan-library.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'takenuma-abandoned-mire.json',
     file: scenarioFile(
       'takenuma-abandoned-mire.json',
