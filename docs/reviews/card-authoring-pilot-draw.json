@@ -1,0 +1,162 @@
+{
+  "seed": "adr-0033-phase-6-pilot",
+  "bankSha256": "4fbbf8f91fc4812e78e6b892ddafa46e810e6f7e13d05698a7d02639563a14a9",
+  "cards": [
+    {
+      "name": "Aetherize",
+      "edhrecRank": 286,
+      "reasons": [
+        "unrecognized rules text: \"Return all attacking creatures to their owner's hand.\""
+      ],
+      "arm": "current"
+    },
+    {
+      "name": "Seedborn Muse",
+      "edhrecRank": 287,
+      "reasons": [
+        "unrecognized rules text: \"Untap all permanents you control during each other player's untap step.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Faerie Mastermind",
+      "edhrecRank": 288,
+      "reasons": ["unrecognized rules text: \"{3}{U}: Each player draws a card.\""],
+      "arm": "current"
+    },
+    {
+      "name": "Witch Enchanter // Witch-Blessed Meadow",
+      "edhrecRank": 289,
+      "reasons": ["unsupported layout \"modal_dfc\""],
+      "arm": "new"
+    },
+    {
+      "name": "Mana Geyser",
+      "edhrecRank": 290,
+      "reasons": [
+        "unrecognized rules text: \"Add {R} for each tapped land your opponents control.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Ruby Medallion",
+      "edhrecRank": 292,
+      "reasons": ["unrecognized rules text: \"Red spells you cast cost {1} less to cast.\""],
+      "arm": "current"
+    },
+    {
+      "name": "Choked Estuary",
+      "edhrecRank": 293,
+      "reasons": [
+        "unrecognized rules text: \"As this land enters, you may reveal an Island or Swamp card from your hand. If you don't, this land enters tapped.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Craterhoof Behemoth",
+      "edhrecRank": 295,
+      "reasons": [
+        "unrecognized rules text: \"When this creature enters, creatures you control gain trample and get +X/+X until end of turn, where X is the number of creatures you control.\""
+      ],
+      "arm": "current"
+    },
+    {
+      "name": "Braids, Arisen Nightmare",
+      "edhrecRank": 298,
+      "reasons": [
+        "unrecognized rules text: \"At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each opponent may sacrifice a permanent of their choice that shares a card type with it. For each opponent who doesn't, that player loses 2 life and you draw a card.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Finale of Devastation",
+      "edhrecRank": 299,
+      "reasons": [
+        "unrecognized rules text: \"Search your library and/or graveyard for a creature card with mana value X or less and put it onto the battlefield. If you search your library this way, shuffle. If X is 10 or more, creatures you control get +X/+X and gain haste until end of turn.\""
+      ],
+      "arm": "current"
+    },
+    {
+      "name": "The Ozolith",
+      "edhrecRank": 303,
+      "reasons": [
+        "unrecognized rules text: \"Whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on ~.\"",
+        "unrecognized rules text: \"At the beginning of combat on your turn, if ~ has counters on it, you may move all counters from ~ onto target creature.\""
+      ],
+      "arm": "current"
+    },
+    {
+      "name": "Shadowspear",
+      "edhrecRank": 305,
+      "reasons": [
+        "unrecognized rules text: \"{1}: Permanents your opponents control lose hexproof and indestructible until end of turn.\""
+      ],
+      "arm": "current"
+    },
+    {
+      "name": "Flusterstorm",
+      "edhrecRank": 310,
+      "reasons": [
+        "unrecognized rules text: \"Counter target instant or sorcery spell unless its controller pays {1}.\"",
+        "unrecognized rules text: \"Storm\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Urza's Incubator",
+      "edhrecRank": 311,
+      "reasons": [
+        "unrecognized rules text: \"Creature spells of the chosen type cost {2} less to cast.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Phyrexian Metamorph",
+      "edhrecRank": 313,
+      "reasons": [
+        "unrecognized rules text: \"You may have this creature enter as a copy of any artifact or creature on the battlefield, except it's an artifact in addition to its other types.\""
+      ],
+      "arm": "current"
+    },
+    {
+      "name": "Sun Titan",
+      "edhrecRank": 315,
+      "reasons": [
+        "unrecognized rules text: \"Whenever this creature enters or attacks, you may return target permanent card with mana value 3 or less from your graveyard to the battlefield.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Foreboding Ruins",
+      "edhrecRank": 317,
+      "reasons": [
+        "unrecognized rules text: \"As this land enters, you may reveal a Swamp or Mountain card from your hand. If you don't, this land enters tapped.\""
+      ],
+      "arm": "current"
+    },
+    {
+      "name": "Simic Growth Chamber",
+      "edhrecRank": 321,
+      "reasons": [
+        "unrecognized rules text: \"When this land enters, return a land you control to its owner's hand.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Guardian Project",
+      "edhrecRank": 324,
+      "reasons": [
+        "unrecognized rules text: \"Whenever a nontoken creature you control enters, if it doesn't have the same name as another creature you control or a creature card in your graveyard, draw a card.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Lotus Cobra",
+      "edhrecRank": 329,
+      "reasons": [
+        "unrecognized rules text: \"Whenever a land you control enters, add one mana of any color.\""
+      ],
+      "arm": "current"
+    }
+  ]
+}

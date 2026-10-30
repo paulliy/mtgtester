@@ -86,7 +86,7 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 | 10   | done  | P6: server-built damage and life cues on each batch; the board animates from them                                                                       | #44          |
 | 11   | done  | phase 3: manifest refs, IR mutation (all reviewed cards proven), facets; phase 4: invariants, zone lint, tap sites, fuzz, nightly bulk job, diagnostics | #44          |
 | 12   | done  | M5 exposure, TLS run, review; M6 table app, lobby, table bar, post-game, table e2e and CI job                                                           | #44          |
-| 13   | doing | phase 5 deferred by its go/no-go; phase 6 draw rule (`pilot:draw`) ready, waiting on Scryfall access to draw                                            | #44          |
+| 13   | doing | phase 5 deferred by its go/no-go; phase 6 cards drawn and pinned, pilot modeling under way                                                              | #44          |
 
 ## Notes from delivery
 
@@ -215,6 +215,11 @@ bulk-smoke` interprets and validates the whole bank and fails on a throw, invali
   52 unmodeled pinned ones, 46 of which wait on the same spell-face feature. `bun run pilot:draw`
   takes, from the Scryfall bank, the 20 best EDHREC-ranked commander-legal cards that no fixture
   pins, are not adventure or omen cards, and do not interpret; a seeded hash splits them 10 and 10. It records the draw and the bank's hash in `docs/reviews/card-authoring-pilot-draw.json`.
-  Scryfall is not reachable from the build environment, so the draw waits for the bank.
+  Drawn 2026-10-30 from the bank of that day (39,196 cards): Professional Face-Breaker, Mithril
+  Coat, Takenuma, Abandoned Mire, Mox Diamond, Everflowing Chalice, Sylvan Library, Academy
+  Manufactor, Orcish Bowmasters, Inspiring Call and Ragavan, Nimble Pilferer take the new
+  workflow; Secluded Courtyard, The Great Henge, Explore, Gamble, Morbid Opportunist, Untimely
+  Malfunction, Syr Konrad, the Grim, Jet Medallion, Bolas's Citadel and Etali, Primal Storm take
+  the current one. All 20 are in the pin store.
 - **Two hash definitions for pins.** Pins before PR08 hashed a card's JSON with sorted keys; later
   ones hash it as written. The pin store keeps the manifest's key and accepts either.

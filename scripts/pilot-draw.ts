@@ -6,6 +6,7 @@
  *
  * Then pin each drawn card with `bun run pin-store add "<name>"`.
  */
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -50,5 +51,6 @@ writeFileSync(
     2,
   )}\n`,
 );
+execFileSync('npx', ['prettier', '--write', OUT], { stdio: 'ignore' });
 for (const card of cards) console.log(`${card.arm.padEnd(7)} ${card.edhrecRank}\t${card.name}`);
 console.log(`pilot:draw: ${cards.length} card(s) recorded in ${OUT}`);
