@@ -17749,6 +17749,54 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "f3c5978a-70fa-431f-933b-b954bd0db0ea": {
+      "name": "Mox Diamond",
+      "oracleSha256": "d992ed712f925955e57609fb1112798f56a60155c3020de23df503a080759465",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "If this artifact would enter, you may discard a land card instead. If you do, put this artifact onto the battlefield. If you don't, put it into its owner's graveyard.",
+          "implementation": [
+            "entersUnlessDiscard replacement (CR 614.1c): its controller may discard a land card from hand as it would enter; otherwise it goes to its owner's graveyard"
+          ],
+          "engineTestIds": [
+            "cards/pilot-new/mox-diamond.test.ts::mox-diamond-discard-land",
+            "cards/pilot-new/mox-diamond.test.ts::mox-diamond-decline",
+            "cards/pilot-new/mox-diamond.test.ts::mox-diamond-no-land",
+            "cards/pilot-new/mox-diamond.test.ts::mox-diamond-choose-land",
+            "cards/pilot-new/mox-diamond.test.ts::mox-diamond-returned-by-effect",
+            "clause 1: the choice offers each land card in hand and discarding nothing, and no other card",
+            "clause 1, negative: with no land card in hand nothing is asked and it goes to the graveyard"
+          ],
+          "contractTestIds": [
+            "entersUnlessDiscard replacement contract > executes on any move onto the battlefield: the land is discarded and it enters"
+          ],
+          "viewerScenarioIds": [
+            "mox-diamond-discard-land",
+            "mox-diamond-decline",
+            "mox-diamond-no-land",
+            "mox-diamond-choose-land",
+            "mox-diamond-returned-by-effect"
+          ]
+        },
+        {
+          "oracleText": "{T}: Add one mana of any color.",
+          "implementation": ["mana ability (parser): one mana of any color"],
+          "engineTestIds": [
+            "cards/pilot-new/mox-diamond.test.ts::mox-diamond-discard-land",
+            "clause 2: once it is on the battlefield its mana pays for a red spell"
+          ],
+          "viewerScenarioIds": ["mox-diamond-discard-land"]
+        }
+      ],
+      "facetNotes": [
+        {
+          "facet": "optional",
+          "reason": "\"you may\" is the replacement's choice to discard nothing, an option of its decision rather than an optional flag"
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

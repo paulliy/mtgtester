@@ -160,6 +160,14 @@ async function channelTakenuma(page: Page): Promise<void> {
   if ((await confirm.isVisible()) && (await confirm.isEnabled())) await confirm.click();
 }
 
+/** Cast Mox Diamond; its entering replacement asks before it finishes resolving. */
+async function castMoxDiamond(page: Page): Promise<void> {
+  const mox = hand(page, 'Mox Diamond');
+  await passUntil(page, mox.and(page.locator('.actionable')));
+  await mox.click();
+  await confirmButton(page).click();
+}
+
 const inZone = (page: Page, seat: string, zone: string, name: string): Locator =>
   seatZone(page, seat, zone).getByRole('img', { name, exact: true });
 
@@ -443,6 +451,55 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await passStackUntil(page, inZone(page, 'P1', 'Graveyard', 'Plains'));
     await expect(inZone(page, 'P1', 'Graveyard', 'Scenario Sorcery')).toHaveCount(1);
     await expect(hand(page, 'Scenario Sorcery')).toHaveCount(0);
+  },
+  'mox-diamond-discard-land': async (page) => {
+    await castMoxDiamond(page);
+    const forest = cardChoice(page, 'Forest', 'Discard');
+    await passStackUntil(page, forest);
+    await forest.click();
+    await passUntil(page, permanent(page, 'P1', 'Mox Diamond'));
+    await expect(inZone(page, 'P1', 'Graveyard', 'Forest')).toHaveCount(1);
+    await castWith(page, hand(page, 'Scenario Imp'), { resolves: /Scenario Imp[^]*resolves/ });
+    await expect(permanent(page, 'P1', 'Scenario Imp')).toHaveCount(1);
+  },
+  'mox-diamond-decline': async (page) => {
+    await castMoxDiamond(page);
+    const nothing = page.getByRole('button', { name: /^Discard nothing/ });
+    await passStackUntil(page, nothing);
+    await nothing.click();
+    await passUntil(page, inZone(page, 'P1', 'Graveyard', 'Mox Diamond'));
+    await expect(permanent(page, 'P1', 'Mox Diamond')).toHaveCount(0);
+    await expect(hand(page, 'Forest')).toHaveCount(1);
+  },
+  'mox-diamond-no-land': async (page) => {
+    await castMoxDiamond(page);
+    await passUntil(page, inZone(page, 'P1', 'Graveyard', 'Mox Diamond'));
+    await expect(hand(page, 'Scenario Bear')).toHaveCount(1);
+  },
+  'mox-diamond-choose-land': async (page) => {
+    await castMoxDiamond(page);
+    const island = cardChoice(page, 'Island', 'Discard');
+    await passStackUntil(page, island);
+    await island.click();
+    await passUntil(page, permanent(page, 'P1', 'Mox Diamond'));
+    await expect(hand(page, 'Forest')).toHaveCount(1);
+    await expect(inZone(page, 'P1', 'Graveyard', 'Island')).toHaveCount(1);
+  },
+  'mox-diamond-returned-by-effect': async (page) => {
+    const recall = hand(page, 'Scenario Recall');
+    await passUntil(page, recall.and(page.locator('.actionable')));
+    await recall.click();
+    const mox = seatZone(page, 'P1', 'Graveyard')
+      .locator('.zone-card-thumb')
+      .filter({ has: page.getByRole('img', { name: 'Mox Diamond' }) })
+      .first();
+    await mox.click();
+    await confirmButton(page).click();
+    const forest = cardChoice(page, 'Forest', 'Discard');
+    await passStackUntil(page, forest);
+    await forest.click();
+    await passUntil(page, permanent(page, 'P1', 'Mox Diamond'));
+    await expect(inZone(page, 'P1', 'Graveyard', 'Forest')).toHaveCount(1);
   },
   'chrome-mox-no-artifact-or-land': async (page) => {
     await castChromeMox(page);

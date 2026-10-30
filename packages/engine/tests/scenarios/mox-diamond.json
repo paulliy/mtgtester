@@ -1,0 +1,257 @@
+{
+  "schemaVersion": 1,
+  "card": "Mox Diamond",
+  "supportCards": [
+    {
+      "name": "Scenario Imp",
+      "typeLine": "Creature — Imp",
+      "manaCost": "{R}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Recall",
+      "typeLine": "Sorcery",
+      "manaCost": "{1}{W}",
+      "oracleText": "Return target artifact card from your graveyard to the battlefield."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "mox-diamond-discard-land",
+      "title": "Mox Diamond: discard a land as it enters, then tap it for red",
+      "clauses": [1, 2],
+      "instructions": [
+        "Cast Mox Diamond.",
+        "Discard Forest as it enters.",
+        "Cast Scenario Imp, tapping Mox Diamond for {R}."
+      ],
+      "expectedOutcome": "Forest is discarded, Mox Diamond enters, and its red mana casts Scenario Imp.",
+      "seats": {
+        "P1": {
+          "hand": ["Mox Diamond", "Forest", "Scenario Imp"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Mox Diamond/"
+        },
+        {
+          "player": "P1",
+          "choose": "Discard Forest"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Imp/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Mox Diamond", "Scenario Imp"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Forest"],
+            "lacks": ["Mox Diamond"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Mox Diamond",
+            "equals": true
+          }
+        },
+        {
+          "event": {
+            "type": "discard",
+            "count": 1,
+            "payload": "Forest"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mox-diamond-decline",
+      "title": "Mox Diamond: discard nothing and it goes to your graveyard",
+      "clauses": [1],
+      "instructions": ["Cast Mox Diamond.", "Discard nothing as it would enter."],
+      "expectedOutcome": "Mox Diamond is put into your graveyard; Forest stays in your hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Mox Diamond", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Mox Diamond/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Discard nothing/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Mox Diamond"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Forest"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Mox Diamond"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mox-diamond-no-land",
+      "title": "Mox Diamond: with no land card in hand it goes to your graveyard",
+      "clauses": [1],
+      "instructions": ["Cast Mox Diamond with only Scenario Bear left in your hand."],
+      "expectedOutcome": "Mox Diamond is put into your graveyard; Scenario Bear, not a land, cannot be discarded for it.",
+      "seats": {
+        "P1": {
+          "hand": ["Mox Diamond", "Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Mox Diamond/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Mox Diamond"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Bear"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mox-diamond-choose-land",
+      "title": "Mox Diamond: you choose which land to discard",
+      "clauses": [1],
+      "instructions": ["Cast Mox Diamond.", "Discard Island, keeping Forest."],
+      "expectedOutcome": "Island is discarded and Mox Diamond enters; Forest stays in your hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Mox Diamond", "Forest", "Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Mox Diamond/"
+        },
+        {
+          "player": "P1",
+          "choose": "Discard Island"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Mox Diamond"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Island"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Forest"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mox-diamond-returned-by-effect",
+      "title": "Mox Diamond: the replacement applies when another effect puts it onto the battlefield",
+      "clauses": [1],
+      "instructions": [
+        "Cast Scenario Recall targeting Mox Diamond in your graveyard.",
+        "Discard Forest as Mox Diamond would enter."
+      ],
+      "expectedOutcome": "Forest is discarded and Mox Diamond enters from your graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Recall", "Forest"],
+          "battlefield": ["Plains", "Plains"],
+          "graveyard": ["Mox Diamond"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Recall/",
+          "targets": ["Mox Diamond"]
+        },
+        {
+          "player": "P1",
+          "choose": "Discard Forest"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Mox Diamond"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Forest", "Scenario Recall"],
+            "lacks": ["Mox Diamond"]
+          }
+        }
+      ]
+    }
+  ]
+}

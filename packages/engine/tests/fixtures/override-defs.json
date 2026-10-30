@@ -21447,6 +21447,21 @@
     }
   },
   {
+    "oracleId": "f3c5978a-70fa-431f-933b-b954bd0db0ea",
+    "name": "Mox Diamond",
+    "handledLines": [
+      "If this artifact would enter, you may discard a land card instead. If you do, put this artifact onto the battlefield. If you don't, put it into its owner's graveyard."
+    ],
+    "def": {
+      "entersUnlessDiscard": {
+        "filter": {
+          "kind": "type",
+          "value": "Land"
+        }
+      }
+    }
+  },
+  {
     "oracleId": "f4310dfd-52eb-4c1f-b1ad-bfbc9b50fe7b",
     "name": "Nova Flame",
     "handledLines": [
@@ -35914,6 +35929,21 @@
           "timing": "any"
         }
       ]
+    }
+  },
+  {
+    "oracleId": "oracle-mox-diamond",
+    "name": "Mox Diamond",
+    "handledLines": [
+      "If this artifact would enter, you may discard a land card instead. If you do, put this artifact onto the battlefield. If you don't, put it into its owner's graveyard."
+    ],
+    "def": {
+      "entersUnlessDiscard": {
+        "filter": {
+          "kind": "type",
+          "value": "Land"
+        }
+      }
     }
   },
   {

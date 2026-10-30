@@ -104,6 +104,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'mox-diamond.json',
+    file: scenarioFile(
+      'mox-diamond.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/mox-diamond.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'path-to-exile.json',
     file: scenarioFile(
       'path-to-exile.json',

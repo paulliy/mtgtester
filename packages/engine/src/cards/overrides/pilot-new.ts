@@ -93,4 +93,17 @@ export function registerPilotNewOverrides(): void {
       ],
     },
   );
+
+  // "If this artifact would enter, you may discard a land card instead. If you do, put this
+  // artifact onto the battlefield. If you don't, put it into its owner's graveyard." A
+  // replacement (CR 614.1c), not a cost or a trigger: it applies whenever Mox Diamond would enter,
+  // cast or put there by another effect, and the land is discarded as it enters.
+  defineCard(
+    'f3c5978a-70fa-431f-933b-b954bd0db0ea',
+    'Mox Diamond',
+    [
+      "If this artifact would enter, you may discard a land card instead. If you do, put this artifact onto the battlefield. If you don't, put it into its owner's graveyard.",
+    ],
+    { entersUnlessDiscard: { filter: ofType('Land') } },
+  );
 }
