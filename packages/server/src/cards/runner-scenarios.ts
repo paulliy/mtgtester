@@ -103,6 +103,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       ),
     ),
   },
+  {
+    name: 'professional-face-breaker.json',
+    file: scenarioFile(
+      'professional-face-breaker.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/professional-face-breaker.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
 ];
 const FILES = RUNNER_SCENARIO_FILES.map(({ file }) => file);
 

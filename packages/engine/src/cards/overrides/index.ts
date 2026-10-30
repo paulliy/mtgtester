@@ -108,6 +108,7 @@ import { registerWhiteBlackControlAvenOverrides } from './white-black-control-av
 import { registerWhiteBlackControlGiftOverrides } from './white-black-control-gifts';
 import { registerWhiteBlackControlPerchOverrides } from './white-black-control-perch';
 import { registerMiniPilotOverrides } from './mini-pilot';
+import { registerPilotNewOverrides } from './pilot-new';
 
 export interface CardOverride {
   oracleId: OracleId;
@@ -257,6 +258,7 @@ registerDeck('coverage-pr11', registerCoveragePr11Overrides);
 registerDeck('coverage-pr11b', registerCoveragePr11bOverrides);
 registerDeck('coverage-pr12', registerCoveragePr12Overrides);
 registerDeck('mini-pilot', registerMiniPilotOverrides);
+registerDeck('pilot-new', registerPilotNewOverrides);
 
 /** Register an override. Exported for the per-card modules and for tests. */
 export function registerOverride(override: CardOverride): void {

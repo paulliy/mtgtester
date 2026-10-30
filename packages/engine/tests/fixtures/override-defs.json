@@ -497,6 +497,52 @@
     }
   },
   {
+    "oracleId": "04152e7a-969c-4858-841b-0a569a9fc1bf",
+    "name": "Professional Face-Breaker",
+    "handledLines": [
+      "Sacrifice a Treasure: Exile the top card of your library. You may play that card this turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Sacrifice a Treasure: Exile the top card of your library. You may play that card this turn",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "exileTopNPlayableUntilEot"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "sacrificeOther",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Treasure"
+                  }
+                ]
+              }
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "04853f06-3fd2-445d-9b0d-d68d0f116635",
     "name": "Verrak, Warped Sengir",
     "handledLines": [
@@ -37581,6 +37627,52 @@
           }
         ]
       }
+    }
+  },
+  {
+    "oracleId": "oracle-professional-face-breaker",
+    "name": "Professional Face-Breaker",
+    "handledLines": [
+      "Sacrifice a Treasure: Exile the top card of your library. You may play that card this turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Sacrifice a Treasure: Exile the top card of your library. You may play that card this turn",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "exileTopNPlayableUntilEot"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "sacrificeOther",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Treasure"
+                  }
+                ]
+              }
+            }
+          ],
+          "timing": "any"
+        }
+      ]
     }
   },
   {

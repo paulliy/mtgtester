@@ -103,6 +103,35 @@ async function castWith(
   await passStackUntil(page, logLine(page, options.resolves));
 }
 
+const life = (page: Page, seat: string): Locator =>
+  page.locator(`${seat === 'P1' ? '.human-zone' : `.opponent[data-seat="${seat}"]`} .life-badge`);
+
+/** Declare each [creature, defender] attack in the attack panel, the rest not attacking. */
+async function attack(page: Page, attacks: Array<[string, string]>): Promise<void> {
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click();
+  for (const [creature, defender] of attacks)
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: creature })
+      .getByRole('button', { name: defender })
+      .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+}
+
+/** Activate the ability matching `ability` of a permanent, once it is offered. */
+async function activate(page: Page, source: Locator, ability: RegExp): Promise<void> {
+  await passUntil(page, source.and(page.locator('.actionable')));
+  await source.click();
+  const action = page.locator('.source-actions .source-action-row button').filter({
+    hasText: ability,
+  });
+  if ((await action.count()) > 0) await action.first().click();
+  const confirm = confirmButton(page);
+  if ((await confirm.isVisible()) && (await confirm.isEnabled())) await confirm.click();
+}
+
 const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
   'mizzium-mortars-target': async (page) => {
     await castWith(page, hand(page, 'Mizzium Mortars'), {
@@ -203,6 +232,90 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await passUntil(page, permanent(page, 'P1', 'Chrome Mox'));
     await expectNotCastable(page, 'Scenario Imp');
     await expectNotCastable(page, 'Scenario Flame');
+  },
+  'face-breaker-treasure-then-play': async (page) => {
+    await attack(page, [['Professional Face-Breaker', 'P2']]);
+    await passUntil(page, permanent(page, 'P1', 'Treasure'));
+    await expect(life(page, 'P2')).toHaveText('38');
+    await activate(
+      page,
+      permanent(page, 'P1', 'Professional Face-Breaker'),
+      /Sacrifice a Treasure/,
+    );
+    const forest = seatZone(page, 'P1', 'Exile')
+      .locator('.zone-card-thumb')
+      .filter({ has: page.getByRole('img', { name: 'Forest' }) })
+      .first();
+    await passUntil(page, forest.and(page.locator('.actionable')));
+    await forest.click();
+    const play = page.getByRole('button', { name: /^Play/ });
+    if ((await play.count()) > 0) await play.first().click();
+    await passUntil(page, permanent(page, 'P1', 'Forest'));
+    await expect(permanent(page, 'P1', 'Treasure')).toHaveCount(0);
+    await expect(
+      seatZone(page, 'P1', 'Exile').getByRole('img', { name: 'Scenario Bear' }),
+    ).toHaveCount(0);
+  },
+  'face-breaker-double-blocked': async (page) => {
+    await attack(page, [['Professional Face-Breaker', 'P2']]);
+    // P2, a scripted seat, blocks with both Bears; Face-Breaker's 2 damage goes to one of them.
+    const assign = page.getByRole('button', { name: /^All 2 damage to Scenario Bear/ }).first();
+    await passUntil(page, assign);
+    await assign.click();
+    await passUntil(page, permanent(page, 'P2', 'Scenario Bear').nth(0));
+    await expect(permanent(page, 'P2', 'Scenario Bear')).toHaveCount(1);
+    await expect(life(page, 'P2')).toHaveText('40');
+    await expect(permanent(page, 'P1', 'Treasure')).toHaveCount(0);
+  },
+  'face-breaker-menace-lone-blocker': async (page) => {
+    await attack(page, [['Professional Face-Breaker', 'P2']]);
+    // P2's lone block is refused; it declares no block, so the damage and the Treasure follow.
+    await passUntil(page, permanent(page, 'P1', 'Treasure'));
+    await expect(life(page, 'P2')).toHaveText('38');
+    await expect(permanent(page, 'P2', 'Scenario Bear')).toHaveCount(1);
+  },
+  'face-breaker-one-treasure': async (page) => {
+    await attack(page, [
+      ['Professional Face-Breaker', 'P2'],
+      ['Scenario Bear', 'P2'],
+    ]);
+    await passUntil(page, permanent(page, 'P1', 'Treasure'));
+    await expect(life(page, 'P2')).toHaveText('36');
+    await expect(permanent(page, 'P1', 'Treasure')).toHaveCount(1);
+  },
+  'face-breaker-opponent-creature-no-treasure': async (page) => {
+    // P2, a scripted seat, attacks you with Scenario Bear; you don't block.
+    const declare = page.getByRole('button', { name: /Declare blockers/ });
+    await passUntil(page, declare);
+    await declare.click();
+    await page.getByRole('button', { name: 'Confirm blocks' }).click();
+    await passUntil(page, life(page, 'P1').filter({ hasText: '38' }));
+    await expect(permanent(page, 'P1', 'Treasure')).toHaveCount(0);
+    await expect(permanent(page, 'P2', 'Treasure')).toHaveCount(0);
+  },
+  'face-breaker-no-treasure-no-sacrifice': async (page) => {
+    await passUntil(page, hand(page, 'Scenario Bear').and(page.locator('.actionable')));
+    // Scenario Trinket is an artifact but not a Treasure: Face-Breaker has nothing to offer.
+    await expect(permanent(page, 'P1', 'Professional Face-Breaker')).not.toHaveClass(/actionable/);
+  },
+  'face-breaker-permission-ends': async (page) => {
+    await attack(page, [['Professional Face-Breaker', 'P2']]);
+    await passUntil(page, permanent(page, 'P1', 'Treasure'));
+    await activate(
+      page,
+      permanent(page, 'P1', 'Professional Face-Breaker'),
+      /Sacrifice a Treasure/,
+    );
+    const bear = seatZone(page, 'P1', 'Exile').getByRole('img', { name: 'Scenario Bear' });
+    await expect(bear).toHaveCount(1);
+    // Pass through the other seats' turns to your next precombat main phase.
+    await passUntil(page, page.getByText(/Turn 8/).first());
+    await expect(bear).toHaveCount(1);
+    await expect(
+      seatZone(page, 'P1', 'Exile')
+        .locator('.zone-card-thumb')
+        .filter({ has: page.getByRole('img', { name: 'Scenario Bear' }) }),
+    ).not.toHaveClass(/actionable/);
   },
   'chrome-mox-no-artifact-or-land': async (page) => {
     await castChromeMox(page);

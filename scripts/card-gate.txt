@@ -172,3 +172,4 @@ packages/engine/tests/mutation
 packages/server/src/cards/mutation.test.ts
 packages/engine/tests/facets.test.ts
 packages/server/src/cards/facet-report.test.ts
+packages/engine/tests/cards/pilot-new

@@ -17457,6 +17457,78 @@
       ],
       "viewerScenarioIds": ["pr13-rakdos-charm-viewer-creature-sources"],
       "gameplayAiScenarioIds": []
+    },
+    "04152e7a-969c-4858-841b-0a569a9fc1bf": {
+      "name": "Professional Face-Breaker",
+      "oracleSha256": "7ff1be0d60a259e5c662c128d0e177fda06a929189549c760de547ff27ae3658",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Menace",
+          "implementation": [
+            "menace keyword (parser): blocked only by two or more creatures, CR 702.111b"
+          ],
+          "engineTestIds": [
+            "cards/pilot-new/professional-face-breaker.test.ts::face-breaker-double-blocked",
+            "cards/pilot-new/professional-face-breaker.test.ts::face-breaker-menace-lone-blocker",
+            "clause 1, negative: one creature alone cannot block it, so the block is refused"
+          ],
+          "viewerScenarioIds": ["face-breaker-double-blocked", "face-breaker-menace-lone-blocker"]
+        },
+        {
+          "oracleText": "Whenever one or more creatures you control deal combat damage to a player, create a Treasure token.",
+          "implementation": [
+            "batched combat-damage-to-a-player trigger (parser) creating the catalog Treasure"
+          ],
+          "engineTestIds": [
+            "cards/pilot-new/professional-face-breaker.test.ts::face-breaker-treasure-then-play",
+            "cards/pilot-new/professional-face-breaker.test.ts::face-breaker-one-treasure",
+            "cards/pilot-new/professional-face-breaker.test.ts::face-breaker-double-blocked",
+            "cards/pilot-new/professional-face-breaker.test.ts::face-breaker-opponent-creature-no-treasure",
+            "clause 2: the Treasure trigger asks nothing"
+          ],
+          "viewerScenarioIds": [
+            "face-breaker-treasure-then-play",
+            "face-breaker-one-treasure",
+            "face-breaker-double-blocked",
+            "face-breaker-opponent-creature-no-treasure"
+          ]
+        },
+        {
+          "oracleText": "Sacrifice a Treasure: Exile the top card of your library. You may play that card this turn.",
+          "implementation": [
+            "activated ability: sacrificeOther (a Treasure you control) cost; exileTopNPlayableUntilEot 1"
+          ],
+          "engineTestIds": [
+            "cards/pilot-new/professional-face-breaker.test.ts::face-breaker-treasure-then-play",
+            "cards/pilot-new/professional-face-breaker.test.ts::face-breaker-permission-ends",
+            "clause 3, negative: an artifact that is not a Treasure does not pay the sacrifice",
+            "clause 3, negative: on your next turn the exiled card can no longer be cast"
+          ],
+          "viewerScenarioIds": [
+            "face-breaker-treasure-then-play",
+            "face-breaker-no-treasure-no-sacrifice",
+            "face-breaker-permission-ends"
+          ]
+        }
+      ],
+      "facetNotes": [
+        {
+          "facet": "other",
+          "reason": "the IR's 'other' is the sacrificeOther cost kind's name; the text has no \"another\" and Face-Breaker is not a Treasure"
+        },
+        {
+          "facet": "untilEndOfTurn",
+          "reason": "\"this turn\" is the permission's duration, which exileTopNPlayableUntilEot ends at end of turn"
+        }
+      ],
+      "equivalentMutants": [
+        {
+          "mutant": "triggers[0]: widen trigger subject (drop condition 1)",
+          "reason": "Only creatures deal combat damage (CR 510.1), so dropping the subject's \"creature\" condition matches the same damage events."
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }
