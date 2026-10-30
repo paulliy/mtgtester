@@ -88,6 +88,12 @@ function abilityMutants(node: Node, path: Path, add: AddMutant): void {
         add(path, `drop trigger ${key}`, (ability) => {
           delete (ability['trigger'] as Node)[key];
         });
+    // "One or more … die" fired once per object, and "only once each turn" without its limit.
+    for (const key of ['aggregate', 'oncePerTurn'])
+      if (trigger[key] === true)
+        add(path, `drop trigger ${key}`, (ability) => {
+          delete (ability['trigger'] as Node)[key];
+        });
     const subject = trigger['subject'];
     if (isNode(subject) && isNode(subject['selector'])) {
       const selector = subject['selector'];
