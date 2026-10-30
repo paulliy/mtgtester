@@ -1,0 +1,53 @@
+name: Nightly fuzz
+
+# ADR 0034 decision 8: the authoritative fuzz run. Each night plays the next 48 seeds, so the
+# nights cover new pods; a failure opens an issue (or comments on the open one) with each failing
+# seed, its decks and the command that replays it.
+on:
+  schedule:
+    - cron: '23 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  fuzz:
+    name: Engine / Nightly fuzz
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-bun-deps
+      - id: fuzz
+        run: >-
+          bun run fuzz --from "$(( (RUN_NUMBER - 1) * 48 ))" --games 48 --jobs 4
+          --json fuzz.json --report fuzz-report.md
+        env:
+          RUN_NUMBER: ${{ github.run_number }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        continue-on-error: true
+        with:
+          name: nightly-fuzz-results
+          path: |
+            fuzz.json
+            fuzz-report.md
+          if-no-files-found: ignore
+      - name: Open or update the fuzz issue
+        if: failure() && steps.fuzz.outcome == 'failure' && hashFiles('fuzz-report.md') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title='Nightly fuzz failures'
+          { echo "Run: $RUN_URL"; echo; cat fuzz-report.md; } > body.md
+          open=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')
+          if [[ -n "$open" ]]; then
+            gh issue comment "$open" --body-file body.md
+          else
+            gh issue create --title "$title" --body-file body.md
+          fi

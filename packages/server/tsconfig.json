@@ -6,7 +6,7 @@
     "types": ["node", "bun"]
   },
   "include": ["src"],
-  // Test suites, their shared fixtures and the `test-cards-*` harnesses import helpers from
+  // Test suites, their shared fixtures, the `test-cards-*` harnesses and fuzz import helpers from
   // `packages/engine/tests/` or `scripts/`, outside this project's `rootDir`. They are checked by
   // `tsconfig.test.json` instead — the same production/test split `packages/engine` uses.
   // See docs/guides/testing-and-typechecking.md.
@@ -14,7 +14,10 @@
     "src/**/*.test.ts",
     "src/cards/card-evidence-input.fixtures.ts",
     "src/cli/test-cards-l4-l6.ts",
-    "src/cli/test-cards-l7-coverage.ts"
+    "src/cli/test-cards-l7-coverage.ts",
+    "src/cli/fuzz.ts",
+    "src/cli/fuzz-game.ts",
+    "src/cli/fuzz-plan.ts"
   ],
   "references": [{ "path": "../shared" }, { "path": "../engine" }, { "path": "../bot" }]
 }

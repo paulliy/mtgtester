@@ -30,6 +30,7 @@ jobs:
     outputs:
       code: ${{ steps.classify.outputs.code }}
       full: ${{ steps.classify.outputs.full }}
+      engine: ${{ steps.classify.outputs.engine }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -46,6 +47,7 @@ jobs:
           if [[ "$EVENT_NAME" != "pull_request" ]]; then
             echo "code=true" >> "$GITHUB_OUTPUT"
             echo "full=true" >> "$GITHUB_OUTPUT"
+            echo "engine=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           if [[ "$DRAFT" == "true" ]]; then
@@ -59,7 +61,13 @@ jobs:
           if ! changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA"); then
             echo "::warning::Could not compute changed files; running all jobs."
             echo "code=true" >> "$GITHUB_OUTPUT"
+            echo "engine=true" >> "$GITHUB_OUTPUT"
             exit 0
+          fi
+          if grep -q '^packages/engine/src/' <<< "$changed"; then
+            echo "engine=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "engine=false" >> "$GITHUB_OUTPUT"
           fi
           docs_only=true
           while IFS= read -r file; do
@@ -176,6 +184,34 @@ jobs:
       - run: bun run mutate-cards --changed
         env:
           MUTATION_BASE: ${{ github.event.pull_request.base.sha }}
+
+  fuzz:
+    name: Engine / Fuzz (advisory)
+    needs: changes
+    # ADR 0034 decision 8: seeded four-player games with the state invariants on, for pull requests
+    # that change the engine. Advisory: an engine change shifts the decision stream, so a seed can
+    # start failing on a bug the pull request did not write. The nightly run is authoritative.
+    if: needs.changes.outputs.engine == 'true' && github.event_name == 'pull_request'
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-bun-deps
+      # Six pods (two of each provider mix), plus three for each changed pinned card. Each failure
+      # prints the command that replays it.
+      - run: bun run fuzz --games 6 --changed --base "$BASE" --jobs 4 --json fuzz.json
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        continue-on-error: true
+        with:
+          name: fuzz-results
+          path: fuzz.json
+          if-no-files-found: ignore
 
   card-verification:
     name: Cards / Offline verification gate

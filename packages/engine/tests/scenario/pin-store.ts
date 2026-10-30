@@ -97,4 +97,8 @@ export const pinStore = {
   has(name: string): boolean {
     return Object.hasOwn(store().names, name);
   },
+  /** Every name the store holds. */
+  names(): string[] {
+    return Object.keys(store().names);
+  },
 };

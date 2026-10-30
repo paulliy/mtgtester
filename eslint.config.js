@@ -259,12 +259,14 @@ export default tseslint.config(
   },
   {
     // The test-only hooks (ADR 0034 decisions 5 and 8) are installed only by tests and tools:
-    // product code may run them, never install them. `testing/` itself wires them together. The
-    // table pattern is repeated because this block's rule replaces the one above for these files.
+    // product code may run them, never install them. `testing/` itself wires them together, and
+    // the fuzz CLI is a tool. The table pattern is repeated because this block's rule replaces the
+    // one above for these files.
     files: ['packages/engine/src/**/*.ts', 'packages/server/src/**/*.ts'],
     ignores: [
       '**/*.test.ts',
       'packages/engine/src/testing/**',
+      'packages/server/src/cli/fuzz-game.ts',
       'packages/server/src/table/**',
       'packages/server/src/cli/serve-table.ts',
       'packages/server/src/cli/table-scripted-run.ts',
