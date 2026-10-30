@@ -7407,8 +7407,16 @@ const FUSE_REMINDER = /^Fuse \(You may cast one or both halves of this card from
 function interpretSplitCard(card: OracleCard): CardDefinition | null {
   const back = card.backFace;
   const names = card.name.split(' // ');
-  const costs = (card.manaCost ?? '').split(' // ');
-  const typeLines = card.typeLine.split(' // ').map((line) => line.trim());
+  const rawCosts = (card.manaCost ?? '').split(' // ');
+  const costs =
+    back !== undefined && card.layout === 'split' && rawCosts.length !== 2
+      ? [card.manaCost ?? '', back.manaCost ?? '']
+      : rawCosts;
+  const rawTypeLines = card.typeLine.split(' // ').map((line) => line.trim());
+  const typeLines =
+    back !== undefined && card.layout === 'split' && rawTypeLines.length !== 2
+      ? [card.typeLine.trim(), back.typeLine.trim()]
+      : rawTypeLines;
   if (back === undefined || names.length !== 2 || costs.length !== 2 || typeLines.length !== 2)
     return null;
   if (!typeLines.every((line) => line === 'Instant' || line === 'Sorcery')) return null;

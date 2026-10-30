@@ -1,162 +1,166 @@
 {
   "seed": "adr-0033-phase-6-pilot",
-  "bankSha256": "4fbbf8f91fc4812e78e6b892ddafa46e810e6f7e13d05698a7d02639563a14a9",
+  "bankSha256": "e2e0284ff74a9d461e7368880d7893f6e925b2ca3b0b4cd0da49bc4b640f08b7",
   "cards": [
     {
-      "name": "Aetherize",
-      "edhrecRank": 286,
+      "name": "Professional Face-Breaker",
+      "edhrecRank": 207,
       "reasons": [
-        "unrecognized rules text: \"Return all attacking creatures to their owner's hand.\""
-      ],
-      "arm": "current"
-    },
-    {
-      "name": "Seedborn Muse",
-      "edhrecRank": 287,
-      "reasons": [
-        "unrecognized rules text: \"Untap all permanents you control during each other player's untap step.\""
+        "unrecognized rules text: \"Sacrifice a Treasure: Exile the top card of your library. You may play that card this turn.\""
       ],
       "arm": "new"
     },
     {
-      "name": "Faerie Mastermind",
-      "edhrecRank": 288,
-      "reasons": ["unrecognized rules text: \"{3}{U}: Each player draws a card.\""],
-      "arm": "current"
-    },
-    {
-      "name": "Witch Enchanter // Witch-Blessed Meadow",
-      "edhrecRank": 289,
-      "reasons": ["unsupported layout \"modal_dfc\""],
-      "arm": "new"
-    },
-    {
-      "name": "Mana Geyser",
-      "edhrecRank": 290,
+      "name": "Secluded Courtyard",
+      "edhrecRank": 220,
       "reasons": [
-        "unrecognized rules text: \"Add {R} for each tapped land your opponents control.\""
-      ],
-      "arm": "new"
-    },
-    {
-      "name": "Ruby Medallion",
-      "edhrecRank": 292,
-      "reasons": ["unrecognized rules text: \"Red spells you cast cost {1} less to cast.\""],
-      "arm": "current"
-    },
-    {
-      "name": "Choked Estuary",
-      "edhrecRank": 293,
-      "reasons": [
-        "unrecognized rules text: \"As this land enters, you may reveal an Island or Swamp card from your hand. If you don't, this land enters tapped.\""
-      ],
-      "arm": "new"
-    },
-    {
-      "name": "Craterhoof Behemoth",
-      "edhrecRank": 295,
-      "reasons": [
-        "unrecognized rules text: \"When this creature enters, creatures you control gain trample and get +X/+X until end of turn, where X is the number of creatures you control.\""
+        "unsupported mana production: \"{T}: Add one mana of any color. Spend this mana only to cast a creature spell of the chosen type or activate an ability of a creature source of the chosen type.\""
       ],
       "arm": "current"
     },
     {
-      "name": "Braids, Arisen Nightmare",
-      "edhrecRank": 298,
+      "name": "The Great Henge",
+      "edhrecRank": 228,
       "reasons": [
-        "unrecognized rules text: \"At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each opponent may sacrifice a permanent of their choice that shares a card type with it. For each opponent who doesn't, that player loses 2 life and you draw a card.\""
-      ],
-      "arm": "new"
-    },
-    {
-      "name": "Finale of Devastation",
-      "edhrecRank": 299,
-      "reasons": [
-        "unrecognized rules text: \"Search your library and/or graveyard for a creature card with mana value X or less and put it onto the battlefield. If you search your library this way, shuffle. If X is 10 or more, creatures you control get +X/+X and gain haste until end of turn.\""
+        "unrecognized rules text: \"This spell costs {X} less to cast, where X is the greatest power among creatures you control.\""
       ],
       "arm": "current"
     },
     {
-      "name": "The Ozolith",
-      "edhrecRank": 303,
-      "reasons": [
-        "unrecognized rules text: \"Whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on ~.\"",
-        "unrecognized rules text: \"At the beginning of combat on your turn, if ~ has counters on it, you may move all counters from ~ onto target creature.\""
-      ],
+      "name": "Explore",
+      "edhrecRank": 237,
+      "reasons": ["unrecognized rules text: \"You may play an additional land this turn.\""],
       "arm": "current"
     },
     {
-      "name": "Shadowspear",
-      "edhrecRank": 305,
+      "name": "Mithril Coat",
+      "edhrecRank": 238,
       "reasons": [
-        "unrecognized rules text: \"{1}: Permanents your opponents control lose hexproof and indestructible until end of turn.\""
-      ],
-      "arm": "current"
-    },
-    {
-      "name": "Flusterstorm",
-      "edhrecRank": 310,
-      "reasons": [
-        "unrecognized rules text: \"Counter target instant or sorcery spell unless its controller pays {1}.\"",
-        "unrecognized rules text: \"Storm\""
+        "unrecognized rules text: \"When ~ enters, attach it to target legendary creature you control.\""
       ],
       "arm": "new"
     },
     {
-      "name": "Urza's Incubator",
-      "edhrecRank": 311,
+      "name": "Gamble",
+      "edhrecRank": 241,
       "reasons": [
-        "unrecognized rules text: \"Creature spells of the chosen type cost {2} less to cast.\""
-      ],
-      "arm": "new"
-    },
-    {
-      "name": "Phyrexian Metamorph",
-      "edhrecRank": 313,
-      "reasons": [
-        "unrecognized rules text: \"You may have this creature enter as a copy of any artifact or creature on the battlefield, except it's an artifact in addition to its other types.\""
+        "unrecognized rules text: \"Search your library for a card, put that card into your hand, discard a card at random, then shuffle.\""
       ],
       "arm": "current"
     },
     {
-      "name": "Sun Titan",
-      "edhrecRank": 315,
+      "name": "Takenuma, Abandoned Mire",
+      "edhrecRank": 245,
       "reasons": [
-        "unrecognized rules text: \"Whenever this creature enters or attacks, you may return target permanent card with mana value 3 or less from your graveyard to the battlefield.\""
+        "unrecognized rules text: \"{3}{B}, Discard this card: Mill three cards, then return a creature or planeswalker card from your graveyard to your hand. This ability costs {1} less to activate for each legendary creature you control.\""
       ],
       "arm": "new"
     },
     {
-      "name": "Foreboding Ruins",
-      "edhrecRank": 317,
+      "name": "Morbid Opportunist",
+      "edhrecRank": 246,
       "reasons": [
-        "unrecognized rules text: \"As this land enters, you may reveal a Swamp or Mountain card from your hand. If you don't, this land enters tapped.\""
+        "unrecognized rules text: \"Whenever one or more other creatures die, draw a card. This ability triggers only once each turn.\""
       ],
       "arm": "current"
     },
     {
-      "name": "Simic Growth Chamber",
-      "edhrecRank": 321,
+      "name": "Mox Diamond",
+      "edhrecRank": 248,
       "reasons": [
-        "unrecognized rules text: \"When this land enters, return a land you control to its owner's hand.\""
+        "unrecognized rules text: \"If this artifact would enter, you may discard a land card instead. If you do, put this artifact onto the battlefield. If you don't, put it into its owner's graveyard.\""
       ],
       "arm": "new"
     },
     {
-      "name": "Guardian Project",
-      "edhrecRank": 324,
+      "name": "Everflowing Chalice",
+      "edhrecRank": 252,
       "reasons": [
-        "unrecognized rules text: \"Whenever a nontoken creature you control enters, if it doesn't have the same name as another creature you control or a creature card in your graveyard, draw a card.\""
+        "unrecognized rules text: \"Multikicker {2}\"",
+        "unrecognized rules text: \"~ enters with a charge counter on it for each time it was kicked.\""
       ],
       "arm": "new"
     },
     {
-      "name": "Lotus Cobra",
-      "edhrecRank": 329,
+      "name": "Sylvan Library",
+      "edhrecRank": 258,
       "reasons": [
-        "unrecognized rules text: \"Whenever a land you control enters, add one mana of any color.\""
+        "unrecognized rules text: \"At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the card on top of your library.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Orcish Bowmasters",
+      "edhrecRank": 259,
+      "reasons": [
+        "unrecognized rules text: \"When this creature enters and whenever an opponent draws a card except the first one they draw in each of their draw steps, this creature deals 1 damage to any target. Then amass Orcs 1.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Syr Konrad, the Grim",
+      "edhrecRank": 260,
+      "reasons": ["unrecognized rules text: \"{1}{B}: Each player mills a card.\""],
+      "arm": "current"
+    },
+    {
+      "name": "Academy Manufactor",
+      "edhrecRank": 262,
+      "reasons": [
+        "unrecognized rules text: \"If you would create a Clue, Food, or Treasure token, instead create one of each.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Untimely Malfunction",
+      "edhrecRank": 266,
+      "reasons": [
+        "unrecognized rules text: \"Choose one —\"",
+        "unrecognized rules text: \"• Destroy target artifact.\"",
+        "unrecognized rules text: \"• Change the target of target spell or ability with a single target.\"",
+        "unrecognized rules text: \"• One or two target creatures can't block this turn.\""
       ],
       "arm": "current"
+    },
+    {
+      "name": "Bolas's Citadel",
+      "edhrecRank": 274,
+      "reasons": [
+        "unrecognized rules text: \"You may play lands and cast spells from the top of your library. If you cast a spell this way, pay life equal to its mana value rather than pay its mana cost.\"",
+        "unrecognized rules text: \"{T}, Sacrifice ten nonland permanents: Each opponent loses 10 life.\""
+      ],
+      "arm": "current"
+    },
+    {
+      "name": "Jet Medallion",
+      "edhrecRank": 276,
+      "reasons": ["unrecognized rules text: \"Black spells you cast cost {1} less to cast.\""],
+      "arm": "current"
+    },
+    {
+      "name": "Etali, Primal Storm",
+      "edhrecRank": 279,
+      "reasons": [
+        "unrecognized rules text: \"Whenever ~ attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana costs.\""
+      ],
+      "arm": "current"
+    },
+    {
+      "name": "Inspiring Call",
+      "edhrecRank": 280,
+      "reasons": [
+        "unrecognized rules text: \"Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Ragavan, Nimble Pilferer",
+      "edhrecRank": 282,
+      "reasons": [
+        "unrecognized rules text: \"Whenever ~ deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card.\"",
+        "unrecognized rules text: \"Dash {1}{R}\""
+      ],
+      "arm": "new"
     }
   ]
 }

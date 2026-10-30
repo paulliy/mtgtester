@@ -215,11 +215,13 @@ bulk-smoke` interprets and validates the whole bank and fails on a throw, invali
   52 unmodeled pinned ones, 46 of which wait on the same spell-face feature. `bun run pilot:draw`
   takes, from the Scryfall bank, the 20 best EDHREC-ranked commander-legal cards that no fixture
   pins, are not adventure or omen cards, and do not interpret; a seeded hash splits them 10 and 10. It records the draw and the bank's hash in `docs/reviews/card-authoring-pilot-draw.json`.
-  Drawn 2026-10-30 from the bank of that day (39,196 cards): Professional Face-Breaker, Mithril
+  Drawn 2026-10-30 from the bank the bulk baseline records (`e2e0284f…`); a draw in the build
+  environment from that day's later bank picked the same 20. Professional Face-Breaker, Mithril
   Coat, Takenuma, Abandoned Mire, Mox Diamond, Everflowing Chalice, Sylvan Library, Academy
   Manufactor, Orcish Bowmasters, Inspiring Call and Ragavan, Nimble Pilferer take the new
   workflow; Secluded Courtyard, The Great Henge, Explore, Gamble, Morbid Opportunist, Untimely
   Malfunction, Syr Konrad, the Grim, Jet Medallion, Bolas's Citadel and Etali, Primal Storm take
-  the current one. All 20 are in the pin store.
+  the current one. All 20 are in the pin store. The draw leaves pinned cards out, so it
+  reproduces only before its cards are pinned; a later run draws the next 20.
 - **Two hash definitions for pins.** Pins before PR08 hashed a card's JSON with sorted keys; later
   ones hash it as written. The pin store keeps the manifest's key and accepts either.

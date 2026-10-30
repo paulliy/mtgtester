@@ -4,7 +4,8 @@
  *
  *   bun run pilot:draw [--bank data/scryfall-oracle-cards.json]
  *
- * Then pin each drawn card with `bun run pin-store add "<name>"`.
+ * Then pin each drawn card with `bun run pin-store add "<name>"`. The draw leaves pinned cards out,
+ * so run it before pinning: afterwards it draws the next 20.
  */
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';

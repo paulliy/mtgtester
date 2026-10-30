@@ -75,19 +75,7 @@ function seat(seatId: string, deckData: ReturnType<typeof deck>): SeatSetup {
 // allowed-skip: needs the Scryfall bulk file (data/scryfall-oracle-cards.json, gitignored)
 describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke checks', () => {
   it('models every unique card except the explicit fail-closed backlog', () => {
-    const expectedUnmodeled = new Set([
-      'Wandering Archaic // Explore the Vastlands',
-      // Audit: incomplete mechanics must not silently simulate approximate card text
-      // (PR10 restored the retarget, copy and ability-stack cards; PR11 restored the
-      // protection, phasing and lifecycle cards).
-      'The War in Heaven',
-      "Defacing Duskmage // Vandal's Edit",
-      'Eiganjo Dynastorian // Replenish',
-      'Intermediate Chirography',
-      'Malakir Rebirth // Malakir Mire',
-      'Valakut Awakening // Valakut Stoneforge',
-      'Wear // Tear',
-    ]);
+    const expectedUnmodeled = new Set<string>();
     const observedUnmodeled = new Set<string>();
     for (const slug of deckSlugs) {
       const parsed = parsePlaintextDeck(
