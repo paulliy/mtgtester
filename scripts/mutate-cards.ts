@@ -14,9 +14,10 @@
  *   --resume              with --json, skip the cards that file already reports
  *   --manifest <path>     read another copy of the verification manifest
  *
- * Each card runs in a child process (`--child`) that prints one line per run. A mutant can make a
- * test worker die (a heap blown by an option-enumeration explosion), which ends the child; the
- * parent records that mutant's run as a crash, not a kill, and resumes from the next mutant.
+ * Each card runs in a child process (`--child-spec <json>`) under Node (matching `bunx vitest`)
+ * that prints one line per run. A mutant can make a test worker die (a heap blown by an
+ * option-enumeration explosion), which ends the child; the parent records that mutant's run as a
+ * crash, not a kill, and resumes from the next mutant.
  *
  * It exits 1 when a reviewed card it was asked to check has a surviving or unreached mutant, or
  * tests that fail without one; `--reviewed` reports and exits 0.
@@ -26,64 +27,34 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createVitest } from 'vitest/node';
-import { interpretCard } from '../packages/engine/src/cards/interpret';
-import { cardMutants } from '../packages/engine/tests/mutation/operators';
 import type { MutationTarget } from '../packages/engine/tests/mutation/setup';
-import { pinStore } from '../packages/engine/tests/scenario/pin-store';
-import { baseCommit, changedCards } from './cards/changed-cards';
-import { indexTests, type CollectedTest } from './contracts/manifest-tests';
-import {
-  cardStatuses,
-  cardTests,
-  equivalentMutants,
-  judgeMutant,
-  testNamePattern,
-  type MutantTestResult,
-  type MutantVerdict,
-} from './contracts/mutation';
+import type { CollectedTest } from './contracts/manifest-tests';
+import type { MutantTestResult, MutantVerdict } from './contracts/mutation';
+
+interface ChildSpec {
+  card: string;
+  tests: CollectedTest[];
+  mutantLabels: string[];
+  patternSource: string;
+}
 
 const args = process.argv.slice(2);
 const option = (flag: string) => {
   const at = args.indexOf(flag);
   return at === -1 ? null : (args[at + 1] ?? null);
 };
-const root = `${process.cwd().replaceAll('\\', '/')}/`;
-// `--manifest` reads another copy: a change's new test IDs can be tried before they are committed.
-const manifestPath =
-  option('--manifest') ?? 'packages/server/fixtures/card-verification-manifest.json';
-const manifestJson = readFileSync(manifestPath, 'utf8');
-const statuses = cardStatuses(manifestJson);
+const normalizePath = (path: string) => path.replaceAll('\\', '/');
 
-/** The Vitest listing's path: `--collected`, or a fresh `vitest list` in `scratch`. */
-function listing(scratch: string): string {
-  const given = option('--collected');
-  if (given !== null) return given;
-  const path = join(scratch, 'tests.json');
-  execFileSync('bunx', ['vitest', 'list', `--json=${path}`], {
-    stdio: ['ignore', 'ignore', 'inherit'],
-  });
-  return path;
-}
-
-function readListing(path: string): CollectedTest[] {
-  return (JSON.parse(readFileSync(path, 'utf8')) as Array<{ name: string; file: string }>).map(
-    (entry) => ({ file: entry.file.replaceAll('\\', '/').replace(root, ''), fullName: entry.name }),
-  );
-}
-
-// ── Child: one card, from one mutant on ─────────────────────────────────────────────────────────
+// ── Child (Node): one card, from one mutant on ──────────────────────────────────────────────────
 
 /** Runs the card's tests: with no mutant (`--from -1` first) and then each mutant from `--from`. */
-async function child(card: string): Promise<void> {
-  const tests = cardTests(
-    manifestJson,
-    card,
-    indexTests(readListing(option('--collected')!)),
-    (path) => readFileSync(path, 'utf8'),
-  );
-  const mutants = cardMutants(interpretCard(pinStore.get(card)));
-  console.log(`TESTS ${tests.length} ${mutants.length}`);
+async function child(specPath: string): Promise<void> {
+  const { card, tests, mutantLabels, patternSource } = JSON.parse(
+    readFileSync(specPath, 'utf8'),
+  ) as ChildSpec;
+  console.log(`TESTS ${tests.length} ${mutantLabels.length}`);
   if (tests.length === 0) return;
+  const pattern = new RegExp(patternSource);
   const vitest = await createVitest(
     'test',
     { config: 'vitest.mutation.config.ts', watch: false, reporters: [{}] },
@@ -91,16 +62,18 @@ async function child(card: string): Promise<void> {
   );
   const run = async (target: MutationTarget | null): Promise<MutantTestResult[]> => {
     vitest.provide('mutation', target);
-    vitest.setGlobalTestNamePattern(testNamePattern(tests));
-    const files = [...new Set(tests.map((test) => resolve(test.file)))];
+    vitest.setGlobalTestNamePattern(pattern);
+    const files = [...new Set(tests.map((test) => normalizePath(resolve(test.file))))];
     const result = await vitest.rerunTestSpecifications(
       await vitest.getRelevantTestSpecifications(files),
     );
-    const wanted = new Set(tests.map((test) => `${resolve(test.file)}\0${test.fullName}`));
+    const wanted = new Set(
+      tests.map((test) => `${normalizePath(resolve(test.file))}\0${test.fullName}`),
+    );
     const results: MutantTestResult[] = [];
     for (const module of result.testModules)
       for (const test of module.children.allTests()) {
-        if (!wanted.has(`${module.moduleId}\0${test.fullName}`)) continue;
+        if (!wanted.has(`${normalizePath(module.moduleId)}\0${test.fullName}`)) continue;
         const outcome = test.result();
         results.push({
           fullName: test.fullName,
@@ -122,20 +95,52 @@ async function child(card: string): Promise<void> {
     console.log(`BASELINE ${JSON.stringify(failures)}`);
     if (failures.length > 0) return void (await vitest.close());
   }
-  for (let at = Math.max(from, 0); at < mutants.length; at++)
+  for (let at = Math.max(from, 0); at < mutantLabels.length; at++)
     console.log(
-      `MUTANT ${at} ${JSON.stringify(await run({ card, index: at, label: mutants[at]!.label }))}`,
+      `MUTANT ${at} ${JSON.stringify(await run({ card, index: at, label: mutantLabels[at]! }))}`,
     );
   await vitest.close();
 }
 
-const childCard = option('--child');
-if (childCard !== null) {
-  await child(childCard);
+const childSpecPath = option('--child-spec');
+if (childSpecPath !== null) {
+  await child(childSpecPath);
   process.exit(0);
 }
 
-// ── Parent: the cards, a child each ─────────────────────────────────────────────────────────────
+// ── Parent (Bun): the cards, a Node child each ──────────────────────────────────────────────────
+
+const { interpretCard } = await import('../packages/engine/src/cards/interpret');
+const { cardMutants } = await import('../packages/engine/tests/mutation/operators');
+const { pinStore } = await import('../packages/engine/tests/scenario/pin-store');
+const { baseCommit, changedCards } = await import('./cards/changed-cards');
+const { indexTests } = await import('./contracts/manifest-tests');
+const { cardStatuses, cardTests, equivalentMutants, judgeMutant, testNamePattern } =
+  await import('./contracts/mutation');
+
+const root = `${normalizePath(process.cwd())}/`;
+// `--manifest` reads another copy: a change's new test IDs can be tried before they are committed.
+const manifestPath =
+  option('--manifest') ?? 'packages/server/fixtures/card-verification-manifest.json';
+const manifestJson = readFileSync(manifestPath, 'utf8');
+const statuses = cardStatuses(manifestJson);
+
+/** The Vitest listing's path: `--collected`, or a fresh `vitest list` in `scratch`. */
+function listing(scratch: string): string {
+  const given = option('--collected');
+  if (given !== null) return given;
+  const path = join(scratch, 'tests.json');
+  execFileSync('bunx', ['vitest', 'list', `--json=${path}`], {
+    stdio: ['ignore', 'ignore', 'inherit'],
+  });
+  return path;
+}
+
+function readListing(path: string): CollectedTest[] {
+  return (JSON.parse(readFileSync(path, 'utf8')) as Array<{ name: string; file: string }>).map(
+    (entry) => ({ file: normalizePath(entry.file).replace(root, ''), fullName: entry.name }),
+  );
+}
 
 const reportOnly = args.includes('--reviewed');
 const cards = reportOnly
@@ -159,26 +164,16 @@ interface CardReport {
 }
 
 /** One child run's lines, from `--from` on, and whether it finished. */
-function runChild(card: string, collected: string, from: number) {
-  const child = spawnSync(
-    process.execPath,
-    [
-      process.argv[1]!,
-      '--child',
-      card,
-      '--collected',
-      collected,
-      '--manifest',
-      manifestPath,
-      '--from',
-      String(from),
-    ],
+function runChild(specPath: string, from: number) {
+  const childProcess = spawnSync(
+    'node',
+    [process.argv[1]!, '--child-spec', specPath, '--from', String(from)],
     { encoding: 'utf8', maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'pipe'] },
   );
-  const lines = child.stdout.split('\n');
+  const lines = (childProcess.stdout ?? '').replaceAll('\r\n', '\n').split('\n');
   const field = (prefix: string) => lines.filter((line) => line.startsWith(prefix));
   return {
-    finished: child.status === 0,
+    finished: childProcess.status === 0,
     counts: field('TESTS ')[0]?.split(' ').slice(1).map(Number),
     baseline: field('BASELINE ').map((line) => JSON.parse(line.slice(9)) as string[])[0],
     mutants: field('MUTANT ').map((line) => {
@@ -204,10 +199,20 @@ const done = new Set(reports.map((report) => report.card));
 const scratch = mkdtempSync(join(tmpdir(), 'mutate-cards-'));
 try {
   const collected = listing(scratch);
+  const indexed = indexTests(readListing(collected));
   for (const card of cards.filter((name) => !done.has(name))) {
     const started = Date.now();
     const status = statuses.get(card)!;
+    const tests = cardTests(manifestJson, card, indexed, (path) => readFileSync(path, 'utf8'));
     const mutants = cardMutants(interpretCard(pinStore.get(card)));
+    const specPath = join(scratch, 'child-spec.json');
+    const spec: ChildSpec = {
+      card,
+      tests,
+      mutantLabels: mutants.map((mutant) => mutant.label),
+      patternSource: tests.length > 0 ? testNamePattern(tests).source : '',
+    };
+    writeFileSync(specPath, JSON.stringify(spec));
     const report: CardReport = {
       card,
       status,
@@ -220,7 +225,7 @@ try {
     const equivalent = new Set(equivalentMutants(manifestJson, card).map(({ mutant }) => mutant));
     let from = -1;
     while (from < mutants.length) {
-      const run = runChild(card, collected, from);
+      const run = runChild(specPath, from);
       report.tests = run.counts?.[0] ?? report.tests;
       if (from === -1) {
         if (report.tests === 0 && run.finished) break;

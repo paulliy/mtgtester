@@ -14,6 +14,7 @@ import {
   registerDef,
   spawn,
 } from '../../../engine/tests/fixtures';
+import { script } from '../../../engine/tests/script';
 import { loadScryfallBulkOrNull } from './scryfall-bulk-fixture';
 import { toOracleCard } from './scryfall';
 
@@ -101,11 +102,13 @@ describe.skipIf(SKIP)('L5: Human UI Reachability Tests', () => {
     const def = registerDef(ctx, pathCard);
     const perm = spawn(ctx, 'P1', pathCard);
 
-    const { decisions } = pump(executeAbility(ctx, perm, def.spellAbility!, []), () => ({
-      index: 0,
-      targets: new Map([[0, target.id]]),
-    }));
+    const { decisions } = pump(
+      executeAbility(ctx, perm, def.spellAbility!, [target.id]),
+      script([{ prompt: /search/i, choose: "Don't find a card" }]),
+    );
 
+    expect(ctx.state.exile.map((c) => c.cardId)).toContain(target.cardId);
+    expect(decisions.length).toBeGreaterThan(0);
     expectAllReachable(ctx, decisions);
   });
 
