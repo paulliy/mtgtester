@@ -191,12 +191,14 @@ describe('Tribute Mage', () => {
       ),
       targets: new Map(),
     }));
-    pump(resolveTopOfStack(ctx), (decision) => ({
+    const { decisions } = pump(resolveTopOfStack(ctx), (decision) => ({
       index: decision.options.findIndex((option) =>
         option.description.includes('Eligible Talisman'),
       ),
       targets: new Map(),
     }));
+    // The trigger is mandatory: only the search's own choice is asked, no "use it?" first.
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(player.hand.map((card) => card.name)).toContain('Eligible Talisman');
   });
 });
