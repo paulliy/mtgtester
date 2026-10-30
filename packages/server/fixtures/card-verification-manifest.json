@@ -17554,6 +17554,75 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "3dc364f3-3094-4660-80ca-9418588c7fde": {
+      "name": "Mithril Coat",
+      "oracleSha256": "96824dad8f17d65f0f355f759f4908e58f52b599e1606a839aebb32c4aff9cc6",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Flash",
+          "implementation": [
+            "flash keyword (parser): cast any time you could cast an instant, CR 702.8"
+          ],
+          "engineTestIds": [
+            "cards/pilot-new/mithril-coat.test.ts::mithril-coat-flash",
+            "clause 1: with flash, you may cast it when you get priority on an opponent's turn"
+          ],
+          "viewerScenarioIds": ["mithril-coat-flash"]
+        },
+        {
+          "oracleText": "Indestructible",
+          "implementation": ["indestructible keyword (parser), CR 702.12"],
+          "engineTestIds": [
+            "cards/pilot-new/mithril-coat.test.ts::mithril-coat-indestructible",
+            "cards/pilot-new/mithril-coat.test.ts::mithril-coat-attach-on-enter"
+          ],
+          "viewerScenarioIds": ["mithril-coat-indestructible"]
+        },
+        {
+          "oracleText": "When Mithril Coat enters, attach it to target legendary creature you control.",
+          "implementation": [
+            "enter trigger targeting a legendary creature you control; attachSelfTo the target, CR 701.3"
+          ],
+          "engineTestIds": [
+            "cards/pilot-new/mithril-coat.test.ts::mithril-coat-attach-on-enter",
+            "cards/pilot-new/mithril-coat.test.ts::mithril-coat-choose-host",
+            "cards/pilot-new/mithril-coat.test.ts::mithril-coat-no-legendary-host",
+            "cards/pilot-new/mithril-coat.test.ts::mithril-coat-flash",
+            "clause 3: the enter trigger asks nothing when one legendary creature of yours is its only target",
+            "clause 3, negative: your nonlegendary creature and an opponent's legendary one are not targets"
+          ],
+          "viewerScenarioIds": [
+            "mithril-coat-attach-on-enter",
+            "mithril-coat-choose-host",
+            "mithril-coat-no-legendary-host"
+          ]
+        },
+        {
+          "oracleText": "Equipped creature has indestructible.",
+          "implementation": [
+            "static (parser): the equipped creature gains indestructible, layer 6"
+          ],
+          "engineTestIds": [
+            "cards/pilot-new/mithril-coat.test.ts::mithril-coat-attach-on-enter",
+            "cards/pilot-new/mithril-coat.test.ts::mithril-coat-equipped-survives-destroy"
+          ],
+          "viewerScenarioIds": ["mithril-coat-equipped-survives-destroy"]
+        },
+        {
+          "oracleText": "Equip {3}",
+          "implementation": [
+            "equip (parser): {3}, sorcery speed, attachSelfTo target creature you control, CR 702.6"
+          ],
+          "engineTestIds": [
+            "cards/pilot-new/mithril-coat.test.ts::mithril-coat-equip",
+            "clause 5, negative: equip targets only a creature you control, not an opponent's"
+          ],
+          "viewerScenarioIds": ["mithril-coat-equip"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

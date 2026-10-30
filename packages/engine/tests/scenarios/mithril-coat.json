@@ -1,0 +1,331 @@
+{
+  "schemaVersion": 1,
+  "card": "Mithril Coat",
+  "supportCards": [
+    {
+      "name": "Scenario Legend",
+      "typeLine": "Legendary Creature — Human Knight",
+      "manaCost": "{1}{W}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Doom",
+      "typeLine": "Instant",
+      "manaCost": "{B}",
+      "oracleText": "Destroy target creature."
+    },
+    {
+      "name": "Scenario Shatter",
+      "typeLine": "Instant",
+      "manaCost": "{R}",
+      "oracleText": "Destroy target artifact."
+    },
+    {
+      "name": "Scenario Second Legend",
+      "typeLine": "Legendary Creature — Elf",
+      "manaCost": "{1}{G}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Ox",
+      "typeLine": "Creature — Ox",
+      "manaCost": "{2}{W}",
+      "power": "2",
+      "toughness": "4"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "mithril-coat-attach-on-enter",
+      "title": "Mithril Coat: entering, it attaches to your legendary creature",
+      "clauses": [3, 4],
+      "instructions": [
+        "Cast Mithril Coat.",
+        "Its enter trigger targets Scenario Legend, your only legendary creature."
+      ],
+      "expectedOutcome": "Mithril Coat is attached to Scenario Legend, which has indestructible; Scenario Bear does not.",
+      "seats": {
+        "P1": {
+          "hand": ["Mithril Coat"],
+          "battlefield": ["Scenario Legend", "Scenario Bear", "Forest", "Forest", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Mithril Coat/"
+        }
+      ],
+      "expect": [
+        {
+          "keywords": {
+            "card": "Scenario Legend",
+            "has": ["indestructible"]
+          }
+        },
+        {
+          "keywords": {
+            "card": "Scenario Bear",
+            "lacks": ["indestructible"]
+          }
+        },
+        {
+          "keywords": {
+            "card": "Mithril Coat",
+            "has": ["indestructible"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mithril-coat-choose-host",
+      "title": "Mithril Coat: with two legendary creatures, it attaches to the one you target",
+      "clauses": [3],
+      "instructions": [
+        "Cast Mithril Coat.",
+        "Target Scenario Second Legend with its enter trigger."
+      ],
+      "expectedOutcome": "Scenario Second Legend has indestructible; Scenario Legend does not.",
+      "seats": {
+        "P1": {
+          "hand": ["Mithril Coat"],
+          "battlefield": ["Scenario Legend", "Scenario Second Legend", "Forest", "Forest", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Mithril Coat/"
+        },
+        {
+          "player": "P1",
+          "choose": "/Mithril Coat/",
+          "targets": ["Scenario Second Legend"]
+        }
+      ],
+      "expect": [
+        {
+          "keywords": {
+            "card": "Scenario Second Legend",
+            "has": ["indestructible"]
+          }
+        },
+        {
+          "keywords": {
+            "card": "Scenario Legend",
+            "lacks": ["indestructible"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mithril-coat-no-legendary-host",
+      "title": "Mithril Coat: with no legendary creature of yours, it enters unattached",
+      "clauses": [3],
+      "instructions": [
+        "Cast Mithril Coat with only Scenario Bear and P2's Scenario Legend on the battlefield."
+      ],
+      "expectedOutcome": "The trigger has no legal target; Mithril Coat stays unattached and neither creature gains indestructible.",
+      "seats": {
+        "P1": {
+          "hand": ["Mithril Coat"],
+          "battlefield": ["Scenario Bear", "Forest", "Forest", "Forest"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Legend"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Mithril Coat/"
+        }
+      ],
+      "expect": [
+        {
+          "keywords": {
+            "card": "Scenario Bear",
+            "lacks": ["indestructible"]
+          }
+        },
+        {
+          "keywords": {
+            "card": "Scenario Legend",
+            "player": "P2",
+            "lacks": ["indestructible"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Mithril Coat"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mithril-coat-flash",
+      "title": "Mithril Coat: flash, cast on an opponent's turn",
+      "clauses": [1, 3],
+      "instructions": [
+        "On P2's turn, cast Mithril Coat when you get priority.",
+        "Its enter trigger targets Scenario Legend, your only legendary creature."
+      ],
+      "expectedOutcome": "Mithril Coat resolves on P2's turn and attaches to Scenario Legend.",
+      "turn": {
+        "player": "P2"
+      },
+      "seats": {
+        "P1": {
+          "hand": ["Mithril Coat"],
+          "battlefield": ["Scenario Legend", "Forest", "Forest", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Mithril Coat/"
+        }
+      ],
+      "expect": [
+        {
+          "keywords": {
+            "card": "Scenario Legend",
+            "has": ["indestructible"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mithril-coat-equip",
+      "title": "Mithril Coat: equip {3} to a nonlegendary creature",
+      "clauses": [4, 5],
+      "instructions": ["Activate Mithril Coat's equip ability targeting Scenario Bear."],
+      "expectedOutcome": "Scenario Bear is equipped and has indestructible; P2's Scenario Ox could not be equipped.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Mithril Coat", "Scenario Bear", "Forest", "Forest", "Forest"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Ox"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/Equip/",
+          "targets": ["Scenario Bear"]
+        }
+      ],
+      "expect": [
+        {
+          "keywords": {
+            "card": "Scenario Bear",
+            "has": ["indestructible"]
+          }
+        },
+        {
+          "keywords": {
+            "card": "Scenario Ox",
+            "player": "P2",
+            "lacks": ["indestructible"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mithril-coat-equipped-survives-destroy",
+      "title": "Mithril Coat: the equipped creature survives a destroy spell",
+      "clauses": [4],
+      "instructions": ["Cast Scenario Doom targeting your equipped Scenario Legend."],
+      "expectedOutcome": "Scenario Legend has indestructible and stays on the battlefield.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Doom"],
+          "battlefield": [
+            "Scenario Legend",
+            {
+              "card": "Mithril Coat",
+              "attachedTo": {
+                "player": "P1",
+                "card": "Scenario Legend"
+              }
+            },
+            "Swamp"
+          ]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Doom/",
+          "targets": ["Scenario Legend"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Legend", "Mithril Coat"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Doom"],
+            "lacks": ["Scenario Legend"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mithril-coat-indestructible",
+      "title": "Mithril Coat: it is indestructible itself",
+      "clauses": [2],
+      "instructions": ["Cast Scenario Shatter targeting Mithril Coat."],
+      "expectedOutcome": "Mithril Coat stays on the battlefield.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Shatter"],
+          "battlefield": ["Mithril Coat", "Mountain"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Shatter/",
+          "targets": ["Mithril Coat"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Mithril Coat"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Shatter"],
+            "lacks": ["Mithril Coat"]
+          }
+        }
+      ]
+    }
+  ]
+}

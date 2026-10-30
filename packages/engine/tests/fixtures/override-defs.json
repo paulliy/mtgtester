@@ -5428,6 +5428,43 @@
     }
   },
   {
+    "oracleId": "3dc364f3-3094-4660-80ca-9418588c7fde",
+    "name": "Mithril Coat",
+    "handledLines": [
+      "When ~ enters, attach it to target legendary creature you control."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Mithril Coat enters, attach it to target legendary creature you control",
+          "effects": [
+            {
+              "op": "attachSelfTo",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "you",
+              "filter": {
+                "kind": "supertype",
+                "value": "Legendary"
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "3e2ae59a-40a1-46ca-8f24-3231ebd4e4eb",
     "name": "Flickering Ward",
     "handledLines": [
@@ -35178,6 +35215,43 @@
             }
           ],
           "timing": "any"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-mithril-coat",
+    "name": "Mithril Coat",
+    "handledLines": [
+      "When ~ enters, attach it to target legendary creature you control."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Mithril Coat enters, attach it to target legendary creature you control",
+          "effects": [
+            {
+              "op": "attachSelfTo",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "you",
+              "filter": {
+                "kind": "supertype",
+                "value": "Legendary"
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
         }
       ]
     }

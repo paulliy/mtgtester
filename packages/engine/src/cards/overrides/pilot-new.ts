@@ -1,5 +1,5 @@
-import { allOf, ofSubtype, YOURS } from '../selector';
-import { activated } from '../templates';
+import { allOf, ofSubtype, ofSupertype, YOURS } from '../selector';
+import { activated, onEtb, targetSlots, triggered } from '../templates';
 import { constant } from '../value';
 import { defineCard } from './index';
 
@@ -23,6 +23,29 @@ export function registerPilotNewOverrides(): void {
           effects: [{ op: 'exileTopNPlayableUntilEot', count: constant(1) }],
           description:
             'Sacrifice a Treasure: Exile the top card of your library. You may play that card this turn',
+        }),
+      ],
+    },
+  );
+
+  // "When Mithril Coat enters, attach it to target legendary creature you control." A triggered
+  // ability, not equip: it attaches at any time Coat enters (flash), with no equip cost. The target
+  // is chosen as it goes on the stack and checked again on resolution (CR 608.2b); if Coat has
+  // left the battlefield meanwhile, nothing is attached (CR 400.7).
+  const host = targetSlots({
+    creature: { kind: 'creature', controller: 'you', filter: ofSupertype('Legendary') },
+  });
+  defineCard(
+    '3dc364f3-3094-4660-80ca-9418588c7fde',
+    'Mithril Coat',
+    ['When ~ enters, attach it to target legendary creature you control.'],
+    {
+      triggers: [
+        triggered(onEtb(), {
+          targets: host.targets,
+          effects: [{ op: 'attachSelfTo', target: host.slot.creature }],
+          description:
+            'When Mithril Coat enters, attach it to target legendary creature you control',
         }),
       ],
     },

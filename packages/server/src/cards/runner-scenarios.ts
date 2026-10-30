@@ -81,6 +81,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'mithril-coat.json',
+    file: scenarioFile(
+      'mithril-coat.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/mithril-coat.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'mizzium-mortars.json',
     file: scenarioFile(
       'mizzium-mortars.json',

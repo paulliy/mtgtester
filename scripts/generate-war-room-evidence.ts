@@ -255,6 +255,7 @@ const SOURCE_FILES = [
   'packages/engine/tests/scenarios/chrome-mox.json',
   'packages/engine/tests/scenarios/electrickery.json',
   'packages/engine/tests/scenarios/ettercap.json',
+  'packages/engine/tests/scenarios/mithril-coat.json',
   'packages/engine/tests/scenarios/mizzium-mortars.json',
   'packages/engine/tests/scenarios/path-to-exile.json',
   'packages/engine/tests/scenarios/professional-face-breaker.json',

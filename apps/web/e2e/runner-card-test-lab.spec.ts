@@ -132,6 +132,20 @@ async function activate(page: Page, source: Locator, ability: RegExp): Promise<v
   if ((await confirm.isVisible()) && (await confirm.isEnabled())) await confirm.click();
 }
 
+/** A permanent's keyword badge naming `keyword`; count 0 when it does not have it. */
+const keywordOn = (page: Page, seat: string, name: string, keyword: string): Locator =>
+  permanent(page, seat, name).locator(`.keywords[title*="${keyword}" i]`);
+
+/** Choose each [seat, name] permanent as a target of the pending prompt, then confirm. */
+async function targetAndConfirm(page: Page, targets: Array<[string, string]>): Promise<void> {
+  for (const [seat, name] of targets) {
+    const target = permanent(page, seat, name).first();
+    await passUntil(page, target.and(page.locator('.targetable, .actionable')));
+    await target.click();
+  }
+  await confirmButton(page).click();
+}
+
 const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
   'mizzium-mortars-target': async (page) => {
     await castWith(page, hand(page, 'Mizzium Mortars'), {
@@ -316,6 +330,57 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
         .locator('.zone-card-thumb')
         .filter({ has: page.getByRole('img', { name: 'Scenario Bear' }) }),
     ).not.toHaveClass(/actionable/);
+  },
+  'mithril-coat-attach-on-enter': async (page) => {
+    await castWith(page, hand(page, 'Mithril Coat'), { resolves: /Mithril Coat[^]*resolves/ });
+    // The enter trigger's only legal target is Scenario Legend.
+    await passStackUntil(page, keywordOn(page, 'P1', 'Scenario Legend', 'indestructible'));
+    await expect(keywordOn(page, 'P1', 'Scenario Bear', 'indestructible')).toHaveCount(0);
+    await expect(keywordOn(page, 'P1', 'Mithril Coat', 'indestructible')).toHaveCount(1);
+  },
+  'mithril-coat-choose-host': async (page) => {
+    await castWith(page, hand(page, 'Mithril Coat'), { resolves: /Mithril Coat[^]*resolves/ });
+    await targetAndConfirm(page, [['P1', 'Scenario Second Legend']]);
+    await passStackUntil(page, keywordOn(page, 'P1', 'Scenario Second Legend', 'indestructible'));
+    await expect(keywordOn(page, 'P1', 'Scenario Legend', 'indestructible')).toHaveCount(0);
+  },
+  'mithril-coat-no-legendary-host': async (page) => {
+    await castWith(page, hand(page, 'Mithril Coat'), { resolves: /Mithril Coat[^]*resolves/ });
+    await passStackUntil(page, permanent(page, 'P1', 'Mithril Coat'));
+    await expect(keywordOn(page, 'P1', 'Scenario Bear', 'indestructible')).toHaveCount(0);
+    await expect(keywordOn(page, 'P2', 'Scenario Legend', 'indestructible')).toHaveCount(0);
+  },
+  'mithril-coat-flash': async (page) => {
+    // It is P2's turn: cast Mithril Coat when P2 passes priority to you.
+    await castWith(page, hand(page, 'Mithril Coat'), { resolves: /Mithril Coat[^]*resolves/ });
+    await passStackUntil(page, keywordOn(page, 'P1', 'Scenario Legend', 'indestructible'));
+  },
+  'mithril-coat-equip': async (page) => {
+    const coat = permanent(page, 'P1', 'Mithril Coat');
+    await passUntil(page, coat.and(page.locator('.actionable')));
+    await coat.click();
+    const equip = page.locator('.source-actions .source-action-row button').filter({
+      hasText: /Equip/,
+    });
+    if ((await equip.count()) > 0) await equip.first().click();
+    await targetAndConfirm(page, [['P1', 'Scenario Bear']]);
+    await passStackUntil(page, keywordOn(page, 'P1', 'Scenario Bear', 'indestructible'));
+    await expect(keywordOn(page, 'P2', 'Scenario Ox', 'indestructible')).toHaveCount(0);
+  },
+  'mithril-coat-equipped-survives-destroy': async (page) => {
+    await castWith(page, hand(page, 'Scenario Doom'), {
+      targets: [['P1', 'Scenario Legend']],
+      resolves: /Scenario Doom[^]*resolves/,
+    });
+    await expect(permanent(page, 'P1', 'Scenario Legend')).toHaveCount(1);
+    await expect(permanent(page, 'P1', 'Mithril Coat')).toHaveCount(1);
+  },
+  'mithril-coat-indestructible': async (page) => {
+    await castWith(page, hand(page, 'Scenario Shatter'), {
+      targets: [['P1', 'Mithril Coat']],
+      resolves: /Scenario Shatter[^]*resolves/,
+    });
+    await expect(permanent(page, 'P1', 'Mithril Coat')).toHaveCount(1);
   },
   'chrome-mox-no-artifact-or-land': async (page) => {
     await castChromeMox(page);
