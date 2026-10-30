@@ -346,8 +346,19 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
         op: { layer: 6, addManaAbility: eff.manaAbility },
         timestamp: eff.timestamp,
       });
-    } else if (eff.kind === 'addTypes' && eff.addTypes !== undefined) {
-      out.push({ applies, op: { layer: 4, addTypes: eff.addTypes }, timestamp: eff.timestamp });
+    } else if (
+      eff.kind === 'addTypes' &&
+      (eff.addTypes !== undefined || eff.addSubtypes !== undefined)
+    ) {
+      out.push({
+        applies,
+        op: {
+          layer: 4,
+          ...(eff.addTypes === undefined ? {} : { addTypes: eff.addTypes }),
+          ...(eff.addSubtypes === undefined ? {} : { addSubtypes: eff.addSubtypes }),
+        },
+        timestamp: eff.timestamp,
+      });
     } else if (eff.kind === 'becomeCreature' && eff.becomeCreature !== undefined) {
       const bc = eff.becomeCreature;
       if (bc.setColors !== undefined) {

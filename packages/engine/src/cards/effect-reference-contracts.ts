@@ -80,6 +80,7 @@ const spellOrPermanent: ReferenceContract = {
 
 /** Each operation and each explicit reference field must declare a contract. */
 export const EFFECT_REFERENCE_CONTRACTS = {
+  amass: {},
   payLifeOrTopDrawnCards: {},
   returnCardFromGraveyardToHand: {},
   pumpUntilEot: { target: permanent },

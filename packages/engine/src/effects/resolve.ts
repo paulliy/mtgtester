@@ -5,6 +5,7 @@ import { enterOp, noop } from '../exits';
 import { offBattlefieldTypes } from '../state/off-battlefield-types';
 import {
   CITIZEN_1_1_GREEN_WHITE,
+  creatureToken,
   HUMAN_SOLDIER_1_1_WHITE,
   INKLING_2_1_FLYING,
   TREASURE,
@@ -9017,6 +9018,51 @@ function* executeAbilityEffects(
       }
       case 'noOp':
         throw new Error('engine bug: executable noOp effect is prohibited');
+      case 'amass': {
+        const armies = () =>
+          ctx.state.battlefield.filter(
+            (perm) =>
+              perm.controllerId === controller.id &&
+              computeCharacteristics(ctx, perm).types.includes('Creature') &&
+              computeCharacteristics(ctx, perm).subtypes.includes('Army'),
+          );
+        if (armies().length === 0)
+          createTokens(
+            ctx,
+            creatureToken({
+              name: `${effect.subtype} Army`,
+              subtypes: [effect.subtype, 'Army'],
+              colors: ['B'],
+              power: 0,
+              toughness: 0,
+            }),
+            1,
+            controller.id,
+            false,
+          );
+        const army = yield* chooseCard(ctx, {
+          player: controller.id,
+          prompt: `${source.name}: choose an Army creature you control to amass`,
+          cards: armies(),
+          type: 'chooseArmy',
+          verb: 'Choose',
+        });
+        if (army === null) break;
+        addCounters(ctx, source, army, '+1/+1', amountOf(effect.count));
+        if (!computeCharacteristics(ctx, army).subtypes.includes(effect.subtype))
+          ctx.state.effects.push({
+            id: `eff-${ctx.state.nextObjectNum++}`,
+            sourceId: source.cardId,
+            description: `${army.name} becomes ${effect.subtype === 'Orc' ? 'an' : 'a'} ${effect.subtype}`,
+            targetCardIds: [army.cardId],
+            targetObjectIds: [army.id],
+            kind: 'addTypes',
+            addSubtypes: [effect.subtype],
+            duration: 'permanent',
+            timestamp: ctx.state.nextTimestamp++,
+          });
+        break;
+      }
       case 'payLifeOrTopDrawnCards': {
         const count = amountOf(effect.count);
         const life = amountOf(effect.life);

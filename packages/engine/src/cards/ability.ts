@@ -608,6 +608,14 @@ export type EffectRef =
  */
 export type Effect =
   /**
+   * "Amass Orcs 1" (CR 701.47a): if the controller controls no Army creature, they create a 0/0
+   * black `subtype` Army creature token; then they choose an Army creature they control, put
+   * `count` +1/+1 counters on it, and it becomes a `subtype` in addition to its other types if it
+   * isn't one. The token is created before the counters, so state-based actions never see it
+   * as 0/0.
+   */
+  | { op: 'amass'; subtype: string; count: Value }
+  /**
    * "Choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the
    * card on top of your library." (Sylvan Library): the controller chooses `count` cards in hand
    * that were drawn this turn (as many as there are, if fewer), then for each, in the order

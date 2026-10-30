@@ -720,6 +720,8 @@ export interface UntilEotEffect extends ContinuousEffect {
   manaAbility?: ManaAbilitySpec;
   /** `addTypes`: "They're artifacts in addition to their other types" (layer 4). */
   addTypes?: string[];
+  /** `addTypes` too: "it becomes an Orc in addition to its other types" (amass, layer 4). */
+  addSubtypes?: string[];
   /**
    * "Becomes a 4/4 red and green Dragon artifact creature with flying until end of turn"
    * (Atarka Monument, Sarkhan's +1) — a type-changing CDA-shaped grant, distinct from
