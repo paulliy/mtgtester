@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import type { OracleCard } from '@mtg/shared';
 import type { FuzzReply } from './fuzz-game';
-import { failureOf, loadDecks, pod, PROVIDER_MIXES, withCard, type Outcome } from './fuzz-plan';
+import {
+  failureOf,
+  liveness,
+  loadDecks,
+  pod,
+  PROVIDER_MIXES,
+  withCard,
+  type Outcome,
+} from './fuzz-plan';
 
 const decks = await loadDecks();
 
@@ -15,6 +23,8 @@ const played = (reply: Partial<FuzzReply>): Outcome => ({
     error: null,
     budgetExhausted: false,
     emptyVetoes: 0,
+    ops: [],
+    exits: [],
     ms: 1000,
     ...reply,
   },
@@ -86,5 +96,32 @@ describe('fuzz failures', () => {
       expect(failureOf(played({ halt: turnCap, winner: null }), providers, 1000)).toBeNull();
       expect(failureOf(played({ emptyVetoes: 2 }), providers, 1000)).toBeNull();
     }
+  });
+});
+
+describe('fuzz liveness', () => {
+  it('lists the card ops that only ever exited early across games, most runs first', () => {
+    const reply = (ops: FuzzReply['ops'], exits: FuzzReply['exits'] = []) =>
+      (played({ ops, exits }) as Extract<Outcome, { kind: 'played' }>).reply;
+    const report = liveness([
+      reply(
+        [
+          { card: 'Bolt', op: 'dealDamage', runs: 2, earlyExits: 2 },
+          { card: 'Bear', op: 'draw', runs: 1, earlyExits: 1 },
+        ],
+        [{ site: 'resolve.ref.targetIllegal', reason: 'targetIllegal', count: 2 }],
+      ),
+      reply(
+        [
+          { card: 'Bolt', op: 'dealDamage', runs: 1, earlyExits: 1 },
+          { card: 'Bear', op: 'draw', runs: 2, earlyExits: 0 },
+        ],
+        [{ site: 'resolve.ref.targetIllegal', reason: 'targetIllegal', count: 1 }],
+      ),
+    ]);
+    expect(report.onlyEarlyExits).toEqual([{ card: 'Bolt', op: 'dealDamage', runs: 3 }]);
+    expect(report.exits).toEqual([
+      { site: 'resolve.ref.targetIllegal', reason: 'targetIllegal', count: 3 },
+    ]);
   });
 });

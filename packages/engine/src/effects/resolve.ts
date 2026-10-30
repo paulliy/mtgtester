@@ -1,6 +1,7 @@
 import { targetingSourceFields } from '../targets/context';
 import type { TargetingSource } from '../targets/context';
 import { copyData } from '../state/copy-data';
+import { enterOp, noop } from '../exits';
 import { offBattlefieldTypes } from '../state/off-battlefield-types';
 import {
   CITIZEN_1_1_GREEN_WHITE,
@@ -1691,6 +1692,38 @@ export function* executeAbility(
   /** The announced division of a `dealDamageDivided` effect's total, keyed by object id. */
   divisionAmounts?: Record<ObjectId, number>,
 ): GameGen<void> {
+  const run = executeAbilityEffects(
+    ctx,
+    source,
+    ability,
+    targets,
+    triggerObjectCardId,
+    extraScope,
+    countTargets,
+    divisionAmounts,
+  );
+  const sink = ctx.diagnostics;
+  if (sink === undefined) return yield* run;
+  // An early exit is charged to the op running when it happens; an ability that runs inside an
+  // op (a reflexive trigger, a copy) hands that op back when it ends, however it ends.
+  const outer = sink.current;
+  try {
+    yield* run;
+  } finally {
+    sink.current = outer;
+  }
+}
+
+function* executeAbilityEffects(
+  ctx: GameContext,
+  source: EffectSource,
+  ability: Ability,
+  targets: ObjectId[],
+  triggerObjectCardId?: string,
+  extraScope?: Omit<ValueScope, 'controllerId' | 'sourceCardId'>,
+  countTargets?: Record<number, ObjectId[]>,
+  divisionAmounts?: Record<ObjectId, number>,
+): GameGen<void> {
   const resolutionObjectMoves = ctx.resolutionObjectMoves ?? new Map<ObjectId, ObjectId | null>();
   const resolutionObjectFacts = ctx.resolutionObjectFacts ?? new Map<ObjectId, ObjectFacts>();
   // Share the game itself, but carry transition tracking only through this effect's calls.
@@ -1947,6 +1980,7 @@ export function* executeAbility(
       );
       if (perm === undefined) {
         debug(ctx, 'effect', `${source.name}: trigger object has left the battlefield — skipped`);
+        noop(ctx, 'resolve.ref.triggerObjectGone', 'objectGone');
         return null;
       }
       return perm.id;
@@ -1958,6 +1992,7 @@ export function* executeAbility(
     }
     if (!stillLegal(id, spec, r)) {
       debug(ctx, 'effect', `${source.name}: target ${id} illegal — skipped`);
+      noop(ctx, 'resolve.ref.targetIllegal', 'targetIllegal', () => id);
       return null;
     }
     const stableId = refStableIdCache.get(r);
@@ -1982,6 +2017,7 @@ export function* executeAbility(
   };
 
   for (const effect of ability.effects ?? []) {
+    enterOp(ctx, source.name, effect.op);
     switch (effect.op) {
       case 'transformSelf': {
         const current = sourcePermanent();

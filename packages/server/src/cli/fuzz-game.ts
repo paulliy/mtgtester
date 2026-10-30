@@ -9,7 +9,8 @@
  * The game runs with `strictInvariants` and the state-invariant checker installed, under the table
  * server's step and object limits. Whatever goes wrong is reported, not thrown: a thrown error or
  * invariant violation, a halted result, an exhausted decision budget, and the heuristic bot's
- * empty-veto fallback, which the parent fails in a heuristic-only game.
+ * empty-veto fallback, which the parent fails in a heuristic-only game. A diagnostics sink records
+ * each op's runs and early exits for the parent's liveness report.
  *
  * Reads one JSON `FuzzRequest` from the file named in `argv[2]` and writes one JSON `FuzzReply` to
  * stdout. Not meant to be run by hand: `bun run fuzz --from <seed> --games 1` replays a game.
@@ -20,6 +21,7 @@ import { fileURLToPath } from 'node:url';
 import type { DecisionResponse, OracleCard, PlayerId } from '@mtg/shared';
 import { Engine, RandomDecisionProvider, type DecisionProvider } from '@mtg/engine';
 import { HeuristicDecisionProvider } from '@mtg/bot';
+import { installDefaultDiagnostics } from '../../../engine/src/testing/diagnostics';
 import { installStateInvariants } from '../../../engine/src/testing/invariants';
 import { TABLE_ENGINE_LIMITS } from '../match/engine-limits';
 
@@ -55,6 +57,9 @@ export interface FuzzReply {
   budgetExhausted: boolean;
   /** Times the heuristic bot's veto excluded every candidate and it took the first action. */
   emptyVetoes: number;
+  /** Each card's ops by runs and early exits, and each early-exit site by reason (ADR 0034 decision 4). */
+  ops: Array<{ card: string; op: string; runs: number; earlyExits: number }>;
+  exits: Array<{ site: string; reason: string; count: number }>;
   ms: number;
 }
 
@@ -62,6 +67,7 @@ const EMPTY_VETO = 'veto excluded every candidate';
 
 export function playFuzzGame(request: FuzzRequest): FuzzReply {
   const restore = installStateInvariants();
+  const diagnostics = installDefaultDiagnostics();
   const started = performance.now();
   const reply: FuzzReply = {
     winner: null,
@@ -71,6 +77,8 @@ export function playFuzzGame(request: FuzzRequest): FuzzReply {
     error: null,
     budgetExhausted: false,
     emptyVetoes: 0,
+    ops: [],
+    exits: [],
     ms: 0,
   };
   const engine = new Engine(
@@ -138,6 +146,12 @@ export function playFuzzGame(request: FuzzRequest): FuzzReply {
         : String(error);
   } finally {
     restore();
+    diagnostics.restore();
+  }
+  const sink = diagnostics.sinks[0];
+  if (sink !== undefined) {
+    reply.ops = sink.opRuns();
+    reply.exits = sink.exits();
   }
   reply.ms = Math.round(performance.now() - started);
   return reply;

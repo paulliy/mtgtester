@@ -287,8 +287,16 @@ export default tseslint.config(
                 'The state-invariant checker is installed by tests and tools only (ADR 0034 decision 8).',
             },
             {
-              group: ['**/testing/definition-transform', '**/testing/checkpoint-hook'],
-              importNames: ['installDefinitionTransform', 'installCheckpointHook'],
+              group: [
+                '**/testing/definition-transform',
+                '**/testing/checkpoint-hook',
+                '**/testing/diagnostics',
+              ],
+              importNames: [
+                'installDefinitionTransform',
+                'installCheckpointHook',
+                'installDefaultDiagnostics',
+              ],
               message:
                 'Test-only hooks are installed by tests and tools only (ADR 0034 decisions 5 and 8).',
             },

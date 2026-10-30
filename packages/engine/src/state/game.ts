@@ -14,6 +14,7 @@ import { ChaCha20Rng, bytesOfHex, streamNonce } from '../rng/chacha20';
 import type { EngineRng } from '../rng/engine-rng';
 import { Prng } from '../rng/prng';
 import { EngineUsageError } from '../errors';
+import { defaultDiagnostics } from '../testing/diagnostics';
 import type {
   EngineCardObject,
   EnginePlayerState,
@@ -181,11 +182,13 @@ export function createGame(config: GameConfig): GameContext {
     turnCap: config.turnCap ?? DEFAULT_TURN_CAP,
   };
 
+  const diagnostics = config.diagnostics ?? defaultDiagnostics();
   return {
     state,
     defs,
     rng: gameRng(config),
     debugLog: [],
     ...(config.strictInvariants === true && { strictInvariants: true }),
+    ...(diagnostics !== undefined && { diagnostics }),
   };
 }

@@ -1008,6 +1008,8 @@ export interface GameContext {
   costLifePaid?: { amount: number };
   /** Copied from `GameConfig.strictInvariants`: rethrow invariant failures instead of halting. */
   strictInvariants?: boolean;
+  /** The test-only diagnostics sink (ADR 0034 decision 4); absent in production. */
+  diagnostics?: import('../testing/diagnostics').DiagnosticsSink;
   /**
    * Work limits from `EngineOptions` (ADR 0031 decision 9), absent when unlimited. One shared
    * object, because effect resolution copies the context by spreading it and a plain number
@@ -1076,6 +1078,11 @@ export interface GameConfig {
    * failing test points at the line responsible. Never set in production paths.
    */
   strictInvariants?: boolean;
+  /**
+   * Test hook (ADR 0034 decision 4): the sink `noop` records early exits in. Without it, a game
+   * gets the default installed by `installDefaultDiagnostics`, if any. Never set in production.
+   */
+  diagnostics?: import('../testing/diagnostics').DiagnosticsSink;
   /**
    * The random source (ADR 0031 decision 4). `legacy` (the default) seeds `Prng` from `seed`, so
    * fixed-seed games, benchmarks and stored replays are unchanged. `chacha20` keys a ChaCha20

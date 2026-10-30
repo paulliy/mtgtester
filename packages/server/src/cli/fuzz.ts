@@ -3,7 +3,7 @@
  *
  *   bun run fuzz [--from N] [--games N] [--card "<name>"]... [--changed [--base SHA]]
  *                [--card-games N] [--turn-cap N] [--decisions N] [--game-timeout SECONDS]
- *                [--jobs N] [--json PATH] [--report PATH]
+ *                [--jobs N] [--json PATH] [--report PATH] [--liveness PATH]
  *
  * Seed N maps to a fixed pod: four of the committed coverage decks, resolved against the pinned
  * `coverage-oracle.json` (the bulk file is gitignored), and a provider mix: heuristic bots in every
@@ -16,8 +16,9 @@
  * table's step and object limits), an exhausted decision budget or the wall clock; a
  * heuristic-only game also fails on the turn cap and on the bot's empty-veto fallback
  * (`fuzz-plan.ts`). Each failure prints the command that replays it, and `--report` writes the
- * failures as Markdown for an issue. The per-game time is reported; the exit code is 1 when any
- * game failed.
+ * failures as Markdown for an issue. The per-game time is reported, with the liveness report
+ * (`--liveness` writes it whole): each card's ops that only ever exited early. The exit code is 1
+ * when any game failed.
  */
 import { spawn } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -27,7 +28,7 @@ import { fileURLToPath } from 'node:url';
 import { pinStore } from '../../../engine/tests/scenario/pin-store';
 import { baseCommit, changedCards } from '../../../../scripts/cards/changed-cards';
 import type { FuzzReply, FuzzRequest } from './fuzz-game';
-import { failureOf, loadDecks, pod, withCard, type Outcome } from './fuzz-plan';
+import { failureOf, liveness, loadDecks, pod, withCard, type Outcome } from './fuzz-plan';
 
 const GAME = fileURLToPath(new URL('./fuzz-game.ts', import.meta.url));
 
@@ -44,6 +45,7 @@ interface Args {
   jobs: number;
   json: string | null;
   report: string | null;
+  liveness: string | null;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -60,6 +62,7 @@ function parseArgs(argv: string[]): Args {
     jobs: 2,
     json: null,
     report: null,
+    liveness: null,
   };
   const count = (flag: string, value: string | undefined): number => {
     const parsed = Number.parseInt(value ?? '', 10);
@@ -81,6 +84,7 @@ function parseArgs(argv: string[]): Args {
     else if (arg === '--jobs') args.jobs = Math.max(1, count(arg, value()));
     else if (arg === '--json') args.json = value() ?? null;
     else if (arg === '--report') args.report = value() ?? null;
+    else if (arg === '--liveness') args.liveness = value() ?? null;
     else throw new Error(`unknown argument ${arg}`);
   }
   return args;
@@ -203,6 +207,16 @@ async function main(): Promise<void> {
   console.log(
     `fuzz: ${results.length} game(s), ${failed.length} failed; per game median ${seconds(times[Math.floor(times.length / 2)] ?? 0)}, max ${seconds(times.at(-1) ?? 0)}; ${seconds(performance.now() - started)} in all with ${args.jobs} job(s)`,
   );
+  const live = liveness(
+    results.flatMap(({ outcome }) => (outcome.kind === 'played' ? [outcome.reply] : [])),
+  );
+  console.log(
+    `liveness: ${live.onlyEarlyExits.length} card op(s) ran and only ever exited early${live.onlyEarlyExits
+      .slice(0, 10)
+      .map(({ card, op, runs }) => `\n  ${card}: ${op} (${runs} run${runs === 1 ? '' : 's'})`)
+      .join('')}`,
+  );
+  if (args.liveness !== null) writeFileSync(args.liveness, `${JSON.stringify(live, null, 2)}\n`);
   if (args.json !== null)
     writeFileSync(
       args.json,

@@ -1,4 +1,4 @@
-/** ADR 0034 decisions 5 and 8: product code may run the test-only hooks, never install them. */
+/** ADR 0034 decisions 4, 5 and 8: product code may run the test-only hooks, never install them. */
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
 
@@ -32,6 +32,10 @@ describe('test-only hook imports', () => {
       'packages/engine/src/flow/probe.ts',
       "import { installCheckpointHook } from '../testing/checkpoint-hook';",
     ],
+    [
+      'packages/server/src/match/probe.ts',
+      "import { installDefaultDiagnostics } from '../../../engine/src/testing/diagnostics';",
+    ],
   ])(
     'rejects %s installing a hook: %s',
     async (path, code) => {
@@ -48,6 +52,10 @@ describe('test-only hook imports', () => {
     [
       'packages/engine/src/sba/probe.ts',
       "import { runCheckpointHook } from '../testing/checkpoint-hook';",
+    ],
+    [
+      'packages/engine/src/state/probe.ts',
+      "import { defaultDiagnostics } from '../testing/diagnostics';",
     ],
     [
       'packages/engine/src/testing/probe.ts',

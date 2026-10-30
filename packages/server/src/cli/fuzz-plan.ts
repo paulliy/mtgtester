@@ -98,3 +98,38 @@ export function failureOf(
     return `the heuristic bot's veto excluded every candidate ${reply.emptyVetoes} time(s)`;
   return null;
 }
+
+/**
+ * The liveness report (ADR 0034 decision 8): across the games played, each card's ops that ran
+ * and only ever exited early, most runs first, and how often each early-exit site fired. An op
+ * that never acts is either a card that cannot do its job in these pods or a guard to look at.
+ */
+export function liveness(replies: readonly FuzzReply[]): {
+  onlyEarlyExits: Array<{ card: string; op: string; runs: number }>;
+  exits: Array<{ site: string; reason: string; count: number }>;
+} {
+  const ops = new Map<string, { card: string; op: string; runs: number; earlyExits: number }>();
+  const exits = new Map<string, { site: string; reason: string; count: number }>();
+  for (const reply of replies) {
+    for (const run of reply.ops) {
+      const key = `${run.card}\u0000${run.op}`;
+      const entry = ops.get(key) ?? { card: run.card, op: run.op, runs: 0, earlyExits: 0 };
+      entry.runs += run.runs;
+      entry.earlyExits += run.earlyExits;
+      ops.set(key, entry);
+    }
+    for (const exit of reply.exits) {
+      const key = `${exit.site}\u0000${exit.reason}`;
+      const entry = exits.get(key) ?? { site: exit.site, reason: exit.reason, count: 0 };
+      entry.count += exit.count;
+      exits.set(key, entry);
+    }
+  }
+  return {
+    onlyEarlyExits: [...ops.values()]
+      .filter((entry) => entry.earlyExits === entry.runs)
+      .map(({ card, op, runs }) => ({ card, op, runs }))
+      .sort((a, b) => b.runs - a.runs || a.card.localeCompare(b.card) || a.op.localeCompare(b.op)),
+    exits: [...exits.values()].sort((a, b) => b.count - a.count || a.site.localeCompare(b.site)),
+  };
+}
