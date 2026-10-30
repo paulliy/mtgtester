@@ -71,7 +71,8 @@ describe('Malakir Rebirth // Malakir Mire', () => {
     pump(moveObject(ctx, foe, { zone: 'graveyard' }));
     checkpoint(ctx);
     expect(ctx.state.stack.at(-1)?.kind).toBe('triggeredAbility');
-    resolve(ctx);
+    // The granted trigger is mandatory: nobody is asked "use this ability?".
+    expect(resolve(ctx).map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     const back = battlefield(ctx, 'Test Bear');
     expect(back).toHaveLength(1);
     expect(back[0]!.id).not.toBe(foe.id);

@@ -136,9 +136,12 @@ function attackAndResolve(
 ): PendingDecision[] {
   attacker.attacking = 'P2';
   queueTriggersForEvent(ctx, 'attacks', [{ permanent: attacker, playerId: 'P1' }]);
-  return pump(runPrioritySequence(ctx), (decision) =>
-    decision.decisionType === 'priority' ? pass(decision) : answer(decision),
-  ).decisions;
+  return pump(runPrioritySequence(ctx), (decision) => {
+    if (decision.decisionType === 'priority') return pass(decision);
+    // The attack triggers are mandatory: only their own choices are asked, no "use it?" first.
+    expect(decision.decisionType).not.toBe('optionalTrigger');
+    return answer(decision);
+  }).decisions;
 }
 
 function chooseTopCard(name: string): Answer {
@@ -170,6 +173,7 @@ describe('Adaptive Omnitool (pinned PR09 Oracle)', () => {
     const ctx = pod('pr09-omnitool-equip');
     const tool = castPermanently(ctx, OMNITOOL, ['C', 'C']);
     const host = spawn(ctx, 'P1', creature('Omnitool Host'));
+    const opposingCreature = spawn(ctx, 'P2', creature('Opposing Omnitool Creature'));
     spawn(ctx, 'P2', artifact('Opponent Artifact'));
     const ownArtifact = spawn(ctx, 'P1', artifact('Own Artifact One'));
     const secondArtifact = spawn(ctx, 'P1', artifact('Own Artifact Two'));
@@ -190,6 +194,10 @@ describe('Adaptive Omnitool (pinned PR09 Oracle)', () => {
         /Equip/.test(option.description),
     );
     expect(equipAction).toBeDefined();
+    // Equip targets only creatures you control.
+    const equipTargets = equipAction!.targets!.flatMap((slot) => slot.options);
+    expect(equipTargets).toContain(host.id);
+    expect(equipTargets).not.toContain(opposingCreature.id);
     // Only two mana cannot pay the printed equip cost.
     drainPool(player, false);
     addMana(player, [{ symbol: 'C' }, { symbol: 'C' }]);

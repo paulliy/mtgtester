@@ -64,11 +64,16 @@ function pass(decision: PendingDecision) {
   return outcome(index < 0 ? 0 : index);
 }
 
+/** The triggers in this file are mandatory: none may ask "use this ability?" before its effects. */
+function expectMandatory(decision: PendingDecision) {
+  expect(decision.decisionType).not.toBe('optionalTrigger');
+}
+
 function settle(ctx: GameContext, answer?: Answer) {
-  return pump(
-    runPrioritySequence(ctx),
-    (decision, count) => answer?.(decision, count) ?? pass(decision),
-  );
+  return pump(runPrioritySequence(ctx), (decision, count) => {
+    expectMandatory(decision);
+    return answer?.(decision, count) ?? pass(decision);
+  });
 }
 
 function castOption(ctx: GameContext, playerId: PlayerId, objectId: string) {
@@ -171,6 +176,7 @@ function attack(ctx: GameContext, attackerId: string, defendingPlayer: PlayerId,
         ? customAttacks
         : declareAttacks(decision, (id) => (id === attackerId ? defendingPlayer : null));
     }
+    expectMandatory(decision);
     return answer?.(decision, count) ?? pass(decision);
   });
 }
@@ -388,9 +394,10 @@ describe('PR09 hideaway and recruit cards', () => {
     const ctx = pod('pr09-rabble-blink');
     const oldCard = setupRabble(ctx, forest(), forest().name, 'rabble-old');
     const oldHidden = oldCard.linked!;
-    pump(moveObject(ctx, oldCard.permanent, { zone: 'graveyard' }));
+    const inGraveyard = pump(moveObject(ctx, oldCard.permanent, { zone: 'graveyard' })).value!;
+    // The card returns from the graveyard as a new object (CR 400.7), not the old permanent.
     const returned = pump(
-      moveObject(ctx, oldCard.permanent, { zone: 'battlefield', controllerId: 'P1' }),
+      moveObject(ctx, inGraveyard, { zone: 'battlefield', controllerId: 'P1' }),
     ).value;
     const current = returned as EnginePermanent;
     expect(current.id).not.toBe(oldCard.permanent.id);
@@ -399,23 +406,37 @@ describe('PR09 hideaway and recruit cards', () => {
       spawn(ctx, 'P1', simpleCreature(`New incarnation body ${i}`), { summoningSick: true });
     const { decisions } = attack(ctx, attacker.id, 'P2');
     expect(citizenTokens(ctx)).toHaveLength(1);
-    expect(
-      decisions.some((decision) =>
-        decision.options.some((option) => option.description.startsWith('Play ')),
-      ),
-    ).toBe(false);
+    // The new object's own hideaway card may be played; the older incarnation's never is.
+    const plays = decisions.flatMap((decision) =>
+      decision.options.filter((option) => option.description.startsWith('Play ')),
+    );
+    expect(plays.some((option) => option.description.includes(oldHidden.name))).toBe(false);
     expect(ctx.state.exile.some((card) => card.id === oldHidden.id)).toBe(true);
   });
 
   it('pr09-celebrate-orders-independent-triggers-and-targets-per-opponent — excludes self, lands, and hexproof permanents', () => {
     const ctx = pod('pr09-celebrate-targets');
+    const mine = spawn(ctx, 'P1', simpleCreature('My own creature'));
     const legalP2 = spawn(ctx, 'P2', simpleCreature('Target P2 creature'));
     const hexproof = spawn(ctx, 'P2', simpleCreature('Hexproof creature', 'Hexproof'));
     const legalP3 = spawn(ctx, 'P3', simpleArtifact('Target P3 artifact'));
     spawn(ctx, 'P4', forest());
     const discard = conjure(ctx, 'P1', simpleCreature('Recruit discard'), 'hand');
     const offered: string[] = [];
+    const menus: string[][] = [];
     const cast = payCast(ctx, 'P1', celebratePin.card, celebrateMana(), (decision) => {
+      const menu = decision.options
+        .filter((option) => option.description.startsWith('Target '))
+        .map((option) => option.description);
+      if (menu.length > 0) {
+        menus.push(menu);
+        // "That player controls": your own permanents (the creature, Celebrate itself) are never
+        // offered, and each opponent's choice offers only that opponent's permanents.
+        const names = menu.join(' | ');
+        expect(names, 'own permanents are not offered').not.toContain(mine.name);
+        expect(names, 'own permanents are not offered').not.toContain('Mountain-king');
+        expect(names.includes(legalP2.name) && names.includes(legalP3.name), names).toBe(false);
+      }
       if (decision.decisionType === 'orderTriggers') {
         expect(decision.options.some((option) => option.description.includes('Recruit'))).toBe(
           true,
@@ -446,6 +467,8 @@ describe('PR09 hideaway and recruit cards', () => {
     expect(offered.some((description) => description.includes(legalP3.name))).toBe(true);
     expect(offered.some((description) => description.includes(hexproof.name))).toBe(false);
     expect(offered.some((description) => description.includes('Forest'))).toBe(false);
+    expect(menus.length).toBeGreaterThanOrEqual(2);
+    expect(ctx.state.battlefield.some((permanent) => permanent.cardId === mine.cardId)).toBe(true);
     expect(ctx.state.exile.some((card) => card.cardId === legalP2.cardId)).toBe(true);
     expect(ctx.state.exile.some((card) => card.cardId === legalP3.cardId)).toBe(true);
     expect(ctx.state.battlefield.some((permanent) => permanent.cardId === hexproof.cardId)).toBe(
@@ -479,6 +502,10 @@ describe('PR09 hideaway and recruit cards', () => {
     const ctx = pod('pr09-celebrate-no-targets');
     const land = conjure(ctx, 'P1', forest(), 'hand');
     const cast = payCast(ctx, 'P1', celebratePin.card, celebrateMana(), (decision) => {
+      // No opponent controls a nonland permanent: Celebrate itself is never a choice.
+      expect(
+        decision.options.map((option) => option.description).filter((d) => d.startsWith('Target ')),
+      ).toEqual([]);
       if (decision.decisionType === 'orderTriggers') {
         const recruit = decision.options.findIndex((option) =>
           option.description.includes('Recruit'),

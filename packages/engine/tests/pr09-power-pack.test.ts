@@ -185,6 +185,10 @@ describe('PR09 Power Pack', () => {
     expect(first.decisions.some((decision) => decision.decisionType === 'chooseTargets')).toBe(
       false,
     );
+    // The combat damage trigger is mandatory: no "use this ability?" question is asked.
+    expect(first.decisions.map((decision) => decision.decisionType)).not.toContain(
+      'optionalTrigger',
+    );
     expect(replay.chosen?.name).toBe(first.chosen?.name);
     expect(first.ctx.state.delayedTriggers).toHaveLength(1);
     const counts = new Map(first.eligible.map((candidate) => [candidate.name, 0]));

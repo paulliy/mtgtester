@@ -92,6 +92,16 @@ function settle(ctx: GameContext, answer: (decision: PendingDecision) => Decisio
   );
 }
 
+/** Wraps an answerer so a mandatory trigger that asks "use this ability?" first fails an assertion. */
+function noOptionalTrigger(
+  answer: (decision: PendingDecision) => DecisionOutcome = pass,
+): (decision: PendingDecision) => DecisionOutcome {
+  return (decision) => {
+    expect(decision.decisionType).not.toBe('optionalTrigger');
+    return answer(decision);
+  };
+}
+
 function chooseDescription(decision: PendingDecision, pattern: RegExp): DecisionOutcome {
   const index = decision.options.findIndex((option) => pattern.test(option.description));
   if (index < 0) {
@@ -230,7 +240,7 @@ describe('PR09 free library cards', () => {
     const marvel = spawn(ctx, 'P1', MARVEL);
     const artifact = spawn(ctx, 'P1', libraryCard('Marvel Artifact', 2, 'Artifact'));
     pump(moveObject(ctx, artifact, { zone: 'graveyard' }));
-    settle(ctx);
+    settle(ctx, noOptionalTrigger());
     expect(p(ctx, 'P1').energy).toBe(1);
     expect(marvel.zone).toBe('battlefield');
   });
@@ -239,7 +249,7 @@ describe('PR09 free library cards', () => {
     const ctx = pod('pr09-marvel-self-graveyard');
     const marvel = spawn(ctx, 'P1', MARVEL);
     pump(moveObject(ctx, marvel, { zone: 'graveyard' }));
-    settle(ctx);
+    settle(ctx, noOptionalTrigger());
     expect(p(ctx, 'P1').energy).toBe(1);
     expect(p(ctx, 'P1').graveyard.some((card) => card.cardId === marvel.cardId)).toBe(true);
   });
@@ -362,6 +372,7 @@ describe('PR09 free library cards', () => {
     const card = castNormally(ctx, 'P1', HERALD, ['C', 'W', 'W', 'C']);
     const permanent = ctx.state.battlefield.find((candidate) => candidate.cardId === card.cardId);
     expect(permanent?.name).toBe('Herald of Amity');
+    expect(computeCharacteristics(ctx, permanent!).keywords).toContain('flying');
     expect(interpretCard(HERALD).modeled).toBe(true);
   });
 
@@ -385,17 +396,24 @@ describe('PR09 free library cards', () => {
       ...Array.from({ length: 7 }, (_, i) => libraryCard(`Herald Exile ${i}`, 1, 'Sorcery')),
     ]);
     let sawEightExiledBeforePick = false;
-    castNormally(ctx, 'P1', HERALD, ['C', 'C', 'C', 'W'], new Map(), (decision) => {
-      if (decision.options.some((option) => /Herald Lab Aura/.test(option.description))) {
-        sawEightExiledBeforePick =
-          p(ctx, 'P1').library.length === 0 &&
-          ctx.state.exile.filter((card) => card.zone === 'exile').length === 8;
-        return chooseDescription(decision, /Herald Lab Aura/);
-      }
-      if (decision.decisionType === 'chooseTargets')
-        return { index: 0, targets: new Map([[0, host.id]]) };
-      return pass(decision);
-    });
+    castNormally(
+      ctx,
+      'P1',
+      HERALD,
+      ['C', 'C', 'C', 'W'],
+      new Map(),
+      noOptionalTrigger((decision) => {
+        if (decision.options.some((option) => /Herald Lab Aura/.test(option.description))) {
+          sawEightExiledBeforePick =
+            p(ctx, 'P1').library.length === 0 &&
+            ctx.state.exile.filter((card) => card.zone === 'exile').length === 8;
+          return chooseDescription(decision, /Herald Lab Aura/);
+        }
+        if (decision.decisionType === 'chooseTargets')
+          return { index: 0, targets: new Map([[0, host.id]]) };
+        return pass(decision);
+      }),
+    );
     expect(sawEightExiledBeforePick).toBe(true);
     expect(
       ctx.state.eventLog.filter(
@@ -447,18 +465,25 @@ describe('PR09 free library cards', () => {
       ...Array.from({ length: 6 }, (_, i) => libraryCard(`Herald Filter ${i}`, 1, 'Sorcery')),
     ]);
     const offered: string[] = [];
-    castNormally(ctx, 'P1', HERALD, ['C', 'C', 'C', 'W'], new Map(), (decision) => {
-      offered.push(
-        ...decision.options
-          .filter((option) => option.type === 'castFree')
-          .map((option) => option.description),
-      );
-      if (decision.options.some((option) => /Filter True Aura/.test(option.description)))
-        return chooseDescription(decision, /Filter True Aura/);
-      if (decision.decisionType === 'chooseTargets')
-        return { index: 0, targets: new Map([[0, host.id]]) };
-      return pass(decision);
-    });
+    castNormally(
+      ctx,
+      'P1',
+      HERALD,
+      ['C', 'C', 'C', 'W'],
+      new Map(),
+      noOptionalTrigger((decision) => {
+        offered.push(
+          ...decision.options
+            .filter((option) => option.type === 'castFree')
+            .map((option) => option.description),
+        );
+        if (decision.options.some((option) => /Filter True Aura/.test(option.description)))
+          return chooseDescription(decision, /Filter True Aura/);
+        if (decision.decisionType === 'chooseTargets')
+          return { index: 0, targets: new Map([[0, host.id]]) };
+        return pass(decision);
+      }),
+    );
     expect(offered.some((description) => /Filter True Aura/.test(description))).toBe(true);
     expect(
       offered.some((description) => /Aura Creature|Herald Filter/.test(description)),
@@ -478,15 +503,22 @@ describe('PR09 free library cards', () => {
       libraryCard('No Host Aura', 1, 'Enchantment — Aura', { oracleText: 'Enchant creature' }),
       ...Array.from({ length: 7 }, (_, i) => libraryCard(`No Host Spell ${i}`, 1, 'Sorcery')),
     ]);
-    const choices = castNormally(ctx, 'P1', HERALD, ['C', 'C', 'C', 'W'], new Map(), (decision) => {
-      const herald = ctx.state.battlefield.find(
-        (permanent) => permanent.name === 'Herald of Amity',
-      );
-      if (herald !== undefined) pump(moveObject(ctx, herald, { zone: 'graveyard' }));
-      return decision.options.some((option) => option.type === 'decline')
-        ? decline(decision)
-        : pass(decision);
-    });
+    const choices = castNormally(
+      ctx,
+      'P1',
+      HERALD,
+      ['C', 'C', 'C', 'W'],
+      new Map(),
+      noOptionalTrigger((decision) => {
+        const herald = ctx.state.battlefield.find(
+          (permanent) => permanent.name === 'Herald of Amity',
+        );
+        if (herald !== undefined) pump(moveObject(ctx, herald, { zone: 'graveyard' }));
+        return decision.options.some((option) => option.type === 'decline')
+          ? decline(decision)
+          : pass(decision);
+      }),
+    );
     expect(choices.cardId).toBeDefined();
     expect(p(ctx, 'P1').library).toHaveLength(8);
     expect(ctx.state.exile).toHaveLength(0);
@@ -502,7 +534,7 @@ describe('PR09 free library cards', () => {
       libraryCard('Decline Aura', 1, 'Enchantment — Aura', { oracleText: 'Enchant creature' }),
       ...Array.from({ length: 7 }, (_, i) => libraryCard(`Decline Spell ${i}`, 1, 'Sorcery')),
     ]);
-    castNormally(ctx, 'P1', HERALD, ['C', 'C', 'C', 'W'], new Map(), decline);
+    castNormally(ctx, 'P1', HERALD, ['C', 'C', 'C', 'W'], new Map(), noOptionalTrigger(decline));
     expect(p(ctx, 'P1').library).toHaveLength(8);
     expect(ctx.state.exile).toHaveLength(0);
     expect(new Set(p(ctx, 'P1').library.map((card) => card.cardId))).toEqual(
@@ -510,7 +542,7 @@ describe('PR09 free library cards', () => {
     );
 
     const emptyCtx = pod('pr09-herald-empty');
-    castNormally(emptyCtx, 'P1', HERALD, ['C', 'C', 'C', 'W']);
+    castNormally(emptyCtx, 'P1', HERALD, ['C', 'C', 'C', 'W'], new Map(), noOptionalTrigger());
     expect(p(emptyCtx, 'P1').hasLost).toBe(false);
   });
 
@@ -527,7 +559,7 @@ describe('PR09 free library cards', () => {
     opponentAura.attachedTo = opponentHost.id;
     herald.summoningSick = false;
     const before = computeCharacteristics(ctx, herald);
-    const decisions = attackAndResolve(ctx, [herald]);
+    const decisions = attackAndResolve(ctx, [herald], noOptionalTrigger());
     expect(decisions.value).toBeUndefined();
     expect(
       computeCharacteristics(ctx, herald),
@@ -550,9 +582,9 @@ describe('PR09 free library cards', () => {
   it('pr09-pillager-normal-cast — pays {5}{R}{R} and resolves as a flying creature', () => {
     const ctx = pod('pr09-pillager-cast');
     const card = castNormally(ctx, 'P1', PILLAGER, ['C', 'C', 'C', 'C', 'C', 'R', 'R']);
-    expect(ctx.state.battlefield.find((permanent) => permanent.cardId === card.cardId)?.name).toBe(
-      'Dream Pillager',
-    );
+    const permanent = ctx.state.battlefield.find((candidate) => candidate.cardId === card.cardId);
+    expect(permanent?.name).toBe('Dream Pillager');
+    expect(computeCharacteristics(ctx, permanent!).keywords).toContain('flying');
     expect(interpretCard(PILLAGER).modeled).toBe(true);
   });
 
@@ -567,7 +599,7 @@ describe('PR09 free library cards', () => {
         libraryCard(`Pillager Card ${i}`, 2, i === 5 ? 'Land' : 'Sorcery'),
       ),
     );
-    attackAndResolve(ctx, [pillager]);
+    attackAndResolve(ctx, [pillager], noOptionalTrigger());
     expect(
       ctx.state.eventLog.filter(
         (event) =>
@@ -593,7 +625,7 @@ describe('PR09 free library cards', () => {
       ...Array.from({ length: 5 }, (_, i) => libraryCard(`Pillager Filler ${i}`, 0, 'Land')),
     ]);
     const originalCard = cards[0]!;
-    attackAndResolve(ctx, [pillager]);
+    attackAndResolve(ctx, [pillager], noOptionalTrigger());
     const exiled = ctx.state.exile.find((card) => card.cardId === originalCard.cardId)!;
     expect(exiled.zone).toBe('exile');
     expect(exiled!.playableUntilEotBy).toBe('P1');
@@ -677,7 +709,7 @@ describe('PR09 free library cards', () => {
       ),
     ]);
     const originalCard = cards[0]!;
-    attackAndResolve(ctx, [pillager]);
+    attackAndResolve(ctx, [pillager], noOptionalTrigger());
     const exiled = ctx.state.exile.find((card) => card.cardId === originalCard.cardId)!;
     expect(exiled.playableUntilEotBy).toBe('P1');
     addMana(p(ctx, 'P1'), [{ symbol: 'C' }]);
@@ -771,7 +803,7 @@ describe('PR09 free library cards', () => {
       libraryCard('Cube One Spell', 1, 'Sorcery'),
       libraryCard('Cube Two Spell', 1, 'Sorcery'),
     ]);
-    const result = attackAndResolve(ctx, [a, b], (decision) => decline(decision));
+    const result = attackAndResolve(ctx, [a, b], noOptionalTrigger(decline));
     const libraryChoices = result.decisions.filter((decision) =>
       decision.options.some((option) => option.type === 'castFree'),
     );
@@ -791,14 +823,18 @@ describe('PR09 free library cards', () => {
       libraryCard('Cube MV 8', 8, 'Sorcery'),
       ...Array.from({ length: 4 }, (_, i) => libraryCard(`Cube Excess ${i}`, 9, 'Land')),
     ]);
-    attackAndResolve(ctx, [weak, strong], (decision) => {
-      offered.push(
-        ...decision.options
-          .filter((option) => option.type === 'castFree')
-          .map((option) => option.description),
-      );
-      return decline(decision);
-    });
+    attackAndResolve(
+      ctx,
+      [weak, strong],
+      noOptionalTrigger((decision) => {
+        offered.push(
+          ...decision.options
+            .filter((option) => option.type === 'castFree')
+            .map((option) => option.description),
+        );
+        return decline(decision);
+      }),
+    );
     expect(offered.some((description) => /Cube MV 6/.test(description))).toBe(true);
     expect(offered.some((description) => /Cube MV 8|Cube Excess/.test(description))).toBe(false);
     expect(new Set(p(ctx, 'P1').library.map((card) => card.cardId))).toEqual(
@@ -814,11 +850,15 @@ describe('PR09 free library cards', () => {
       libraryCard('Cube Too Costly', 5, 'Sorcery'),
       ...Array.from({ length: 5 }, (_, i) => libraryCard(`Cube Land ${i}`, 0, 'Land')),
     ]);
-    const result = attackAndResolve(ctx, [attacker], (decision) => {
-      if (decision.options.some((option) => option.type === 'castFree'))
-        throw new Error('no spell qualifies');
-      return pass(decision);
-    });
+    const result = attackAndResolve(
+      ctx,
+      [attacker],
+      noOptionalTrigger((decision) => {
+        if (decision.options.some((option) => option.type === 'castFree'))
+          throw new Error('no spell qualifies');
+        return pass(decision);
+      }),
+    );
     expect(
       result.decisions.some((decision) =>
         decision.options.some((option) => option.type === 'castFree'),

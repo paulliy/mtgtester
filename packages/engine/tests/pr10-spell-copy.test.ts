@@ -162,18 +162,46 @@ describe('PR10.12 Display of Power', () => {
     const restore = asActive(ctx, 'P3');
     const second = castFromHand(ctx, 'P3', labShock(), new Map([[0, mine.id]]));
     restore();
+    // A flash creature spell is on the stack too, but Display of Power targets only instants and sorceries.
+    const flashRestore = asActive(ctx, 'P3');
+    const flashBear = castFromHand(
+      ctx,
+      'P3',
+      oracle({
+        name: 'Lab Flash Bear',
+        typeLine: 'Creature — Bear',
+        manaCost: '{1}',
+        cmc: 1,
+        power: '2',
+        toughness: '2',
+        oracleText: 'Flash',
+      }),
+    );
+    flashRestore();
+    expect(ctx.state.stack.some((entry) => entry.id === flashBear.id)).toBe(true);
     const display = conjure(ctx, 'P1', card, 'hand');
     addMana(p(ctx, 'P1'), exactMana(interpretCard(card)));
     const option = castOption(ctx, 'P1', display.id);
     expect(option).toBeDefined();
-    pump(
+    const targetMenus = pump(
       applyPriorityAction(ctx, p(ctx, 'P1'), option!.payload as PriorityActionPayload, {
         index: 0,
         targets: new Map(),
       }),
       // Counted targets are picked one at a time; the first offered spell is the earliest.
-      choose('Lab Shock (on the stack)'),
+      (decision) => {
+        expect(
+          decision.options.map((entry) => entry.description).join(' | '),
+          'the creature spell is not a legal target',
+        ).not.toContain('Lab Flash Bear');
+        return choose('Lab Shock (on the stack)')(decision);
+      },
+    ).decisions;
+    const offered = targetMenus.flatMap((decision) =>
+      decision.options.map((entry) => entry.description),
     );
+    expect(offered.some((description) => description.includes('Lab Shock'))).toBe(true);
+    expect(offered.some((description) => description.includes('Lab Flash Bear'))).toBe(false);
     expect(ctx.state.stack.at(-1)!.countTargets).toEqual({ 0: [shock.id, second.id] });
     let call = 0;
     pump(resolveTopOfStack(ctx), (decision) =>

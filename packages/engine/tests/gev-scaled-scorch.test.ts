@@ -10,7 +10,7 @@ import {
 } from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
 import { fixtureOracleId } from '../src/cards/overrides';
-import type { EngineActionOption } from '../src/decisions';
+import type { EngineActionOption, PendingDecision } from '../src/decisions';
 import { executeAbility } from '../src/effects/resolve';
 import { priorityCheckpoint } from '../src/sba/sba';
 import { resolveTopOfStack } from '../src/stack/stack';
@@ -162,6 +162,20 @@ describe('Gev, Scaled Scorch', () => {
     );
     queueCastTriggers(ctx, stackSpell(lizard, 'P1'));
     expect(ctx.state.pendingTriggers).toHaveLength(1);
+    // Put the real trigger on the stack and resolve it: it is mandatory, so no "use it?" is asked.
+    const answerTrigger = (decision: PendingDecision) => {
+      expect(decision.decisionType).not.toBe('optionalTrigger');
+      const slot = decision.options[0]?.targets?.[0];
+      return {
+        index: 0,
+        targets: new Map(slot === undefined ? [] : [[slot.slot, 'P2']]),
+      };
+    };
+    pump(priorityCheckpoint(ctx), answerTrigger);
+    expect(ctx.state.stack).toHaveLength(1);
+    pump(resolveTopOfStack(ctx), answerTrigger);
+    expect(ctx.state.players[1]!.life).toBe(lifeBefore - 2);
+    expect(ctx.state.players[2]!.life).toBe(40);
     ctx.state.pendingTriggers = [];
 
     const bear = conjure(

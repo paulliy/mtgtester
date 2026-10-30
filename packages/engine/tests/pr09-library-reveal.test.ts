@@ -117,9 +117,12 @@ function decline(decision: PendingDecision): DecisionOutcome {
 }
 
 function settle(ctx: GameContext, answer: (decision: PendingDecision) => DecisionOutcome = pass) {
-  return pump(runPrioritySequence(ctx), (decision) =>
-    decision.decisionType === 'priority' ? pass(decision) : answer(decision),
-  );
+  return pump(runPrioritySequence(ctx), (decision) => {
+    if (decision.decisionType === 'priority') return pass(decision);
+    // No trigger here is a "may" trigger: its own choices are asked, never "use this ability?".
+    expect(decision.decisionType).not.toBe('optionalTrigger');
+    return answer(decision);
+  });
 }
 
 function normalOption(ctx: GameContext, playerId: string, objectId: string) {

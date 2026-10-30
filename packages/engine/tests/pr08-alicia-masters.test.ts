@@ -601,7 +601,9 @@ describe('Alicia Masters, Skilled Sculptor', () => {
 
     beginEndStep(ctx);
     expect(ctx.state.pendingTriggers).toHaveLength(1);
-    settle(ctx);
+    const { decisions } = settle(ctx);
+    // The end-step trigger is mandatory: nobody is asked "use this ability?".
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
 
     expect(stolen.controllerId).toBe('P2');
     expect(stolen.ownerId).toBe('P2');

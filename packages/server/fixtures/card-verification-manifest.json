@@ -6302,7 +6302,13 @@
           "viewerScenarioIds": ["foe-razer-regent-viewer-fight-and-grow"]
         }
       ],
-      "gameplayAiScenarioIds": []
+      "gameplayAiScenarioIds": [],
+      "equivalentMutants": [
+        {
+          "mutant": "triggers[1]: widen trigger subject (drop condition 0)",
+          "reason": "Only creatures fight (CR 701.14), and the fight executor queues \"fights\" only when both fighters are creatures, so dropping the \"creature\" condition matches the same fights."
+        }
+      ]
     },
     "4cfaa5cf-cc3d-49a7-9544-38a8bb7e9ec1": {
       "name": "Frontier Siege",
@@ -6357,7 +6363,17 @@
           "viewerScenarioIds": ["frontier-siege-viewer-dragons-fight"]
         }
       ],
-      "gameplayAiScenarioIds": []
+      "gameplayAiScenarioIds": [],
+      "equivalentMutants": [
+        {
+          "mutant": "triggers[0].effects[0].amount: const 2 + 1",
+          "reason": "The Khans mode adds its fixed {G}{G}; the mana executor reads the fixed symbols and never this amount."
+        },
+        {
+          "mutant": "triggers[0].effects[0].amount: const 2 - 1",
+          "reason": "The Khans mode adds its fixed {G}{G}; the mana executor reads the fixed symbols and never this amount."
+        }
+      ]
     },
     "80c26f58-04b0-4db0-b84e-9b136609abe0": {
       "name": "Sarkhan, the Dragonspeaker",
@@ -14371,7 +14387,17 @@
           ]
         }
       ],
-      "gameplayAiScenarioIds": []
+      "gameplayAiScenarioIds": [],
+      "equivalentMutants": [
+        {
+          "mutant": "triggers[0]: widen trigger subject (drop condition 0)",
+          "reason": "Only creatures attack (CR 508.1a), so dropping the attacker's \"creature\" condition matches the same attackers."
+        },
+        {
+          "mutant": "triggers[0]: widen trigger subject (drop condition 1)",
+          "reason": "The trigger also requires that you are the defending player, and no player attacks themselves (CR 508.1b), so the attacker is always an opponent's."
+        }
+      ]
     },
     "3db8466c-864f-48ba-b617-f2c863dfdcbd": {
       "name": "Benevolent Offering",
@@ -16060,7 +16086,13 @@
         "pr09-grenzo-havoc-raiser-viewer-negative",
         "pr09-grenzo-havoc-raiser-viewer-goad"
       ],
-      "gameplayAiScenarioIds": []
+      "gameplayAiScenarioIds": [],
+      "equivalentMutants": [
+        {
+          "mutant": "triggers[0]: widen trigger subject (drop condition 0)",
+          "reason": "Only creatures deal combat damage (CR 510.2), so dropping the subject's \"creature\" condition matches the same sources."
+        }
+      ]
     },
     "c51ed6e3-813b-49c4-b1de-7f92a77f8f6e": {
       "name": "Galvanic Iteration",

@@ -110,6 +110,10 @@ describe('PR10.24 Annie Joins Up', () => {
     putPendingTriggersOnStack(ctx, () => ({ index: 0, targets: new Map([[0, theirs.id]]) }));
     // Annie Joins Up is not a creature, so its own trigger is not doubled.
     expect(ctx.state.stack).toHaveLength(1);
+    // The trigger is mandatory: no "use it?" is asked, and exactly 5 damage is marked.
+    const { decisions } = pump(resolveTopOfStack(ctx));
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
+    expect(theirs.damageMarked).toBe(5);
     settle(ctx);
     expect(ctx.state.battlefield.some((permanent) => permanent.id === theirs.id)).toBe(false);
   });

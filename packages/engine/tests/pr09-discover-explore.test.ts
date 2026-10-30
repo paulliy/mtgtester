@@ -68,7 +68,12 @@ const decline = (d: PendingDecision): DecisionOutcome => {
   return { index: Math.max(i, 0), targets: new Map() };
 };
 function settle(c: GameContext, answer: (d: PendingDecision) => DecisionOutcome = pass) {
-  return pump(runPrioritySequence(c), (d) => (d.decisionType === 'priority' ? pass(d) : answer(d)));
+  return pump(runPrioritySequence(c), (d) => {
+    if (d.decisionType === 'priority') return pass(d);
+    // Every trigger in this file is mandatory: no "use this ability?" question is ever asked.
+    expect(d.decisionType).not.toBe('optionalTrigger');
+    return answer(d);
+  });
 }
 function cast(
   c: GameContext,
@@ -125,12 +130,25 @@ describe('PR09 discover, explore, and reveal production cards', () => {
   it('pr09-franklin-own-combat-discover — after your noncreature spell, beginning combat queues and resolves Discover 6', () => {
     const c = pod('franklin-discover');
     const f = spawn(c, 'P1', FRANKLIN);
+    // No spell cast yet this turn, then only a creature spell: the intervening condition fails.
+    queueStepTriggers(c, 'beginningOfCombat');
+    expect(c.state.pendingTriggers).toHaveLength(0);
+    cast(c, testCard('Franklin setup creature', '{1}', 'Creature — Test'), ['C']);
+    queueStepTriggers(c, 'beginningOfCombat');
+    expect(c.state.pendingTriggers).toHaveLength(0);
     cast(c, testCard('Franklin setup artifact', '{1}', 'Artifact'), ['C']);
-    lib(c, [testCard('Franklin hit', '{2}', 'Artifact')]);
+    // Discover 6: the mana value 7 card is exiled past (and bottomed); the mana value 6 card hits.
+    lib(c, [
+      testCard('Franklin too costly', '{7}', 'Artifact'),
+      testCard('Franklin hit', '{6}', 'Artifact'),
+    ]);
     queueStepTriggers(c, 'beginningOfCombat');
     expect(c.state.pendingTriggers).toHaveLength(1);
     settle(c, (d) => (d.decisionType === 'general' ? decline(d) : pass(d)));
-    expect(playerById(c, 'P1').hand.some((x) => x.name === 'Franklin hit')).toBe(true);
+    const hand = playerById(c, 'P1').hand.map((x) => x.name);
+    expect(hand).toContain('Franklin hit');
+    expect(hand).not.toContain('Franklin too costly');
+    expect(playerById(c, 'P1').library.map((x) => x.name)).toEqual(['Franklin too costly']);
     expect(f.name).toBe(FRANKLIN.name);
   });
   it('pr09-franklin-no-opponent-combat — Franklin does not trigger at another player’s beginning of combat', () => {
@@ -165,11 +183,16 @@ describe('PR09 discover, explore, and reveal production cards', () => {
   it('pr09-chimil-own-end-step-discover — own end step triggers Discover 5', () => {
     const c = pod('chimil-end');
     spawn(c, 'P1', CHIMIL);
-    lib(c, [testCard('Chimil hit', '{5}', 'Artifact')]);
+    lib(c, [
+      testCard('Chimil too costly', '{6}', 'Artifact'),
+      testCard('Chimil hit', '{5}', 'Artifact'),
+    ]);
     queueStepTriggers(c, 'endStep');
     expect(c.state.pendingTriggers).toHaveLength(1);
     settle(c, (d) => (d.decisionType === 'general' ? decline(d) : pass(d)));
-    expect(playerById(c, 'P1').hand.some((x) => x.name === 'Chimil hit')).toBe(true);
+    // Discover 5 skips the mana value 6 card (it goes to the library bottom) and takes the 5.
+    expect(playerById(c, 'P1').hand.map((x) => x.name)).toEqual(['Chimil hit']);
+    expect(playerById(c, 'P1').library.map((x) => x.name)).toEqual(['Chimil too costly']);
   });
   it('pr09-chimil-opponent-end-step — opponent end step does not queue Chimil', () => {
     const c = pod('chimil-opponent');
@@ -180,17 +203,28 @@ describe('PR09 discover, explore, and reveal production cards', () => {
   });
   it('pr09-carnosaur-cast-etb-discover — pays {4}{R}{R}, resolves, and its ETB discovers', () => {
     const c = pod('carnosaur-cast');
-    lib(c, [testCard('Carnosaur hit', '{4}', 'Artifact')]);
+    lib(c, [
+      testCard('Carnosaur too costly', '{6}', 'Artifact'),
+      testCard('Carnosaur hit', '{5}', 'Artifact'),
+    ]);
     const car = cast(c, CARNOSAUR, ['C', 'C', 'C', 'C', 'R', 'R'], (d) =>
       d.decisionType === 'general' ? decline(d) : pass(d),
     );
     expect(car.name).toBe(CARNOSAUR.name);
-    expect(playerById(c, 'P1').hand.some((x) => x.name === 'Carnosaur hit')).toBe(true);
+    // Discover 5: the mana value 6 card is skipped, the mana value 5 card is the hit.
+    expect(playerById(c, 'P1').hand.map((x) => x.name)).toEqual(['Carnosaur hit']);
+    expect(playerById(c, 'P1').library.map((x) => x.name)).toEqual(['Carnosaur too costly']);
   });
   it('pr09-carnosaur-activation-hand-only-cost — ability requires hand zone and {2}{R}', () => {
     const c = pod('carnosaur-cost');
     const hand = conjure(c, 'P1', CARNOSAUR, 'hand');
     const foe = spawn(c, 'P2', testCard('Target', '{1}', 'Creature — Test'));
+    const walker = spawn(
+      c,
+      'P2',
+      oracle({ name: 'Carnosaur Walker', typeLine: 'Planeswalker — Test', loyalty: '5' }),
+    );
+    const notTargetable = spawn(c, 'P2', testCard('Carnosaur Relic', '{1}', 'Artifact'));
     const actions = () =>
       computePriorityOptions(c, playerById(c, 'P1')).filter(
         (o) => (o.payload as { objectId?: string }).objectId === hand.id,
@@ -202,15 +236,43 @@ describe('PR09 discover, explore, and reveal production cards', () => {
     );
     expect(actions().length).toBe(0);
     addMana(playerById(c, 'P1'), [{ symbol: 'R' }]);
-    expect(
-      actions().some((o) => (o.payload as PriorityActionPayload).kind === 'activateAbility'),
-    ).toBe(true);
-    expect(foe.name).toBe('Target');
+    const activate = actions().find(
+      (o) => (o.payload as PriorityActionPayload).kind === 'activateAbility',
+    );
+    expect(activate).toBeDefined();
+    // Targets only creatures and planeswalkers.
+    const legal = activate!.targets!.flatMap((slot) => slot.options);
+    expect(legal).toContain(foe.id);
+    expect(legal).toContain(walker.id);
+    expect(legal).not.toContain(notTargetable.id);
+    pump(
+      applyPriorityAction(c, playerById(c, 'P1'), activate!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map([[activate!.targets![0]!.slot, foe.id]]),
+      }),
+    );
+    // The cost is paid on activation: the card is discarded and the mana is spent.
+    expect(playerById(c, 'P1').graveyard.some((x) => x.cardId === hand.cardId)).toBe(true);
+    expect(playerById(c, 'P1').hand.some((x) => x.cardId === hand.cardId)).toBe(false);
+    expect(playerById(c, 'P1').manaEntries).toHaveLength(0);
+    settle(c);
+    expect(c.state.battlefield.find((x) => x.id === foe.id)?.damageMarked).toBe(3);
+    expect(c.state.battlefield.find((x) => x.id === walker.id)?.counters['loyalty'] ?? 5).toBe(5);
   });
   it('pr09-path-own-creature-enters-explore-land — own creature entering explores; land goes to hand without a draw', () => {
     const c = pod('path-land');
     spawn(c, 'P1', PATH);
     lib(c, [testCard('Explore land', '', 'Land')]);
+    // An opposing creature and your own noncreature permanent entering do not explore.
+    const enemy = conjure(c, 'P2', testCard('Path enemy', '{2}', 'Creature — Scout'), 'hand');
+    pump(moveObject(c, enemy, { zone: 'battlefield' }));
+    const relic = conjure(c, 'P1', testCard('Path relic', '{2}', 'Artifact'), 'hand');
+    pump(moveObject(c, relic, { zone: 'battlefield' }));
+    expect(c.state.pendingTriggers).toHaveLength(0);
+    settle(c);
+    expect(playerById(c, 'P1').hand.some((x) => x.name === 'Explore land')).toBe(false);
+    expect(playerById(c, 'P1').library.map((x) => x.name)).toEqual(['Explore land']);
+    expect(c.state.battlefield.find((x) => x.id === enemy.id)?.counters['+1/+1'] ?? 0).toBe(0);
     const object = conjure(c, 'P1', testCard('Path creature', '{2}', 'Creature — Scout'), 'hand');
     pump(moveObject(c, object, { zone: 'battlefield' }));
     settle(c);

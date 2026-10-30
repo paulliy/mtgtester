@@ -160,6 +160,15 @@ describe('Fabled Passage', () => {
 
   it('fabled-passage-normal-activation — pays tap and sacrifice before stack resolution', () => {
     const ctx = pod('normal-activation');
+    // {T} is a real cost: a Passage that is already tapped offers no activation.
+    const tappedPassage = spawn(ctx, 'P1', fabled.card, { tapped: true });
+    expect(
+      computePriorityOptions(ctx, player(ctx)).some((option) => {
+        const payload = option.payload as PriorityActionPayload;
+        return payload.kind === 'activateAbility' && payload.objectId === tappedPassage.id;
+      }),
+    ).toBe(false);
+    ctx.state.battlefield = ctx.state.battlefield.filter((entry) => entry !== tappedPassage);
     const passage = spawn(ctx, 'P1', fabled.card);
     spawn(ctx, 'P1', forest());
     spawn(ctx, 'P1', forest());
@@ -186,6 +195,8 @@ describe('Fabled Passage', () => {
 
     expect(player(ctx).graveyard.some((card) => card.cardId === passage.cardId)).toBe(true);
     expect(ctx.state.eventLog.some((event) => event.type === 'activateAbility')).toBe(true);
+    // "...then shuffle."
+    expect(ctx.state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
     expect(ctx.state.battlefield.find((entry) => entry.cardId === found.cardId)?.tapped).toBe(
       false,
     );

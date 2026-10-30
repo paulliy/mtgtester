@@ -8,6 +8,7 @@ import { interpretCard } from '../src/cards/interpret';
 import { fixtureOracleId } from '../src/cards/overrides';
 import type { EngineActionOption } from '../src/decisions';
 import { executeAbility } from '../src/effects/resolve';
+import { priorityCheckpoint } from '../src/sba/sba';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { createGame } from '../src/state/game';
 import { moveObject, moveObjects } from '../src/state/objects';
@@ -133,6 +134,16 @@ describe('Thran Vigil', () => {
 
     pump(executeAbility(ctx, vigil, ability, [chosen.id]));
     expect(chosen.counters['+1/+1']).toBe(1);
+    expect(opponent.counters['+1/+1'] ?? 0).toBe(0);
+
+    // Through the real stack: the trigger is mandatory, so resolving it asks no "use it?" first.
+    const relic = conjure(ctx, 'P1', artifact('Counter Relic'), 'graveyard');
+    pump(moveObject(ctx, relic, { zone: 'exile' }));
+    pump(priorityCheckpoint(ctx), () => ({ index: 0, targets: new Map([[0, chosen.id]]) }));
+    expect(ctx.state.stack).toHaveLength(1);
+    const { decisions } = pump(resolveTopOfStack(ctx));
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
+    expect(chosen.counters['+1/+1']).toBe(2);
     expect(opponent.counters['+1/+1'] ?? 0).toBe(0);
   });
 

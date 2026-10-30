@@ -164,6 +164,8 @@ function settleThroughTable(
       const pass = decision.options.findIndex((option) => option.type === 'pass');
       return { index: pass >= 0 ? pass : 0, targets: new Map() };
     }
+    // The enter trigger is mandatory: the players' choices come with no "use this ability?" first.
+    expect(decision.decisionType).not.toBe('optionalTrigger');
     if (decision.decisionType !== 'general')
       throw new Error(`unexpected ${decision.decisionType} decision for ${decision.player}`);
     const wanted = choose(decision);
