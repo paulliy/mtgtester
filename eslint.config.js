@@ -60,6 +60,15 @@ const OVERRIDE_RESTRICTIONS = [
       'Use defineCard(oracleId, name, handledLines, def) — it registers both the real and the fixture oracle id, so the two cannot drift apart. Use unimplemented(...) for a card with no authored behavior yet.',
   },
   {
+    selector: "CallExpression[callee.name='parseManaCost']",
+    message:
+      "Use mana('{2}{R}') for a cost component or manaCost('{2}{R}') for a ParsedManaCost. Both throw on an unparseable cost, where parseManaCost(s).cost! yields a null cost the payment solver treats as free.",
+  },
+  {
+    selector: TOKEN_SPEC_LITERAL_SELECTOR,
+    message: TOKEN_SPEC_LITERAL_MESSAGE,
+  },
+  {
     selector: "Property[key.name='op'][value.value='noOp']",
     message:
       'Executable noOp effects are prohibited in authored card data. Keep the card explicitly unsupported until its behavior is implemented.',
