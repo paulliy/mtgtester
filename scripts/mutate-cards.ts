@@ -12,6 +12,7 @@
  *   --collected <json>    reuse a `vitest list --json` listing
  *   --json <path>         write every verdict, after each card
  *   --resume              with --json, skip the cards that file already reports
+ *   --manifest <path>     read another copy of the verification manifest
  *
  * Each card runs in a child process (`--child`) that prints one line per run. A mutant can make a
  * test worker die (a heap blown by an option-enumeration explosion), which ends the child; the
@@ -41,14 +42,16 @@ import {
   type MutantVerdict,
 } from './contracts/mutation';
 
-const MANIFEST = 'packages/server/fixtures/card-verification-manifest.json';
 const args = process.argv.slice(2);
 const option = (flag: string) => {
   const at = args.indexOf(flag);
   return at === -1 ? null : (args[at + 1] ?? null);
 };
 const root = `${process.cwd().replaceAll('\\', '/')}/`;
-const manifestJson = readFileSync(MANIFEST, 'utf8');
+// `--manifest` reads another copy: a change's new test IDs can be tried before they are committed.
+const manifestPath =
+  option('--manifest') ?? 'packages/server/fixtures/card-verification-manifest.json';
+const manifestJson = readFileSync(manifestPath, 'utf8');
 const statuses = cardStatuses(manifestJson);
 
 /** The Vitest listing's path: `--collected`, or a fresh `vitest list` in `scratch`. */
@@ -159,7 +162,17 @@ interface CardReport {
 function runChild(card: string, collected: string, from: number) {
   const child = spawnSync(
     process.execPath,
-    [process.argv[1]!, '--child', card, '--collected', collected, '--from', String(from)],
+    [
+      process.argv[1]!,
+      '--child',
+      card,
+      '--collected',
+      collected,
+      '--manifest',
+      manifestPath,
+      '--from',
+      String(from),
+    ],
     { encoding: 'utf8', maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'pipe'] },
   );
   const lines = child.stdout.split('\n');
