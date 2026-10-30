@@ -285,27 +285,6 @@ const hasOnlyImmediateActions = computed(
 );
 
 /**
- * A `chooseTargets` request is a triggered ability already committed to the stack — there is
- * nothing to decide except which targets, so making the player click the source permanent
- * first (the way choosing whether to cast a spell or activate an ability does) is an extra,
- * pointless step. Auto-opening the tray for these skips straight to targeting.
- */
-watch(
-  () => request.value?.requestId,
-  () => {
-    selectedActionId.value = null;
-    focusedSourceId.value = null;
-    chosenTargets.value = {};
-    pendingPass.value = null;
-    const req = request.value;
-    if (req?.decisionType === 'chooseTargets' && req.legalActions.length === 1) {
-      const [only] = req.legalActions;
-      if (only !== undefined) chooseAction(only);
-    }
-  },
-);
-
-/**
  * Drives the batched combat declaration (brief — Workstream 5). Fires on every freshly pushed
  * request: `onRequest` starts or continues a plan (a no-op unless it's a `declareAttackers`/
  * `declareBlockers` decision). Both sides submit their whole confirmed plan in one call
@@ -723,6 +702,29 @@ function chooseAction(action: LegalAction): void {
     store.submitPlayerAction(action.id);
   }
 }
+
+/**
+ * A `chooseTargets` request is a triggered ability already committed to the stack — there is
+ * nothing to decide except which targets, so making the player click the source permanent
+ * first (the way choosing whether to cast a spell or activate an ability does) is an extra,
+ * pointless step. Auto-opening the tray for these skips straight to targeting.
+ */
+watch(
+  () => request.value?.requestId,
+  () => {
+    selectedActionId.value = null;
+    focusedSourceId.value = null;
+    chosenTargets.value = {};
+    pendingPass.value = null;
+    const req = request.value;
+    if (req?.decisionType === 'chooseTargets' && req.legalActions.length === 1) {
+      const [only] = req.legalActions;
+      if (only !== undefined) chooseAction(only);
+    }
+  },
+  // A trigger's targets may be the first thing asked, already pending when the board mounts.
+  { immediate: true },
+);
 
 function chooseFallbackAction(actionId: number): void {
   const action = request.value?.legalActions.find((candidate) => candidate.id === actionId);
