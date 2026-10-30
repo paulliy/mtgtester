@@ -13,5 +13,7 @@ Spectator play, one-human-versus-three-opponent play, replay, supported-pool dec
 ## Known residual risks
 
 - Full list: [audit remediation](../reviews/audit-remediation-2026-09-05.md).
+- Engine speed on big boards: in a fuzz game with 56 to 71 permanents (Council of Reeds copying itself), one engine step takes 4 to 13 seconds, and the state invariants double that. Fuzz's 300-second game clock holds, but a table with such a board would wait.
+- The stateful mana planner still tries every order of activations when only a dynamic source could make a needed color (Exotic Orchard for {1}{W} with no white opposing land), and halts the game past 2,048 states. Its bounds prune too few sources and colors no source can make.
 - Tables: a manual LAN game across two machines with `--insecure-lan` is still owed, and the served table bundle has not had its own security review. See [table server security](../reviews/table-server-security-2026-10-29.md).
 - Browser-trial payment regression: covered by focused normal-path tests and `scripts/reproduce-browser-payment.ts`, which reuses the original derived seed. The original generated deck configuration was not captured, so do not describe that script as an exact full-game replay. See [browser trial](../reviews/browser-experience-2026-09-05.md).

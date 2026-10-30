@@ -72,20 +72,20 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 
 ## Progress
 
-| Step | State | Done so far                                                                                                           | Pull request |
-| ---- | ----- | --------------------------------------------------------------------------------------------------------------------- | ------------ |
-| 1    | done  | stale harness deleted; harness-integrity guard                                                                        | #44          |
-| 2    | done  | `scripts/card-authoring-metrics.ts`; `docs/reviews/card-authoring-baseline-2026-10-28.md`                             | #44          |
-| 3    | done  | phase 1 done: scope reads are invariants per kind; every test file collects a test (`check:suite-collect`)            | #44          |
-| 4    | done  | P1 data-key registry; P3 label code in `@mtg/shared/presentation`                                                     | #44          |
-| 5    | done  | M1 seat controllers: `'table'` mode, per-seat state, fail-closed switches                                             | #44          |
-| 6    | done  | M2a disclosure policy, privacy fixes, replay inputs and harness; M2b ChaCha20 and streams                             | #44          |
-| 7    | done  | P2 projection types and board groups; P4 server presentation; P5 raw `data` on request, lint                          | #44          |
-| 8    | done  | phase 2: pin store, script/strict pump, scenario runner and lab adapter, card:check/new/finish, gate list, mini-pilot | #44          |
-| 9    | done  | M3 workers, health, manifest, post-game, agent table mode, scans; M4 clocks, fallback, concede                        | #44          |
-| 10   | done  | P6: server-built damage and life cues on each batch; the board animates from them                                     | #44          |
-| 11   | doing | phase 3 done (all 168 reviewed cards mutation-proven); phase 4: invariants, zone lint, tap sites; fuzz next           | #44          |
-| 12   | done  | M5 exposure, TLS run, review; M6 table app, lobby, table bar, post-game, table e2e and CI job                         | #44          |
+| Step | State | Done so far                                                                                                              | Pull request |
+| ---- | ----- | ------------------------------------------------------------------------------------------------------------------------ | ------------ |
+| 1    | done  | stale harness deleted; harness-integrity guard                                                                           | #44          |
+| 2    | done  | `scripts/card-authoring-metrics.ts`; `docs/reviews/card-authoring-baseline-2026-10-28.md`                                | #44          |
+| 3    | done  | phase 1 done: scope reads are invariants per kind; every test file collects a test (`check:suite-collect`)               | #44          |
+| 4    | done  | P1 data-key registry; P3 label code in `@mtg/shared/presentation`                                                        | #44          |
+| 5    | done  | M1 seat controllers: `'table'` mode, per-seat state, fail-closed switches                                                | #44          |
+| 6    | done  | M2a disclosure policy, privacy fixes, replay inputs and harness; M2b ChaCha20 and streams                                | #44          |
+| 7    | done  | P2 projection types and board groups; P4 server presentation; P5 raw `data` on request, lint                             | #44          |
+| 8    | done  | phase 2: pin store, script/strict pump, scenario runner and lab adapter, card:check/new/finish, gate list, mini-pilot    | #44          |
+| 9    | done  | M3 workers, health, manifest, post-game, agent table mode, scans; M4 clocks, fallback, concede                           | #44          |
+| 10   | done  | P6: server-built damage and life cues on each batch; the board animates from them                                        | #44          |
+| 11   | doing | phase 3 done; phase 4: invariants, zone lint, tap sites, fuzz (PR job, nightly issue); nightly bulk and diagnostics next | #44          |
+| 12   | done  | M5 exposure, TLS run, review; M6 table app, lobby, table bar, post-game, table e2e and CI job                            | #44          |
 
 ## Notes from delivery
 
@@ -182,5 +182,16 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
   mutant can exhaust a test worker's heap (Celebrate the Mountain-king's widened target slot) and
   Vitest then exits. Facet warnings flag 47 reviewed cards, advisory until a facet finds a real
   defect outside its fixture.
+- **Fuzz (phase 4 step 4).** `bun run fuzz` plays four of the 13 coverage decks per seed, with
+  heuristic, random or mixed seats, under the invariants and the table limits. Twelve seeds with
+  four jobs on four cores: median 29 seconds a game, most 120. Heuristic-only games end in 32 to 48
+  turns; random players seldom finish, so a pod with one plays to the turn cap, and the cap fails
+  only heuristic-only games. The first run found three engine defects, each fixed with a
+  regression: the stateful mana planner deep-copied the spectator snapshots and logs at every
+  searched state (one turn took 225 seconds); its capacity bound was off beside a dynamic source,
+  so proving eight sources could not pay nine mana halted the game; and the layer digest missed a
+  player's loss, so a cached Nighthawk Scavenger kept that player's graveyard. The pull-request
+  job runs six seeds plus three per changed pinned card; the nightly job plays the next 48 seeds
+  and opens or updates an issue. The liveness report waits for the diagnostics sink (step 6).
 - **Two hash definitions for pins.** Pins before PR08 hashed a card's JSON with sorted keys; later
   ones hash it as written. The pin store keeps the manifest's key and accepts either.

@@ -46,6 +46,8 @@ bun run coverage:snapshot [url...]
 bun run snapshot:oracle
 bun run modelled-cards
 bun run combat-sweep [--games N] [--seed S] [--json out.json]
+bun run fuzz [--from N] [--games N] [--changed [--base S]] [--card "<name>"] [--json F] [--report F]
+                                        # ADR 0034 seeded four-player games, invariants on; prints each failure's replay
 bun run diplomacy-sweep [--games N] [--seed S] [--turn-cap N] [--all] [--talk]   # ADR 0035 self-play
 bun run ai-bench                        # AI benchmark harness (ADR 0026)
 bun run agent-client [--seat P1] [--seed S] [--port N] [--provider random|ai]
