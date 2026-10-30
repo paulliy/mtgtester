@@ -231,6 +231,32 @@ export function choiceAfterScript(
 }
 
 /**
+ * The first decision `player` is asked, other seats passing priority until then, or null when
+ * the run ends first: what a timing test reads ("on P2's turn, P1 may cast it").
+ */
+export function firstDecisionOf(
+  file: CardScenarioFile,
+  scenario: CardScenario,
+  player: string,
+): DecisionRequest | null {
+  const { engine } = buildCardScenario(file, scenario, resolveScenarioCard, {
+    gameId: `scenario-${scenario.id}-first`,
+    strictInvariants: true,
+  });
+  for (let count = 0; count < MAX_DECISIONS; count++) {
+    const step = engine.advance();
+    if (step.kind === 'gameOver') return null;
+    if (step.kind === 'continue') continue;
+    const request = step.request;
+    if (request.decidingPlayer === player) return request;
+    const pass = request.legalActions.find((candidate) => candidate.type === 'pass');
+    if (pass === undefined) throw new Error(`${scenario.id}: ${describeRequest(request)}`);
+    engine.submit({ requestId: request.requestId, actionId: pass.id });
+  }
+  throw new Error(`${scenario.id}: ${player} was never asked`);
+}
+
+/**
  * The names a scenario's first matching action would offer per target slot, at the first
  * decision of `player`: what a negative test reads ("you can't target your own creature").
  */

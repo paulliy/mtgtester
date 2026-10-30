@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { parseCardScenarioFile, type CardScenario } from '../../src/testing/card-scenario';
-import { choiceAfterScript, loadScenarioFile, runScenario, scenarioFailures } from './runner';
+import {
+  choiceAfterScript,
+  firstDecisionOf,
+  loadScenarioFile,
+  runScenario,
+  scenarioFailures,
+} from './runner';
 
 const file = loadScenarioFile(new URL('../scenarios/path-to-exile.json', import.meta.url));
 const base = file.scenarios[0]!;
@@ -93,6 +99,15 @@ describe('the scenario runner', () => {
       expect.stringMatching(/Find Forest/),
     );
     expect(choiceAfterScript(file, base)).toBeNull();
+  });
+
+  it("returns a seat's first decision, or null when it is never asked", () => {
+    const first = firstDecisionOf(file, base, 'P1');
+    expect([first?.turn, first?.decidingPlayer]).toEqual([4, 'P1']);
+    expect(first?.legalActions.map((action) => action.description)).toContainEqual(
+      expect.stringMatching(/^Cast Path to Exile/),
+    );
+    expect(firstDecisionOf(file, base, 'P3')).toBeNull();
   });
 
   it("reads keywords from the controller's view, after layers", () => {
