@@ -16622,7 +16622,14 @@
             "Effect.exileFromHandWithSource",
             "ExiledWithLink"
           ],
-          "engineTestIds": ["mox-c01", "mox-c01-off-battlefield-types"],
+          "engineTestIds": [
+            "mox-c01",
+            "mox-c01-off-battlefield-types",
+            "cards/chrome-mox.test.ts::chrome-mox-imprint-then-tap",
+            "cards/chrome-mox.test.ts::chrome-mox-decline",
+            "cards/chrome-mox.test.ts::chrome-mox-no-artifact-or-land",
+            "cards/chrome-mox.test.ts::chrome-mox-c01-types"
+          ],
           "viewerScenarioIds": [
             "pr11-chrome-mox-viewer-imprint",
             "pr11-chrome-mox-viewer-no-imprint"
@@ -16632,7 +16639,14 @@
           "id": "pr11-chrome-mox-clause-2",
           "oracleText": "{T}: Add one mana of any of the exiled card's colors.",
           "implementation": ["ActivatedAbility.mana", "DynamicMana.exiledWithSourceColors"],
-          "engineTestIds": ["mox-c02", "mox-c02-negative"],
+          "engineTestIds": [
+            "mox-c02",
+            "mox-c02-negative",
+            "cards/chrome-mox.test.ts::chrome-mox-imprint-then-tap",
+            "cards/chrome-mox.test.ts::chrome-mox-only-the-exiled-colors",
+            "cards/chrome-mox.test.ts::chrome-mox-c02-colors",
+            "cards/chrome-mox.test.ts::chrome-mox-c02-nothing-imprinted"
+          ],
           "viewerScenarioIds": [
             "pr11-chrome-mox-viewer-imprint",
             "pr11-chrome-mox-viewer-no-imprint"
@@ -16640,6 +16654,12 @@
         }
       ],
       "viewerScenarioIds": ["pr11-chrome-mox-viewer-imprint", "pr11-chrome-mox-viewer-no-imprint"],
+      "equivalentMutants": [
+        {
+          "mutant": "triggers[0]: flip optional to true",
+          "reason": "The imprint effect already offers Exile nothing, so asking first whether to use the trigger reaches no state declining the exile does not: no card leaves the hand either way."
+        }
+      ],
       "gameplayAiScenarioIds": []
     },
     "c0adbddc-b070-4c5f-afe0-0474c72a9251": {
