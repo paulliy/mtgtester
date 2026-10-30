@@ -72,20 +72,21 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 
 ## Progress
 
-| Step | State | Done so far                                                                                                               | Pull request |
-| ---- | ----- | ------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| 1    | done  | stale harness deleted; harness-integrity guard                                                                            | #44          |
-| 2    | done  | `scripts/card-authoring-metrics.ts`; `docs/reviews/card-authoring-baseline-2026-10-28.md`                                 | #44          |
-| 3    | done  | phase 1 done: scope reads are invariants per kind; every test file collects a test (`check:suite-collect`)                | #44          |
-| 4    | done  | P1 data-key registry; P3 label code in `@mtg/shared/presentation`                                                         | #44          |
-| 5    | done  | M1 seat controllers: `'table'` mode, per-seat state, fail-closed switches                                                 | #44          |
-| 6    | done  | M2a disclosure policy, privacy fixes, replay inputs and harness; M2b ChaCha20 and streams                                 | #44          |
-| 7    | done  | P2 projection types and board groups; P4 server presentation; P5 raw `data` on request, lint                              | #44          |
-| 8    | done  | phase 2: pin store, script/strict pump, scenario runner and lab adapter, card:check/new/finish, gate list, mini-pilot     | #44          |
-| 9    | done  | M3 workers, health, manifest, post-game, agent table mode, scans; M4 clocks, fallback, concede                            | #44          |
-| 10   | done  | P6: server-built damage and life cues on each batch; the board animates from them                                         | #44          |
-| 11   | doing | phase 3 done; phase 4: invariants, zone lint, tap sites, fuzz (PR job, nightly issue), nightly bulk job; diagnostics next | #44          |
-| 12   | done  | M5 exposure, TLS run, review; M6 table app, lobby, table bar, post-game, table e2e and CI job                             | #44          |
+| Step | State | Done so far                                                                                                                                             | Pull request |
+| ---- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| 1    | done  | stale harness deleted; harness-integrity guard                                                                                                          | #44          |
+| 2    | done  | `scripts/card-authoring-metrics.ts`; `docs/reviews/card-authoring-baseline-2026-10-28.md`                                                               | #44          |
+| 3    | done  | phase 1 done: scope reads are invariants per kind; every test file collects a test (`check:suite-collect`)                                              | #44          |
+| 4    | done  | P1 data-key registry; P3 label code in `@mtg/shared/presentation`                                                                                       | #44          |
+| 5    | done  | M1 seat controllers: `'table'` mode, per-seat state, fail-closed switches                                                                               | #44          |
+| 6    | done  | M2a disclosure policy, privacy fixes, replay inputs and harness; M2b ChaCha20 and streams                                                               | #44          |
+| 7    | done  | P2 projection types and board groups; P4 server presentation; P5 raw `data` on request, lint                                                            | #44          |
+| 8    | done  | phase 2: pin store, script/strict pump, scenario runner and lab adapter, card:check/new/finish, gate list, mini-pilot                                   | #44          |
+| 9    | done  | M3 workers, health, manifest, post-game, agent table mode, scans; M4 clocks, fallback, concede                                                          | #44          |
+| 10   | done  | P6: server-built damage and life cues on each batch; the board animates from them                                                                       | #44          |
+| 11   | done  | phase 3: manifest refs, IR mutation (all reviewed cards proven), facets; phase 4: invariants, zone lint, tap sites, fuzz, nightly bulk job, diagnostics | #44          |
+| 12   | done  | M5 exposure, TLS run, review; M6 table app, lobby, table bar, post-game, table e2e and CI job                                                           | #44          |
+| 13   | doing | phase 5 deferred by its go/no-go (no keyword-blocked card); phase 6 pilot next                                                                          | #44          |
 
 ## Notes from delivery
 
@@ -199,5 +200,16 @@ bulk-smoke` interprets and validates the whole bank and fails on a throw, invali
   fewer modeled cards than the baseline recorded for that bank. The same smoke runs in the suite
   over the 958-card coverage fixture. Scryfall is unreachable from the build container, so the job
   was exercised on a synthetic bank only; the pin and first baseline are the owner's.
+- **Diagnostics (phase 4 step 6).** `noop(ctx, site, reason, detail?)` and
+  `invariant(site, reason)` live in `engine/src/exits.ts`. `invariant` takes no context: it
+  records nothing and only throws. The reasons start with the three the first sites need (CR
+  608.2b, 400.7, 609.3). The first `noop` sites are the referent skips for an illegal target and a
+  departed trigger object, so the liveness report is empty on the first fuzz seeds; it fills as
+  cards touch ops. Nothing is recorded without a sink, and a game plays the same with one.
+- **Phase 5 deferred by its go/no-go (step 13).** Of the 1,058 distinct cards in the pinned
+  fixtures, which hold all 200 EDH staples, 52 are unmodeled and none is blocked only by a missing
+  keyword: they wait on adventure and omen spell faces (46), invalid IR (4), one unrecognized
+  creature line and one explicitly unsupported trigger. The keyword registry and line provenance (phase 5 steps 1 and 2) wait for the first card
+  a keyword blocks. The bulk ranking is still owed where the bank exists.
 - **Two hash definitions for pins.** Pins before PR08 hashed a card's JSON with sorted keys; later
   ones hash it as written. The pin store keeps the manifest's key and accepts either.
