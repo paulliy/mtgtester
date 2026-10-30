@@ -227,6 +227,9 @@ export function digestOf(
   h = mix(h, Object.keys(s.modifiedCreatureDiedThisTurn ?? {}).length);
   h = mix(h, s.excessDamageControllerIds.length);
   for (const player of s.players) {
+    // A player who has lost is no opponent (Nighthawk Scavenger's count), from the loss until
+    // the elimination that removes their cards: `eliminatedPlayers` alone misses that window.
+    h = mix(h, player.hasLost ? 1 : 0);
     h = mix(h, player.life + 0x10000);
     h = mix(h, player.hand.length);
     h = mix(h, player.library.length);
