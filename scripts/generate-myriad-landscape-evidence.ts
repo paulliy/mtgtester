@@ -219,6 +219,7 @@ const SOURCE_FILES = [
   'packages/engine/src/state/off-battlefield-types.ts',
   'packages/engine/src/state/queries.ts',
   'packages/engine/src/testing/card-scenario.ts',
+  'packages/engine/src/testing/checkpoint-hook.ts',
   'packages/engine/src/testing/definition-transform.ts',
   'packages/engine/src/testing/prepared-scenario.ts',
   'packages/engine/src/turn/mulligan.ts',

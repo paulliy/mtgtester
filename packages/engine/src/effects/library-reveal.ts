@@ -43,6 +43,7 @@ export function* bottomCards(ctx: GameContext, cards: readonly EngineCardObject[
     const members = new Set(group);
     const current = group.filter((card) => library.includes(card));
     ctx.rng.shuffle(current);
+    // zone-mutation: reorders the library in place: the revealed cards go back to its bottom, and nothing changes zone
     playerById(ctx, ownerId).library = library.filter((card) => !members.has(card));
     playerById(ctx, ownerId).library.push(...current);
   }

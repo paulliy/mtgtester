@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { interpretCard } from '@mtg/engine';
 import type { OracleCard } from '@mtg/shared';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 
 const expected = [
   { id: 'marchesa-viewer-first-zone-own', owner: 'P1', returns: true },
@@ -48,7 +48,7 @@ describe('pinned Marchesa first-zone real Lab scenarios', () => {
   });
   for (const entry of expected)
     it(`${entry.id} — applies the independently expected owner and zone outcome`, () => {
-      const scenario = createCardTestScenario(entry.id, `lab-unit-${entry.id}`)!;
+      const scenario = strictCardTestScenario(entry.id, `lab-unit-${entry.id}`)!;
       expect(scenario).not.toBeNull();
       const engine = scenario.engine;
       let murder = false;

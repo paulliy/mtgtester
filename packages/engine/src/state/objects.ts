@@ -695,7 +695,11 @@ export function consumeRegenerationShield(
   perm.regenerationShields--;
   perm.damageMarked = 0;
   perm.damagedByDeathtouch = false;
+  // Regeneration taps it (CR 701.15a): an untapped permanent becomes tapped, and "whenever … becomes
+  // tapped" sees it like any other tap.
+  const becomesTapped = !perm.tapped;
   perm.tapped = true;
+  if (becomesTapped) queueTriggersForObject(ctx, 'becomesTapped', perm);
   // Removed from combat (CR 701.19c).
   removeFromCombat(ctx, perm);
   emit(

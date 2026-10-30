@@ -19,7 +19,7 @@ import { PR13_ALL_SCENARIO_IDS } from './pr13-scenario-catalog';
 import { PR11B_ALL_SCENARIO_IDS } from './pr11b-scenario-catalog';
 import {
   CARD_TEST_SCENARIO_IDS,
-  createCardTestScenario,
+  strictCardTestScenario,
   listCardTestScenarios,
 } from './card-test-scenarios';
 
@@ -145,7 +145,7 @@ describe('Card Test Lab viewer-evidence gate', () => {
 
   it('requires the unmocked Playwright spec to prove registry coverage at runtime', () => {
     for (const scenarioId of CARD_TEST_SCENARIO_IDS) {
-      const scenario = createCardTestScenario(scenarioId, 'gate-check' as GameId);
+      const scenario = strictCardTestScenario(scenarioId, 'gate-check' as GameId);
       expect(scenario, scenarioId).not.toBeNull();
     }
     // The Playwright process records the IDs actually selected from the live catalog. Its

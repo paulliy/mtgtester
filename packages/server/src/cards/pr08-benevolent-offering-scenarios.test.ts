@@ -39,7 +39,7 @@ import type { DecisionRequest, GameEvent, OracleCard } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { computeCharacteristics } from '../../../engine/src/effects/continuous';
 import type { EnginePermanent, GameContext } from '../../../engine/src/state/types';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 
 type Mode = 'different-opponents' | 'same-opponent';
 
@@ -100,7 +100,7 @@ function tokenNameSet(ctx: GameContext): Set<string> {
 }
 
 function replay(mode: Mode) {
-  const scenario = createCardTestScenario(
+  const scenario = strictCardTestScenario(
     `benevolent-offering-viewer-${mode}`,
     'pr08-offering-lab',
   );
@@ -235,7 +235,7 @@ describe('Benevolent Offering Card Test Lab replay', () => {
       'same-opponent': `${OFFERING}: choose the same opponent twice, for the Spirits and for the life`,
     };
     for (const mode of ['different-opponents', 'same-opponent'] as const) {
-      const scenario = createCardTestScenario(
+      const scenario = strictCardTestScenario(
         `benevolent-offering-viewer-${mode}`,
         'pr08-offering',
       );

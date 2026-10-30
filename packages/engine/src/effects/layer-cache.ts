@@ -49,6 +49,21 @@ export function setCached(ctx: GameContext, entry: LayerCacheEntry): void {
   CACHE.set(ctx, entry);
 }
 
+/**
+ * Under `strictInvariants` (ADR 0034 decision 8) one cache hit in `SAMPLE_EVERY` is recomputed
+ * and compared, as `MTG_VERIFY_LAYER_CACHE=1` does for every hit. A per-game count picks the
+ * sample, so it draws no randomness and a game plays the same with it on or off.
+ */
+const SAMPLE_EVERY = 64;
+const HITS = new WeakMap<GameContext, number>();
+
+export function sampleCacheHit(ctx: GameContext): boolean {
+  if (ctx.strictInvariants !== true) return false;
+  const hits = (HITS.get(ctx) ?? 0) + 1;
+  HITS.set(ctx, hits);
+  return hits % SAMPLE_EVERY === 0;
+}
+
 /** Discard a speculative casting pass after in-place recovery. */
 export function clearCached(ctx: GameContext): void {
   CACHE.delete(ctx);

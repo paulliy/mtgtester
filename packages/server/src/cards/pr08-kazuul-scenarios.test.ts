@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 import type { GameContext } from '../../../engine/src/state/types';
 import { computeCharacteristics } from '../../../engine/src/effects/continuous';
 import { NO_BLOCK_TARGET } from '@mtg/shared';
 
 async function replay(mode: 'decline' | 'pay' | 'other-defender') {
-  const scenario = createCardTestScenario(`kazuul-viewer-${mode}`, 'kazuul-production-replay')!;
+  const scenario = strictCardTestScenario(`kazuul-viewer-${mode}`, 'kazuul-production-replay')!;
   const engine = scenario.engine;
   const ctx = (engine as unknown as { ctx: GameContext }).ctx;
   let cast = false,

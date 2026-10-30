@@ -510,6 +510,9 @@ export function drive(
   provider: RuleBasedProvider,
   { allowHalt = false }: { allowHalt?: boolean } = {},
 ): import('@mtg/shared').GameResult {
+  // Whole-state invariants at every checkpoint (ADR 0034 decision 8). A test that expects a halt
+  // keeps the halting behavior: strictInvariants would rethrow an invariant failure instead.
+  if (!allowHalt) engine.enableStrictInvariants();
   for (let i = 0; i < 200_000; i++) {
     const step = engine.advance();
     if (step.kind === 'gameOver') {

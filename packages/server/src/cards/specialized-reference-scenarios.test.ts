@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { interpretCard } from '@mtg/engine';
 import type { OracleCard } from '@mtg/shared';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 
 const expected = [
   {
@@ -82,7 +82,7 @@ describe('pinned Madame Null real Lab event identity and life-payment scenarios'
   });
   for (const entry of expected)
     it(`${entry.id} — follows normal cast, response, payment and priority`, () => {
-      const engine = createCardTestScenario(entry.id, `lab-unit-${entry.id}`)!.engine;
+      const engine = strictCardTestScenario(entry.id, `lab-unit-${entry.id}`)!.engine;
       let cast = false;
       let responded = false;
       let choices = 0;

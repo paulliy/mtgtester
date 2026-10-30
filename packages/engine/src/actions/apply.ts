@@ -687,6 +687,7 @@ export function* applyPriorityAction(
         id: `o-${s.nextObjectNum++}` as ObjectId,
         zone: 'hand',
       };
+      // zone-mutation: the companion comes from outside the game (CR 702.139a), which moveObject has no zone for; it is a new hand object
       player.hand.push(handObj);
       player.companion = null;
       emit(ctx, 'companionToHand', { player: player.id, name: companion.name }, player.id);

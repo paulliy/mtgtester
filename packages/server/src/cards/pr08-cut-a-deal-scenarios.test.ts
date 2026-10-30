@@ -2,7 +2,7 @@ import { sha256 } from '../benchmark/hash';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { DecisionRequest, DecisionResponse, OracleCard, PlayerId } from '@mtg/shared';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 import {
   PR08_CUT_A_DEAL_SCENARIO_IDS,
   pr08CutADealScenarioSubject,
@@ -13,7 +13,7 @@ const pins = JSON.parse(
 ) as { cards: { card: OracleCard; sha256: string }[] };
 
 function run(id: (typeof PR08_CUT_A_DEAL_SCENARIO_IDS)[number]) {
-  const scenario = createCardTestScenario(id, `cut-a-deal-${id}`)!;
+  const scenario = strictCardTestScenario(id, `cut-a-deal-${id}`)!;
   const overrides = scenario.decisionProviderOverrides ?? {};
   let decisions = 0;
   let castSubject = false;
@@ -66,7 +66,7 @@ function run(id: (typeof PR08_CUT_A_DEAL_SCENARIO_IDS)[number]) {
 
 /** The replayed `draw` events after `from`, in resolution order. */
 function drawEventPlayers(
-  state: ReturnType<NonNullable<ReturnType<typeof createCardTestScenario>>['engine']['getState']>,
+  state: ReturnType<NonNullable<ReturnType<typeof strictCardTestScenario>>['engine']['getState']>,
 ): string[] {
   return state.eventLog
     .filter((event) => event.type === 'draw')

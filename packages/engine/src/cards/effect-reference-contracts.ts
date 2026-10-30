@@ -264,7 +264,6 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   searchLibrary: {},
   searchLibraryGroup: {},
   huntingWilds: {},
-  etaliPrimalConqueror: {},
   searchLibraryCastFree: {},
   shuffle: {},
   scry: {},
@@ -324,7 +323,6 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   exileEachChosenUntilSourceLeaves: {
     targetSlot: { domains: ['permanent'], selection: 'counted' },
   },
-  exileTargetAndControllerMaySearchBasicLandTapped: { targetSlot: permanent },
   removeTargetAndControllerMaySearchBasicLand: { target: permanent },
   destroyTargetAndControllerMaySearchBasicTypedLand: { target: permanent },
   exileCreatureAndControllerSearchBasicLand: { target: permanent },

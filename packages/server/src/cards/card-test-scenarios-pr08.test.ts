@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import type { OracleCard } from '@mtg/shared';
 import { interpretCard } from '@mtg/engine';
 import { describe, expect, it } from 'vitest';
-import { createCardTestScenario, listCardTestScenarios } from './card-test-scenarios';
+import { strictCardTestScenario, listCardTestScenarios } from './card-test-scenarios';
 
 const pins = (
   JSON.parse(readFileSync('packages/engine/tests/fixtures/coverage-pr08-oracle.json', 'utf8')) as {
@@ -26,7 +26,7 @@ describe('Mob Rule Card Test Lab', () => {
   it.each(['large', 'small', 'cleanup'] as const)(
     'mob-rule-viewer-%s — normal modal cast resolves with the right affected set and duration',
     (mode) => {
-      const scenario = createCardTestScenario(`mob-rule-viewer-${mode}`, 'pr08-mob-rule-lab');
+      const scenario = strictCardTestScenario(`mob-rule-viewer-${mode}`, 'pr08-mob-rule-lab');
       expect(scenario).not.toBeNull();
       let cast = false;
       let sawStack = false;

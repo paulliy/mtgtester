@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import { cardAuthoringPlugin } from './scripts/eslint/card-authoring.js';
 import { castingBoundaryPlugin } from './scripts/eslint/casting-boundary.js';
 import { testSkipsPlugin } from './scripts/eslint/test-skips.js';
+import { zoneMutationPlugin } from './scripts/eslint/zone-mutation.js';
 import tseslint from 'typescript-eslint';
 import vue from 'eslint-plugin-vue';
 
@@ -107,6 +108,13 @@ export default tseslint.config(
     files: ['packages/engine/src/**/*.ts'],
     plugins: { 'casting-boundary': castingBoundaryPlugin },
     rules: { 'casting-boundary/constructors': 'error' },
+  },
+  {
+    // Zone changes go through state/objects.ts (ADR 0034 decision 7); test setup builds positions.
+    files: ['packages/engine/src/**/*.ts'],
+    ignores: ['packages/engine/src/state/objects.ts', 'packages/engine/src/testing/**'],
+    plugins: { 'zone-mutation': zoneMutationPlugin },
+    rules: { 'zone-mutation/outside-objects': 'error' },
   },
   {
     // The inline-`TokenSpec` ban covers all of the engine, not only card data: Master of Ceremonies'
@@ -243,6 +251,44 @@ export default tseslint.config(
               group: ['**/table', '**/table/**'],
               message:
                 'Code under server/src/table/ is for the table server only (ADR 0031 decision 1); import it only from cli/serve-table.ts or from table/ itself.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // The test-only hooks (ADR 0034 decisions 5 and 8) are installed only by tests and tools:
+    // product code may run them, never install them. `testing/` itself wires them together. The
+    // table pattern is repeated because this block's rule replaces the one above for these files.
+    files: ['packages/engine/src/**/*.ts', 'packages/server/src/**/*.ts'],
+    ignores: [
+      '**/*.test.ts',
+      'packages/engine/src/testing/**',
+      'packages/server/src/table/**',
+      'packages/server/src/cli/serve-table.ts',
+      'packages/server/src/cli/table-scripted-run.ts',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/table', '**/table/**'],
+              message:
+                'Code under server/src/table/ is for the table server only (ADR 0031 decision 1); import it only from cli/serve-table.ts or from table/ itself.',
+            },
+            {
+              group: ['**/testing/invariants'],
+              message:
+                'The state-invariant checker is installed by tests and tools only (ADR 0034 decision 8).',
+            },
+            {
+              group: ['**/testing/definition-transform', '**/testing/checkpoint-hook'],
+              importNames: ['installDefinitionTransform', 'installCheckpointHook'],
+              message:
+                'Test-only hooks are installed by tests and tools only (ADR 0034 decisions 5 and 8).',
             },
           ],
         },

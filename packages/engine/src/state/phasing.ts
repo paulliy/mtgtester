@@ -65,6 +65,7 @@ export function phaseOutPermanents(
     }
   }
   const leaving = ctx.state.battlefield.filter((perm) => ids.has(perm.id));
+  // zone-mutation: phasing out is not a zone change (CR 702.26d): the permanents keep their objects
   ctx.state.battlefield = ctx.state.battlefield.filter((perm) => !ids.has(perm.id));
   // CR 506.4: a planeswalker that phases out is removed from combat. Mark it now, not lazily:
   // it phases back in later with the same object id and must not re-enter the attack.
@@ -105,6 +106,7 @@ export function phaseInAtUntap(ctx: GameContext, playerId: PlayerId): void {
   ctx.state.phasedOut = (ctx.state.phasedOut ?? []).filter(
     (record) => record.phaseInPlayerId !== playerId,
   );
+  // zone-mutation: phasing in is not a zone change (CR 702.26d): the permanents return as the same objects
   ctx.state.battlefield.push(...due.map((record) => record.permanent));
   // Its prepare-spell copy ceased while it was phased out; phasing in prepared makes a fresh one
   // (CR 722.3c).

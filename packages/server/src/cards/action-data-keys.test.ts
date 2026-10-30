@@ -28,7 +28,7 @@ import type {
 } from '@mtg/shared';
 import { generateCommanderDeck } from '../decks/generate';
 import { enrichPresentation } from '../match/presentation';
-import { CARD_TEST_SCENARIO_IDS, createCardTestScenario } from './card-test-scenarios';
+import { CARD_TEST_SCENARIO_IDS, strictCardTestScenario } from './card-test-scenarios';
 import { buildSupportedPool } from './pool';
 
 const GAME_SEEDS = ['keys-1', 'keys-2', 'keys-3', 'keys-4'];
@@ -196,7 +196,7 @@ function observe(
 
 function sweepScenarios(observed: Observed): void {
   for (const id of CARD_TEST_SCENARIO_IDS) {
-    const scenario = createCardTestScenario(id, 'action-data-keys');
+    const scenario = strictCardTestScenario(id, 'action-data-keys');
     if (scenario === null) throw new Error(`unknown scenario ${id}`);
     for (;;) {
       const step = scenario.engine.advance();

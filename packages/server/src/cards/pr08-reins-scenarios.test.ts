@@ -22,7 +22,7 @@
 import { describe, expect, it } from 'vitest';
 import { computeCharacteristics } from '../../../engine/src/effects/continuous';
 import type { EnginePermanent, GameContext } from '../../../engine/src/state/types';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 
 type Mode = 'swap-and-cleanup' | 'empty-caster';
 
@@ -42,7 +42,7 @@ interface Observation {
 }
 
 function replay(mode: Mode) {
-  const scenario = createCardTestScenario(`reins-of-power-viewer-${mode}`, 'pr08-reins-test');
+  const scenario = strictCardTestScenario(`reins-of-power-viewer-${mode}`, 'pr08-reins-test');
   expect(scenario).not.toBeNull();
   const engine = scenario!.engine;
   const ctx = (engine as unknown as { ctx: GameContext }).ctx;

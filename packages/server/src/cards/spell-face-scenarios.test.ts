@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 import { SPELL_FACE_LAB_EXPECTATIONS } from './spell-face-lab-expectations';
 const slug = (name: string) =>
   name
@@ -121,7 +121,7 @@ describe('pinned selected-face real Lab scenarios', () => {
 });
 
 function finish(id: string, name: string, half: boolean, x?: number) {
-  const engine = createCardTestScenario(id, `lab-test-${id}`)!.engine;
+  const engine = strictCardTestScenario(id, `lab-test-${id}`)!.engine;
   let played = false;
   let ended = false;
   for (let count = 0; count < 150; count++) {
@@ -188,7 +188,7 @@ it('face-commander-lab normally casts and resolves Easy Pickings as a commander 
 });
 
 it('face-commander-stack-lab retains a real response choice while Easy Pickings is on the public stack', () => {
-  const engine = createCardTestScenario(
+  const engine = strictCardTestScenario(
     'easy-pickings-viewer-commander-face',
     'commander-stack-lab',
   )!.engine;
@@ -219,7 +219,7 @@ it.each(['Foulmire Knight', 'Sagu Wildling'])(
   'face-impulse-lab — casts the pinned spell half of %s through a normal temporary permission',
   (name) => {
     const pin = pins.cards.find(({ card }) => card.name.startsWith(name))!.card;
-    const engine = createCardTestScenario(
+    const engine = strictCardTestScenario(
       `${slug(pin.backFace!.name)}-viewer-impulse-face`,
       `impulse-lab-${slug(name)}`,
     )!.engine;

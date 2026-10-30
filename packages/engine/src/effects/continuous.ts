@@ -47,7 +47,7 @@ import type { LayerValueScope } from '../cards/value';
 import type { ManaUnit } from '../mana/cost';
 import { manaValueOf, parseManaCost } from '../mana/cost';
 import type { EnginePermanent, GameContext } from '../state/types';
-import { digestOf, getCached, setCached } from './layer-cache';
+import { digestOf, getCached, sampleCacheHit, setCached } from './layer-cache';
 
 /** Basic-land subtype → intrinsic mana ability (CR 305.6), for Blood Moon's mana override. */
 const BASIC_LAND_MANA: Record<string, ManaUnit> = {
@@ -1100,7 +1100,7 @@ export function computeAllCharacteristics(
   const digest = digestOf(ctx, extra, includeGraveyards);
 
   if (cached !== undefined && cached.digest === digest && cached.extraCardId === extraCardId) {
-    if (!VERIFY_CACHE) return cached.map;
+    if (!VERIFY_CACHE && !sampleCacheHit(ctx)) return cached.map;
     const fresh = runLayers(ctx, permsFor(ctx, extra));
     const a = canonicalJson(cached.map);
     const b = canonicalJson(fresh.map);

@@ -113,7 +113,6 @@ import {
   refreshControlEffects,
   createTokens,
   createTokensForPlayers,
-  makePermanent,
   canAttach,
   moveObject,
   moveObjects,
@@ -2792,42 +2791,6 @@ export function* executeAbility(
         shuffleLibrary(ctx, beneficiary);
         break;
       }
-      case 'exileTargetAndControllerMaySearchBasicLandTapped': {
-        const targetId = scope.targets?.[effect.targetSlot];
-        if (!targetId) break;
-        const perm = findPermanent(ctx, targetId);
-        if (perm === undefined) break;
-        const targetControllerId = perm.controllerId;
-        emit(ctx, 'exile', { target: perm.name, source: source.name });
-        yield* moveObject(ctx, perm, { zone: 'exile' });
-        const targetPlayer = ctx.state.players.find((p) => p.id === targetControllerId);
-        if (targetPlayer) {
-          const choice = yield {
-            decisionType: 'general',
-            player: targetControllerId,
-            prompt:
-              'May search your library for a basic land card, put that card onto the battlefield tapped, then shuffle',
-            options: [
-              { type: 'search', description: 'Search for a basic land card' },
-              { type: 'decline', description: "Don't search" },
-            ],
-          };
-          if (choice.index === 0) {
-            const landIdx = targetPlayer.library.findIndex((c) => {
-              const def = getDefByOracleId(ctx, c.oracleId, c.name);
-              return def.types.includes('Land') && def.supertypes.includes('Basic');
-            });
-            if (landIdx !== -1) {
-              const landCard = targetPlayer.library.splice(landIdx, 1)[0]!;
-              const landPerm = makePermanent(ctx, landCard, targetControllerId);
-              landPerm.tapped = true;
-              ctx.state.battlefield.push(landPerm);
-              queueTriggersForObject(ctx, 'enters', landPerm);
-            }
-          }
-        }
-        break;
-      }
       case 'populate': {
         const myTokens = ctx.state.battlefield.filter(
           (p) =>
@@ -3248,6 +3211,7 @@ export function* executeAbility(
           isCommander: false,
           isCardCopy: true,
         };
+        // zone-mutation: creates a copy of a card in exile (CR 707.12); nothing moves from another zone
         ctx.state.exile.push(card);
         emit(
           ctx,
@@ -6062,53 +6026,6 @@ export function* executeAbility(
         }
         break;
       }
-      case 'etaliPrimalConqueror': {
-        const exiled: EngineCardObject[] = [];
-        for (const player of ctx.state.players) {
-          while (player.library.length > 0) {
-            const card = player.library.shift() as EngineCardObject;
-            card.zone = 'exile';
-            card.id = `o-${ctx.state.nextObjectNum++}` as ObjectId;
-            ctx.state.exile.push(card);
-            const cardDef = getDefByOracleId(ctx, card.oracleId, card.name);
-            if (!cardDef.types.includes('Land')) {
-              exiled.push(card);
-              break;
-            }
-          }
-        }
-        while (true) {
-          const castable = exiled.filter(
-            (card) =>
-              ctx.state.exile.includes(card) && freeCardIsCastable(ctx, card, controller.id),
-          );
-          if (castable.length === 0) break;
-          const outcome = yield {
-            decisionType: 'general' as const,
-            player: controller.id,
-            prompt: `${source.name}: cast an exiled nonland card without paying its mana cost.`,
-            options: [
-              ...castable.map((card) =>
-                cardOption(ctx, card, {
-                  viewerId: controller.id,
-                  type: 'castSpell',
-                  description: `Cast ${card.name} for free`,
-                  verb: 'Cast for free',
-                }),
-              ),
-              plainOption({
-                type: 'decline',
-                description: 'Cast no more cards',
-                verb: 'Done',
-                role: 'decline',
-              }),
-            ],
-          };
-          if (outcome.index >= castable.length) break;
-          yield* resolveFreeCard(ctx, castable[outcome.index] as EngineCardObject, controller.id);
-        }
-        break;
-      }
       case 'doublePowerAndToughnessEachUntilEot': {
         for (const permanent of affectedBy(ctx, source, effect.selector)) {
           const pt = effectivePT(ctx, permanent);
@@ -7476,11 +7393,11 @@ export function* executeAbility(
         doubleEachPlayerCounter(ctx, source, controller, controller.id);
         break;
       case 'shuffleHandGraveyardIntoLibrary': {
-        const cards = [...controller.hand, ...controller.graveyard];
-        controller.hand = [];
-        controller.graveyard = [];
-        ctx.rng.shuffle(cards);
-        controller.library.push(...cards);
+        // "Shuffle into your library" puts the cards there, then shuffles the whole library
+        // (CR 701.20a). Through moveObjects, a commander among them offers its owner the
+        // command zone instead (CR 903.9b).
+        yield* moveObjects(ctx, [...controller.hand, ...controller.graveyard], { zone: 'library' });
+        shuffleLibrary(ctx, controller);
         break;
       }
       case 'chaosWarp': {
@@ -9288,6 +9205,7 @@ function* eachPlayerLooksAtTopRevealsToHand(
     const rest = looked.filter((card) => player.library.includes(card) && !revealed.includes(card));
     ctx.rng.shuffle(rest);
     const restObjects = new Set(rest);
+    // zone-mutation: reorders the library: the looked-at cards left there go to its bottom
     player.library = [...player.library.filter((card) => !restObjects.has(card)), ...rest];
   }
 }
@@ -9423,6 +9341,7 @@ function* lookAtTopN(
     ctx.rng.shuffle(ordered);
   }
   const restObjects = new Set(rest);
+  // zone-mutation: reorders the library: the rest are taken out here and put back on top or bottom below
   player.library = player.library.filter((card) => !restObjects.has(card));
   if (effect.rest === 'topAnyOrder') {
     const offset = taken !== undefined && mayPut?.destination.zone === 'libraryTop' ? 1 : 0;

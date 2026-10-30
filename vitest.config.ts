@@ -7,5 +7,7 @@ export default defineConfig({
     exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**'],
     // A test that runs no `expect` fails (ADR 0034 decision 9).
     expect: { requireAssertions: true },
+    // Games run with `strictInvariants` check the whole state at each checkpoint (decision 8).
+    setupFiles: ['packages/engine/tests/invariants-setup.ts'],
   },
 });

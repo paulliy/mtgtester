@@ -62,59 +62,6 @@ describe('Batch 3 subsystems and card overrides', () => {
     expect(returned?.controllerId).toBe('P2');
   });
 
-  it('Path to Exile exiles target and target controller searches for basic land', () => {
-    const ctx = setupGame();
-    const p2 = ctx.state.players.find((p) => p.id === 'P2')!;
-    p2.library = [
-      {
-        id: '200',
-        cardId: 'f1',
-        oracleId: 'oracle-forest',
-        ownerId: 'P2',
-        name: 'Forest',
-        typeLine: 'Basic Land — Forest',
-        oracleText: '',
-        manaCost: null,
-        isToken: false,
-        isCommander: false,
-        zone: 'library',
-      },
-    ];
-    const bear = spawn(ctx, 'P2', oracle({ name: 'Bear', typeLine: 'Creature', manaCost: '{1}' }));
-    const path = spawn(
-      ctx,
-      'P1',
-      oracle({ name: 'Path to Exile', typeLine: 'Instant', manaCost: '{W}' }),
-    );
-
-    pump(
-      executeAbility(
-        ctx,
-        {
-          cardId: path.cardId,
-          name: path.name,
-          oracleId: path.oracleId,
-          controllerId: path.controllerId,
-        },
-        {
-          kind: 'spell',
-          targets: [{ kind: 'creature' }],
-          effects: [{ op: 'exileTargetAndControllerMaySearchBasicLandTapped', targetSlot: 0 }],
-          description: 'Path to Exile',
-        },
-        [bear.id],
-      ),
-      () => ({ index: 0, targets: new Map() }),
-    );
-
-    expect(ctx.state.battlefield.find((p) => p.id === bear.id)).toBeUndefined();
-    const searchedForest = ctx.state.battlefield.find(
-      (p) => p.name === 'Forest' && p.controllerId === 'P2',
-    );
-    expect(searchedForest).toBeDefined();
-    expect(searchedForest?.tapped).toBe(true);
-  });
-
   it('Populate creates a copy of a controlled token creature', () => {
     const ctx = setupGame();
     const token = spawn(

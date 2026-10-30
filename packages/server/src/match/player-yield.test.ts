@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Engine } from '@mtg/engine';
 import type { LegalAction, PlayerBoardState, ServerToClientMessage } from '@mtg/shared';
-import { createCardTestScenario } from '../cards/card-test-scenarios';
+import { strictCardTestScenario } from '../cards/card-test-scenarios';
 import {
   SmartYieldMemory,
   isPlayerActionYielded,
@@ -14,7 +14,7 @@ import { MatchSession } from './session';
 import { testerPolicy } from './disclosure';
 
 function scenario() {
-  const fixture = createCardTestScenario('kogla-viewer-bounce-and-attack', 'g-smart-yield');
+  const fixture = strictCardTestScenario('kogla-viewer-bounce-and-attack', 'g-smart-yield');
   if (fixture === null) throw new Error('missing combat fixture');
   return fixture;
 }
@@ -522,7 +522,7 @@ describe('smart player yield', () => {
   });
 
   it('skips utility priority until the last opponent end step, then crosses into your upkeep after one pass', async () => {
-    const fixture = createCardTestScenario(
+    const fixture = strictCardTestScenario(
       'war-room-viewer-dynamic-life-activation',
       'g-utility-yield',
     )!;

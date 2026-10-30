@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 
 const counters = ['Counterspell', 'Negate', 'Mana Leak', 'Stubborn Denial', 'Force of Negation'];
 const overloads = ['Cyclonic Rift', 'Vandalblast', 'Damn'];
@@ -68,7 +68,7 @@ describe('pinned counter and overload lab scenarios', () => {
 
 function finish(name: string, mode: string) {
   const id = `${slug(name)}-viewer-${mode}`;
-  const scenario = createCardTestScenario(id, `lab-test-${id}`)!;
+  const scenario = strictCardTestScenario(id, `lab-test-${id}`)!;
   expect(scenario).not.toBeNull();
   const engine = scenario.engine;
   let cast = false;

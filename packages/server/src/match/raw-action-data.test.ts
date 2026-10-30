@@ -6,7 +6,7 @@
 
 import { describe, expect, it } from 'vitest';
 import type { LegalAction, ServerToClientMessage } from '@mtg/shared';
-import { createCardTestScenario } from '../cards/card-test-scenarios';
+import { strictCardTestScenario } from '../cards/card-test-scenarios';
 import { testerPolicy } from './disclosure';
 import { withoutActionData } from './presentation';
 import { MatchSession } from './session';
@@ -23,7 +23,7 @@ const CONTEXT = {
 
 /** A lab scenario whose first human decision is a priority menu with `data` on its actions. */
 function labSession(sent: ServerToClientMessage[]): MatchSession {
-  const scenario = createCardTestScenario('kogla-viewer-bounce-and-attack', 'g-raw-data');
+  const scenario = strictCardTestScenario('kogla-viewer-bounce-and-attack', 'g-raw-data');
   if (scenario === null) throw new Error('missing scenario');
   return new MatchSession({
     disclosure: testerPolicy('singlePlayer'),

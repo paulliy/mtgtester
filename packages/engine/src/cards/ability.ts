@@ -1230,7 +1230,6 @@ export type Effect =
   /** Hunting Wilds: search two Forests and permanently animate only those found this way. */
   | { op: 'huntingWilds' }
   /** Etali's linked per-player exile and optional free-cast sequence. */
-  | { op: 'etaliPrimalConqueror' }
   /**
    * "Search your library for a `<filter>` card and cast that card without paying its mana
    * cost" (Sunforger) — like `searchLibrary`, but the found card is cast for free instead of
@@ -1538,7 +1537,6 @@ export type Effect =
   | { op: 'untapTargetPlayerCreatures'; targetSlot: number }
   | { op: 'exileUntilSourceLeaves'; targetSlot: number }
   | { op: 'exileEachChosenUntilSourceLeaves'; targetSlot: number }
-  | { op: 'exileTargetAndControllerMaySearchBasicLandTapped'; targetSlot: number }
   | { op: 'destroyTargetAndControllerMaySearchBasicTypedLand'; target: EffectRef }
   | { op: 'exileCreatureAndControllerSearchBasicLand'; target: EffectRef }
   | { op: 'exileEachCreatureAndControllersSearchBasicLands'; selector: Selector }

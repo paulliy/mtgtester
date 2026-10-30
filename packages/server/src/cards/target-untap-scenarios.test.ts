@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 
 const outcomes = [
   ['Arachnoid Adaptation', 4, 4, 'reach', 0],
@@ -28,7 +28,7 @@ describe('pinned untap-pronoun lab scenarios', () => {
         .toLowerCase()
         .replace(/['’]/g, '')
         .replace(/[^a-z0-9]+/g, '-')}-viewer-target-untap`;
-      const scenario = createCardTestScenario(id, `lab-test-${id}`)!;
+      const scenario = strictCardTestScenario(id, `lab-test-${id}`)!;
       expect(scenario).not.toBeNull();
       const engine = scenario.engine;
       let cast = false;

@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { interpretCard, ScriptedDecisionProvider } from '@mtg/engine';
 import type { DecisionRequest, DecisionResponse, OracleCard } from '@mtg/shared';
 import type { EngineState } from '@mtg/engine';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 import { TRANSFORMED_DFC_CASES } from './transformed-dfc-scenarios';
 
 const pins = JSON.parse(
@@ -12,7 +12,7 @@ const pins = JSON.parse(
 ) as { cards: { sha256: string; card: OracleCard }[] };
 
 function run(id: string) {
-  const scenario = createCardTestScenario(id, 'transformed-dfc-evidence')!;
+  const scenario = strictCardTestScenario(id, 'transformed-dfc-evidence')!;
   expect(scenario).not.toBeNull();
   const entry = TRANSFORMED_DFC_CASES.find((entry) => entry.id === id)!;
   const spell = entry.token ? 'Quantum Misalignment' : "Dack's Duplicate";

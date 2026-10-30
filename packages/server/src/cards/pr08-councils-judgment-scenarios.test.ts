@@ -39,7 +39,7 @@ import type { DecisionRequest, GameEvent, OracleCard, PlayerId } from '@mtg/shar
 import { describe, expect, it } from 'vitest';
 import { computeCharacteristics } from '../../../engine/src/effects/continuous';
 import type { GameContext } from '../../../engine/src/state/types';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 
 type Mode = 'tied-votes' | 'unanimous-hexproof';
 
@@ -146,7 +146,7 @@ const voteEvents = (ctx: GameContext): GameEvent[] =>
   ctx.state.eventLog.filter((event) => event.type === 'vote');
 
 function replay(mode: Mode) {
-  const scenario = createCardTestScenario(`councils-judgment-viewer-${mode}`, 'pr08-council-lab');
+  const scenario = strictCardTestScenario(`councils-judgment-viewer-${mode}`, 'pr08-council-lab');
   expect(scenario, `scenario councils-judgment-viewer-${mode}`).not.toBeNull();
   const engine = scenario!.engine;
   const observations: Observation[] = [];
@@ -405,7 +405,7 @@ describe("Council's Judgment Card Test Lab replay", () => {
     expect(chars!.keywords).toContain('hexproof');
 
     for (const mode of ['tied-votes', 'unanimous-hexproof'] as const) {
-      const scenario = createCardTestScenario(`councils-judgment-viewer-${mode}`, 'pr08-council');
+      const scenario = strictCardTestScenario(`councils-judgment-viewer-${mode}`, 'pr08-council');
       expect(scenario, mode).not.toBeNull();
       // Both clause IDs ride on BOTH scenarios: each run resolves both printed sentences, so
       // neither is allowed to be scoped to a single run.

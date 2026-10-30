@@ -1,6 +1,6 @@
 import type { DecisionRequest } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
-import { createCardTestScenario, listCardTestScenarios } from './card-test-scenarios';
+import { strictCardTestScenario, listCardTestScenarios } from './card-test-scenarios';
 import { RUNNER_SCENARIOS } from './runner-scenarios';
 import type { CardTestScenario } from './card-test-scenarios';
 
@@ -19,7 +19,7 @@ function chooseAction(request: DecisionRequest): number {
 }
 
 function runScenario() {
-  const scenario = createCardTestScenario(
+  const scenario = strictCardTestScenario(
     'tribute-viewer-cast-search-select-resolve',
     'card-lab-test',
   );
@@ -42,7 +42,7 @@ function runScenario() {
 
 describe('deterministic Card Test Lab scenarios', () => {
   it('rejects unknown scenario IDs', () => {
-    expect(createCardTestScenario('unknown', 'card-lab-unknown')).toBeNull();
+    expect(strictCardTestScenario('unknown', 'card-lab-unknown')).toBeNull();
   });
 
   it('lists every registered scenario in catalog order', () => {
@@ -996,7 +996,7 @@ function passChoice(request: DecisionRequest): Choice {
 }
 
 function runScenarioWith(scenarioId: string, chooser: Chooser) {
-  const scenario = createCardTestScenario(scenarioId, 'card-lab-test');
+  const scenario = strictCardTestScenario(scenarioId, 'card-lab-test');
   expect(scenario).not.toBeNull();
   const engine = scenario!.engine;
   let decisions = 0;
@@ -2641,7 +2641,7 @@ describe('deterministic Card Test Lab scenarios — registered card scenarios', 
   });
 
   it('war-room-retained-action - returns a genuine P1 cast after the forced draw resolution', () => {
-    const scenario = createCardTestScenario(
+    const scenario = strictCardTestScenario(
       'war-room-viewer-dynamic-life-activation',
       'war-room-retained-action',
     )!;

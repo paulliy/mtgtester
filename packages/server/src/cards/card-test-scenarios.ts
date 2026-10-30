@@ -16356,6 +16356,20 @@ export function createCardTestScenario(
   return builder === undefined ? null : builder(gameId);
 }
 
+/**
+ * `createCardTestScenario` for tests and tools: the scenario's game runs under `strictInvariants`
+ * (ADR 0034 decision 8), so an installed state check runs at every checkpoint and an invariant
+ * failure throws. The Lab itself plays scenarios as built.
+ */
+export function strictCardTestScenario(
+  scenarioId: string,
+  gameId: GameId,
+): CardTestScenario | null {
+  const scenario = createCardTestScenario(scenarioId, gameId);
+  scenario?.engine.enableStrictInvariants();
+  return scenario;
+}
+
 /** Catalog for the lab page's scenario picker: metadata only, engines are discarded. */
 export function listCardTestScenarios(): CardTestScenarioMetadata[] {
   return CARD_TEST_SCENARIO_IDS.map(

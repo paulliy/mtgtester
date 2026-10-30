@@ -43,7 +43,7 @@ import {
   type AiClient,
 } from '../ai';
 import { MatchSession } from './session';
-import { createCardTestScenario } from '../cards/card-test-scenarios';
+import { strictCardTestScenario } from '../cards/card-test-scenarios';
 import type { SeatSetup } from './setup';
 import { testerPolicy } from './disclosure';
 
@@ -906,7 +906,7 @@ describe('MatchSession — a prepared scenario flushes its own outcome before th
     "War Room: Pay life equal to your commanders' color identity colors: draw a card";
 
   function labSession(gameId: GameId) {
-    const scenario = createCardTestScenario('war-room-viewer-dynamic-life-activation', gameId);
+    const scenario = strictCardTestScenario('war-room-viewer-dynamic-life-activation', gameId);
     if (scenario === null) throw new Error('missing War Room lab scenario');
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({

@@ -297,6 +297,7 @@ function putPermanentSpellCopyOntoBattlefield(ctx: GameContext, spell: EngineSta
     perm.attachedTo = spell.targets[0] ?? null;
     perm.bestowed = true;
   }
+  // zone-mutation: a resolving copy of a permanent spell becomes a token (CR 608.3f), created like createToken: makePermanent applies its entry replacements
   ctx.state.battlefield.push(perm);
   emit(
     ctx,

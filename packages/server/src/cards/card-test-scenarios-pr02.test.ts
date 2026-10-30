@@ -6,7 +6,7 @@
 import type { DecisionRequest } from '@mtg/shared';
 import { formatPlayerLog } from '@mtg/engine';
 import { describe, expect, it } from 'vitest';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 import type { CardTestScenario } from './card-test-scenarios';
 
 interface Choice {
@@ -82,7 +82,7 @@ function scripted(steps: Step[]) {
 }
 
 function run(scenarioId: string, steps: Step[]) {
-  const scenario = createCardTestScenario(scenarioId, 'card-lab-pr02');
+  const scenario = strictCardTestScenario(scenarioId, 'card-lab-pr02');
   expect(scenario, scenarioId).not.toBeNull();
   const choose = scripted(steps);
   const prompts: string[] = [];

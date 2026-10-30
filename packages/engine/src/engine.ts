@@ -189,6 +189,12 @@ export class Engine implements EngineDriver {
           continue;
         }
 
+        // A decision nobody can answer stalls the game (ADR 0034 decision 8).
+        if (decision.options.length === 0 && this.ctx.strictInvariants === true)
+          throw new EngineInvariantError(
+            'decision',
+            `${decision.player}'s ${decision.decisionType} decision offers no option`,
+          );
         this.pendingDecision = decision;
         this.pendingRequest = this.buildRequest(decision);
         debug(
@@ -364,6 +370,16 @@ export class Engine implements EngineDriver {
   enableManualMana(playerId: string): void {
     const player = this.ctx.state.players.find((p) => p.id === playerId);
     if (player !== undefined) player.manualMana = true;
+  }
+
+  /**
+   * Run this game under `strictInvariants` from now on (ADR 0034 decision 8): invariant failures
+   * throw instead of halting, the installed checkpoint check runs, and layer-cache hits are
+   * sampled. For an engine a test or tool did not build itself (a Card Test Lab scenario); a
+   * fresh game sets it in its config.
+   */
+  enableStrictInvariants(): void {
+    this.ctx.strictInvariants = true;
   }
 
   /**
