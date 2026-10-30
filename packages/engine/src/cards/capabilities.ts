@@ -1076,6 +1076,7 @@ const families = {
       grantUnearthToArtifactCreaturesInGraveyard: true,
       exileSource: true,
       draw: true,
+      additionalLandPlaysThisTurn: true,
       discard: true,
       putFromHandOnLibraryTop: true,
       discardAtRandom: true,

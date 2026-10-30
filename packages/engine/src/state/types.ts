@@ -586,6 +586,11 @@ export interface EngineEmblem {
   abilities: Ability[];
 }
 export interface EnginePlayerState extends PlayerState {
+  /**
+   * Land plays added this turn by a one-shot effect ("you may play an additional land this
+   * turn", CR 305.2), for the turn numbered `turn`; a later turn ignores it.
+   */
+  additionalLandPlays?: { turn: number; count: number };
   hand: EngineCardObject[];
   library: EngineCardObject[];
   graveyard: EngineCardObject[];

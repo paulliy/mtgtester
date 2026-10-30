@@ -145,6 +145,21 @@ const DEFS: ScenarioDef[] = [
     p1Hand: ['Pilot Lab Red Sorcery'],
     p1Field: ['Jet Medallion', 'Mountain'],
   },
+  {
+    id: 'pilot-current-explore-viewer-second-land',
+    cardName: 'Explore',
+    title: 'Explore: a second land this turn, and a card',
+    instructions: [
+      'Play Forest from your hand.',
+      'Cast Explore with your two other Forests.',
+      'Play Plains from your hand.',
+    ],
+    expectedOutcome:
+      'Both lands enter, you draw a card, and Island stays in your hand: no third land play.',
+    lines: [1, 2],
+    p1Hand: ['Explore', 'Forest', 'Plains', 'Island'],
+    p1Field: ['Forest', 'Forest'],
+  },
 ];
 
 export const PILOT_CURRENT_SCENARIOS = DEFS.map(({ id, cardName, title }) => ({

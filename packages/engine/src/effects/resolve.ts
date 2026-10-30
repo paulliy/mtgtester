@@ -4002,6 +4002,15 @@ function* executeAbilityEffects(
         yield* drawCards(ctx, drawingPlayer, amountOf(effect.count));
         break;
       }
+      case 'additionalLandPlaysThisTurn': {
+        const turn = ctx.state.turnNumber;
+        const earlier = controller.additionalLandPlays;
+        controller.additionalLandPlays = {
+          turn,
+          count: (earlier?.turn === turn ? earlier.count : 0) + amountOf(effect.count),
+        };
+        break;
+      }
       case 'discard':
         yield* discardCards(ctx, controller, effect.count);
         break;

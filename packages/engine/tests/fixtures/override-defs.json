@@ -15476,6 +15476,36 @@
     }
   },
   {
+    "oracleId": "b8f566ea-8283-4afa-9ac8-737e26419283",
+    "name": "Explore",
+    "handledLines": [
+      "You may play an additional land this turn."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "You may play an additional land this turn. Draw a card",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "additionalLandPlaysThisTurn"
+          },
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "draw"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "b9c58cfb-b7d5-4e86-a5d3-efb07192aa22",
     "name": "Glimmer of Genius",
     "handledLines": [
@@ -29657,6 +29687,36 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "oracle-explore",
+    "name": "Explore",
+    "handledLines": [
+      "You may play an additional land this turn."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "You may play an additional land this turn. Draw a card",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "additionalLandPlaysThisTurn"
+          },
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "draw"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
     }
   },
   {

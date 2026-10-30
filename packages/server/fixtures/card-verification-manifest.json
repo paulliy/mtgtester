@@ -17623,6 +17623,33 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "b8f566ea-8283-4afa-9ac8-737e26419283": {
+      "name": "Explore",
+      "oracleSha256": "a0dd60a0a8645d5608fe54d10928eff5a3c3758a7180fbb2854067117417c621",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "You may play an additional land this turn.",
+          "implementation": [
+            "additionalLandPlaysThisTurn 1: one more land play for the controller this turn, CR 305.2"
+          ],
+          "engineTestIds": [
+            "explore-extra-land-play",
+            "explore-lapses",
+            "explore-twice",
+            "explore-only-you"
+          ],
+          "viewerScenarioIds": ["pilot-current-explore-viewer-second-land"]
+        },
+        {
+          "oracleText": "Draw a card.",
+          "implementation": ["draw 1 (parser)"],
+          "engineTestIds": ["explore-extra-land-play"],
+          "viewerScenarioIds": ["pilot-current-explore-viewer-second-land"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

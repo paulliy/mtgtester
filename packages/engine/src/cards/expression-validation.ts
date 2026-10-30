@@ -524,6 +524,7 @@ const effectExpressions = {
   grantUnearthToArtifactCreaturesInGraveyard: {},
   exileSource: {},
   draw: { count: numberValue },
+  additionalLandPlaysThisTurn: { count: numberValue },
   discard: {},
   putFromHandOnLibraryTop: { count: numberValue },
   discardAtRandom: { count: numberValue },

@@ -1,5 +1,6 @@
 import { ofColor } from '../selector';
-import { costReductionFor } from '../templates';
+import { costReductionFor, spell } from '../templates';
+import { constant } from '../value';
 import { defineCard } from './index';
 
 /**
@@ -14,5 +15,22 @@ export function registerPilotCurrentOverrides(): void {
     'Jet Medallion',
     ['Black spells you cast cost {1} less to cast.'],
     { ruleStatics: [costReductionFor(ofColor('B'), 1)] },
+  );
+
+  // "You may play an additional land this turn. Draw a card." The spell grants one more land play
+  // this turn (CR 305.2) and plays nothing itself; the parser's draw stays the second effect.
+  defineCard(
+    'b8f566ea-8283-4afa-9ac8-737e26419283',
+    'Explore',
+    ['You may play an additional land this turn.'],
+    {
+      spellAbility: spell({
+        effects: [
+          { op: 'additionalLandPlaysThisTurn', count: constant(1) },
+          { op: 'draw', count: constant(1) },
+        ],
+        description: 'You may play an additional land this turn. Draw a card',
+      }),
+    },
   );
 }

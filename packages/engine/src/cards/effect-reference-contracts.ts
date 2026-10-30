@@ -235,6 +235,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   grantUnearthToArtifactCreaturesInGraveyard: {},
   exileSource: {},
   draw: {},
+  additionalLandPlaysThisTurn: {},
   discard: {},
   putFromHandOnLibraryTop: {},
   discardAtRandom: {},

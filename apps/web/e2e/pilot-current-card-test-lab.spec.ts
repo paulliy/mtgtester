@@ -46,6 +46,17 @@ async function cast(page: Page, name: string): Promise<void> {
   await passStackUntil(page, logLine(page, new RegExp(`${name}[^]*resolves`)));
 }
 
+/** Play a land from hand and wait for it to leave the hand (the board groups same-name lands). */
+async function playLand(page: Page, name: string): Promise<void> {
+  const card = hand(page, name);
+  await passUntil(page, card.and(page.locator('.actionable')));
+  await card.click();
+  const play = page.getByRole('button', { name: /^Play/ });
+  if ((await play.count()) > 0) await play.first().click();
+  await expect(hand(page, name)).toHaveCount(0);
+  await expect(permanent(page, 'P1', name).first()).toBeVisible();
+}
+
 const FLOWS: Record<string, (page: Page) => Promise<void>> = {
   'pilot-current-jet-medallion-viewer-reduced': async (page) => {
     await cast(page, 'Pilot Lab Black Sorcery');
@@ -57,6 +68,14 @@ const FLOWS: Record<string, (page: Page) => Promise<void>> = {
     await passUntil(page, hand(page, 'Pilot Lab Trinket').and(page.locator('.actionable')));
     await expect(hand(page, 'Pilot Lab Red Sorcery')).toBeVisible();
     await expect(hand(page, 'Pilot Lab Red Sorcery')).not.toHaveClass(/actionable/);
+  },
+  'pilot-current-explore-viewer-second-land': async (page) => {
+    await playLand(page, 'Forest');
+    await cast(page, 'Explore');
+    await playLand(page, 'Plains');
+    // Two lands played this turn: Island is not offered as a third.
+    await expect(hand(page, 'Island')).toBeVisible();
+    await expect(hand(page, 'Island')).not.toHaveClass(/actionable/);
   },
 };
 

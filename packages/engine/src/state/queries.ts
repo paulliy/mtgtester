@@ -1394,8 +1394,14 @@ export function nonHandSpellCostIncreaseFor(
 
 /** Number of land plays available to a player this turn, including the normal play. */
 export function landPlayLimitFor(ctx: GameContext, playerId: PlayerId): number {
+  const player = ctx.state.players.find((candidate) => candidate.id === playerId);
+  const thisTurn =
+    player?.additionalLandPlays?.turn === ctx.state.turnNumber
+      ? player.additionalLandPlays.count
+      : 0;
   return (
     1 +
+    thisTurn +
     gatherRuleStatics(ctx).reduce(
       (total, entry) =>
         entry.controllerId === playerId && entry.static.kind === 'additionalLandDrops'

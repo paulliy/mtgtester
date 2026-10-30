@@ -8,11 +8,24 @@ import {
   costReductionFor,
   type PriorityActionPayload,
 } from '../src/actions/legal';
+import { interpretCard } from '../src/cards/interpret';
+import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import { playerById } from '../src/state/objects';
+import { landPlayLimitFor } from '../src/state/queries';
 import type { GameContext } from '../src/state/types';
 import { pinStore } from './scenario/pin-store';
-import { conjure, copies, forest, gameConfig, oracle, registerDef, spawn, swamp } from './fixtures';
+import {
+  conjure,
+  copies,
+  forest,
+  gameConfig,
+  oracle,
+  pump,
+  registerDef,
+  spawn,
+  swamp,
+} from './fixtures';
 
 /** A two-player game in P1's precombat main phase, turn 3, with empty boards. */
 function mainPhase(seed: string): GameContext {
@@ -97,5 +110,52 @@ describe('Jet Medallion', () => {
     spawn(ctx, 'P1', swamp());
     const blackSpell = conjure(ctx, 'P1', black(), 'hand');
     expect(castable(ctx, blackSpell.id)).toBe(false);
+  });
+});
+
+describe('Explore', () => {
+  const landPlayOffered = (ctx: GameContext): boolean =>
+    computePriorityOptions(ctx, playerById(ctx, 'P1')).some(
+      (option) => (option.payload as PriorityActionPayload).kind === 'playLand',
+    );
+  /** Resolve Explore for P1, as its spell ability does on resolution. */
+  const resolveExplore = (ctx: GameContext): void => {
+    const card = pinStore.get('Explore');
+    // A source P1 controls stands in for the resolving spell.
+    pump(executeAbility(ctx, spawn(ctx, 'P1', card), interpretCard(card).spellAbility!, []));
+  };
+
+  it('explore-extra-land-play — after a land this turn, you may play one more, and you draw', () => {
+    const ctx = mainPhase('explore-extra');
+    conjure(ctx, 'P1', forest(), 'hand');
+    const p1 = playerById(ctx, 'P1');
+    p1.landsPlayedThisTurn = 1;
+    expect(landPlayOffered(ctx)).toBe(false);
+    const hand = p1.hand.length;
+    resolveExplore(ctx);
+    expect(landPlayLimitFor(ctx, 'P1')).toBe(2);
+    expect(landPlayOffered(ctx)).toBe(true);
+    expect(p1.hand.length).toBe(hand + 1);
+  });
+
+  it('explore-lapses — the extra land play is gone next turn', () => {
+    const ctx = mainPhase('explore-lapse');
+    resolveExplore(ctx);
+    expect(landPlayLimitFor(ctx, 'P1')).toBe(2);
+    ctx.state.turnNumber += 1;
+    expect(landPlayLimitFor(ctx, 'P1')).toBe(1);
+  });
+
+  it('explore-twice — two Explores this turn give two more land plays', () => {
+    const ctx = mainPhase('explore-twice');
+    resolveExplore(ctx);
+    resolveExplore(ctx);
+    expect(landPlayLimitFor(ctx, 'P1')).toBe(3);
+  });
+
+  it('explore-only-you — an opponent gets no extra land play', () => {
+    const ctx = mainPhase('explore-only-you');
+    resolveExplore(ctx);
+    expect(landPlayLimitFor(ctx, 'P2')).toBe(1);
   });
 });

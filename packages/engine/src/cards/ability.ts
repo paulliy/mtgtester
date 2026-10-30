@@ -1084,6 +1084,12 @@ export type Effect =
   | { op: 'grantUnearthToArtifactCreaturesInGraveyard'; cost: ParsedManaCost }
   | { op: 'exileSource' }
   | { op: 'draw'; count: Value; player?: 'controller' | 'eventPlayer' }
+  /**
+   * "You may play an additional land this turn" (Explore): the controller may play `count` more
+   * lands this turn than the rules otherwise allow (CR 305.2). It grants the permission and
+   * plays nothing; the extra plays lapse at end of turn.
+   */
+  | { op: 'additionalLandPlaysThisTurn'; count: Value }
   | { op: 'discard'; count: number } // controller chooses cards to discard
   /**
    * "You may discard a card. If you do, draw a card. If a creature card was discarded this way,

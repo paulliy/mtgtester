@@ -52,6 +52,7 @@ describe('deterministic Card Test Lab scenarios', () => {
     expect(ids.slice(RUNNER_SCENARIOS.length)).toEqual([
       'pilot-current-jet-medallion-viewer-reduced',
       'pilot-current-jet-medallion-viewer-not-red',
+      'pilot-current-explore-viewer-second-land',
       'pr13-master-of-ceremonies-viewer-money',
       'pr13-securitron-squadron-viewer-squad-copy',
       'pr13-securitron-squadron-viewer-nontoken',

@@ -27,6 +27,9 @@ interface Plan {
 const PLANS: Record<string, Plan> = {
   'pilot-current-jet-medallion-viewer-reduced': { steps: [{ cast: 'Pilot Lab Black Sorcery' }] },
   'pilot-current-jet-medallion-viewer-not-red': { steps: [] },
+  'pilot-current-explore-viewer-second-land': {
+    steps: [{ play: 'Forest' }, { cast: 'Explore' }, { play: 'Plains', whenEmpty: true }],
+  },
 };
 
 /** Play a scenario to the end with P1 following its plan and the other seats as the lab runs them. */
@@ -140,6 +143,22 @@ const CHECKS: Record<string, (result: Result) => void> = {
       expect(actions.some((action) => action.startsWith('Cast Pilot Lab Red Sorcery'))).toBe(false);
     expect(zoneNames(r.player('P1').hand)).toContain('Pilot Lab Red Sorcery');
     expect(r.player('P1').life).toBe(40);
+  },
+  'pilot-current-explore-viewer-second-land': (r) => {
+    expect(r.done).toEqual(['Forest', 'Explore', 'Plains']);
+    expect(
+      r.state.battlefield
+        .filter((perm) => perm.controllerId === 'P1')
+        .map((perm) => perm.name)
+        .sort(),
+    ).toEqual(['Forest', 'Forest', 'Forest', 'Plains']);
+    expect(r.player('P1').landsPlayedThisTurn).toBe(2);
+    // Explore drew a card; Island was never offered as a third land play.
+    const hand = zoneNames(r.player('P1').hand);
+    expect(hand).toContain('Island');
+    expect(hand).toHaveLength(3);
+    expect(r.offered.at(-1)!.some((action) => action.startsWith('Play '))).toBe(false);
+    expect(zoneNames(r.player('P1').graveyard)).toEqual(['Explore']);
   },
 };
 
