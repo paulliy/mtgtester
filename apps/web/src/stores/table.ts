@@ -128,6 +128,8 @@ export const useTableStore = defineStore('table', () => {
   let backoffMs = 1_000;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   let now: () => number = () => Date.now();
+  let seatOnSocket: PlayerId | null = null;
+  let lobbyJoin: { inviteCode: string; displayName: string } | null = null;
 
   const you = computed(() => state.value?.you ?? null);
   const mySeat = computed<PlayerId | null>(() => you.value?.seat ?? null);
@@ -156,6 +158,7 @@ export const useTableStore = defineStore('table', () => {
   /** Open the table's socket. Resumes a stored seat or host role on every (re)connect. */
   function open(id: string): void {
     if (tableId.value !== id) {
+      close();
       tableId.value = id;
       seatToken.value = readStored(seatKey(id));
       hostToken.value = readStored(hostKey(id));
@@ -165,6 +168,9 @@ export const useTableStore = defineStore('table', () => {
       replayTurn.value = null;
       clocks.value = {};
       seatStatus.value = {};
+      deckProblems.value = [];
+      errors.value = [];
+      lobbyJoin = null;
       stopped.value = null;
     }
     game.useTableTransport({ send: (message) => sendFrame(message) });
@@ -176,6 +182,7 @@ export const useTableStore = defineStore('table', () => {
     setConnection('connecting');
     const next = factory(socketUrl(tableId.value));
     socket = next;
+    seatOnSocket = null;
     next.onOpen(() => {
       if (socket !== next) return;
       setConnection('open');
@@ -184,6 +191,7 @@ export const useTableStore = defineStore('table', () => {
         sendFrame({ type: 'hostAuth', payload: { hostToken: hostToken.value } });
       }
       if (seatToken.value !== null) resume();
+      else if (lobbyJoin !== null) join(lobbyJoin.inviteCode, lobbyJoin.displayName);
     });
     next.onMessage((text) => {
       if (socket !== next) return;
@@ -219,11 +227,14 @@ export const useTableStore = defineStore('table', () => {
   }
 
   function close(): void {
-    stopped.value = stopped.value ?? 'reaped';
     if (reconnectTimer !== null) clearTimeout(reconnectTimer);
     reconnectTimer = null;
-    socket?.close();
+    // Detach first: a close callback (or late frame) from this socket cannot reconnect it or
+    // mutate the next table's state. Leaving the page does not mean the table was reaped.
+    const previous = socket;
     socket = null;
+    previous?.close();
+    setConnection('closed');
     game.useTableTransport(null);
   }
 
@@ -255,6 +266,13 @@ export const useTableStore = defineStore('table', () => {
     }
     switch (message.type) {
       case 'tableState':
+        // Leaving a seat, a host reassignment and setup rejection all revoke the old token.
+        // A host-auth frame before resume has no prior seat, so retain stored tokens then.
+        if (seatOnSocket !== null && message.payload.you.seat === null) {
+          seatToken.value = null;
+          if (tableId.value !== null) writeStored(seatKey(tableId.value), null);
+        }
+        seatOnSocket = message.payload.you.seat;
         state.value = message.payload;
         return;
       case 'claimPending':
@@ -315,6 +333,7 @@ export const useTableStore = defineStore('table', () => {
 
   function join(inviteCode: string, displayName: string): void {
     errors.value = [];
+    lobbyJoin = { inviteCode, displayName };
     sendFrame({
       type: 'joinTable',
       payload: { inviteCode, displayName, protocolVersion: PROTOCOL_VERSION, capabilities: {} },

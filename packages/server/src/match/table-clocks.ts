@@ -99,6 +99,17 @@ export class TableClocks {
     return this.seats.get(seat)?.fallback === true;
   }
 
+  /** Re-send current public clocks and badges after a player reloads, without renewing time. */
+  resync(): void {
+    if (this.stopped) return;
+    for (const seat of this.seats.keys()) {
+      if (this.host.isEliminated(seat)) continue;
+      const view = this.clock.viewOf(seat);
+      if (view !== null) this.host.publish({ type: 'clockState', payload: view });
+      this.publishStatus(seat);
+    }
+  }
+
   /**
    * A decision frame went to the seat. Starts its clock the first time this request is shown;
    * a re-send (resume, yield change) keeps the clock it has.
@@ -140,6 +151,9 @@ export class TableClocks {
     if (connected) this.clock.reconnected(seat);
     else this.clock.disconnected(seat);
     this.publishStatus(seat);
+    // A previously exhausted budget is not reported a second time by DecisionClock.
+    // Re-evaluate when that player leaves again as well as when a budget first runs out.
+    if (!connected) this.checkAllAway();
   }
 
   /** The player takes the seat back from the fallback bot. False when it was not held. */
@@ -195,7 +209,9 @@ export class TableClocks {
     if (this.stopped) return;
     const remaining = [...this.seats.keys()].filter((seat) => !this.host.isEliminated(seat));
     if (remaining.length === 0) return;
-    if (remaining.every((seat) => this.clock.budgetSpent(seat))) this.host.concede('allAway');
+    if (remaining.every((seat) => !this.host.isConnected(seat) && this.clock.budgetSpent(seat))) {
+      this.host.concede('allAway');
+    }
   }
 
   private publishStatus(seat: PlayerId): void {

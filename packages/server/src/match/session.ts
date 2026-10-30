@@ -1859,10 +1859,16 @@ export class MatchSession {
   }
 
   setPlayerConnected(seat: PlayerId, connected: boolean): void {
+    let resyncOnConnect: boolean;
     switch (this.gameMode) {
       // flow: the player connection gate, per human seat (m1 row 1191).
       case 'singlePlayer':
+        resyncOnConnect = true;
+        break;
       case 'table':
+        // The table port sends gameStarted followed by one resync after binding the socket.
+        // Resyncing here too duplicates history under fresh per-viewer sequence ids.
+        resyncOnConnect = false;
         break;
       case 'spectator':
         return;
@@ -1873,7 +1879,7 @@ export class MatchSession {
     if (human === undefined) return;
     human.connectionGate.setConnected(connected);
     this.clocks?.connection(seat, connected);
-    if (connected) this.resyncPlayer(seat);
+    if (connected && resyncOnConnect) this.resyncPlayer(seat);
   }
 
   resyncPlayer(seat: PlayerId): void {
@@ -1899,6 +1905,9 @@ export class MatchSession {
     if (pending !== null) {
       this.sendPlayerActionRequired(seat, pending.request, pending.revision);
     }
+    // Table clocks are public. A reloaded client also needs the other seats' current clocks
+    // and fallback badges, even when their next transition may be minutes away.
+    this.clocks?.resync();
   }
 
   abandon(): void {
