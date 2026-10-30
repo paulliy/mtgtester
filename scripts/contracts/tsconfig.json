@@ -17,6 +17,7 @@
     "../check-manifest-tests.ts",
     "../mutate-cards.ts",
     "../bulk-smoke.ts",
+    "../pilot-draw.ts",
     "../update-scryfall-bank.ts",
     "../pin-store.ts",
     "../cards/*.ts",

@@ -45,6 +45,7 @@ bun run coverage:rebaseline [--bulk | --oracle-fixture <file> [--write]]   # rev
 bun run coverage:snapshot [url...]
 bun run scryfall:update [--from oracle-cards.jsonl.gz]   # refresh data/ from Scryfall, or from a downloaded snapshot
 bun run bulk-smoke [--bank F] [--write] # interpret and validate the whole bank; fails on a throw, invalid modeled IR or fewer modeled cards
+bun run pilot:draw [--bank F]          # phase 6 pilot: draw 20 unmodeled cards and split them by seed
 bun run snapshot:oracle
 bun run modelled-cards
 bun run combat-sweep [--games N] [--seed S] [--json out.json]
