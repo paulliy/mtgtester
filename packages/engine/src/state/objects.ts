@@ -1734,15 +1734,9 @@ export function createToken(
     let first: EnginePermanent | undefined;
     for (const plan of clueFoodTreasurePlan(ctx, spec, multiplier, controllerId))
       for (let i = 0; i < plan.count; i++) {
-        const token = createToken(
-          ctx,
-          plan.spec,
-          controllerId,
-          false,
-          false,
-          false,
-          entersTapped && plan.named,
-        );
+        // "Create a tapped Food" is an instruction of the creation event the replacement modifies
+        // (CR 614.1), so every token it creates instead enters tapped (Academy Manufactor).
+        const token = createToken(ctx, plan.spec, controllerId, false, false, false, entersTapped);
         created.push(token);
         if (plan.named) first ??= token;
       }
@@ -1951,7 +1945,8 @@ export function createTokens(
   for (const plan of clueFoodTreasurePlan(ctx, spec, count * multiplier, controllerId))
     for (let i = 0; i < plan.count; i++)
       created.push(
-        createToken(ctx, plan.spec, controllerId, false, false, false, entersTapped && plan.named),
+        // Every token of the modified creation event enters tapped, not only the one named.
+        createToken(ctx, plan.spec, controllerId, false, false, false, entersTapped),
       );
   if (created.length > 0) {
     queueTokenCreatedEvent(ctx, created);

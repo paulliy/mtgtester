@@ -18104,7 +18104,10 @@
             "cards/pilot-new/academy-manufactor.test.ts::manufactor-two-manufactors",
             "cards/pilot-new/academy-manufactor.test.ts::manufactor-other-token",
             "cards/pilot-new/academy-manufactor.test.ts::manufactor-opponent-treasure",
-            "cards/pilot-new/academy-manufactor.test.ts::manufactor-crack-clue"
+            "cards/pilot-new/academy-manufactor.test.ts::manufactor-crack-clue",
+            "academy-manufactor-tapped-event",
+            "academy-manufactor-tapped-single",
+            "academy-manufactor-untapped-event"
           ]
         }
       ],
