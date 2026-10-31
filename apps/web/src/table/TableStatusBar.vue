@@ -92,7 +92,7 @@ const myFallback = computed(() => {
       Take back control
     </button>
     <button
-      v-if="table.isHost && table.phase === 'playing'"
+      v-if="table.isHost && (table.phase === 'playing' || table.phase === 'starting')"
       type="button"
       data-testid="abandon"
       @click="table.abandon()"

@@ -209,6 +209,43 @@ describe('table store', () => {
     expect(memory.get('mtg-table-seat:t1')).toBe('tok');
   });
 
+  it('drops a seat token the server refuses on resume, keeping the host token', () => {
+    const { table } = setup();
+    memory.set('mtg-table-host:t1', 'host');
+    memory.set('mtg-table-seat:t1', 'stale');
+    table.open('t1');
+    sockets[0]!.open();
+    // The host token is accepted (tableState holds the host role); only the seat token is refused.
+    sockets[0]!.deliver(tableState({ displayName: null, isHost: true }));
+    sockets[0]!.deliver({ type: 'error', payload: { message: 'That token is not valid.' } });
+    expect(table.seatToken).toBeNull();
+    expect(memory.has('mtg-table-seat:t1')).toBe(false);
+    expect(table.hostToken).toBe('host');
+    expect(memory.get('mtg-table-host:t1')).toBe('host');
+    expect(table.errors).toEqual([]);
+  });
+
+  it('reads the first bad-token refusal as the host token when both were sent', () => {
+    const { table } = setup();
+    memory.set('mtg-table-host:t1', 'old-host');
+    memory.set('mtg-table-seat:t1', 'tok');
+    table.open('t1');
+    sockets[0]!.open();
+    // hostAuth is refused first; the seat token's answer is still to come.
+    sockets[0]!.deliver({ type: 'error', payload: { message: 'That token is not valid.' } });
+    expect(table.seatToken).toBe('tok');
+    sockets[0]!.deliver(tableState({ seat: 'P1' }));
+    expect(table.seatToken).toBe('tok');
+  });
+
+  it('ignores a bad-token refusal when no stored token awaits an answer', () => {
+    const { table } = setup();
+    table.open('t1');
+    sockets[0]!.open();
+    sockets[0]!.deliver({ type: 'error', payload: { message: 'That token is not valid.' } });
+    expect(table.errors).toEqual(['That token is not valid.']);
+  });
+
   it('rejoins the lobby after reconnecting before a seat was approved', () => {
     vi.useFakeTimers();
     const { table } = setup();

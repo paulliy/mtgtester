@@ -115,6 +115,24 @@ describe('xFamily', () => {
     });
   });
 
+  it('keeps cast variants of one X spell in separate families', () => {
+    const keyOf = (data: Record<string, unknown>) =>
+      xFamily(action({ data: { x: 2, ...data } }))?.key;
+    const keys = [
+      keyOf({}),
+      keyOf({ castVariant: 'overload' }),
+      keyOf({ castVariant: 'libraryTopLife' }),
+      keyOf({ optionalCostCount: 1, optionalMechanic: 'kicker' }),
+      keyOf({ optionalCostCount: 2, optionalMechanic: 'kicker' }),
+      keyOf({ castVariant: 'overload', optionalCostCount: 1, optionalMechanic: 'kicker' }),
+    ];
+    expect(new Set(keys).size).toBe(keys.length);
+    // Options that differ only in X still share a key.
+    expect(keyOf({ castVariant: 'overload' })).toBe(
+      xFamily(action({ data: { x: 5, castVariant: 'overload' } }))?.key,
+    );
+  });
+
   it('is null for an option that announces no X', () => {
     expect(xFamily(action({}))).toBeNull();
     expect(xFamily(action({ data: { x: '3' } }))).toBeNull();

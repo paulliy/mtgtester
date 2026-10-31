@@ -91,13 +91,24 @@ export function paymentSourceSummary(action: LegalAction): string {
  * is the contract" — `legal.ts` enumerates every value up front so nothing needs a second
  * legality check). Rendered flat that's one button per value — up to however much mana the
  * player has, sometimes dozens. The family key says which options differ only in X (same type,
- * same mode); a client collapses each family into a single numeric input, and picking a number
- * just looks up the matching pre-enumerated action, so legality is still exactly what the
- * engine offered.
+ * same mode, same cast variant, same optional-cost count); a client collapses each family into a
+ * single numeric input, and picking a number just looks up the matching pre-enumerated action,
+ * so legality is still exactly what the engine offered.
  */
 export function xFamily(action: LegalAction): { key: string; x: number } | null {
   const x = actionData(action, 'x');
   if (typeof x !== 'number') return null;
   const modeLabel = actionData(action, 'modeLabel');
-  return { key: `${action.type}|${typeof modeLabel === 'string' ? modeLabel : ''}`, x };
+  let key = `${action.type}|${typeof modeLabel === 'string' ? modeLabel : ''}`;
+  // Cast variants of one spell (alternative casts, overload, the life cast, each kicker or
+  // multikicker count) each offer their own X range; folding them together would leave the
+  // picker only the first variant's actions.
+  const variant = actionData(action, 'castVariant');
+  if (typeof variant === 'string') key += `|variant:${variant}`;
+  const count = actionData(action, 'optionalCostCount');
+  if (typeof count === 'number') {
+    const mechanic = actionData(action, 'optionalMechanic');
+    key += `|optional:${typeof mechanic === 'string' ? mechanic : ''}:${count}`;
+  }
+  return { key, x };
 }

@@ -8,6 +8,7 @@ import { useRoute } from 'vue-router';
 import PlayerGameView from '../views/PlayerGameView.vue';
 import { useGameStore } from '../stores/game';
 import { useTableStore } from '../stores/table';
+import { inviteCodeFor } from './invite';
 import TableLobby from './TableLobby.vue';
 import TablePostGame from './TablePostGame.vue';
 import TableStatusBar from './TableStatusBar.vue';
@@ -18,9 +19,7 @@ const game = useGameStore();
 const name = ref('');
 
 const tableId = computed(() => String(route.params['id'] ?? ''));
-const inviteCode = computed(
-  () => decodeURIComponent((route.hash ?? '').replace(/^#/, '')) || (table.state?.inviteCode ?? ''),
-);
+const inviteCode = computed(() => inviteCodeFor(route.hash, table.state?.inviteCode));
 
 // Vue Router reuses this view when only the table id changes.
 watch(tableId, (id) => table.open(id), { immediate: true });

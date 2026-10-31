@@ -105,6 +105,13 @@ export interface SeatClock extends ClockStatePayload {
 
 const MAX_BACKOFF_MS = 30_000;
 
+/**
+ * The server's refusal text for a host or seat token it does not accept (`badToken` in
+ * `REFUSAL_TEXT`). The error frame carries no code, so this text is all there is to match; a
+ * typed refusal code on the frame would make this exact.
+ */
+const BAD_TOKEN_TEXT = 'That token is not valid.';
+
 export const useTableStore = defineStore('table', () => {
   const game = useGameStore();
 
@@ -130,6 +137,10 @@ export const useTableStore = defineStore('table', () => {
   let now: () => number = () => Date.now();
   let seatOnSocket: PlayerId | null = null;
   let lobbyJoin: { inviteCode: string; displayName: string } | null = null;
+  // Which token a refusal on this socket could be answering. The server replies to `hostAuth`
+  // then `resumeSeat` in order, and a success shows as a `tableState` that holds the role.
+  let hostAuthPending = false;
+  let resumePending = false;
 
   const you = computed(() => state.value?.you ?? null);
   const mySeat = computed<PlayerId | null>(() => you.value?.seat ?? null);
@@ -183,11 +194,14 @@ export const useTableStore = defineStore('table', () => {
     const next = factory(socketUrl(tableId.value));
     socket = next;
     seatOnSocket = null;
+    hostAuthPending = false;
+    resumePending = false;
     next.onOpen(() => {
       if (socket !== next) return;
       setConnection('open');
       backoffMs = 1_000;
       if (hostToken.value !== null) {
+        hostAuthPending = true;
         sendFrame({ type: 'hostAuth', payload: { hostToken: hostToken.value } });
       }
       if (seatToken.value !== null) resume();
@@ -240,6 +254,7 @@ export const useTableStore = defineStore('table', () => {
 
   function resume(): void {
     if (seatToken.value === null) return;
+    resumePending = true;
     sendFrame({
       type: 'resumeSeat',
       payload: { seatToken: seatToken.value, protocolVersion: PROTOCOL_VERSION, capabilities: {} },
@@ -254,13 +269,33 @@ export const useTableStore = defineStore('table', () => {
     writeStored(hostKey(tableId.value), null);
   }
 
+  /**
+   * A bad-token refusal while a stored token was awaiting its answer. The host token goes first
+   * (its reply comes first); a refused seat token is dropped so the join form can show instead
+   * of resuming a dead seat on every reconnect. Returns whether the refusal was consumed.
+   */
+  function refusedStoredToken(): boolean {
+    if (hostAuthPending) {
+      hostAuthPending = false;
+      return true;
+    }
+    if (!resumePending) return false;
+    resumePending = false;
+    seatToken.value = null;
+    if (tableId.value !== null) writeStored(seatKey(tableId.value), null);
+    return true;
+  }
+
   function receive(message: TableServerToClientMessage | ServerToClientMessage): void {
     if (!isTableFrame(message)) {
       if (message.type === 'replayUnlocked') {
         replayUnlock.value = message.payload;
         return;
       }
-      if (message.type === 'error') errors.value = [message.payload.message];
+      if (message.type === 'error') {
+        if (message.payload.message === BAD_TOKEN_TEXT && refusedStoredToken()) return;
+        errors.value = [message.payload.message];
+      }
       game.receive(message);
       return;
     }
@@ -273,6 +308,8 @@ export const useTableStore = defineStore('table', () => {
           if (tableId.value !== null) writeStored(seatKey(tableId.value), null);
         }
         seatOnSocket = message.payload.you.seat;
+        if (message.payload.you.isHost) hostAuthPending = false;
+        if (message.payload.you.seat !== null) resumePending = false;
         state.value = message.payload;
         return;
       case 'claimPending':

@@ -243,6 +243,8 @@ function zonesShown(seat: string): boolean {
   const seatCards = [
     ...(state.value?.seats.find((s) => s.seat === seat)?.graveyard ?? []),
     ...exileFor(seat),
+    // The "Top of library" strip lives in the same block.
+    ...revealedLibraryTopsFor(seat),
   ];
   return seatCards.some((card) => wanted.includes(card.id));
 }
@@ -527,7 +529,7 @@ const playableSources = computed(() => {
   return [...best].map(([id, { action }]) => ({
     id,
     verb: entryOf(action)?.verb ?? '',
-    name: nameById.value.get(id) ?? id,
+    name: sourceNameOf(action) ?? id,
   }));
 });
 /** The "Playable now" list: identical entries (three Swamps) collapse to one with a count. */
