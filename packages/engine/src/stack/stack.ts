@@ -20,7 +20,12 @@ import {
 } from '../state/objects';
 import { roomDoorOf } from '../cards/spell-faces';
 import { spellDefinitionOf, stackSourceTraits } from '../state/queries';
-import type { EngineCardObject, EngineStackObject, GameContext } from '../state/types';
+import type {
+  EngineCardObject,
+  EngineObject,
+  EngineStackObject,
+  GameContext,
+} from '../state/types';
 
 /** Resolve the top object of the stack. Caller guarantees the stack is nonempty. */
 export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
@@ -228,38 +233,7 @@ export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): Ga
       moved.isToken = true;
       delete moved.isCardCopy;
     }
-    // Dash (CR 702.109a): haste for as long as this object stays, and back to its owner's hand at
-    // the beginning of the next end step, whoever's turn that is. A new object (CR 400.7) after
-    // a flicker is neither hasty nor returned.
-    if (spell.dashed === true && moved !== null && moved.zone === 'battlefield') {
-      ctx.state.effects.push({
-        id: `eff-${ctx.state.nextObjectNum++}`,
-        sourceId: spell.sourceCardId,
-        description: `${moved.name} was dashed: it has haste`,
-        targetCardIds: [moved.cardId],
-        targetObjectIds: [moved.id],
-        kind: 'grantKeyword',
-        keyword: 'haste',
-        duration: 'permanent',
-        timestamp: ctx.state.nextTimestamp++,
-      });
-      ctx.state.delayedTriggers.push({
-        id: `dt-${ctx.state.nextObjectNum++}`,
-        sourceCardId: moved.cardId,
-        sourceOracleId: moved.oracleId,
-        controllerId: spell.controllerId,
-        targetId: moved.cardId,
-        targetObjectId: moved.id,
-        when: 'endStep',
-        ability: {
-          kind: 'triggered',
-          targets: [],
-          effects: [{ op: 'returnToHand', target: 'triggerObject' }],
-          description: `Dash: return ${moved.name} to its owner's hand`,
-        },
-        expiry: 'onFire',
-      });
-    }
+    if (moved !== null && moved.zone === 'battlefield') applyDash(ctx, spell, moved);
     if (spell.grantHasteOnResolution && moved && moved.zone === 'battlefield') {
       ctx.state.effects.push({
         id: `eff-${ctx.state.nextObjectNum++}`,
@@ -298,6 +272,42 @@ export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): Ga
   } else {
     yield* moveObject(ctx, card, { zone: 'graveyard' });
   }
+}
+
+/**
+ * Dash (CR 702.109a): haste for as long as this object stays, and back to its owner's hand at the
+ * beginning of the next end step, whoever's turn that is. A new object (CR 400.7) after a flicker
+ * is neither hasty nor returned. A copy of a dashed spell is dashed too (CR 707.10).
+ */
+function applyDash(ctx: GameContext, spell: EngineStackObject, moved: EngineObject): void {
+  if (spell.dashed !== true) return;
+  ctx.state.effects.push({
+    id: `eff-${ctx.state.nextObjectNum++}`,
+    sourceId: spell.sourceCardId,
+    description: `${moved.name} was dashed: it has haste`,
+    targetCardIds: [moved.cardId],
+    targetObjectIds: [moved.id],
+    kind: 'grantKeyword',
+    keyword: 'haste',
+    duration: 'permanent',
+    timestamp: ctx.state.nextTimestamp++,
+  });
+  ctx.state.delayedTriggers.push({
+    id: `dt-${ctx.state.nextObjectNum++}`,
+    sourceCardId: moved.cardId,
+    sourceOracleId: moved.oracleId,
+    controllerId: spell.controllerId,
+    targetId: moved.cardId,
+    targetObjectId: moved.id,
+    when: 'endStep',
+    ability: {
+      kind: 'triggered',
+      targets: [],
+      effects: [{ op: 'returnToHand', target: 'triggerObject' }],
+      description: `Dash: return ${moved.name} to its owner's hand`,
+    },
+    expiry: 'onFire',
+  });
 }
 
 /**
@@ -346,6 +356,7 @@ function* putPermanentSpellCopyOntoBattlefield(
   }
   // zone-mutation: a resolving copy of a permanent spell becomes a token (CR 608.3f), created like createToken: makePermanent applies its entry replacements
   ctx.state.battlefield.push(perm);
+  applyDash(ctx, spell, perm);
   emit(
     ctx,
     'permanentSpellCopyResolved',

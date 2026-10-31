@@ -18109,7 +18109,8 @@
             "cards/pilot-new/academy-manufactor.test.ts::manufactor-crack-clue",
             "academy-manufactor-tapped-event",
             "academy-manufactor-tapped-single",
-            "academy-manufactor-untapped-event"
+            "academy-manufactor-untapped-event",
+            "academy-manufactor-replaces-a-clue-copy"
           ]
         }
       ],
@@ -18163,7 +18164,8 @@
             "cards/pilot-new/ragavan-nimble-pilferer.test.ts::ragavan-dash",
             "cards/pilot-new/ragavan-nimble-pilferer.test.ts::ragavan-cast-normally",
             "clause 2: dashed, it can attack the turn it enters",
-            "clause 2, negative: cast for {R}, it is not offered as an attacker"
+            "clause 2, negative: cast for {R}, it is not offered as an attacker",
+            "permanent-spell-copy-dashed"
           ]
         }
       ],

@@ -9,7 +9,10 @@ import { computePriorityOptions, type PriorityActionPayload } from '../src/actio
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { addMana } from '../src/mana/pool';
 import { priorityCheckpoint } from '../src/sba/sba';
+import { spell } from '../src/cards/templates';
+import { executeAbility } from '../src/effects/resolve';
 import { resolveTopOfStack } from '../src/stack/stack';
+import { hasKeyword } from '../src/state/queries';
 import type { GameContext } from '../src/state/types';
 import { conjure, forest, pump, spawn } from './fixtures';
 import { castFromHand, choose, p, pinned, pod } from './pr10-helpers';
@@ -87,5 +90,49 @@ describe('a resolving copy of a permanent spell enters as a permanent', () => {
       [false, 2],
       [true, 2],
     ]);
+  });
+  it('permanent-spell-copy-dashed — a copy of a dashed spell has haste and returns at the end step', () => {
+    const ctx = pod('copy-dash');
+    const ragavan = conjure(ctx, 'P1', pinStore.get('Ragavan, Nimble Pilferer'), 'hand');
+    addMana(p(ctx, 'P1'), [{ symbol: 'R' }, { symbol: 'C' }]);
+    const dash = computePriorityOptions(ctx, p(ctx, 'P1')).find(
+      (option) =>
+        (option.payload as PriorityActionPayload & { objectId?: string }).objectId === ragavan.id &&
+        /dash/i.test(option.description),
+    )!;
+    pump(
+      applyPriorityAction(ctx, p(ctx, 'P1'), dash.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+      undefined,
+      { strict: true },
+    );
+    const original = ctx.state.stack.at(-1)!;
+    expect(original.dashed).toBe(true);
+    const copier = spawn(ctx, 'P1', pinned('Cosmic Crucible'));
+    pump(
+      executeAbility(
+        ctx,
+        copier,
+        spell({
+          targets: [{ kind: 'stackObject' }],
+          effects: [{ op: 'copyTargetSpell', target: 0 }],
+          description: 'Copy target spell',
+        }),
+        [original.id],
+      ),
+      undefined,
+      { strict: true },
+    );
+    // The copy resolves first and becomes a token Ragavan.
+    pump(resolveTopOfStack(ctx), undefined, { strict: true });
+    const token = named(ctx, 'Ragavan, Nimble Pilferer').find((perm) => perm.isToken)!;
+    expect(hasKeyword(ctx, token, 'haste')).toBe(true);
+    expect(
+      ctx.state.delayedTriggers.some(
+        (trigger) => trigger.when === 'endStep' && trigger.targetObjectId === token.id,
+      ),
+    ).toBe(true);
   });
 });

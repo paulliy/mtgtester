@@ -1720,9 +1720,9 @@ function clueFoodTreasurePlan(
   if (named === undefined || replacements === 0 || count <= 0)
     return [{ spec, count, named: true }];
   const each = count * 3 ** (replacements - 1);
-  return kinds.map((kind) =>
-    kind === named ? { spec, count: each, named: true } : { spec: kind, count: each, named: false },
-  );
+  // "Instead create one of each" creates the predefined tokens (CR 111.10), even in place of a
+  // token copy that is a Clue (Parcel Myr); `named` marks the kind the caller asked for.
+  return kinds.map((kind) => ({ spec: kind, count: each, named: kind === named }));
 }
 
 /**

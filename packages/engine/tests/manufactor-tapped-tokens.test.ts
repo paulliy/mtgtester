@@ -4,7 +4,7 @@
  * 614.1), so every token created instead enters tapped, as the Peregrin Took ruling illustrates.
  */
 import { describe, expect, it } from 'vitest';
-import { FOOD } from '../src/cards/tokens';
+import { creatureToken, FOOD } from '../src/cards/tokens';
 import { createGame } from '../src/state/game';
 import { createToken, createTokens } from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
@@ -52,6 +52,29 @@ describe('Academy Manufactor and a tapped token', () => {
   it('academy-manufactor-untapped-event — an untapped Food event leaves all three untapped', () => {
     const ctx = withManufactor('manufactor-untapped-event');
     createTokens(ctx, FOOD, 1, 'P1');
+    expect(tokens(ctx)).toEqual([
+      ['Clue', false],
+      ['Food', false],
+      ['Treasure', false],
+    ]);
+  });
+
+  it('academy-manufactor-replaces-a-clue-copy — a token that is a Clue is replaced by the predefined three', () => {
+    const ctx = withManufactor('manufactor-clue-copy');
+    // A token copy of an artifact creature Clue, such as Parcel Myr.
+    createTokens(
+      ctx,
+      creatureToken({
+        name: 'Parcel Myr',
+        subtypes: ['Clue', 'Myr'],
+        colors: [],
+        power: 2,
+        toughness: 1,
+        artifact: true,
+      }),
+      1,
+      'P1',
+    );
     expect(tokens(ctx)).toEqual([
       ['Clue', false],
       ['Food', false],
