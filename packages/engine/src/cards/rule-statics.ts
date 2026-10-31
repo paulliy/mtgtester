@@ -266,4 +266,10 @@ export type RuleStatic =
    * ignores its controller's permanents that match `filter` from this permanent's view.
    */
   | { kind: 'legendRuleDoesntApply'; filter: Selector }
-  | { kind: 'artifactTokenCreatesThopter' };
+  | { kind: 'artifactTokenCreatesThopter' }
+  /**
+   * "If you would create a Clue, Food, or Treasure token, instead create one of each" (Academy
+   * Manufactor): a replacement on its controller's token creation (CR 614.1a). Each one applies
+   * to every token the others made, so two turn one Treasure into three of each.
+   */
+  | { kind: 'createClueFoodAndTreasure' };

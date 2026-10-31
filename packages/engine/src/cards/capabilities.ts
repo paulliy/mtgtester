@@ -1564,6 +1564,7 @@ const families = {
       triggerAdditionalTime: true,
       legendRuleDoesntApply: true,
       artifactTokenCreatesThopter: true,
+      createClueFoodAndTreasure: true,
       grantForetell: true,
     } satisfies Record<Extract<RuleStatic['kind'], string | number>, true>,
   },

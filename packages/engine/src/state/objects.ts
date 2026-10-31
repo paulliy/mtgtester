@@ -1,6 +1,6 @@
 import { copyData } from './copy-data';
 import { EngineBudgetError } from '../errors';
-import { THOPTER_1_1_FLYING } from '../cards/tokens';
+import { CLUE, FOOD, THOPTER_1_1_FLYING, TREASURE } from '../cards/tokens';
 import { counterCount, setCounterCount } from './counters';
 import { offBattlefieldTypes } from './off-battlefield-types';
 import { playerProtectedFromEverything } from './phasing';
@@ -1664,6 +1664,33 @@ function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
 }
 
 /**
+ * The tokens `controllerId` creates when an effect makes `count` of `spec`, after "if you would
+ * create a Clue, Food, or Treasure token, instead create one of each" (Academy Manufactor, CR
+ * 614.1a). Each such replacement applies to every token the others made, so with `m` of them
+ * `count` becomes `count * 3^(m-1)` of each kind. Only the kind the effect named keeps its own
+ * spec and enters tapped if it was to; the other two are plain.
+ */
+function clueFoodTreasurePlan(
+  ctx: GameContext,
+  spec: TokenSpec,
+  count: number,
+  controllerId: PlayerId,
+): Array<{ spec: TokenSpec; count: number; named: boolean }> {
+  const kinds = [CLUE, FOOD, TREASURE];
+  const named = kinds.find((kind) => spec.subtypes.includes(kind.subtypes[0]!));
+  const replacements = gatherRuleStatics(ctx).filter(
+    (entry) =>
+      entry.static.kind === 'createClueFoodAndTreasure' && entry.controllerId === controllerId,
+  ).length;
+  if (named === undefined || replacements === 0 || count <= 0)
+    return [{ spec, count, named: true }];
+  const each = count * 3 ** (replacements - 1);
+  return kinds.map((kind) =>
+    kind === named ? { spec, count: each, named: true } : { spec: kind, count: each, named: false },
+  );
+}
+
+/**
  * Put a token onto the battlefield (CR 111.1). Returns the new permanent.
  *
  * It goes through `makePermanent` and `queueTriggersForObject` exactly as a resolving permanent
@@ -1691,9 +1718,22 @@ export function createToken(
   if (applyTokenReplacements) {
     const multiplier = tokenCreationMultiplierFor(ctx, controllerId);
     const created: EnginePermanent[] = [];
-    for (let i = 0; i < multiplier; i++) {
-      created.push(createToken(ctx, spec, controllerId, false, false, false, entersTapped));
-    }
+    // The caller asked for `spec`: hand back one of those, not a Clue a replacement added.
+    let first: EnginePermanent | undefined;
+    for (const plan of clueFoodTreasurePlan(ctx, spec, multiplier, controllerId))
+      for (let i = 0; i < plan.count; i++) {
+        const token = createToken(
+          ctx,
+          plan.spec,
+          controllerId,
+          false,
+          false,
+          false,
+          entersTapped && plan.named,
+        );
+        created.push(token);
+        if (plan.named) first ??= token;
+      }
     queueTokenCreatedEvent(ctx, created);
     queueTriggersForEvent(
       ctx,
@@ -1701,7 +1741,6 @@ export function createToken(
       created.map((permanent) => ({ permanent })),
     );
     applyTokenCreationReplacements(ctx, spec, controllerId);
-    const first = created[0];
     if (first === undefined) throw new Error('engine bug: token multiplier created no token');
     return first;
   }
@@ -1897,8 +1936,11 @@ export function createTokens(
 ): EnginePermanent[] {
   const created: EnginePermanent[] = [];
   const multiplier = tokenCreationMultiplierFor(ctx, controllerId);
-  for (let i = 0; i < count * multiplier; i++)
-    created.push(createToken(ctx, spec, controllerId, false, false, false, entersTapped));
+  for (const plan of clueFoodTreasurePlan(ctx, spec, count * multiplier, controllerId))
+    for (let i = 0; i < plan.count; i++)
+      created.push(
+        createToken(ctx, plan.spec, controllerId, false, false, false, entersTapped && plan.named),
+      );
   if (created.length > 0) {
     queueTokenCreatedEvent(ctx, created);
     queueTriggersForEvent(
@@ -1925,8 +1967,9 @@ export function createTokensForPlayers(
     .map((id) => ({ id, count: count * tokenCreationMultiplierFor(ctx, id) }));
   const created: EnginePermanent[] = [];
   for (const plan of plans) {
-    for (let index = 0; index < plan.count; index++)
-      created.push(createToken(ctx, spec, plan.id, false, false, false));
+    for (const kind of clueFoodTreasurePlan(ctx, spec, plan.count, plan.id))
+      for (let index = 0; index < kind.count; index++)
+        created.push(createToken(ctx, kind.spec, plan.id, false, false, false));
   }
   for (const plan of plans) {
     if (plan.count > 0) applyTokenCreationReplacements(ctx, spec, plan.id, created);

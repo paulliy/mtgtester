@@ -587,6 +587,29 @@ export const FOOD: TokenSpec = {
   ],
 };
 
+/**
+ * Clue (CR 111.10f) — "{2}, Sacrifice this token: Draw a card." No tap: a Clue can be cracked the
+ * turn it is made, and several in one priority window.
+ */
+export const CLUE: TokenSpec = {
+  ...artifactToken({ name: 'Clue', subtypes: ['Clue'] }),
+  activatedAbilities: [
+    {
+      costs: [
+        { kind: 'mana', cost: parseManaCost('{2}' as ManaCostString).cost as ParsedManaCost },
+        { kind: 'sacrificeSelf' },
+      ],
+      timing: 'any',
+      ability: {
+        kind: 'activated',
+        targets: [],
+        effects: [{ op: 'draw', count: { kind: 'const', n: 1 } }],
+        description: '{2}, Sacrifice this token: Draw a card.',
+      },
+    },
+  ],
+};
+
 // ---------------------------------------------------------------------------
 // The whole catalog, for structural lookup
 // ---------------------------------------------------------------------------
@@ -622,6 +645,7 @@ export const ALL_TOKENS: TokenSpec[] = [
   DRAGON_5_5_FLYING,
   BEAST_3_3_GREEN,
   THOPTER_1_1_FLYING,
+  CLUE,
   SERVO_1_1,
   CAT_2_2_WHITE,
   INSECT_1_1_FLYING,
