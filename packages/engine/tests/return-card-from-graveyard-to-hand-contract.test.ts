@@ -26,6 +26,7 @@ import {
   oracle,
   pick,
   pump,
+  pumpStrict,
   spawn,
 } from './fixtures';
 
@@ -59,10 +60,14 @@ describe('returnCardFromGraveyardToHand primitive contract', () => {
     });
     conjure(ctx, 'P1', ox, 'graveyard');
     const asked: string[][] = [];
-    pump(executeAbility(ctx, source(ctx), ability, []), (decision) => {
-      asked.push(decision.options.map((option) => option.description));
-      return pick(decision, /Test Bear/);
-    });
+    pump(
+      executeAbility(ctx, source(ctx), ability, []),
+      (decision) => {
+        asked.push(decision.options.map((option) => option.description));
+        return pick(decision, /Test Bear/);
+      },
+      { strict: true },
+    );
     const p1 = playerById(ctx, 'P1');
     expect(names(p1.hand)).toContain('Test Bear');
     expect(names(p1.graveyard).sort()).toEqual(['Contract Ox', 'Test Bolt']);
@@ -76,9 +81,7 @@ describe('returnCardFromGraveyardToHand primitive contract', () => {
     conjure(ctx, 'P1', bolt(), 'graveyard');
     conjure(ctx, 'P2', bear(), 'graveyard');
     const hand = playerById(ctx, 'P1').hand.length;
-    pump(executeAbility(ctx, source(ctx), ability, []), () => {
-      throw new Error('nothing qualifies, so nothing is asked');
-    });
+    pumpStrict(executeAbility(ctx, source(ctx), ability, []));
     // Neither the controller's instant nor an opponent's creature is returned.
     expect(playerById(ctx, 'P1').hand).toHaveLength(hand);
     expect(names(playerById(ctx, 'P2').graveyard)).toEqual(['Test Bear']);

@@ -71,7 +71,7 @@ function pod(seed: string): GameContext {
   return ctx;
 }
 function settle(ctx: GameContext) {
-  return pump(runPrioritySequence(ctx), (d) => answer(d));
+  return pump(runPrioritySequence(ctx), (d) => answer(d), { strict: true });
 }
 function cast(ctx: GameContext, who: string, card: OracleCard, mana: ('R' | 'C')[]) {
   const hand = conjure(ctx, who, card, 'hand');
@@ -387,18 +387,22 @@ describe('PR08 Alexios and Varchild', () => {
       step: null,
     });
     let sawBlockMenu = false;
-    pump(runCombatPhase(defended), (d) => {
-      if (d.decisionType === 'declareAttackers')
-        return declareAttacks(d, (id) => (id === raider.id ? 'P2' : null));
-      if (d.decisionType === 'declareBlockers') {
-        sawBlockMenu = true;
-        const subjects = d.presentationBlockDeclaration!.subjects.map((x) => x.subjectId);
-        expect(subjects).toContain(bear.id);
-        expect(subjects).not.toContain(survivor.id);
-        return declareBlocks(d, () => null);
-      }
-      return answer(d);
-    });
+    pump(
+      runCombatPhase(defended),
+      (d) => {
+        if (d.decisionType === 'declareAttackers')
+          return declareAttacks(d, (id) => (id === raider.id ? 'P2' : null));
+        if (d.decisionType === 'declareBlockers') {
+          sawBlockMenu = true;
+          const subjects = d.presentationBlockDeclaration!.subjects.map((x) => x.subjectId);
+          expect(subjects).toContain(bear.id);
+          expect(subjects).not.toContain(survivor.id);
+          return declareBlocks(d, () => null);
+        }
+        return answer(d);
+      },
+      { strict: true },
+    );
     expect(sawBlockMenu).toBe(true);
   });
 

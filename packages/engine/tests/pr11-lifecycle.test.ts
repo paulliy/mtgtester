@@ -223,10 +223,14 @@ describe('Mystic Remora', () => {
     turnOf(declined, 'P2');
     castFromHand(declined, 'P2', opponentSorcery(), new Map(), { C: 1 });
     checkpoint(declined);
-    pump(resolveTopOfStack(declined), (decision) => ({
-      index: decision.options.findIndex((option) => option.type === 'declineTrigger'),
-      targets: new Map(),
-    }));
+    pump(
+      resolveTopOfStack(declined),
+      (decision) => ({
+        index: decision.options.findIndex((option) => option.type === 'declineTrigger'),
+        targets: new Map(),
+      }),
+      { strict: true },
+    );
     expect(player(declined, 'P1').hand.length).toBe(declinedHand);
   });
 
@@ -937,13 +941,17 @@ describe('Gut, True Soul Zealot', () => {
     turnOf(theirs, 'P2');
     theirs.state.phase = 'combat';
     const asked: string[] = [];
-    pump(runCombatPhase(theirs), (decision) => {
-      asked.push(decision.decisionType);
-      if (decision.decisionType === 'declareAttackers')
-        return declareAttacks(decision, (id) => (id === raider.id ? 'P1' : null));
-      if (decision.decisionType === 'declareBlockers') return declareBlocks(decision, () => null);
-      return { index: 0, targets: new Map() };
-    });
+    pump(
+      runCombatPhase(theirs),
+      (decision) => {
+        asked.push(decision.decisionType);
+        if (decision.decisionType === 'declareAttackers')
+          return declareAttacks(decision, (id) => (id === raider.id ? 'P1' : null));
+        if (decision.decisionType === 'declareBlockers') return declareBlocks(decision, () => null);
+        return { index: 0, targets: new Map() };
+      },
+      { strict: true },
+    );
     expect(asked).toContain('declareAttackers');
     expect(asked).not.toContain('optionalTrigger');
     expect(battlefield(theirs, 'Skeleton')).toEqual([]);

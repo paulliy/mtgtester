@@ -362,10 +362,14 @@ describe('Arcane Denial — corrected next-turn upkeep semantics', () => {
     const resolved = [] as ReturnType<typeof pump>['decisions'];
     while (ctx.state.stack.length > 0) {
       resolved.push(
-        ...pump(resolveTopOfStack(ctx), (decision) => ({
-          index: decision.options.findIndex((option) => option.description === 'Draw 2 cards'),
-          targets: new Map(),
-        })).decisions,
+        ...pump(
+          resolveTopOfStack(ctx),
+          (decision) => ({
+            index: decision.options.findIndex((option) => option.description === 'Draw 2 cards'),
+            targets: new Map(),
+          }),
+          { strict: true },
+        ).decisions,
       );
     }
     expect(resolved.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');

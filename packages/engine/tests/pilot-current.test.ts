@@ -37,6 +37,7 @@ import {
   oracle,
   pick,
   pump,
+  pumpStrict,
   registerDef,
   spawn,
   swamp,
@@ -137,7 +138,7 @@ describe('Explore', () => {
   const resolveExplore = (ctx: GameContext): void => {
     const card = pinStore.get('Explore');
     // A source P1 controls stands in for the resolving spell.
-    pump(executeAbility(ctx, spawn(ctx, 'P1', card), interpretCard(card).spellAbility!, []));
+    pumpStrict(executeAbility(ctx, spawn(ctx, 'P1', card), interpretCard(card).spellAbility!, []));
   };
 
   it('explore-extra-land-play — after a land this turn, you may play one more, and you draw', () => {
@@ -260,6 +261,7 @@ describe('Gamble', () => {
         [],
       ),
       (decision) => pick(decision, /Pilot Prize/),
+      { strict: true },
     );
     return ctx;
   }
@@ -292,6 +294,7 @@ describe('Gamble', () => {
         [],
       ),
       (decision) => pick(decision, /Pilot Prize/),
+      { strict: true },
     );
     expect(names(p1.graveyard)).toEqual(['Pilot Prize']);
     expect(p1.hand).toHaveLength(0);
@@ -406,10 +409,14 @@ describe('Secluded Courtyard', () => {
     spawn(ctx, 'P1', creature('Pilot Goblin', 'Goblin'));
     const land = conjure(ctx, 'P1', courtyard(), 'hand');
     const asked: string[][] = [];
-    pump(moveObject(ctx, land, { zone: 'battlefield' }), (decision) => {
-      asked.push(decision.options.map((option) => option.description));
-      return pick(decision, 'Elf');
-    });
+    pump(
+      moveObject(ctx, land, { zone: 'battlefield' }),
+      (decision) => {
+        asked.push(decision.options.map((option) => option.description));
+        return pick(decision, 'Elf');
+      },
+      { strict: true },
+    );
     expect(asked).toHaveLength(1);
     expect(asked[0]).toEqual(expect.arrayContaining(['Elf', 'Goblin']));
     const entered = ctx.state.battlefield.find((perm) => perm.name === 'Secluded Courtyard');
@@ -444,9 +451,7 @@ describe('Morbid Opportunist', () => {
   const morbidTriggers = (ctx: GameContext) =>
     ctx.state.pendingTriggers.filter((trigger) => trigger.sourceName === 'Morbid Opportunist');
   const destroy = (ctx: GameContext, selector: Selector) =>
-    pump(executeAbility(ctx, sorceryCaster(ctx), wrath(selector), []), () => {
-      throw new Error('destroying asks nothing');
-    });
+    pumpStrict(executeAbility(ctx, sorceryCaster(ctx), wrath(selector), []));
 
   it("morbid-opportunist-another-dies — an opponent's creature dying triggers it, and it draws a card", () => {
     const ctx = mainPhase('morbid-another');
@@ -520,16 +525,13 @@ describe('Syr Konrad, the Grim', () => {
     library.unshift(placed);
   };
   const mill = (ctx: GameContext, source: ReturnType<typeof spawn>) =>
-    pump(
+    pumpStrict(
       executeAbility(
         ctx,
         source,
         ctx.defs.get(source.oracleId)!.activatedAbilities[0]!.ability,
         [],
       ),
-      () => {
-        throw new Error('milling asks nothing');
-      },
     );
   const konradTriggers = (ctx: GameContext) =>
     ctx.state.pendingTriggers.filter((trigger) => trigger.sourceName === 'Syr Konrad, the Grim');
@@ -570,21 +572,16 @@ describe('Syr Konrad, the Grim', () => {
   });
 
   const destroyEach = (ctx: GameContext, source: ReturnType<typeof spawn>, selector: Selector) =>
-    pump(
+    pumpStrict(
       executeAbility(
         ctx,
         source,
         spell({ effects: [{ op: 'destroyEach', selector }], description: 'Destroy each' }),
         [],
       ),
-      () => {
-        throw new Error('destroying asks nothing');
-      },
     );
   const exileFromGraveyard = (ctx: GameContext, card: ReturnType<typeof conjure>) =>
-    pump(moveObject(ctx, card, { zone: 'exile' }), () => {
-      throw new Error('exiling asks nothing');
-    });
+    pumpStrict(moveObject(ctx, card, { zone: 'exile' }));
 
   it("syr-konrad-other-creature-dies — another creature dying triggers it; its own death or a noncreature's does not", () => {
     const ctx = mainPhase('konrad-dies');
@@ -606,7 +603,7 @@ describe('Syr Konrad, the Grim', () => {
   it('syr-konrad-token-dies — a creature token dying triggers it once, as a death only', () => {
     const ctx = mainPhase('konrad-token');
     const source = spawn(ctx, 'P1', konrad());
-    pump(
+    pumpStrict(
       executeAbility(
         ctx,
         source,
@@ -628,9 +625,6 @@ describe('Syr Konrad, the Grim', () => {
         }),
         [],
       ),
-      () => {
-        throw new Error('creating asks nothing');
-      },
     );
     destroyEach(ctx, source, ofSubtype('Spirit'));
     expect(konradTriggers(ctx).map((trigger) => trigger.ability.trigger?.when)).toEqual(['dies']);
@@ -721,13 +715,10 @@ describe('Untimely Malfunction', () => {
     const first = spawn(ctx, 'P2', bear());
     const second = spawn(ctx, 'P2', creatureNamed('Pilot Wolf', 'Wolf'));
     const free = spawn(ctx, 'P2', creatureNamed('Pilot Elk', 'Elk'));
-    pump(
+    pumpStrict(
       executeAbility(ctx, attacker, cantBlock, [], undefined, undefined, {
         0: [first.id, second.id],
       }),
-      () => {
-        throw new Error('nothing is asked');
-      },
     );
     expect(blockersOffered(ctx, attacker)).toEqual([free.id]);
   });
@@ -736,16 +727,11 @@ describe('Untimely Malfunction', () => {
     const ctx = mainPhase('malfunction-cleanup');
     const attacker = spawn(ctx, 'P1', bear());
     const target = spawn(ctx, 'P2', bear());
-    pump(
+    pumpStrict(
       executeAbility(ctx, attacker, cantBlock, [], undefined, undefined, { 0: [target.id] }),
-      () => {
-        throw new Error('nothing is asked');
-      },
     );
     expect(ctx.state.blockRestrictions).toHaveLength(1);
-    pump(cleanupStep(ctx), () => {
-      throw new Error('an empty hand discards nothing');
-    });
+    pumpStrict(cleanupStep(ctx));
     expect(ctx.state.blockRestrictions ?? []).toEqual([]);
   });
 });
@@ -767,14 +753,11 @@ describe("Bolas's Citadel", () => {
       return 'objectId' in payload && payload.objectId === objectId;
     });
   const apply = (ctx: GameContext, option: ReturnType<typeof topOptions>[number]) =>
-    pump(
+    pumpStrict(
       applyPriorityAction(ctx, playerById(ctx, 'P1'), option.payload as PriorityActionPayload, {
         index: 0,
         targets: new Map(),
       }),
-      () => {
-        throw new Error('casting it asks nothing');
-      },
     );
 
   it('bolas-citadel-cast-for-life — the top card is cast for life equal to its mana value, never for mana', () => {
@@ -877,12 +860,11 @@ describe("Bolas's Citadel", () => {
         prompts.push(decision.prompt);
         return { index: 0, targets: new Map() };
       },
+      { strict: true },
     );
     expect(prompts).toHaveLength(9);
     expect(ctx.state.battlefield.map((perm) => perm.name)).toEqual(['Forest']);
-    pump(resolveTopOfStack(ctx), () => {
-      throw new Error('losing life asks nothing');
-    });
+    pumpStrict(resolveTopOfStack(ctx));
     expect(playerById(ctx, 'P2').life).toBe(30);
     expect(playerById(ctx, 'P1').life).toBe(40);
   });
@@ -940,6 +922,7 @@ describe('Etali, Primal Storm', () => {
           next === undefined ? 'Cast no more spells' : `Cast ${next} without paying its mana cost`,
         );
       },
+      { strict: true },
     );
     return offered;
   };

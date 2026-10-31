@@ -14,7 +14,7 @@ import { createGame } from '../src/state/game';
 import { moveObject, moveObjects } from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
 import { runTurn } from '../src/turn/turn';
-import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import { conjure, copies, forest, gameConfig, oracle, pump, pumpStrict, spawn } from './fixtures';
 
 interface PinnedFixture {
   cards: { card: OracleCard }[];
@@ -139,7 +139,8 @@ describe('Thran Vigil', () => {
     // Through the real stack: the trigger is mandatory, so resolving it asks no "use it?" first.
     const relic = conjure(ctx, 'P1', artifact('Counter Relic'), 'graveyard');
     pump(moveObject(ctx, relic, { zone: 'exile' }));
-    pump(priorityCheckpoint(ctx), () => ({ index: 0, targets: new Map([[0, chosen.id]]) }));
+    // The one creature it can target is forced, so no target question is raised.
+    pumpStrict(priorityCheckpoint(ctx));
     expect(ctx.state.stack).toHaveLength(1);
     const { decisions } = pump(resolveTopOfStack(ctx));
     expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
@@ -153,7 +154,7 @@ describe('Thran Vigil', () => {
     const chosen = spawn(ctx, 'P1', creature('Doomed Bear'));
     const opponent = spawn(ctx, 'P2', creature('Opponent Bear'));
     const relic = conjure(ctx, 'P1', artifact('Departing Relic'), 'graveyard');
-    pump(moveObject(ctx, relic, { zone: 'exile' }));
+    pumpStrict(moveObject(ctx, relic, { zone: 'exile' }));
 
     const gen = runTurn(ctx);
     let step = gen.next();
@@ -196,7 +197,7 @@ describe('Thran Vigil', () => {
         targets: new Map(),
       }),
     );
-    pump(resolveTopOfStack(ctx));
+    pumpStrict(resolveTopOfStack(ctx));
 
     expect(ctx.state.battlefield.some((permanent) => permanent.cardId === spell.cardId)).toBe(true);
   });

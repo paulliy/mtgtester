@@ -136,12 +136,16 @@ function attackAndResolve(
 ): PendingDecision[] {
   attacker.attacking = 'P2';
   queueTriggersForEvent(ctx, 'attacks', [{ permanent: attacker, playerId: 'P1' }]);
-  return pump(runPrioritySequence(ctx), (decision) => {
-    if (decision.decisionType === 'priority') return pass(decision);
-    // The attack triggers are mandatory: only their own choices are asked, no "use it?" first.
-    expect(decision.decisionType).not.toBe('optionalTrigger');
-    return answer(decision);
-  }).decisions;
+  return pump(
+    runPrioritySequence(ctx),
+    (decision) => {
+      if (decision.decisionType === 'priority') return pass(decision);
+      // The attack triggers are mandatory: only their own choices are asked, no "use it?" first.
+      expect(decision.decisionType).not.toBe('optionalTrigger');
+      return answer(decision);
+    },
+    { strict: true },
+  ).decisions;
 }
 
 function chooseTopCard(name: string): Answer {

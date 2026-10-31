@@ -23,7 +23,7 @@ import {
   forest,
   gameConfig,
   mountain,
-  pump,
+  pumpStrict,
   spawn,
 } from './fixtures';
 
@@ -41,9 +41,9 @@ describe('diagnostics sink', () => {
     const ctx = game(sink);
     const source = spawn(ctx, 'P1', bolt());
     const target = spawn(ctx, 'P2', bear());
-    pump(moveObject(ctx, target, { zone: 'graveyard' }));
+    pumpStrict(moveObject(ctx, target, { zone: 'graveyard' }));
 
-    pump(executeAbility(ctx, source, interpretCard(bolt()).spellAbility!, [target.id]));
+    pumpStrict(executeAbility(ctx, source, interpretCard(bolt()).spellAbility!, [target.id]));
 
     expect(sink.opRuns()).toEqual([
       { card: 'Test Bolt', op: 'dealDamage', runs: 1, earlyExits: 1 },
@@ -58,7 +58,7 @@ describe('diagnostics sink', () => {
     const sink = new DiagnosticsSink();
     const ctx = game(sink);
     const source = spawn(ctx, 'P1', bolt());
-    pump(executeAbility(ctx, source, interpretCard(bolt()).spellAbility!, ['P2']));
+    pumpStrict(executeAbility(ctx, source, interpretCard(bolt()).spellAbility!, ['P2']));
     expect(sink.opRuns()).toEqual([
       { card: 'Test Bolt', op: 'dealDamage', runs: 1, earlyExits: 0 },
     ]);

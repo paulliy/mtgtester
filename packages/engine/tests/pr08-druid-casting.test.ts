@@ -159,33 +159,37 @@ function settleThroughTable(
   watched?: ObjectId,
 ): ChoiceRecord[] {
   const records: ChoiceRecord[] = [];
-  pump(runPrioritySequence(ctx), (decision) => {
-    if (decision.decisionType === 'priority') {
-      const pass = decision.options.findIndex((option) => option.type === 'pass');
-      return { index: pass >= 0 ? pass : 0, targets: new Map() };
-    }
-    // The enter trigger is mandatory: the players' choices come with no "use this ability?" first.
-    expect(decision.decisionType).not.toBe('optionalTrigger');
-    if (decision.decisionType !== 'general')
-      throw new Error(`unexpected ${decision.decisionType} decision for ${decision.player}`);
-    const wanted = choose(decision);
-    const index = decision.options.findIndex((option) => option.description === wanted);
-    if (index < 0)
-      throw new Error(
-        `${decision.player} was never offered "${wanted}" in: ${decision.options
-          .map((option) => option.description)
-          .join(' | ')}`,
-      );
-    records.push({
-      player: decision.player,
-      prompt: decision.prompt,
-      options: decision.options.map((option) => option.description),
-      watchedOnBattlefield:
-        watched === undefined ? true : ctx.state.battlefield.some((perm) => perm.id === watched),
-      destroyEventsSoFar: destroyEvents(ctx),
-    });
-    return { index, targets: new Map() };
-  });
+  pump(
+    runPrioritySequence(ctx),
+    (decision) => {
+      if (decision.decisionType === 'priority') {
+        const pass = decision.options.findIndex((option) => option.type === 'pass');
+        return { index: pass >= 0 ? pass : 0, targets: new Map() };
+      }
+      // The enter trigger is mandatory: the players' choices come with no "use this ability?" first.
+      expect(decision.decisionType).not.toBe('optionalTrigger');
+      if (decision.decisionType !== 'general')
+        throw new Error(`unexpected ${decision.decisionType} decision for ${decision.player}`);
+      const wanted = choose(decision);
+      const index = decision.options.findIndex((option) => option.description === wanted);
+      if (index < 0)
+        throw new Error(
+          `${decision.player} was never offered "${wanted}" in: ${decision.options
+            .map((option) => option.description)
+            .join(' | ')}`,
+        );
+      records.push({
+        player: decision.player,
+        prompt: decision.prompt,
+        options: decision.options.map((option) => option.description),
+        watchedOnBattlefield:
+          watched === undefined ? true : ctx.state.battlefield.some((perm) => perm.id === watched),
+        destroyEventsSoFar: destroyEvents(ctx),
+      });
+      return { index, targets: new Map() };
+    },
+    { strict: true },
+  );
   return records;
 }
 

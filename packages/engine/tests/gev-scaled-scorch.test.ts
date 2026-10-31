@@ -171,9 +171,9 @@ describe('Gev, Scaled Scorch', () => {
         targets: new Map(slot === undefined ? [] : [[slot.slot, 'P2']]),
       };
     };
-    pump(priorityCheckpoint(ctx), answerTrigger);
+    pump(priorityCheckpoint(ctx), answerTrigger, { strict: true });
     expect(ctx.state.stack).toHaveLength(1);
-    pump(resolveTopOfStack(ctx), answerTrigger);
+    pump(resolveTopOfStack(ctx), answerTrigger, { strict: true });
     expect(ctx.state.players[1]!.life).toBe(lifeBefore - 2);
     expect(ctx.state.players[2]!.life).toBe(40);
     ctx.state.pendingTriggers = [];

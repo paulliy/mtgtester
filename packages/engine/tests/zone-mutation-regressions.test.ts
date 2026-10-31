@@ -14,7 +14,17 @@ import { executeAbility } from '../src/effects/resolve';
 import { priorityCheckpoint } from '../src/sba/sba';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
-import { commanderFor, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import {
+  commanderFor,
+  conjure,
+  copies,
+  forest,
+  gameConfig,
+  oracle,
+  pump,
+  pumpStrict,
+  spawn,
+} from './fixtures';
 import { pinStore } from './scenario/pin-store';
 
 const midnightClock = (
@@ -58,7 +68,7 @@ describe('Midnight Clock shuffles hand and graveyard into the library', () => {
     conjure(ctx, 'P1', named('Graveyard card'), 'graveyard');
     const clock = spawn(ctx, 'P1', midnightClock);
 
-    pump(executeAbility(ctx, clock, twelfthHour(), []));
+    pumpStrict(executeAbility(ctx, clock, twelfthHour(), []));
 
     expect(ctx.state.eventLog.filter((event) => event.type === 'shuffle')).toHaveLength(1);
     // Seven drawn from a shuffled 22-card library are not the old top seven, in order.
@@ -74,10 +84,14 @@ describe('Midnight Clock shuffles hand and graveyard into the library', () => {
       isCommander: true,
     });
     const clock = spawn(ctx, 'P1', midnightClock);
-    const { decisions } = pump(executeAbility(ctx, clock, twelfthHour(), []), (decision) => ({
-      index: decision.options.findIndex((option) => option.type === 'commanderToCommandZone'),
-      targets: new Map(),
-    }));
+    const { decisions } = pump(
+      executeAbility(ctx, clock, twelfthHour(), []),
+      (decision) => ({
+        index: decision.options.findIndex((option) => option.type === 'commanderToCommandZone'),
+        targets: new Map(),
+      }),
+      { strict: true },
+    );
 
     expect(decisions.map((decision) => decision.decisionType)).toContain('commanderReplacement');
     expect(ctx.state.players[0]!.commandZone.map((card) => card.name)).toContain(general.name);
@@ -97,13 +111,17 @@ describe("Etali exiles from each library's top through moveObject", () => {
       ability.effects.some((effect) => effect.op === 'exileEachUntilNonlandCast'),
     )!;
     // Decline every free cast, then let state-based actions offer the commander its zone.
-    pump(executeAbility(ctx, source, trigger, []), (decision) => ({
-      index: decision.options.length - 1,
-      targets: new Map(),
-    }));
+    pump(
+      executeAbility(ctx, source, trigger, []),
+      (decision) => ({
+        index: decision.options.length - 1,
+        targets: new Map(),
+      }),
+      { strict: true },
+    );
     expect(ctx.state.exile.some((card) => card.name === general.name)).toBe(true);
     // The command-zone choice (CR 903.9a) is the only option, so it resolves as forced.
-    pump(priorityCheckpoint(ctx));
+    pumpStrict(priorityCheckpoint(ctx));
 
     expect(p2.commandZone.map((card) => card.name)).toContain(general.name);
     expect(ctx.state.exile.some((card) => card.name === general.name)).toBe(false);

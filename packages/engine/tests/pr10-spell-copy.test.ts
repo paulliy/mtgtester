@@ -196,6 +196,7 @@ describe('PR10.12 Display of Power', () => {
         ).not.toContain('Lab Flash Bear');
         return choose('Lab Shock (on the stack)')(decision);
       },
+      { strict: true },
     ).decisions;
     const offered = targetMenus.flatMap((decision) =>
       decision.options.map((entry) => entry.description),

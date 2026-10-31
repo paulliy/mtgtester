@@ -21,6 +21,7 @@ import {
   gameConfig,
   oracle,
   pump,
+  pumpStrict,
   spawn,
 } from './fixtures';
 
@@ -70,10 +71,14 @@ function expectMandatory(decision: PendingDecision) {
 }
 
 function settle(ctx: GameContext, answer?: Answer) {
-  return pump(runPrioritySequence(ctx), (decision, count) => {
-    expectMandatory(decision);
-    return answer?.(decision, count) ?? pass(decision);
-  });
+  return pump(
+    runPrioritySequence(ctx),
+    (decision, count) => {
+      expectMandatory(decision);
+      return answer?.(decision, count) ?? pass(decision);
+    },
+    { strict: true },
+  );
 }
 
 function castOption(ctx: GameContext, playerId: PlayerId, objectId: string) {
@@ -169,16 +174,20 @@ function setupRabble(
 function attack(ctx: GameContext, attackerId: string, defendingPlayer: PlayerId, answer?: Answer) {
   ctx.state.phase = 'combat';
   ctx.state.step = null;
-  return pump(runCombatPhase(ctx), (decision, count) => {
-    if (decision.decisionType === 'declareAttackers') {
-      const customAttacks = answer?.(decision, count);
-      return customAttacks !== undefined && customAttacks.targets.size > 0
-        ? customAttacks
-        : declareAttacks(decision, (id) => (id === attackerId ? defendingPlayer : null));
-    }
-    expectMandatory(decision);
-    return answer?.(decision, count) ?? pass(decision);
-  });
+  return pump(
+    runCombatPhase(ctx),
+    (decision, count) => {
+      if (decision.decisionType === 'declareAttackers') {
+        const customAttacks = answer?.(decision, count);
+        return customAttacks !== undefined && customAttacks.targets.size > 0
+          ? customAttacks
+          : declareAttacks(decision, (id) => (id === attackerId ? defendingPlayer : null));
+      }
+      expectMandatory(decision);
+      return answer?.(decision, count) ?? pass(decision);
+    },
+    { strict: true },
+  );
 }
 
 function citizenTokens(ctx: GameContext): EnginePermanent[] {
@@ -396,7 +405,7 @@ describe('PR09 hideaway and recruit cards', () => {
     const oldHidden = oldCard.linked!;
     const inGraveyard = pump(moveObject(ctx, oldCard.permanent, { zone: 'graveyard' })).value!;
     // The card returns from the graveyard as a new object (CR 400.7), not the old permanent.
-    const returned = pump(
+    const returned = pumpStrict(
       moveObject(ctx, inGraveyard, { zone: 'battlefield', controllerId: 'P1' }),
     ).value;
     const current = returned as EnginePermanent;

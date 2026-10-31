@@ -11,7 +11,7 @@ import { queueStepTriggers } from '../src/turn/turn';
 import { runPrioritySequence } from '../src/turn/priority';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
-import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import { conjure, copies, forest, gameConfig, oracle, pump, pumpStrict, spawn } from './fixtures';
 
 const pins = (
   JSON.parse(
@@ -68,12 +68,16 @@ const decline = (d: PendingDecision): DecisionOutcome => {
   return { index: Math.max(i, 0), targets: new Map() };
 };
 function settle(c: GameContext, answer: (d: PendingDecision) => DecisionOutcome = pass) {
-  return pump(runPrioritySequence(c), (d) => {
-    if (d.decisionType === 'priority') return pass(d);
-    // Every trigger in this file is mandatory: no "use this ability?" question is ever asked.
-    expect(d.decisionType).not.toBe('optionalTrigger');
-    return answer(d);
-  });
+  return pump(
+    runPrioritySequence(c),
+    (d) => {
+      if (d.decisionType === 'priority') return pass(d);
+      // Every trigger in this file is mandatory: no "use this ability?" question is ever asked.
+      expect(d.decisionType).not.toBe('optionalTrigger');
+      return answer(d);
+    },
+    { strict: true },
+  );
 }
 function cast(
   c: GameContext,
@@ -245,7 +249,7 @@ describe('PR09 discover, explore, and reveal production cards', () => {
     expect(legal).toContain(foe.id);
     expect(legal).toContain(walker.id);
     expect(legal).not.toContain(notTargetable.id);
-    pump(
+    pumpStrict(
       applyPriorityAction(c, playerById(c, 'P1'), activate!.payload as PriorityActionPayload, {
         index: 0,
         targets: new Map([[activate!.targets![0]!.slot, foe.id]]),
@@ -265,9 +269,9 @@ describe('PR09 discover, explore, and reveal production cards', () => {
     lib(c, [testCard('Explore land', '', 'Land')]);
     // An opposing creature and your own noncreature permanent entering do not explore.
     const enemy = conjure(c, 'P2', testCard('Path enemy', '{2}', 'Creature — Scout'), 'hand');
-    pump(moveObject(c, enemy, { zone: 'battlefield' }));
+    pumpStrict(moveObject(c, enemy, { zone: 'battlefield' }));
     const relic = conjure(c, 'P1', testCard('Path relic', '{2}', 'Artifact'), 'hand');
-    pump(moveObject(c, relic, { zone: 'battlefield' }));
+    pumpStrict(moveObject(c, relic, { zone: 'battlefield' }));
     expect(c.state.pendingTriggers).toHaveLength(0);
     settle(c);
     expect(playerById(c, 'P1').hand.some((x) => x.name === 'Explore land')).toBe(false);

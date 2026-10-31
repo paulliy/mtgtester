@@ -23,6 +23,7 @@ import {
   oracle,
   pick,
   pump,
+  pumpStrict,
   registerCustomDef,
 } from './fixtures';
 
@@ -52,10 +53,14 @@ describe('entersUnlessDiscard replacement contract', () => {
     const diamond = conjure(ctx, 'P1', trinket, 'graveyard');
     conjure(ctx, 'P1', island(), 'hand');
     const asked: string[][] = [];
-    pump(moveObject(ctx, diamond, { zone: 'battlefield' }), (decision) => {
-      asked.push(decision.options.map((option) => option.description));
-      return pick(decision, 'Discard Island');
-    });
+    pump(
+      moveObject(ctx, diamond, { zone: 'battlefield' }),
+      (decision) => {
+        asked.push(decision.options.map((option) => option.description));
+        return pick(decision, 'Discard Island');
+      },
+      { strict: true },
+    );
     expect(names(ctx.state.battlefield)).toContain('Contract Diamond');
     expect(names(playerById(ctx, 'P1').graveyard)).toEqual(['Island']);
     expect(asked).toEqual([
@@ -67,17 +72,17 @@ describe('entersUnlessDiscard replacement contract', () => {
     const ctx = game();
     const diamond = conjure(ctx, 'P1', trinket, 'hand');
     conjure(ctx, 'P1', bear(), 'hand');
-    pump(moveObject(ctx, diamond, { zone: 'battlefield' }), () => {
-      throw new Error('a nonland card is never offered');
-    });
+    pumpStrict(moveObject(ctx, diamond, { zone: 'battlefield' }));
     expect(names(playerById(ctx, 'P1').graveyard)).toEqual(['Contract Diamond']);
     expect(names(playerById(ctx, 'P1').hand)).toContain('Test Bear');
 
     const declined = game();
     const second = conjure(declined, 'P1', trinket, 'hand');
     conjure(declined, 'P1', island(), 'hand');
-    pump(moveObject(declined, second, { zone: 'battlefield' }), (decision) =>
-      pick(decision, /^Discard nothing/),
+    pump(
+      moveObject(declined, second, { zone: 'battlefield' }),
+      (decision) => pick(decision, /^Discard nothing/),
+      { strict: true },
     );
     expect(names(playerById(declined, 'P1').graveyard)).toEqual(['Contract Diamond']);
     expect(names(playerById(declined, 'P1').hand)).toContain('Island');

@@ -27,6 +27,7 @@ import {
   oracle,
   pick,
   pump,
+  pumpStrict,
   spawn,
 } from './fixtures';
 
@@ -53,18 +54,20 @@ describe('payLifeOrTopDrawnCards primitive contract', () => {
     conjure(ctx, 'P1', bear(), 'hand');
     // Library top: Test Bolt, then Forests. Draw two: Bolt and a Forest, both drawn this turn.
     conjure(ctx, 'P1', bolt(), 'library');
-    pump(drawCards(ctx, p1, 2), () => {
-      throw new Error('drawing asks nothing');
-    });
+    pumpStrict(drawCards(ctx, p1, 2));
     const asked: string[][] = [];
     const life = p1.life;
-    pump(executeAbility(ctx, source(ctx), ability, []), (decision) => {
-      asked.push(decision.options.map((option) => option.description));
-      // The first pick is the Bolt; the Forest, the only card left, is chosen with it. Keep the
-      // Bolt for 4 life; put the Forest back.
-      if (asked.length === 1) return pick(decision, 'Test Bolt');
-      return pick(decision, asked.length === 2 ? /^Pay 4 life/ : /^Put Forest on top/);
-    });
+    pump(
+      executeAbility(ctx, source(ctx), ability, []),
+      (decision) => {
+        asked.push(decision.options.map((option) => option.description));
+        // The first pick is the Bolt; the Forest, the only card left, is chosen with it. Keep the
+        // Bolt for 4 life; put the Forest back.
+        if (asked.length === 1) return pick(decision, 'Test Bolt');
+        return pick(decision, asked.length === 2 ? /^Pay 4 life/ : /^Put Forest on top/);
+      },
+      { strict: true },
+    );
     // The Bear was not drawn this turn, so it is never offered.
     expect(asked[0]!.some((description) => description.includes('Test Bear'))).toBe(false);
     expect(asked).toEqual([
@@ -81,21 +84,15 @@ describe('payLifeOrTopDrawnCards primitive contract', () => {
     const ctx = game();
     const p1 = playerById(ctx, 'P1');
     conjure(ctx, 'P1', bear(), 'hand');
-    pump(executeAbility(ctx, source(ctx), ability, []), () => {
-      throw new Error('no card was drawn this turn, so nothing is asked');
-    });
+    pumpStrict(executeAbility(ctx, source(ctx), ability, []));
     expect(names(p1.hand)).toEqual(['Test Bear']);
 
     // Without 4 life to pay, the drawn card goes back without a question (CR 119.4).
     const poor = game();
     const p = playerById(poor, 'P1');
-    pump(drawCards(poor, p, 1), () => {
-      throw new Error('drawing asks nothing');
-    });
+    pumpStrict(drawCards(poor, p, 1));
     p.life = 3;
-    pump(executeAbility(poor, source(poor), ability, []), () => {
-      throw new Error('one drawn card and no life to pay: nothing is asked');
-    });
+    pumpStrict(executeAbility(poor, source(poor), ability, []));
     expect(p.hand).toHaveLength(0);
     expect(p.life).toBe(3);
   });

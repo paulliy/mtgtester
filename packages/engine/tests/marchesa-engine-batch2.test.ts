@@ -33,6 +33,7 @@ import {
   oracle,
   pick,
   pump,
+  pumpStrict,
   spawn,
 } from './fixtures';
 
@@ -164,7 +165,7 @@ describe('Anathemancer', () => {
       o.description.includes('(graveyard): Unearth'),
     );
     expect(option).toBeDefined();
-    pump(
+    pumpStrict(
       applyPriorityAction(ctx, player, option!.payload as PriorityActionPayload, {
         index: 0,
         targets: new Map(),
@@ -453,7 +454,7 @@ describe('Forge of Heroes', () => {
         targets: new Map([[0, commander.id]]),
       }),
     );
-    pump(resolveTopOfStack(ctx));
+    pumpStrict(resolveTopOfStack(ctx));
     expect(commander.counters['+1/+1']).toBe(1);
     expect(land.tapped).toBe(true);
   });

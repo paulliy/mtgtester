@@ -6,7 +6,7 @@ import { moveObject } from '../src/state/objects';
 import { queueStepTriggers } from '../src/turn/turn';
 import { addMana } from '../src/mana/pool';
 import type { GameContext } from '../src/state/types';
-import { conjure, forest, oracle, pump, spawn } from './fixtures';
+import { conjure, forest, oracle, pump, pumpStrict, spawn } from './fixtures';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import {
   asActive,
@@ -106,7 +106,7 @@ describe('PR10.23 Scute Swarm', () => {
     // Only a LAND entering counts: one of your creatures entering makes no Insect and no copy.
     const creatureCtx = swarmWithLands('pr10-scute-creature', 0).ctx;
     const cub = conjure(creatureCtx, 'P1', bear('Swarm Cub'), 'hand');
-    pump(moveObject(creatureCtx, cub, { zone: 'battlefield', controllerId: 'P1' }));
+    pumpStrict(moveObject(creatureCtx, cub, { zone: 'battlefield', controllerId: 'P1' }));
     expect(creatureCtx.state.pendingTriggers).toHaveLength(0);
     settle(creatureCtx);
     expect(tokensOf(creatureCtx, 'P1')).toHaveLength(0);
@@ -218,7 +218,7 @@ describe('PR10.31 Twilight Diviner', () => {
     // The enter trigger surveils 2 (two cards, one decision each) and is not a "you may".
     const ctx = pod('pr10-diviner-surveil');
     const diviner = conjure(ctx, 'P1', pinned('Twilight Diviner'), 'hand');
-    pump(moveObject(ctx, diviner, { zone: 'battlefield', controllerId: 'P1' }));
+    pumpStrict(moveObject(ctx, diviner, { zone: 'battlefield', controllerId: 'P1' }));
     const prompts: string[] = [];
     const asked = settleRecording(ctx, (decision) => {
       prompts.push(decision.prompt);
@@ -237,9 +237,9 @@ describe('PR10.31 Twilight Diviner', () => {
     // Only OTHER creatures count: the Diviner itself coming back from the graveyard copies nothing.
     const selfCtx = pod('pr10-diviner-self');
     const self = spawn(selfCtx, 'P1', pinned('Twilight Diviner'));
-    pump(moveObject(selfCtx, self, { zone: 'graveyard' }));
+    pumpStrict(moveObject(selfCtx, self, { zone: 'graveyard' }));
     const dead = selfCtx.state.players[0]!.graveyard.find((c) => c.name === 'Twilight Diviner')!;
-    pump(moveObject(selfCtx, dead, { zone: 'battlefield', controllerId: 'P1' }));
+    pumpStrict(moveObject(selfCtx, dead, { zone: 'battlefield', controllerId: 'P1' }));
     settle(selfCtx);
     expect(tokensOf(selfCtx, 'P1')).toHaveLength(0);
 
@@ -247,7 +247,7 @@ describe('PR10.31 Twilight Diviner', () => {
     const landCtx = pod('pr10-diviner-land');
     spawn(landCtx, 'P1', pinned('Twilight Diviner'));
     const land = conjure(landCtx, 'P1', forest(), 'graveyard');
-    pump(moveObject(landCtx, land, { zone: 'battlefield', controllerId: 'P1' }));
+    pumpStrict(moveObject(landCtx, land, { zone: 'battlefield', controllerId: 'P1' }));
     settle(landCtx);
     expect(tokensOf(landCtx, 'P1')).toHaveLength(0);
   });

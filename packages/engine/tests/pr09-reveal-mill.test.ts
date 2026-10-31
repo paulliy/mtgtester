@@ -66,10 +66,14 @@ function expectMandatory(d: PendingDecision) {
   expect(d.decisionType).not.toBe('optionalTrigger');
 }
 function settle(ctx: GameContext, choose?: (d: PendingDecision) => ReturnType<typeof pass>) {
-  return pump(runPrioritySequence(ctx), (d) => {
-    expectMandatory(d);
-    return choose?.(d) ?? pass(d);
-  });
+  return pump(
+    runPrioritySequence(ctx),
+    (d) => {
+      expectMandatory(d);
+      return choose?.(d) ?? pass(d);
+    },
+    { strict: true },
+  );
 }
 function upkeep(ctx: GameContext, player: string) {
   ctx.state.currentTurnPlayer = player;
@@ -109,12 +113,16 @@ function attack(
   ctx.state.activePlayerIndex = 0;
   ctx.state.phase = 'combat';
   ctx.state.step = null;
-  return pump(runCombatPhase(ctx), (d) => {
-    if (d.decisionType === 'declareAttackers')
-      return declareAttacks(d, (id) => (id === creatureId ? 'P2' : null));
-    expectMandatory(d);
-    return choose?.(d) ?? pass(d);
-  });
+  return pump(
+    runCombatPhase(ctx),
+    (d) => {
+      if (d.decisionType === 'declareAttackers')
+        return declareAttacks(d, (id) => (id === creatureId ? 'P2' : null));
+      expectMandatory(d);
+      return choose?.(d) ?? pass(d);
+    },
+    { strict: true },
+  );
 }
 
 describe('PR09 reveal and mill cards', () => {

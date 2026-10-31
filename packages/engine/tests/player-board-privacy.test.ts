@@ -13,7 +13,7 @@ import {
   formatPlayerLog,
 } from '../src/view/spectator';
 import { buildPlayerView } from '../src/view/view';
-import { commanderFor, copies, forest, gameConfig, pump, spawn } from './fixtures';
+import { commanderFor, copies, forest, gameConfig, pumpStrict, spawn } from './fixtures';
 
 function pod() {
   return gameConfig(
@@ -79,7 +79,7 @@ describe('player projection privacy (ADR 0031 decision 12)', () => {
     const ctx = createGame(pod());
     const p2 = ctx.state.players.find((player) => player.id === 'P2')!;
     const card = p2.library[0]!;
-    const exiled = pump(moveObject(ctx, card, { zone: 'exile', faceDown: true })).value;
+    const exiled = pumpStrict(moveObject(ctx, card, { zone: 'exile', faceDown: true })).value;
 
     expect(exiled).not.toBeNull();
     const projected = buildPlayerBoardState(ctx, 'P1').exile.find((c) => c.id === exiled!.id);

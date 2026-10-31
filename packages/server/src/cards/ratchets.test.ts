@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { strictPumpErrors } from '../../../../scripts/contracts/strict-pump';
+import { PUMP_UNIT_TEST, strictPumpErrors } from '../../../../scripts/contracts/strict-pump';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
@@ -144,6 +144,20 @@ describe('ratchet 2: notExecutableInCi IDs may not grow', () => {
     ).toEqual(new Set(['oracle-1::c']));
   });
 
+  it('reads a card-level engineTestIds entry marked notExecutableInCi', () => {
+    const text = JSON.stringify({
+      schemaVersion: 1,
+      cards: {
+        'oracle-1': {
+          name: 'A',
+          engineTestIds: ['a', { id: 'b', notExecutableInCi: true }],
+          clauses: [],
+        },
+      },
+    });
+    expect(notExecutableInCiIds(text)).toEqual(new Set(['oracle-1::b']));
+  });
+
   it('passes with no new marks, and fires on a newly marked ID', () => {
     const before = manifest({ engineTestIds: ['a', 'b'], notExecutableInCi: ['b'] });
     expect(checkNotExecutableInCi({ baseManifest: before, headManifest: before }).errors).toEqual(
@@ -239,5 +253,23 @@ pumpStrict(gen);`),
     ]);
     // A second copy of an existing call is new.
     expect(strictPumpErrors(file('pump(other);\npump(other);', 'pump(other);'))).toHaveLength(1);
+  });
+
+  it('exempts only the unit test of pump itself, which pins the non-strict default', () => {
+    expect(
+      strictPumpErrors([{ path: PUMP_UNIT_TEST, head: 'pump(gen);', base: undefined }]),
+    ).toEqual([]);
+    expect(
+      strictPumpErrors([
+        { path: 'packages/engine/tests/other/script.test.ts', head: 'pump(gen);', base: undefined },
+      ]),
+    ).toHaveLength(1);
+  });
+
+  it('reports a new call at its own line when it repeats an old call that moved', () => {
+    const base = 'it("a", () => {\n  pump(gen);\n});\n';
+    const head =
+      'it("new", () => {\n  pump(gen);\n  const extra = 1;\n});\nit("a", () => {\n  pump(gen);\n});\n';
+    expect(strictPumpErrors(file(head, base))).toEqual([expect.stringContaining('x.test.ts:2:')]);
   });
 });

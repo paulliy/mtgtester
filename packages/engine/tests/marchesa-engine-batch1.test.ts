@@ -12,7 +12,17 @@ import { moveObject } from '../src/state/objects';
 import { manaSourcesFor } from '../src/state/queries';
 import type { GameContext } from '../src/state/types';
 import { runPrioritySequence } from '../src/turn/priority';
-import { bear, copies, declareAttacks, forest, gameConfig, pick, pump, spawn } from './fixtures';
+import {
+  bear,
+  copies,
+  declareAttacks,
+  forest,
+  gameConfig,
+  pick,
+  pump,
+  pumpStrict,
+  spawn,
+} from './fixtures';
 
 interface PinnedFixture {
   schemaVersion: number;
@@ -164,7 +174,7 @@ describe('Grave Pact', () => {
     const land = spawn(lands, 'P1', forest());
     const p2Creature = spawn(lands, 'P2', bear());
     const landAsked: string[] = [];
-    pump(moveObject(lands, land, { zone: 'graveyard' }));
+    pumpStrict(moveObject(lands, land, { zone: 'graveyard' }));
     resolveDeath(lands, (decision) => {
       landAsked.push(decision.player);
       return { index: 0, targets: new Map() };
@@ -317,7 +327,7 @@ describe('Pawn of Ulamog', () => {
     spawn(lands, 'P1', pawn);
     const land = spawn(lands, 'P1', forest());
     let landAsked = false;
-    pump(moveObject(lands, land, { zone: 'graveyard' }));
+    pumpStrict(moveObject(lands, land, { zone: 'graveyard' }));
     resolveDeath(lands, () => {
       landAsked = true;
       return { index: 0, targets: new Map() };

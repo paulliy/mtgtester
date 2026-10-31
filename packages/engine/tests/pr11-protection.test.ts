@@ -12,7 +12,7 @@ import { addMana } from '../src/mana/pool';
 import { priorityCheckpoint } from '../src/sba/sba';
 import { moveObject } from '../src/state/objects';
 import { hasKeyword, hasProtectionFrom } from '../src/state/queries';
-import { bear, conjure, oracle, pump, spawn } from './fixtures';
+import { bear, conjure, oracle, pump, pumpStrict, spawn } from './fixtures';
 import {
   activate,
   anyMana,
@@ -174,7 +174,16 @@ describe("Basri's Lieutenant — protection from multicolored", () => {
     castFromHand(ctx, 'P1', LIEUTENANT, new Map(), { W: 1, C: 3 });
     resolve(ctx);
     const lieutenant = battlefield(ctx, "Basri's Lieutenant")[0]!;
-    const { decisions: targeting } = pump(priorityCheckpoint(ctx));
+    const { decisions: targeting } = pump(
+      priorityCheckpoint(ctx),
+      (decision) => {
+        // The trigger's one target is chosen explicitly: the other creature the player controls.
+        const slot = decision.options[0]?.targets?.[0];
+        if (decision.decisionType !== 'chooseTargets' || slot === undefined) return undefined;
+        return { index: 0, targets: new Map([[slot.slot, ally.id]]) };
+      },
+      { strict: true },
+    );
     // Only creatures you control are offered: the opponent's bear is not a legal target.
     const slot = targeting.find((d) => d.decisionType === 'chooseTargets')?.options[0]
       ?.targets?.[0];
@@ -358,7 +367,7 @@ describe('Spirit Mantle and Unquestioned Authority — protection from creatures
     });
     const witness = spawn(ctx, 'P2', redCreature());
     expect(computeCharacteristics(ctx, relic).types).toContain('Creature');
-    pump(moveObject(ctx, relic, { zone: 'graveyard' }));
+    pumpStrict(moveObject(ctx, relic, { zone: 'graveyard' }));
     checkpoint(ctx);
     expect(ctx.state.stack.at(-1)?.kind).toBe('triggeredAbility');
     resolve(ctx);

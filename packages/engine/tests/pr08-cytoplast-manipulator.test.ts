@@ -17,7 +17,7 @@ import { addMana } from '../src/mana/pool';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { endUntilEotEffects } from '../src/effects/resolve';
 import { runPrioritySequence } from '../src/turn/priority';
-import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import { conjure, copies, forest, gameConfig, oracle, pump, pumpStrict, spawn } from './fixtures';
 
 const selected = (
   JSON.parse(readFileSync('packages/engine/tests/fixtures/coverage-pr08-oracle.json', 'utf8')) as {
@@ -41,14 +41,18 @@ function pod(seed: string) {
   return ctx;
 }
 function settle(ctx: GameContext, graft = false, asked: string[] = []) {
-  pump(runPrioritySequence(ctx), (decision) => {
-    asked.push(decision.decisionType);
-    const pass = decision.options.findIndex((option) => option.type === 'pass');
-    const optional = decision.options.findIndex(
-      (option) => option.description === (graft ? 'Yes' : 'No'),
-    );
-    return { index: pass >= 0 ? pass : optional >= 0 ? optional : 0, targets: new Map() };
-  });
+  pump(
+    runPrioritySequence(ctx),
+    (decision) => {
+      asked.push(decision.decisionType);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      const optional = decision.options.findIndex(
+        (option) => option.description === (graft ? 'Yes' : 'No'),
+      );
+      return { index: pass >= 0 ? pass : optional >= 0 ? optional : 0, targets: new Map() };
+    },
+    { strict: true },
+  );
 }
 function cast(ctx: GameContext, asked: string[] = []) {
   const card = conjure(ctx, 'P1', pin.card, 'hand');
@@ -222,14 +226,14 @@ describe('Cytoplast Manipulator (PR08.06)', () => {
 
     // A noncreature permanent entering does not trigger Graft.
     const relic = conjure(ctx, 'P2', oracle({ name: 'Graft Relic', typeLine: 'Artifact' }), 'hand');
-    pump(moveObject(ctx, relic, { zone: 'battlefield', controllerId: 'P2' }));
+    pumpStrict(moveObject(ctx, relic, { zone: 'battlefield', controllerId: 'P2' }));
     expect(ctx.state.pendingTriggers).toHaveLength(0);
     expect(source.counters['+1/+1']).toBe(2);
 
     // Graft needs a +1/+1 counter on the source when the creature enters.
     source.counters['+1/+1'] = 0;
     const late = conjure(ctx, 'P2', bear('Late Receiver'), 'hand');
-    pump(moveObject(ctx, late, { zone: 'battlefield', controllerId: 'P2' }));
+    pumpStrict(moveObject(ctx, late, { zone: 'battlefield', controllerId: 'P2' }));
     expect(ctx.state.pendingTriggers).toHaveLength(0);
   });
   it('cytoplast-last-graft-dies — transferring both counters through separate triggers leaves a 0/0 that dies to state-based actions', () => {

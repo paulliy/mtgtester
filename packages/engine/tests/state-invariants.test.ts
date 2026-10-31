@@ -19,7 +19,7 @@ import {
   gameConfig,
   giantGrowth,
   mountain,
-  pump,
+  pumpStrict,
   spawn,
 } from './fixtures';
 
@@ -105,7 +105,7 @@ describe('state invariants', () => {
         const ctx = game();
         if (strict) ctx.strictInvariants = true;
         ctx.state.players[0]!.life = Number.NaN;
-        const run = () => pump(priorityCheckpoint(ctx));
+        const run = () => pumpStrict(priorityCheckpoint(ctx));
         if (strict) {
           expect(run).toThrow(EngineInvariantError);
           expect(run).toThrow(/at state: P1's life is NaN/);

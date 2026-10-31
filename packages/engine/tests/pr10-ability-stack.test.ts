@@ -46,15 +46,9 @@ const hand = (ctx: GameContext, playerId: string) => p(ctx, playerId).hand.lengt
 /**
  * An answer that records every unforced decision's type into `seen`, says yes to a yes/no "use
  * this ability?" (so a wrongly optional trigger still runs instead of throwing) and otherwise
- * defers to `answer`, or takes option 0.
+ * defers to `answer`.
  */
-function recording(
-  seen: string[],
-  answer: (decision: PendingDecision) => DecisionOutcome = () => ({
-    index: 0,
-    targets: new Map(),
-  }),
-) {
+function recording(seen: string[], answer: (decision: PendingDecision) => DecisionOutcome) {
   return (decision: PendingDecision): DecisionOutcome => {
     seen.push(decision.decisionType);
     return decision.decisionType === 'optionalTrigger'
@@ -353,7 +347,12 @@ describe('PR10.21 Mister Fantastic', () => {
     settle(ctx);
     queueStepTriggers(ctx, 'beginningOfCombat');
     const seen: string[] = [];
-    settle(ctx, recording(seen));
+    settle(
+      ctx,
+      recording(seen, (decision) => {
+        throw new Error(`nothing else is asked:\n${decision.prompt}`);
+      }),
+    );
     expect(hand(ctx, 'P1')).toBe(before + 1);
     // The draw is mandatory: nobody is asked "use this ability?".
     expect(seen).not.toContain('optionalTrigger');
@@ -401,7 +400,7 @@ describe('PR10.10 Verrak, Warped Sengir', () => {
     expect(p(ctx, 'P1').life).toBe(38);
     expect(ctx.state.stack.at(-1)!.kind).toBe('triggeredAbility');
     const seen: string[] = [];
-    pump(resolveTopOfStack(ctx), recording(seen, choose('Pay 2 life')));
+    pump(resolveTopOfStack(ctx), recording(seen, choose('Pay 2 life')), { strict: true });
     // The trigger is mandatory; the only question is the "pay 2 life?" in its own effect.
     expect(seen).not.toContain('optionalTrigger');
     expect(p(ctx, 'P1').life).toBe(36);

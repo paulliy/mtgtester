@@ -172,24 +172,28 @@ function resolveGrenzo(ctx: GameContext, mode: 'goad' | 'exile', targetId?: stri
   )!;
   const attackers = [grenzo];
   const ids = new Set(attackers.map((attacker) => attacker.id));
-  return pump(runCombatPhase(ctx), (d) => {
-    if (d.decisionType === 'declareAttackers')
-      return declareAttacks(d, (id) => (ids.has(id) ? 'P2' : null));
-    // Grenzo's trigger is mandatory: its mode is chosen, never a "use this ability?" question.
-    expect(d.decisionType).not.toBe('optionalTrigger');
-    if (d.options.some((option) => /Goad|Exile their top card/.test(option.description)))
-      return choose(d, mode === 'goad' ? /Goad/ : /Exile their top card/);
-    if (d.decisionType === 'declareBlockers') return declareNoBlocks(d);
-    if (d.decisionType === 'chooseTargets') {
-      if (targetId !== undefined) {
-        const targetSlot = d.options[0]?.targets?.find((slot) => slot.options.includes(targetId));
-        if (targetSlot !== undefined)
-          return { index: 0, targets: new Map([[targetSlot.slot, targetId]]) };
+  return pump(
+    runCombatPhase(ctx),
+    (d) => {
+      if (d.decisionType === 'declareAttackers')
+        return declareAttacks(d, (id) => (ids.has(id) ? 'P2' : null));
+      // Grenzo's trigger is mandatory: its mode is chosen, never a "use this ability?" question.
+      expect(d.decisionType).not.toBe('optionalTrigger');
+      if (d.options.some((option) => /Goad|Exile their top card/.test(option.description)))
+        return choose(d, mode === 'goad' ? /Goad/ : /Exile their top card/);
+      if (d.decisionType === 'declareBlockers') return declareNoBlocks(d);
+      if (d.decisionType === 'chooseTargets') {
+        if (targetId !== undefined) {
+          const targetSlot = d.options[0]?.targets?.find((slot) => slot.options.includes(targetId));
+          if (targetSlot !== undefined)
+            return { index: 0, targets: new Map([[targetSlot.slot, targetId]]) };
+        }
+        return { index: 0, targets: new Map() };
       }
-      return { index: 0, targets: new Map() };
-    }
-    return d.decisionType === 'priority' ? pass(d) : pass(d);
-  });
+      return d.decisionType === 'priority' ? pass(d) : pass(d);
+    },
+    { strict: true },
+  );
 }
 
 describe('PR09 Trickery and Grenzo', () => {
@@ -419,15 +423,19 @@ describe('PR09 Trickery and Grenzo', () => {
     foeAttacker.summoningSick = false;
     setTop(foeCtx, 'P3', [simpleSpell('Foe Damage Sentinel')]);
     Object.assign(foeCtx.state, { currentTurnPlayer: 'P2', activePlayerIndex: 1 });
-    const foeResult = pump(runCombatPhase(foeCtx), (d) => {
-      if (d.decisionType === 'declareAttackers')
-        return declareAttacks(d, (id) => (id === foeAttacker.id ? 'P3' : null));
-      expect(d.options.map((option) => option.description).join(' | ')).not.toMatch(
-        /Goad|Exile their top card/,
-      );
-      if (d.decisionType === 'declareBlockers') return declareNoBlocks(d);
-      return pass(d);
-    });
+    const foeResult = pump(
+      runCombatPhase(foeCtx),
+      (d) => {
+        if (d.decisionType === 'declareAttackers')
+          return declareAttacks(d, (id) => (id === foeAttacker.id ? 'P3' : null));
+        expect(d.options.map((option) => option.description).join(' | ')).not.toMatch(
+          /Goad|Exile their top card/,
+        );
+        if (d.decisionType === 'declareBlockers') return declareNoBlocks(d);
+        return pass(d);
+      },
+      { strict: true },
+    );
     expect(foeResult.decisions.length).toBeGreaterThan(0);
     expect(p(foeCtx, 'P3').life).toBe(38);
     expect(foeCtx.state.exile).toHaveLength(0);

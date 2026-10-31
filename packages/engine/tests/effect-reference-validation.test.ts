@@ -9,7 +9,7 @@ import { executeAbility } from '../src/effects/resolve';
 import { EngineInvariantError } from '../src/errors';
 import { createGame } from '../src/state/game';
 import { FABLED_PASSAGE_CANDIDATE } from '../src/cards/overrides/queen-marchesa-queens-gambit';
-import { copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import { copies, forest, gameConfig, oracle, pumpStrict, spawn } from './fixtures';
 
 const land = interpretCard(oracle({ name: 'Reference Probe', typeLine: 'Land', oracleText: '' }));
 
@@ -127,6 +127,8 @@ describe('an unset binding at resolution (ADR 0034 decision 2)', () => {
     const [, , untap] = passageEffects();
     const ability: Ability = { kind: 'activated', targets: [], effects: [untap as Effect] };
 
-    expect(() => pump(executeAbility(ctx, source, ability, []))).toThrow(EngineInvariantError);
+    expect(() => pumpStrict(executeAbility(ctx, source, ability, []))).toThrow(
+      EngineInvariantError,
+    );
   });
 });

@@ -16,7 +16,7 @@ import { computeCharacteristics } from '../src/effects/continuous';
 import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
-import { copies, forest, gameConfig, oracle, pick, pump, spawn } from './fixtures';
+import { copies, forest, gameConfig, oracle, pick, pump, pumpStrict, spawn } from './fixtures';
 
 const effect: Effect = { op: 'amass', subtype: 'Orc', count: constant(1) };
 const ability = spell({ effects: [effect], description: 'Amass Orcs 1' });
@@ -50,9 +50,7 @@ const armiesOf = (ctx: GameContext, seat: string) =>
 describe('amass primitive contract', () => {
   it('executes through a real spell or ability, with the engine path', () => {
     const ctx = game();
-    pump(executeAbility(ctx, source(ctx), ability, []), () => {
-      throw new Error('one new Army is chosen without a question');
-    });
+    pumpStrict(executeAbility(ctx, source(ctx), ability, []));
     const [token] = armiesOf(ctx, 'P1');
     expect(armiesOf(ctx, 'P1')).toHaveLength(1);
     expect(token!.isToken).toBe(true);
@@ -62,9 +60,7 @@ describe('amass primitive contract', () => {
     expect([chars.power, chars.toughness]).toEqual([1, 1]);
 
     // A second amass grows the same Army rather than making another.
-    pump(executeAbility(ctx, source(ctx), ability, []), () => {
-      throw new Error('one Army is chosen without a question');
-    });
+    pumpStrict(executeAbility(ctx, source(ctx), ability, []));
     expect(armiesOf(ctx, 'P1')).toHaveLength(1);
     expect(token!.counters['+1/+1']).toBe(2);
   });
@@ -77,10 +73,14 @@ describe('amass primitive contract', () => {
     const other = spawn(ctx, 'P1', army('Contract Elf Army', 'Elf'));
     spawn(ctx, 'P2', army('Contract Rival Army', 'Orc'));
     const asked: string[][] = [];
-    pump(executeAbility(ctx, source(ctx), ability, []), (decision) => {
-      asked.push(decision.options.map((option) => option.description));
-      return pick(decision, /Contract Zombie Army/);
-    });
+    pump(
+      executeAbility(ctx, source(ctx), ability, []),
+      (decision) => {
+        asked.push(decision.options.map((option) => option.description));
+        return pick(decision, /Contract Zombie Army/);
+      },
+      { strict: true },
+    );
     expect(asked).toHaveLength(1);
     expect(asked[0]!.join(' | ')).not.toMatch(/Rival/);
     expect(armiesOf(ctx, 'P1')).toHaveLength(2);

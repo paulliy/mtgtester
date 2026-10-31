@@ -106,10 +106,14 @@ describe('Intermediate Chirography', () => {
     loseLife(ctx, player(ctx, 'P1'), 2);
     // "Target creature you control": the targets offered are P1's creatures, never the opponent's.
     const offered: string[] = [];
-    pump(priorityCheckpoint(ctx), (decision) => {
-      for (const slot of decision.options[0]?.targets ?? []) offered.push(...slot.options);
-      return { index: 0, targets: new Map([[0, mine.id]]) };
-    });
+    pump(
+      priorityCheckpoint(ctx),
+      (decision) => {
+        for (const slot of decision.options[0]?.targets ?? []) offered.push(...slot.options);
+        return { index: 0, targets: new Map([[0, mine.id]]) };
+      },
+      { strict: true },
+    );
     expect(offered).toContain(mine.id);
     expect(offered).not.toContain(theirs.id);
     const trigger = ctx.state.stack.at(-1)!;

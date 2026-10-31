@@ -18,7 +18,18 @@ import { createGame } from '../src/state/game';
 import { moveObject } from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
 import { runPrioritySequence } from '../src/turn/priority';
-import { bear, conjure, copies, forest, gameConfig, island, oracle, pump, spawn } from './fixtures';
+import {
+  bear,
+  conjure,
+  copies,
+  forest,
+  gameConfig,
+  island,
+  oracle,
+  pump,
+  pumpStrict,
+  spawn,
+} from './fixtures';
 
 function pod(players: number, seed: string): GameContext {
   const ctx = createGame(
@@ -71,6 +82,7 @@ function resolveOutOfRange(ctx: GameContext, effects: Effect[], prompt: RegExp):
     pump(
       executeAbility(ctx, permanentSource(holder), triggered(effects), []),
       outOfRangeOn(prompt),
+      { strict: true },
     ),
   );
 }
@@ -129,7 +141,11 @@ describe('an out-of-range answer at an optionAt site throws EngineInvariantError
       },
     };
     const site = invariantSite(() =>
-      pump(executeAbility(ctx, permanentSource(holder), ability, []), outOfRangeOn(/choose modes/)),
+      pump(
+        executeAbility(ctx, permanentSource(holder), ability, []),
+        outOfRangeOn(/choose modes/),
+        { strict: true },
+      ),
     );
     expect(site).toBe('resolve.executeAbility.modes');
   });
@@ -283,6 +299,7 @@ describe('an out-of-range answer at an optionAt site throws EngineInvariantError
           { combat: false, sourceIsCommander: false, sourceHasLifelink: false },
         ),
         outOfRangeOn(/Choose which effect applies first/),
+        { strict: true },
       ),
     );
     expect(site).toBe('damageModifiers.applyDamageModifiers');
@@ -308,12 +325,15 @@ describe('an out-of-range answer at an optionAt site throws EngineInvariantError
       }),
       'hand',
     );
-    pump(moveObject(ctx, sporesinger, { zone: 'battlefield', controllerId: 'P1' }));
+    pumpStrict(moveObject(ctx, sporesinger, { zone: 'battlefield', controllerId: 'P1' }));
     const site = invariantSite(() =>
-      pump(priorityCheckpoint(ctx), (decision) =>
-        decision.options.some((option) => option.type === 'chooseModes')
-          ? { index: decision.options.length, targets: new Map() }
-          : { index: 0, targets: new Map() },
+      pump(
+        priorityCheckpoint(ctx),
+        (decision) =>
+          decision.options.some((option) => option.type === 'chooseModes')
+            ? { index: decision.options.length, targets: new Map() }
+            : { index: 0, targets: new Map() },
+        { strict: true },
       ),
     );
     expect(site).toBe('sba.pushTriggerOnStack.modes');
@@ -351,21 +371,25 @@ describe('an out-of-range answer at an optionAt site throws EngineInvariantError
       ability: trigger as Ability,
     });
     const site = invariantSite(() =>
-      pump(runPrioritySequence(ctx), (decision) => {
-        if (/how much of the remaining/.test(decision.prompt))
-          return { index: decision.options.length, targets: new Map() };
-        // Take the first two targets, then stop.
-        if (/choose (a|another) target/.test(decision.prompt)) {
-          const stop = decision.options.findIndex((option) => option.type === 'decline');
-          const taken = decision.prompt.includes('(0/')
-            ? 0
-            : decision.prompt.includes('(1/')
-              ? 1
-              : 2;
-          return { index: taken < 2 || stop < 0 ? 0 : stop, targets: new Map() };
-        }
-        return { index: 0, targets: new Map() };
-      }),
+      pump(
+        runPrioritySequence(ctx),
+        (decision) => {
+          if (/how much of the remaining/.test(decision.prompt))
+            return { index: decision.options.length, targets: new Map() };
+          // Take the first two targets, then stop.
+          if (/choose (a|another) target/.test(decision.prompt)) {
+            const stop = decision.options.findIndex((option) => option.type === 'decline');
+            const taken = decision.prompt.includes('(0/')
+              ? 0
+              : decision.prompt.includes('(1/')
+                ? 1
+                : 2;
+            return { index: taken < 2 || stop < 0 ? 0 : stop, targets: new Map() };
+          }
+          return { index: 0, targets: new Map() };
+        },
+        { strict: true },
+      ),
     );
     expect(site).toBe('sba.pushTriggerOnStack.division');
   });

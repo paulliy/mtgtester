@@ -10,7 +10,7 @@ import { addMana } from '../src/mana/pool';
 import { moveObject } from '../src/state/objects';
 import { resolveTopOfStack } from '../src/stack/stack';
 import type { EnginePermanent, GameContext } from '../src/state/types';
-import { bear, conjure, declareAttacks, oracle, pump, spawn } from './fixtures';
+import { bear, conjure, declareAttacks, oracle, pump, pumpStrict, spawn } from './fixtures';
 import {
   anyMana,
   battlefield,
@@ -269,13 +269,13 @@ describe('Mila, Crafty Companion // Lukka, Wayward Bonder', () => {
     expect(lukka.counters['loyalty'] ?? 0).toBe(0);
     expect(player(ctx, 'P1').emblems).toHaveLength(1);
     // Only creatures entering under your control trigger the emblem.
-    pump(
+    pumpStrict(
       moveObject(ctx, conjure(ctx, 'P1', relic(), 'hand'), {
         zone: 'battlefield',
         controllerId: 'P1',
       }),
     );
-    pump(
+    pumpStrict(
       moveObject(ctx, conjure(ctx, 'P2', bear(), 'hand'), {
         zone: 'battlefield',
         controllerId: 'P2',
