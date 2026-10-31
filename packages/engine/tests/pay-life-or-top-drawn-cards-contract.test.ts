@@ -53,7 +53,6 @@ describe('payLifeOrTopDrawnCards primitive contract', () => {
     conjure(ctx, 'P1', bear(), 'hand');
     // Library top: Test Bolt, then Forests. Draw two: Bolt and a Forest, both drawn this turn.
     conjure(ctx, 'P1', bolt(), 'library');
-    p1.library.unshift(p1.library.pop()!);
     pump(drawCards(ctx, p1, 2), () => {
       throw new Error('drawing asks nothing');
     });
@@ -69,7 +68,7 @@ describe('payLifeOrTopDrawnCards primitive contract', () => {
     // The Bear was not drawn this turn, so it is never offered.
     expect(asked[0]!.some((description) => description.includes('Test Bear'))).toBe(false);
     expect(asked).toEqual([
-      ['Choose Forest', 'Choose Test Bolt'],
+      ['Choose Test Bolt', 'Choose Forest'],
       ['Pay 4 life: keep Test Bolt', 'Put Test Bolt on top of your library'],
       ['Pay 4 life: keep Forest', 'Put Forest on top of your library'],
     ]);
