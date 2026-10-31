@@ -6,8 +6,10 @@
  */
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useTableStore } from '../stores/table';
 
 const router = useRouter();
+const table = useTableStore();
 const secret = ref('');
 const error = ref<string | null>(null);
 const busy = ref(false);
@@ -30,11 +32,8 @@ async function create(): Promise<void> {
       error.value = body.error ?? 'The table could not be created.';
       return;
     }
-    try {
-      localStorage.setItem(`mtg-table-host:${body.tableId}`, body.hostToken);
-    } catch {
-      // Storage blocked: the host role lasts as long as this tab.
-    }
+    // Kept in this tab even when storage is blocked, so the table's page can still claim host.
+    table.storeHostToken(body.tableId, body.hostToken);
     const invite = body.inviteUrl?.split('#')[1] ?? '';
     secret.value = '';
     await router.push({ name: 'table', params: { id: body.tableId }, hash: `#${invite}` });

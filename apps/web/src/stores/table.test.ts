@@ -370,4 +370,27 @@ describe('table store', () => {
     sockets[0]!.deliver({ type: 'replayTurnState', payload: { turn: 1, state: { seats: [] } } });
     expect(table.replayTurn?.turn).toBe(1);
   });
+  it('keeps a new table’s host token in the tab when storage writes throw, and authenticates with it', () => {
+    // A full quota or a private window: reads find nothing and every write throws.
+    const blocked = () => {
+      throw new Error('QuotaExceededError');
+    };
+    vi.stubGlobal('localStorage', { getItem: () => null, setItem: blocked, removeItem: blocked });
+    try {
+      const { table } = setup();
+      table.storeHostToken('t1', 'host-token');
+      table.open('t1');
+      sockets[0]!.open();
+      expect(sockets[0]!.sent[0]).toEqual({
+        type: 'hostAuth',
+        payload: { hostToken: 'host-token' },
+      });
+    } finally {
+      vi.stubGlobal('localStorage', {
+        getItem: (key: string) => memory.get(key) ?? null,
+        setItem: (key: string, value: string) => memory.set(key, value),
+        removeItem: (key: string) => memory.delete(key),
+      });
+    }
+  });
 });

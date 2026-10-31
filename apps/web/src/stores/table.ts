@@ -77,21 +77,30 @@ function socketUrl(tableId: string): string {
 const seatKey = (tableId: string): string => `mtg-table-seat:${tableId}`;
 const hostKey = (tableId: string): string => `mtg-table-host:${tableId}`;
 
-function readStored(key: string): string | null {
+/**
+ * Read a stored token: storage first, then `tab`, this tab's own copy. Storage can be blocked or
+ * throw (a private window, a full quota); the tokens then last as long as the tab instead of being
+ * lost on the way to the table's page.
+ */
+function readStored(key: string, tab: Map<string, string>): string | null {
   try {
-    return typeof localStorage === 'undefined' ? null : localStorage.getItem(key);
+    const stored = typeof localStorage === 'undefined' ? null : localStorage.getItem(key);
+    if (stored !== null) return stored;
   } catch {
-    return null;
+    // Storage blocked: fall back to this tab's copy.
   }
+  return tab.get(key) ?? null;
 }
 
-function writeStored(key: string, value: string | null): void {
+function writeStored(key: string, value: string | null, tab: Map<string, string>): void {
+  if (value === null) tab.delete(key);
+  else tab.set(key, value);
   try {
     if (typeof localStorage === 'undefined') return;
     if (value === null) localStorage.removeItem(key);
     else localStorage.setItem(key, value);
   } catch {
-    // Storage blocked: the seat lasts as long as the tab.
+    // Storage blocked: the token lasts as long as the tab.
   }
 }
 
@@ -121,6 +130,10 @@ export const useTableStore = defineStore('table', () => {
   const deckProblems = ref<TableDeckProblem[]>([]);
   const seatToken = ref<string | null>(null);
   const hostToken = ref<string | null>(null);
+  /** This tab's copy of the tokens it stored (see `readStored`). */
+  const tabTokens = new Map<string, string>();
+  const read = (key: string): string | null => readStored(key, tabTokens);
+  const write = (key: string, value: string | null): void => writeStored(key, value, tabTokens);
   const clocks = ref<Record<string, SeatClock>>({});
   const seatStatus = ref<Record<string, SeatStatusPayload>>({});
   const results = ref<TableResultsPayload | null>(null);
@@ -171,8 +184,8 @@ export const useTableStore = defineStore('table', () => {
     if (tableId.value !== id) {
       close();
       tableId.value = id;
-      seatToken.value = readStored(seatKey(id));
-      hostToken.value = readStored(hostKey(id));
+      seatToken.value = read(seatKey(id));
+      hostToken.value = read(hostKey(id));
       state.value = null;
       results.value = null;
       replayUnlock.value = null;
@@ -265,8 +278,8 @@ export const useTableStore = defineStore('table', () => {
     if (tableId.value === null) return;
     seatToken.value = null;
     hostToken.value = null;
-    writeStored(seatKey(tableId.value), null);
-    writeStored(hostKey(tableId.value), null);
+    write(seatKey(tableId.value), null);
+    write(hostKey(tableId.value), null);
   }
 
   /**
@@ -282,7 +295,7 @@ export const useTableStore = defineStore('table', () => {
     if (!resumePending) return false;
     resumePending = false;
     seatToken.value = null;
-    if (tableId.value !== null) writeStored(seatKey(tableId.value), null);
+    if (tableId.value !== null) write(seatKey(tableId.value), null);
     return true;
   }
 
@@ -305,7 +318,7 @@ export const useTableStore = defineStore('table', () => {
         // A host-auth frame before resume has no prior seat, so retain stored tokens then.
         if (seatOnSocket !== null && message.payload.you.seat === null) {
           seatToken.value = null;
-          if (tableId.value !== null) writeStored(seatKey(tableId.value), null);
+          if (tableId.value !== null) write(seatKey(tableId.value), null);
         }
         seatOnSocket = message.payload.you.seat;
         if (message.payload.you.isHost) hostAuthPending = false;
@@ -317,7 +330,7 @@ export const useTableStore = defineStore('table', () => {
         return;
       case 'seatGranted':
         seatToken.value = message.payload.seatToken;
-        if (tableId.value !== null) writeStored(seatKey(tableId.value), message.payload.seatToken);
+        if (tableId.value !== null) write(seatKey(tableId.value), message.payload.seatToken);
         resume();
         return;
       case 'deckProblems':
@@ -383,9 +396,13 @@ export const useTableStore = defineStore('table', () => {
   function leaveSeat(): void {
     sendFrame({ type: 'leaveSeat', payload: {} });
   }
+  /** Keep the host token a new table returned, for the table's page to authenticate with. */
+  function storeHostToken(id: string, token: string): void {
+    write(hostKey(id), token);
+  }
   function becomeHost(token: string): void {
     hostToken.value = token;
-    if (tableId.value !== null) writeStored(hostKey(tableId.value), token);
+    if (tableId.value !== null) write(hostKey(tableId.value), token);
     sendFrame({ type: 'hostAuth', payload: { hostToken: token } });
   }
   function approve(claimId: string): void {
@@ -418,6 +435,7 @@ export const useTableStore = defineStore('table', () => {
 
   return {
     tableId,
+    storeHostToken,
     connection,
     state,
     deckProblems,
