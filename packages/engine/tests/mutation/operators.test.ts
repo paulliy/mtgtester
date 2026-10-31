@@ -46,6 +46,12 @@ const probe = {
       targets: [{ kind: 'creature', controller: 'opponent' }, { kind: 'player' }],
       effects: [gain(1), { op: 'draw' }],
     },
+    {
+      kind: 'triggered',
+      trigger: { when: 'attacks', subject: { kind: 'self' } },
+      targets: [],
+      effects: [{ op: 'exileLibraryTop', player: 'each', castFree: true }],
+    },
   ],
   spellAbility: {
     kind: 'spell',
@@ -87,6 +93,10 @@ describe('IR mutation operators', () => {
       'triggers[0] | triggers[0]: widen trigger subject (drop condition 1)',
       'triggers[0] | triggers[0].effects[0].amount: const 1 + 1',
       'triggers[0] | triggers[0].effects[0].amount: const 1 - 1',
+      'triggers[1] | triggers[1]: drop effect 0',
+      'triggers[1] | triggers[1]: drop effect 0 castFree',
+      'triggers[1] | triggers[1]: narrow effect 0 player each to you',
+      'triggers[1] | triggers[1]: flip optional to true',
     ]);
     expect(unmutatedParts(probe)).toEqual([]);
   });

@@ -829,9 +829,14 @@ export type Effect =
   | { op: 'revealCreatureOrBottom' }
   /** CR 701.44: the permanent's current (or last) controller performs the exploration. */
   | { op: 'explore'; target: EffectRef }
+  /**
+   * Exile the top card of a library. `player: 'each'` exiles the top card of each player's library;
+   * with `castFree`, "then you may cast any number of spells from among those cards without paying
+   * their mana costs" (Etali, Primal Storm), chosen one at a time.
+   */
   | {
       op: 'exileLibraryTop';
-      player: 'you' | 'eventPlayer';
+      player: 'you' | 'eventPlayer' | 'each';
       castFree?: true;
       grantCastUntilEot?: true;
       spendAsAnyColor?: true;

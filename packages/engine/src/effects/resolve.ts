@@ -5622,6 +5622,45 @@ function* executeAbilityEffects(
         break;
       }
       case 'exileLibraryTop': {
+        if (effect.player === 'each') {
+          if (effect.grantCastUntilEot === true)
+            throw new Error('exileLibraryTop for each player grants no cast permission');
+          const exiled: EngineCardObject[] = [];
+          for (const player of playersInApnapOrder(ctx)) {
+            const top = player.hasLost ? undefined : player.library[0];
+            if (top === undefined) continue;
+            const moved = yield* moveObject(ctx, top, { zone: 'exile' });
+            if (moved?.zone === 'exile') exiled.push(moved);
+          }
+          // Each spell is cast, onto the stack, before the next is chosen (CR 608.2g); a land
+          // among them can't be cast and stays in exile.
+          while (effect.castFree === true) {
+            const eligible = exiled.filter(
+              (card) =>
+                ctx.state.exile.includes(card) && freeCardIsCastable(ctx, card, controller.id),
+            );
+            if (eligible.length === 0) break;
+            const outcome = yield {
+              decisionType: 'general',
+              player: controller.id,
+              prompt: `${source.name}: cast any number of the exiled spells without paying their mana costs. Choose one or Done.`,
+              options: [
+                ...eligible.map((card) =>
+                  cardOption(ctx, card, {
+                    type: 'castFree',
+                    description: `Cast ${card.name} without paying its mana cost`,
+                    verb: 'Cast for free',
+                  }),
+                ),
+                plainOption({ type: 'decline', description: 'Cast no more spells', verb: 'Done' }),
+              ],
+            };
+            const chosen = eligible[outcome.index];
+            if (chosen === undefined) break;
+            yield* resolveFreeCard(ctx, chosen, controller.id);
+          }
+          break;
+        }
         const player = effect.player === 'eventPlayer' ? drawRecipient('eventPlayer') : controller;
         const top = player.library[0];
         if (top === undefined) break;

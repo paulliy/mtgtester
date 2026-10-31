@@ -67,6 +67,18 @@ function abilityMutants(node: Node, path: Path, add: AddMutant): void {
       removeAt(ability['effects'] as unknown[], index),
     ),
   );
+  // Etali without its free casts only exiles; with "each" narrowed it exiles only your top card.
+  (effects as Node[]).forEach((effect, index) => {
+    if (effect['op'] !== 'exileLibraryTop') return;
+    if (effect['castFree'] === true)
+      add(path, `drop effect ${index} castFree`, (ability) => {
+        delete (ability['effects'] as Node[])[index]!['castFree'];
+      });
+    if (effect['player'] === 'each')
+      add(path, `narrow effect ${index} player each to you`, (ability) => {
+        (ability['effects'] as Node[])[index]!['player'] = 'you';
+      });
+  });
   const targets = node['targets'] as Node[];
   targets.forEach((target, index) => {
     const narrowing = ['filter', 'controller', 'tapState'].filter((key) => key in target);
