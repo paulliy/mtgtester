@@ -438,6 +438,37 @@ const DEFS: ScenarioDef[] = [
     lines: [3],
     p1Field: ["Bolas's Citadel", 'Swamp', ...Array<string>(9).fill('Pilot Lab Relic')],
   },
+  {
+    id: 'pilot-current-etali-primal-storm-viewer-cast-both',
+    cardName: 'Etali, Primal Storm',
+    title: "Etali: attack, then cast your own and P2's exiled spells free",
+    instructions: [
+      'Attack P2 with Etali, Primal Storm.',
+      "When its trigger resolves, cast P2's Pilot Lab Saproling, then your Pilot Lab Red Sorcery, both free.",
+    ],
+    expectedOutcome:
+      "You get a Saproling and gain 2 life; P3's and P4's lands stay in exile, and Etali deals 6 to P2.",
+    lines: [1],
+    p1Field: ['Etali, Primal Storm'],
+    p1Top: ['Pilot Lab Red Sorcery'],
+    p1TopUndrawn: true,
+    p2Top: ['Pilot Lab Saproling'],
+    prepared: { continueThroughCombat: true },
+  },
+  {
+    id: 'pilot-current-etali-primal-storm-viewer-cast-none',
+    cardName: 'Etali, Primal Storm',
+    title: 'Etali: attack and cast nothing',
+    instructions: [
+      'Attack P2 with Etali, Primal Storm.',
+      'When its trigger resolves, choose Done.',
+    ],
+    expectedOutcome: "Each player's top card stays in exile; nothing is cast.",
+    lines: [1],
+    p1Field: ['Etali, Primal Storm'],
+    p2Top: ['Pilot Lab Saproling'],
+    prepared: { continueThroughCombat: true },
+  },
 ];
 
 export const PILOT_CURRENT_SCENARIOS = DEFS.map(({ id, cardName, title }) => ({

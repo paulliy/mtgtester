@@ -887,3 +887,148 @@ describe("Bolas's Citadel", () => {
     expect(playerById(ctx, 'P1').life).toBe(40);
   });
 });
+
+describe('Etali, Primal Storm', () => {
+  const etali = () => pinStore.get('Etali, Primal Storm');
+  /** A four-player game in P1's precombat main phase. */
+  const fourPlayers = (seed: string): GameContext => {
+    const ctx = createGame(
+      gameConfig(
+        [0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })),
+        { seed },
+      ),
+    );
+    ctx.state.currentTurnPlayer = 'P1';
+    ctx.state.activePlayerIndex = 0;
+    ctx.state.turnNumber = 3;
+    ctx.state.phase = 'precombatMain';
+    ctx.state.step = null;
+    return ctx;
+  };
+  /** Put `card` on top of `seat`'s library. */
+  const onTop = (ctx: GameContext, seat: string, card: ReturnType<typeof bear>) => {
+    const placed = conjure(ctx, seat as 'P1', card, 'library');
+    const library = playerById(ctx, seat as 'P1').library;
+    library.splice(library.indexOf(placed), 1);
+    library.unshift(placed);
+    return placed;
+  };
+  const sorcery = (name: string) => spellCard(name, '{3}{R}', ['R']);
+  /** Each player's top card: P1 and P2 a sorcery, P3 a Forest, P4 a creature. */
+  const setUp = (seed: string) => {
+    const ctx = fourPlayers(seed);
+    const source = spawn(ctx, 'P1', etali());
+    onTop(ctx, 'P1', sorcery('Pilot Own Sorcery'));
+    onTop(ctx, 'P2', sorcery('Pilot Their Sorcery'));
+    onTop(ctx, 'P3', forest());
+    onTop(ctx, 'P4', bear());
+    conjure(ctx, 'P1', sorcery('Pilot Hand Sorcery'), 'hand');
+    return { ctx, source };
+  };
+  /** Resolve Etali's attack trigger, picking the free casts in `picks` order, then Done. */
+  const resolveTrigger = (ctx: GameContext, source: ReturnType<typeof spawn>, picks: string[]) => {
+    const offered: string[][] = [];
+    const queue = [...picks];
+    pump(
+      executeAbility(ctx, source, ctx.defs.get(source.oracleId)!.triggers[0]!, []),
+      (decision) => {
+        if (decision.prompt.startsWith('Configure free-cast')) return pick(decision, /^Cast /);
+        offered.push(decision.options.map((option) => option.description));
+        const next = queue.shift();
+        return pick(
+          decision,
+          next === undefined ? 'Cast no more spells' : `Cast ${next} without paying its mana cost`,
+        );
+      },
+    );
+    return offered;
+  };
+  const exiled = (ctx: GameContext) => ctx.state.exile.map((card) => card.name).sort();
+
+  it('etali-attack-trigger — attacking triggers it, and the exile is not optional', () => {
+    const ctx = fourPlayers('etali-attack');
+    const source = spawn(ctx, 'P1', etali());
+    source.enteredTurnNumber = 0;
+    onTop(ctx, 'P2', sorcery('Pilot Their Sorcery'));
+    const generator = runCombatPhase(ctx);
+    let outcome: DecisionOutcome | undefined;
+    let stackedIn: string | null = null;
+    /** P1's first decision that is neither priority nor a combat declaration. */
+    let firstQuestion: { prompt: string; exiled: number } | null = null;
+    for (;;) {
+      const step = outcome === undefined ? generator.next() : generator.next(outcome);
+      if (step.done === true) break;
+      const decision = step.value;
+      if (ctx.state.stack.some((entry) => entry.sourceCardId === source.cardId))
+        stackedIn ??= ctx.state.step;
+      if (decision.presentationAttackDeclaration !== undefined)
+        outcome = declareAttacks(decision, (subjectId) => (subjectId === source.id ? 'P2' : null));
+      else if (decision.presentationBlockDeclaration !== undefined)
+        outcome = declareBlocks(decision, () => null);
+      else if (decision.options.some((option) => option.description === 'Pass priority'))
+        outcome = pick(decision, 'Pass priority');
+      else {
+        firstQuestion = { prompt: decision.prompt, exiled: ctx.state.exile.length };
+        break;
+      }
+    }
+    // On the stack in the declare attackers step; resolving it exiles all four top cards before
+    // anything is asked, and the first question is which spell to cast.
+    expect(stackedIn).toBe('declareAttackers');
+    expect(firstQuestion).toEqual({
+      prompt: expect.stringMatching(/cast any number of the exiled spells/),
+      exiled: 4,
+    });
+  });
+
+  it("etali-exile-each-cast-any — each player's top card is exiled; any number of the spells among them are cast free", () => {
+    const { ctx, source } = setUp('etali-cast');
+    const offered = resolveTrigger(ctx, source, ['Pilot Their Sorcery', 'Test Bear']);
+    // The Forest can't be cast; the hand card is not among those cards.
+    expect(offered).toEqual([
+      [
+        'Cast Pilot Own Sorcery without paying its mana cost',
+        'Cast Pilot Their Sorcery without paying its mana cost',
+        'Cast Test Bear without paying its mana cost',
+        'Cast no more spells',
+      ],
+      [
+        'Cast Pilot Own Sorcery without paying its mana cost',
+        'Cast Test Bear without paying its mana cost',
+        'Cast no more spells',
+      ],
+      ['Cast Pilot Own Sorcery without paying its mana cost', 'Cast no more spells'],
+    ]);
+    // Cast by you, for no mana, from another player's library: both go on the stack under you.
+    expect(ctx.state.stack.map((entry) => [entry.card?.name, entry.controllerId])).toEqual([
+      ['Pilot Their Sorcery', 'P1'],
+      ['Test Bear', 'P1'],
+    ]);
+    expect(exiled(ctx)).toEqual(['Forest', 'Pilot Own Sorcery']);
+    for (const seat of ['P1', 'P2', 'P3', 'P4'])
+      expect(playerById(ctx, seat as 'P1').library.every((card) => card.name === 'Forest')).toBe(
+        true,
+      );
+    expect(playerById(ctx, 'P1').hand.map((card) => card.name)).toEqual(['Pilot Hand Sorcery']);
+  });
+
+  it('etali-cast-none — casting nothing leaves all four cards in exile', () => {
+    const { ctx, source } = setUp('etali-none');
+    const offered = resolveTrigger(ctx, source, []);
+    expect(offered).toHaveLength(1);
+    expect(ctx.state.stack).toHaveLength(0);
+    expect(exiled(ctx)).toEqual([
+      'Forest',
+      'Pilot Own Sorcery',
+      'Pilot Their Sorcery',
+      'Test Bear',
+    ]);
+  });
+
+  it('etali-only-lands — with only lands exiled, nothing is asked', () => {
+    const ctx = fourPlayers('etali-lands');
+    const source = spawn(ctx, 'P1', etali());
+    expect(resolveTrigger(ctx, source, [])).toEqual([]);
+    expect(exiled(ctx)).toEqual(['Forest', 'Forest', 'Forest', 'Forest']);
+  });
+});

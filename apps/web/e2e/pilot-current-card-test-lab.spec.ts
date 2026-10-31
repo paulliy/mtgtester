@@ -112,6 +112,19 @@ const libraryTop = (page: Page, name: string): Locator =>
     .filter({ has: page.getByRole('img', { name, exact: true }) })
     .first();
 
+/** Declare Etali, Primal Storm as P2's only attacker. */
+async function attackWithEtali(page: Page): Promise<void> {
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Etali, Primal Storm' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+}
+
 const FLOWS: Record<string, (page: Page) => Promise<void>> = {
   'pilot-current-jet-medallion-viewer-reduced': async (page) => {
     await cast(page, 'Pilot Lab Black Sorcery');
@@ -316,6 +329,31 @@ const FLOWS: Record<string, (page: Page) => Promise<void>> = {
     await expect(life(page, 'P1')).toHaveText('40');
     await expect(permanent(page, 'P1', "Bolas's Citadel")).toHaveCount(0);
     await expect(permanent(page, 'P1', 'Swamp')).toHaveCount(1);
+  },
+  'pilot-current-etali-primal-storm-viewer-cast-both': async (page) => {
+    await attackWithEtali(page);
+    // Each exiled spell is a row with its own button; the Forests from P3 and P4 have none.
+    for (const name of ['Pilot Lab Saproling', 'Pilot Lab Red Sorcery']) {
+      const cast = page
+        .locator('.decision-panel .panel-group')
+        .filter({ hasText: name })
+        .getByRole('button', { name: 'Cast for free', exact: true })
+        .first();
+      await passStackUntil(page, cast);
+      await cast.click();
+    }
+    await passUntil(page, life(page, 'P2').filter({ hasText: '34' }));
+    await expect(life(page, 'P1')).toHaveText('42');
+    await expect(permanent(page, 'P1', 'Saproling')).toHaveCount(1);
+  },
+  'pilot-current-etali-primal-storm-viewer-cast-none': async (page) => {
+    await attackWithEtali(page);
+    const done = page.getByRole('button', { name: /^(Done|Cast no more spells)/ }).first();
+    await passStackUntil(page, done);
+    await done.click();
+    await passUntil(page, life(page, 'P2').filter({ hasText: '34' }));
+    await expect(permanent(page, 'P1', 'Saproling')).toHaveCount(0);
+    await expect(life(page, 'P1')).toHaveText('40');
   },
   'pilot-current-explore-viewer-second-land': async (page) => {
     await playLand(page, 'Forest');

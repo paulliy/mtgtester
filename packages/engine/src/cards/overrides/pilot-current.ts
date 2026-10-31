@@ -1,6 +1,14 @@
 import { searchLibraryCards } from '../effect-builders';
 import { allOf, CHOSEN_SUBTYPE, NONLAND, ofColor, ofType, OTHER, YOURS } from '../selector';
-import { activated, costReductionFor, mana, spell, targetSlots, triggered } from '../templates';
+import {
+  activated,
+  costReductionFor,
+  mana,
+  onAttacks,
+  spell,
+  targetSlots,
+  triggered,
+} from '../templates';
 import { constant } from '../value';
 import { defineCard } from './index';
 
@@ -224,6 +232,22 @@ export function registerPilotCurrentOverrides(): void {
           ],
           effects: [{ op: 'eachOpponentLosesLife', amount: constant(10) }],
           description: 'Each opponent loses 10 life',
+        }),
+      ],
+    },
+  );
+  defineCard(
+    '078def07-ae5d-4591-8db6-d156834aab97',
+    'Etali, Primal Storm',
+    [
+      "Whenever ~ attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana costs.",
+    ],
+    {
+      triggers: [
+        triggered(onAttacks(), {
+          effects: [{ op: 'exileLibraryTop', player: 'each', castFree: true }],
+          description:
+            "Exile the top card of each player's library, then cast any number of those spells free",
         }),
       ],
     },

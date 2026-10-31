@@ -83,6 +83,16 @@ const PLANS: Record<string, Plan> = {
     steps: [{ cast: 'Pilot Lab Doom', targets: ['Pilot Lab Giant'] }],
   },
   'pilot-current-bolas-citadel-viewer-play-land': { steps: [{ play: 'Mountain' }] },
+  'pilot-current-etali-primal-storm-viewer-cast-both': {
+    steps: [],
+    answers: [/^Cast Pilot Lab Saproling without/, /^Cast Pilot Lab Red Sorcery without/],
+    attacks: { 'Etali, Primal Storm': 'P2' },
+  },
+  'pilot-current-etali-primal-storm-viewer-cast-none': {
+    steps: [],
+    answers: [/^Cast no more spells$/],
+    attacks: { 'Etali, Primal Storm': 'P2' },
+  },
   'pilot-current-bolas-citadel-viewer-sacrifice-ten': {
     steps: [{ activate: 'Each opponent loses 10 life' }],
   },
@@ -397,6 +407,28 @@ const CHECKS: Record<string, (result: Result) => void> = {
     ).toEqual(['Swamp']);
     expect(['P1', 'P2', 'P3', 'P4'].map((seat) => r.player(seat).life)).toEqual([40, 30, 30, 30]);
     expect(r.asked).toHaveLength(9);
+  },
+  'pilot-current-etali-primal-storm-viewer-cast-both': (r) => {
+    expect(r.picked).toEqual([
+      'Cast Pilot Lab Saproling without paying its mana cost',
+      'Cast Pilot Lab Red Sorcery without paying its mana cost',
+    ]);
+    expect(r.permanent('Saproling')?.controllerId).toBe('P1');
+    expect(r.player('P1').life).toBe(42);
+    expect(r.player('P2').life).toBe(34);
+    // Cast spells go to their owners' graveyards; the lands stay in exile.
+    expect(zoneNames(r.player('P2').graveyard)).toEqual(['Pilot Lab Saproling']);
+    expect(zoneNames(r.player('P1').graveyard)).toEqual(['Pilot Lab Red Sorcery']);
+    expect(r.state.exile.map((card) => card.ownerId).sort()).toEqual(['P3', 'P4']);
+    expect(r.permanent('Etali, Primal Storm')?.tapped).toBe(true);
+  },
+  'pilot-current-etali-primal-storm-viewer-cast-none': (r) => {
+    expect(r.picked).toEqual(['Cast no more spells']);
+    expect(r.permanent('Saproling')).toBeUndefined();
+    expect(r.state.exile.map((card) => card.ownerId).sort()).toEqual(['P1', 'P2', 'P3', 'P4']);
+    expect(zoneNames(r.state.exile)).toContain('Pilot Lab Saproling');
+    expect(r.player('P2').life).toBe(34);
+    expect(r.permanent('Etali, Primal Storm')?.tapped).toBe(true);
   },
   'pilot-current-untimely-malfunction-viewer-cant-block': (r) => {
     expect(r.done).toEqual(['Untimely Malfunction']);

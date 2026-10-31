@@ -72,6 +72,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'pilot-current-bolas-citadel-viewer-cast-for-life',
       'pilot-current-bolas-citadel-viewer-play-land',
       'pilot-current-bolas-citadel-viewer-sacrifice-ten',
+      'pilot-current-etali-primal-storm-viewer-cast-both',
+      'pilot-current-etali-primal-storm-viewer-cast-none',
       'pr13-master-of-ceremonies-viewer-money',
       'pr13-securitron-squadron-viewer-squad-copy',
       'pr13-securitron-squadron-viewer-nontoken',

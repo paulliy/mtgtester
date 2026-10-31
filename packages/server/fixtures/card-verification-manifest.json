@@ -18245,6 +18245,33 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "078def07-ae5d-4591-8db6-d156834aab97": {
+      "name": "Etali, Primal Storm",
+      "oracleSha256": "4169c3079879b8b42cda02c825e23d42a1b67b2ece0219ba140acba425bec157",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever Etali attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana costs.",
+          "implementation": [
+            "attacks trigger (self)",
+            "exileLibraryTop player each with castFree: each player's top card is exiled in APNAP order, then the cast spells are chosen one at a time with a Done option, each cast free before the next choice; lands are never offered"
+          ],
+          "engineTestIds": [
+            "etali-attack-trigger",
+            "etali-exile-each-cast-any",
+            "etali-cast-none",
+            "etali-only-lands",
+            "pilot-current-etali-primal-storm-viewer-cast-both",
+            "pilot-current-etali-primal-storm-viewer-cast-none"
+          ],
+          "viewerScenarioIds": [
+            "pilot-current-etali-primal-storm-viewer-cast-both",
+            "pilot-current-etali-primal-storm-viewer-cast-none"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }
