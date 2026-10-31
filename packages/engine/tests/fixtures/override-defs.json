@@ -3736,6 +3736,70 @@
     }
   },
   {
+    "oracleId": "2bd111bb-ce02-414c-b5b7-e0e037d8d96b",
+    "name": "Bolas's Citadel",
+    "handledLines": [
+      "You may play lands and cast spells from the top of your library. If you cast a spell this way, pay life equal to its mana value rather than pay its mana cost.",
+      "{T}, Sacrifice ten nonland permanents: Each opponent loses 10 life."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Each opponent loses 10 life",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 10
+                },
+                "op": "eachOpponentLosesLife"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "allowSelf": true,
+              "count": 10,
+              "kind": "sacrificeOther",
+              "selector": {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              }
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "ruleStatics": [
+        {
+          "kind": "lookTopLibrary"
+        },
+        {
+          "filter": {
+            "kind": "type",
+            "value": "Land"
+          },
+          "kind": "playFromZone",
+          "zone": "libraryTop"
+        },
+        {
+          "kind": "castFromZone",
+          "lifeInsteadOfMana": true,
+          "zone": "libraryTop"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "2c0de95f-4269-439c-a1bc-faa11348b185",
     "name": "Necron Overlord",
     "handledLines": [
@@ -25971,6 +26035,70 @@
             },
             "when": "enters"
           }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-bolas-s-citadel",
+    "name": "Bolas's Citadel",
+    "handledLines": [
+      "You may play lands and cast spells from the top of your library. If you cast a spell this way, pay life equal to its mana value rather than pay its mana cost.",
+      "{T}, Sacrifice ten nonland permanents: Each opponent loses 10 life."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Each opponent loses 10 life",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 10
+                },
+                "op": "eachOpponentLosesLife"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "allowSelf": true,
+              "count": 10,
+              "kind": "sacrificeOther",
+              "selector": {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              }
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "ruleStatics": [
+        {
+          "kind": "lookTopLibrary"
+        },
+        {
+          "filter": {
+            "kind": "type",
+            "value": "Land"
+          },
+          "kind": "playFromZone",
+          "zone": "libraryTop"
+        },
+        {
+          "kind": "castFromZone",
+          "lifeInsteadOfMana": true,
+          "zone": "libraryTop"
         }
       ]
     }

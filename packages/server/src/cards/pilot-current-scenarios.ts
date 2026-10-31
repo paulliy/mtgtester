@@ -153,6 +153,8 @@ interface ScenarioDef {
   p1Graveyard?: string[];
   /** P1's library top, below the card it draws for the turn. */
   p1Top?: string[];
+  /** `p1Top` is the top as is: the scenario starts after P1's draw (Bolas's Citadel). */
+  p1TopUndrawn?: true;
   /** P2's library top, as is: P2 draws nothing before P1's main phase. */
   p2Top?: string[];
   p2Hand?: string[];
@@ -399,6 +401,43 @@ const DEFS: ScenarioDef[] = [
     p2Field: ['Pilot Lab Giant', 'Pilot Lab Elf'],
     prepared: { continueThroughCombat: true },
   },
+  {
+    id: 'pilot-current-bolas-citadel-viewer-cast-for-life',
+    cardName: "Bolas's Citadel",
+    title: "Bolas's Citadel: cast the top card of your library for life",
+    instructions: [
+      "Cast Pilot Lab Doom from the top of your library, paying 1 life, targeting P2's Pilot Lab Giant.",
+    ],
+    expectedOutcome:
+      'You pay 1 life rather than {B}, your Swamp stays untapped, and Pilot Lab Giant is destroyed.',
+    lines: [1, 2],
+    p1Field: ["Bolas's Citadel", 'Swamp'],
+    p1Top: ['Pilot Lab Doom'],
+    p1TopUndrawn: true,
+    p2Field: ['Pilot Lab Giant'],
+  },
+  {
+    id: 'pilot-current-bolas-citadel-viewer-play-land',
+    cardName: "Bolas's Citadel",
+    title: "Bolas's Citadel: play a land from the top of your library",
+    instructions: ['Play the Mountain on top of your library.'],
+    expectedOutcome: 'The Mountain enters as your land for the turn, and no life is paid.',
+    lines: [2],
+    p1Field: ["Bolas's Citadel"],
+    p1Top: ['Mountain'],
+    p1TopUndrawn: true,
+  },
+  {
+    id: 'pilot-current-bolas-citadel-viewer-sacrifice-ten',
+    cardName: "Bolas's Citadel",
+    title: "Bolas's Citadel: sacrifice ten nonland permanents",
+    instructions: [
+      "Activate Bolas's Citadel, sacrificing it and your nine Pilot Lab Relics; the Swamp can't be sacrificed.",
+    ],
+    expectedOutcome: 'Each opponent loses 10 life; only your Swamp is left.',
+    lines: [3],
+    p1Field: ["Bolas's Citadel", 'Swamp', ...Array<string>(9).fill('Pilot Lab Relic')],
+  },
 ];
 
 export const PILOT_CURRENT_SCENARIOS = DEFS.map(({ id, cardName, title }) => ({
@@ -543,7 +582,12 @@ export function pilotCurrentScenario(id: string, gameId: GameId): CardTestScenar
       ? {
           libraryTop: [
             ...(def.p1Top?.length
-              ? [{ playerId: 'P1' as const, cardNames: ['Forest', ...def.p1Top] }]
+              ? [
+                  {
+                    playerId: 'P1' as const,
+                    cardNames: def.p1TopUndrawn ? def.p1Top : ['Forest', ...def.p1Top],
+                  },
+                ]
               : []),
             ...(def.p2Top?.length ? [{ playerId: 'P2' as const, cardNames: def.p2Top }] : []),
           ],

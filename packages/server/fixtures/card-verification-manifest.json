@@ -18194,6 +18194,57 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "2bd111bb-ce02-414c-b5b7-e0e037d8d96b": {
+      "name": "Bolas's Citadel",
+      "oracleSha256": "074ac83c600b370254587cec0977f0f9c8be1819fa6b72067e18ffabcdc45fdb",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "You may look at the top card of your library any time.",
+          "implementation": [
+            "lookTopLibrary rule static: the top card is visible to its controller only"
+          ],
+          "engineTestIds": [
+            "bolas-citadel-look",
+            "bolas-citadel-without",
+            "pilot-current-bolas-citadel-viewer-cast-for-life"
+          ],
+          "viewerScenarioIds": ["pilot-current-bolas-citadel-viewer-cast-for-life"]
+        },
+        {
+          "oracleText": "You may play lands and cast spells from the top of your library. If you cast a spell this way, pay life equal to its mana value rather than pay its mana cost.",
+          "implementation": [
+            "playFromZone libraryTop for lands: played as the land drop",
+            "castFromZone libraryTop with lifeInsteadOfMana: the libraryTopLife alternative cost pays life equal to the printed mana value, X=0, and is the only way it is cast"
+          ],
+          "engineTestIds": [
+            "bolas-citadel-cast-for-life",
+            "bolas-citadel-not-enough-life",
+            "bolas-citadel-x-is-zero",
+            "bolas-citadel-play-land",
+            "bolas-citadel-without",
+            "pilot-current-bolas-citadel-viewer-cast-for-life",
+            "pilot-current-bolas-citadel-viewer-play-land"
+          ],
+          "viewerScenarioIds": [
+            "pilot-current-bolas-citadel-viewer-cast-for-life",
+            "pilot-current-bolas-citadel-viewer-play-land"
+          ]
+        },
+        {
+          "oracleText": "{T}, Sacrifice ten nonland permanents: Each opponent loses 10 life.",
+          "implementation": [
+            "activated: tap plus sacrificeOther NONLAND count 10 allowSelf; eachOpponentLosesLife 10"
+          ],
+          "engineTestIds": [
+            "bolas-citadel-sacrifice-ten",
+            "pilot-current-bolas-citadel-viewer-sacrifice-ten"
+          ],
+          "viewerScenarioIds": ["pilot-current-bolas-citadel-viewer-sacrifice-ten"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

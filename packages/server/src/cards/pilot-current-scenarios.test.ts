@@ -79,6 +79,13 @@ const PLANS: Record<string, Plan> = {
   'pilot-current-syr-konrad-viewer-mill-lands': {
     steps: [{ activate: 'Each player mills a card' }],
   },
+  'pilot-current-bolas-citadel-viewer-cast-for-life': {
+    steps: [{ cast: 'Pilot Lab Doom', targets: ['Pilot Lab Giant'] }],
+  },
+  'pilot-current-bolas-citadel-viewer-play-land': { steps: [{ play: 'Mountain' }] },
+  'pilot-current-bolas-citadel-viewer-sacrifice-ten': {
+    steps: [{ activate: 'Each opponent loses 10 life' }],
+  },
   'pilot-current-secluded-courtyard-viewer-activate': {
     steps: [
       { play: 'Secluded Courtyard' },
@@ -362,6 +369,34 @@ const CHECKS: Record<string, (result: Result) => void> = {
       'Pilot Lab Doom',
       'Pilot Lab Giant',
     ]);
+  },
+  'pilot-current-bolas-citadel-viewer-cast-for-life': (r) => {
+    expect(r.done).toEqual(['Pilot Lab Doom']);
+    expect(r.permanent("Bolas's Citadel")?.tapped).toBe(false);
+    expect(r.player('P1').life).toBe(39);
+    expect(r.permanent('Swamp')!.tapped).toBe(false);
+    expect(r.permanent('Pilot Lab Giant')).toBeUndefined();
+    // Offered from the top of the library for life only, never for its mana cost.
+    const casts = r.offered.flat().filter((action) => action.startsWith('Cast Pilot Lab Doom'));
+    expect(new Set(casts)).toEqual(
+      new Set(['Cast Pilot Lab Doom ({0}) by paying 1 life from the top of your library']),
+    );
+  },
+  'pilot-current-bolas-citadel-viewer-play-land': (r) => {
+    expect(r.done).toEqual(['Mountain']);
+    expect(r.permanent("Bolas's Citadel")?.controllerId).toBe('P1');
+    expect(r.permanent('Mountain')?.controllerId).toBe('P1');
+    expect(r.player('P1').landsPlayedThisTurn).toBe(1);
+    expect(r.player('P1').life).toBe(40);
+  },
+  'pilot-current-bolas-citadel-viewer-sacrifice-ten': (r) => {
+    expect(r.done).toEqual(['Each opponent loses 10 life']);
+    expect(zoneNames(r.player('P1').graveyard)).toContain("Bolas's Citadel");
+    expect(
+      r.state.battlefield.filter((perm) => perm.controllerId === 'P1').map((perm) => perm.name),
+    ).toEqual(['Swamp']);
+    expect(['P1', 'P2', 'P3', 'P4'].map((seat) => r.player(seat).life)).toEqual([40, 30, 30, 30]);
+    expect(r.asked).toHaveLength(9);
   },
   'pilot-current-untimely-malfunction-viewer-cant-block': (r) => {
     expect(r.done).toEqual(['Untimely Malfunction']);

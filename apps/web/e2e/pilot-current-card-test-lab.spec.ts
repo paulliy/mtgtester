@@ -105,6 +105,13 @@ async function chooseMalfunctionMode(page: Page, mode: RegExp): Promise<void> {
   if ((await row.count()) > 0) await row.click();
 }
 
+/** The card named `name` in P1's "Top of library" strip. */
+const libraryTop = (page: Page, name: string): Locator =>
+  page
+    .locator('.zone-card-thumb')
+    .filter({ has: page.getByRole('img', { name, exact: true }) })
+    .first();
+
 const FLOWS: Record<string, (page: Page) => Promise<void>> = {
   'pilot-current-jet-medallion-viewer-reduced': async (page) => {
     await cast(page, 'Pilot Lab Black Sorcery');
@@ -261,6 +268,54 @@ const FLOWS: Record<string, (page: Page) => Promise<void>> = {
     await page.getByRole('button', { name: 'Confirm attacks' }).click();
     // P2 declares no blocks; the Giant could not have.
     await passUntil(page, life(page, 'P2').filter({ hasText: '38' }));
+  },
+  'pilot-current-bolas-citadel-viewer-cast-for-life': async (page) => {
+    const doom = libraryTop(page, 'Pilot Lab Doom');
+    await passUntil(page, doom.and(page.locator('.actionable')));
+    await doom.click();
+    const giant = permanent(page, 'P2', 'Pilot Lab Giant').first();
+    await expect(giant).toHaveClass(/targetable|actionable/);
+    await giant.click();
+    await confirmButton(page).click();
+    await passStackUntil(page, logLine(page, /Pilot Lab Doom[^]*resolves/));
+    await expect(life(page, 'P1')).toHaveText('39');
+    await expect(permanent(page, 'P2', 'Pilot Lab Giant')).toHaveCount(0);
+    await expect(permanent(page, 'P1', 'Swamp').locator('.tap-badge')).toHaveCount(0);
+  },
+  'pilot-current-bolas-citadel-viewer-play-land': async (page) => {
+    const mountain = libraryTop(page, 'Mountain');
+    await passUntil(page, mountain.and(page.locator('.actionable')));
+    await mountain.click();
+    const play = page.getByRole('button', { name: /^Play/ });
+    if ((await play.count()) > 0) await play.first().click();
+    await expect(permanent(page, 'P1', 'Mountain')).toHaveCount(1);
+    await expect(life(page, 'P1')).toHaveText('40');
+  },
+  'pilot-current-bolas-citadel-viewer-sacrifice-ten': async (page) => {
+    const citadel = permanent(page, 'P1', "Bolas's Citadel");
+    await passUntil(page, citadel.and(page.locator('.actionable')));
+    await citadel.click();
+    const confirm = confirmButton(page);
+    if ((await confirm.count()) > 0) await confirm.click();
+    // Each sacrifice is picked on the board: the Citadel, then eight of the nine grouped Relics;
+    // the last pick has one candidate left. The Swamp is never highlighted.
+    const picks = ["Bolas's Citadel", ...Array<string>(8).fill('Pilot Lab Relic')];
+    for (const [index, name] of picks.entries()) {
+      await expect(
+        page.getByText(`choose permanent ${index + 1} of 10 to sacrifice`),
+      ).toBeVisible();
+      await expect(permanent(page, 'P1', 'Swamp')).not.toHaveClass(/targetable|actionable/);
+      const pick = permanent(page, 'P1', name).first();
+      await expect(pick).toHaveClass(/targetable|actionable/);
+      await pick.click();
+      await confirmButton(page).click();
+    }
+    await passStackUntil(page, life(page, 'P2').filter({ hasText: '30' }));
+    await expect(life(page, 'P3')).toHaveText('30');
+    await expect(life(page, 'P4')).toHaveText('30');
+    await expect(life(page, 'P1')).toHaveText('40');
+    await expect(permanent(page, 'P1', "Bolas's Citadel")).toHaveCount(0);
+    await expect(permanent(page, 'P1', 'Swamp')).toHaveCount(1);
   },
   'pilot-current-explore-viewer-second-land': async (page) => {
     await playLand(page, 'Forest');

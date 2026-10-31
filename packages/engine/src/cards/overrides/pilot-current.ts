@@ -1,5 +1,5 @@
 import { searchLibraryCards } from '../effect-builders';
-import { allOf, CHOSEN_SUBTYPE, ofColor, ofType, OTHER, YOURS } from '../selector';
+import { allOf, CHOSEN_SUBTYPE, NONLAND, ofColor, ofType, OTHER, YOURS } from '../selector';
 import { activated, costReductionFor, mana, spell, targetSlots, triggered } from '../templates';
 import { constant } from '../value';
 import { defineCard } from './index';
@@ -199,6 +199,33 @@ export function registerPilotCurrentOverrides(): void {
         },
         description: 'Choose one',
       }),
+    },
+  );
+  defineCard(
+    '2bd111bb-ce02-414c-b5b7-e0e037d8d96b',
+    "Bolas's Citadel",
+    // The look line is parsed; ruleStatics replaces the parsed list, so it is restated below.
+    [
+      'You may play lands and cast spells from the top of your library. If you cast a spell this way, pay life equal to its mana value rather than pay its mana cost.',
+      '{T}, Sacrifice ten nonland permanents: Each opponent loses 10 life.',
+    ],
+    {
+      ruleStatics: [
+        { kind: 'lookTopLibrary' },
+        { kind: 'playFromZone', zone: 'libraryTop', filter: ofType('Land') },
+        { kind: 'castFromZone', zone: 'libraryTop', lifeInsteadOfMana: true },
+      ],
+      activatedAbilities: [
+        activated({
+          // The Citadel is a nonland permanent too, so it may be one of the ten.
+          costs: [
+            { kind: 'tap' },
+            { kind: 'sacrificeOther', selector: NONLAND, count: 10, allowSelf: true },
+          ],
+          effects: [{ op: 'eachOpponentLosesLife', amount: constant(10) }],
+          description: 'Each opponent loses 10 life',
+        }),
+      ],
     },
   );
 }

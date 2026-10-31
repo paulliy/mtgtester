@@ -3,6 +3,7 @@
  * card, through the cost, legality and resolution paths a real game takes.
  */
 import { describe, expect, it } from 'vitest';
+import { applyPriorityAction } from '../src/actions/apply';
 import {
   computePriorityOptions,
   costReductionFor,
@@ -15,10 +16,12 @@ import { creatureToken } from '../src/cards/tokens';
 import { constant } from '../src/cards/value';
 import { runCombatPhase } from '../src/combat/combat';
 import { executeAbility } from '../src/effects/resolve';
+import { resolveTopOfStack } from '../src/stack/stack';
 import { createGame } from '../src/state/game';
 import { moveObject, playerById } from '../src/state/objects';
 import { landPlayLimitFor } from '../src/state/queries';
 import { cleanupStep } from '../src/turn/turn';
+import { visibleLibraryTops } from '../src/view/library-top';
 import type { DecisionOutcome } from '../src/decisions';
 import type { GameContext } from '../src/state/types';
 import { pinStore } from './scenario/pin-store';
@@ -744,5 +747,143 @@ describe('Untimely Malfunction', () => {
       throw new Error('an empty hand discards nothing');
     });
     expect(ctx.state.blockRestrictions ?? []).toEqual([]);
+  });
+});
+
+describe("Bolas's Citadel", () => {
+  const citadel = () => pinStore.get("Bolas's Citadel");
+  const lavaSpike = () => spellCard('Pilot Spike', '{2}{R}', ['R']);
+  /** Put `card` on top of P1's library. */
+  const onTop = (ctx: GameContext, card: ReturnType<typeof bear>) => {
+    const placed = conjure(ctx, 'P1', card, 'library');
+    const library = playerById(ctx, 'P1').library;
+    library.splice(library.indexOf(placed), 1);
+    library.unshift(placed);
+    return placed;
+  };
+  const topOptions = (ctx: GameContext, objectId: string) =>
+    computePriorityOptions(ctx, playerById(ctx, 'P1')).filter((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return 'objectId' in payload && payload.objectId === objectId;
+    });
+  const apply = (ctx: GameContext, option: ReturnType<typeof topOptions>[number]) =>
+    pump(
+      applyPriorityAction(ctx, playerById(ctx, 'P1'), option.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+      () => {
+        throw new Error('casting it asks nothing');
+      },
+    );
+
+  it('bolas-citadel-cast-for-life — the top card is cast for life equal to its mana value, never for mana', () => {
+    const ctx = mainPhase('citadel-life');
+    spawn(ctx, 'P1', citadel());
+    // Mana to pay {2}{R} is there, and still only the life cast is offered.
+    for (let i = 0; i < 3; i++) spawn(ctx, 'P1', mountain());
+    const top = onTop(ctx, lavaSpike());
+    const options = topOptions(ctx, top.id);
+    expect(options.map((option) => option.description)).toEqual([
+      'Cast Pilot Spike ({0}) by paying 3 life from the top of your library',
+    ]);
+    expect((options[0]!.payload as { alternativeCast?: string }).alternativeCast).toBe(
+      'libraryTopLife',
+    );
+    apply(ctx, options[0]!);
+    expect(playerById(ctx, 'P1').life).toBe(37);
+    expect(ctx.state.stack.map((entry) => entry.card?.name)).toEqual(['Pilot Spike']);
+    expect(ctx.state.battlefield.filter((perm) => perm.tapped)).toHaveLength(0);
+  });
+
+  it('bolas-citadel-not-enough-life — with less life than the mana value, it is not offered', () => {
+    const ctx = mainPhase('citadel-poor');
+    spawn(ctx, 'P1', citadel());
+    const top = onTop(ctx, lavaSpike());
+    playerById(ctx, 'P1').life = 2;
+    expect(topOptions(ctx, top.id)).toEqual([]);
+    playerById(ctx, 'P1').life = 3;
+    expect(topOptions(ctx, top.id)).toHaveLength(1);
+  });
+
+  it('bolas-citadel-x-is-zero — a spell with {X} is cast with X=0, for its printed mana value', () => {
+    const ctx = mainPhase('citadel-x');
+    spawn(ctx, 'P1', citadel());
+    const top = onTop(ctx, spellCard('Pilot Blaze', '{X}{R}', ['R']));
+    expect(topOptions(ctx, top.id).map((option) => option.description)).toEqual([
+      'Cast Pilot Blaze ({0}) by paying 1 life from the top of your library',
+    ]);
+  });
+
+  it('bolas-citadel-play-land — a land on top is played, as the land drop, not cast', () => {
+    const ctx = mainPhase('citadel-land');
+    spawn(ctx, 'P1', citadel());
+    const top = onTop(ctx, forest());
+    const options = topOptions(ctx, top.id);
+    expect(options.map((option) => option.type)).toEqual(['playLand']);
+    apply(ctx, options[0]!);
+    expect(playerById(ctx, 'P1').life).toBe(40);
+    expect(ctx.state.battlefield.some((perm) => perm.cardId === top.cardId)).toBe(true);
+    expect(playerById(ctx, 'P1').landsPlayedThisTurn).toBe(1);
+  });
+
+  it('bolas-citadel-look — you may look at the top card; your opponents may not', () => {
+    const ctx = mainPhase('citadel-look');
+    spawn(ctx, 'P1', citadel());
+    const top = onTop(ctx, lavaSpike());
+    expect(visibleLibraryTops(ctx, 'P1').map((entry) => entry.card.id)).toEqual([top.id]);
+    expect(visibleLibraryTops(ctx, 'P2')).toEqual([]);
+  });
+
+  it('bolas-citadel-without — without the Citadel, the top card is neither seen nor cast', () => {
+    const ctx = mainPhase('citadel-without');
+    for (let i = 0; i < 3; i++) spawn(ctx, 'P1', mountain());
+    const top = onTop(ctx, lavaSpike());
+    expect(topOptions(ctx, top.id)).toEqual([]);
+    expect(visibleLibraryTops(ctx, 'P1')).toEqual([]);
+  });
+
+  it('bolas-citadel-sacrifice-ten — ten nonland permanents, the Citadel among them, make each opponent lose 10', () => {
+    const ctx = mainPhase('citadel-ten');
+    const source = spawn(ctx, 'P1', citadel());
+    const relic = () => oracle({ name: 'Pilot Relic', typeLine: 'Artifact', manaCost: '{1}' });
+    for (let i = 0; i < 8; i++) spawn(ctx, 'P1', relic());
+    // Lands are not nonland permanents: 9 nonland and a Forest is not enough.
+    spawn(ctx, 'P1', forest());
+    const activate = () =>
+      computePriorityOptions(ctx, playerById(ctx, 'P1')).filter((option) => {
+        const payload = option.payload as PriorityActionPayload;
+        return payload.kind === 'activateAbility' && payload.objectId === source.id;
+      });
+    expect(activate()).toHaveLength(0);
+    spawn(ctx, 'P1', relic());
+    // {T} is part of the cost: a tapped Citadel can't activate it.
+    source.tapped = true;
+    expect(activate()).toHaveLength(0);
+    source.tapped = false;
+    const options = activate();
+    expect(options).toHaveLength(1);
+    // Exactly ten nonland permanents, so all go; the engine still asks for the first nine one at a
+    // time (the last has one candidate).
+    const prompts: string[] = [];
+    pump(
+      applyPriorityAction(
+        ctx,
+        playerById(ctx, 'P1'),
+        options[0]!.payload as PriorityActionPayload,
+        { index: 0, targets: new Map() },
+      ),
+      (decision) => {
+        prompts.push(decision.prompt);
+        return { index: 0, targets: new Map() };
+      },
+    );
+    expect(prompts).toHaveLength(9);
+    expect(ctx.state.battlefield.map((perm) => perm.name)).toEqual(['Forest']);
+    pump(resolveTopOfStack(ctx), () => {
+      throw new Error('losing life asks nothing');
+    });
+    expect(playerById(ctx, 'P2').life).toBe(30);
+    expect(playerById(ctx, 'P1').life).toBe(40);
   });
 });
