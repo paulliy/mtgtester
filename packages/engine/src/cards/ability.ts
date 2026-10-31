@@ -1537,6 +1537,11 @@ export type Effect =
   | { op: 'selfToLibraryTop' }
   | { op: 'putCountersEachChosen'; targetSlot: number; counter: string; count: Value | number }
   | { op: 'grantKeywordEachChosenUntilEot'; targetSlot: number; keyword: KeywordAbility }
+  /**
+   * "One or two target creatures can't block this turn" (Untimely Malfunction): every creature
+   * chosen in the count slot that is still a legal target can't block until the turn ends.
+   */
+  | { op: 'cantBlockEachChosenThisTurn'; targetSlot: number }
   /** "Double the number of each kind of counter on any number of target permanents" (The Thing). */
   | { op: 'doubleCountersEachChosen'; targetSlot: number }
   /** "… and up to one other target creature you control can't be blocked this turn" (Lockjaw). */

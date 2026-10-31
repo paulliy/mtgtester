@@ -1158,6 +1158,7 @@ const families = {
       selfToLibraryTop: true,
       putCountersEachChosen: true,
       grantKeywordEachChosenUntilEot: true,
+      cantBlockEachChosenThisTurn: true,
       doubleCountersEachChosen: true,
       cantBeBlockedEachChosen: true,
       untapUpTo: true,

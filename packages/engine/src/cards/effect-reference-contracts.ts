@@ -312,6 +312,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   selfToLibraryTop: {},
   putCountersEachChosen: { targetSlot: many(permanent) },
   grantKeywordEachChosenUntilEot: { targetSlot: many(permanent) },
+  cantBlockEachChosenThisTurn: { targetSlot: many(permanent) },
   doubleCountersEachChosen: { targetSlot: many(permanent) },
   cantBeBlockedEachChosen: { targetSlot: many(permanent) },
   untapUpTo: {},

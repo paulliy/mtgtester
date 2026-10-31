@@ -614,6 +614,7 @@ const effectExpressions = {
   selfToLibraryTop: {},
   putCountersEachChosen: { count: numericExpression },
   grantKeywordEachChosenUntilEot: {},
+  cantBlockEachChosenThisTurn: {},
   doubleCountersEachChosen: {},
   cantBeBlockedEachChosen: {},
   untapUpTo: { selector: selector },

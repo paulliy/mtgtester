@@ -2538,6 +2538,17 @@ function* executeAbilityEffects(
         }
         break;
       }
+      case 'cantBlockEachChosenThisTurn': {
+        const chosen = legalChosenPermanents(effect.targetSlot);
+        if (chosen.length > 0)
+          (ctx.state.blockRestrictions ??= []).push({
+            id: `br-${ctx.state.nextObjectNum++}`,
+            controllerId: controller.id,
+            objectIds: chosen.map((permanent) => permanent.id),
+            expires: { kind: 'thisTurn', turn: ctx.state.turnNumber },
+          });
+        break;
+      }
       case 'untapUpTo': {
         const available = affectedBy(ctx, source, effect.selector).filter(
           (permanent) => permanent.tapped,
