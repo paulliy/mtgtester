@@ -8542,8 +8542,11 @@ function* executeAbilityEffects(
       }
       case 'exileTopNPlayableUntilEot': {
         const count = amountOf(effect.count);
+        const library = (
+          effect.library === 'eventPlayer' ? drawRecipient('eventPlayer') : controller
+        ).library;
         for (let i = 0; i < count; i++) {
-          const top = controller.library[0];
+          const top = library[0];
           if (top === undefined) break;
           const moved = (yield* moveObject(ctx, top, { zone: 'exile' })) as EngineCardObject | null;
           if (moved !== null) {

@@ -107,6 +107,7 @@ const shapes = {
     },
     exileOnResolution: leaf,
     escaped: leaf,
+    dashed: leaf,
     fused: leaf,
   } satisfies Fields<Objects<AlternativeCast>>,
   // eslint-disable-next-line no-restricted-syntax -- field-schema table keyed by property name, not a token
@@ -241,6 +242,7 @@ const shapes = {
     count: { union: [{ node: 'Value' }, leaf] },
     life: { node: 'Value' },
     subtype: leaf,
+    library: leaf,
     metric: leaf,
     action: leaf,
     maxManaValue: { union: [leaf, { node: 'Value' }] },

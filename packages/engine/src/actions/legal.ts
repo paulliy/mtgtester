@@ -1315,7 +1315,15 @@ export function computePriorityOptions(
                     : {}),
                   ...(variant.alternativeCast === undefined
                     ? {}
-                    : { castVariant: variant.alternativeCast }),
+                    : {
+                        // Dash is a non-mana alternative to the payload, and its own way to cast
+                        // to the player.
+                        castVariant:
+                          variant.altIndex !== undefined &&
+                          castingDef.alternativeCasts?.[variant.altIndex]?.dashed === true
+                            ? 'dash'
+                            : variant.alternativeCast,
+                      }),
                   ...(energyCost > 0 ? { energyCost } : {}),
                   sourceName: obj.name,
                   sourceZone: fromCommand
@@ -1530,7 +1538,7 @@ export function computePriorityOptions(
               [...spellAdditionalCosts, ...(alt.costs ?? [])],
               def,
               { alternativeCast: alt.kind, altIndex: index },
-              ' (alternate cost)',
+              alt.dashed === true ? ' (dash)' : ' (alternate cost)',
               0,
               instantSpeed || alt.instantTiming === true,
             );

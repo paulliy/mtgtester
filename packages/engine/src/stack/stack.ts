@@ -222,6 +222,38 @@ export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): Ga
       moved.isToken = true;
       delete moved.isCardCopy;
     }
+    // Dash (CR 702.109a): haste for as long as this object stays, and back to its owner's hand at
+    // the beginning of the next end step, whoever's turn that is. A new object (CR 400.7) after
+    // a flicker is neither hasty nor returned.
+    if (spell.dashed === true && moved !== null && moved.zone === 'battlefield') {
+      ctx.state.effects.push({
+        id: `eff-${ctx.state.nextObjectNum++}`,
+        sourceId: spell.sourceCardId,
+        description: `${moved.name} was dashed: it has haste`,
+        targetCardIds: [moved.cardId],
+        targetObjectIds: [moved.id],
+        kind: 'grantKeyword',
+        keyword: 'haste',
+        duration: 'permanent',
+        timestamp: ctx.state.nextTimestamp++,
+      });
+      ctx.state.delayedTriggers.push({
+        id: `dt-${ctx.state.nextObjectNum++}`,
+        sourceCardId: moved.cardId,
+        sourceOracleId: moved.oracleId,
+        controllerId: spell.controllerId,
+        targetId: moved.cardId,
+        targetObjectId: moved.id,
+        when: 'endStep',
+        ability: {
+          kind: 'triggered',
+          targets: [],
+          effects: [{ op: 'returnToHand', target: 'triggerObject' }],
+          description: `Dash: return ${moved.name} to its owner's hand`,
+        },
+        expiry: 'onFire',
+      });
+    }
     if (spell.grantHasteOnResolution && moved && moved.zone === 'battlefield') {
       ctx.state.effects.push({
         id: `eff-${ctx.state.nextObjectNum++}`,

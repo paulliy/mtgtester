@@ -582,6 +582,8 @@ export interface EngineStackObject extends StackObject {
   exileOnResolution?: boolean;
   /** This spell was announced for its Escape cost. */
   escaped?: boolean;
+  /** This spell was announced for its Dash cost (CR 702.109a). */
+  dashed?: boolean;
 }
 
 export interface EngineEmblem {

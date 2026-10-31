@@ -793,6 +793,7 @@ function* proposeCast(
   let abilityDef = printedSpellDef;
   let exileOnResolution = false;
   let escaped = false;
+  let dashed = false;
   let energyAlternativeCostToPay = 0;
   if (payload.alternativeCast === 'energy') {
     const energyAlternativeCost = s.battlefield
@@ -832,6 +833,7 @@ function* proposeCast(
     cost = alt.manaCost;
     exileOnResolution = alt.exileOnResolution === true;
     escaped = alt.escaped === true;
+    dashed = alt.dashed === true;
   } else if (payload.alternativeCast === 'overload') {
     const alt = selectedAlternative;
     if (alt?.kind !== 'overload') throw new Error('missing overload cost');
@@ -1112,6 +1114,7 @@ function* proposeCast(
       : {}),
     ...(exileOnResolution ? { exileOnResolution: true } : {}),
     ...(escaped ? { escaped: true } : {}),
+    ...(dashed ? { dashed: true } : {}),
     ...(resolutionPermission === undefined &&
     payload.fromExile !== true &&
     payload.fromLibraryTop !== true &&

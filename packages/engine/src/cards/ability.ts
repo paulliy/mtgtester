@@ -130,6 +130,11 @@ export interface AlternativeCast {
   exileOnResolution?: boolean;
   /** The alternative is Escape and marks the resulting stack/permanent object as escaped. */
   escaped?: true;
+  /**
+   * Dash (CR 702.109a): the permanent this spell becomes gains haste, and it's returned from the
+   * battlefield to its owner's hand at the beginning of the next end step.
+   */
+  dashed?: true;
 }
 
 export interface MdfcLandFace {
@@ -2073,7 +2078,16 @@ export type Effect =
    * spells from among those exiled cards" (Dream Pillager) — an impulse-draw of a DYNAMIC
    * count. `legal.ts` offers each exiled card back as a cast option for the rest of the turn.
    */
-  | { op: 'exileTopNPlayableUntilEot'; count: Value; castOnly?: true }
+  | {
+      op: 'exileTopNPlayableUntilEot';
+      count: Value;
+      castOnly?: true;
+      /**
+       * "Exile the top card of that player's library" (Ragavan): the event player's library, not
+       * the controller's. The controller may still cast the card; its owner keeps it.
+       */
+      library?: 'eventPlayer';
+    }
   | { op: 'noOp' };
 
 /**
