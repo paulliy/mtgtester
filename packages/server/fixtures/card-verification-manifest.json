@@ -17775,7 +17775,9 @@
             "cards/pilot-new/mox-diamond.test.ts::mox-diamond-choose-land",
             "cards/pilot-new/mox-diamond.test.ts::mox-diamond-returned-by-effect",
             "clause 1: the choice offers each land card in hand and discarding nothing, and no other card",
-            "clause 1, negative: with no land card in hand nothing is asked and it goes to the graveyard"
+            "clause 1, negative: with no land card in hand nothing is asked and it goes to the graveyard",
+            "permanent-spell-copy-mox-diamond",
+            "permanent-spell-copy-mox-diamond-pays"
           ],
           "contractTestIds": [
             "entersUnlessDiscard replacement contract > executes on any move onto the battlefield: the land is discarded and it enters"
@@ -17857,7 +17859,8 @@
             "cards/pilot-new/everflowing-chalice.test.ts::everflowing-chalice-kicked-twice",
             "cards/pilot-new/everflowing-chalice.test.ts::everflowing-chalice-kicked-once",
             "cards/pilot-new/everflowing-chalice.test.ts::everflowing-chalice-unkicked",
-            "clause 3, negative: an unkicked Chalice has no counter to tap for, so a {1} spell is not offered"
+            "clause 3, negative: an unkicked Chalice has no counter to tap for, so a {1} spell is not offered",
+            "permanent-spell-copy-kicked-chalice"
           ],
           "viewerScenarioIds": [
             "everflowing-chalice-kicked-twice",

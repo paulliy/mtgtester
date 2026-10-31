@@ -1040,37 +1040,14 @@ export function* moveObject(
     }
   }
 
-  // "If this would enter, you may discard a land card instead. If you do, put it onto the
-  // battlefield. If you don't, put it into its owner's graveyard." (Mox Diamond): a replacement
+  // "If this would enter, you may discard a land card instead ..." (Mox Diamond): a replacement
   // (CR 614.1c), applied before it leaves the zone it is in, whichever effect moves it.
   if (target.zone === 'battlefield' && from !== 'battlefield' && !target.faceDown) {
-    const enterCost = getDefByOracleId(ctx, obj.oracleId, obj.name).entersUnlessDiscard;
-    const controllerId = target.controllerId ?? obj.ownerId;
-    if (enterCost !== undefined && !losesAbilitiesAsItEnters(ctx, obj, controllerId)) {
-      const source = { cardId: obj.cardId, controllerId };
-      const discard = yield* chooseCard(ctx, {
-        player: controllerId,
-        prompt: `${obj.name} would enter: you may discard a card instead. If you don't, it goes to its owner's graveyard.`,
-        cards: playerById(ctx, controllerId).hand.filter(
-          (card) =>
-            card !== obj &&
-            selectMatches(cardZoneCandidate(ctx, card, controllerId), enterCost.filter, source),
-        ),
-        type: 'discard',
-        verb: 'Discard',
-        decline: {
-          type: 'declineDiscard',
-          description: `Discard nothing: put ${obj.name} into its owner's graveyard`,
-          verb: 'Discard nothing',
-        },
-      });
-      if (discard === null)
-        target = {
-          zone: graveyardDestination(ctx, obj, 'graveyard'),
-          ...(target.reason !== undefined ? { reason: target.reason } : {}),
-        };
-      else yield* discardCard(ctx, discard, controllerId);
-    }
+    if (!(yield* paysEntersUnlessDiscard(ctx, obj, target.controllerId ?? obj.ownerId)))
+      target = {
+        zone: graveyardDestination(ctx, obj, 'graveyard'),
+        ...(target.reason !== undefined ? { reason: target.reason } : {}),
+      };
   }
 
   // Its fixed effects stay until leave processing has read its last known characteristics: an
@@ -1422,6 +1399,41 @@ export function* moveObject(
  * effects already in play (a nonbasic land under Blood Moon has no abilities, so it enters
  * untapped). The probe is never put anywhere, and its object id is handed back.
  */
+/**
+ * "If this would enter, you may discard a land card instead. If you do, put it onto the
+ * battlefield. If you don't, put it into its owner's graveyard." (Mox Diamond): a replacement
+ * (CR 614.1c) as `obj` would enter under `controllerId`, a card moving or a resolving spell copy.
+ * Whether it enters; a card never pays with itself.
+ */
+export function* paysEntersUnlessDiscard(
+  ctx: GameContext,
+  obj: EngineObject,
+  controllerId: PlayerId,
+): GameGen<boolean> {
+  const enterCost = getDefByOracleId(ctx, obj.oracleId, obj.name).entersUnlessDiscard;
+  if (enterCost === undefined || losesAbilitiesAsItEnters(ctx, obj, controllerId)) return true;
+  const source = { cardId: obj.cardId, controllerId };
+  const discard = yield* chooseCard(ctx, {
+    player: controllerId,
+    prompt: `${obj.name} would enter: you may discard a card instead. If you don't, it goes to its owner's graveyard.`,
+    cards: playerById(ctx, controllerId).hand.filter(
+      (card) =>
+        card !== obj &&
+        selectMatches(cardZoneCandidate(ctx, card, controllerId), enterCost.filter, source),
+    ),
+    type: 'discard',
+    verb: 'Discard',
+    decline: {
+      type: 'declineDiscard',
+      description: `Discard nothing: put ${obj.name} into its owner's graveyard`,
+      verb: 'Discard nothing',
+    },
+  });
+  if (discard === null) return false;
+  yield* discardCard(ctx, discard, controllerId);
+  return true;
+}
+
 function losesAbilitiesAsItEnters(
   ctx: GameContext,
   obj: EngineObject,
