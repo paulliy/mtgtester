@@ -187,6 +187,39 @@ No pilot card touched either measured duplicate family (the additional-trigger s
 damage multipliers), so neither was merged. `castFromZone` and `playFromZone` for the library top
 overlap; Bolas's Citadel uses both, and merging them is left for its own change.
 
+## Pre-merge code review
+
+Before merge, reviewers each read one area of the branch: engine, table server, match and agent client,
+web viewer, scripts, and the pilot cards' evidence. Of the 44 findings, 37 were fixed with a
+regression test that fails without the fix, one turned out not to be a bug, and six stay open:
+
+- **Bolas's Citadel and spell faces.** The life cast is never offered for one face of a split,
+  adventure, omen, modal double-faced or bestow card. The engine leaves the action out rather than
+  offering a wrong one. The cast payload carries a single `alternativeCast`, so a face cast for life
+  needs a new payload field. Until then, a split card on top is not offered for life at all (CR 709.3).
+- **Guests filling a table's connections.** Guests can fill `maxConnections` and lock out the host or
+  a seated player who reconnects. This needs many addresses, since the per-address limit holds; a
+  reserved slot for the host and seats is the fix if it shows up in practice.
+- **Large replay frames.** A `replayUnlocked` frame over 1 MiB would close the socket under the
+  backpressure limit. No measured game comes near that size.
+- **Pin store ordering.** It sorts with `localeCompare`; changing the comparison would reorder the
+  committed pin store with no observed churn to fix.
+- **`card-gate` argument length on Windows.** It passes its files to Vitest on one command line,
+  14.6 KB of Windows' 32 KB; it will need a file list before the gate list doubles.
+- **The skip lint.** It does not see `ctx.skip()`.
+
+Separately, the Bun 1.3.14 `server.stop()` hang is worked around with a bounded wait, which a Bun
+upgrade past the fix would let go.
+
+The pilot evidence findings strengthened tests rather than definitions:
+
+- Untimely Malfunction's target count is now tested on the real card.
+- Gamble's seeded discard is shown to vary across seeds.
+- Everflowing Chalice, Professional Face-Breaker, Takenuma, Orcish Bowmasters and Ragavan gained
+  positive controls and missed cases.
+
+Each new check fails against a deliberately broken definition.
+
 ## Recommendations
 
 1. Keep the new workflow for cards whose clauses compose existing primitives and for every new op
