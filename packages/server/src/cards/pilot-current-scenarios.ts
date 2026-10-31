@@ -102,6 +102,7 @@ export const ELF_WARRIOR = lab(
   ['1', '1'],
 );
 export const DOOM = lab('Pilot Lab Doom', 'Sorcery', '{B}', 'Destroy target creature.', ['B']);
+export const RELIC = lab('Pilot Lab Relic', 'Artifact', '{1}', '', []);
 export const WRATH = lab('Pilot Lab Wrath', 'Sorcery', '{B}', 'Destroy all creatures.', ['B']);
 /**
  * Always in P1's hand: a free spell P1 can cast whenever it has priority, so the viewer is still
@@ -120,6 +121,7 @@ const SUPPORT_CARDS = [
   ELF_WARRIOR,
   DOOM,
   WRATH,
+  RELIC,
   TRINKET,
 ];
 
@@ -349,6 +351,53 @@ const DEFS: ScenarioDef[] = [
     expectedOutcome: 'Each player mills a land; Konrad does not trigger and everyone stays at 40.',
     lines: [2],
     p1Field: ['Syr Konrad, the Grim', 'Swamp', 'Swamp'],
+  },
+  {
+    id: 'pilot-current-untimely-malfunction-viewer-destroy-artifact',
+    cardName: 'Untimely Malfunction',
+    title: "Untimely Malfunction: destroy P2's artifact",
+    instructions: [
+      "Cast Untimely Malfunction choosing its first mode, targeting P2's Pilot Lab Relic.",
+    ],
+    expectedOutcome: 'Pilot Lab Relic is destroyed.',
+    lines: [1, 2],
+    p1Hand: ['Untimely Malfunction'],
+    p1Field: ['Mountain', 'Mountain'],
+    p2Field: ['Pilot Lab Relic'],
+  },
+  {
+    id: 'pilot-current-untimely-malfunction-viewer-redirect',
+    cardName: 'Untimely Malfunction',
+    title: "Untimely Malfunction: P2's Doom is turned onto P2's own Giant",
+    instructions: [
+      "On P2's turn, P2 casts Pilot Lab Doom at your Pilot Lab Bear.",
+      'In response, cast Untimely Malfunction choosing its second mode, targeting Pilot Lab Doom.',
+      'Choose Pilot Lab Giant as its new target.',
+    ],
+    expectedOutcome:
+      'You choose Pilot Lab Giant over Pilot Lab Elf; Pilot Lab Doom destroys the Giant and your Pilot Lab Bear survives.',
+    lines: [1, 3],
+    p1Hand: ['Untimely Malfunction'],
+    p1Field: ['Pilot Lab Bear', 'Mountain', 'Mountain'],
+    p2Hand: ['Pilot Lab Doom'],
+    p2Field: ['Swamp', 'Pilot Lab Giant', 'Pilot Lab Elf'],
+    opponent: { seat: 'P2', cast: 'Pilot Lab Doom', targets: ['Pilot Lab Bear'] },
+    prepared: { currentTurnPlayer: 'P2' },
+  },
+  {
+    id: 'pilot-current-untimely-malfunction-viewer-cant-block',
+    cardName: 'Untimely Malfunction',
+    title: "Untimely Malfunction: P2's Giant can't block this turn",
+    instructions: [
+      "Cast Untimely Malfunction choosing its third mode, targeting P2's Pilot Lab Giant.",
+      'Attack P2 with Pilot Lab Bear.',
+    ],
+    expectedOutcome: 'Only Pilot Lab Elf may block; Pilot Lab Giant is not offered as a blocker.',
+    lines: [1, 4],
+    p1Hand: ['Untimely Malfunction'],
+    p1Field: ['Pilot Lab Bear', 'Mountain', 'Mountain'],
+    p2Field: ['Pilot Lab Giant', 'Pilot Lab Elf'],
+    prepared: { continueThroughCombat: true },
   },
 ];
 

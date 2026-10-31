@@ -95,6 +95,16 @@ async function activateKonrad(page: Page): Promise<void> {
   await confirmButton(page).click();
 }
 
+/** Click Untimely Malfunction in hand and pick the mode whose button matches `mode`. */
+async function chooseMalfunctionMode(page: Page, mode: RegExp): Promise<void> {
+  const card = hand(page, 'Untimely Malfunction');
+  await passUntil(page, card.and(page.locator('.actionable')));
+  await card.click();
+  // With one legal mode the cast is already selected and there is no row to pick.
+  const row = page.locator('.source-actions .source-action-row button').filter({ hasText: mode });
+  if ((await row.count()) > 0) await row.click();
+}
+
 const FLOWS: Record<string, (page: Page) => Promise<void>> = {
   'pilot-current-jet-medallion-viewer-reduced': async (page) => {
     await cast(page, 'Pilot Lab Black Sorcery');
@@ -207,6 +217,50 @@ const FLOWS: Record<string, (page: Page) => Promise<void>> = {
     await passStackUntil(page, logLine(page, /Each player mills a card[^]*resolves/));
     await passUntil(page, hand(page, 'Pilot Lab Trinket').and(page.locator('.actionable')));
     for (const seat of ['P1', 'P2', 'P3', 'P4']) await expect(life(page, seat)).toHaveText('40');
+  },
+  'pilot-current-untimely-malfunction-viewer-destroy-artifact': async (page) => {
+    await chooseMalfunctionMode(page, /Destroy target artifact/);
+    const relic = permanent(page, 'P2', 'Pilot Lab Relic').first();
+    await expect(relic).toHaveClass(/targetable/);
+    await relic.click();
+    await confirmButton(page).click();
+    await passStackUntil(page, logLine(page, /Untimely Malfunction[^]*resolves/));
+    await expect(permanent(page, 'P2', 'Pilot Lab Relic')).toHaveCount(0);
+  },
+  'pilot-current-untimely-malfunction-viewer-redirect': async (page) => {
+    // P2, a scripted seat, casts Pilot Lab Doom at your Pilot Lab Bear.
+    const doom = page.locator('.stack li').filter({ hasText: 'Pilot Lab Doom' }).first();
+    await passUntil(page, doom);
+    await chooseMalfunctionMode(page, /Change the target/);
+    await doom.click();
+    await confirmButton(page).click();
+    const giant = page.getByRole('button', { name: /Pilot Lab Giant/ }).first();
+    await passStackUntil(page, giant);
+    await giant.click();
+    await passStackUntil(page, logLine(page, /Pilot Lab Doom[^]*resolves/));
+    await expect(permanent(page, 'P2', 'Pilot Lab Giant')).toHaveCount(0);
+    await expect(permanent(page, 'P1', 'Pilot Lab Bear')).toHaveCount(1);
+    await expect(permanent(page, 'P2', 'Pilot Lab Elf')).toHaveCount(1);
+  },
+  'pilot-current-untimely-malfunction-viewer-cant-block': async (page) => {
+    await chooseMalfunctionMode(page, /can't block/);
+    await confirmButton(page).click();
+    const giant = page.getByRole('button', { name: /^Target Pilot Lab Giant$/ });
+    await passStackUntil(page, giant);
+    await giant.click();
+    await page.getByRole('button', { name: /^Choose no more targets$/ }).click();
+    await passStackUntil(page, logLine(page, /Untimely Malfunction[^]*resolves/));
+    const declare = page.getByRole('button', { name: /Declare attackers/ });
+    await passUntil(page, declare);
+    await declare.click();
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: 'Pilot Lab Bear' })
+      .getByRole('button', { name: 'P2' })
+      .click();
+    await page.getByRole('button', { name: 'Confirm attacks' }).click();
+    // P2 declares no blocks; the Giant could not have.
+    await passUntil(page, life(page, 'P2').filter({ hasText: '38' }));
   },
   'pilot-current-explore-viewer-second-land': async (page) => {
     await playLand(page, 'Forest');

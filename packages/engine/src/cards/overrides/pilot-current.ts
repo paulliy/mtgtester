@@ -1,6 +1,6 @@
 import { searchLibraryCards } from '../effect-builders';
 import { allOf, CHOSEN_SUBTYPE, ofColor, ofType, OTHER, YOURS } from '../selector';
-import { activated, costReductionFor, mana, spell, triggered } from '../templates';
+import { activated, costReductionFor, mana, spell, targetSlots, triggered } from '../templates';
 import { constant } from '../value';
 import { defineCard } from './index';
 
@@ -150,6 +150,55 @@ export function registerPilotCurrentOverrides(): void {
           description: '{1}{B}: Each player mills a card',
         }),
       ],
+    },
+  );
+  // "Choose one — • Destroy target artifact. • Change the target of target spell or ability with
+  // a single target. • One or two target creatures can't block this turn." Only the chosen mode's
+  // targets are chosen (CR 700.2b). The redirect may pick only a new legal target, and leaves the
+  // target unchanged if there is none (CR 115.7a). The creatures' restriction ends with the turn.
+  const malfunction = targetSlots({
+    artifact: { kind: 'artifact' },
+    object: { kind: 'stackObject', spellHasSingleTarget: true },
+    creatures: { kind: 'creature', count: { min: 1, max: 2 } },
+  });
+  defineCard(
+    '2c49d24a-98a4-43c2-bb59-1ef13d4214c2',
+    'Untimely Malfunction',
+    [
+      'Choose one —',
+      '• Destroy target artifact.',
+      '• Change the target of target spell or ability with a single target.',
+      "• One or two target creatures can't block this turn.",
+    ],
+    {
+      spellAbility: spell({
+        targets: malfunction.targets,
+        effects: [],
+        modes: {
+          minChoices: 1,
+          maxChoices: 1,
+          options: [
+            {
+              description: 'Destroy target artifact',
+              effects: [{ op: 'destroy', target: malfunction.slot.artifact }],
+              targetSlots: [malfunction.slot.artifact],
+            },
+            {
+              description: 'Change the target of target spell or ability with a single target',
+              effects: [{ op: 'changeSingleTarget', target: malfunction.slot.object }],
+              targetSlots: [malfunction.slot.object],
+            },
+            {
+              description: "One or two target creatures can't block this turn",
+              effects: [
+                { op: 'cantBlockEachChosenThisTurn', targetSlot: malfunction.slot.creatures },
+              ],
+              targetSlots: [malfunction.slot.creatures],
+            },
+          ],
+        },
+        description: 'Choose one',
+      }),
     },
   );
 }

@@ -13,6 +13,8 @@ interface Step {
   targets?: string[];
   /** Take the step only with an empty stack. */
   whenEmpty?: true;
+  /** For a modal spell, the cast option whose description matches this. */
+  mode?: RegExp;
 }
 
 /** What the viewer does, as engine actions. */
@@ -59,6 +61,21 @@ const PLANS: Record<string, Plan> = {
   'pilot-current-syr-konrad-viewer-mill-creature': {
     steps: [{ activate: 'Each player mills a card' }],
   },
+  'pilot-current-untimely-malfunction-viewer-destroy-artifact': {
+    steps: [{ cast: 'Untimely Malfunction', mode: /artifact/i, targets: ['Pilot Lab Relic'] }],
+  },
+  'pilot-current-untimely-malfunction-viewer-redirect': {
+    steps: [
+      { cast: 'Untimely Malfunction', mode: /Change the target/, targets: ['Pilot Lab Doom'] },
+    ],
+    answers: [/Pilot Lab Giant/],
+  },
+  'pilot-current-untimely-malfunction-viewer-cant-block': {
+    steps: [{ cast: 'Untimely Malfunction', mode: /can't block/ }],
+    // The count slot is chosen one creature at a time.
+    answers: [/^Target Pilot Lab Giant$/, /^Choose no more targets$/],
+    attacks: { 'Pilot Lab Bear': 'P2' },
+  },
   'pilot-current-syr-konrad-viewer-mill-lands': {
     steps: [{ activate: 'Each player mills a card' }],
   },
@@ -84,7 +101,11 @@ function run(id: string) {
   /** The prompts of the choices put to P1 other than priority and combat declarations. */
   const asked: string[] = [];
   const nameOf = (objectId: string) =>
-    ctx.state.battlefield.find((perm) => perm.id === objectId)?.name ?? objectId;
+    ctx.state.battlefield.find((perm) => perm.id === objectId)?.name ??
+    ctx.state.stack.find((entry) => entry.id === objectId)?.card?.name ??
+    objectId;
+  /** The creatures each non-P1 seat was offered as blockers, by name. */
+  const blockersOffered: string[][] = [];
   for (let decisions = 0; ; decisions++) {
     if (decisions > 300) throw new Error(`${id} exceeded 300 decisions`);
     const step = scenario.engine.advance();
@@ -92,13 +113,31 @@ function run(id: string) {
     if (step.kind === 'continue') continue;
     const request: DecisionRequest = step.request;
     if (request.decidingPlayer !== 'P1') {
+      const block = request.legalActions.find((action) => action.type === 'blockDeclaration');
+      if (block !== undefined)
+        blockersOffered.push(
+          ((block.data?.['subjects'] ?? []) as Array<{ subjectId: string }>).map((subject) =>
+            nameOf(subject.subjectId),
+          ),
+        );
       const provider = scenario.decisionProviderOverrides?.[request.decidingPlayer];
       const pass = request.legalActions.find((action) => action.type === 'pass');
       scenario.engine.submit(
-        provider?.decide(request) ?? {
-          requestId: request.requestId,
-          actionId: (pass ?? request.legalActions[0]!).id,
-        },
+        provider?.decide(request) ??
+          (block !== undefined
+            ? {
+                // An unscripted seat declares no blocks.
+                requestId: request.requestId,
+                actionId: block.id,
+                targets: (block.targets ?? []).map((slot) => ({
+                  slot: slot.slot,
+                  choice: '__no_block__',
+                })),
+              }
+            : {
+                requestId: request.requestId,
+                actionId: (pass ?? request.legalActions[0]!).id,
+              }),
       );
       continue;
     }
@@ -131,14 +170,17 @@ function run(id: string) {
         next.play !== undefined
           ? option.type === 'playLand' && option.description === `Play ${next.play}`
           : next.cast !== undefined
-            ? option.type === 'castSpell' && option.description.startsWith(`Cast ${next.cast}`)
+            ? option.type === 'castSpell' &&
+              option.description.startsWith(`Cast ${next.cast}`) &&
+              (next.mode === undefined || next.mode.test(option.description))
             : option.type === 'activateAbility' && option.description.includes(next.activate!),
       );
       if (action !== undefined) {
         steps.shift();
         done.push(next.play ?? next.cast ?? next.activate!);
-        targets = (action.targets ?? []).map((slot) => {
-          const want = next.targets?.[slot.slot];
+        targets = (action.targets ?? []).map((slot, index) => {
+          // Named in the order the action asks: a modal spell's chosen mode has only its slots.
+          const want = next.targets?.[index];
           const choice = slot.options.find((option) => option === want || nameOf(option) === want);
           if (choice === undefined) throw new Error(`${id}: no target ${want} for ${slot.slot}`);
           return { slot: slot.slot, choice };
@@ -166,7 +208,7 @@ function run(id: string) {
   const state = ctx.state;
   const player = (seat: string) => state.players.find((candidate) => candidate.id === seat)!;
   const permanent = (name: string) => state.battlefield.find((perm) => perm.name === name);
-  return { ctx, state, done, picked, offered, asked, steps, player, permanent };
+  return { ctx, state, done, picked, offered, asked, steps, player, permanent, blockersOffered };
 }
 
 type Result = ReturnType<typeof run>;
@@ -305,6 +347,26 @@ const CHECKS: Record<string, (result: Result) => void> = {
     expect(r.done).toEqual(['Each player mills a card']);
     for (const seat of ['P1', 'P2', 'P3', 'P4']) expect(r.player(seat).graveyard).toHaveLength(1);
     expect(['P1', 'P2', 'P3', 'P4'].map((seat) => r.player(seat).life)).toEqual([40, 40, 40, 40]);
+  },
+  'pilot-current-untimely-malfunction-viewer-destroy-artifact': (r) => {
+    expect(r.done).toEqual(['Untimely Malfunction']);
+    expect(r.permanent('Pilot Lab Relic')).toBeUndefined();
+    expect(zoneNames(r.player('P2').graveyard)).toEqual(['Pilot Lab Relic']);
+  },
+  'pilot-current-untimely-malfunction-viewer-redirect': (r) => {
+    expect(r.done).toEqual(['Untimely Malfunction']);
+    expect(r.picked).toEqual([expect.stringMatching(/Pilot Lab Giant/)]);
+    expect(r.permanent('Pilot Lab Bear')?.controllerId).toBe('P1');
+    expect(r.permanent('Pilot Lab Giant')).toBeUndefined();
+    expect(zoneNames(r.player('P2').graveyard).sort()).toEqual([
+      'Pilot Lab Doom',
+      'Pilot Lab Giant',
+    ]);
+  },
+  'pilot-current-untimely-malfunction-viewer-cant-block': (r) => {
+    expect(r.done).toEqual(['Untimely Malfunction']);
+    expect(r.blockersOffered).toEqual([['Pilot Lab Elf']]);
+    expect(r.player('P2').life).toBe(38);
   },
   'pilot-current-gamble-viewer-tutor': (r) => {
     expect(r.done).toEqual(['Gamble']);

@@ -18142,6 +18142,58 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "2c49d24a-98a4-43c2-bb59-1ef13d4214c2": {
+      "name": "Untimely Malfunction",
+      "oracleSha256": "c731141ee3cdd337701555e3faa7e8e928fa3bd92117178dbff35c38bf0e9333",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Choose one —",
+          "implementation": [
+            "modal spell, minChoices 1 maxChoices 1; each mode names only its own target slot"
+          ],
+          "engineTestIds": [
+            "untimely-malfunction-modes",
+            "pilot-current-untimely-malfunction-viewer-destroy-artifact",
+            "pilot-current-untimely-malfunction-viewer-redirect",
+            "pilot-current-untimely-malfunction-viewer-cant-block"
+          ],
+          "viewerScenarioIds": [
+            "pilot-current-untimely-malfunction-viewer-destroy-artifact",
+            "pilot-current-untimely-malfunction-viewer-redirect",
+            "pilot-current-untimely-malfunction-viewer-cant-block"
+          ]
+        },
+        {
+          "oracleText": "• Destroy target artifact.",
+          "implementation": ["destroy, artifact target slot"],
+          "engineTestIds": [
+            "untimely-malfunction-modes",
+            "pilot-current-untimely-malfunction-viewer-destroy-artifact"
+          ],
+          "viewerScenarioIds": ["pilot-current-untimely-malfunction-viewer-destroy-artifact"]
+        },
+        {
+          "oracleText": "• Change the target of target spell or ability with a single target.",
+          "implementation": ["changeSingleTarget on a stackObject slot with spellHasSingleTarget"],
+          "engineTestIds": ["pilot-current-untimely-malfunction-viewer-redirect"],
+          "viewerScenarioIds": ["pilot-current-untimely-malfunction-viewer-redirect"]
+        },
+        {
+          "oracleText": "• One or two target creatures can't block this turn.",
+          "implementation": [
+            "cantBlockEachChosenThisTurn over a creature count slot (1-2): a block restriction that expires in the cleanup step"
+          ],
+          "engineTestIds": [
+            "untimely-malfunction-cant-block",
+            "untimely-malfunction-this-turn",
+            "pilot-current-untimely-malfunction-viewer-cant-block"
+          ],
+          "viewerScenarioIds": ["pilot-current-untimely-malfunction-viewer-cant-block"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

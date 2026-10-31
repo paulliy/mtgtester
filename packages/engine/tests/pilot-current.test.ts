@@ -13,18 +13,24 @@ import { allOf, ofSubtype, ofType, type Selector } from '../src/cards/selector';
 import { spell } from '../src/cards/templates';
 import { creatureToken } from '../src/cards/tokens';
 import { constant } from '../src/cards/value';
+import { runCombatPhase } from '../src/combat/combat';
 import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import { moveObject, playerById } from '../src/state/objects';
 import { landPlayLimitFor } from '../src/state/queries';
+import { cleanupStep } from '../src/turn/turn';
+import type { DecisionOutcome } from '../src/decisions';
 import type { GameContext } from '../src/state/types';
 import { pinStore } from './scenario/pin-store';
 import {
   bear,
   conjure,
   copies,
+  declareAttacks,
+  declareBlocks,
   forest,
   gameConfig,
+  mountain,
   oracle,
   pick,
   pump,
@@ -654,5 +660,89 @@ describe('Syr Konrad, the Grim', () => {
     expect(activatable(ctx, source.id)).toBe(false);
     spawn(ctx, 'P1', forest());
     expect(activatable(ctx, source.id)).toBe(true);
+  });
+});
+
+describe('Untimely Malfunction', () => {
+  const malfunction = () => pinStore.get('Untimely Malfunction');
+  const castOptions = (ctx: GameContext) =>
+    computePriorityOptions(ctx, playerById(ctx, 'P1'))
+      .map((option) => option.description)
+      .filter((description) => description.startsWith('Cast Untimely Malfunction'));
+  const cantBlock = spell({
+    targets: [{ kind: 'creature', count: { min: 1, max: 2 } }],
+    effects: [{ op: 'cantBlockEachChosenThisTurn', targetSlot: 0 }],
+    description: "One or two target creatures can't block this turn",
+  });
+  /** The P2 creatures offered as blockers when P1's `attacker` attacks P2 this turn. */
+  const blockersOffered = (ctx: GameContext, attacker: ReturnType<typeof spawn>) => {
+    // On the battlefield since before this turn: not summoning sick.
+    attacker.enteredTurnNumber = 0;
+    let offered: string[] = [];
+    const generator = runCombatPhase(ctx);
+    let outcome: DecisionOutcome | undefined;
+    for (;;) {
+      const step = outcome === undefined ? generator.next() : generator.next(outcome);
+      if (step.done === true) break;
+      const decision = step.value;
+      if (decision.presentationAttackDeclaration !== undefined)
+        outcome = declareAttacks(decision, (subjectId) =>
+          subjectId === attacker.id ? 'P2' : null,
+        );
+      else if (decision.presentationBlockDeclaration !== undefined) {
+        offered = decision.presentationBlockDeclaration.subjects.map(
+          (subject) => subject.subjectId,
+        );
+        outcome = declareBlocks(decision, () => null);
+      } else outcome = { index: 0, targets: new Map() };
+    }
+    return offered;
+  };
+
+  it('untimely-malfunction-modes — each mode is offered when it has a legal target, and not otherwise', () => {
+    const ctx = mainPhase('malfunction-modes');
+    spawn(ctx, 'P1', mountain());
+    spawn(ctx, 'P1', mountain());
+    conjure(ctx, 'P1', malfunction(), 'hand');
+    spawn(ctx, 'P2', bear());
+    const withoutArtifact = castOptions(ctx);
+    expect(withoutArtifact.some((option) => /artifact/i.test(option))).toBe(false);
+    expect(withoutArtifact.some((option) => /can't block/i.test(option))).toBe(true);
+    spawn(ctx, 'P2', oracle({ name: 'Pilot Relic', typeLine: 'Artifact', manaCost: '{1}' }));
+    expect(castOptions(ctx).some((option) => /Destroy target artifact/.test(option))).toBe(true);
+  });
+
+  it("untimely-malfunction-cant-block — the chosen creatures aren't offered as blockers; others are", () => {
+    const ctx = mainPhase('malfunction-block');
+    const attacker = spawn(ctx, 'P1', bear());
+    const first = spawn(ctx, 'P2', bear());
+    const second = spawn(ctx, 'P2', creatureNamed('Pilot Wolf', 'Wolf'));
+    const free = spawn(ctx, 'P2', creatureNamed('Pilot Elk', 'Elk'));
+    pump(
+      executeAbility(ctx, attacker, cantBlock, [], undefined, undefined, {
+        0: [first.id, second.id],
+      }),
+      () => {
+        throw new Error('nothing is asked');
+      },
+    );
+    expect(blockersOffered(ctx, attacker)).toEqual([free.id]);
+  });
+
+  it('untimely-malfunction-this-turn — the restriction ends in the cleanup step', () => {
+    const ctx = mainPhase('malfunction-cleanup');
+    const attacker = spawn(ctx, 'P1', bear());
+    const target = spawn(ctx, 'P2', bear());
+    pump(
+      executeAbility(ctx, attacker, cantBlock, [], undefined, undefined, { 0: [target.id] }),
+      () => {
+        throw new Error('nothing is asked');
+      },
+    );
+    expect(ctx.state.blockRestrictions).toHaveLength(1);
+    pump(cleanupStep(ctx), () => {
+      throw new Error('an empty hand discards nothing');
+    });
+    expect(ctx.state.blockRestrictions ?? []).toEqual([]);
   });
 });
