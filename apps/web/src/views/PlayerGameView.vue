@@ -237,13 +237,14 @@ function toggleZones(seat: string): void {
 }
 function zonesShown(seat: string): boolean {
   if (zoneChoices.value.get(seat) ?? zonesByDefault.value) return true;
-  const targets = zoneTargetIds.value;
-  if (targets.length === 0) return false;
+  // Opened too while a card there is a target or one you may cast (Ragavan's exiled card).
+  const wanted = [...zoneTargetIds.value, ...zoneSourceIds.value];
+  if (wanted.length === 0) return false;
   const seatCards = [
     ...(state.value?.seats.find((s) => s.seat === seat)?.graveyard ?? []),
     ...exileFor(seat),
   ];
-  return seatCards.some((card) => targets.includes(card.id));
+  return seatCards.some((card) => wanted.includes(card.id));
 }
 const isYourTurn = computed(() => state.value?.activePlayer === state.value?.viewerSeat);
 const selectedAction = computed(
@@ -1435,20 +1436,26 @@ function abandon(): void {
                 label="Graveyard"
                 :cards="opponent.graveyard"
                 :selectable-ids="zoneTargetIds"
+                :actionable-ids="zoneSourceIds"
                 @select="chooseTarget"
+                @activate="selectSource"
               />
               <ZoneStrip
                 label="Exile"
                 :cards="exileFor(opponent.seat)"
                 :selectable-ids="zoneTargetIds"
+                :actionable-ids="zoneSourceIds"
                 @select="chooseTarget"
+                @activate="selectSource"
               />
               <ZoneStrip
                 v-if="revealedLibraryTopsFor(opponent.seat).length > 0"
                 label="Top of library"
                 :cards="revealedLibraryTopsFor(opponent.seat)"
                 :selectable-ids="zoneTargetIds"
+                :actionable-ids="zoneSourceIds"
                 @select="chooseTarget"
+                @activate="selectSource"
               />
             </div>
           </article>

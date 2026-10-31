@@ -52,6 +52,8 @@ function variantLabel(action: LegalAction, variant: string): string {
       return 'Cast free (you control a commander)';
     case 'nonMana':
       return 'Cast for alternative cost';
+    case 'dash':
+      return 'Cast with dash';
     case 'energy': {
       const energy = data(action, 'energyCost');
       return typeof energy === 'number' ? `Cast for ${energy} energy` : 'Cast for energy';
