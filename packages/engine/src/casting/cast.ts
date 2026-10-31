@@ -825,9 +825,14 @@ function* proposeCast(
     energyAlternativeCostToPay = energyAlternativeCost;
     cost = emptyCost();
   } else if (payload.alternativeCast === 'libraryTopLife') {
-    // Life equal to the mana value rather than the mana cost; {X} is 0 (CR 107.3b).
+    // Life equal to the mana value rather than the mana cost: an {X} in the mana cost is 0 (CR
+    // 107.3b), but an X an additional cost announces ("pay X life") is still chosen (CR 601.2b).
     const life = manaValueOf(def.manaCost);
-    if ((payload.x ?? 0) !== 0) throw new Error('a pay-life cast has X=0');
+    if (
+      (payload.x ?? 0) !== 0 &&
+      (printedSpellDef.manaCost?.x !== undefined || printedSpellDef.announcesX !== true)
+    )
+      throw new Error('a pay-life cast has X=0 unless an additional cost announces X');
     castingAdditionalCosts = [
       ...castingAdditionalCosts,
       ...(life > 0 ? [{ kind: 'payLife' as const, amount: life }] : []),

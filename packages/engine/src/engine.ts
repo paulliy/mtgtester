@@ -398,6 +398,9 @@ export class Engine implements EngineDriver {
     this.pendingDecision = null;
     this.pendingRequest = null;
     this.nextOutcome = null;
+    // The concession is a step of its own, like `advance()`: its events must not be charged to
+    // whatever work the last step left on the budget.
+    if (this.ctx.budget !== undefined) this.ctx.budget.stepWork.count = 0;
     const floor = this.ctx.state.nextEventSequence;
     const step = this.gen.throw(new GameConcededSignal(players, reason, floor));
     if (step.done !== true) {

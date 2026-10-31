@@ -67,6 +67,20 @@ describe('Engine.concede', () => {
     );
   });
 
+  it('is not charged to the work budget the last step left behind', () => {
+    const engine = new Engine(gameConfig(forestsPod(), { seed: 'concede-budget' }), {
+      maxStepWork: 50_000,
+    });
+    firstDecision(engine);
+    // The step that surfaced the decision spent the whole budget.
+    const budget = (engine as unknown as { ctx: { budget: { stepWork: { count: number } } } }).ctx
+      .budget;
+    budget.stepWork.count = 50_000;
+    expect(engine.concede(['P1', 'P2', 'P3', 'P4'], 'allAway')).toBe(true);
+    expect(engine.getResult()?.endReason).toBe('allAway');
+    expect(tail(engine, 2)).toEqual(['conceded', 'gameOver']);
+  });
+
   it('refuses before the game has surfaced a decision', () => {
     const engine = new Engine(gameConfig(forestsPod(), { seed: 'concede-3' }));
     expect(() => engine.concede(['P1'], 'timeLimit')).toThrow(EngineUsageError);
