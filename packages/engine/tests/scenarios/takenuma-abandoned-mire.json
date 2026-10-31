@@ -30,6 +30,13 @@
       "toughness": "2"
     },
     {
+      "name": "Scenario Third Legend",
+      "typeLine": "Legendary Creature — Dwarf",
+      "manaCost": "{2}",
+      "power": "1",
+      "toughness": "3"
+    },
+    {
       "name": "Scenario Second Legend",
       "typeLine": "Legendary Creature — Elf",
       "manaCost": "{1}{G}",
@@ -212,6 +219,109 @@
         "P1": {
           "hand": ["Takenuma, Abandoned Mire", "Scenario Sorcery"],
           "battlefield": ["Scenario Bear", "Swamp", "Swamp"]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Takenuma, Abandoned Mire"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "takenuma-three-legends-one-swamp",
+      "title": "Takenuma: three legendary creatures make channel cost {B}, one Swamp pays",
+      "clauses": [2],
+      "instructions": ["With three legendary creatures, channel Takenuma using only one Swamp."],
+      "expectedOutcome": "Channel costs {B}: the Swamp taps and the milled Scenario Bear returns to your hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Takenuma, Abandoned Mire"],
+          "battlefield": [
+            "Scenario Legend",
+            "Scenario Second Legend",
+            "Scenario Third Legend",
+            "Swamp"
+          ],
+          "libraryTop": ["Scenario Bear", "Forest", "Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/Discard this card/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Bear"],
+            "lacks": ["Takenuma, Abandoned Mire"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Takenuma, Abandoned Mire", "Forest", "Island"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Swamp",
+            "equals": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "takenuma-one-legend-not-enough",
+      "title": "Takenuma: one legendary creature leaves channel at {2}{B}, which two Swamps do not pay",
+      "clauses": [2],
+      "instructions": [
+        "With one legendary creature and two Swamps, look for Takenuma's channel ability; Scenario Sorcery in hand is the only spell you can cast."
+      ],
+      "expectedOutcome": "Channel is not offered: the discount is {1}, so it still costs {2}{B}.",
+      "seats": {
+        "P1": {
+          "hand": ["Takenuma, Abandoned Mire", "Scenario Sorcery"],
+          "battlefield": ["Scenario Legend", "Swamp", "Swamp"]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Takenuma, Abandoned Mire"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "takenuma-three-legends-no-black",
+      "title": "Takenuma: the discount is generic only, so three legends without black mana cannot channel",
+      "clauses": [2],
+      "instructions": [
+        "With three legendary creatures and only a Forest, look for Takenuma's channel ability; playing the Island is the only thing you can do."
+      ],
+      "expectedOutcome": "Channel is not offered: {B} is not reduced.",
+      "seats": {
+        "P1": {
+          "hand": ["Takenuma, Abandoned Mire", "Island"],
+          "battlefield": [
+            "Scenario Legend",
+            "Scenario Second Legend",
+            "Scenario Third Legend",
+            "Forest"
+          ]
         }
       },
       "script": [],

@@ -231,6 +231,60 @@
       ]
     },
     {
+      "id": "face-breaker-cast-exiled-this-turn",
+      "title": "Professional Face-Breaker: the exiled nonland card can be cast on the turn it was exiled",
+      "clauses": [3],
+      "instructions": [
+        "Attack P2 with Professional Face-Breaker.",
+        "After combat damage, sacrifice the Treasure to exile Scenario Bear from the top of your library.",
+        "In your postcombat main phase, cast Scenario Bear from exile with your two Forests."
+      ],
+      "expectedOutcome": "Scenario Bear is cast from exile and enters the battlefield; nothing is left in exile.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Professional Face-Breaker", "Forest", "Forest"],
+          "libraryTop": ["Scenario Bear"]
+        },
+        "P2": {}
+      },
+      "continue": {
+        "throughCombat": true,
+        "toPostcombatMain": true
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P1",
+          "choose": "/Sacrifice a Treasure/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Bear/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Professional Face-Breaker", "Scenario Bear"],
+            "lacks": ["Treasure"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "exile",
+            "lacks": ["Scenario Bear"]
+          }
+        }
+      ]
+    },
+    {
       "id": "face-breaker-permission-ends",
       "title": "Professional Face-Breaker: the exiled card can be played only this turn",
       "clauses": [3],

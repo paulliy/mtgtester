@@ -35,4 +35,22 @@ describe('Everflowing Chalice', () => {
       'Cast Everflowing Chalice ({4}) — kicker 2',
     ]);
   });
+
+  it('clause 3, negative: an unkicked Chalice has no counter to tap for, so a {1} spell is not offered', () => {
+    const run = runScenario(file, scenario('everflowing-chalice-unkicked'));
+    const actions = run.stoppedAt?.legalActions.map((action) => action.description) ?? [];
+    // The Forest in hand keeps P1 being asked (the engine skips a priority with only a pass), so
+    // this reads a real decision: P1 may play a land, and still cannot cast Scenario Mite.
+    expect(actions).toContainEqual(expect.stringMatching(/^Play Forest/));
+    expect(actions).not.toContainEqual(expect.stringMatching(/^Cast Scenario Mite/));
+  });
+
+  it('clause 3: with one charge counter on it, Chalice pays for a {1} spell', () => {
+    const one = scenario('everflowing-chalice-one-counter-taps');
+    const run = runScenario(file, { ...one, script: [] });
+    // Control for the negative above: the same {1} spell is offered once a counter is there.
+    expect(run.stoppedAt?.legalActions.map((action) => action.description) ?? []).toContainEqual(
+      expect.stringMatching(/^Cast Scenario Mite/),
+    );
+  });
 });

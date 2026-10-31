@@ -32,6 +32,17 @@ describe('Ragavan, Nimble Pilferer', () => {
     });
   });
 
+  it("clause 1: it exiles the top card of the damaged player's library, not another opponent's", () => {
+    const third = scenario('ragavan-hits-third-player');
+    const { engine } = runScenario(file, { ...third, script: third.script.slice(0, 1) });
+    const exile = engine.getState().exile;
+    expect(exile.map((card) => [card.ownerId, card.name])).toEqual([['P3', 'Scenario Spark']]);
+    expect(exile[0]).toMatchObject({ playableUntilEotBy: 'P1', castOnlyUntilEot: true });
+    expect(engine.getState().players.find((p) => p.id === 'P2')?.library[0]?.name).toBe(
+      'Scenario Wall',
+    );
+  });
+
   it('clause 2: dashed, it can attack the turn it enters', () => {
     const dash = scenario('ragavan-dash');
     const cast = firstDecisionOf(file, { ...dash, script: [] }, 'P1');

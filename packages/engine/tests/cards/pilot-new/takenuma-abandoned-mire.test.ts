@@ -39,6 +39,26 @@ describe('Takenuma, Abandoned Mire', () => {
     expect(actions).not.toContainEqual(expect.stringMatching(/Discard this card/));
   });
 
+  it('clause 2: three legendary creatures bring channel down to {B}, which one Swamp pays', () => {
+    expect(offered('takenuma-three-legends-one-swamp')).toContainEqual(
+      expect.stringMatching(/Discard this card/),
+    );
+  });
+
+  it('clause 2, negative: one legendary creature takes off only {1}, so two Swamps do not pay', () => {
+    // Channel would cost {2}{B}. Scenario Sorcery shows P1 is being asked with a Swamp to spend.
+    const actions = offered('takenuma-one-legend-not-enough');
+    expect(actions).toContainEqual(expect.stringMatching(/^Cast Scenario Sorcery/));
+    expect(actions).not.toContainEqual(expect.stringMatching(/Discard this card/));
+  });
+
+  it('clause 2, negative: the discount is generic only, so no black mana cannot channel', () => {
+    // Three legendary creatures cover all of {3}, and the Forest is no help with {B}.
+    const actions = offered('takenuma-three-legends-no-black');
+    expect(actions).toContainEqual(expect.stringMatching(/^Play Island/));
+    expect(actions).not.toContainEqual(expect.stringMatching(/Discard this card/));
+  });
+
   it('clause 2, negative: a card that is not a creature or planeswalker is never offered', () => {
     // Scenario Sorcery and three milled lands are in the graveyard; with nothing that qualifies,
     // nothing is asked. Only the milled creature qualifies in the other: it returns unasked.

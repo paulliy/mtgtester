@@ -27,6 +27,12 @@
       "manaCost": "{B}",
       "power": "1",
       "toughness": "1"
+    },
+    {
+      "name": "Scenario Flash Insight",
+      "typeLine": "Instant",
+      "manaCost": "{U}",
+      "oracleText": "Draw a card."
     }
   ],
   "scenarios": [
@@ -268,6 +274,112 @@
             "player": "P1",
             "zone": "battlefield",
             "lacks": ["Orc Army"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "bowmasters-second-draw-in-draw-step",
+      "title": "Orcish Bowmasters: an opponent's second draw in their own draw step triggers it",
+      "clauses": [2],
+      "instructions": [
+        "End your turn; P2 draws for its turn.",
+        "In its draw step, after that draw, P2 casts Scenario Flash Insight and draws a second card.",
+        "Target P2 with the one trigger, for the second card."
+      ],
+      "expectedOutcome": "P2's first draw in its draw step is exempt and its second is not: P2 loses 1 life and you get one 1/1 Orc Army.",
+      "continue": {
+        "throughPrecombatMains": 1
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Orcish Bowmasters"]
+        },
+        "P2": {
+          "hand": ["Scenario Flash Insight"],
+          "battlefield": ["Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P2",
+          "prompt": "/, draw\\)/",
+          "choose": "/^Cast Scenario Flash Insight/"
+        },
+        {
+          "player": "P1",
+          "choose": "/Orcish Bowmasters/",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 39
+          }
+        },
+        {
+          "counters": {
+            "card": "Orc Army",
+            "counter": "+1/+1",
+            "equals": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "bowmasters-other-opponent-draws-in-their-turn",
+      "title": "Orcish Bowmasters: a different opponent drawing during another player's draw step triggers it",
+      "clauses": [2],
+      "instructions": [
+        "End your turn; P2 draws for its turn.",
+        "In P2's draw step, P3 casts Scenario Flash Insight and draws a card.",
+        "Target P3 with the one trigger."
+      ],
+      "expectedOutcome": "Only P3's draw triggers: it is not P3's own draw step. P3 loses 1 life, P2 stays at 40, and you get one 1/1 Orc Army.",
+      "continue": {
+        "throughPrecombatMains": 1
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Orcish Bowmasters"]
+        },
+        "P3": {
+          "hand": ["Scenario Flash Insight"],
+          "battlefield": ["Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P3",
+          "prompt": "/, draw\\)/",
+          "choose": "/^Cast Scenario Flash Insight/"
+        },
+        {
+          "player": "P1",
+          "choose": "/Orcish Bowmasters/",
+          "targets": ["P3"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P3",
+            "equals": 39
+          }
+        },
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "counters": {
+            "card": "Orc Army",
+            "counter": "+1/+1",
+            "equals": 1
           }
         }
       ]

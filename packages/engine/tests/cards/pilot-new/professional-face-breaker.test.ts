@@ -38,8 +38,24 @@ describe('Professional Face-Breaker', () => {
 
   it('clause 3, negative: on your next turn the exiled card can no longer be cast', () => {
     // Two untapped Forests pay for Scenario Bear, so only the lapsed permission keeps it uncast.
+    // Read at P1's own precombat main four turns on, where the control below could cast it.
+    const request = runScenario(file, scenario('face-breaker-permission-ends')).stoppedAt;
+    expect(request?.turn).toBe(8);
+    expect(request?.phase).toBe('precombatMain');
+    expect(request?.decidingPlayer).toBe('P1');
     expect(offered('face-breaker-permission-ends')).not.toContainEqual(
       expect.stringMatching(/Scenario Bear/),
+    );
+  });
+
+  it('clause 3: the exiled card is castable in the postcombat main phase of the turn it was exiled', () => {
+    // The positive control for the negative above: same position, same Forests, same turn.
+    const run = runScenario(file, scenario('face-breaker-cast-exiled-this-turn'));
+    const cast = run.answered.find((entry) => entry.step?.choose === '/^Cast Scenario Bear/');
+    expect(cast?.request.phase).toBe('postcombatMain');
+    expect(cast?.request.turn).toBe(4);
+    expect(cast?.request.legalActions.map((action) => action.description)).toContainEqual(
+      expect.stringMatching(/^Cast Scenario Bear/),
     );
   });
 });

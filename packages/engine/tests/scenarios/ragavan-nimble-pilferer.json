@@ -73,6 +73,91 @@
       ]
     },
     {
+      "id": "ragavan-hits-third-player",
+      "title": "Ragavan: connect with P3, and P3's top card, not P2's, is exiled",
+      "clauses": [1],
+      "instructions": [
+        "Attack P3 with Ragavan.",
+        "After combat damage, cast the exiled Scenario Spark at P3, paying {R} with the Treasure."
+      ],
+      "expectedOutcome": "P3 takes 2 from Ragavan and 1 from Scenario Spark, which goes to P3's graveyard. P2's top card, Scenario Wall, stays in P2's library and P2 loses no life.",
+      "continue": {
+        "throughCombat": true
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Ragavan, Nimble Pilferer"]
+        },
+        "P2": {
+          "libraryTop": ["Scenario Wall"]
+        },
+        "P3": {
+          "libraryTop": ["Scenario Spark"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P3"]
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Spark/",
+          "targets": ["P3"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P3",
+            "equals": 37
+          }
+        },
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P3",
+            "zone": "graveyard",
+            "has": ["Scenario Spark"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P3",
+            "zone": "exile",
+            "lacks": ["Scenario Spark"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "exile",
+            "lacks": ["Scenario Wall"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "library",
+            "has": ["Scenario Wall"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Treasure"]
+          }
+        }
+      ]
+    },
+    {
       "id": "ragavan-blocked",
       "title": "Ragavan: blocked, no damage to a player and nothing happens",
       "clauses": [1],
