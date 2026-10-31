@@ -66,6 +66,36 @@ function rig(settings: ClockSettings = SETTINGS) {
   return { clock, log, views, ...time };
 }
 
+describe('DecisionClock budget timer', () => {
+  it('reports the budget as spent even when its timer fires a millisecond early', () => {
+    let now = 0;
+    const callbacks: Array<() => void> = [];
+    const timers: ClockTimers = {
+      now: () => now,
+      setTimeout: (callback) => callbacks.push(callback),
+      clearTimeout: () => undefined,
+    };
+    const spent: boolean[] = [];
+    const clock: DecisionClock = new DecisionClock(
+      { ...SETTINGS, graceMs: 500, disconnectBudgetMs: 1_000 },
+      ['P1'] as PlayerId[],
+      timers,
+      {
+        decisionExpired: () => undefined,
+        graceExpired: () => undefined,
+        budgetExhausted: (seat) => spent.push(clock.budgetSpent(seat)),
+        gameCapReached: () => undefined,
+        changed: () => undefined,
+      },
+    );
+    clock.startGame();
+    clock.disconnected('P1');
+    now = 999;
+    callbacks.at(-1)!(); // the budget timer, 1 ms before the budget is gone
+    expect(spent).toEqual([true]);
+  });
+});
+
 describe('DecisionClock', () => {
   it('has the plan presets', () => {
     expect(CLOCK_PRESETS.relaxed).toMatchObject({ bankMs: 1_200_000, gameCapMs: 14_400_000 });

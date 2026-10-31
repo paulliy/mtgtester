@@ -593,9 +593,11 @@ describe('socket binding', () => {
     expect(game.port.inputs('submitPlayerAction')).toHaveLength(1);
 
     // The old socket's close event neither disconnects the seat nor unbinds the new socket.
+    const awayFilter = (i: { connected: boolean }) => !i.connected;
+    // Before any socket bound, the seat was marked away once at the start.
+    const awayAtStart = game.port.inputs('setPlayerConnected').filter(awayFilter);
     game.rig.hub.close(game.aliceGame.id);
-    const disconnects = game.port.inputs('setPlayerConnected').filter((i) => !i.connected);
-    expect(disconnects).toEqual([]);
+    expect(game.port.inputs('setPlayerConnected').filter(awayFilter)).toEqual(awayAtStart);
     game.port.seat('P1', eventBatch([1]));
     expect(second.of('eventBatch')).toHaveLength(1);
   });
@@ -604,6 +606,7 @@ describe('socket binding', () => {
     const game = await startedGame();
     game.rig.hub.close(game.bobGame.id);
     expect(game.port.inputs('setPlayerConnected').filter((i) => i.seat === 'P2')).toEqual([
+      { type: 'setPlayerConnected', seat: 'P2', connected: false }, // unbound when the game started
       { type: 'setPlayerConnected', seat: 'P2', connected: true },
       { type: 'setPlayerConnected', seat: 'P2', connected: false },
     ]);
@@ -1012,6 +1015,29 @@ describe('the end of an attempt', () => {
   });
 });
 
+describe('a human seat with no socket when the game starts', () => {
+  it('is marked away, while a bound seat is attached', async () => {
+    const rig = makeRig();
+    const t = openTable(rig);
+    const alice = seatPlayer(rig, t, 'Alice', 'P1');
+    seatPlayer(rig, t, 'Bob', 'P2');
+    for (const seat of ['P3', 'P4'] as const) {
+      rig.send(t.host, 'hostSetSeat', { seat, controller: 'bot' });
+    }
+    const early = rig.connect(t.tableId);
+    resume(rig, early, alice.seatToken);
+    rig.send(t.host, 'hostStart');
+    await flush();
+    const port = rig.ports[0]!;
+    port.started();
+    await flush();
+    const changes = port.inputs('setPlayerConnected').map((i) => [i.seat, i.connected]);
+    expect(changes).toContainEqual(['P1', true]);
+    expect(changes).toContainEqual(['P2', false]);
+    expect(changes).not.toContainEqual(['P1', false]);
+  });
+});
+
 // ── Post-game view ──────────────────────────────────────────────────────────────────────────
 
 describe('the post-game view', () => {
@@ -1359,5 +1385,73 @@ describe('reaping', () => {
       { type: 'tableClosed', payload: { reason: 'reaped' } },
     ]);
     expect(game.rig.hub.open(game.t.tableId, new FakeSocket('late', 'x'))).toBe(false);
+  });
+
+  it('closes a socket that never joined when its finished table is reaped', async () => {
+    const game = await startedGame();
+    const stray = game.rig.connect(game.t.tableId);
+    game.port.emit({ type: 'gameOver', generation: game.port.generation, result: RESULT });
+    await flush();
+    game.rig.clock.t += 16 * 60_000;
+    game.rig.hub.reapIdle();
+    expect(stray.closed).toBe(true);
+  });
+
+  it('reaps an open table nobody is connected to, and closes sockets that never joined', () => {
+    const rig = makeRig();
+    const t = openTable(rig);
+    const idle = rig.connect(t.tableId);
+    rig.hub.close(t.host.id);
+    rig.clock.t += 16 * 60_000;
+    rig.hub.reapIdle();
+    expect(rig.registry.size).toBe(0);
+    expect(idle.closed).toBe(true);
+    expect(rig.hub.open(t.tableId, new FakeSocket('late', 'x'))).toBe(false);
+  });
+
+  it('keeps an open table that still has a connection', () => {
+    const rig = makeRig();
+    const t = openTable(rig);
+    rig.clock.t += 16 * 60_000;
+    rig.hub.reapIdle();
+    expect(rig.registry.size).toBe(1);
+    expect(t.host.closed).toBe(false);
+  });
+
+  it('frees registry slots held by abandoned lobbies', () => {
+    const rig = makeRig();
+    for (let i = 0; i < 8; i++) rig.newTable();
+    expect(rig.registry.create()).toEqual({ ok: false, reason: 'tooManyTables' });
+    rig.clock.t += 16 * 60_000;
+    rig.hub.reapIdle();
+    expect(rig.registry.create().ok).toBe(true);
+  });
+});
+
+describe('shutdown', () => {
+  it('ends a live game through the normal end path before closing sockets', async () => {
+    const ended: Array<{ attemptId: string; status: AttemptEndStatus }> = [];
+    const game = await startedGame(makeRig({ ended }));
+    await game.rig.hub.shutdown();
+    expect(ended).toEqual([{ attemptId: expect.any(String), status: 'workerFailure' }]);
+    expect(game.port.terminations).toEqual(['workerFailure']);
+    expect(game.aliceGame.closed).toBe(true);
+    expect(game.carol.closed).toBe(true);
+  });
+
+  it('refuses new sockets and a hostStart that arrives while closing', async () => {
+    const rig = makeRig();
+    const t = openTable(rig);
+    seatPlayer(rig, t, 'Alice', 'P1');
+    for (const seat of ['P2', 'P3', 'P4'] as const) {
+      rig.send(t.host, 'hostSetSeat', { seat, controller: 'bot' });
+    }
+    const shutting = rig.hub.shutdown();
+    expect(rig.hub.open(t.tableId, new FakeSocket('late', 'x'))).toBe(false);
+    rig.send(t.host, 'hostStart');
+    await shutting;
+    await flush();
+    expect(rig.ports).toHaveLength(0);
+    expect(t.host.errors()).toContain('The server is shutting down.');
   });
 });

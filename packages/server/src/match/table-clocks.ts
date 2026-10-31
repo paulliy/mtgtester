@@ -169,9 +169,15 @@ export class TableClocks {
 
   /** Eliminated seats have no clock. */
   syncEliminations(): void {
+    let removed = false;
     for (const seat of this.seats.keys()) {
-      if (this.host.isEliminated(seat) && !this.clock.isRemoved(seat)) this.clock.remove(seat);
+      if (this.host.isEliminated(seat) && !this.clock.isRemoved(seat)) {
+        this.clock.remove(seat);
+        removed = true;
+      }
     }
+    // The last connected human may be the one who just lost; the rest may all be away already.
+    if (removed) this.checkAllAway();
   }
 
   // ── Internals ──────────────────────────────────────────────────────────────────────────────

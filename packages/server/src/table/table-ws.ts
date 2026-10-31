@@ -274,6 +274,8 @@ interface AttemptRun {
   attemptId: string;
   generation: number;
   port: TableSessionPort | null;
+  /** The seats a person plays; a seat with no bound socket when the game starts is away. */
+  humanSeats: PlayerId[];
   unsubscribe: (() => void) | null;
   /** Set by the first terminal transition, which wins over any racing result or timeout. */
   terminal: boolean;
@@ -373,6 +375,8 @@ export class TableSocketHub {
     rateClosed: 0,
   };
   private readonly limits: SocketLimits;
+  /** Set by `shutdown`: no socket opens and no game starts after it. */
+  private closing = false;
   /** Per socket: its pre-authentication timer (null once authenticated) and its rate bucket. */
   private readonly guards = new Map<
     string,
@@ -396,6 +400,7 @@ export class TableSocketHub {
 
   /** A socket opened on `/tables/<tableId>/ws`. False when no such table exists. */
   open(tableId: string, socket: HubSocket): boolean {
+    if (this.closing) return false;
     const runtime = this.runtimeFor(tableId);
     if (runtime === null) return false;
     runtime.sockets.set(socket.id, socket);
@@ -509,7 +514,9 @@ export class TableSocketHub {
         run.stopHealth?.();
         void this.terminateQuiet(run.port, 'workerFailure');
       }
-      for (const socketId of runtime.sockets.keys()) {
+      // A socket that never joined has no connection record, so the table's effects missed it.
+      for (const socketId of [...runtime.sockets.keys()]) {
+        this.closeSocket(runtime, socketId);
         this.socketTables.delete(socketId);
         this.dropGuard(socketId);
       }
@@ -517,18 +524,23 @@ export class TableSocketHub {
     }
   }
 
-  /** Stop every running game and close every socket (server shutdown). */
+  /**
+   * Stop every running game and close every socket (server shutdown). Nothing new opens or
+   * starts once this is called. Each live game ends through the normal path as `workerFailure`,
+   * so its attempt and game rows are closed before the sockets go.
+   */
   async shutdown(): Promise<void> {
+    this.closing = true;
     for (const socketId of [...this.guards.keys()]) this.dropGuard(socketId);
-    const stops: Promise<void>[] = [];
+    const ends: Promise<void>[] = [];
     for (const runtime of this.runtimes.values()) {
       const run = runtime.run;
       if (run !== null) {
-        run.terminal = true;
-        run.unsubscribe?.();
-        run.stopHealth?.();
-        stops.push(this.terminateQuiet(run.port, 'workerFailure'));
+        ends.push(this.settle(runtime, run, { kind: 'failed', reason: 'workerFailure' }));
       }
+    }
+    await Promise.all(ends);
+    for (const runtime of this.runtimes.values()) {
       for (const socket of runtime.sockets.values()) {
         try {
           socket.close();
@@ -537,7 +549,6 @@ export class TableSocketHub {
         }
       }
     }
-    await Promise.all(stops);
   }
 
   // ── Table messages ────────────────────────────────────────────────────────────────────────
@@ -586,6 +597,10 @@ export class TableSocketHub {
         this.finish(runtime, socket, table.hostRotateInvite(conn));
         return;
       case 'hostStart':
+        if (this.closing) {
+          this.sendTo(runtime, socket.id, errorFrame('The server is shutting down.'));
+          return;
+        }
         this.finish(runtime, socket, table.hostStart(conn));
         return;
       case 'hostAbandon':
@@ -955,6 +970,7 @@ export class TableSocketHub {
       attemptId: attempt.attemptId,
       generation,
       port: null,
+      humanSeats: attempt.seats.flatMap((seat) => (seat.controller === 'human' ? [seat.seat] : [])),
       unsubscribe: null,
       terminal: false,
       started: false,
@@ -1037,6 +1053,13 @@ export class TableSocketHub {
         const result = runtime.table.startSucceeded(run.attemptId);
         this.apply(runtime, result.effects);
         for (const seat of [...runtime.seatSockets.keys()]) this.attachSeat(runtime, run, seat);
+        // A seat whose player never bound a socket (a tab closed during setup) starts away, so
+        // its clock waits and the all-away check counts it.
+        for (const seat of run.humanSeats) {
+          if (!runtime.seatSockets.has(seat)) {
+            this.toPort(run, { type: 'setPlayerConnected', seat, connected: false });
+          }
+        }
         return;
       }
       case 'seatFrame':

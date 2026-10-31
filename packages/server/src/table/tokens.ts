@@ -196,10 +196,14 @@ export class AttemptThrottle {
 
 export const DISPLAY_NAME_MAX_CHARS = 24;
 
-/** Zero-width, bidi-control, soft-hyphen, joiner and variation-selector characters. */
+/**
+ * Zero-width, bidi-control, soft-hyphen, joiner and variation-selector characters, plus every
+ * default-ignorable and format code point (tag characters, musical formatting and the like), so
+ * a set that is listed by hand cannot fall behind Unicode.
+ */
 /* eslint-disable no-misleading-character-class -- the class lists invisible code points on purpose */
 const INVISIBLE =
-  /[\u00AD\u034F\u061C\u115F\u1160\u17B4\u17B5\u180B-\u180F\u200B-\u200F\u202A-\u202E\u2060-\u206F\u3164\uFE00-\uFE0F\uFEFF\uFFA0]/gu;
+  /[\u00AD\u034F\u061C\u115F\u1160\u17B4\u17B5\u180B-\u180F\u200B-\u200F\u202A-\u202E\u2060-\u206F\u3164\uFE00-\uFE0F\uFEFF\uFFA0\p{Default_Ignorable_Code_Point}\p{Cf}]/gu;
 /* eslint-enable no-misleading-character-class */
 const CONTROL = /\p{Cc}/gu;
 

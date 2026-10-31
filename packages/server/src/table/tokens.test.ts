@@ -200,6 +200,13 @@ describe('display-name normalization', () => {
     expect(normalizeDisplayName('Al⁠ice')).toBe(normalizeDisplayName('Alice'));
   });
 
+  it('removes tag characters and other default-ignorable code points', () => {
+    expect(normalizeDisplayName('Bob\u{E0041}')).toBe(normalizeDisplayName('Bob'));
+    expect(normalizeDisplayName('Bo\u{E0001}b')).toBe(normalizeDisplayName('Bob'));
+    expect(normalizeDisplayName('Bo\u{1D173}b\u{1D17A}')).toBe(normalizeDisplayName('Bob'));
+    expect(normalizeDisplayName('Bo\u0600b')).toBe(normalizeDisplayName('Bob')); // a Cf character
+  });
+
   it('ignores accents and separators', () => {
     expect(normalizeDisplayName('Álice')).toBe(normalizeDisplayName('Alice'));
     expect(normalizeDisplayName('Mary  Jane')).toBe(normalizeDisplayName('Mary_Jane'));
@@ -225,6 +232,12 @@ describe('cleanDisplayName', () => {
   it('trims, collapses spaces and strips invisible characters', () => {
     expect(cleanDisplayName('  Al​ice   B  ')).toBe('Alice B');
     expect(cleanDisplayName('‮Alice')).toBe('Alice');
+  });
+
+  it('strips tag characters and other default-ignorable code points', () => {
+    expect(cleanDisplayName('Bob\u{E0041}')).toBe('Bob');
+    expect(cleanDisplayName('Bo\u{1D173}b')).toBe('Bob');
+    expect(cleanDisplayName('\u{E0041}\u{E0042}')).toBeNull();
   });
 
   it('refuses empty, invisible-only and over-long names', () => {

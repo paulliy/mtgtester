@@ -159,6 +159,39 @@ describe('all-away termination', () => {
   });
 });
 
+describe('all-away termination after an elimination', () => {
+  it('concedes when the only human still in the game is away with a spent budget', () => {
+    const time = manualTimers();
+    const connected = new Set<PlayerId>(['P3']);
+    const eliminated = new Set<PlayerId>();
+    const endings: string[] = [];
+    const clocks = new TableClocks(
+      SETTINGS,
+      {
+        humanSeats: new Set(['P1', 'P3']),
+        takeOver: () => null,
+        fallbackDecide: () => {
+          throw new Error('no decision is pending');
+        },
+        tagSource: () => undefined,
+        concede: (reason) => endings.push(reason),
+        isEliminated: (seat) => eliminated.has(seat),
+        isConnected: (seat) => connected.has(seat),
+        publish: () => undefined,
+      },
+      time.timers,
+    );
+    clocks.connection('P1', false);
+    time.advance(SETTINGS.disconnectBudgetMs);
+    // P3 is still here, so the table is not all away.
+    expect(endings).toEqual([]);
+    eliminated.add('P3');
+    clocks.syncEliminations();
+    expect(endings).toEqual(['allAway']);
+    clocks.stop();
+  });
+});
+
 /** A recorder over a fake database: decision sources and game-row updates are captured. */
 function fakeStore() {
   const sources = new Map<string, string>();
@@ -326,12 +359,17 @@ describe('a timed table', () => {
       expect(String(event.payload['description'])).not.toMatch(/: add \{/);
     }
     // Taking the seat back: the next decision is shown to the player again.
+    const beforeResume = t.bySeat['P1']!.length;
     t.session.resumeControl('P1');
     expect(status(t, 'P1').at(-1)?.payload).toEqual({
       seat: 'P1',
       connected: true,
       fallback: false,
     });
+    // The client is still connected and holds the log, so resuming does not send it again.
+    const resumed = t.bySeat['P1']!.slice(beforeResume).map((m) => m.type);
+    expect(resumed).not.toContain('eventBatch');
+    expect(resumed).toContain('playerStateSnapshot');
     await until(() => t.required('P1').length > shownAtTakeover || over(t), 'the next P1 decision');
     expect(t.required('P1').length).toBeGreaterThan(shownAtTakeover);
     stopP3();

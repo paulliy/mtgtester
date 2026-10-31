@@ -226,6 +226,8 @@ export class Table {
 
   private phase: TablePhase = 'open';
   private finishedAt: number | null = null;
+  /** Since when an `open` table has had no connection at all; `null` while one is connected. */
+  private emptySince: number | null;
   private attempt: Attempt | null = null;
   private readonly seats = new Map<PlayerId, SeatRecord>();
   /** When each seat was last taken over by a new socket, for the takeover limit. */
@@ -243,6 +245,7 @@ export class Table {
     this.insecureLan = options.insecureLan ?? false;
     this.clock = options.clock ?? null;
     this.limits = { ...DEFAULT_TABLE_LIMITS, ...options.limits };
+    this.emptySince = this.now();
     for (const seat of PLAYER_SEAT_IDS) {
       this.seats.set(seat, { seat, controller: 'open', player: null });
     }
@@ -475,6 +478,11 @@ export class Table {
       this.claims.delete(claim.claimId);
       return refuse('unknownClaim');
     }
+    // A socket that resumed a seat after asking holds that seat already; it cannot take a second.
+    if (this.seatOfSocket(claim.socketId) !== null) {
+      this.claims.delete(claim.claimId);
+      return refuse('unknownClaim');
+    }
     const seatToken = generateSeatToken();
     record.controller = 'human';
     record.player = {
@@ -658,6 +666,10 @@ export class Table {
       const held = this.seats.get(record.seat)?.player;
       if (held?.socketId === conn.socketId) held.socketId = null;
     }
+    // A seat now bound to this socket supersedes any request it still has waiting on the host.
+    for (const claim of [...this.claims.values()]) {
+      if (claim.socketId === conn.socketId) this.claims.delete(claim.claimId);
+    }
     record.displayName = player.displayName;
     record.normalizedName = player.normalizedName;
     record.seat = seat;
@@ -726,6 +738,7 @@ export class Table {
     }
     this.attempt = null;
     this.phase = 'open';
+    if (this.conns.size === 0) this.emptySince = this.now();
     return ok([...effects, ...this.broadcastState()]);
   }
 
@@ -742,13 +755,15 @@ export class Table {
     return ok(this.broadcastState());
   }
 
-  /** `finished` to `reaped` once the idle time has passed. Seat tokens stop working. */
+  /**
+   * `finished` to `reaped` once the idle time has passed. An `open` table nobody is connected to
+   * (its host left the lobby) is reaped after the same time, so it frees its registry slot. Seat
+   * tokens stop working.
+   */
   reapIfIdle(): TableResult<{ reaped: boolean }> {
-    if (
-      this.phase !== 'finished' ||
-      this.finishedAt === null ||
-      this.now() - this.finishedAt < this.limits.finishedIdleMs
-    ) {
+    const since =
+      this.phase === 'finished' ? this.finishedAt : this.phase === 'open' ? this.emptySince : null;
+    if (since === null || this.now() - since < this.limits.finishedIdleMs) {
       return ok([], { reaped: false });
     }
     this.phase = 'reaped';
@@ -779,6 +794,7 @@ export class Table {
       capabilities: {},
     };
     this.conns.set(conn.socketId, record);
+    this.emptySince = null;
     return record;
   }
 
@@ -786,6 +802,7 @@ export class Table {
     const conn = this.conns.get(socketId);
     if (conn === undefined) return;
     this.conns.delete(socketId);
+    if (this.conns.size === 0) this.emptySince = this.now();
     for (const claim of [...this.claims.values()]) {
       if (claim.socketId === socketId) this.claims.delete(claim.claimId);
     }

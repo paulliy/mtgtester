@@ -412,6 +412,22 @@ describe('approval by claim id', () => {
     expect(stateFor(h, first).you.claim).toBeNull();
   });
 
+  it('drops a pending claim when its socket resumes a seat, so the socket never holds two', () => {
+    const { h, host, aliceToken } = readyTable();
+    record(h, h.table.hostSetSeat(host, { seat: 'P3', controller: 'open' }));
+    const other = conn();
+    join(h, other, 'Carol');
+    const claim = record(h, h.table.requestSeat(other, { seat: 'P3', decklist: 'good' }));
+    if (!claim.ok) throw new Error('claim');
+    expect(resume(h, other, aliceToken)).toMatchObject({ ok: true, seat: 'P1' });
+    expect(stateFor(h, other).you.claim).toBeNull();
+    expect(record(h, h.table.hostApprove(host, { claimId: claim.claimId }))).toMatchObject({
+      ok: false,
+      reason: 'unknownClaim',
+    });
+    expect(h.table.seatOfSocket(other.socketId)).toBe('P1');
+  });
+
   it('hands the approved deck to part B for storage', () => {
     const h = setup();
     const host = hostConn(h);
@@ -900,6 +916,19 @@ describe('lifecycle', () => {
     expect(h.table.gameFinished(started.attemptId).ok).toBe(true);
     expect(h.table.currentPhase).toBe('finished');
     expect(h.table.gameFinished(started.attemptId).ok).toBe(true); // idempotent
+  });
+
+  it('reaps an open table with no connection after the idle time', () => {
+    const h = setup();
+    const host = hostConn(h);
+    h.clock.t += 20 * 60_000;
+    expect(h.table.reapIfIdle()).toMatchObject({ reaped: false }); // the host is still here
+    record(h, h.table.disconnect(host.socketId));
+    h.clock.t += 14 * 60_000;
+    expect(h.table.reapIfIdle()).toMatchObject({ reaped: false });
+    h.clock.t += 2 * 60_000;
+    expect(h.table.reapIfIdle()).toMatchObject({ ok: true, reaped: true });
+    expect(h.table.currentPhase).toBe('reaped');
   });
 
   it('does not reap a table that has not finished', () => {

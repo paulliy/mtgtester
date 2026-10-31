@@ -331,7 +331,10 @@ export class DecisionClock {
         () => {
           away.budgetTimer = null;
           if (clock.away !== away || this.disposed || clock.removed) return;
+          // The budget is gone, whatever the timer's own clock says; a timer that fires a
+          // millisecond early must not leave the all-away check a millisecond to find.
           this.chargeAway(clock);
+          clock.budgetMs = 0;
           clock.budgetReported = true;
           this.events.budgetExhausted(clock.seat);
         },

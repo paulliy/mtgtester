@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { makeResolvedDeck } from '../test-factory';
 import type { TableConfig } from './config';
 import type { DeckChecker } from './deck-check';
@@ -11,6 +11,7 @@ import {
   handleTableRequest,
   isLoopbackRequest,
   manifestFiles,
+  routeSocketFrame,
   type TableHttpContext,
 } from './table-http';
 
@@ -266,6 +267,24 @@ describe('the table socket route', () => {
       ),
     );
     expect(missing.status).toBe(404);
+  });
+});
+
+describe('inbound socket frames', () => {
+  it('passes a text frame to the hub', () => {
+    const hub = { message: vi.fn() };
+    const ws = { data: { socketId: 's1' }, close: vi.fn() };
+    routeSocketFrame(hub, ws, '{"type":"x"}');
+    expect(hub.message).toHaveBeenCalledWith('s1', '{"type":"x"}');
+    expect(ws.close).not.toHaveBeenCalled();
+  });
+
+  it('closes the socket on a binary frame instead of dropping it past the rate limit', () => {
+    const hub = { message: vi.fn() };
+    const ws = { data: { socketId: 's1' }, close: vi.fn() };
+    routeSocketFrame(hub, ws, new Uint8Array([1, 2, 3]));
+    expect(hub.message).not.toHaveBeenCalled();
+    expect(ws.close).toHaveBeenCalledWith(1003, expect.any(String));
   });
 });
 

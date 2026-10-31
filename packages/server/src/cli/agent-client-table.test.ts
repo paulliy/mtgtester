@@ -117,6 +117,45 @@ describe('TableAgentSession', () => {
     expect(JSON.stringify(events)).not.toContain(TOKEN);
   });
 
+  it('exits non-zero when the join or the seat request is refused', () => {
+    const { session, events, done, isClosed } = makeSession();
+    session.begin();
+    session.receive({ type: 'error', payload: { message: 'That invite code is not valid.' } });
+    expect(done).toEqual([1]);
+    expect(isClosed()).toBe(true);
+    expect(events.at(-1)).toMatchObject({ type: 'error', fatal: true });
+    expect(JSON.stringify(events.at(-1))).toContain('That invite code is not valid.');
+  });
+
+  it('exits non-zero when the seat resume is refused', () => {
+    const { session, done } = makeSession();
+    session.receive({ type: 'seatGranted', payload: { seat: 'P2', seatToken: TOKEN } });
+    session.receive({ type: 'error', payload: { message: 'That token is not valid.' } });
+    expect(done).toEqual([1]);
+  });
+
+  it('keeps going on an error frame once game frames are flowing', () => {
+    const { session, done } = makeSession();
+    session.receive(started('P2'));
+    session.receive({ type: 'error', payload: { message: 'That decision is stale.' } });
+    expect(done).toEqual([]);
+  });
+
+  it('exits non-zero when the host denies the claim', () => {
+    const { session, done, events } = makeSession();
+    session.begin();
+    session.receive(tableState({ seat: null, claim: null }));
+    session.receive({
+      type: 'claimPending',
+      payload: { seat: 'P2', claimId: 'c1', verificationCode: '1234' },
+    } as unknown as TableServerToClientMessage);
+    session.receive(tableState({ seat: null, claim: { seat: 'P2' } }));
+    expect(done).toEqual([]);
+    session.receive(tableState({ seat: null, claim: null }));
+    expect(done).toEqual([1]);
+    expect(JSON.stringify(events.at(-1))).toContain('denied');
+  });
+
   it("adopts the table's game for its seat only, and answers with the first legal action", async () => {
     const { session, sent, events } = makeSession();
     session.receive(started('P1', 'other'));

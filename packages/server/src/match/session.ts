@@ -672,7 +672,8 @@ export class MatchSession {
   /** The player takes their seat back from its fallback bot (table mode, M4). */
   resumeControl(seat: PlayerId): void {
     if (this.clocks?.resumeControl(seat) === true) {
-      this.resyncPlayer(seat);
+      // The client is still connected and already holds the log: board, decision and clocks only.
+      this.resyncPlayer(seat, false);
       return;
     }
     this.reply(seat, {
@@ -1882,19 +1883,22 @@ export class MatchSession {
     if (connected && resyncOnConnect) this.resyncPlayer(seat);
   }
 
-  resyncPlayer(seat: PlayerId): void {
+  /** Republish the seat's view. `includeLog` false skips the log, for a client that still has it. */
+  resyncPlayer(seat: PlayerId, includeLog = true): void {
     const human = this.humanState(seat);
     if (human === undefined) return;
-    this.sendToSeat(seat, {
-      type: 'eventBatch',
-      payload: {
-        gameId: this.opts.gameId,
-        lines: formatPlayerLog(playerFacingEvents(this.engine.eventsSince(0)), seat),
-        frontierTurn: this.engine.getState().turnNumber,
-        snapshotTurns: [],
-        ...(this.allTalk.length > 0 ? { tableTalk: [...this.allTalk] } : {}),
-      },
-    });
+    if (includeLog) {
+      this.sendToSeat(seat, {
+        type: 'eventBatch',
+        payload: {
+          gameId: this.opts.gameId,
+          lines: formatPlayerLog(playerFacingEvents(this.engine.eventsSince(0)), seat),
+          frontierTurn: this.engine.getState().turnNumber,
+          snapshotTurns: [],
+          ...(this.allTalk.length > 0 ? { tableTalk: [...this.allTalk] } : {}),
+        },
+      });
+    }
     this.publishPlayerState(seat, false);
     const result = this.runner.getResult();
     if (result !== null) {

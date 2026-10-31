@@ -57,6 +57,10 @@ export class TableAgentSession {
   private readonly game: AgentClientSession;
   private requested = false;
   private resumed = false;
+  /** The host's pending-claim notice was seen, so a state with no claim later means denial. */
+  private claimSeen = false;
+  /** A game frame arrived since the last join or resume, so an `error` is no longer a refusal. */
+  private settled = false;
   private done = false;
   /** The socket in use; `reconnect` swaps it. */
   private transport: AgentClientTransport;
@@ -124,6 +128,12 @@ export class TableAgentSession {
       this.onTableFrame(message);
       return;
     }
+    if (message.type === 'error' && !this.settled) {
+      // The join, the seat request or the resume was refused; nothing here will fix it.
+      this.fail(`the table refused the request: ${message.payload.message}`);
+      return;
+    }
+    this.settled = true;
     this.game.receive(message);
   }
 
@@ -150,10 +160,19 @@ export class TableAgentSession {
             type: 'requestSeat',
             payload: { seat: this.opts.join.seat, decklist: this.opts.join.decklist },
           });
+        } else if (
+          this.claimSeen &&
+          this.seatToken === null &&
+          you.seat === null &&
+          you.claim === null
+        ) {
+          // The request was pending and now is not, and no seat was granted: the host said no.
+          this.fail('the host denied the seat request.');
         }
         return;
       }
       case 'claimPending':
+        this.claimSeen = true;
         this.opts.io.diagnostic(
           `seat request ${message.payload.seat} is waiting on the host; verification code ` +
             `${message.payload.verificationCode}.`,
@@ -207,6 +226,7 @@ export class TableAgentSession {
   }
 
   private sendResume(seatToken: string): void {
+    this.settled = false;
     this.transport.send({
       type: 'resumeSeat',
       payload: {

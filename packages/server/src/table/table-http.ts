@@ -377,6 +377,22 @@ export const TABLE_IDLE_TIMEOUT_S = 120;
 /** Outbound bytes a socket may have queued before it is closed as too slow to keep up. */
 export const TABLE_BACKPRESSURE_BYTES = 1024 * 1024;
 
+/**
+ * One inbound WebSocket frame. The protocol is text-only, so a binary frame closes the socket
+ * (code 1003) instead of being dropped, where it would dodge the hub's per-socket rate limit.
+ */
+export function routeSocketFrame(
+  hub: Pick<TableSocketHub, 'message'>,
+  ws: { data: { socketId: string }; close(code?: number, reason?: string): void },
+  raw: unknown,
+): void {
+  if (typeof raw !== 'string') {
+    ws.close(1003, 'Text frames only');
+    return;
+  }
+  hub.message(ws.data.socketId, raw);
+}
+
 export interface RunningTableServer {
   readonly port: number;
   readonly origin: string;
@@ -419,7 +435,7 @@ export function startTableServer(deps: TableServerDeps): RunningTableServer {
       return new Response('WebSocket upgrade failed', { status: 400 });
     },
     websocket: {
-      // Binary frames are not part of the protocol. The hub also caps a frame's text length.
+      // Binary frames are not part of the protocol (`routeSocketFrame` closes on one). The hub also caps a frame's text length.
       maxPayloadLength: Math.min(TABLE_MAX_PAYLOAD_BYTES, TABLE_MAX_FRAME_CHARS * 3),
       idleTimeout: TABLE_IDLE_TIMEOUT_S,
       sendPings: true,
@@ -435,8 +451,7 @@ export function startTableServer(deps: TableServerDeps): RunningTableServer {
         if (!hub.open(ws.data.tableId, socket)) ws.close();
       },
       message: (ws, raw) => {
-        if (typeof raw !== 'string') return;
-        hub.message(ws.data.socketId, raw);
+        routeSocketFrame(hub, ws, raw);
       },
       close: (ws) => {
         limiter.release(ws.data.address);
