@@ -190,13 +190,9 @@ overlap; Bolas's Citadel uses both, and merging them is left for its own change.
 ## Pre-merge code review
 
 Before merge, reviewers each read one area of the branch: engine, table server, match and agent client,
-web viewer, scripts, and the pilot cards' evidence. Of the 44 findings, 37 were fixed with a
-regression test that fails without the fix, one turned out not to be a bug, and six stay open:
+web viewer, scripts, and the pilot cards' evidence. Of the 44 findings, 38 were fixed with a
+regression test that fails without the fix, one turned out not to be a bug, and five stay open:
 
-- **Bolas's Citadel and spell faces.** The life cast is never offered for one face of a split,
-  adventure, omen, modal double-faced or bestow card. The engine leaves the action out rather than
-  offering a wrong one. The cast payload carries a single `alternativeCast`, so a face cast for life
-  needs a new payload field. Until then, a split card on top is not offered for life at all (CR 709.3).
 - **Guests filling a table's connections.** Guests can fill `maxConnections` and lock out the host or
   a seated player who reconnects. This needs many addresses, since the per-address limit holds; a
   reserved slot for the host and seats is the fix if it shows up in practice.
@@ -219,6 +215,12 @@ The pilot evidence findings strengthened tests rather than definitions:
   positive controls and missed cases.
 
 Each new check fails against a deliberately broken definition.
+
+Codex's review of the ready PR found the Citadel spell-face gap this review had left open
+unacceptable for a card marked supported, and it was right: Citadel now casts a split half, an
+adventure or omen, or a modal double-faced back face for that face's own mana value. It also
+found a new table's host token lost when storage writes throw; the table store now keeps a copy
+in the tab.
 
 ## Recommendations
 
