@@ -12,6 +12,15 @@ import { PR12_ALL_SCENARIO_IDS } from '../../../packages/server/src/cards/pr12-s
 import { PR10_ALL_SCENARIO_IDS } from '../../../packages/server/src/cards/pr10-scenario-catalog';
 import { PR09_ALL_SCENARIO_IDS } from '../../../packages/server/src/cards/pr09-scenario-catalog';
 import { PR08_SCENARIO_IDS } from '../../../packages/server/src/cards/pr08-scenario-catalog';
+import { BOSEIJU_SCENARIO_IDS } from '../../../packages/server/src/cards/pr08-boseiju-scenarios';
+import { PR08_MODAL_PLAYER_SCENARIO_IDS } from '../../../packages/server/src/cards/pr08-modal-player-scenarios';
+import { OLORIN_SCENARIO_IDS } from '../../../packages/server/src/cards/pr08-olorin-scenarios';
+import {
+  AETHERSPOUTS_SCENARIO_IDS,
+  PR08_REMAINING_SCENARIO_IDS,
+} from '../../../packages/server/src/cards/pr08-remaining-scenarios';
+import { ROTATING_SURVIVOR_SCENARIO_IDS } from '../../../packages/server/src/cards/pr08-rotating-survivor-scenarios';
+import { WINDS_OF_ABANDON_SCENARIO_IDS } from '../../../packages/server/src/cards/pr08-winds-of-abandon-scenarios';
 import { COMBAT_TRIGGER_SCENARIO_IDS } from '../../../packages/server/src/cards/combat-trigger-scenarios';
 import { DRAKUSETH_WORDING_SCENARIO_IDS } from '../../../packages/server/src/cards/drakuseth-wording-scenarios';
 import { WHITE_BLACK_COMBAT_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-combat-scenarios';
@@ -33,6 +42,16 @@ import { WHITE_BLACK_REMAINING_COMBAT_SCENARIO_IDS } from '../../../packages/ser
 import { WHITE_BLACK_TERGRID_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-tergrid-scenarios';
 import { WHITE_BLACK_HAND_LIMIT_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-hand-limit-scenarios';
 import { WHITE_BLACK_KEYWORD_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-keyword-scenarios';
+/** PR08 batches whose viewer flows live in their own `pr08-*-card-test-lab.spec.ts`. */
+const PR08_OWN_SPEC_SCENARIO_IDS: readonly string[] = [
+  ...BOSEIJU_SCENARIO_IDS,
+  ...PR08_MODAL_PLAYER_SCENARIO_IDS,
+  ...OLORIN_SCENARIO_IDS,
+  ...PR08_REMAINING_SCENARIO_IDS,
+  ...AETHERSPOUTS_SCENARIO_IDS,
+  ...ROTATING_SURVIVOR_SCENARIO_IDS,
+  ...WINDS_OF_ABANDON_SCENARIO_IDS,
+];
 const SPELL_FACE_VIEWER_PINS = JSON.parse(
   readFileSync('packages/engine/tests/fixtures/selected-spell-faces-oracle.json', 'utf8'),
 ) as { cards: { card: OracleCard }[] };
@@ -87,6 +106,7 @@ async function runScenario(page: Page, title: string): Promise<void> {
     for (const scenarioId of optionIds)
       if (
         !PR08_SCENARIO_IDS.includes(scenarioId) &&
+        !PR08_OWN_SPEC_SCENARIO_IDS.includes(scenarioId) &&
         !PR09_ALL_SCENARIO_IDS.includes(scenarioId) &&
         !PR10_ALL_SCENARIO_IDS.includes(scenarioId) &&
         !PR11_ALL_SCENARIO_IDS.includes(scenarioId) &&
@@ -128,6 +148,7 @@ async function runScenario(page: Page, title: string): Promise<void> {
         .filter(
           (id) =>
             !PR08_SCENARIO_IDS.includes(id) &&
+            !PR08_OWN_SPEC_SCENARIO_IDS.includes(id) &&
             !PR09_ALL_SCENARIO_IDS.includes(id) &&
             !PR10_ALL_SCENARIO_IDS.includes(id) &&
             !PR11_ALL_SCENARIO_IDS.includes(id) &&
