@@ -86,7 +86,7 @@ Each step is one or more pull requests. A step's exit is the exit of the plan it
 | 10   | done  | P6: server-built damage and life cues on each batch; the board animates from them                                                                       | #44          |
 | 11   | done  | phase 3: manifest refs, IR mutation (all reviewed cards proven), facets; phase 4: invariants, zone lint, tap sites, fuzz, nightly bulk job, diagnostics | #44          |
 | 12   | done  | M5 exposure, TLS run, review; M6 table app, lobby, table bar, post-game, table e2e and CI job                                                           | #44          |
-| 13   | doing | phase 5 deferred by its go/no-go; phase 6 cards drawn and pinned, pilot modeling under way                                                              | #44          |
+| 13   | done  | phase 5 deferred by its go/no-go; phase 6 pilot: 20 cards modeled, [reviewed](../reviews/card-authoring-pilot-2026-10-31.md)                            | #44          |
 
 ## Notes from delivery
 
@@ -223,5 +223,14 @@ bulk-smoke` interprets and validates the whole bank and fails on a throw, invali
   Malfunction, Syr Konrad, the Grim, Jet Medallion, Bolas's Citadel and Etali, Primal Storm take
   the current one. All 20 are in the pin store. The draw leaves pinned cards out, so it
   reproduces only before its cards are pinned; a later run draws the next 20.
+- **Phase 6 pilot result (step 13).** All 20 cards were modeled to the completion standard and pass
+  manifest references and mutation. The new workflow's median time per card was 27.6 minutes
+  against the control's 23.4, so its 25% target was missed; the new arm also drew the harder cards
+  and paid for the runner fixes. No new-workflow card added a card-named op, and no follow-up fix
+  has landed yet; the 30-day count is due 2026-11-30. The
+  [pilot review](../reviews/card-authoring-pilot-2026-10-31.md) has the measurements and findings.
+- **Table shutdown on Bun 1.3.14.** The scripted worker runs hung at shutdown: on the pinned Bun
+  1.3.14, `server.stop()` never settles once a server-side WebSocket has closed, though the server
+  stops listening. `stop()` waits for it at most a second; Bun 1.4 settles it at once.
 - **Two hash definitions for pins.** Pins before PR08 hashed a card's JSON with sorted keys; later
   ones hash it as written. The pin store keeps the manifest's key and accepts either.

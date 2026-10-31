@@ -464,6 +464,24 @@ runner (`packages/engine/tests/scenario/`) and loaded by the Card Test Lab from 
 scaffold `card:new` writes stays rejected until filled: the stub keeps the card unmodeled, the
 manifest clauses have no test IDs, and the skip lint refuses `it.todo`.
 
+What the runner offers, from the phase 6 pilot ([review](../reviews/card-authoring-pilot-2026-10-31.md)):
+
+- A scenario's `continue` plays on past its script: `throughCombat`, `toPostcombatMain`,
+  `toEndStep`, `throughNextTurn`, `throughUpkeeps` and `throughPrecombatMains`. To reach your draw
+  step, start on the previous seat's turn and continue `throughPrecombatMains`.
+- A script step's `prompt` names the decision it answers; options with identical descriptions are
+  one choice to the runner. A single-candidate choice is answered automatically.
+- `choiceAfterScript` and `firstDecisionOf` (in `tests/scenario/runner.ts`) read the decision a
+  scenario stops at, for "this option is (not) offered" negatives; an event expectation takes a
+  `count`.
+- `scenarios.test.ts` also runs every JSON file, so a manifest test ID for a scenario test is
+  qualified with its file: `cards/<batch>/<file>.test.ts::<id>`.
+- `mutate-cards` kills a mutant only on an assertion failure, not a thrown error: assert on what
+  the card did before anything that could throw.
+- An override's `handledLines` are the interpreter's unparsed lines exactly as `card:new` prints
+  them, with the card's own name as `~`. Claiming a line the interpreter parses leaves the card
+  unmodeled, which a behavior test that never checks `modeled` does not notice.
+
 **Forge scripts are a reference, never a source.** `card:new` shows a card's Forge script when the
 network allows; it is GPL-3.0 and must not enter this repository in any form, including retyped by
 hand or translated into our IR. The Oracle text, the Comprehensive Rules and our own tests are the
