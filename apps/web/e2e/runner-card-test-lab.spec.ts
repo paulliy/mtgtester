@@ -740,6 +740,30 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await expect(permanent(page, 'P1', 'Clue')).toHaveCount(0);
     await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(1);
   },
+  'inspiring-call-two-countered': async (page) => {
+    await castWith(page, hand(page, 'Inspiring Call'), { resolves: /Inspiring Call[^]*resolves/ });
+    await expect(keywordOn(page, 'P1', 'Scenario Bear', 'indestructible')).toHaveCount(1);
+    await expect(keywordOn(page, 'P1', 'Scenario Elk', 'indestructible')).toHaveCount(1);
+    await expect(keywordOn(page, 'P1', 'Scenario Cat', 'indestructible')).toHaveCount(0);
+    await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(2);
+  },
+  'inspiring-call-opponent-creature': async (page) => {
+    await castWith(page, hand(page, 'Inspiring Call'), { resolves: /Inspiring Call[^]*resolves/ });
+    await expect(keywordOn(page, 'P1', 'Scenario Bear', 'indestructible')).toHaveCount(1);
+    await expect(keywordOn(page, 'P2', 'Scenario Rival', 'indestructible')).toHaveCount(0);
+    await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(1);
+  },
+  'inspiring-call-minus-counter': async (page) => {
+    await castWith(page, hand(page, 'Inspiring Call'), { resolves: /Inspiring Call[^]*resolves/ });
+    await expect(keywordOn(page, 'P1', 'Scenario Elk', 'indestructible')).toHaveCount(0);
+    await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(0);
+  },
+  'inspiring-call-survives-wrath': async (page) => {
+    await castWith(page, hand(page, 'Inspiring Call'), { resolves: /Inspiring Call[^]*resolves/ });
+    await castWith(page, hand(page, 'Scenario Wrath'), { resolves: /Scenario Wrath[^]*resolves/ });
+    await expect(permanent(page, 'P1', 'Scenario Cat')).toHaveCount(0);
+    await expect(permanent(page, 'P1', 'Scenario Bear')).toHaveCount(1);
+  },
   'chrome-mox-no-artifact-or-land': async (page) => {
     await castChromeMox(page);
     await passUntil(page, permanent(page, 'P1', 'Chrome Mox'));

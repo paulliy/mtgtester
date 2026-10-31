@@ -107,6 +107,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'inspiring-call.json',
+    file: scenarioFile(
+      'inspiring-call.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/inspiring-call.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'mithril-coat.json',
     file: scenarioFile(
       'mithril-coat.json',

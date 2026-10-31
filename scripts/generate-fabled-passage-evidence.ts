@@ -261,6 +261,7 @@ const SOURCE_FILES = [
   'packages/engine/tests/scenarios/electrickery.json',
   'packages/engine/tests/scenarios/ettercap.json',
   'packages/engine/tests/scenarios/everflowing-chalice.json',
+  'packages/engine/tests/scenarios/inspiring-call.json',
   'packages/engine/tests/scenarios/mithril-coat.json',
   'packages/engine/tests/scenarios/mizzium-mortars.json',
   'packages/engine/tests/scenarios/mox-diamond.json',

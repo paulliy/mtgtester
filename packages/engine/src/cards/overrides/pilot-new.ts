@@ -1,5 +1,14 @@
 import { allOf, anyOf, ofSubtype, ofSupertype, ofType, YOURS } from '../selector';
-import { activated, mana, manaCost, onDrawStep, onEtb, targetSlots, triggered } from '../templates';
+import {
+  activated,
+  mana,
+  manaCost,
+  onDrawStep,
+  onEtb,
+  spell,
+  targetSlots,
+  triggered,
+} from '../templates';
 import { constant } from '../value';
 import { defineCard } from './index';
 
@@ -197,5 +206,28 @@ export function registerPilotNewOverrides(): void {
     'Academy Manufactor',
     ['If you would create a Clue, Food, or Treasure token, instead create one of each.'],
     { ruleStatics: [{ kind: 'createClueFoodAndTreasure' }] },
+  );
+
+  // "Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain
+  // indestructible until end of turn." Both read the same set as the spell resolves (CR 608.2c):
+  // the count is taken once, and the grant reaches the creatures with a counter then, not ones
+  // that get a counter later in the turn (CR 611.2c).
+  const countered = allOf(ofType('Creature'), YOURS, { kind: 'hasCounter', counter: '+1/+1' });
+  defineCard(
+    '9b9a10ff-5a5d-4df8-88aa-18d84ff9117c',
+    'Inspiring Call',
+    [
+      'Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn.',
+    ],
+    {
+      spellAbility: spell({
+        effects: [
+          { op: 'draw', count: { kind: 'countPermanents', selector: countered, scope: 'you' } },
+          { op: 'grantKeywordEachUntilEot', selector: countered, keyword: 'indestructible' },
+        ],
+        description:
+          'Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn',
+      }),
+    },
   );
 }

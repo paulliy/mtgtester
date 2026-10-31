@@ -18090,6 +18090,26 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "9b9a10ff-5a5d-4df8-88aa-18d84ff9117c": {
+      "name": "Inspiring Call",
+      "oracleSha256": "c650024b4da3fb908aa01ec00751a29d8d6c13255ca027e98bc9a8e0c25cf1d1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy them.)",
+          "implementation": [
+            "spell: draw countPermanents(creature, yours, hasCounter +1/+1); grantKeywordEachUntilEot indestructible over the same selector"
+          ],
+          "engineTestIds": [
+            "cards/pilot-new/inspiring-call.test.ts::inspiring-call-two-countered",
+            "cards/pilot-new/inspiring-call.test.ts::inspiring-call-opponent-creature",
+            "cards/pilot-new/inspiring-call.test.ts::inspiring-call-minus-counter",
+            "cards/pilot-new/inspiring-call.test.ts::inspiring-call-survives-wrath"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

@@ -1,0 +1,264 @@
+{
+  "schemaVersion": 1,
+  "card": "Inspiring Call",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Elk",
+      "typeLine": "Creature — Elk",
+      "manaCost": "{1}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Cat",
+      "typeLine": "Creature — Cat",
+      "manaCost": "{1}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Rival",
+      "typeLine": "Creature — Wolf",
+      "manaCost": "{1}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Wrath",
+      "typeLine": "Sorcery",
+      "manaCost": "{0}",
+      "oracleText": "Destroy all creatures."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "inspiring-call-two-countered",
+      "title": "Inspiring Call: two creatures with +1/+1 counters, two cards",
+      "clauses": [1],
+      "instructions": ["Cast Inspiring Call with your three Forests."],
+      "expectedOutcome": "You draw two cards; Scenario Bear and Scenario Elk gain indestructible, Scenario Cat does not.",
+      "seats": {
+        "P1": {
+          "hand": ["Inspiring Call"],
+          "battlefield": [
+            "Forest",
+            "Forest",
+            "Forest",
+            {
+              "card": "Scenario Bear",
+              "counters": {
+                "+1/+1": 1
+              }
+            },
+            {
+              "card": "Scenario Elk",
+              "counters": {
+                "+1/+1": 2
+              }
+            },
+            "Scenario Cat"
+          ]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Inspiring Call/"
+        }
+      ],
+      "expect": [
+        {
+          "event": {
+            "type": "draw",
+            "count": 2
+          }
+        },
+        {
+          "keywords": {
+            "card": "Scenario Bear",
+            "has": ["indestructible"]
+          }
+        },
+        {
+          "keywords": {
+            "card": "Scenario Elk",
+            "has": ["indestructible"]
+          }
+        },
+        {
+          "keywords": {
+            "card": "Scenario Cat",
+            "lacks": ["indestructible"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "inspiring-call-opponent-creature",
+      "title": "Inspiring Call: an opponent's countered creature does not count",
+      "clauses": [1],
+      "instructions": ["Cast Inspiring Call."],
+      "expectedOutcome": "You draw one card for Scenario Bear; P2's Scenario Rival gains nothing.",
+      "seats": {
+        "P1": {
+          "hand": ["Inspiring Call"],
+          "battlefield": [
+            "Forest",
+            "Forest",
+            "Forest",
+            {
+              "card": "Scenario Bear",
+              "counters": {
+                "+1/+1": 1
+              }
+            }
+          ]
+        },
+        "P2": {
+          "battlefield": [
+            {
+              "card": "Scenario Rival",
+              "counters": {
+                "+1/+1": 1
+              }
+            }
+          ]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Inspiring Call/"
+        }
+      ],
+      "expect": [
+        {
+          "event": {
+            "type": "draw",
+            "count": 1
+          }
+        },
+        {
+          "keywords": {
+            "card": "Scenario Bear",
+            "has": ["indestructible"]
+          }
+        },
+        {
+          "keywords": {
+            "card": "Scenario Rival",
+            "lacks": ["indestructible"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "inspiring-call-minus-counter",
+      "title": "Inspiring Call: a -1/-1 counter is not a +1/+1 counter",
+      "clauses": [1],
+      "instructions": ["Cast Inspiring Call."],
+      "expectedOutcome": "You draw nothing, and Scenario Elk gains nothing.",
+      "seats": {
+        "P1": {
+          "hand": ["Inspiring Call"],
+          "battlefield": [
+            "Forest",
+            "Forest",
+            "Forest",
+            {
+              "card": "Scenario Elk",
+              "counters": {
+                "-1/-1": 1
+              }
+            }
+          ]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Inspiring Call/"
+        }
+      ],
+      "expect": [
+        {
+          "event": {
+            "type": "draw",
+            "count": 0
+          }
+        },
+        {
+          "keywords": {
+            "card": "Scenario Elk",
+            "lacks": ["indestructible"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Inspiring Call"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "inspiring-call-survives-wrath",
+      "title": "Inspiring Call: an indestructible creature survives a wrath",
+      "clauses": [1],
+      "instructions": ["Cast Inspiring Call.", "Cast Scenario Wrath."],
+      "expectedOutcome": "Scenario Bear survives; Scenario Cat is destroyed.",
+      "seats": {
+        "P1": {
+          "hand": ["Inspiring Call", "Scenario Wrath"],
+          "battlefield": [
+            "Forest",
+            "Forest",
+            "Forest",
+            {
+              "card": "Scenario Bear",
+              "counters": {
+                "+1/+1": 1
+              }
+            },
+            "Scenario Cat"
+          ]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Inspiring Call/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Wrath/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Bear"],
+            "lacks": ["Scenario Cat"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Cat"]
+          }
+        }
+      ]
+    }
+  ]
+}

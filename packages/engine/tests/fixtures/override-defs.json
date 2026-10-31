@@ -13481,6 +13481,67 @@
     }
   },
   {
+    "oracleId": "9b9a10ff-5a5d-4df8-88aa-18d84ff9117c",
+    "name": "Inspiring Call",
+    "handledLines": [
+      "Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn",
+        "effects": [
+          {
+            "count": {
+              "kind": "countPermanents",
+              "scope": "you",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "counter": "+1/+1",
+                    "kind": "hasCounter"
+                  }
+                ]
+              }
+            },
+            "op": "draw"
+          },
+          {
+            "keyword": "indestructible",
+            "op": "grantKeywordEachUntilEot",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "counter": "+1/+1",
+                  "kind": "hasCounter"
+                }
+              ]
+            }
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "9ba89c25-5302-414f-a2ec-436b8981999d",
     "name": "Overwhelming Instinct",
     "handledLines": [
@@ -32921,6 +32982,67 @@
         "effects": [
           {
             "op": "inkshield"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
+    "oracleId": "oracle-inspiring-call",
+    "name": "Inspiring Call",
+    "handledLines": [
+      "Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn",
+        "effects": [
+          {
+            "count": {
+              "kind": "countPermanents",
+              "scope": "you",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "counter": "+1/+1",
+                    "kind": "hasCounter"
+                  }
+                ]
+              }
+            },
+            "op": "draw"
+          },
+          {
+            "keyword": "indestructible",
+            "op": "grantKeywordEachUntilEot",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "counter": "+1/+1",
+                  "kind": "hasCounter"
+                }
+              ]
+            }
           }
         ],
         "kind": "spell",
