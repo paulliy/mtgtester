@@ -388,6 +388,22 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     // Scenario Trinket is an artifact but not a Treasure: Face-Breaker has nothing to offer.
     await expect(permanent(page, 'P1', 'Professional Face-Breaker')).not.toHaveClass(/actionable/);
   },
+  'face-breaker-cast-exiled-this-turn': async (page) => {
+    await attack(page, [['Professional Face-Breaker', 'P2']]);
+    await passUntil(page, permanent(page, 'P1', 'Treasure'));
+    await activate(
+      page,
+      permanent(page, 'P1', 'Professional Face-Breaker'),
+      /Sacrifice a Treasure/,
+    );
+    const bear = seatZone(page, 'P1', 'Exile')
+      .locator('.zone-card-thumb')
+      .filter({ has: page.getByRole('img', { name: 'Scenario Bear' }) })
+      .first();
+    await castWith(page, bear, { resolves: /Scenario Bear[^]*resolves/ });
+    await expect(permanent(page, 'P1', 'Scenario Bear')).toHaveCount(1);
+    await expect(inZone(page, 'P1', 'Exile', 'Scenario Bear')).toHaveCount(0);
+  },
   'face-breaker-permission-ends': async (page) => {
     await attack(page, [['Professional Face-Breaker', 'P2']]);
     await passUntil(page, permanent(page, 'P1', 'Treasure'));
@@ -491,6 +507,32 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
       }),
     ).toHaveCount(0);
   },
+  'takenuma-three-legends-one-swamp': async (page) => {
+    await channelTakenuma(page);
+    await passStackUntil(page, hand(page, 'Scenario Bear'));
+    await expect(permanent(page, 'P1', 'Swamp').locator('.tap-badge')).toHaveCount(1);
+    await expect(inZone(page, 'P1', 'Graveyard', 'Takenuma, Abandoned Mire')).toHaveCount(1);
+  },
+  'takenuma-one-legend-not-enough': async (page) => {
+    await passUntil(page, hand(page, 'Scenario Sorcery').and(page.locator('.actionable')));
+    // One legend takes {1} off: {2}{B} is still more than two Swamps pay.
+    await hand(page, 'Takenuma, Abandoned Mire').click();
+    await expect(
+      page.locator('.source-actions .source-action-row button').filter({
+        hasText: /Discard this card/,
+      }),
+    ).toHaveCount(0);
+  },
+  'takenuma-three-legends-no-black': async (page) => {
+    await passUntil(page, hand(page, 'Island').and(page.locator('.actionable')));
+    // Three legends take off the generic {2}; the {B} stays, and a Forest cannot pay it.
+    await hand(page, 'Takenuma, Abandoned Mire').click();
+    await expect(
+      page.locator('.source-actions .source-action-row button').filter({
+        hasText: /Discard this card/,
+      }),
+    ).toHaveCount(0);
+  },
   'takenuma-tap-for-black': async (page) => {
     await castWith(page, hand(page, 'Scenario Sorcery'), {
       resolves: /Scenario Sorcery[^]*resolves/,
@@ -580,7 +622,16 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     const chalice = permanent(page, 'P1', 'Everflowing Chalice');
     await expect(chalice).toHaveCount(1);
     await expect(chalice.locator('.counters')).toHaveCount(0);
-    await expect(hand(page, 'Scenario Ox')).not.toHaveClass(/actionable/);
+    // The Forest's land play gives you priority; Chalice adds nothing, so the Mite's {1} is unpaid.
+    await passUntil(page, hand(page, 'Forest').and(page.locator('.actionable')));
+    await expectNotCastable(page, 'Scenario Mite');
+  },
+  'everflowing-chalice-one-counter-taps': async (page) => {
+    await castWith(page, hand(page, 'Scenario Mite'), { resolves: /Scenario Mite[^]*resolves/ });
+    const chalice = permanent(page, 'P1', 'Everflowing Chalice');
+    await expect(permanent(page, 'P1', 'Scenario Mite')).toHaveCount(1);
+    await expect(chalice.locator('.tap-badge')).toHaveCount(1);
+    await expect(chalice.locator('.counters')).toContainText(/charge.*1/i);
   },
   'sylvan-library-keep-both': async (page) => {
     await useSylvanLibrary(page);
@@ -678,6 +729,20 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await passStackUntil(page, permanent(page, 'P1', 'Orc Army').filter({ hasText: '2/2' }));
     await expect(life(page, 'P2')).toHaveText('38');
     await expect(permanent(page, 'P1', 'Orc Army')).toHaveCount(1);
+  },
+  'bowmasters-second-draw-in-draw-step': async (page) => {
+    // P2's draw for the turn asks nothing; its Scenario Flash Insight draw, in the same step, does.
+    await bowmastersTarget(page, 'P2');
+    await passStackUntil(page, permanent(page, 'P1', 'Orc Army').filter({ hasText: '1/1' }));
+    await expect(life(page, 'P2')).toHaveText('39');
+    await expect(permanent(page, 'P1', 'Orc Army')).toHaveCount(1);
+  },
+  'bowmasters-other-opponent-draws-in-their-turn': async (page) => {
+    // P3 draws during P2's draw step, which is not P3's own: the trigger asks for a target.
+    await bowmastersTarget(page, 'P3');
+    await passStackUntil(page, permanent(page, 'P1', 'Orc Army').filter({ hasText: '1/1' }));
+    await expect(life(page, 'P3')).toHaveText('39');
+    await expect(life(page, 'P2')).toHaveText('40');
   },
   'bowmasters-first-draw-exempt': async (page) => {
     await passUntil(page, logLine(page, /game over/));
@@ -780,6 +845,24 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await passStackUntil(page, logLine(page, /Scenario Spark[^]*resolves/));
     await expect(life(page, 'P2')).toHaveText('37');
     await expect(permanent(page, 'P1', 'Treasure')).toHaveCount(0);
+  },
+  'ragavan-hits-third-player': async (page) => {
+    await attack(page, [['Ragavan, Nimble Pilferer', 'P3']]);
+    await passUntil(page, permanent(page, 'P1', 'Treasure'));
+    await expect(life(page, 'P3')).toHaveText('38');
+    // P3's top card is exiled, not the first opponent's: P2's Scenario Wall stays put.
+    const spark = seatZone(page, 'P3', 'Exile')
+      .locator('.zone-card-thumb')
+      .filter({ has: page.getByRole('img', { name: 'Scenario Spark' }) })
+      .first();
+    await passUntil(page, spark.and(page.locator('.actionable')));
+    await expect(inZone(page, 'P2', 'Exile', 'Scenario Wall')).toHaveCount(0);
+    await spark.click();
+    await page.locator('.opponent[data-seat="P3"] > header').click();
+    await confirmButton(page).click();
+    await passStackUntil(page, logLine(page, /Scenario Spark[^]*resolves/));
+    await expect(life(page, 'P3')).toHaveText('37');
+    await expect(life(page, 'P2')).toHaveText('40');
   },
   'ragavan-blocked': async (page) => {
     await attack(page, [['Ragavan, Nimble Pilferer', 'P2']]);
