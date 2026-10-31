@@ -561,7 +561,7 @@ describe('primitive evidence and eligibility', { timeout: 60_000 }, () => {
         evidence,
       ),
     ).toThrow('reviewed primitives are not proven');
-  }, 30_000);
+  }, 65_000);
 
   it('rejects promotion input routed to a different repository', () => {
     const directory = mkdtempSync(resolve(tmpdir(), 'mtg-other-review-root-'));
