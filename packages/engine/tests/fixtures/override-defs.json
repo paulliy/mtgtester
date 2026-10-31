@@ -21773,6 +21773,20 @@
     }
   },
   {
+    "oracleId": "f36d1d8b-8303-44a9-ab56-531931641ea2",
+    "name": "Academy Manufactor",
+    "handledLines": [
+      "If you would create a Clue, Food, or Treasure token, instead create one of each."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "createClueFoodAndTreasure"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "f3c5978a-70fa-431f-933b-b954bd0db0ea",
     "name": "Mox Diamond",
     "handledLines": [
@@ -23232,6 +23246,20 @@
             "player": "you",
             "when": "endStep"
           }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-academy-manufactor",
+    "name": "Academy Manufactor",
+    "handledLines": [
+      "If you would create a Clue, Food, or Treasure token, instead create one of each."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "createClueFoodAndTreasure"
         }
       ]
     }

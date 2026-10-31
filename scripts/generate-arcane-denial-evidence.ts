@@ -261,6 +261,7 @@ const SOURCE_FILES = [
   'packages/engine/tests/fixtures/queen-engine-batch3-oracle.json',
   'packages/engine/tests/fixtures/pin-store.json',
   'packages/engine/tests/fixtures/reviewed-five-oracle.json',
+  'packages/engine/tests/scenarios/academy-manufactor.json',
   'packages/engine/tests/scenarios/chrome-mox.json',
   'packages/engine/tests/scenarios/electrickery.json',
   'packages/engine/tests/scenarios/ettercap.json',

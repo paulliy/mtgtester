@@ -51,6 +51,19 @@ const scenarioFile = (name: string, text: string): CardScenarioFile =>
  */
 export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScenarioFile }> = [
   {
+    name: 'academy-manufactor.json',
+    file: scenarioFile(
+      'academy-manufactor.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/academy-manufactor.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'chrome-mox.json',
     file: scenarioFile(
       'chrome-mox.json',

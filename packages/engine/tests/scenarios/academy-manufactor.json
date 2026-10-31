@@ -1,0 +1,314 @@
+{
+  "schemaVersion": 1,
+  "card": "Academy Manufactor",
+  "supportCards": [
+    {
+      "name": "Scenario Hoard",
+      "typeLine": "Sorcery",
+      "manaCost": "{0}",
+      "oracleText": "Create a Treasure token."
+    },
+    {
+      "name": "Scenario Picnic",
+      "typeLine": "Sorcery",
+      "manaCost": "{0}",
+      "oracleText": "Create a Food token."
+    },
+    {
+      "name": "Scenario Twin Hoard",
+      "typeLine": "Sorcery",
+      "manaCost": "{0}",
+      "oracleText": "Create two Treasure tokens."
+    },
+    {
+      "name": "Scenario Muster",
+      "typeLine": "Sorcery",
+      "manaCost": "{0}",
+      "oracleText": "Create a 1/1 white Soldier creature token."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "manufactor-treasure",
+      "title": "Academy Manufactor: a Treasure becomes a Clue, a Food and a Treasure",
+      "clauses": [1],
+      "instructions": ["Cast Scenario Hoard."],
+      "expectedOutcome": "You create one Clue, one Food and one Treasure.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Hoard"],
+          "battlefield": ["Academy Manufactor"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Hoard/"
+        }
+      ],
+      "expect": [
+        {
+          "event": {
+            "type": "tokenCreated",
+            "payload": "/\"name\":\"Clue\"/",
+            "count": 1
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "payload": "/\"name\":\"Food\"/",
+            "count": 1
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "payload": "/\"name\":\"Treasure\"/",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "manufactor-food",
+      "title": "Academy Manufactor: a Food becomes one of each",
+      "clauses": [1],
+      "instructions": ["Cast Scenario Picnic."],
+      "expectedOutcome": "You create one Clue, one Food and one Treasure.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Picnic"],
+          "battlefield": ["Academy Manufactor"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Picnic/"
+        }
+      ],
+      "expect": [
+        {
+          "event": {
+            "type": "tokenCreated",
+            "payload": "/\"name\":\"Clue\"/",
+            "count": 1
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "payload": "/\"name\":\"Food\"/",
+            "count": 1
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "payload": "/\"name\":\"Treasure\"/",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "manufactor-two-treasures",
+      "title": "Academy Manufactor: two Treasures become two of each",
+      "clauses": [1],
+      "instructions": ["Cast Scenario Twin Hoard."],
+      "expectedOutcome": "You create two Clues, two Foods and two Treasures.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Twin Hoard"],
+          "battlefield": ["Academy Manufactor"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Twin Hoard/"
+        }
+      ],
+      "expect": [
+        {
+          "event": {
+            "type": "tokenCreated",
+            "payload": "/\"name\":\"Clue\"/",
+            "count": 2
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "payload": "/\"name\":\"Food\"/",
+            "count": 2
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "payload": "/\"name\":\"Treasure\"/",
+            "count": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "manufactor-two-manufactors",
+      "title": "Academy Manufactor: with two, a Treasure becomes three of each",
+      "clauses": [1],
+      "instructions": ["Cast Scenario Hoard with two Academy Manufactors."],
+      "expectedOutcome": "Each Manufactor applies to the other's tokens: three Clues, three Foods and three Treasures.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Hoard"],
+          "battlefield": ["Academy Manufactor", "Academy Manufactor"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Hoard/"
+        }
+      ],
+      "expect": [
+        {
+          "event": {
+            "type": "tokenCreated",
+            "payload": "/\"name\":\"Clue\"/",
+            "count": 3
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "payload": "/\"name\":\"Food\"/",
+            "count": 3
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "payload": "/\"name\":\"Treasure\"/",
+            "count": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "manufactor-other-token",
+      "title": "Academy Manufactor: a Soldier token is not replaced",
+      "clauses": [1],
+      "instructions": ["Cast Scenario Muster."],
+      "expectedOutcome": "You create only the Soldier.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Muster"],
+          "battlefield": ["Academy Manufactor"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Muster/"
+        }
+      ],
+      "expect": [
+        {
+          "event": {
+            "type": "tokenCreated",
+            "payload": "/\"name\":\"Soldier\"/",
+            "count": 1
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "manufactor-opponent-treasure",
+      "title": "Academy Manufactor: an opponent's Treasure is not replaced",
+      "clauses": [1],
+      "instructions": ["On P2's turn, P2 casts Scenario Hoard."],
+      "expectedOutcome": "P2 creates only a Treasure.",
+      "turn": {
+        "player": "P2"
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Academy Manufactor"]
+        },
+        "P2": {
+          "hand": ["Scenario Hoard"]
+        }
+      },
+      "script": [
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Hoard/"
+        }
+      ],
+      "expect": [
+        {
+          "event": {
+            "type": "tokenCreated",
+            "payload": "/\"name\":\"Treasure\"/",
+            "count": 1
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "manufactor-crack-clue",
+      "title": "Academy Manufactor: the Clue it makes draws a card",
+      "clauses": [1],
+      "instructions": [
+        "Cast Scenario Hoard.",
+        "Sacrifice the Treasure for {G} and tap a Forest to pay the Clue's {2}, and draw a card."
+      ],
+      "expectedOutcome": "The Clue is sacrificed and you draw a card.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Hoard"],
+          "battlefield": ["Academy Manufactor", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Hoard/"
+        },
+        {
+          "player": "P1",
+          "choose": "/Clue.*Draw a card/"
+        }
+      ],
+      "expect": [
+        {
+          "event": {
+            "type": "draw",
+            "count": 1
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Clue", "Treasure"]
+          }
+        }
+      ]
+    }
+  ]
+}

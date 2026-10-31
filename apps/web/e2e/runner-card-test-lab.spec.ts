@@ -209,6 +209,19 @@ async function bowmastersTarget(page: Page, target: string | [string, string]): 
   await confirmButton(page).click();
 }
 
+/** Cast a free sorcery and wait for Academy Manufactor's tokens to appear. */
+async function castForTokens(page: Page, name: string): Promise<void> {
+  await castWith(page, hand(page, name), { resolves: new RegExp(`${name}[^]*resolves`) });
+}
+
+/** A seat's token stack named `name`, showing `count` copies (one tile when count is 1). */
+async function expectTokens(page: Page, seat: string, name: string, count: number): Promise<void> {
+  const tile = permanent(page, seat, name);
+  await expect(tile).toHaveCount(1);
+  if (count === 1) await expect(tile.locator('.stack-count-badge')).toHaveCount(0);
+  else await expect(tile.locator('.stack-count-badge')).toHaveText(`×${count}`);
+}
+
 const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
   'mizzium-mortars-target': async (page) => {
     await castWith(page, hand(page, 'Mizzium Mortars'), {
@@ -690,6 +703,42 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     );
     await expect(permanent(page, 'P1', 'Orc Army')).toHaveCount(0);
     await expect(life(page, 'P2')).toHaveText('39');
+  },
+  'manufactor-treasure': async (page) => {
+    await castForTokens(page, 'Scenario Hoard');
+    for (const kind of ['Clue', 'Food', 'Treasure']) await expectTokens(page, 'P1', kind, 1);
+  },
+  'manufactor-food': async (page) => {
+    await castForTokens(page, 'Scenario Picnic');
+    for (const kind of ['Clue', 'Food', 'Treasure']) await expectTokens(page, 'P1', kind, 1);
+  },
+  'manufactor-two-treasures': async (page) => {
+    await castForTokens(page, 'Scenario Twin Hoard');
+    for (const kind of ['Clue', 'Food', 'Treasure']) await expectTokens(page, 'P1', kind, 2);
+  },
+  'manufactor-two-manufactors': async (page) => {
+    await castForTokens(page, 'Scenario Hoard');
+    for (const kind of ['Clue', 'Food', 'Treasure']) await expectTokens(page, 'P1', kind, 3);
+  },
+  'manufactor-other-token': async (page) => {
+    await castForTokens(page, 'Scenario Muster');
+    await expectTokens(page, 'P1', 'Soldier', 1);
+    for (const kind of ['Clue', 'Food', 'Treasure'])
+      await expect(permanent(page, 'P1', kind)).toHaveCount(0);
+  },
+  'manufactor-opponent-treasure': async (page) => {
+    await passUntil(page, permanent(page, 'P2', 'Treasure'));
+    await passUntil(page, logLine(page, /game over/));
+    for (const kind of ['Clue', 'Food']) await expect(permanent(page, 'P2', kind)).toHaveCount(0);
+    for (const kind of ['Clue', 'Food', 'Treasure'])
+      await expect(permanent(page, 'P1', kind)).toHaveCount(0);
+  },
+  'manufactor-crack-clue': async (page) => {
+    await castForTokens(page, 'Scenario Hoard');
+    await activate(page, permanent(page, 'P1', 'Clue'), /Draw a card/);
+    await passStackUntil(page, logLine(page, /Clue[^]*resolves/));
+    await expect(permanent(page, 'P1', 'Clue')).toHaveCount(0);
+    await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(1);
   },
   'chrome-mox-no-artifact-or-land': async (page) => {
     await castChromeMox(page);

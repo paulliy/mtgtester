@@ -188,4 +188,14 @@ export function registerPilotNewOverrides(): void {
       ],
     },
   );
+
+  // "If you would create a Clue, Food, or Treasure token, instead create one of each." A
+  // replacement on its controller's token creation (CR 614.1a), not a trigger: the extra tokens
+  // are created in the same event. Two Manufactors make three of each (the card's ruling).
+  defineCard(
+    'f36d1d8b-8303-44a9-ab56-531931641ea2',
+    'Academy Manufactor',
+    ['If you would create a Clue, Food, or Treasure token, instead create one of each.'],
+    { ruleStatics: [{ kind: 'createClueFoodAndTreasure' }] },
+  );
 }

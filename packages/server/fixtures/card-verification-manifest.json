@@ -18067,6 +18067,29 @@
           "reason": "A token in a graveyard ceases to exist as a state-based action (CR 704.5d), which is not a zone change, so a token never leaves a graveyard; the card's ruling is that a dying token triggers Konrad once."
         }
       ]
+    },
+    "f36d1d8b-8303-44a9-ab56-531931641ea2": {
+      "name": "Academy Manufactor",
+      "oracleSha256": "16dc5dc9fb1e0b295a8de67ee15d44b85a304a9bb87e2cb96679a4329c7a0dea",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "If you would create a Clue, Food, or Treasure token, instead create one of each.",
+          "implementation": [
+            "rule static createClueFoodAndTreasure: a replacement in token creation (createToken, createTokens, createTokensForPlayers) for its controller; m of them make count*3^(m-1) of each; new CLUE token spec"
+          ],
+          "engineTestIds": [
+            "cards/pilot-new/academy-manufactor.test.ts::manufactor-treasure",
+            "cards/pilot-new/academy-manufactor.test.ts::manufactor-food",
+            "cards/pilot-new/academy-manufactor.test.ts::manufactor-two-treasures",
+            "cards/pilot-new/academy-manufactor.test.ts::manufactor-two-manufactors",
+            "cards/pilot-new/academy-manufactor.test.ts::manufactor-other-token",
+            "cards/pilot-new/academy-manufactor.test.ts::manufactor-opponent-treasure",
+            "cards/pilot-new/academy-manufactor.test.ts::manufactor-crack-clue"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }
