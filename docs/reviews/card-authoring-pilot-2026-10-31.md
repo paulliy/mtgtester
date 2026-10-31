@@ -216,18 +216,19 @@ The pilot evidence findings strengthened tests rather than definitions:
 
 Each new check fails against a deliberately broken definition.
 
-Codex reviewed the ready PR on each push and raised nine findings, all fixed with a
+Codex reviewed the ready PR on each push and raised eleven findings, all fixed with a
 regression test that fails without the fix:
 
 - Bolas's Citadel's life cast now covers each spell face: a split half, an adventure or omen, or a
   modal double-faced back face, each for its own mana value. Our review had left this one open; it
   is counted among the 38 above. A modal double-faced card's land face can also be played from the
-  top.
+  top, and a card with no mana cost is cast for 0 life.
 - A resolving copy of a permanent spell now enters with the spell's kicker counts, dash, and Mox
   Diamond's discard replacement. A permanent entering as a copy of Mox Diamond (Sculpting Steel)
   gets the replacement too.
 - Academy Manufactor's three tokens are the predefined ones, even in place of a token copy that is
-  a Clue, and they enter tapped when the token they replace would.
+  a Clue, and they enter tapped when the token they replace would. A rider on the copies, such as
+  Saheeli's end-step sacrifice, applies to all three.
 - A new table's host token survives a storage write that throws.
 
 ## Recommendations
