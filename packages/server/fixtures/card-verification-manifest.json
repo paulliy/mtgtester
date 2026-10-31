@@ -18110,6 +18110,38 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "37108cd4-bbab-4ce3-9ed6-f60e8422e703": {
+      "name": "Ragavan, Nimble Pilferer",
+      "oracleSha256": "81603cf20aba624f8e0b93e53359993a31f047d317768f92676a51c5dd6f60dd",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever Ragavan deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card.",
+          "implementation": [
+            "dealsCombatDamageToPlayer (self) trigger: createToken TREASURE; exileTopNPlayableUntilEot count 1, castOnly, library eventPlayer"
+          ],
+          "engineTestIds": [
+            "cards/pilot-new/ragavan-nimble-pilferer.test.ts::ragavan-hit-cast",
+            "cards/pilot-new/ragavan-nimble-pilferer.test.ts::ragavan-blocked",
+            "cards/pilot-new/ragavan-nimble-pilferer.test.ts::ragavan-land-exiled",
+            "clause 1: the exiled card is P2's, and you may only cast it this turn"
+          ]
+        },
+        {
+          "oracleText": "Dash {1}{R} (You may cast this spell for its dash cost. If you do, it gains haste, and it's returned from the battlefield to its owner's hand at the beginning of the next end step.)",
+          "implementation": [
+            "alternativeCasts nonMana {1}{R} with dashed: the permanent gets permanent haste and a delayed end-step returnToHand on the same object (CR 702.109a)"
+          ],
+          "engineTestIds": [
+            "cards/pilot-new/ragavan-nimble-pilferer.test.ts::ragavan-dash",
+            "cards/pilot-new/ragavan-nimble-pilferer.test.ts::ragavan-cast-normally",
+            "clause 2: dashed, it can attack the turn it enters",
+            "clause 2, negative: cast for {R}, it is not offered as an attacker"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

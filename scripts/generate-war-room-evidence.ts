@@ -264,6 +264,7 @@ const SOURCE_FILES = [
   'packages/engine/tests/scenarios/orcish-bowmasters.json',
   'packages/engine/tests/scenarios/path-to-exile.json',
   'packages/engine/tests/scenarios/professional-face-breaker.json',
+  'packages/engine/tests/scenarios/ragavan-nimble-pilferer.json',
   'packages/engine/tests/scenarios/sylvan-library.json',
   'packages/engine/tests/scenarios/takenuma-abandoned-mire.json',
   'packages/engine/tests/fixtures/silverquill-main-engine-batch1-oracle.json',

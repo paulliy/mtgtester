@@ -186,6 +186,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'ragavan-nimble-pilferer.json',
+    file: scenarioFile(
+      'ragavan-nimble-pilferer.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/ragavan-nimble-pilferer.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'sylvan-library.json',
     file: scenarioFile(
       'sylvan-library.json',

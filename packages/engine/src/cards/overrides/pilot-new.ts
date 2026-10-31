@@ -3,12 +3,14 @@ import {
   activated,
   mana,
   manaCost,
+  onCombatDamageToPlayer,
   onDrawStep,
   onEtb,
   spell,
   targetSlots,
   triggered,
 } from '../templates';
+import { TREASURE } from '../tokens';
 import { constant } from '../value';
 import { defineCard } from './index';
 
@@ -228,6 +230,40 @@ export function registerPilotNewOverrides(): void {
         description:
           'Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn',
       }),
+    },
+  );
+
+  // "Whenever Ragavan deals combat damage to a player, create a Treasure token and exile the top
+  // card of that player's library. Until end of turn, you may cast that card." The card stays its
+  // owner's; Ragavan's controller may cast it this turn, paying its costs (a Treasure helps), but
+  // not play it as a land. "Dash {1}{R}" (CR 702.109a): an alternative cost; the dashed Ragavan
+  // has haste and returns to its owner's hand at the beginning of the next end step.
+  defineCard(
+    '37108cd4-bbab-4ce3-9ed6-f60e8422e703',
+    'Ragavan, Nimble Pilferer',
+    [
+      "Whenever ~ deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card.",
+      'Dash {1}{R}',
+    ],
+    {
+      triggers: [
+        triggered(onCombatDamageToPlayer(), {
+          effects: [
+            { op: 'createToken', spec: TREASURE, count: constant(1) },
+            {
+              op: 'exileTopNPlayableUntilEot',
+              count: constant(1),
+              castOnly: true,
+              library: 'eventPlayer',
+            },
+          ],
+          description:
+            "Whenever Ragavan deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card",
+        }),
+      ],
+      alternativeCasts: [
+        { kind: 'nonMana', manaCost: manaCost('{1}{R}'), dashed: true, description: 'Dash {1}{R}' },
+      ],
     },
   );
 }

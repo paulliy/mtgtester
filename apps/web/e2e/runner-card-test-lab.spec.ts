@@ -764,6 +764,61 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await expect(permanent(page, 'P1', 'Scenario Cat')).toHaveCount(0);
     await expect(permanent(page, 'P1', 'Scenario Bear')).toHaveCount(1);
   },
+  'ragavan-hit-cast': async (page) => {
+    await attack(page, [['Ragavan, Nimble Pilferer', 'P2']]);
+    await passUntil(page, permanent(page, 'P1', 'Treasure'));
+    await expect(life(page, 'P2')).toHaveText('38');
+    // The exiled card is P2's, shown in P2's exile, and you may cast it.
+    const spark = page
+      .locator('.zone-card-thumb')
+      .filter({ has: page.getByRole('img', { name: 'Scenario Spark' }) })
+      .first();
+    await passUntil(page, spark.and(page.locator('.actionable')));
+    await spark.click();
+    await page.locator('.opponent[data-seat="P2"] > header').click();
+    await confirmButton(page).click();
+    await passStackUntil(page, logLine(page, /Scenario Spark[^]*resolves/));
+    await expect(life(page, 'P2')).toHaveText('37');
+    await expect(permanent(page, 'P1', 'Treasure')).toHaveCount(0);
+  },
+  'ragavan-blocked': async (page) => {
+    await attack(page, [['Ragavan, Nimble Pilferer', 'P2']]);
+    // P2, a scripted seat, blocks with Scenario Wall.
+    await passUntil(page, logLine(page, /game over/));
+    await expect(life(page, 'P2')).toHaveText('40');
+    await expect(permanent(page, 'P1', 'Treasure')).toHaveCount(0);
+  },
+  'ragavan-land-exiled': async (page) => {
+    await attack(page, [['Ragavan, Nimble Pilferer', 'P2']]);
+    await passUntil(page, permanent(page, 'P1', 'Treasure'));
+    await expect(life(page, 'P2')).toHaveText('38');
+    const forest = page
+      .locator('.zone-card-thumb')
+      .filter({ has: page.getByRole('img', { name: 'Forest' }) })
+      .first();
+    await passUntil(page, logLine(page, /game over/));
+    await expect(forest.and(page.locator('.actionable'))).toHaveCount(0);
+  },
+  'ragavan-dash': async (page) => {
+    await castWith(page, hand(page, 'Ragavan, Nimble Pilferer'), {
+      mode: /dash/i,
+      resolves: /Ragavan, Nimble Pilferer[^]*resolves/,
+    });
+    await attack(page, [['Ragavan, Nimble Pilferer', 'P2']]);
+    await passUntil(page, life(page, 'P2').filter({ hasText: '38' }));
+    await passUntil(page, hand(page, 'Ragavan, Nimble Pilferer'));
+    await expect(permanent(page, 'P1', 'Ragavan, Nimble Pilferer')).toHaveCount(0);
+  },
+  'ragavan-cast-normally': async (page) => {
+    // One Mountain: the dash cost is not affordable, so the plain cast is the only one.
+    await castWith(page, hand(page, 'Ragavan, Nimble Pilferer'), {
+      resolves: /Ragavan, Nimble Pilferer[^]*resolves/,
+    });
+    await passUntil(page, logLine(page, /game over/));
+    await expect(page.getByRole('button', { name: /Declare attackers/ })).toHaveCount(0);
+    await expect(permanent(page, 'P1', 'Ragavan, Nimble Pilferer')).toHaveCount(1);
+    await expect(life(page, 'P2')).toHaveText('40');
+  },
   'chrome-mox-no-artifact-or-land': async (page) => {
     await castChromeMox(page);
     await passUntil(page, permanent(page, 'P1', 'Chrome Mox'));

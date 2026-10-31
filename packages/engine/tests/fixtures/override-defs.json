@@ -4848,6 +4848,99 @@
     }
   },
   {
+    "oracleId": "37108cd4-bbab-4ce3-9ed6-f60e8422e703",
+    "name": "Ragavan, Nimble Pilferer",
+    "handledLines": [
+      "Dash {1}{R}",
+      "Whenever ~ deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card."
+    ],
+    "def": {
+      "alternativeCasts": [
+        {
+          "dashed": true,
+          "description": "Dash {1}{R}",
+          "kind": "nonMana",
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 1,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 1
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Whenever Ragavan deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [],
+                "manaAbilities": [
+                  {
+                    "costs": [
+                      {
+                        "kind": "tap"
+                      },
+                      {
+                        "kind": "sacrificeSelf"
+                      }
+                    ],
+                    "units": [
+                      [
+                        "W",
+                        "U",
+                        "B",
+                        "R",
+                        "G"
+                      ]
+                    ]
+                  }
+                ],
+                "name": "Treasure",
+                "power": null,
+                "subtypes": [
+                  "Treasure"
+                ],
+                "toughness": null,
+                "typeLine": "Artifact — Treasure",
+                "types": [
+                  "Artifact"
+                ]
+              }
+            },
+            {
+              "castOnly": true,
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "library": "eventPlayer",
+              "op": "exileTopNPlayableUntilEot"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "377d0fa7-1b3d-4b97-b066-dceeff3734d0",
     "name": "Pramikon, Sky Rampart",
     "handledLines": [
@@ -38886,6 +38979,99 @@
           "trigger": {
             "attacker": "you",
             "when": "attackDeclared"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-ragavan-nimble-pilferer",
+    "name": "Ragavan, Nimble Pilferer",
+    "handledLines": [
+      "Dash {1}{R}",
+      "Whenever ~ deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card."
+    ],
+    "def": {
+      "alternativeCasts": [
+        {
+          "dashed": true,
+          "description": "Dash {1}{R}",
+          "kind": "nonMana",
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 1,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 1
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Whenever Ragavan deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [],
+                "manaAbilities": [
+                  {
+                    "costs": [
+                      {
+                        "kind": "tap"
+                      },
+                      {
+                        "kind": "sacrificeSelf"
+                      }
+                    ],
+                    "units": [
+                      [
+                        "W",
+                        "U",
+                        "B",
+                        "R",
+                        "G"
+                      ]
+                    ]
+                  }
+                ],
+                "name": "Treasure",
+                "power": null,
+                "subtypes": [
+                  "Treasure"
+                ],
+                "toughness": null,
+                "typeLine": "Artifact — Treasure",
+                "types": [
+                  "Artifact"
+                ]
+              }
+            },
+            {
+              "castOnly": true,
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "library": "eventPlayer",
+              "op": "exileTopNPlayableUntilEot"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
           }
         }
       ]
