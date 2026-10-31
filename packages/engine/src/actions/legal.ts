@@ -5,7 +5,11 @@ import { offBattlefieldTypes } from '../state/off-battlefield-types';
 import { UnmodeledCardError } from '../errors';
 import type { ObjectFacts } from '../cards/source-identity';
 import { supportsAdditionalXAnnouncement } from '../cards/cost-contracts';
-import { bestowedDefinition, selectedSpellDefinition } from '../cards/spell-faces';
+import {
+  bestowedDefinition,
+  mdfcLandFaceDefinition,
+  selectedSpellDefinition,
+} from '../cards/spell-faces';
 import type { RoomDoor } from '../cards/spell-faces';
 import { assertNever } from '../utils/assert-never';
 import { castingPreviewContext } from '../casting/preview';
@@ -877,10 +881,24 @@ export function computePriorityOptions(
       def.alternativeCasts?.findIndex((alt) => alt.kind === 'mdfc' && alt.landFace !== undefined) ??
       -1;
     const mdfc = mdfcIndex >= 0 ? def.alternativeCasts?.[mdfcIndex] : undefined;
+    // From the top of the library, a permission to play lands applies to the land face (CR
+    // 712.12): Bolas's Citadel or "play lands from the top of your library".
+    const landFacePermission =
+      mdfc?.landFace === undefined
+        ? null
+        : fromLibraryTop
+          ? playFromZonePermission(
+              ctx,
+              player.id,
+              obj,
+              'libraryTop',
+              mdfcLandFaceDefinition(def, mdfc),
+            )
+          : {};
     if (
       mdfc?.landFace !== undefined &&
+      landFacePermission !== null &&
       !fromCommand &&
-      !fromLibraryTop &&
       !fromExile &&
       !fromGraveyard &&
       sorcerySpeed &&
@@ -895,24 +913,30 @@ export function computePriorityOptions(
           `preview-${obj.oracleId}-mdfc`,
         ),
         sourceName: face.name,
-        sourceZone: 'hand',
+        sourceZone: fromLibraryTop ? 'library' : 'hand',
         castVariant: 'mdfc',
       };
       if (face.entersTappedUnless?.kind === 'mayPayLife')
         data['payLifeToUntap'] = face.entersTappedUnless.n;
       else if (face.entersTappedUnless !== undefined) data['entersTappedConditional'] = true;
       else data['entersTapped'] = face.entersTapped;
-      options.push({
-        type: 'playLand',
-        description: `Play ${face.name}`,
-        payload: {
-          kind: 'playLand',
-          objectId: obj.id,
-          alternativeCast: 'mdfc',
-          altIndex: mdfcIndex,
-        },
-        data,
-      });
+      for (const budgetType of landFacePermission.budgetTypes ?? [undefined]) {
+        options.push({
+          type: 'playLand',
+          description:
+            `Play ${face.name}` +
+            (budgetType === undefined ? '' : ` (using ${budgetType} permission)`),
+          payload: {
+            kind: 'playLand',
+            objectId: obj.id,
+            alternativeCast: 'mdfc',
+            altIndex: mdfcIndex,
+            ...(fromLibraryTop ? { fromLibraryTop: true } : {}),
+            ...(budgetType !== undefined ? { zoneBudgetType: budgetType } : {}),
+          },
+          data: { ...data, ...(budgetType !== undefined ? { zoneBudgetType: budgetType } : {}) },
+        });
+      }
     }
 
     const normalOptionsStart = options.length;
@@ -1694,12 +1718,22 @@ export function computePriorityOptions(
       // A permission only the bestowed Aura spell satisfies ("Aura spells") still allows bestow.
       (topDef.alternativeCasts ?? []).some(
         (alt) =>
-          (alt.kind === 'bestow' ||
+          // An MDFC's land face, played under a permission to play lands (CR 712.12).
+          (alt.kind === 'mdfc' &&
+            alt.landFace !== undefined &&
+            playFromZonePermission(
+              ctx,
+              player.id,
+              libraryTop,
+              'libraryTop',
+              mdfcLandFaceDefinition(topDef, alt),
+            ) !== null) ||
+          ((alt.kind === 'bestow' ||
             alt.kind === 'adventure' ||
             alt.kind === 'omen' ||
             alt.kind === 'split' ||
             (alt.kind === 'mdfc' && alt.spellFace !== undefined)) &&
-          topCastableAs(libraryTop, selectedSpellDefinition(topDef, alt)),
+            topCastableAs(libraryTop, selectedSpellDefinition(topDef, alt))),
       )
     )
       considerCast(libraryTop, false, true);

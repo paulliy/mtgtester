@@ -214,8 +214,17 @@ export function consumePlayFromZonePermission(
   card: EngineCardObject,
   zone: 'libraryTop' | 'graveyard',
   chosenBudgetType: string | undefined,
+  /** The face it is played as (an MDFC's land face), when that differs (CR 712.12). */
+  playedAs?: CardDefinition,
 ): void {
-  const budgetType = validatePlayFromZonePermission(ctx, player, card, zone, chosenBudgetType);
+  const budgetType = validatePlayFromZonePermission(
+    ctx,
+    player,
+    card,
+    zone,
+    chosenBudgetType,
+    playedAs,
+  );
   if (budgetType !== undefined) {
     player.playFromZoneTypeUsesThisTurn[budgetType] =
       (player.playFromZoneTypeUsesThisTurn[budgetType] ?? 0) + 1;

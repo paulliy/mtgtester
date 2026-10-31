@@ -152,4 +152,33 @@ describe('libraryTopLife casts', () => {
     expect(playerById(ctx, 'P1').life).toBe(35);
     expect(ctx.state.stack.map((entry) => entry.card?.name)).toEqual(['Toxic Deluge']);
   });
+  it('bolas-citadel-mdfc-land-face — a modal double-faced card on top is played as its land face (CR 712.12)', () => {
+    const name = 'Valakut Awakening // Valakut Stoneforge';
+    const { ctx, card, options } = withTop('life-mdfc-land', pinStore.get(name));
+    const land = options.filter((option) => option.type === 'playLand');
+    expect(land.map((option) => option.description)).toEqual(['Play Valakut Stoneforge']);
+    // The front face is still cast for life as well.
+    expect(options.map((option) => option.description)).toContainEqual(
+      expect.stringMatching(/Valakut Awakening.* by paying 3 life/),
+    );
+    pumpStrict(
+      applyPriorityAction(ctx, playerById(ctx, 'P1'), land[0]!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+    );
+    const played = ctx.state.battlefield.find((perm) => perm.cardId === card.cardId);
+    expect([played?.face, playerById(ctx, 'P1').landsPlayedThisTurn]).toEqual(['back', 1]);
+  });
+
+  it('bolas-citadel-mdfc-land-drop-used — with the land drop used, the land face is not offered', () => {
+    const { options } = withTop(
+      'life-mdfc-no-drop',
+      pinStore.get('Valakut Awakening // Valakut Stoneforge'),
+      (ctx) => {
+        playerById(ctx, 'P1').landsPlayedThisTurn = 1;
+      },
+    );
+    expect(options.filter((option) => option.type === 'playLand')).toEqual([]);
+  });
 });

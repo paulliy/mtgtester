@@ -24,6 +24,7 @@ import {
 } from './ability-modes';
 
 import { evaluateCondition } from '../cards/condition';
+import { mdfcLandFaceDefinition } from '../cards/spell-faces';
 import type { AbilityCost } from '../cards/definition';
 import type { DecisionOutcome, GameGen } from '../decisions';
 import { payAbilityCosts, payManaCost } from '../effects/resolve';
@@ -179,12 +180,6 @@ export function* applyPriorityAction(
               : player.hand;
       const obj = sourceZone.find((o) => o.id === payload.objectId);
       if (obj === undefined) throw new Error('engine bug: land to play not in its source zone');
-      if (payload.fromLibraryTop === true) {
-        consumePlayFromZonePermission(ctx, player, obj, 'libraryTop', payload.zoneBudgetType);
-      }
-      if (payload.fromGraveyard === true) {
-        consumePlayFromZonePermission(ctx, player, obj, 'graveyard', payload.zoneBudgetType);
-      }
       const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
       const mdfc =
         payload.alternativeCast === 'mdfc'
@@ -196,6 +191,28 @@ export function* applyPriorityAction(
         (mdfc?.kind !== 'mdfc' || mdfc.landFace === undefined)
       ) {
         throw new Error('missing MDFC land face');
+      }
+      // A permission to play lands is judged on the face played (CR 712.12).
+      const playedAs = mdfc === undefined ? undefined : mdfcLandFaceDefinition(def, mdfc);
+      if (payload.fromLibraryTop === true) {
+        consumePlayFromZonePermission(
+          ctx,
+          player,
+          obj,
+          'libraryTop',
+          payload.zoneBudgetType,
+          playedAs,
+        );
+      }
+      if (payload.fromGraveyard === true) {
+        consumePlayFromZonePermission(
+          ctx,
+          player,
+          obj,
+          'graveyard',
+          payload.zoneBudgetType,
+          playedAs,
+        );
       }
       player.landsPlayedThisTurn += 1;
       emit(

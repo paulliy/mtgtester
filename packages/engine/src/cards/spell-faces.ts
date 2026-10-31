@@ -22,6 +22,30 @@ export function selectedSpellDefinition(
   return spellFaceOf(alternative);
 }
 
+/**
+ * A modal double-faced card as its land face, for judging a permission to play it ("you may play
+ * lands from the top of your library"): only that face's characteristics apply (CR 712.12).
+ */
+export function mdfcLandFaceDefinition(
+  definition: CardDefinition,
+  alternative: AlternativeCast,
+): CardDefinition | undefined {
+  const face = alternative.kind === 'mdfc' ? alternative.landFace : undefined;
+  if (face === undefined) return undefined;
+  return {
+    ...definition,
+    // The same card: only its characteristics are the face's.
+    oracleId: definition.oracleId,
+    name: face.name,
+    typeLine: face.typeLine,
+    manaCost: null,
+    colors: [...face.colors],
+    supertypes: [...face.supertypes],
+    types: [...face.types],
+    subtypes: [...face.subtypes],
+  };
+}
+
 /** Modal faces retain the chosen characteristics on the battlefield and reset elsewhere. */
 export function selectedPermanentDefinition(
   definition: CardDefinition,

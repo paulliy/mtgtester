@@ -18239,7 +18239,8 @@
           "implementation": [
             "playFromZone libraryTop for lands: played as the land drop",
             "castFromZone libraryTop with lifeInsteadOfMana: the libraryTopLife alternative cost pays life equal to the printed mana value, X=0, and is the only way it is cast",
-            "a split half, an adventure or omen, or a modal double-faced card's back face is cast for its own mana value (libraryTopLife with altIndex); never the combined split card, bestow or fuse"
+            "a split half, an adventure or omen, or a modal double-faced card's back face is cast for its own mana value (libraryTopLife with altIndex); never the combined split card, bestow or fuse",
+            "a modal double-faced card's land face is played from the top as the land drop, the permission judged on that face (CR 712.12)"
           ],
           "engineTestIds": [
             "bolas-citadel-cast-for-life",
@@ -18248,6 +18249,8 @@
             "bolas-citadel-announced-x",
             "bolas-citadel-split-half",
             "bolas-citadel-adventure",
+            "bolas-citadel-mdfc-land-face",
+            "bolas-citadel-mdfc-land-drop-used",
             "bolas-citadel-play-land",
             "bolas-citadel-without",
             "pilot-current-bolas-citadel-viewer-cast-for-life",
