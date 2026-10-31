@@ -216,11 +216,18 @@ The pilot evidence findings strengthened tests rather than definitions:
 
 Each new check fails against a deliberately broken definition.
 
-Codex's review of the ready PR found the Citadel spell-face gap this review had left open
-unacceptable for a card marked supported, and it was right: Citadel now casts a split half, an
-adventure or omen, or a modal double-faced back face for that face's own mana value. It also
-found a new table's host token lost when storage writes throw; the table store now keeps a copy
-in the tab.
+Codex reviewed the ready PR on each push and raised seven findings, all fixed with a
+regression test that fails without the fix:
+
+- Bolas's Citadel's life cast now covers each spell face: a split half, an adventure or omen, or a
+  modal double-faced back face, each for its own mana value. Our review had left this one open; it
+  is counted among the 38 above. A modal double-faced card's land face can also be played from the
+  top.
+- A resolving copy of a permanent spell now enters with the spell's kicker counts, and with Mox
+  Diamond's discard replacement. So does a permanent entering as a copy of Mox Diamond (Sculpting
+  Steel).
+- Academy Manufactor's extra tokens enter tapped when the token they replace would.
+- A new table's host token survives a storage write that throws.
 
 ## Recommendations
 
