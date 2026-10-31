@@ -58,13 +58,15 @@ test('Library of Leng keeps the normal eight-card hand through cleanup', async (
   await page.getByRole('button', { name: 'Confirm', exact: true }).click();
 
   await expect(permanent(page, 'Library of Leng')).toBeVisible({ timeout: 15_000 });
-  await passUntil(page, opponent(page, 'P2').getByText(/23 in library/));
+  // The opponent panel shows its library count as "lib 23", titled "Cards in library".
+  const p2Library = opponent(page, 'P2').getByTitle('Cards in library');
+  await passUntil(page, p2Library.filter({ hasText: /^\s*lib\s*23\s*$/ }));
   await expect(
     page.locator('.hand-card:not(.hand-card-leave-active)').filter({ hasText: 'Swamp' }),
   ).toHaveCount(8, {
     timeout: 20_000,
   });
-  await expect(opponent(page, 'P2')).toContainText('23 in library');
+  await expect(p2Library).toHaveText(/^\s*lib\s*23\s*$/);
 });
 
 test('Tinybones pays its six-mana activation and affects each opponent by hand count', async ({
