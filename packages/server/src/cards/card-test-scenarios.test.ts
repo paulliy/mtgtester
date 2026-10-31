@@ -64,6 +64,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'pilot-current-morbid-opportunist-viewer-draw',
       'pilot-current-morbid-opportunist-viewer-once',
       'pilot-current-morbid-opportunist-viewer-wrath',
+      'pilot-current-syr-konrad-viewer-mill-creature',
+      'pilot-current-syr-konrad-viewer-mill-lands',
       'pr13-master-of-ceremonies-viewer-money',
       'pr13-securitron-squadron-viewer-squad-copy',
       'pr13-securitron-squadron-viewer-nontoken',

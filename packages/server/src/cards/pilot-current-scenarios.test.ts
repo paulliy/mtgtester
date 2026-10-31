@@ -56,6 +56,12 @@ const PLANS: Record<string, Plan> = {
     ],
   },
   'pilot-current-morbid-opportunist-viewer-wrath': { steps: [{ cast: 'Pilot Lab Wrath' }] },
+  'pilot-current-syr-konrad-viewer-mill-creature': {
+    steps: [{ activate: 'Each player mills a card' }],
+  },
+  'pilot-current-syr-konrad-viewer-mill-lands': {
+    steps: [{ activate: 'Each player mills a card' }],
+  },
   'pilot-current-secluded-courtyard-viewer-activate': {
     steps: [
       { play: 'Secluded Courtyard' },
@@ -286,6 +292,19 @@ const CHECKS: Record<string, (result: Result) => void> = {
     ]);
     expect(r.state.eventLog.filter((event) => event.type === 'draw')).toHaveLength(1);
     expect(r.player('P1').hand).toHaveLength(2);
+  },
+  'pilot-current-syr-konrad-viewer-mill-creature': (r) => {
+    expect(r.done).toEqual(['Each player mills a card']);
+    expect(zoneNames(r.player('P2').graveyard)).toEqual(['Pilot Lab Bear']);
+    for (const seat of ['P1', 'P2', 'P3', 'P4']) expect(r.player(seat).graveyard).toHaveLength(1);
+    // Konrad deals 1 damage to each opponent, not to you.
+    expect(['P1', 'P2', 'P3', 'P4'].map((seat) => r.player(seat).life)).toEqual([40, 39, 39, 39]);
+    expect(r.asked).toEqual([]);
+  },
+  'pilot-current-syr-konrad-viewer-mill-lands': (r) => {
+    expect(r.done).toEqual(['Each player mills a card']);
+    for (const seat of ['P1', 'P2', 'P3', 'P4']) expect(r.player(seat).graveyard).toHaveLength(1);
+    expect(['P1', 'P2', 'P3', 'P4'].map((seat) => r.player(seat).life)).toEqual([40, 40, 40, 40]);
   },
   'pilot-current-gamble-viewer-tutor': (r) => {
     expect(r.done).toEqual(['Gamble']);

@@ -1781,6 +1781,51 @@
     }
   },
   {
+    "oracleId": "14c3ff84-1e82-4606-a433-869fc52cc382",
+    "name": "Syr Konrad, the Grim",
+    "handledLines": [
+      "{1}{B}: Each player mills a card."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{1}{B}: Each player mills a card",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "millEachPlayer",
+                "scope": "all"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 1,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "153376c9-dffd-458c-8ce3-a4c8269bc4e9",
     "name": "Smothering Tithe",
     "handledLines": [
@@ -42422,6 +42467,51 @@
         "kind": "spell",
         "targets": []
       }
+    }
+  },
+  {
+    "oracleId": "oracle-syr-konrad-the-grim",
+    "name": "Syr Konrad, the Grim",
+    "handledLines": [
+      "{1}{B}: Each player mills a card."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{1}{B}: Each player mills a card",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "millEachPlayer",
+                "scope": "all"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 1,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
     }
   },
   {

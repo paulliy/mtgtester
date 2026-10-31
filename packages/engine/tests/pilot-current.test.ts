@@ -11,6 +11,7 @@ import {
 import { interpretCard } from '../src/cards/interpret';
 import { allOf, ofSubtype, ofType, type Selector } from '../src/cards/selector';
 import { spell } from '../src/cards/templates';
+import { creatureToken } from '../src/cards/tokens';
 import { constant } from '../src/cards/value';
 import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
@@ -492,5 +493,166 @@ describe('Morbid Opportunist', () => {
     spawn(ctx, 'P2', oracle({ name: 'Pilot Relic', typeLine: 'Artifact', manaCost: '{1}' }));
     destroy(ctx, ofType('Artifact'));
     expect(morbidTriggers(ctx)).toHaveLength(0);
+  });
+});
+
+describe('Syr Konrad, the Grim', () => {
+  const konrad = () => pinStore.get('Syr Konrad, the Grim');
+  const activatable = (ctx: GameContext, objectId: string): boolean =>
+    computePriorityOptions(ctx, playerById(ctx, 'P1')).some((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind === 'activateAbility' && payload.objectId === objectId;
+    });
+  /** Put `card` on top of `seat`'s library. */
+  const onTop = (ctx: GameContext, seat: string, card: ReturnType<typeof bear>) => {
+    const placed = conjure(ctx, seat as 'P1', card, 'library');
+    const library = playerById(ctx, seat as 'P1').library;
+    library.splice(library.indexOf(placed), 1);
+    library.unshift(placed);
+  };
+  const mill = (ctx: GameContext, source: ReturnType<typeof spawn>) =>
+    pump(
+      executeAbility(
+        ctx,
+        source,
+        ctx.defs.get(source.oracleId)!.activatedAbilities[0]!.ability,
+        [],
+      ),
+      () => {
+        throw new Error('milling asks nothing');
+      },
+    );
+  const konradTriggers = (ctx: GameContext) =>
+    ctx.state.pendingTriggers.filter((trigger) => trigger.sourceName === 'Syr Konrad, the Grim');
+
+  it('syr-konrad-each-player-mills — each player, you included, mills one card', () => {
+    const ctx = mainPhase('konrad-mill');
+    const source = spawn(ctx, 'P1', konrad());
+    const before = ctx.state.players.map((player) => player.library.length);
+    const tops = ctx.state.players.map((player) => player.library[0]!.name);
+    mill(ctx, source);
+    expect(ctx.state.players.map((player) => player.library.length)).toEqual(
+      before.map((count) => count - 1),
+    );
+    expect(ctx.state.players.map((player) => player.graveyard.map((card) => card.name))).toEqual(
+      tops.map((name) => [name]),
+    );
+  });
+
+  it('syr-konrad-milled-creature — each creature card milled triggers its damage, from any library', () => {
+    const ctx = mainPhase('konrad-creatures');
+    const source = spawn(ctx, 'P1', konrad());
+    onTop(ctx, 'P1', bear());
+    onTop(ctx, 'P2', bear());
+    mill(ctx, source);
+    const triggers = konradTriggers(ctx);
+    expect(triggers).toHaveLength(2);
+    expect(triggers.every((trigger) => trigger.controllerId === 'P1')).toBe(true);
+  });
+
+  it('syr-konrad-milled-land — milling only lands does not trigger it', () => {
+    const ctx = mainPhase('konrad-lands');
+    const source = spawn(ctx, 'P1', konrad());
+    mill(ctx, source);
+    expect(
+      ctx.state.players.flatMap((player) => player.graveyard.map((card) => card.name)),
+    ).toEqual(['Forest', 'Forest']);
+    expect(konradTriggers(ctx)).toHaveLength(0);
+  });
+
+  const destroyEach = (ctx: GameContext, source: ReturnType<typeof spawn>, selector: Selector) =>
+    pump(
+      executeAbility(
+        ctx,
+        source,
+        spell({ effects: [{ op: 'destroyEach', selector }], description: 'Destroy each' }),
+        [],
+      ),
+      () => {
+        throw new Error('destroying asks nothing');
+      },
+    );
+  const exileFromGraveyard = (ctx: GameContext, card: ReturnType<typeof conjure>) =>
+    pump(moveObject(ctx, card, { zone: 'exile' }), () => {
+      throw new Error('exiling asks nothing');
+    });
+
+  it("syr-konrad-other-creature-dies — another creature dying triggers it; its own death or a noncreature's does not", () => {
+    const ctx = mainPhase('konrad-dies');
+    const source = spawn(ctx, 'P1', konrad());
+    spawn(ctx, 'P2', bear());
+    spawn(ctx, 'P2', oracle({ name: 'Pilot Relic', typeLine: 'Artifact', manaCost: '{1}' }));
+    destroyEach(ctx, source, ofType('Artifact'));
+    expect(konradTriggers(ctx)).toHaveLength(0);
+    destroyEach(ctx, source, ofSubtype('Bear'));
+    expect(konradTriggers(ctx)).toHaveLength(1);
+    expect(konradTriggers(ctx)[0]!.ability.optional).not.toBe(true);
+
+    const alone = mainPhase('konrad-dies-alone');
+    const lone = spawn(alone, 'P1', konrad());
+    destroyEach(alone, lone, ofType('Creature'));
+    expect(konradTriggers(alone)).toHaveLength(0);
+  });
+
+  it('syr-konrad-token-dies — a creature token dying triggers it once, as a death only', () => {
+    const ctx = mainPhase('konrad-token');
+    const source = spawn(ctx, 'P1', konrad());
+    pump(
+      executeAbility(
+        ctx,
+        source,
+        spell({
+          effects: [
+            {
+              op: 'createToken',
+              spec: creatureToken({
+                name: 'Pilot Spirit',
+                subtypes: ['Spirit'],
+                colors: ['W'],
+                power: 1,
+                toughness: 1,
+              }),
+              count: constant(1),
+            },
+          ],
+          description: 'Create a Spirit',
+        }),
+        [],
+      ),
+      () => {
+        throw new Error('creating asks nothing');
+      },
+    );
+    destroyEach(ctx, source, ofSubtype('Spirit'));
+    expect(konradTriggers(ctx).map((trigger) => trigger.ability.trigger?.when)).toEqual(['dies']);
+  });
+
+  it('syr-konrad-leaves-graveyard — a creature card leaving your graveyard triggers it, nothing else does', () => {
+    const ctx = mainPhase('konrad-leaves');
+    spawn(ctx, 'P1', konrad());
+    const relic = conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Pilot Relic', typeLine: 'Artifact', manaCost: '{1}' }),
+      'graveyard',
+    );
+    const theirs = conjure(ctx, 'P2', bear(), 'graveyard');
+    exileFromGraveyard(ctx, relic);
+    exileFromGraveyard(ctx, theirs);
+    expect(konradTriggers(ctx)).toHaveLength(0);
+    const mine = conjure(ctx, 'P1', bear(), 'graveyard');
+    exileFromGraveyard(ctx, mine);
+    const triggers = konradTriggers(ctx);
+    expect(triggers.map((trigger) => trigger.ability.trigger?.when)).toEqual(['leavesGraveyard']);
+    expect(triggers[0]!.ability.optional).not.toBe(true);
+  });
+
+  it('syr-konrad-cost — it costs {1}{B}: two Swamps activate it, one does not', () => {
+    const ctx = mainPhase('konrad-cost');
+    const source = spawn(ctx, 'P1', konrad());
+    spawn(ctx, 'P1', swamp());
+    expect(activatable(ctx, source.id)).toBe(false);
+    spawn(ctx, 'P1', forest());
+    expect(activatable(ctx, source.id)).toBe(true);
   });
 });

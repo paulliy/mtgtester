@@ -83,6 +83,18 @@ async function playCourtyardChoosingElf(page: Page): Promise<void> {
   await expect(permanent(page, 'P1', 'Secluded Courtyard')).toHaveCount(1);
 }
 
+/** Activate Syr Konrad's {1}{B} mill ability and confirm its payment. */
+async function activateKonrad(page: Page): Promise<void> {
+  const konrad = permanent(page, 'P1', 'Syr Konrad, the Grim');
+  await passUntil(page, konrad.and(page.locator('.actionable')));
+  await konrad.click();
+  const ability = page
+    .locator('.source-actions .source-action-row button')
+    .filter({ hasText: /mills a card/ });
+  if ((await ability.count()) > 0) await ability.first().click();
+  await confirmButton(page).click();
+}
+
 const FLOWS: Record<string, (page: Page) => Promise<void>> = {
   'pilot-current-jet-medallion-viewer-reduced': async (page) => {
     await cast(page, 'Pilot Lab Black Sorcery');
@@ -182,6 +194,19 @@ const FLOWS: Record<string, (page: Page) => Promise<void>> = {
     await expect(permanent(page, 'P1', 'Morbid Opportunist')).toHaveCount(0);
     await expect(permanent(page, 'P2', 'Pilot Lab Giant')).toHaveCount(0);
     await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(2);
+  },
+  'pilot-current-syr-konrad-viewer-mill-creature': async (page) => {
+    await activateKonrad(page);
+    await passStackUntil(page, life(page, 'P2').filter({ hasText: '39' }));
+    await expect(life(page, 'P3')).toHaveText('39');
+    await expect(life(page, 'P4')).toHaveText('39');
+    await expect(life(page, 'P1')).toHaveText('40');
+  },
+  'pilot-current-syr-konrad-viewer-mill-lands': async (page) => {
+    await activateKonrad(page);
+    await passStackUntil(page, logLine(page, /Each player mills a card[^]*resolves/));
+    await passUntil(page, hand(page, 'Pilot Lab Trinket').and(page.locator('.actionable')));
+    for (const seat of ['P1', 'P2', 'P3', 'P4']) await expect(life(page, seat)).toHaveText('40');
   },
   'pilot-current-explore-viewer-second-land': async (page) => {
     await playLand(page, 'Forest');

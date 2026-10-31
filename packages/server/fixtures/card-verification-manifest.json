@@ -18018,6 +18018,55 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "14c3ff84-1e82-4606-a433-869fc52cc382": {
+      "name": "Syr Konrad, the Grim",
+      "oracleSha256": "026e7c0ad1c97f0ddfb18a3d5dce3ff7dfb07ea1f7563f1d31a31dd97d8ab8fc",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever another creature dies, or a creature card is put into a graveyard from anywhere other than the battlefield, or a creature card leaves your graveyard, Syr Konrad deals 1 damage to each opponent.",
+          "implementation": [
+            "parser: dies (other creatures), putIntoGraveyardFromAnywhere (nontoken creature cards) and leavesGraveyard (your nontoken creature cards) heads, damage 1 to each opponent"
+          ],
+          "engineTestIds": [
+            "syr-konrad-other-creature-dies",
+            "syr-konrad-token-dies",
+            "syr-konrad-leaves-graveyard",
+            "syr-konrad-milled-creature",
+            "syr-konrad-milled-land",
+            "pilot-current-syr-konrad-viewer-mill-creature"
+          ],
+          "viewerScenarioIds": ["pilot-current-syr-konrad-viewer-mill-creature"]
+        },
+        {
+          "oracleText": "{1}{B}: Each player mills a card.",
+          "implementation": ["activated {1}{B}: millEachPlayer scope all, count 1"],
+          "engineTestIds": [
+            "syr-konrad-each-player-mills",
+            "syr-konrad-milled-creature",
+            "syr-konrad-milled-land",
+            "syr-konrad-cost",
+            "pilot-current-syr-konrad-viewer-mill-creature",
+            "pilot-current-syr-konrad-viewer-mill-lands"
+          ],
+          "viewerScenarioIds": [
+            "pilot-current-syr-konrad-viewer-mill-creature",
+            "pilot-current-syr-konrad-viewer-mill-lands"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "equivalentMutants": [
+        {
+          "mutant": "triggers[1]: widen trigger subject (drop condition 1)",
+          "reason": "A token can reach a graveyard only from the battlefield (CR 111.8), which this head excludes, so no token is ever put into a graveyard from anywhere else for the nontoken condition to reject."
+        },
+        {
+          "mutant": "triggers[2]: widen trigger subject (drop condition 1)",
+          "reason": "A token in a graveyard ceases to exist as a state-based action (CR 704.5d), which is not a zone change, so a token never leaves a graveyard; the card's ruling is that a dying token triggers Konrad once."
+        }
+      ]
     }
   }
 }

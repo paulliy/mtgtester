@@ -151,6 +151,8 @@ interface ScenarioDef {
   p1Graveyard?: string[];
   /** P1's library top, below the card it draws for the turn. */
   p1Top?: string[];
+  /** P2's library top, as is: P2 draws nothing before P1's main phase. */
+  p2Top?: string[];
   p2Hand?: string[];
   p2Field?: FieldEntry[];
   opponent?: OpponentPlan;
@@ -328,6 +330,26 @@ const DEFS: ScenarioDef[] = [
     p1Field: ['Morbid Opportunist', 'Swamp', 'Pilot Lab Bear'],
     p2Field: ['Pilot Lab Giant'],
   },
+  {
+    id: 'pilot-current-syr-konrad-viewer-mill-creature',
+    cardName: 'Syr Konrad, the Grim',
+    title: "Syr Konrad: each player mills, and P2's milled creature pings each opponent",
+    instructions: ["Activate Syr Konrad's {1}{B} ability with your two Swamps."],
+    expectedOutcome:
+      'Each player mills a card; P2 mills Pilot Lab Bear, so Konrad deals 1 damage to each opponent.',
+    lines: [2],
+    p1Field: ['Syr Konrad, the Grim', 'Swamp', 'Swamp'],
+    p2Top: ['Pilot Lab Bear'],
+  },
+  {
+    id: 'pilot-current-syr-konrad-viewer-mill-lands',
+    cardName: 'Syr Konrad, the Grim',
+    title: 'Syr Konrad: milling only lands deals no damage',
+    instructions: ["Activate Syr Konrad's {1}{B} ability with your two Swamps."],
+    expectedOutcome: 'Each player mills a land; Konrad does not trigger and everyone stays at 40.',
+    lines: [2],
+    p1Field: ['Syr Konrad, the Grim', 'Swamp', 'Swamp'],
+  },
 ];
 
 export const PILOT_CURRENT_SCENARIOS = DEFS.map(({ id, cardName, title }) => ({
@@ -444,7 +466,7 @@ export function pilotCurrentScenario(id: string, gameId: GameId): CardTestScenar
     ...(def.p1Graveyard ?? []),
     ...(def.p1Top ?? []),
   ];
-  const p2Cards = [...(def.p2Hand ?? []), ...names(def.p2Field)];
+  const p2Cards = [...(def.p2Hand ?? []), ...names(def.p2Field), ...(def.p2Top ?? [])];
   const players: EnginePlayerConfig[] = (['P1', 'P2', 'P3', 'P4'] as const).map((seat) => ({
     id: seat,
     deckId: `pilot-current-${seat}`,
@@ -468,8 +490,15 @@ export function pilotCurrentScenario(id: string, gameId: GameId): CardTestScenar
       ? { graveyard: [{ playerId: 'P1' as const, cardNames: def.p1Graveyard }] }
       : {}),
     // The first library card is the one P1 draws for the turn, so the named cards sit below it.
-    ...(def.p1Top?.length
-      ? { libraryTop: [{ playerId: 'P1' as const, cardNames: ['Forest', ...def.p1Top] }] }
+    ...(def.p1Top?.length || def.p2Top?.length
+      ? {
+          libraryTop: [
+            ...(def.p1Top?.length
+              ? [{ playerId: 'P1' as const, cardNames: ['Forest', ...def.p1Top] }]
+              : []),
+            ...(def.p2Top?.length ? [{ playerId: 'P2' as const, cardNames: def.p2Top }] : []),
+          ],
+        }
       : {}),
     ...def.prepared,
   };

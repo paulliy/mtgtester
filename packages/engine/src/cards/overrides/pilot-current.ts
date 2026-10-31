@@ -1,6 +1,6 @@
 import { searchLibraryCards } from '../effect-builders';
 import { allOf, CHOSEN_SUBTYPE, ofColor, ofType, OTHER, YOURS } from '../selector';
-import { costReductionFor, spell, triggered } from '../templates';
+import { activated, costReductionFor, mana, spell, triggered } from '../templates';
 import { constant } from '../value';
 import { defineCard } from './index';
 
@@ -132,6 +132,23 @@ export function registerPilotCurrentOverrides(): void {
             description: 'Whenever one or more other creatures die, draw a card',
           },
         ),
+      ],
+    },
+  );
+  // "{1}{B}: Each player mills a card." Every player, the controller included, puts their top
+  // card into their graveyard (CR 701.13); a creature card milled this way is "put into a
+  // graveyard from anywhere other than the battlefield", which Konrad's parsed trigger answers.
+  defineCard(
+    '14c3ff84-1e82-4606-a433-869fc52cc382',
+    'Syr Konrad, the Grim',
+    ['{1}{B}: Each player mills a card.'],
+    {
+      activatedAbilities: [
+        activated({
+          costs: [mana('{1}{B}')],
+          effects: [{ op: 'millEachPlayer', scope: 'all', count: constant(1) }],
+          description: '{1}{B}: Each player mills a card',
+        }),
       ],
     },
   );
