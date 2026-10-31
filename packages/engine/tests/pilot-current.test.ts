@@ -308,9 +308,14 @@ describe('Gamble', () => {
     expect(types.lastIndexOf('shuffle')).toBeGreaterThan(discard);
   });
 
-  it('gamble-seeded — the random discard repeats for the same seed', () => {
+  it('gamble-seeded — the random discard repeats for the same seed and varies across seeds', () => {
     const discarded = (seed: string) => names(playerById(gamble(seed, 3), 'P1').graveyard);
     expect(discarded('gamble-seed')).toEqual(discarded('gamble-seed'));
+    // Four cards in hand, one discarded at random: across seeds, both the find and a Swamp go.
+    const outcomes = new Set(
+      Array.from({ length: 12 }, (_, index) => discarded(`gamble-seed-${index}`).join()),
+    );
+    expect(outcomes).toEqual(new Set(['Pilot Prize', 'Swamp']));
   });
 });
 
@@ -721,6 +726,50 @@ describe('Untimely Malfunction', () => {
       }),
     );
     expect(blockersOffered(ctx, attacker)).toEqual([free.id]);
+  });
+
+  it("untimely-malfunction-one-or-two — the card's own mode takes one or two creatures, never a third", () => {
+    for (const chosen of [1, 2] as const) {
+      const ctx = mainPhase(`malfunction-count-${chosen}`);
+      spawn(ctx, 'P1', mountain());
+      spawn(ctx, 'P1', mountain());
+      const card = conjure(ctx, 'P1', malfunction(), 'hand');
+      const attacker = spawn(ctx, 'P1', bear());
+      const wolf = spawn(ctx, 'P2', creatureNamed('Pilot Wolf', 'Wolf'));
+      const elk = spawn(ctx, 'P2', creatureNamed('Pilot Elk', 'Elk'));
+      const yak = spawn(ctx, 'P2', creatureNamed('Pilot Yak', 'Yak'));
+      const cast = computePriorityOptions(ctx, playerById(ctx, 'P1')).find(
+        (option) =>
+          (option.payload as PriorityActionPayload & { objectId?: string }).objectId === card.id &&
+          /can't block/.test(option.description),
+      )!;
+      const prompts: string[] = [];
+      const answers = ['Pilot Wolf', chosen === 2 ? 'Pilot Elk' : null];
+      pump(
+        applyPriorityAction(ctx, playerById(ctx, 'P1'), cast.payload as PriorityActionPayload, {
+          index: 0,
+          targets: new Map(),
+        }),
+        (decision) => {
+          prompts.push(decision.prompt);
+          const answer = answers[prompts.length - 1];
+          if (answer === undefined)
+            throw new Error(`a third target was asked:\n${decision.prompt}`);
+          if (answer !== null) return pick(decision, answer);
+          return {
+            index: decision.options.findIndex((option) => option.type === 'decline'),
+            targets: new Map(),
+          };
+        },
+        { strict: true },
+      );
+      // Two target questions at most, the second one declinable: one or two creatures.
+      expect(prompts).toHaveLength(2);
+      pumpStrict(resolveTopOfStack(ctx));
+      const shut = chosen === 2 ? [wolf.id, elk.id] : [wolf.id];
+      const free = [wolf.id, elk.id, yak.id].filter((id) => !shut.includes(id));
+      expect(blockersOffered(ctx, attacker).sort()).toEqual(free.sort());
+    }
   });
 
   it('untimely-malfunction-this-turn — the restriction ends in the cleanup step', () => {

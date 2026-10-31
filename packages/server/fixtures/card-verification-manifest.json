@@ -17502,8 +17502,10 @@
           "engineTestIds": [
             "cards/pilot-new/professional-face-breaker.test.ts::face-breaker-treasure-then-play",
             "cards/pilot-new/professional-face-breaker.test.ts::face-breaker-permission-ends",
+            "cards/pilot-new/professional-face-breaker.test.ts::face-breaker-cast-exiled-this-turn",
             "clause 3, negative: an artifact that is not a Treasure does not pay the sacrifice",
-            "clause 3, negative: on your next turn the exiled card can no longer be cast"
+            "clause 3, negative: on your next turn the exiled card can no longer be cast",
+            "clause 3: the exiled card is castable in the postcombat main phase of the turn it was exiled"
           ],
           "viewerScenarioIds": [
             "face-breaker-treasure-then-play",
@@ -17680,9 +17682,15 @@
             "cards/pilot-new/takenuma-abandoned-mire.test.ts::takenuma-choose-among",
             "cards/pilot-new/takenuma-abandoned-mire.test.ts::takenuma-legend-discount",
             "cards/pilot-new/takenuma-abandoned-mire.test.ts::takenuma-no-discount",
+            "cards/pilot-new/takenuma-abandoned-mire.test.ts::takenuma-three-legends-one-swamp",
+            "cards/pilot-new/takenuma-abandoned-mire.test.ts::takenuma-one-legend-not-enough",
+            "cards/pilot-new/takenuma-abandoned-mire.test.ts::takenuma-three-legends-no-black",
             "cards/pilot-new/takenuma-abandoned-mire.test.ts::takenuma-nothing-qualifies",
             "clause 2: two legendary creatures bring channel down to what two Swamps pay",
             "clause 2, negative: without legendary creatures two Swamps do not pay for channel",
+            "clause 2: three legendary creatures bring channel down to {B}, which one Swamp pays",
+            "clause 2, negative: one legendary creature takes off only {1}, so two Swamps do not pay",
+            "clause 2, negative: the discount is generic only, so no black mana cannot channel",
             "clause 2, negative: a card that is not a creature or planeswalker is never offered"
           ],
           "viewerScenarioIds": [
@@ -17848,7 +17856,8 @@
           "engineTestIds": [
             "cards/pilot-new/everflowing-chalice.test.ts::everflowing-chalice-kicked-twice",
             "cards/pilot-new/everflowing-chalice.test.ts::everflowing-chalice-kicked-once",
-            "cards/pilot-new/everflowing-chalice.test.ts::everflowing-chalice-unkicked"
+            "cards/pilot-new/everflowing-chalice.test.ts::everflowing-chalice-unkicked",
+            "clause 3, negative: an unkicked Chalice has no counter to tap for, so a {1} spell is not offered"
           ],
           "viewerScenarioIds": [
             "everflowing-chalice-kicked-twice",
@@ -17862,7 +17871,10 @@
           "engineTestIds": [
             "cards/pilot-new/everflowing-chalice.test.ts::everflowing-chalice-kicked-twice",
             "cards/pilot-new/everflowing-chalice.test.ts::everflowing-chalice-unkicked",
-            "clause 3: kicked twice, its {C}{C} pays for a {2} creature"
+            "cards/pilot-new/everflowing-chalice.test.ts::everflowing-chalice-one-counter-taps",
+            "clause 3: kicked twice, its {C}{C} pays for a {2} creature",
+            "clause 3, negative: an unkicked Chalice has no counter to tap for, so a {1} spell is not offered",
+            "clause 3: with one charge counter on it, Chalice pays for a {1} spell"
           ],
           "viewerScenarioIds": ["everflowing-chalice-kicked-twice", "everflowing-chalice-unkicked"]
         }
@@ -18008,10 +18020,14 @@
             "cards/pilot-new/orcish-bowmasters.test.ts::bowmasters-opponent-draws",
             "cards/pilot-new/orcish-bowmasters.test.ts::bowmasters-draws-two",
             "cards/pilot-new/orcish-bowmasters.test.ts::bowmasters-first-draw-exempt",
+            "cards/pilot-new/orcish-bowmasters.test.ts::bowmasters-second-draw-in-draw-step",
+            "cards/pilot-new/orcish-bowmasters.test.ts::bowmasters-other-opponent-draws-in-their-turn",
             "cards/pilot-new/orcish-bowmasters.test.ts::bowmasters-own-draw",
             "cards/pilot-new/orcish-bowmasters.test.ts::bowmasters-existing-army",
             "clause 2: the enter trigger takes any target, a player or a creature",
             "clause 2: nothing is left to answer after each trigger is targeted",
+            "clause 2: an opponent’s second draw in its own draw step triggers it",
+            "clause 2: another opponent’s draw during someone else’s draw step triggers it",
             "clause 2, negative: an opponent's first draw in their draw step asks nothing",
             "clause 2, negative: your own draw asks nothing after the spell"
           ]
@@ -18123,9 +18139,11 @@
           ],
           "engineTestIds": [
             "cards/pilot-new/ragavan-nimble-pilferer.test.ts::ragavan-hit-cast",
+            "cards/pilot-new/ragavan-nimble-pilferer.test.ts::ragavan-hits-third-player",
             "cards/pilot-new/ragavan-nimble-pilferer.test.ts::ragavan-blocked",
             "cards/pilot-new/ragavan-nimble-pilferer.test.ts::ragavan-land-exiled",
-            "clause 1: the exiled card is P2's, and you may only cast it this turn"
+            "clause 1: the exiled card is P2's, and you may only cast it this turn",
+            "clause 1: it exiles the top card of the damaged player's library, not another opponent's"
           ]
         },
         {
@@ -18186,6 +18204,7 @@
             "cantBlockEachChosenThisTurn over a creature count slot (1-2): a block restriction that expires in the cleanup step"
           ],
           "engineTestIds": [
+            "untimely-malfunction-one-or-two",
             "untimely-malfunction-cant-block",
             "untimely-malfunction-this-turn",
             "pilot-current-untimely-malfunction-viewer-cant-block"
