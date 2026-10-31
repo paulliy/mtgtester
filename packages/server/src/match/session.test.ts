@@ -707,7 +707,8 @@ describe('MatchSession - Phase 6 single-player control', () => {
   }, 15_000);
 });
 
-describe('MatchSession — seeking (brief §10.1)', () => {
+// Each plays a whole game, like the file's other full-game tests.
+describe('MatchSession — seeking (brief §10.1)', { timeout: 15_000 }, () => {
   it('reports which action the board it sent belongs to', async () => {
     const { session, sent, snapshots } = harness({ livePaceMs: 0 });
     session.start();
