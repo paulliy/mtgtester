@@ -168,8 +168,10 @@ test('Leyline of the Void uses its actual opening-hand choice and exiles a destr
     'Leyline of the Void: choose its opening-hand action, then exile a destroyed opponent land';
   await runScenario(page, title);
 
-  await expect(page.getByText(/Keep this hand or mulligan/)).toBeVisible();
-  await page.getByRole('button', { name: 'Keep this hand', exact: true }).click();
+  // The opening hand is its own dialog, with Mulligan and "Keep 7" as its two choices.
+  const openingHand = page.getByRole('dialog', { name: /^Opening hand/ });
+  await expect(openingHand).toBeVisible();
+  await openingHand.getByRole('button', { name: /^Keep \d+$/ }).click();
   await expect(
     page.getByText('You may begin the game with a card from your opening hand on the battlefield.'),
   ).toBeVisible();
