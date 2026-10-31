@@ -1665,6 +1665,8 @@ export function castFromLibraryTopCandidates(
   playerId: PlayerId,
   /** The spell the top card would be cast as (a bestowed Aura), when that differs (CR 601.3e). */
   spellDefinition?: CardDefinition,
+  /** Permissions to pay the mana cost, or those that pay life instead (Bolas's Citadel). */
+  payment: 'mana' | 'life' = 'mana',
 ): EngineCardObject[] {
   const player = ctx.state.players.find((p) => p.id === playerId);
   const top = player?.library[0];
@@ -1674,6 +1676,7 @@ export function castFromLibraryTopCandidates(
   const eligible = gatherRuleStatics(ctx).some((entry) => {
     if (entry.static.kind !== 'castFromZone' || entry.static.zone !== 'libraryTop') return false;
     if (entry.controllerId !== playerId) return false;
+    if ((entry.static.lifeInsteadOfMana === true) !== (payment === 'life')) return false;
     return (
       entry.static.filter === undefined || selectMatches(candidate, entry.static.filter, source)
     );

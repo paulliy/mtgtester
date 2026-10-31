@@ -27,6 +27,7 @@ import {
   addGeneric,
   describeManaCost,
   emptyCost,
+  manaValueOf,
   subtractColored,
   subtractGeneric,
   withX,
@@ -511,6 +512,7 @@ function* proposeCast(
       'mdfc',
       'bestow',
       'split',
+      'libraryTopLife',
     ].includes(payload.alternativeCast)
   )
     throw new Error('unknown casting alternative');
@@ -662,7 +664,18 @@ function* proposeCast(
     );
     consumeZonePermission = 'graveyard';
   }
-  if (resolutionPermission === undefined && payload.fromLibraryTop === true) {
+  const lifeFromLibraryTop = payload.alternativeCast === 'libraryTopLife';
+  if (lifeFromLibraryTop) {
+    // Bolas's Citadel's own permission: no other library-top permission is used (CR 118.9).
+    if (
+      resolutionPermission !== undefined ||
+      payload.fromLibraryTop !== true ||
+      !castFromLibraryTopCandidates(ctx, player.id, permissionSpell, 'life').some(
+        (card) => card.id === obj.id,
+      )
+    )
+      throw new Error('pay-life cast from library top is not legal');
+  } else if (resolutionPermission === undefined && payload.fromLibraryTop === true) {
     const permission = playFromZonePermission(ctx, player.id, obj, 'libraryTop', permissionSpell);
     if (permission !== null) {
       validatePlayFromZonePermission(
@@ -810,6 +823,15 @@ function* proposeCast(
       throw new Error('energy alternative cost is not legal');
     }
     energyAlternativeCostToPay = energyAlternativeCost;
+    cost = emptyCost();
+  } else if (payload.alternativeCast === 'libraryTopLife') {
+    // Life equal to the mana value rather than the mana cost; {X} is 0 (CR 107.3b).
+    const life = manaValueOf(def.manaCost);
+    if ((payload.x ?? 0) !== 0) throw new Error('a pay-life cast has X=0');
+    castingAdditionalCosts = [
+      ...castingAdditionalCosts,
+      ...(life > 0 ? [{ kind: 'payLife' as const, amount: life }] : []),
+    ];
     cost = emptyCost();
   } else if (payload.alternativeCast === 'commanderFree') {
     if (

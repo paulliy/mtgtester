@@ -58,6 +58,7 @@ import {
   canPay,
   describeManaCost,
   emptyCost,
+  manaValueOf,
   planPayment,
   subtractColored,
   subtractGeneric,
@@ -142,7 +143,8 @@ export type PriorityActionPayload =
         | 'commanderFree'
         | 'faceDown'
         | 'bestow'
-        | 'split';
+        | 'split'
+        | 'libraryTopLife';
       altIndex?: number;
       /**
        * The option priced with target-dependent reductions (Killian): the target slot that must
@@ -1500,6 +1502,25 @@ export function computePriorityOptions(
         );
       }
     }
+    // "Pay life equal to its mana value rather than pay its mana cost" (Bolas's Citadel): an
+    // alternative cost (CR 118.9), so {X} is 0 (CR 107.3b) and the life is the printed mana value.
+    if (
+      fromLibraryTop &&
+      def.manaCost !== null &&
+      castFromLibraryTopCandidates(ctx, player.id, def, 'life').some((card) => card.id === obj.id)
+    ) {
+      const life = manaValueOf(def.manaCost);
+      offerCast(
+        emptyCost(),
+        [
+          ...spellAdditionalCosts,
+          ...(life > 0 ? [{ kind: 'payLife' as const, amount: life }] : []),
+        ],
+        def,
+        { alternativeCast: 'libraryTopLife' },
+        ` by paying ${life} life`,
+      );
+    }
 
     // Adventure's own exile permission allows only the permanent face. A broad temporary
     // play permission also permits choosing a spell face or paying bestow (CR 118.9); other
@@ -1623,6 +1644,7 @@ export function computePriorityOptions(
   /** Whether a library-top permission lets `libraryTop` be cast as `spell` (CR 601.3e). */
   const topCastableAs = (top: EngineCardObject, spell?: CardDefinition): boolean =>
     castFromLibraryTopCandidates(ctx, player.id, spell).some((obj) => obj.id === top.id) ||
+    castFromLibraryTopCandidates(ctx, player.id, spell, 'life').some((obj) => obj.id === top.id) ||
     playFromZonePermission(ctx, player.id, top, 'libraryTop', spell) !== null;
   if (libraryTop !== undefined) {
     const topDef = getDefByOracleId(ctx, libraryTop.oracleId, libraryTop.name);

@@ -158,6 +158,19 @@ function definitionMutants(node: Node, path: Path, add: AddMutant): void {
           'alternativeCasts',
         );
     });
+  // Bolas's Citadel without its life clause is a plain library-top cast for mana.
+  if (Array.isArray(node['ruleStatics']))
+    (node['ruleStatics'] as Node[]).forEach((rule, index) => {
+      if (rule['lifeInsteadOfMana'] === true)
+        add(
+          path,
+          `drop ruleStatics[${index}] lifeInsteadOfMana`,
+          (definition) => {
+            delete (definition['ruleStatics'] as Node[])[index]!['lifeInsteadOfMana'];
+          },
+          `ruleStatics[${index}]`,
+        );
+    });
   // A CR 106.6 restriction dropped is the mana spendable on anything.
   if (Array.isArray(node['manaAbilities']))
     (node['manaAbilities'] as Node[]).forEach((ability, index) => {

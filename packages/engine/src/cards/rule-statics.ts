@@ -109,8 +109,13 @@ export type RuleStatic =
   | { kind: 'spellCastLimit'; category: 'any' | 'noncreature'; limit: number }
   | { kind: 'otherPermanentsEnterTapped'; filter: Selector }
   | { kind: 'suppressObjectTriggers'; events: ('enters' | 'dies')[]; filter: Selector }
-  /** "You may cast Dragon spells from the top of your library" (Korlessa, Scale Singer). */
-  | { kind: 'castFromZone'; zone: 'libraryTop'; filter?: Selector }
+  /**
+   * "You may cast Dragon spells from the top of your library" (Korlessa, Scale Singer).
+   * `lifeInsteadOfMana`: "If you cast a spell this way, pay life equal to its mana value rather
+   * than pay its mana cost" (Bolas's Citadel) — an alternative cost (CR 118.9), so a spell cast
+   * under it is never cast for mana, and X is 0 (CR 107.3b).
+   */
+  | { kind: 'castFromZone'; zone: 'libraryTop'; filter?: Selector; lifeInsteadOfMana?: true }
   /** Private permission to look, without revealing the library top to other players. */
   | { kind: 'lookTopLibrary' }
   /** "You may play lands from the top of your library/your graveyard." */

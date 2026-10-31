@@ -22,6 +22,7 @@ const probe = {
   alternativeCasts: [{ kind: 'nonMana', manaCost: {}, dashed: true, description: 'Dash' }],
   staticEffects: [{ kind: 'anthem' }],
   manaAbilities: [{ units: [] }, { units: [], restriction: { purposes: ['castSpell'] } }],
+  ruleStatics: [{ kind: 'castFromZone', zone: 'libraryTop', lifeInsteadOfMana: true }],
   activatedAbilities: [
     {
       costs: [{ kind: 'mana' }, { kind: 'tap' }],
@@ -59,9 +60,11 @@ describe('IR mutation operators', () => {
     expect(cardMutants(probe).map((mutant) => `${mutant.part} | ${mutant.label}`)).toEqual([
       'keywords | (card): drop keyword flying',
       'staticEffects[0] | (card): drop staticEffects[0]',
+      'ruleStatics[0] | (card): drop ruleStatics[0]',
       'manaAbilities[0] | (card): drop manaAbilities[0]',
       'manaAbilities[1] | (card): drop manaAbilities[1]',
       'alternativeCasts | (card): drop alternativeCasts[0] dashed',
+      'ruleStatics[0] | (card): drop ruleStatics[0] lifeInsteadOfMana',
       'manaAbilities[1] | (card): drop manaAbilities[1] restriction',
       'entersTapped | (card): flip entersTapped to false',
       'entersWithCounters | (card): remove entersWithCounters',
@@ -97,6 +100,9 @@ describe('IR mutation operators', () => {
     expect(at('(card): flip entersTapped to false').entersTapped).toBe(false);
     expect(at('(card): remove entersWithCounters')).not.toHaveProperty('entersWithCounters');
     expect(at('(card): remove entersUnlessDiscard')).not.toHaveProperty('entersUnlessDiscard');
+    expect(at('(card): drop ruleStatics[0] lifeInsteadOfMana').ruleStatics[0]).not.toHaveProperty(
+      'lifeInsteadOfMana',
+    );
     expect(at('(card): drop manaAbilities[1] restriction').manaAbilities[1]).not.toHaveProperty(
       'restriction',
     );

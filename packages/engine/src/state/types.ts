@@ -542,7 +542,8 @@ export interface EngineStackObject extends StackObject {
     | 'commanderFree'
     | 'faceDown'
     | 'bestow'
-    | 'split';
+    | 'split'
+    | 'libraryTopLife';
   altIndex?: number;
   /** Triggered abilities: the object whose event fired this — the `'triggerObject'` referent. */
   triggerObjectCardId?: CardId;

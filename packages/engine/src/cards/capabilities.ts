@@ -787,6 +787,7 @@ const shapes = {
     minimumMana: leaf,
     condition: { node: 'Condition' },
     reduction: leaf,
+    lifeInsteadOfMana: leaf,
   } satisfies Fields<Objects<RuleStatic>>,
   ContinuousOp: {
     layer: leaf,

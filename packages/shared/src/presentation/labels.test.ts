@@ -58,6 +58,7 @@ describe('actionLabel', () => {
       'commanderFree',
       'nonMana',
       'dash',
+      'libraryTopLife',
       'energy',
       'overload',
       'bestow',
