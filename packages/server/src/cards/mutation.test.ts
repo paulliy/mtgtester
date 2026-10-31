@@ -5,6 +5,7 @@ import {
   cardTests,
   equivalentMutants,
   judgeMutant,
+  mutationNotProven,
   testNamePattern,
   type MutantTestResult,
 } from '../../../../scripts/contracts/mutation';
@@ -91,5 +92,39 @@ describe("a card's evidence", () => {
     expect(pattern.test('a.test.ts Card (x) id — does [it] again')).toBe(false);
     expect(pattern.test('a.test.ts Other Card (x) id — does [it]')).toBe(false);
     expect(pattern.test('b/a.test.ts Card (x) id — does [it]')).toBe(false);
+  });
+});
+
+describe('which reviewed cards fail the mutation run', () => {
+  const outcome = (change: Partial<Parameters<typeof mutationNotProven>[0]>) => ({
+    status: 'implemented-reviewed',
+    tests: 3,
+    mutants: [{ status: 'killed' as const }],
+    baselineFailures: [],
+    ...change,
+  });
+
+  it('passes a reviewed card whose mutants are all killed or equivalent', () => {
+    expect(
+      mutationNotProven(outcome({ mutants: [{ status: 'killed' }, { status: 'equivalent' }] })),
+    ).toBe(false);
+  });
+
+  it('fails a reviewed card with no resolvable test, not vacuously passing it', () => {
+    expect(mutationNotProven(outcome({ tests: 0, mutants: [] }))).toBe(true);
+  });
+
+  it('fails a survivor, an unreached mutant and a baseline failure', () => {
+    expect(mutationNotProven(outcome({ mutants: [{ status: 'survived' }] }))).toBe(true);
+    expect(mutationNotProven(outcome({ mutants: [{ status: 'unreached' }] }))).toBe(true);
+    expect(mutationNotProven(outcome({ baselineFailures: ['(some tests did not run)'] }))).toBe(
+      true,
+    );
+  });
+
+  it('only reports on cards that are not reviewed', () => {
+    expect(mutationNotProven(outcome({ status: 'implemented', tests: 0, mutants: [] }))).toBe(
+      false,
+    );
   });
 });

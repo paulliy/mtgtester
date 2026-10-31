@@ -47,6 +47,31 @@ export function judgeMutant(results: readonly MutantTestResult[]): MutantVerdict
   return { status, killedBy, crashed };
 }
 
+/** What `mutate-cards` found for one card (the fields `mutationNotProven` reads). */
+export interface MutationOutcome {
+  status: string;
+  /** Manifest tests that resolved to one collected test each. */
+  tests: number;
+  mutants: ReadonlyArray<{ status: MutantStatus }>;
+  baselineFailures: readonly string[];
+}
+
+/**
+ * Whether a reviewed card fails the run: no test resolves for it (nothing was run, so nothing is
+ * proven), a test fails with no mutant, or a mutant survived or was never reached. Other
+ * statuses are reports only.
+ */
+export function mutationNotProven(outcome: MutationOutcome): boolean {
+  return (
+    outcome.status === 'implemented-reviewed' &&
+    (outcome.tests === 0 ||
+      outcome.baselineFailures.length > 0 ||
+      outcome.mutants.some(
+        (mutant) => mutant.status === 'survived' || mutant.status === 'unreached',
+      ))
+  );
+}
+
 /**
  * The tests that are evidence for a card: its manifest engine test IDs that resolve to exactly one
  * collected test. Contract tests (built on stand-in cards) and bulk-only IDs are not; an ID that

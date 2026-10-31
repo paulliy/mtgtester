@@ -13,7 +13,6 @@
  * the test file's card-gate entry. It never copies another card's definition, and it reads the
  * engine's own interpreter rather than any copy of its vocabulary.
  */
-import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { OracleCard } from '../../packages/shared/src';
@@ -26,6 +25,8 @@ import {
   type PinStoreFile,
 } from '../../packages/engine/tests/scenario/pin-store';
 import { CARD_GATE_LIST } from '../contracts/suite-integrity';
+import { withLf } from './line-endings';
+import { runPrettier } from './prettier';
 import { COVERAGE_ORACLE, findCard } from './resolve-card';
 
 const OVERRIDES_DIR = 'packages/engine/src/cards/overrides';
@@ -238,7 +239,7 @@ function definitionSite(name: string): string {
   for (const file of readdirSync(OVERRIDES_DIR)
     .filter((entry) => entry.endsWith('.ts'))
     .sort()) {
-    const lines = readFileSync(join(OVERRIDES_DIR, file), 'utf8').split('\n');
+    const lines = readFileSync(join(OVERRIDES_DIR, file), 'utf8').split(/\r?\n/);
     const index = lines.findIndex((text) => quoted.some((needle) => text.includes(needle)));
     if (index !== -1) return `${OVERRIDES_DIR}/${file}:${index + 1}`;
   }
@@ -306,17 +307,26 @@ export function batchFileSource(batch: string): string {
 
 /** The batch file with `stub` added at the end of its register function. */
 export function insertStub(source: string, stub: string): string {
+  return withLf(source, (lf) => insertStubLf(lf, stub));
+}
+
+function insertStubLf(source: string, stub: string): string {
   const end = source.lastIndexOf('\n}');
   if (end === -1) throw new Error('the batch file has no closing brace to insert before');
   const before = source.slice(0, end).replace(/\n*$/, '');
   const opening = before.endsWith('{') ? '' : '\n';
-  const withImport = source.includes('import { unimplemented') || /\bunimplemented,/.test(source);
+  // Imported already, alone or among other names from './index'.
+  const withImport = /import\s*\{[^}]*\bunimplemented\b[^}]*\}\s*from\s*'\.\/index'/.test(source);
   const result = `${before}\n${opening}${stub}${source.slice(end)}`;
   return withImport ? result : `import { unimplemented } from './index';\n${result}`;
 }
 
 /** The overrides index with the batch's register function imported and called, once. */
 export function wireBatch(index: string, batch: string): string {
+  return withLf(index, (lf) => wireLf(lf, batch));
+}
+
+function wireLf(index: string, batch: string): string {
   const fn = `register${pascalOf(batch)}Overrides`;
   if (index.includes(`${fn}(`) || index.includes(`, ${fn});`)) return index;
   const imports = [...index.matchAll(/^import .*;$/gm)];
@@ -393,10 +403,12 @@ export const PRIMITIVE_FILES = {
 export type PrimitiveSources = Record<keyof typeof PRIMITIVE_FILES, string>;
 
 function insertAfter(source: string, anchor: string, text: string, file: string): string {
-  const at = source.indexOf(anchor);
-  if (at === -1) throw new Error(`${file} no longer has the anchor the scaffold writes after`);
-  if (source.indexOf(anchor, at + 1) !== -1) throw new Error(`${file} has the anchor twice`);
-  return `${source.slice(0, at + anchor.length)}${text}${source.slice(at + anchor.length)}`;
+  return withLf(source, (lf) => {
+    const at = lf.indexOf(anchor);
+    if (at === -1) throw new Error(`${file} no longer has the anchor the scaffold writes after`);
+    if (lf.indexOf(anchor, at + 1) !== -1) throw new Error(`${file} has the anchor twice`);
+    return `${lf.slice(0, at + anchor.length)}${text}${lf.slice(at + anchor.length)}`;
+  });
 }
 
 /**
@@ -522,8 +534,11 @@ function writeScaffold(card: OracleCard, sha: string, handled: string[], batch: 
   }
   const gate = readFileSync(CARD_GATE_LIST, 'utf8');
   const entry = `${CARD_TESTS_DIR}/${batch}`;
-  if (!gate.split('\n').includes(entry)) {
-    writeFileSync(CARD_GATE_LIST, `${gate.replace(/\n*$/, '\n')}${entry}\n`);
+  if (!gate.split(/\r?\n/).includes(entry)) {
+    writeFileSync(
+      CARD_GATE_LIST,
+      withLf(gate, (lf) => `${lf.replace(/\n*$/, '\n')}${entry}\n`),
+    );
     written.push(CARD_GATE_LIST);
   }
   return written;
@@ -531,9 +546,7 @@ function writeScaffold(card: OracleCard, sha: string, handled: string[], batch: 
 
 /** The scaffold in the repository's own style, so it reads like the code around it. */
 function formatWritten(paths: readonly string[]): void {
-  execFileSync('npx', ['prettier', '--write', ...paths.filter((path) => !path.endsWith('.txt'))], {
-    stdio: 'ignore',
-  });
+  runPrettier(paths.filter((path) => !path.endsWith('.txt')));
 }
 
 function writePrimitive(op: string): void {

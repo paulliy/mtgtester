@@ -1,6 +1,7 @@
 /** The authoring commands' pure parts (ADR 0033 decision 1, plan phase 2). */
 import { describe, expect, it } from 'vitest';
 import { lineDiff, snapshotChange } from '../../../../scripts/cards/card-check';
+import { baseCommit } from '../../../../scripts/cards/changed-cards';
 import {
   batchCards,
   bindSources,
@@ -285,5 +286,86 @@ describe('card:new --primitive', () => {
 
   it('writes a contract skeleton the skip lint refuses until filled', () => {
     expect(primitiveContractSource('probeShuffle').match(/it\.todo\(/g)).toHaveLength(5);
+  });
+});
+
+describe('scaffold editors on CRLF checkouts', () => {
+  const crlf = (text: string) => text.replaceAll('\n', '\r\n');
+
+  it('registers scenario files once, and keeps the CRLF endings', () => {
+    const source = [
+      'export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScenarioFile }> = [',
+      '  {',
+      "    name: 'a.json',",
+      '  },',
+      '];',
+    ].join('\n');
+    const registered = registerScenarioFiles(crlf(source), ['a.json', 'b.json']);
+    expect(registered).toBe(crlf(registerScenarioFiles(source, ['a.json', 'b.json'])));
+    expect(registered.match(/name: 'a\.json'/g)).toHaveLength(1);
+    expect(registered.replaceAll('\r\n', '')).not.toContain('\n');
+    expect(registerScenarioFiles(registered, ['a.json', 'b.json'])).toBe(registered);
+  });
+
+  it('binds a source into the list without splitting a string literal', () => {
+    const generator = [
+      'const SOURCE_FILES = [',
+      "  'a/one.ts',",
+      "  'a/three.ts',",
+      '] as const;',
+    ].join('\n');
+    const bound = bindSources(crlf(generator), ['a/two.ts']);
+    expect(bound).toBe(crlf(bindSources(generator, ['a/two.ts'])));
+    expect(sourceList(bound)).toEqual(['a/one.ts', 'a/three.ts', 'a/two.ts']);
+  });
+
+  it('inserts a stub, and finds the primitive anchors', () => {
+    const stub = overrideStub(card('Mortar', 'x'), ['x']);
+    const batch = crlf(batchFileSource('pilot-one'));
+    expect(insertStub(batch, stub)).toBe(crlf(insertStub(batchFileSource('pilot-one'), stub)));
+    const read = Object.fromEntries(
+      Object.entries(PRIMITIVE_FILES).map(([key, path]) => [key, crlf(readFileSync(path, 'utf8'))]),
+    ) as Parameters<typeof primitiveScaffold>[1];
+    expect(primitiveScaffold('fooBar', read).ability).toContain("{ op: 'fooBar' }\r\n");
+  });
+});
+
+describe('card:new stubs import unimplemented once', () => {
+  const stub = overrideStub(card('Mortar', 'x'), ['x']);
+
+  it.each([
+    "import { spell, unimplemented } from './index';",
+    "import { unimplemented, spell } from './index';",
+    "import {\n  spell,\n  unimplemented,\n} from './index';",
+  ])('when it is already among the names in %j', (line) => {
+    const source = `${line}\n\nexport function registerXOverrides(): void {\n}\n`;
+    expect(insertStub(source, stub).match(/\bunimplemented\b[^()]*from/g)).toHaveLength(1);
+    expect(insertStub(source, stub)).not.toContain("import { unimplemented } from './index'");
+  });
+
+  it('adds the import when it is absent', () => {
+    const source =
+      "import { spell } from './index';\n\nexport function registerXOverrides(): void {\n}\n";
+    expect(insertStub(source, stub)).toContain("import { unimplemented } from './index';");
+  });
+});
+
+describe('the changed-cards base commit', () => {
+  it('resolves a SHA or a ref to a commit', () => {
+    const head = baseCommit('HEAD');
+    expect(head).toMatch(/^[0-9a-f]{40}$/);
+    expect(baseCommit(head)).toBe(head);
+  });
+
+  it("falls back to HEAD's first parent only when no base was given", () => {
+    const parent = baseCommit(undefined);
+    expect(parent).toMatch(/^[0-9a-f]{40}$/);
+    expect(baseCommit('')).toBe(parent);
+    expect(baseCommit('0'.repeat(40))).toBe(parent);
+  });
+
+  it('fails loudly on a base that names no commit', () => {
+    expect(() => baseCommit('no-such-ref-anywhere')).toThrow(/does not name a commit/);
+    expect(() => baseCommit('f'.repeat(40))).toThrow(/does not name a commit/);
   });
 });

@@ -14,9 +14,19 @@ import { strictPumpErrors, type ChangedTestFile } from './contracts/strict-pump'
 // ADR 0034 decision 9: lists that may shrink but must not grow, and no new guessing pump() call,
 // compared with the pull request's base commit. The base comes from RATCHET_BASE (ci.yml passes the pull request's base SHA, or a
 // push event's `before` SHA) or `--base <sha>`; an unusable base falls back to HEAD's first parent.
-function git(args: string[]): string | undefined {
+// A git failure throws: only a path missing at the base counts as "absent there" (see `baseFile`).
+function git(args: string[], quiet = false): string {
+  return execFileSync('git', args, {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', quiet ? 'ignore' : 'inherit'],
+    maxBuffer: 1 << 28,
+  });
+}
+
+/** `git` for the base probes, where failing is an answer (an unknown commit, no parent). */
+function tryGit(args: string[]): string | undefined {
   try {
-    return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    return git(args, true);
   } catch {
     return undefined;
   }
@@ -25,14 +35,18 @@ function git(args: string[]): string | undefined {
 const flag = process.argv.indexOf('--base');
 const candidate = flag === -1 ? process.env['RATCHET_BASE'] : process.argv[flag + 1];
 const base = resolveBase(candidate, {
-  hasCommit: (sha) => git(['cat-file', '-e', `${sha}^{commit}`]) !== undefined,
-  firstParent: () => git(['rev-parse', '--verify', 'HEAD^'])?.trim() || undefined,
+  hasCommit: (sha) => tryGit(['cat-file', '-e', `${sha}^{commit}`]) !== undefined,
+  firstParent: () => tryGit(['rev-parse', '--verify', 'HEAD^'])?.trim() || undefined,
 });
 if (base.notice !== undefined)
   console.log(`${base.kind === 'none' ? '::notice::' : '::warning::'}${base.notice}`);
 if (base.kind === 'none') process.exit(0);
 
-const baseFile = (path: string) => git(['show', `${base.sha}:${path}`]);
+// The file at the base, or undefined when the base has no such path; any other git error throws.
+const baseFile = (path: string): string | undefined =>
+  git(['ls-tree', '--name-only', base.sha, '--', path]).trim() === ''
+    ? undefined
+    : git(['show', `${base.sha}:${path}`]);
 
 // The committed slug list, plus slugs of any card names added since it was generated, so a new
 // fixture cannot open a gap before the list is regenerated.
@@ -58,9 +72,14 @@ const manifest = checkNotExecutableInCi({
 });
 
 // Test files changed against the base, renames compared with their old version.
-const changedTests: ChangedTestFile[] = (
-  git(['diff', '--name-status', '-M', '--diff-filter=AMR', base.sha, 'HEAD']) ?? ''
-)
+const changedTests: ChangedTestFile[] = git([
+  'diff',
+  '--name-status',
+  '-M',
+  '--diff-filter=AMR',
+  base.sha,
+  'HEAD',
+])
   .split('\n')
   .map((line) => line.split('\t'))
   .filter((parts) => parts.length >= 2)

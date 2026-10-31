@@ -15,10 +15,27 @@ const SNAPSHOTS = [
 const git = (...args: string[]) =>
   execFileSync('git', args, { encoding: 'utf8', maxBuffer: 1 << 28 });
 
-/** A commit SHA from `candidate` (a pull request's base), or HEAD's first parent. */
+/** The commit `ref` names, or undefined when it names none (or only the all-zero null SHA). */
+function resolveCommit(ref: string): string | undefined {
+  try {
+    const sha = git('rev-parse', '--verify', '--quiet', `${ref}^{commit}`).trim();
+    return /^0+$/.test(sha) ? undefined : sha;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * The commit `candidate` (a pull request's base: a SHA or any ref) names. With no candidate, or an
+ * all-zero one (a push to a new branch), HEAD's first parent; a candidate that names no commit is
+ * an error rather than a silent switch to another base.
+ */
 export function baseCommit(candidate: string | undefined): string {
   const value = candidate?.trim() ?? '';
-  return /^[0-9a-f]{7,40}$/.test(value) ? value : git('rev-parse', 'HEAD^').trim();
+  if (value === '' || /^0+$/.test(value)) return git('rev-parse', 'HEAD^').trim();
+  const sha = resolveCommit(value);
+  if (sha === undefined) throw new Error(`--base ${value} does not name a commit in this clone`);
+  return sha;
 }
 
 /** Of `cards`, those with a snapshot entry added or changed since `base`. */

@@ -115,8 +115,14 @@ const { cardMutants } = await import('../packages/engine/tests/mutation/operator
 const { pinStore } = await import('../packages/engine/tests/scenario/pin-store');
 const { baseCommit, changedCards } = await import('./cards/changed-cards');
 const { indexTests } = await import('./contracts/manifest-tests');
-const { cardStatuses, cardTests, equivalentMutants, judgeMutant, testNamePattern } =
-  await import('./contracts/mutation');
+const {
+  cardStatuses,
+  cardTests,
+  equivalentMutants,
+  judgeMutant,
+  mutationNotProven,
+  testNamePattern,
+} = await import('./contracts/mutation');
 
 const root = `${normalizePath(process.cwd())}/`;
 // `--manifest` reads another copy: a change's new test IDs can be tried before they are committed.
@@ -249,7 +255,10 @@ try {
       from = crashed + 1;
     }
     report.seconds = Math.round((Date.now() - started) / 100) / 10;
-    if (report.tests === 0) console.log(`${card}: no manifest test resolves to one collected test`);
+    if (report.tests === 0)
+      console.log(
+        `${card}: no manifest test resolves to one collected test${status === 'implemented-reviewed' ? ' (a reviewed card needs one: counted as not proven)' : ''}`,
+      );
     else if (report.baselineFailures.length > 0)
       console.log(`${card}: ${report.baselineFailures.length} test(s) fail with no mutant`);
     else {
@@ -270,14 +279,7 @@ try {
   rmSync(scratch, { recursive: true, force: true });
 }
 
-const failing = reports.filter(
-  (report) =>
-    report.status === 'implemented-reviewed' &&
-    (report.baselineFailures.length > 0 ||
-      report.mutants.some(
-        (mutant) => mutant.status === 'survived' || mutant.status === 'unreached',
-      )),
-);
+const failing = reports.filter(mutationNotProven);
 console.log(
   `mutate-cards: ${reports.length} card(s), ${reports.reduce((sum, report) => sum + report.mutants.length, 0)} mutants; ${failing.length} reviewed card(s) not proven`,
 );

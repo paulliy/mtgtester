@@ -23,6 +23,8 @@ import { overrideSnapshot } from '../../packages/engine/src/cards/overrides/snap
 import { pinStore } from '../../packages/engine/tests/scenario/pin-store';
 import { discoverGeneratorSourceFiles } from '../card-evidence-input';
 import { snapshotChange } from './card-check';
+import { withLf } from './line-endings';
+import { runPrettier } from './prettier';
 
 const INTERPRET_FIXTURE = 'packages/engine/tests/fixtures/urdragon-oracle.json';
 const INTERPRET_SNAPSHOT = 'packages/engine/tests/fixtures/interpret-defs.json';
@@ -84,6 +86,10 @@ function scenarioEntry(name: string): string {
  * entry in file-name order (the order the Card Test Lab lists the scenarios in).
  */
 export function registerScenarioFiles(source: string, files: readonly string[]): string {
+  return withLf(source, (lf) => registerLf(lf, files));
+}
+
+function registerLf(source: string, files: readonly string[]): string {
   const marker =
     'export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScenarioFile }> = [';
   const start = source.indexOf(marker);
@@ -123,6 +129,10 @@ const sharedPrefix = (a: string, b: string): number => {
  * the first after it), or at the end when none shares its directory.
  */
 export function bindSources(generator: string, missing: readonly string[]): string {
+  return withLf(generator, (lf) => bindLf(lf, missing));
+}
+
+function bindLf(generator: string, missing: readonly string[]): string {
   let text = generator;
   for (const path of [...missing].sort()) {
     const listed = sourceList(text);
@@ -209,7 +219,7 @@ function main(): void {
   const write = (path: string, text: string) => {
     if (dryRun) return;
     writeFileSync(path, text);
-    execFileSync('npx', ['prettier', '--write', path], { stdio: 'ignore' });
+    runPrettier([path]);
   };
 
   console.log('1. Definition snapshots');

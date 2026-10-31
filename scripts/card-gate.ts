@@ -36,7 +36,16 @@ if (errors.length > 0) {
 const manifestJson = read('packages/server/fixtures/card-verification-manifest.json');
 const manifestCards = (JSON.parse(manifestJson) as { cards: Record<string, { name: string }> })
   .cards;
-const base = baseCommit(process.env['CARD_GATE_BASE'] ?? process.env['RATCHET_BASE']);
+// The base only picks which cards get facet warnings, so an unusable one from CI (a force-push's
+// `before` SHA is not in the clone) warns and falls back to HEAD's first parent.
+const envBase = process.env['CARD_GATE_BASE'] ?? process.env['RATCHET_BASE'];
+let base: string;
+try {
+  base = baseCommit(envBase);
+} catch (error) {
+  console.log(`::warning::${(error as Error).message}; comparing with HEAD's first parent instead`);
+  base = baseCommit(undefined);
+}
 for (const name of changedCards(
   base,
   Object.values(manifestCards).map((card) => card.name),

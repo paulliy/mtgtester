@@ -161,28 +161,32 @@ export function checkCardNamedOps(options: {
 
 /**
  * Manifest test IDs marked `notExecutableInCi`, keyed `oracleId::id` so moving an ID between
- * clauses is not growth. Two forms are read: a clause's `notExecutableInCi: string[]`, and an
- * `engineTestIds` entry written as `{ id, notExecutableInCi: true }`.
+ * clauses is not growth. Two forms are read, as `manifestReferences` reads them: a clause's
+ * `notExecutableInCi: string[]`, and an `engineTestIds` entry (a card's or a clause's) written
+ * `{ id, notExecutableInCi: true }`.
  */
 export function notExecutableInCiIds(manifestText: string): Set<string> {
   const manifest = JSON.parse(manifestText) as {
-    cards?: Record<string, { clauses?: Record<string, unknown>[] }>;
+    cards?: Record<string, { engineTestIds?: unknown[]; clauses?: Array<Record<string, unknown>> }>;
   };
   const marked = new Set<string>();
+  const markedEntries = (oracleId: string, tests: unknown) => {
+    if (!Array.isArray(tests)) return;
+    for (const entry of tests) {
+      if (entry !== null && typeof entry === 'object') {
+        const object = entry as Record<string, unknown>;
+        if (object['notExecutableInCi'] === true && typeof object['id'] === 'string')
+          marked.add(`${oracleId}::${object['id']}`);
+      }
+    }
+  };
   for (const [oracleId, card] of Object.entries(manifest.cards ?? {})) {
+    markedEntries(oracleId, card.engineTestIds);
     for (const clause of card.clauses ?? []) {
       const listed = clause['notExecutableInCi'];
       if (Array.isArray(listed))
         for (const id of listed) if (typeof id === 'string') marked.add(`${oracleId}::${id}`);
-      const tests = clause['engineTestIds'];
-      if (Array.isArray(tests))
-        for (const entry of tests) {
-          if (entry !== null && typeof entry === 'object') {
-            const object = entry as Record<string, unknown>;
-            if (object['notExecutableInCi'] === true && typeof object['id'] === 'string')
-              marked.add(`${oracleId}::${object['id']}`);
-          }
-        }
+      markedEntries(oracleId, clause['engineTestIds']);
     }
   }
   return marked;
