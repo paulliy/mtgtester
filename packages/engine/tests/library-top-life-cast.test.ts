@@ -8,12 +8,20 @@ import { computePriorityOptions, type PriorityActionPayload } from '../src/actio
 import { createGame } from '../src/state/game';
 import { playerById } from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
+import { resolveTopOfStack } from '../src/stack/stack';
 import { conjure, copies, forest, gameConfig, oracle, pumpStrict, spawn } from './fixtures';
 import { pinned } from './pr11-helpers';
 import { pinStore } from './scenario/pin-store';
 
-/** P1's precombat main phase, turn 3, with Bolas's Citadel and `top` on top of P1's library. */
-function withTop(seed: string, top: Parameters<typeof conjure>[2]) {
+/**
+ * P1's precombat main phase, turn 3, with Bolas's Citadel and `top` on top of P1's library;
+ * `setup` adds the rest of the board before the options are computed.
+ */
+function withTop(
+  seed: string,
+  top: Parameters<typeof conjure>[2],
+  setup: (ctx: GameContext) => void = () => {},
+) {
   const ctx: GameContext = createGame(
     gameConfig(
       [0, 1].map(() => ({ cards: copies(8, forest) })),
@@ -32,6 +40,7 @@ function withTop(seed: string, top: Parameters<typeof conjure>[2]) {
   const library = playerById(ctx, 'P1').library;
   library.splice(library.indexOf(card), 1);
   library.unshift(card);
+  setup(ctx);
   const options = computePriorityOptions(ctx, playerById(ctx, 'P1')).filter((option) => {
     const payload = option.payload as PriorityActionPayload;
     return 'objectId' in payload && payload.objectId === card.id;
@@ -50,17 +59,83 @@ const toxicDeluge = () =>
   });
 
 describe('libraryTopLife casts', () => {
-  it('a split card is not offered as the combined card (CR 709.3)', () => {
-    const { options } = withTop('life-split', pinned('Wear // Tear'));
+  it('bolas-citadel-split-half — a split card is cast as one half for that half’s mana value, never whole (CR 709.3)', () => {
+    let relic: ReturnType<typeof spawn> | undefined;
+    const { ctx, card, options } = withTop('life-split', pinned('Wear // Tear'), (ctx) => {
+      relic = spawn(
+        ctx,
+        'P2',
+        oracle({ name: 'Life Relic', typeLine: 'Artifact', manaCost: '{1}' }),
+      );
+      spawn(ctx, 'P2', oracle({ name: 'Life Charm', typeLine: 'Enchantment', manaCost: '{1}' }));
+    });
+    const life = options.filter(
+      (option) =>
+        (option.payload as { alternativeCast?: string }).alternativeCast === 'libraryTopLife',
+    );
+    // One option per half, each naming it; none for the combined card.
+    expect(life.map((option) => option.description).sort()).toEqual([
+      expect.stringMatching(/Tear.* by paying 1 life/),
+      expect.stringMatching(/Wear.* by paying 2 life/),
+    ]);
     expect(
-      options.filter(
-        (option) =>
-          (option.payload as { alternativeCast?: string }).alternativeCast === 'libraryTopLife',
-      ),
-    ).toEqual([]);
+      life.every((option) => (option.payload as { altIndex?: number }).altIndex !== undefined),
+    ).toBe(true);
+    const wear = life.find((option) => /Wear/.test(option.description))!;
+    pumpStrict(
+      applyPriorityAction(ctx, playerById(ctx, 'P1'), wear.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map([[0, relic!.id]]),
+      }),
+    );
+    expect(playerById(ctx, 'P1').life).toBe(38);
+    // The spell is Wear alone, resolving as a split half.
+    expect(ctx.state.stack.map((entry) => [entry.description, entry.alternativeCastKind])).toEqual([
+      ['Wear', 'split'],
+    ]);
+    pumpStrict(resolveTopOfStack(ctx));
+    expect(ctx.state.battlefield.some((perm) => perm.id === relic!.id)).toBe(false);
+    expect(playerById(ctx, 'P1').graveyard.map((grave) => grave.cardId)).toContain(card.cardId);
   });
 
-  it('an X an additional cost announces is still chosen, and each offered X casts (CR 601.2b)', () => {
+  it('bolas-citadel-adventure — an adventure is cast for its own mana value and goes on an adventure (CR 715.3c, 715.4)', () => {
+    let bat: ReturnType<typeof spawn> | undefined;
+    const { ctx, card, options } = withTop(
+      'life-adventure',
+      pinStore.get('Ettercap // Web Shot'),
+      (ctx) => {
+        bat = spawn(
+          ctx,
+          'P2',
+          oracle({
+            name: 'Life Bat',
+            typeLine: 'Creature — Bat',
+            manaCost: '{1}',
+            oracleText: 'Flying',
+            power: '1',
+            toughness: '1',
+          }),
+        );
+      },
+    );
+    const descriptions = options.map((option) => option.description);
+    // The creature for its five, and Web Shot for its three.
+    expect(descriptions).toContainEqual(expect.stringMatching(/Ettercap.* by paying 5 life/));
+    const shot = options.find((option) => /Web Shot.* by paying 3 life/.test(option.description))!;
+    pumpStrict(
+      applyPriorityAction(ctx, playerById(ctx, 'P1'), shot.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map([[0, bat!.id]]),
+      }),
+    );
+    expect(playerById(ctx, 'P1').life).toBe(37);
+    pumpStrict(resolveTopOfStack(ctx));
+    expect(ctx.state.battlefield.some((perm) => perm.id === bat!.id)).toBe(false);
+    const exiled = ctx.state.exile.find((exiledCard) => exiledCard.cardId === card.cardId);
+    expect(exiled?.onAdventure).toBe(true);
+  });
+
+  it('bolas-citadel-announced-x — an X an additional cost announces is still chosen, and each offered X casts (CR 601.2b)', () => {
     const { ctx, options } = withTop('life-announced-x', toxicDeluge());
     const descriptions = options.map((option) => option.description);
     expect(descriptions).toContain(

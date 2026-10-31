@@ -1504,8 +1504,7 @@ export function computePriorityOptions(
     }
     // "Pay life equal to its mana value rather than pay its mana cost" (Bolas's Citadel): an
     // alternative cost (CR 118.9), so {X} is 0 (CR 107.3b) and the life is the printed mana value.
-    // A split card is cast as one half, never as the combined card (CR 709.3); its halves are not
-    // offered for life here.
+    // A split card is cast as one half, never as the combined card (CR 709.3).
     if (
       fromLibraryTop &&
       def.manaCost !== null &&
@@ -1523,6 +1522,45 @@ export function computePriorityOptions(
         { alternativeCast: 'libraryTopLife' },
         ` by paying ${life} life`,
       );
+    }
+    // Each spell face it may be cast as, for that face's own mana value (CR 709.3b, 715.3c):
+    // a split half, an adventure or omen, or a modal double-faced card's back face. Bestow is an
+    // alternative cost of its own (CR 118.9a); fuse is cast only from a hand (CR 702.102a).
+    if (fromLibraryTop) {
+      for (const [index, alt] of (def.alternativeCasts ?? []).entries()) {
+        if (
+          alt.from !== undefined ||
+          !(
+            alt.kind === 'adventure' ||
+            alt.kind === 'omen' ||
+            (alt.kind === 'mdfc' && alt.spellFace !== undefined) ||
+            (alt.kind === 'split' && alt.fused !== true)
+          )
+        )
+          continue;
+        const face = selectedSpellDefinition(def, alt);
+        if (
+          face.manaCost === null ||
+          !castFromLibraryTopCandidates(ctx, player.id, face, 'life').some(
+            (card) => card.id === obj.id,
+          )
+        )
+          continue;
+        const life = manaValueOf(face.manaCost);
+        offerCast(
+          emptyCost(),
+          [
+            ...(face.spellAdditionalCosts ?? []),
+            ...(life > 0 ? [{ kind: 'payLife' as const, amount: life }] : []),
+          ],
+          face,
+          { alternativeCast: 'libraryTopLife', altIndex: index },
+          ` as ${face.name} by paying ${life} life`,
+          0,
+          face.types.includes('Instant') || face.keywords.includes('flash'),
+          face.name,
+        );
+      }
     }
 
     // Adventure's own exile permission allows only the permanent face. A broad temporary

@@ -18235,12 +18235,16 @@
           "oracleText": "You may play lands and cast spells from the top of your library. If you cast a spell this way, pay life equal to its mana value rather than pay its mana cost.",
           "implementation": [
             "playFromZone libraryTop for lands: played as the land drop",
-            "castFromZone libraryTop with lifeInsteadOfMana: the libraryTopLife alternative cost pays life equal to the printed mana value, X=0, and is the only way it is cast"
+            "castFromZone libraryTop with lifeInsteadOfMana: the libraryTopLife alternative cost pays life equal to the printed mana value, X=0, and is the only way it is cast",
+            "a split half, an adventure or omen, or a modal double-faced card's back face is cast for its own mana value (libraryTopLife with altIndex); never the combined split card, bestow or fuse"
           ],
           "engineTestIds": [
             "bolas-citadel-cast-for-life",
             "bolas-citadel-not-enough-life",
             "bolas-citadel-x-is-zero",
+            "bolas-citadel-announced-x",
+            "bolas-citadel-split-half",
+            "bolas-citadel-adventure",
             "bolas-citadel-play-land",
             "bolas-citadel-without",
             "pilot-current-bolas-citadel-viewer-cast-for-life",

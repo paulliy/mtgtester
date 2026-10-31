@@ -482,9 +482,13 @@ function* proposeCast(
   ) {
     throw new Error('a spell with no mana cost requires an alternative cost');
   }
+  // Bolas's Citadel's pay-life cast of one spell face (`altIndex`): the face is chosen as for a
+  // mana cast (CR 709.3, 715.3, 712.11), and its own mana value is the life paid.
+  const lifeFace = payload.alternativeCast === 'libraryTopLife' && payload.altIndex !== undefined;
   // A split card is cast as one half or both, never as the combined card (CR 709.3).
   if (
     payload.alternativeCast !== 'split' &&
+    !lifeFace &&
     def.alternativeCasts?.some((alternative) => alternative.kind === 'split') === true
   )
     throw new Error('a split card is cast as one of its halves');
@@ -524,17 +528,31 @@ function* proposeCast(
     payload.alternativeCast === 'mdfc' ||
     payload.alternativeCast === 'bestow' ||
     payload.alternativeCast === 'split';
-  if (payload.altIndex !== undefined && !authoredAlternative) {
+  if (payload.altIndex !== undefined && !authoredAlternative && !lifeFace) {
     throw new Error('unexpected alternative index');
   }
   const selectedAlternative = authoredAlternative
     ? payload.altIndex === undefined
       ? def.alternativeCasts?.find((alternative) => alternative.kind === payload.alternativeCast)
       : def.alternativeCasts?.[payload.altIndex]
-    : undefined;
+    : lifeFace
+      ? def.alternativeCasts?.[payload.altIndex!]
+      : undefined;
   if (authoredAlternative && selectedAlternative?.kind !== payload.alternativeCast) {
     throw new Error('missing or mismatched casting alternative');
   }
+  // Bestow is an alternative cost of its own and cannot join the life one (CR 118.9a); a fused
+  // split card is cast only from a hand (CR 702.102a).
+  if (
+    lifeFace &&
+    !(
+      selectedAlternative?.kind === 'adventure' ||
+      selectedAlternative?.kind === 'omen' ||
+      selectedAlternative?.kind === 'mdfc' ||
+      (selectedAlternative?.kind === 'split' && selectedAlternative.fused !== true)
+    )
+  )
+    throw new Error('a pay-life cast names a spell face');
   if (selectedAlternative?.kind === 'mdfc' && selectedAlternative.spellFace === undefined)
     throw new Error('a modal land face cannot be cast as a spell');
   if (selectedAlternative !== undefined) {
@@ -827,7 +845,8 @@ function* proposeCast(
   } else if (payload.alternativeCast === 'libraryTopLife') {
     // Life equal to the mana value rather than the mana cost: an {X} in the mana cost is 0 (CR
     // 107.3b), but an X an additional cost announces ("pay X life") is still chosen (CR 601.2b).
-    const life = manaValueOf(def.manaCost);
+    // A spell face's mana value is its own (CR 709.3b, 715.3c).
+    const life = manaValueOf(printedSpellDef.manaCost);
     if (
       (payload.x ?? 0) !== 0 &&
       (printedSpellDef.manaCost?.x !== undefined || printedSpellDef.announcesX !== true)
@@ -838,6 +857,11 @@ function* proposeCast(
       ...(life > 0 ? [{ kind: 'payLife' as const, amount: life }] : []),
     ];
     cost = emptyCost();
+    if (lifeFace) {
+      if (selectedAlternative?.ability === undefined)
+        throw new Error('alternative spell face has no executable ability');
+      abilityDef = printedSpellDef;
+    }
   } else if (payload.alternativeCast === 'commanderFree') {
     if (
       def.commanderFreeCast !== true ||
@@ -1130,7 +1154,12 @@ function* proposeCast(
     sourceOracleId: obj.oracleId,
     sourceCardId: obj.cardId,
     isCommanderCast: payload.fromCommand,
-    ...(payload.alternativeCast ? { alternativeCastKind: payload.alternativeCast } : {}),
+    // A face cast for life resolves as that face (an adventure goes on an adventure, CR 715.4).
+    ...(lifeFace && selectedAlternative !== undefined
+      ? { alternativeCastKind: selectedAlternative.kind }
+      : payload.alternativeCast
+        ? { alternativeCastKind: payload.alternativeCast }
+        : {}),
     ...(payload.altIndex === undefined ? {} : { altIndex: payload.altIndex }),
     ...(payload.x !== undefined ? { announcedX: payload.x } : {}),
     ...(spellCard.optionalCostCounts !== undefined
