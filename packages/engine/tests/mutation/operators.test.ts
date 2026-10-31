@@ -19,6 +19,7 @@ const probe = {
   entersWithCounters: { '+1/+1': 2 },
   entersUnlessDiscard: { filter: { kind: 'type', value: 'Land' } },
   optionalAdditionalCost: { mechanic: 'kicker', cost: {}, repeatable: true },
+  alternativeCasts: [{ kind: 'nonMana', manaCost: {}, dashed: true, description: 'Dash' }],
   staticEffects: [{ kind: 'anthem' }],
   manaAbilities: [{ units: [] }, { units: [], restriction: { purposes: ['castSpell'] } }],
   activatedAbilities: [
@@ -60,6 +61,7 @@ describe('IR mutation operators', () => {
       'staticEffects[0] | (card): drop staticEffects[0]',
       'manaAbilities[0] | (card): drop manaAbilities[0]',
       'manaAbilities[1] | (card): drop manaAbilities[1]',
+      'alternativeCasts | (card): drop alternativeCasts[0] dashed',
       'manaAbilities[1] | (card): drop manaAbilities[1] restriction',
       'entersTapped | (card): flip entersTapped to false',
       'entersWithCounters | (card): remove entersWithCounters',

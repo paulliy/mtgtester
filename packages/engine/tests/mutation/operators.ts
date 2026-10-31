@@ -145,6 +145,19 @@ function definitionMutants(node: Node, path: Path, add: AddMutant): void {
           `${list}[${index}]`,
         ),
       );
+  // A dash cost without its rider is only a cheaper cast: no haste, no return (CR 702.109a).
+  if (Array.isArray(node['alternativeCasts']))
+    (node['alternativeCasts'] as Node[]).forEach((alternative, index) => {
+      if (alternative['dashed'] === true)
+        add(
+          path,
+          `drop alternativeCasts[${index}] dashed`,
+          (definition) => {
+            delete (definition['alternativeCasts'] as Node[])[index]!['dashed'];
+          },
+          'alternativeCasts',
+        );
+    });
   // A CR 106.6 restriction dropped is the mana spendable on anything.
   if (Array.isArray(node['manaAbilities']))
     (node['manaAbilities'] as Node[]).forEach((ability, index) => {
