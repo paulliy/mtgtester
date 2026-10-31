@@ -18110,7 +18110,8 @@
             "academy-manufactor-tapped-event",
             "academy-manufactor-tapped-single",
             "academy-manufactor-untapped-event",
-            "academy-manufactor-replaces-a-clue-copy"
+            "academy-manufactor-replaces-a-clue-copy",
+            "pr10-saheeli-radiant-creator-manufactor"
           ]
         }
       ],
@@ -18258,6 +18259,7 @@
             "bolas-citadel-adventure",
             "bolas-citadel-mdfc-land-face",
             "bolas-citadel-mdfc-land-drop-used",
+            "bolas-citadel-no-mana-cost",
             "bolas-citadel-play-land",
             "bolas-citadel-without",
             "pilot-current-bolas-citadel-viewer-cast-for-life",

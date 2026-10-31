@@ -6631,28 +6631,30 @@ function* executeAbilityEffects(
           }
           break;
         }
-        for (let i = 0; i < amountOf(effect.count); i++) {
-          const token = createToken(ctx, spec, controller.id);
-          if (copyOptions.goadedForRestOfGame === true)
-            addGoadRequirement(ctx, token, controller.id, true);
-          if (copyOptions.sacrificeAt === 'endStep') {
-            ctx.state.delayedTriggers.push({
-              id: `dt-${ctx.state.nextObjectNum++}`,
-              sourceCardId: source.cardId,
-              sourceOracleId: source.oracleId,
-              controllerId: source.controllerId,
-              targetId: token.cardId,
-              when: 'endStep',
-              expiry: 'endStep',
-              ability: {
-                kind: 'triggered',
-                targets: [],
-                effects: [{ op: 'sacrifice', target: 'triggerObject' }],
-                description: 'Sacrifice the token at the beginning of the next end step',
-              },
-            });
+        // Every token each creation makes, a replacement's (Academy Manufactor's three, a
+        // doubler's extra) included, is one of "those tokens" the rider applies to.
+        for (let i = 0; i < amountOf(effect.count); i++)
+          for (const token of createTokens(ctx, spec, 1, controller.id)) {
+            if (copyOptions.goadedForRestOfGame === true)
+              addGoadRequirement(ctx, token, controller.id, true);
+            if (copyOptions.sacrificeAt === 'endStep') {
+              ctx.state.delayedTriggers.push({
+                id: `dt-${ctx.state.nextObjectNum++}`,
+                sourceCardId: source.cardId,
+                sourceOracleId: source.oracleId,
+                controllerId: source.controllerId,
+                targetId: token.cardId,
+                when: 'endStep',
+                expiry: 'endStep',
+                ability: {
+                  kind: 'triggered',
+                  targets: [],
+                  effects: [{ op: 'sacrifice', target: 'triggerObject' }],
+                  description: 'Sacrifice the token at the beginning of the next end step',
+                },
+              });
+            }
           }
-        }
         break;
       }
       case 'doublePlayerCountersTarget': {

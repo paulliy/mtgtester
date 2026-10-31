@@ -1529,9 +1529,10 @@ export function computePriorityOptions(
     // "Pay life equal to its mana value rather than pay its mana cost" (Bolas's Citadel): an
     // alternative cost (CR 118.9), so {X} is 0 (CR 107.3b) and the life is the printed mana value.
     // A split card is cast as one half, never as the combined card (CR 709.3).
+    // A card with no mana cost has mana value 0 and is cast for 0 life: an alternative cost
+    // replaces an unpayable mana cost (CR 118.6a).
     if (
       fromLibraryTop &&
-      def.manaCost !== null &&
       !splitCard &&
       castFromLibraryTopCandidates(ctx, player.id, def, 'life').some((card) => card.id === obj.id)
     ) {

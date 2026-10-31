@@ -181,4 +181,30 @@ describe('libraryTopLife casts', () => {
     );
     expect(options.filter((option) => option.type === 'playLand')).toEqual([]);
   });
+  it('bolas-citadel-no-mana-cost — a card with no mana cost is cast for 0 life (CR 118.6a)', () => {
+    const { ctx, options } = withTop(
+      'life-no-cost',
+      oracle({
+        name: 'Life Vision',
+        typeLine: 'Sorcery',
+        manaCost: '',
+        oracleText: 'Draw a card.',
+      }),
+    );
+    const life = options.filter(
+      (option) =>
+        (option.payload as { alternativeCast?: string }).alternativeCast === 'libraryTopLife',
+    );
+    expect(life.map((option) => option.description)).toEqual([
+      expect.stringMatching(/^Cast Life Vision .*by paying 0 life/),
+    ]);
+    pumpStrict(
+      applyPriorityAction(ctx, playerById(ctx, 'P1'), life[0]!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+    );
+    expect(playerById(ctx, 'P1').life).toBe(40);
+    expect(ctx.state.stack.map((entry) => entry.description)).toEqual(['Life Vision']);
+  });
 });

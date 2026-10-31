@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
 import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
 import { computeCharacteristics } from '../src/effects/continuous';
-import { moveObject } from '../src/state/objects';
+import { FOOD } from '../src/cards/tokens';
+import { createToken, moveObject } from '../src/state/objects';
 import { queueStepTriggers } from '../src/turn/turn';
 import { addMana } from '../src/mana/pool';
 import type { GameContext } from '../src/state/types';
@@ -22,6 +23,7 @@ import {
   putPendingTriggersOnStack,
   settle,
 } from './pr10-helpers';
+import { pinStore } from './scenario/pin-store';
 
 /**
  * `settle`, recording the type of every decision asked (an unforced one is answered with the first
@@ -373,6 +375,24 @@ describe('PR10.16 Saheeli, Radiant Creator', () => {
     queueStepTriggers(ctx, 'endStep');
     settle(ctx);
     expect(tokensOf(ctx, 'P1')).toHaveLength(0);
+  });
+
+  it('pr10-saheeli-radiant-creator-manufactor — every token Academy Manufactor makes instead is sacrificed', () => {
+    const ctx = pod('pr10-radiant-manufactor');
+    spawn(ctx, 'P1', pinned('Saheeli, Radiant Creator'));
+    const food = createToken(ctx, FOOD, 'P1');
+    spawn(ctx, 'P1', pinStore.get('Academy Manufactor'));
+    p(ctx, 'P1').energy = 3;
+    queueStepTriggers(ctx, 'beginningOfCombat');
+    settle(ctx, (decision) => {
+      if (decision.prompt.includes('pay energy')) return choose('Pay 3 energy')(decision);
+      return { index: 0, targets: new Map([[0, food.id]]) };
+    });
+    // Copying a Food makes a Clue, a Food and a Treasure instead (CR 111.10), all "those tokens".
+    expect(tokensOf(ctx, 'P1').filter((token) => token.id !== food.id)).toHaveLength(3);
+    queueStepTriggers(ctx, 'endStep');
+    settle(ctx);
+    expect(tokensOf(ctx, 'P1').map((token) => token.id)).toEqual([food.id]);
   });
 
   it('pr10-saheeli-radiant-creator-not-enough-energy — nothing to pay with two energy', () => {
