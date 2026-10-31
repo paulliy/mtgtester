@@ -17777,7 +17777,9 @@
             "clause 1: the choice offers each land card in hand and discarding nothing, and no other card",
             "clause 1, negative: with no land card in hand nothing is asked and it goes to the graveyard",
             "permanent-spell-copy-mox-diamond",
-            "permanent-spell-copy-mox-diamond-pays"
+            "permanent-spell-copy-mox-diamond-pays",
+            "steel-copies-mox-diamond-no-land",
+            "steel-copies-mox-diamond-discards"
           ],
           "contractTestIds": [
             "entersUnlessDiscard replacement contract > executes on any move onto the battlefield: the land is discarded and it enters"

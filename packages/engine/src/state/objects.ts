@@ -1267,6 +1267,26 @@ export function* moveObject(
           target: copyTargetPerm.name,
           untilEot: false,
         });
+        // The copied characteristics bring their own entry replacement (CR 707.5, 614.12):
+        // entering as a copy of Mox Diamond, it must discard a land card or go to its owner's
+        // graveyard instead, never having entered (no enters trigger has been queued yet).
+        const copiedCost = copiableDefinition(ctx, copyTargetPerm).entersUnlessDiscard;
+        if (
+          copiedCost !== undefined &&
+          def.entersUnlessDiscard === undefined &&
+          computeCharacteristics(ctx, perm).loseAbilities !== true &&
+          !(yield* paysEntersUnlessDiscard(ctx, obj, controllerId, copiedCost))
+        ) {
+          ctx.state.battlefield.splice(ctx.state.battlefield.indexOf(perm), 1);
+          releaseFixedEffects(ctx, perm.cardId);
+          target = {
+            zone: graveyardDestination(ctx, obj, 'graveyard'),
+            ...(target.reason !== undefined ? { reason: target.reason } : {}),
+          };
+          next = reincarnate(ctx, obj, target.zone);
+          if (target.zone === 'exile') ctx.state.exile.push(next);
+          else playerById(ctx, obj.ownerId).graveyard.push(next);
+        }
       }
     }
   } else {
@@ -1409,9 +1429,12 @@ export function* paysEntersUnlessDiscard(
   ctx: GameContext,
   obj: EngineObject,
   controllerId: PlayerId,
+  /** The replacement copied characteristics give it (CR 707.5), checked by the caller. */
+  copiedCost?: CardDefinition['entersUnlessDiscard'],
 ): GameGen<boolean> {
-  const enterCost = getDefByOracleId(ctx, obj.oracleId, obj.name).entersUnlessDiscard;
-  if (enterCost === undefined || losesAbilitiesAsItEnters(ctx, obj, controllerId)) return true;
+  const enterCost = copiedCost ?? getDefByOracleId(ctx, obj.oracleId, obj.name).entersUnlessDiscard;
+  if (enterCost === undefined) return true;
+  if (copiedCost === undefined && losesAbilitiesAsItEnters(ctx, obj, controllerId)) return true;
   const source = { cardId: obj.cardId, controllerId };
   const discard = yield* chooseCard(ctx, {
     player: controllerId,
