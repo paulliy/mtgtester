@@ -158,7 +158,9 @@ describe('auto-pay leaves untapped what other costs still need', () => {
     const black = conjure(ctx, player.id, spell('Black Spell', '{1}{B}'), 'hand');
     conjure(ctx, player.id, spell('Blue Spell', '{1}{U}'), 'hand');
     const cast = computePriorityOptions(ctx, player).find(
-      (o) => o.payload.kind === 'castSpell' && o.payload.objectId === black.id,
+      (o) =>
+        (o.payload as { kind?: string; objectId?: string } | undefined)?.kind === 'castSpell' &&
+        (o.payload as { kind?: string; objectId?: string } | undefined)?.objectId === black.id,
     );
     const preview = cast?.data?.['paymentSourceIds'] as string[] | undefined;
     expect(preview).toHaveLength(2);
