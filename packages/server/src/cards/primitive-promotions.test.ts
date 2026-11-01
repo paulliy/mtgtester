@@ -75,6 +75,34 @@ describe('primitive promotion requirements (declarations are not execution evide
     });
     expect(primitiveReviewPromotions(previous, current)).toEqual([id]);
   });
+  it('does not treat re-pointed evidence references as a promotion', () => {
+    const clause = { oracleText: 'You gain 3 life.', implementation: ['gainLife 3'] };
+    const previous = manifest({
+      [id]: { ...declaration, clauses: [{ ...clause, engineTestIds: ['old-test'] }] },
+    });
+    const current = manifest({
+      [id]: {
+        ...declaration,
+        clauses: [
+          {
+            ...clause,
+            engineTestIds: ['renamed-test', 'new-test'],
+            viewerScenarioIds: ['scenario'],
+            contractTestIds: ['contract'],
+          },
+        ],
+        engineTestIds: ['card-test'],
+        equivalentMutants: [{ mutant: 'm', reason: 'r' }],
+      },
+    });
+    expect(primitiveReviewPromotions(previous, current)).toEqual([]);
+    // A changed clause requirement alongside them is still a promotion.
+    current.cards[id] = {
+      ...current.cards[id]!,
+      clauses: [{ ...clause, implementation: ['gainLife 4'] }],
+    } as typeof declaration;
+    expect(primitiveReviewPromotions(previous, current)).toEqual([id]);
+  });
   it('ignores property order while retaining additional clause requirements', () => {
     const previous = manifest({ [id]: { ...declaration } });
     const current = manifest({
