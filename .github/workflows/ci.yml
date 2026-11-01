@@ -1,11 +1,23 @@
 name: CI
 
+# Actions minutes (ADR 0036). Every pull request push runs only the fast checks: format,
+# typecheck, lint, web build and the offline card gate. The slow jobs (full test suite with the
+# collection checks and IR mutation, about 25 minutes, and Playwright, about 35) run only when the
+# pull request carries the `ci:full` label, on the nightly run, and on manual dispatch. `CI / Gate`
+# is the one required check: it fails a ready pull request that changed code until the slow jobs
+# have run green on it, so add `ci:full` once the branch is ready to merge. The advisory PR fuzz job
+# needs its own `ci:fuzz` label. Pushes to main run the fast checks only; the nightly run repeats
+# everything on main when it changed in the last day.
 on:
   pull_request:
-    # ready_for_review starts the full run when a draft is marked ready.
-    types: [opened, synchronize, reopened, ready_for_review]
+    # labeled: adding `ci:full` starts the full run without a new push. ready_for_review: the gate
+    # passes drafts (they cannot merge) and must be re-evaluated when one is marked ready.
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
   push:
     branches: [main]
+  schedule:
+    - cron: '13 6 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -16,18 +28,16 @@ concurrency:
 
 jobs:
   # A pull request that only touches prose under these directories cannot change any test, typecheck,
-  # lint, or build result, so the heavy jobs below are skipped for it. Each path here must be one that
+  # lint, or build result, so the code checks are skipped for it. Each path here must be one that
   # no test, script, or build reads. Files that code does read (docs/rules, docs/plans, docs/reviews,
-  # docs/modelled-cards.md, README.md, data/) are deliberately absent. The format job always runs,
-  # because prettier also checks Markdown. Pushes to main always run everything.
-  #
-  # Actions minutes: the two slow jobs (full test suite, about 18 minutes, and Playwright, about 29)
-  # also skip while a pull request is a draft (`full` below). They run when it is marked ready for
-  # review, on every push after that, and on main. A skipped job still satisfies a required check.
+  # docs/modelled-cards.md, README.md, data/) are deliberately absent. Format still runs, because
+  # prettier also checks Markdown.
   changes:
     name: Changes / Classify
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
+      run: ${{ steps.classify.outputs.run }}
       code: ${{ steps.classify.outputs.code }}
       full: ${{ steps.classify.outputs.full }}
       engine: ${{ steps.classify.outputs.engine }}
@@ -40,35 +50,47 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          DRAFT: ${{ github.event.pull_request.draft }}
+          FULL_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'ci:full') }}
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "$EVENT_NAME" != "pull_request" ]]; then
-            echo "code=true" >> "$GITHUB_OUTPUT"
-            echo "full=true" >> "$GITHUB_OUTPUT"
-            echo "engine=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if [[ "$DRAFT" == "true" ]]; then
-            echo "Draft pull request: skipping the full test suite and Playwright."
-            echo "full=false" >> "$GITHUB_OUTPUT"
+          out() { echo "$1=$2" >> "$GITHUB_OUTPUT"; }
+          case "$EVENT_NAME" in
+            pull_request) ;;
+            push)
+              # The pull request already ran the full checks on this tree (with "require branches
+              # to be up to date" on); the nightly run repeats them.
+              out run true; out code true; out full false; out engine false
+              exit 0 ;;
+            schedule)
+              age=$(( $(date +%s) - $(git log -1 --format=%ct HEAD) ))
+              if (( age > 25 * 3600 )); then
+                echo "No commit on main in the last 25 hours: nothing to run."
+                out run false; out code false; out full false; out engine false
+                exit 0
+              fi
+              out run true; out code true; out full true; out engine true
+              exit 0 ;;
+            *)
+              out run true; out code true; out full true; out engine true
+              exit 0 ;;
+          esac
+          out run true
+          if [[ "$FULL_LABEL" == "true" ]]; then
+            echo "ci:full label present: running the full test suite, mutation and Playwright."
+            out full true
           else
-            echo "full=true" >> "$GITHUB_OUTPUT"
+            echo "No ci:full label: fast checks only."
+            out full false
           fi
-          # On any diff failure, fail open: run everything.
+          # On any diff failure, fail open: run every code check.
           # Three-dot diff: files changed on the PR branch since its merge base, not base-branch drift.
           if ! changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA"); then
-            echo "::warning::Could not compute changed files; running all jobs."
-            echo "code=true" >> "$GITHUB_OUTPUT"
-            echo "engine=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::Could not compute changed files; running all code checks."
+            out code true; out engine true
             exit 0
           fi
-          if grep -q '^packages/engine/src/' <<< "$changed"; then
-            echo "engine=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "engine=false" >> "$GITHUB_OUTPUT"
-          fi
+          if grep -q '^packages/engine/src/' <<< "$changed"; then out engine true; else out engine false; fi
           docs_only=true
           while IFS= read -r file; do
             [[ -z "$file" ]] && continue
@@ -78,76 +100,40 @@ jobs:
             esac
           done <<< "$changed"
           if [[ "$docs_only" == "true" ]]; then
-            echo "Docs-only change: skipping code jobs."
-            echo "code=false" >> "$GITHUB_OUTPUT"
+            echo "Docs-only change: skipping code checks."
+            out code false
           else
-            echo "code=true" >> "$GITHUB_OUTPUT"
+            out code true
           fi
 
-  # Runs for every change, including docs-only, because prettier checks Markdown.
-  format:
-    name: Quality / Format
+  # One job for the quick checks: each job pays its own checkout, Bun install and per-job minute
+  # rounding. Every check runs even when an earlier one fails, so one push reports all of them.
+  quality:
+    name: Quality / Format, typecheck, lint, web build
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CODE: ${{ needs.changes.outputs.code }}
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-bun-deps
+      - id: deps
+        uses: ./.github/actions/setup-bun-deps
       - run: bun run format:check
-
-  typecheck:
-    name: Quality / Typecheck
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-bun-deps
-      - run: bun run typecheck
-      - run: bun run typecheck:tests
-
-  lint:
-    name: Quality / Lint
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-bun-deps
-      - run: bun run lint
-
-  web-build:
-    name: Quality / Web build
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-bun-deps
-      - run: bun run --cwd apps/web build
-
-  engine-tests:
-    name: Engine / Full test suite
-    needs: changes
-    if: needs.changes.outputs.code == 'true' && needs.changes.outputs.full == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-bun-deps
-      - run: bun run test
-      # Every tracked test file collects at least one test from its runner (ADR 0034 decision 9).
-      # It lists every runner's tests without running them: about 2.5 minutes, measured locally,
-      # nearly all of it Vitest importing the suites.
-      - run: bun run check:suite-collect
-
-  ai-benchmark-contracts:
-    name: AI / Benchmark contracts and privacy
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-bun-deps
-      # Deterministic only: no provider key and no live model calls are available to PR code.
-      - run: >-
+      - if: ${{ !cancelled() && steps.deps.outcome == 'success' && env.CODE == 'true' }}
+        run: bun run typecheck
+      - if: ${{ !cancelled() && steps.deps.outcome == 'success' && env.CODE == 'true' }}
+        run: bun run typecheck:tests
+      - if: ${{ !cancelled() && steps.deps.outcome == 'success' && env.CODE == 'true' }}
+        run: bun run lint
+      - if: ${{ !cancelled() && steps.deps.outcome == 'success' && env.CODE == 'true' }}
+        run: bun run --cwd apps/web build
+      # Deterministic only: no provider key and no live model calls are available to PR code. These
+      # files are part of `bun run test`, so they run here only when the full suite does not.
+      - name: AI benchmark contracts and privacy
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' && env.CODE == 'true' && needs.changes.outputs.full != 'true' }}
+        run: >-
           bun run test
           packages/server/src/benchmark/hash.test.ts
           packages/server/src/benchmark/source-hash.test.ts
@@ -167,57 +153,13 @@ jobs:
           packages/server/src/benchmark/h-k.test.ts
           packages/server/src/decks/strategy-profile.test.ts
 
-  card-mutation:
-    name: Cards / IR mutation
-    needs: changes
-    # Non-draft pull requests only (ADR 0034 decision 5): a draft skips it, as it skips the full suite.
-    if: needs.changes.outputs.code == 'true' && github.event_name == 'pull_request' && !github.event.pull_request.draft
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/setup-bun-deps
-      # Each reviewed card whose definition snapshot entry changed against the base must fail one of
-      # its manifest tests on an assertion under every IR mutant; changed unreviewed cards are
-      # reported. About 1 second per mutant after a 2.5-minute Vitest listing.
-      - run: bun run mutate-cards --changed
-        env:
-          MUTATION_BASE: ${{ github.event.pull_request.base.sha }}
-
-  fuzz:
-    name: Engine / Fuzz (advisory)
-    needs: changes
-    # ADR 0034 decision 8: seeded four-player games with the state invariants on, for pull requests
-    # that change the engine. Advisory: an engine change shifts the decision stream, so a seed can
-    # start failing on a bug the pull request did not write. The nightly run is authoritative.
-    if: needs.changes.outputs.engine == 'true' && github.event_name == 'pull_request'
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/setup-bun-deps
-      # Six pods (two of each provider mix), plus three for each changed pinned card. Each failure
-      # prints the command that replays it.
-      - run: bun run fuzz --games 6 --changed --base "$BASE" --jobs 4 --json fuzz.json
-        env:
-          BASE: ${{ github.event.pull_request.base.sha }}
-      - uses: actions/upload-artifact@v4
-        if: always()
-        continue-on-error: true
-        with:
-          name: fuzz-results
-          path: fuzz.json
-          if-no-files-found: ignore
-
   card-verification:
     name: Cards / Offline verification gate
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    # Pull requests, nightly and dispatch; a push to main merged a pull request that already ran it.
+    if: needs.changes.outputs.code == 'true' && github.event_name != 'push'
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
@@ -231,10 +173,6 @@ jobs:
           RATCHET_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: bun run check:ratchets
       - run: bun run snapshots:check
-      # Each manifest engine test ID names exactly one collected test that names its card (ADR 0034
-      # decision 5). It lists the Vitest collection without running it: about 2.5 minutes, measured
-      # locally.
-      - run: bun run check:manifest-tests
       - run: bun run test:primitive-contracts --output test-results/primitive-contracts
       - run: >-
           bun run card-capabilities
@@ -268,34 +206,110 @@ jobs:
             test-results/primitive-impact.json
           if-no-files-found: error
 
-  viewer-evidence:
-    name: Viewer / Card Test Lab evidence
+  # The full suite, then the checks that read the Vitest collection. The collection is listed once
+  # (about 2.5 minutes, nearly all of it Vitest importing the suites) and shared by suite-collect,
+  # manifest-tests and IR mutation, which used to list it once each.
+  engine-tests:
+    name: Engine / Full test suite
     needs: changes
     if: needs.changes.outputs.code == 'true' && needs.changes.outputs.full == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/setup-bun-deps
+      - run: bun run test
+      - name: List the Vitest collection
+        run: bunx vitest list --json="$RUNNER_TEMP/vitest-list.json" > /dev/null
+      # Every tracked test file collects at least one test from its runner (ADR 0034 decision 9).
+      - run: bun run check:suite-collect --collected "$RUNNER_TEMP/vitest-list.json"
+      # Each manifest engine test ID names exactly one collected test that names its card (ADR 0034
+      # decision 5).
+      - run: bun run check:manifest-tests --collected "$RUNNER_TEMP/vitest-list.json"
+      # Pull requests only (ADR 0034 decision 5): each reviewed card whose definition snapshot entry
+      # changed against the base must fail one of its manifest tests on an assertion under every IR
+      # mutant; changed unreviewed cards are reported. About 1 second per mutant.
+      - name: IR mutation of changed cards
+        if: github.event_name == 'pull_request'
+        run: bun run mutate-cards --changed --collected "$RUNNER_TEMP/vitest-list.json"
+        env:
+          MUTATION_BASE: ${{ github.event.pull_request.base.sha }}
+
+  fuzz:
+    name: Engine / Fuzz (advisory)
+    needs: changes
+    # ADR 0034 decision 8, as amended by ADR 0036: seeded four-player games with the state invariants
+    # on, for pull requests that change the engine and carry the `ci:fuzz` label. Advisory: an engine
+    # change shifts the decision stream, so a seed can start failing on a bug the pull request did
+    # not write. The nightly run is authoritative.
+    if: >-
+      needs.changes.outputs.engine == 'true' && github.event_name == 'pull_request' &&
+      contains(github.event.pull_request.labels.*.name, 'ci:fuzz')
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-bun-deps
+      # Six pods (two of each provider mix), plus three for each changed pinned card. Each failure
+      # prints the command that replays it.
+      - run: bun run fuzz --games 6 --changed --base "$BASE" --jobs 4 --json fuzz.json
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        continue-on-error: true
+        with:
+          name: fuzz-results
+          path: fuzz.json
+          if-no-files-found: ignore
+
+  # The Card Test Lab, setup and table Playwright suites share one job, so the browser and its
+  # system packages are installed once. The table suite runs even when the lab suites fail.
+  viewer-evidence:
+    name: Viewer / Card Test Lab evidence and table e2e
+    needs: changes
+    if: needs.changes.outputs.code == 'true' && needs.changes.outputs.full == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - id: deps
+        uses: ./.github/actions/setup-bun-deps
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       # System packages are installed every run; the browser binary itself comes from the cache.
-      - run: bunx playwright install-deps chromium
-      - run: bunx playwright install chromium
+      - id: browser
+        run: bunx playwright install-deps chromium && bunx playwright install chromium
       # Real frontend + real lab backend, no mocked transport. The config boots both servers.
       - run: bun run test:e2e
       # Real frontend + real DB-backed server on the committed Oracle fixture: Play my deck setup
       # and a seeded player game against built-in bots.
       - run: bun run test:e2e:setup
       # The specs record a trace for every test (trace: 'on', preserveOutput: 'always'); this checks
-      # tracing is still on. Actions storage is limited, so CI uploads the traces only when a step
-      # fails; a passing run's viewer evidence comes from a local run, which keeps its traces. The
-      # upload tolerates artifact-quota errors, which also mutes its if-no-files-found check.
+      # tracing is still on. It runs before the table suite writes test-results/table. Actions
+      # storage is limited, so CI uploads the traces only when a step fails; a passing run's viewer
+      # evidence comes from a local run, which keeps its traces. The upload tolerates artifact-quota
+      # errors, which also mutes its if-no-files-found check.
       - name: Require viewer traces
         if: always()
         run: test -n "$(find test-results -name trace.zip -print -quit 2>/dev/null)"
+      # The built table bundle served by `serve:table --dev` from its own origin, two browser
+      # contexts per table, on the committed Oracle fixture with a fixed test key. The config
+      # builds the bundle and boots the three table servers.
+      - name: Table e2e
+        if: ${{ !cancelled() && steps.browser.outcome == 'success' }}
+        run: bun run test:e2e:table
+      - name: Require table traces
+        if: ${{ !cancelled() && steps.browser.outcome == 'success' }}
+        run: test -n "$(find test-results/table -name trace.zip -print -quit 2>/dev/null)"
       - uses: actions/upload-artifact@v4
         if: failure()
         continue-on-error: true
@@ -304,32 +318,32 @@ jobs:
           path: test-results/
           if-no-files-found: error
 
-  table-e2e:
-    name: Table e2e
-    needs: changes
-    if: needs.changes.outputs.code == 'true' && needs.changes.outputs.full == 'true'
+  # The single required check. It fails when any job it waits on failed or was cancelled, and on a
+  # ready pull request that changed code but has not run the slow jobs (no `ci:full` label).
+  # The advisory fuzz job is not waited on.
+  gate:
+    name: CI / Gate
+    needs: [changes, quality, card-verification, engine-tests, viewer-evidence]
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-bun-deps
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-      - run: bunx playwright install-deps chromium
-      - run: bunx playwright install chromium
-      # The built table bundle served by `serve:table --dev` from its own origin, two browser
-      # contexts per table, on the committed Oracle fixture with a fixed test key. The config
-      # builds the bundle and boots the three table servers.
-      - run: bun run test:e2e:table
-      - name: Require table traces
-        if: always()
-        run: test -n "$(find test-results/table -name trace.zip -print -quit 2>/dev/null)"
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        continue-on-error: true
-        with:
-          name: table-e2e-traces
-          path: test-results/table/
-          if-no-files-found: error
+      - env:
+          NEEDS: ${{ toJSON(needs) }}
+          EVENT_NAME: ${{ github.event_name }}
+          DRAFT: ${{ github.event.pull_request.draft }}
+          CODE: ${{ needs.changes.outputs.code }}
+          FULL: ${{ needs.changes.outputs.full }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          failed=$(jq -r 'to_entries[] | select(.value.result == "failure" or .value.result == "cancelled") | .key' <<< "$NEEDS")
+          if [[ -n "$failed" ]]; then
+            echo "::error::These jobs did not pass: $(echo $failed)"
+            exit 1
+          fi
+          if [[ "$EVENT_NAME" == "pull_request" && "$DRAFT" != "true" && "$CODE" == "true" && "$FULL" != "true" ]]; then
+            echo "::error::Fast checks passed. Add the ci:full label to run the full test suite, IR mutation and Playwright before merging."
+            exit 1
+          fi
+          echo "Gate passed."

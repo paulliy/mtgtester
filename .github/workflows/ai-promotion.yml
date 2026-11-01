@@ -29,6 +29,8 @@ jobs:
   live-candidate:
     name: AI / Trusted live candidate gate
     runs-on: ubuntu-latest
+    # The default limit is 360 minutes; the spend cap bounds API cost, this bounds runner minutes.
+    timeout-minutes: 120
     environment: ai-promotion
     env:
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
