@@ -59,13 +59,26 @@ async function castAt(page: Page, name: string, seat: string, target: string): P
   await passStackUntil(page, logLine(page, new RegExp(`${name}[^]*resolves`)));
 }
 
+/**
+ * Click a land (in hand, or on top of the library) to play it. Its one action is taken at once; only a land with several (a
+ * permission's budget choice) opens its own menu, whose Play button is then pressed. A bare
+ * `/^Play/` button would also match "Playable now" entries the play is about to take away.
+ */
+async function clickToPlay(page: Page, card: Locator): Promise<void> {
+  await card.click();
+  const menuPlay = page.locator('.source-actions').getByRole('button', { name: /^Play/ }).first();
+  const opened = await menuPlay.waitFor({ state: 'visible', timeout: 1_000 }).then(
+    () => true,
+    () => false,
+  );
+  if (opened) await menuPlay.click();
+}
+
 /** Play a land from hand and wait for it to leave the hand (the board groups same-name lands). */
 async function playLand(page: Page, name: string): Promise<void> {
   const card = hand(page, name);
   await passUntil(page, card.and(page.locator('.actionable')));
-  await card.click();
-  const play = page.getByRole('button', { name: /^Play/ });
-  if ((await play.count()) > 0) await play.first().click();
+  await clickToPlay(page, card);
   await expect(hand(page, name)).toHaveCount(0);
   await expect(permanent(page, 'P1', name).first()).toBeVisible();
 }
@@ -74,9 +87,7 @@ async function playLand(page: Page, name: string): Promise<void> {
 async function playCourtyardChoosingElf(page: Page): Promise<void> {
   const card = hand(page, 'Secluded Courtyard');
   await passUntil(page, card.and(page.locator('.actionable')));
-  await card.click();
-  const play = page.getByRole('button', { name: /^Play/ });
-  if ((await play.count()) > 0) await play.first().click();
+  await clickToPlay(page, card);
   const elf = page.getByRole('button', { name: 'Elf', exact: true });
   await passStackUntil(page, elf);
   await elf.click();
@@ -298,9 +309,7 @@ const FLOWS: Record<string, (page: Page) => Promise<void>> = {
   'pilot-current-bolas-citadel-viewer-play-land': async (page) => {
     const mountain = libraryTop(page, 'Mountain');
     await passUntil(page, mountain.and(page.locator('.actionable')));
-    await mountain.click();
-    const play = page.getByRole('button', { name: /^Play/ });
-    if ((await play.count()) > 0) await play.first().click();
+    await clickToPlay(page, mountain);
     await expect(permanent(page, 'P1', 'Mountain')).toHaveCount(1);
     await expect(life(page, 'P1')).toHaveText('40');
   },

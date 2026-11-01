@@ -338,8 +338,16 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
       .first();
     await passUntil(page, forest.and(page.locator('.actionable')));
     await forest.click();
-    const play = page.getByRole('button', { name: /^Play/ });
-    if ((await play.count()) > 0) await play.first().click();
+    // One action is taken at once; only several open the card's own menu. A bare `/^Play/` would
+    // also match "Playable now" entries the play is about to take away.
+    const play = page.locator('.source-actions').getByRole('button', { name: /^Play/ }).first();
+    if (
+      await play.waitFor({ state: 'visible', timeout: 1_000 }).then(
+        () => true,
+        () => false,
+      )
+    )
+      await play.click();
     await passUntil(page, permanent(page, 'P1', 'Forest'));
     await expect(permanent(page, 'P1', 'Treasure')).toHaveCount(0);
     await expect(

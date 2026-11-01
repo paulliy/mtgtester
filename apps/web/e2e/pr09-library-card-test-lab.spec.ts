@@ -61,7 +61,8 @@ test.describe('PR09 library and reveal viewer scenarios', () => {
       await runScenario(page, id);
       if (id === 'pr09-mystic-forge-viewer-positive') {
         await cast(page, 'Mystic Forge');
-        const topCardCast = page.getByRole('button', { name: /^Cast o-/ }).first();
+        // The server names the card it offers (ADR 0032), not its object id.
+        const topCardCast = page.getByRole('button', { name: /^Cast PR09 Forge Artifact\b/ });
         await passStackUntil(page, topCardCast);
         await topCardCast.click();
         await expect(page.getByText(/Auto-pay/)).toBeVisible();
@@ -74,7 +75,9 @@ test.describe('PR09 library and reveal viewer scenarios', () => {
           page.getByRole('img', { name: 'PR09 Forge Colored Spell', exact: true }),
         ).toBeVisible();
         await expect(permanent(page, 'P1', 'PR09 Forge Colored Spell')).toHaveCount(0);
-        await expect(page.getByRole('button', { name: /^Cast o-/ })).toHaveCount(0);
+        await expect(
+          page.getByRole('button', { name: /^Cast PR09 Forge Colored Spell\b/ }),
+        ).toHaveCount(0);
       } else if (id === 'pr09-mystic-forge-viewer-activation') {
         const forge = permanent(page, 'P1', 'Mystic Forge');
         await forge.click();
