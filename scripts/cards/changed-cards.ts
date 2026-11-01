@@ -12,13 +12,14 @@ const SNAPSHOTS = [
   'packages/engine/tests/fixtures/override-defs.json',
 ];
 
-const git = (...args: string[]) =>
-  execFileSync('git', args, { encoding: 'utf8', maxBuffer: 1 << 28 });
+const gitIn = (cwd: string | undefined, ...args: string[]) =>
+  execFileSync('git', args, { encoding: 'utf8', maxBuffer: 1 << 28, ...(cwd ? { cwd } : {}) });
+const git = (...args: string[]) => gitIn(undefined, ...args);
 
 /** The commit `ref` names, or undefined when it names none (or only the all-zero null SHA). */
-function resolveCommit(ref: string): string | undefined {
+function resolveCommit(ref: string, cwd?: string): string | undefined {
   try {
-    const sha = git('rev-parse', '--verify', '--quiet', `${ref}^{commit}`).trim();
+    const sha = gitIn(cwd, 'rev-parse', '--verify', '--quiet', `${ref}^{commit}`).trim();
     return /^0+$/.test(sha) ? undefined : sha;
   } catch {
     return undefined;
@@ -30,10 +31,14 @@ function resolveCommit(ref: string): string | undefined {
  * all-zero one (a push to a new branch), HEAD's first parent; a candidate that names no commit is
  * an error rather than a silent switch to another base.
  */
-export function baseCommit(candidate: string | undefined): string {
+export function baseCommit(
+  candidate: string | undefined,
+  /** The repository to resolve in; the current directory's by default. */
+  cwd?: string,
+): string {
   const value = candidate?.trim() ?? '';
-  if (value === '' || /^0+$/.test(value)) return git('rev-parse', 'HEAD^').trim();
-  const sha = resolveCommit(value);
+  if (value === '' || /^0+$/.test(value)) return gitIn(cwd, 'rev-parse', 'HEAD^').trim();
+  const sha = resolveCommit(value, cwd);
   if (sha === undefined) throw new Error(`--base ${value} does not name a commit in this clone`);
   return sha;
 }

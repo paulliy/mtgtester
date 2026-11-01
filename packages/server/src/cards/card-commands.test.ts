@@ -1,5 +1,9 @@
 /** The authoring commands' pure parts (ADR 0033 decision 1, plan phase 2). */
 import { describe, expect, it } from 'vitest';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { lineDiff, snapshotChange } from '../../../../scripts/cards/card-check';
 import { baseCommit } from '../../../../scripts/cards/changed-cards';
 import {
@@ -27,7 +31,6 @@ import {
   similarity,
   wireBatch,
 } from '../../../../scripts/cards/card-new';
-import { readFileSync } from 'node:fs';
 import type { OracleCard } from '@mtg/shared';
 
 const card = (name: string, oracleText: string): OracleCard =>
@@ -358,10 +361,35 @@ describe('the changed-cards base commit', () => {
   });
 
   it("falls back to HEAD's first parent only when no base was given", () => {
-    const parent = baseCommit(undefined);
-    expect(parent).toMatch(/^[0-9a-f]{40}$/);
-    expect(baseCommit('')).toBe(parent);
-    expect(baseCommit('0'.repeat(40))).toBe(parent);
+    // A repository of its own with two commits: CI's shallow checkout has no parent commit.
+    const repo = mkdtempSync(join(tmpdir(), 'changed-cards-base-'));
+    try {
+      const git = (...args: string[]) =>
+        execFileSync('git', args, { cwd: repo, encoding: 'utf8' }).trim();
+      git('init', '--quiet');
+      for (const message of ['first', 'second'])
+        git(
+          '-c',
+          'user.name=test',
+          '-c',
+          'user.email=test@example.invalid',
+          '-c',
+          'commit.gpgsign=false',
+          'commit',
+          '--quiet',
+          '--allow-empty',
+          '-m',
+          message,
+        );
+      const parent = git('rev-parse', 'HEAD^');
+      expect(baseCommit(undefined, repo)).toBe(parent);
+      expect(baseCommit('', repo)).toBe(parent);
+      expect(baseCommit('0'.repeat(40), repo)).toBe(parent);
+      // A given base still resolves, rather than falling back.
+      expect(baseCommit('HEAD', repo)).toBe(git('rev-parse', 'HEAD'));
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
   });
 
   it('fails loudly on a base that names no commit', () => {
