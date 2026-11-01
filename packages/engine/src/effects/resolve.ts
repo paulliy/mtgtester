@@ -113,7 +113,9 @@ import {
   createToken,
   changeController,
   refreshControlEffects,
+  copiableDefinition,
   createTokens,
+  paysEntersUnlessDiscard,
   createTokensForPlayers,
   canAttach,
   moveObject,
@@ -6621,19 +6623,34 @@ function* executeAbilityEffects(
             ? { keywords: [...new Set([...(baseSpec.keywords ?? []), ...copyOptions.addKeywords])] }
             : {}),
         };
+        // The copied characteristics bring their own entry replacement (CR 707.5, 614.12): a token
+        // copy of Mox Diamond is created only if its controller discards a land card for it, and
+        // otherwise is never created (CR 111.7 would put it straight into the graveyard).
+        const enterCost = copiableDefinition(ctx, original).entersUnlessDiscard;
+        const copied = original;
+        const paysToEnter = function* (playerId: PlayerId): GameGen<boolean> {
+          return (
+            enterCost === undefined ||
+            (yield* paysEntersUnlessDiscard(ctx, copied, playerId, enterCost))
+          );
+        };
         if (copyOptions.eachOpponent === true) {
           // Each opponent, in turn order from the active player, creates their own copies.
           for (const opponent of opponentsOf(ctx, controller.id)) {
-            for (const token of createTokens(ctx, spec, amountOf(effect.count), opponent.id)) {
-              if (copyOptions.goadedForRestOfGame === true)
-                addGoadRequirement(ctx, token, controller.id, true);
+            for (let i = 0; i < amountOf(effect.count); i++) {
+              if (!(yield* paysToEnter(opponent.id))) continue;
+              for (const token of createTokens(ctx, spec, 1, opponent.id)) {
+                if (copyOptions.goadedForRestOfGame === true)
+                  addGoadRequirement(ctx, token, controller.id, true);
+              }
             }
           }
           break;
         }
         // Every token each creation makes, a replacement's (Academy Manufactor's three, a
         // doubler's extra) included, is one of "those tokens" the rider applies to.
-        for (let i = 0; i < amountOf(effect.count); i++)
+        for (let i = 0; i < amountOf(effect.count); i++) {
+          if (!(yield* paysToEnter(controller.id))) continue;
           for (const token of createTokens(ctx, spec, 1, controller.id)) {
             if (copyOptions.goadedForRestOfGame === true)
               addGoadRequirement(ctx, token, controller.id, true);
@@ -6655,6 +6672,7 @@ function* executeAbilityEffects(
               });
             }
           }
+        }
         break;
       }
       case 'doublePlayerCountersTarget': {

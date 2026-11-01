@@ -17779,7 +17779,9 @@
             "permanent-spell-copy-mox-diamond",
             "permanent-spell-copy-mox-diamond-pays",
             "steel-copies-mox-diamond-no-land",
-            "steel-copies-mox-diamond-discards"
+            "steel-copies-mox-diamond-discards",
+            "pr10-saheeli-radiant-creator-mox-diamond",
+            "pr10-saheeli-radiant-creator-mox-diamond-pays"
           ],
           "contractTestIds": [
             "entersUnlessDiscard replacement contract > executes on any move onto the battlefield: the land is discarded and it enters"

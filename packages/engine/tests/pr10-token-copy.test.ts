@@ -395,6 +395,35 @@ describe('PR10.16 Saheeli, Radiant Creator', () => {
     expect(tokensOf(ctx, 'P1').map((token) => token.id)).toEqual([food.id]);
   });
 
+  function saheeliCopiesDiamond(seed: string, withLand: boolean) {
+    const ctx = pod(seed);
+    spawn(ctx, 'P1', pinned('Saheeli, Radiant Creator'));
+    const diamond = spawn(ctx, 'P1', pinStore.get('Mox Diamond'));
+    if (withLand) conjure(ctx, 'P1', forest(), 'hand');
+    p(ctx, 'P1').energy = 3;
+    queueStepTriggers(ctx, 'beginningOfCombat');
+    const asked = settleRecording(ctx, (decision) => {
+      if (decision.prompt.includes('pay energy')) return choose('Pay 3 energy')(decision);
+      if (decision.prompt.includes('would enter')) return choose('Forest')(decision);
+      return { index: 0, targets: new Map([[0, diamond.id]]) };
+    });
+    return { ctx, asked };
+  }
+
+  it('pr10-saheeli-radiant-creator-mox-diamond — a token copy of Mox Diamond with no land to discard is never created', () => {
+    const { ctx } = saheeliCopiesDiamond('pr10-radiant-diamond-none', false);
+    expect(tokensOf(ctx, 'P1')).toEqual([]);
+    expect(p(ctx, 'P1').energy).toBe(0);
+  });
+
+  it('pr10-saheeli-radiant-creator-mox-diamond-pays — discarding a land creates the token copy', () => {
+    const { ctx, asked } = saheeliCopiesDiamond('pr10-radiant-diamond-land', true);
+    expect(asked).toHaveLength(3);
+    expect(tokensOf(ctx, 'P1').map((token) => token.name)).toEqual(['Mox Diamond']);
+    expect(p(ctx, 'P1').hand).toEqual([]);
+    expect(p(ctx, 'P1').graveyard.map((card) => card.name)).toEqual(['Forest']);
+  });
+
   it('pr10-saheeli-radiant-creator-not-enough-energy — nothing to pay with two energy', () => {
     const ctx = pod('pr10-radiant-poor');
     spawn(ctx, 'P1', pinned('Saheeli, Radiant Creator'));

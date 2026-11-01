@@ -2147,7 +2147,7 @@ export function copyImageFace(ctx: GameContext, perm: EnginePermanent): 'front' 
 }
 
 /** Layer-1 values only: counters, attachments and later continuous effects never enter a copy. */
-function copiableDefinition(ctx: GameContext, perm: EnginePermanent): CardDefinition {
+export function copiableDefinition(ctx: GameContext, perm: EnginePermanent): CardDefinition {
   const def = selectedPermanentDefinition(
     getDefByOracleId(ctx, perm.oracleId, perm.name),
     perm.face,
