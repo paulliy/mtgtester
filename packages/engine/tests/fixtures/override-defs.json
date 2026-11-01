@@ -497,6 +497,52 @@
     }
   },
   {
+    "oracleId": "04152e7a-969c-4858-841b-0a569a9fc1bf",
+    "name": "Professional Face-Breaker",
+    "handledLines": [
+      "Sacrifice a Treasure: Exile the top card of your library. You may play that card this turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Sacrifice a Treasure: Exile the top card of your library. You may play that card this turn",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "exileTopNPlayableUntilEot"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "sacrificeOther",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Treasure"
+                  }
+                ]
+              }
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "04853f06-3fd2-445d-9b0d-d68d0f116635",
     "name": "Verrak, Warped Sengir",
     "handledLines": [
@@ -763,6 +809,35 @@
         "kind": "spell",
         "targets": []
       }
+    }
+  },
+  {
+    "oracleId": "078def07-ae5d-4591-8db6-d156834aab97",
+    "name": "Etali, Primal Storm",
+    "handledLines": [
+      "Whenever ~ attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana costs."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Exile the top card of each player's library, then cast any number of those spells free",
+          "effects": [
+            {
+              "castFree": true,
+              "op": "exileLibraryTop",
+              "player": "each"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        }
+      ]
     }
   },
   {
@@ -1166,6 +1241,37 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "0a79237e-0811-4a8a-bd4d-db3ca91bff22",
+    "name": "Everflowing Chalice",
+    "handledLines": [
+      "Multikicker {2}",
+      "~ enters with a charge counter on it for each time it was kicked."
+    ],
+    "def": {
+      "entersWithCounters": {
+        "charge": {
+          "kind": "optionalCostCount",
+          "mechanic": "kicker"
+        }
+      },
+      "optionalAdditionalCost": {
+        "cost": {
+          "colored": {
+            "B": 0,
+            "G": 0,
+            "R": 0,
+            "U": 0,
+            "W": 0
+          },
+          "colorless": 0,
+          "generic": 2
+        },
+        "mechanic": "kicker",
+        "repeatable": true
+      }
     }
   },
   {
@@ -1699,6 +1805,51 @@
             },
             "when": "enters"
           }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "14c3ff84-1e82-4606-a433-869fc52cc382",
+    "name": "Syr Konrad, the Grim",
+    "handledLines": [
+      "{1}{B}: Each player mills a card."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{1}{B}: Each player mills a card",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "millEachPlayer",
+                "scope": "all"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 1,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
         }
       ]
     }
@@ -3614,6 +3765,70 @@
     }
   },
   {
+    "oracleId": "2bd111bb-ce02-414c-b5b7-e0e037d8d96b",
+    "name": "Bolas's Citadel",
+    "handledLines": [
+      "You may play lands and cast spells from the top of your library. If you cast a spell this way, pay life equal to its mana value rather than pay its mana cost.",
+      "{T}, Sacrifice ten nonland permanents: Each opponent loses 10 life."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Each opponent loses 10 life",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 10
+                },
+                "op": "eachOpponentLosesLife"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "allowSelf": true,
+              "count": 10,
+              "kind": "sacrificeOther",
+              "selector": {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              }
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "ruleStatics": [
+        {
+          "kind": "lookTopLibrary"
+        },
+        {
+          "filter": {
+            "kind": "type",
+            "value": "Land"
+          },
+          "kind": "playFromZone",
+          "zone": "libraryTop"
+        },
+        {
+          "kind": "castFromZone",
+          "lifeInsteadOfMana": true,
+          "zone": "libraryTop"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "2c0de95f-4269-439c-a1bc-faa11348b185",
     "name": "Necron Overlord",
     "handledLines": [
@@ -3680,6 +3895,81 @@
           "timing": "any"
         }
       ]
+    }
+  },
+  {
+    "oracleId": "2c49d24a-98a4-43c2-bb59-1ef13d4214c2",
+    "name": "Untimely Malfunction",
+    "handledLines": [
+      "Choose one —",
+      "• Change the target of target spell or ability with a single target.",
+      "• Destroy target artifact.",
+      "• One or two target creatures can't block this turn."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Choose one",
+        "effects": [],
+        "kind": "spell",
+        "modes": {
+          "maxChoices": 1,
+          "minChoices": 1,
+          "options": [
+            {
+              "description": "Destroy target artifact",
+              "effects": [
+                {
+                  "op": "destroy",
+                  "target": 0
+                }
+              ],
+              "targetSlots": [
+                0
+              ]
+            },
+            {
+              "description": "Change the target of target spell or ability with a single target",
+              "effects": [
+                {
+                  "op": "changeSingleTarget",
+                  "target": 1
+                }
+              ],
+              "targetSlots": [
+                1
+              ]
+            },
+            {
+              "description": "One or two target creatures can't block this turn",
+              "effects": [
+                {
+                  "op": "cantBlockEachChosenThisTurn",
+                  "targetSlot": 2
+                }
+              ],
+              "targetSlots": [
+                2
+              ]
+            }
+          ]
+        },
+        "targets": [
+          {
+            "kind": "artifact"
+          },
+          {
+            "kind": "stackObject",
+            "spellHasSingleTarget": true
+          },
+          {
+            "count": {
+              "max": 2,
+              "min": 1
+            },
+            "kind": "creature"
+          }
+        ]
+      }
     }
   },
   {
@@ -4269,6 +4559,51 @@
     }
   },
   {
+    "oracleId": "322f44f0-e6da-4ee0-b474-e7d5e9a461c5",
+    "name": "Morbid Opportunist",
+    "handledLines": [
+      "Whenever one or more other creatures die, draw a card. This ability triggers only once each turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever one or more other creatures die, draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "aggregate": true,
+            "oncePerTurn": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "other"
+                  }
+                ]
+              }
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "333745d9-e930-439b-94d6-3aeea2877f69",
     "name": "Illusionist's Gambit",
     "handledLines": [
@@ -4675,6 +5010,99 @@
           "op": {
             "layer": 6,
             "setCantBeBlocked": true
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "37108cd4-bbab-4ce3-9ed6-f60e8422e703",
+    "name": "Ragavan, Nimble Pilferer",
+    "handledLines": [
+      "Dash {1}{R}",
+      "Whenever ~ deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card."
+    ],
+    "def": {
+      "alternativeCasts": [
+        {
+          "dashed": true,
+          "description": "Dash {1}{R}",
+          "kind": "nonMana",
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 1,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 1
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Whenever Ragavan deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [],
+                "manaAbilities": [
+                  {
+                    "costs": [
+                      {
+                        "kind": "tap"
+                      },
+                      {
+                        "kind": "sacrificeSelf"
+                      }
+                    ],
+                    "units": [
+                      [
+                        "W",
+                        "U",
+                        "B",
+                        "R",
+                        "G"
+                      ]
+                    ]
+                  }
+                ],
+                "name": "Treasure",
+                "power": null,
+                "subtypes": [
+                  "Treasure"
+                ],
+                "toughness": null,
+                "typeLine": "Artifact — Treasure",
+                "types": [
+                  "Artifact"
+                ]
+              }
+            },
+            {
+              "castOnly": true,
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "library": "eventPlayer",
+              "op": "exileTopNPlayableUntilEot"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
           }
         }
       ]
@@ -5382,6 +5810,43 @@
     }
   },
   {
+    "oracleId": "3dc364f3-3094-4660-80ca-9418588c7fde",
+    "name": "Mithril Coat",
+    "handledLines": [
+      "When ~ enters, attach it to target legendary creature you control."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Mithril Coat enters, attach it to target legendary creature you control",
+          "effects": [
+            {
+              "op": "attachSelfTo",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "you",
+              "filter": {
+                "kind": "supertype",
+                "value": "Legendary"
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "3e2ae59a-40a1-46ca-8f24-3231ebd4e4eb",
     "name": "Flickering Ward",
     "handledLines": [
@@ -5864,6 +6329,79 @@
         ],
         "kind": "spell",
         "targets": []
+      }
+    }
+  },
+  {
+    "oracleId": "48ddba1e-2ad7-463f-9307-d2379a800e51",
+    "name": "Mizzium Mortars",
+    "handledLines": [
+      "~ deals 4 damage to target creature you don't control."
+    ],
+    "def": {
+      "alternativeCasts": [
+        {
+          "ability": {
+            "description": "Deal 4 damage to each creature you don't control",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 4
+                },
+                "op": "damageEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "opponents"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "spell",
+            "targets": []
+          },
+          "description": "Overload {3}{R}{R}{R}",
+          "kind": "overload",
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 3,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 3
+          }
+        }
+      ],
+      "spellAbility": {
+        "description": "Deal 4 damage to target creature you don't control",
+        "effects": [
+          {
+            "amount": {
+              "kind": "const",
+              "n": 4
+            },
+            "op": "dealDamage",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "opponent",
+            "kind": "creature"
+          }
+        ]
       }
     }
   },
@@ -10354,6 +10892,86 @@
     }
   },
   {
+    "oracleId": "78427103-9543-41fb-b6d4-72963fe87275",
+    "name": "The Great Henge",
+    "handledLines": [
+      "This spell costs {X} less to cast, where X is the greatest power among creatures you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "amount": {
+            "kind": "greatestPowerAmong",
+            "scope": "all",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          },
+          "kind": "costReduction",
+          "selfOnly": true
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "79ba18fd-f184-43c1-86df-56ee18ce806c",
+    "name": "Secluded Courtyard",
+    "handledLines": [
+      "{T}: Add one mana of any color. Spend this mana only to cast a creature spell of the chosen type or activate an ability of a creature source of the chosen type."
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "units": [
+            [
+              "C"
+            ]
+          ]
+        },
+        {
+          "restriction": {
+            "description": "cast a creature spell of the chosen type or activate an ability of a creature source of the chosen type",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "chosenSubtype"
+                }
+              ]
+            },
+            "purposes": [
+              "castSpell",
+              "activateAbility"
+            ]
+          },
+          "units": [
+            [
+              "W",
+              "U",
+              "B",
+              "R",
+              "G"
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "7a2484a9-04fd-41a0-8224-610c1c07ed10",
     "name": "Blasphemous Act",
     "handledLines": [
@@ -12171,6 +12789,47 @@
     }
   },
   {
+    "oracleId": "92eed395-62ca-4293-882b-8565c40daab5",
+    "name": "Sylvan Library",
+    "handledLines": [
+      "At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the card on top of your library."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards drawn this turn; pay 4 life or put each on top of your library",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 2
+              },
+              "op": "draw"
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 2
+              },
+              "life": {
+                "kind": "const",
+                "n": 4
+              },
+              "op": "payLifeOrTopDrawnCards"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "drawStep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "932708ae-9d5c-4561-aa8b-0d2222d37fdc",
     "name": "Darkness",
     "handledLines": [
@@ -12705,6 +13364,79 @@
     "def": {}
   },
   {
+    "oracleId": "99fd4b51-1698-4168-9366-a6ea2df22361",
+    "name": "Electrickery",
+    "handledLines": [
+      "~ deals 1 damage to target creature you don't control."
+    ],
+    "def": {
+      "alternativeCasts": [
+        {
+          "ability": {
+            "description": "Deal 1 damage to each creature you don't control",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "damageEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "opponents"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "spell",
+            "targets": []
+          },
+          "description": "Overload {1}{R}",
+          "kind": "overload",
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 1,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 1
+          }
+        }
+      ],
+      "spellAbility": {
+        "description": "Deal 1 damage to target creature you don't control",
+        "effects": [
+          {
+            "amount": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "dealDamage",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "opponent",
+            "kind": "creature"
+          }
+        ]
+      }
+    }
+  },
+  {
     "oracleId": "9a107e48-3d50-4941-95b1-10f2b29a4245",
     "name": "Stroke of Midnight",
     "handledLines": [],
@@ -13007,6 +13739,67 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "9b9a10ff-5a5d-4df8-88aa-18d84ff9117c",
+    "name": "Inspiring Call",
+    "handledLines": [
+      "Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn",
+        "effects": [
+          {
+            "count": {
+              "kind": "countPermanents",
+              "scope": "you",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "counter": "+1/+1",
+                    "kind": "hasCounter"
+                  }
+                ]
+              }
+            },
+            "op": "draw"
+          },
+          {
+            "keyword": "indestructible",
+            "op": "grantKeywordEachUntilEot",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "counter": "+1/+1",
+                  "kind": "hasCounter"
+                }
+              ]
+            }
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
     }
   },
   {
@@ -13509,6 +14302,44 @@
                 }
               ]
             }
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
+    "oracleId": "a54f0869-94c8-42af-9080-166efb9486a4",
+    "name": "Gamble",
+    "handledLines": [
+      "Search your library for a card, put that card into your hand, discard a card at random, then shuffle."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Search your library for a card, put that card into your hand, discard a card at random, then shuffle",
+        "effects": [
+          {
+            "destinations": [
+              {
+                "zone": "hand"
+              }
+            ],
+            "filter": {
+              "kind": "allOf",
+              "of": []
+            },
+            "op": "searchLibrary"
+          },
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "discardAtRandom"
+          },
+          {
+            "op": "shuffle"
           }
         ],
         "kind": "spell",
@@ -14132,6 +14963,98 @@
             "player": "you",
             "when": "endStep"
           }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "ac2dd694-d2f1-4025-8400-12332bdc882a",
+    "name": "Takenuma, Abandoned Mire",
+    "handledLines": [
+      "{3}{B}, Discard this card: Mill three cards, then return a creature or planeswalker card from your graveyard to your hand. This ability costs {1} less to activate for each legendary creature you control."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Channel — {3}{B}, Discard this card: Mill three cards, then return a creature or planeswalker card from your graveyard to your hand",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 3
+                },
+                "op": "mill"
+              },
+              {
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Planeswalker"
+                    }
+                  ]
+                },
+                "op": "returnCardFromGraveyardToHand"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 1,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 3
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "discardSelf"
+            }
+          ],
+          "timing": "any",
+          "zone": "hand"
+        }
+      ],
+      "ruleStatics": [
+        {
+          "amount": {
+            "kind": "countPermanents",
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "supertype",
+                  "value": "Legendary"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "appliesTo": "activate",
+          "kind": "costReduction",
+          "selfOnly": true
         }
       ]
     }
@@ -15247,6 +16170,36 @@
     }
   },
   {
+    "oracleId": "b8f566ea-8283-4afa-9ac8-737e26419283",
+    "name": "Explore",
+    "handledLines": [
+      "You may play an additional land this turn."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "You may play an additional land this turn. Draw a card",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "additionalLandPlaysThisTurn"
+          },
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "draw"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "b9c58cfb-b7d5-4e86-a5d3-efb07192aa22",
     "name": "Glimmer of Genius",
     "handledLines": [
@@ -15779,6 +16732,28 @@
             },
             "when": "enters"
           }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "bccb06f1-8839-4104-9ffa-c79a817f8378",
+    "name": "Jet Medallion",
+    "handledLines": [
+      "Black spells you cast cost {1} less to cast."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "amount": {
+            "kind": "const",
+            "n": 1
+          },
+          "filter": {
+            "kind": "color",
+            "value": "B"
+          },
+          "kind": "costReduction"
         }
       ]
     }
@@ -18789,6 +19764,34 @@
     }
   },
   {
+    "oracleId": "e0b5b3af-af89-4b91-8b55-947ec095d6f2:back",
+    "name": "Web Shot",
+    "handledLines": [
+      "Destroy target creature with flying."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Destroy target creature with flying",
+        "effects": [
+          {
+            "op": "destroy",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "filter": {
+              "keyword": "flying",
+              "kind": "hasKeyword"
+            },
+            "kind": "creature"
+          }
+        ]
+      }
+    }
+  },
+  {
     "oracleId": "e0df8e2a-96d2-4e4d-b065-aa2e162abbfe",
     "name": "Liliana, Waker of the Dead",
     "handledLines": [
@@ -20003,6 +21006,84 @@
     }
   },
   {
+    "oracleId": "ea5103f5-27e0-4eb1-902c-7f34652d6bf3",
+    "name": "Orcish Bowmasters",
+    "handledLines": [
+      "When this creature enters and whenever an opponent draws a card except the first one they draw in each of their draw steps, this creature deals 1 damage to any target. Then amass Orcs 1."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Orcish Bowmasters enters, it deals 1 damage to any target. Then amass Orcs 1",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "dealDamage",
+              "target": 0
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "amass",
+              "subtype": "Orc"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "anyTarget"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever an opponent draws a card except the first one they draw in each of their draw steps, Orcish Bowmasters deals 1 damage to any target. Then amass Orcs 1",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "dealDamage",
+              "target": 0
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "amass",
+              "subtype": "Orc"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "anyTarget"
+            }
+          ],
+          "trigger": {
+            "condition": {
+              "kind": "notFirstDrawInOwnDrawStep"
+            },
+            "player": "opponent",
+            "when": "drawsCard"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "ea86abfa-6cab-4ef0-8463-34136fc25b59",
     "name": "Duplicant",
     "handledLines": [
@@ -21011,6 +22092,35 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "f36d1d8b-8303-44a9-ab56-531931641ea2",
+    "name": "Academy Manufactor",
+    "handledLines": [
+      "If you would create a Clue, Food, or Treasure token, instead create one of each."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "createClueFoodAndTreasure"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "f3c5978a-70fa-431f-933b-b954bd0db0ea",
+    "name": "Mox Diamond",
+    "handledLines": [
+      "If this artifact would enter, you may discard a land card instead. If you do, put this artifact onto the battlefield. If you don't, put it into its owner's graveyard."
+    ],
+    "def": {
+      "entersUnlessDiscard": {
+        "filter": {
+          "kind": "type",
+          "value": "Land"
+        }
+      }
     }
   },
   {
@@ -22458,6 +23568,20 @@
             "player": "you",
             "when": "endStep"
           }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-academy-manufactor",
+    "name": "Academy Manufactor",
+    "handledLines": [
+      "If you would create a Clue, Food, or Treasure token, instead create one of each."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "createClueFoodAndTreasure"
         }
       ]
     }
@@ -24940,6 +26064,70 @@
             },
             "when": "enters"
           }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-bolas-s-citadel",
+    "name": "Bolas's Citadel",
+    "handledLines": [
+      "You may play lands and cast spells from the top of your library. If you cast a spell this way, pay life equal to its mana value rather than pay its mana cost.",
+      "{T}, Sacrifice ten nonland permanents: Each opponent loses 10 life."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Each opponent loses 10 life",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 10
+                },
+                "op": "eachOpponentLosesLife"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "allowSelf": true,
+              "count": 10,
+              "kind": "sacrificeOther",
+              "selector": {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              }
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "ruleStatics": [
+        {
+          "kind": "lookTopLibrary"
+        },
+        {
+          "filter": {
+            "kind": "type",
+            "value": "Land"
+          },
+          "kind": "playFromZone",
+          "zone": "libraryTop"
+        },
+        {
+          "kind": "castFromZone",
+          "lifeInsteadOfMana": true,
+          "zone": "libraryTop"
         }
       ]
     }
@@ -28951,6 +30139,79 @@
     }
   },
   {
+    "oracleId": "oracle-electrickery",
+    "name": "Electrickery",
+    "handledLines": [
+      "~ deals 1 damage to target creature you don't control."
+    ],
+    "def": {
+      "alternativeCasts": [
+        {
+          "ability": {
+            "description": "Deal 1 damage to each creature you don't control",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "damageEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "opponents"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "spell",
+            "targets": []
+          },
+          "description": "Overload {1}{R}",
+          "kind": "overload",
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 1,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 1
+          }
+        }
+      ],
+      "spellAbility": {
+        "description": "Deal 1 damage to target creature you don't control",
+        "effects": [
+          {
+            "amount": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "dealDamage",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "opponent",
+            "kind": "creature"
+          }
+        ]
+      }
+    }
+  },
+  {
     "oracleId": "oracle-endless-foot-assault",
     "name": "Endless Foot Assault",
     "handledLines": [
@@ -29245,6 +30506,63 @@
     }
   },
   {
+    "oracleId": "oracle-etali-primal-storm",
+    "name": "Etali, Primal Storm",
+    "handledLines": [
+      "Whenever ~ attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana costs."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Exile the top card of each player's library, then cast any number of those spells free",
+          "effects": [
+            {
+              "castFree": true,
+              "op": "exileLibraryTop",
+              "player": "each"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-ettercap-web-shot:back",
+    "name": "Web Shot",
+    "handledLines": [
+      "Destroy target creature with flying."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Destroy target creature with flying",
+        "effects": [
+          {
+            "op": "destroy",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "filter": {
+              "keyword": "flying",
+              "kind": "hasKeyword"
+            },
+            "kind": "creature"
+          }
+        ]
+      }
+    }
+  },
+  {
     "oracleId": "oracle-ever-watching-threshold",
     "name": "Ever-Watching Threshold",
     "handledLines": [
@@ -29277,6 +30595,67 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "oracle-everflowing-chalice",
+    "name": "Everflowing Chalice",
+    "handledLines": [
+      "Multikicker {2}",
+      "~ enters with a charge counter on it for each time it was kicked."
+    ],
+    "def": {
+      "entersWithCounters": {
+        "charge": {
+          "kind": "optionalCostCount",
+          "mechanic": "kicker"
+        }
+      },
+      "optionalAdditionalCost": {
+        "cost": {
+          "colored": {
+            "B": 0,
+            "G": 0,
+            "R": 0,
+            "U": 0,
+            "W": 0
+          },
+          "colorless": 0,
+          "generic": 2
+        },
+        "mechanic": "kicker",
+        "repeatable": true
+      }
+    }
+  },
+  {
+    "oracleId": "oracle-explore",
+    "name": "Explore",
+    "handledLines": [
+      "You may play an additional land this turn."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "You may play an additional land this turn. Draw a card",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "additionalLandPlaysThisTurn"
+          },
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "draw"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
     }
   },
   {
@@ -30383,6 +31762,44 @@
               ]
             },
             "op": "nextCastThisTurn"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
+    "oracleId": "oracle-gamble",
+    "name": "Gamble",
+    "handledLines": [
+      "Search your library for a card, put that card into your hand, discard a card at random, then shuffle."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Search your library for a card, put that card into your hand, discard a card at random, then shuffle",
+        "effects": [
+          {
+            "destinations": [
+              {
+                "zone": "hand"
+              }
+            ],
+            "filter": {
+              "kind": "allOf",
+              "of": []
+            },
+            "op": "searchLibrary"
+          },
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "discardAtRandom"
+          },
+          {
+            "op": "shuffle"
           }
         ],
         "kind": "spell",
@@ -31927,6 +33344,67 @@
     }
   },
   {
+    "oracleId": "oracle-inspiring-call",
+    "name": "Inspiring Call",
+    "handledLines": [
+      "Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn",
+        "effects": [
+          {
+            "count": {
+              "kind": "countPermanents",
+              "scope": "you",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "counter": "+1/+1",
+                    "kind": "hasCounter"
+                  }
+                ]
+              }
+            },
+            "op": "draw"
+          },
+          {
+            "keyword": "indestructible",
+            "op": "grantKeywordEachUntilEot",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "counter": "+1/+1",
+                  "kind": "hasCounter"
+                }
+              ]
+            }
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "oracle-intermediate-chirography",
     "name": "Intermediate Chirography",
     "handledLines": [
@@ -32381,6 +33859,28 @@
             },
             "when": "attacks"
           }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-jet-medallion",
+    "name": "Jet Medallion",
+    "handledLines": [
+      "Black spells you cast cost {1} less to cast."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "amount": {
+            "kind": "const",
+            "n": 1
+          },
+          "filter": {
+            "kind": "color",
+            "value": "B"
+          },
+          "kind": "costReduction"
         }
       ]
     }
@@ -34818,6 +36318,116 @@
     }
   },
   {
+    "oracleId": "oracle-mithril-coat",
+    "name": "Mithril Coat",
+    "handledLines": [
+      "When ~ enters, attach it to target legendary creature you control."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Mithril Coat enters, attach it to target legendary creature you control",
+          "effects": [
+            {
+              "op": "attachSelfTo",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "you",
+              "filter": {
+                "kind": "supertype",
+                "value": "Legendary"
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-mizzium-mortars",
+    "name": "Mizzium Mortars",
+    "handledLines": [
+      "~ deals 4 damage to target creature you don't control."
+    ],
+    "def": {
+      "alternativeCasts": [
+        {
+          "ability": {
+            "description": "Deal 4 damage to each creature you don't control",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 4
+                },
+                "op": "damageEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "opponents"
+                    }
+                  ]
+                }
+              }
+            ],
+            "kind": "spell",
+            "targets": []
+          },
+          "description": "Overload {3}{R}{R}{R}",
+          "kind": "overload",
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 3,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 3
+          }
+        }
+      ],
+      "spellAbility": {
+        "description": "Deal 4 damage to target creature you don't control",
+        "effects": [
+          {
+            "amount": {
+              "kind": "const",
+              "n": 4
+            },
+            "op": "dealDamage",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "opponent",
+            "kind": "creature"
+          }
+        ]
+      }
+    }
+  },
+  {
     "oracleId": "oracle-mob-rule",
     "name": "Mob Rule",
     "handledLines": [
@@ -35149,6 +36759,51 @@
     }
   },
   {
+    "oracleId": "oracle-morbid-opportunist",
+    "name": "Morbid Opportunist",
+    "handledLines": [
+      "Whenever one or more other creatures die, draw a card. This ability triggers only once each turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever one or more other creatures die, draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "aggregate": true,
+            "oncePerTurn": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "other"
+                  }
+                ]
+              }
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-mordant-dragon",
     "name": "Mordant Dragon",
     "handledLines": [
@@ -35218,6 +36873,21 @@
           "timing": "any"
         }
       ]
+    }
+  },
+  {
+    "oracleId": "oracle-mox-diamond",
+    "name": "Mox Diamond",
+    "handledLines": [
+      "If this artifact would enter, you may discard a land card instead. If you do, put this artifact onto the battlefield. If you don't, put it into its owner's graveyard."
+    ],
+    "def": {
+      "entersUnlessDiscard": {
+        "filter": {
+          "kind": "type",
+          "value": "Land"
+        }
+      }
     }
   },
   {
@@ -36237,6 +37907,84 @@
     }
   },
   {
+    "oracleId": "oracle-orcish-bowmasters",
+    "name": "Orcish Bowmasters",
+    "handledLines": [
+      "When this creature enters and whenever an opponent draws a card except the first one they draw in each of their draw steps, this creature deals 1 damage to any target. Then amass Orcs 1."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Orcish Bowmasters enters, it deals 1 damage to any target. Then amass Orcs 1",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "dealDamage",
+              "target": 0
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "amass",
+              "subtype": "Orc"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "anyTarget"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever an opponent draws a card except the first one they draw in each of their draw steps, Orcish Bowmasters deals 1 damage to any target. Then amass Orcs 1",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "dealDamage",
+              "target": 0
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "amass",
+              "subtype": "Orc"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "anyTarget"
+            }
+          ],
+          "trigger": {
+            "condition": {
+              "kind": "notFirstDrawInOwnDrawStep"
+            },
+            "player": "opponent",
+            "when": "drawsCard"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-organic-extinction",
     "name": "Organic Extinction",
     "handledLines": [
@@ -37236,6 +38984,52 @@
     }
   },
   {
+    "oracleId": "oracle-professional-face-breaker",
+    "name": "Professional Face-Breaker",
+    "handledLines": [
+      "Sacrifice a Treasure: Exile the top card of your library. You may play that card this turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Sacrifice a Treasure: Exile the top card of your library. You may play that card this turn",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "exileTopNPlayableUntilEot"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "sacrificeOther",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Treasure"
+                  }
+                ]
+              }
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-promise-of-loyalty",
     "name": "Promise of Loyalty",
     "handledLines": [
@@ -37446,6 +39240,99 @@
           "trigger": {
             "attacker": "you",
             "when": "attackDeclared"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-ragavan-nimble-pilferer",
+    "name": "Ragavan, Nimble Pilferer",
+    "handledLines": [
+      "Dash {1}{R}",
+      "Whenever ~ deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card."
+    ],
+    "def": {
+      "alternativeCasts": [
+        {
+          "dashed": true,
+          "description": "Dash {1}{R}",
+          "kind": "nonMana",
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 1,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 1
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Whenever Ragavan deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [],
+                "manaAbilities": [
+                  {
+                    "costs": [
+                      {
+                        "kind": "tap"
+                      },
+                      {
+                        "kind": "sacrificeSelf"
+                      }
+                    ],
+                    "units": [
+                      [
+                        "W",
+                        "U",
+                        "B",
+                        "R",
+                        "G"
+                      ]
+                    ]
+                  }
+                ],
+                "name": "Treasure",
+                "power": null,
+                "subtypes": [
+                  "Treasure"
+                ],
+                "toughness": null,
+                "typeLine": "Artifact — Treasure",
+                "types": [
+                  "Artifact"
+                ]
+              }
+            },
+            {
+              "castOnly": true,
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "library": "eventPlayer",
+              "op": "exileTopNPlayableUntilEot"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
           }
         }
       ]
@@ -39357,6 +41244,54 @@
     }
   },
   {
+    "oracleId": "oracle-secluded-courtyard",
+    "name": "Secluded Courtyard",
+    "handledLines": [
+      "{T}: Add one mana of any color. Spend this mana only to cast a creature spell of the chosen type or activate an ability of a creature source of the chosen type."
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "units": [
+            [
+              "C"
+            ]
+          ]
+        },
+        {
+          "restriction": {
+            "description": "cast a creature spell of the chosen type or activate an ability of a creature source of the chosen type",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "chosenSubtype"
+                }
+              ]
+            },
+            "purposes": [
+              "castSpell",
+              "activateAbility"
+            ]
+          },
+          "units": [
+            [
+              "W",
+              "U",
+              "B",
+              "R",
+              "G"
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-secret-rendezvous",
     "name": "Secret Rendezvous",
     "handledLines": [
@@ -41026,6 +42961,47 @@
     }
   },
   {
+    "oracleId": "oracle-sylvan-library",
+    "name": "Sylvan Library",
+    "handledLines": [
+      "At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the card on top of your library."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards drawn this turn; pay 4 life or put each on top of your library",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 2
+              },
+              "op": "draw"
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 2
+              },
+              "life": {
+                "kind": "const",
+                "n": 4
+              },
+              "op": "payLifeOrTopDrawnCards"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "drawStep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-sylvan-reclamation",
     "name": "Sylvan Reclamation",
     "handledLines": [
@@ -41091,6 +43067,51 @@
     }
   },
   {
+    "oracleId": "oracle-syr-konrad-the-grim",
+    "name": "Syr Konrad, the Grim",
+    "handledLines": [
+      "{1}{B}: Each player mills a card."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{1}{B}: Each player mills a card",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "millEachPlayer",
+                "scope": "all"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 1,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-szarekh-the-silent-king",
     "name": "Szarekh, the Silent King",
     "handledLines": [
@@ -41116,6 +43137,98 @@
             },
             "when": "attacks"
           }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-takenuma-abandoned-mire",
+    "name": "Takenuma, Abandoned Mire",
+    "handledLines": [
+      "{3}{B}, Discard this card: Mill three cards, then return a creature or planeswalker card from your graveyard to your hand. This ability costs {1} less to activate for each legendary creature you control."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Channel — {3}{B}, Discard this card: Mill three cards, then return a creature or planeswalker card from your graveyard to your hand",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 3
+                },
+                "op": "mill"
+              },
+              {
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Planeswalker"
+                    }
+                  ]
+                },
+                "op": "returnCardFromGraveyardToHand"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 1,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 3
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "discardSelf"
+            }
+          ],
+          "timing": "any",
+          "zone": "hand"
+        }
+      ],
+      "ruleStatics": [
+        {
+          "amount": {
+            "kind": "countPermanents",
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "supertype",
+                  "value": "Legendary"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "appliesTo": "activate",
+          "kind": "costReduction",
+          "selfOnly": true
         }
       ]
     }
@@ -41724,6 +43837,38 @@
             }
           ],
           "timing": "sorcery"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-the-great-henge",
+    "name": "The Great Henge",
+    "handledLines": [
+      "This spell costs {X} less to cast, where X is the greatest power among creatures you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "amount": {
+            "kind": "greatestPowerAmong",
+            "scope": "all",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          },
+          "kind": "costReduction",
+          "selfOnly": true
         }
       ]
     }
@@ -43298,6 +45443,81 @@
         "kind": "spell",
         "targets": [
           {
+            "kind": "creature"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "oracleId": "oracle-untimely-malfunction",
+    "name": "Untimely Malfunction",
+    "handledLines": [
+      "Choose one —",
+      "• Change the target of target spell or ability with a single target.",
+      "• Destroy target artifact.",
+      "• One or two target creatures can't block this turn."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Choose one",
+        "effects": [],
+        "kind": "spell",
+        "modes": {
+          "maxChoices": 1,
+          "minChoices": 1,
+          "options": [
+            {
+              "description": "Destroy target artifact",
+              "effects": [
+                {
+                  "op": "destroy",
+                  "target": 0
+                }
+              ],
+              "targetSlots": [
+                0
+              ]
+            },
+            {
+              "description": "Change the target of target spell or ability with a single target",
+              "effects": [
+                {
+                  "op": "changeSingleTarget",
+                  "target": 1
+                }
+              ],
+              "targetSlots": [
+                1
+              ]
+            },
+            {
+              "description": "One or two target creatures can't block this turn",
+              "effects": [
+                {
+                  "op": "cantBlockEachChosenThisTurn",
+                  "targetSlot": 2
+                }
+              ],
+              "targetSlots": [
+                2
+              ]
+            }
+          ]
+        },
+        "targets": [
+          {
+            "kind": "artifact"
+          },
+          {
+            "kind": "stackObject",
+            "spellHasSingleTarget": true
+          },
+          {
+            "count": {
+              "max": 2,
+              "min": 1
+            },
             "kind": "creature"
           }
         ]

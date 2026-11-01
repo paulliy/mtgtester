@@ -1,0 +1,71 @@
+[
+  {
+    "object": "card",
+    "id": "e01cc65a-0e38-4f41-b9ed-796ef0355d0b",
+    "oracle_id": "9842734c-1eac-4509-a731-4c22017ae586",
+    "name": "Wear // Tear",
+    "lang": "en",
+    "layout": "split",
+    "mana_cost": "{1}{R} // {W}",
+    "cmc": 3,
+    "colors": [
+      "R",
+      "W"
+    ],
+    "color_identity": [
+      "R",
+      "W"
+    ],
+    "type_line": "Instant // Instant",
+    "keywords": [
+      "Fuse"
+    ],
+    "legalities": {
+      "standard": "not_legal",
+      "future": "not_legal",
+      "historic": "legal",
+      "timeless": "legal",
+      "gladiator": "legal",
+      "pioneer": "legal",
+      "modern": "legal",
+      "legacy": "legal",
+      "pauper": "not_legal",
+      "vintage": "legal",
+      "penny": "not_legal",
+      "commander": "legal",
+      "oathbreaker": "legal",
+      "standardbrawl": "not_legal",
+      "brawl": "legal",
+      "competitivebrawl": "legal",
+      "alchemy": "not_legal",
+      "paupercommander": "not_legal",
+      "duel": "legal",
+      "oldschool": "not_legal",
+      "premodern": "not_legal",
+      "predh": "not_legal",
+      "tlr": "legal"
+    },
+    "card_faces": [
+      {
+        "object": "card_face",
+        "name": "Wear",
+        "mana_cost": "{1}{R}",
+        "type_line": "Instant",
+        "oracle_text": "Destroy target artifact.\nFuse (You may cast one or both halves of this card from your hand.)",
+        "artist": "Ryan Pancoast",
+        "artist_id": "89cc9475-dda2-4d13-bf88-54b92867a25c",
+        "illustration_id": "35dc8f1e-5c26-4f3f-98eb-62123968a04f"
+      },
+      {
+        "object": "card_face",
+        "name": "Tear",
+        "mana_cost": "{W}",
+        "type_line": "Instant",
+        "oracle_text": "Destroy target enchantment.\nFuse (You may cast one or both halves of this card from your hand.)",
+        "artist": "Ryan Pancoast",
+        "artist_id": "89cc9475-dda2-4d13-bf88-54b92867a25c"
+      }
+    ],
+    "set_type": "commander"
+  }
+]

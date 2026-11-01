@@ -3,7 +3,6 @@
 import { computed } from 'vue';
 import type { SpectatorCard } from '@mtg/shared';
 import CardImage from './CardImage.vue';
-import { isTokenTypeLine } from '../lib/card';
 import { useCardPreviewStore } from '../stores/cardPreview';
 
 const props = withDefaults(
@@ -92,7 +91,7 @@ function onCardLeave(): void {
         <CardImage
           :scryfall-id="card.scryfallId"
           :name="card.name"
-          :is-token="isTokenTypeLine(card.typeLine)"
+          :is-token="card.isToken === true"
           size="small"
         />
       </div>

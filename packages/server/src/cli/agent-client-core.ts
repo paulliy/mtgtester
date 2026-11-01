@@ -21,10 +21,17 @@
  * socket, a process, or stdio.
  */
 
-import { LOSS_REASONS, isPlayerSeatId, parseStrictJson, type StrictJsonFailure } from '@mtg/shared';
+import {
+  LOSS_REASONS,
+  assertNever,
+  isPlayerSeatId,
+  parseStrictJson,
+  type StrictJsonFailure,
+} from '@mtg/shared';
 import { projectSetupErrorPayload } from '../ws/setup-privacy';
 import type {
   ClientToServerMessage,
+  ClientCapabilities,
   ErrorPayload,
   GameOverPayload,
   GameResult,
@@ -37,6 +44,7 @@ import type {
   SeatSummary,
   ServerToClientMessage,
   StartGamePayload,
+  TableClientToServerMessage,
   TargetChoice,
 } from '@mtg/shared';
 
@@ -81,10 +89,29 @@ function readGameId(container: unknown): string | null {
   return typeof id === 'string' && id.length > 0 ? id : null;
 }
 
+/** The longest `summary` the agent will pass on: the server's line is one short sentence. */
+const MAX_SUMMARY_LENGTH = 200;
+
+/**
+ * The server's one-line summary of the game's end, when it is plain text of a sane length.
+ * Anything else is not a summary: a control character could drive a terminal, and a long one is
+ * not the line the server writes.
+ */
+function readSummary(value: unknown): string | null {
+  if (typeof value !== 'string' || value.length > MAX_SUMMARY_LENGTH) return null;
+  for (const char of value) {
+    const code = char.codePointAt(0) ?? 0;
+    if (code < 0x20 || code === 0x7f) return null;
+  }
+  return value;
+}
+
 /** Rebuild terminal output from validated public fields, never upstream free text. */
-function projectAgentGameOver(
-  payload: unknown,
-): { result: GameResult; standings: GameOverPayload['standings'] } | null {
+function projectAgentGameOver(payload: unknown): {
+  result: GameResult;
+  standings: GameOverPayload['standings'];
+  summary?: string;
+} | null {
   const frame = readRecord(payload);
   const result = readRecord(frame?.['result']);
   const gameId = readGameId(result);
@@ -109,6 +136,10 @@ function projectAgentGameOver(
     if (!isPlayerSeatId(seat) || order.includes(seat)) return null;
     order.push(seat);
   }
+  // A server older than ADR 0032 sends none; a present one must be plain text.
+  const incomingSummary = frame?.['summary'];
+  const summary = incomingSummary === undefined ? null : readSummary(incomingSummary);
+  if (incomingSummary !== undefined && summary === null) return null;
   const incomingStandings = frame?.['standings'];
   if (!Array.isArray(incomingStandings)) return null;
   const standings: GameOverPayload['standings'] = [];
@@ -133,6 +164,7 @@ function projectAgentGameOver(
   return {
     result: { gameId, winnerSeat, finishingOrder: order, turnCount, halted, haltReason: null },
     standings,
+    ...(summary === null ? {} : { summary }),
   };
 }
 
@@ -200,6 +232,8 @@ export interface AgentGameOverEvent {
   type: 'game-over';
   result: GameResult;
   standings: GameOverPayload['standings'];
+  /** The server's one-line "game over" summary, when it sent one. */
+  summary?: string;
 }
 
 export type AgentEvent =
@@ -332,7 +366,8 @@ export interface AgentClientIo {
 }
 
 export interface AgentClientTransport {
-  send(message: ClientToServerMessage): void;
+  /** A table client also sends the table's lobby messages on the same socket. */
+  send(message: ClientToServerMessage | TableClientToServerMessage): void;
   close(): void;
 }
 
@@ -390,9 +425,23 @@ export interface AgentClientSessionOptions {
   io: AgentClientIo;
   transport: AgentClientTransport;
   game: AgentGameOptions;
+  /**
+   * Table mode (`agent-client-table.ts`): the seat was granted at a table, so this session asks
+   * for no game, adopts the table's `gameStarted` for that seat, and never abandons the game,
+   * which belongs to the table.
+   */
+  table?: { seat: PlayerId };
   /** Called once with the process exit code when the run is over. */
   onDone?: (code: number) => void;
 }
+
+/**
+ * What this client asks of the server on every first or resume message (ADR 0032 decision 7). It
+ * documents `data` in each legal action (`docs/guides/json-agent-client.md`), and the server
+ * sends no raw `data` to a connection that did not ask. This client never reconnects today; a
+ * `resumeGame` it sends must carry the same declaration.
+ */
+export const AGENT_CAPABILITIES: ClientCapabilities = { rawActionData: true };
 
 /** Build the `startGame` payload. Always single-player: this client is one seat, never a viewer. */
 export function startGamePayload(game: AgentGameOptions): StartGamePayload {
@@ -401,6 +450,7 @@ export function startGamePayload(game: AgentGameOptions): StartGamePayload {
     providerKind: game.providerKind,
     gameMode: 'singlePlayer',
     humanSeat: game.humanSeat,
+    capabilities: AGENT_CAPABILITIES,
     ...(game.seed !== undefined && { seed: game.seed }),
     ...(game.paceMs !== undefined && { paceMs: game.paceMs }),
   };
@@ -432,9 +482,15 @@ export class AgentClientSession {
 
   constructor(private readonly opts: AgentClientSessionOptions) {}
 
-  /** Ask for the game. Called once the socket is open. */
+  /** Ask for the game. Called once the socket is open. A table's game is not asked for. */
   begin(): void {
+    if (this.opts.table !== undefined) return;
     this.opts.transport.send({ type: 'startGame', payload: startGamePayload(this.opts.game) });
+  }
+
+  /** The seat this client plays. */
+  private get seat(): PlayerId {
+    return this.opts.table?.seat ?? this.opts.game.humanSeat;
   }
 
   receive(message: ServerToClientMessage): void {
@@ -444,14 +500,30 @@ export class AgentClientSession {
         const payload = message.payload;
         // A spectator game belongs to some other client: the server broadcasts those to every
         // socket, and adopting one would have this agent answer for a seat it does not hold.
-        if (payload.gameMode !== 'singlePlayer') {
-          this.opts.io.diagnostic('ignored a gameStarted frame for a spectator game.');
-          return;
+        // flow: which gameStarted frames the agent adopts (m1 row agent-client-core:447). A
+        // single-player client adopts its own game and a table client its table's, never the other.
+        const startedMode = payload.gameMode ?? 'spectator';
+        const wanted = this.opts.table === undefined ? 'singlePlayer' : 'table';
+        switch (startedMode) {
+          case 'singlePlayer':
+          case 'table':
+            if (startedMode !== wanted) {
+              this.opts.io.diagnostic(`ignored a gameStarted frame for a ${startedMode} game.`);
+              return;
+            }
+            break;
+          case 'spectator':
+            this.opts.io.diagnostic('ignored a gameStarted frame for a spectator game.');
+            return;
+          default:
+            return assertNever(startedMode, 'gameStarted game mode');
         }
         // Exactly one game is ever adopted. A later start frame is some other client's game, and
         // letting it overwrite `activeGameId` would move the terminal scope off this game — the run
         // would then end on a stranger's halt and ignore its own.
         if (this.started) {
+          // A table re-sends its start frame to a seat that resumes; it is the same game.
+          if (this.opts.table !== undefined && readGameId(payload) === this.activeGameId) return;
           this.opts.io.diagnostic('ignored a gameStarted frame; this client already holds a game.');
           return;
         }
@@ -462,7 +534,7 @@ export class AgentClientSession {
         }
         // The seat is the one this client asked for, or the frame is not about this client. The
         // server sets `humanSeat` on every single-player start, so an absent one is not ours.
-        if (payload.humanSeat !== this.opts.game.humanSeat) {
+        if (payload.humanSeat !== this.seat) {
           this.opts.io.diagnostic('ignored a gameStarted frame for a seat it did not request.');
           return;
         }
@@ -473,7 +545,7 @@ export class AgentClientSession {
           gameId,
           seed: payload.seed,
           providerKind: payload.providerKind,
-          humanSeat: this.opts.game.humanSeat,
+          humanSeat: this.seat,
           seats: payload.seats,
           startedAt: payload.startedAt,
           // `sessionToken` is deliberately not republished: v1 does not reconnect, so exposing
@@ -484,7 +556,10 @@ export class AgentClientSession {
 
       case 'playerActionRequired': {
         const { request, state, revision, ignoredAbilities } = message.payload;
-        if (request.manaSplit !== undefined || request.combatDamageSplit !== undefined) {
+        if (
+          this.opts.table === undefined &&
+          (request.manaSplit !== undefined || request.combatDamageSplit !== undefined)
+        ) {
           this.fail(
             'agent',
             `decision ${request.requestId} needs a split the v1 submission wire cannot express.`,
@@ -545,6 +620,7 @@ export class AgentClientSession {
           type: 'game-over',
           result: projected.result,
           standings: projected.standings,
+          ...(projected.summary === undefined ? {} : { summary: projected.summary }),
         });
         this.finish(0);
         return;
@@ -573,12 +649,12 @@ export class AgentClientSession {
         // A refusal reports all four seats at once, so it is the one inbound frame that carries
         // other players' deck data; it is rebuilt from an allowlist keyed on the seat this client
         // asked to play, not forwarded. Its own `message` goes no further than this process.
-        if (!this.started) {
+        if (!this.started && this.opts.table === undefined) {
           this.opts.io.event({
             type: 'error',
             source: 'server',
             fatal: true,
-            ...projectSetupErrorPayload(message.payload, this.opts.game.humanSeat),
+            ...projectSetupErrorPayload(message.payload, this.seat),
           });
           this.finish(1);
           return;
@@ -694,6 +770,15 @@ export class AgentClientSession {
     });
   }
 
+  /**
+   * The socket was replaced (a table seat resumed on a new connection). An answer sent on the
+   * old one may never have arrived; the server re-sends the decision if it is still pending, and
+   * that decision may be answered again.
+   */
+  reconnected(): void {
+    this.submitted = false;
+  }
+
   /** The agent closed its input stream. */
   inputClosed(): void {
     if (this.finished) return;
@@ -742,7 +827,7 @@ export class AgentClientSession {
     // it instead leaves this CLI good for exactly one game per server process. Only ever for a
     // game this client started: on someone else's session the server rejects it, and before
     // `gameStarted` there is nothing of ours to release.
-    if (this.started && this.socketOpen) {
+    if (this.started && this.socketOpen && this.opts.table === undefined) {
       this.opts.transport.send({ type: 'abandonGame', payload: {} });
     }
     this.opts.transport.close();

@@ -7,7 +7,7 @@ import type { AttackDeclarationSubject, DecisionRequest } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { computeCharacteristics } from '../../../engine/src/effects/continuous';
 import type { EnginePermanent, GameContext } from '../../../engine/src/state/types';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 import type { CardTestScenario } from './card-test-scenarios';
 
 interface Choice {
@@ -91,7 +91,7 @@ function run(
   /** Called with each request just before the scripted choice is submitted. */
   inspect?: (request: DecisionRequest, scenario: CardTestScenario) => void,
 ) {
-  const scenario = createCardTestScenario(scenarioId, 'card-lab-pr05');
+  const scenario = strictCardTestScenario(scenarioId, 'card-lab-pr05');
   expect(scenario, scenarioId).not.toBeNull();
   const choose = scripted(steps);
   const prompts: string[] = [];
@@ -1645,7 +1645,7 @@ describe('Curse of Bounty opponent-attack Card Test Lab scenario', () => {
 
   it('curse-of-bounty-viewer-opponent-attacks — P3 attacking the enchanted P2 untaps P3’s nonland permanents and P1’s, but no lands and nobody else’s', () => {
     // Start: every permanent that matters is tapped except P3's attacker.
-    const start = createCardTestScenario(
+    const start = strictCardTestScenario(
       'curse-of-bounty-viewer-opponent-attacks',
       'card-lab-pr05',
     );

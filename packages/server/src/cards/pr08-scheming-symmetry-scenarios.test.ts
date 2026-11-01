@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { DecisionRequest, LegalAction } from '@mtg/shared';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 import { formatPlayerLog } from '../../../engine/src/view/spectator';
 import type { GameContext } from '../../../engine/src/state/types';
 
@@ -55,7 +55,7 @@ function publicEvents(ctx: GameContext) {
  * priority window after the spell resolves — never running on into the automatic game over.
  */
 function replay(mode: Mode, options: { castWitness: boolean }): Observation {
-  const scenario = createCardTestScenario(`scheming-symmetry-viewer-${mode}`, 'symmetry-replay');
+  const scenario = strictCardTestScenario(`scheming-symmetry-viewer-${mode}`, 'symmetry-replay');
   expect(scenario).not.toBeNull();
   const engine = scenario!.engine;
   const ctx = (engine as unknown as { ctx: GameContext }).ctx;
@@ -238,7 +238,7 @@ describe('Scheming Symmetry Card Test Lab', () => {
   });
 
   it('symmetry-lab-two-opponents-empty-library — the empty target still shuffles and the untargeted caster library is untouched', () => {
-    const scenario = createCardTestScenario(
+    const scenario = strictCardTestScenario(
       'scheming-symmetry-viewer-two-opponents-empty-library',
       'symmetry-replay',
     )!;

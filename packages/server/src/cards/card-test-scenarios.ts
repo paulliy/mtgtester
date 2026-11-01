@@ -99,7 +99,9 @@ import {
   whiteBlackControlKeywordScenario,
 } from './white-black-control-keyword-scenarios';
 import { PR02_FOLLOW_UP_SCENARIO_IDS, pr02FollowUpScenario } from './pr02-follow-up-scenarios';
+import { PILOT_CURRENT_SCENARIOS, pilotCurrentScenario } from './pilot-current-scenarios';
 import { PR13_SCENARIOS, pr13Scenario } from './pr13-scenarios';
+import { RUNNER_SCENARIOS, runnerScenario } from './runner-scenarios';
 import { PR12_SCENARIOS, pr12Scenario } from './pr12-scenarios';
 import { PR11B_SCENARIOS, pr11bScenario } from './pr11b-scenarios';
 import { PR11_SCENARIOS, pr11Scenario } from './pr11-scenarios';
@@ -15137,6 +15139,8 @@ function masterWarcraftAssignScenario(gameId: GameId): CardTestScenario {
 }
 
 export const CARD_TEST_SCENARIO_IDS = [
+  ...RUNNER_SCENARIOS.map((scenario) => scenario.id),
+  ...PILOT_CURRENT_SCENARIOS.map((scenario) => scenario.id),
   ...PR13_SCENARIOS.map((scenario) => scenario.id),
   ...PR12_SCENARIOS.map((scenario) => scenario.id),
   ...PR11B_SCENARIOS.map((scenario) => scenario.id),
@@ -15699,6 +15703,15 @@ function agitatorAntScenario(gameId: GameId, mode: 'accept' | 'decline'): CardTe
 }
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
+  ...Object.fromEntries(
+    RUNNER_SCENARIOS.map(({ id }) => [id, (gameId: GameId) => runnerScenario(id, gameId)]),
+  ),
+  ...Object.fromEntries(
+    PILOT_CURRENT_SCENARIOS.map(({ id }) => [
+      id,
+      (gameId: GameId) => pilotCurrentScenario(id, gameId),
+    ]),
+  ),
   ...Object.fromEntries(
     PR13_SCENARIOS.map(({ id }) => [id, (gameId: GameId) => pr13Scenario(id, gameId)]),
   ),
@@ -16349,6 +16362,20 @@ export function createCardTestScenario(
 ): CardTestScenario | null {
   const builder = SCENARIO_BUILDERS[scenarioId];
   return builder === undefined ? null : builder(gameId);
+}
+
+/**
+ * `createCardTestScenario` for tests and tools: the scenario's game runs under `strictInvariants`
+ * (ADR 0034 decision 8), so an installed state check runs at every checkpoint and an invariant
+ * failure throws. The Lab itself plays scenarios as built.
+ */
+export function strictCardTestScenario(
+  scenarioId: string,
+  gameId: GameId,
+): CardTestScenario | null {
+  const scenario = createCardTestScenario(scenarioId, gameId);
+  scenario?.engine.enableStrictInvariants();
+  return scenario;
 }
 
 /** Catalog for the lab page's scenario picker: metadata only, engines are discarded. */

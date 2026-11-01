@@ -10,9 +10,10 @@
  * option in a details element the player has to find.
  */
 import { computed } from 'vue';
-import type { ActionSubject, DecisionRequest, LegalAction } from '@mtg/shared';
+import type { ActionSubject } from '@mtg/shared';
+import type { DecisionRequest, LegalAction } from '../lib/protocol';
 import CardImage from './CardImage.vue';
-import { playerFacingPrompt } from '../lib/turnLabels';
+import { panelButtonText, promptOf } from '../lib/actionPresentation';
 import { useCardPreviewStore } from '../stores/cardPreview';
 
 const props = defineProps<{ request: DecisionRequest }>();
@@ -29,7 +30,7 @@ function subjectFor(action: LegalAction): ActionSubject | null {
   return props.request.presentation?.actions?.[action.id]?.subjects[0] ?? null;
 }
 function verbFor(action: LegalAction): string {
-  return props.request.presentation?.actions?.[action.id]?.verb ?? action.description;
+  return panelButtonText(props.request, action);
 }
 function roleFor(action: LegalAction): string | undefined {
   return props.request.presentation?.actions?.[action.id]?.role;
@@ -77,7 +78,7 @@ function hidePreview(): void {
       <CardImage :scryfall-id="sourceScryfallId" :name="sourceLabel" size="small" />
       <strong>{{ sourceLabel }}</strong>
     </div>
-    <p class="panel-prompt">{{ playerFacingPrompt(request.prompt) }}</p>
+    <p class="panel-prompt">{{ promptOf(request) }}</p>
     <div class="panel-groups">
       <div v-for="group in groups" :key="group.key" class="panel-group">
         <div

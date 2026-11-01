@@ -391,6 +391,11 @@ export function* cleanupStep(ctx: GameContext): GameGen<void> {
       ctx.state.attackRequirements = ctx.state.attackRequirements.filter(
         (entry) => entry.expires.kind !== 'combat' && entry.expires.kind !== 'thisTurn',
       );
+    // "Can't block this turn" (Untimely Malfunction) ends here too.
+    if (ctx.state.blockRestrictions !== undefined)
+      ctx.state.blockRestrictions = ctx.state.blockRestrictions.filter(
+        (entry) => entry.expires.kind !== 'thisTurn',
+      );
     // "During their next turn" (Willie Lumpkin) ends in the cleanup step of that turn.
     if (ctx.state.attackRequirements !== undefined)
       ctx.state.attackRequirements = ctx.state.attackRequirements.filter(

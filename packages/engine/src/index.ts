@@ -14,6 +14,24 @@ export const ENGINE_VERSION = '0.2.0-phase2';
 export { Engine } from './engine';
 export type { EngineDriver, EngineOptions } from './engine';
 export type { PreparedScenarioSpec } from './testing/prepared-scenario';
+export {
+  CARD_SCENARIO_SEATS,
+  buildCardScenario,
+  describeRequest as describeScenarioRequest,
+  parseCardScenarioFile,
+  scenarioAction,
+  scenarioPattern,
+  scenarioTargets,
+  supportCard as scenarioSupportCard,
+} from './testing/card-scenario';
+export type {
+  BuiltScenario,
+  CardResolver,
+  CardScenario,
+  CardScenarioFile,
+  ScenarioExpectation,
+  ScenarioStep,
+} from './testing/card-scenario';
 export { buildGuardedCandidateDefinition } from './testing/candidate-definition';
 export {
   FABLED_PASSAGE_CANDIDATE,
@@ -50,10 +68,18 @@ export type {
 export { IMPLEMENTED_KEYWORDS } from './cards/definition';
 
 // Errors.
-export { IllegalDecisionError, EngineUsageError, UnmodeledCardError } from './errors';
+export {
+  EngineBudgetError,
+  EngineInvariantError,
+  EngineUsageError,
+  IllegalDecisionError,
+  UnmodeledCardError,
+} from './errors';
 
 // Seeded PRNG (exposed for providers/tests; the engine owns its own instance).
 export { Prng } from './rng/prng';
+export { ChaCha20Rng, streamNonce } from './rng/chacha20';
+export type { EngineRng } from './rng/engine-rng';
 
 // The anti-cheat projection (brief §7.1).
 export { buildPlayerView } from './view/view';
@@ -65,6 +91,7 @@ export {
   formatPlayerLog,
   formatSpectatorLine,
   formatSpectatorLog,
+  PLAYER_HALT_TEXT,
 } from './view/spectator';
 
 // Scripted/random decision providers and the completion driver (Phase 2 — brief §14.1).

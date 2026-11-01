@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeTargetOptions } from '../src/actions/legal';
+import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { addMana } from '../src/mana/pool';
 import { cleanupStep, queueStepTriggers } from '../src/turn/turn';
@@ -24,6 +25,14 @@ const mana = (...symbols: ('W' | 'U' | 'B' | 'R' | 'G' | 'C')[]) =>
 
 const chars = (ctx: GameContext, permanent: EnginePermanent) =>
   computeCharacteristics(ctx, permanent);
+
+/** An answer that records every unforced decision's type into `seen`, taking option 0. */
+const recording =
+  (seen: string[]) =>
+  (decision: PendingDecision): DecisionOutcome => {
+    seen.push(decision.decisionType);
+    return { index: 0, targets: new Map() };
+  };
 
 function endTurn(ctx: GameContext) {
   pump(cleanupStep(ctx));
@@ -134,22 +143,27 @@ describe('PR10.17 Sarkhan, the Dragonspeaker', () => {
     const { ctx, walker } = sarkhan('pr10-sarkhan-emblem');
     walker.counters['loyalty'] = 6;
     activate(ctx, 'P1', walker, new Map(), undefined, 2);
+    // The -6 is paid as a cost: all six loyalty counters are gone as the ability goes on the stack.
+    expect(walker.counters['loyalty'] ?? 0).toBe(0);
     settle(ctx);
     expect(p(ctx, 'P1').emblems).toHaveLength(1);
     conjure(ctx, 'P1', forest(), 'hand');
     const before = p(ctx, 'P1').hand.length;
+    const seen: string[] = [];
     queueStepTriggers(ctx, 'drawStep');
-    settle(ctx);
+    settle(ctx, recording(seen));
     expect(p(ctx, 'P1').hand.length).toBe(before + 2);
     // An opponent's draw step does not trigger it.
     const restore = asActive(ctx, 'P2');
     queueStepTriggers(ctx, 'drawStep');
-    settle(ctx);
+    settle(ctx, recording(seen));
     restore();
     expect(p(ctx, 'P1').hand.length).toBe(before + 2);
     queueStepTriggers(ctx, 'endStep');
-    settle(ctx);
+    settle(ctx, recording(seen));
     expect(p(ctx, 'P1').hand).toHaveLength(0);
+    // Both emblem abilities are mandatory: nobody is asked "use this ability?".
+    expect(seen).not.toContain('optionalTrigger');
   });
 });
 
@@ -249,8 +263,11 @@ describe('PR10.07 Saheeli, Sublime Artificer', () => {
   it('pr10-saheeli-sublime-artificer-servo — a Servo for each noncreature spell you cast', () => {
     const { ctx } = saheeli('pr10-saheeli-servo');
     castFromHand(ctx, 'P1', labShock(), new Map([[0, 'P2']]));
-    settle(ctx);
+    const seen: string[] = [];
+    settle(ctx, recording(seen));
     expect(servos(ctx)).toHaveLength(1);
+    // The Servo is mandatory: nobody is asked "use this ability?".
+    expect(seen).not.toContain('optionalTrigger');
     castFromHand(ctx, 'P1', labCreature());
     settle(ctx);
     expect(servos(ctx)).toHaveLength(1);
@@ -284,8 +301,15 @@ describe('PR10.07 Saheeli, Sublime Artificer', () => {
     const art = spawn(ctx, 'P1', trinket());
     const other = spawn(ctx, 'P1', trinket());
     const theirs = spawn(ctx, 'P2', bear('Saheeli Rival'));
-    const spec = pinnedDefinition('Saheeli, Sublime Artificer').activatedAbilities[0]!.ability
-      .targets[1]!;
+    const theirArt = spawn(ctx, 'P2', trinket());
+    const specs = pinnedDefinition('Saheeli, Sublime Artificer').activatedAbilities[0]!.ability
+      .targets;
+    // The artifact that becomes a copy must be one you control.
+    const first = computeTargetOptions(ctx, specs[0]!, 'P1');
+    expect(first).toContain(art.id);
+    expect(first).toContain(other.id);
+    expect(first).not.toContain(theirArt.id);
+    const spec = specs[1]!;
     const legal = computeTargetOptions(ctx, spec, 'P1', undefined, undefined, [art.id]);
     expect(legal).toContain(other.id);
     expect(legal).not.toContain(art.id);

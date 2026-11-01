@@ -232,6 +232,45 @@ describe('MatchRunner — compute-ahead cap (brief §10.1)', { timeout: 60_000 }
   });
 });
 
+describe('MatchRunner — the thread stays responsive', () => {
+  it('yields to the event loop on time as well as on step count', async () => {
+    // Every decision costs 20 ms of synchronous work, as a slow late-game bot step does. Counting
+    // steps alone held the thread for 200 of them (four seconds here, minutes at a table); a
+    // timer queued at the start must run within the first few decisions instead.
+    const inner = randomProviders();
+    let decisions = 0;
+    const slow = (playerId: string): AsyncDecisionProvider => ({
+      decide: (request) => {
+        decisions += 1;
+        const until = Date.now() + 20;
+        while (Date.now() < until) {
+          // busy: the work a slow step does without awaiting anything
+        }
+        return inner(playerId).decide(request);
+      },
+    });
+    const engine = makeEngine();
+    const runner = new MatchRunner({
+      engine,
+      gameId: 'g-test',
+      seed: 'runner-test',
+      seats: SEATS,
+      providerFor: slow,
+      onSnapshot: (turn) => {
+        runner.setViewTurn(turn);
+      },
+    });
+    let decisionsWhenTimerRan: number | null = null;
+    setTimeout(() => {
+      decisionsWhenTimerRan = decisions;
+      runner.abandon();
+    }, 0);
+    await runner.run();
+    expect(decisionsWhenTimerRan).not.toBeNull();
+    expect(decisionsWhenTimerRan!).toBeLessThanOrEqual(5);
+  });
+});
+
 describe('MatchRunner — snapshots and the scrubber', () => {
   it('records one snapshot per turn and refuses to seek past the frontier', async () => {
     const engine = makeEngine();

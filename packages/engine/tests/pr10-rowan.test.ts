@@ -59,6 +59,11 @@ function mustAttack(
   return required;
 }
 
+/** Fails the moment a "use this ability?" yes/no is asked: Rowan's abilities are mandatory. */
+function neverOptional(decision: PendingDecision): void {
+  expect(decision.decisionType).not.toBe('optionalTrigger');
+}
+
 const healer = (name: string) =>
   oracle({
     name,
@@ -99,24 +104,37 @@ describe('PR10.30 Rowan Kenrith', () => {
     const untapped = spawn(ctx, 'P2', bear('Rowan Untapped', { power: '3', toughness: '3' }));
     const mine = spawn(ctx, 'P1', bear('Rowan Own Tapped', { power: '3', toughness: '3' }));
     mine.tapped = true;
+    // A tapped 3/4 survives exactly 3 damage (and would not survive 4).
+    const sturdy = spawn(ctx, 'P2', bear('Rowan Sturdy', { power: '3', toughness: '4' }));
+    sturdy.tapped = true;
     activate(ctx, 'P1', walker, new Map([[0, 'P2']]), undefined, 1);
     settle(ctx);
     expect(walker.counters['loyalty']).toBe(2);
     const alive = (perm: EnginePermanent) =>
       ctx.state.battlefield.some((candidate) => candidate.id === perm.id);
     expect([alive(tapped), alive(untapped), alive(mine)]).toEqual([false, true, true]);
+    expect(alive(sturdy)).toBe(true);
+    expect(sturdy.damageMarked).toBe(3);
+    expect(untapped.damageMarked).toBe(0);
   });
 
   it("pr10-rowan-kenrith-emblem — the target player's activated abilities are copied", () => {
     const { ctx, walker } = rowanFor('pr10-rowan-emblem', 8);
     activate(ctx, 'P1', walker, new Map([[0, 'P1']]), undefined, 2);
+    // The -8 is paid as a cost: all eight loyalty counters are gone and Rowan leaves.
+    expect(walker.counters['loyalty'] ?? 0).toBe(0);
     settle(ctx);
+    expect(ctx.state.battlefield.some((permanent) => permanent.id === walker.id)).toBe(false);
     expect(p(ctx, 'P1').emblems.map((emblem) => emblem.name)).toEqual(['Rowan Kenrith emblem']);
     const cleric = spawn(ctx, 'P1', healer('Rowan Cleric'));
     const life = p(ctx, 'P1').life;
     activate(ctx, 'P1', cleric);
     putPendingTriggersOnStack(ctx);
-    settle(ctx);
+    // The emblem's copy trigger is mandatory ("copy it"): nothing asks "use it?" first.
+    settle(ctx, (decision) => {
+      neverOptional(decision);
+      return { index: 0, targets: new Map() };
+    });
     // The ability and its copy each resolve; the copy was not activated, so it doesn't loop.
     expect(p(ctx, 'P1').life).toBe(life + 4);
   });
@@ -147,11 +165,13 @@ describe('PR10.30 Rowan Kenrith', () => {
     castFromHand(ctx, 'P1', rowan);
     pump(resolveTopOfStack(ctx));
     putPendingTriggersOnStack(ctx, () => ({ index: 0, targets: new Map([[0, 'P1']]) }));
-    settle(ctx, (decision) =>
-      decision.options.some((option) => option.description === 'Search')
+    // The trigger is mandatory; only the target player's own "Search" choice is asked.
+    settle(ctx, (decision) => {
+      neverOptional(decision);
+      return decision.options.some((option) => option.description === 'Search')
         ? choose('Search')(decision)
-        : choose('Will Kenrith')(decision),
-    );
+        : choose('Will Kenrith')(decision);
+    });
     expect(p(ctx, 'P1').hand.some((card) => card.cardId === will.cardId)).toBe(true);
   });
 

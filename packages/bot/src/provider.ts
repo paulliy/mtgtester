@@ -2,7 +2,7 @@ import type { DecisionRequest, DecisionResponse, LegalAction, PlayerView } from 
 import type { CombatSearchOptions } from './combat-search';
 import type { DiplomacyPlay } from './diplomacy/play';
 import { decide } from './evaluate';
-import { Rng } from './rng';
+import { Rng, type RandomSource } from './rng';
 
 /**
  * Structural match for `packages/engine/src/providers/providers.ts`'s `DecisionProvider`
@@ -46,7 +46,7 @@ export interface HeuristicProviderOptions {
 }
 
 export class HeuristicDecisionProvider implements DecisionProviderLike {
-  private readonly rng: Rng;
+  private readonly rng: RandomSource;
   private readonly viewOf: () => PlayerView;
   private readonly opts: HeuristicProviderOptions;
   private turnSeen = -1;
@@ -56,9 +56,16 @@ export class HeuristicDecisionProvider implements DecisionProviderLike {
    * Constructed with a view accessor rather than a fixed `PlayerView`: scoring needs the
    * deciding player's current life and board every time, and re-fetching it per decision (via
    * `engine.view(seat)`) is cheap and always current.
+   *
+   * `seed` is a string for today's seeded `Rng` (every benchmark, CLI and tester call site), or
+   * an injected `{ nextInt }` source: the table server passes a keyed stream (ADR 0031 decision 4).
    */
-  constructor(seed: string, viewOf: () => PlayerView, opts: HeuristicProviderOptions = {}) {
-    this.rng = new Rng(seed);
+  constructor(
+    seed: string | RandomSource,
+    viewOf: () => PlayerView,
+    opts: HeuristicProviderOptions = {},
+  ) {
+    this.rng = typeof seed === 'string' ? new Rng(seed) : seed;
     this.viewOf = viewOf;
     this.opts = opts;
   }

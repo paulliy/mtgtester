@@ -30,6 +30,7 @@ jobs:
     outputs:
       code: ${{ steps.classify.outputs.code }}
       full: ${{ steps.classify.outputs.full }}
+      engine: ${{ steps.classify.outputs.engine }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -46,6 +47,7 @@ jobs:
           if [[ "$EVENT_NAME" != "pull_request" ]]; then
             echo "code=true" >> "$GITHUB_OUTPUT"
             echo "full=true" >> "$GITHUB_OUTPUT"
+            echo "engine=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           if [[ "$DRAFT" == "true" ]]; then
@@ -59,7 +61,13 @@ jobs:
           if ! changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA"); then
             echo "::warning::Could not compute changed files; running all jobs."
             echo "code=true" >> "$GITHUB_OUTPUT"
+            echo "engine=true" >> "$GITHUB_OUTPUT"
             exit 0
+          fi
+          if grep -q '^packages/engine/src/' <<< "$changed"; then
+            echo "engine=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "engine=false" >> "$GITHUB_OUTPUT"
           fi
           docs_only=true
           while IFS= read -r file; do
@@ -125,6 +133,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-bun-deps
       - run: bun run test
+      # Every tracked test file collects at least one test from its runner (ADR 0034 decision 9).
+      # It lists every runner's tests without running them: about 2.5 minutes, measured locally,
+      # nearly all of it Vitest importing the suites.
+      - run: bun run check:suite-collect
 
   ai-benchmark-contracts:
     name: AI / Benchmark contracts and privacy
@@ -155,6 +167,52 @@ jobs:
           packages/server/src/benchmark/h-k.test.ts
           packages/server/src/decks/strategy-profile.test.ts
 
+  card-mutation:
+    name: Cards / IR mutation
+    needs: changes
+    # Non-draft pull requests only (ADR 0034 decision 5): a draft skips it, as it skips the full suite.
+    if: needs.changes.outputs.code == 'true' && github.event_name == 'pull_request' && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-bun-deps
+      # Each reviewed card whose definition snapshot entry changed against the base must fail one of
+      # its manifest tests on an assertion under every IR mutant; changed unreviewed cards are
+      # reported. About 1 second per mutant after a 2.5-minute Vitest listing.
+      - run: bun run mutate-cards --changed
+        env:
+          MUTATION_BASE: ${{ github.event.pull_request.base.sha }}
+
+  fuzz:
+    name: Engine / Fuzz (advisory)
+    needs: changes
+    # ADR 0034 decision 8: seeded four-player games with the state invariants on, for pull requests
+    # that change the engine. Advisory: an engine change shifts the decision stream, so a seed can
+    # start failing on a bug the pull request did not write. The nightly run is authoritative.
+    if: needs.changes.outputs.engine == 'true' && github.event_name == 'pull_request'
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-bun-deps
+      # Six pods (two of each provider mix), plus three for each changed pinned card. Each failure
+      # prints the command that replays it.
+      - run: bun run fuzz --games 6 --changed --base "$BASE" --jobs 4 --json fuzz.json
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        continue-on-error: true
+        with:
+          name: fuzz-results
+          path: fuzz.json
+          if-no-files-found: ignore
+
   card-verification:
     name: Cards / Offline verification gate
     needs: changes
@@ -166,7 +224,17 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup-bun-deps
       - run: bun run test:card-gate
+      # Lists that may shrink but must not grow, compared with the pull request's base (or a push's
+      # `before` SHA); the script falls back to HEAD's first parent as the promotion check does.
+      - name: Check ratchets
+        env:
+          RATCHET_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: bun run check:ratchets
       - run: bun run snapshots:check
+      # Each manifest engine test ID names exactly one collected test that names its card (ADR 0034
+      # decision 5). It lists the Vitest collection without running it: about 2.5 minutes, measured
+      # locally.
+      - run: bun run check:manifest-tests
       - run: bun run test:primitive-contracts --output test-results/primitive-contracts
       - run: >-
           bun run card-capabilities
@@ -234,4 +302,34 @@ jobs:
         with:
           name: card-test-lab-traces
           path: test-results/
+          if-no-files-found: error
+
+  table-e2e:
+    name: Table e2e
+    needs: changes
+    if: needs.changes.outputs.code == 'true' && needs.changes.outputs.full == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-bun-deps
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bunx playwright install-deps chromium
+      - run: bunx playwright install chromium
+      # The built table bundle served by `serve:table --dev` from its own origin, two browser
+      # contexts per table, on the committed Oracle fixture with a fixed test key. The config
+      # builds the bundle and boots the three table servers.
+      - run: bun run test:e2e:table
+      - name: Require table traces
+        if: always()
+        run: test -n "$(find test-results/table -name trace.zip -print -quit 2>/dev/null)"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        continue-on-error: true
+        with:
+          name: table-e2e-traces
+          path: test-results/table/
           if-no-files-found: error

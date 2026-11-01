@@ -24,6 +24,7 @@ import type {
   ManaRestriction,
   SearchDestination,
 } from './ability';
+import { transformDefinition } from '../testing/definition-transform';
 import { IMPLEMENTED_KEYWORDS, SELF_SUBJECT } from './ability';
 import type {
   Ability,
@@ -5628,6 +5629,9 @@ const MANA_PER_PERMANENT_RE = /^add ((?:\{[wubrgc]\})+) for each (.+)$/;
  */
 const MANA_WITH_SELF_DAMAGE_RE = /^(add [^.]+)\. ~ deals (\d+) damage to you$/;
 
+/** "{T}: Add {G}{G}. You gain 2 life." (The Great Henge): a mana ability with a life rider. */
+const MANA_WITH_LIFE_GAIN_RE = /^(add [^.]+)\. you gain (\d+) life$/;
+
 /** "Add one mana of any color. Activate only if you control a Dragon." (Mox Jasper) */
 const MANA_ACTIVATE_ONLY_IF_RE = /^(add [^.]+)\. activate only if you control (?:a|an) (.+)$/;
 /** "Activate only if you control five or more lands." (Temple of the False God) */
@@ -6235,6 +6239,16 @@ function parseManaProduction(effectText: string, card: OracleCard): ManaAbilityS
       if (base !== null) {
         return { ...base, onActivate: [{ op: 'damageController', amount: Number(m[2]) }] };
       }
+    }
+  }
+  // The same with a life gain: still a mana ability (CR 605.1a), so the life is gained as the
+  // mana is produced, without using the stack (CR 605.3a).
+  {
+    const m = effectText.match(MANA_WITH_LIFE_GAIN_RE);
+    if (m) {
+      const base = parseManaProduction(m[1] as string, card);
+      if (base !== null)
+        return { ...base, onActivate: [{ op: 'gainLife', amount: constant(Number(m[2])) }] };
     }
   }
   return null;
@@ -7406,8 +7420,16 @@ const FUSE_REMINDER = /^Fuse \(You may cast one or both halves of this card from
 function interpretSplitCard(card: OracleCard): CardDefinition | null {
   const back = card.backFace;
   const names = card.name.split(' // ');
-  const costs = (card.manaCost ?? '').split(' // ');
-  const typeLines = card.typeLine.split(' // ').map((line) => line.trim());
+  const rawCosts = (card.manaCost ?? '').split(' // ');
+  const costs =
+    back !== undefined && card.layout === 'split' && rawCosts.length !== 2
+      ? [card.manaCost ?? '', back.manaCost ?? '']
+      : rawCosts;
+  const rawTypeLines = card.typeLine.split(' // ').map((line) => line.trim());
+  const typeLines =
+    back !== undefined && card.layout === 'split' && rawTypeLines.length !== 2
+      ? [card.typeLine.trim(), back.typeLine.trim()]
+      : rawTypeLines;
   if (back === undefined || names.length !== 2 || costs.length !== 2 || typeLines.length !== 2)
     return null;
   if (!typeLines.every((line) => line === 'Instant' || line === 'Sorcery')) return null;
@@ -7419,7 +7441,7 @@ function interpretSplitCard(card: OracleCard): CardDefinition | null {
       .join('\n');
   const half = (suffix: string, index: 0 | 1, oracleText: string): CardDefinition => {
     const cost = costs[index]!.trim();
-    return interpretCard({
+    return interpretOracleCard({
       oracleId: `${card.oracleId}:${suffix}` as OracleCard['oracleId'],
       scryfallId: card.scryfallId,
       name: names[index]!,
@@ -7583,7 +7605,7 @@ function interpretSecondFace(card: OracleCard): CardDefinition | null {
     commanderLegality: card.commanderLegality,
     isBasicLand: supertypes.includes('Basic') && types.includes('Land'),
   };
-  return interpretCard(synthetic);
+  return interpretOracleCard(synthetic);
 }
 
 function buildTransformBackFace(card: OracleCard): TransformBackFaceResult | null {
@@ -7653,6 +7675,11 @@ function buildPathwayLand(card: OracleCard): {
 
 /** Interpret one oracle card. Never throws â€” unmodeled cards are reported, not errors. */
 export function interpretCard(card: OracleCard): CardDefinition {
+  return transformDefinition(interpretOracleCard(card));
+}
+
+/** `interpretCard` without the test-only transform: its recursive calls for halves and faces. */
+function interpretOracleCard(card: OracleCard): CardDefinition {
   if (card.layout === 'split') {
     const split = interpretSplitCard(card);
     if (split !== null) return split;

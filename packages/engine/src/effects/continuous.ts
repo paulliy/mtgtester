@@ -47,7 +47,7 @@ import type { LayerValueScope } from '../cards/value';
 import type { ManaUnit } from '../mana/cost';
 import { manaValueOf, parseManaCost } from '../mana/cost';
 import type { EnginePermanent, GameContext } from '../state/types';
-import { digestOf, getCached, setCached } from './layer-cache';
+import { digestOf, getCached, sampleCacheHit, setCached } from './layer-cache';
 
 /** Basic-land subtype → intrinsic mana ability (CR 305.6), for Blood Moon's mana override. */
 const BASIC_LAND_MANA: Record<string, ManaUnit> = {
@@ -346,8 +346,19 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
         op: { layer: 6, addManaAbility: eff.manaAbility },
         timestamp: eff.timestamp,
       });
-    } else if (eff.kind === 'addTypes' && eff.addTypes !== undefined) {
-      out.push({ applies, op: { layer: 4, addTypes: eff.addTypes }, timestamp: eff.timestamp });
+    } else if (
+      eff.kind === 'addTypes' &&
+      (eff.addTypes !== undefined || eff.addSubtypes !== undefined)
+    ) {
+      out.push({
+        applies,
+        op: {
+          layer: 4,
+          ...(eff.addTypes === undefined ? {} : { addTypes: eff.addTypes }),
+          ...(eff.addSubtypes === undefined ? {} : { addSubtypes: eff.addSubtypes }),
+        },
+        timestamp: eff.timestamp,
+      });
     } else if (eff.kind === 'becomeCreature' && eff.becomeCreature !== undefined) {
       const bc = eff.becomeCreature;
       if (bc.setColors !== undefined) {
@@ -1100,7 +1111,7 @@ export function computeAllCharacteristics(
   const digest = digestOf(ctx, extra, includeGraveyards);
 
   if (cached !== undefined && cached.digest === digest && cached.extraCardId === extraCardId) {
-    if (!VERIFY_CACHE) return cached.map;
+    if (!VERIFY_CACHE && !sampleCacheHit(ctx)) return cached.map;
     const fresh = runLayers(ctx, permsFor(ctx, extra));
     const a = canonicalJson(cached.map);
     const b = canonicalJson(fresh.map);

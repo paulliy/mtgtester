@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { DecisionRequest, LegalAction, PlayerView } from '@mtg/shared';
 import { HeuristicDecisionProvider } from './provider';
+import { Rng, type RandomSource } from './rng';
 
 function view(): PlayerView {
   return {
@@ -72,5 +73,35 @@ describe('HeuristicDecisionProvider', () => {
     // Turn 2: the same ability should be fresh again — attractive, not decayed.
     const response = provider.decide(requestFor(2, 't2-0', [PASS, PING_ABILITY]));
     expect(response.actionId).toBe(PING_ABILITY.id);
+  });
+
+  describe('an injected random source', () => {
+    const TIED: LegalAction[] = [
+      { id: 0, type: 'pass', description: 'Pass priority' },
+      { id: 1, type: 'pass', description: 'Pass priority again' },
+    ];
+
+    it('breaks ties through the injected source, not a seeded Rng', () => {
+      const bounds: number[] = [];
+      const source: RandomSource = {
+        nextInt: (bound) => {
+          bounds.push(bound);
+          return bound - 1;
+        },
+      };
+      const provider = new HeuristicDecisionProvider(source, view);
+      const response = provider.decide(requestFor(1, 'r1', TIED));
+      expect(bounds).toEqual([2]);
+      expect(response.actionId).toBe(1);
+    });
+
+    it('answers a string seed exactly as the same seed injected as an Rng', () => {
+      const requests = Array.from({ length: 12 }, (_, i) => requestFor(i + 1, `r${i}`, TIED));
+      const viaString = new HeuristicDecisionProvider('table-seed', view);
+      const viaRng = new HeuristicDecisionProvider(new Rng('table-seed'), view);
+      expect(requests.map((r) => viaRng.decide(r).actionId)).toEqual(
+        requests.map((r) => viaString.decide(r).actionId),
+      );
+    });
   });
 });

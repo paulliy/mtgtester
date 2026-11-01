@@ -44,6 +44,9 @@ const ALLOWED: Record<string, string> = {
     '(search, look-at-top, reanimation targets). No continuous effect reaches those, so printed ' +
     'characteristics are the only ones they have',
   'effects/resolve.ts': 'reads cards in exile for playExiledCardFree (not battlefield permanents)',
+  'view/spectator.ts':
+    'cardView projects cards in hands, graveyards and exile, whose printed types are the only ' +
+    'types they have (ADR 0032 decision 2); permanentView uses computeCharacteristics',
   'cards/condition.ts':
     "mayRevealCardFromHand checks a player's HAND for a qualifying card (Game Trail and the " +
     'other reveal-a-land duals) — no continuous effect reaches a card that never entered play',

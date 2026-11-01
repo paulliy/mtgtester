@@ -34,6 +34,11 @@ Exit codes: `0` game over, `1` the run ended without one, `2` bad arguments, `13
 --pace-ms <n>       Bot presentation pace in ms (default 0 — no artificial delay)
 ```
 
+The `startGame` message declares `capabilities: { rawActionData: true }` (ADR 0032 decision 7), so
+each `LegalAction` in `decision-required` keeps its `data`, as documented below. The server sends
+no `data` to a connection that does not ask, which is why the browser never sees it. This client
+does not reconnect; a `resumeGame` it sent would have to declare the same capability again.
+
 Four supported-pool seats, as `bun run pool` builds them. The URL must be loopback: the server
 binds loopback only (brief §2), and this client will not be the thing that reaches past it.
 
@@ -43,14 +48,16 @@ binds loopback only (brief §2), and this client will not be the thing that reac
   server's `sessionToken` is deliberately not republished: v1 does not reconnect.
 - `decision-required` — `requestId`, `revision`, `request`, `state`, `ignoredAbilities`.
   `request` is the `DecisionRequest` verbatim; `request.legalActions` is the complete menu, and the
-  only menu, the agent may choose from.
+  only menu, the agent may choose from. `request.presentation` is the server's own wording for it
+  (ADR 0032): `playerPrompt`, and for each action in the menu a `label`, `summary`, `costLabels`
+  and so on. An agent may read it or ignore it; it never changes which actions are legal.
 - `state-update` — `gameId`, `revision`, `connected`, `state`, `ignoredAbilities`. A new board with
   no decision attached.
 - `error` — `source` (`agent` for a rejected reply, `server` otherwise), `fatal`, `message`,
   `deckIssues`/`unmodeledCards` when setup failed, and `requestId`/`revision` when the server
   correlated the error to a submission it rejected. Only a correlated rejection makes a decision
   answerable again; see below.
-- `game-over` — `result`, `standings`.
+- `game-over` — `result`, `standings`, and the server's one-line `summary` ("Game over — winner P1 after 12 turns") when it sends one.
 
 ## Replies (stdin)
 
@@ -118,3 +125,32 @@ next `startGame` while it does. So the client sends `abandonGame` when its run e
 no-op on a finished or halted runner (`MatchRunner.abandon`) and therefore leaves the recorded game
 with its real status. Without it one server process would be good for exactly one agent game.
 `SIGINT`/`SIGTERM` abandon the same way before exiting.
+
+## Table mode
+
+`--table` plays one seat at a local table server (ADR 0031) instead of starting a single-player
+game:
+
+```bash
+bun run agent-client --table 'http://127.0.0.1:3002/t/<table>#<invite>' --name Ann \
+  --deck deck.txt --seat P2 [--policy first-legal]
+```
+
+- **Joining.** The client sends `joinTable` with the invite, then `requestSeat` with the decklist
+  file's text. The host approves the claim (stderr shows its verification code). On `seatGranted`
+  the client sends `resumeSeat` on the same socket. The seat token stays inside the process and is
+  never printed.
+- **Capabilities.** `rawActionData` is declared on `joinTable` and again on `resumeSeat`, since a
+  resumed seat starts from what its resume declared.
+- **Playing.** From the table's `gameStarted` for the granted seat on, events and replies are the
+  single-player ones above. Request ids and revisions are the seat's own (`q1`, `q2`, ...), not the
+  engine's.
+- **Policies.** `stdin` (the default) reads replies as above. `first-legal` answers every decision
+  with the first legal action and each target slot's first option, for scripted runs.
+- **Clocks.** At a timed table a decision left unanswered past the seat's allowance and bank is
+  answered by the seat's fallback bot. If a `seatStatus` says the fallback bot holds this seat
+  while the client is connected, the client sends `resumeControl` to take it back.
+- **Leaving.** The game belongs to the table, so the client never sends `abandonGame`; closing
+  the process only disconnects the seat. Deck problems, a takeover by another connection, and a
+  closed table end the run with a fatal `error`.
+- **Loopback only** until the table server's production mode (plan M5).

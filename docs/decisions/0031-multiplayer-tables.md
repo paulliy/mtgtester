@@ -1,6 +1,6 @@
 # ADR 0031: Multiplayer tables
 
-Status: Proposed
+Status: Accepted (2026-10-29)
 
 Date: 2026-10-27
 
@@ -481,8 +481,11 @@ benchmarks and debug views show every hand by design and must never be reachable
 - **A `game_decisions` table.** Rejected. Decision events already hold the exact responses.
 - **Peer-to-peer play.** Rejected. Every hand and the key would sit on every machine.
 
-## Open questions
+## Resolved questions
 
-1. Hosting default: LAN with `--insecure-lan` (default first target), or TLS behind a proxy?
-2. Default clock: `relaxed` (default) or `standard`?
-3. Should the host be able to assign supported-pool decks? Default: no.
+Decided by the owner on 2026-10-29, when this ADR was accepted:
+
+1. Hosting default: LAN with `--insecure-lan` is the first target; TLS behind a proxy is also
+   supported.
+2. Default clock: `relaxed`.
+3. The host cannot assign supported-pool decks.

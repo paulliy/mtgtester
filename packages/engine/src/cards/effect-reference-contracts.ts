@@ -80,6 +80,9 @@ const spellOrPermanent: ReferenceContract = {
 
 /** Each operation and each explicit reference field must declare a contract. */
 export const EFFECT_REFERENCE_CONTRACTS = {
+  amass: {},
+  payLifeOrTopDrawnCards: {},
+  returnCardFromGraveyardToHand: {},
   pumpUntilEot: { target: permanent },
   grantKeywordUntilEot: { target: permanent },
   cantBeBlockedUntilEot: { target: permanent },
@@ -235,6 +238,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   grantUnearthToArtifactCreaturesInGraveyard: {},
   exileSource: {},
   draw: {},
+  additionalLandPlaysThisTurn: {},
   discard: {},
   putFromHandOnLibraryTop: {},
   discardAtRandom: {},
@@ -264,7 +268,6 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   searchLibrary: {},
   searchLibraryGroup: {},
   huntingWilds: {},
-  etaliPrimalConqueror: {},
   searchLibraryCastFree: {},
   shuffle: {},
   scry: {},
@@ -309,6 +312,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   selfToLibraryTop: {},
   putCountersEachChosen: { targetSlot: many(permanent) },
   grantKeywordEachChosenUntilEot: { targetSlot: many(permanent) },
+  cantBlockEachChosenThisTurn: { targetSlot: many(permanent) },
   doubleCountersEachChosen: { targetSlot: many(permanent) },
   cantBeBlockedEachChosen: { targetSlot: many(permanent) },
   untapUpTo: {},
@@ -324,7 +328,6 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   exileEachChosenUntilSourceLeaves: {
     targetSlot: { domains: ['permanent'], selection: 'counted' },
   },
-  exileTargetAndControllerMaySearchBasicLandTapped: { targetSlot: permanent },
   removeTargetAndControllerMaySearchBasicLand: { target: permanent },
   destroyTargetAndControllerMaySearchBasicTypedLand: { target: permanent },
   exileCreatureAndControllerSearchBasicLand: { target: permanent },

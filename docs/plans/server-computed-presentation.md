@@ -1,6 +1,6 @@
 # Server-computed presentation
 
-Decision record: [ADR 0032](../decisions/0032-server-computed-presentation.md). Status: proposed.
+Decision record: [ADR 0032](../decisions/0032-server-computed-presentation.md). Status: accepted (2026-10-29); P1 to P6 delivered.
 
 This track runs between multiplayer milestones M2 and M3
 ([multiplayer plan](multiplayer-tables.md)):

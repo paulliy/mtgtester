@@ -150,7 +150,9 @@ describe('The One Ring', () => {
     castFromHand(ctx, 'P1', RING, new Map(), { C: 4 });
     resolve(ctx);
     checkpoint(ctx);
-    resolve(ctx);
+    // The enter trigger is mandatory ("you gain protection"): nothing asks "use it?" first.
+    const decisions = resolve(ctx);
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     return battlefield(ctx, 'The One Ring')[0]!;
   }
 
@@ -197,7 +199,10 @@ describe('The One Ring', () => {
     const ctx = game('pr11-ring-tap');
     const ring = castRing(ctx);
     const hand = player(ctx, 'P1').hand.length;
+    expect(ring.tapped).toBe(false);
     activate(ctx, 'P1', ring);
+    // {T} is a cost: the Ring is tapped as the ability goes on the stack.
+    expect(ring.tapped).toBe(true);
     resolve(ctx);
     expect(ring.counters['burden']).toBe(1);
     expect(player(ctx, 'P1').hand.length).toBe(hand + 1);
@@ -215,8 +220,10 @@ describe('The One Ring', () => {
     const life = player(ctx, 'P1').life;
     nextTurnOf(ctx, 'P2');
     expect(player(ctx, 'P1').life).toBe(life);
-    nextTurnOf(ctx, 'P1');
+    const decisions = nextTurnOf(ctx, 'P1');
     expect(player(ctx, 'P1').life).toBe(life - 3);
+    // The upkeep trigger is mandatory ("you lose 1 life"): no "use it?" was asked.
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
   });
 
   it('ring-c01 — indestructible: lethal destruction leaves it on the battlefield', () => {

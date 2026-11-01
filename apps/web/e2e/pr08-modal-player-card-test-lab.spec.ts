@@ -128,7 +128,9 @@ async function chooseTargetPlayer(page: Page, seat: string): Promise<void> {
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
   const target = opponent(page, seat);
   await expect(target).toHaveClass(/targetable/);
-  await target.click();
+  // The panel's header: its center may be one of that player's permanents, and clicking a
+  // permanent selects it as a source instead.
+  await target.locator(':scope > header').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await page.getByRole('button', { name: 'Confirm' }).click();
 }

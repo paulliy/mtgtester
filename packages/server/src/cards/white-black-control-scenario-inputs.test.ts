@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { interpretCard } from '@mtg/engine';
 import { expect, it } from 'vitest';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 
 // Witness cards also reach interpretation during casting, discard, and zone moves.
 // Validate their inputs before spending a browser run on a fail-closed fixture.
@@ -12,7 +12,7 @@ const requirements = JSON.parse(
 it.each(requirements.evidenceSemantics.factoryReadyViewerScenarioIds)(
   '%s has supported subjects and witness cards',
   (id) => {
-    const scenario = createCardTestScenario(id, `input-check-${id}`);
+    const scenario = strictCardTestScenario(id, `input-check-${id}`);
     expect(scenario).not.toBeNull();
     for (const seat of scenario!.seats) {
       for (const card of seat.config.cards) {

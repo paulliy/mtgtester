@@ -14,8 +14,9 @@ const chromiumExecutable = process.env['PLAYWRIGHT_CHROMIUM_EXECUTABLE'];
 
 export default defineConfig({
   testDir: './apps/web/e2e',
-  // These run against their own DB-backed backend via playwright.setup.config.ts.
-  testIgnore: /player-(setup|game)\.spec\.ts$/,
+  // These run against their own backends: playwright.setup.config.ts and
+  // playwright.table.config.ts.
+  testIgnore: [/player-(setup|game)\.spec\.ts$/, /table-.*\.spec\.ts$/],
   fullyParallel: true,
   retries: 0,
   // The lab backend holds a single live session, so specs that share it must not overlap in time.

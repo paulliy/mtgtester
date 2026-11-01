@@ -3,7 +3,8 @@
  * messages and reacts to the eight server ones, and needs no engine code to interpret either.
  */
 
-import type { ClientToServerMessage, ServerToClientMessage } from '@mtg/shared';
+import type { ClientToServerMessage } from '@mtg/shared';
+import type { ServerToClientMessage } from './protocol';
 
 export type ServerMessageHandler = (message: ServerToClientMessage) => void;
 

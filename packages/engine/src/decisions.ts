@@ -5,6 +5,7 @@
  * one legal option with no real target choice (brief §5.1 — no AI call for forced moves).
  */
 
+import { EngineInvariantError } from './errors';
 import type {
   ActionInteraction,
   ActionPresentation,
@@ -67,6 +68,25 @@ export interface DecisionOutcome {
   targets: ReadonlyMap<number, ObjectId>;
   manaSplit?: Readonly<Record<string, number>>;
   combatDamageSplit?: Readonly<Record<string, number>>;
+}
+
+/**
+ * The option a decision's answer names (ADR 0034 decision 3). `Engine.submit` accepts only an
+ * offered action, so an index outside the menu means a test driver or engine bug: it throws
+ * rather than silently becoming the first option.
+ */
+export function optionAt<T>(
+  options: readonly T[],
+  outcome: Pick<DecisionOutcome, 'index'>,
+  site: string,
+): T {
+  const option = options[outcome.index];
+  if (option === undefined)
+    throw new EngineInvariantError(
+      site,
+      `answer index ${outcome.index} is outside the ${options.length} offered options`,
+    );
+  return option;
 }
 
 /** Generator type for all engine flow code. */

@@ -58,6 +58,8 @@ function pod(seed: string) {
 }
 const p = playerById;
 function answer(decision: PendingDecision): DecisionOutcome {
+  // No trigger in this file is optional: none may ask "use this ability?" before its own choices.
+  expect(decision.decisionType).not.toBe('optionalTrigger');
   const index = Math.max(
     0,
     decision.options.findIndex((option) => option.type === 'pass' || option.type === 'decline'),

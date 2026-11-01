@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { lossReasonLabel } from '../lib/lossReasons';
 
 interface DeckStatistic {
   deckSnapshotId: string;
@@ -16,7 +15,7 @@ interface DeckStatistic {
   averageGameLength: number | null;
   averageMulligans: number;
   mulliganDistribution: Array<{ mulligans: number; games: number }>;
-  eliminationCauses: Array<{ reason: string; count: number }>;
+  eliminationCauses: Array<{ reason: string; label: string; count: number }>;
   lossesTo: Array<{
     commanders: string[];
     colorIdentity: string[];
@@ -168,7 +167,7 @@ onMounted(() => void load());
             <p v-if="deck.eliminationCauses.length === 0">No losses recorded.</p>
             <ul v-else>
               <li v-for="entry in deck.eliminationCauses" :key="entry.reason">
-                {{ lossReasonLabel(entry.reason) }}: {{ entry.count }}
+                {{ entry.label }}: {{ entry.count }}
               </li>
             </ul>
           </section>

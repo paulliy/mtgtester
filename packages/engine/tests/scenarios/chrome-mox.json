@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "card": "Chrome Mox",
+  "supportCards": [
+    {
+      "name": "Scenario Flame",
+      "typeLine": "Sorcery",
+      "manaCost": "{1}{R}",
+      "oracleText": "Scenario Flame deals 1 damage to any target."
+    },
+    {
+      "name": "Scenario Sprout",
+      "typeLine": "Creature — Plant",
+      "manaCost": "{G}",
+      "power": "0",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Imp",
+      "typeLine": "Creature — Imp",
+      "manaCost": "{R}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Trinket",
+      "typeLine": "Artifact",
+      "manaCost": "{1}",
+      "oracleText": ""
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "chrome-mox-imprint-then-tap",
+      "title": "Chrome Mox: imprint a red card, then tap for red",
+      "clauses": [1, 2],
+      "instructions": [
+        "Cast Chrome Mox and exile Scenario Flame with it.",
+        "Cast Scenario Imp with the Mox's red mana."
+      ],
+      "expectedOutcome": "Scenario Flame is exiled; the Mox is tapped and Scenario Imp is on the battlefield.",
+      "seats": {
+        "P1": {
+          "hand": ["Chrome Mox", "Scenario Flame", "Scenario Imp"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Chrome Mox/"
+        },
+        {
+          "player": "P1",
+          "choose": "Exile Scenario Flame"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Imp/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "exile",
+            "has": ["Scenario Flame"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Chrome Mox", "Scenario Imp"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Chrome Mox",
+            "player": "P1",
+            "equals": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "chrome-mox-only-the-exiled-colors",
+      "title": "Chrome Mox: a green card imprinted makes no red mana",
+      "clauses": [1, 2],
+      "instructions": [
+        "Cast Chrome Mox and exile Scenario Sprout with it.",
+        "Try to cast Scenario Imp: it is not offered."
+      ],
+      "expectedOutcome": "Scenario Sprout is exiled; Scenario Imp stays in hand and the Mox stays untapped.",
+      "seats": {
+        "P1": {
+          "hand": ["Chrome Mox", "Scenario Sprout", "Scenario Imp"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Chrome Mox/"
+        },
+        {
+          "player": "P1",
+          "choose": "Exile Scenario Sprout"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "exile",
+            "has": ["Scenario Sprout"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Imp"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Chrome Mox",
+            "player": "P1",
+            "equals": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "chrome-mox-decline",
+      "title": "Chrome Mox: exile nothing, and it makes no mana",
+      "clauses": [1, 2],
+      "instructions": ["Cast Chrome Mox and exile nothing."],
+      "expectedOutcome": "Nothing is exiled; Scenario Flame and Scenario Imp stay in hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Chrome Mox", "Scenario Flame", "Scenario Imp"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Chrome Mox/"
+        },
+        {
+          "player": "P1",
+          "choose": "Exile nothing"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "exile",
+            "lacks": ["Scenario Flame", "Scenario Imp"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Flame", "Scenario Imp"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "chrome-mox-no-artifact-or-land",
+      "title": "Chrome Mox: an artifact or land card cannot be imprinted",
+      "clauses": [1],
+      "instructions": ["Cast Chrome Mox with only an artifact card and a land card in hand."],
+      "expectedOutcome": "Neither is offered; both stay in hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Chrome Mox", "Scenario Trinket", "Mountain"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Chrome Mox/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Trinket", "Mountain"]
+          }
+        }
+      ]
+    }
+  ]
+}

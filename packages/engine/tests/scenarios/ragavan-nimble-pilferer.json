@@ -1,0 +1,357 @@
+{
+  "schemaVersion": 1,
+  "card": "Ragavan, Nimble Pilferer",
+  "supportCards": [
+    {
+      "name": "Scenario Spark",
+      "typeLine": "Instant",
+      "manaCost": "{R}",
+      "oracleText": "Scenario Spark deals 1 damage to any target."
+    },
+    {
+      "name": "Scenario Wall",
+      "typeLine": "Creature — Wall",
+      "manaCost": "{1}",
+      "power": "0",
+      "toughness": "4"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "ragavan-hit-cast",
+      "title": "Ragavan: connect, make a Treasure, and cast the exiled card with it",
+      "clauses": [1],
+      "instructions": [
+        "Attack P2 with Ragavan.",
+        "After combat damage, cast the exiled Scenario Spark at P2, paying {R} with the Treasure."
+      ],
+      "expectedOutcome": "P2 takes 2 from Ragavan and 1 from its own Scenario Spark, which goes to P2's graveyard.",
+      "continue": {
+        "throughCombat": true
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Ragavan, Nimble Pilferer"]
+        },
+        "P2": {
+          "libraryTop": ["Scenario Spark"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Spark/",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 37
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "has": ["Scenario Spark"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Treasure"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ragavan-hits-third-player",
+      "title": "Ragavan: connect with P3, and P3's top card, not P2's, is exiled",
+      "clauses": [1],
+      "instructions": [
+        "Attack P3 with Ragavan.",
+        "After combat damage, cast the exiled Scenario Spark at P3, paying {R} with the Treasure."
+      ],
+      "expectedOutcome": "P3 takes 2 from Ragavan and 1 from Scenario Spark, which goes to P3's graveyard. P2's top card, Scenario Wall, stays in P2's library and P2 loses no life.",
+      "continue": {
+        "throughCombat": true
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Ragavan, Nimble Pilferer"]
+        },
+        "P2": {
+          "libraryTop": ["Scenario Wall"]
+        },
+        "P3": {
+          "libraryTop": ["Scenario Spark"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P3"]
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Spark/",
+          "targets": ["P3"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P3",
+            "equals": 37
+          }
+        },
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P3",
+            "zone": "graveyard",
+            "has": ["Scenario Spark"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P3",
+            "zone": "exile",
+            "lacks": ["Scenario Spark"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "exile",
+            "lacks": ["Scenario Wall"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "library",
+            "has": ["Scenario Wall"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Treasure"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ragavan-blocked",
+      "title": "Ragavan: blocked, no damage to a player and nothing happens",
+      "clauses": [1],
+      "instructions": ["Attack P2 with Ragavan; P2 blocks with Scenario Wall."],
+      "expectedOutcome": "No Treasure is created and nothing is exiled.",
+      "continue": {
+        "throughCombat": true
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Ragavan, Nimble Pilferer"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Wall"],
+          "libraryTop": ["Scenario Spark"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P2",
+          "choose": "/blockers/",
+          "targets": ["Ragavan, Nimble Pilferer"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Treasure"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "exile",
+            "lacks": ["Scenario Spark"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ragavan-land-exiled",
+      "title": "Ragavan: an exiled land can't be played",
+      "clauses": [1],
+      "instructions": ["Attack P2 with Ragavan; P2's top card is a Forest."],
+      "expectedOutcome": "You get a Treasure; the Forest is exiled and stays there: it may only be cast, and a land can't be.",
+      "continue": {
+        "throughCombat": true,
+        "toPostcombatMain": true
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Ragavan, Nimble Pilferer"]
+        },
+        "P2": {
+          "libraryTop": ["Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 38
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Treasure"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "exile",
+            "has": ["Forest"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ragavan-dash",
+      "title": "Ragavan: dashed, it attacks at once and returns at the end step",
+      "clauses": [2],
+      "instructions": [
+        "Cast Ragavan for its dash cost {1}{R} with your two Mountains.",
+        "Attack P2 with it."
+      ],
+      "expectedOutcome": "Ragavan has haste and hits P2; at the beginning of the end step it returns to your hand.",
+      "continue": {
+        "throughCombat": true,
+        "toEndStep": true
+      },
+      "seats": {
+        "P1": {
+          "hand": ["Ragavan, Nimble Pilferer"],
+          "battlefield": ["Mountain", "Mountain"]
+        },
+        "P2": {
+          "libraryTop": ["Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Ragavan, Nimble Pilferer .*\\(dash\\)$/"
+        },
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 38
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Ragavan, Nimble Pilferer"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Treasure"],
+            "lacks": ["Ragavan, Nimble Pilferer"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ragavan-cast-normally",
+      "title": "Ragavan: cast for {R}, it has no haste and stays",
+      "clauses": [2],
+      "instructions": ["Cast Ragavan for {R}.", "Pass to the end step."],
+      "expectedOutcome": "Ragavan can't attack this turn and is still on the battlefield after the end step.",
+      "continue": {
+        "throughCombat": true,
+        "toEndStep": true
+      },
+      "seats": {
+        "P1": {
+          "hand": ["Ragavan, Nimble Pilferer"],
+          "battlefield": ["Mountain"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Ragavan, Nimble Pilferer \\(\\{R\\}\\)$/"
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Ragavan, Nimble Pilferer"]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -12,7 +12,10 @@ import type { SeatSetup } from '../match/setup';
 import { parsePlaintextDeck } from '../decks/plaintext';
 import { loadScryfallBulkOrNull } from './scryfall-bulk-fixture';
 import { toOracleCard } from './scryfall';
+import { testerPolicy } from '../match/disclosure';
 
+// Builds its tests from the Scryfall bulk file, which is not tracked (data/README.md).
+// suite-requires: data/scryfall-oracle-cards.json
 const scryfallCards = loadScryfallBulkOrNull();
 // data/scryfall-oracle-cards.json is gitignored and not fetched by CI (see scryfall-bulk-fixture.ts).
 const SKIP = scryfallCards === null;
@@ -58,6 +61,7 @@ function livingSeat(seat: string, commander: OracleCard, cards: OracleCard[]): S
   };
 }
 
+// allowed-skip: needs the Scryfall bulk file (data/scryfall-oracle-cards.json, gitignored)
 describe.skipIf(SKIP)('Living Energy modeled-card and player-experience checks', () => {
   it('models every unique card except the catalog-contained backlog', () => {
     const names = new Set([
@@ -103,6 +107,7 @@ describe.skipIf(SKIP)('Living Energy modeled-card and player-experience checks',
     const { commander, cards } = livingDeckCards();
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
       gameId: 'living-energy-single-player',
       seed: 'living-energy-single-player',
       seats: ['P1', 'P2', 'P3', 'P4'].map((seat) => livingSeat(seat, commander, cards)),
@@ -131,7 +136,7 @@ describe.skipIf(SKIP)('Living Energy modeled-card and player-experience checks',
 
     const chooser = new RandomDecisionProvider('living-energy-human-check');
     const response = chooser.decide(required!.payload.request);
-    session.submitPlayerAction({
+    session.submitPlayerAction('P1', {
       requestId: response.requestId,
       actionId: response.actionId,
       revision: required!.payload.revision,

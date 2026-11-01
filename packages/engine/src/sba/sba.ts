@@ -7,7 +7,9 @@
  * all objects the player owns leave the game, and the game continues among survivors.
  */
 
+import { runCheckpointHook } from '../testing/checkpoint-hook';
 import type { TargetingSource } from '../targets/context';
+import { COMMANDER_DAMAGE_LETHAL } from '@mtg/shared';
 import type { LossReason, ObjectId, PlayerId } from '@mtg/shared';
 import { playerProtectedFromEverything } from '../state/phasing';
 import { queueBecomesTargetedTriggers, queueWardTriggers } from '../actions/apply';
@@ -21,6 +23,7 @@ import {
 import { computeTargetOptions, withinTotalManaValue } from '../actions/legal';
 import type { Ability, Effect } from '../cards/ability';
 import type { GameGen } from '../decisions';
+import { optionAt } from '../decisions';
 import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
 import { debug, emit } from '../log/log';
@@ -137,6 +140,7 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
       ...(s.phasedOut ?? []).map((record) => record.permanent),
     ].filter((p) => p.ownerId === player.id);
     s.phasedOut = (s.phasedOut ?? []).filter((record) => record.permanent.ownerId !== player.id);
+    // zone-mutation: a player who leaves the game takes every object they own with them (CR 800.4a): they leave the game, not to a zone
     s.battlefield = s.battlefield.filter((p) => p.ownerId !== player.id);
     for (const perm of leaving) {
       debug(ctx, 'zoneChange', `${perm.name} leaves the game with its owner ${player.id}`);
@@ -170,9 +174,11 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
       (so) => so.controllerId !== player.id && so.card?.ownerId !== player.id,
     );
     s.pendingTriggers = s.pendingTriggers.filter((t) => t.controllerId !== player.id);
+    // zone-mutation: as above: the departed player's objects leave the game (CR 800.4a)
     s.exile = s.exile.filter((o) => o.ownerId !== player.id);
     // Every other object they own leaves the game too: nothing may still count their graveyard
     // (Tarmogoyf), target a card in it (Reanimate), or count their hand or library.
+    // zone-mutation: as above: the departed player's objects leave the game (CR 800.4a)
     player.hand = [];
     player.library = [];
     player.graveyard = [];
@@ -248,8 +254,10 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
       acted = true;
       return false;
     });
+  // zone-mutation: a card copy outside the stack and battlefield ceases to exist (CR 704.5e); it goes nowhere
   s.exile = removeCopies(s.exile);
   for (const player of s.players) {
+    // zone-mutation: as above: card copies cease to exist (CR 704.5e)
     player.hand = removeCopies(player.hand);
     player.library = removeCopies(player.library);
     player.graveyard = removeCopies(player.graveyard);
@@ -281,7 +289,9 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
     } else if (player.poisonCounters >= 10) {
       markLoss(ctx, player, 'poisonCounters');
       acted = true;
-    } else if (Object.values(player.commanderDamageTaken).some((dmg) => dmg >= 21)) {
+    } else if (
+      Object.values(player.commanderDamageTaken).some((dmg) => dmg >= COMMANDER_DAMAGE_LETHAL)
+    ) {
       markLoss(ctx, player, 'commanderDamage');
       acted = true;
     }
@@ -646,7 +656,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
           description: abilityModeLabel(modes, candidate),
         })),
       };
-      selection = selections[outcome.index] ?? selection;
+      selection = optionAt(selections, outcome, 'sba.pushTriggerOnStack.modes');
     }
     ability = abilityForModes(trigger.ability, selection);
     activeSlots = abilityModeTargetSlots(modes, selection);
@@ -880,7 +890,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
             `${describeTargetForLog(ctx, targetId)}?`,
           options: choices.map((n) => ({ type: 'assignDamage', description: `${n}` })),
         };
-        const amount = choices[outcome.index] ?? 1;
+        const amount = optionAt(choices, outcome, 'sba.pushTriggerOnStack.division');
         divisionAmounts[targetId] = amount;
         remaining -= amount;
       }
@@ -955,7 +965,11 @@ export function* priorityCheckpoint(ctx: GameContext): GameGen<boolean> {
     }
     const placed = yield* placePendingTriggers(ctx);
     if (sbaActed || placed) anything = true;
-    if (!placed && !sbaActed) return anything;
+    if (!placed && !sbaActed) {
+      // Tests and tools check whole-state invariants here (ADR 0034 decision 8).
+      runCheckpointHook(ctx);
+      return anything;
+    }
   }
 }
 

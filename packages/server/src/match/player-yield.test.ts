@@ -1,17 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { Engine } from '@mtg/engine';
 import type { LegalAction, PlayerBoardState, ServerToClientMessage } from '@mtg/shared';
-import { createCardTestScenario } from '../cards/card-test-scenarios';
+import { strictCardTestScenario } from '../cards/card-test-scenarios';
 import {
   SmartYieldMemory,
   isPlayerActionYielded,
   playerYieldKey,
   smartYieldStops,
 } from './player-yield';
+import type { GameStore } from '../db';
+import { GameRecorder, type SqliteLike } from '../db/games';
 import { MatchSession } from './session';
+import { testerPolicy } from './disclosure';
 
 function scenario() {
-  const fixture = createCardTestScenario('kogla-viewer-bounce-and-attack', 'g-smart-yield');
+  const fixture = strictCardTestScenario('kogla-viewer-bounce-and-attack', 'g-smart-yield');
   if (fixture === null) throw new Error('missing combat fixture');
   return fixture;
 }
@@ -157,6 +160,7 @@ describe('smart player yield', () => {
     );
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
       gameId: 'g-smart-yield',
       seed: 'smart-yield',
       seats: fixture.seats,
@@ -178,7 +182,7 @@ describe('smart player yield', () => {
       const first = requests().at(-1)!.payload;
       const cast = first.request.legalActions.find((a) => a.type === 'castSpell')!;
       expect(cast).toBeDefined();
-      session.yieldPlayerAbility({
+      session.yieldPlayerAbility('P1', {
         requestId: first.request.requestId,
         revision: first.revision,
         actionId: cast.id,
@@ -191,19 +195,19 @@ describe('smart player yield', () => {
       expect(requests().filter((m) => m.payload.request.phase === 'precombatMain')).toHaveLength(1);
       // Rejected passes cannot consume the opportunity. Reconnection keeps it offered.
       const pass = combat.request.legalActions.find((a) => a.type === 'pass')!;
-      session.submitPlayerAction({
+      session.submitPlayerAction('P1', {
         requestId: combat.request.requestId,
         revision: combat.revision - 1,
         actionId: pass.id,
       });
       expect(sent.at(-1)?.type).toBe('error');
-      session.resyncPlayer();
+      session.resyncPlayer('P1');
       expect(
         requests()
           .at(-1)!
           .payload.request.legalActions.some((a) => a.type === 'castSpell'),
       ).toBe(true);
-      session.submitPlayerAction({
+      session.submitPlayerAction('P1', {
         requestId: combat.request.requestId,
         revision: combat.revision,
         actionId: pass.id,
@@ -218,15 +222,122 @@ describe('smart player yield', () => {
       expect(requests().filter((m) => m.payload.request.decisionType === 'priority')).toHaveLength(
         3,
       );
-      session.resumePlayerAbility(combat.ignoredAbilities[0]!.key);
+      session.resumePlayerAbility('P1', combat.ignoredAbilities[0]!.key);
       expect(requests().at(-1)!.payload.ignoredAbilities).toEqual([]);
-      session.yieldPlayerAbility({
+      session.yieldPlayerAbility('P1', {
         requestId: combat.request.requestId,
         revision: combat.revision - 1,
         actionId: cast.id,
         mode: 'smart',
       });
       expect(sent.at(-1)?.type).toBe('error');
+    } finally {
+      session.abandon();
+      await session.settled();
+    }
+  });
+
+  it('records a smart-yield pass as auto, the next pass as human, and the bots as bot', async () => {
+    const fixture = scenario();
+    const basic = fixture.seats[0]!.config.cards.find((card) => card.name === 'Forest')!;
+    fixture.seats[0]!.config.cards.push({
+      ...basic,
+      oracleId: 'test-trick',
+      name: 'Combat Trick',
+      manaCost: '{G}' as const,
+      typeLine: 'Instant',
+      supertypes: [],
+      types: ['Instant'],
+      subtypes: [],
+      isBasicLand: false,
+      oracleText: 'Target creature gets +2/+2 until end of turn.',
+      cmc: 1,
+    });
+    const engine = new Engine(
+      {
+        gameId: 'g-sources',
+        seed: 'smart-yield',
+        players: fixture.seats.map((seat) => seat.config),
+      },
+      {
+        preparedScenario: {
+          currentTurnPlayer: 'P1',
+          phase: 'precombatMain',
+          step: null,
+          turnNumber: 3,
+          hand: [{ playerId: 'P1', cardNames: ['Combat Trick'] }],
+          battlefield: [
+            { playerId: 'P1', cardNames: ['Kogla, the Titan Ape', 'Forest', 'Forest'] },
+          ],
+          continueThroughCombat: true,
+        },
+      },
+    );
+    const written: Array<{ requestId: string; seat: number; source: string }> = [];
+    const db: SqliteLike = {
+      query: (sql: string) => ({
+        run: (...args: unknown[]) => {
+          if (sql.includes('INSERT INTO game_decision_sources')) {
+            written.push({
+              requestId: String(args[1]),
+              seat: Number(args[2]),
+              source: String(args[3]),
+            });
+          }
+        },
+        all: () => [],
+        get: () => null,
+      }),
+    };
+    const store = { recorderFor: (id: string) => new GameRecorder(db, id) } as unknown as GameStore;
+    const sent: ServerToClientMessage[] = [];
+    const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
+      gameId: 'g-sources',
+      seed: 'smart-yield',
+      seats: fixture.seats,
+      providerKind: 'random',
+      gameMode: 'singlePlayer',
+      humanSeat: 'P1',
+      engine,
+      store,
+      livePaceMs: 0,
+      send: (message) => sent.push(message),
+    });
+    const requests = () =>
+      sent.filter(
+        (m): m is Extract<ServerToClientMessage, { type: 'playerActionRequired' }> =>
+          m.type === 'playerActionRequired',
+      );
+    session.start();
+    try {
+      await waitFor(() => requests().length > 0);
+      const first = requests().at(-1)!.payload;
+      const cast = first.request.legalActions.find((a) => a.type === 'castSpell')!;
+      session.yieldPlayerAbility('P1', {
+        requestId: first.request.requestId,
+        revision: first.revision,
+        actionId: cast.id,
+        mode: 'smart',
+      });
+      await waitFor(() => requests().at(-1)?.payload.request.step === 'beginCombat');
+      const combat = requests().at(-1)!.payload;
+      const pass = combat.request.legalActions.find((a) => a.type === 'pass')!;
+      session.submitPlayerAction('P1', {
+        requestId: combat.request.requestId,
+        revision: combat.revision,
+        actionId: pass.id,
+      });
+      await waitFor(() => requests().at(-1)?.payload.request.decisionType === 'declareAttackers');
+
+      const sourceOf = (requestId: string) =>
+        written.find((row) => row.requestId === requestId)?.source;
+      expect(sourceOf(first.request.requestId)).toBe('auto');
+      expect(sourceOf(combat.request.requestId)).toBe('human');
+      // The human seat's rows are human or auto; any other seat's are bot.
+      for (const row of written) {
+        expect(row.seat === 1 ? ['human', 'auto'] : ['bot']).toContain(row.source);
+      }
     } finally {
       session.abandon();
       await session.settled();
@@ -411,7 +522,7 @@ describe('smart player yield', () => {
   });
 
   it('skips utility priority until the last opponent end step, then crosses into your upkeep after one pass', async () => {
-    const fixture = createCardTestScenario(
+    const fixture = strictCardTestScenario(
       'war-room-viewer-dynamic-life-activation',
       'g-utility-yield',
     )!;
@@ -436,6 +547,7 @@ describe('smart player yield', () => {
     );
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
       gameId: 'g-utility-yield',
       seed: 'utility-yield',
       seats: fixture.seats,
@@ -446,6 +558,8 @@ describe('smart player yield', () => {
       livePaceMs: 0,
       send: (message) => sent.push(message),
     });
+    // This test reads the raw `data` the connection asked for (ADR 0032 decision 7).
+    session.setRawActionData('P1', true);
     const requests = () =>
       sent.filter(
         (message): message is Extract<ServerToClientMessage, { type: 'playerActionRequired' }> =>
@@ -457,7 +571,7 @@ describe('smart player yield', () => {
       const first = requests().at(-1)!.payload;
       const draw = first.request.legalActions.find((action) => action.type === 'activateAbility')!;
       expect(draw.data?.['abilityEffectOps']).toEqual(['draw']);
-      session.yieldPlayerAbility({
+      session.yieldPlayerAbility('P1', {
         requestId: first.request.requestId,
         revision: first.revision,
         actionId: draw.id,
@@ -470,7 +584,7 @@ describe('smart player yield', () => {
       expect(lastEnd.request.legalActions.some((action) => action.type === 'activateAbility')).toBe(
         true,
       );
-      session.submitPlayerAction({
+      session.submitPlayerAction('P1', {
         requestId: lastEnd.request.requestId,
         revision: lastEnd.revision,
         actionId: lastEnd.request.legalActions.find((action) => action.type === 'pass')!.id,

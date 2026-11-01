@@ -12,6 +12,8 @@ import { EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS } from './token-triumph-suppor
 
 registerTOKEN_TRIUMPHOverrides();
 
+// Builds its tests from the Scryfall bulk file, which is not tracked (data/README.md).
+// suite-requires: data/scryfall-oracle-cards.json
 const scryfallCards = loadScryfallBulkOrNull();
 // data/scryfall-oracle-cards.json is gitignored and not fetched by CI (see scryfall-bulk-fixture.ts).
 const SKIP = scryfallCards === null;
@@ -43,6 +45,7 @@ function loadTokenTriumphDeckCards(): { commanderCard: OracleCard; deckCards: Or
   return { commanderCard, deckCards };
 }
 
+// allowed-skip: needs the Scryfall bulk file (data/scryfall-oracle-cards.json, gitignored)
 describe.skipIf(SKIP)('Token Triumph Deck — L1-L7 Test Suite', () => {
   // `describe.skipIf` still calls this factory to collect its `it`s (only the `it` bodies
   // themselves are skipped) — so without this guard, `loadTokenTriumphDeckCards()` below would
@@ -74,7 +77,7 @@ describe.skipIf(SKIP)('Token Triumph Deck — L1-L7 Test Suite', () => {
     const engine = makeEngine([{ cards: deckCards }, { cards: opponentDeck }], {
       seed: 'token-triumph-l3-seed',
     });
-    const provider = new RuleBasedProvider([whenChoose({ option: /./ })]);
+    const provider = new RuleBasedProvider([whenChoose({ option: /./ })], { fallback: 'first' });
     for (let i = 0; i < 20_000; i++) {
       const step = engine.advance();
       if (step.kind === 'gameOver') break;
@@ -103,7 +106,7 @@ describe.skipIf(SKIP)('Token Triumph Deck — L1-L7 Test Suite', () => {
     const engine = makeEngine([{ cards: playableDeck }, { cards: opponentDeck }], {
       seed: 'token-triumph-supported-subset',
     });
-    const provider = new RuleBasedProvider([whenChoose({ option: /./ })]);
+    const provider = new RuleBasedProvider([whenChoose({ option: /./ })], { fallback: 'first' });
     for (let i = 0; i < 20_000; i++) {
       const step = engine.advance();
       if (step.kind === 'gameOver') break;

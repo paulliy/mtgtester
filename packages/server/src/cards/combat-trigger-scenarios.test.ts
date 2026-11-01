@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { NO_ATTACK_TARGET } from '@mtg/shared';
 import type { DecisionRequest, DecisionResponse, OracleCard, PlayerId } from '@mtg/shared';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 import {
   COMBAT_TRIGGER_SCENARIO_IDS,
   combatTriggerScenarioSubject,
@@ -13,7 +13,7 @@ const pins = JSON.parse(
   readFileSync('packages/engine/tests/fixtures/combat-trigger-oracle.json', 'utf8'),
 ) as { cards: { card: OracleCard; sha256: string }[] };
 const targetFor = (
-  scenario: ReturnType<typeof createCardTestScenario>,
+  scenario: ReturnType<typeof strictCardTestScenario>,
   action: DecisionRequest['legalActions'][number],
   target: string,
 ) =>
@@ -32,7 +32,7 @@ const targetFor = (
   });
 
 function run(id: (typeof COMBAT_TRIGGER_SCENARIO_IDS)[number]) {
-  const scenario = createCardTestScenario(id, `combat-trigger-${id}`)!;
+  const scenario = strictCardTestScenario(id, `combat-trigger-${id}`)!;
   const overrides = scenario.decisionProviderOverrides ?? {};
   let decisions = 0;
   let castSubject = false;
@@ -166,7 +166,7 @@ describe('pinned combat trigger viewer scenarios', () => {
   });
 
   it.each(COMBAT_TRIGGER_SCENARIO_IDS)(
-    '%s creates a bounded real viewer route and resolves its outcome',
+    '%s — creates a bounded real viewer route and resolves its outcome',
     (id) => {
       const {
         scenario,

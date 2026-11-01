@@ -86,7 +86,7 @@ describe('Harmonic Prodigy', () => {
     }
   });
 
-  it('harmonic-prowess-noncreature-only triggers for noncreature but not creature spells', () => {
+  it('harmonic-prowess-noncreature-only — triggers for noncreature but not creature spells', () => {
     const ctx = pod('harmonic-prowess-filter');
     spawn(ctx, 'P1', harmonic);
     castEvent(ctx, 'P1', oracle({ name: 'Test Instant', typeLine: 'Instant', manaCost: '{0}' }));
@@ -97,7 +97,7 @@ describe('Harmonic Prodigy', () => {
     expect(ctx.state.pendingTriggers).toHaveLength(0);
   });
 
-  it('harmonic-own-shaman-trigger-doubled queues and resolves the trigger twice', () => {
+  it('harmonic-own-shaman-trigger-doubled — queues and resolves the trigger twice', () => {
     const ctx = pod('harmonic-shaman');
     spawn(ctx, 'P1', harmonic);
     const shaman = spawn(ctx, 'P1', triggeredCreature('Entry Shaman', 'Shaman'));
@@ -109,7 +109,7 @@ describe('Harmonic Prodigy', () => {
     expect(ctx.state.players[0]!.hand).toHaveLength(handBefore + 2);
   });
 
-  it('harmonic-other-own-wizard-trigger-doubled but own Wizard prowess is not self-doubled', () => {
+  it('harmonic-other-own-wizard-trigger-doubled — but own Wizard prowess is not self-doubled', () => {
     const ctx = pod('harmonic-wizard-and-self');
     const prodigy = spawn(ctx, 'P1', harmonic);
     const wizard = spawn(ctx, 'P1', triggeredCreature('Entry Wizard', 'Wizard'));
@@ -119,11 +119,13 @@ describe('Harmonic Prodigy', () => {
 
     castEvent(ctx, 'P1', oracle({ name: 'Prowess Instant', typeLine: 'Instant', manaCost: '{0}' }));
     expect(ctx.state.pendingTriggers).toHaveLength(1);
-    pump(runPrioritySequence(ctx));
+    const { decisions } = pump(runPrioritySequence(ctx));
+    // Prowess is mandatory: nothing asks "use it?" before the pump.
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(computeCharacteristics(ctx, prodigy)).toMatchObject({ power: 2, toughness: 4 });
   });
 
-  it('harmonic-ineligible-and-opponent-sources are not doubled', () => {
+  it('harmonic-ineligible-and-opponent-sources — are not doubled', () => {
     const ctx = pod('harmonic-ineligible');
     spawn(ctx, 'P1', harmonic);
     const soldier = spawn(ctx, 'P1', triggeredCreature('Entry Soldier', 'Soldier'));
@@ -136,7 +138,7 @@ describe('Harmonic Prodigy', () => {
     expect(ctx.state.pendingTriggers).toHaveLength(1);
   });
 
-  it('harmonic-multiple-effects-exact-count adds one copy per Prodigy without recursion', () => {
+  it('harmonic-multiple-effects-exact-count — adds one copy per Prodigy without recursion', () => {
     const ctx = pod('harmonic-multiple');
     spawn(ctx, 'P1', harmonic);
     spawn(ctx, 'P1', harmonic);
@@ -151,7 +153,7 @@ describe('Harmonic Prodigy', () => {
     expect(ctx.state.pendingTriggers).toHaveLength(4);
   });
 
-  it('harmonic-normal-cast resolves through normal mana, legality, and stack paths', () => {
+  it('harmonic-normal-cast — resolves through normal mana, legality, and stack paths', () => {
     const ctx = pod('harmonic-cast');
     const player = ctx.state.players[0]!;
     const spell = conjure(ctx, 'P1', harmonic, 'hand');

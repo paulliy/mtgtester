@@ -1,6 +1,6 @@
 # Plan: faster card authoring and fail-loud execution
 
-Status: Proposed. Baseline: `8b93725` (2026-10-27).
+Status: In progress (ADRs accepted 2026-10-29); phases 0 to 2 delivered on PR #44. Baseline: `8b93725` (2026-10-27).
 
 Implements [ADR 0033](../decisions/0033-forge-informed-card-authoring.md) (faster card authoring)
 and [ADR 0034](../decisions/0034-fail-loud-execution-and-strict-tests.md) (fail-loud execution and
@@ -194,6 +194,9 @@ byte-identical.
 3. Merge a duplicate rule-static family when one of its cards is touched.
 4. Measure both groups with the phase 0 rule: commit-time span per card, engine lines outside
    `cards/` and the per-op tables, and follow-up fixes within 30 days.
+
+Done 2026-10-31; see the [pilot review](../reviews/card-authoring-pilot-2026-10-31.md). The time
+target was missed (27.6 against 23.4 minutes); the other targets were met.
 
 Targets: the new-workflow group's median time per card is at least 25% below the control's and its
 follow-up fixes are no more than the control's; no new-workflow card adds a card-named op; every

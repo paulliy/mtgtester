@@ -43,8 +43,9 @@ import {
   type AiClient,
 } from '../ai';
 import { MatchSession } from './session';
-import { createCardTestScenario } from '../cards/card-test-scenarios';
+import { strictCardTestScenario } from '../cards/card-test-scenarios';
 import type { SeatSetup } from './setup';
+import { testerPolicy } from './disclosure';
 
 function forest(n: number): OracleCard {
   return {
@@ -120,6 +121,7 @@ interface Harness {
 function harness(options: { livePaceMs?: number; playbackMode?: 'live' | 'manual' } = {}): Harness {
   const sent: ServerToClientMessage[] = [];
   const session = new MatchSession({
+    disclosure: testerPolicy('spectator'),
     gameId: 'g-session-test',
     seed: 'session-test',
     seats: seats(),
@@ -151,6 +153,7 @@ describe('MatchSession — live pacing and the compute-ahead cap (brief §10.1)'
     let surfaced: DecisionRequest | undefined;
     let abandonedInSend = false;
     const session = new MatchSession({
+      disclosure: testerPolicy('spectator'),
       gameId: 'g-strategist-event-abandon',
       seed: 'strategist-event-abandon',
       seats: seats(),
@@ -316,6 +319,7 @@ describe('MatchSession — live pacing and the compute-ahead cap (brief §10.1)'
     expect(
       () =>
         new MatchSession({
+          disclosure: testerPolicy('spectator'),
           gameId: 'ordinary-match-provider-override',
           seed: 'ordinary-match-provider-override',
           seats: seats(),
@@ -395,6 +399,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
   it('echoes the rejected submission request and revision to the player', async () => {
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
       gameId: 'g-player-rejection',
       seed: 'player-rejection',
       seats: seats(),
@@ -416,7 +421,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
       revision: request.payload.revision,
       actionId: 999_999,
     };
-    session.submitPlayerAction(rejected);
+    session.submitPlayerAction('P1', rejected);
     expect(sent.at(-1)).toEqual({
       type: 'error',
       payload: {
@@ -432,6 +437,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
   it('waits without a timeout for the human and advances only after submission', async () => {
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
       gameId: 'g-player-test',
       seed: 'player-test',
       seats: seats(),
@@ -458,7 +464,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
       countBefore,
     );
 
-    session.submitPlayerAction({
+    session.submitPlayerAction('P1', {
       requestId: first!.payload.request.requestId,
       actionId: first!.payload.request.legalActions[0]!.id,
       revision: first!.payload.revision,
@@ -478,6 +484,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
   it('offers the human its mana abilities, and never stops for them alone (ADR 0030)', async () => {
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
       gameId: 'g-player-mana',
       seed: 'player-mana',
       seats: seats(),
@@ -518,7 +525,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
         expect(types.every((type) => quiet.includes(type))).toBe(false);
       }
       const response = chooser.decide(request);
-      session.submitPlayerAction({
+      session.submitPlayerAction('P1', {
         requestId: response.requestId,
         actionId: response.actionId,
         revision: next.payload.revision,
@@ -530,9 +537,101 @@ describe('MatchSession - Phase 6 single-player control', () => {
     expect(offered).toBe(true);
   }, 15_000);
 
+  it('presents every action it sends, and none it removed with a smart yield (ADR 0032)', async () => {
+    const sent: ServerToClientMessage[] = [];
+    const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
+      gameId: 'g-player-presentation',
+      seed: 'player-presentation',
+      seats: seats(),
+      providerKind: 'random',
+      gameMode: 'singlePlayer',
+      humanSeat: 'P1',
+      turnCap: 40,
+      livePaceMs: 0,
+      send: (message) => sent.push(message),
+    });
+    type Required = Extract<ServerToClientMessage, { type: 'playerActionRequired' }>;
+    const requests = (): Required[] =>
+      sent.filter((message): message is Required => message.type === 'playerActionRequired');
+    const chooser = new RandomDecisionProvider('browser-presentation');
+    // Land first, then pass: the next time the seat has priority it has a land drop and a cast.
+    let consumed = 0;
+    let checked = false;
+    session.start();
+
+    const deadline = Date.now() + 10_000;
+    while (!checked && Date.now() < deadline) {
+      const next = requests()[consumed];
+      if (next === undefined) {
+        await new Promise((resolve) => setTimeout(resolve, 1));
+        continue;
+      }
+      consumed += 1;
+      const { request, revision } = next.payload;
+      // Every frame's menu is presented in full, with the engine's prompt in player terms.
+      expect(request.presentation?.playerPrompt).toBeDefined();
+      expect(request.presentation?.playerPrompt).not.toMatch(
+        /\((precombatMain|postcombatMain|beginning|combat|ending)/,
+      );
+      if (request.decisionType === 'priority') {
+        expect(request.presentation?.layout).toBe('priority');
+        for (const action of request.legalActions) {
+          expect(request.presentation?.actions?.[action.id]?.verb, action.description).toBeTruthy();
+        }
+      }
+      const cast = request.legalActions.find((action) => action.type === 'castSpell');
+      const another = request.legalActions.some(
+        (action) => action.id !== cast?.id && action.type === 'playLand',
+      );
+      if (request.decisionType === 'priority' && cast !== undefined && another) {
+        expect(request.presentation?.actions?.[cast.id]?.label).toBe('Cast');
+        session.yieldPlayerAbility('P1', {
+          requestId: request.requestId,
+          revision,
+          actionId: cast.id,
+          mode: 'smart',
+        });
+        // The same request goes out again without the yielded cast, and without its entry.
+        const resent = requests().filter(
+          (message) => message.payload.request.requestId === request.requestId,
+        );
+        const again = resent.at(-1)!.payload.request;
+        expect(resent.length).toBeGreaterThan(1);
+        expect(again.legalActions.map((action) => action.id)).not.toContain(cast.id);
+        expect(
+          Object.keys(again.presentation?.actions ?? {})
+            .map(Number)
+            .sort(),
+        ).toEqual(again.legalActions.map((action) => action.id).sort());
+        checked = true;
+        break;
+      }
+      const response = chooser.decide(request);
+      const land = request.legalActions.find((action) => action.type === 'playLand');
+      const pass = request.legalActions.find((action) => action.type === 'pass');
+      const actionId =
+        request.decisionType === 'priority'
+          ? (land ?? pass ?? request.legalActions[0]!).id
+          : response.actionId;
+      session.submitPlayerAction('P1', {
+        requestId: response.requestId,
+        actionId,
+        revision,
+        ...(request.decisionType !== 'priority' && response.targets !== undefined
+          ? { targets: response.targets }
+          : {}),
+      });
+    }
+    session.abandon();
+    await session.settled();
+    expect(checked).toBe(true);
+  }, 15_000);
+
   it('refuses timeline seeking before a player game has ended', () => {
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
       gameId: 'g-player-seek',
       seed: 'player-seek',
       seats: seats(),
@@ -552,6 +651,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
   it('plays through with a human provider and restores the unlocked replay on resync', async () => {
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
       gameId: 'g-player-complete',
       seed: 'player-complete',
       seats: seats(),
@@ -579,7 +679,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
       }
       consumedRequests += 1;
       const response = chooser.decide(next.payload.request);
-      session.submitPlayerAction({
+      session.submitPlayerAction('P1', {
         requestId: response.requestId,
         actionId: response.actionId,
         revision: next.payload.revision,
@@ -599,7 +699,7 @@ describe('MatchSession - Phase 6 single-player control', () => {
 
     const replayCount = sent.filter((message) => message.type === 'replayUnlocked').length;
     const gameOverCount = sent.filter((message) => message.type === 'gameOver').length;
-    session.resyncPlayer();
+    session.resyncPlayer('P1');
     expect(sent.filter((message) => message.type === 'replayUnlocked')).toHaveLength(
       replayCount + 1,
     );
@@ -607,7 +707,8 @@ describe('MatchSession - Phase 6 single-player control', () => {
   }, 15_000);
 });
 
-describe('MatchSession — seeking (brief §10.1)', () => {
+// Each plays a whole game, like the file's other full-game tests.
+describe('MatchSession — seeking (brief §10.1)', { timeout: 15_000 }, () => {
   it('reports which action the board it sent belongs to', async () => {
     const { session, sent, snapshots } = harness({ livePaceMs: 0 });
     session.start();
@@ -676,6 +777,7 @@ describe('MatchSession — post-game reflection stays out of the way when off', 
   } {
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('spectator'),
       gameId: 'g-reflection-off',
       seed: 'reflection-off',
       seats: seats(),
@@ -757,6 +859,7 @@ describe('MatchSession — presentation survives a gap in turn numbering', () =>
   it('presents through to the final turn at pace 0 without hanging, even with a deck-out gap', async () => {
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('spectator'),
       gameId: 'g-presentation-gap',
       seed: 'reflection-off', // same fixture as above — its 20-card decks run out well before turn 200
       seats: seats(),
@@ -804,10 +907,11 @@ describe('MatchSession — a prepared scenario flushes its own outcome before th
     "War Room: Pay life equal to your commanders' color identity colors: draw a card";
 
   function labSession(gameId: GameId) {
-    const scenario = createCardTestScenario('war-room-viewer-dynamic-life-activation', gameId);
+    const scenario = strictCardTestScenario('war-room-viewer-dynamic-life-activation', gameId);
     if (scenario === null) throw new Error('missing War Room lab scenario');
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({
+      disclosure: testerPolicy('singlePlayer'),
       gameId,
       seed: scenario.seed,
       seats: scenario.seats,
@@ -848,7 +952,7 @@ describe('MatchSession — a prepared scenario flushes its own outcome before th
       (action) => action.type === 'activateAbility' && action.description === ACTIVATION,
     );
     expect(activation).toBeDefined();
-    session.submitPlayerAction({
+    session.submitPlayerAction('P1', {
       requestId: opening.request.requestId,
       actionId: activation!.id,
       revision: opening.revision,

@@ -178,7 +178,7 @@ test.describe('PR09 permanent Card Test Lab scenarios', () => {
               'PR09 Viewer Sacrifice Artifact',
             );
             await passUntilText(
-              page.locator('.human-zone [aria-label="Global counters"]'),
+              page.locator('.bar-resources [aria-label="Global counters"]'),
               'ENERGY6',
             );
             await expect(

@@ -1,6 +1,6 @@
 # ADR 0032: Server-computed presentation
 
-Status: Proposed
+Status: Accepted (2026-10-29)
 
 Date: 2026-10-27
 

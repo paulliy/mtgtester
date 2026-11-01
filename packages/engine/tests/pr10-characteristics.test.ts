@@ -179,8 +179,15 @@ describe('PR10.28 Xenagos, God of Revels', () => {
     expect(legal).not.toContain(god.id);
     expect(legal).not.toContain(rival.id);
     queueStepTriggers(ctx, 'beginningOfCombat');
-    putPendingTriggersOnStack(ctx, () => ({ index: 0, targets: new Map([[0, ally.id]]) }));
-    settle(ctx);
+    const asked: string[] = [];
+    const answer = (decision: { decisionType: string }) => {
+      asked.push(decision.decisionType);
+      return { index: 0, targets: new Map([[0, ally.id]]) };
+    };
+    putPendingTriggersOnStack(ctx, answer);
+    settle(ctx, answer);
+    // The trigger is mandatory: only its target is chosen, no "use this ability?" yes/no.
+    expect(asked).not.toContain('optionalTrigger');
     const chars = computeCharacteristics(ctx, ally);
     expect([chars.power, chars.toughness]).toEqual([6, 5]);
     expect(chars.keywords).toContain('haste');

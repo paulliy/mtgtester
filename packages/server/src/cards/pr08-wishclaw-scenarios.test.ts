@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { formatPlayerLog } from '@mtg/engine';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 
 function replay(mode: 'cast-search-and-gift' | 'empty-library' | 'off-turn') {
-  const scenario = createCardTestScenario(
+  const scenario = strictCardTestScenario(
     `wishclaw-talisman-viewer-${mode}`,
     'pr08-wishclaw-replay',
   )!;

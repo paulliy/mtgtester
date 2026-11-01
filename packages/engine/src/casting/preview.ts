@@ -54,8 +54,10 @@ export function castingPreviewContext(
     ...(spellDefinition === undefined ? {} : { spellDefinition }),
   };
   const without = (cards: EngineCardObject[]) => cards.filter((entry) => entry !== card);
+  // A preview is speculative: it records nothing in the diagnostics sink (ADR 0034 decision 4).
+  const { diagnostics: _diagnostics, ...game } = ctx;
   return {
-    ...ctx,
+    ...game,
     state: {
       ...ctx.state,
       exile: without(ctx.state.exile),

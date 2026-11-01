@@ -26,6 +26,8 @@ function runDirectory(): string {
 }
 
 const dbPath = join(runDirectory(), 'setup.sqlite');
+// Permit the installed system browser in managed development environments, as the lab config does.
+const chromiumExecutable = process.env['PLAYWRIGHT_CHROMIUM_EXECUTABLE'];
 
 export default defineConfig({
   testDir: './apps/web/e2e',
@@ -37,7 +39,12 @@ export default defineConfig({
   globalTeardown: './apps/web/e2e/setup-teardown.ts',
   workers: 1,
   timeout: 120_000,
-  use: { baseURL: 'http://127.0.0.1:5173' },
+  use: {
+    baseURL: 'http://127.0.0.1:5173',
+    ...(chromiumExecutable === undefined
+      ? {}
+      : { launchOptions: { executablePath: chromiumExecutable } }),
+  },
   webServer: [
     {
       // The committed Oracle fixture, not the gitignored Scryfall bulk file, so this runs in CI.

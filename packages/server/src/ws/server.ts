@@ -7,6 +7,7 @@
  */
 
 import {
+  assertNever,
   isClientToServerMessage,
   isPlayerSeatId,
   parseStrictJson,
@@ -14,8 +15,10 @@ import {
   type StrictJsonFailure,
 } from '@mtg/shared';
 import type {
+  ClientCapabilities,
   ClientToServerMessage,
   GameReportBuild,
+  GameMode,
   GameReportCardData,
   GameStartedPayload,
   PlayerId,
@@ -29,12 +32,118 @@ import type { SupportedPool } from '../cards/pool';
 import type { GameStore } from '../db';
 import type { BannedList } from '../decks/banned';
 import type { ReportSeatSource } from '../match/report';
+import type { ReplayIdentity } from '../match/replay-config';
 import { MatchSession } from '../match/session';
+import { withoutActionData } from '../match/presentation';
+import { disclosedSeatSummaries, seedLabel, testerPolicy } from '../match/disclosure';
 import { BatchManager, validateBatch } from '../batch/manager';
 import { setupSeats } from '../match/setup';
 import { previewMatchup, type PreviewRequest } from '../match/preview';
 import { createCardTestScenario, listCardTestScenarios } from '../cards/card-test-scenarios';
 import { projectSetupProblems, SETUP_REFUSED_MESSAGE } from './setup-privacy';
+
+function replayOption(identity: ReplayIdentity | undefined): { replay?: ReplayIdentity } {
+  return identity === undefined ? {} : { replay: identity };
+}
+
+/**
+ * Where a game's frames go. `GameServer` runs spectator and single-player games only; a table
+ * runs in `serve:table`, so asking this about one is a bug and throws.
+ *
+ * flow: player socket, session token and start-frame routing (m1 rows 918, 928, 929, 950).
+ */
+function routeOf(mode: GameMode): 'player' | 'broadcast' {
+  switch (mode) {
+    case 'singlePlayer':
+      return 'player';
+    case 'spectator':
+      return 'broadcast';
+    case 'table':
+      throw new Error('GameServer does not run table games');
+    default:
+      return assertNever(mode, 'game server route');
+  }
+}
+
+/**
+ * Whether a requester holds one seat, so its refusals are projected to that seat instead of
+ * naming every failing deck (m1 rows 562, 863, 886, following 824).
+ *
+ * fence: `'table'` takes the restrictive answer, as single-player.
+ */
+function holdsOneSeat(mode: GameMode): boolean {
+  switch (mode) {
+    case 'singlePlayer':
+    case 'table':
+      return true;
+    case 'spectator':
+      return false;
+    default:
+      return assertNever(mode, 'setup refusal projection');
+  }
+}
+
+/**
+ * Whether a player can resume a session of this mode (m1 row 680).
+ *
+ * flow: unreachable for `'table'`, which `GameServer` refuses to start; refused if it ever is.
+ */
+function resumable(mode: GameMode): boolean {
+  switch (mode) {
+    case 'singlePlayer':
+      return true;
+    case 'spectator':
+    case 'table':
+      return false;
+    default:
+      return assertNever(mode, 'game resume');
+  }
+}
+
+/**
+ * Whether a session of this mode has a "Copy game report" (m1 row 441).
+ *
+ * fence: only a single-player session does; a table is a 404, like a spectator game.
+ */
+function hasGameReport(mode: GameMode): boolean {
+  switch (mode) {
+    case 'singlePlayer':
+      return true;
+    case 'spectator':
+    case 'table':
+      return false;
+    default:
+      return assertNever(mode, 'game report availability');
+  }
+}
+
+/**
+ * The preview-cache key for a start request, so a preview and the start that redeems it compare
+ * the same fields in the same order. The human seat joins it only when the mode has one.
+ *
+ * flow: the human seat in a preview or start request (m1 rows 402, 841).
+ */
+function previewRequestFor(
+  payload: StartGamePayload,
+  seats: StartGamePayload['seats'],
+  seed: string,
+): PreviewRequest {
+  const base = {
+    seats,
+    seed,
+    providerKind: payload.providerKind,
+    gameMode: payload.gameMode ?? 'spectator',
+  } as const;
+  switch (payload.gameMode) {
+    case undefined:
+    case 'spectator':
+      return base;
+    case 'singlePlayer':
+      return { ...base, humanSeat: payload.humanSeat };
+    default:
+      return assertNever(payload, 'preview request mode');
+  }
+}
 
 export interface GameServerDeps {
   pool: SupportedPool;
@@ -118,6 +227,13 @@ export function isAllowedLocalRequest(
 
 export class GameServer {
   private readonly sockets = new Set<ServerWebSocket<SocketData>>();
+  /**
+   * What each connection declared in its latest `startGame`, `startCardTestScenario` or
+   * `resumeGame` (ADR 0032 decision 7). A connection that declared nothing is not in the map. A
+   * resumed connection is a new socket with its own declaration, so nothing carries over from the
+   * one it replaces.
+   */
+  private readonly capabilities = new WeakMap<ServerWebSocket<SocketData>, ClientCapabilities>();
   private session: MatchSession | null = null;
   private startingGame = false;
   private startingSocket: ServerWebSocket<SocketData> | null = null;
@@ -125,6 +241,8 @@ export class GameServer {
   private orphanTimer: ReturnType<typeof setTimeout> | null = null;
   private playerIdleTimer: ReturnType<typeof setTimeout> | null = null;
   private playerSocket: ServerWebSocket<SocketData> | null = null;
+  /** The seat `playerSocket` plays: the one human seat of the single-player game it holds. */
+  private playerSeat: PlayerId | null = null;
   private sessionToken: string | null = null;
   private startedPayload: GameStartedPayload | null = null;
   /** How each seat's deck was chosen, and the lab scenario if any — for "Copy game report". */
@@ -150,10 +268,9 @@ export class GameServer {
 
   /** Broadcast to every connected spectator. One game at a time (brief §15). */
   private broadcast(message: ServerToClientMessage): void {
-    const frame = JSON.stringify(message);
     for (const socket of this.sockets) {
       try {
-        socket.send(frame);
+        socket.send(this.frameFor(socket, message));
       } catch {
         // A socket that died between the readyState check and the send is not an error worth
         // failing a game over; the close handler removes it.
@@ -161,9 +278,24 @@ export class GameServer {
     }
   }
 
+  private wantsRawActionData(socket: ServerWebSocket<SocketData>): boolean {
+    return this.capabilities.get(socket)?.rawActionData === true;
+  }
+
+  /** The frame as this connection may receive it: `decisionPending` loses raw `data` unless asked. */
+  private frameFor(socket: ServerWebSocket<SocketData>, message: ServerToClientMessage): string {
+    if (message.type === 'decisionPending' && !this.wantsRawActionData(socket)) {
+      return JSON.stringify({
+        ...message,
+        payload: { ...message.payload, request: withoutActionData(message.payload.request) },
+      });
+    }
+    return JSON.stringify(message);
+  }
+
   private sendTo(socket: ServerWebSocket<SocketData>, message: ServerToClientMessage): void {
     try {
-      socket.send(JSON.stringify(message));
+      socket.send(this.frameFor(socket, message));
     } catch {
       // The close callback owns connection state. A send racing with it must not fail a match.
     }
@@ -293,11 +425,7 @@ export class GameServer {
           const gameId = decodeURIComponent(annotationMatch[1] ?? '');
           // Same lock as the debug route: in an unfinished player game this would hand the human
           // exactly the opponent reasoning the live stream is withholding (ADR 0022 §3).
-          if (
-            this.startedPayload?.gameId === gameId &&
-            this.session?.getGameMode() === 'singlePlayer' &&
-            this.session.runner.getStatus() !== 'finished'
-          ) {
+          if (this.holdsUnfinishedGame(gameId)) {
             return Response.json(
               { message: 'AI reasoning unlocks after the player game ends.' },
               { status: 403 },
@@ -331,11 +459,7 @@ export class GameServer {
           if (this.deps.store === undefined)
             return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
           const gameId = decodeURIComponent(debugMatch[1] ?? '');
-          if (
-            this.startedPayload?.gameId === gameId &&
-            this.session?.getGameMode() === 'singlePlayer' &&
-            this.session.runner.getStatus() !== 'finished'
-          ) {
+          if (this.holdsUnfinishedGame(gameId)) {
             return Response.json(
               { message: 'Full debug data unlocks after the player game ends.' },
               { status: 403 },
@@ -367,6 +491,30 @@ export class GameServer {
   }
 
   /**
+   * Whether `gameId` is a game in progress whose reasoning and debug data would hand its players
+   * what the live stream withholds (ADR 0022 §3).
+   *
+   * fence: annotations and debug routes (m1 rows 298, 336). They are open from the start only
+   * when the policy releases both live; otherwise they wait for the game to end, as single-player.
+   */
+  private holdsUnfinishedGame(gameId: string): boolean {
+    const session = this.session;
+    if (this.startedPayload?.gameId !== gameId || session === null) return false;
+    const mode = session.getGameMode();
+    switch (mode) {
+      case 'spectator':
+      case 'singlePlayer':
+      case 'table': {
+        const policy = session.getDisclosurePolicy();
+        if (policy.annotations === 'live' && policy.debugEvents) return false;
+        return session.runner.getStatus() !== 'finished';
+      }
+      default:
+        return assertNever(mode, 'unfinished game lock');
+    }
+  }
+
+  /**
    * `POST /api/setup-preview`. The only setup entry point that does not arrive as a `/ws` frame,
    * so it needs the same strict read: `request.json()` resolves a repeated key by last-wins, and a
    * body carrying two different `humanSeat` values would otherwise be previewed — and cached as a
@@ -392,15 +540,25 @@ export class GameServer {
     if (!isClientToServerMessage({ type: 'startGame', payload: body }))
       return Response.json({ message: 'Invalid setup selections.' }, { status: 400 });
     const selected = body as StartGamePayload;
+    // flow: tables run only in `serve:table` (m1 row 402). The parser never admits `'table'`;
+    // this holds the line if a caller reaches here some other way.
+    const requestedMode = (selected.gameMode ?? 'spectator') as GameMode;
+    switch (requestedMode) {
+      case 'table':
+        return Response.json({ message: SETUP_REFUSED_MESSAGE }, { status: 400 });
+      case 'spectator':
+      case 'singlePlayer':
+        break;
+      default:
+        assertNever(requestedMode, 'setup preview mode');
+    }
     if (selected.seats.length !== SEAT_COUNT)
       return Response.json({ message: 'Exactly four seats are required.' }, { status: 400 });
-    const previewRequest: PreviewRequest = {
-      seats: selected.seats,
-      seed: selected.seed?.trim() || crypto.randomUUID().slice(0, 8),
-      providerKind: selected.providerKind,
-      gameMode: selected.gameMode ?? 'spectator',
-      ...(selected.gameMode === 'singlePlayer' && { humanSeat: selected.humanSeat }),
-    };
+    const previewRequest = previewRequestFor(
+      selected,
+      selected.seats,
+      selected.seed?.trim() || crypto.randomUUID().slice(0, 8),
+    );
     const preview = await previewMatchup(previewRequest, this.deps);
     const previewId = crypto.randomUUID();
     for (const [id, entry] of this.setupPreviews)
@@ -438,7 +596,7 @@ export class GameServer {
     const session = this.session;
     if (
       session === null ||
-      session.getGameMode() !== 'singlePlayer' ||
+      !hasGameReport(session.getGameMode()) ||
       this.sessionToken === null ||
       token !== this.sessionToken
     )
@@ -504,6 +662,14 @@ export class GameServer {
     }
 
     const message: ClientToServerMessage = parsed;
+    if (
+      message.type === 'startGame' ||
+      message.type === 'startCardTestScenario' ||
+      message.type === 'resumeGame'
+    ) {
+      // The connection's declaration, read afresh from each of the messages that carry one.
+      this.capabilities.set(socket, { ...message.payload.capabilities });
+    }
     switch (message.type) {
       case 'startCardTestScenario':
         if (this.deps.cardTestLab !== true) {
@@ -558,12 +724,11 @@ export class GameServer {
           this.sendTo(socket, {
             type: 'error',
             payload: {
-              message:
-                message.payload.gameMode === 'singlePlayer'
-                  ? SETUP_REFUSED_MESSAGE
-                  : error instanceof Error
-                    ? error.message
-                    : String(error),
+              message: holdsOneSeat(message.payload.gameMode ?? 'spectator')
+                ? SETUP_REFUSED_MESSAGE
+                : error instanceof Error
+                  ? error.message
+                  : String(error),
             },
           });
         } finally {
@@ -603,6 +768,7 @@ export class GameServer {
         }
         this.session = null;
         this.playerSocket = null;
+        this.playerSeat = null;
         this.sessionToken = null;
         this.startedPayload = null;
         this.reportSources = null;
@@ -620,7 +786,9 @@ export class GameServer {
           });
           return;
         }
-        this.requireSession(socket)?.submitPlayerAction(message.payload);
+        this.withPlayerSeat(socket, (session, seat) => {
+          session.submitPlayerAction(seat, message.payload);
+        });
         return;
 
       case 'yieldPlayerAbility':
@@ -631,7 +799,9 @@ export class GameServer {
           });
           return;
         }
-        this.requireSession(socket)?.yieldPlayerAbility(message.payload);
+        this.withPlayerSeat(socket, (session, seat) => {
+          session.yieldPlayerAbility(seat, message.payload);
+        });
         return;
 
       case 'resumePlayerAbility':
@@ -642,7 +812,9 @@ export class GameServer {
           });
           return;
         }
-        this.requireSession(socket)?.resumePlayerAbility(message.payload.key);
+        this.withPlayerSeat(socket, (session, seat) => {
+          session.resumePlayerAbility(seat, message.payload.key);
+        });
         return;
 
       case 'cancelYield':
@@ -653,7 +825,9 @@ export class GameServer {
           });
           return;
         }
-        this.requireSession(socket)?.cancelYield();
+        this.withPlayerSeat(socket, (session, seat) => {
+          session.cancelYield(seat);
+        });
         return;
 
       case 'proposeDeal':
@@ -667,17 +841,18 @@ export class GameServer {
           return;
         }
         const session = this.requireSession(socket);
-        if (session === null) return;
-        if (message.type === 'proposeDeal') session.proposeDeal(message.payload);
-        else if (message.type === 'answerDeal') session.answerDeal(message.payload);
-        else await session.draftDeal(message.payload);
+        const seat = this.playerSeat;
+        if (session === null || seat === null) return;
+        if (message.type === 'proposeDeal') session.proposeDeal(seat, message.payload);
+        else if (message.type === 'answerDeal') session.answerDeal(seat, message.payload);
+        else await session.draftDeal(seat, message.payload);
         return;
       }
 
       case 'resumeGame':
         if (
           this.session === null ||
-          this.session.getGameMode() !== 'singlePlayer' ||
+          !resumable(this.session.getGameMode()) ||
           this.sessionToken === null ||
           message.payload.sessionToken !== this.sessionToken
         ) {
@@ -689,6 +864,10 @@ export class GameServer {
         }
         this.playerSocket = socket;
         this.cancelPlayerIdleTimer();
+        // The resuming connection's own declaration, before anything is resent to it.
+        if (this.playerSeat !== null) {
+          this.session.setRawActionData(this.playerSeat, this.wantsRawActionData(socket));
+        }
         if (this.startedPayload !== null) {
           this.sendTo(socket, {
             type: 'gameStarted',
@@ -698,7 +877,7 @@ export class GameServer {
             },
           });
         }
-        this.session.setPlayerConnected(true);
+        if (this.playerSeat !== null) this.session.setPlayerConnected(this.playerSeat, true);
         return;
     }
   }
@@ -710,12 +889,19 @@ export class GameServer {
    */
   private holdsPlayerSeat(socket: ServerWebSocket<SocketData>): boolean {
     const session = this.session;
-    return (
-      session !== null &&
-      session.getGameMode() === 'singlePlayer' &&
-      !session.isOver() &&
-      socket !== this.playerSocket
-    );
+    if (session === null) return false;
+    const mode = session.getGameMode();
+    switch (mode) {
+      case 'singlePlayer':
+        return !session.isOver() && socket !== this.playerSocket;
+      case 'spectator':
+        return false;
+      case 'table':
+        // flow: unreachable, GameServer refuses table games
+        return false;
+      default:
+        return assertNever(mode, 'player seat guard');
+    }
   }
 
   private onSocketOpen(socket: ServerWebSocket<SocketData>): void {
@@ -728,10 +914,22 @@ export class GameServer {
     if (socket === this.startingSocket) this.startGeneration++;
     if (socket === this.playerSocket) {
       this.playerSocket = null;
-      this.session?.setPlayerConnected(false);
+      if (this.playerSeat !== null) this.session?.setPlayerConnected(this.playerSeat, false);
       this.startPlayerIdleTimer();
     }
-    if (this.session?.getGameMode() === 'singlePlayer') return;
+    const mode = this.session?.getGameMode();
+    switch (mode) {
+      case 'singlePlayer':
+        return;
+      case 'table':
+        // flow: unreachable, GameServer refuses table games
+        return;
+      case undefined:
+      case 'spectator':
+        break;
+      default:
+        assertNever(mode, 'orphan timer');
+    }
     if (this.sockets.size === 0) this.startOrphanTimer();
   }
 
@@ -744,12 +942,25 @@ export class GameServer {
   private startPlayerIdleTimer(): void {
     this.cancelPlayerIdleTimer();
     const session = this.session;
-    if (session === null || session.getGameMode() !== 'singlePlayer') return;
+    if (session === null) return;
+    const mode = session.getGameMode();
+    switch (mode) {
+      case 'singlePlayer':
+        break;
+      case 'spectator':
+        return;
+      case 'table':
+        // flow: unreachable, GameServer refuses table games
+        return;
+      default:
+        assertNever(mode, 'player idle timer');
+    }
     this.playerIdleTimer = setTimeout(() => {
       this.playerIdleTimer = null;
       if (this.session !== session || this.playerSocket !== null) return;
       session.abandon();
       this.session = null;
+      this.playerSeat = null;
       this.sessionToken = null;
       this.startedPayload = null;
       this.reportSources = null;
@@ -787,19 +998,47 @@ export class GameServer {
     this.orphanTimer = null;
   }
 
+  /** Run a seat-scoped call for the one connection that holds the player's seat. */
+  private withPlayerSeat(
+    socket: ServerWebSocket<SocketData>,
+    run: (session: MatchSession, seat: PlayerId) => void,
+  ): void {
+    const session = this.requireSession(socket);
+    if (session === null) return;
+    const seat = this.playerSeat;
+    if (seat === null) {
+      this.sendTo(socket, {
+        type: 'error',
+        payload: { message: 'This is not a single-player game.' },
+      });
+      return;
+    }
+    run(session, seat);
+  }
+
   private requireSession(socket: ServerWebSocket<SocketData>): MatchSession | null {
     if (this.session === null) {
       this.sendTo(socket, { type: 'error', payload: { message: 'No game is running.' } });
       return null;
     }
-    if (this.session.getGameMode() === 'singlePlayer' && socket !== this.playerSocket) {
-      this.sendTo(socket, {
-        type: 'error',
-        payload: { message: 'Resume the player session before controlling this game.' },
-      });
-      return null;
+    const mode = this.session.getGameMode();
+    // fence: only the bound player socket controls a player game; a table takes the same rule.
+    switch (mode) {
+      case 'singlePlayer':
+      case 'table':
+        if (socket !== this.playerSocket) {
+          this.sendTo(socket, {
+            type: 'error',
+            payload: { message: 'Resume the player session before controlling this game.' },
+          });
+          return null;
+        }
+        return this.session;
+      case 'spectator':
+        return this.session;
+      default:
+        return assertNever(mode, 'session control');
     }
-    return this.session;
   }
 
   /**
@@ -813,33 +1052,51 @@ export class GameServer {
   ): Promise<void> {
     const generation = this.startGeneration;
     const { seats, providerKind, playbackMode, paceMs } = payload;
-    const gameMode = payload.gameMode ?? 'spectator';
+    const gameMode = (payload.gameMode ?? 'spectator') as GameMode;
     // Reruns use a fresh seed; the old one is still stored with its game (brief §4).
     const seed = payload.seed ?? crypto.randomUUID().slice(0, 8);
+
+    // flow: `GameServer` never runs a table (m1 rows 402, 841); tables run only in `serve:table`.
+    // The parser never admits `'table'`, so this holds the line for any caller that gets here.
+    switch (gameMode) {
+      case 'table':
+        this.sendTo(socket, { type: 'error', payload: { message: SETUP_REFUSED_MESSAGE } });
+        return;
+      case 'spectator':
+      case 'singlePlayer':
+        break;
+      default:
+        assertNever(gameMode, 'start game mode');
+    }
 
     // The seat is settled before anything can fail, because it is the authorization identity
     // for every refusal below: which diagnostics this requester may see is a function of it.
     // There is no `?? 'P1'` fallback -- inferring an identity would authorize a seat nobody
     // claimed -- and no `String()` coercion, which `isPlayerSeatId` exists to avoid.
-    const singlePlayer = gameMode === 'singlePlayer';
-    if (singlePlayer && !isPlayerSeatId(payload.humanSeat)) {
-      this.sendTo(socket, {
-        type: 'error',
-        payload: { message: 'Human seat must be P1, P2, P3 or P4.' },
-      });
-      return;
+    const seatScoped = holdsOneSeat(gameMode);
+    let humanSeat: PlayerId | undefined;
+    // fence: requester identity (m1 row 824).
+    switch (gameMode) {
+      case 'spectator':
+        humanSeat = undefined;
+        break;
+      case 'singlePlayer':
+        if (!isPlayerSeatId(payload.humanSeat)) {
+          this.sendTo(socket, {
+            type: 'error',
+            payload: { message: 'Human seat must be P1, P2, P3 or P4.' },
+          });
+          return;
+        }
+        humanSeat = payload.humanSeat;
+        break;
+      default:
+        return assertNever(gameMode, 'requester identity');
     }
-    const humanSeat: PlayerId | undefined = singlePlayer ? payload.humanSeat : undefined;
 
     if (payload.previewId !== undefined) {
       const entry = this.setupPreviews.get(payload.previewId);
-      const requested = {
-        seats,
-        seed,
-        providerKind,
-        gameMode: payload.gameMode ?? 'spectator',
-        ...(payload.gameMode === 'singlePlayer' && { humanSeat: payload.humanSeat }),
-      };
+      const requested = previewRequestFor(payload, seats, seed);
       if (
         !entry ||
         Date.now() - entry.createdAt > 600_000 ||
@@ -860,7 +1117,11 @@ export class GameServer {
         // the same private-data path a `SeatProblem` does. Only a spectator sees the list.
         this.sendTo(socket, {
           type: 'error',
-          payload: { message: singlePlayer ? SETUP_REFUSED_MESSAGE : fresh.blockers.join('\n') },
+          payload: {
+            message: testerPolicy(gameMode).rawErrorText
+              ? fresh.blockers.join('\n')
+              : SETUP_REFUSED_MESSAGE,
+          },
         });
         return;
       }
@@ -883,7 +1144,7 @@ export class GameServer {
       // an allowlist keyed on that seat instead of forwarding the other three seats.
       this.sendTo(socket, {
         type: 'error',
-        payload: singlePlayer
+        payload: seatScoped
           ? projectSetupProblems(setup.problems, humanSeat)
           : {
               message: setup.problems.map((p) => `${p.seat}: ${p.message}`).join('\n'),
@@ -899,12 +1160,16 @@ export class GameServer {
     }
 
     const gameId = `g-${crypto.randomUUID()}`;
+    const route = routeOf(gameMode);
+    const policy = testerPolicy(gameMode);
     const session = new MatchSession({
       gameId,
       seed,
       seats: setup.seats,
       providerKind,
       gameMode,
+      disclosure: policy,
+      ...replayOption(this.replayIdentity()),
       ...(humanSeat !== undefined && { humanSeat }),
       store: this.deps.store,
       ...(playbackMode !== undefined && { playbackMode }),
@@ -915,7 +1180,7 @@ export class GameServer {
       ...(payload.diplomacy === true && { diplomacy: true }),
       send: (message) => {
         if (this.session !== session) return;
-        if (gameMode === 'singlePlayer') {
+        if (route === 'player') {
           if (this.playerSocket !== null) this.sendTo(this.playerSocket, message);
         } else {
           this.broadcast(message);
@@ -925,13 +1190,21 @@ export class GameServer {
     this.session?.abandon();
     this.cancelPlayerIdleTimer();
     this.session = session;
-    this.sessionToken = gameMode === 'singlePlayer' ? crypto.randomUUID() : null;
-    this.playerSocket = gameMode === 'singlePlayer' ? socket : null;
+    this.sessionToken = route === 'player' ? crypto.randomUUID() : null;
+    this.playerSocket = route === 'player' ? socket : null;
+    this.playerSeat = humanSeat ?? null;
+    if (humanSeat !== undefined) {
+      session.setRawActionData(humanSeat, this.wantsRawActionData(socket));
+    }
 
     const startedPayload: GameStartedPayload = {
       gameId,
-      seed,
-      seats: setup.seats.map((s) => s.summary),
+      seed: seedLabel(policy, seed),
+      seats: disclosedSeatSummaries(
+        policy,
+        setup.seats.map((s) => s.summary),
+        humanSeat,
+      ),
       providerKind,
       gameMode,
       controllers: setup.seats.map((seat) => ({
@@ -947,10 +1220,20 @@ export class GameServer {
     this.startedPayload = startedPayload;
     this.reportSources = { sources: [...seats], cardTestScenarioId: null };
     const startedMessage: ServerToClientMessage = { type: 'gameStarted', payload: startedPayload };
-    if (gameMode === 'singlePlayer') this.sendTo(socket, startedMessage);
+    if (route === 'player') this.sendTo(socket, startedMessage);
     else this.broadcast(startedMessage);
 
     session.start();
+  }
+
+  /**
+   * What the `games` row records about the process (ADR 0031 decision 8). Omitted when the server
+   * was given no build, so a bare `GameServer` in a test stores nothing it cannot name.
+   */
+  private replayIdentity(): ReplayIdentity | undefined {
+    const build = this.deps.build;
+    if (build === undefined) return undefined;
+    return { cardDataSha256: this.deps.cardData?.sha256 ?? null, build };
   }
 
   private startCardTestScenario(socket: ServerWebSocket<SocketData>, scenarioId: string): void {
@@ -970,6 +1253,7 @@ export class GameServer {
       seats: scenario.seats,
       providerKind: 'random',
       gameMode: 'singlePlayer',
+      disclosure: testerPolicy('singlePlayer'),
       humanSeat: 'P1',
       livePaceMs: 0,
       engine: scenario.engine,
@@ -987,11 +1271,17 @@ export class GameServer {
     this.session = session;
     this.sessionToken = crypto.randomUUID();
     this.playerSocket = socket;
+    this.playerSeat = 'P1';
+    session.setRawActionData('P1', this.wantsRawActionData(socket));
 
     const startedPayload: GameStartedPayload = {
       gameId,
-      seed: scenario.seed,
-      seats: scenario.seats.map((seat) => seat.summary),
+      seed: seedLabel(testerPolicy('singlePlayer'), scenario.seed),
+      seats: disclosedSeatSummaries(
+        testerPolicy('singlePlayer'),
+        scenario.seats.map((seat) => seat.summary),
+        'P1',
+      ),
       providerKind: 'random',
       gameMode: 'singlePlayer',
       controllers: scenario.seats.map((seat) => ({

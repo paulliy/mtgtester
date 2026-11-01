@@ -1,11 +1,12 @@
 <script setup lang="ts">
 /**
  * The 4×4 commander damage matrix (brief §10.2 — "a 4×4 matrix is the clearest presentation").
- * Rows are victims, columns are the dealing commanders. 21 is lethal (brief §5.7), so the cell
- * shades as it approaches.
+ * Rows are victims, columns are the dealing commanders. A cell shades as it nears lethal; whether
+ * it is lethal, and how far off, come from the server with each entry (CR 903.10a), so the
+ * number 21 lives in the engine alone.
  */
 import { computed } from 'vue';
-import type { SpectatorSeat, SpectatorState } from '@mtg/shared';
+import type { CommanderDamageEntry, SpectatorSeat, SpectatorState } from '@mtg/shared';
 
 /** Only the seats' ids and commanders are read, so the player board's seats fit as well. */
 const props = defineProps<{
@@ -14,7 +15,8 @@ const props = defineProps<{
   };
 }>();
 
-const LETHAL = 21;
+/** A cell shows as "close" when this many points or fewer remain. Styling only. */
+const CLOSE_WITHIN = 7;
 
 interface Column {
   cardId: string;
@@ -28,16 +30,26 @@ const columns = computed<Column[]>(() =>
   ),
 );
 
-const damage = computed(() => {
-  const map = new Map<string, number>();
+const entries = computed(() => {
+  const map = new Map<string, CommanderDamageEntry>();
   for (const entry of props.state.commanderDamage) {
-    map.set(`${entry.victimSeat}|${entry.sourceCardId}`, entry.damage);
+    map.set(`${entry.victimSeat}|${entry.sourceCardId}`, entry);
   }
   return map;
 });
 
 function cell(victim: string, cardId: string): number {
-  return damage.value.get(`${victim}|${cardId}`) ?? 0;
+  return entries.value.get(`${victim}|${cardId}`)?.damage ?? 0;
+}
+
+/** Lethal damage, as the server judged it. An entry from before the fields existed is neither. */
+function isLethal(victim: string, cardId: string): boolean {
+  return entries.value.get(`${victim}|${cardId}`)?.lethal === true;
+}
+
+function isClose(victim: string, cardId: string): boolean {
+  const remaining = entries.value.get(`${victim}|${cardId}`)?.remaining;
+  return remaining !== undefined && remaining > 0 && remaining <= CLOSE_WITHIN;
 }
 </script>
 
@@ -61,9 +73,8 @@ function cell(victim: string, cardId: string): number {
             :key="col.cardId"
             :class="{
               self: col.seat === seat.seat,
-              danger: cell(seat.seat, col.cardId) >= LETHAL,
-              close:
-                cell(seat.seat, col.cardId) >= LETHAL - 7 && cell(seat.seat, col.cardId) < LETHAL,
+              danger: isLethal(seat.seat, col.cardId),
+              close: isClose(seat.seat, col.cardId),
             }"
           >
             {{ col.seat === seat.seat ? '—' : cell(seat.seat, col.cardId) }}

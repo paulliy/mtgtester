@@ -1,0 +1,166 @@
+{
+  "seed": "adr-0033-phase-6-pilot",
+  "bankSha256": "e2e0284ff74a9d461e7368880d7893f6e925b2ca3b0b4cd0da49bc4b640f08b7",
+  "cards": [
+    {
+      "name": "Professional Face-Breaker",
+      "edhrecRank": 207,
+      "reasons": [
+        "unrecognized rules text: \"Sacrifice a Treasure: Exile the top card of your library. You may play that card this turn.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Secluded Courtyard",
+      "edhrecRank": 220,
+      "reasons": [
+        "unsupported mana production: \"{T}: Add one mana of any color. Spend this mana only to cast a creature spell of the chosen type or activate an ability of a creature source of the chosen type.\""
+      ],
+      "arm": "current"
+    },
+    {
+      "name": "The Great Henge",
+      "edhrecRank": 228,
+      "reasons": [
+        "unrecognized rules text: \"This spell costs {X} less to cast, where X is the greatest power among creatures you control.\""
+      ],
+      "arm": "current"
+    },
+    {
+      "name": "Explore",
+      "edhrecRank": 237,
+      "reasons": ["unrecognized rules text: \"You may play an additional land this turn.\""],
+      "arm": "current"
+    },
+    {
+      "name": "Mithril Coat",
+      "edhrecRank": 238,
+      "reasons": [
+        "unrecognized rules text: \"When ~ enters, attach it to target legendary creature you control.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Gamble",
+      "edhrecRank": 241,
+      "reasons": [
+        "unrecognized rules text: \"Search your library for a card, put that card into your hand, discard a card at random, then shuffle.\""
+      ],
+      "arm": "current"
+    },
+    {
+      "name": "Takenuma, Abandoned Mire",
+      "edhrecRank": 245,
+      "reasons": [
+        "unrecognized rules text: \"{3}{B}, Discard this card: Mill three cards, then return a creature or planeswalker card from your graveyard to your hand. This ability costs {1} less to activate for each legendary creature you control.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Morbid Opportunist",
+      "edhrecRank": 246,
+      "reasons": [
+        "unrecognized rules text: \"Whenever one or more other creatures die, draw a card. This ability triggers only once each turn.\""
+      ],
+      "arm": "current"
+    },
+    {
+      "name": "Mox Diamond",
+      "edhrecRank": 248,
+      "reasons": [
+        "unrecognized rules text: \"If this artifact would enter, you may discard a land card instead. If you do, put this artifact onto the battlefield. If you don't, put it into its owner's graveyard.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Everflowing Chalice",
+      "edhrecRank": 252,
+      "reasons": [
+        "unrecognized rules text: \"Multikicker {2}\"",
+        "unrecognized rules text: \"~ enters with a charge counter on it for each time it was kicked.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Sylvan Library",
+      "edhrecRank": 258,
+      "reasons": [
+        "unrecognized rules text: \"At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the card on top of your library.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Orcish Bowmasters",
+      "edhrecRank": 259,
+      "reasons": [
+        "unrecognized rules text: \"When this creature enters and whenever an opponent draws a card except the first one they draw in each of their draw steps, this creature deals 1 damage to any target. Then amass Orcs 1.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Syr Konrad, the Grim",
+      "edhrecRank": 260,
+      "reasons": ["unrecognized rules text: \"{1}{B}: Each player mills a card.\""],
+      "arm": "current"
+    },
+    {
+      "name": "Academy Manufactor",
+      "edhrecRank": 262,
+      "reasons": [
+        "unrecognized rules text: \"If you would create a Clue, Food, or Treasure token, instead create one of each.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Untimely Malfunction",
+      "edhrecRank": 266,
+      "reasons": [
+        "unrecognized rules text: \"Choose one —\"",
+        "unrecognized rules text: \"• Destroy target artifact.\"",
+        "unrecognized rules text: \"• Change the target of target spell or ability with a single target.\"",
+        "unrecognized rules text: \"• One or two target creatures can't block this turn.\""
+      ],
+      "arm": "current"
+    },
+    {
+      "name": "Bolas's Citadel",
+      "edhrecRank": 274,
+      "reasons": [
+        "unrecognized rules text: \"You may play lands and cast spells from the top of your library. If you cast a spell this way, pay life equal to its mana value rather than pay its mana cost.\"",
+        "unrecognized rules text: \"{T}, Sacrifice ten nonland permanents: Each opponent loses 10 life.\""
+      ],
+      "arm": "current"
+    },
+    {
+      "name": "Jet Medallion",
+      "edhrecRank": 276,
+      "reasons": ["unrecognized rules text: \"Black spells you cast cost {1} less to cast.\""],
+      "arm": "current"
+    },
+    {
+      "name": "Etali, Primal Storm",
+      "edhrecRank": 279,
+      "reasons": [
+        "unrecognized rules text: \"Whenever ~ attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana costs.\""
+      ],
+      "arm": "current"
+    },
+    {
+      "name": "Inspiring Call",
+      "edhrecRank": 280,
+      "reasons": [
+        "unrecognized rules text: \"Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn.\""
+      ],
+      "arm": "new"
+    },
+    {
+      "name": "Ragavan, Nimble Pilferer",
+      "edhrecRank": 282,
+      "reasons": [
+        "unrecognized rules text: \"Whenever ~ deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card.\"",
+        "unrecognized rules text: \"Dash {1}{R}\""
+      ],
+      "arm": "new"
+    }
+  ]
+}

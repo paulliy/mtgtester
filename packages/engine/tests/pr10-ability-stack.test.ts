@@ -6,6 +6,8 @@ import { resolveTopOfStack } from '../src/stack/stack';
 import { moveObject } from '../src/state/objects';
 import { queueStepTriggers } from '../src/turn/turn';
 import type { EnginePermanent, GameContext } from '../src/state/types';
+import type { DecisionOutcome, PendingDecision } from '../src/decisions';
+import { computeCharacteristics } from '../src/effects/continuous';
 import { conjure, oracle, pump, spawn } from './fixtures';
 import {
   activate,
@@ -40,6 +42,20 @@ const mana = (...symbols: ('W' | 'U' | 'B' | 'R' | 'G' | 'C')[]) =>
   symbols.map((symbol) => ({ symbol }));
 
 const hand = (ctx: GameContext, playerId: string) => p(ctx, playerId).hand.length;
+
+/**
+ * An answer that records every unforced decision's type into `seen`, says yes to a yes/no "use
+ * this ability?" (so a wrongly optional trigger still runs instead of throwing) and otherwise
+ * defers to `answer`.
+ */
+function recording(seen: string[], answer: (decision: PendingDecision) => DecisionOutcome) {
+  return (decision: PendingDecision): DecisionOutcome => {
+    seen.push(decision.decisionType);
+    return decision.decisionType === 'optionalTrigger'
+      ? { index: 0, targets: new Map() }
+      : answer(decision);
+  };
+}
 
 describe('PR10.08 Siren Stormtamer', () => {
   function setup(seed: string) {
@@ -246,6 +262,12 @@ describe('PR10.21 Mister Fantastic', () => {
     expect(def.modeled, def.unmodeledReasons.join('\n')).toBe(true);
     expect(def.triggers).toHaveLength(1);
     expect(def.activatedAbilities).toHaveLength(1);
+    expect(def.keywords).toEqual(expect.arrayContaining(['reach', 'vigilance']));
+    const kwCtx = pod('pr10-fantastic-keywords');
+    const fantastic = spawn(kwCtx, 'P1', pinned('Mister Fantastic'));
+    expect(computeCharacteristics(kwCtx, fantastic).keywords).toEqual(
+      expect.arrayContaining(['reach', 'vigilance']),
+    );
   });
 
   it('pr10-mister-fantastic-copies-twice — two copies, each with its own new target', () => {
@@ -324,8 +346,16 @@ describe('PR10.21 Mister Fantastic', () => {
     castFromHand(ctx, 'P1', labShock(), new Map([[0, 'P2']]));
     settle(ctx);
     queueStepTriggers(ctx, 'beginningOfCombat');
-    settle(ctx);
+    const seen: string[] = [];
+    settle(
+      ctx,
+      recording(seen, (decision) => {
+        throw new Error(`nothing else is asked:\n${decision.prompt}`);
+      }),
+    );
     expect(hand(ctx, 'P1')).toBe(before + 1);
+    // The draw is mandatory: nobody is asked "use this ability?".
+    expect(seen).not.toContain('optionalTrigger');
   });
 });
 
@@ -369,7 +399,10 @@ describe('PR10.10 Verrak, Warped Sengir', () => {
     activateWithTrigger(ctx, source);
     expect(p(ctx, 'P1').life).toBe(38);
     expect(ctx.state.stack.at(-1)!.kind).toBe('triggeredAbility');
-    pump(resolveTopOfStack(ctx), choose('Pay 2 life'));
+    const seen: string[] = [];
+    pump(resolveTopOfStack(ctx), recording(seen, choose('Pay 2 life')), { strict: true });
+    // The trigger is mandatory; the only question is the "pay 2 life?" in its own effect.
+    expect(seen).not.toContain('optionalTrigger');
     expect(p(ctx, 'P1').life).toBe(36);
     expect(ctx.state.stack.at(-1)!.description).toMatch(/^Copy of /);
     settle(ctx);

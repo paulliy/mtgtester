@@ -26,6 +26,8 @@ import {
 } from './effect-reference-contracts';
 import type { ReferenceContract, TargetDomain } from './effect-reference-contracts';
 import { assertNever } from '../utils/assert-never';
+import { TRIGGER_SCOPE_FIELDS, VALUE_SCOPE_NEEDS } from './scope-contracts';
+import type { ScopeField } from './scope-contracts';
 
 export interface AuthoringIssue {
   path: string;
@@ -46,6 +48,10 @@ interface Scope {
   movedToBattlefieldSlots?: ReadonlySet<number>;
   activeSlots?: readonly number[];
   narrowedDomains?: ReadonlyMap<number, readonly TargetDomain[]>;
+  /** Scope fields this ability's trigger head, cast path or cost fills (ADR 0034). */
+  scopeFields?: ReadonlySet<ScopeField>;
+  /** Scope fields an enclosing construct gives a nested ability that has no trigger head. */
+  providedScopeFields?: readonly ScopeField[];
 }
 const integer = (n: unknown): n is number =>
   typeof n === 'number' && Number.isSafeInteger(n) && n >= 0;
@@ -446,6 +452,44 @@ function validateFields(
   }
 }
 
+/** Ops that pay energy and record the amount in the resolution scope as `energyPaid`. */
+const ENERGY_PAYMENT_OPS: ReadonlySet<string> = new Set(['mayPayEnergy', 'mayPayEnergyUpTo']);
+
+function triggerScopeFields(when: unknown, aggregate: unknown): ScopeField[] {
+  const fields =
+    typeof when === 'string' && Object.hasOwn(TRIGGER_SCOPE_FIELDS, when)
+      ? [...TRIGGER_SCOPE_FIELDS[when as keyof typeof TRIGGER_SCOPE_FIELDS]]
+      : [];
+  if (aggregate !== undefined && aggregate !== false) fields.push('triggerCount');
+  return fields;
+}
+
+/**
+ * What an ability's scope carries when it resolves: its trigger head's facts, a spell's own cast
+ * (`casting/cast.ts`), or, for an ability with no head of its own (a reflexive or delayed body),
+ * what the enclosing construct gives it.
+ */
+function abilityScopeFields(
+  record: Record<string, unknown>,
+  trigger: { when?: string } | undefined,
+  scope: Scope | undefined,
+): ReadonlySet<ScopeField> {
+  const fields = new Set<ScopeField>(
+    trigger === undefined ? (scope?.providedScopeFields ?? scope?.scopeFields ?? []) : [],
+  );
+  if (record['kind'] === 'triggered' && trigger !== undefined)
+    for (const field of triggerScopeFields(
+      trigger.when,
+      (trigger as { aggregate?: unknown }).aggregate,
+    ))
+      fields.add(field);
+  if (record['kind'] === 'spell') {
+    fields.add('manaSpent');
+    fields.add('treasureManaSpent');
+  }
+  return fields;
+}
+
 function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: Scope): void {
   if (Array.isArray(value)) {
     let currentScope = scope;
@@ -453,6 +497,13 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       visit(entry, `${path}[${index}]`, issues, currentScope);
       if (currentScope === undefined || entry === null || typeof entry !== 'object') return;
       const effect = entry as Record<string, unknown>;
+      // These ops write the energy paid into the resolution's shared scope, so every later effect
+      // of the same list reads it too (`effects/resolve.ts`).
+      if (ENERGY_PAYMENT_OPS.has(String(effect['op'])))
+        currentScope = {
+          ...currentScope,
+          scopeFields: new Set([...(currentScope.scopeFields ?? []), 'energyPaid']),
+        };
       if (
         ['commandZoneToBattlefield', 'graveyardToBattlefield'].includes(String(effect['op'])) &&
         typeof effect['target'] === 'number'
@@ -577,8 +628,22 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
         ? { selfEventObject: true }
         : {}),
       ...(attackEventObject ? { attackEventObject: true } : {}),
+      scopeFields: abilityScopeFields(record, trigger, scope),
     };
   }
+  const needed =
+    typeof record['kind'] === 'string' && Object.hasOwn(VALUE_SCOPE_NEEDS, record['kind'])
+      ? VALUE_SCOPE_NEEDS[record['kind'] as keyof typeof VALUE_SCOPE_NEEDS]
+      : null;
+  if (
+    needed !== null &&
+    owningScope?.scopeFields !== undefined &&
+    !owningScope.scopeFields.has(needed)
+  )
+    issues.push({
+      path,
+      message: `${String(record['kind'])} reads ${needed}, which this ability's trigger, cast or cost does not provide`,
+    });
   let checkedPermanentPossible = false;
   if (
     record['op'] === 'conditionalEffect' &&
@@ -1300,6 +1365,7 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       visit(entry, `${path}.${key}`, issues, {
         targets: [],
         providedEventPlayer: record['affectedPlayer'] !== undefined,
+        providedScopeFields: triggerScopeFields(record['when'], undefined),
         ...(providedEventObject === undefined ? {} : { providedEventObject }),
       });
     } else {
@@ -1329,9 +1395,102 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
             });
         });
       }
-      visit(entry, `${path}.${key}`, issues, owningScope);
+      visit(entry, `${path}.${key}`, issues, nestedScope(record, key, owningScope));
     }
   }
+}
+
+/**
+ * The scope a nested ability inherits from the construct around it: a station cost's tapped
+ * power for its activated ability (`actions/apply.ts`), and the energy actually paid for the
+ * body of an energy payment (`effects/resolve.ts`).
+ */
+function nestedScope(
+  record: Record<string, unknown>,
+  key: string,
+  owningScope: Scope | undefined,
+): Scope | undefined {
+  if (
+    key === 'ability' &&
+    Array.isArray(record['costs']) &&
+    record['costs'].some(
+      (cost) =>
+        (cost as { kind?: unknown; capturePowerForStation?: unknown } | null)?.kind ===
+          'tapOther' &&
+        (cost as { capturePowerForStation?: unknown }).capturePowerForStation === true,
+    )
+  )
+    return { ...(owningScope ?? { targets: [] }), providedScopeFields: ['stationPower'] };
+  if (key === 'then' && ENERGY_PAYMENT_OPS.has(String(record['op'])) && owningScope !== undefined)
+    return {
+      ...owningScope,
+      scopeFields: new Set([...(owningScope.scopeFields ?? []), 'energyPaid']),
+    };
+  if (key === 'then' && record['op'] === 'mayPayEnergyThenReflexive' && owningScope !== undefined)
+    return {
+      ...owningScope,
+      providedScopeFields: [...(owningScope.scopeFields ?? []), 'energyPaid'],
+    };
+  return owningScope;
+}
+
+/** Ops whose actual life loss feeds a following `gainLifeEqualToLifeLostThisWay`. */
+const LIFE_LOST_THIS_WAY_FEEDERS: ReadonlySet<Effect['op']> = new Set([
+  'eachOpponentLosesLife',
+  'loseLifeTarget',
+  'loseHalfLifeTarget',
+]);
+
+function isEffectList(value: unknown[]): value is Effect[] {
+  return (
+    value.length > 0 &&
+    value.every(
+      (entry) =>
+        entry !== null &&
+        typeof entry === 'object' &&
+        typeof (entry as { op?: unknown }).op === 'string',
+    )
+  );
+}
+
+/**
+ * Every reference from one effect to another must resolve within the scope the executor has
+ * (ADR 0034 decision 2). `executeAbility` starts each effect list, including every nested body,
+ * with fresh bindings and a zero "life lost this way" accumulator, so a reference resolves only
+ * to an earlier effect of the same list. A bind or loss inside a nested body (a conditional
+ * branch, a mode, a per-player body) is not visible after it.
+ */
+function validateEffectReferences(value: unknown, path: string, issues: AuthoringIssue[]): void {
+  if (Array.isArray(value)) {
+    if (isEffectList(value)) {
+      const bound = new Set<string>();
+      let lifeLossBefore = false;
+      value.forEach((effect, index) => {
+        if (effect.op === 'untapBoundIf' && !bound.has(effect.binding))
+          issues.push({
+            path: `${path}[${index}].binding`,
+            message: `binding "${effect.binding}" is not bound by an earlier effect in the same effect list`,
+          });
+        if (effect.op === 'gainLifeEqualToLifeLostThisWay' && !lifeLossBefore)
+          issues.push({
+            path: `${path}[${index}]`,
+            message:
+              'life lost this way needs an earlier eachOpponentLosesLife, loseLifeTarget or loseHalfLifeTarget in the same effect list',
+          });
+        if (
+          (effect.op === 'searchLibrary' || effect.op === 'searchLibraryGroup') &&
+          effect.bind !== undefined
+        )
+          bound.add(effect.bind);
+        if (LIFE_LOST_THIS_WAY_FEEDERS.has(effect.op)) lifeLossBefore = true;
+      });
+    }
+    value.forEach((entry, index) => validateEffectReferences(entry, `${path}[${index}]`, issues));
+    return;
+  }
+  if (value === null || typeof value !== 'object') return;
+  for (const [key, entry] of Object.entries(value))
+    validateEffectReferences(entry, `${path}.${key}`, issues);
 }
 
 /** Validate the fully merged executable definition rather than trusting an override patch alone. */
@@ -1369,6 +1528,7 @@ export function validateCardDefinition(definition: CardDefinition): AuthoringIss
     });
   visit(definition, 'definition', issues);
   validateFields(definition, 'definition', issues);
+  validateEffectReferences(definition, 'definition', issues);
   return issues;
 }
 

@@ -39,7 +39,7 @@ import { describe, expect, it } from 'vitest';
 import { computeCharacteristics } from '../../../engine/src/effects/continuous';
 import { manaSourcesFor } from '../../../engine/src/state/queries';
 import type { EnginePermanent, GameContext } from '../../../engine/src/state/types';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 
 type Mode = 'combat-treasure-and-owner-control' | 'no-noncreature-spell';
 
@@ -81,7 +81,7 @@ interface Observation {
 type Replay = ReturnType<typeof replay>;
 
 function replay(mode: Mode) {
-  const scenario = createCardTestScenario(`alicia-masters-viewer-${mode}`, 'pr08-alicia-lab');
+  const scenario = strictCardTestScenario(`alicia-masters-viewer-${mode}`, 'pr08-alicia-lab');
   expect(scenario, `scenario alicia-masters-viewer-${mode}`).not.toBeNull();
   const engine = scenario!.engine;
   const castsWitness = mode === 'combat-treasure-and-owner-control';
@@ -194,7 +194,7 @@ describe('Alicia Masters, Skilled Sculptor Card Test Lab replay', () => {
     );
     expect(aliciaPin!.card.oracleId).toBe('223504ba-174a-46f2-a4a2-5d663a82dfd3');
     for (const mode of ['combat-treasure-and-owner-control', 'no-noncreature-spell'] as const) {
-      const scenario = createCardTestScenario(`alicia-masters-viewer-${mode}`, 'pr08-alicia-lab');
+      const scenario = strictCardTestScenario(`alicia-masters-viewer-${mode}`, 'pr08-alicia-lab');
       expect(scenario, mode).not.toBeNull();
       expect(scenario!.metadata.oracleSha256, mode).toBe(aliciaPin!.sha256);
       expect(scenario!.metadata.clauseIds, mode).toContain(

@@ -3,6 +3,7 @@ import { applyPriorityAction } from '../src/actions/apply';
 import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
 import { fixtureOracleId } from '../src/cards/overrides';
+import { computeCharacteristics } from '../src/effects/continuous';
 import { drawCards } from '../src/effects/resolve';
 import { addMana } from '../src/mana/pool';
 import { moveObject } from '../src/state/objects';
@@ -45,7 +46,8 @@ function preparedDuskmage(seed: string): { ctx: GameContext; duskmage: EnginePer
   expect(ctx.state.stack).toHaveLength(0);
   draw(ctx, 'P2');
   expect(ctx.state.stack.at(-1)?.description).toContain('becomes prepared');
-  resolve(ctx);
+  // The trigger is mandatory: no "use this ability?" yes/no is asked.
+  expect(resolve(ctx).map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
   return { ctx, duskmage };
 }
 
@@ -72,6 +74,15 @@ describe('prepare (CR 722)', () => {
         expect(def.unmodeledReasons).toEqual([]);
         expect(def.prepareSpell?.spellAbility?.kind).toBe('spell');
       }
+    }
+    // The printed keywords survive, on the definition and on the permanent in play.
+    for (const [card, keyword] of [
+      [DUSKMAGE, 'deathtouch'],
+      [DYNASTORIAN, 'vigilance'],
+    ] as const) {
+      expect(interpretCard(card).keywords).toContain(keyword);
+      const ctx = game(`prepare-keyword-${keyword}`);
+      expect(computeCharacteristics(ctx, spawn(ctx, 'P1', card)).keywords).toContain(keyword);
     }
   });
 
@@ -171,7 +182,8 @@ describe('prepare (CR 722)', () => {
     const ctx2 = game('dynastorian-attack-two');
     const second = spawn(ctx2, 'P1', DYNASTORIAN);
     attackWith(ctx2, [second, spawn(ctx2, 'P1', bear())]);
-    resolve(ctx2);
+    // The trigger is mandatory: no "use this ability?" yes/no is asked.
+    expect(resolve(ctx2).map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(second.prepared).toBe(true);
     expect(preparedCopies(ctx2, 'Replenish')).toHaveLength(1);
     void partner;

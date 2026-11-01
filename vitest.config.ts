@@ -5,5 +5,9 @@ export default defineConfig({
     // Unit tests live beside source (brief §12 — engine coverage is the bulk of these).
     include: ['packages/**/*.{test,spec}.ts', 'apps/**/*.{test,spec}.ts'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**'],
+    // A test that runs no `expect` fails (ADR 0034 decision 9).
+    expect: { requireAssertions: true },
+    // Games run with `strictInvariants` check the whole state at each checkpoint (decision 8).
+    setupFiles: ['packages/engine/tests/invariants-setup.ts'],
   },
 });

@@ -4,6 +4,7 @@
  * scenarios are the bulk of engine coverage).
  */
 
+import { describeDecision, isScript } from './script';
 import type {
   AttackDeclarationSubject,
   BlockDeclarationSubject,
@@ -231,14 +232,13 @@ export function gameConfig(
   seats: SeatSpec[],
   overrides?: Partial<Omit<GameConfig, 'players'>>,
 ): GameConfig {
+  // Every other field passes through, so a new GameConfig option cannot be silently dropped.
+  const { gameId, seed, ...rest } = overrides ?? {};
   return {
-    gameId: overrides?.gameId ?? 'test-game',
-    seed: overrides?.seed ?? 'test-seed',
+    gameId: gameId ?? 'test-game',
+    seed: seed ?? 'test-seed',
     players: seats.map((s, i) => seat(s, i)),
-    ...(overrides?.turnCap !== undefined ? { turnCap: overrides.turnCap } : {}),
-    ...(overrides?.customDefinitions !== undefined
-      ? { customDefinitions: overrides.customDefinitions }
-      : {}),
+    ...rest,
   };
 }
 
@@ -331,27 +331,42 @@ export function spawn(
 }
 
 /**
- * Pump an internal generator to completion. `answer` maps surfaced decisions to
- * outcomes; forced decisions resolve automatically; the default picks option 0.
+ * Pump an internal generator to completion. `answer` maps surfaced decisions to outcomes; forced
+ * decisions resolve automatically. Without `strict`, an unanswered decision picks option 0; with
+ * `{ strict: true }`, or with a `script()` answer, an unforced decision the answer does not handle
+ * throws with its prompt and options (ADR 0034 decision 9), and a script with unused steps fails
+ * when the generator ends.
  */
 export function pump<T>(
   gen: GameGen<T>,
-  answer?: (decision: PendingDecision, count: number) => DecisionOutcome,
+  answer?: (decision: PendingDecision, count: number) => DecisionOutcome | undefined,
+  options: { strict?: boolean } = {},
 ): { value: T; decisions: PendingDecision[] } {
+  const strict = options.strict === true || isScript(answer);
   const decisions: PendingDecision[] = [];
   let outcome: DecisionOutcome | undefined;
   for (;;) {
     const step = outcome === undefined ? gen.next() : gen.next(outcome);
-    if (step.done === true) return { value: step.value, decisions };
+    if (step.done === true) {
+      if (isScript(answer)) answer.assertDone();
+      return { value: step.value, decisions };
+    }
     const decision = step.value;
     if (isForced(decision)) {
       outcome = forcedOutcome(decision);
       continue;
     }
     decisions.push(decision);
-    outcome =
-      answer?.(decision, decisions.length) ?? ({ index: 0, targets: new Map() } as DecisionOutcome);
+    const answered = answer?.(decision, decisions.length);
+    if (answered === undefined && strict)
+      throw new Error(`An unforced decision nothing answers:\n${describeDecision(decision)}`);
+    outcome = answered ?? ({ index: 0, targets: new Map() } as DecisionOutcome);
   }
+}
+
+/** Pump a generator that should raise no unforced decision; one that does throws. */
+export function pumpStrict<T>(gen: GameGen<T>): { value: T; decisions: PendingDecision[] } {
+  return pump(gen, undefined, { strict: true });
 }
 
 // --- Rule-based provider for whole-game engine tests ---
@@ -359,19 +374,40 @@ export function pump<T>(
 export interface ProviderRule {
   when: (request: import('@mtg/shared').DecisionRequest) => boolean;
   then: (request: import('@mtg/shared').DecisionRequest) => import('@mtg/shared').DecisionResponse;
-  /** Fire at most once. */
+  /** Fire at most once; `drive()` fails if a `once` rule never fired. */
   once?: boolean;
+  /** Names the rule in failures; `whenChoose` derives one from its matcher. */
+  label?: string;
+}
+
+export interface RuleBasedProviderOptions {
+  /**
+   * Answer a decision no rule matches with the first legal action (pass / keep / don't attack /
+   * don't block). Without it an unmatched decision throws (ADR 0034 decision 9).
+   */
+  fallback?: 'first';
 }
 
 /**
- * Answers decisions by the first matching rule; anything unmatched takes the first
- * option (pass / keep / don't attack / don't block — always the conservative default).
+ * Answers decisions by the first matching rule. An unmatched decision throws unless the provider
+ * was built with `{ fallback: 'first' }`.
  */
 export class RuleBasedProvider {
   readonly seen: import('@mtg/shared').DecisionRequest[] = [];
   private readonly used = new Set<ProviderRule>();
 
-  constructor(private readonly rules: ProviderRule[]) {}
+  constructor(
+    private readonly rules: ProviderRule[],
+    private readonly options: RuleBasedProviderOptions = {},
+  ) {}
+
+  /** Labels of `once` rules that never fired. */
+  unfiredOnceRules(): string[] {
+    return this.rules
+      .map((rule, i) => ({ rule, i }))
+      .filter(({ rule }) => rule.once === true && !this.used.has(rule))
+      .map(({ rule, i }) => rule.label ?? `rule #${i}`);
+  }
 
   decide(request: import('@mtg/shared').DecisionRequest): import('@mtg/shared').DecisionResponse {
     this.seen.push(request);
@@ -384,6 +420,13 @@ export class RuleBasedProvider {
     }
     const first = request.legalActions[0];
     if (first === undefined) throw new Error('decision with no legal actions');
+    if (this.options.fallback !== 'first') {
+      throw new Error(
+        `RuleBasedProvider: no rule matched the decision "${request.prompt}"; options: ` +
+          request.legalActions.map((a) => `[${a.id}] ${a.description}`).join(' | ') +
+          ` (pass { fallback: 'first' } to opt in to answering the first option)`,
+      );
+    }
     const targets = (first.targets ?? []).map((slot) => ({
       slot: slot.slot,
       choice: slot.options[0] as string,
@@ -411,11 +454,26 @@ export function whenChoose(spec: {
     | { slot: number; choice: string }[]
     | ((req: import('@mtg/shared').DecisionRequest) => { slot: number; choice: string }[]);
   once?: boolean;
+  /** Names the rule when `drive()` reports it unfired; defaults to a description of the matcher. */
+  label?: string;
 }): ProviderRule {
   const matches = (text: string, pattern: RegExp | string): boolean =>
     typeof pattern === 'string' ? text.includes(pattern) : pattern.test(text);
+  const describePattern = (pattern: RegExp | string): string =>
+    typeof pattern === 'string' ? JSON.stringify(pattern) : String(pattern);
+  const label =
+    spec.label ??
+    `whenChoose(${[
+      spec.player === undefined ? null : `player ${spec.player}`,
+      spec.turn === undefined ? null : `turn ${spec.turn}`,
+      spec.prompt === undefined ? null : `prompt ${describePattern(spec.prompt)}`,
+      `option ${describePattern(spec.option)}`,
+    ]
+      .filter((part) => part !== null)
+      .join(', ')})`;
   return {
     once: spec.once ?? true,
+    label,
     when: (req) =>
       (spec.player === undefined || req.decidingPlayer === spec.player) &&
       (spec.turn === undefined || req.turn === spec.turn) &&
@@ -442,14 +500,34 @@ export function whenChoose(spec: {
   };
 }
 
-/** Drive an engine to completion with one provider answering every seat. */
+/**
+ * Drive an engine to completion with one provider answering every seat. A halted result fails
+ * the test (ADR 0034) unless the test is about halting and passes `allowHalt`; so does a `once`
+ * rule that never fired.
+ */
 export function drive(
   engine: Engine,
   provider: RuleBasedProvider,
+  { allowHalt = false }: { allowHalt?: boolean } = {},
 ): import('@mtg/shared').GameResult {
+  // Whole-state invariants at every checkpoint (ADR 0034 decision 8). A test that expects a halt
+  // keeps the halting behavior: strictInvariants would rethrow an invariant failure instead.
+  if (!allowHalt) engine.enableStrictInvariants();
   for (let i = 0; i < 200_000; i++) {
     const step = engine.advance();
-    if (step.kind === 'gameOver') return step.result;
+    if (step.kind === 'gameOver') {
+      if (step.result.halted && !allowHalt) {
+        throw new Error(`drive(): the game halted: ${step.result.haltReason ?? 'no reason'}`);
+      }
+      const unfired = provider.unfiredOnceRules();
+      if (unfired.length > 0) {
+        throw new Error(
+          `drive(): ${unfired.length} once-rule(s) never fired: ${unfired.join('; ')} ` +
+            `(set once: false if the rule is defensive)`,
+        );
+      }
+      return step.result;
+    }
     if (step.kind === 'continue') continue;
     engine.submit(provider.decide(step.request));
   }

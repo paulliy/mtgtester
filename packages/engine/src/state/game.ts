@@ -4,12 +4,17 @@
  * the game PRNG so the call order is deterministic, brief §5.9).
  */
 
+import { transformDefinition } from '../testing/definition-transform';
 import type { Color, OracleCard, PlayerId } from '@mtg/shared';
 import { interpretCard } from '../cards/interpret';
 import { assertValidModeledDefinition } from '../cards/authoring-validation';
 import type { CardDefinition } from '../cards/definition';
 import { emptyPool } from '../mana/cost';
+import { ChaCha20Rng, bytesOfHex, streamNonce } from '../rng/chacha20';
+import type { EngineRng } from '../rng/engine-rng';
 import { Prng } from '../rng/prng';
+import { EngineUsageError } from '../errors';
+import { defaultDiagnostics } from '../testing/diagnostics';
 import type {
   EngineCardObject,
   EnginePlayerState,
@@ -20,6 +25,20 @@ import type {
 
 const DEFAULT_TURN_CAP = 500;
 const STARTING_LIFE = 40; // brief §5.7
+
+/** Stream 0 of the game's key is the game's own (ADR 0031 decision 4). */
+const GAME_STREAM = 0;
+
+function gameRng(config: GameConfig): EngineRng {
+  if ((config.rng ?? 'legacy') === 'legacy') {
+    if (config.rngKey !== undefined)
+      throw new EngineUsageError('rngKey is set but the game uses the legacy RNG');
+    return new Prng(config.seed);
+  }
+  if (config.rngKey === undefined || !/^[0-9a-fA-F]{64}$/.test(config.rngKey))
+    throw new EngineUsageError('a chacha20 game needs an rngKey of 32 bytes as 64 hex digits');
+  return new ChaCha20Rng(bytesOfHex(config.rngKey, 32), streamNonce(GAME_STREAM));
+}
 
 export function createGame(config: GameConfig): GameContext {
   if (config.players.length < 2) {
@@ -36,7 +55,7 @@ export function createGame(config: GameConfig): GameContext {
     if (p.companion != null) addDef(p.companion);
   }
   for (const override of config.customDefinitions ?? []) {
-    defs.set(override.oracleId, assertValidModeledDefinition(override));
+    defs.set(override.oracleId, assertValidModeledDefinition(transformDefinition(override)));
   }
 
   let nextObjectNum = 1;
@@ -163,5 +182,13 @@ export function createGame(config: GameConfig): GameContext {
     turnCap: config.turnCap ?? DEFAULT_TURN_CAP,
   };
 
-  return { state, defs, rng: new Prng(config.seed), debugLog: [] };
+  const diagnostics = config.diagnostics ?? defaultDiagnostics();
+  return {
+    state,
+    defs,
+    rng: gameRng(config),
+    debugLog: [],
+    ...(config.strictInvariants === true && { strictInvariants: true }),
+    ...(diagnostics !== undefined && { diagnostics }),
+  };
 }

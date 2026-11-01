@@ -1,6 +1,7 @@
 /** Phase 5 read models: aggregate deck statistics and one-game debug/export payloads. */
 
 import type { AiAnnotation, AiReflection, ReflectionMoment, TableTalkLine } from '@mtg/shared';
+import { lossReasonLabel } from '../match/loss-reasons';
 import type { SqliteLike } from './games';
 
 type Row = Record<string, unknown>;
@@ -20,7 +21,8 @@ export interface DeckStatistic {
   averageGameLength: number | null;
   averageMulligans: number;
   mulliganDistribution: Array<{ mulligans: number; games: number }>;
-  eliminationCauses: Array<{ reason: string; count: number }>;
+  /** `label` is `reason` in player terms, written here so no screen translates the code. */
+  eliminationCauses: Array<{ reason: string; label: string; count: number }>;
   lossesTo: Array<{
     commanders: string[];
     colorIdentity: string[];
@@ -148,7 +150,11 @@ export class StatsRepository {
           `SELECT gp.loss_reason AS reason, COUNT(*) AS count FROM game_players gp JOIN games g ON g.id = gp.game_id JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ? WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' AND gp.loss_reason IS NOT NULL GROUP BY gp.loss_reason`,
           batchId,
           snapshotId,
-        ).map((item) => ({ reason: String(item['reason']), count: number(item['count']) })),
+        ).map((item) => ({
+          reason: String(item['reason']),
+          label: lossReasonLabel(String(item['reason'])),
+          count: number(item['count']),
+        })),
         lossesTo: rows(
           this.db,
           `SELECT killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag, COUNT(*) AS count FROM game_players victim JOIN games g ON g.id = victim.game_id JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ? JOIN game_players killer ON killer.game_id = victim.game_id AND killer.seat = victim.eliminated_by_seat JOIN deck_snapshots killer_ds ON killer_ds.id = killer.deck_snapshot_id JOIN decks killer_d ON killer_d.id = killer_ds.deck_id WHERE victim.deck_snapshot_id = ? AND g.status = 'finished' AND ${ATTRIBUTED_LOSS} GROUP BY killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag`,
@@ -193,7 +199,11 @@ export class StatsRepository {
         `SELECT loss_reason AS reason, COUNT(*) AS count FROM game_players gp JOIN games g ON g.id = gp.game_id
          WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' AND loss_reason IS NOT NULL GROUP BY loss_reason`,
         snapshotId,
-      ).map((item) => ({ reason: String(item['reason']), count: number(item['count']) })),
+      ).map((item) => ({
+        reason: String(item['reason']),
+        label: lossReasonLabel(String(item['reason'])),
+        count: number(item['count']),
+      })),
       lossesTo: rows(
         this.db,
         `SELECT killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag, COUNT(*) AS count

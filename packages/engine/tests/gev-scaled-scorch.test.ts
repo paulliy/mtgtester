@@ -10,7 +10,7 @@ import {
 } from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
 import { fixtureOracleId } from '../src/cards/overrides';
-import type { EngineActionOption } from '../src/decisions';
+import type { EngineActionOption, PendingDecision } from '../src/decisions';
 import { executeAbility } from '../src/effects/resolve';
 import { priorityCheckpoint } from '../src/sba/sba';
 import { resolveTopOfStack } from '../src/stack/stack';
@@ -98,7 +98,7 @@ describe('Gev, Scaled Scorch', () => {
     ['gev-ward-insufficient-life', 1, 'payCost', 1, false, 0, false],
     ['gev-ward-protected-life-floor', 2, 'payCost', 0, true, 1, true],
   ] as const)(
-    '%s applies the life payment and counter outcome',
+    '%s — applies the life payment and counter outcome',
     (_id, life, choice, expectedLife, spellRemains, decisions, lifeFloor) => {
       const ctx = pod(`gev-ward-${life}-${choice}`);
       ctx.state.currentTurnPlayer = 'P2';
@@ -122,7 +122,7 @@ describe('Gev, Scaled Scorch', () => {
     },
   );
 
-  it('gev-own-spell-no-ward and low-life legality keep targeting separate from payment', () => {
+  it('gev-own-spell-no-ward — and low-life legality keep targeting separate from payment', () => {
     const own = pod('gev-own-target');
     const ownGev = spawn(own, 'P1', gev);
     castTargeting(own, 'P1', ownGev.id);
@@ -144,7 +144,7 @@ describe('Gev, Scaled Scorch', () => {
     );
   });
 
-  it('gev-lizard-opponent-target-only triggers only for your Lizard and damages an opponent', () => {
+  it('gev-lizard-opponent-target-only — triggers only for your Lizard and damages an opponent', () => {
     const ctx = pod('gev-lizard', 3);
     const source = spawn(ctx, 'P1', gev);
     const trigger = interpretCard(gev).triggers![0]!;
@@ -162,6 +162,20 @@ describe('Gev, Scaled Scorch', () => {
     );
     queueCastTriggers(ctx, stackSpell(lizard, 'P1'));
     expect(ctx.state.pendingTriggers).toHaveLength(1);
+    // Put the real trigger on the stack and resolve it: it is mandatory, so no "use it?" is asked.
+    const answerTrigger = (decision: PendingDecision) => {
+      expect(decision.decisionType).not.toBe('optionalTrigger');
+      const slot = decision.options[0]?.targets?.[0];
+      return {
+        index: 0,
+        targets: new Map(slot === undefined ? [] : [[slot.slot, 'P2']]),
+      };
+    };
+    pump(priorityCheckpoint(ctx), answerTrigger, { strict: true });
+    expect(ctx.state.stack).toHaveLength(1);
+    pump(resolveTopOfStack(ctx), answerTrigger, { strict: true });
+    expect(ctx.state.players[1]!.life).toBe(lifeBefore - 2);
+    expect(ctx.state.players[2]!.life).toBe(40);
     ctx.state.pendingTriggers = [];
 
     const bear = conjure(
@@ -174,7 +188,7 @@ describe('Gev, Scaled Scorch', () => {
     expect(ctx.state.pendingTriggers).toHaveLength(0);
   });
 
-  it('gev-entry-counters-opponents-lost-life counts each opponent once and excludes Gev', () => {
+  it('gev-entry-counters-opponents-lost-life — counts each opponent once and excludes Gev', () => {
     const ctx = pod('gev-counters', 4);
     const source = spawn(ctx, 'P1', gev);
     expect(source.counters['+1/+1'] ?? 0).toBe(0);

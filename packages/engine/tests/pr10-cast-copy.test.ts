@@ -39,6 +39,14 @@ function resolveAll(ctx: GameContext, answer?: (decision: PendingDecision) => De
   throw new Error('stack did not settle');
 }
 
+/** The copy is not a "may" trigger of its own: no "use this ability?" question precedes it. */
+const noOptionalTrigger =
+  (answer: (decision: PendingDecision) => DecisionOutcome) =>
+  (decision: PendingDecision): DecisionOutcome => {
+    expect(decision.decisionType).not.toBe('optionalTrigger');
+    return answer(decision);
+  };
+
 const labDraw = () =>
   oracle({
     name: 'Lab Divination',
@@ -96,7 +104,7 @@ describe('PR10.19 Galvanic Iteration', () => {
     expect(ctx.state.delayedTriggers).toHaveLength(0);
     putPendingTriggersOnStack(ctx);
     // The delayed trigger is above the spell; resolving it copies the spell.
-    pump(resolveTopOfStack(ctx), choose('Galvanic Second'));
+    pump(resolveTopOfStack(ctx), noOptionalTrigger(choose('Galvanic Second')), { strict: true });
     const copy = ctx.state.stack.at(-1)!;
     expect(copy.id).not.toBe(shock.id);
     expect(copy.card).toBeNull();
@@ -162,7 +170,7 @@ describe('PR10.19 Galvanic Iteration', () => {
     putPendingTriggersOnStack(ctx);
     // The original leaves the stack before the copy trigger resolves.
     ctx.state.stack = ctx.state.stack.filter((entry) => entry.id !== shock.id);
-    pump(resolveTopOfStack(ctx), choose('Keep'));
+    pump(resolveTopOfStack(ctx), noOptionalTrigger(choose('Keep')), { strict: true });
     expect(ctx.state.stack).toHaveLength(1);
     resolveAll(ctx);
     expect(a.damageMarked).toBe(2);
@@ -215,6 +223,7 @@ describe('PR10.26 Cosmic Crucible', () => {
       targets: new Map(),
       manaSplit: { W: 0, U: 1, B: 0, R: 1, G: 2 },
     }));
+    expect(decisions).toHaveLength(1);
     expect(decisions[0]!.manaSplit).toEqual({ amount: 4, colors: ['W', 'U', 'B', 'R', 'G'] });
     expect(
       p(ctx, 'P1')

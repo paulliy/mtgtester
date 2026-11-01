@@ -372,7 +372,7 @@ const facePins = JSON.parse(
   readFileSync(new URL('./fixtures/selected-spell-faces-oracle.json', import.meta.url), 'utf8'),
 ) as { cards: { card: OracleCard }[] };
 it.each(['Foulmire Knight', 'Sagu Wildling'])(
-  'free-face normal stack resolves the printed alternate of %s',
+  'free-face — normal stack resolves the printed alternate of %s',
   (name) => {
     const { ctx, player } = setup();
     const input = facePins.cards.find(({ card }) => card.name.startsWith(name))!.card;
@@ -406,7 +406,7 @@ it.each(['Foulmire Knight', 'Sagu Wildling'])(
   },
 );
 it.each([2, 3])(
-  'free-face Cascade limit %s excludes Profane Insight even though its front qualifies',
+  'free-face — Cascade limit %s excludes Profane Insight even though its front qualifies',
   (limit) => {
     const { ctx } = setup();
     const card = conjure(

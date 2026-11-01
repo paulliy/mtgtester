@@ -130,6 +130,11 @@ export interface AlternativeCast {
   exileOnResolution?: boolean;
   /** The alternative is Escape and marks the resulting stack/permanent object as escaped. */
   escaped?: true;
+  /**
+   * Dash (CR 702.109a): the permanent this spell becomes gains haste, and it's returned from the
+   * battlefield to its owner's hand at the beginning of the next end step.
+   */
+  dashed?: true;
 }
 
 export interface MdfcLandFace {
@@ -607,6 +612,29 @@ export type EffectRef =
  * (CR 611.2c).
  */
 export type Effect =
+  /**
+   * "Amass Orcs 1" (CR 701.47a): if the controller controls no Army creature, they create a 0/0
+   * black `subtype` Army creature token; then they choose an Army creature they control, put
+   * `count` +1/+1 counters on it, and it becomes a `subtype` in addition to its other types if it
+   * isn't one. The token is created before the counters, so state-based actions never see it
+   * as 0/0.
+   */
+  | { op: 'amass'; subtype: string; count: Value }
+  /**
+   * "Choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the
+   * card on top of your library." (Sylvan Library): the controller chooses `count` cards in hand
+   * that were drawn this turn (as many as there are, if fewer), then for each, in the order
+   * chosen, pays `life` or puts it on top. Life can be paid only with at least that much life
+   * (CR 119.4); a card that has left the hand meanwhile is skipped.
+   */
+  | { op: 'payLifeOrTopDrawnCards'; count: Value; life: Value }
+  /**
+   * "Return a creature or planeswalker card from your graveyard to your hand" (Takenuma): the
+   * controller chooses one card matching `filter` in their graveyard as the effect resolves and
+   * puts it into their hand. Not a target (CR 115.10), so it may be a card an earlier effect of the
+   * same ability just put there; mandatory whenever one exists.
+   */
+  | { op: 'returnCardFromGraveyardToHand'; filter: Selector }
   | { op: 'pumpUntilEot'; target: EffectRef; power: Value | number; toughness: Value | number }
   | { op: 'grantKeywordUntilEot'; target: EffectRef; keyword: KeywordAbility }
   /** Target creature cannot be blocked this turn. */
@@ -801,9 +829,14 @@ export type Effect =
   | { op: 'revealCreatureOrBottom' }
   /** CR 701.44: the permanent's current (or last) controller performs the exploration. */
   | { op: 'explore'; target: EffectRef }
+  /**
+   * Exile the top card of a library. `player: 'each'` exiles the top card of each player's library;
+   * with `castFree`, "then you may cast any number of spells from among those cards without paying
+   * their mana costs" (Etali, Primal Storm), chosen one at a time.
+   */
   | {
       op: 'exileLibraryTop';
-      player: 'you' | 'eventPlayer';
+      player: 'you' | 'eventPlayer' | 'each';
       castFree?: true;
       grantCastUntilEot?: true;
       spendAsAnyColor?: true;
@@ -1084,6 +1117,12 @@ export type Effect =
   | { op: 'grantUnearthToArtifactCreaturesInGraveyard'; cost: ParsedManaCost }
   | { op: 'exileSource' }
   | { op: 'draw'; count: Value; player?: 'controller' | 'eventPlayer' }
+  /**
+   * "You may play an additional land this turn" (Explore): the controller may play `count` more
+   * lands this turn than the rules otherwise allow (CR 305.2). It grants the permission and
+   * plays nothing; the extra plays lapse at end of turn.
+   */
+  | { op: 'additionalLandPlaysThisTurn'; count: Value }
   | { op: 'discard'; count: number } // controller chooses cards to discard
   /**
    * "You may discard a card. If you do, draw a card. If a creature card was discarded this way,
@@ -1230,7 +1269,6 @@ export type Effect =
   /** Hunting Wilds: search two Forests and permanently animate only those found this way. */
   | { op: 'huntingWilds' }
   /** Etali's linked per-player exile and optional free-cast sequence. */
-  | { op: 'etaliPrimalConqueror' }
   /**
    * "Search your library for a `<filter>` card and cast that card without paying its mana
    * cost" (Sunforger) — like `searchLibrary`, but the found card is cast for free instead of
@@ -1504,6 +1542,11 @@ export type Effect =
   | { op: 'selfToLibraryTop' }
   | { op: 'putCountersEachChosen'; targetSlot: number; counter: string; count: Value | number }
   | { op: 'grantKeywordEachChosenUntilEot'; targetSlot: number; keyword: KeywordAbility }
+  /**
+   * "One or two target creatures can't block this turn" (Untimely Malfunction): every creature
+   * chosen in the count slot that is still a legal target can't block until the turn ends.
+   */
+  | { op: 'cantBlockEachChosenThisTurn'; targetSlot: number }
   /** "Double the number of each kind of counter on any number of target permanents" (The Thing). */
   | { op: 'doubleCountersEachChosen'; targetSlot: number }
   /** "… and up to one other target creature you control can't be blocked this turn" (Lockjaw). */
@@ -1538,7 +1581,6 @@ export type Effect =
   | { op: 'untapTargetPlayerCreatures'; targetSlot: number }
   | { op: 'exileUntilSourceLeaves'; targetSlot: number }
   | { op: 'exileEachChosenUntilSourceLeaves'; targetSlot: number }
-  | { op: 'exileTargetAndControllerMaySearchBasicLandTapped'; targetSlot: number }
   | { op: 'destroyTargetAndControllerMaySearchBasicTypedLand'; target: EffectRef }
   | { op: 'exileCreatureAndControllerSearchBasicLand'; target: EffectRef }
   | { op: 'exileEachCreatureAndControllersSearchBasicLands'; selector: Selector }
@@ -2046,7 +2088,16 @@ export type Effect =
    * spells from among those exiled cards" (Dream Pillager) — an impulse-draw of a DYNAMIC
    * count. `legal.ts` offers each exiled card back as a cast option for the rest of the turn.
    */
-  | { op: 'exileTopNPlayableUntilEot'; count: Value; castOnly?: true }
+  | {
+      op: 'exileTopNPlayableUntilEot';
+      count: Value;
+      castOnly?: true;
+      /**
+       * "Exile the top card of that player's library" (Ragavan): the event player's library, not
+       * the controller's. The controller may still cast the card; its owner keeps it.
+       */
+      library?: 'eventPlayer';
+    }
   | { op: 'noOp' };
 
 /**

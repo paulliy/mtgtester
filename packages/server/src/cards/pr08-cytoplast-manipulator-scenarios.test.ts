@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 
 function replay(mode: 'graft-yes' | 'graft-no' | 'control-duration') {
-  const scenario = createCardTestScenario(
+  const scenario = strictCardTestScenario(
     `cytoplast-manipulator-viewer-${mode}`,
     'pr08-cytoplast-test',
   )!;

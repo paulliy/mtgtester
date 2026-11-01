@@ -350,6 +350,9 @@ type ExpressionFields<T> = {
   [F in keyof T as Extract<T[F], Selector | Value | Condition> extends never ? never : F]-?: Check;
 };
 const effectExpressions = {
+  amass: { count: numberValue },
+  payLifeOrTopDrawnCards: { count: numberValue, life: numberValue },
+  returnCardFromGraveyardToHand: { filter: selector },
   pumpUntilEot: { power: numericExpression, toughness: numericExpression },
   grantKeywordUntilEot: {},
   cantBeBlockedUntilEot: {},
@@ -524,6 +527,7 @@ const effectExpressions = {
   grantUnearthToArtifactCreaturesInGraveyard: {},
   exileSource: {},
   draw: { count: numberValue },
+  additionalLandPlaysThisTurn: { count: numberValue },
   discard: {},
   putFromHandOnLibraryTop: { count: numberValue },
   discardAtRandom: { count: numberValue },
@@ -554,7 +558,6 @@ const effectExpressions = {
   searchLibrary: { filter: selector, count: optional(numberValue) },
   searchLibraryGroup: { filter: selector },
   huntingWilds: {},
-  etaliPrimalConqueror: {},
   searchLibraryCastFree: { filter: selector },
   shuffle: {},
   scry: { count: numericExpression },
@@ -611,6 +614,7 @@ const effectExpressions = {
   selfToLibraryTop: {},
   putCountersEachChosen: { count: numericExpression },
   grantKeywordEachChosenUntilEot: {},
+  cantBlockEachChosenThisTurn: {},
   doubleCountersEachChosen: {},
   cantBeBlockedEachChosen: {},
   untapUpTo: { selector: selector },
@@ -624,7 +628,6 @@ const effectExpressions = {
   untapTargetPlayerCreatures: {},
   exileUntilSourceLeaves: {},
   exileEachChosenUntilSourceLeaves: {},
-  exileTargetAndControllerMaySearchBasicLandTapped: {},
   removeTargetAndControllerMaySearchBasicLand: {},
   destroyTargetAndControllerMaySearchBasicTypedLand: {},
   exileCreatureAndControllerSearchBasicLand: {},

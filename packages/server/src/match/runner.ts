@@ -27,14 +27,25 @@ import type {
   HaltKind,
   LossReason,
   PlayerId,
+  PresentationCue,
   SpectatorLogLine,
   SpectatorState,
   TargetChoice,
 } from '@mtg/shared';
 import { LOOKAHEAD_TURNS } from '@mtg/shared';
-import type { GameRecorder, GameSeatRecord, GameStatus, ManaMetricRecord } from '../db/games';
+import { buildCues, type CueBoard } from './presentation';
+import type {
+  GameRecorder,
+  GameReplayRecord,
+  GameSeatRecord,
+  GameStatus,
+  ManaMetricRecord,
+} from '../db/games';
 
 export { LOOKAHEAD_TURNS } from '@mtg/shared';
+
+/** Surfaced decisions a game may take before it halts as a runaway (a replay input, ADR 0031 decision 8). */
+export const DEFAULT_MAX_DECISIONS = 100_000;
 
 /**
  * How many per-action board states to keep for seeking. The client keeps the last 4 000 log
@@ -52,6 +63,12 @@ export const ESCALATION_TIMEOUT_MS = 5_000;
  * `jumpToTurn` messages that let compute continue.
  */
 const YIELD_EVERY_STEPS = 200;
+/**
+ * And at least this often, however few steps that is. A late-game bot turn can spend hundreds of
+ * milliseconds in one step, so 200 of them would hold the thread for a minute: a table worker
+ * could answer no health probe and read no `resumeControl` until its game was stopped as hung.
+ */
+const YIELD_EVERY_MS = 50;
 
 export type MatchStatus =
   | 'idle'
@@ -81,6 +98,9 @@ export interface HaltInfo {
   reason: string;
   turn: number;
   cardName?: string;
+  /** The engine site that raised an invariant halt, with the seed to reproduce it (ADR 0034). */
+  site?: string;
+  seed?: string;
 }
 
 /**
@@ -93,8 +113,18 @@ export interface DecisionEscalation {
 }
 
 export interface MatchRunnerHooks {
-  /** New spectator log lines, with the advancing compute frontier. */
-  onEvents?(lines: SpectatorLogLine[], frontierTurn: number, snapshotTurns: number[]): void;
+  /**
+   * New log lines, with the advancing compute frontier. `seat` names the viewer the lines were
+   * formatted for when the runner has `seatEvents`; otherwise there is one stream and it is absent.
+   */
+  onEvents?(
+    lines: SpectatorLogLine[],
+    frontierTurn: number,
+    snapshotTurns: number[],
+    seat?: PlayerId,
+    /** Damage and life cues for the same events (ADR 0032 decision 8); empty when none. */
+    cues?: PresentationCue[],
+  ): void;
   onSnapshot?(turn: number, state: SpectatorState, atFrontier: boolean): void;
   onHalt?(info: HaltInfo): void;
   onGameOver?(result: GameResult): void;
@@ -131,11 +161,21 @@ export interface MatchRunnerOptions extends MatchRunnerHooks {
   seats: readonly GameSeatRecord[];
   providerFor: (playerId: PlayerId) => AsyncDecisionProvider;
   recorder?: GameRecorder | null;
+  /** Written to the `games` row with the rest of its first insert; omit to store none. */
+  replay?: GameReplayRecord;
   lookaheadTurns?: number;
   maxDecisions?: number;
   escalationTimeoutMs?: number;
   gameMode?: GameMode;
   formatEvents?: (events: readonly GameEvent[]) => SpectatorLogLine[];
+  /**
+   * One log stream per viewing seat (a table's human seats): `format` is called once per seat per
+   * batch, and each seat's lines reach `onEvents` with that seat. Replaces the single stream.
+   */
+  seatEvents?: {
+    seats: readonly PlayerId[];
+    format: (events: readonly GameEvent[], seat: PlayerId) => SpectatorLogLine[];
+  };
 }
 
 /** Classify a halt reason string the engine produced into a protocol `HaltKind`. */
@@ -181,6 +221,11 @@ export class MatchRunner {
 
   /** Resolves when something the compute gate cares about changes. */
   private wakeup: (() => void) | null = null;
+  /** The board the next batch of cues is judged against (`takeCues`). */
+  private cueBoard: CueBoard | null = null;
+  /** A concession asked for (ADR 0031 decision 10), applied at the next decision boundary. */
+  private pendingConcession: { players: PlayerId[]; reason: 'timeLimit' | 'allAway' } | null = null;
+  private wakeConcession: (() => void) | null = null;
   /** The escalation currently awaiting a human pick, if any (brief §7.7 step 2). */
   private heldDecision: {
     requestId: string;
@@ -273,6 +318,22 @@ export class MatchRunner {
     return true;
   }
 
+  /**
+   * End the game by agreement: a table's time limit, or every human gone (ADR 0031 decision 10).
+   * Applied at the decision the runner is waiting on, or at the next one it reaches; the waiting
+   * provider's answer, if it ever comes, is dropped. The result is a draw for the players still
+   * in the game, recorded as an outcome and not a halt.
+   */
+  concede(players: readonly PlayerId[], reason: 'timeLimit' | 'allAway'): void {
+    if (this.status === 'finished' || this.status === 'halted' || this.status === 'abandoned') {
+      return;
+    }
+    if (this.pendingConcession !== null) return;
+    this.pendingConcession = { players: [...players], reason };
+    this.wakeConcession?.();
+    this.wake();
+  }
+
   abandon(): void {
     if (this.status === 'finished' || this.status === 'halted') return;
     this.setStatus('abandoned');
@@ -309,7 +370,12 @@ export class MatchRunner {
   async run(): Promise<void> {
     if (this.status !== 'idle') return;
     this.setStatus('running');
-    this.opts.recorder?.start(this.opts.seed, this.opts.seats, this.opts.gameMode ?? 'spectator');
+    const mode = this.opts.gameMode ?? 'spectator';
+    if (this.opts.replay === undefined) {
+      this.opts.recorder?.start(this.opts.seed, this.opts.seats, mode);
+    } else {
+      this.opts.recorder?.start(this.opts.seed, this.opts.seats, mode, this.opts.replay);
+    }
     // A prepared-scenario engine (Card Test Lab) starts mid-game: its first snapshot is already
     // past turn 0, so a viewer anchored at turn 0 would park compute before the first decision.
     this.viewTurn = this.opts.engine.getState().turnNumber;
@@ -340,8 +406,15 @@ export class MatchRunner {
   // ── The pump ──────────────────────────────────────────────────────────────────────────────
 
   private async loop(): Promise<void> {
-    const maxDecisions = this.opts.maxDecisions ?? 100_000;
+    const maxDecisions = this.opts.maxDecisions ?? DEFAULT_MAX_DECISIONS;
     let stepsSinceYield = 0;
+    let lastYield = Date.now();
+    const yieldIfDue = async (): Promise<void> => {
+      if (++stepsSinceYield < YIELD_EVERY_STEPS && Date.now() - lastYield < YIELD_EVERY_MS) return;
+      stepsSinceYield = 0;
+      await yieldToEventLoop();
+      lastYield = Date.now();
+    };
 
     for (;;) {
       if (this.isAbandoned()) return;
@@ -360,10 +433,7 @@ export class MatchRunner {
       }
 
       if (step.kind === 'continue') {
-        if (++stepsSinceYield >= YIELD_EVERY_STEPS) {
-          stepsSinceYield = 0;
-          await yieldToEventLoop();
-        }
+        await yieldIfDue();
         continue;
       }
 
@@ -375,6 +445,7 @@ export class MatchRunner {
       }
 
       const request = step.request;
+      if (this.applyConcession()) continue;
       // Bookkeep and flush *before* the provider, not after it. `advance()` has already run this
       // decision's whole forced tail — payments, forced passes, resolutions, draws — and the
       // board it surfaced the request against is settled. Flushing afterwards held those outcome
@@ -389,8 +460,12 @@ export class MatchRunner {
       // match from inside them. The post-await guard below still covers the provider itself.
       if (this.isAbandoned()) return;
 
-      const response = await this.opts.providerFor(request.decidingPlayer).decide(request);
+      const response = await this.decideOrConcede(request);
       if (this.isAbandoned()) return;
+      if (response === null) {
+        this.applyConcession();
+        continue;
+      }
 
       this.opts.engine.submit(response);
       // `eventCursor` still points at the first event the submit above produced — `flushEvents()`
@@ -401,11 +476,34 @@ export class MatchRunner {
       this.flushEvents();
       this.flushDebug();
 
-      if (++stepsSinceYield >= YIELD_EVERY_STEPS) {
-        stepsSinceYield = 0;
-        await yieldToEventLoop();
-      }
+      await yieldIfDue();
     }
+  }
+
+  /** The provider's answer, or null when a concession arrives first. */
+  private async decideOrConcede(request: DecisionRequest): Promise<DecisionResponse | null> {
+    if (this.pendingConcession !== null) return null;
+    const conceded = new Promise<null>((resolve) => {
+      this.wakeConcession = () => {
+        resolve(null);
+      };
+    });
+    try {
+      return await Promise.race([
+        this.opts.providerFor(request.decidingPlayer).decide(request),
+        conceded,
+      ]);
+    } finally {
+      this.wakeConcession = null;
+    }
+  }
+
+  /** Concede the engine's waiting decision if a concession is pending. */
+  private applyConcession(): boolean {
+    const concession = this.pendingConcession;
+    if (concession === null) return false;
+    this.pendingConcession = null;
+    return this.opts.engine.concede(concession.players, concession.reason);
   }
 
   /**
@@ -413,7 +511,11 @@ export class MatchRunner {
    * change the answer — `setViewTurn`, `abandon` — calls `wake()`.
    */
   private async awaitComputeBudget(): Promise<void> {
-    while (this.hasComputeBudget() === false && !this.isAbandoned()) {
+    while (
+      this.hasComputeBudget() === false &&
+      !this.isAbandoned() &&
+      this.pendingConcession === null
+    ) {
       this.setStatus('waitingForView');
       await new Promise<void>((resolve) => {
         this.wakeup = resolve;
@@ -491,11 +593,37 @@ export class MatchRunner {
     this.eventCursor = (events[events.length - 1]?.sequence ?? this.eventCursor) + 1;
     this.opts.recorder?.appendEvents(events);
     this.indexMetricEvents(events);
-    const lines = this.opts.formatEvents?.(events) ?? formatSpectatorLog(events);
-    if (lines.length > 0) {
-      this.opts.onEvents?.(lines, this.frontierTurn, this.getSnapshotTurns());
+    const cues = this.takeCues(events);
+    const { seatEvents } = this.opts;
+    if (seatEvents !== undefined) {
+      for (const seat of seatEvents.seats) {
+        const seatLines = seatEvents.format(events, seat);
+        if (seatLines.length > 0) {
+          this.opts.onEvents?.(seatLines, this.frontierTurn, this.getSnapshotTurns(), seat, cues);
+        }
+      }
+    } else {
+      const lines = this.opts.formatEvents?.(events) ?? formatSpectatorLog(events);
+      if (lines.length > 0) {
+        this.opts.onEvents?.(lines, this.frontierTurn, this.getSnapshotTurns(), undefined, cues);
+      }
     }
     this.opts.onProgress?.(this.frontierTurn);
+  }
+
+  /**
+   * The cues for a flushed batch, built against the boards before and after it. The board after
+   * one batch is the board before the next, so every event is judged against the board it
+   * changed.
+   */
+  private takeCues(events: readonly GameEvent[]): PresentationCue[] {
+    const engine = this.opts.engine as Partial<Pick<Engine, 'cueBoard'>>;
+    // A stub engine in a runner test has no board to read.
+    if (typeof engine.cueBoard !== 'function') return [];
+    const after = engine.cueBoard();
+    const before = this.cueBoard ?? after;
+    this.cueBoard = after;
+    return buildCues(events, before, after);
   }
 
   /** Persist the engine's separate diagnostic stream with the same incremental cadence as events. */
@@ -591,7 +719,17 @@ export class MatchRunner {
         kind: classifyHalt(result.haltReason),
         reason: result.haltReason ?? 'engine halted',
         turn: result.turnCount,
+        ...(result.haltSite !== undefined && { site: result.haltSite, seed: this.opts.seed }),
       });
+      return;
+    }
+
+    // A game ended by agreement (a table's time limit, everyone away) is a deliberate draw for
+    // the players still in it: an outcome, not a halt (ADR 0031 decision 10).
+    if (result.endReason !== undefined && result.endReason !== 'rules') {
+      this.setStatus('finished');
+      this.persistOutcome(result, 'finished');
+      this.opts.onGameOver?.(result);
       return;
     }
 

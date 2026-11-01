@@ -26,7 +26,8 @@
  */
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
-import type { CombatRejection, DecisionRequest, ObjectId, TargetChoice } from '@mtg/shared';
+import type { CombatRejection, ObjectId, TargetChoice } from '@mtg/shared';
+import type { DecisionRequest } from '../lib/protocol';
 import { ATTACKS_TARGET, NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
 
 export type CombatPlanMode = 'idle' | 'composing' | 'replaying';

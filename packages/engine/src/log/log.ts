@@ -9,6 +9,7 @@
 
 import type { GameEvent, PlayerId } from '@mtg/shared';
 import type { DebugEntry, GameContext } from '../state/types';
+import { EngineBudgetError } from '../errors';
 import { buildSpectatorState, formatSpectatorLine } from '../view/spectator';
 
 /**
@@ -37,6 +38,12 @@ export function emit(
   payload: Record<string, unknown>,
   actorSeat: PlayerId | null = null,
 ): void {
+  const budget = ctx.budget;
+  if (budget?.maxStepWork !== undefined && type !== 'engineHalt') {
+    budget.stepWork.count += 1;
+    if (budget.stepWork.count > budget.maxStepWork)
+      throw new EngineBudgetError('stepWork', budget.maxStepWork);
+  }
   const s = ctx.state;
   const seq = s.nextEventSequence++;
   const event: GameEvent = {

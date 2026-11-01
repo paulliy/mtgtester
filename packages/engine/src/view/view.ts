@@ -166,7 +166,14 @@ function formatEvent(e: GameEvent): string {
  * and any zone change touching a library (draws, bottoms, tucks).
  */
 function visibleEvent(e: GameEvent, viewer: PlayerId): GameEvent | null {
-  if (e.type === 'draw' || e.type === 'decision') return null;
+  // A cancelled yield or a concession is a replay input, not game news; it never reaches a prompt.
+  if (
+    e.type === 'draw' ||
+    e.type === 'decision' ||
+    e.type === 'yieldCancelled' ||
+    e.type === 'conceded'
+  )
+    return null;
   if (e.type === 'zoneChange') {
     const from = e.payload['from'];
     const to = e.payload['to'];

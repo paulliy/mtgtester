@@ -118,6 +118,10 @@ const engineSourcesFor = (name: string): string =>
 
 describe('fail-closed restoration baseline', () => {
   it('keeps the remaining restoration cards explicitly contained for the documented reason', () => {
+    // A card is either still contained or restored, never both.
+    expect(
+      expected.filter((card) => restored.some((entry) => entry.oracleId === card.oracleId)),
+    ).toEqual([]);
     for (const card of expected) {
       const pinned = fixture.cards.find((entry) => entry.card.oracleId === card.oracleId);
       expect(pinned?.sha256, card.name).toBe(card.sha256);
@@ -221,7 +225,9 @@ describe('fail-closed restoration baseline', () => {
       expect(RESTORED_ENGINE_TEST_FILES[card.name], `${card.name} engine test file`).toBeTruthy();
       const engineSources = engineSourcesFor(card.name);
       for (const clause of entry!.clauses) {
-        for (const id of clause.engineTestIds) expect(engineSources, id).toContain(id);
+        // A parametrized title's ID is literal up to its em dash; check:manifest-tests matches it whole.
+        for (const id of clause.engineTestIds)
+          expect(engineSources, id).toContain(id.split(' — ')[0]);
         for (const id of clause.viewerScenarioIds) expect(viewerSources, id).toContain(id);
       }
       for (const id of entry!.gameplayAiScenarioIds) expect(gameplayAiSource, id).toContain(id);

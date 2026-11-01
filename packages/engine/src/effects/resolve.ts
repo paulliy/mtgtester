@@ -1,8 +1,15 @@
 import { targetingSourceFields } from '../targets/context';
 import type { TargetingSource } from '../targets/context';
 import { copyData } from '../state/copy-data';
+import { enterOp, noop } from '../exits';
 import { offBattlefieldTypes } from '../state/off-battlefield-types';
-import { HUMAN_SOLDIER_1_1_WHITE, TREASURE } from '../cards/tokens';
+import {
+  CITIZEN_1_1_GREEN_WHITE,
+  creatureToken,
+  HUMAN_SOLDIER_1_1_WHITE,
+  INKLING_2_1_FLYING,
+  TREASURE,
+} from '../cards/tokens';
 import {
   discover,
   revealUntilAura,
@@ -65,7 +72,8 @@ import { queueBecomesTargetedTriggers, queueWardTriggers } from '../actions/appl
 import { evaluateCondition, isChoiceCondition, resolveCondition } from '../cards/condition';
 import { allOf, ofSupertype, ofType, selectMatches, YOURS } from '../cards/selector';
 import type { GameGen } from '../decisions';
-import { UnmodeledCardError } from '../errors';
+import { optionAt } from '../decisions';
+import { EngineInvariantError, UnmodeledCardError } from '../errors';
 import {
   candidateOf,
   computeCharacteristics,
@@ -105,9 +113,10 @@ import {
   createToken,
   changeController,
   refreshControlEffects,
+  copiableDefinition,
   createTokens,
+  paysEntersUnlessDiscard,
   createTokensForPlayers,
-  makePermanent,
   canAttach,
   moveObject,
   moveObjects,
@@ -610,7 +619,7 @@ function* chooseEnteringAttackTarget(
             }),
       ),
     };
-    chosen = choices[outcome.index] ?? chosen;
+    chosen = optionAt(choices, outcome, 'resolve.chooseEnteringAttackTarget');
   }
   return { defenderId: chosen.defenderId, planeswalkerId: chosen.planeswalker?.id ?? null };
 }
@@ -775,6 +784,7 @@ export function* drawCards(
     }
     const drawn = yield* moveObject(ctx, top, { zone: 'hand' });
     if (drawn?.zone !== 'hand') continue;
+    (drawn as EngineCardObject).drawnOnTurn = ctx.state.turnNumber;
     // The count is banked exactly when this successful emitted draw exists: the card moved
     // to hand and the `draw` event below is about to record it.
     drawnCount += 1;
@@ -1686,6 +1696,38 @@ export function* executeAbility(
   /** The announced division of a `dealDamageDivided` effect's total, keyed by object id. */
   divisionAmounts?: Record<ObjectId, number>,
 ): GameGen<void> {
+  const run = executeAbilityEffects(
+    ctx,
+    source,
+    ability,
+    targets,
+    triggerObjectCardId,
+    extraScope,
+    countTargets,
+    divisionAmounts,
+  );
+  const sink = ctx.diagnostics;
+  if (sink === undefined) return yield* run;
+  // An early exit is charged to the op running when it happens; an ability that runs inside an
+  // op (a reflexive trigger, a copy) hands that op back when it ends, however it ends.
+  const outer = sink.current;
+  try {
+    yield* run;
+  } finally {
+    sink.current = outer;
+  }
+}
+
+function* executeAbilityEffects(
+  ctx: GameContext,
+  source: EffectSource,
+  ability: Ability,
+  targets: ObjectId[],
+  triggerObjectCardId?: string,
+  extraScope?: Omit<ValueScope, 'controllerId' | 'sourceCardId'>,
+  countTargets?: Record<number, ObjectId[]>,
+  divisionAmounts?: Record<ObjectId, number>,
+): GameGen<void> {
   const resolutionObjectMoves = ctx.resolutionObjectMoves ?? new Map<ObjectId, ObjectId | null>();
   const resolutionObjectFacts = ctx.resolutionObjectFacts ?? new Map<ObjectId, ObjectFacts>();
   // Share the game itself, but carry transition tracking only through this effect's calls.
@@ -1722,7 +1764,7 @@ export function* executeAbility(
           .join('; '),
       })),
     };
-    const selected = selections[outcome.index] ?? selections[0];
+    const selected = optionAt(selections, outcome, 'resolve.executeAbility.modes');
     if (selected === undefined) return;
     const effects = selected.flatMap((index) => ability.modes?.options[index]?.effects ?? []);
     const { modes: _modes, ...abilityWithoutModes } = ability;
@@ -1942,6 +1984,7 @@ export function* executeAbility(
       );
       if (perm === undefined) {
         debug(ctx, 'effect', `${source.name}: trigger object has left the battlefield — skipped`);
+        noop(ctx, 'resolve.ref.triggerObjectGone', 'objectGone');
         return null;
       }
       return perm.id;
@@ -1953,6 +1996,7 @@ export function* executeAbility(
     }
     if (!stillLegal(id, spec, r)) {
       debug(ctx, 'effect', `${source.name}: target ${id} illegal — skipped`);
+      noop(ctx, 'resolve.ref.targetIllegal', 'targetIllegal', () => id);
       return null;
     }
     const stableId = refStableIdCache.get(r);
@@ -1977,6 +2021,7 @@ export function* executeAbility(
   };
 
   for (const effect of ability.effects ?? []) {
+    enterOp(ctx, source.name, effect.op);
     switch (effect.op) {
       case 'transformSelf': {
         const current = sourcePermanent();
@@ -2043,7 +2088,7 @@ export function* executeAbility(
             description: option.description,
           })),
         };
-        const chosen = effect.options[outcome.index] ?? effect.options[0];
+        const chosen = optionAt(effect.options, outcome, 'resolve.chooseOne');
         if (chosen !== undefined) {
           yield* executeAbility(
             ctx,
@@ -2495,6 +2540,17 @@ export function* executeAbility(
         }
         break;
       }
+      case 'cantBlockEachChosenThisTurn': {
+        const chosen = legalChosenPermanents(effect.targetSlot);
+        if (chosen.length > 0)
+          (ctx.state.blockRestrictions ??= []).push({
+            id: `br-${ctx.state.nextObjectNum++}`,
+            controllerId: controller.id,
+            objectIds: chosen.map((permanent) => permanent.id),
+            expires: { kind: 'thisTurn', turn: ctx.state.turnNumber },
+          });
+        break;
+      }
       case 'untapUpTo': {
         const available = affectedBy(ctx, source, effect.selector).filter(
           (permanent) => permanent.tapped,
@@ -2786,42 +2842,6 @@ export function* executeAbility(
         shuffleLibrary(ctx, beneficiary);
         break;
       }
-      case 'exileTargetAndControllerMaySearchBasicLandTapped': {
-        const targetId = scope.targets?.[effect.targetSlot];
-        if (!targetId) break;
-        const perm = findPermanent(ctx, targetId);
-        if (perm === undefined) break;
-        const targetControllerId = perm.controllerId;
-        emit(ctx, 'exile', { target: perm.name, source: source.name });
-        yield* moveObject(ctx, perm, { zone: 'exile' });
-        const targetPlayer = ctx.state.players.find((p) => p.id === targetControllerId);
-        if (targetPlayer) {
-          const choice = yield {
-            decisionType: 'general',
-            player: targetControllerId,
-            prompt:
-              'May search your library for a basic land card, put that card onto the battlefield tapped, then shuffle',
-            options: [
-              { type: 'search', description: 'Search for a basic land card' },
-              { type: 'decline', description: "Don't search" },
-            ],
-          };
-          if (choice.index === 0) {
-            const landIdx = targetPlayer.library.findIndex((c) => {
-              const def = getDefByOracleId(ctx, c.oracleId, c.name);
-              return def.types.includes('Land') && def.supertypes.includes('Basic');
-            });
-            if (landIdx !== -1) {
-              const landCard = targetPlayer.library.splice(landIdx, 1)[0]!;
-              const landPerm = makePermanent(ctx, landCard, targetControllerId);
-              landPerm.tapped = true;
-              ctx.state.battlefield.push(landPerm);
-              queueTriggersForObject(ctx, 'enters', landPerm);
-            }
-          }
-        }
-        break;
-      }
       case 'populate': {
         const myTokens = ctx.state.battlefield.filter(
           (p) =>
@@ -2841,11 +2861,12 @@ export function* executeAbility(
                 description: `${t.name} (${effectivePT(ctx, t).power}/${effectivePT(ctx, t).toughness})`,
               })),
             };
-            chosenToken = myTokens[choice.index] ?? myTokens[0]!;
+            chosenToken = optionAt(myTokens, choice, 'resolve.populate');
           }
           const chars = computeCharacteristics(ctx, chosenToken);
           createToken(
             ctx,
+            // eslint-disable-next-line no-restricted-syntax -- populate copies the chosen token's current characteristics (CR 701.36), which no catalog entry can name
             {
               name: chosenToken.name,
               typeLine: chosenToken.typeLine,
@@ -3241,6 +3262,7 @@ export function* executeAbility(
           isCommander: false,
           isCardCopy: true,
         };
+        // zone-mutation: creates a copy of a card in exile (CR 707.12); nothing moves from another zone
         ctx.state.exile.push(card);
         emit(
           ctx,
@@ -3812,7 +3834,11 @@ export function* executeAbility(
               }),
             ),
           };
-          selected = candidates[choice.index] ?? selected;
+          selected = optionAt(
+            candidates,
+            choice,
+            'resolve.returnOneFromYourGraveyardToBattlefield',
+          );
         }
         emit(ctx, 'graveyardToBattlefield', { target: selected.name, source: source.name });
         yield* moveObject(ctx, selected, {
@@ -3989,6 +4015,15 @@ export function* executeAbility(
       case 'draw': {
         const drawingPlayer = drawRecipient(effect.player);
         yield* drawCards(ctx, drawingPlayer, amountOf(effect.count));
+        break;
+      }
+      case 'additionalLandPlaysThisTurn': {
+        const turn = ctx.state.turnNumber;
+        const earlier = controller.additionalLandPlays;
+        controller.additionalLandPlays = {
+          turn,
+          count: (earlier?.turn === turn ? earlier.count : 0) + amountOf(effect.count),
+        };
         break;
       }
       case 'discard':
@@ -4480,16 +4515,7 @@ export function* executeAbility(
         ctx.state.combatDamagePrevention.players[controller.id] = true;
         if (ctx.state.combatDamagePrevention.tokenSpecs === undefined)
           ctx.state.combatDamagePrevention.tokenSpecs = {};
-        ctx.state.combatDamagePrevention.tokenSpecs[controller.id] = {
-          name: 'Inkling',
-          typeLine: 'Creature — Inkling',
-          types: ['Creature'],
-          subtypes: ['Inkling'],
-          colors: ['W', 'B'],
-          power: 2,
-          toughness: 1,
-          keywords: ['flying'],
-        };
+        ctx.state.combatDamagePrevention.tokenSpecs[controller.id] = INKLING_2_1_FLYING;
         break;
       case 'gisela':
         emit(ctx, 'damageReplacement', {
@@ -4516,6 +4542,8 @@ export function* executeAbility(
           excluded: PlayerId | undefined,
         ): GameGen<PlayerId> {
           const eligible = players.filter((p) => p.id !== excluded);
+          // Only a game the controller alone survives leaves nobody else to choose.
+          if (eligible.length === 0) return controller.id;
           const outcome = yield {
             decisionType: 'general',
             player: controller.id,
@@ -4526,7 +4554,7 @@ export function* executeAbility(
               payload: p.id,
             })),
           };
-          return eligible[outcome.index]?.id ?? eligible[0]?.id ?? controller.id;
+          return optionAt(eligible, outcome, 'resolve.shadrixModes').id;
         };
         const first = yield {
           decisionType: 'general',
@@ -4567,21 +4595,7 @@ export function* executeAbility(
           [second.index, secondPlayer],
         ] as [number, PlayerId][]) {
           const player = playerById(ctx, playerId);
-          if (mode === 0)
-            createToken(
-              ctx,
-              {
-                name: 'Inkling',
-                typeLine: 'Creature — Inkling',
-                types: ['Creature'],
-                subtypes: ['Inkling'],
-                colors: ['W', 'B'],
-                power: 2,
-                toughness: 1,
-                keywords: ['flying'],
-              },
-              player.id,
-            );
+          if (mode === 0) createToken(ctx, INKLING_2_1_FLYING, player.id);
           else if (mode === 1) {
             yield* drawCards(ctx, player, 1);
             loseLife(ctx, player, 1);
@@ -4611,32 +4625,8 @@ export function* executeAbility(
             createToken(ctx, TREASURE, controller.id);
             createToken(ctx, TREASURE, opponent.id);
           } else if (outcome.index === 1) {
-            createToken(
-              ctx,
-              {
-                name: 'Citizen',
-                typeLine: 'Creature — Citizen',
-                types: ['Creature'],
-                subtypes: ['Citizen'],
-                colors: ['G', 'W'],
-                power: 1,
-                toughness: 1,
-              },
-              controller.id,
-            );
-            createToken(
-              ctx,
-              {
-                name: 'Citizen',
-                typeLine: 'Creature — Citizen',
-                types: ['Creature'],
-                subtypes: ['Citizen'],
-                colors: ['G', 'W'],
-                power: 1,
-                toughness: 1,
-              },
-              opponent.id,
-            );
+            createToken(ctx, CITIZEN_1_1_GREEN_WHITE, controller.id);
+            createToken(ctx, CITIZEN_1_1_GREEN_WHITE, opponent.id);
           } else {
             yield* drawCards(ctx, controller, 1);
             yield* drawCards(ctx, opponent, 1);
@@ -5163,7 +5153,7 @@ export function* executeAbility(
             }),
           ),
         };
-        const opponent = opponents[selectedOpponent.index] ?? opponents[0]!;
+        const opponent = optionAt(opponents, selectedOpponent, 'resolve.vindictiveLichModes');
         if (mode.index === 0) {
           const creatures = ctx.state.battlefield.filter(
             (perm) =>
@@ -5352,7 +5342,7 @@ export function* executeAbility(
             }),
           ),
         };
-        const opponent = opponents[selected.index] ?? opponents[0]!;
+        const opponent = optionAt(opponents, selected, 'resolve.halfLifeDrainTargetOpponent');
         const lost = Math.ceil(Math.max(0, opponent.life) / 2);
         loseLife(ctx, opponent, lost);
         gainLife(ctx, controller, lost);
@@ -5634,6 +5624,45 @@ export function* executeAbility(
         break;
       }
       case 'exileLibraryTop': {
+        if (effect.player === 'each') {
+          if (effect.grantCastUntilEot === true)
+            throw new Error('exileLibraryTop for each player grants no cast permission');
+          const exiled: EngineCardObject[] = [];
+          for (const player of playersInApnapOrder(ctx)) {
+            const top = player.hasLost ? undefined : player.library[0];
+            if (top === undefined) continue;
+            const moved = yield* moveObject(ctx, top, { zone: 'exile' });
+            if (moved?.zone === 'exile') exiled.push(moved);
+          }
+          // Each spell is cast, onto the stack, before the next is chosen (CR 608.2g); a land
+          // among them can't be cast and stays in exile.
+          while (effect.castFree === true) {
+            const eligible = exiled.filter(
+              (card) =>
+                ctx.state.exile.includes(card) && freeCardIsCastable(ctx, card, controller.id),
+            );
+            if (eligible.length === 0) break;
+            const outcome = yield {
+              decisionType: 'general',
+              player: controller.id,
+              prompt: `${source.name}: cast any number of the exiled spells without paying their mana costs. Choose one or Done.`,
+              options: [
+                ...eligible.map((card) =>
+                  cardOption(ctx, card, {
+                    type: 'castFree',
+                    description: `Cast ${card.name} without paying its mana cost`,
+                    verb: 'Cast for free',
+                  }),
+                ),
+                plainOption({ type: 'decline', description: 'Cast no more spells', verb: 'Done' }),
+              ],
+            };
+            const chosen = eligible[outcome.index];
+            if (chosen === undefined) break;
+            yield* resolveFreeCard(ctx, chosen, controller.id);
+          }
+          break;
+        }
         const player = effect.player === 'eventPlayer' ? drawRecipient('eventPlayer') : controller;
         const top = player.library[0];
         if (top === undefined) break;
@@ -6096,53 +6125,6 @@ export function* executeAbility(
         }
         break;
       }
-      case 'etaliPrimalConqueror': {
-        const exiled: EngineCardObject[] = [];
-        for (const player of ctx.state.players) {
-          while (player.library.length > 0) {
-            const card = player.library.shift() as EngineCardObject;
-            card.zone = 'exile';
-            card.id = `o-${ctx.state.nextObjectNum++}` as ObjectId;
-            ctx.state.exile.push(card);
-            const cardDef = getDefByOracleId(ctx, card.oracleId, card.name);
-            if (!cardDef.types.includes('Land')) {
-              exiled.push(card);
-              break;
-            }
-          }
-        }
-        while (true) {
-          const castable = exiled.filter(
-            (card) =>
-              ctx.state.exile.includes(card) && freeCardIsCastable(ctx, card, controller.id),
-          );
-          if (castable.length === 0) break;
-          const outcome = yield {
-            decisionType: 'general' as const,
-            player: controller.id,
-            prompt: `${source.name}: cast an exiled nonland card without paying its mana cost.`,
-            options: [
-              ...castable.map((card) =>
-                cardOption(ctx, card, {
-                  viewerId: controller.id,
-                  type: 'castSpell',
-                  description: `Cast ${card.name} for free`,
-                  verb: 'Cast for free',
-                }),
-              ),
-              plainOption({
-                type: 'decline',
-                description: 'Cast no more cards',
-                verb: 'Done',
-                role: 'decline',
-              }),
-            ],
-          };
-          if (outcome.index >= castable.length) break;
-          yield* resolveFreeCard(ctx, castable[outcome.index] as EngineCardObject, controller.id);
-        }
-        break;
-      }
       case 'doublePowerAndToughnessEachUntilEot': {
         for (const permanent of affectedBy(ctx, source, effect.selector)) {
           const pt = effectivePT(ctx, permanent);
@@ -6255,7 +6237,7 @@ export function* executeAbility(
               }),
             ),
           };
-          token = tokens[outcome.index] ?? token;
+          token = optionAt(tokens, outcome, 'resolve.reflexiveOnCreatedToken');
         }
         ctx.state.pendingTriggers.push({
           controllerId: source.controllerId,
@@ -6641,36 +6623,57 @@ export function* executeAbility(
             ? { keywords: [...new Set([...(baseSpec.keywords ?? []), ...copyOptions.addKeywords])] }
             : {}),
         };
+        // The copied characteristics bring their own entry replacement (CR 707.5, 614.12): each
+        // token copy of Mox Diamond the event would create, a doubler's extras included, enters
+        // only if its controller discards a land card for it, and otherwise is never created.
+        // Returns how many of one copy's tokens enter, the doublers already applied.
+        const enterCost = copiableDefinition(ctx, original).entersUnlessDiscard;
+        const copied = original;
+        const tokensEntering = function* (playerId: PlayerId): GameGen<number> {
+          const wouldCreate = tokenCreationMultiplierFor(ctx, playerId);
+          if (enterCost === undefined) return wouldCreate;
+          let entering = 0;
+          for (let n = 0; n < wouldCreate; n++)
+            if (yield* paysEntersUnlessDiscard(ctx, copied, playerId, enterCost)) entering++;
+          return entering;
+        };
         if (copyOptions.eachOpponent === true) {
           // Each opponent, in turn order from the active player, creates their own copies.
           for (const opponent of opponentsOf(ctx, controller.id)) {
-            for (const token of createTokens(ctx, spec, amountOf(effect.count), opponent.id)) {
-              if (copyOptions.goadedForRestOfGame === true)
-                addGoadRequirement(ctx, token, controller.id, true);
+            for (let i = 0; i < amountOf(effect.count); i++) {
+              const entering = yield* tokensEntering(opponent.id);
+              for (const token of createTokens(ctx, spec, entering, opponent.id, false, true)) {
+                if (copyOptions.goadedForRestOfGame === true)
+                  addGoadRequirement(ctx, token, controller.id, true);
+              }
             }
           }
           break;
         }
+        // Every token each creation makes, a replacement's (Academy Manufactor's three, a
+        // doubler's extra) included, is one of "those tokens" the rider applies to.
         for (let i = 0; i < amountOf(effect.count); i++) {
-          const token = createToken(ctx, spec, controller.id);
-          if (copyOptions.goadedForRestOfGame === true)
-            addGoadRequirement(ctx, token, controller.id, true);
-          if (copyOptions.sacrificeAt === 'endStep') {
-            ctx.state.delayedTriggers.push({
-              id: `dt-${ctx.state.nextObjectNum++}`,
-              sourceCardId: source.cardId,
-              sourceOracleId: source.oracleId,
-              controllerId: source.controllerId,
-              targetId: token.cardId,
-              when: 'endStep',
-              expiry: 'endStep',
-              ability: {
-                kind: 'triggered',
-                targets: [],
-                effects: [{ op: 'sacrifice', target: 'triggerObject' }],
-                description: 'Sacrifice the token at the beginning of the next end step',
-              },
-            });
+          const entering = yield* tokensEntering(controller.id);
+          for (const token of createTokens(ctx, spec, entering, controller.id, false, true)) {
+            if (copyOptions.goadedForRestOfGame === true)
+              addGoadRequirement(ctx, token, controller.id, true);
+            if (copyOptions.sacrificeAt === 'endStep') {
+              ctx.state.delayedTriggers.push({
+                id: `dt-${ctx.state.nextObjectNum++}`,
+                sourceCardId: source.cardId,
+                sourceOracleId: source.oracleId,
+                controllerId: source.controllerId,
+                targetId: token.cardId,
+                when: 'endStep',
+                expiry: 'endStep',
+                ability: {
+                  kind: 'triggered',
+                  targets: [],
+                  effects: [{ op: 'sacrifice', target: 'triggerObject' }],
+                  description: 'Sacrifice the token at the beginning of the next end step',
+                },
+              });
+            }
           }
         }
         break;
@@ -6794,7 +6797,15 @@ export function* executeAbility(
       }
       case 'untapBoundIf': {
         if (!evaluateCondition(ctx, effect.condition, source)) break;
-        for (const cardId of effectBindings.get(effect.binding) ?? []) {
+        const bound = effectBindings.get(effect.binding);
+        // Validation requires an earlier bind in this list, and a search that finds nothing
+        // still binds `[]`, so an unset binding is an engine bug (ADR 0034 decision 2).
+        if (bound === undefined)
+          throw new EngineInvariantError(
+            'resolve.untapBoundIf',
+            `${source.name}: binding "${effect.binding}" was never set`,
+          );
+        for (const cardId of bound) {
           const permanent = ctx.state.battlefield.find((candidate) => candidate.cardId === cardId);
           if (permanent !== undefined) permanent.tapped = false;
         }
@@ -6975,7 +6986,7 @@ export function* executeAbility(
               }),
             ),
           };
-          selected = candidates[choice.index] ?? selected;
+          selected = optionAt(candidates, choice, 'resolve.returnOneToHand');
         }
         emit(ctx, 'returnToHand', { target: selected.name, source: source.name });
         yield* moveObject(ctx, selected, { zone: 'hand' });
@@ -7173,7 +7184,7 @@ export function* executeAbility(
               }),
             ),
           };
-          chosen = opponents[outcome.index] ?? chosen;
+          chosen = optionAt(opponents, outcome, 'resolve.chooseOpponentForSource');
         }
         // Only the permanent itself remembers it: a Stalker that has left has nothing to store on,
         // and the same card back as a new object is not the one whose trigger this is (CR 400.7).
@@ -7440,7 +7451,7 @@ export function* executeAbility(
             }),
           ),
         };
-        const chosen = byName[outcome.index] ?? byName[0]!;
+        const chosen = optionAt(byName, outcome, 'resolve.searchBasicsNamedLikeChosenLand');
         emit(ctx, 'chosen', { name: chosen.name, source: source.name }, controller.id);
         yield* searchLibrary(
           ctx,
@@ -7502,11 +7513,11 @@ export function* executeAbility(
         doubleEachPlayerCounter(ctx, source, controller, controller.id);
         break;
       case 'shuffleHandGraveyardIntoLibrary': {
-        const cards = [...controller.hand, ...controller.graveyard];
-        controller.hand = [];
-        controller.graveyard = [];
-        ctx.rng.shuffle(cards);
-        controller.library.push(...cards);
+        // "Shuffle into your library" puts the cards there, then shuffles the whole library
+        // (CR 701.20a). Through moveObjects, a commander among them offers its owner the
+        // command zone instead (CR 903.9b).
+        yield* moveObjects(ctx, [...controller.hand, ...controller.graveyard], { zone: 'library' });
+        shuffleLibrary(ctx, controller);
         break;
       }
       case 'chaosWarp': {
@@ -8604,8 +8615,11 @@ export function* executeAbility(
       }
       case 'exileTopNPlayableUntilEot': {
         const count = amountOf(effect.count);
+        const library = (
+          effect.library === 'eventPlayer' ? drawRecipient('eventPlayer') : controller
+        ).library;
         for (let i = 0; i < count; i++) {
-          const top = controller.library[0];
+          const top = library[0];
           if (top === undefined) break;
           const moved = (yield* moveObject(ctx, top, { zone: 'exile' })) as EngineCardObject | null;
           if (moved !== null) {
@@ -9080,6 +9094,109 @@ export function* executeAbility(
       }
       case 'noOp':
         throw new Error('engine bug: executable noOp effect is prohibited');
+      case 'amass': {
+        const armies = () =>
+          ctx.state.battlefield.filter(
+            (perm) =>
+              perm.controllerId === controller.id &&
+              computeCharacteristics(ctx, perm).types.includes('Creature') &&
+              computeCharacteristics(ctx, perm).subtypes.includes('Army'),
+          );
+        if (armies().length === 0)
+          createTokens(
+            ctx,
+            creatureToken({
+              name: `${effect.subtype} Army`,
+              subtypes: [effect.subtype, 'Army'],
+              colors: ['B'],
+              power: 0,
+              toughness: 0,
+            }),
+            1,
+            controller.id,
+            false,
+          );
+        const army = yield* chooseCard(ctx, {
+          player: controller.id,
+          prompt: `${source.name}: choose an Army creature you control to amass`,
+          cards: armies(),
+          type: 'chooseArmy',
+          verb: 'Choose',
+        });
+        if (army === null) break;
+        addCounters(ctx, source, army, '+1/+1', amountOf(effect.count));
+        if (!computeCharacteristics(ctx, army).subtypes.includes(effect.subtype))
+          ctx.state.effects.push({
+            id: `eff-${ctx.state.nextObjectNum++}`,
+            sourceId: source.cardId,
+            description: `${army.name} becomes ${effect.subtype === 'Orc' ? 'an' : 'a'} ${effect.subtype}`,
+            targetCardIds: [army.cardId],
+            targetObjectIds: [army.id],
+            kind: 'addTypes',
+            addSubtypes: [effect.subtype],
+            duration: 'permanent',
+            timestamp: ctx.state.nextTimestamp++,
+          });
+        break;
+      }
+      case 'payLifeOrTopDrawnCards': {
+        const count = amountOf(effect.count);
+        const life = amountOf(effect.life);
+        const chosen: EngineCardObject[] = [];
+        for (let i = 0; i < count; i++) {
+          const candidates = controller.hand.filter(
+            (card) => card.drawnOnTurn === ctx.state.turnNumber && !chosen.includes(card),
+          );
+          // "Choose two": as many as possible when fewer were drawn and kept.
+          if (candidates.length === 0) break;
+          const card = yield* chooseCard(ctx, {
+            player: controller.id,
+            prompt: `${source.name}: choose a card in your hand drawn this turn (${i + 1} of ${count})`,
+            cards: candidates,
+            type: 'chooseCard',
+            verb: 'Choose',
+          });
+          if (card === null) break;
+          chosen.push(card);
+        }
+        for (const card of chosen) {
+          if (!controller.hand.includes(card)) continue;
+          const canPay =
+            life === 0 || (controller.life >= life && !playerLifeLocked(ctx, controller.id));
+          const pay = canPay
+            ? (yield {
+                decisionType: 'general',
+                player: controller.id,
+                prompt: `${source.name}: pay ${life} life to keep ${card.name}, or put it on top of your library?`,
+                options: [
+                  { type: 'payLife', description: `Pay ${life} life: keep ${card.name}` },
+                  { type: 'decline', description: `Put ${card.name} on top of your library` },
+                ],
+              }).index === 0
+            : false;
+          if (pay) payLife(ctx, controller, life);
+          else yield* moveObject(ctx, card, { zone: 'library', libraryPosition: 'top' });
+        }
+        break;
+      }
+      case 'returnCardFromGraveyardToHand': {
+        const selectorSource = { cardId: source.cardId, controllerId: controller.id };
+        const chosen = yield* chooseCard(ctx, {
+          player: controller.id,
+          prompt: `${source.name}: return a card from your graveyard to your hand`,
+          cards: controller.graveyard.filter((card) =>
+            selectMatches(
+              cardZoneCandidate(ctx, card, controller.id),
+              effect.filter,
+              selectorSource,
+            ),
+          ),
+          type: 'returnToHand',
+          verb: 'Return',
+        });
+        if (chosen !== null) yield* moveObject(ctx, chosen, { zone: 'hand' });
+        break;
+      }
 
       default:
         assertNever(effect, 'Effect executor');
@@ -9181,7 +9298,9 @@ function* addManaFromAbility(
         palette.some((allowed) => allowed === sym) && Number.isInteger(count) && count >= 0,
     ) &&
     palette.reduce((total, sym) => total + (split[sym] ?? 0), 0) === amount;
-  const counts = validSplit ? split : { [palette[outcome.index] ?? palette[0]]: amount };
+  const counts = validSplit
+    ? split
+    : { [optionAt(palette, outcome, 'resolve.addManaFromAbility')]: amount };
   const produced: ManaEntry[] = [];
   for (const sym of palette) {
     for (let i = 0; i < (counts[sym] ?? 0); i++) {
@@ -9312,6 +9431,7 @@ function* eachPlayerLooksAtTopRevealsToHand(
     const rest = looked.filter((card) => player.library.includes(card) && !revealed.includes(card));
     ctx.rng.shuffle(rest);
     const restObjects = new Set(rest);
+    // zone-mutation: reorders the library: the looked-at cards left there go to its bottom
     player.library = [...player.library.filter((card) => !restObjects.has(card)), ...rest];
   }
 }
@@ -9447,6 +9567,7 @@ function* lookAtTopN(
     ctx.rng.shuffle(ordered);
   }
   const restObjects = new Set(rest);
+  // zone-mutation: reorders the library: the rest are taken out here and put back on top or bottom below
   player.library = player.library.filter((card) => !restObjects.has(card));
   if (effect.rest === 'topAnyOrder') {
     const offset = taken !== undefined && mayPut?.destination.zone === 'libraryTop' ? 1 : 0;

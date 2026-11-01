@@ -27,8 +27,15 @@ import type {
 import { describeDamageSplit } from './combat/combat';
 import type { DecisionOutcome, GameGen, PendingDecision } from './decisions';
 import { forcedOutcome, isForced } from './decisions';
-import { EngineUsageError, IllegalDecisionError, UnmodeledCardError } from './errors';
+import {
+  EngineBudgetError,
+  EngineInvariantError,
+  EngineUsageError,
+  IllegalDecisionError,
+  UnmodeledCardError,
+} from './errors';
 import { playGame, playPreparedScenario } from './flow/game';
+import { GameConcededSignal } from './signals';
 import { debug, emit, settleSpectatorSnapshot } from './log/log';
 import { createGame } from './state/game';
 import type { DebugEntry, GameConfig, GameContext } from './state/types';
@@ -108,6 +115,14 @@ export interface EngineDriver {
 export interface EngineOptions {
   /** Closed server/test fixture initialization; never populated from arbitrary client state. */
   preparedScenario?: PreparedScenarioSpec;
+  /**
+   * Events one `advance()` may emit before the game halts (ADR 0031 decision 9), which catches a
+   * runaway inside a single generator step. Unlimited when absent, as for every tester game; set
+   * for tables and stored with the game.
+   */
+  maxStepWork?: number;
+  /** Objects the whole game may create before it halts. Unlimited when absent. */
+  maxObjects?: number;
 }
 
 export class Engine implements EngineDriver {
@@ -122,6 +137,14 @@ export class Engine implements EngineDriver {
 
   constructor(config: GameConfig, options: EngineOptions = {}) {
     this.ctx = createGame(config);
+    if (options.maxStepWork !== undefined || options.maxObjects !== undefined) {
+      this.ctx.budget = {
+        ...(options.maxStepWork !== undefined && { maxStepWork: options.maxStepWork }),
+        ...(options.maxObjects !== undefined && { maxObjects: options.maxObjects }),
+        stepWork: { count: 0 },
+        objectsAtStart: this.ctx.state.nextObjectNum,
+      };
+    }
     if (options.preparedScenario !== undefined) {
       prepareScenario(this.ctx, options.preparedScenario);
       this.gen = playPreparedScenario(this.ctx, options.preparedScenario);
@@ -136,6 +159,7 @@ export class Engine implements EngineDriver {
       return { kind: 'decision', request: this.pendingRequest };
     }
 
+    if (this.ctx.budget !== undefined) this.ctx.budget.stepWork.count = 0;
     try {
       for (;;) {
         const step =
@@ -165,6 +189,12 @@ export class Engine implements EngineDriver {
           continue;
         }
 
+        // A decision nobody can answer stalls the game (ADR 0034 decision 8).
+        if (decision.options.length === 0 && this.ctx.strictInvariants === true)
+          throw new EngineInvariantError(
+            'decision',
+            `${decision.player}'s ${decision.decisionType} decision offers no option`,
+          );
         this.pendingDecision = decision;
         this.pendingRequest = this.buildRequest(decision);
         debug(
@@ -190,6 +220,35 @@ export class Engine implements EngineDriver {
           turnCount: this.ctx.state.turnNumber,
           halted: true,
           haltReason: err.message,
+        };
+        return { kind: 'gameOver', result: this.finished };
+      }
+      if (err instanceof EngineBudgetError) {
+        // A work limit, not a rules outcome: halt with the limit named (ADR 0031 decision 9).
+        emit(this.ctx, 'engineHalt', { reason: err.message, budget: err.budget });
+        debug(this.ctx, 'engine', `ENGINE HALT: ${err.message}`);
+        this.finished = {
+          gameId: this.ctx.state.gameId,
+          winnerSeat: null,
+          finishingOrder: [...this.ctx.state.eliminatedPlayers],
+          turnCount: this.ctx.state.turnNumber,
+          halted: true,
+          haltReason: err.message,
+        };
+        return { kind: 'gameOver', result: this.finished };
+      }
+      if (err instanceof EngineInvariantError && this.ctx.strictInvariants !== true) {
+        // An authoring or engine bug: halt with the site so the record names it (ADR 0034).
+        emit(this.ctx, 'engineHalt', { reason: err.message, site: err.site });
+        debug(this.ctx, 'engine', `ENGINE HALT: ${err.message}`);
+        this.finished = {
+          gameId: this.ctx.state.gameId,
+          winnerSeat: null,
+          finishingOrder: [...this.ctx.state.eliminatedPlayers],
+          turnCount: this.ctx.state.turnNumber,
+          halted: true,
+          haltReason: err.message,
+          haltSite: err.site,
         };
         return { kind: 'gameOver', result: this.finished };
       }
@@ -313,10 +372,54 @@ export class Engine implements EngineDriver {
     if (player !== undefined) player.manualMana = true;
   }
 
+  /**
+   * Run this game under `strictInvariants` from now on (ADR 0034 decision 8): invariant failures
+   * throw instead of halting, the installed checkpoint check runs, and layer-cache hits are
+   * sampled. For an engine a test or tool did not build itself (a Card Test Lab scenario); a
+   * fresh game sets it in its config.
+   */
+  enableStrictInvariants(): void {
+    this.ctx.strictInvariants = true;
+  }
+
+  /**
+   * End the game by agreement (ADR 0031 decision 10): a table's time limit, or every human seat
+   * gone. Only between steps, while a decision waits; the waiting decision is withdrawn and never
+   * answered. The game generator unwinds from where it stands (a cast in progress rewinds
+   * through its checkpoint), then records `conceded` and a draw for the players still in it.
+   * Returns false when the game has already ended. Like `cancelYield`, the event is a replay
+   * input: a replay applies it when the engine reaches its sequence.
+   */
+  concede(players: readonly string[], reason: 'timeLimit' | 'allAway'): boolean {
+    if (this.finished !== null) return false;
+    if (!this.started || this.pendingRequest === null) {
+      throw new EngineUsageError('concede() needs a game waiting on a decision');
+    }
+    this.pendingDecision = null;
+    this.pendingRequest = null;
+    this.nextOutcome = null;
+    // The concession is a step of its own, like `advance()`: its events must not be charged to
+    // whatever work the last step left on the budget.
+    if (this.ctx.budget !== undefined) this.ctx.budget.stepWork.count = 0;
+    const floor = this.ctx.state.nextEventSequence;
+    const step = this.gen.throw(new GameConcededSignal(players, reason, floor));
+    if (step.done !== true) {
+      throw new EngineInvariantError(
+        'engine.concede',
+        'a conceded game kept running past the concession',
+      );
+    }
+    this.finished = step.value;
+    return true;
+  }
+
   cancelYield(playerId: string): boolean {
     const player = this.ctx.state.players.find((p) => p.id === playerId);
     if (player === undefined || player.yieldUntilEndOfTurn !== true) return false;
     player.yieldUntilEndOfTurn = false;
+    // The change is an input like a decision, so it is logged for replay (ADR 0031 decision 8).
+    // Only a human seat cancels a yield, so games without one keep identical event streams.
+    emit(this.ctx, 'yieldCancelled', { player: player.id }, player.id);
     return true;
   }
 
@@ -348,6 +451,24 @@ export class Engine implements EngineDriver {
    */
   spectatorState(): SpectatorState {
     return buildSpectatorState(this.ctx);
+  }
+
+  /**
+   * What the server needs to turn damage events into animation cues (ADR 0032 decision 8): each
+   * card id on the battlefield or the stack mapped to the object id the projections show, and
+   * every life total. Server-private: card ids never reach a frame.
+   */
+  cueBoard(): { objects: Map<string, string>; life: Map<string, number> } {
+    const s = this.ctx.state;
+    const objects = new Map<string, string>();
+    for (const permanent of s.battlefield) objects.set(permanent.cardId, permanent.id);
+    // A spell's damage keeps its source while the spell is on the stack; an ability's source is
+    // its permanent, already mapped above.
+    for (const entry of s.stack) {
+      if (!objects.has(entry.sourceCardId)) objects.set(entry.sourceCardId, entry.id);
+    }
+    const life = new Map(s.players.map((player) => [player.id, player.life]));
+    return { objects, life };
   }
 
   /** Hidden-information-safe board projection for an interactive human seat. */

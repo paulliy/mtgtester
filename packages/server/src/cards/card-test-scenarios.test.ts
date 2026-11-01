@@ -1,6 +1,7 @@
 import type { DecisionRequest } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
-import { createCardTestScenario, listCardTestScenarios } from './card-test-scenarios';
+import { strictCardTestScenario, listCardTestScenarios } from './card-test-scenarios';
+import { RUNNER_SCENARIOS } from './runner-scenarios';
 import type { CardTestScenario } from './card-test-scenarios';
 
 function chooseAction(request: DecisionRequest): number {
@@ -18,7 +19,7 @@ function chooseAction(request: DecisionRequest): number {
 }
 
 function runScenario() {
-  const scenario = createCardTestScenario(
+  const scenario = strictCardTestScenario(
     'tribute-viewer-cast-search-select-resolve',
     'card-lab-test',
   );
@@ -41,11 +42,38 @@ function runScenario() {
 
 describe('deterministic Card Test Lab scenarios', () => {
   it('rejects unknown scenario IDs', () => {
-    expect(createCardTestScenario('unknown', 'card-lab-unknown')).toBeNull();
+    expect(strictCardTestScenario('unknown', 'card-lab-unknown')).toBeNull();
   });
 
   it('lists every registered scenario in catalog order', () => {
-    expect(listCardTestScenarios().map((entry) => entry.id)).toEqual([
+    const ids = listCardTestScenarios().map((entry) => entry.id);
+    // Runner scenarios come first, in their files' order; their list is derived, not kept here.
+    expect(ids.slice(0, RUNNER_SCENARIOS.length)).toEqual(RUNNER_SCENARIOS.map(({ id }) => id));
+    expect(ids.slice(RUNNER_SCENARIOS.length)).toEqual([
+      'pilot-current-jet-medallion-viewer-reduced',
+      'pilot-current-jet-medallion-viewer-not-red',
+      'pilot-current-explore-viewer-second-land',
+      'pilot-current-great-henge-viewer-cast-reduced',
+      'pilot-current-great-henge-viewer-enter-trigger',
+      'pilot-current-great-henge-viewer-token-ignored',
+      'pilot-current-great-henge-viewer-opponent-creature',
+      'pilot-current-gamble-viewer-tutor',
+      'pilot-current-secluded-courtyard-viewer-cast-chosen',
+      'pilot-current-secluded-courtyard-viewer-other-type',
+      'pilot-current-secluded-courtyard-viewer-activate',
+      'pilot-current-morbid-opportunist-viewer-draw',
+      'pilot-current-morbid-opportunist-viewer-once',
+      'pilot-current-morbid-opportunist-viewer-wrath',
+      'pilot-current-syr-konrad-viewer-mill-creature',
+      'pilot-current-syr-konrad-viewer-mill-lands',
+      'pilot-current-untimely-malfunction-viewer-destroy-artifact',
+      'pilot-current-untimely-malfunction-viewer-redirect',
+      'pilot-current-untimely-malfunction-viewer-cant-block',
+      'pilot-current-bolas-citadel-viewer-cast-for-life',
+      'pilot-current-bolas-citadel-viewer-play-land',
+      'pilot-current-bolas-citadel-viewer-sacrifice-ten',
+      'pilot-current-etali-primal-storm-viewer-cast-both',
+      'pilot-current-etali-primal-storm-viewer-cast-none',
       'pr13-master-of-ceremonies-viewer-money',
       'pr13-securitron-squadron-viewer-squad-copy',
       'pr13-securitron-squadron-viewer-nontoken',
@@ -992,7 +1020,7 @@ function passChoice(request: DecisionRequest): Choice {
 }
 
 function runScenarioWith(scenarioId: string, chooser: Chooser) {
-  const scenario = createCardTestScenario(scenarioId, 'card-lab-test');
+  const scenario = strictCardTestScenario(scenarioId, 'card-lab-test');
   expect(scenario).not.toBeNull();
   const engine = scenario!.engine;
   let decisions = 0;
@@ -2637,7 +2665,7 @@ describe('deterministic Card Test Lab scenarios — registered card scenarios', 
   });
 
   it('war-room-retained-action - returns a genuine P1 cast after the forced draw resolution', () => {
-    const scenario = createCardTestScenario(
+    const scenario = strictCardTestScenario(
       'war-room-viewer-dynamic-life-activation',
       'war-room-retained-action',
     )!;

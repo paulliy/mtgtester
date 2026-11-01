@@ -10,12 +10,8 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
-import type {
-  ClientToServerMessage,
-  ServerToClientMessage,
-  SpectatorLogLine,
-  PlayerActionRequiredPayload,
-} from '@mtg/shared';
+import type { ClientToServerMessage, SpectatorLogLine } from '@mtg/shared';
+import type { ServerToClientMessage, PlayerActionRequiredPayload } from '../lib/protocol';
 import type { ConnectionState } from '../lib/socket';
 
 /** Frames the store handed to the socket, newest last. */
@@ -379,6 +375,31 @@ describe('spectator store — server-confirmed position', () => {
       },
     });
     expect(sent.map((message) => message.type)).toEqual(['startGame']);
+  });
+
+  it('does not adopt a table game: the tester viewer has no table UI', () => {
+    store.startGame(
+      Array.from({ length: 4 }, () => ({ kind: 'pool' as const })),
+      'random',
+      'game-seed',
+      'singlePlayer',
+      'P1',
+    );
+    inbound?.({
+      type: 'gameStarted',
+      payload: {
+        gameId: 'g-table',
+        seed: 'game-seed',
+        seats: [],
+        providerKind: 'random',
+        gameMode: 'table',
+        startedAt: new Date().toISOString(),
+      },
+    });
+
+    expect(store.gameId).toBeNull();
+    expect(store.gameMode).not.toBe('table');
+    expect(store.errors).toEqual(['This viewer cannot join a table game.']);
   });
 
   it('remembers a newly imported player deck by the snapshot ID returned at start', () => {
@@ -810,4 +831,44 @@ describe('store — deals with the human seat (ADR 0035 phase 3)', () => {
     });
     expect(store.tableTalk).toHaveLength(1);
   });
+});
+
+it('keeps each batch of cues for the board to animate, and flashes life from them', async () => {
+  const { useLifeFlash } = await import('../composables/useLifeFlash');
+  const store = useGameStore();
+  store.connect();
+  inbound?.(podGameStarted('cued'));
+  const cues = [
+    {
+      kind: 'damage' as const,
+      sequence: 5,
+      sourceId: 'o-3',
+      target: { kind: 'player' as const, id: 'P2' },
+      amount: 2,
+      combat: true,
+      group: 0,
+    },
+    { kind: 'lifeChange' as const, sequence: 5, player: 'P2', delta: -2 },
+  ];
+  const batch = {
+    type: 'eventBatch' as const,
+    payload: {
+      gameId: 'cued',
+      lines: [line(5, 3, 'hit')],
+      frontierTurn: 3,
+      snapshotTurns: [],
+      cues,
+    },
+  };
+  inbound?.(batch);
+  expect(store.cueBatch?.cues).toEqual(cues);
+  expect(useLifeFlash(() => 'P2').value).toBe('damage');
+  // The same cues again are a new batch, so the board animates again.
+  const first = store.cueBatch?.id;
+  inbound?.(batch);
+  expect(store.cueBatch?.id).not.toBe(first);
+  // A new game starts with no cues and no flashes.
+  inbound?.(podGameStarted('next'));
+  expect(store.cueBatch).toBeNull();
+  expect(useLifeFlash(() => 'P2').value).toBeNull();
 });

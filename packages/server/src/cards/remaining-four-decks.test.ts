@@ -9,7 +9,10 @@ import type { SeatSetup } from '../match/setup';
 import { parsePlaintextDeck } from '../decks/plaintext';
 import { loadScryfallBulkOrNull } from './scryfall-bulk-fixture';
 import { toOracleCard } from './scryfall';
+import { testerPolicy } from '../match/disclosure';
 
+// Builds its tests from the Scryfall bulk file, which is not tracked (data/README.md).
+// suite-requires: data/scryfall-oracle-cards.json
 const scryfallCards = loadScryfallBulkOrNull();
 // data/scryfall-oracle-cards.json is gitignored and not fetched by CI (see scryfall-bulk-fixture.ts).
 const SKIP = scryfallCards === null;
@@ -69,21 +72,10 @@ function seat(seatId: string, deckData: ReturnType<typeof deck>): SeatSetup {
   };
 }
 
+// allowed-skip: needs the Scryfall bulk file (data/scryfall-oracle-cards.json, gitignored)
 describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke checks', () => {
   it('models every unique card except the explicit fail-closed backlog', () => {
-    const expectedUnmodeled = new Set([
-      'Wandering Archaic // Explore the Vastlands',
-      // Audit: incomplete mechanics must not silently simulate approximate card text
-      // (PR10 restored the retarget, copy and ability-stack cards; PR11 restored the
-      // protection, phasing and lifecycle cards).
-      'The War in Heaven',
-      "Defacing Duskmage // Vandal's Edit",
-      'Eiganjo Dynastorian // Replenish',
-      'Intermediate Chirography',
-      'Malakir Rebirth // Malakir Mire',
-      'Valakut Awakening // Valakut Stoneforge',
-      'Wear // Tear',
-    ]);
+    const expectedUnmodeled = new Set<string>();
     const observedUnmodeled = new Set<string>();
     for (const slug of deckSlugs) {
       const parsed = parsePlaintextDeck(
@@ -112,6 +104,7 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       const deckData = deck(slug);
       const sent: ServerToClientMessage[] = [];
       const session = new MatchSession({
+        disclosure: testerPolicy('singlePlayer'),
         gameId: `coverage-${slug}-single-player`,
         seed: `coverage-${slug}-single-player`,
         seats: ['P1', 'P2', 'P3', 'P4'].map((seatId) => seat(seatId, deckData)),
@@ -142,7 +135,7 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       const response = new RandomDecisionProvider(`coverage-${slug}-human-check`).decide(
         required!.payload.request,
       );
-      session.submitPlayerAction({
+      session.submitPlayerAction('P1', {
         requestId: response.requestId,
         actionId: response.actionId,
         revision: required!.payload.revision,

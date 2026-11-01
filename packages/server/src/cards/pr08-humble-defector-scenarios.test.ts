@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 
 function replay(offTurn: boolean) {
   const id = offTurn
     ? 'humble-defector-viewer-off-turn'
     : 'humble-defector-viewer-draw-then-opponent-takes-control';
-  const scenario = createCardTestScenario(id, 'pr08-humble-replay')!;
+  const scenario = strictCardTestScenario(id, 'pr08-humble-replay')!;
   expect(scenario).not.toBeNull();
   let activated = false,
     sawStack = false,

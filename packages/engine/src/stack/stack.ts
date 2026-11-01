@@ -11,10 +11,21 @@ import { executeAbility, drawCards } from '../effects/resolve';
 import { TREASURE } from '../cards/tokens';
 import { captureResolutionTargets } from '../targets/resolution';
 import { emit, debug } from '../log/log';
-import { makePermanent, moveObject, queueTriggersForObject, createTokens } from '../state/objects';
+import {
+  createTokens,
+  makePermanent,
+  moveObject,
+  paysEntersUnlessDiscard,
+  queueTriggersForObject,
+} from '../state/objects';
 import { roomDoorOf } from '../cards/spell-faces';
 import { spellDefinitionOf, stackSourceTraits } from '../state/queries';
-import type { EngineStackObject, GameContext } from '../state/types';
+import type {
+  EngineCardObject,
+  EngineObject,
+  EngineStackObject,
+  GameContext,
+} from '../state/types';
 
 /** Resolve the top object of the stack. Caller guarantees the stack is nonempty. */
 export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
@@ -175,7 +186,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
   if (top.kind === 'spell' && top.card !== null) {
     yield* finishSpellCard(ctx, top);
   } else if (top.kind === 'spell' && top.permanentSpellCopy !== undefined) {
-    putPermanentSpellCopyOntoBattlefield(ctx, top);
+    yield* putPermanentSpellCopyOntoBattlefield(ctx, top);
   }
   emit(ctx, 'resolved', { description: top.description }, top.controllerId);
 }
@@ -222,6 +233,7 @@ export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): Ga
       moved.isToken = true;
       delete moved.isCardCopy;
     }
+    if (moved !== null && moved.zone === 'battlefield') applyDash(ctx, spell, moved);
     if (spell.grantHasteOnResolution && moved && moved.zone === 'battlefield') {
       ctx.state.effects.push({
         id: `eff-${ctx.state.nextObjectNum++}`,
@@ -263,41 +275,88 @@ export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): Ga
 }
 
 /**
+ * Dash (CR 702.109a): haste for as long as this object stays, and back to its owner's hand at the
+ * beginning of the next end step, whoever's turn that is. A new object (CR 400.7) after a flicker
+ * is neither hasty nor returned. A copy of a dashed spell is dashed too (CR 707.10).
+ */
+function applyDash(ctx: GameContext, spell: EngineStackObject, moved: EngineObject): void {
+  if (spell.dashed !== true) return;
+  ctx.state.effects.push({
+    id: `eff-${ctx.state.nextObjectNum++}`,
+    sourceId: spell.sourceCardId,
+    description: `${moved.name} was dashed: it has haste`,
+    targetCardIds: [moved.cardId],
+    targetObjectIds: [moved.id],
+    kind: 'grantKeyword',
+    keyword: 'haste',
+    duration: 'permanent',
+    timestamp: ctx.state.nextTimestamp++,
+  });
+  ctx.state.delayedTriggers.push({
+    id: `dt-${ctx.state.nextObjectNum++}`,
+    sourceCardId: moved.cardId,
+    sourceOracleId: moved.oracleId,
+    controllerId: spell.controllerId,
+    targetId: moved.cardId,
+    targetObjectId: moved.id,
+    when: 'endStep',
+    ability: {
+      kind: 'triggered',
+      targets: [],
+      effects: [{ op: 'returnToHand', target: 'triggerObject' }],
+      description: `Dash: return ${moved.name} to its owner's hand`,
+    },
+    expiry: 'onFire',
+  });
+}
+
+/**
  * A copy of a permanent spell becomes a token as it resolves (CR 608.3f, 707.10f) — not
  * "created", so no token-creation trigger or replacement applies. An Aura copy enters attached
  * to its target (CR 303.4f), as the spell it copies would.
  */
-function putPermanentSpellCopyOntoBattlefield(ctx: GameContext, spell: EngineStackObject): void {
+function* putPermanentSpellCopyOntoBattlefield(
+  ctx: GameContext,
+  spell: EngineStackObject,
+): GameGen<void> {
   const selected = spellDefinitionOf(ctx, spell);
   // A token copying a spell has the chosen spell's characteristics, with no unchosen faces.
   const copyOracleId = `spell-copy:${spell.id}`;
   const { alternativeCasts: _alternatives, backFace: _back, ...singleFace } = selected;
   const def = { ...singleFace, oracleId: copyOracleId };
   ctx.defs.set(copyOracleId, def);
-  const perm = makePermanent(
-    ctx,
-    {
-      id: `o-${ctx.state.nextObjectNum++}`,
-      cardId: spell.sourceCardId,
-      oracleId: copyOracleId,
-      ownerId: spell.controllerId,
-      name: def.name,
-      typeLine: def.typeLine,
-      oracleText: spell.permanentSpellCopy?.oracleText ?? '',
-      manaCost: spell.permanentSpellCopy?.manaCost ?? null,
-      isToken: true,
-      isCommander: false,
-      zone: 'battlefield',
-    },
-    spell.controllerId,
-  );
+  const entering: EngineCardObject = {
+    id: `o-${ctx.state.nextObjectNum++}`,
+    cardId: spell.sourceCardId,
+    oracleId: copyOracleId,
+    ownerId: spell.controllerId,
+    name: def.name,
+    typeLine: def.typeLine,
+    oracleText: spell.permanentSpellCopy?.oracleText ?? '',
+    manaCost: spell.permanentSpellCopy?.manaCost ?? null,
+    isToken: true,
+    isCommander: false,
+    zone: 'battlefield',
+    // A copy copies the choices made for the spell, its X and kicker counts among them (CR
+    // 707.10), so "enters with a counter for each time it was kicked" counts the copy's too.
+    ...(spell.announcedX === undefined ? {} : { announcedX: spell.announcedX }),
+    ...(spell.optionalCostCounts === undefined
+      ? {}
+      : { optionalCostCounts: { ...spell.optionalCostCounts } }),
+  };
+  // Its own entry replacements apply as it would enter (Mox Diamond's discard, CR 614.1c). Put
+  // anywhere else instead, a copy of a spell ceases to exist (CR 707.10a).
+  if (!(yield* paysEntersUnlessDiscard(ctx, entering, spell.controllerId))) return;
+  const perm = makePermanent(ctx, entering, spell.controllerId);
   if (def.subtypes.includes('Aura')) perm.attachedTo = spell.targets[0] ?? null;
   // A copy of a bestowed Aura spell is one too (CR 702.103c), and becomes a bestowed Aura.
   if (spell.alternativeCastKind === 'bestow') {
     perm.attachedTo = spell.targets[0] ?? null;
     perm.bestowed = true;
   }
+  // zone-mutation: a resolving copy of a permanent spell becomes a token (CR 608.3f), created like createToken: makePermanent applies its entry replacements
   ctx.state.battlefield.push(perm);
+  applyDash(ctx, spell, perm);
   emit(
     ctx,
     'permanentSpellCopyResolved',

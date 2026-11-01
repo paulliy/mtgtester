@@ -65,6 +65,51 @@ export function parseReviewManifest(bytes: string): ReviewManifest {
   return value as ReviewManifest;
 }
 
+/**
+ * Fields that point at evidence rather than state what is claimed: test and scenario IDs and the
+ * equivalent-mutant records. Other checks hold them to the evidence (`check:manifest-tests`
+ * resolves every ID, `mutate-cards` replays each mutant), and card and viewer evidence is not
+ * this gate's scope, so re-pointing them is not a new review claim.
+ */
+const EVIDENCE_REFERENCE_FIELDS = new Set([
+  'engineTestIds',
+  'viewerScenarioIds',
+  'gameplayAiScenarioIds',
+  'equivalentMutants',
+]);
+const CLAUSE_EVIDENCE_REFERENCE_FIELDS = new Set([
+  'engineTestIds',
+  'engineTestSource',
+  'viewerScenarioIds',
+  'contractTestIds',
+]);
+
+/** The review claim a declaration makes: everything but its evidence references. */
+function reviewClaim(card: ReviewDeclaration | undefined): unknown {
+  if (card === undefined) return undefined;
+  const entries = Object.entries(card as unknown as Record<string, unknown>).filter(
+    ([key]) => !EVIDENCE_REFERENCE_FIELDS.has(key),
+  );
+  return Object.fromEntries(
+    entries.map(([key, value]) =>
+      key === 'clauses' && Array.isArray(value)
+        ? [
+            key,
+            value.map((clause: unknown) =>
+              clause !== null && typeof clause === 'object' && !Array.isArray(clause)
+                ? Object.fromEntries(
+                    Object.entries(clause).filter(
+                      ([field]) => !CLAUSE_EVIDENCE_REFERENCE_FIELDS.has(field),
+                    ),
+                  )
+                : clause,
+            ),
+          ]
+        : [key, value],
+    ),
+  );
+}
+
 /** Unchanged historical declarations confer no current primitive certification. */
 export function primitiveReviewPromotions(
   previous: ReviewManifest,
@@ -74,7 +119,7 @@ export function primitiveReviewPromotions(
     .filter(
       ([id, card]) =>
         card.implementationStatus === 'implemented-reviewed' &&
-        canonicalJson(previous.cards[id]) !== canonicalJson(card),
+        canonicalJson(reviewClaim(previous.cards[id])) !== canonicalJson(reviewClaim(card)),
     )
     .map(([id]) => id)
     .sort();

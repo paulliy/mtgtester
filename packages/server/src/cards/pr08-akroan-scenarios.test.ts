@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 import { computeCharacteristics } from '../../../engine/src/effects/continuous';
 import type { GameContext } from '../../../engine/src/state/types';
 function replay(upkeep: boolean) {
-  const scenario = createCardTestScenario(
+  const scenario = strictCardTestScenario(
     `akroan-horse-viewer-${upkeep ? 'recipient-upkeep' : 'cast-and-gift'}`,
     'akroan-production-replay',
   )!;

@@ -15,10 +15,16 @@
  * stderr diagnostic. `agent-client-core.ts` holds the translation and owns its tests; this file is
  * only the wiring to a real socket and a real process.
  *
+ *   bun run agent-client --table <invite link> --name Ann --deck deck.txt --policy first-legal
+ *
+ * With `--table` it plays one seat at a local table server (`agent-client-table.ts`): it joins
+ * with the invite, asks the host for the seat, and plays once approved.
+ *
  * Exit codes: 0 game over, 1 the run ended without one, 2 bad arguments, 130 interrupted.
  */
 
-import type { ServerToClientMessage } from '@mtg/shared';
+import { readFileSync } from 'node:fs';
+import type { ServerToClientMessage, TableServerToClientMessage } from '@mtg/shared';
 import {
   AGENT_CLIENT_USAGE,
   AgentClientSession,
@@ -26,8 +32,93 @@ import {
   createAgentIo,
   parseAgentClientArgs,
 } from './agent-client-core';
+import { parseTableAgentArgs, TABLE_AGENT_USAGE, TableAgentSession } from './agent-client-table';
+
+function mainTable(): void {
+  const args = parseTableAgentArgs(process.argv.slice(2));
+  if (args.kind === 'help') {
+    process.stderr.write(`${TABLE_AGENT_USAGE}\n`);
+    return;
+  }
+  if (args.kind === 'error') {
+    process.stderr.write(`agent-client: ${args.message}\n`);
+    process.exitCode = 2;
+    return;
+  }
+  let decklist: string;
+  try {
+    decklist = readFileSync(args.deckPath, 'utf8');
+  } catch {
+    process.stderr.write(`agent-client: cannot read the decklist ${args.deckPath}.\n`);
+    process.exitCode = 2;
+    return;
+  }
+
+  const io = createAgentIo({
+    writeOut: (chunk) => void process.stdout.write(chunk),
+    writeErr: (chunk) => void process.stderr.write(chunk),
+  });
+  const socket = new WebSocket(args.url);
+  const input = new LineBuffer();
+  const session = new TableAgentSession({
+    io,
+    transport: {
+      send: (message) => socket.send(JSON.stringify(message)),
+      close: () => socket.close(),
+    },
+    join: {
+      inviteCode: args.inviteCode,
+      displayName: args.displayName,
+      seat: args.seat,
+      decklist,
+    },
+    policy: args.policy,
+    onDone: (code) => {
+      process.exitCode = code;
+      process.stdin.pause();
+    },
+  });
+  socket.addEventListener('open', () => {
+    io.diagnostic(`connected to the table; asking for ${args.seat}.`);
+    session.begin();
+  });
+  socket.addEventListener('message', (event: MessageEvent) => {
+    if (typeof event.data !== 'string') return;
+    let parsed: ServerToClientMessage | TableServerToClientMessage;
+    try {
+      parsed = JSON.parse(event.data) as ServerToClientMessage | TableServerToClientMessage;
+    } catch {
+      io.diagnostic('ignored an unparseable socket frame.');
+      return;
+    }
+    session.receive(parsed);
+  });
+  socket.addEventListener('error', () => session.socketClosed());
+  socket.addEventListener('close', () => session.socketClosed());
+  if (args.policy === 'stdin') {
+    process.stdin.setEncoding('utf8');
+    process.stdin.on('data', (chunk: string) => {
+      for (const line of input.take(chunk)) session.reply(line);
+    });
+    process.stdin.on('end', () => {
+      for (const line of input.flush()) session.reply(line);
+      session.inputClosed();
+    });
+  }
+  for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+    process.on(signal, () => {
+      // The game belongs to the table; leaving only closes this seat's connection.
+      socket.close();
+      process.exit(130);
+    });
+  }
+}
 
 function main(): void {
+  if (process.argv.slice(2).includes('--table')) {
+    mainTable();
+    return;
+  }
   const args = parseAgentClientArgs(process.argv.slice(2));
   if (args.kind === 'help') {
     process.stderr.write(`${AGENT_CLIENT_USAGE}\n`);

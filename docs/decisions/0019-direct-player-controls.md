@@ -4,6 +4,8 @@ Date: 2026-07-28
 
 Status: Accepted
 
+Amended by [0032](0032-server-computed-presentation.md): decision 5. Presentation facts for casts and abilities move from `LegalAction.data` to server-built presentation.
+
 ## Context
 
 Phase 6 exposed a player-safe board plus engine-generated legal actions, but the first player

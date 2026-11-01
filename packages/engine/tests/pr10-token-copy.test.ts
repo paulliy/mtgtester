@@ -2,13 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
 import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
 import { computeCharacteristics } from '../src/effects/continuous';
-import { moveObject } from '../src/state/objects';
+import { FOOD } from '../src/cards/tokens';
+import { createToken, moveObject } from '../src/state/objects';
 import { queueStepTriggers } from '../src/turn/turn';
 import { addMana } from '../src/mana/pool';
 import type { GameContext } from '../src/state/types';
-import { conjure, forest, oracle, pump, spawn } from './fixtures';
+import { conjure, forest, oracle, pump, pumpStrict, spawn } from './fixtures';
+import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import {
   asActive,
+  bear,
   castFromHand,
   castOption,
   choose,
@@ -20,6 +23,23 @@ import {
   putPendingTriggersOnStack,
   settle,
 } from './pr10-helpers';
+import { pinStore } from './scenario/pin-store';
+
+/**
+ * `settle`, recording the type of every decision asked (an unforced one is answered with the first
+ * option, unless `answer` says otherwise).
+ */
+function settleRecording(
+  ctx: GameContext,
+  answer?: (decision: PendingDecision) => DecisionOutcome,
+): string[] {
+  const asked: string[] = [];
+  settle(ctx, (decision) => {
+    asked.push(decision.decisionType);
+    return answer?.(decision) ?? { index: 0, targets: new Map() };
+  });
+  return asked;
+}
 
 /** `playerId` plays a Forest from hand through the real special action. */
 function playForest(ctx: GameContext, playerId: string) {
@@ -36,13 +56,26 @@ function playForest(ctx: GameContext, playerId: string) {
       targets: new Map(),
     }),
   );
-  settle(ctx);
+  // None of the landfall-style triggers this helper serves is a "you may".
+  expect(settleRecording(ctx)).not.toContain('optionalTrigger');
 }
 
 const tokensOf = (ctx: GameContext, playerId: string) =>
   ctx.state.battlefield.filter(
     (permanent) => permanent.isToken && permanent.controllerId === playerId,
   );
+
+/** Doubling Season, its Oracle text verbatim (as in `counter-token-replacements.test.ts`). */
+const doublingSeason = () =>
+  oracle({
+    name: 'Doubling Season',
+    typeLine: 'Enchantment',
+    manaCost: '{4}{G}',
+    power: null,
+    toughness: null,
+    oracleText:
+      'If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead.\nIf an effect would put one or more counters on a permanent you control, it puts twice that many of those counters on that permanent instead.',
+  });
 
 describe('PR10.23 Scute Swarm', () => {
   function swarmWithLands(seed: string, lands: number) {
@@ -84,6 +117,13 @@ describe('PR10.23 Scute Swarm', () => {
     playForest(ctx, 'P2');
     restore();
     expect(tokensOf(ctx, 'P1')).toHaveLength(0);
+    // Only a LAND entering counts: one of your creatures entering makes no Insect and no copy.
+    const creatureCtx = swarmWithLands('pr10-scute-creature', 0).ctx;
+    const cub = conjure(creatureCtx, 'P1', bear('Swarm Cub'), 'hand');
+    pumpStrict(moveObject(creatureCtx, cub, { zone: 'battlefield', controllerId: 'P1' }));
+    expect(creatureCtx.state.pendingTriggers).toHaveLength(0);
+    settle(creatureCtx);
+    expect(tokensOf(creatureCtx, 'P1')).toHaveLength(0);
   });
 });
 
@@ -149,7 +189,8 @@ describe('PR10.27 Council of Reeds', () => {
     castFromHand(ctx, 'P1', labShock(), new Map([[0, 'P2']]));
     settle(ctx);
     queueStepTriggers(ctx, 'beginningOfCombat');
-    settle(ctx);
+    // The trigger is mandatory: no "use this ability?" yes/no is asked.
+    expect(settleRecording(ctx)).not.toContain('optionalTrigger');
     const tokens = tokensOf(ctx, 'P1');
     expect(tokens.map((token) => token.name)).toEqual(['Council of Reeds']);
     // Both copies stay: the legend rule doesn't apply to them.
@@ -176,7 +217,8 @@ describe('PR10.31 Twilight Diviner', () => {
   function reanimate(ctx: GameContext, name: string) {
     const card = conjure(ctx, 'P1', zombie(name), 'graveyard');
     pump(moveObject(ctx, card, { zone: 'battlefield', controllerId: 'P1' }));
-    settle(ctx);
+    // The copy trigger is mandatory: no "use this ability?" yes/no is asked.
+    expect(settleRecording(ctx)).not.toContain('optionalTrigger');
   }
 
   const copiesOf = (ctx: GameContext, name: string) =>
@@ -186,6 +228,18 @@ describe('PR10.31 Twilight Diviner', () => {
     const def = pinnedDefinition('Twilight Diviner');
     expect(def.modeled, def.unmodeledReasons.join('\n')).toBe(true);
     expect(def.triggers).toHaveLength(2);
+
+    // The enter trigger surveils 2 (two cards, one decision each) and is not a "you may".
+    const ctx = pod('pr10-diviner-surveil');
+    const diviner = conjure(ctx, 'P1', pinned('Twilight Diviner'), 'hand');
+    pumpStrict(moveObject(ctx, diviner, { zone: 'battlefield', controllerId: 'P1' }));
+    const prompts: string[] = [];
+    const asked = settleRecording(ctx, (decision) => {
+      prompts.push(decision.prompt);
+      return { index: 0, targets: new Map() };
+    });
+    expect(asked).not.toContain('optionalTrigger');
+    expect(prompts.filter((prompt) => prompt.includes('surveil — keep'))).toHaveLength(2);
   });
 
   it('pr10-twilight-diviner-entered-from-graveyard — copies a reanimated creature', () => {
@@ -193,6 +247,23 @@ describe('PR10.31 Twilight Diviner', () => {
     spawn(ctx, 'P1', pinned('Twilight Diviner'));
     reanimate(ctx, 'Diviner Zombie');
     expect(copiesOf(ctx, 'Diviner Zombie')).toHaveLength(1);
+
+    // Only OTHER creatures count: the Diviner itself coming back from the graveyard copies nothing.
+    const selfCtx = pod('pr10-diviner-self');
+    const self = spawn(selfCtx, 'P1', pinned('Twilight Diviner'));
+    pumpStrict(moveObject(selfCtx, self, { zone: 'graveyard' }));
+    const dead = selfCtx.state.players[0]!.graveyard.find((c) => c.name === 'Twilight Diviner')!;
+    pumpStrict(moveObject(selfCtx, dead, { zone: 'battlefield', controllerId: 'P1' }));
+    settle(selfCtx);
+    expect(tokensOf(selfCtx, 'P1')).toHaveLength(0);
+
+    // Only CREATURES count: a land returning from the graveyard copies nothing.
+    const landCtx = pod('pr10-diviner-land');
+    spawn(landCtx, 'P1', pinned('Twilight Diviner'));
+    const land = conjure(landCtx, 'P1', forest(), 'graveyard');
+    pumpStrict(moveObject(landCtx, land, { zone: 'battlefield', controllerId: 'P1' }));
+    settle(landCtx);
+    expect(tokensOf(landCtx, 'P1')).toHaveLength(0);
   });
 
   it('pr10-twilight-diviner-cast-from-graveyard — copies a creature cast from a graveyard', () => {
@@ -271,27 +342,41 @@ describe('PR10.16 Saheeli, Radiant Creator', () => {
   it('pr10-saheeli-radiant-creator-energy — {E} for each Artificer or artifact spell', () => {
     const ctx = pod('pr10-radiant-energy');
     spawn(ctx, 'P1', pinned('Saheeli, Radiant Creator'));
+    const asked: string[] = [];
     castFromHand(ctx, 'P1', trinket());
-    settle(ctx);
+    asked.push(...settleRecording(ctx));
     castFromHand(ctx, 'P1', artificer());
-    settle(ctx);
+    asked.push(...settleRecording(ctx));
     castFromHand(ctx, 'P1', labShock(), new Map([[0, 'P2']]));
-    settle(ctx);
+    asked.push(...settleRecording(ctx));
     expect(p(ctx, 'P1').energy).toBe(2);
+    // The energy trigger is mandatory: no "use this ability?" yes/no is asked.
+    expect(asked).not.toContain('optionalTrigger');
   });
 
   it('pr10-saheeli-radiant-creator-combat-copy — pay three energy, then copy a permanent as a hasty 5/5', () => {
     const ctx = pod('pr10-radiant-copy');
-    spawn(ctx, 'P1', pinned('Saheeli, Radiant Creator'));
+    const saheeli = spawn(ctx, 'P1', pinned('Saheeli, Radiant Creator'));
     const relic = spawn(ctx, 'P1', trinket());
+    const rivalRelic = spawn(ctx, 'P2', { ...trinket(), name: 'Rival Trinket' });
     p(ctx, 'P1').energy = 4;
     queueStepTriggers(ctx, 'beginningOfCombat');
-    settle(ctx, (decision) =>
-      decision.prompt.includes('pay energy')
-        ? choose('Pay 3 energy')(decision)
-        : { index: 0, targets: new Map([[0, relic.id]]) },
-    );
+    const asked: string[] = [];
+    let offered: string[] = [];
+    settle(ctx, (decision) => {
+      asked.push(decision.decisionType);
+      if (decision.prompt.includes('pay energy')) return choose('Pay 3 energy')(decision);
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined) offered = slot.options;
+      return { index: 0, targets: new Map([[0, relic.id]]) };
+    });
+    // Neither the trigger nor its reflexive copy is a "you may": the only yes/no is paying energy.
+    expect(asked).not.toContain('optionalTrigger');
+    // "Target permanent you control": Saheeli and the Trinket, never the opponent's permanent.
+    expect([...offered].sort()).toEqual([saheeli.id, relic.id].sort());
+    expect(offered).not.toContain(rivalRelic.id);
     expect(p(ctx, 'P1').energy).toBe(1);
+    expect(tokensOf(ctx, 'P1')).toHaveLength(1);
     const [token] = tokensOf(ctx, 'P1');
     expect(token?.name).toBe('Radiant Trinket');
     const now = computeCharacteristics(ctx, token!);
@@ -302,6 +387,68 @@ describe('PR10.16 Saheeli, Radiant Creator', () => {
     queueStepTriggers(ctx, 'endStep');
     settle(ctx);
     expect(tokensOf(ctx, 'P1')).toHaveLength(0);
+  });
+
+  it('pr10-saheeli-radiant-creator-manufactor — every token Academy Manufactor makes instead is sacrificed', () => {
+    const ctx = pod('pr10-radiant-manufactor');
+    spawn(ctx, 'P1', pinned('Saheeli, Radiant Creator'));
+    const food = createToken(ctx, FOOD, 'P1');
+    spawn(ctx, 'P1', pinStore.get('Academy Manufactor'));
+    p(ctx, 'P1').energy = 3;
+    queueStepTriggers(ctx, 'beginningOfCombat');
+    settle(ctx, (decision) => {
+      if (decision.prompt.includes('pay energy')) return choose('Pay 3 energy')(decision);
+      return { index: 0, targets: new Map([[0, food.id]]) };
+    });
+    // Copying a Food makes a Clue, a Food and a Treasure instead (CR 111.10), all "those tokens".
+    expect(tokensOf(ctx, 'P1').filter((token) => token.id !== food.id)).toHaveLength(3);
+    queueStepTriggers(ctx, 'endStep');
+    settle(ctx);
+    expect(tokensOf(ctx, 'P1').map((token) => token.id)).toEqual([food.id]);
+  });
+
+  function saheeliCopiesDiamond(seed: string, lands: number, doubled = false) {
+    const ctx = pod(seed);
+    spawn(ctx, 'P1', pinned('Saheeli, Radiant Creator'));
+    const diamond = spawn(ctx, 'P1', pinStore.get('Mox Diamond'));
+    for (let i = 0; i < lands; i++) conjure(ctx, 'P1', forest(), 'hand');
+    if (doubled) spawn(ctx, 'P1', doublingSeason());
+    p(ctx, 'P1').energy = 3;
+    queueStepTriggers(ctx, 'beginningOfCombat');
+    const asked = settleRecording(ctx, (decision) => {
+      if (decision.prompt.includes('pay energy')) return choose('Pay 3 energy')(decision);
+      if (decision.prompt.includes('would enter')) return choose('Forest')(decision);
+      return { index: 0, targets: new Map([[0, diamond.id]]) };
+    });
+    return { ctx, asked };
+  }
+
+  it('pr10-saheeli-radiant-creator-mox-diamond — a token copy of Mox Diamond with no land to discard is never created', () => {
+    const { ctx } = saheeliCopiesDiamond('pr10-radiant-diamond-none', 0);
+    expect(tokensOf(ctx, 'P1')).toEqual([]);
+    expect(p(ctx, 'P1').energy).toBe(0);
+  });
+
+  it('pr10-saheeli-radiant-creator-mox-diamond-pays — discarding a land creates the token copy', () => {
+    const { ctx, asked } = saheeliCopiesDiamond('pr10-radiant-diamond-land', 1);
+    expect(asked).toHaveLength(3);
+    expect(tokensOf(ctx, 'P1').map((token) => token.name)).toEqual(['Mox Diamond']);
+    expect(p(ctx, 'P1').hand).toEqual([]);
+    expect(p(ctx, 'P1').graveyard.map((card) => card.name)).toEqual(['Forest']);
+  });
+
+  it('pr10-saheeli-radiant-creator-mox-diamond-doubled — each doubled token Diamond needs its own land', () => {
+    // Doubling Season makes the copy two tokens; one Forest pays for only one of them.
+    const { ctx } = saheeliCopiesDiamond('pr10-radiant-diamond-doubled-one', 1, true);
+    expect(tokensOf(ctx, 'P1').map((token) => token.name)).toEqual(['Mox Diamond']);
+    expect(p(ctx, 'P1').graveyard.map((card) => card.name)).toEqual(['Forest']);
+  });
+
+  it('pr10-saheeli-radiant-creator-mox-diamond-doubled-pays — two lands pay for both doubled tokens', () => {
+    const { ctx } = saheeliCopiesDiamond('pr10-radiant-diamond-doubled-two', 2, true);
+    expect(tokensOf(ctx, 'P1').map((token) => token.name)).toEqual(['Mox Diamond', 'Mox Diamond']);
+    expect(p(ctx, 'P1').hand).toEqual([]);
+    expect(p(ctx, 'P1').graveyard.map((card) => card.name)).toEqual(['Forest', 'Forest']);
   });
 
   it('pr10-saheeli-radiant-creator-not-enough-energy — nothing to pay with two energy', () => {

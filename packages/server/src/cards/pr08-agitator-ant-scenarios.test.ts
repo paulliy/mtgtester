@@ -43,7 +43,7 @@ import { NO_BLOCK_TARGET } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { computeCharacteristics } from '../../../engine/src/effects/continuous';
 import type { GameContext } from '../../../engine/src/state/types';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 import type { CardTestScenario } from './card-test-scenarios';
 
 type Mode = 'accept' | 'decline';
@@ -174,7 +174,7 @@ function casterSeat(mode: Mode) {
  */
 function replay(mode: Mode) {
   return drive(
-    createCardTestScenario(`agitator-ant-viewer-${mode}`, 'pr08-ant-lab'),
+    strictCardTestScenario(`agitator-ant-viewer-${mode}`, 'pr08-ant-lab'),
     casterSeat(mode),
   );
 }
@@ -267,7 +267,7 @@ describe('Agitator Ant Card Test Lab replay', () => {
       decline: 'Agitator Ant: declining counters leaves its creature ungoaded',
     };
     for (const mode of ['accept', 'decline'] as const) {
-      const scenario = createCardTestScenario(`agitator-ant-viewer-${mode}`, 'pr08-ant-pin');
+      const scenario = strictCardTestScenario(`agitator-ant-viewer-${mode}`, 'pr08-ant-pin');
       expect(scenario, mode).not.toBeNull();
       // Both clause IDs ride on BOTH scenarios: each run resolves the whole printed clause, so
       // neither is allowed to be scoped to a single run.
@@ -533,7 +533,7 @@ describe('Agitator Ant Card Test Lab replay', () => {
  */
 describe('Agitator Ant goad expiry continuation', () => {
   it('agitator-ant-goad-expires-at-the-goaders-next-untap — P1’s next untap ends it, and the run stops before another Ant end step', () => {
-    const published = createCardTestScenario('agitator-ant-viewer-accept', 'pr08-ant-expiry');
+    const published = strictCardTestScenario('agitator-ant-viewer-accept', 'pr08-ant-expiry');
     expect(published).not.toBeNull();
     const engine = new Engine(
       {

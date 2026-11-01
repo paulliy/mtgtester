@@ -3,18 +3,23 @@
  * terminals. Any args after `--` are forwarded to the server only (e.g. `--port 3005 --no-db`),
  * matching what `bun run serve` already accepts.
  *
+ * `bun run dev --table` runs `serve:table --dev` and the table app's dev server instead (plan M6);
+ * the remaining args go to the table server (e.g. `--oracle-fixture <file>`).
+ *
  * Plain `Bun.spawn` rather than a `concurrently`-style dependency: two child processes with
  * prefixed output and coordinated shutdown is little enough code not to need one.
  */
 
-const serverArgs = process.argv.slice(2);
+const table = process.argv.includes('--table');
+const serverArgs = process.argv.slice(2).filter((arg) => arg !== '--table');
 
 function parseServerPort(args: string[]): number {
+  const fallback = table ? 3002 : 3001;
   const portIndex = args.indexOf('--port');
-  if (portIndex === -1) return 3001;
+  if (portIndex === -1) return fallback;
 
   const port = Number.parseInt(args[portIndex + 1] ?? '', 10);
-  return Number.isFinite(port) ? port : 3001;
+  return Number.isFinite(port) ? port : fallback;
 }
 
 function spawnTagged(
@@ -67,12 +72,12 @@ async function waitForServer(port: number, timeoutMs = 30_000): Promise<void> {
 }
 
 const serverPort = parseServerPort(serverArgs);
-const server = spawnTagged('server', [
-  'bun',
-  'run',
-  'packages/server/src/cli/serve.ts',
-  ...serverArgs,
-]);
+const server = spawnTagged(
+  'server',
+  table
+    ? ['bun', 'run', 'packages/server/src/cli/serve-table.ts', '--dev', ...serverArgs]
+    : ['bun', 'run', 'packages/server/src/cli/serve.ts', ...serverArgs],
+);
 let web: ReturnType<typeof Bun.spawn> | undefined;
 
 let shuttingDown = false;
@@ -95,10 +100,16 @@ void (async () => {
     }),
   ]);
 
-  web = spawnTagged('web', ['bun', 'run', '--cwd', 'apps/web', 'dev'], {
-    ...process.env,
-    GAME_SERVER_PORT: String(serverPort),
-  });
+  web = spawnTagged(
+    'web',
+    ['bun', 'run', '--cwd', 'apps/web', 'dev', ...(table ? ['--mode', 'table'] : [])],
+    {
+      ...process.env,
+      ...(table
+        ? { TABLE_SERVER_PORT: String(serverPort) }
+        : { GAME_SERVER_PORT: String(serverPort) }),
+    },
+  );
 
   void web.exited.then((code) => shutdown(code ?? 1));
 })().catch((error: unknown) => {

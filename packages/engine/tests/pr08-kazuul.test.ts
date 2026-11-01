@@ -95,6 +95,8 @@ function combatPod(ctx: GameContext, attacker: string): void {
 }
 
 function passOutcome(decision: PendingDecision): DecisionOutcome {
+  // Kazuul's trigger is mandatory ("unless that creature's controller pays"): no "use it?" first.
+  expect(decision.decisionType).not.toBe('optionalTrigger');
   return {
     index: Math.max(
       0,

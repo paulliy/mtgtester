@@ -302,7 +302,9 @@ function definition(count: number | Value = 1): CardDefinition {
   };
 }
 
-describe('primitive evidence and eligibility', { timeout: 30_000 }, () => {
+// Each evidence load hashes every primitive's contract closure (about 16 seconds here, growing
+// with each primitive), and a test may pay for two, so the budget is twice a single load.
+describe('primitive evidence and eligibility', { timeout: 60_000 }, () => {
   it('loads evidence from actual independent execution and freezes generated facts', () => {
     const evidence = loadPrimitiveEvidence(root, runDirectory);
     expect(evidence.capabilities).toEqual(expectedCapabilities);
@@ -559,7 +561,7 @@ describe('primitive evidence and eligibility', { timeout: 30_000 }, () => {
         evidence,
       ),
     ).toThrow('reviewed primitives are not proven');
-  }, 30_000);
+  }, 65_000);
 
   it('rejects promotion input routed to a different repository', () => {
     const directory = mkdtempSync(resolve(tmpdir(), 'mtg-other-review-root-'));

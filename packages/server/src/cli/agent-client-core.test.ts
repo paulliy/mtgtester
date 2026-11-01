@@ -125,6 +125,7 @@ function gameOver(): GameOverPayload {
       halted: false,
       haltReason: null,
     },
+    summary: 'Game over — winner P1 after 12 turns',
     standings: [
       { seat: 'P1', position: 1, lossReason: null },
       { seat: 'P2', position: 2, lossReason: 'lifeZeroOrLess' },
@@ -223,6 +224,8 @@ describe('agent client startup', () => {
           providerKind: 'random',
           gameMode: 'singlePlayer',
           humanSeat: 'P1',
+          // The documented contract keeps `data` in each legal action (ADR 0032 decision 7).
+          capabilities: { rawActionData: true },
           seed: 'seed1',
           paceMs: 0,
         },
@@ -248,6 +251,22 @@ describe('agent client startup', () => {
     ]);
     expect(JSON.stringify(h.events)).not.toContain('secret-token');
   });
+
+  it.each(['table', 'spectator'] as const)(
+    'ignores a gameStarted frame for a %s game and still adopts its own',
+    (gameMode) => {
+      const h = harness();
+      h.session.begin();
+      h.session.receive({
+        type: 'gameStarted',
+        payload: { ...gameStarted(), gameId: 'other', gameMode, humanSeat: 'P1' },
+      });
+      expect(h.events).toEqual([]);
+      expect(h.diagnostics).toEqual([`ignored a gameStarted frame for a ${gameMode} game.`]);
+      h.session.receive({ type: 'gameStarted', payload: gameStarted() });
+      expect(h.events.map((event) => event.type)).toEqual(['game-started']);
+    },
+  );
 
   it('treats a setup error before gameStarted as fatal without republishing its text', () => {
     const h = harness();
@@ -883,7 +902,12 @@ describe('agent client termination', () => {
     const h = atDecision();
     h.session.receive({ type: 'gameOver', payload: gameOver() });
     expect(h.events).toEqual([
-      { type: 'game-over', result: gameOver().result, standings: gameOver().standings },
+      {
+        type: 'game-over',
+        result: gameOver().result,
+        standings: gameOver().standings,
+        summary: gameOver().summary,
+      },
     ]);
     expect(h.closed()).toBe(true);
     expect(h.done()).toBe(0);
@@ -1443,6 +1467,7 @@ describe('agent game-over output projection', () => {
     const original = gameOver();
     const payload = {
       result: { ...original.result, halted: true, haltReason: MARKER, privateState: MARKER },
+      summary: original.summary,
       standings: original.standings.map((row) => ({ ...row, privateHand: MARKER })),
       reflections: MARKER,
     };
@@ -1452,6 +1477,7 @@ describe('agent game-over output projection', () => {
         type: 'game-over',
         result: { ...original.result, halted: true, haltReason: null },
         standings: original.standings,
+        summary: original.summary,
       },
     ]);
     const event = h.events[0];
@@ -1467,6 +1493,21 @@ describe('agent game-over output projection', () => {
     expect(h.done()).toBe(0);
     expect(h.closed()).toBe(true);
     expect(h.sent).toEqual([{ type: 'abandonGame', payload: {} }]);
+  });
+
+  it('passes on the server summary, and omits it for a server that sent none', () => {
+    const h = atDecision();
+    receive(h, { ...gameOver(), summary: 'Game over — draw after 3 turns' });
+    expect(h.events[0]).toMatchObject({
+      type: 'game-over',
+      summary: 'Game over — draw after 3 turns',
+    });
+
+    const older = atDecision();
+    const { summary: _summary, ...withoutSummary } = gameOver();
+    receive(older, withoutSummary);
+    expect(older.events[0]).not.toHaveProperty('summary');
+    expect(older.done()).toBe(0);
   });
 
   it.each(['P1', 'P2', 'P3', 'P4', null])(
@@ -1539,6 +1580,17 @@ describe('agent game-over output projection', () => {
   for (const [index, value] of [undefined, null, {}, 'rows', [null], [[]], ['row']].entries()) {
     malformed.push([`standings/${index}`, { ...gameOver(), standings: value }]);
   }
+  for (const [index, value] of [
+    null,
+    1,
+    {},
+    [],
+    'x'.repeat(201),
+    'two\nlines',
+    'escape\u001b[31m',
+  ].entries()) {
+    malformed.push([`summary/${index}`, { ...gameOver(), summary: value }]);
+  }
   for (const [field, values] of Object.entries({
     seat: [undefined, null, 'P5', 1, {}],
     position: [undefined, null, '0', -1, 5, 1.5, NaN, Infinity],
@@ -1585,6 +1637,7 @@ describe('agent game-over output projection', () => {
   it('projects terminal bytes through the actual CLI on a listening loopback WebSocket', () => {
     const payload = {
       result: { ...gameOver().result, haltReason: MARKER, privateState: MARKER },
+      summary: gameOver().summary,
       standings: gameOver().standings.map((row) => ({ ...row, privateHand: MARKER })),
       reflections: MARKER,
     };
@@ -1646,7 +1699,12 @@ describe('agent game-over output projection', () => {
         seats: gameStarted().seats,
         startedAt: gameStarted().startedAt,
       },
-      { type: 'game-over', result: gameOver().result, standings: gameOver().standings },
+      {
+        type: 'game-over',
+        result: gameOver().result,
+        standings: gameOver().standings,
+        summary: gameOver().summary,
+      },
     ]);
   }, 15000);
 });

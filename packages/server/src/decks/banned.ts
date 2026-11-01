@@ -34,6 +34,12 @@ export function parseBannedList(markdown: string): BannedList {
   };
 }
 
+/** A banned list from names already parsed elsewhere (a table worker gets them from its host). */
+export function bannedListFromNames(names: readonly string[]): BannedList {
+  const keys = new Set(names.map((name) => strictKey(name)));
+  return { names: [...names], isBanned: (name: string) => keys.has(strictKey(name)) };
+}
+
 export function loadBannedList(path: string): BannedList {
   return parseBannedList(readFileSync(path, 'utf8'));
 }

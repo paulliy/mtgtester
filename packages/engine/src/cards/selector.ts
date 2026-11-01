@@ -292,6 +292,31 @@ export const CHOSEN_COLOR: Selector = { kind: 'chosenColor' };
 export const CHOSEN_TYPE: Selector = { kind: 'chosenType' };
 export const CHOSEN_SUBTYPE: Selector = { kind: 'chosenSubtype' };
 
+/**
+ * `selector` with "the chosen …" replaced by what `chosen` names: a fixed `color`, `type` or
+ * `subtype`. For a selector that outlives the permanent it reads from, such as a CR 106.6
+ * restriction riding on mana (Cavern of Souls), which is checked with no source permanent.
+ * Unbound (`chosen` absent), the selector is returned as is and still matches nothing.
+ */
+export function bindChosenOption(selector: Selector, chosen: string | undefined): Selector {
+  if (chosen === undefined) return selector;
+  switch (selector.kind) {
+    case 'chosenColor':
+      return { kind: 'color', value: chosen as Color };
+    case 'chosenType':
+      return { kind: 'type', value: chosen };
+    case 'chosenSubtype':
+      return { kind: 'subtype', value: chosen };
+    case 'allOf':
+    case 'anyOf':
+      return { kind: selector.kind, of: selector.of.map((of) => bindChosenOption(of, chosen)) };
+    case 'not':
+      return { kind: 'not', of: bindChosenOption(selector.of, chosen) };
+    default:
+      return selector;
+  }
+}
+
 export const allOf = (...of: Selector[]): Selector => ({ kind: 'allOf', of });
 export const anyOf = (...of: Selector[]): Selector => ({ kind: 'anyOf', of });
 export const not = (of: Selector): Selector => ({ kind: 'not', of });

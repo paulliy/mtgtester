@@ -7,7 +7,7 @@
 import type { GameResult, PlayerId } from '@mtg/shared';
 import type { GameGen } from '../decisions';
 import { emit, debug } from '../log/log';
-import { GameOverSignal, TurnAbortedSignal } from '../signals';
+import { GameConcededSignal, GameOverSignal, TurnAbortedSignal } from '../signals';
 import { playerById } from '../state/objects';
 import type { GameContext } from '../state/types';
 import { runOpeningHands } from '../turn/mulligan';
@@ -113,6 +113,32 @@ export function* playGame(ctx: GameContext): GameGen<GameResult> {
       advanceToNextTurnPlayer(ctx);
     }
   } catch (err) {
+    if (err instanceof GameConcededSignal) {
+      // Emitted here, after the unwind, so a cast that was in progress has already rewound
+      // through its checkpoint and cannot take this event with it; numbered after every event
+      // emitted before the rewind, which may already have been recorded.
+      s.nextEventSequence = Math.max(s.nextEventSequence, err.sequenceFloor);
+      emit(ctx, 'conceded', { players: [...err.players], reason: err.reason });
+      const result: GameResult = {
+        gameId: s.gameId,
+        winnerSeat: null,
+        finishingOrder: [...s.eliminatedPlayers],
+        turnCount: s.turnNumber,
+        halted: false,
+        haltReason: null,
+        endReason: err.reason,
+      };
+      emit(ctx, 'gameOver', {
+        winner: null,
+        finishingOrder: result.finishingOrder,
+        turns: result.turnCount,
+        halted: false,
+        haltReason: null,
+        endReason: err.reason,
+      });
+      debug(ctx, 'engine', `game ended by agreement: ${err.reason}`);
+      return result;
+    }
     if (err instanceof GameOverSignal) {
       const result = buildResult(ctx, err);
       emit(ctx, 'gameOver', {

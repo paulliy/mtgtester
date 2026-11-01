@@ -214,8 +214,8 @@ export class StrategyCoordinator {
     private readonly engine: Engine,
     private readonly config: AiConfig,
     private readonly logger?: AiCallLogger,
-    /** Never plan this seat's own turn — no tactician ever consumes it (see `guidanceFor`). */
-    private readonly humanSeat?: PlayerId | null,
+    /** Never plan these seats' own turns — no tactician ever consumes them (see `guidanceFor`). */
+    private readonly humanSeats?: ReadonlySet<PlayerId>,
     /**
      * Each seat's own inferred archetype (ADR 0022 §5), so the strategist knows what the deck it
      * is piloting is built to do. Read only for the seat being planned — an archetype comes from
@@ -293,7 +293,7 @@ export class StrategyCoordinator {
       this.strategyAttempted ||
       this.cancelled ||
       turn <= 0 ||
-      activePlayer === this.humanSeat
+      this.humanSeats?.has(activePlayer) === true
     ) {
       return;
     }

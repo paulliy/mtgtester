@@ -109,7 +109,8 @@ const energy = (page: Page): Locator =>
 const counters = (page: Page, seat: string): Locator =>
   page.locator(
     seat === 'P1'
-      ? '.human-zone [aria-label="Global counters"]'
+      ? // Your counters are in the top bar, beside the turn (56a6344).
+        '.bar-resources [aria-label="Global counters"]'
       : `.opponent[data-seat="${seat}"] [aria-label="Global counters"]`,
   );
 

@@ -3,6 +3,7 @@ import type { OracleIndex } from '../cards/oracle-index';
 import type { SupportedPool } from '../cards/pool';
 import type { BannedList } from '../decks/banned';
 import type { GameStore } from '../db';
+import { testerPolicy } from '../match/disclosure';
 import { MatchSession } from '../match/session';
 import { setupSeats } from '../match/setup';
 
@@ -183,6 +184,7 @@ export class BatchManager {
               seed,
               seats: setup.seats,
               providerKind: scenario.providerKind,
+              disclosure: testerPolicy('spectator'),
               store: this.deps.store,
               playbackMode: 'live',
               livePaceMs: 0,

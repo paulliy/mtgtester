@@ -19,6 +19,7 @@ import type { GameContext } from '../src/state/types';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
 import { bear, conjure, copies, forest, gameConfig, oracle, pick, pump, spawn } from './fixtures';
+import { pinStore } from './scenario/pin-store';
 
 interface PinnedFixture {
   schemaVersion: number;
@@ -363,6 +364,46 @@ describe('Sculpting Steel', () => {
     expect(ctx.state.battlefield.some((permanent) => permanent.name === 'Sculpting Steel')).toBe(
       true,
     );
+  });
+
+  // Copying Mox Diamond brings its entry replacement (CR 707.5, 614.12).
+  it('steel-copies-mox-diamond-no-land — with no land card to discard, it goes to the graveyard instead', () => {
+    const ctx = pod('steel-diamond-none');
+    spawn(ctx, 'P1', pinStore.get('Mox Diamond'));
+    playerOf(ctx, 'P1').hand.splice(0);
+    const obj = conjure(ctx, 'P1', card, 'hand');
+    pump(
+      moveObject(ctx, obj, { zone: 'battlefield', controllerId: 'P1' }),
+      (decision) => pick(decision, 'Mox Diamond'),
+      { strict: true },
+    );
+    expect(ctx.state.battlefield.some((permanent) => permanent.cardId === obj.cardId)).toBe(false);
+    expect(playerOf(ctx, 'P1').graveyard.map((grave) => grave.cardId)).toContain(obj.cardId);
+    expect(
+      ctx.state.battlefield.filter((permanent) => permanent.name === 'Mox Diamond'),
+    ).toHaveLength(1);
+  });
+
+  it('steel-copies-mox-diamond-discards — discarding a land card, it enters as Mox Diamond', () => {
+    const ctx = pod('steel-diamond-land');
+    spawn(ctx, 'P1', pinStore.get('Mox Diamond'));
+    playerOf(ctx, 'P1').hand.splice(0);
+    conjure(ctx, 'P1', forest(), 'hand');
+    const obj = conjure(ctx, 'P1', card, 'hand');
+    const prompts: string[] = [];
+    pump(
+      moveObject(ctx, obj, { zone: 'battlefield', controllerId: 'P1' }),
+      (decision) => {
+        prompts.push(decision.prompt);
+        return pick(decision, prompts.length === 1 ? 'Mox Diamond' : 'Forest');
+      },
+      { strict: true },
+    );
+    expect(prompts).toHaveLength(2);
+    expect(ctx.state.battlefield.find((permanent) => permanent.cardId === obj.cardId)?.name).toBe(
+      'Mox Diamond',
+    );
+    expect(playerOf(ctx, 'P1').graveyard.map((grave) => grave.name)).toEqual(['Forest']);
   });
 
   it('steel-creature-not-offered', () => {

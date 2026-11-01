@@ -1,0 +1,47 @@
+name: Nightly bulk data
+
+# ADR 0034 decision 9: the suites that need the gitignored Scryfall bank run here with no skips,
+# and the whole population is interpreted and validated. The bank is a checksum-pinned download:
+# set the repository variables SCRYFALL_BULK_URL (an oracle-cards .jsonl.gz from Scryfall's bulk
+# data) and SCRYFALL_BULK_SHA256, then record the baseline with `bun run bulk-smoke --write`.
+on:
+  schedule:
+    - cron: '41 8 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bulk:
+    name: Cards / Nightly bulk data
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      SCRYFALL_BULK_URL: ${{ vars.SCRYFALL_BULK_URL }}
+      SCRYFALL_BULK_SHA256: ${{ vars.SCRYFALL_BULK_SHA256 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-bun-deps
+      - name: Download the pinned bank
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$SCRYFALL_BULK_URL" || -z "$SCRYFALL_BULK_SHA256" ]]; then
+            echo "::error::Set the SCRYFALL_BULK_URL and SCRYFALL_BULK_SHA256 repository variables."
+            exit 1
+          fi
+          curl -fsSL -A 'mtg-commander-sim/0.1' "$SCRYFALL_BULK_URL" -o oracle-cards.jsonl.gz
+          echo "$SCRYFALL_BULK_SHA256  oracle-cards.jsonl.gz" | sha256sum -c -
+          bun run scryfall:update --from oracle-cards.jsonl.gz
+      - name: Bulk-data suites, with no skips
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t suites < <(grep -rl 'allowed-skip: needs the Scryfall bulk file' packages)
+          bunx vitest run "${suites[@]}" --reporter=default --reporter=json --outputFile=bulk-tests.json
+          jq -e '.numPendingTests == 0 and .numTodoTests == 0' bulk-tests.json > /dev/null ||
+            { echo "::error::A bulk-data suite skipped tests with the bank present."; exit 1; }
+      - name: Interpret and validate the whole population
+        if: always()
+        run: bun run bulk-smoke

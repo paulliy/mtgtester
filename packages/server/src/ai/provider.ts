@@ -229,6 +229,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
       }
     }
 
+    // Seeded from the public request id, so it reveals nothing about a table game's keyed streams.
     const fallback = heuristicDecide(request, view, new HeuristicRng(request.requestId));
     console.warn(
       `  ⚠ ${request.decidingPlayer} decision ${request.requestId} — using heuristic bot fallback`,

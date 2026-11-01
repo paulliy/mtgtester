@@ -134,7 +134,7 @@ describe('zone-change triggers remember only the first public destination incarn
 });
 
 it.each(['stayed', 'after registration'])(
-  'batch-death-first-destination preserves separate identities after %s',
+  'batch-death-first-destination — preserves separate identities after %s',
   (movement) => {
     const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(8, forest) }))));
     ctx.state.currentTurnPlayer = 'P1';

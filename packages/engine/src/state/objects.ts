@@ -1,4 +1,6 @@
 import { copyData } from './copy-data';
+import { EngineBudgetError } from '../errors';
+import { CLUE, FOOD, THOPTER_1_1_FLYING, TREASURE } from '../cards/tokens';
 import { counterCount, setCounterCount } from './counters';
 import { offBattlefieldTypes } from './off-battlefield-types';
 import { playerProtectedFromEverything } from './phasing';
@@ -75,6 +77,12 @@ import type {
 } from './types';
 
 export function newObjectId(ctx: GameContext): ObjectId {
+  const budget = ctx.budget;
+  if (
+    budget?.maxObjects !== undefined &&
+    ctx.state.nextObjectNum - budget.objectsAtStart >= budget.maxObjects
+  )
+    throw new EngineBudgetError('objects', budget.maxObjects);
   return `o-${ctx.state.nextObjectNum++}`;
 }
 
@@ -533,8 +541,12 @@ export function makePermanent(
     ...((obj as EngineCardObject).announcedX !== undefined
       ? { x: (obj as EngineCardObject).announcedX }
       : {}),
-    ...((obj as EngineCardObject).treasureManaSpentToCast !== undefined
-      ? { treasureManaSpent: (obj as EngineCardObject).treasureManaSpentToCast }
+    // Mana from a Treasure spent to cast it: none when it was not cast, or cast without any.
+    treasureManaSpent: (obj as EngineCardObject).treasureManaSpentToCast ?? 0,
+    // "enters with a charge counter on it for each time it was kicked" (Everflowing Chalice):
+    // the spell has left the stack, so its paid optional costs ride on the entering card.
+    ...((obj as EngineCardObject).optionalCostCounts !== undefined
+      ? { resolvingOptionalCostCounts: { ...(obj as EngineCardObject).optionalCostCounts } }
       : {}),
   };
   for (const [counter, value] of Object.entries(
@@ -688,7 +700,11 @@ export function consumeRegenerationShield(
   perm.regenerationShields--;
   perm.damageMarked = 0;
   perm.damagedByDeathtouch = false;
+  // Regeneration taps it (CR 701.15a): an untapped permanent becomes tapped, and "whenever … becomes
+  // tapped" sees it like any other tap.
+  const becomesTapped = !perm.tapped;
   perm.tapped = true;
+  if (becomesTapped) queueTriggersForObject(ctx, 'becomesTapped', perm);
   // Removed from combat (CR 701.19c).
   removeFromCombat(ctx, perm);
   emit(
@@ -1024,6 +1040,16 @@ export function* moveObject(
     }
   }
 
+  // "If this would enter, you may discard a land card instead ..." (Mox Diamond): a replacement
+  // (CR 614.1c), applied before it leaves the zone it is in, whichever effect moves it.
+  if (target.zone === 'battlefield' && from !== 'battlefield' && !target.faceDown) {
+    if (!(yield* paysEntersUnlessDiscard(ctx, obj, target.controllerId ?? obj.ownerId)))
+      target = {
+        zone: graveyardDestination(ctx, obj, 'graveyard'),
+        ...(target.reason !== undefined ? { reason: target.reason } : {}),
+      };
+  }
+
   // Its fixed effects stay until leave processing has read its last known characteristics: an
   // animated land that dies is a creature dying (CR 113.7a, 603.10a).
   const keepForLeaveProcessing = from === 'battlefield' && target.zone !== 'battlefield';
@@ -1241,6 +1267,26 @@ export function* moveObject(
           target: copyTargetPerm.name,
           untilEot: false,
         });
+        // The copied characteristics bring their own entry replacement (CR 707.5, 614.12):
+        // entering as a copy of Mox Diamond, it must discard a land card or go to its owner's
+        // graveyard instead, never having entered (no enters trigger has been queued yet).
+        const copiedCost = copiableDefinition(ctx, copyTargetPerm).entersUnlessDiscard;
+        if (
+          copiedCost !== undefined &&
+          def.entersUnlessDiscard === undefined &&
+          computeCharacteristics(ctx, perm).loseAbilities !== true &&
+          !(yield* paysEntersUnlessDiscard(ctx, obj, controllerId, copiedCost))
+        ) {
+          ctx.state.battlefield.splice(ctx.state.battlefield.indexOf(perm), 1);
+          releaseFixedEffects(ctx, perm.cardId);
+          target = {
+            zone: graveyardDestination(ctx, obj, 'graveyard'),
+            ...(target.reason !== undefined ? { reason: target.reason } : {}),
+          };
+          next = reincarnate(ctx, obj, target.zone);
+          if (target.zone === 'exile') ctx.state.exile.push(next);
+          else playerById(ctx, obj.ownerId).graveyard.push(next);
+        }
       }
     }
   } else {
@@ -1257,6 +1303,7 @@ export function* moveObject(
         owner.commandZone.push(next);
         break;
       case 'exile':
+        if (target.faceDown === true) next.exiledFaceDown = true;
         ctx.state.exile.push(next);
         break;
       case 'library':
@@ -1372,6 +1419,44 @@ export function* moveObject(
  * effects already in play (a nonbasic land under Blood Moon has no abilities, so it enters
  * untapped). The probe is never put anywhere, and its object id is handed back.
  */
+/**
+ * "If this would enter, you may discard a land card instead. If you do, put it onto the
+ * battlefield. If you don't, put it into its owner's graveyard." (Mox Diamond): a replacement
+ * (CR 614.1c) as `obj` would enter under `controllerId`, a card moving or a resolving spell copy.
+ * Whether it enters; a card never pays with itself.
+ */
+export function* paysEntersUnlessDiscard(
+  ctx: GameContext,
+  obj: EngineObject,
+  controllerId: PlayerId,
+  /** The replacement copied characteristics give it (CR 707.5), checked by the caller. */
+  copiedCost?: CardDefinition['entersUnlessDiscard'],
+): GameGen<boolean> {
+  const enterCost = copiedCost ?? getDefByOracleId(ctx, obj.oracleId, obj.name).entersUnlessDiscard;
+  if (enterCost === undefined) return true;
+  if (copiedCost === undefined && losesAbilitiesAsItEnters(ctx, obj, controllerId)) return true;
+  const source = { cardId: obj.cardId, controllerId };
+  const discard = yield* chooseCard(ctx, {
+    player: controllerId,
+    prompt: `${obj.name} would enter: you may discard a card instead. If you don't, it goes to its owner's graveyard.`,
+    cards: playerById(ctx, controllerId).hand.filter(
+      (card) =>
+        card !== obj &&
+        selectMatches(cardZoneCandidate(ctx, card, controllerId), enterCost.filter, source),
+    ),
+    type: 'discard',
+    verb: 'Discard',
+    decline: {
+      type: 'declineDiscard',
+      description: `Discard nothing: put ${obj.name} into its owner's graveyard`,
+      verb: 'Discard nothing',
+    },
+  });
+  if (discard === null) return false;
+  yield* discardCard(ctx, discard, controllerId);
+  return true;
+}
+
 function losesAbilitiesAsItEnters(
   ctx: GameContext,
   obj: EngineObject,
@@ -1478,6 +1563,7 @@ export function* moveObjects(
  * only what is public.
  */
 export function faceDownSpellOracleId(ctx: GameContext): OracleId {
+  // eslint-disable-next-line no-restricted-syntax -- a face-down spell's definition (CR 708.2a), not a printed token; no catalog entry describes it
   return registerTokenDef(ctx, {
     name: 'Face-down creature spell',
     typeLine: 'Creature',
@@ -1613,6 +1699,33 @@ function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
 }
 
 /**
+ * The tokens `controllerId` creates when an effect makes `count` of `spec`, after "if you would
+ * create a Clue, Food, or Treasure token, instead create one of each" (Academy Manufactor, CR
+ * 614.1a). Each such replacement applies to every token the others made, so with `m` of them
+ * `count` becomes `count * 3^(m-1)` of each kind. Only the kind the effect named keeps its own
+ * spec and enters tapped if it was to; the other two are plain.
+ */
+function clueFoodTreasurePlan(
+  ctx: GameContext,
+  spec: TokenSpec,
+  count: number,
+  controllerId: PlayerId,
+): Array<{ spec: TokenSpec; count: number; named: boolean }> {
+  const kinds = [CLUE, FOOD, TREASURE];
+  const named = kinds.find((kind) => spec.subtypes.includes(kind.subtypes[0]!));
+  const replacements = gatherRuleStatics(ctx).filter(
+    (entry) =>
+      entry.static.kind === 'createClueFoodAndTreasure' && entry.controllerId === controllerId,
+  ).length;
+  if (named === undefined || replacements === 0 || count <= 0)
+    return [{ spec, count, named: true }];
+  const each = count * 3 ** (replacements - 1);
+  // "Instead create one of each" creates the predefined tokens (CR 111.10), even in place of a
+  // token copy that is a Clue (Parcel Myr); `named` marks the kind the caller asked for.
+  return kinds.map((kind) => ({ spec: kind, count: each, named: kind === named }));
+}
+
+/**
  * Put a token onto the battlefield (CR 111.1). Returns the new permanent.
  *
  * It goes through `makePermanent` and `queueTriggersForObject` exactly as a resolving permanent
@@ -1640,9 +1753,16 @@ export function createToken(
   if (applyTokenReplacements) {
     const multiplier = tokenCreationMultiplierFor(ctx, controllerId);
     const created: EnginePermanent[] = [];
-    for (let i = 0; i < multiplier; i++) {
-      created.push(createToken(ctx, spec, controllerId, false, false, false, entersTapped));
-    }
+    // The caller asked for `spec`: hand back one of those, not a Clue a replacement added.
+    let first: EnginePermanent | undefined;
+    for (const plan of clueFoodTreasurePlan(ctx, spec, multiplier, controllerId))
+      for (let i = 0; i < plan.count; i++) {
+        // "Create a tapped Food" is an instruction of the creation event the replacement modifies
+        // (CR 614.1), so every token it creates instead enters tapped (Academy Manufactor).
+        const token = createToken(ctx, plan.spec, controllerId, false, false, false, entersTapped);
+        created.push(token);
+        if (plan.named) first ??= token;
+      }
     queueTokenCreatedEvent(ctx, created);
     queueTriggersForEvent(
       ctx,
@@ -1650,7 +1770,6 @@ export function createToken(
       created.map((permanent) => ({ permanent })),
     );
     applyTokenCreationReplacements(ctx, spec, controllerId);
-    const first = created[0];
     if (first === undefined) throw new Error('engine bug: token multiplier created no token');
     return first;
   }
@@ -1758,16 +1877,7 @@ export function applyTokenCreationReplacements(
       return def?.ruleStatics.some((rs) => rs.kind === 'artifactTokenCreatesThopter') ?? false;
     })
   ) {
-    createAdditional({
-      name: 'Thopter',
-      typeLine: 'Artifact Creature — Thopter',
-      types: ['Artifact', 'Creature'],
-      subtypes: ['Thopter'],
-      colors: [],
-      power: 1,
-      toughness: 1,
-      keywords: ['flying'],
-    });
+    createAdditional(THOPTER_1_1_FLYING);
   }
 }
 
@@ -1852,11 +1962,17 @@ export function createTokens(
   count: number,
   controllerId: PlayerId,
   entersTapped = false,
+  /** `count` already includes the doublers' extra tokens (the caller applied them). */
+  countIncludesMultiplier = false,
 ): EnginePermanent[] {
   const created: EnginePermanent[] = [];
-  const multiplier = tokenCreationMultiplierFor(ctx, controllerId);
-  for (let i = 0; i < count * multiplier; i++)
-    created.push(createToken(ctx, spec, controllerId, false, false, false, entersTapped));
+  const multiplier = countIncludesMultiplier ? 1 : tokenCreationMultiplierFor(ctx, controllerId);
+  for (const plan of clueFoodTreasurePlan(ctx, spec, count * multiplier, controllerId))
+    for (let i = 0; i < plan.count; i++)
+      created.push(
+        // Every token of the modified creation event enters tapped, not only the one named.
+        createToken(ctx, plan.spec, controllerId, false, false, false, entersTapped),
+      );
   if (created.length > 0) {
     queueTokenCreatedEvent(ctx, created);
     queueTriggersForEvent(
@@ -1883,8 +1999,9 @@ export function createTokensForPlayers(
     .map((id) => ({ id, count: count * tokenCreationMultiplierFor(ctx, id) }));
   const created: EnginePermanent[] = [];
   for (const plan of plans) {
-    for (let index = 0; index < plan.count; index++)
-      created.push(createToken(ctx, spec, plan.id, false, false, false));
+    for (const kind of clueFoodTreasurePlan(ctx, spec, plan.count, plan.id))
+      for (let index = 0; index < kind.count; index++)
+        created.push(createToken(ctx, kind.spec, plan.id, false, false, false));
   }
   for (const plan of plans) {
     if (plan.count > 0) applyTokenCreationReplacements(ctx, spec, plan.id, created);
@@ -1944,8 +2061,10 @@ export function tokenSpecCopying(
       cantBlock,
       cantBeBlocked,
     } = back;
+    // eslint-disable-next-line no-restricted-syntax -- wraps the copied permanent's back face (see below); the selector sees the nested face's fields
     copyDefinition = {
       ...front,
+      // eslint-disable-next-line no-restricted-syntax -- the copied permanent's own back face (CR 707.2), read from its definition; not a catalog token
       backFace: {
         name,
         typeLine,
@@ -1979,6 +2098,7 @@ export function tokenSpecCopying(
       },
     };
   }
+  // eslint-disable-next-line no-restricted-syntax -- a copy token takes its characteristics from the permanent it copies (CR 707.2), not from the catalog
   const spec: CopyTokenSpec = {
     copyDefinition,
     oracleText: perm.faceDown ? '' : perm.oracleText,
@@ -2029,7 +2149,7 @@ export function copyImageFace(ctx: GameContext, perm: EnginePermanent): 'front' 
 }
 
 /** Layer-1 values only: counters, attachments and later continuous effects never enter a copy. */
-function copiableDefinition(ctx: GameContext, perm: EnginePermanent): CardDefinition {
+export function copiableDefinition(ctx: GameContext, perm: EnginePermanent): CardDefinition {
   const def = selectedPermanentDefinition(
     getDefByOracleId(ctx, perm.oracleId, perm.name),
     perm.face,

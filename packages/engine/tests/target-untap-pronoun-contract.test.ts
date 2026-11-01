@@ -36,7 +36,7 @@ const expectations = [
 
 describe('one target followed by an untap pronoun', () => {
   it.each(expectations)(
-    'target-untap-normal-path binds both instructions to %s’s one target',
+    'target-untap-normal-path — binds both instructions to %s’s one target',
     (name, power, toughness, keyword, counters) => {
       const pinned = fixture.cards.find((row) => row.card.name === name)!;
       expect(createHash('sha256').update(JSON.stringify(pinned.card)).digest('hex')).toBe(

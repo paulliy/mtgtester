@@ -38,14 +38,19 @@ function attackWith(ctx: GameContext, attackers: EnginePermanent[]): void {
   }
 }
 
-function landed(seed: string): { ctx: GameContext; landing: EnginePermanent } {
+function landed(seed: string): {
+  ctx: GameContext;
+  landing: EnginePermanent;
+  /** The decision types asked while the enter trigger resolved. */
+  enterAsked: string[];
+} {
   const ctx = game(seed);
   castFromHand(ctx, 'P1', LANDING, new Map(), { W: 1 });
   resolve(ctx);
   checkpoint(ctx);
-  resolve(ctx);
+  const enterAsked = resolve(ctx).map((decision) => decision.decisionType);
   const landing = battlefield(ctx, "Legion's Landing")[0]!;
-  return { ctx, landing };
+  return { ctx, landing, enterAsked };
 }
 
 describe("Legion's Landing // Adanto, the First Fort", () => {
@@ -58,9 +63,11 @@ describe("Legion's Landing // Adanto, the First Fort", () => {
   });
 
   it('landing-c01-positive — entering creates a 1/1 white Vampire with lifelink', () => {
-    const { ctx } = landed('landing-enters');
+    const { ctx, enterAsked } = landed('landing-enters');
+    expect(battlefield(ctx, 'Vampire')).toHaveLength(1);
+    // The enter trigger is mandatory: nobody is asked "use this ability?".
+    expect(enterAsked).not.toContain('optionalTrigger');
     const [vampire] = battlefield(ctx, 'Vampire');
-    expect(vampire).toBeDefined();
     const chars = computeCharacteristics(ctx, vampire!);
     expect([chars.power, chars.toughness, chars.colors, chars.keywords]).toEqual([
       1,
@@ -77,7 +84,8 @@ describe("Legion's Landing // Adanto, the First Fort", () => {
     for (const attacker of attackers) attacker.summoningSick = false;
     attackWith(ctx, attackers);
     expect(ctx.state.stack.at(-1)?.description).toContain('transform');
-    resolve(ctx);
+    // The transform trigger is mandatory too.
+    expect(resolve(ctx).map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(landing.transformed).toBe(true);
     expect(landing.name).toBe('Adanto, the First Fort');
     const chars = computeCharacteristics(ctx, landing);

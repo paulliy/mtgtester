@@ -24,6 +24,8 @@ import { toOracleCard } from './scryfall';
 import { VERIFIED_TOKEN_TRIUMPH_CARDS } from './token-triumph-support';
 import type { OracleCard } from '@mtg/shared';
 
+// Builds its tests from the Scryfall bulk file, which is not tracked (data/README.md).
+// suite-requires: data/scryfall-oracle-cards.json
 const scryfallCards = loadScryfallBulkOrNull();
 // data/scryfall-oracle-cards.json is gitignored and not fetched by CI (see scryfall-bulk-fixture.ts).
 const SKIP = scryfallCards === null;
@@ -50,6 +52,7 @@ function setupEngineContext(): GameContext {
   return ctx;
 }
 
+// allowed-skip: needs the Scryfall bulk file (data/scryfall-oracle-cards.json, gitignored)
 describe.skipIf(SKIP)('L1: Modeled & Drift Guard Smoke Check', () => {
   for (const cardName of VERIFIED_TOKEN_TRIUMPH_CARDS) {
     it(`${cardName} passes L1 smoke check (modeled: true, unmodeledReasons: [])`, () => {
@@ -64,6 +67,7 @@ describe.skipIf(SKIP)('L1: Modeled & Drift Guard Smoke Check', () => {
   }
 });
 
+// allowed-skip: needs the Scryfall bulk file (data/scryfall-oracle-cards.json, gitignored)
 describe.skipIf(SKIP)('L2: Fixture & Unit Behavioral Tests', () => {
   it('path-engine-optional-search: verifies Path and representative triggered behavior', () => {
     const ctx = setupEngineContext();
@@ -155,6 +159,7 @@ describe.skipIf(SKIP)('L2: Fixture & Unit Behavioral Tests', () => {
   });
 });
 
+// allowed-skip: needs the Scryfall bulk file (data/scryfall-oracle-cards.json, gitignored)
 describe.skipIf(SKIP)('L3: Legality & Priority Engine Tests', () => {
   it('path-engine-normal-cast: executes full engine priority pipeline for Path to Exile', () => {
     const pathCard = getOracleCard('Path to Exile');

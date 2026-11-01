@@ -39,7 +39,7 @@ import type { ObjectFacts } from '../cards/source-identity';
 import type { Selector, SelectorCandidate } from '../cards/selector';
 import type { TriggerScope } from '../cards/value';
 import type { RoomDoor } from '../cards/spell-faces';
-import type { Prng } from '../rng/prng';
+import type { EngineRng } from '../rng/engine-rng';
 
 /** Stable physical-card identity, assigned once at game creation. */
 export type CardId = string;
@@ -436,6 +436,11 @@ export interface CastRecord {
 export interface EngineCardObject extends EngineObject, CastRecord {
   /** X announced when this card was cast, retained while it resolves into a permanent. */
   announcedX?: number;
+  /**
+   * The turn this hand card was drawn ("cards in your hand drawn this turn", Sylvan Library). Set
+   * on the hand object by a draw, so it is gone once the card leaves the hand (CR 400.7).
+   */
+  drawnOnTurn?: number;
   optionalCostCounts?: Partial<Record<'kicker' | 'squad' | 'offspring' | 'replicate', number>>;
   /** Mana from Treasure permanents spent to cast this card, retained until it enters. */
   treasureManaSpentToCast?: number;
@@ -449,6 +454,11 @@ export interface EngineCardObject extends EngineObject, CastRecord {
   leftBattlefieldObjectId?: ObjectId;
   /** 903.9a flag — see `EnginePermanent.commanderSbaPending`. */
   commanderSbaPending?: boolean;
+  /**
+   * Exiled face down (CR 406.3): foretold, hideaway and similar. Only its owner may see it, and
+   * a later zone change makes a new object without the flag.
+   */
+  exiledFaceDown?: true;
   /** For cards exiled by Hideaway (Spinerock Knoll, Mosswort Bridge). */
   attachedToCardId?: string;
   /**
@@ -532,7 +542,8 @@ export interface EngineStackObject extends StackObject {
     | 'commanderFree'
     | 'faceDown'
     | 'bestow'
-    | 'split';
+    | 'split'
+    | 'libraryTopLife';
   altIndex?: number;
   /** Triggered abilities: the object whose event fired this — the `'triggerObject'` referent. */
   triggerObjectCardId?: CardId;
@@ -572,6 +583,8 @@ export interface EngineStackObject extends StackObject {
   exileOnResolution?: boolean;
   /** This spell was announced for its Escape cost. */
   escaped?: boolean;
+  /** This spell was announced for its Dash cost (CR 702.109a). */
+  dashed?: boolean;
 }
 
 export interface EngineEmblem {
@@ -581,6 +594,11 @@ export interface EngineEmblem {
   abilities: Ability[];
 }
 export interface EnginePlayerState extends PlayerState {
+  /**
+   * Land plays added this turn by a one-shot effect ("you may play an additional land this
+   * turn", CR 305.2), for the turn numbered `turn`; a later turn ignores it.
+   */
+  additionalLandPlays?: { turn: number; count: number };
   hand: EngineCardObject[];
   library: EngineCardObject[];
   graveyard: EngineCardObject[];
@@ -705,6 +723,8 @@ export interface UntilEotEffect extends ContinuousEffect {
   manaAbility?: ManaAbilitySpec;
   /** `addTypes`: "They're artifacts in addition to their other types" (layer 4). */
   addTypes?: string[];
+  /** `addTypes` too: "it becomes an Orc in addition to its other types" (amass, layer 4). */
+  addSubtypes?: string[];
   /**
    * "Becomes a 4/4 red and green Dragon artifact creature with flying until end of turn"
    * (Atarka Monument, Sarkhan's +1) — a type-changing CDA-shaped grant, distinct from
@@ -983,7 +1003,7 @@ export interface EngineState extends GameState {
 export interface GameContext {
   state: EngineState;
   defs: Map<OracleId, CardDefinition>;
-  rng: Prng;
+  rng: EngineRng;
   debugLog: DebugEntry[];
   /**
    * Resolution-local CR 400.7j transitions. Only the context executing this effect carries
@@ -1001,6 +1021,27 @@ export interface GameContext {
   enteringTogether?: ReadonlySet<CardId>;
   /** Set while an activation's costs are paid: the life paid as part of them (Verrak). */
   costLifePaid?: { amount: number };
+  /** Copied from `GameConfig.strictInvariants`: rethrow invariant failures instead of halting. */
+  strictInvariants?: boolean;
+  /** The test-only diagnostics sink (ADR 0034 decision 4); absent in production. */
+  diagnostics?: import('../testing/diagnostics').DiagnosticsSink;
+  /**
+   * Work limits from `EngineOptions` (ADR 0031 decision 9), absent when unlimited. One shared
+   * object, because effect resolution copies the context by spreading it and a plain number
+   * would be copied by value; payment probes build their own context without it.
+   */
+  budget?: EngineBudget;
+}
+
+export interface EngineBudget {
+  /** Events one `advance()` may emit; `engineHalt` is exempt. */
+  maxStepWork?: number;
+  /** Objects the whole game may create, counted from when the engine was built. */
+  maxObjects?: number;
+  /** Events emitted in the current `advance()`, reset at its start. */
+  stepWork: { count: number };
+  /** `nextObjectNum` when the engine was built: a game's starting cards are not counted. */
+  objectsAtStart: number;
 }
 
 /** Internal debug log entry (brief §13) — separate from the replayable `GameEvent` log. */
@@ -1047,6 +1088,24 @@ export interface GameConfig {
    * produce yet. Not used in production paths.
    */
   customDefinitions?: CardDefinition[];
+  /**
+   * Test hook (ADR 0034 decision 2): rethrow `EngineInvariantError` instead of halting, so a
+   * failing test points at the line responsible. Never set in production paths.
+   */
+  strictInvariants?: boolean;
+  /**
+   * Test hook (ADR 0034 decision 4): the sink `noop` records early exits in. Without it, a game
+   * gets the default installed by `installDefaultDiagnostics`, if any. Never set in production.
+   */
+  diagnostics?: import('../testing/diagnostics').DiagnosticsSink;
+  /**
+   * The random source (ADR 0031 decision 4). `legacy` (the default) seeds `Prng` from `seed`, so
+   * fixed-seed games, benchmarks and stored replays are unchanged. `chacha20` keys a ChaCha20
+   * stream with `rngKey`, 32 bytes as 64 hex digits, and `seed` is only a public label. The key
+   * stays in the RNG and the stored config; it never enters `EngineState`, events or snapshots.
+   */
+  rng?: 'legacy' | 'chacha20';
+  rngKey?: string;
 }
 
 export type { GameEvent };

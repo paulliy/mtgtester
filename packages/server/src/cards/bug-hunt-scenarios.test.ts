@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { interpretCard } from '@mtg/engine';
 import type { OracleCard } from '@mtg/shared';
 import { BUG_HUNT_SCENARIO_IDS } from './bug-hunt-scenarios';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 
 function canonical(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonical);
@@ -46,7 +46,7 @@ describe('bug-hunt card regression evidence', () => {
   it.each(BUG_HUNT_SCENARIO_IDS)(
     'runs %s through legal actions, payment, priority and resolution',
     (id) => {
-      const scenario = createCardTestScenario(id, `lab-test-${id}`)!;
+      const scenario = strictCardTestScenario(id, `lab-test-${id}`)!;
       expect(scenario).not.toBeNull();
       const engine = scenario.engine;
       let performed = false;

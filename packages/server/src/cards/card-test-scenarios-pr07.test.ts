@@ -5,7 +5,7 @@
  */
 import type { DecisionRequest } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 import type { CardTestScenario } from './card-test-scenarios';
 
 interface Choice {
@@ -95,7 +95,7 @@ function run(
   /** Called with each request just before the scripted choice is submitted. */
   inspect?: (request: DecisionRequest, scenario: CardTestScenario) => void,
 ) {
-  const scenario = createCardTestScenario(scenarioId, 'card-lab-pr07');
+  const scenario = strictCardTestScenario(scenarioId, 'card-lab-pr07');
   expect(scenario, scenarioId).not.toBeNull();
   const choose = scripted(steps);
   const prompts: string[] = [];

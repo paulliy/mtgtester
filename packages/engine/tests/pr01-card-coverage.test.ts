@@ -124,6 +124,18 @@ function answers(rules: [prompt: RegExp, option: RegExp][]): Answer {
   };
 }
 
+/**
+ * Wraps `answer` so a yes/no "use this ability?" is answered yes instead of reaching it: a trigger
+ * that is wrongly optional then runs on and shows up in the returned decisions (for the test to
+ * reject) rather than throwing inside `answer`'s prompt matching.
+ */
+function yesToOptional(answer: Answer): Answer {
+  return (decision, count) =>
+    decision.decisionType === 'optionalTrigger'
+      ? { index: 0, targets: new Map() }
+      : answer(decision, count);
+}
+
 function priorityOptions(ctx: GameContext, playerId: string) {
   return computePriorityOptions(ctx, playerById(ctx, playerId));
 }
@@ -574,7 +586,9 @@ describe('Canoptek Spyder', () => {
   function drawsAfter(ctx: GameContext, act: () => void): number {
     const before = playerById(ctx, 'P1').hand.length;
     act();
-    settle(ctx);
+    const { decisions } = settle(ctx);
+    // The draw trigger is mandatory: nobody is asked "use this ability?".
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     return playerById(ctx, 'P1').hand.length - before;
   }
 
@@ -760,6 +774,27 @@ describe('Canoptek Wraith', () => {
     expect(ctx.state.battlefield.some((entry) => entry.cardId === self.cardId)).toBe(true);
     expect(playerById(ctx, 'P1').manaEntries).toHaveLength(3);
     expect(ctx.state.eventLog.some((event) => event.type === 'shuffle')).toBe(false);
+
+    // Through real combat: the trigger itself is mandatory, so the only question asked is the
+    // "pay {3} and sacrifice it?" inside its effect, never a separate "use this ability?" first.
+    const hit = board('wraith-decline-combat', [island()], [island()], 0);
+    // Mana empties between steps, so {3} comes from untapped lands instead of a floating pool.
+    for (let i = 0; i < 3; i++) spawn(hit.ctx, 'P1', forest());
+    const declineScout = answers([[/pay \{3\} and sacrifice/, /Decline/]]);
+    const { decisions } = runCombat(hit.ctx, { [hit.self.id]: 'P2' }, (decision, count) =>
+      // A wrongly optional trigger would be asked "use this ability?" first; say yes so it is seen.
+      decision.decisionType === 'optionalTrigger'
+        ? { index: 0, targets: new Map() }
+        : declineScout(decision, count),
+    );
+    expect(decisions.some((decision) => /pay \{3\} and sacrifice/.test(decision.prompt))).toBe(
+      true,
+    );
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
+    expect(hit.ctx.state.battlefield.some((entry) => entry.cardId === hit.self.cardId)).toBe(true);
+    expect(
+      hit.ctx.state.battlefield.filter((entry) => entry.name === 'Forest' && entry.tapped),
+    ).toEqual([]);
   });
 
   it('canoptek-wraith-unpayable — without {3}, or once the Wraith is gone, nothing is offered', () => {
@@ -1491,7 +1526,15 @@ describe('Mordant Dragon', () => {
     const self = spawn(ctx, 'P1', dragon.card);
     self.counters['+1/+1'] = 2;
     const wall = spawn(ctx, 'P2', big());
+    // "{1}{R}: Mordant Dragon gets +1/+0 until end of turn." The pump is paid for and applied,
+    // and the combat damage (and so the redirected amount) includes it.
+    const printed = computeCharacteristics(ctx, self).power;
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'R' }, { symbol: 'C' }]);
+    takeAction(ctx, 'P1', activationOf(ctx, 'P1', self)!.payload as PriorityActionPayload);
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+    resolveTop(ctx);
     const power = computeCharacteristics(ctx, self).power;
+    expect(power).toBe(printed + 1);
     runCombat(ctx, { [self.id]: 'P2' }, dragonAnswer(wall.id, true));
     expect(ctx.state.battlefield.find((entry) => entry.id === wall.id)?.damageMarked).toBe(power);
   });
@@ -1752,7 +1795,9 @@ describe('Necron Deathmark', () => {
     const ctx = board('deathmark-both');
     const victim = spawn(ctx, 'P2', bear());
     enter(ctx, 'P1', deathmark.card);
-    settle(ctx, deathmarkAnswer('P2', 'Test Bear'));
+    const { decisions } = settle(ctx, deathmarkAnswer('P2', 'Test Bear'));
+    // The enters trigger is mandatory: nobody is asked "use this ability?".
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(ctx.state.battlefield.some((entry) => entry.id === victim.id)).toBe(false);
     expect(playerById(ctx, 'P2').graveyard.map((card) => card.name)).toEqual([
       'Test Bear',
@@ -1903,7 +1948,12 @@ describe('Plasmancer', () => {
   it('plasmancer-cast-reveals-swamp-to-hand — casting it puts a revealed basic Swamp into hand, then shuffles', () => {
     const cast = castPlasmancer('plasmancer-cast');
     const found = conjure(cast, 'P1', swamp(), 'library');
-    settle(cast, answers([[SEARCH, /Put Swamp into your hand/]]));
+    const { decisions } = settle(
+      cast,
+      yesToOptional(answers([[SEARCH, /Put Swamp into your hand/]])),
+    );
+    // The enters search is mandatory: nobody is asked "use this ability?".
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     const p1 = playerById(cast, 'P1');
     expect(cast.state.battlefield.some((entry) => entry.name === 'Plasmancer')).toBe(true);
     expect(p1.hand.map((card) => card.cardId)).toContain(found.cardId);
@@ -2417,7 +2467,9 @@ describe('Voice of Many', () => {
     expect(cast).toBeDefined();
     takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
     resolveTop(ctx);
-    settle(ctx);
+    const { decisions } = settle(ctx);
+    // The enters draw is mandatory: nobody is asked "use this ability?".
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     return { ctx, drawn: playerById(ctx, 'P1').hand.length - handBefore };
   }
 
@@ -2488,7 +2540,7 @@ describe('Foe-Razer Regent', () => {
     ctx.state.phase = 'ending';
     ctx.state.step = 'end';
     queueStepTriggers(ctx, 'endStep');
-    settle(ctx);
+    return settle(ctx);
   }
 
   const plusOnes = (ctx: GameContext, cardId: string) =>
@@ -2538,11 +2590,17 @@ describe('Foe-Razer Regent', () => {
   it('foe-razer-regent-fight-then-counters — casting it and accepting fights, then it gets two +1/+1 counters at the end step', () => {
     const ctx = pod('regent-fight');
     const victim = spawn(ctx, 'P2', bear());
-    const { self } = castRegent(ctx, true, victim.id);
+    const { self, decisions } = castRegent(ctx, true, victim.id);
     expect(ctx.state.battlefield.some((entry) => entry.id === victim.id)).toBe(false);
     expect(self.damageMarked).toBe(2);
     expect(plusOnes(ctx, self.cardId)).toBe(0);
-    toEndStep(ctx);
+    // Only the fight is a "may": the fights trigger it causes is mandatory, so one yes/no in all.
+    expect(
+      decisions.filter((decision) => decision.decisionType === 'optionalTrigger'),
+    ).toHaveLength(1);
+    const end = toEndStep(ctx);
+    // ...and so is the end-step delayed trigger.
+    expect(end.decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(plusOnes(ctx, self.cardId)).toBe(2);
   });
 
@@ -2586,8 +2644,12 @@ describe('Foe-Razer Regent', () => {
         [mine.id, theirs.id],
       ),
     );
-    settle(ctx);
-    toEndStep(ctx);
+    const fought = settle(ctx);
+    const end = toEndStep(ctx);
+    // Neither the fights trigger nor its end-step counters are optional.
+    expect(
+      [...fought.decisions, ...end.decisions].map((decision) => decision.decisionType),
+    ).not.toContain('optionalTrigger');
     expect(plusOnes(ctx, mine.cardId)).toBe(2);
     expect(plusOnes(ctx, theirs.cardId)).toBe(0);
   });
@@ -2950,6 +3012,8 @@ describe('Loran of the Third Path', () => {
     takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
     resolveTop(ctx);
     const { decisions } = settle(ctx, answer);
+    // The enters trigger is mandatory ("up to one target"): nobody is asked "use this ability?".
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     return decisions;
   }
 
@@ -3092,7 +3156,10 @@ describe('Rishkar, Peema Renegade', () => {
     expect(cast).toBeDefined();
     takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
     resolveTop(ctx);
-    return settle(ctx, answer).decisions;
+    const { decisions } = settle(ctx, answer);
+    // The enters trigger is mandatory ("up to two"): nobody is asked "use this ability?".
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
+    return decisions;
   }
 
   const sourcesOf = (ctx: GameContext, playerId: string) =>
@@ -3323,7 +3390,7 @@ describe('Frontier Siege', () => {
     ctx.state.phase = 'postcombatMain';
     ctx.state.step = null;
     queueStepTriggers(ctx, 'mainPhase');
-    settle(ctx);
+    return settle(ctx);
   }
 
   const fightAnswer =
@@ -3357,7 +3424,11 @@ describe('Frontier Siege', () => {
     const self = castSiege(ctx, 'Khans');
     expect(self.chosenOption).toBe('Khans');
     playerById(ctx, 'P1').manaEntries = [];
-    mainPhase(ctx, 'P1');
+    const khans = mainPhase(ctx, 'P1');
+    // The Khans mana trigger is mandatory: nobody is asked "use this ability?".
+    expect(khans.decisions.map((decision) => decision.decisionType)).not.toContain(
+      'optionalTrigger',
+    );
     expect(green(ctx, 'P1')).toBe(2);
     playerById(ctx, 'P1').manaEntries = [];
     mainPhase(ctx, 'P2');
@@ -3434,6 +3505,21 @@ describe('Frontier Siege', () => {
     enter(ctx, 'P2', drake());
     const others = settle(ctx, fightAnswer(true));
     expect(others.decisions.some((d) => d.decisionType === 'optionalTrigger')).toBe(false);
+    // A flying noncreature permanent is not a "flying creature": no trigger, nothing is asked.
+    enter(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Siege Glider',
+        typeLine: 'Artifact',
+        oracleText: 'Flying',
+        keywords: ['Flying'],
+        manaCost: '{2}',
+      }),
+    );
+    expect(ctx.state.pendingTriggers).toHaveLength(0);
+    const glider = settle(ctx, fightAnswer(true));
+    expect(glider.decisions.some((d) => d.decisionType === 'optionalTrigger')).toBe(false);
 
     const lonely = pod('siege-dragons-no-target');
     castSiege(lonely, 'Dragons');
@@ -3477,11 +3563,14 @@ describe('Kairi, the Swirling Sky', () => {
   function dies(ctx: GameContext, mode: RegExp, rest: Answer) {
     const self = spawn(ctx, 'P1', kairi.card);
     pump(moveObject(ctx, self, { zone: 'graveyard' }));
-    return settle(ctx, (decision, count) =>
+    const { decisions } = settle(ctx, (decision, count) =>
       decision.options.some((option) => BOUNCE.test(option.description))
         ? optionMatching(decision, mode)
         : rest(decision, count),
-    ).decisions;
+    );
+    // The modal dies trigger is mandatory: the mode is chosen, but nobody is asked "use it?".
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
+    return decisions;
   }
 
   /** Pick each named permanent for the count slot in order, then stop. */
@@ -3878,6 +3967,8 @@ describe('Aether Channeler', () => {
       }
       return { index: 0, targets: new Map() };
     });
+    // The modal enters trigger is mandatory: only the mode (and target) are asked, no "use it?".
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     return { decisions, offered };
   }
 
@@ -3898,6 +3989,8 @@ describe('Aether Channeler', () => {
   it('aether-channeler-bird — the Bird mode creates a 1/1 white flying Bird', () => {
     const ctx = pod('channeler-bird');
     castChanneler(ctx, /^Create a 1\/1 white Bird/);
+    // Exactly one Bird is created.
+    expect(ctx.state.battlefield.filter((entry) => entry.name === 'Bird')).toHaveLength(1);
     const bird = ctx.state.battlefield.find((entry) => entry.name === 'Bird')!;
     const c = computeCharacteristics(ctx, bird);
     expect([c.power, c.toughness, c.colors, c.keywords]).toEqual([1, 1, ['W'], ['flying']]);
@@ -4261,14 +4354,24 @@ describe('Brokers Hideout', () => {
     ]);
     pump(priorityCheckpoint(ctx));
     expect(ctx.state.stack).toHaveLength(1);
-    resolveTop(ctx);
+    // Both the sacrifice trigger and the reflexive search are mandatory: no "use it?" is asked.
+    const sacrificeStep = resolveTop(ctx);
+    expect(sacrificeStep.decisions.map((decision) => decision.decisionType)).not.toContain(
+      'optionalTrigger',
+    );
     expect(ctx.state.battlefield.some((entry) => entry.name === 'Brokers Hideout')).toBe(false);
     expect(playerById(ctx, 'P1').graveyard.map((card) => card.name)).toEqual(['Brokers Hideout']);
     // The search is its own ability on the stack, after a priority window (CR 603.12).
     pump(priorityCheckpoint(ctx));
     expect(ctx.state.stack).toHaveLength(1);
     const life = playerById(ctx, 'P1').life;
-    resolveTop(ctx, answers([[SEARCH, /Put Plains onto the battlefield tapped/]]));
+    const searchStep = resolveTop(
+      ctx,
+      answers([[SEARCH, /Put Plains onto the battlefield tapped/]]),
+    );
+    expect(searchStep.decisions.map((decision) => decision.decisionType)).not.toContain(
+      'optionalTrigger',
+    );
     const plains = ctx.state.battlefield.find((entry) => entry.name === 'Plains');
     expect(plains?.tapped).toBe(true);
     expect(playerById(ctx, 'P1').life).toBe(life + 1);
@@ -4372,6 +4475,8 @@ describe('Sweet-Gum Recluse', () => {
     expect(cast).toBeDefined();
     takeAction(ctx, 'P1', cast!.payload as PriorityActionPayload);
     const { decisions } = settle(ctx, answer);
+    // The enters counters trigger is mandatory ("any number"): nobody is asked "use it?".
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     return {
       decisions,
       self: ctx.state.battlefield.find((entry) => entry.name === 'Sweet-Gum Recluse')!,
@@ -4560,6 +4665,8 @@ describe('Kogla, the Titan Ape', () => {
           )
         : { index: 0, targets: new Map() },
     );
+    // The enters fight is mandatory ("fights up to one target"): nobody is asked "use it?".
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     return {
       decisions,
       self: ctx.state.battlefield.find((entry) => entry.name === 'Kogla, the Titan Ape')!,
@@ -4677,7 +4784,7 @@ describe('Kogla, the Titan Ape', () => {
     spawn(ctx, 'P3', charm('Kogla P3 Charm'));
     const otherPlayers = spawn(ctx, 'P2', relic('Kogla P2 Relic'));
     let offered: string[] = [];
-    runCombat(ctx, { [self.id]: 'P3' }, (decision) => {
+    const combat = runCombat(ctx, { [self.id]: 'P3' }, (decision) => {
       const slot = decision.options[0]?.targets?.[0];
       if (slot !== undefined) {
         offered = slot.options;
@@ -4685,6 +4792,10 @@ describe('Kogla, the Titan Ape', () => {
       }
       return { index: 0, targets: new Map() };
     });
+    // The attack trigger is mandatory: nobody is asked "use this ability?".
+    expect(combat.decisions.map((decision) => decision.decisionType)).not.toContain(
+      'optionalTrigger',
+    );
     expect(offered).toHaveLength(2);
     expect(offered).not.toContain(otherPlayers.id);
     expect(playerById(ctx, 'P3').graveyard.map((card) => card.name)).toContain('Kogla P3 Relic');
@@ -4998,7 +5109,8 @@ describe('PR01 restoration gate', () => {
         expect(clause.implementation, `${name} implementation`).not.toHaveLength(0);
         expect(clause.engineTestIds, `${name} engine tests`).not.toHaveLength(0);
         expect(clause.viewerScenarioIds, `${name} viewer scenarios`).not.toHaveLength(0);
-        for (const id of clause.engineTestIds) expect(engineSource, id).toContain(`${id} —`);
+        for (const id of clause.engineTestIds)
+          expect(engineSource, id).toContain(`${id.split(' — ')[0]} —`);
         for (const id of clause.viewerScenarioIds) expect(viewerSource, id).toContain(id);
       }
     },

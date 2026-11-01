@@ -20,7 +20,7 @@ import {
   targetBreachPenalty,
   type DiplomacyPlay,
 } from './diplomacy/play';
-import type { Rng } from './rng';
+import type { RandomSource } from './rng';
 import { passesVeto, totalDiscardCount, totalLifeCost, totalSacrificeCount } from './veto';
 import { WEIGHTS } from './weights';
 
@@ -242,13 +242,13 @@ export function evaluate(
 }
 
 /**
- * Pick the highest-scoring legal action, breaking ties with a seeded `Rng` (item 11 —
+ * Pick the highest-scoring legal action, breaking ties with a seeded `Rng`, or any `RandomSource` (item 11 —
  * determinism survives even when several candidates tie exactly, e.g. two untapped basics).
  */
 export function decide(
   request: DecisionRequest,
   view: PlayerView,
-  rng: Rng,
+  rng: RandomSource,
   opts: EvaluateOptions = {},
 ): DecisionResponse {
   // Combat-damage division (ADR 0023 Phase 4) isn't a "which option" choice at all — see

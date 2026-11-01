@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { DecisionRequest } from '@mtg/shared';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 
-function run(): ReturnType<typeof createCardTestScenario> extends infer T
+function run(): ReturnType<typeof strictCardTestScenario> extends infer T
   ? Exclude<T, null>
   : never {
-  const scenario = createCardTestScenario(
+  const scenario = strictCardTestScenario(
     'conclave-tribunal-viewer-convoke-szeras',
     'card-lab-pr02-follow-up',
   );
@@ -69,7 +69,7 @@ function run(): ReturnType<typeof createCardTestScenario> extends infer T
 }
 
 function runCounted(id: string, targetNames: string[]) {
-  const scenario = createCardTestScenario(id, `card-lab-${id}`)!;
+  const scenario = strictCardTestScenario(id, `card-lab-${id}`)!;
   const remaining = [...targetNames];
   for (;;) {
     const step = scenario.engine.advance();
@@ -102,7 +102,7 @@ function runCounted(id: string, targetNames: string[]) {
 }
 
 function runCountedReplicate() {
-  const scenario = createCardTestScenario(
+  const scenario = strictCardTestScenario(
     'lab-replicate-counted-targets-original-countered-contract',
     'card-lab-replicate-follow-up',
   )!;

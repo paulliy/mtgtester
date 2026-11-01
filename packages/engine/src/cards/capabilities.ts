@@ -107,8 +107,10 @@ const shapes = {
     },
     exileOnResolution: leaf,
     escaped: leaf,
+    dashed: leaf,
     fused: leaf,
   } satisfies Fields<Objects<AlternativeCast>>,
+  // eslint-disable-next-line no-restricted-syntax -- field-schema table keyed by property name, not a token
   MdfcLandFace: {
     name: leaf,
     typeLine: leaf,
@@ -238,6 +240,9 @@ const shapes = {
     cantRegenerate: leaf,
     spec: { node: 'TokenSpec' },
     count: { union: [{ node: 'Value' }, leaf] },
+    life: { node: 'Value' },
+    subtype: leaf,
+    library: leaf,
     metric: leaf,
     action: leaf,
     maxManaValue: { union: [leaf, { node: 'Value' }] },
@@ -432,6 +437,7 @@ const shapes = {
     newTargets: leaf,
     oncePerTurn: leaf,
   } satisfies Fields<Objects<Effect>>,
+  // eslint-disable-next-line no-restricted-syntax -- field-schema table describing TokenSpec's own properties, not a token
   TokenSpec: {
     name: leaf,
     typeLine: leaf,
@@ -531,6 +537,7 @@ const shapes = {
     },
     functionsInGraveyard: leaf,
   } satisfies Fields<Objects<Ability>>,
+  // eslint-disable-next-line no-restricted-syntax -- field-schema table keyed by property name, not a token
   BackFace: {
     name: leaf,
     typeLine: leaf,
@@ -589,6 +596,7 @@ const shapes = {
     activatedAbilities: { array: { node: 'ActivatedAbility' } },
     entersTapped: leaf,
     entersTappedUnless: { node: 'Condition' },
+    entersUnlessDiscard: { object: { filter: { node: 'Selector' } } },
     entersChoosingOption: {
       object: {
         prompt: leaf,
@@ -779,6 +787,7 @@ const shapes = {
     minimumMana: leaf,
     condition: { node: 'Condition' },
     reduction: leaf,
+    lifeInsteadOfMana: leaf,
   } satisfies Fields<Objects<RuleStatic>>,
   ContinuousOp: {
     layer: leaf,
@@ -918,6 +927,9 @@ const families = {
     prefix: 'Effect',
     discriminator: 'op',
     tags: {
+      amass: true,
+      payLifeOrTopDrawnCards: true,
+      returnCardFromGraveyardToHand: true,
       pumpUntilEot: true,
       grantKeywordUntilEot: true,
       cantBeBlockedUntilEot: true,
@@ -1073,6 +1085,7 @@ const families = {
       grantUnearthToArtifactCreaturesInGraveyard: true,
       exileSource: true,
       draw: true,
+      additionalLandPlaysThisTurn: true,
       discard: true,
       putFromHandOnLibraryTop: true,
       discardAtRandom: true,
@@ -1102,7 +1115,6 @@ const families = {
       searchLibrary: true,
       searchLibraryGroup: true,
       huntingWilds: true,
-      etaliPrimalConqueror: true,
       searchLibraryCastFree: true,
       shuffle: true,
       scry: true,
@@ -1147,6 +1159,7 @@ const families = {
       selfToLibraryTop: true,
       putCountersEachChosen: true,
       grantKeywordEachChosenUntilEot: true,
+      cantBlockEachChosenThisTurn: true,
       doubleCountersEachChosen: true,
       cantBeBlockedEachChosen: true,
       untapUpTo: true,
@@ -1160,7 +1173,6 @@ const families = {
       untapTargetPlayerCreatures: true,
       exileUntilSourceLeaves: true,
       exileEachChosenUntilSourceLeaves: true,
-      exileTargetAndControllerMaySearchBasicLandTapped: true,
       removeTargetAndControllerMaySearchBasicLand: true,
       destroyTargetAndControllerMaySearchBasicTypedLand: true,
       exileCreatureAndControllerSearchBasicLand: true,
@@ -1556,6 +1568,7 @@ const families = {
       triggerAdditionalTime: true,
       legendRuleDoesntApply: true,
       artifactTokenCreatesThopter: true,
+      createClueFoodAndTreasure: true,
       grantForetell: true,
     } satisfies Record<Extract<RuleStatic['kind'], string | number>, true>,
   },

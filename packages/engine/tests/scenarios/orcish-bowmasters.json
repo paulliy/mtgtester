@@ -1,0 +1,469 @@
+{
+  "schemaVersion": 1,
+  "card": "Orcish Bowmasters",
+  "supportCards": [
+    {
+      "name": "Scenario Elf",
+      "typeLine": "Creature — Elf",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Insight",
+      "typeLine": "Sorcery",
+      "manaCost": "{U}",
+      "oracleText": "Draw a card."
+    },
+    {
+      "name": "Scenario Deep Insight",
+      "typeLine": "Sorcery",
+      "manaCost": "{U}",
+      "oracleText": "Draw two cards."
+    },
+    {
+      "name": "Scenario Zombie Army",
+      "typeLine": "Creature — Zombie Army",
+      "manaCost": "{B}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Flash Insight",
+      "typeLine": "Instant",
+      "manaCost": "{U}",
+      "oracleText": "Draw a card."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "bowmasters-enters-ping",
+      "title": "Orcish Bowmasters: it enters, pings a creature and amasses",
+      "clauses": [2],
+      "instructions": [
+        "Cast Orcish Bowmasters with your two Swamps.",
+        "Target P2's Scenario Elf with its enter trigger."
+      ],
+      "expectedOutcome": "Scenario Elf dies and you get a 1/1 Orc Army token.",
+      "seats": {
+        "P1": {
+          "hand": ["Orcish Bowmasters"],
+          "battlefield": ["Swamp", "Swamp"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Elf"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Orcish Bowmasters/"
+        },
+        {
+          "player": "P1",
+          "choose": "/Orcish Bowmasters/",
+          "targets": ["Scenario Elf"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "has": ["Scenario Elf"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Orcish Bowmasters", "Orc Army"]
+          }
+        },
+        {
+          "counters": {
+            "card": "Orc Army",
+            "counter": "+1/+1",
+            "equals": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "bowmasters-flash",
+      "title": "Orcish Bowmasters: flash it in on an opponent's turn",
+      "clauses": [1, 2],
+      "instructions": [
+        "On P2's turn, cast Orcish Bowmasters when you get priority.",
+        "Target P2 with its enter trigger."
+      ],
+      "expectedOutcome": "Bowmasters enters on P2's turn; P2 loses 1 life and you get a 1/1 Orc Army.",
+      "turn": {
+        "player": "P2"
+      },
+      "seats": {
+        "P1": {
+          "hand": ["Orcish Bowmasters"],
+          "battlefield": ["Swamp", "Swamp"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Orcish Bowmasters/"
+        },
+        {
+          "player": "P1",
+          "choose": "/Orcish Bowmasters/",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 39
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Orcish Bowmasters", "Orc Army"]
+          }
+        },
+        {
+          "counters": {
+            "card": "Orc Army",
+            "counter": "+1/+1",
+            "equals": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "bowmasters-opponent-draws",
+      "title": "Orcish Bowmasters: an opponent draws outside their draw step",
+      "clauses": [2],
+      "instructions": [
+        "On P2's turn, P2 casts Scenario Insight and draws a card.",
+        "Target P2 with the trigger."
+      ],
+      "expectedOutcome": "P2 loses 1 life and you get a 1/1 Orc Army.",
+      "turn": {
+        "player": "P2"
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Orcish Bowmasters"]
+        },
+        "P2": {
+          "hand": ["Scenario Insight"],
+          "battlefield": ["Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Insight/"
+        },
+        {
+          "player": "P1",
+          "choose": "/Orcish Bowmasters/",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 39
+          }
+        },
+        {
+          "counters": {
+            "card": "Orc Army",
+            "counter": "+1/+1",
+            "equals": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "bowmasters-draws-two",
+      "title": "Orcish Bowmasters: two cards drawn, two triggers, one Army grown twice",
+      "clauses": [2],
+      "instructions": [
+        "On P2's turn, P2 casts Scenario Deep Insight and draws two cards.",
+        "Put the two triggers on the stack and target P2 with each."
+      ],
+      "expectedOutcome": "P2 loses 2 life; one Orc Army gets both counters and is 2/2.",
+      "turn": {
+        "player": "P2"
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Orcish Bowmasters"]
+        },
+        "P2": {
+          "hand": ["Scenario Deep Insight"],
+          "battlefield": ["Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Deep Insight/"
+        },
+        {
+          "player": "P1",
+          "prompt": "/triggered simultaneously/",
+          "choose": "/Orcish Bowmasters/"
+        },
+        {
+          "player": "P1",
+          "choose": "/Orcish Bowmasters/",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P1",
+          "choose": "/Orcish Bowmasters/",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 38
+          }
+        },
+        {
+          "counters": {
+            "card": "Orc Army",
+            "counter": "+1/+1",
+            "equals": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "bowmasters-first-draw-exempt",
+      "title": "Orcish Bowmasters: an opponent's first draw in their draw step does not trigger it",
+      "clauses": [2],
+      "instructions": ["End your turn; P2 draws for its turn."],
+      "expectedOutcome": "Bowmasters does not trigger: P2 is at 40 life and you have no Army.",
+      "continue": {
+        "throughPrecombatMains": 1
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Orcish Bowmasters"]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Orc Army"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "bowmasters-second-draw-in-draw-step",
+      "title": "Orcish Bowmasters: an opponent's second draw in their own draw step triggers it",
+      "clauses": [2],
+      "instructions": [
+        "End your turn; P2 draws for its turn.",
+        "In its draw step, after that draw, P2 casts Scenario Flash Insight and draws a second card.",
+        "Target P2 with the one trigger, for the second card."
+      ],
+      "expectedOutcome": "P2's first draw in its draw step is exempt and its second is not: P2 loses 1 life and you get one 1/1 Orc Army.",
+      "continue": {
+        "throughPrecombatMains": 1
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Orcish Bowmasters"]
+        },
+        "P2": {
+          "hand": ["Scenario Flash Insight"],
+          "battlefield": ["Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P2",
+          "prompt": "/, draw\\)/",
+          "choose": "/^Cast Scenario Flash Insight/"
+        },
+        {
+          "player": "P1",
+          "choose": "/Orcish Bowmasters/",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 39
+          }
+        },
+        {
+          "counters": {
+            "card": "Orc Army",
+            "counter": "+1/+1",
+            "equals": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "bowmasters-other-opponent-draws-in-their-turn",
+      "title": "Orcish Bowmasters: a different opponent drawing during another player's draw step triggers it",
+      "clauses": [2],
+      "instructions": [
+        "End your turn; P2 draws for its turn.",
+        "In P2's draw step, P3 casts Scenario Flash Insight and draws a card.",
+        "Target P3 with the one trigger."
+      ],
+      "expectedOutcome": "Only P3's draw triggers: it is not P3's own draw step. P3 loses 1 life, P2 stays at 40, and you get one 1/1 Orc Army.",
+      "continue": {
+        "throughPrecombatMains": 1
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Orcish Bowmasters"]
+        },
+        "P3": {
+          "hand": ["Scenario Flash Insight"],
+          "battlefield": ["Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P3",
+          "prompt": "/, draw\\)/",
+          "choose": "/^Cast Scenario Flash Insight/"
+        },
+        {
+          "player": "P1",
+          "choose": "/Orcish Bowmasters/",
+          "targets": ["P3"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P3",
+            "equals": 39
+          }
+        },
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "counters": {
+            "card": "Orc Army",
+            "counter": "+1/+1",
+            "equals": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "bowmasters-own-draw",
+      "title": "Orcish Bowmasters: your own draw does not trigger it",
+      "clauses": [2],
+      "instructions": ["Cast Scenario Insight with your Island and draw a card."],
+      "expectedOutcome": "Bowmasters does not trigger: you have no Army.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Insight"],
+          "battlefield": ["Orcish Bowmasters", "Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Insight/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Orc Army"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Insight"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "bowmasters-existing-army",
+      "title": "Orcish Bowmasters: an Army you control grows and becomes an Orc",
+      "clauses": [2],
+      "instructions": ["Cast Orcish Bowmasters and target P2 with its enter trigger."],
+      "expectedOutcome": "No token is created: Scenario Zombie Army gets a +1/+1 counter, is 2/2, and is an Orc too.",
+      "seats": {
+        "P1": {
+          "hand": ["Orcish Bowmasters"],
+          "battlefield": ["Swamp", "Swamp", "Scenario Zombie Army"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Orcish Bowmasters/"
+        },
+        {
+          "player": "P1",
+          "choose": "/Orcish Bowmasters/",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 39
+          }
+        },
+        {
+          "counters": {
+            "card": "Scenario Zombie Army",
+            "counter": "+1/+1",
+            "equals": 1
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Orc Army"]
+          }
+        }
+      ]
+    }
+  ]
+}

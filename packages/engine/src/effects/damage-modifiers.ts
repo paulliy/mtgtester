@@ -11,6 +11,7 @@
 
 import type { ObjectId, PlayerId } from '@mtg/shared';
 import type { GameGen } from '../decisions';
+import { optionAt } from '../decisions';
 import { emit } from '../log/log';
 import { cardOption, plainOption, presentedSource } from '../present';
 import { createToken, queuePlayerTriggersForEvent } from '../state/objects';
@@ -431,7 +432,7 @@ export function* applyDamageModifiers(ctx: GameContext, event: DamageEvent): Gam
           }),
         ),
       };
-      next = pending[outcome.index] ?? next;
+      next = optionAt(pending, outcome, 'damageModifiers.applyDamageModifiers');
     }
     applied.add(next.id);
     if (next.kind === 'replacement') {

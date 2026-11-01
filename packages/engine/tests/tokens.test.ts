@@ -185,21 +185,21 @@ describe('a created token is a real permanent', () => {
 
   it('enters with its printed P/T and is affected by an anthem', () => {
     const ctx = pod();
-    spawn(ctx, 'P1', anthem());
-    spawn(ctx, 'P1', pestMaker());
+    // The Pest's face comes from the card's own trigger, so this is the token the card makes.
+    const effect = interpretCard(pestMaker()).triggers[0]?.effects[0];
+    if (effect?.op !== 'createToken') throw new Error('expected a createToken trigger effect');
 
-    // Fire the upkeep trigger by running a priority sequence after queueing it.
-    ctx.state.step = 'upkeep';
-    pump(runPrioritySequence(ctx));
-    // The upkeep trigger is queued by `runTurn`; queue it here the same way the turn does.
-    const pests = tokensOf(ctx, 'Pest');
-    if (pests.length === 0) {
-      // No upkeep ran in this harness — create via the trigger directly.
-      return;
-    }
-    const pest = pests[0];
-    if (pest === undefined) throw new Error('test bug');
-    expect(effectivePT(ctx, pest)).toEqual({ power: 2, toughness: 2 });
+    const before = createToken(ctx, effect.spec, 'P1');
+    expect(before.isToken).toBe(true);
+    expect(effectivePT(ctx, before)).toEqual({ power: 1, toughness: 1 });
+
+    spawn(ctx, 'P1', anthem());
+    expect(effectivePT(ctx, before)).toEqual({ power: 2, toughness: 2 });
+
+    // A token created while the anthem is already in play is affected the same way.
+    const after = createToken(ctx, effect.spec, 'P1');
+    expect(tokensOf(ctx, 'Pest')).toHaveLength(2);
+    expect(effectivePT(ctx, after)).toEqual({ power: 2, toughness: 2 });
   });
 });
 

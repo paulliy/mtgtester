@@ -1,6 +1,8 @@
 import { eventObjectFacts, sourceObjectFacts, targetObjectFacts } from '../cards/source-identity';
 import { counterCount } from '../state/counters';
 import { assertNever } from '../utils/assert-never';
+import { EngineInvariantError } from '../errors';
+import type { ScopeField } from '../cards/scope-contracts';
 /**
  * Resolution-time `Value` evaluation — the half that reads *current* characteristics.
  *
@@ -46,6 +48,21 @@ function scopedPermanents(
     if (who === 'opponents') return perm.controllerId !== scope.controllerId;
     return true;
   });
+}
+
+/**
+ * A fact the resolving ability's scope carries (ADR 0034 decision 2). Validation admits the value
+ * only where a trigger head, cast path or cost provides the field, so an absent one is an engine
+ * bug, not a zero.
+ */
+function scopeFact(scope: ValueScope, field: ScopeField): number {
+  const fact = scope[field];
+  if (fact === undefined)
+    throw new EngineInvariantError(
+      `values.${field}`,
+      `the ${field} value was read from a scope that does not carry it`,
+    );
+  return fact;
 }
 
 /** Evaluate any `Value` in the context of a resolving spell or ability. */
@@ -195,29 +212,27 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       );
     }
     case 'damageDealt':
-      return scope.damageDealt ?? 0;
+      return scopeFact(scope, 'damageDealt');
     case 'aurasYouControlledAttachedToTriggerObject':
       return (scope.triggerObjectFacts?.attachedAuraControllerIds ?? []).filter(
         (controllerId) => controllerId === scope.controllerId,
       ).length;
     case 'triggerCount':
-      // An aggregate trigger always fired because at least one object matched, so the absent
-      // case is a scope that was never populated — 1 is the honest floor, not 0.
-      return scope.triggerCount ?? 1;
+      return scopeFact(scope, 'triggerCount');
     case 'spellManaValue':
-      return scope.spellManaValue ?? 0;
+      return scopeFact(scope, 'spellManaValue');
     case 'spellColorCount':
-      return scope.spellColorCount ?? 0;
+      return scopeFact(scope, 'spellColorCount');
     case 'manaSpent':
-      return scope.manaSpent ?? 0;
+      return scopeFact(scope, 'manaSpent');
     case 'treasureManaSpent':
-      return scope.treasureManaSpent ?? 0;
+      return scopeFact(scope, 'treasureManaSpent');
     case 'energyPaid':
-      return scope.energyPaid ?? 0;
+      return scopeFact(scope, 'energyPaid');
     case 'energyAvailable':
       return ctx.state.players.find((p) => p.id === scope.controllerId)?.energy ?? 0;
     case 'stationPower':
-      return scope.stationPower ?? 0;
+      return scopeFact(scope, 'stationPower');
     case 'countersOnSelf': {
       const facts = sourceObjectFacts(ctx, scope);
       return facts === undefined ? 0 : counterCount(facts.counters, value.counter);

@@ -14,9 +14,12 @@ import {
   registerDef,
   spawn,
 } from '../../../engine/tests/fixtures';
+import { script } from '../../../engine/tests/script';
 import { loadScryfallBulkOrNull } from './scryfall-bulk-fixture';
 import { toOracleCard } from './scryfall';
 
+// Builds its tests from the Scryfall bulk file, which is not tracked (data/README.md).
+// suite-requires: data/scryfall-oracle-cards.json
 const scryfallCards = loadScryfallBulkOrNull();
 // data/scryfall-oracle-cards.json is gitignored and not fetched by CI (see scryfall-bulk-fixture.ts).
 const SKIP = scryfallCards === null;
@@ -86,6 +89,7 @@ function expectAllReachable(ctx: GameContext, decisions: PendingDecision[]): voi
   }
 }
 
+// allowed-skip: needs the Scryfall bulk file (data/scryfall-oracle-cards.json, gitignored)
 describe.skipIf(SKIP)('L5: Human UI Reachability Tests', () => {
   it('validates UI decision reachability for Path to Exile', () => {
     const ctx = pod();
@@ -98,11 +102,13 @@ describe.skipIf(SKIP)('L5: Human UI Reachability Tests', () => {
     const def = registerDef(ctx, pathCard);
     const perm = spawn(ctx, 'P1', pathCard);
 
-    const { decisions } = pump(executeAbility(ctx, perm, def.spellAbility!, []), () => ({
-      index: 0,
-      targets: new Map([[0, target.id]]),
-    }));
+    const { decisions } = pump(
+      executeAbility(ctx, perm, def.spellAbility!, [target.id]),
+      script([{ prompt: /search/i, choose: "Don't find a card" }]),
+    );
 
+    expect(ctx.state.exile.map((c) => c.cardId)).toContain(target.cardId);
+    expect(decisions.length).toBeGreaterThan(0);
     expectAllReachable(ctx, decisions);
   });
 

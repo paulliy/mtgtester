@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { OracleCard } from '@mtg/shared';
 import { applyPriorityAction } from '../src/actions/apply';
-import type { PriorityActionPayload } from '../src/actions/legal';
+import { computeTargetOptions, type PriorityActionPayload } from '../src/actions/legal';
+import type { PendingDecision } from '../src/decisions';
 import { interpretCard } from '../src/cards/interpret';
 import { fixtureOracleId } from '../src/cards/overrides';
 import { computeCharacteristics } from '../src/effects/continuous';
@@ -37,6 +38,9 @@ const creature = (name: string, manaCost: string): OracleCard =>
   });
 const artifact = (name: string, manaCost: string | null, typeLine = 'Artifact'): OracleCard =>
   oracle({ name, typeLine, manaCost: manaCost as string, oracleText: '' });
+
+const types = (decisions: PendingDecision[]): string[] =>
+  decisions.map((decision) => decision.decisionType);
 
 const lore = (saga: EnginePermanent): number => saga.counters['lore'] ?? 0;
 
@@ -93,7 +97,8 @@ describe('The War in Heaven', () => {
     const life = player(ctx, 'P1').life;
     checkpoint(ctx);
     expect(ctx.state.stack.at(-1)?.description).toContain('I — You draw three cards');
-    resolve(ctx);
+    // Chapter I is mandatory: nobody is asked "use this ability?".
+    expect(types(resolve(ctx))).not.toContain('optionalTrigger');
     expect(player(ctx, 'P1').hand.length).toBe(hand + 3);
     expect(player(ctx, 'P1').life).toBe(life - 3);
     checkpoint(ctx);
@@ -107,7 +112,8 @@ describe('The War in Heaven', () => {
     const graveyard = player(ctx, 'P1').graveyard.length;
     const life = player(ctx, 'P1').life;
     // The turn runs through its precombat main phase, resolving what triggers there.
-    nextTurnOf(ctx, 'P1');
+    const asked = nextTurnOf(ctx, 'P1');
+    expect(types(asked)).not.toContain('optionalTrigger');
     expect(lore(war)).toBe(2);
     expect(player(ctx, 'P1').graveyard.length).toBe(graveyard + 3);
     expect(player(ctx, 'P1').life).toBe(life);
@@ -129,7 +135,7 @@ describe('The War in Heaven', () => {
     // The Saga waits for its chapter III ability to leave the stack (CR 714.4).
     checkpoint(ctx);
     expect(battlefield(ctx, 'The War in Heaven')).toHaveLength(1);
-    resolve(ctx);
+    expect(types(resolve(ctx))).not.toContain('optionalTrigger');
     for (const name of ['Test Two', 'Test Six']) {
       const [returned] = battlefield(ctx, name);
       expect(returned?.counters['necrodermis']).toBe(1);
@@ -150,6 +156,19 @@ describe('The War in Heaven', () => {
     const picks = [creature('Test Five', '{4}{B}'), creature('Test Four', '{3}{B}')].map((card) =>
       conjure(ctx, 'P1', card, 'graveyard'),
     );
+    // Only creature cards in your graveyard can be chosen for chapter III.
+    const spell = conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Test Spell', typeLine: 'Sorcery' }),
+      'graveyard',
+    );
+    const theirs = conjure(ctx, 'P2', creature('Test Theirs', '{1}{B}'), 'graveyard');
+    const spec = interpretCard(WAR).triggers[2]!.targets[0]!;
+    const legal = computeTargetOptions(ctx, spec, 'P1');
+    expect(legal).toEqual(expect.arrayContaining(picks.map((card) => card.id)));
+    expect(legal).not.toContain(spell.id);
+    expect(legal).not.toContain(theirs.id);
     nextChapter(ctx);
     ctx.state.stack.at(-1)!.countTargets = { 0: picks.map((card) => card.id) };
     resolve(ctx);
@@ -182,7 +201,8 @@ describe("Urza's Saga", () => {
     expect(lore(urza)).toBe(1);
     expect(computeCharacteristics(ctx, urza).manaAbilities).toEqual([]);
     checkpoint(ctx);
-    resolve(ctx);
+    // Chapter I is mandatory: nobody is asked "use this ability?".
+    expect(types(resolve(ctx))).not.toContain('optionalTrigger');
     expect(computeCharacteristics(ctx, urza).manaAbilities.map((ability) => ability.units)).toEqual(
       [[['C']]],
     );
@@ -192,13 +212,16 @@ describe("Urza's Saga", () => {
     const { ctx, urza } = playUrza('urza-chapter-2');
     checkpoint(ctx);
     resolve(ctx);
-    nextTurnOf(ctx, 'P1');
+    // Chapter II is mandatory too.
+    expect(types(nextTurnOf(ctx, 'P1'))).not.toContain('optionalTrigger');
     expect(lore(urza)).toBe(2);
     expect(computeCharacteristics(ctx, urza).manaAbilities).toHaveLength(1);
     anyMana(ctx, 'P1', 2);
     activate(ctx, 'P1', urza);
     resolve(ctx);
     expect(urza.tapped).toBe(true);
+    // Exactly one Construct token is made.
+    expect(battlefield(ctx, 'Construct')).toHaveLength(1);
     const [construct] = battlefield(ctx, 'Construct');
     const chars = computeCharacteristics(ctx, construct!);
     expect([chars.power, chars.toughness, chars.types]).toEqual([1, 1, ['Artifact', 'Creature']]);
@@ -222,6 +245,9 @@ describe("Urza's Saga", () => {
     nextChapter(ctx);
     expect(ctx.state.stack.at(-1)?.description).toContain('III —');
     const decisions = resolve(ctx);
+    expect(types(decisions)).not.toContain('optionalTrigger');
+    // Chapter III ends with "then shuffle".
+    expect(ctx.state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
     const offered = decisions.flatMap((decision) =>
       decision.options.map((option) => option.description),
     );

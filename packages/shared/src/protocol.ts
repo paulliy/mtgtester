@@ -10,7 +10,7 @@
  */
 
 import type { DecisionRequest, TargetChoice } from './engine';
-import type { GameId, PlayerId } from './ids';
+import type { GameId, ObjectId, PlayerId } from './ids';
 import type { GameResult } from './state';
 import type { PlayerBoardState } from './player';
 import type { AiAnnotation, AiReflection, SpectatorLogLine, SpectatorState } from './spectator';
@@ -71,8 +71,16 @@ export type ClientToServerType = (typeof CLIENT_TO_SERVER_TYPES)[number];
  * budget on every non-local decision (ADR 0010, ADR 0011). See ADR 0012 §4.
  */
 export type ProviderKind = 'random' | 'ai';
-export type GameMode = 'spectator' | 'singlePlayer';
+/**
+ * How a game is presented and who may see what. `'table'` is a multi-human game run by the table
+ * server (ADR 0031); the tester's `StartGamePayload` never carries it, and `GameServer` refuses it.
+ */
+export type GameMode = 'spectator' | 'singlePlayer' | 'table';
 export type SeatControllerKind = ProviderKind | 'human';
+/** The modes a `startGame` request may name. `'table'` is started only by the table server. */
+export type StartGameMode = Exclude<GameMode, 'table'>;
+/** Who answers each seat's decisions. A session takes this instead of a single human seat. */
+export type SeatControllers = Readonly<Record<PlayerId, SeatControllerKind>>;
 
 /** Live-ish compute-ahead vs. the user stepping it forward (brief §10.1). */
 export type PlaybackMode = 'live' | 'manual';
@@ -202,7 +210,40 @@ export interface EventBatchPayload {
    * Absent unless the game was started with `diplomacy`, so the default payload does not grow.
    */
   tableTalk?: TableTalkLine[];
+  /**
+   * What these lines did to the board, for animation (ADR 0032 decision 8): who damaged what, and
+   * whose life changed. Built on the server, so the browser no longer diffs boards to guess.
+   * Absent when the lines changed neither.
+   */
+  cues?: PresentationCue[];
 }
+
+/** A damage or life cue's target: a permanent by its object id, or a player. */
+export type CueTarget = { kind: 'object'; id: ObjectId } | { kind: 'player'; id: PlayerId };
+
+/**
+ * One board change to animate. `sequence` is the log line it belongs to (a viewer's own sequence
+ * at a table). Cues name objects by object id only, never by card id.
+ */
+export type PresentationCue =
+  | {
+      kind: 'damage';
+      sequence: number;
+      /** Null when the source is on neither board (it left before the batch was flushed). */
+      sourceId: ObjectId | null;
+      target: CueTarget;
+      amount: number;
+      combat: boolean;
+      /** Damage dealt together shares a group: one per combat damage step, then one per event. */
+      group: number;
+    }
+  | {
+      kind: 'lifeChange';
+      sequence: number;
+      player: PlayerId;
+      /** The real change in the life total, which damage alone does not always give. */
+      delta: number;
+    };
 
 /**
  * The AI failed twice on a decision the user is currently watching (brief §7.7 step 2). The
@@ -303,8 +344,16 @@ export interface ReplayUnlockedPayload {
 
 export interface GameOverPayload {
   result: GameResult;
+  /** The "game over" line in player terms, written by the server (ADR 0032 decision 5). */
+  summary: string;
   /** Finishing positions, 1st through 4th. */
-  standings: Array<{ seat: PlayerId; position: number; lossReason: string | null }>;
+  standings: Array<{
+    seat: PlayerId;
+    position: number;
+    lossReason: string | null;
+    /** `lossReason` in player terms, written by the server; absent when there is no reason. */
+    lossLabel?: string;
+  }>;
   /**
    * Seats whose post-game reflection has been started (ADR 0022 §7). Absent when the feature is
    * off. This ships with `gameOver` — which never waits on a model — so the results screen can
@@ -408,7 +457,31 @@ export type ServerMessageOf<T extends ServerToClientType> = Extract<
 
 // ── Client → server ─────────────────────────────────────────────────────────────────────────
 
+/**
+ * What a player connection asks the server to include (ADR 0032 decision 7). Declared in the
+ * first player message (`startGame`, `startCardTestScenario`) and again in every `resumeGame`,
+ * because a resumed connection is a new one. Absent or empty means the default: no raw
+ * `LegalAction.data`. Only the JSON agent client asks for `rawActionData`; the browser never does.
+ */
+export interface ClientCapabilities {
+  /** Keep `LegalAction.data` on the legal actions sent to this player. */
+  rawActionData?: boolean;
+}
+
+/** Whether `value` is a well-formed `ClientCapabilities`, or absent. Unknown keys are refused. */
+function isOptionalCapabilities(value: unknown): value is ClientCapabilities | undefined {
+  if (value === undefined) return true;
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+  const caps = value as Record<string, unknown>;
+  return (
+    Object.keys(caps).every((key) => key === 'rawActionData') &&
+    (caps['rawActionData'] === undefined || typeof caps['rawActionData'] === 'boolean')
+  );
+}
+
 interface StartGameCommon {
+  /** What this connection wants in its frames; see `ClientCapabilities`. */
+  capabilities?: ClientCapabilities;
   /** Four seats in v1 (brief §15). */
   seats: SeatSource[];
   providerKind: ProviderKind;
@@ -442,6 +515,8 @@ export type StartGamePayload = StartGameCommon &
 
 export interface StartCardTestScenarioPayload {
   scenarioId: string;
+  /** What this connection wants in its frames; see `ClientCapabilities`. */
+  capabilities?: ClientCapabilities;
 }
 
 export interface JumpToTurnPayload {
@@ -491,6 +566,8 @@ export interface ResumePlayerAbilityPayload {
 
 export interface ResumeGamePayload {
   sessionToken: string;
+  /** Declared again on every resume: the new connection's own capabilities. */
+  capabilities?: ClientCapabilities;
 }
 
 /** The player's proposal: the table checks it like any other (ADR 0035 decision 15). */
@@ -664,10 +741,15 @@ export function isClientToServerMessage(value: unknown): value is ClientToServer
           (isFiniteNumber(payload['paceMs']) && payload['paceMs'] >= 0)) &&
         (payload['reflectionEnabled'] === undefined ||
           typeof payload['reflectionEnabled'] === 'boolean') &&
-        (payload['diplomacy'] === undefined || typeof payload['diplomacy'] === 'boolean')
+        (payload['diplomacy'] === undefined || typeof payload['diplomacy'] === 'boolean') &&
+        isOptionalCapabilities(payload['capabilities'])
       );
     case 'startCardTestScenario':
-      return typeof payload['scenarioId'] === 'string' && payload['scenarioId'].length > 0;
+      return (
+        typeof payload['scenarioId'] === 'string' &&
+        payload['scenarioId'].length > 0 &&
+        isOptionalCapabilities(payload['capabilities'])
+      );
     case 'jumpToTurn':
       return (
         Number.isInteger(payload['turn']) &&
@@ -727,7 +809,11 @@ export function isClientToServerMessage(value: unknown): value is ClientToServer
     case 'cancelYield':
       return Object.keys(payload).length === 0;
     case 'resumeGame':
-      return typeof payload['sessionToken'] === 'string' && payload['sessionToken'].length > 0;
+      return (
+        typeof payload['sessionToken'] === 'string' &&
+        payload['sessionToken'].length > 0 &&
+        isOptionalCapabilities(payload['capabilities'])
+      );
     case 'proposeDeal':
       return (
         Object.keys(payload).every((key) => ['to', 'obligations', 'rounds'].includes(key)) &&

@@ -17,7 +17,7 @@ import { addMana } from '../src/mana/pool';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { endUntilEotEffects } from '../src/effects/resolve';
 import { runPrioritySequence } from '../src/turn/priority';
-import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import { conjure, copies, forest, gameConfig, oracle, pump, pumpStrict, spawn } from './fixtures';
 
 const selected = (
   JSON.parse(readFileSync('packages/engine/tests/fixtures/coverage-pr08-oracle.json', 'utf8')) as {
@@ -40,16 +40,21 @@ function pod(seed: string) {
   ctx.state.turnNumber = 3;
   return ctx;
 }
-function settle(ctx: GameContext, graft = false) {
-  pump(runPrioritySequence(ctx), (decision) => {
-    const pass = decision.options.findIndex((option) => option.type === 'pass');
-    const optional = decision.options.findIndex(
-      (option) => option.description === (graft ? 'Yes' : 'No'),
-    );
-    return { index: pass >= 0 ? pass : optional >= 0 ? optional : 0, targets: new Map() };
-  });
+function settle(ctx: GameContext, graft = false, asked: string[] = []) {
+  pump(
+    runPrioritySequence(ctx),
+    (decision) => {
+      asked.push(decision.decisionType);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      const optional = decision.options.findIndex(
+        (option) => option.description === (graft ? 'Yes' : 'No'),
+      );
+      return { index: pass >= 0 ? pass : optional >= 0 ? optional : 0, targets: new Map() };
+    },
+    { strict: true },
+  );
 }
-function cast(ctx: GameContext) {
+function cast(ctx: GameContext, asked: string[] = []) {
   const card = conjure(ctx, 'P1', pin.card, 'hand');
   addMana(
     playerById(ctx, 'P1'),
@@ -67,7 +72,7 @@ function cast(ctx: GameContext) {
     }),
   );
   expect(ctx.state.stack).toHaveLength(1);
-  settle(ctx);
+  settle(ctx, false, asked);
   const source = ctx.state.battlefield.find((permanent) => permanent.cardId === card.cardId);
   expect(source).toBeDefined();
   return source!;
@@ -142,7 +147,10 @@ describe('Cytoplast Manipulator (PR08.06)', () => {
   });
   it('cytoplast-normal-cast-graft — pays four mana, enters with two counters and does not graft onto itself', () => {
     const ctx = pod('cytoplast-cast');
-    const source = cast(ctx);
+    const asked: string[] = [];
+    const source = cast(ctx, asked);
+    // Graft's trigger is for ANOTHER creature entering: Cytoplast's own entry asks nothing.
+    expect(asked).not.toContain('optionalTrigger');
     expect(source.counters['+1/+1']).toBe(2);
     expect(source.summoningSick).toBe(true);
     expect(playerById(ctx, 'P1').manaEntries).toHaveLength(0);
@@ -205,13 +213,28 @@ describe('Cytoplast Manipulator (PR08.06)', () => {
     const source = cast(ctx);
     const entrant = conjure(ctx, 'P2', bear('Declined Receiver'), 'hand');
     pump(moveObject(ctx, entrant, { zone: 'battlefield', controllerId: 'P2' }));
-    settle(ctx, false);
+    const asked: string[] = [];
+    settle(ctx, false, asked);
+    // Graft is optional: the yes/no is asked, and "No" moves nothing.
+    expect(asked).toContain('optionalTrigger');
     expect(source.counters['+1/+1']).toBe(2);
     expect(
       ctx.state.battlefield.find((permanent) => permanent.cardId === entrant.cardId)?.counters[
         '+1/+1'
       ] ?? 0,
     ).toBe(0);
+
+    // A noncreature permanent entering does not trigger Graft.
+    const relic = conjure(ctx, 'P2', oracle({ name: 'Graft Relic', typeLine: 'Artifact' }), 'hand');
+    pumpStrict(moveObject(ctx, relic, { zone: 'battlefield', controllerId: 'P2' }));
+    expect(ctx.state.pendingTriggers).toHaveLength(0);
+    expect(source.counters['+1/+1']).toBe(2);
+
+    // Graft needs a +1/+1 counter on the source when the creature enters.
+    source.counters['+1/+1'] = 0;
+    const late = conjure(ctx, 'P2', bear('Late Receiver'), 'hand');
+    pumpStrict(moveObject(ctx, late, { zone: 'battlefield', controllerId: 'P2' }));
+    expect(ctx.state.pendingTriggers).toHaveLength(0);
   });
   it('cytoplast-last-graft-dies — transferring both counters through separate triggers leaves a 0/0 that dies to state-based actions', () => {
     const ctx = pod('cytoplast-last-graft');

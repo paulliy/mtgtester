@@ -1,0 +1,185 @@
+{
+  "schemaVersion": 1,
+  "card": "Everflowing Chalice",
+  "supportCards": [
+    {
+      "name": "Scenario Ox",
+      "typeLine": "Creature — Ox",
+      "manaCost": "{2}",
+      "power": "2",
+      "toughness": "4"
+    },
+    {
+      "name": "Scenario Mite",
+      "typeLine": "Creature — Insect",
+      "manaCost": "{1}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "everflowing-chalice-kicked-twice",
+      "title": "Everflowing Chalice: kicked twice, it enters with two charge counters and taps for {C}{C}",
+      "clauses": [1, 2, 3],
+      "instructions": [
+        "Cast Everflowing Chalice kicked twice, paying {4} with four Forests.",
+        "Cast Scenario Ox, tapping Chalice for {C}{C}."
+      ],
+      "expectedOutcome": "Chalice enters with two charge counters; its {C}{C} pays for Scenario Ox.",
+      "seats": {
+        "P1": {
+          "hand": ["Everflowing Chalice", "Scenario Ox"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Everflowing Chalice .*kicker 2$/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Ox/"
+        }
+      ],
+      "expect": [
+        {
+          "counters": {
+            "card": "Everflowing Chalice",
+            "counter": "charge",
+            "equals": 2
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Ox"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Everflowing Chalice",
+            "equals": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "everflowing-chalice-kicked-once",
+      "title": "Everflowing Chalice: kicked once, one charge counter",
+      "clauses": [1, 2],
+      "instructions": ["Cast Everflowing Chalice kicked once, paying {2}."],
+      "expectedOutcome": "Chalice enters with one charge counter.",
+      "seats": {
+        "P1": {
+          "hand": ["Everflowing Chalice"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Everflowing Chalice .*kicker 1$/"
+        }
+      ],
+      "expect": [
+        {
+          "counters": {
+            "card": "Everflowing Chalice",
+            "counter": "charge",
+            "equals": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "everflowing-chalice-unkicked",
+      "title": "Everflowing Chalice: cast for {0}, no counters and no mana",
+      "clauses": [2, 3],
+      "instructions": [
+        "Cast Everflowing Chalice for {0}, unkicked, with no other mana source.",
+        "Look for a way to cast Scenario Mite ({1}) with Chalice: it is not offered. (The Forest in your hand only gives you a play to be asked about; don't play it.)"
+      ],
+      "expectedOutcome": "Chalice enters with no charge counter; it adds no mana, so Scenario Mite stays in your hand and cannot be cast.",
+      "seats": {
+        "P1": {
+          "hand": ["Everflowing Chalice", "Scenario Mite", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Cast Everflowing Chalice ({0})"
+        }
+      ],
+      "expect": [
+        {
+          "counters": {
+            "card": "Everflowing Chalice",
+            "counter": "charge",
+            "equals": 0
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Mite"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "everflowing-chalice-one-counter-taps",
+      "title": "Everflowing Chalice: with one charge counter it taps for {C}",
+      "clauses": [3],
+      "instructions": [
+        "With Everflowing Chalice holding one charge counter and no other mana source, cast Scenario Mite ({1}), tapping Chalice for {C}."
+      ],
+      "expectedOutcome": "Chalice's {C} pays for Scenario Mite: Chalice is tapped and Scenario Mite is on the battlefield.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Mite"],
+          "battlefield": [
+            {
+              "card": "Everflowing Chalice",
+              "counters": {
+                "charge": 1
+              }
+            }
+          ]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Mite/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Mite"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Everflowing Chalice",
+            "equals": true
+          }
+        },
+        {
+          "counters": {
+            "card": "Everflowing Chalice",
+            "counter": "charge",
+            "equals": 1
+          }
+        }
+      ]
+    }
+  ]
+}

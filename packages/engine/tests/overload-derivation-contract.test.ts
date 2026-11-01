@@ -292,18 +292,35 @@ describe('guarded Overload lowering and casting', () => {
     ).toBeNull();
   });
 
-  it.each(fixture.cards.slice(2, 5).map(({ card }) => ({ name: card.name, card })))(
-    '$name-overload-contained',
-    ({ card }) => {
+  // Mizzium Mortars and Electrickery are authored with explicit overload abilities (mini-pilot
+  // batch, tests/cards/mini-pilot); the lowering still declines their damage, checked below.
+  const AUTHORED = new Set(['Mizzium Mortars', 'Electrickery']);
+
+  it.each(
+    fixture.cards
+      .slice(2, 5)
+      .filter(({ card }) => !AUTHORED.has(card.name))
+      .map(({ card }) => ({ name: card.name, card })),
+  )('$name-overload-contained', ({ card }) => {
+    const definition = interpretCard(card);
+    expect(definition.modeled, card.name).toBe(false);
+    // Mizzium Skin's base pump now parses, so it fails closed on the missing overload ability.
+    const reason =
+      card.name === 'Mizzium Skin'
+        ? 'overload requires an explicit executable spell ability with no targets'
+        : 'unrecognized rules text';
+    expect(definition.unmodeledReasons.some((entry) => entry.includes(reason))).toBe(true);
+    expect(definition.alternativeCasts?.[0]?.ability).toBeUndefined();
+  });
+
+  it.each([...AUTHORED])(
+    '%s models only through its authored overload ability; the lowering still declines damage',
+    (name) => {
+      const card = fixture.cards.find((entry) => entry.card.name === name)!.card;
       const definition = interpretCard(card);
-      expect(definition.modeled, card.name).toBe(false);
-      // Mizzium Skin's base pump now parses, so it fails closed on the missing overload ability.
-      const reason =
-        card.name === 'Mizzium Skin'
-          ? 'overload requires an explicit executable spell ability with no targets'
-          : 'unrecognized rules text';
-      expect(definition.unmodeledReasons.some((entry) => entry.includes(reason))).toBe(true);
-      expect(definition.alternativeCasts?.[0]?.ability).toBeUndefined();
+      expect(definition.modeled).toBe(true);
+      expect(definition.alternativeCasts?.[0]?.ability?.targets).toEqual([]);
+      expect(deriveOverloadAbility(definition.spellAbility)).toBeNull();
     },
   );
 
@@ -355,7 +372,7 @@ describe('guarded Overload lowering and casting', () => {
 });
 
 it.each([false, true])(
-  'damn-simultaneous-indestructible is independent of battlefield order %s',
+  'damn-simultaneous-indestructible — is independent of battlefield order %s',
   (reverse) => {
     const state = setup('Damn');
     const pin = JSON.parse(

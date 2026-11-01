@@ -15,11 +15,12 @@ import { PR09_ALL_SCENARIO_IDS } from './pr09-scenario-catalog';
 import { PR10_ALL_SCENARIO_IDS } from './pr10-scenario-catalog';
 import { PR11_ALL_SCENARIO_IDS } from './pr11-scenario-catalog';
 import { PR12_ALL_SCENARIO_IDS } from './pr12-scenario-catalog';
+import { PILOT_CURRENT_ALL_SCENARIO_IDS } from './pilot-current-scenario-catalog';
 import { PR13_ALL_SCENARIO_IDS } from './pr13-scenario-catalog';
 import { PR11B_ALL_SCENARIO_IDS } from './pr11b-scenario-catalog';
 import {
   CARD_TEST_SCENARIO_IDS,
-  createCardTestScenario,
+  strictCardTestScenario,
   listCardTestScenarios,
 } from './card-test-scenarios';
 
@@ -88,6 +89,17 @@ describe('Card Test Lab viewer-evidence gate', () => {
     expect(spec).not.toContain('routeWebSocket');
     expect(spec).not.toContain('page.route(');
   });
+  it('requires the dedicated pilot-current browser batch and excludes it from generic walkthroughs', () => {
+    for (const id of PILOT_CURRENT_ALL_SCENARIO_IDS) expect(CARD_TEST_SCENARIO_IDS).toContain(id);
+    expect(labSpec).toContain('!PILOT_CURRENT_ALL_SCENARIO_IDS.includes(scenarioId)');
+    expect(labSpec).toContain('!PILOT_CURRENT_ALL_SCENARIO_IDS.includes(id)');
+    const spec = readFileSync(resolve('apps/web/e2e/pilot-current-card-test-lab.spec.ts'), 'utf8');
+    expect(spec).toContain('exercised.add(id)');
+    expect(spec).toContain('test.afterAll(');
+    expect(spec).toContain("trace: 'on'");
+    expect(spec).not.toContain('routeWebSocket');
+    expect(spec).not.toContain('page.route(');
+  });
   it('requires the dedicated PR13 browser batch and excludes it from generic walkthroughs', () => {
     for (const id of PR13_ALL_SCENARIO_IDS) expect(CARD_TEST_SCENARIO_IDS).toContain(id);
     expect(labSpec).toContain('!PR13_ALL_SCENARIO_IDS.includes(scenarioId)');
@@ -145,7 +157,7 @@ describe('Card Test Lab viewer-evidence gate', () => {
 
   it('requires the unmocked Playwright spec to prove registry coverage at runtime', () => {
     for (const scenarioId of CARD_TEST_SCENARIO_IDS) {
-      const scenario = createCardTestScenario(scenarioId, 'gate-check' as GameId);
+      const scenario = strictCardTestScenario(scenarioId, 'gate-check' as GameId);
       expect(scenario, scenarioId).not.toBeNull();
     }
     // The Playwright process records the IDs actually selected from the live catalog. Its

@@ -61,10 +61,12 @@ const taxedCommanders = computed(() =>
 );
 const ZONES_CAP = 6;
 
-const lands = computed(() => props.permanents.filter((p) => p.typeLine.includes('Land')));
-const nonlands = computed(() => props.permanents.filter((p) => !p.typeLine.includes('Land')));
+// The server decides the row (`boardGroup`): an animated land groups with creatures, a Dryad
+// Arbor too. A permanent without one (a snapshot saved before it existed) stays on the board.
+const lands = computed(() => props.permanents.filter((p) => p.boardGroup === 'lands'));
+const nonlands = computed(() => props.permanents.filter((p) => p.boardGroup !== 'lands'));
 
-const lifeFlash = useLifeFlash(() => props.seat.life);
+const lifeFlash = useLifeFlash(() => props.seat.seat);
 
 const cmdDamageTaken = computed(() => {
   if (!props.commanderDamage) return [];

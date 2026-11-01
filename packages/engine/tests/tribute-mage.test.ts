@@ -89,7 +89,7 @@ describe('Tribute Mage', () => {
     }
   });
 
-  it('tribute-eligible-artifact-mv2 and rejection scenarios offer exactly artifacts with mana value 2', () => {
+  it('tribute-eligible-artifact-mv2 — and rejection scenarios offer exactly artifacts with mana value 2', () => {
     const ctx = pod('tribute-filter');
     searchCards(ctx);
     const source = spawn(ctx, 'P1', tribute);
@@ -116,7 +116,7 @@ describe('Tribute Mage', () => {
     expect(ctx.state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
   });
 
-  it('tribute-decline-search leaves eligible cards in the library and still shuffles', () => {
+  it('tribute-decline-search — leaves eligible cards in the library and still shuffles', () => {
     const ctx = pod('tribute-decline');
     searchCards(ctx);
     const source = spawn(ctx, 'P1', tribute);
@@ -134,7 +134,7 @@ describe('Tribute Mage', () => {
     expect(ctx.state.eventLog.filter((event) => event.type === 'shuffle')).toHaveLength(1);
   });
 
-  it('tribute-no-eligible-card presents no search choice and still shuffles', () => {
+  it('tribute-no-eligible-card — presents no search choice and still shuffles', () => {
     const ctx = pod('tribute-no-match');
     conjure(
       ctx,
@@ -150,7 +150,7 @@ describe('Tribute Mage', () => {
     expect(ctx.state.eventLog.filter((event) => event.type === 'shuffle')).toHaveLength(1);
   });
 
-  it('tribute-normal-cast-etb pays its mana cost, respects sorcery timing, and resolves the ETB search', () => {
+  it('tribute-normal-cast-etb — pays its mana cost, respects sorcery timing, and resolves the ETB search', () => {
     const ctx = pod('tribute-normal-cast');
     const player = ctx.state.players[0]!;
     const spell = conjure(ctx, 'P1', tribute, 'hand');
@@ -191,12 +191,14 @@ describe('Tribute Mage', () => {
       ),
       targets: new Map(),
     }));
-    pump(resolveTopOfStack(ctx), (decision) => ({
+    const { decisions } = pump(resolveTopOfStack(ctx), (decision) => ({
       index: decision.options.findIndex((option) =>
         option.description.includes('Eligible Talisman'),
       ),
       targets: new Map(),
     }));
+    // The trigger is mandatory: only the search's own choice is asked, no "use it?" first.
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(player.hand.map((card) => card.name)).toContain('Eligible Talisman');
   });
 });

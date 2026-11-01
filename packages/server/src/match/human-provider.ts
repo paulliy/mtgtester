@@ -145,6 +145,18 @@ export class HumanDecisionProvider implements AsyncDecisionProvider {
     return null;
   }
 
+  /**
+   * Take the pending decision away from the player (a clock ran out, or the seat's fallback bot
+   * took over): a late answer from the player is then stale, and the caller resolves the
+   * decision exactly once with whatever answers in the player's place.
+   */
+  takeOver(): { request: DecisionRequest; resolve(response: DecisionResponse): void } | null {
+    const pending = this.pending;
+    if (pending === null) return null;
+    this.pending = null;
+    return { request: pending.request, resolve: pending.resolve };
+  }
+
   /** Release an abandoned runner without applying the response (it observes abandonment first). */
   releaseForAbandon(): void {
     const pending = this.pending;

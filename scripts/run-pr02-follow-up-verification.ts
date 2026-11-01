@@ -14,7 +14,7 @@ const tests = [
   'packages/server/src/cards/pr02-follow-up-scenarios.test.ts',
   'packages/server/src/cards/card-test-scenarios-pr02.test.ts',
   'packages/server/src/cards/card-test-scenarios.test.ts',
-  'apps/web/src/lib/actionLabels.test.ts',
+  'packages/shared/src/presentation/labels.test.ts',
 ] as const;
 const root = process.cwd();
 const output = resolve(process.argv[2] ?? 'test-results/pr02-follow-ups');

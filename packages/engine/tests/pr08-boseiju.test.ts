@@ -218,6 +218,16 @@ describe('Boseiju, Who Endures (PR08)', () => {
     expect(channelOption(ctx, 'P1', source.id)).toBeUndefined();
     addPool(ctx, 'P1', 1, 0);
     expect(channelOption(ctx, 'P1', source.id)).toBeDefined();
+
+    // With exactly {G} available, the channel is affordable only because one legendary creature
+    // takes {1} off the {1}{G} cost.
+    const bare = pod('boseiju-discount-exact');
+    const bareSource = conjure(bare, 'P1', pin!.card, 'hand');
+    permanent(bare, 'P2', targetCard('Target Artifact', 'Artifact'));
+    addPool(bare, 'P1', 1, 0);
+    expect(channelOption(bare, 'P1', bareSource.id)).toBeUndefined();
+    permanent(bare, 'P1', targetCard('Legendary Creature', 'Legendary Creature — Bear'));
+    expect(channelOption(bare, 'P1', bareSource.id)).toBeDefined();
   });
 
   it('boseiju-may-decline — target controller may decline without shuffling', () => {

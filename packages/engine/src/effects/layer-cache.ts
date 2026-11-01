@@ -49,6 +49,21 @@ export function setCached(ctx: GameContext, entry: LayerCacheEntry): void {
   CACHE.set(ctx, entry);
 }
 
+/**
+ * Under `strictInvariants` (ADR 0034 decision 8) one cache hit in `SAMPLE_EVERY` is recomputed
+ * and compared, as `MTG_VERIFY_LAYER_CACHE=1` does for every hit. A per-game count picks the
+ * sample, so it draws no randomness and a game plays the same with it on or off.
+ */
+const SAMPLE_EVERY = 64;
+const HITS = new WeakMap<GameContext, number>();
+
+export function sampleCacheHit(ctx: GameContext): boolean {
+  if (ctx.strictInvariants !== true) return false;
+  const hits = (HITS.get(ctx) ?? 0) + 1;
+  HITS.set(ctx, hits);
+  return hits % SAMPLE_EVERY === 0;
+}
+
 /** Discard a speculative casting pass after in-place recovery. */
 export function clearCached(ctx: GameContext): void {
   CACHE.delete(ctx);
@@ -212,6 +227,9 @@ export function digestOf(
   h = mix(h, Object.keys(s.modifiedCreatureDiedThisTurn ?? {}).length);
   h = mix(h, s.excessDamageControllerIds.length);
   for (const player of s.players) {
+    // A player who has lost is no opponent (Nighthawk Scavenger's count), from the loss until
+    // the elimination that removes their cards: `eliminatedPlayers` alone misses that window.
+    h = mix(h, player.hasLost ? 1 : 0);
     h = mix(h, player.life + 0x10000);
     h = mix(h, player.hand.length);
     h = mix(h, player.library.length);

@@ -4,6 +4,8 @@ Status: Accepted
 
 Date: 2026-10-23
 
+Amended by [0031](0031-multiplayer-tables.md): the fallback bot that answers for a missing player at a table sees its seat's menu without manual-mana options. Ordinary bots still never opt in.
+
 The single-player board keeps your lands in a pile you open to see them one by one. Players asked
 to tap those lands for mana themselves, as in Arena, instead of leaving every payment to the
 engine.

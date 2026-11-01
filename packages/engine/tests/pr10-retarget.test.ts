@@ -324,6 +324,22 @@ describe('PR10.11 Bolt Bend', () => {
     );
     expect(p(ctx, 'P1').manaEntries).toHaveLength(0);
     expect(ctx.state.stack.at(-1)!.sourceCardId).toBe(bend.cardId);
+
+    // The reduction is exactly {3}: with {2} of commander tax on top, {3}{R}+{2}-{3} is {2}{R}.
+    const taxed = shockAtP1Creature('pr10-bend-reduced-taxed').ctx;
+    spawn(taxed, 'P1', big('Bend Brute'));
+    const player = p(taxed, 'P1');
+    const commanded = conjure(taxed, 'P1', BEND, 'hand');
+    player.hand.splice(player.hand.indexOf(commanded), 1);
+    commanded.zone = 'command';
+    commanded.isCommander = true;
+    player.commandZone.push(commanded);
+    player.commanderCardIds.push(commanded.cardId);
+    player.commanderCastCount[commanded.cardId] = 1;
+    addMana(player, [{ symbol: 'R' }, { symbol: 'C' }]);
+    expect(castOption(taxed, 'P1', commanded.id), 'short of {2}{R}').toBeUndefined();
+    addMana(player, [{ symbol: 'C' }]);
+    expect(castOption(taxed, 'P1', commanded.id)).toBeDefined();
   });
 
   it('pr10-bolt-bend-no-reduction — an opponent’s or a smaller creature does not reduce it', () => {

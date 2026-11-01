@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { formatPlayerLog } from '@mtg/engine';
-import { createCardTestScenario } from './card-test-scenarios';
+import { strictCardTestScenario } from './card-test-scenarios';
 
 function replay(mode: 'duplicates' | 'decline' | 'shroud') {
-  const scenario = createCardTestScenario(
+  const scenario = strictCardTestScenario(
     `druid-of-purification-viewer-${mode}`,
     'pr08-druid-replay',
   )!;

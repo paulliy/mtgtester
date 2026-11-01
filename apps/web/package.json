@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:table": "vite build --mode table",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json"
   },

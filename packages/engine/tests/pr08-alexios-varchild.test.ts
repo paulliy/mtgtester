@@ -71,13 +71,7 @@ function pod(seed: string): GameContext {
   return ctx;
 }
 function settle(ctx: GameContext) {
-  return pump(runPrioritySequence(ctx), (d) => ({
-    index: Math.max(
-      0,
-      d.options.findIndex((o) => o.type === 'pass'),
-    ),
-    targets: new Map(),
-  }));
+  return pump(runPrioritySequence(ctx), (d) => answer(d), { strict: true });
 }
 function cast(ctx: GameContext, who: string, card: OracleCard, mana: ('R' | 'C')[]) {
   const hand = conjure(ctx, who, card, 'hand');
@@ -101,6 +95,8 @@ function cast(ctx: GameContext, who: string, card: OracleCard, mana: ('R' | 'C')
   return ctx.state.battlefield.find((p) => p.cardId === hand.cardId)!;
 }
 function answer(d: PendingDecision): DecisionOutcome {
+  // The triggers of both cards are mandatory: none asks "use this ability?" first.
+  expect(d.decisionType).not.toBe('optionalTrigger');
   return {
     index: Math.max(
       0,
@@ -369,6 +365,45 @@ describe('PR08 Alexios and Varchild', () => {
       return answer(d);
     });
     expect(friendly.blocking).toBeTruthy();
+
+    // An opponent's Survivor cannot block even for its own controller, who is the defending player.
+    const defended = pod('varchild-block-defender');
+    cast(defended, 'P1', varchildPin.card, ['C', 'C', 'R']);
+    const survivor = createToken(defended, SURVIVOR_1_1_RED, 'P2');
+    const bear = spawn(
+      defended,
+      'P2',
+      oracle({ name: 'Plain Blocker', typeLine: 'Creature — Bear', power: '2', toughness: '2' }),
+    );
+    const raider = spawn(
+      defended,
+      'P3',
+      oracle({ name: 'Bear Raider', typeLine: 'Creature — Bear', power: '2', toughness: '2' }),
+    );
+    Object.assign(defended.state, {
+      currentTurnPlayer: 'P3',
+      activePlayerIndex: 2,
+      phase: 'combat',
+      step: null,
+    });
+    let sawBlockMenu = false;
+    pump(
+      runCombatPhase(defended),
+      (d) => {
+        if (d.decisionType === 'declareAttackers')
+          return declareAttacks(d, (id) => (id === raider.id ? 'P2' : null));
+        if (d.decisionType === 'declareBlockers') {
+          sawBlockMenu = true;
+          const subjects = d.presentationBlockDeclaration!.subjects.map((x) => x.subjectId);
+          expect(subjects).toContain(bear.id);
+          expect(subjects).not.toContain(survivor.id);
+          return declareBlocks(d, () => null);
+        }
+        return answer(d);
+      },
+      { strict: true },
+    );
+    expect(sawBlockMenu).toBe(true);
   });
 
   it('pr08-alexios-varchild-09 — Survivors cannot attack controller or their planeswalker', () => {

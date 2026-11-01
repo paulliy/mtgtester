@@ -99,6 +99,33 @@ export interface ActionPresentation {
   subjects: ActionSubject[];
   /** Layout/emphasis hint — e.g. `'decline'` renders muted rather than primary. */
   role?: 'affirm' | 'decline' | 'select' | 'order' | 'immediate';
+  /**
+   * The text on this action's button in a source panel: "Cast", "Cast with bestow", a mode's
+   * name, an ability's rules text, "Tap for {G}". Computed by the server (ADR 0032 decision 3)
+   * for casts, land plays, activations and mana abilities; absent on other actions.
+   */
+  label?: string;
+  /** The one-line "what you are about to do" heading once the action is selected: "Cast Opt". */
+  summary?: string;
+  /** Cost chips, mana cost first, then each non-mana cost: `["{1}{U}", "Tap this"]`. */
+  costLabels?: string[];
+  /** How a land enters, when the label does not already say it: "enters tapped". */
+  entryNote?: string;
+  /**
+   * Marks one value of X in a family of otherwise identical options. Options that share `key`
+   * differ only in `x`, so a client can offer one numeric input over them.
+   */
+  xFamily?: { key: string; x: number };
+  /**
+   * What the engine's auto-payment would tap for this option. `sourceIds` are permanents in the
+   * seat's own projection; `summary` is the names with repeats counted ("Forest ×2, Sol Ring"),
+   * empty when the engine named none.
+   */
+  payment?: { sourceIds: ObjectId[]; summary: string };
+  /** Mana symbols a mana ability adds, one entry per symbol: `["G"]`, `["R", "R"]`. */
+  manaSymbols?: string[];
+  /** Why this option differs from its siblings when its cost depends on a target: "reduced for target slot 2". */
+  targetHint?: string;
 }
 
 /**
@@ -240,7 +267,15 @@ export interface BlockDeclarationPresentation {
  * `PresentedCard` above.
  */
 export interface DecisionPresentation {
-  layout: 'choices' | 'cards' | 'order' | 'value' | 'attackDeclaration' | 'blockDeclaration';
+  /**
+   * `'priority'` is the server's own layout for a priority menu (casts, land plays, activations,
+   * passes): the engine builds presentation only for choice decisions, and the server adds one
+   * entry per remaining action (ADR 0032 decision 3).
+   */
+  layout:
+    'choices' | 'cards' | 'order' | 'value' | 'attackDeclaration' | 'blockDeclaration' | 'priority';
+  /** The decision's prompt in player terms, set by the server for every decision. */
+  playerPrompt?: string;
   /** The card/permanent the whole decision concerns, e.g. what triggered it. */
   source?: PresentedSource;
   /** Per-option presentation, keyed by `LegalAction.id`. */

@@ -7,7 +7,15 @@
 
 // --- Runtime values (enum tuples) ---
 export { ALL_COLORS } from './mana';
-export { PHASES, STEPS, ZONES, DECISION_TYPES, LOSS_REASONS } from './enums';
+export { turnPositionLabel } from './turn-labels';
+export {
+  PHASES,
+  STEPS,
+  ZONES,
+  DECISION_TYPES,
+  LOSS_REASONS,
+  COMMANDER_DAMAGE_LETHAL,
+} from './enums';
 export { PERMANENT_STATUSES } from './objects';
 export { COMMANDER_LEGALITIES } from './cards';
 export { DECK_SOURCE_TYPES, VALIDATION_CODES } from './decks';
@@ -23,6 +31,19 @@ export {
 } from './protocol';
 export { ATTACKS_TARGET, NO_ATTACK_TARGET, NO_BLOCK_TARGET } from './engine';
 export { parseStrictJson, STRICT_JSON_MAX_DEPTH } from './json';
+export { assertNever } from './assert-never';
+
+// --- LegalAction.data key registry (ADR 0032) ---
+export {
+  ACTION_DATA_KEYS,
+  ACTION_DATA_VALUE_TYPES,
+  ACTION_DATA_CONSUMERS,
+} from './action-data-keys';
+export type {
+  ActionDataKeyInfo,
+  ActionDataValueType,
+  ActionDataConsumer,
+} from './action-data-keys';
 
 // --- Strict inbound JSON (duplicate-key rejection ahead of the native parse) ---
 export type { StrictJsonFailure, StrictJsonResult } from './json';
@@ -44,7 +65,7 @@ export type {
   StackObject,
   StackObjectKind,
 } from './objects';
-export type { PlayerState, GameState, GameResult } from './state';
+export type { PlayerState, GameState, GameResult, GameEndReason } from './state';
 export type { ContinuousEffect } from './effects';
 export type { GameEvent } from './events';
 
@@ -111,6 +132,7 @@ export type {
   SpectatorSeat,
   SpectatorCard,
   SpectatorPermanent,
+  BoardGroup,
   SpectatorCommander,
   SpectatorStackObject,
   SpectatorLogLine,
@@ -130,7 +152,9 @@ export type {
   ClientMessageOf,
   ProviderKind,
   GameMode,
+  StartGameMode,
   SeatControllerKind,
+  SeatControllers,
   PlaybackMode,
   SeatSource,
   SeatSummary,
@@ -142,6 +166,8 @@ export type {
   CardTestScenarioMetadata,
   StateSnapshotPayload,
   EventBatchPayload,
+  CueTarget,
+  PresentationCue,
   DecisionPendingPayload,
   ComputeHaltedPayload,
   ApiWaitingPayload,
@@ -157,6 +183,7 @@ export type {
   ErrorPayload,
   StartGamePayload,
   StartCardTestScenarioPayload,
+  ClientCapabilities,
   JumpToTurnPayload,
   SetPlaybackModePayload,
   ResolveHeldDecisionPayload,
@@ -214,3 +241,58 @@ export type {
   BatchSpec,
   BatchStatus,
 } from './batch';
+
+// --- Table protocol (ADR 0031, plan M3) ---
+export {
+  PROTOCOL_VERSION,
+  TABLE_CLIENT_TO_SERVER_TYPES,
+  TABLE_SERVER_TO_CLIENT_TYPES,
+  TABLE_MAX_DECKLIST_CHARS,
+  TABLE_MAX_TOKEN_CHARS,
+  TABLE_MAX_RAW_NAME_CHARS,
+  parseTableClientMessage,
+  parseTableClientFrame,
+} from './table-protocol';
+export type {
+  ClaimIdPayload,
+  ClaimPendingPayload,
+  ClockStatePayload,
+  DeckProblemsPayload,
+  EmptyPayload,
+  HostAuthPayload,
+  HostKickPayload,
+  HostSeatController,
+  HostSetSeatPayload,
+  JoinTablePayload,
+  ProtocolMismatchPayload,
+  ReplayTurnPayload,
+  ReplayTurnStatePayload,
+  RequestSeatPayload,
+  ResumeSeatPayload,
+  SeatGrantedPayload,
+  SeatStatusPayload,
+  SeatTakenOverPayload,
+  TableCapabilities,
+  TableClientMessageOf,
+  TableClientToServerMessage,
+  TableClientToServerType,
+  TableClockMode,
+  TableClosedPayload,
+  TableClosedReason,
+  TableDeckProblem,
+  TableDeckProblemCode,
+  TableEnding,
+  TableParseFailure,
+  TableParseResult,
+  TablePendingClaimView,
+  TablePhase,
+  TableSeatController,
+  TableSeatView,
+  TableServerMessageOf,
+  TableServerToClientMessage,
+  TableServerToClientType,
+  TableResultsDeck,
+  TableResultsPayload,
+  TableStatePayload,
+  TableYouView,
+} from './table-protocol';

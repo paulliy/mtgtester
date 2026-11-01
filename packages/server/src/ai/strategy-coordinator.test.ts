@@ -121,7 +121,7 @@ describe('StrategyCoordinator', () => {
       engine,
       DEFAULT_AI_CONFIG,
       undefined,
-      'P1',
+      new Set(['P1']),
     );
     const req = request();
 
@@ -130,6 +130,32 @@ describe('StrategyCoordinator', () => {
 
     expect(client.requestDecision).not.toHaveBeenCalled();
     expect(coordinator.guidanceFor('P1').strategy).toBeNull();
+  });
+
+  it('never plans the turn of any seat in a set of human seats', async () => {
+    const client = strategist();
+    const engine = {
+      view: vi.fn().mockReturnValue(view),
+      addDebug: vi.fn(),
+    } as unknown as Engine;
+    const queue = { enqueue: <T>(fn: () => Promise<T>) => fn() };
+    const coordinator = new StrategyCoordinator(
+      client,
+      queue,
+      engine,
+      DEFAULT_AI_CONFIG,
+      undefined,
+      new Set(['P1', 'P3']),
+    );
+
+    coordinator.prepare(request({ activePlayer: 'P1', requestId: 'a' }));
+    coordinator.prepare(request({ activePlayer: 'P3', requestId: 'b' }));
+    await coordinator.settled();
+    expect(client.requestDecision).not.toHaveBeenCalled();
+
+    coordinator.prepare(request({ activePlayer: 'P2', requestId: 'c' }));
+    await coordinator.settled();
+    expect(client.requestDecision).toHaveBeenCalledTimes(1);
   });
 
   it('prefetches at a turn boundary ahead of the first real decision', async () => {

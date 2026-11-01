@@ -134,10 +134,9 @@ async function verify(page: Page, info: TestInfo, id: string) {
         );
         expect(options).not.toContain('P1');
         expect(options).toContain('P2');
-        await page
-          .getByRole('article')
-          .filter({ has: page.getByText('P2', { exact: true }) })
-          .click();
+        // P2's header: the panel's center is P2's Forest, and clicking a permanent selects it as a
+        // source instead of choosing P2.
+        await page.locator('.opponent[data-seat="P2"] > header').click();
         await page.getByRole('button', { name: 'Confirm', exact: true }).click();
       } else await page.getByRole('button', { name: 'Target Lab Bear', exact: true }).click();
     } else if (current.decisionType === 'orderTriggers') {

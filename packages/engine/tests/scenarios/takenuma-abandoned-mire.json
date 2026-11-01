@@ -1,0 +1,411 @@
+{
+  "schemaVersion": 1,
+  "card": "Takenuma, Abandoned Mire",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Ox",
+      "typeLine": "Creature — Ox",
+      "manaCost": "{2}{W}",
+      "power": "2",
+      "toughness": "4"
+    },
+    {
+      "name": "Scenario Walker",
+      "typeLine": "Planeswalker — Lab",
+      "manaCost": "{3}",
+      "loyalty": "3"
+    },
+    {
+      "name": "Scenario Legend",
+      "typeLine": "Legendary Creature — Human Knight",
+      "manaCost": "{1}{W}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Third Legend",
+      "typeLine": "Legendary Creature — Dwarf",
+      "manaCost": "{2}",
+      "power": "1",
+      "toughness": "3"
+    },
+    {
+      "name": "Scenario Second Legend",
+      "typeLine": "Legendary Creature — Elf",
+      "manaCost": "{1}{G}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Sorcery",
+      "typeLine": "Sorcery",
+      "manaCost": "{B}",
+      "oracleText": "You gain 1 life."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "takenuma-mill-then-return-milled",
+      "title": "Takenuma: channel mills three and returns the milled creature",
+      "clauses": [2],
+      "instructions": ["Channel Takenuma from your hand, paying {3}{B} with four Swamps."],
+      "expectedOutcome": "Scenario Bear, Forest and Island are milled; Scenario Bear returns to your hand and Takenuma is in your graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Takenuma, Abandoned Mire"],
+          "battlefield": ["Swamp", "Swamp", "Swamp", "Swamp"],
+          "libraryTop": ["Scenario Bear", "Forest", "Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/Discard this card/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Bear"],
+            "lacks": ["Takenuma, Abandoned Mire"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Takenuma, Abandoned Mire", "Forest", "Island"],
+            "lacks": ["Scenario Bear"]
+          }
+        },
+        {
+          "event": {
+            "type": "mill",
+            "count": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "takenuma-return-planeswalker",
+      "title": "Takenuma: a planeswalker card already in your graveyard can be returned",
+      "clauses": [2],
+      "instructions": ["Channel Takenuma; the three milled cards are lands."],
+      "expectedOutcome": "Scenario Walker returns from your graveyard to your hand; Scenario Sorcery stays.",
+      "seats": {
+        "P1": {
+          "hand": ["Takenuma, Abandoned Mire"],
+          "battlefield": ["Swamp", "Swamp", "Swamp", "Swamp"],
+          "graveyard": ["Scenario Walker", "Scenario Sorcery"],
+          "libraryTop": ["Forest", "Island", "Plains"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/Discard this card/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Walker"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Sorcery"],
+            "lacks": ["Scenario Walker"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "takenuma-choose-among",
+      "title": "Takenuma: with two creature cards in your graveyard, you choose which returns",
+      "clauses": [2],
+      "instructions": [
+        "Channel Takenuma.",
+        "Return Scenario Ox, which was just milled, rather than Scenario Bear."
+      ],
+      "expectedOutcome": "Scenario Ox returns to your hand; Scenario Bear stays in your graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Takenuma, Abandoned Mire"],
+          "battlefield": ["Swamp", "Swamp", "Swamp", "Swamp"],
+          "graveyard": ["Scenario Bear"],
+          "libraryTop": ["Scenario Ox", "Forest", "Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/Discard this card/"
+        },
+        {
+          "player": "P1",
+          "choose": "/Scenario Ox/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Ox"],
+            "lacks": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Bear"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "takenuma-legend-discount",
+      "title": "Takenuma: two legendary creatures make channel cost {1}{B}",
+      "clauses": [2],
+      "instructions": ["With two legendary creatures, channel Takenuma using only two Swamps."],
+      "expectedOutcome": "Channel costs {1}{B}: both Swamps tap and the milled Scenario Bear returns to your hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Takenuma, Abandoned Mire"],
+          "battlefield": ["Scenario Legend", "Scenario Second Legend", "Swamp", "Swamp"],
+          "libraryTop": ["Scenario Bear", "Forest", "Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/Discard this card/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Bear"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "takenuma-no-discount",
+      "title": "Takenuma: without legendary creatures, two Swamps do not pay for channel",
+      "clauses": [2],
+      "instructions": [
+        "With two Swamps and no legendary creature, look for Takenuma's channel ability."
+      ],
+      "expectedOutcome": "Channel is not offered; only Scenario Sorcery can be cast.",
+      "seats": {
+        "P1": {
+          "hand": ["Takenuma, Abandoned Mire", "Scenario Sorcery"],
+          "battlefield": ["Scenario Bear", "Swamp", "Swamp"]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Takenuma, Abandoned Mire"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "takenuma-three-legends-one-swamp",
+      "title": "Takenuma: three legendary creatures make channel cost {B}, one Swamp pays",
+      "clauses": [2],
+      "instructions": ["With three legendary creatures, channel Takenuma using only one Swamp."],
+      "expectedOutcome": "Channel costs {B}: the Swamp taps and the milled Scenario Bear returns to your hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Takenuma, Abandoned Mire"],
+          "battlefield": [
+            "Scenario Legend",
+            "Scenario Second Legend",
+            "Scenario Third Legend",
+            "Swamp"
+          ],
+          "libraryTop": ["Scenario Bear", "Forest", "Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/Discard this card/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Bear"],
+            "lacks": ["Takenuma, Abandoned Mire"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Takenuma, Abandoned Mire", "Forest", "Island"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Swamp",
+            "equals": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "takenuma-one-legend-not-enough",
+      "title": "Takenuma: one legendary creature leaves channel at {2}{B}, which two Swamps do not pay",
+      "clauses": [2],
+      "instructions": [
+        "With one legendary creature and two Swamps, look for Takenuma's channel ability; Scenario Sorcery in hand is the only spell you can cast."
+      ],
+      "expectedOutcome": "Channel is not offered: the discount is {1}, so it still costs {2}{B}.",
+      "seats": {
+        "P1": {
+          "hand": ["Takenuma, Abandoned Mire", "Scenario Sorcery"],
+          "battlefield": ["Scenario Legend", "Swamp", "Swamp"]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Takenuma, Abandoned Mire"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "takenuma-three-legends-no-black",
+      "title": "Takenuma: the discount is generic only, so three legends without black mana cannot channel",
+      "clauses": [2],
+      "instructions": [
+        "With three legendary creatures and only a Forest, look for Takenuma's channel ability; playing the Island is the only thing you can do."
+      ],
+      "expectedOutcome": "Channel is not offered: {B} is not reduced.",
+      "seats": {
+        "P1": {
+          "hand": ["Takenuma, Abandoned Mire", "Island"],
+          "battlefield": [
+            "Scenario Legend",
+            "Scenario Second Legend",
+            "Scenario Third Legend",
+            "Forest"
+          ]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Takenuma, Abandoned Mire"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "takenuma-tap-for-black",
+      "title": "Takenuma: tap it for {B}",
+      "clauses": [1],
+      "instructions": ["Cast Scenario Sorcery, tapping Takenuma for {B}."],
+      "expectedOutcome": "Scenario Sorcery resolves and you gain 1 life.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Sorcery"],
+          "battlefield": ["Takenuma, Abandoned Mire"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Sorcery/"
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 41
+          }
+        },
+        {
+          "tapped": {
+            "card": "Takenuma, Abandoned Mire",
+            "equals": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "takenuma-nothing-qualifies",
+      "title": "Takenuma: with no creature or planeswalker card in your graveyard, nothing returns",
+      "clauses": [2],
+      "instructions": [
+        "Channel Takenuma; it mills three lands and your graveyard holds only a sorcery."
+      ],
+      "expectedOutcome": "The three lands are milled and no card returns to your hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Takenuma, Abandoned Mire"],
+          "battlefield": ["Swamp", "Swamp", "Swamp", "Swamp"],
+          "graveyard": ["Scenario Sorcery"],
+          "libraryTop": ["Forest", "Island", "Plains"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/Discard this card/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Sorcery", "Forest", "Island", "Plains", "Takenuma, Abandoned Mire"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "lacks": ["Scenario Sorcery", "Forest", "Island", "Plains"]
+          }
+        }
+      ]
+    }
+  ]
+}

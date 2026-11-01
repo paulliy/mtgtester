@@ -33,6 +33,7 @@ import {
   forest,
   gameConfig,
   giantGrowth,
+  bolt,
   keywordCreature,
   mountain,
   oracle,
@@ -40,6 +41,7 @@ import {
   registerDef,
   spawn,
 } from './fixtures';
+import { pinStore } from './scenario/pin-store';
 
 function pod(): GameContext {
   const ctx = createGame(
@@ -824,6 +826,18 @@ describe('layer cache (fuzz: MTG_VERIFY_LAYER_CACHE)', () => {
     expect(computeCharacteristics(ctx, zurgo).keywords).toContain('hexproof');
     ctx.state.turnNumber += 1;
     expect(computeCharacteristics(ctx, zurgo).keywords).not.toContain('hexproof');
+  });
+
+  it('a player who has lost stops counting as an opponent before their cards leave', () => {
+    // Found by fuzz (ADR 0034 decision 8): the sampled cache check saw Nighthawk Scavenger keep
+    // a lost player's card types between the loss and the elimination.
+    const ctx = pod();
+    const nighthawk = spawn(ctx, 'P1', pinStore.get('Nighthawk Scavenger'));
+    conjure(ctx, 'P2', bolt(), 'graveyard');
+    conjure(ctx, 'P3', oracle({ name: 'Grave Bear', typeLine: 'Creature — Bear' }), 'graveyard');
+    expect(computeCharacteristics(ctx, nighthawk).power).toBe(3);
+    ctx.state.players[2]!.hasLost = true;
+    expect(computeCharacteristics(ctx, nighthawk).power).toBe(2);
   });
 });
 

@@ -107,6 +107,9 @@ import { registerWhiteBlackControlTergridOverrides } from './white-black-control
 import { registerWhiteBlackControlAvenOverrides } from './white-black-control-aven';
 import { registerWhiteBlackControlGiftOverrides } from './white-black-control-gifts';
 import { registerWhiteBlackControlPerchOverrides } from './white-black-control-perch';
+import { registerMiniPilotOverrides } from './mini-pilot';
+import { registerPilotCurrentOverrides } from './pilot-current';
+import { registerPilotNewOverrides } from './pilot-new';
 
 export interface CardOverride {
   oracleId: OracleId;
@@ -255,6 +258,9 @@ registerDeck('coverage-pr10-characteristics', registerPr10CharacteristicsOverrid
 registerDeck('coverage-pr11', registerCoveragePr11Overrides);
 registerDeck('coverage-pr11b', registerCoveragePr11bOverrides);
 registerDeck('coverage-pr12', registerCoveragePr12Overrides);
+registerDeck('mini-pilot', registerMiniPilotOverrides);
+registerDeck('pilot-new', registerPilotNewOverrides);
+registerDeck('pilot-current', registerPilotCurrentOverrides);
 
 /** Register an override. Exported for the per-card modules and for tests. */
 export function registerOverride(override: CardOverride): void {
@@ -449,6 +455,14 @@ export function unregisterOverride(oracleId: OracleId): void {
 function quotedBody(reason: string): string | null {
   const m = /^[a-z ]+: "([\s\S]*)"$/.exec(reason);
   return m === null ? null : (m[1] as string);
+}
+
+/**
+ * The `handledLines` entry that clears an unmodeled reason: the quoted Oracle line for a reason
+ * that quotes one, the reason itself otherwise. `card:new` prints these for an author to claim.
+ */
+export function handledLineOf(reason: string): string {
+  return quotedBody(reason) ?? reason;
 }
 
 function normalizeLine(line: string): string {

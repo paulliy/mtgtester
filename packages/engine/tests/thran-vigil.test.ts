@@ -8,12 +8,13 @@ import { interpretCard } from '../src/cards/interpret';
 import { fixtureOracleId } from '../src/cards/overrides';
 import type { EngineActionOption } from '../src/decisions';
 import { executeAbility } from '../src/effects/resolve';
+import { priorityCheckpoint } from '../src/sba/sba';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { createGame } from '../src/state/game';
 import { moveObject, moveObjects } from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
 import { runTurn } from '../src/turn/turn';
-import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import { conjure, copies, forest, gameConfig, oracle, pump, pumpStrict, spawn } from './fixtures';
 
 interface PinnedFixture {
   cards: { card: OracleCard }[];
@@ -68,7 +69,7 @@ describe('Thran Vigil', () => {
     }
   });
 
-  it('thran-vigil-own-turn-aggregate fires once when multiple qualifying own cards leave together', () => {
+  it('thran-vigil-own-turn-aggregate — fires once when multiple qualifying own cards leave together', () => {
     const ctx = pod('thran-aggregate');
     spawn(ctx, 'P1', thran);
     const relic = conjure(ctx, 'P1', artifact('Relic'), 'graveyard');
@@ -80,7 +81,7 @@ describe('Thran Vigil', () => {
     expect(ctx.state.pendingTriggers[0]?.scope).toMatchObject({ triggerCount: 2 });
   });
 
-  it('thran-separate-events-separate-triggers treats separate departures as separate events', () => {
+  it('thran-separate-events-separate-triggers — treats separate departures as separate events', () => {
     const ctx = pod('thran-separate');
     spawn(ctx, 'P1', thran);
     const first = conjure(ctx, 'P1', artifact('First Relic'), 'graveyard');
@@ -92,7 +93,7 @@ describe('Thran Vigil', () => {
     expect(ctx.state.pendingTriggers).toHaveLength(2);
   });
 
-  it('thran-single-and-entry fires once for one qualifying departure but not battlefield entry from hand', () => {
+  it('thran-single-and-entry — fires once for one qualifying departure but not battlefield entry from hand', () => {
     const ctx = pod('thran-single-and-entry');
     spawn(ctx, 'P1', thran);
     const entering = conjure(ctx, 'P1', creature('Entering Bear'), 'hand');
@@ -104,7 +105,7 @@ describe('Thran Vigil', () => {
     expect(ctx.state.pendingTriggers).toHaveLength(1);
   });
 
-  it('thran-event-restrictions rejects wrong types, owners, and turns', () => {
+  it('thran-event-restrictions — rejects wrong types, owners, and turns', () => {
     const ctx = pod('thran-restrictions');
     spawn(ctx, 'P1', thran);
     const ownSorcery = conjure(
@@ -124,7 +125,7 @@ describe('Thran Vigil', () => {
     expect(ctx.state.pendingTriggers).toHaveLength(0);
   });
 
-  it('thran-mandatory-own-creature puts exactly one counter on its mandatory own target', () => {
+  it('thran-mandatory-own-creature — puts exactly one counter on its mandatory own target', () => {
     const ctx = pod('thran-counter');
     const vigil = spawn(ctx, 'P1', thran);
     const chosen = spawn(ctx, 'P1', creature('Chosen Bear'));
@@ -134,15 +135,26 @@ describe('Thran Vigil', () => {
     pump(executeAbility(ctx, vigil, ability, [chosen.id]));
     expect(chosen.counters['+1/+1']).toBe(1);
     expect(opponent.counters['+1/+1'] ?? 0).toBe(0);
+
+    // Through the real stack: the trigger is mandatory, so resolving it asks no "use it?" first.
+    const relic = conjure(ctx, 'P1', artifact('Counter Relic'), 'graveyard');
+    pump(moveObject(ctx, relic, { zone: 'exile' }));
+    // The one creature it can target is forced, so no target question is raised.
+    pumpStrict(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    const { decisions } = pump(resolveTopOfStack(ctx));
+    expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
+    expect(chosen.counters['+1/+1']).toBe(2);
+    expect(opponent.counters['+1/+1'] ?? 0).toBe(0);
   });
 
-  it('thran-invalidated-target fizzles when its chosen target leaves before resolution', () => {
+  it('thran-invalidated-target — fizzles when its chosen target leaves before resolution', () => {
     const ctx = pod('thran-invalidated-target');
     spawn(ctx, 'P1', thran);
     const chosen = spawn(ctx, 'P1', creature('Doomed Bear'));
     const opponent = spawn(ctx, 'P2', creature('Opponent Bear'));
     const relic = conjure(ctx, 'P1', artifact('Departing Relic'), 'graveyard');
-    pump(moveObject(ctx, relic, { zone: 'exile' }));
+    pumpStrict(moveObject(ctx, relic, { zone: 'exile' }));
 
     const gen = runTurn(ctx);
     let step = gen.next();
@@ -166,7 +178,7 @@ describe('Thran Vigil', () => {
     expect(ctx.state.eventLog.some((event) => event.type === 'fizzle')).toBe(true);
   });
 
-  it('thran-normal-cast casts at sorcery speed and resolves as an enchantment', () => {
+  it('thran-normal-cast — casts at sorcery speed and resolves as an enchantment', () => {
     const ctx = pod('thran-cast');
     const player = ctx.state.players[0]!;
     const spell = conjure(ctx, 'P1', thran, 'hand');
@@ -185,7 +197,7 @@ describe('Thran Vigil', () => {
         targets: new Map(),
       }),
     );
-    pump(resolveTopOfStack(ctx));
+    pumpStrict(resolveTopOfStack(ctx));
 
     expect(ctx.state.battlefield.some((permanent) => permanent.cardId === spell.cardId)).toBe(true);
   });

@@ -83,6 +83,26 @@ describe('matchup preview', () => {
     expect(write).not.toHaveBeenCalled();
   });
 
+  it('shows every human seat of a table preview as human', async () => {
+    const deps = { pool: { cards: [] }, index: {}, banned: {} } as unknown as PreviewDeps;
+    const result = await previewMatchup(
+      {
+        seats: Array.from({ length: 4 }, () => ({ kind: 'pool' as const })),
+        seed: 'fixed',
+        providerKind: 'random',
+        gameMode: 'table',
+        seatControllers: { P1: 'human', P2: 'random', P3: 'human', P4: 'random' },
+      },
+      deps,
+    );
+    expect(result.seats.map((seat) => seat.controller)).toEqual([
+      'human',
+      'random',
+      'human',
+      'random',
+    ]);
+  });
+
   it('marks missing saved snapshots as blocked and disables them without DB', async () => {
     const input = {
       seats: [

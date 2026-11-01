@@ -68,7 +68,13 @@ describe('PR10.03 Biotransference', () => {
     const life = p(ctx, 'P1').life;
     castFromHand(ctx, 'P1', bear('Bio Cast Bear'));
     putPendingTriggersOnStack(ctx);
-    settle(ctx);
+    const asked: string[] = [];
+    settle(ctx, (decision) => {
+      asked.push(decision.decisionType);
+      return { index: 0, targets: new Map() };
+    });
+    // The trigger is mandatory: no "use this ability?" yes/no is asked.
+    expect(asked).not.toContain('optionalTrigger');
     expect(p(ctx, 'P1').life).toBe(life - 1);
     const tokens = necrons(ctx, 'P1');
     expect(tokens.map((token) => token.name)).toEqual(['Necron Warrior']);

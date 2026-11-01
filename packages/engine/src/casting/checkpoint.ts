@@ -45,8 +45,11 @@ export function castingCheckpoint(ctx: GameContext): () => void {
   capture(ctx.defs);
   capture(ctx.resolutionObjectMoves);
   capture(ctx.resolutionObjectFacts);
+  // What a rolled-back cast recorded never happened (ADR 0034 decision 4).
+  const diagnostics = ctx.diagnostics?.mark();
   return () => {
     for (const revert of restore) revert();
+    if (diagnostics !== undefined) ctx.diagnostics?.truncate(diagnostics);
     clearCached(ctx);
   };
 }

@@ -5,7 +5,11 @@ import { offBattlefieldTypes } from '../state/off-battlefield-types';
 import { UnmodeledCardError } from '../errors';
 import type { ObjectFacts } from '../cards/source-identity';
 import { supportsAdditionalXAnnouncement } from '../cards/cost-contracts';
-import { bestowedDefinition, selectedSpellDefinition } from '../cards/spell-faces';
+import {
+  bestowedDefinition,
+  mdfcLandFaceDefinition,
+  selectedSpellDefinition,
+} from '../cards/spell-faces';
 import type { RoomDoor } from '../cards/spell-faces';
 import { assertNever } from '../utils/assert-never';
 import { castingPreviewContext } from '../casting/preview';
@@ -58,6 +62,7 @@ import {
   canPay,
   describeManaCost,
   emptyCost,
+  manaValueOf,
   planPayment,
   subtractColored,
   subtractGeneric,
@@ -142,7 +147,8 @@ export type PriorityActionPayload =
         | 'commanderFree'
         | 'faceDown'
         | 'bestow'
-        | 'split';
+        | 'split'
+        | 'libraryTopLife';
       altIndex?: number;
       /**
        * The option priced with target-dependent reductions (Killian): the target slot that must
@@ -875,10 +881,24 @@ export function computePriorityOptions(
       def.alternativeCasts?.findIndex((alt) => alt.kind === 'mdfc' && alt.landFace !== undefined) ??
       -1;
     const mdfc = mdfcIndex >= 0 ? def.alternativeCasts?.[mdfcIndex] : undefined;
+    // From the top of the library, a permission to play lands applies to the land face (CR
+    // 712.12): Bolas's Citadel or "play lands from the top of your library".
+    const landFacePermission =
+      mdfc?.landFace === undefined
+        ? null
+        : fromLibraryTop
+          ? playFromZonePermission(
+              ctx,
+              player.id,
+              obj,
+              'libraryTop',
+              mdfcLandFaceDefinition(def, mdfc),
+            )
+          : {};
     if (
       mdfc?.landFace !== undefined &&
+      landFacePermission !== null &&
       !fromCommand &&
-      !fromLibraryTop &&
       !fromExile &&
       !fromGraveyard &&
       sorcerySpeed &&
@@ -893,24 +913,30 @@ export function computePriorityOptions(
           `preview-${obj.oracleId}-mdfc`,
         ),
         sourceName: face.name,
-        sourceZone: 'hand',
+        sourceZone: fromLibraryTop ? 'library' : 'hand',
         castVariant: 'mdfc',
       };
       if (face.entersTappedUnless?.kind === 'mayPayLife')
         data['payLifeToUntap'] = face.entersTappedUnless.n;
       else if (face.entersTappedUnless !== undefined) data['entersTappedConditional'] = true;
       else data['entersTapped'] = face.entersTapped;
-      options.push({
-        type: 'playLand',
-        description: `Play ${face.name}`,
-        payload: {
-          kind: 'playLand',
-          objectId: obj.id,
-          alternativeCast: 'mdfc',
-          altIndex: mdfcIndex,
-        },
-        data,
-      });
+      for (const budgetType of landFacePermission.budgetTypes ?? [undefined]) {
+        options.push({
+          type: 'playLand',
+          description:
+            `Play ${face.name}` +
+            (budgetType === undefined ? '' : ` (using ${budgetType} permission)`),
+          payload: {
+            kind: 'playLand',
+            objectId: obj.id,
+            alternativeCast: 'mdfc',
+            altIndex: mdfcIndex,
+            ...(fromLibraryTop ? { fromLibraryTop: true } : {}),
+            ...(budgetType !== undefined ? { zoneBudgetType: budgetType } : {}),
+          },
+          data: { ...data, ...(budgetType !== undefined ? { zoneBudgetType: budgetType } : {}) },
+        });
+      }
     }
 
     const normalOptionsStart = options.length;
@@ -1315,7 +1341,15 @@ export function computePriorityOptions(
                     : {}),
                   ...(variant.alternativeCast === undefined
                     ? {}
-                    : { castVariant: variant.alternativeCast }),
+                    : {
+                        // Dash is a non-mana alternative to the payload, and its own way to cast
+                        // to the player.
+                        castVariant:
+                          variant.altIndex !== undefined &&
+                          castingDef.alternativeCasts?.[variant.altIndex]?.dashed === true
+                            ? 'dash'
+                            : variant.alternativeCast,
+                      }),
                   ...(energyCost > 0 ? { energyCost } : {}),
                   sourceName: obj.name,
                   sourceZone: fromCommand
@@ -1492,6 +1526,67 @@ export function computePriorityOptions(
         );
       }
     }
+    // "Pay life equal to its mana value rather than pay its mana cost" (Bolas's Citadel): an
+    // alternative cost (CR 118.9), so {X} is 0 (CR 107.3b) and the life is the printed mana value.
+    // A split card is cast as one half, never as the combined card (CR 709.3).
+    // A card with no mana cost has mana value 0 and is cast for 0 life: an alternative cost
+    // replaces an unpayable mana cost (CR 118.6a).
+    if (
+      fromLibraryTop &&
+      !splitCard &&
+      castFromLibraryTopCandidates(ctx, player.id, def, 'life').some((card) => card.id === obj.id)
+    ) {
+      const life = manaValueOf(def.manaCost);
+      offerCast(
+        emptyCost(),
+        [
+          ...spellAdditionalCosts,
+          ...(life > 0 ? [{ kind: 'payLife' as const, amount: life }] : []),
+        ],
+        def,
+        { alternativeCast: 'libraryTopLife' },
+        ` by paying ${life} life`,
+      );
+    }
+    // Each spell face it may be cast as, for that face's own mana value (CR 709.3b, 715.3c):
+    // a split half, an adventure or omen, or a modal double-faced card's back face. Bestow is an
+    // alternative cost of its own (CR 118.9a); fuse is cast only from a hand (CR 702.102a).
+    if (fromLibraryTop) {
+      for (const [index, alt] of (def.alternativeCasts ?? []).entries()) {
+        if (
+          alt.from !== undefined ||
+          !(
+            alt.kind === 'adventure' ||
+            alt.kind === 'omen' ||
+            (alt.kind === 'mdfc' && alt.spellFace !== undefined) ||
+            (alt.kind === 'split' && alt.fused !== true)
+          )
+        )
+          continue;
+        const face = selectedSpellDefinition(def, alt);
+        if (
+          face.manaCost === null ||
+          !castFromLibraryTopCandidates(ctx, player.id, face, 'life').some(
+            (card) => card.id === obj.id,
+          )
+        )
+          continue;
+        const life = manaValueOf(face.manaCost);
+        offerCast(
+          emptyCost(),
+          [
+            ...(face.spellAdditionalCosts ?? []),
+            ...(life > 0 ? [{ kind: 'payLife' as const, amount: life }] : []),
+          ],
+          face,
+          { alternativeCast: 'libraryTopLife', altIndex: index },
+          ` as ${face.name} by paying ${life} life`,
+          0,
+          face.types.includes('Instant') || face.keywords.includes('flash'),
+          face.name,
+        );
+      }
+    }
 
     // Adventure's own exile permission allows only the permanent face. A broad temporary
     // play permission also permits choosing a spell face or paying bestow (CR 118.9); other
@@ -1530,7 +1625,7 @@ export function computePriorityOptions(
               [...spellAdditionalCosts, ...(alt.costs ?? [])],
               def,
               { alternativeCast: alt.kind, altIndex: index },
-              ' (alternate cost)',
+              alt.dashed === true ? ' (dash)' : ' (alternate cost)',
               0,
               instantSpeed || alt.instantTiming === true,
             );
@@ -1615,6 +1710,7 @@ export function computePriorityOptions(
   /** Whether a library-top permission lets `libraryTop` be cast as `spell` (CR 601.3e). */
   const topCastableAs = (top: EngineCardObject, spell?: CardDefinition): boolean =>
     castFromLibraryTopCandidates(ctx, player.id, spell).some((obj) => obj.id === top.id) ||
+    castFromLibraryTopCandidates(ctx, player.id, spell, 'life').some((obj) => obj.id === top.id) ||
     playFromZonePermission(ctx, player.id, top, 'libraryTop', spell) !== null;
   if (libraryTop !== undefined) {
     const topDef = getDefByOracleId(ctx, libraryTop.oracleId, libraryTop.name);
@@ -1623,12 +1719,22 @@ export function computePriorityOptions(
       // A permission only the bestowed Aura spell satisfies ("Aura spells") still allows bestow.
       (topDef.alternativeCasts ?? []).some(
         (alt) =>
-          (alt.kind === 'bestow' ||
+          // An MDFC's land face, played under a permission to play lands (CR 712.12).
+          (alt.kind === 'mdfc' &&
+            alt.landFace !== undefined &&
+            playFromZonePermission(
+              ctx,
+              player.id,
+              libraryTop,
+              'libraryTop',
+              mdfcLandFaceDefinition(topDef, alt),
+            ) !== null) ||
+          ((alt.kind === 'bestow' ||
             alt.kind === 'adventure' ||
             alt.kind === 'omen' ||
             alt.kind === 'split' ||
             (alt.kind === 'mdfc' && alt.spellFace !== undefined)) &&
-          topCastableAs(libraryTop, selectedSpellDefinition(topDef, alt)),
+            topCastableAs(libraryTop, selectedSpellDefinition(topDef, alt))),
       )
     )
       considerCast(libraryTop, false, true);

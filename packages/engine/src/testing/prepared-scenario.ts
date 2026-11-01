@@ -213,6 +213,7 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
       const manaCost = ctx.defs.get(card.oracleId)?.manaCost ?? null;
       if (manaCost === null) throw new Error(`prepared foretold card ${name} has no mana cost`);
       card.zone = 'exile';
+      card.exiledFaceDown = true;
       card.foretold = {
         turn: spec.turnNumber - 1,
         cost: subtractGeneric(manaCost, entry.reduction),

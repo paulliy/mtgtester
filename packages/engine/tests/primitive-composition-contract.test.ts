@@ -66,7 +66,8 @@ function setup(entry: (typeof cases)[number]) {
   return { ctx, player, card };
 }
 
-describe('bounded registered primitive compositions', () => {
+// 576 compositions cast and resolved; it runs inside the card gate's parallel load.
+describe('bounded registered primitive compositions', { timeout: 30_000 }, () => {
   it('every funded composition offers a complete deterministic normal cast', () => {
     expect(cases).toHaveLength(576);
     let verified = 0;

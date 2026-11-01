@@ -6,14 +6,15 @@
  * leads or threatens lethal) still gets a warning, worded as "may break".
  */
 import type {
+  AttackDeclarationPresentation,
   Deal,
   DealObligation,
-  LegalAction,
   ObjectId,
   PlayerBoardState,
   PlayerId,
   TargetChoice,
 } from '@mtg/shared';
+import type { LegalAction } from './protocol';
 import { ATTACKS_TARGET, NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
 
 const SENTINELS = new Set<string>([NO_ATTACK_TARGET, NO_BLOCK_TARGET, ATTACKS_TARGET]);
@@ -37,15 +38,17 @@ function ownerLookup(board: PlayerBoardState): {
   return { ownerOf: (id) => owners.get(id), isStack: (id) => stack.has(id) };
 }
 
-/** Each attack slot's attacker power, from its subject data, as the table reads it. */
-function slotPowers(action: LegalAction): number[] {
-  const subjects = action.data?.['subjects'];
-  return (action.targets ?? []).map((_, i) => {
-    const subject = Array.isArray(subjects)
-      ? (subjects[i] as { power?: unknown } | undefined)
-      : undefined;
-    return typeof subject?.power === 'number' ? Math.max(0, subject.power) : 0;
-  });
+/**
+ * Each attack slot's attacker power, from the decision's attack-declaration presentation. Its
+ * subjects are in slot order, one per target slot of the declaration action.
+ */
+function slotPowers(
+  action: LegalAction,
+  attackDeclaration: AttackDeclarationPresentation | undefined,
+): number[] {
+  return (action.targets ?? []).map((_, i) =>
+    Math.max(0, attackDeclaration?.subjects[i]?.power ?? 0),
+  );
 }
 
 /**
@@ -91,6 +94,8 @@ export function dealWarnings(
   me: PlayerId,
   deals: readonly Deal[],
   action: LegalAction | undefined,
+  /** The pending decision's `presentation.attackDeclaration`, when it has one. */
+  attackDeclaration: AttackDeclarationPresentation | undefined,
   targets: readonly TargetChoice[] | undefined,
   board: PlayerBoardState,
   /** `DiplomacySeatState.attackPlayerShare`: how much of a seat's attack a promise needs. */
@@ -101,7 +106,9 @@ export function dealWarnings(
     deal.obligations.filter((o) => o.by === me).map((o) => ({ deal, o })),
   );
   if (mine.length === 0) return [];
-  const attack = action.type === 'attackDeclaration' && action.data?.['chooseAttackers'] !== true;
+  // Choosing which creatures attack (Master Warcraft) names no defender yet, so nothing to warn.
+  const attack =
+    action.type === 'attackDeclaration' && attackDeclaration?.mode !== 'chooseAttackers';
   const { ownerOf, isStack } = ownerLookup(board);
   const chosen = (targets ?? []).map((t) => t.choice).filter((id) => !SENTINELS.has(id));
   const other = (deal: Deal) => (deal.parties[0] === me ? deal.parties[1] : deal.parties[0]);
@@ -113,7 +120,7 @@ export function dealWarnings(
       if (!attack) continue;
       // As on the server: a token attack does not keep the promise, and one the declaration
       // could not have made is excused.
-      const powers = slotPowers(action);
+      const powers = slotPowers(action, attackDeclaration);
       const required = requiredPower(action, powers, o.target, ownerOf, attackPlayerShare);
       if (required <= 0) continue;
       const chosenBySlot = new Map((targets ?? []).map((t) => [t.slot, t.choice]));

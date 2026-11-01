@@ -73,3 +73,10 @@ export const LOSS_REASONS = [
   'other',
 ] as const;
 export type LossReason = (typeof LOSS_REASONS)[number];
+
+/**
+ * Combat damage from one commander that eliminates a player (CR 903.10a). The one copy of the
+ * number: the engine's state-based action and the projection's `lethal`/`remaining` both read it,
+ * so no client holds the rule.
+ */
+export const COMMANDER_DAMAGE_LETHAL = 21;
