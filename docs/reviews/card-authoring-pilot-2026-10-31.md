@@ -216,7 +216,7 @@ The pilot evidence findings strengthened tests rather than definitions:
 
 Each new check fails against a deliberately broken definition.
 
-Codex reviewed the ready PR on each push and raised twelve findings, all fixed with a
+Codex reviewed the ready PR on each push and raised thirteen findings, all fixed with a
 regression test that fails without the fix:
 
 - Bolas's Citadel's life cast now covers each spell face: a split half, an adventure or omen, or a
@@ -225,7 +225,8 @@ regression test that fails without the fix:
   top, and a card with no mana cost is cast for 0 life.
 - A resolving copy of a permanent spell now enters with the spell's kicker counts, dash, and Mox
   Diamond's discard replacement. A permanent entering as a copy of Mox Diamond (Sculpting Steel)
-  and a token copy of it (Saheeli, Radiant Creator) get the replacement too.
+  and a token copy of it (Saheeli, Radiant Creator) get the replacement too, once for each token a
+  doubler makes.
 - Academy Manufactor's three tokens are the predefined ones, even in place of a token copy that is
   a Clue, and they enter tapped when the token they replace would. A rider on the copies, such as
   Saheeli's end-step sacrifice, applies to all three.
