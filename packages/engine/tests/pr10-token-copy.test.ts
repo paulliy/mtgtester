@@ -65,6 +65,18 @@ const tokensOf = (ctx: GameContext, playerId: string) =>
     (permanent) => permanent.isToken && permanent.controllerId === playerId,
   );
 
+/** Doubling Season, its Oracle text verbatim (as in `counter-token-replacements.test.ts`). */
+const doublingSeason = () =>
+  oracle({
+    name: 'Doubling Season',
+    typeLine: 'Enchantment',
+    manaCost: '{4}{G}',
+    power: null,
+    toughness: null,
+    oracleText:
+      'If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead.\nIf an effect would put one or more counters on a permanent you control, it puts twice that many of those counters on that permanent instead.',
+  });
+
 describe('PR10.23 Scute Swarm', () => {
   function swarmWithLands(seed: string, lands: number) {
     const ctx = pod(seed);
@@ -395,11 +407,12 @@ describe('PR10.16 Saheeli, Radiant Creator', () => {
     expect(tokensOf(ctx, 'P1').map((token) => token.id)).toEqual([food.id]);
   });
 
-  function saheeliCopiesDiamond(seed: string, withLand: boolean) {
+  function saheeliCopiesDiamond(seed: string, lands: number, doubled = false) {
     const ctx = pod(seed);
     spawn(ctx, 'P1', pinned('Saheeli, Radiant Creator'));
     const diamond = spawn(ctx, 'P1', pinStore.get('Mox Diamond'));
-    if (withLand) conjure(ctx, 'P1', forest(), 'hand');
+    for (let i = 0; i < lands; i++) conjure(ctx, 'P1', forest(), 'hand');
+    if (doubled) spawn(ctx, 'P1', doublingSeason());
     p(ctx, 'P1').energy = 3;
     queueStepTriggers(ctx, 'beginningOfCombat');
     const asked = settleRecording(ctx, (decision) => {
@@ -411,17 +424,31 @@ describe('PR10.16 Saheeli, Radiant Creator', () => {
   }
 
   it('pr10-saheeli-radiant-creator-mox-diamond — a token copy of Mox Diamond with no land to discard is never created', () => {
-    const { ctx } = saheeliCopiesDiamond('pr10-radiant-diamond-none', false);
+    const { ctx } = saheeliCopiesDiamond('pr10-radiant-diamond-none', 0);
     expect(tokensOf(ctx, 'P1')).toEqual([]);
     expect(p(ctx, 'P1').energy).toBe(0);
   });
 
   it('pr10-saheeli-radiant-creator-mox-diamond-pays — discarding a land creates the token copy', () => {
-    const { ctx, asked } = saheeliCopiesDiamond('pr10-radiant-diamond-land', true);
+    const { ctx, asked } = saheeliCopiesDiamond('pr10-radiant-diamond-land', 1);
     expect(asked).toHaveLength(3);
     expect(tokensOf(ctx, 'P1').map((token) => token.name)).toEqual(['Mox Diamond']);
     expect(p(ctx, 'P1').hand).toEqual([]);
     expect(p(ctx, 'P1').graveyard.map((card) => card.name)).toEqual(['Forest']);
+  });
+
+  it('pr10-saheeli-radiant-creator-mox-diamond-doubled — each doubled token Diamond needs its own land', () => {
+    // Doubling Season makes the copy two tokens; one Forest pays for only one of them.
+    const { ctx } = saheeliCopiesDiamond('pr10-radiant-diamond-doubled-one', 1, true);
+    expect(tokensOf(ctx, 'P1').map((token) => token.name)).toEqual(['Mox Diamond']);
+    expect(p(ctx, 'P1').graveyard.map((card) => card.name)).toEqual(['Forest']);
+  });
+
+  it('pr10-saheeli-radiant-creator-mox-diamond-doubled-pays — two lands pay for both doubled tokens', () => {
+    const { ctx } = saheeliCopiesDiamond('pr10-radiant-diamond-doubled-two', 2, true);
+    expect(tokensOf(ctx, 'P1').map((token) => token.name)).toEqual(['Mox Diamond', 'Mox Diamond']);
+    expect(p(ctx, 'P1').hand).toEqual([]);
+    expect(p(ctx, 'P1').graveyard.map((card) => card.name)).toEqual(['Forest', 'Forest']);
   });
 
   it('pr10-saheeli-radiant-creator-not-enough-energy — nothing to pay with two energy', () => {

@@ -1962,9 +1962,11 @@ export function createTokens(
   count: number,
   controllerId: PlayerId,
   entersTapped = false,
+  /** `count` already includes the doublers' extra tokens (the caller applied them). */
+  countIncludesMultiplier = false,
 ): EnginePermanent[] {
   const created: EnginePermanent[] = [];
-  const multiplier = tokenCreationMultiplierFor(ctx, controllerId);
+  const multiplier = countIncludesMultiplier ? 1 : tokenCreationMultiplierFor(ctx, controllerId);
   for (const plan of clueFoodTreasurePlan(ctx, spec, count * multiplier, controllerId))
     for (let i = 0; i < plan.count; i++)
       created.push(

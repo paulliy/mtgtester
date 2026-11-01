@@ -17781,7 +17781,9 @@
             "steel-copies-mox-diamond-no-land",
             "steel-copies-mox-diamond-discards",
             "pr10-saheeli-radiant-creator-mox-diamond",
-            "pr10-saheeli-radiant-creator-mox-diamond-pays"
+            "pr10-saheeli-radiant-creator-mox-diamond-pays",
+            "pr10-saheeli-radiant-creator-mox-diamond-doubled",
+            "pr10-saheeli-radiant-creator-mox-diamond-doubled-pays"
           ],
           "contractTestIds": [
             "entersUnlessDiscard replacement contract > executes on any move onto the battlefield: the land is discarded and it enters"
