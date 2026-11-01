@@ -43,7 +43,7 @@ function numberedSources(
   playerId: PlayerId,
 ): { source: ManaSource; ability: number }[] {
   const seen = new Map<string, number>();
-  return manaSourcesFor(ctx, playerId).map((source) => {
+  return manaSourcesFor(ctx, playerId, false, 'board').map((source) => {
     const ability = seen.get(source.cardId) ?? 0;
     seen.set(source.cardId, ability + 1);
     return { source, ability };
