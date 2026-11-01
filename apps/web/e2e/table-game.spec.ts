@@ -1,4 +1,4 @@
-import { expect, test, type Browser, type Page } from '@playwright/test';
+import { expect, test, type Browser, type Locator, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { TABLE_HOST_SECRET, TABLE_PORTS, TABLE_TEST_KEY } from './table-env';
 
@@ -76,16 +76,29 @@ interface Plan {
 }
 
 /**
+ * Click `target` if it is still there. A decision panel can show a moment longer than its
+ * decision lasts: the next frame moves the decision on (to another seat, or past this step) and
+ * takes the button away. A click on it would wait out its whole timeout while the other players
+ * go undriven, so a button that leaves the page counts as nothing done this step.
+ */
+async function clickIfStill(target: Locator): Promise<boolean> {
+  try {
+    await target.click({ timeout: 2_000 });
+    return true;
+  } catch (error) {
+    if (await target.isVisible()) throw error;
+    return false;
+  }
+}
+
+/**
  * One step for a player: keep the opening hand, run the plan's own action, play a basic land,
  * answer combat with no attackers or blockers, and otherwise pass. Returns what it did, or null
  * when nothing is being asked of this player.
  */
 async function step(page: Page, plan: Plan): Promise<string | null> {
   const keep = page.getByRole('button', { name: /^Keep \d+$/ });
-  if (await keep.isVisible()) {
-    await keep.click();
-    return 'keep';
-  }
+  if ((await keep.isVisible()) && (await clickIfStill(keep))) return 'keep';
   if (!(await page.locator('.decision').isVisible())) return null;
   const custom = await plan.custom?.(page);
   if (custom !== null && custom !== undefined) return custom;
@@ -94,21 +107,16 @@ async function step(page: Page, plan: Plan): Promise<string | null> {
       .locator('.playable-now')
       .getByRole('button', { name: /^Play (Plains|Island|Swamp|Mountain|Forest)\b/ })
       .first();
-    if (await land.isVisible()) {
-      await land.click();
+    if ((await land.isVisible()) && (await clickIfStill(land))) {
       await expect(land).toBeHidden();
       plan.played = (plan.played ?? 0) + 1;
       return 'land';
     }
   }
   const combat = page.getByRole('button', { name: /^Confirm (attacks|blocks)$/ });
-  if (await combat.isVisible()) {
-    await combat.click();
-    return 'combat';
-  }
+  if ((await combat.isVisible()) && (await clickIfStill(combat))) return 'combat';
   const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
-  if (await pass.isVisible()) {
-    await pass.click();
+  if ((await pass.isVisible()) && (await clickIfStill(pass))) {
     const anyway = page.getByRole('button', { name: 'Pass anyway', exact: true });
     if (await anyway.isVisible({ timeout: 300 }).catch(() => false)) await anyway.click();
     return 'pass';
