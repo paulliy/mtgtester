@@ -21,11 +21,16 @@ describe('mandatory card CI gate', () => {
     expect(workflow).toContain('name: CI / Gate');
   });
 
-  it('gates merging on the full run and shares one Vitest listing', () => {
-    expect(workflow).toContain("contains(github.event.pull_request.labels.*.name, 'ci:full')");
+  it('gates merging on the picked slow suites and shares one Vitest listing', () => {
+    // ADR 0036 decision 8: labels pick the slow suites, and the gate needs at least one.
+    for (const label of ['ci:full', 'ci:engine', 'ci:e2e', 'ci:lab', 'ci:setup', 'ci:table']) {
+      expect(workflow).toContain(`if label ${label}; then`);
+    }
+    expect(workflow).toContain('if [[ "$SLOW" != "true" ]]; then');
     expect(workflow).toContain(
       'needs: [changes, quality, card-verification, engine-tests, viewer-evidence]',
     );
+    expect(workflow).toContain('bun run scripts/vitest-run-listing.ts');
     for (const check of ['check:suite-collect', 'check:manifest-tests', 'mutate-cards --changed']) {
       expect(workflow).toContain(`bun run ${check} --collected "$RUNNER_TEMP/vitest-list.json"`);
     }

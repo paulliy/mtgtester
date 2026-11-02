@@ -1,16 +1,22 @@
 name: CI
 
 # Actions minutes (ADR 0036). Every pull request push runs only the fast checks: format,
-# typecheck, lint, web build and the offline card gate. The slow jobs (full test suite with the
-# collection checks and IR mutation, about 25 minutes, and Playwright, about 35) run only when the
-# pull request carries the `ci:full` label, on the nightly run, and on manual dispatch. `CI / Gate`
-# is the one required check: it fails a ready pull request that changed code until the slow jobs
-# have run green on it, so add `ci:full` once the branch is ready to merge. The advisory PR fuzz job
-# needs its own `ci:fuzz` label. Pushes to main run the fast checks only; the nightly run repeats
-# everything on main when it changed in the last day.
+# typecheck, lint, web build and the offline card gate. The slow suites run on a pull request only
+# when its labels pick them, and on the nightly run and manual dispatch:
+#   ci:engine  full test suite with the collection checks and IR mutation (about 25 minutes)
+#   ci:lab     Card Test Lab Playwright (the longest suite)
+#   ci:setup   Play my deck setup and player game Playwright
+#   ci:table   multiplayer table Playwright
+#   ci:e2e     all three Playwright suites
+#   ci:full    every slow suite
+# `CI / Gate` is the one required check: it fails a ready pull request that changed code until at
+# least one slow suite has been picked and every picked suite has run green; the nightly run covers
+# the suites a pull request left out. The advisory PR fuzz job needs its own `ci:fuzz` label. Pushes
+# to main run the fast checks only; the nightly run repeats everything on main when it changed in
+# the last day.
 on:
   pull_request:
-    # labeled: adding `ci:full` starts the full run without a new push. ready_for_review: the gate
+    # labeled: adding a `ci:` label starts its suites without a new push. ready_for_review: the gate
     # passes drafts (they cannot merge) and must be re-evaluated when one is marked ready.
     types: [opened, synchronize, reopened, ready_for_review, labeled]
   push:
@@ -39,8 +45,14 @@ jobs:
     outputs:
       run: ${{ steps.classify.outputs.run }}
       code: ${{ steps.classify.outputs.code }}
-      full: ${{ steps.classify.outputs.full }}
       engine: ${{ steps.classify.outputs.engine }}
+      # The slow suites picked: the full suite, each Playwright suite, and whether any was.
+      suite: ${{ steps.classify.outputs.suite }}
+      lab: ${{ steps.classify.outputs.lab }}
+      setup: ${{ steps.classify.outputs.setup }}
+      table: ${{ steps.classify.outputs.table }}
+      e2e: ${{ steps.classify.outputs.e2e }}
+      slow: ${{ steps.classify.outputs.slow }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -50,39 +62,47 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          FULL_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'ci:full') }}
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
         shell: bash
         run: |
           set -euo pipefail
           out() { echo "$1=$2" >> "$GITHUB_OUTPUT"; }
+          slow() {
+            out suite "$1"; out lab "$2"; out setup "$3"; out table "$4"
+            if [[ "$2$3$4" == *true* ]]; then out e2e true; else out e2e false; fi
+            if [[ "$1$2$3$4" == *true* ]]; then out slow true; else out slow false; fi
+          }
           case "$EVENT_NAME" in
             pull_request) ;;
             push)
-              # The pull request already ran the full checks on this tree (with "require branches
-              # to be up to date" on); the nightly run repeats them.
-              out run true; out code true; out full false; out engine false
+              # The pull request already ran its checks on this tree (with "require branches to
+              # be up to date" on); the nightly run repeats them.
+              out run true; out code true; out engine false; slow false false false false
               exit 0 ;;
             schedule)
               age=$(( $(date +%s) - $(git log -1 --format=%ct HEAD) ))
               if (( age > 25 * 3600 )); then
                 echo "No commit on main in the last 25 hours: nothing to run."
-                out run false; out code false; out full false; out engine false
+                out run false; out code false; out engine false; slow false false false false
                 exit 0
               fi
-              out run true; out code true; out full true; out engine true
+              out run true; out code true; out engine true; slow true true true true
               exit 0 ;;
             *)
-              out run true; out code true; out full true; out engine true
+              out run true; out code true; out engine true; slow true true true true
               exit 0 ;;
           esac
           out run true
-          if [[ "$FULL_LABEL" == "true" ]]; then
-            echo "ci:full label present: running the full test suite, mutation and Playwright."
-            out full true
-          else
-            echo "No ci:full label: fast checks only."
-            out full false
-          fi
+          label() { jq -e --arg name "$1" 'any(.[]; . == $name)' <<< "$LABELS" > /dev/null; }
+          suite=false; lab=false; setup=false; table=false
+          if label ci:full; then suite=true; lab=true; setup=true; table=true; fi
+          if label ci:e2e; then lab=true; setup=true; table=true; fi
+          if label ci:engine; then suite=true; fi
+          if label ci:lab; then lab=true; fi
+          if label ci:setup; then setup=true; fi
+          if label ci:table; then table=true; fi
+          echo "Slow suites picked by labels: full suite=$suite, lab=$lab, setup=$setup, table=$table."
+          slow "$suite" "$lab" "$setup" "$table"
           # On any diff failure, fail open: run every code check.
           # Three-dot diff: files changed on the PR branch since its merge base, not base-branch drift.
           if ! changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA"); then
@@ -132,7 +152,7 @@ jobs:
       # Deterministic only: no provider key and no live model calls are available to PR code. These
       # files are part of `bun run test`, so they run here only when the full suite does not.
       - name: AI benchmark contracts and privacy
-        if: ${{ !cancelled() && steps.deps.outcome == 'success' && env.CODE == 'true' && needs.changes.outputs.full != 'true' }}
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' && env.CODE == 'true' && needs.changes.outputs.suite != 'true' }}
         run: >-
           bun run test
           packages/server/src/benchmark/hash.test.ts
@@ -165,7 +185,11 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup-bun-deps
-      - run: bun run test:card-gate
+      # The full suite runs every card gate file, so when it runs in this workflow the gate checks its
+      # list and prints the facet warnings but leaves the tests to it, and they run once.
+      - run: bun run test:card-gate $SKIP_RUN
+        env:
+          SKIP_RUN: ${{ needs.changes.outputs.suite == 'true' && '--skip-run' || '' }}
       # Lists that may shrink but must not grow, compared with the pull request's base (or a push's
       # `before` SHA); the script falls back to HEAD's first parent as the promotion check does.
       - name: Check ratchets
@@ -206,13 +230,13 @@ jobs:
             test-results/primitive-impact.json
           if-no-files-found: error
 
-  # The full suite, then the checks that read the Vitest collection. The collection is listed once
-  # (about 2.5 minutes, nearly all of it Vitest importing the suites) and shared by suite-collect,
-  # manifest-tests and IR mutation, which used to list it once each.
+  # The full suite, then the checks that read the Vitest collection. The suite run writes a JSON
+  # report that becomes the collection listing shared by suite-collect, manifest-tests and IR
+  # mutation; a separate `vitest list` imported every suite again (about 7 minutes).
   engine-tests:
     name: Engine / Full test suite
     needs: changes
-    if: needs.changes.outputs.code == 'true' && needs.changes.outputs.full == 'true'
+    if: needs.changes.outputs.code == 'true' && needs.changes.outputs.suite == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -220,9 +244,11 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup-bun-deps
-      - run: bun run test
+      - run: >-
+          bun run test --reporter=default --reporter=json
+          --outputFile.json="$RUNNER_TEMP/vitest-run.json"
       - name: List the Vitest collection
-        run: bunx vitest list --json="$RUNNER_TEMP/vitest-list.json" > /dev/null
+        run: bun run scripts/vitest-run-listing.ts "$RUNNER_TEMP/vitest-run.json" "$RUNNER_TEMP/vitest-list.json"
       # Every tracked test file collects at least one test from its runner (ADR 0034 decision 9).
       - run: bun run check:suite-collect --collected "$RUNNER_TEMP/vitest-list.json"
       # Each manifest engine test ID names exactly one collected test that names its card (ADR 0034
@@ -269,13 +295,18 @@ jobs:
           if-no-files-found: ignore
 
   # The Card Test Lab, setup and table Playwright suites share one job, so the browser and its
-  # system packages are installed once. The table suite runs even when the lab suites fail.
+  # system packages are installed once. Each suite runs when its label picked it; the table suite
+  # runs even when the lab suites fail.
   viewer-evidence:
     name: Viewer / Card Test Lab evidence and table e2e
     needs: changes
-    if: needs.changes.outputs.code == 'true' && needs.changes.outputs.full == 'true'
+    if: needs.changes.outputs.code == 'true' && needs.changes.outputs.e2e == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      LAB: ${{ needs.changes.outputs.lab }}
+      SETUP: ${{ needs.changes.outputs.setup }}
+      TABLE: ${{ needs.changes.outputs.table }}
     steps:
       - uses: actions/checkout@v4
       - id: deps
@@ -289,26 +320,28 @@ jobs:
       - id: browser
         run: bunx playwright install-deps chromium && bunx playwright install chromium
       # Real frontend + real lab backend, no mocked transport. The config boots both servers.
-      - run: bun run test:e2e
+      - if: env.LAB == 'true'
+        run: bun run test:e2e
       # Real frontend + real DB-backed server on the committed Oracle fixture: Play my deck setup
       # and a seeded player game against built-in bots.
-      - run: bun run test:e2e:setup
+      - if: env.SETUP == 'true'
+        run: bun run test:e2e:setup
       # The specs record a trace for every test (trace: 'on', preserveOutput: 'always'); this checks
       # tracing is still on. It runs before the table suite writes test-results/table. Actions
       # storage is limited, so CI uploads the traces only when a step fails; a passing run's viewer
       # evidence comes from a local run, which keeps its traces. The upload tolerates artifact-quota
       # errors, which also mutes its if-no-files-found check.
       - name: Require viewer traces
-        if: always()
+        if: ${{ always() && (env.LAB == 'true' || env.SETUP == 'true') }}
         run: test -n "$(find test-results -name trace.zip -print -quit 2>/dev/null)"
       # The built table bundle served by `serve:table --dev` from its own origin, two browser
       # contexts per table, on the committed Oracle fixture with a fixed test key. The config
       # builds the bundle and boots the three table servers.
       - name: Table e2e
-        if: ${{ !cancelled() && steps.browser.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.browser.outcome == 'success' && env.TABLE == 'true' }}
         run: bun run test:e2e:table
       - name: Require table traces
-        if: ${{ !cancelled() && steps.browser.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.browser.outcome == 'success' && env.TABLE == 'true' }}
         run: test -n "$(find test-results/table -name trace.zip -print -quit 2>/dev/null)"
       - uses: actions/upload-artifact@v4
         if: failure()
@@ -319,8 +352,8 @@ jobs:
           if-no-files-found: error
 
   # The single required check. It fails when any job it waits on failed or was cancelled, and on a
-  # ready pull request that changed code but has not run the slow jobs (no `ci:full` label).
-  # The advisory fuzz job is not waited on.
+  # ready pull request that changed code but has no `ci:` label picking a slow suite. It names the
+  # suites left out, which only the nightly run will cover. The advisory fuzz job is not waited on.
   gate:
     name: CI / Gate
     needs: [changes, quality, card-verification, engine-tests, viewer-evidence]
@@ -333,7 +366,11 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           DRAFT: ${{ github.event.pull_request.draft }}
           CODE: ${{ needs.changes.outputs.code }}
-          FULL: ${{ needs.changes.outputs.full }}
+          SLOW: ${{ needs.changes.outputs.slow }}
+          SUITE: ${{ needs.changes.outputs.suite }}
+          LAB: ${{ needs.changes.outputs.lab }}
+          SETUP: ${{ needs.changes.outputs.setup }}
+          TABLE: ${{ needs.changes.outputs.table }}
         shell: bash
         run: |
           set -euo pipefail
@@ -342,8 +379,18 @@ jobs:
             echo "::error::These jobs did not pass: $(echo $failed)"
             exit 1
           fi
-          if [[ "$EVENT_NAME" == "pull_request" && "$DRAFT" != "true" && "$CODE" == "true" && "$FULL" != "true" ]]; then
-            echo "::error::Fast checks passed. Add the ci:full label to run the full test suite, IR mutation and Playwright before merging."
-            exit 1
+          if [[ "$EVENT_NAME" == "pull_request" && "$DRAFT" != "true" && "$CODE" == "true" ]]; then
+            if [[ "$SLOW" != "true" ]]; then
+              echo "::error::Fast checks passed. Pick the slow suites to run before merging: ci:full for all of them, or any of ci:engine, ci:e2e, ci:lab, ci:setup and ci:table."
+              exit 1
+            fi
+            skipped=()
+            [[ "$SUITE" == "true" ]] || skipped+=(ci:engine)
+            [[ "$LAB" == "true" ]] || skipped+=(ci:lab)
+            [[ "$SETUP" == "true" ]] || skipped+=(ci:setup)
+            [[ "$TABLE" == "true" ]] || skipped+=(ci:table)
+            if (( ${#skipped[@]} > 0 )); then
+              echo "::notice::Not run on this pull request (the nightly run covers them): ${skipped[*]}"
+            fi
           fi
           echo "Gate passed."

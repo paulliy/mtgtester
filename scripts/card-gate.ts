@@ -4,6 +4,10 @@
  * matches no file fails before anything runs; the resolved files go to Vitest by path, so the set
  * that runs is exactly the one printed. It first prints facet warnings for the cards whose
  * definitions changed against `CARD_GATE_BASE` (or `RATCHET_BASE`, or HEAD's first parent).
+ *
+ *   --skip-run    check the list and print the warnings, but run no tests. CI passes it when the
+ *                 full suite, which runs every one of these files, runs in the same workflow
+ *                 (ADR 0036 decision 7). Other arguments go to Vitest.
  */
 import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -59,7 +63,12 @@ for (const name of changedCards(
 
 const gate = cardGateFiles(entries, files, runners);
 console.log(`card gate: ${entries.length} entries, ${gate.length} test files`);
-const result = spawnSync('bunx', ['vitest', 'run', ...gate, ...process.argv.slice(2)], {
+const args = process.argv.slice(2);
+if (args.includes('--skip-run')) {
+  console.log('card gate: --skip-run: these files run in the full suite instead');
+  process.exit(0);
+}
+const result = spawnSync('bunx', ['vitest', 'run', ...gate, ...args], {
   stdio: 'inherit',
 });
 process.exit(result.status ?? 1);
