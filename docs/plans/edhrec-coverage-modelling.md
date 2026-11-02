@@ -30,8 +30,9 @@ Related: [EDH staple coverage](edh-staple-coverage.md) (earlier tiers),
   keywords close 193. Those gains come from composable phrase parsers, which the current
   sentence-regex parser cannot provide (ADR 0038).
 - **Tests follow features, not cards (D1).** A card that only composes grammar and primitives
-  already under test needs no tests of its own. A card that adds a feature brings that feature's
-  tests. Every modeled card is pinned offline and covered by the interpretation snapshots (D3).
+  already under test needs no tests of its own; it is pinned offline, covered by the
+  interpretation snapshots (D3), and stays `implemented-unreviewed`. A card that adds a feature
+  meets the full completion standard for it.
 
 ## Decisions (2026-11-02)
 
@@ -39,12 +40,14 @@ Related: [EDH staple coverage](edh-staple-coverage.md) (earlier tiers),
   production, `Effect` op, `Value`, `Condition` or `Selector` kind, trigger event, rule static,
   keyword or subsystem. A simple card gets no tests of its own: it is covered by the tests of the
   productions it uses, its Oracle text is pinned (D3), and its definition is in the interpretation
-  snapshot. A card that adds any of those brings tests for the new feature (positive and negative
-  executor tests, plus a primitive contract test for a new op), using the card as the example.
-  Simple cards count as modeled and stay `implemented-unreviewed`, the label the completion
-  standard already gives to cards that were modeled but not audited. A card is
-  `implemented-reviewed` only when it meets the full [completion
-  standard](../guides/card-modeling-and-testing.md), which this plan does not require in bulk.
+  snapshot. It counts as modeled and stays `implemented-unreviewed`. That is the state the
+  [completion standard](../guides/card-modeling-and-testing.md) already gives every card the
+  interpreter models without an audit, and nothing in this plan reports a simple card as complete
+  or reviewed. A card that adds any of those features meets the full completion standard
+  (`AGENTS.md`) for the clauses the feature covers: pinned Oracle text, a clause-to-test manifest
+  entry, positive and negative engine scenarios, the normal cast or activation path, and
+  real-viewer evidence. The feature's executor tests, plus a primitive contract test for a new op,
+  serve as its engine evidence, so later simple cards reuse them.
 - **D2. Rewrite the parser into phrase-level grammar** before adding coverage breadth.
   [ADR 0038](../decisions/0038-phrase-level-card-grammar.md) records the design.
 - **D3. Pin Oracle text offline.** Every card this plan models has its Oracle record in a committed
@@ -267,10 +270,8 @@ Ozolith each have two unparsed lines, and Witch Enchanter is blocked by its layo
 | The Ozolith              |  298 | counters it had when it left; move all counters                                                  | Phase 2 last-known counters.                                                                                                             |
 | Braids, Arisen Nightmare |  306 | sacrifice; each opponent may sacrifice a permanent sharing a type, or lose 2 life while you draw | Bespoke override.                                                                                                                        |
 
-Every staple except the Medallions after Ruby adds a feature, so each brings that feature's tests
-under D1. Because staples are the most-played cards, the recommendation is to also take them to
-the full completion standard (manifest entry, viewer evidence, passing mutation); that is optional
-under D1. Exit: `bun run staples --complete` passes
+Every staple except the Medallions after Ruby adds a feature, so each meets the full completion
+standard (D1): a manifest entry, engine and viewer evidence, and passing mutation. Exit: `bun run staples --complete` passes
 at 200/200 and `knownUnmodeled` is empty.
 
 ### Phase 4: grammar breadth
@@ -309,7 +310,8 @@ Discover lands (5). Then Fog, Control Magic, bite, `each opponent discards`, `Co
 What remains is mostly one card per template. Work it in batches of about 25 cards from the triage
 queue, grouped by the surface the failing slot needs and ordered by slot share. A card that fits
 existing productions is simple and is modeled, pinned and snapshotted. A card that needs a new
-production adds it with tests. A card that needs a bespoke override always brings tests, because
+production meets the full standard for that production (D1). A card that needs a bespoke override
+always meets the full standard, because
 no generic production stands behind it. The families the probe found:
 
 | Surface family                                  | Cards | In ranks 1–2,000 | Slots |
