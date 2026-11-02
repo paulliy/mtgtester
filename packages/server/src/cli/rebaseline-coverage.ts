@@ -9,7 +9,7 @@
  * Every drifted card is printed with the fields that differ from the pinned fixture, which is what
  * the baseline was built from. `--write` only rewrites hashes in coverage-contract.json and never
  * touches the pinned fixture: copy the revised projection over it in the same commit, then run
- * `bun run coverage:complete` and `bun run staples --complete`. Exits 1 while anything drifted.
+ * `bun run coverage:complete`. Exits 1 while anything drifted.
  */
 
 import { createHash } from 'node:crypto';
@@ -118,7 +118,7 @@ function main(): void {
   writeFileSync(resolve(BASELINE_PATH), `${JSON.stringify(baseline, null, 2)}\n`);
   console.log(`\nupdated ${drifted.length} hash(es) in ${BASELINE_PATH}.`);
   console.log(
-    `Next: copy ${candidate.path} over ${PINNED_ORACLE_FIXTURE}, then run bun run coverage:complete and bun run staples --complete.`,
+    `Next: copy ${candidate.path} over ${PINNED_ORACLE_FIXTURE}, then run bun run coverage:complete.`,
   );
 }
 

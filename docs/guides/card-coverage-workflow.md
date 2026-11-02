@@ -14,6 +14,7 @@ The canonical completion standard is [Modeling a Card and Testing It](card-model
 ## Backlog
 
 - [EDH staple coverage](../plans/edh-staple-coverage.md)
+- [EDHREC ready list](../plans/edhrec-ready-list.md): the cards filling 95% of real Commander deck slots that are modeled or one unparsed line away. Regenerate with `bun run edhrec:ready-list` after a parser change; refreeze the ranking with `bun run edhrec:fetch`.
 - [Post-Tier-3 residue](../plans/post-tier3-card-coverage.md)
 
 Precon coverage is strongest. Community fixtures and the EDH-staples report expose the significant remaining gaps. Use `bun run coverage`, `bun run staples`, and `bun run test:implemented`.

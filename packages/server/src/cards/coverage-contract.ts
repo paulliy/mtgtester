@@ -3,6 +3,11 @@ import type { CoverageReport } from './coverage';
 
 export interface CoveragePopulation {
   decks: { name: string; oracleIds: string[] }[];
+  /**
+   * Cards of the population known not to be modeled yet. A ratchet: a card outside this list that
+   * is unmodeled is a regression, and a listed card that became modeled must leave the list.
+   */
+  knownUnmodeled?: { oracleId: string; name: string }[];
 }
 
 /** Never allow a missing fixture or a substituted card to improve measured coverage. */
@@ -70,4 +75,22 @@ export function assertCompleteCoverage(report: CoverageReport): void {
         blocked.map((c) => c.name).join(', '),
     );
   }
+}
+
+/** Unmodeled cards must be exactly the population's known-unmodeled list; it may only shrink. */
+export function assertKnownUnmodeled(report: CoverageReport, population: CoveragePopulation): void {
+  const known = new Set((population.knownUnmodeled ?? []).map((card) => card.oracleId));
+  const blocked = report.cards.filter((c) => !c.modeled || c.reasons.length > 0);
+  const regressed = blocked.filter((c) => !known.has(c.oracleId)).map((c) => c.name);
+  const blockedIds = new Set(blocked.map((c) => c.oracleId));
+  const fixed = (population.knownUnmodeled ?? [])
+    .filter((card) => !blockedIds.has(card.oracleId))
+    .map((card) => card.name);
+  const problems = [
+    ...(regressed.length > 0 ? [`no longer modeled: ${regressed.join(', ')}`] : []),
+    ...(fixed.length > 0
+      ? [`now modeled, remove from knownUnmodeled in coverage-contract.json: ${fixed.join(', ')}`]
+      : []),
+  ];
+  if (problems.length > 0) throw new Error(`coverage ratchet: ${problems.join('; ')}`);
 }

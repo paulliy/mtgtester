@@ -8,7 +8,7 @@ describe('reproducible coverage Oracle input', () => {
   it('preserves other flags and reads the complete pinned population without a bulk dependency', () => {
     const result = coverageInput(['--json', '--oracle-fixture', pinned, '--complete']);
     expect(result.args).toEqual(['--json', '--complete']);
-    expect(result.index.size).toBe(958);
+    expect(result.index.size).toBe(1031);
     const signet = result.index.resolve('Arcane Signet')!;
     const report = measureCoverage([{ name: 'input probe', cards: [signet] }]);
     // Baseline population is checked separately by each CLI; the input must retain the exact pin.
@@ -20,7 +20,7 @@ describe('reproducible coverage Oracle input', () => {
     const result = coverageInput(['--json']);
     expect(result.path).toBe(pinned);
     expect(result.args).toEqual(['--json']);
-    expect(result.index.size).toBe(958);
+    expect(result.index.size).toBe(1031);
   });
   it('rejects combining the bulk download with a fixture', () => {
     expect(() => coverageInput(['--bulk', '--oracle-fixture', pinned])).toThrow(

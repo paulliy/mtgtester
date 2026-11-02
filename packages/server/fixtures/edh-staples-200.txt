@@ -1,200 +1,200 @@
 Sol Ring
-Command Tower
 Arcane Signet
-Exotic Orchard
-Reliquary Tower
 Swords to Plowshares
 Swiftfoot Boots
 Lightning Greaves
-Path of Ancestry
 Path to Exile
 Counterspell
 Fellwar Stone
-Rogue's Passage
-Evolving Wilds
 Cultivate
 Thought Vessel
 Blasphemous Act
 Farseek
-Bojuka Bog
 Beast Within
-Rampant Growth
 Nature's Lore
-Terramorphic Expanse
-Chaos Warp
+Rampant Growth
 Heroic Intervention
-Myriad Landscape
+Chaos Warp
 Mind Stone
+An Offer You Can't Refuse
 Dark Ritual
 Birds of Paradise
-An Offer You Can't Refuse
-Polluted Delta
-Kodama's Reach
-Solemn Simulacrum
-Flooded Strand
 Skullclamp
+Kodama's Reach
 Three Visits
-Misty Rainforest
-Bloodstained Mire
+Solemn Simulacrum
 Rhystic Study
-Windswept Heath
-Fabled Passage
-Wooded Foothills
-Verdant Catacombs
-Scalding Tarn
-Commander's Sphere
-Watery Grave
-Marsh Flats
 Arcane Denial
-Cyclonic Rift
-Negate
 Reanimate
-Arid Mesa
 Llanowar Elves
-Breeding Pool
+Commander's Sphere
+Negate
+Cyclonic Rift
 Generous Gift
-Godless Shrine
 Demonic Tutor
-Hallowed Fountain
-Smothering Tithe
-Steam Vents
-Ancient Tomb
-Toxic Deluge
-Blood Crypt
 Swan Song
-Stomping Ground
-Overgrown Tomb
+Toxic Deluge
+Smothering Tithe
 Brainstorm
-Urborg, Tomb of Yawgmoth
-Sacred Foundry
 Deflecting Swat
-Boseiju, Who Endures
 Esper Sentinel
-Yavimaya, Cradle of Growth
-Sulfur Falls
-Temple of the False God
-Clifftop Retreat
 Fierce Guardianship
-Temple Garden
-Dragonskull Summit
 Chromatic Lantern
-Sunken Hollow
-Cinder Glade
-Otawara, Soaring City
-Feed the Swarm
-Garruk's Uprising
-The One Ring
-Smoldering Marsh
 Talisman of Dominance
-Isolated Chapel
-Glacial Fortress
-City of Brass
-Faithless Looting
-Hinterland Harbor
-Mystic Remora
-Vandalblast
+Garruk's Uprising
+Feed the Swarm
+The One Ring
 Frantic Search
-Phyrexian Arena
-Jeska's Will
+Faithless Looting
+Vandalblast
+Mystic Remora
 Elvish Mystic
-Canopy Vista
-Prairie Stream
+Phyrexian Arena
 Deadly Rollick
-Drowned Catacomb
+Jeska's Will
 Teferi's Protection
-Sakura-Tribe Elder
-Woodland Cemetery
-Vampiric Tutor
-Cavern of Souls
 Propaganda
-Eternal Witness
-Shivan Reef
+Vampiric Tutor
+Sakura-Tribe Elder
 Mana Drain
-Urza's Saga
-Mana Confluence
 Lotus Petal
-Battlefield Forge
+Eternal Witness
 Assassin's Trophy
+Talisman of Creativity
 Enlightened Tutor
 Wayfarer's Bauble
-Caves of Koilos
-Talisman of Creativity
-Rootbound Crag
-Victimize
 Talisman of Indulgence
-Deadly Dispute
 Black Market Connections
+Victimize
+Deadly Dispute
 Roaming Throne
-Sunpetal Grove
 Ashnod's Altar
 Talisman of Hierarchy
-Yavimaya Coast
-Llanowar Wastes
-Blood Artist
-Big Score
 Talisman of Progress
-War Room
-Morphic Pool
-Rejuvenating Springs
-Ponder
+Big Score
+Blood Artist
 Abrade
-Mana Vault
-Underground River
-Chrome Mox
-Herald's Horn
-Adarkar Wastes
-Training Center
-Talisman of Conviction
-Sulfurous Springs
 Delighted Halfling
-Pongify
+Ponder
+Talisman of Conviction
 Anguished Unmaking
+Herald's Horn
+Mana Vault
+Pongify
+Chrome Mox
 Dimir Signet
-Windfall
 Lightning Bolt
-Mystical Tutor
-Luxury Suite
 Ghostly Prison
-Nykthos, Shrine to Nyx
-Sea of Clouds
-Rakdos Signet
-Worldly Tutor
-Austere Command
-Farewell
-Vault of Champions
-Spectator Seating
-Izzet Signet
-Sink into Stupor // Soporific Springs
-Reflecting Pool
-Mystic Sanctuary
-Undergrowth Stadium
-Three Tree City
-Dreamroot Cascade
-Return of the Wildspeaker
-Boros Charm
-Gemstone Caverns
+Windfall
+Mystical Tutor
 Flawless Maneuver
+Sink into Stupor
+Rakdos Signet
+Austere Command
+Izzet Signet
+Worldly Tutor
 Night's Whisper
-Command Beacon
-Tireless Provisioner
-Orzhov Signet
-Hardened Scales
-Stormcarved Coast
-Spire Garden
+Return of the Wildspeaker
+Farewell
+Boros Charm
 Akroma's Will
 Doubling Season
+Hardened Scales
+Tireless Provisioner
+Orzhov Signet
 Idol of Oblivion
-Force of Will
-Impact Tremors
-Cabal Coffers
-Buried Ruin
-Prismatic Vista
-Mosswort Bridge
-Phyrexian Tower
+Thran Dynamo
+Stroke of Midnight
+Storm-Kiln Artist
+Fell the Profane
 Patchwork Banner
 Village Rites
-Thran Dynamo
-Fell the Profane // Fell Mire
-Storm-Kiln Artist
-Stroke of Midnight
 Mox Amber
+Impact Tremors
+Force of Will
+Professional Face-Breaker
+Rapid Hybridization
+Azorius Signet
+Preordain
+Beast Whisperer
+Thrill of Possibility
+Fyndhorn Elves
+Opt
+Wild Growth
+Ornithopter of Paradise
+Crop Rotation
+Animate Dead
+Pitiless Plunderer
+Rhythm of the Wild
+Dovin's Veto
+Terminate
+The Great Henge
+Sensei's Divining Top
+Mirkwood Bats
+Malakir Rebirth
+Sign in Blood
+Zulaport Cutthroat
+Sword of the Animist
+Mithril Coat
+Explore
+Growth Spiral
+Rishkar's Expertise
+Gray Merchant of Asphodel
+Gamble
+Scute Swarm
+Mox Opal
+Morbid Opportunist
+Mox Diamond
+Bloom Tender
+Foundry Inspector
+Everflowing Chalice
+Archmage Emeritus
+Harrow
+Basilisk Collar
+Grand Abolisher
+Boros Signet
+Viscera Seer
+Sylvan Library
+Infernal Grasp
+Academy Manufactor
+Withering Torment
+Untimely Malfunction
+Orcish Bowmasters
+Unexpected Windfall
+Syr Konrad, the Grim
+Exsanguinate
+Panharmonicon
+Jet Medallion
+Force of Negation
+Diabolic Intent
+Hullbreaker Horror
+Snap
+Bolas's Citadel
+Inspiring Call
+Etali, Primal Storm
+Ragavan, Nimble Pilferer
+Reality Shift
+Aetherize
+Faerie Mastermind
+Seedborn Muse
+Witch Enchanter
+Mana Geyser
+Ruby Medallion
+Craterhoof Behemoth
+Finale of Devastation
+Seething Song
+Avenger of Zendikar
+Authority of the Consuls
+The Ozolith
+Shadowspear
+Phyrexian Altar
+Exploration
+Flusterstorm
+Skyshroud Claim
+Urza's Incubator
+Braids, Arisen Nightmare
+Phyrexian Metamorph
+Dryad of the Ilysian Grove
+Sun Titan
+Bala Ged Recovery
+Entomb
