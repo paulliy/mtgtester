@@ -16378,9 +16378,15 @@ export function strictCardTestScenario(
   return scenario;
 }
 
-/** Catalog for the lab page's scenario picker: metadata only, engines are discarded. */
+let catalog: readonly CardTestScenarioMetadata[] | undefined;
+/**
+ * Catalog for the lab page's scenario picker: metadata only, engines are discarded. Building it
+ * sets up every scenario's game (about a second), and the metadata is static, so it is built once
+ * per process rather than on each page load.
+ */
 export function listCardTestScenarios(): CardTestScenarioMetadata[] {
-  return CARD_TEST_SCENARIO_IDS.map(
+  catalog ??= CARD_TEST_SCENARIO_IDS.map(
     (scenarioId) => createCardTestScenario(scenarioId, 'card-lab-catalog' as GameId)!.metadata,
   );
+  return [...catalog];
 }
