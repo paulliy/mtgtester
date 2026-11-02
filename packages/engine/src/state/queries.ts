@@ -34,6 +34,7 @@ import {
 import { UnmodeledCardError } from '../errors';
 import type { ManaAllowance, ManaSource, ManaUnit, ParsedManaCost } from '../mana/cost';
 import { manaCostComponent, manaCostTextOf } from '../mana/cost';
+import { orderByKeepValue } from '../mana/tap-preference';
 import type {
   DamageKeyword,
   EngineCardObject,
@@ -1033,17 +1034,19 @@ export function manaSourcesFor(
   ctx: GameContext,
   playerId: PlayerId,
   includeZeroProduction = false,
+  order: 'payment' | 'board' = 'payment',
 ): ManaSource[] {
   const sources: ManaSource[] = [];
+  // Preserve creatures for combat whenever a land or noncreature source can do the job.
+  // Equal-priority permanents retain battlefield order, preserving determinism.
+  const priority = (types: readonly string[]): number =>
+    types.includes('Land') ? 0 : types.includes('Creature') ? 2 : 1;
   const permanents = controlledPermanents(ctx, playerId)
     .map((perm, index) => ({ perm, index, chars: computeCharacteristics(ctx, perm) }))
-    .sort((a, b) => {
-      // Preserve creatures for combat whenever a land or noncreature source can do the job.
-      // Equal-priority permanents retain battlefield order, preserving determinism.
-      const priority = (types: readonly string[]): number =>
-        types.includes('Land') ? 0 : types.includes('Creature') ? 2 : 1;
-      return priority(a.chars.types) - priority(b.chars.types) || a.index - b.index;
-    });
+    .sort((a, b) => priority(a.chars.types) - priority(b.chars.types) || a.index - b.index);
+  const tierByCard = new Map(
+    permanents.map(({ perm, chars }) => [perm.cardId, priority(chars.types)]),
+  );
   for (const { perm, chars } of permanents) {
     // Grand Abolisher bars opponents from activating abilities of artifacts, creatures and
     // enchantments during its controller's turn — and a mana ability is an activated ability
@@ -1224,7 +1227,18 @@ export function manaSourcesFor(
       }
     }
   }
-  return sources.flatMap((source) => {
+  // Within a tier, spend first what the player's other spells and abilities need least, so a
+  // payment leaves the colors they still want untapped where it can (`mana/tap-preference.ts`).
+  // A list shown to the player (manual mana, ADR 0030) keeps board order instead.
+  const preferred =
+    order === 'board'
+      ? sources
+      : orderByKeepValue(
+          sources,
+          (cardId) => tierByCard.get(cardId) ?? 0,
+          () => otherManaDemand(ctx, playerId),
+        );
+  return preferred.flatMap((source) => {
     if (source.costs.every((cost) => cost.kind === 'tap' || cost.kind === 'mana')) return [source];
     const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId)!;
     const player = ctx.state.players.find((p) => p.id === playerId)!;
@@ -1294,6 +1308,42 @@ export function manaSourcesFor(
     if (!Number.isFinite(limit) || limit <= 1) return [{ ...source, ...shared }];
     return Array.from({ length: limit }, (_, activation) => ({ ...source, ...shared, activation }));
   });
+}
+
+/**
+ * The mana costs `playerId` may want to pay next: spells in hand (and their hand-activated
+ * abilities, such as ninjutsu), commanders waiting in the command zone, and the activated
+ * abilities of their permanents. A spell already on the stack is not here: it is being paid for,
+ * not competing with the payment. Read only to rank sources (`orderByKeepValue`), never for
+ * legality, so a cost missing here costs a worse tap choice and nothing else.
+ */
+function otherManaDemand(ctx: GameContext, playerId: PlayerId): ParsedManaCost[] {
+  const player = ctx.state.players.find((p) => p.id === playerId);
+  if (player === undefined) return [];
+  const costs: ParsedManaCost[] = [];
+  const abilityCost = (activated: { costs: readonly AbilityCost[] }): void => {
+    const mana = manaCostComponent(activated.costs);
+    if (mana !== undefined) costs.push(mana);
+  };
+  for (const card of player.hand) {
+    const def = ctx.defs.get(card.oracleId);
+    if (def === undefined) continue;
+    if (def.manaCost !== null) costs.push(def.manaCost);
+    for (const activated of def.activatedAbilities)
+      if (activated.zone === 'hand') abilityCost(activated);
+  }
+  for (const card of player.commandZone) {
+    const cost = card.isCommander ? ctx.defs.get(card.oracleId)?.manaCost : null;
+    if (cost !== undefined && cost !== null) costs.push(cost);
+  }
+  for (const perm of controlledPermanents(ctx, playerId)) {
+    const def = ctx.defs.get(perm.oracleId);
+    const activated =
+      computeCharacteristics(ctx, perm).activatedAbilities ?? def?.activatedAbilities;
+    for (const ability of activated ?? [])
+      if (ability.zone === undefined || ability.zone === 'battlefield') abilityCost(ability);
+  }
+  return costs;
 }
 
 /** Best-effort preview of mana symbols produced by a set of mana abilities. */
