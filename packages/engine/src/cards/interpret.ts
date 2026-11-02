@@ -25,7 +25,7 @@ import type {
   SearchDestination,
 } from './ability';
 import { transformDefinition } from '../testing/definition-transform';
-import { IMPLEMENTED_KEYWORDS, SELF_SUBJECT } from './ability';
+import { SELF_SUBJECT } from './ability';
 import type {
   Ability,
   Effect,
@@ -38,13 +38,38 @@ import type {
   TriggerSpec,
   TriggerSubject,
 } from './ability';
+import {
+  CARD_TYPE_SINGULARS,
+  COLOR_WORDS,
+  FIVE_COLORS,
+  KEYWORD_SET,
+  ORDINAL_TIMES,
+  ORDINALS_FROM_TOP,
+  parseAmount,
+  resolveSubtype,
+  titleCase,
+} from './grammar/words';
+import {
+  ANY_SPELL,
+  parseCardFilterPhrase,
+  parseMassSubject,
+  parseSearchFilter,
+  parseSpellFilter,
+  parseSubject,
+  parseTargetClause,
+  parseTriggerSubject,
+} from './grammar/subject';
+import type { CountSlotAllocator, SlotAllocator } from './grammar/subject';
+import { parseCountPhrase, parseDamageAmount, parseDynamicCountValue } from './grammar/amount';
+import {
+  INTERVENING_IF_RE,
+  parseActivationCondition,
+  parseConditionClause,
+  parseEntersUnlessClause,
+} from './grammar/condition';
 import type { Condition } from './condition';
 import { countPermanents } from './condition';
-import {
-  CREATURE_TYPE_BY_LOWER,
-  CREATURE_TYPES,
-  NONCREATURE_SUBTYPE_BY_LOWER,
-} from './creature-types';
+import { CREATURE_TYPES } from './creature-types';
 import type { ProtectionQuality, StaticEffect } from './continuous-types';
 import type { RuleStatic } from './rule-statics';
 import type { Selector } from './selector';
@@ -52,12 +77,8 @@ import {
   CHOSEN_SUBTYPE,
   ENTERED_THIS_TURN,
   IS_COMMANDER,
-  IS_ENCHANTED,
-  IS_EQUIPPED,
-  IS_MONOCOLORED,
   IS_TOKEN,
   NONBASIC_LANDS,
-  NONLAND,
   OPPONENTS,
   OTHER,
   SELF,
@@ -69,7 +90,6 @@ import {
   not,
   ofSubtype,
   ofSupertype,
-  manaValueAtLeast,
   manaValueAtMost,
   ofType,
   powerAtLeast,
@@ -98,32 +118,6 @@ import { canonicalizeToken, FOOD, MUTAGEN, SOLDIER_1_1, TREASURE } from './token
 // interpreter share one module instance under Bun/TypeScript path resolution.
 import { applyOverride, getOverride } from './overrides/index';
 import type { BackFace, CardDefinition, ManaAbilitySpec } from './definition';
-import { PERMANENT_CARD_TYPES } from './definition';
-
-/**
- * Allocates a target slot of the given kind and returns its index (ADR 0004). `filter` further
- * restricts a zone-qualified kind (`cardInGraveyard`) â€” "target Dragon permanent card".
- */
-type SlotAllocator = (
-  kind: TargetKind,
-  filter?: Selector,
-  controller?: TargetSpec['controller'],
-  graveyardOwnerScope?: TargetSpec['graveyardOwnerScope'],
-) => number;
-
-/**
- * Allocates a variable-COUNT target slot ("up to two other targets", "any number of target
- * creatures") and returns its index. Only offered where a variable count actually means
- * something â€” inside a triggered ability's own target list (`parseTriggerLine`) â€” because a
- * cast spell's targets are all chosen in the same option-menu step {X} already uses, which has
- * no room for a decision sequence.
- */
-type CountSlotAllocator = (
-  kind: TargetKind,
-  count: { min: number; max: number },
-  controller?: TargetSpec['controller'],
-  filter?: Selector,
-) => number;
 
 /** Basic land subtypes â†’ intrinsic mana ability (CR 305.6). */
 const BASIC_LAND_MANA: Record<string, ManaUnit> = {
@@ -134,157 +128,6 @@ const BASIC_LAND_MANA: Record<string, ManaUnit> = {
   Forest: ['G'],
   Wastes: ['C'],
 };
-
-const NUMBER_WORDS: Record<string, number> = {
-  a: 1,
-  an: 1,
-  one: 1,
-  two: 2,
-  three: 3,
-  four: 4,
-  five: 5,
-  six: 6,
-  seven: 7,
-  eight: 8,
-  nine: 9,
-  ten: 10,
-  eleven: 11,
-  twelve: 12,
-  thirteen: 13,
-  fourteen: 14,
-  fifteen: 15,
-  sixteen: 16,
-  seventeen: 17,
-  eighteen: 18,
-  nineteen: 19,
-  twenty: 20,
-};
-
-function parseAmount(word: string): number | null {
-  if (/^\d+$/.test(word)) return Number(word);
-  return NUMBER_WORDS[word] ?? null;
-}
-
-/**
- * A count as rules text writes it, including the back-references only an event can answer.
- *
- * **"That many" is not one thing.** It refers back to the most recent quantity in the trigger
- * head, and which quantity that is depends on the head:
- *
- *   "Whenever one or more Dragons you control attack, draw **that many** cards"   â†’ how many
- *   "Whenever a creature deals combat damage to a player, create **that many**    â†’ how much
- *    Treasure tokens"
- *
- * So the referent is supplied by the caller (`thatMany`) rather than guessed here. Guessing
- * would make Old Gnawbone produce one Treasure per hit instead of one per damage â€” a silent
- * undercount, not an error.
- */
-function parseCountPhrase(phrase: string, thatMany?: Value): Value | null {
-  if (phrase === 'that many' || phrase === 'that much' || phrase === 'that damage') {
-    return thatMany ?? null;
-  }
-  if (phrase === 'x') return { kind: 'xValue' };
-  const n = parseAmount(phrase);
-  return n === null ? null : constant(n);
-}
-
-/** Parse count clauses that depend on the source, trigger object, or current battlefield. */
-function parseDynamicCountValue(
-  clause: string,
-  card: OracleCard,
-  opts: { triggerObject?: boolean } = {},
-): Value | null {
-  // Scryfall prints the typographic apostrophe; every literal below is written with the
-  // straight one, and "~’s power" would otherwise miss.
-  const text = clause.trim().toLowerCase().replace(/’/g, "'");
-  const totalPower = text.match(/^the total power of (.+)$/);
-  if (totalPower !== null) {
-    const selector = parseSubject(totalPower[1] as string, card);
-    if (selector !== null) return { kind: 'totalPowerAmong', selector, scope: 'all' };
-  }
-  const devotion = text.match(/^your devotion to (white|blue|black|red|green)$/);
-  if (devotion !== null)
-    return { kind: 'devotionTo', color: COLOR_WORDS[devotion[1] as string] as Color };
-  // The singular reaches here from the "gets +1/+1 **for each color** among permanents you
-  // control" buff parse (Faeburrow Elder), which prefixes its clause with "the number of ".
-  if (/^the number of colou?rs? among permanents you control$/.test(text)) {
-    return { kind: 'colorsAmongPermanents' };
-  }
-  if (
-    /^the number of colors among permanents you control and spells you've cast this turn$/.test(
-      text,
-    )
-  ) {
-    return { kind: 'colorsAmongPermanentsAndSpellsCastThisTurn' };
-  }
-  const opponents = text.match(/^(?:the )?number of opponents$/);
-  if (opponents !== null) return { kind: 'countOpponents' };
-  const cardsInYourZone = text.match(
-    /^the number of (.+ cards?) in your (graveyard|hand|library)$/,
-  );
-  if (cardsInYourZone !== null) {
-    const selector = parseCardFilterPhrase(cardsInYourZone[1] as string, card);
-    if (selector !== null) {
-      return {
-        kind: 'countCardsInZone',
-        zone: cardsInYourZone[2] as 'graveyard' | 'hand' | 'library',
-        selector,
-        owner: 'you',
-      };
-    }
-  }
-  const entered = text.match(
-    /^(?:the )?number of (.+) that entered the battlefield under your control this turn$/,
-  );
-  if (entered !== null) {
-    const selector = parseSubject(entered[1] as string, card);
-    if (selector !== null)
-      return {
-        kind: 'countPermanents',
-        selector: allOf(selector, YOURS, ENTERED_THIS_TURN),
-        scope: 'all',
-      };
-  }
-  const plus = text.match(/^one plus the number of (.+)$/);
-  if (plus !== null) {
-    const base = parseDynamicCountValue('the number of ' + (plus[1] as string), card, opts);
-    return base === null ? null : { kind: 'plus', of: base, n: 1 };
-  }
-  const number = text.match(/^(?:the )?number of (.+)$/);
-  if (number !== null) {
-    const noun = number[1] as string;
-    const selector = parseSubject(noun, card);
-    if (selector !== null) {
-      // The scope has to follow the subject. Defaulting to 'you' intersects an explicitly
-      // opposing subject ("creatures your opponents control") with a you-only filter and counts
-      // a constant 0 — silently, with the card still reporting modeled.
-      const scope: 'you' | 'opponents' | 'all' =
-        /\byour opponents control\b|\ban opponent controls\b/.test(noun)
-          ? 'opponents'
-          : /\byou control\b/.test(noun)
-            ? 'you'
-            : 'all';
-      return { kind: 'countPermanents', selector, scope };
-    }
-  }
-  if (text === "~'s power" || text === "this creature's power") return { kind: 'powerOfSource' };
-  if (text === "~'s toughness" || text === "this creature's toughness")
-    return { kind: 'toughnessOfSource' };
-  if (opts.triggerObject === true && (text === 'its power' || text === "that creature's power")) {
-    return { kind: 'powerOfTriggerObject' };
-  }
-  const counters = text.match(
-    /^(?:the number of )?([+-][0-9]+[/][+-][0-9]+|[a-z]+) counters? on (?:~|this (?:creature|artifact|enchantment|land|permanent)|it)$/,
-  );
-  if (counters !== null) {
-    return opts.triggerObject === true && text.endsWith('on it')
-      ? { kind: 'countersOnTriggerObject', counter: counters[1] as string }
-      : { kind: 'countersOnSelf', counter: counters[1] as string };
-  }
-  if (text === 'the number of opponents who lost life this turn')
-    return { kind: 'opponentsLostLifeThisTurn' };
-  return null;
-}
 
 /** Strip reminder text (parenthesized), collapse whitespace. */
 function stripReminderText(text: string): string {
@@ -423,8 +266,6 @@ function splitSentences(line: string): string[] {
     .filter((s) => s.length > 0);
 }
 
-const KEYWORD_SET = new Set<string>(IMPLEMENTED_KEYWORDS);
-
 /**
  * A keyword list as printed â€” "Flying, ward {3}", "Flying, protection from white and from
  * black", "Other Dragons you control have ward {2}".
@@ -441,10 +282,6 @@ interface ParsedKeywordLine {
 
 const WARD_RE = /^ward ((?:\{[^}]+\})+)$/;
 const PROTECTION_RE = /^protection from (.+)$/;
-
-/** CR 105.1 — the five colors. Distinct from the mana-side `ALL_COLORS` below, which is a
- * `ManaUnit` and is about production, not about what "each color" means. */
-const FIVE_COLORS: readonly Color[] = ['W', 'U', 'B', 'R', 'G'];
 
 function parseKeywordLine(text: string): ParsedKeywordLine | null {
   const out: ParsedKeywordLine = { keywords: [] };
@@ -508,60 +345,6 @@ function parseKeywordLine(text: string): ParsedKeywordLine | null {
   return empty ? null : out;
 }
 
-/** Color adjectives a subject can carry ("Black creatures get +1/+1" â€” Bad Moon). */
-const COLOR_WORDS: Record<string, Color> = {
-  white: 'W',
-  blue: 'U',
-  black: 'B',
-  red: 'R',
-  green: 'G',
-};
-
-/** Plural card types that can head a subject noun phrase. */
-const CARD_TYPE_PLURALS: Record<string, string> = {
-  creatures: 'Creature',
-  artifacts: 'Artifact',
-  enchantments: 'Enchantment',
-  lands: 'Land',
-  planeswalkers: 'Planeswalker',
-};
-
-/** English plural forms a creature type could be written as: "Elf" â†’ â€¦/elfs/elves. */
-function pluralForms(word: string): string[] {
-  const w = word.toLowerCase();
-  const forms = [w, `${w}s`, `${w}es`];
-  if (w.endsWith('fe')) forms.push(`${w.slice(0, -2)}ves`);
-  else if (w.endsWith('f')) forms.push(`${w.slice(0, -1)}ves`);
-  if (w.endsWith('y')) forms.push(`${w.slice(0, -1)}ies`);
-  return forms;
-}
-
-/**
- * Resolve a tribe as rules text writes it ("elves") back to the printed subtype ("Elf").
- *
- * Three vocabularies, in order. The card's OWN subtypes come first, so a non-creature subtype
- * the card actually has ("Equipment", "Aura", a land type) still resolves. Then CR 205.3m's
- * closed creature-type list, which is what lets a card refer to a tribe it is not a member of â€”
- * Dragon's Hoard is an Artifact that watches Dragons. Finally the planeswalker (205.3j) and
- * spell (205.3k) types, which is how "Ugin planeswalker card" and "an Omen spell" resolve as
- * ordinary subtype filters rather than needing card-name matching.
- *
- * Anything in none of them returns null and leaves the card unmodeled, which halts loudly.
- * Guessing a singular from a plural would silently produce a selector matching nothing.
- */
-function resolveSubtype(word: string, card: OracleCard): string | null {
-  const own = card.subtypes.find((s) => pluralForms(s).includes(word));
-  if (own !== undefined) return own;
-  const lower = word.toLowerCase();
-  for (const [key, type] of CREATURE_TYPE_BY_LOWER) {
-    if (pluralForms(key).includes(lower)) return type;
-  }
-  for (const [key, type] of NONCREATURE_SUBTYPE_BY_LOWER) {
-    if (pluralForms(key).includes(lower)) return type;
-  }
-  return null;
-}
-
 function appendSentenceEffects(effects: Effect[], sentence: string, parsed: Effect[]): void {
   const normalized = sentence.toLowerCase().replace(/\.$/, '');
   if (
@@ -579,209 +362,6 @@ function appendSentenceEffects(effects: Effect[], sentence: string, parsed: Effe
     }
   }
   effects.push(...parsed);
-}
-
-/**
- * Parse the subject of an anthem â€” "other Elves you control", "creatures your opponents
- * control" â€” into a `Selector`. Returns null when any part is unrecognized.
- */
-function parseSubject(phrase: string, card: OracleCard): Selector | null {
-  const parts: Selector[] = [];
-  let noun = phrase;
-
-  // "Equipped creature has haste" / "Enchanted creature gets +2/+2" â€” the subject is whatever
-  // the source is currently attached to, which is a relation, not a characteristic.
-  if (/^(equipped|enchanted|fortified) /.test(noun)) return { kind: 'attachedToSource' };
-
-  if (noun.startsWith('each ')) noun = noun.slice('each '.length);
-  // "creatures that are enchanted by an Aura you control" (Killian, Decisive Mentor).
-  const enchantedByYours = noun.match(/^(.+) that are enchanted by an aura you control$/);
-  if (enchantedByYours !== null) {
-    parts.push({ kind: 'enchantedByAuraYouControl' });
-    noun = enchantedByYours[1] as string;
-  }
-  const combat = noun.match(/^(attacking|blocking) (.+)$/);
-  if (combat !== null) {
-    parts.push({ kind: 'combatRole', role: combat[1] as 'attacking' | 'blocking' });
-    noun = combat[2] as string;
-  }
-  if (noun.startsWith('other ')) {
-    parts.push(OTHER);
-    noun = noun.slice('other '.length);
-  }
-  // "Nontoken creatures you control have riot" (Rhythm of the Wild) â€” the plural counterpart
-  // to `parseTriggerSubject`'s "another nontoken Dragon you control" (Miirym).
-  if (noun.startsWith('nontoken ')) {
-    parts.push(not(IS_TOKEN));
-    noun = noun.slice('nontoken '.length);
-  }
-  const attackingEventPlayer = noun.match(/^(.+) attacking that player$/);
-  if (attackingEventPlayer !== null) {
-    parts.push({ kind: 'attackingEventPlayer' });
-    noun = attackingEventPlayer[1] as string;
-  }
-  const powerClause = noun.match(/^(.+) with power (\d+) or greater$/);
-  if (powerClause !== null) {
-    parts.push(powerAtLeast(Number(powerClause[2])));
-    noun = powerClause[1] as string;
-  }
-
-  // "each other creature you control that's a token or a Rabbit" (Finneas, Ace Archer).
-  const tokenOrType = noun.match(/^(.+?) that's a token or an? ([a-z]+)$/);
-  if (tokenOrType !== null) {
-    parts.push(anyOf(IS_TOKEN, ofSubtype(titleCase(tokenOrType[2] as string))));
-    noun = tokenOrType[1] as string;
-  }
-
-  // "Creatures you control OF THE CHOSEN TYPE get +1/+1" (Patchwork Banner) - the type was named
-  // as the source entered (`entersChoosingOption`). Stripped before the "you control" suffix
-  // below, because it is printed AFTER it.
-  const chosenTypeClause = noun.match(/^(.+) of the chosen type$/);
-  if (chosenTypeClause !== null) {
-    parts.push(CHOSEN_SUBTYPE);
-    noun = chosenTypeClause[1] as string;
-  }
-
-  for (const [suffix, who] of [
-    [' you control', YOURS],
-    [' your opponents control', OPPONENTS],
-  ] as const) {
-    if (noun.endsWith(suffix)) {
-      parts.push(who);
-      noun = noun.slice(0, -suffix.length);
-      break;
-    }
-  }
-
-  const colorMatch = noun.match(/^(white|blue|black|red|green) (.+)$/);
-  if (colorMatch !== null) {
-    parts.push(ofColor(COLOR_WORDS[colorMatch[1] as string] as Color));
-    noun = colorMatch[2] as string;
-  }
-
-  // "legendary creatures you control" (Boseiju's discount, Kindred Discovery-style anthems) -
-  // a SUPERTYPE adjective, read the same way as the color adjective above. CR 205.4a's list;
-  // "World" is included for completeness even though nothing in the pool prints it.
-  const supertypeMatch = noun.match(/^(basic|legendary|snow|world) (.+)$/);
-  if (supertypeMatch !== null) {
-    parts.push(ofSupertype(titleCase(supertypeMatch[1] as string)));
-    noun = supertypeMatch[2] as string;
-  }
-
-  // "other creatures you control with base power and toughness 1/1" (Bess, Soul Nourisher).
-  const baseClause = noun.match(/^(.+) with base power and toughness (\d+)\/(\d+)$/);
-  if (baseClause !== null) {
-    parts.push({
-      kind: 'basePowerToughness',
-      power: Number(baseClause[2]),
-      toughness: Number(baseClause[3]),
-    });
-    noun = baseClause[1] as string;
-    for (const [suffix, who] of [
-      [' you control', YOURS],
-      [' your opponents control', OPPONENTS],
-    ] as const) {
-      if (noun.endsWith(suffix)) {
-        parts.push(who);
-        noun = noun.slice(0, -suffix.length);
-        break;
-      }
-    }
-  }
-
-  // "creatures you control each with power greater than its base power" (Kutzil).
-  const aboveBase = noun.match(
-    /^(.+?) (?:each )?with power greater than (?:its|their) base power$/,
-  );
-  if (aboveBase !== null) {
-    parts.push({ kind: 'powerGreaterThanBase' });
-    noun = aboveBase[1] as string;
-    for (const [suffix, who] of [
-      [' you control', YOURS],
-      [' your opponents control', OPPONENTS],
-    ] as const) {
-      if (noun.endsWith(suffix)) {
-        parts.push(who);
-        noun = noun.slice(0, -suffix.length);
-        break;
-      }
-    }
-  }
-
-  const counterClause = noun.match(/^(.+) with (?:a )?\+1\/\+1 counter on it$/);
-  if (counterClause !== null) {
-    // The printed subject names the counter KIND. "Any counter" would pull in -1/-1, stun and
-    // charge counters, which is a different (and strictly larger) set of creatures.
-    parts.push(hasCounter('+1/+1'));
-    noun = counterClause[1] as string;
-    for (const [suffix, who] of [
-      [' you control', YOURS],
-      [' your opponents control', OPPONENTS],
-    ] as const) {
-      if (noun.endsWith(suffix)) {
-        parts.push(who);
-        noun = noun.slice(0, -suffix.length);
-        break;
-      }
-    }
-  }
-
-  // "creature tokens" is an intersection too: the token status is not a subtype. Keep it in
-  // the shared subject grammar so activated effects such as "Creature tokens you control gain
-  // indestructible" compose with the same selector used by anthems and triggers.
-  const tokenType = noun.match(/^(?:(creature|artifact|enchantment|land|planeswalker) )?tokens$/);
-  if (tokenType !== null) {
-    parts.push(IS_TOKEN);
-    if (tokenType[1] !== undefined) parts.push(ofType(titleCase(tokenType[1] as string)));
-    noun = 'permanents';
-  }
-
-  // "artifact creatures" is an intersection of card types, not a creature subtype named
-  // Artifact. Treating it as a subtype would either reject the line or silently match nothing.
-  const compoundTypes = noun.match(/^(artifact|enchantment) (creatures|artifacts|enchantments)$/);
-  // "non-Human creatures you control" (Return of the Wildspeaker) â€” a negated tribe, the plural
-  // counterpart to the mass-destroy grammar's own "non-Dragon creatures" (which reads the tribe
-  // out by hand rather than sharing this function; see the "destroy all non-X creatures" rule).
-  const negatedTribe = noun.match(
-    /^non-(.+?) (creatures|artifacts|enchantments|lands|planeswalkers)$/,
-  );
-  if (compoundTypes !== null) {
-    parts.push(ofType(titleCase(compoundTypes[1] as string)));
-    parts.push(ofType(CARD_TYPE_PLURALS[compoundTypes[2] as string] as string));
-  } else if (negatedTribe !== null) {
-    const subtype = resolveSubtype(negatedTribe[1] as string, card);
-    if (subtype === null) return null;
-    parts.push(not(ofSubtype(subtype)));
-    parts.push(ofType(CARD_TYPE_PLURALS[negatedTribe[2] as string] as string));
-  } else if (noun === 'nonland permanents') {
-    // "destroy all nonland permanents your opponents control" (Ruinous Ultimatum) â€” the plural
-    // counterpart to `TARGET_NOUNS`'s singular `nonlandPermanent`. Not a tribe or a card type, so
-    // it needs its own bare-noun case rather than falling through to `resolveSubtype`.
-    parts.push(NONLAND);
-  } else {
-    const bareType = CARD_TYPE_PLURALS[noun];
-    const singularType = Object.entries(CARD_TYPE_PLURALS).find(
-      ([, type]) => type.toLowerCase() === noun,
-    )?.[1];
-    if (bareType !== undefined) {
-      parts.push(ofType(bareType));
-    } else if (singularType !== undefined) {
-      parts.push(ofType(singularType));
-    } else if (noun !== 'permanents') {
-      // Either a bare tribe ("elves") or a tribe plus a card type ("elf creatures").
-      const m = noun.match(
-        /^(.+) (creature|creatures|artifact|artifacts|enchantment|enchantments|land|lands|planeswalker|planeswalkers)$/,
-      );
-      const subtype = resolveSubtype(m?.[1] ?? noun, card);
-      if (subtype === null) return null;
-      parts.push(ofSubtype(subtype));
-      if (m !== null)
-        parts.push(ofType(CARD_TYPE_PLURALS[m[2] as string] ?? titleCase(m[2] as string)));
-    }
-  }
-
-  if (parts.length === 0) return null;
-  return parts.length === 1 ? (parts[0] as Selector) : allOf(...parts);
 }
 
 /**
@@ -2861,14 +2441,6 @@ function parseCountersThenTheyGainBlock(body: string, card: OracleCard): Effect[
   ];
 }
 
-const ORDINAL_TIMES: Record<string, number> = {
-  first: 1,
-  second: 2,
-  third: 3,
-  fourth: 4,
-  fifth: 5,
-};
-
 /**
  * "You gain 1 life if this is the first time this ability has resolved this turn. If it's the
  * second time, draw a card. If it's the third time, …" (Belladonna Took) and "scry 1. If this is
@@ -3581,8 +3153,6 @@ function parseDiesThisTurnReturnTappedBlock(body: string, alloc: SlotAllocator):
   ];
 }
 
-const ORDINALS_FROM_TOP: Record<string, number> = { second: 2, third: 3, fourth: 4, fifth: 5 };
-
 /**
  * "Put it into its owner's library third from the top" (God-Eternal Rhonas), on a trigger for the
  * source itself dying or being exiled: "it" is the card the source became (CR 400.7e).
@@ -3657,104 +3227,6 @@ function parseHerdHeirloomEffect(
 }
 
 /**
- * A damage amount as printed: a number word, or `X` (the announced value, CR 601.2b).
- *
- * Returns a `Value` rather than a number so "X damage" and "3 damage" take the same executor
- * path â€” the alternative is a parallel set of ops that differ only in how the number arrives.
- */
-function parseDamageAmount(word: string, card: OracleCard): Value | null {
-  if (word === 'x') {
-    // Only meaningful on a card whose own cost contains {X}; anything else is a different X
-    // (an ability's X, a counted quantity) that this grammar has not read.
-    return (card.manaCost ?? '').includes('{X}') ? { kind: 'xValue' } : null;
-  }
-  const amount = parseAmount(word);
-  return amount === null ? null : constant(amount);
-}
-
-/**
- * The subject of a mass effect â€” "each creature without flying", "each Dragon you control".
- * Plural `parseSubject` with a singular head, plus the keyword clause only mass effects use.
- */
-function parseMassSubject(phrase: string, card: OracleCard): Selector | null {
-  let noun = phrase;
-  const parts: Selector[] = [];
-
-  const enchantedClause = noun.match(/^(.+) that (?:aren't|are not) enchanted$/i);
-  if (enchantedClause !== null) {
-    parts.push(not(IS_ENCHANTED));
-    noun = enchantedClause[1] as string;
-  }
-
-  const equippedClause = noun.match(/^(.+) that (?:aren't|are not) equipped$/i);
-  if (equippedClause !== null) {
-    parts.push(not(IS_EQUIPPED));
-    noun = equippedClause[1] as string;
-  }
-
-  const powerClause = noun.match(/^(.+) with power (\d+) or greater$/i);
-  if (powerClause !== null) {
-    parts.push(powerAtLeast(Number(powerClause[2])));
-    noun = powerClause[1] as string;
-  }
-
-  // "destroy all creatures with mana value 3 or less" / "â€¦4 or greater" (Austere Command).
-  const manaValueClause = noun.match(/^(.+) with mana value (\d+) or (less|greater)$/i);
-  if (manaValueClause !== null) {
-    const n = Number(manaValueClause[2]);
-    parts.push(
-      manaValueClause[3]?.toLowerCase() === 'less' ? manaValueAtMost(n) : manaValueAtLeast(n),
-    );
-    noun = manaValueClause[1] as string;
-  }
-
-  // "â€¦without flying" / "â€¦with flying". Event-only (see `cards/selector.ts`): safe here because
-  // a resolving spell reads keywords once, after the layer pass has produced them.
-  const keywordClause = noun.match(/^(.+) with(out)? ([a-z ]+)$/i);
-  if (keywordClause !== null) {
-    const keyword = keywordClause[3] as string;
-    if (KEYWORD_SET.has(keyword)) {
-      const leaf = withKeyword(keyword);
-      parts.push(keywordClause[2] === undefined ? leaf : not(leaf));
-      noun = keywordClause[1] as string;
-    }
-  }
-
-  // "destroy all nontoken creatures" (Hour of Reckoning): tokens are spared.
-  const nontoken = noun.match(/^nontoken (.+)$/i);
-  if (nontoken !== null) {
-    parts.push(not(IS_TOKEN));
-    noun = nontoken[1] as string;
-  }
-
-  // "artifacts and enchantments" is one mass-removal subject, not two independent effects.
-  // Keep the alternation inside the selector so modal bullets such as Cleansing Nova remain
-  // single modes and the conservative sentence splitter never sees this conjunction.
-  const typeAlternation = noun.split(' and ');
-  const typeNames: Record<string, string> = {
-    creatures: 'Creature',
-    artifacts: 'Artifact',
-    enchantments: 'Enchantment',
-    lands: 'Land',
-    planeswalkers: 'Planeswalker',
-  };
-  let compoundTypeSelected = false;
-  if (
-    typeAlternation.length > 1 &&
-    typeAlternation.every((type) => typeNames[type] !== undefined)
-  ) {
-    parts.push(anyOf(...typeAlternation.map((type) => ofType(typeNames[type] as string))));
-    compoundTypeSelected = true;
-    noun = 'permanents';
-  }
-
-  const subject = parseSubject(noun, card) ?? parseTriggerSubject(noun, card);
-  if (subject === null && !compoundTypeSelected) return null;
-  if (subject !== null) parts.push(subject);
-  return parts.length === 1 ? (parts[0] as Selector) : allOf(...parts);
-}
-
-/**
  * "Search your library for <what>, put <them> <where>, then shuffle" (CR 701.19) â€” the
  * basic-land tutor template, which recurs on four cards in the coverage fixtures.
  *
@@ -3801,134 +3273,6 @@ function parseSearchSentence(s: string, card: OracleCard): Effect[] | null {
     }),
     { op: 'shuffle' },
   ];
-}
-
-/** "a Plains, Island, Swamp, or Mountain card" / "up to two basic land cards" â†’ a `Selector`. */
-function parseSearchFilter(phrase: string, card: OracleCard): Selector | null {
-  // "a creature card OF THE CHOSEN TYPE" (Herald's Horn) - stripped first, because it trails
-  // the noun everything below reads. The chosen type is per-permanent state recorded as the
-  // source entered (`entersChoosingOption`), so it is a selector, not a literal subtype.
-  const chosen = phrase.match(/^(.+) of the chosen type$/);
-  if (chosen !== null) {
-    const rest = parseSearchFilter(chosen[1] as string, card);
-    return rest === null ? null : allOf(rest, CHOSEN_SUBTYPE);
-  }
-
-  const noun = phrase.replace(/^(?:up to \w+|a|an) /, '').replace(/ cards?$/, '');
-
-  // "basic land cards and/or Gate cards" is one search filter accepting either branch.
-  if (noun.includes(' and/or ')) {
-    const alternatives: Selector[] = [];
-    for (const part of noun.split(' and/or ')) {
-      const parsed = parseSearchFilter(part, card);
-      if (parsed === null) return null;
-      alternatives.push(parsed);
-    }
-    return anyOf(...alternatives);
-  }
-  // "a card" (Demonic Tutor) â€” unrestricted, not narrowed to permanent types the way
-  // `parseCardFilterPhrase`'s bare "card"/"permanent" is for its (zone-restricted) callers.
-  // `allOf()` with no operands is vacuously true (CR-accurate: every `every()` over an empty
-  // list holds), so it matches any card in the library without a dedicated "match anything"
-  // selector kind.
-  if (noun === 'card' || noun === 'cards') return allOf();
-
-  // "basic land" â€” a supertype plus a type, not a subtype.
-  if (noun === 'basic land') return allOf(ofSupertype('Basic'), ofType('Land'));
-
-  // "Plains, Island, Swamp, or Mountain" â€” a list of land subtypes, any of which qualifies.
-  const alternatives = noun.split(/,? or |, /).map((n) => n.trim());
-  const selectors: Selector[] = [];
-  for (const alternative of alternatives) {
-    const subtype = LAND_SUBTYPES.find((t) => t.toLowerCase() === alternative);
-    if (subtype !== undefined) {
-      selectors.push(ofSubtype(subtype));
-      continue;
-    }
-    const parsed = parseTriggerSubject(alternative, card);
-    if (parsed === null) return null;
-    selectors.push(parsed);
-  }
-  if (selectors.length === 0) return null;
-  return selectors.length === 1 ? (selectors[0] as Selector) : anyOf(...selectors);
-}
-
-/**
- * "Dragon permanent card" / "creature card" / "permanent card" â†’ a `Selector` matching cards in
- * a non-battlefield zone by their PRINTED characteristics (`state/queries.ts::cardZoneCandidate`).
- *
- * Distinct from `parseTriggerSubject`: "permanent" is not a real card type (CR 110), so a bare
- * "permanent card" means "any of the six permanent card types", not a single `ofType`.
- */
-function parseCardFilterPhrase(phrase: string, card: OracleCard): Selector | null {
-  // "a Dragon creature card or Ugin planeswalker card" / "a Dragon spell or an Omen spell" â€”
-  // alternatives, any of which qualifies. Split before anything else so each side is read whole.
-  if (/ or /.test(phrase)) {
-    const parts: Selector[] = [];
-    for (const alternative of phrase.split(/ or /)) {
-      const parsed = parseCardFilterPhrase(alternative.replace(/^(?:an?) /, '').trim(), card);
-      if (parsed === null) return null;
-      parts.push(parsed);
-    }
-    return parts.length === 1 ? (parts[0] as Selector) : anyOf(...parts);
-  }
-
-  // "a creature spell OF THE CHOSEN TYPE" (Cavern of Souls) / "a creature card of the chosen
-  // type" (Herald's Horn) - the type named as the source entered. Stripped first, because it
-  // trails the noun the rest of this function reads.
-  const chosen = phrase.match(/^(.+) of the chosen type$/);
-  if (chosen !== null) {
-    const rest = parseCardFilterPhrase(chosen[1] as string, card);
-    return rest === null ? null : allOf(rest, CHOSEN_SUBTYPE);
-  }
-
-  const noun = phrase.replace(/ (?:cards?|spells?)$/, '').replace(/^(?:an?) /, '');
-  // "noncreature, nonland cards" (Flame On!) means the intersection of both negative
-  // characteristics, not either one. Keep this in the card-zone filter grammar: the same
-  // spelling on a battlefield subject is handled by `parseSubject` instead.
-  const negativeTypeNames = noun.split(/,\s*/).map((part) => {
-    const type = part.match(/^non(.+)$/)?.[1];
-    if (type === undefined) return undefined;
-    return (
-      CARD_TYPE_PLURALS[`${type}s`] ??
-      ({ instant: 'Instant', sorcery: 'Sorcery' } as Record<string, string>)[type]
-    );
-  });
-  if (
-    negativeTypeNames.length > 0 &&
-    negativeTypeNames.every((type): type is string => type !== undefined)
-  ) {
-    return allOf(...negativeTypeNames.map((type) => not(ofType(type))));
-  }
-  // "legendary creature card" combines a supertype with the ordinary card filter. Keep this
-  // here rather than teaching trigger subjects about card-zone-only wording.
-  if (noun === 'legendary') return ofSupertype('Legendary');
-  const legendary = noun.match(/^legendary (.+)$/);
-  if (legendary !== null) {
-    const rest = parseCardFilterPhrase(legendary[1] as string, card);
-    return rest === null ? null : allOf(ofSupertype('Legendary'), rest);
-  }
-  // "non-Rogue creature card" (Body Launderer): a hyphenated negated subtype before the noun.
-  const nonSubtype = noun.match(/^non-([a-z]+) (.+)$/);
-  if (nonSubtype !== null) {
-    const subtype = resolveSubtype(nonSubtype[1] as string, card);
-    const rest = parseCardFilterPhrase(nonSubtype[2] as string, card);
-    return subtype === null || rest === null ? null : allOf(not(ofSubtype(subtype)), rest);
-  }
-  const anyPermanentType = (): Selector => anyOf(...PERMANENT_CARD_TYPES.map((t) => ofType(t)));
-  if (noun === 'permanent' || noun === 'card' || noun === 'cards') return anyPermanentType();
-  const cardType =
-    CARD_TYPE_PLURALS[noun] ??
-    ((PERMANENT_CARD_TYPES as readonly string[]).includes(titleCase(noun))
-      ? titleCase(noun)
-      : undefined);
-  if (cardType !== undefined) return ofType(cardType);
-  const m = noun.match(/^(.+) permanent$/);
-  if (m !== null) {
-    const subtype = resolveSubtype(m[1] as string, card);
-    return subtype === null ? null : allOf(ofSubtype(subtype), anyPermanentType());
-  }
-  return parseTriggerSubject(noun, card);
 }
 
 /**
@@ -4004,9 +3348,6 @@ const ORDINAL_CAST_TRIGGER_HEAD_RE =
   /^whenever (you|an opponent) casts? (?:your|their) (first|second|third|fourth|fifth|sixth) (.+?) each turn, (.*)$/;
 const CAST_TRIGGER_HEAD_RE =
   /^whenever (you|an opponent|a player) casts?(?: or copy)? (.+?), (.*)$/;
-/** The intervening-if clause (CR 603.4): "â€¦, if you control a Dragon, draw a card". */
-const INTERVENING_IF_RE = /^if (.+?), (.+)$/;
-
 /**
  * Self-reference in a trigger head. `~` is the substituted card name; the "this <type>" forms
  * appear here in LOWERCASE ("When this enchantment enters"), so `SELF_REFERENCE_RE` â€” which is
@@ -4016,110 +3357,6 @@ const INTERVENING_IF_RE = /^if (.+?), (.+)$/;
  */
 const SELF_TRIGGER_SUBJECT_RE =
   /^(?:~|this (?:creature|artifact|enchantment|land|permanent|token|vehicle|equipment|saga|planeswalker|aura))$/;
-
-/** Singular card types that can head a trigger subject ("a creature you control"). */
-const CARD_TYPE_SINGULARS: Record<string, string> = {
-  creature: 'Creature',
-  instant: 'Instant',
-  sorcery: 'Sorcery',
-  artifact: 'Artifact',
-  enchantment: 'Enchantment',
-  land: 'Land',
-  planeswalker: 'Planeswalker',
-};
-
-/**
- * The subject of an object trigger â€” "a Dragon you control", "another creature you control
- * with power 4 or greater" â€” as a `Selector`. The singular counterpart to `parseSubject`,
- * which reads the plural noun phrases anthems use.
- *
- * Returns null for anything unrecognized, leaving the card unmodeled: a trigger with a subject
- * that silently matches nothing would never fire, which is a misplay every game.
- */
-function parseTriggerSubject(phrase: string, card: OracleCard): Selector | null {
-  // Aura/Equipment combat triggers refer to the permanent attached to this source.
-  if (/^(equipped|enchanted) creature$/.test(phrase)) return { kind: 'attachedToSource' };
-  const selfOrOther = phrase.match(
-    /^(?:~|this (?:creature|artifact|enchantment|land|permanent)) or another (.+)$/,
-  );
-  if (selfOrOther !== null) {
-    const rest = parseTriggerSubject('another ' + selfOrOther[1], card);
-    if (rest !== null) {
-      return anyOf(SELF, rest);
-    }
-  }
-  const parts: Selector[] = [];
-  let noun = phrase;
-
-  if (noun.startsWith('another ')) {
-    parts.push(OTHER);
-    noun = noun.slice('another '.length);
-  } else {
-    noun = noun.replace(/^an? /, '');
-  }
-
-  // "Whenever an enchanted creature dies" (Hateful Eidolon): any creature with an Aura attached,
-  // read off the leaving creature's last-known facts.
-  if (noun === 'enchanted creature') {
-    parts.push(IS_ENCHANTED);
-    noun = 'creature';
-  }
-  // "another **nontoken** Dragon you control" (Miirym). Sits between "another" and the tribe.
-  if (noun.startsWith('nontoken ')) {
-    parts.push(not(IS_TOKEN));
-    noun = noun.slice('nontoken '.length);
-  }
-
-  // "â€¦with power 4 or greater" is the outermost clause, so it comes off before the control
-  // suffix it wraps. Event-only â€” see `powerAtLeast` in `cards/selector.ts`.
-  const powerMatch = noun.match(/^(.+) with power (\d+) or greater$/);
-  if (powerMatch !== null) {
-    parts.push(powerAtLeast(Number(powerMatch[2])));
-    noun = powerMatch[1] as string;
-  }
-
-  // "a creature you control with a +1/+1 counter on it" (The Ooze): the named counter kind, read
-  // off the subject as the event saw it — a leaving creature's last-known counters (CR 603.10a).
-  const counterMatch = noun.match(/^(.+) with an? ([+-]\d+\/[+-]\d+) counter on it$/);
-  if (counterMatch !== null) {
-    parts.push(hasCounter(counterMatch[2] as string));
-    noun = counterMatch[1] as string;
-  }
-
-  for (const [suffix, who] of [
-    [' you control', YOURS],
-    [' an opponent controls', OPPONENTS],
-    [' your opponents control', OPPONENTS],
-  ] as const) {
-    if (noun.endsWith(suffix)) {
-      parts.push(who);
-      noun = noun.slice(0, -suffix.length);
-      break;
-    }
-  }
-
-  const tokenType = noun.match(/^(creature|artifact|enchantment|land|planeswalker)? ?tokens?$/);
-  if (tokenType !== null) {
-    parts.push(IS_TOKEN);
-    if (tokenType[1] !== undefined)
-      parts.push(ofType(CARD_TYPE_SINGULARS[tokenType[1] as string] as string));
-  } else {
-    const bareType = CARD_TYPE_SINGULARS[noun];
-    if (bareType !== undefined) {
-      parts.push(ofType(bareType));
-    } else if (noun !== 'permanent') {
-      // Either a bare tribe ("a Dragon") or a tribe plus a card type ("a Dragon creature").
-      const m = noun.match(/^(.+) (creature|artifact|enchantment|land|planeswalker)$/);
-      const subtype = resolveSubtype(m?.[1] ?? noun, card);
-      if (subtype === null) return null;
-      parts.push(ofSubtype(subtype));
-      if (m !== null) parts.push(ofType(CARD_TYPE_SINGULARS[m[2] as string] as string));
-    }
-  }
-
-  if (parts.length === 0) return null;
-  return parts.length === 1 ? (parts[0] as Selector) : allOf(...parts);
-}
 
 /**
  * Predefined token faces that rules text names rather than describes (CR 111.10). "Create a
@@ -4387,147 +3624,6 @@ function parseCreateTokenSentence(
   }
 
   return [{ op: 'createToken', spec, count, ...(tapped ? { tapped: true } : {}) }];
-}
-
-/** Sentinel for "whenever you cast **a spell**" â€” no filter at all, which is not the same as an
- * unparseable one. Compared by identity, never matched against anything. */
-const ANY_SPELL: Selector = { kind: 'type', value: '*any spell*' };
-
-/**
- * The spell a `castsSpell` trigger watches â€” "a Dragon spell", "a creature spell", "a Dragon
- * creature spell".
- *
- * A spell is matched on card characteristics, so this reuses `parseTriggerSubject` after
- * stripping the trailing "spell": "a Dragon spell" and "a Dragon" describe the same
- * characteristics, and only the zone differs.
- */
-function parseSpellFilter(phrase: string, card: OracleCard): Selector | null {
-  // "Spells OF THE CHOSEN TYPE you cast..." (Morophon) - the qualifier sits on the subject here,
-  // where Herald's Horn prints it after "you cast". Same selector either way.
-  const chosen = phrase.match(/^(.+) of the chosen type$/);
-  if (chosen !== null) {
-    const rest = parseSpellFilter(chosen[1] as string, card);
-    return rest === null ? null : rest === ANY_SPELL ? CHOSEN_SUBTYPE : allOf(rest, CHOSEN_SUBTYPE);
-  }
-
-  const noun = phrase.replace(/ spells?$/, '').replace(/^an? /, '');
-  // "spells" reaches here bare when a qualifier was stripped off the front of it ("spells of the
-  // chosen type" -> "spells"); the ` spells?$` strip above needs a leading space and leaves it.
-  if (noun === '' || noun === 'a' || noun === 'an' || noun === 'spell' || noun === 'spells') {
-    return ANY_SPELL;
-  }
-  const manaValue = noun.match(/^(?:(.+?) )?spell with mana value (\d+) or (less|greater)$/);
-  if (manaValue !== null) {
-    const bound =
-      manaValue[3] === 'less'
-        ? manaValueAtMost(Number(manaValue[2]))
-        : manaValueAtLeast(Number(manaValue[2]));
-    if (manaValue[1] === undefined) return bound;
-    const base = parseTriggerSubject(manaValue[1] as string, card);
-    return base === null ? null : allOf(base, bound);
-  }
-  if (noun === 'noncreature') return not(ofType('Creature'));
-  // "Whenever you cast an Aura spell" (Kor Spiritdancer): the spell's subtype (CR 205.3h).
-  if (noun === 'aura') return ofSubtype('Aura');
-  // "an instant or sorcery spell" (Archmage Emeritus) / "Instant and sorcery spells" (Goblin
-  // Electromancer) â€” each side is its own card type, not a tribe the way `parseTriggerSubject`'s
-  // "or" handling elsewhere reads alternatives. "And" reads the same as "or" here: the predicate
-  // is "matches either type", not an intersection no single spell could ever satisfy.
-  const orTypes = noun.match(
-    /^(instant|sorcery|artifact|creature|enchantment|planeswalker|land) (?:and|or) (?:an? )?(instant|sorcery|artifact|creature|enchantment|planeswalker|land)$/,
-  );
-  if (orTypes !== null) {
-    return anyOf(ofType(titleCase(orTypes[1] as string)), ofType(titleCase(orTypes[2] as string)));
-  }
-  return parseTriggerSubject(noun, card);
-}
-
-/**
- * A condition clause as rules text writes it â€” "you control a creature with power 4 or
- * greater". Reuses `parseTriggerSubject`, so anything expressible as a trigger subject is
- * automatically countable here too.
- */
-function parseConditionClause(clause: string, card: OracleCard): Condition | null {
-  if (clause === 'it was kicked' || clause === 'this spell was kicked') {
-    return { kind: 'wasKicked' };
-  }
-  // "When this creature enters, if you cast it, …" (Shard of the Nightbringer): read from the
-  // permanent's cast record, so reanimating or flickering it does not count.
-  if (clause === 'you cast it') return { kind: 'sourceWasCast' };
-  if (clause === 'it escaped' || clause === '~ escaped') {
-    return { kind: 'escaped' };
-  }
-  if (
-    clause === 'a creature or planeswalker an opponent controlled was dealt excess damage this turn'
-  ) {
-    return { kind: 'excessDamageDealtTo', scope: 'opponents' };
-  }
-  // "if you've cast a noncreature spell this turn" — the shared intervening-if of the Fantastic
-  // Four cycle. A tally kept at cast time, not a board read, so it survives the spell resolving.
-  {
-    const cast = clause.match(/^you've cast (?:a|an) (noncreature )?spell this turn$/);
-    if (cast !== null) {
-      return {
-        kind: 'castSpellThisTurn',
-        category: cast[1] === undefined ? 'any' : 'noncreature',
-        cmp: '>=',
-        n: 1,
-      };
-    }
-  }
-  // "if there are thirteen or more creatures on the battlefield" (Blasphemous Edict) — every
-  // player's permanents count.
-  {
-    const total = clause.match(/^there are (\w+) or more (.+) on the battlefield$/);
-    if (total !== null) {
-      const n = parseAmount(total[1] as string);
-      const selector = parseSubject(total[2] as string, card);
-      if (n === null || selector === null) return null;
-      return countPermanents(selector, 'all', '>=', n);
-    }
-  }
-  // "if you control four or more creatures" — a threshold rather than the bare "you control a
-  // creature" below, which is the same condition with an implied n of 1. The subject is stripped
-  // of its count before `parseTriggerSubject` sees it, so it reads the same singular grammar.
-  {
-    const counted = clause.match(/^you control (\w+) or more (.+)$/);
-    if (counted !== null) {
-      const n = parseAmount(counted[1] as string);
-      const selector = parseSubject(counted[2] as string, card);
-      if (n === null || selector === null) return null;
-      return countPermanents(selector, 'you', '>=', n);
-    }
-  }
-  // "if it has no ice counters on it" / "if ~ has three or more charge counters on it" — the
-  // ability's own source, not a selector match.
-  {
-    const counters = clause.match(
-      /^(?:it|~|this (?:artifact|creature|enchantment|land|permanent)) has (no|\w+ or more|\w+ or fewer) ([a-z]+) counters? on it$/,
-    );
-    if (counters !== null) {
-      const quantifier = counters[1] as string;
-      const counter = counters[2] as string;
-      if (quantifier === 'no') return { kind: 'sourceHasCounters', counter, cmp: '<=', n: 0 };
-      const [word, , direction] = quantifier.split(' ');
-      const n = parseAmount(word as string);
-      if (n === null) return null;
-      return { kind: 'sourceHasCounters', counter, cmp: direction === 'more' ? '>=' : '<=', n };
-    }
-  }
-  // "if you have seven or more cards in your graveyard" (Search for Azcanta).
-  {
-    const graveyard = clause.match(/^you have (\w+) or more cards in your graveyard$/);
-    if (graveyard !== null) {
-      const n = parseAmount(graveyard[1] as string);
-      if (n === null) return null;
-      return { kind: 'cardsInYourGraveyard', cmp: '>=', n };
-    }
-  }
-  const m = clause.match(/^you control (.+)$/);
-  if (m === null) return null;
-  const selector = parseTriggerSubject(m[1] as string, card);
-  if (selector === null) return null;
-  return countPermanents(selector, 'you', '>=', 1);
 }
 
 /**
@@ -5367,116 +4463,6 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
 }
 
 /**
- * The noun phrase after "target" â†’ a `TargetKind`. Returns null for anything unlisted so the
- * card stays unmodeled rather than being silently retargeted at the wrong thing.
- */
-const TARGET_NOUNS: Record<string, TargetKind> = {
-  creature: 'creature',
-  artifact: 'artifact',
-  enchantment: 'enchantment',
-  land: 'land',
-  planeswalker: 'planeswalker',
-  permanent: 'permanent',
-  'nonland permanent': 'nonlandPermanent',
-  'artifact or enchantment': 'artifactOrEnchantment',
-  'artifact, enchantment, or planeswalker': 'artifactEnchantmentOrPlaneswalker',
-  player: 'player',
-  opponent: 'player',
-};
-
-function parseTargetNoun(noun: string): TargetKind | null {
-  return TARGET_NOUNS[noun.trim()] ?? null;
-}
-
-/**
- * "Artifact, creature, or planeswalker" / "creature or enchantment" â€” an arbitrary permanent-type
- * alternation that `TARGET_NOUNS` doesn't special-case. Rather than adding a new `TargetKind`
- * literal (and a new `permanentMatchesKind` branch) for every combination removal spells happen
- * to print â€” Bedevil, Mortify, Putrefy, Despark's "with mana value N or greater" restriction all
- * want a different subset â€” this composes the general `permanent` kind (matches everything) with
- * an `anyOf(ofType(...))` filter, which the target-legality code already applies on top of any
- * kind. Two or more comma/"or"-separated single-word type nouns, each a known permanent type;
- * anything else (a card name, a qualifier, a single noun already in `TARGET_NOUNS`) returns null.
- */
-const PERMANENT_TYPE_NOUNS: Record<string, string> = {
-  creature: 'Creature',
-  artifact: 'Artifact',
-  enchantment: 'Enchantment',
-  land: 'Land',
-  planeswalker: 'Planeswalker',
-};
-
-function parseCompoundPermanentTypeNoun(text: string): Selector | null {
-  const parts = text
-    .split(/,| or /)
-    .map((p) => p.replace(/^and\s+/, '').trim())
-    .filter((p) => p.length > 0);
-  if (parts.length < 2) return null;
-  const types: string[] = [];
-  for (const part of parts) {
-    const type = PERMANENT_TYPE_NOUNS[part];
-    if (type === undefined) return null;
-    types.push(type);
-  }
-  return anyOf(...types.map((t) => ofType(t)));
-}
-
-function parseTargetClause(
-  text: string,
-): { kind: TargetKind; filter?: Selector; controller?: TargetSpec['controller'] } | null {
-  let cleaned = text.trim();
-  let controller: TargetSpec['controller'] | undefined = undefined;
-  if (cleaned.endsWith("you don't control") || cleaned.endsWith('an opponent controls')) {
-    controller = 'opponent';
-    cleaned = cleaned.replace(/\s+(you don't control|an opponent controls)$/, '').trim();
-  } else if (cleaned.endsWith('you control')) {
-    controller = 'you';
-    cleaned = cleaned.replace(/\s+you control$/, '').trim();
-  } else if (cleaned.endsWith('that player controls')) {
-    controller = 'eventPlayer';
-    cleaned = cleaned.replace(/\s+that player controls$/, '').trim();
-  }
-
-  let filter: Selector | undefined = undefined;
-  if (cleaned.startsWith('monocolored ')) {
-    filter = IS_MONOCOLORED;
-    cleaned = cleaned.replace(/^monocolored\s+/, '').trim();
-  }
-
-  // "target permanent with mana value 4 or greater" (Despark) / "target nonland permanent with
-  // mana value 3 or less" (Abrupt Decay) â€” the targeted counterpart to `parseMassSubject`'s
-  // identical clause for the untargeted "destroy all â€¦" form.
-  const manaValueClause = cleaned.match(/^(.+) with mana value (\d+) or (less|greater)$/i);
-  if (manaValueClause !== null) {
-    const n = Number(manaValueClause[2]);
-    const bound =
-      manaValueClause[3]?.toLowerCase() === 'less' ? manaValueAtMost(n) : manaValueAtLeast(n);
-    filter = filter === undefined ? bound : allOf(filter, bound);
-    cleaned = manaValueClause[1] as string;
-  }
-
-  const kind = parseTargetNoun(cleaned);
-  if (kind !== null) {
-    return {
-      kind,
-      ...(filter !== undefined ? { filter } : {}),
-      ...(controller !== undefined ? { controller } : {}),
-    };
-  }
-
-  // Not one of the named single/compound target kinds â€” try reading it as an arbitrary
-  // permanent-type alternation instead (see `parseCompoundPermanentTypeNoun`). `filter` can
-  // already hold `IS_MONOCOLORED` from above; combine rather than overwrite.
-  const compound = parseCompoundPermanentTypeNoun(cleaned);
-  if (compound === null) return null;
-  return {
-    kind: 'permanent',
-    filter: filter === undefined ? compound : allOf(filter, compound),
-    ...(controller !== undefined ? { controller } : {}),
-  };
-}
-
-/**
  * As-enters tapped-ness (CR 614.1c). Two printed templates, one meaning: the permanent enters
  * tapped exactly when the condition is false.
  *
@@ -5490,71 +4476,6 @@ function parseTargetClause(
 const ENTERS_TAPPED_UNLESS_RE = /^(?:~|this land) enters (?:the battlefield )?tapped unless (.+)$/;
 const ENTERS_PAY_LIFE_RE =
   /^as (?:~|this land) enters, you may pay (\d+) life\. if you don't, it enters tapped$/;
-
-/**
- * The "unless â€¦" clause of a conditional-enters-tapped land â†’ a `Condition`. Returns null for
- * anything unlisted, leaving the card unmodeled rather than guessing a predicate â€” a land that
- * silently entered untapped would be a real (if small) misplay every game.
- */
-function parseEntersUnlessClause(clause: string, card: OracleCard): Condition | null {
-  // "you have two or more opponents"
-  {
-    const m = clause.match(/^you have (\w+) or (more|fewer) opponents$/);
-    if (m) {
-      const n = parseAmount(m[1] as string);
-      if (n === null) return null;
-      return { kind: 'opponentCount', cmp: m[2] === 'more' ? '>=' : '<=', n };
-    }
-  }
-  // "you control a Mountain or a Forest" â€” a subtype list, any of which satisfies it.
-  {
-    const m = clause.match(/^you control (a|an) (.+)$/);
-    if (m) {
-      const nouns = (m[2] as string).split(/,? or (?:a |an )?/).map((s) => s.trim());
-      const selectors: Selector[] = [];
-      for (const noun of nouns) {
-        // Printed capitalized on the card ("a Mountain"), but `clause` is lowercased; match
-        // against the land subtypes this card itself can check for.
-        const subtype = LAND_SUBTYPES.find((s) => s.toLowerCase() === noun);
-        if (subtype === undefined) return null;
-        selectors.push(ofSubtype(subtype));
-      }
-      if (selectors.length === 0) return null;
-      return countPermanents(
-        selectors.length === 1 ? (selectors[0] as Selector) : anyOf(...selectors),
-        'you',
-        '>=',
-        1,
-      );
-    }
-  }
-  // "you control two or more other lands" / "â€¦ two or fewer other lands"
-  // "you control two or more basic lands"
-  // "your opponents control eight or more lands"
-  {
-    const m = clause.match(
-      /^(you|your opponents) controls? (\w+) or (more|fewer) (other |basic )?lands$/,
-    );
-    if (m) {
-      const n = parseAmount(m[2] as string);
-      if (n === null) return null;
-      const parts: Selector[] = [ofType('Land')];
-      if ((m[4] ?? '').trim() === 'other') parts.push(OTHER);
-      if ((m[4] ?? '').trim() === 'basic') parts.push(ofSupertype('Basic'));
-      return countPermanents(
-        parts.length === 1 ? (parts[0] as Selector) : allOf(...parts),
-        m[1] === 'you' ? 'you' : 'opponents',
-        m[3] === 'more' ? '>=' : '<=',
-        n,
-      );
-    }
-  }
-  void card;
-  return null;
-}
-
-/** Basic land types (CR 305.6) â€” the vocabulary a checkland's "unless you control a â€¦" uses. */
-const LAND_SUBTYPES = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes'];
 
 /**
  * How a card refers to itself mid-sentence. `~` is the substituted card name; the lowercase
@@ -5641,32 +4562,6 @@ const MANA_ACTIVATE_ONLY_IF_COUNT_RE =
 const MANA_ACTIVATE_ONLY_IF_ANY_RE = /^(add [^.]+)\. activate only if (.+)$/;
 /** "Add three mana of any one color" (Sceptre of Eternal Glory): N units, all the same color. */
 const MANA_N_OF_ONE_COLOR_RE = /^add (\w+) mana of any one color$/;
-
-/**
- * The condition of an "Activate only if …" restriction (CR 602.5b), lowercased with no trailing
- * period. Returns null for any phrasing it does not know, so the ability stays unmodeled rather
- * than becoming activatable at times the card forbids.
- */
-function parseActivationCondition(text: string, card: OracleCard): Condition | null {
-  const sameName = text.match(/^you control (\w+) or more lands with the same name$/);
-  if (sameName !== null) {
-    const n = parseAmount(sameName[1] as string);
-    return n === null ? null : { kind: 'controlsLandsWithSameName', n };
-  }
-  const opponentMore = text.match(/^an opponent controls more (.+) than you$/);
-  if (opponentMore !== null) {
-    const selector = parseSubject(opponentMore[1] as string, card);
-    return selector === null ? null : { kind: 'opponentControlsMore', selector };
-  }
-  if (text === 'you created a token this turn') return { kind: 'createdTokenThisTurn' };
-  const counted = text.match(/^you control (\w+) or more (.+)$/);
-  if (counted !== null) {
-    const n = parseAmount(counted[1] as string);
-    const selector = parseSubject(counted[2] as string, card);
-    return n === null || selector === null ? null : countPermanents(selector, 'you', '>=', n);
-  }
-  return null;
-}
 
 /**
  * "â€¦Spend this mana only to cast a Dragon creature spell." (Haven of the Spirit Dragon) â€” a
@@ -6418,11 +5313,6 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
     ...(costs.some((c) => c.kind === 'discardSelf') ? { zone: 'hand' as const } : {}),
     ability: { kind: 'activated', targets, effects, description: line },
   };
-}
-
-/** "dragon" → "Dragon". Subtypes are printed capitalized; the parser lowercases lines. */
-function titleCase(word: string): string {
-  return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
 /**
