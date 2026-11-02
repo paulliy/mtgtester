@@ -15,7 +15,7 @@ import {
   mountain,
   oracle,
   plains,
-  pump,
+  pumpStrict,
   spawn,
   swamp,
 } from './fixtures';
@@ -28,7 +28,7 @@ const underground = () => oracle({ name: 'Test Sea', typeLine: 'Land — Island 
 function setup() {
   const ctx = createGame(gameConfig([{ cards: copies(8, forest) }, { cards: copies(8, forest) }]));
   const player = ctx.state.players[0]!;
-  const pay = (cost: string) => pump(payManaCost(ctx, player, parseManaCost(cost).cost!));
+  const pay = (cost: string) => pumpStrict(payManaCost(ctx, player, parseManaCost(cost).cost!));
   const tapped = (perms: EnginePermanent[]) => perms.filter((p) => p.tapped).map((p) => p.name);
   return { ctx, player, pay, tapped };
 }
