@@ -131,3 +131,11 @@ export function resolveSubtype(word: string, card: OracleCard): string | null {
   }
   return null;
 }
+
+/**
+ * How a card refers to itself mid-sentence. `~` is the substituted card name; the lowercase
+ * "this <type>" forms survive `substituteSelfName` (which is case-sensitive by design — see
+ * `SELF_REFERENCE_RE`) and are accepted only in positions where nothing else can be meant.
+ */
+export const SELF_OBJECT_RE =
+  /^(?:~|this (?:artifact|creature|enchantment|land|permanent|token|vehicle|equipment|saga|planeswalker))$/;
