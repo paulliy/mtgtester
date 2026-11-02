@@ -19,8 +19,10 @@ const pool = buildSupportedPool(
     readFileSync(resolve('packages/server/fixtures/coverage-oracle.json'), 'utf8'),
   ) as OracleCard[],
 );
-// The diplomacy sweep's first game: its table talk starts on turn 11.
-const SEED = 'diplomacy-g0';
+// A sweep game that reaches table talk within the turn cap. The decks come from every modeled
+// card in the pinned fixture, so pinning more cards changes the game: re-pick the seed from
+// `bun run diplomacy-sweep` if this game stops talking.
+const SEED = 'diplomacy-g1';
 
 function seats(): SeatSetup[] {
   return [1, 2, 3, 4].map((n) => {
