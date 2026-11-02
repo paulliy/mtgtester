@@ -1,8 +1,10 @@
 name: CI
 
-# Actions minutes (ADR 0036, 0037). Every pull request push runs only the fast checks: format,
-# typecheck, lint, web build and the offline card gate. The slow suites run on a pull request only
-# when its labels pick them, and on the weekly run and manual dispatch:
+# Actions minutes (ADR 0036, 0037). A pull request runs CI when it is opened, when it is marked
+# ready for review, and when a label is added; a push to a pull request or to main runs nothing.
+# Each run does the fast checks: format, typecheck, lint, web build and the offline card gate. The
+# slow suites run on a pull request only when its labels pick them, and on the weekly run and
+# manual dispatch:
 #   ci:engine       full test suite with the collection checks and IR mutation (about 25 minutes)
 #   ci:lab          Card Test Lab Playwright, sampled: the scenarios the change adds or edits, one
 #                   per engine primitive the change's engine edits name, and one per primitive
@@ -17,15 +19,17 @@ name: CI
 # `CI / Gate` is the one required check: it fails a ready pull request that changed code until at
 # least one slow suite has been picked and every picked suite has run green; the weekly run covers
 # the suites and lab scenarios a pull request left out. The advisory PR fuzz job needs its own
-# `ci:fuzz` label. Pushes to main run the fast checks only; the weekly run repeats everything, with
-# every lab scenario, on main when a commit touched the engine in the last week.
+# `ci:fuzz` label. The weekly run repeats everything, with every lab scenario, on main when a commit
+# touched the engine in the last week.
+# Commits pushed after a pull request's last run are not checked, and `CI / Gate` reports on the
+# commit a run checked. To check a new head, add a label (removing and re-adding one works); the
+# run then checks the pull request as it is at that moment.
 on:
   pull_request:
-    # labeled: adding a `ci:` label starts its suites without a new push. ready_for_review: the gate
-    # passes drafts (they cannot merge) and must be re-evaluated when one is marked ready.
-    types: [opened, synchronize, reopened, ready_for_review, labeled]
-  push:
-    branches: [main]
+    # ADR 0037: no run on synchronize or reopened. labeled: adding a label runs CI on the current
+    # head. ready_for_review: the gate passes drafts (they cannot merge) and must be re-evaluated
+    # when one is marked ready.
+    types: [opened, ready_for_review, labeled]
   schedule:
     - cron: '13 6 * * 1'
   workflow_dispatch:
@@ -90,12 +94,6 @@ jobs:
           lab_mode() { out lab_full "$1"; out lab_sample "$2"; out lab_latest "$3"; }
           case "$EVENT_NAME" in
             pull_request) ;;
-            push)
-              # The pull request already ran its checks on this tree (with "require branches to
-              # be up to date" on); the weekly run repeats them.
-              out run true; out code true; out engine false; slow false false false false
-              lab_mode true false false
-              exit 0 ;;
             schedule)
               # ADR 0037: weekly, and only when a commit touched the engine that week.
               if [[ "$ENGINE_CHANGED" != "true" ]]; then
@@ -152,7 +150,7 @@ jobs:
           fi
 
   # One job for the quick checks: each job pays its own checkout, Bun install and per-job minute
-  # rounding. Every check runs even when an earlier one fails, so one push reports all of them.
+  # rounding. Every check runs even when an earlier one fails, so one run reports all of them.
   quality:
     name: Quality / Format, typecheck, lint, web build
     needs: changes
@@ -201,9 +199,8 @@ jobs:
   card-verification:
     name: Cards / Offline verification gate
     needs: changes
-    # Pull requests, the weekly run and dispatch; a push to main merged a pull request that
-    # already ran it.
-    if: needs.changes.outputs.code == 'true' && github.event_name != 'push'
+    # Pull requests, the weekly run and dispatch.
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -216,11 +213,12 @@ jobs:
       - run: bun run test:card-gate $SKIP_RUN
         env:
           SKIP_RUN: ${{ needs.changes.outputs.suite == 'true' && '--skip-run' || '' }}
-      # Lists that may shrink but must not grow, compared with the pull request's base (or a push's
-      # `before` SHA); the script falls back to HEAD's first parent as the promotion check does.
+      # Lists that may shrink but must not grow, compared with the pull request's base; without one
+      # (the weekly run, dispatch) the script falls back to HEAD's first parent, as the promotion
+      # check does.
       - name: Check ratchets
         env:
-          RATCHET_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          RATCHET_BASE: ${{ github.event.pull_request.base.sha }}
         run: bun run check:ratchets
       - run: bun run snapshots:check
       # The Card Test Lab scenario fingerprints a sampled lab run compares against (ADR 0037).
@@ -232,7 +230,7 @@ jobs:
           > test-results/primitive-impact.json
       - name: Check primitive review promotions
         env:
-          PROMOTION_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          PROMOTION_BASE: ${{ github.event.pull_request.base.sha }}
         run: |
           if [[ -z "$PROMOTION_BASE" || "$PROMOTION_BASE" =~ ^0+$ ]] || ! git cat-file -e "$PROMOTION_BASE^{commit}" 2>/dev/null; then
             PROMOTION_BASE=$(git rev-parse --verify HEAD^ 2>/dev/null || true)
@@ -240,7 +238,7 @@ jobs:
               echo "::notice::No prior commit exists; skipping base-relative promotion comparison."
               exit 0
             fi
-            echo "::warning::Push base unavailable; comparing promotions with HEAD's first parent."
+            echo "::warning::No pull request base; comparing promotions with HEAD's first parent."
           fi
           bun run primitive-promotions --base "$PROMOTION_BASE" --primitive-evidence test-results/primitive-contracts
       # The upload tolerates artifact-quota errors, which also mutes its if-no-files-found check,

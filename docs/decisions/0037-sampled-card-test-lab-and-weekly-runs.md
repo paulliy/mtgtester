@@ -4,8 +4,8 @@ Status: Accepted (2026-11-02)
 
 Date: 2026-11-02
 
-Amends: [ADR 0036](0036-ci-minutes-budget.md) decisions 5, 6 and 8 (how often the scheduled runs
-happen, and what `ci:lab` runs). What each suite checks is unchanged.
+Amends: [ADR 0036](0036-ci-minutes-budget.md) decisions 1, 5, 6 and 8 (which events run CI, how
+often the scheduled runs happen, and what `ci:lab` runs). What each suite checks is unchanged.
 
 ## Context
 
@@ -73,6 +73,11 @@ every capability plays nearly every scenario. A sample per family does not.
    which a renamed file would restart, and its failure issue keeps its title so an open one is still
    found.
 
+6. **Pull requests run CI on three events only** (added 2026-11-02): `opened`, `ready_for_review`
+   and `labeled`. A push to a pull request (`synchronize`), a reopen, and a push to main run
+   nothing. Each run checks the pull request's head at that moment. To check commits pushed since
+   the last run, add a label; removing and re-adding one works.
+
 ## Consequences
 
 - A regression in a lab scenario the sample did not draw merges and is found by the next weekly run,
@@ -82,6 +87,12 @@ every capability plays nearly every scenario. A sample per family does not.
   scenarios changed. Those changes are covered only by the suites their pull requests picked, until
   a later engine commit or a manual dispatch.
 - The fuzz job plays 48 seeds per week instead of per day.
+- `CI / Gate` reports on the commit a run checked. After a push, the new head has no gate result
+  until a label is added, so branch protection that requires the gate holds the merge until then. A
+  re-run from the Actions page repeats the old head, so it does not check the push.
+- A branch updated with main (the "Update branch" button is a push) needs a label added before it
+  can merge under "require branches to be up to date".
+- Main gets no CI on merge; the weekly run is its only scheduled check.
 - Scenario changes now also need the index regenerated. The check names the stale scenarios.
 - A scenario edit that the fingerprint does not see (a scripted opponent's choice in a shared
   builder) and that names no scenario in its diff is not targeted. It still runs whenever the
