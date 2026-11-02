@@ -59,7 +59,7 @@ bun run agent-client          # play one seat from a program over the running se
 bun run test:e2e              # Playwright browser tests
 ```
 
-For the full command reference and contributor guidance, see [CLAUDE.md](CLAUDE.md).
+For the full command reference and contributor guidance, see [CLAUDE.md](CLAUDE.md). Contributor testing and CI workflows (including the `ci:full` label for PRs) are described in [testing discipline](docs/guides/testing-discipline.md) and [ADR 0036](docs/decisions/0036-ci-minutes-budget.md).
 
 ## Current limitations
 

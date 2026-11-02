@@ -22,8 +22,22 @@ jobs:
       SCRYFALL_BULK_SHA256: ${{ vars.SCRYFALL_BULK_SHA256 }}
     steps:
       - uses: actions/checkout@v4
+      # ADR 0036: the bank is pinned, so on a day main did not change the run would repeat
+      # yesterday's result. A scheduled run checks only when main changed in the last 25 hours; a
+      # manual dispatch always checks.
+      - id: recent
+        if: github.event_name == 'schedule'
+        shell: bash
+        run: |
+          age=$(( $(date +%s) - $(git log -1 --format=%ct HEAD) ))
+          if (( age > 25 * 3600 )); then
+            echo "No commit on main in the last 25 hours: skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
       - uses: ./.github/actions/setup-bun-deps
+        if: steps.recent.outputs.skip != 'true'
       - name: Download the pinned bank
+        if: steps.recent.outputs.skip != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -35,6 +49,7 @@ jobs:
           echo "$SCRYFALL_BULK_SHA256  oracle-cards.jsonl.gz" | sha256sum -c -
           bun run scryfall:update --from oracle-cards.jsonl.gz
       - name: Bulk-data suites, with no skips
+        if: steps.recent.outputs.skip != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -43,5 +58,5 @@ jobs:
           jq -e '.numPendingTests == 0 and .numTodoTests == 0' bulk-tests.json > /dev/null ||
             { echo "::error::A bulk-data suite skipped tests with the bank present."; exit 1; }
       - name: Interpret and validate the whole population
-        if: always()
+        if: always() && steps.recent.outputs.skip != 'true'
         run: bun run bulk-smoke

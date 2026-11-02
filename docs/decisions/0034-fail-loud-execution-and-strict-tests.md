@@ -297,7 +297,9 @@ the ops that only ever took a `noop` exit.
 On pull requests that touch `packages/engine/src`, fuzz runs as its own job and is advisory: an
 engine change shifts the decision stream, so a seed can start failing on a bug the pull request did
 not write. A nightly run with a larger budget is authoritative and opens an issue with the seed and
-decks. Per-game time is measured before the PR seed count is chosen.
+decks. Per-game time is measured before the PR seed count is chosen. (Amended by
+[ADR 0036](0036-ci-minutes-budget.md): the PR job runs only with the `ci:fuzz` label, and the
+nightly run skips days main did not change.)
 
 ### 9. Test drivers never guess, and the suite cannot shrink unnoticed
 
@@ -408,6 +410,8 @@ not migrated wholesale.
 - CI gains a ratchet and suite-integrity step and facet warnings in the card gate, a mutation job on
   non-draft pull requests that change reviewed cards, an advisory fuzz job on engine changes, and
   nightly fuzz and bulk-data jobs. Each step's added minutes are measured before it is required.
+  [ADR 0036](0036-ci-minutes-budget.md) later moved mutation, suite collection and the manifest
+  test check into the full-suite job, which runs on pull requests labeled `ci:full`.
 
 ## Alternatives rejected
 
