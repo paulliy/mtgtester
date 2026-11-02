@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { expectLabCoverage } from './lab-selection';
 import { PR08_MODAL_PLAYER_SCENARIO_IDS } from '../../../packages/server/src/cards/pr08-modal-player-scenarios';
 
 test.describe.configure({ mode: 'serial' });
@@ -70,9 +71,7 @@ for (const [index, id] of PR08_MODAL_PLAYER_SCENARIO_IDS.entries()) {
   });
 }
 
-test.afterAll(() =>
-  expect([...exercised].sort()).toEqual([...PR08_MODAL_PLAYER_SCENARIO_IDS].sort()),
-);
+test.afterAll(() => expectLabCoverage(exercised, PR08_MODAL_PLAYER_SCENARIO_IDS));
 
 async function runScenario(page: Page, title: string): Promise<void> {
   await page.goto('/card-test-lab');

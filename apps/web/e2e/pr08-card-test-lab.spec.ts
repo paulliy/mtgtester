@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expectLabCoverage } from './lab-selection';
 import type { PlayerBoardState, ServerToClientMessage } from '../../../packages/shared/src/index';
 import { PR08_SCENARIO_IDS } from '../../../packages/server/src/cards/pr08-scenario-catalog';
 
@@ -326,7 +327,7 @@ for (const mode of ['duplicates', 'decline', 'shroud'] as const) {
       );
   });
 }
-test.afterAll(() => expect([...exercised].sort()).toEqual([...PR08_SCENARIO_IDS].sort()));
+test.afterAll(() => expectLabCoverage(exercised, PR08_SCENARIO_IDS));
 
 async function runScenario(page: Page, title: string): Promise<void> {
   const frontier = { requestId: '', stackSize: 0 };

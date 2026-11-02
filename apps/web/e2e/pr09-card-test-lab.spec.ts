@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { expectLabCoverage } from './lab-selection';
 import {
   hand,
   permanent,
@@ -286,4 +287,4 @@ test('pr09-szarekh-the-silent-king-viewer-cast', async ({ page }) => {
   await expect(szarekh).toContainText(/flying/i);
 });
 
-test.afterAll(() => expect([...exercised].sort()).toEqual([...PR09_SCENARIO_IDS].sort()));
+test.afterAll(() => expectLabCoverage(exercised, PR09_SCENARIO_IDS));

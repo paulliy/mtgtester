@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { expectLabCoverage } from './lab-selection';
 import { BOSEIJU_SCENARIO_IDS } from '../../../packages/server/src/cards/pr08-boseiju-scenarios';
 
 test.describe.configure({ mode: 'serial' });
@@ -74,7 +75,7 @@ for (const [index, id] of BOSEIJU_SCENARIO_IDS.entries()) {
   });
 }
 
-test.afterAll(() => expect([...exercised].sort()).toEqual([...BOSEIJU_SCENARIO_IDS].sort()));
+test.afterAll(() => expectLabCoverage(exercised, BOSEIJU_SCENARIO_IDS));
 
 async function runScenario(page: Page, title: string): Promise<void> {
   await page.goto('/card-test-lab');

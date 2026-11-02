@@ -18,6 +18,9 @@ bun run mutate-cards --card "<name>"    # IR mutation: each mutant of the card m
 bun run mutate-cards --changed [--base S] # ...for reviewed cards whose definition snapshot changed against S
 bun run mutate-cards --reviewed [--json F] # ...every reviewed card, as a report
 bun run test:e2e                        # Playwright (Card Test Lab + mocked smoke)
+bun run lab:index --write|--check       # Card Test Lab scenario fingerprints a sampled run compares against
+bun run lab:select --seed S --out F [--base B] [--sample] [--latest] [--per-family N]
+                                        # write the sample CI plays; LAB_SELECTION=F bun run test:e2e plays it
 bun run test:e2e:setup                  # Playwright: setup screen + a seeded player game (DB-backed)
 bun run test:e2e:table                  # Playwright: table games in two browsers on the built table bundle
 

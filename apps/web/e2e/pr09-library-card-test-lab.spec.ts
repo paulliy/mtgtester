@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { expectLabCoverage } from './lab-selection';
 import {
   hand,
   permanent,
@@ -224,5 +225,8 @@ test.describe('PR09 library and reveal viewer scenarios', () => {
 });
 
 test.afterAll(() =>
-  expect([...exercised].sort()).toEqual(PR09_LIBRARY_SCENARIOS.map(({ id }) => id).sort()),
+  expectLabCoverage(
+    exercised,
+    PR09_LIBRARY_SCENARIOS.map(({ id }) => id),
+  ),
 );
