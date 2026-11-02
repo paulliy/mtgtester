@@ -12,7 +12,8 @@ bun run --cwd apps/web build            # web build
 bun run test                            # full Vitest suite
 bun run test <path-or-filter>           # one test file or pattern
 bun run test:card-gate                  # offline card verification gate: every test file in scripts/card-gate.txt
-bun run snapshots:check                 # interpretation/override snapshot drift
+bun run snapshots:check                 # interpretation/override snapshot drift, incl. the pinned fixture and one-line corpus nets (ADR 0038)
+bun run scripts/one-line-corpus.ts [--check] # rebuild the one-line probe corpus after the ready list changes
 bun run check:manifest-tests [--report] # each manifest engine test ID names one collected test (lists Vitest, ~2.5 min)
 bun run mutate-cards --card "<name>"    # IR mutation: each mutant of the card must fail one of its manifest tests on an assertion
 bun run mutate-cards --changed [--base S] # ...for reviewed cards whose definition snapshot changed against S

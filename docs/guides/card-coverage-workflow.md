@@ -8,7 +8,7 @@ The canonical completion standard is [Modeling a Card and Testing It](card-model
 
 - Use the template layer in `packages/engine/src/cards/` first: reusable grammar, selectors, values, effects, conditions, and rule statics before bespoke overrides.
 - Overrides live in `packages/engine/src/cards/overrides/`; update their handled-lines deliberately.
-- Interpretation and override snapshot fixtures change only on purpose. Regenerate with `bun run scripts/snapshot-interpret-defs.ts` or `bun run scripts/snapshot-override-defs.ts`, review the diff, then confirm with `bun run snapshots:check`. A new or changed Card Test Lab scenario also needs `bun run lab:index --write` (ADR 0037).
+- Interpretation and override snapshot fixtures change only on purpose. Regenerate with `bun run scripts/snapshot-interpret-defs.ts` or `bun run scripts/snapshot-override-defs.ts`, review the diff, then confirm with `bun run snapshots:check`. The interpretation script writes three nets (ADR 0038): the Ur-Dragon fixture, the full pinned fixture, and the outcomes of the one-line probe corpus, whose diff is a coverage change's measured yield. A new or changed Card Test Lab scenario also needs `bun run lab:index --write` (ADR 0037).
 - A change that adds a `LegalAction.data` key registers it in `packages/shared/src/action-data-keys.ts`; `packages/server/src/cards/action-data-keys.test.ts` fails on an unregistered key or value type.
 
 ## Backlog
