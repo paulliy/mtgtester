@@ -27,6 +27,7 @@ import {
 const labView = readFileSync(resolve('apps/web/src/views/CardTestLabView.vue'), 'utf8');
 const labSpec = readFileSync(resolve('apps/web/e2e/card-test-lab.spec.ts'), 'utf8');
 const pr02Spec = readFileSync(resolve('apps/web/e2e/pr02-limited-mechanics.spec.ts'), 'utf8');
+const labSelection = readFileSync(resolve('apps/web/e2e/lab-selection.ts'), 'utf8');
 const playwrightConfig = readFileSync(resolve('playwright.config.ts'), 'utf8');
 const workflow = readFileSync(resolve('.github/workflows/ci.yml'), 'utf8');
 const gameServer = readFileSync(resolve('packages/server/src/ws/server.ts'), 'utf8');
@@ -128,9 +129,7 @@ describe('Card Test Lab viewer-evidence gate', () => {
     expect(labSpec).toContain('!PR08_SCENARIO_IDS.includes(scenarioId)');
     expect(labSpec).toContain('!PR08_SCENARIO_IDS.includes(id)');
     expect(pr08Spec).toContain('exercised.add(id)');
-    expect(pr08Spec).toContain(
-      'expect([...exercised].sort()).toEqual([...PR08_SCENARIO_IDS].sort())',
-    );
+    expect(pr08Spec).toContain('expectLabCoverage(exercised, PR08_SCENARIO_IDS)');
     expect(pr08Spec).toContain("trace: 'on'");
     expect(pr08Spec).not.toContain('routeWebSocket');
     expect(pr08Spec).not.toContain('page.route(');
@@ -139,9 +138,7 @@ describe('Card Test Lab viewer-evidence gate', () => {
     for (const id of PR02_FOLLOW_UP_SCENARIO_IDS) expect(CARD_TEST_SCENARIO_IDS).toContain(id);
     expect(labSpec).toContain('PR02_FOLLOW_UP_SCENARIO_IDS.includes');
     expect(pr02Spec).toContain('exercised.add(id)');
-    expect(pr02Spec).toContain(
-      'expect([...exercised].sort()).toEqual([...PR02_FOLLOW_UP_SCENARIO_IDS].sort())',
-    );
+    expect(pr02Spec).toContain('expectLabCoverage(exercised, PR02_FOLLOW_UP_SCENARIO_IDS)');
     expect(pr02Spec).toContain("trace: 'on'");
     expect(pr02Spec).not.toContain('routeWebSocket');
     expect(pr02Spec).not.toContain('page.route(');
@@ -162,14 +159,16 @@ describe('Card Test Lab viewer-evidence gate', () => {
     }
     // The Playwright process records the IDs actually selected from the live catalog. Its
     // afterAll equality check fails when a registered scenario is skipped or selected twice.
-    // The CI assertion below guarantees that this runtime check is executed.
+    // The CI assertion below guarantees that this runtime check is executed. A sampled CI run
+    // (ADR 0037) checks the selected subset instead; a run without LAB_SELECTION (local, weekly,
+    // `ci:lab-verbose`) still demands exact equality with the whole catalog.
     expect(labSpec).toContain('const catalogScenarioIds = new Set<string>()');
     expect(labSpec).toContain('const exercisedScenarioIds = new Set<string>()');
     expect(labSpec).toContain('const scenarioId = await picker.inputValue()');
     expect(labSpec).toContain('exercisedScenarioIds.add(scenarioId)');
-    expect(labSpec).toContain(
-      'expect([...exercisedScenarioIds].sort()).toEqual([...catalogScenarioIds].sort())',
-    );
+    expect(labSpec).toContain('expectLabCoverage(exercisedScenarioIds, catalogScenarioIds)');
+    expect(labSelection).toContain('if (selection === null) {');
+    expect(labSelection).toContain('expect([...exercised].sort()).toEqual(all);');
     // The lab spec must never mock its transport: mocked UI checks are not viewer evidence.
     expect(labSpec).not.toContain('routeWebSocket');
     expect(labSpec).not.toContain('page.route(');

@@ -1,28 +1,37 @@
 name: CI
 
-# Actions minutes (ADR 0036). Every pull request push runs only the fast checks: format,
-# typecheck, lint, web build and the offline card gate. The slow suites run on a pull request only
-# when its labels pick them, and on the nightly run and manual dispatch:
-#   ci:engine  full test suite with the collection checks and IR mutation (about 25 minutes)
-#   ci:lab     Card Test Lab Playwright (the longest suite)
-#   ci:setup   Play my deck setup and player game Playwright
-#   ci:table   multiplayer table Playwright
-#   ci:e2e     all three Playwright suites
-#   ci:full    every slow suite
+# Actions minutes (ADR 0036, 0037). A pull request runs CI when it is opened, when it is marked
+# ready for review, and when a label is added; a push to a pull request or to main runs nothing.
+# Each run does the fast checks: format, typecheck, lint, web build and the offline card gate. The
+# slow suites run on a pull request only when its labels pick them, and on the weekly run and
+# manual dispatch:
+#   ci:engine       full test suite with the collection checks and IR mutation (about 25 minutes)
+#   ci:lab          Card Test Lab Playwright, sampled: the scenarios the change adds or edits, one
+#                   per engine primitive the change's engine edits name, and one per primitive
+#                   family, drawn from the head commit (ADR 0037)
+#   ci:lab-latest   Card Test Lab Playwright for the scenarios added on main in the last week, plus
+#                   the change's own
+#   ci:lab-verbose  every Card Test Lab scenario (the longest suite)
+#   ci:setup        Play my deck setup and player game Playwright
+#   ci:table        multiplayer table Playwright
+#   ci:e2e          the sampled lab and the setup and table suites
+#   ci:full         every slow suite, with the sampled lab
 # `CI / Gate` is the one required check: it fails a ready pull request that changed code until at
-# least one slow suite has been picked and every picked suite has run green; the nightly run covers
-# the suites a pull request left out. The advisory PR fuzz job needs its own `ci:fuzz` label. Pushes
-# to main run the fast checks only; the nightly run repeats everything on main when it changed in
-# the last day.
+# least one slow suite has been picked and every picked suite has run green; the weekly run covers
+# the suites and lab scenarios a pull request left out. The advisory PR fuzz job needs its own
+# `ci:fuzz` label. The weekly run repeats everything, with every lab scenario, on main when a commit
+# touched the engine in the last week.
+# Commits pushed after a pull request's last run are not checked, and `CI / Gate` reports on the
+# commit a run checked. To check a new head, add a label (removing and re-adding one works); the
+# run then checks the pull request as it is at that moment.
 on:
   pull_request:
-    # labeled: adding a `ci:` label starts its suites without a new push. ready_for_review: the gate
-    # passes drafts (they cannot merge) and must be re-evaluated when one is marked ready.
-    types: [opened, synchronize, reopened, ready_for_review, labeled]
-  push:
-    branches: [main]
+    # ADR 0037: no run on synchronize or reopened. labeled: adding a label runs CI on the current
+    # head. ready_for_review: the gate passes drafts (they cannot merge) and must be re-evaluated
+    # when one is marked ready.
+    types: [opened, ready_for_review, labeled]
   schedule:
-    - cron: '13 6 * * *'
+    - cron: '13 6 * * 1'
   workflow_dispatch:
 
 permissions:
@@ -49,6 +58,11 @@ jobs:
       # The slow suites picked: the full suite, each Playwright suite, and whether any was.
       suite: ${{ steps.classify.outputs.suite }}
       lab: ${{ steps.classify.outputs.lab }}
+      # How the lab runs when it does: lab_full plays every scenario; otherwise lab_sample draws the
+      # per-family sample and lab_latest adds last week's scenarios (ADR 0037).
+      lab_full: ${{ steps.classify.outputs.lab_full }}
+      lab_sample: ${{ steps.classify.outputs.lab_sample }}
+      lab_latest: ${{ steps.classify.outputs.lab_latest }}
       setup: ${{ steps.classify.outputs.setup }}
       table: ${{ steps.classify.outputs.table }}
       e2e: ${{ steps.classify.outputs.e2e }}
@@ -57,8 +71,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - id: weekly
+        uses: ./.github/actions/engine-changed
       - id: classify
         env:
+          ENGINE_CHANGED: ${{ steps.weekly.outputs.changed }}
           EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -72,37 +89,43 @@ jobs:
             if [[ "$2$3$4" == *true* ]]; then out e2e true; else out e2e false; fi
             if [[ "$1$2$3$4" == *true* ]]; then out slow true; else out slow false; fi
           }
+          # A pull request's labels pick how its lab runs; every other run that plays the lab plays
+          # all of it.
+          lab_mode() { out lab_full "$1"; out lab_sample "$2"; out lab_latest "$3"; }
           case "$EVENT_NAME" in
             pull_request) ;;
-            push)
-              # The pull request already ran its checks on this tree (with "require branches to
-              # be up to date" on); the nightly run repeats them.
-              out run true; out code true; out engine false; slow false false false false
-              exit 0 ;;
             schedule)
-              age=$(( $(date +%s) - $(git log -1 --format=%ct HEAD) ))
-              if (( age > 25 * 3600 )); then
-                echo "No commit on main in the last 25 hours: nothing to run."
+              # ADR 0037: weekly, and only when a commit touched the engine that week.
+              if [[ "$ENGINE_CHANGED" != "true" ]]; then
                 out run false; out code false; out engine false; slow false false false false
+                lab_mode true false false
                 exit 0
               fi
               out run true; out code true; out engine true; slow true true true true
+              lab_mode true false false
               exit 0 ;;
             *)
               out run true; out code true; out engine true; slow true true true true
+              lab_mode true false false
               exit 0 ;;
           esac
           out run true
           label() { jq -e --arg name "$1" 'any(.[]; . == $name)' <<< "$LABELS" > /dev/null; }
-          suite=false; lab=false; setup=false; table=false
-          if label ci:full; then suite=true; lab=true; setup=true; table=true; fi
-          if label ci:e2e; then lab=true; setup=true; table=true; fi
+          suite=false; setup=false; table=false
+          lab_sample=false; lab_latest=false; lab_full=false
+          if label ci:full; then suite=true; lab_sample=true; setup=true; table=true; fi
+          if label ci:e2e; then lab_sample=true; setup=true; table=true; fi
           if label ci:engine; then suite=true; fi
-          if label ci:lab; then lab=true; fi
+          if label ci:lab; then lab_sample=true; fi
+          if label ci:lab-latest; then lab_latest=true; fi
+          if label ci:lab-verbose; then lab_full=true; fi
           if label ci:setup; then setup=true; fi
           if label ci:table; then table=true; fi
-          echo "Slow suites picked by labels: full suite=$suite, lab=$lab, setup=$setup, table=$table."
+          lab=false
+          if [[ "$lab_sample$lab_latest$lab_full" == *true* ]]; then lab=true; fi
+          echo "Slow suites picked by labels: full suite=$suite, lab=$lab (sample=$lab_sample, latest=$lab_latest, verbose=$lab_full), setup=$setup, table=$table."
           slow "$suite" "$lab" "$setup" "$table"
+          lab_mode "$lab_full" "$lab_sample" "$lab_latest"
           # On any diff failure, fail open: run every code check.
           # Three-dot diff: files changed on the PR branch since its merge base, not base-branch drift.
           if ! changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA"); then
@@ -127,7 +150,7 @@ jobs:
           fi
 
   # One job for the quick checks: each job pays its own checkout, Bun install and per-job minute
-  # rounding. Every check runs even when an earlier one fails, so one push reports all of them.
+  # rounding. Every check runs even when an earlier one fails, so one run reports all of them.
   quality:
     name: Quality / Format, typecheck, lint, web build
     needs: changes
@@ -176,8 +199,8 @@ jobs:
   card-verification:
     name: Cards / Offline verification gate
     needs: changes
-    # Pull requests, nightly and dispatch; a push to main merged a pull request that already ran it.
-    if: needs.changes.outputs.code == 'true' && github.event_name != 'push'
+    # Pull requests, the weekly run and dispatch.
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -190,13 +213,16 @@ jobs:
       - run: bun run test:card-gate $SKIP_RUN
         env:
           SKIP_RUN: ${{ needs.changes.outputs.suite == 'true' && '--skip-run' || '' }}
-      # Lists that may shrink but must not grow, compared with the pull request's base (or a push's
-      # `before` SHA); the script falls back to HEAD's first parent as the promotion check does.
+      # Lists that may shrink but must not grow, compared with the pull request's base; without one
+      # (the weekly run, dispatch) the script falls back to HEAD's first parent, as the promotion
+      # check does.
       - name: Check ratchets
         env:
-          RATCHET_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          RATCHET_BASE: ${{ github.event.pull_request.base.sha }}
         run: bun run check:ratchets
       - run: bun run snapshots:check
+      # The Card Test Lab scenario fingerprints a sampled lab run compares against (ADR 0037).
+      - run: bun run lab:index --check
       - run: bun run test:primitive-contracts --output test-results/primitive-contracts
       - run: >-
           bun run card-capabilities
@@ -204,7 +230,7 @@ jobs:
           > test-results/primitive-impact.json
       - name: Check primitive review promotions
         env:
-          PROMOTION_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          PROMOTION_BASE: ${{ github.event.pull_request.base.sha }}
         run: |
           if [[ -z "$PROMOTION_BASE" || "$PROMOTION_BASE" =~ ^0+$ ]] || ! git cat-file -e "$PROMOTION_BASE^{commit}" 2>/dev/null; then
             PROMOTION_BASE=$(git rev-parse --verify HEAD^ 2>/dev/null || true)
@@ -212,7 +238,7 @@ jobs:
               echo "::notice::No prior commit exists; skipping base-relative promotion comparison."
               exit 0
             fi
-            echo "::warning::Push base unavailable; comparing promotions with HEAD's first parent."
+            echo "::warning::No pull request base; comparing promotions with HEAD's first parent."
           fi
           bun run primitive-promotions --base "$PROMOTION_BASE" --primitive-evidence test-results/primitive-contracts
       # The upload tolerates artifact-quota errors, which also mutes its if-no-files-found check,
@@ -269,7 +295,7 @@ jobs:
     # ADR 0034 decision 8, as amended by ADR 0036: seeded four-player games with the state invariants
     # on, for pull requests that change the engine and carry the `ci:fuzz` label. Advisory: an engine
     # change shifts the decision stream, so a seed can start failing on a bug the pull request did
-    # not write. The nightly run is authoritative.
+    # not write. The weekly fuzz run is authoritative.
     if: >-
       needs.changes.outputs.engine == 'true' && github.event_name == 'pull_request' &&
       contains(github.event.pull_request.labels.*.name, 'ci:fuzz')
@@ -305,10 +331,16 @@ jobs:
     timeout-minutes: 60
     env:
       LAB: ${{ needs.changes.outputs.lab }}
+      LAB_FULL: ${{ needs.changes.outputs.lab_full }}
+      LAB_SAMPLE: ${{ needs.changes.outputs.lab_sample }}
+      LAB_LATEST: ${{ needs.changes.outputs.lab_latest }}
       SETUP: ${{ needs.changes.outputs.setup }}
       TABLE: ${{ needs.changes.outputs.table }}
     steps:
+      # History for the lab sample: the merge base's scenario index and last week's (ADR 0037).
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - id: deps
         uses: ./.github/actions/setup-bun-deps
       - name: Cache Playwright browsers
@@ -319,6 +351,24 @@ jobs:
       # System packages are installed every run; the browser binary itself comes from the cache.
       - id: browser
         run: bunx playwright install-deps chromium && bunx playwright install chromium
+      # ADR 0037: unless the run plays every scenario, pick the scenarios to play: the change's own,
+      # one per engine primitive its engine edits name, the per-family sample drawn from the head
+      # commit, and last week's additions for `ci:lab-latest`. The config leaves the rest out
+      # through LAB_SELECTION, and the job summary lists what was picked and how to reproduce it.
+      - name: Select the Card Test Lab sample
+        if: env.LAB == 'true' && env.LAB_FULL != 'true'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(--seed "$HEAD_SHA" --out lab-selection/selection.json)
+          [[ -n "$BASE_SHA" ]] && args+=(--base "$BASE_SHA")
+          [[ "$LAB_SAMPLE" == "true" ]] && args+=(--sample)
+          [[ "$LAB_LATEST" == "true" ]] && args+=(--latest)
+          bun run lab:select "${args[@]}"
+          echo "LAB_SELECTION=lab-selection/selection.json" >> "$GITHUB_ENV"
       # Real frontend + real lab backend, no mocked transport. The config boots both servers.
       - if: env.LAB == 'true'
         run: bun run test:e2e
@@ -348,12 +398,14 @@ jobs:
         continue-on-error: true
         with:
           name: card-test-lab-traces
-          path: test-results/
+          path: |
+            test-results/
+            lab-selection/
           if-no-files-found: error
 
   # The single required check. It fails when any job it waits on failed or was cancelled, and on a
   # ready pull request that changed code but has no `ci:` label picking a slow suite. It names the
-  # suites left out, which only the nightly run will cover. The advisory fuzz job is not waited on.
+  # suites left out, which only the weekly run will cover. The advisory fuzz job is not waited on.
   gate:
     name: CI / Gate
     needs: [changes, quality, card-verification, engine-tests, viewer-evidence]
@@ -369,6 +421,7 @@ jobs:
           SLOW: ${{ needs.changes.outputs.slow }}
           SUITE: ${{ needs.changes.outputs.suite }}
           LAB: ${{ needs.changes.outputs.lab }}
+          LAB_FULL: ${{ needs.changes.outputs.lab_full }}
           SETUP: ${{ needs.changes.outputs.setup }}
           TABLE: ${{ needs.changes.outputs.table }}
         shell: bash
@@ -381,16 +434,17 @@ jobs:
           fi
           if [[ "$EVENT_NAME" == "pull_request" && "$DRAFT" != "true" && "$CODE" == "true" ]]; then
             if [[ "$SLOW" != "true" ]]; then
-              echo "::error::Fast checks passed. Pick the slow suites to run before merging: ci:full for all of them, or any of ci:engine, ci:e2e, ci:lab, ci:setup and ci:table."
+              echo "::error::Fast checks passed. Pick the slow suites to run before merging: ci:full for all of them, or any of ci:engine, ci:e2e, ci:lab, ci:lab-latest, ci:lab-verbose, ci:setup and ci:table."
               exit 1
             fi
             skipped=()
             [[ "$SUITE" == "true" ]] || skipped+=(ci:engine)
             [[ "$LAB" == "true" ]] || skipped+=(ci:lab)
+            [[ "$LAB" != "true" || "$LAB_FULL" == "true" ]] || skipped+=("the lab scenarios the sample left out (ci:lab-verbose)")
             [[ "$SETUP" == "true" ]] || skipped+=(ci:setup)
             [[ "$TABLE" == "true" ]] || skipped+=(ci:table)
             if (( ${#skipped[@]} > 0 )); then
-              echo "::notice::Not run on this pull request (the nightly run covers them): ${skipped[*]}"
+              echo "::notice::Not run on this pull request (the weekly run covers them): ${skipped[*]}"
             fi
           fi
           echo "Gate passed."

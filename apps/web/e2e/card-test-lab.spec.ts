@@ -66,6 +66,7 @@ const SPELL_FACE_VIEWER_PINS = JSON.parse(
  * The lab backend holds a single live session, so these tests run serially.
  */
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expectLabCoverage } from './lab-selection';
 import type {
   ServerToClientMessage,
   SpectatorPermanent,
@@ -81,7 +82,7 @@ const catalogScenarioIds = new Set<string>();
 const exercisedScenarioIds = new Set<string>();
 
 test.afterAll(() => {
-  expect([...exercisedScenarioIds].sort()).toEqual([...catalogScenarioIds].sort());
+  expectLabCoverage(exercisedScenarioIds, catalogScenarioIds);
 });
 
 /** The player options live in the Settings menu: open it, set one, and close it again. */

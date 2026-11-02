@@ -22,6 +22,7 @@
     "../pin-store.ts",
     "../cards/*.ts",
     "../check-ratchets.ts",
+    "../card-test-lab-sample.ts",
     "../card-authoring-metrics.ts",
     "../generate-card-name-slugs.ts",
     "../run-pr08-verification.ts",

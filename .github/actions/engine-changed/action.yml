@@ -1,0 +1,35 @@
+name: Engine changed this week
+description: >-
+  For a scheduled run, report whether any commit on the checked-out branch touched
+  packages/engine/src in the last week (ADR 0037). Other events always report a change. Needs a
+  checkout with history (fetch-depth 0).
+
+outputs:
+  changed:
+    description: "'true' when the weekly run should run, 'false' when it should skip."
+    value: ${{ steps.check.outputs.changed }}
+
+runs:
+  using: composite
+  steps:
+    - id: check
+      shell: bash
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+      run: |
+        set -euo pipefail
+        if [[ "$EVENT_NAME" != "schedule" ]]; then
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        # A week plus an hour, so a commit just before last week's run is not missed when this
+        # one starts a little later.
+        commits=$(git log --since='169 hours ago' --format='%h %s' -- packages/engine/src)
+        if [[ -z "$commits" ]]; then
+          echo "No commit touched packages/engine/src in the last week: skipping."
+          echo "changed=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "Engine commits this week:"
+          echo "$commits"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+        fi

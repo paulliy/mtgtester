@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test';
+import { excludedTitlePattern, labSelection } from './apps/web/e2e/lab-selection';
 
 /** The Card Test Lab backend port. The dev server proxies `/ws`, `/api`, and `/health` here. */
 function labPort(name: string, fallback: number): number {
@@ -9,6 +10,9 @@ function labPort(name: string, fallback: number): number {
 // Separate lab processes can debug different suites without sharing a live game session.
 const LAB_SERVER_PORT = labPort('CARD_TEST_LAB_SERVER_PORT', 3101);
 const LAB_WEB_PORT = labPort('CARD_TEST_LAB_WEB_PORT', 5173);
+// A sampled CI run (ADR 0037) leaves out the tests titled with an unselected scenario's ID or
+// title. With LAB_SELECTION unset every test runs.
+const sampleExclusions = excludedTitlePattern(labSelection()?.excludedTitles ?? []);
 // Permit the installed system browser in managed development environments.
 const chromiumExecutable = process.env['PLAYWRIGHT_CHROMIUM_EXECUTABLE'];
 
@@ -17,6 +21,7 @@ export default defineConfig({
   // These run against their own backends: playwright.setup.config.ts and
   // playwright.table.config.ts.
   testIgnore: [/player-(setup|game)\.spec\.ts$/, /table-.*\.spec\.ts$/],
+  ...(sampleExclusions === undefined ? {} : { grepInvert: sampleExclusions }),
   fullyParallel: true,
   retries: 0,
   // The lab backend holds a single live session, so specs that share it must not overlap in time.

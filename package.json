@@ -64,6 +64,8 @@
     "card:new": "bun run scripts/cards/card-new.ts",
     "card:finish": "bun run scripts/cards/card-finish.ts",
     "check:ratchets": "bun run scripts/check-ratchets.ts",
+    "lab:index": "bun run scripts/card-test-lab-sample.ts index",
+    "lab:select": "bun run scripts/card-test-lab-sample.ts select",
     "card-slugs:generate": "bun run scripts/generate-card-name-slugs.ts",
     "card-capabilities": "bun run scripts/card-capability-impact.ts",
     "test:primitive-contracts": "bun run scripts/test-primitive-contracts.ts",

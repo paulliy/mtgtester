@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expectLabCoverage } from './lab-selection';
 import {
   hand,
   permanent as allPermanents,
@@ -400,6 +401,9 @@ test.describe('PR09 choice-card Card Test Lab scenarios', () => {
   }
 
   test.afterAll(() => {
-    expect([...exercised].sort()).toEqual(PR09_CHOICE_SCENARIOS.map(({ id }) => id).sort());
+    expectLabCoverage(
+      exercised,
+      PR09_CHOICE_SCENARIOS.map(({ id }) => id),
+    );
   });
 });

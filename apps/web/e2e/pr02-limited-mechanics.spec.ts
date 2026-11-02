@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expectLabCoverage } from './lab-selection';
 import { PR02_FOLLOW_UP_SCENARIO_IDS } from '../../../packages/server/src/cards/pr02-follow-up-scenarios';
 
 test.describe.configure({ mode: 'serial' });
@@ -6,7 +7,7 @@ test.use({ trace: 'on', screenshot: 'on' });
 test.setTimeout(60_000);
 
 const exercised = new Set<string>();
-test.afterAll(() => expect([...exercised].sort()).toEqual([...PR02_FOLLOW_UP_SCENARIO_IDS].sort()));
+test.afterAll(() => expectLabCoverage(exercised, PR02_FOLLOW_UP_SCENARIO_IDS));
 
 async function runScenario(page: Page, title: string): Promise<void> {
   await page.goto('/card-test-lab');

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { expectLabCoverage } from './lab-selection';
 import { WINDS_OF_ABANDON_SCENARIO_IDS } from '../../../packages/server/src/cards/pr08-winds-of-abandon-scenarios';
 
 test.describe.configure({ mode: 'serial' });
@@ -49,9 +50,7 @@ for (const [index, id] of WINDS_OF_ABANDON_SCENARIO_IDS.entries()) {
   });
 }
 
-test.afterAll(() =>
-  expect([...exercised].sort()).toEqual([...WINDS_OF_ABANDON_SCENARIO_IDS].sort()),
-);
+test.afterAll(() => expectLabCoverage(exercised, WINDS_OF_ABANDON_SCENARIO_IDS));
 
 async function runScenario(page: Page, title: string): Promise<void> {
   await page.goto('/card-test-lab');

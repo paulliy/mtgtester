@@ -7,6 +7,10 @@ Date: 2026-11-01
 Amends: [ADR 0034](0034-fail-loud-execution-and-strict-tests.md) decisions 5, 8 and 9 (when the
 mutation, fuzz and collection checks run; not what they check).
 
+Amended by: [ADR 0037](0037-sampled-card-test-lab-and-weekly-runs.md) (decisions 1, 5, 6 and 8:
+pull requests run CI only when opened, marked ready or labeled, main pushes run nothing, the
+scheduled runs are weekly and need an engine change, and `ci:lab` plays a sample).
+
 ## Context
 
 `ci.yml` ran the full test suite (about 18 minutes, plus a 2.5-minute Vitest listing), Playwright

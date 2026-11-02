@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expectLabCoverage } from './lab-selection';
 import {
   hand,
   permanent,
@@ -225,5 +226,8 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
 };
 
 test.afterAll(() =>
-  expect([...exercised].sort()).toEqual(PR13_ALL_SCENARIOS.map(({ id }) => id).sort()),
+  expectLabCoverage(
+    exercised,
+    PR13_ALL_SCENARIOS.map(({ id }) => id),
+  ),
 );
