@@ -544,7 +544,17 @@ interface DiscoveryState {
   parsed: Map<string, ts.SourceFile>;
   resolutionCache: ts.ModuleResolutionCache;
   installed: Map<string, { path: string; realpath: string }>;
+  /** confinedFile results: one realpath and stat per path in a pass, not one per import edge. */
+  confined: Map<string, string>;
+  /**
+   * What a non-entry file contributes: its runtime specifiers and consumed data reads, in walk
+   * order. Entries sharing a state share most of their closure, so each file is walked once.
+   */
+  facts: Map<string, FileFact[]>;
 }
+type FileFact =
+  | { kind: 'dependency'; specifier: string }
+  | { kind: 'data'; name: string; pos: string; dataPath: string; input: string; actual: string };
 /** Parsed sources, keyed by repository path and content hash. Bounded by distinct file contents. */
 const parsedSources = new Map<string, ts.SourceFile>();
 function discoveryState(root: string): DiscoveryState {
@@ -552,6 +562,8 @@ function discoveryState(root: string): DiscoveryState {
     parsed: new Map(),
     resolutionCache: ts.createModuleResolutionCache(root, (path) => path),
     installed: new Map(),
+    confined: new Map(),
+    facts: new Map(),
   };
 }
 function installedResolutions(state: DiscoveryState, requests: [string, string][]) {
@@ -626,6 +638,14 @@ function discoverGeneratorSources(
 ): GeneratorDiscovery {
   const { parsed, resolutionCache } = state;
   const root = realpathSync(repoRoot);
+  const confined = (path: string) => {
+    let actual = state.confined.get(path);
+    if (actual === undefined) {
+      actual = confinedFile(root, path);
+      state.confined.set(path, actual);
+    }
+    return actual;
+  };
   const seen = new Set<string>();
   const inputs = new Set<string>(['.prettierrc']); // resolveConfig() consumed by writeReport.
   const edges: string[][] = [];
@@ -645,9 +665,32 @@ function discoverGeneratorSources(
     const path = pending.pop()!;
     if (seen.has(path)) continue;
     canonicalSourcePath(path);
-    const absolute = confinedFile(root, resolve(root, path));
+    const absolute = confined(resolve(root, path));
     seen.add(path);
     if (extname(path) === '.json') continue;
+    // Only an entry's own walk depends on which file is the entry (its fileSha256 read is
+    // exempt), so every other file replays what its first walk in this pass found.
+    const factKey = path === generatorPath ? undefined : path;
+    const known = factKey === undefined ? undefined : state.facts.get(factKey);
+    if (known) {
+      for (const fact of known) {
+        if (fact.kind === 'dependency') dependency(fact.specifier);
+        else {
+          data.push([
+            generatorPath,
+            absolute,
+            fact.name,
+            fact.pos,
+            fact.dataPath,
+            fact.input,
+            fact.actual,
+          ]);
+          inputs.add(fact.dataPath);
+        }
+      }
+      continue;
+    }
+    const facts: FileFact[] = [];
     let source = parsed.get(path);
     if (!source) {
       // Every discovery pass re-reads the same sources; parsing is the expensive part. Keying on
@@ -709,7 +752,7 @@ function discoverGeneratorSources(
         `unresolved runtime import: ${path}: ${specifier}`,
       );
       const resolvedPath = resolve(installed?.path ?? resolved!.resolvedFileName);
-      const actual = confinedFile(root, resolvedPath);
+      const actual = confined(resolvedPath);
       requireInput(
         !installed || installed.realpath === actual,
         'installed resolution identity drifted',
@@ -736,7 +779,7 @@ function discoverGeneratorSources(
           );
           directory = parent;
         }
-        const metadata = confinedFile(root, resolve(directory, 'package.json'));
+        const metadata = confined(resolve(directory, 'package.json'));
         const name = specifier.split('/').slice(0, 2).join('/');
         requireInput(
           record(JSON.parse(readFileSync(metadata, 'utf8')))['name'] === name,
@@ -754,6 +797,10 @@ function discoverGeneratorSources(
         ]);
       }
     }
+    function depend(specifier: string) {
+      facts.push({ kind: 'dependency', specifier });
+      dependency(specifier);
+    }
     function visit(node: ts.Node) {
       if (ts.isImportDeclaration(node)) {
         const clause = node.importClause;
@@ -765,15 +812,13 @@ function discoverGeneratorSources(
             bindings &&
             ts.isNamedImports(bindings) &&
             bindings.elements.every((element) => element.isTypeOnly));
-        if (!erased && ts.isStringLiteral(node.moduleSpecifier))
-          dependency(node.moduleSpecifier.text);
+        if (!erased && ts.isStringLiteral(node.moduleSpecifier)) depend(node.moduleSpecifier.text);
       } else if (ts.isExportDeclaration(node) && !node.isTypeOnly && node.moduleSpecifier) {
         const erased =
           node.exportClause &&
           ts.isNamedExports(node.exportClause) &&
           node.exportClause.elements.every((element) => element.isTypeOnly);
-        if (!erased && ts.isStringLiteral(node.moduleSpecifier))
-          dependency(node.moduleSpecifier.text);
+        if (!erased && ts.isStringLiteral(node.moduleSpecifier)) depend(node.moduleSpecifier.text);
       } else if (ts.isCallExpression(node)) {
         const name = node.expression.getText(ast);
         if (name === 'require' || node.expression.kind === ts.SyntaxKind.ImportKeyword) {
@@ -782,7 +827,7 @@ function discoverGeneratorSources(
             specifier && ts.isStringLiteralLike(specifier),
             `unresolved dynamic runtime import: ${path}`,
           );
-          dependency(specifier.text);
+          depend(specifier.text);
         }
         const fileRead =
           fileReaders.has(name) ||
@@ -848,14 +893,16 @@ function discoverGeneratorSources(
           const dataPath = moduleRelative ?? (literal as ts.StringLiteralLike).text;
           canonicalSourcePath(dataPath);
           const input = resolve(root, dataPath);
-          const actual = confinedFile(root, input);
+          const actual = confined(input);
           data.push([generatorPath, absolute, name, String(node.pos), dataPath, input, actual]);
           inputs.add(dataPath);
+          facts.push({ kind: 'data', name, pos: String(node.pos), dataPath, input, actual });
         }
       }
       ts.forEachChild(node, visit);
     }
     visit(source);
+    if (factKey !== undefined) state.facts.set(factKey, facts);
   }
   // The helper reads externally supplied manifest/report/trace bytes and discovered sources.
   // These inputs are governed by the loader; they are not pinned scenario data.

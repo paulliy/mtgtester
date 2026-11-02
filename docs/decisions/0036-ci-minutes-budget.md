@@ -31,14 +31,14 @@ minutes, and each fix-up push repeated all of it. Other waste:
    web build and, when the full suite will not run, the AI benchmark contract tests. Every step runs
    even when an earlier one fails, so a push reports all problems at once. The offline card
    verification gate (card gate, ratchets, snapshots, primitive contracts) also runs on every push.
-2. **Slow checks behind the `ci:full` label.** The full suite with the collection checks and IR
-   mutation, and the Playwright suites, run on a pull request only while it carries `ci:full`
-   (adding the label starts a run), and on the nightly and manual runs. The draft state no longer
-   decides this.
+2. **Slow checks behind labels.** The full suite with the collection checks and IR mutation, and
+   the Playwright suites, run on a pull request only while a label picks them (adding the label
+   starts a run), and on the nightly and manual runs. The draft state no longer decides this.
+   Decision 8 lists the labels.
 3. **One required check, `CI / Gate`.** It fails when any job it waits on failed or was cancelled,
-   and on a ready (non-draft) pull request that changed code but has not run the slow jobs. A
-   pull request therefore cannot merge without one green full run on its head commit; drafts pass,
-   because they cannot merge.
+   and on a ready (non-draft) pull request that changed code but has no label picking a slow suite.
+   A pull request therefore cannot merge without a green run of the suites it picked on its head
+   commit; drafts pass, because they cannot merge. The gate names the suites left out.
 4. **PR fuzz behind `ci:fuzz`.** The advisory fuzz job (ADR 0034 decision 8) runs only on engine
    pull requests that carry `ci:fuzz`. The nightly run stays authoritative.
 5. **Main pushes run the fast checks only.** With "require branches to be up to date before
@@ -48,14 +48,35 @@ minutes, and each fix-up push repeated all of it. Other waste:
    runs exit after checkout when main's head commit is more than 25 hours old. Manual dispatch
    always runs. Nightly fuzz seeds still advance with the run number, so skipped nights' seeds are
    not played.
-7. **Shared work.** The full-suite job lists the Vitest collection once and passes it to
-   `check:suite-collect`, `check:manifest-tests` and `mutate-cards` with `--collected`. The
-   Playwright suites share one job and one browser install. Every job sets `timeout-minutes`.
+7. **Shared work.** The full-suite run writes Vitest's JSON report, which
+   `scripts/vitest-run-listing.ts` turns into the collection listing passed to
+   `check:suite-collect`, `check:manifest-tests` and `mutate-cards` with `--collected`; a separate
+   `vitest list` imported every suite a second time (about 7 minutes). When the full suite runs, the
+   card gate checks its list and prints its facet warnings but leaves its test files to the full
+   suite (`test:card-gate --skip-run`), so they run once. The Playwright suites share one job and
+   one browser install. Every job sets `timeout-minutes`.
+8. **Labels pick the slow suites** (added 2026-11-01). A pull request picks what its change needs:
+
+   | Label       | Runs                                                       |
+   | ----------- | ---------------------------------------------------------- |
+   | `ci:engine` | full test suite, collection checks, IR mutation            |
+   | `ci:lab`    | Card Test Lab Playwright (`test:e2e`), the longest suite   |
+   | `ci:setup`  | Play my deck setup and player game Playwright              |
+   | `ci:table`  | multiplayer table Playwright                               |
+   | `ci:e2e`    | all three Playwright suites                                |
+   | `ci:full`   | every slow suite                                           |
+   | `ci:fuzz`   | the advisory fuzz job (decision 4), on engine changes only |
+
+   Labels combine. The nightly run on main runs every suite, so a suite a pull request left out is
+   still covered within a day of the merge.
 
 ## Consequences
 
-- A typical pull request push costs a few minutes; the slow jobs run once when the author adds
-  `ci:full`, and again on each push made while the label stays on.
+- A typical pull request push costs a few minutes; the picked suites run once when the author adds
+  their labels, and again on each push made while the labels stay on.
+- A pull request that picks only some suites can merge a change that breaks one it left out. The
+  nightly run reports it, and the gate's notice lists what was left out, so pick `ci:full` when
+  unsure.
 - `check:manifest-tests` moved from the card gate to the full-suite job, so a manifest test ID that
   stops matching is reported at the full run rather than on every push.
 - Adding any label to a pull request reruns its workflow (GitHub has no per-label trigger filter),
