@@ -24,6 +24,7 @@ import {
   not,
   ofType,
 } from '../selector';
+import { noteSlotFailure } from './diagnostics';
 
 /**
  * "When ~ enters" / "Whenever a Dragon you control attacks" — one shape covering both, because
@@ -109,7 +110,7 @@ export interface ParsedTriggerHead {
  * Read the head of a trigger line (its first line, lowercased, with the card's name as `~`).
  * Null means the head is not one the grammar knows, which leaves the card unmodeled.
  */
-export function parseTriggerHead(firstLine: string, card: OracleCard): ParsedTriggerHead | null {
+function parseTriggerHeadUntraced(firstLine: string, card: OracleCard): ParsedTriggerHead | null {
   let heads: TriggerHead[];
   let body: string;
   let implicitCondition: Condition | undefined;
@@ -508,4 +509,13 @@ export function parseTriggerHead(firstLine: string, card: OracleCard): ParsedTri
     );
   }
   return { heads, body, implicitCondition, eventCondition };
+}
+
+/** `parseTriggerHeadUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
+export function parseTriggerHead(
+  ...args: Parameters<typeof parseTriggerHeadUntraced>
+): ReturnType<typeof parseTriggerHeadUntraced> {
+  const result = parseTriggerHeadUntraced(...args);
+  if (result === null) noteSlotFailure('trigger event', args[0]);
+  return result;
 }

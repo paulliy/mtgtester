@@ -15,6 +15,7 @@ The canonical completion standard is [Modeling a Card and Testing It](card-model
 
 - [EDH staple coverage](../plans/edh-staple-coverage.md)
 - [EDHREC coverage modelling plan](../plans/edhrec-coverage-modelling.md): how the 15 unmodeled staples and the 5,917 one-line cards are sequenced, and the verification bar for each rank band.
+- [EDHREC triage](../plans/edhrec-triage.md): the grammar slot that fails in each one-line card, grouped by phrase; the work queue for the coverage plan. Regenerate with `bun run edhrec:triage` after a parser change (`snapshots:check` fails until you do).
 - [EDHREC ready list](../plans/edhrec-ready-list.md): the cards filling 95% of real Commander deck slots that are modeled or one unparsed line away. Regenerate with `bun run edhrec:ready-list` after a parser change; refreeze the ranking with `bun run edhrec:fetch`.
 - [Post-Tier-3 residue](../plans/post-tier3-card-coverage.md)
 

@@ -11,6 +11,7 @@ import { parseCardFilterPhrase, parseSubject } from './subject';
 import { ENTERED_THIS_TURN, YOURS, allOf } from '../selector';
 import type { Value } from '../value';
 import { constant } from '../value';
+import { noteSlotFailure } from './diagnostics';
 
 /**
  * A count as rules text writes it, including the back-references only an event can answer.
@@ -26,7 +27,7 @@ import { constant } from '../value';
  * would make Old Gnawbone produce one Treasure per hit instead of one per damage — a silent
  * undercount, not an error.
  */
-export function parseCountPhrase(phrase: string, thatMany?: Value): Value | null {
+function parseCountPhraseUntraced(phrase: string, thatMany?: Value): Value | null {
   if (phrase === 'that many' || phrase === 'that much' || phrase === 'that damage') {
     return thatMany ?? null;
   }
@@ -36,7 +37,7 @@ export function parseCountPhrase(phrase: string, thatMany?: Value): Value | null
 }
 
 /** Parse count clauses that depend on the source, trigger object, or current battlefield. */
-export function parseDynamicCountValue(
+function parseDynamicCountValueUntraced(
   clause: string,
   card: OracleCard,
   opts: { triggerObject?: boolean } = {},
@@ -139,7 +140,7 @@ export function parseDynamicCountValue(
  * Returns a `Value` rather than a number so "X damage" and "3 damage" take the same executor
  * path — the alternative is a parallel set of ops that differ only in how the number arrives.
  */
-export function parseDamageAmount(word: string, card: OracleCard): Value | null {
+function parseDamageAmountUntraced(word: string, card: OracleCard): Value | null {
   if (word === 'x') {
     // Only meaningful on a card whose own cost contains {X}; anything else is a different X
     // (an ability's X, a counted quantity) that this grammar has not read.
@@ -147,4 +148,31 @@ export function parseDamageAmount(word: string, card: OracleCard): Value | null 
   }
   const amount = parseAmount(word);
   return amount === null ? null : constant(amount);
+}
+
+/** `parseCountPhraseUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
+export function parseCountPhrase(
+  ...args: Parameters<typeof parseCountPhraseUntraced>
+): ReturnType<typeof parseCountPhraseUntraced> {
+  const result = parseCountPhraseUntraced(...args);
+  if (result === null) noteSlotFailure('amount', args[0]);
+  return result;
+}
+
+/** `parseDynamicCountValueUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
+export function parseDynamicCountValue(
+  ...args: Parameters<typeof parseDynamicCountValueUntraced>
+): ReturnType<typeof parseDynamicCountValueUntraced> {
+  const result = parseDynamicCountValueUntraced(...args);
+  if (result === null) noteSlotFailure('amount', args[0]);
+  return result;
+}
+
+/** `parseDamageAmountUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
+export function parseDamageAmount(
+  ...args: Parameters<typeof parseDamageAmountUntraced>
+): ReturnType<typeof parseDamageAmountUntraced> {
+  const result = parseDamageAmountUntraced(...args);
+  if (result === null) noteSlotFailure('amount', args[0]);
+  return result;
 }

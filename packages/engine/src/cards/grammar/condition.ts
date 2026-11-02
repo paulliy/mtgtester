@@ -11,6 +11,7 @@ import type { Condition } from '../condition';
 import { countPermanents } from '../condition';
 import type { Selector } from '../selector';
 import { OTHER, allOf, anyOf, ofSubtype, ofSupertype, ofType } from '../selector';
+import { noteSlotFailure } from './diagnostics';
 
 /** The intervening-if clause (CR 603.4): "…, if you control a Dragon, draw a card". */
 export const INTERVENING_IF_RE = /^if (.+?), (.+)$/;
@@ -20,7 +21,7 @@ export const INTERVENING_IF_RE = /^if (.+?), (.+)$/;
  * greater". Reuses `parseTriggerSubject`, so anything expressible as a trigger subject is
  * automatically countable here too.
  */
-export function parseConditionClause(clause: string, card: OracleCard): Condition | null {
+function parseConditionClauseUntraced(clause: string, card: OracleCard): Condition | null {
   if (clause === 'it was kicked' || clause === 'this spell was kicked') {
     return { kind: 'wasKicked' };
   }
@@ -108,7 +109,7 @@ export function parseConditionClause(clause: string, card: OracleCard): Conditio
  * period. Returns null for any phrasing it does not know, so the ability stays unmodeled rather
  * than becoming activatable at times the card forbids.
  */
-export function parseActivationCondition(text: string, card: OracleCard): Condition | null {
+function parseActivationConditionUntraced(text: string, card: OracleCard): Condition | null {
   const sameName = text.match(/^you control (\w+) or more lands with the same name$/);
   if (sameName !== null) {
     const n = parseAmount(sameName[1] as string);
@@ -134,7 +135,7 @@ export function parseActivationCondition(text: string, card: OracleCard): Condit
  * anything unlisted, leaving the card unmodeled rather than guessing a predicate — a land that
  * silently entered untapped would be a real (if small) misplay every game.
  */
-export function parseEntersUnlessClause(clause: string, card: OracleCard): Condition | null {
+function parseEntersUnlessClauseUntraced(clause: string, card: OracleCard): Condition | null {
   // "you have two or more opponents"
   {
     const m = clause.match(/^you have (\w+) or (more|fewer) opponents$/);
@@ -189,4 +190,31 @@ export function parseEntersUnlessClause(clause: string, card: OracleCard): Condi
   }
   void card;
   return null;
+}
+
+/** `parseConditionClauseUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
+export function parseConditionClause(
+  ...args: Parameters<typeof parseConditionClauseUntraced>
+): ReturnType<typeof parseConditionClauseUntraced> {
+  const result = parseConditionClauseUntraced(...args);
+  if (result === null) noteSlotFailure('condition', args[0]);
+  return result;
+}
+
+/** `parseActivationConditionUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
+export function parseActivationCondition(
+  ...args: Parameters<typeof parseActivationConditionUntraced>
+): ReturnType<typeof parseActivationConditionUntraced> {
+  const result = parseActivationConditionUntraced(...args);
+  if (result === null) noteSlotFailure('condition', args[0]);
+  return result;
+}
+
+/** `parseEntersUnlessClauseUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
+export function parseEntersUnlessClause(
+  ...args: Parameters<typeof parseEntersUnlessClauseUntraced>
+): ReturnType<typeof parseEntersUnlessClauseUntraced> {
+  const result = parseEntersUnlessClauseUntraced(...args);
+  if (result === null) noteSlotFailure('condition', args[0]);
+  return result;
 }

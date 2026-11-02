@@ -70,6 +70,7 @@ import {
 import type { Value } from '../value';
 import { constant } from '../value';
 import { canonicalizeToken, FOOD, MUTAGEN, TREASURE } from '../tokens';
+import { noteSlotFailure } from './diagnostics';
 
 /** Split a line into sentences, dropping the terminal period of each. */
 export function splitSentences(line: string): string[] {
@@ -1118,7 +1119,7 @@ export const REANIMATE_ATTACH_TRIGGER =
  * — a back-reference to something this grammar has not tracked — can never be misread as the
  * trigger referent.
  */
-export function parseEffectSentence(
+function parseEffectSentenceUntraced(
   sentence: string,
   alloc: SlotAllocator,
   card: OracleCard,
@@ -3296,4 +3297,13 @@ export function parseTriggerLine(line: string, card: OracleCard): Ability[] | nu
     ...(modalBlock !== null ? { modes: modalBlock.modes } : {}),
     description: line,
   }));
+}
+
+/** `parseEffectSentenceUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
+export function parseEffectSentence(
+  ...args: Parameters<typeof parseEffectSentenceUntraced>
+): ReturnType<typeof parseEffectSentenceUntraced> {
+  const result = parseEffectSentenceUntraced(...args);
+  if (result === null) noteSlotFailure('effect', args[0]);
+  return result;
 }

@@ -1,7 +1,7 @@
 # Plan: modelling the EDHREC coverage list
 
 Status: in progress. Phases retooled 2026-11-02 after decisions D1 to D4 below. Phase 1 steps 1
-and 2 are done and step 3 has started (conditions moved); see the Phase 1 status line. Baseline: `253d682`. Scope: the 15 unmodeled EDHREC staples and the 5,917 cards in the
+to 6 are done; step 7 (offline pins) needs network access to Scryfall. See the Phase 1 status. Baseline: `253d682`. Scope: the 15 unmodeled EDHREC staples and the 5,917 cards in the
 [EDHREC ready list](edhrec-ready-list.md) that are blocked by exactly one unparsed rules line.
 
 Related: [EDH staple coverage](edh-staple-coverage.md) (earlier tiers),
@@ -182,10 +182,18 @@ and reads test output.
 
 ### Phase 1: parser foundation (D2, D3)
 
-Status (2026-11-02): steps 1 and 2 done. The nets are in `snapshots:check`; `cards/grammar/`
-holds `words.ts`, `subject.ts`, `amount.ts` and `condition.ts`, and `interpret.ts` is down from
-9,252 to 8,142 lines with every net unchanged. Step 3 continues with trigger events, durations,
-player scope and costs.
+Status (2026-11-02): steps 1 to 6 done; step 7 waits for network access to Scryfall.
+
+- The nets are in `snapshots:check`, together with `edhrec:triage --check`.
+- `cards/grammar/` holds `words`, `subject`, `amount`, `condition`, `cost`, `trigger-event`,
+  `effect` and `diagnostics`. `interpret.ts` is down from 9,252 to 4,182 lines, and every net
+  is unchanged.
+- Step 4 is done as a move, not yet as a split. `parseEffectSentence` has 151 top-level branches,
+  and 34 of them can match a sentence starting with any word, scattered between the
+  verb-specific ones, so a mechanical split by verb could reorder matches the nets cannot see.
+  Each verb family is instead rebuilt on the slot parsers when Phase 4 extends it, and its old
+  branches are deleted once the nets show the rebuilt family produces the same definitions.
+- [EDHREC triage](edhrec-triage.md) is the work queue: the failing slot of every one-line card.
 
 The goal is a parser built from phrase parsers that report which slot failed, with no change to
 any card's behavior. Each step is a pure refactor proven by the nets in step 1.1.

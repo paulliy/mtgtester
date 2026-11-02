@@ -25,6 +25,7 @@ import {
   ofSupertype,
   ofType,
 } from '../selector';
+import { noteSlotFailure } from './diagnostics';
 
 /**
  * Split "`<costs>`: `<effect>`" at the FIRST colon. Returns null for a line that is not an
@@ -41,7 +42,7 @@ export function splitActivation(lower: string): { costText: string; effectText: 
  * `AbilityCost`s. Returns null if ANY component is unrecognized: a cost the engine cannot charge
  * is worse than an ability it cannot use, because the ability would then be free.
  */
-export function parseActivationCosts(costText: string, card?: OracleCard): AbilityCost[] | null {
+function parseActivationCostsUntraced(costText: string, card?: OracleCard): AbilityCost[] | null {
   const costs: AbilityCost[] = [];
   for (const raw of costText.split(',')) {
     const part = raw.trim();
@@ -227,7 +228,7 @@ export function parseGraveyardAlternativeCosts(costText: string): AbilityCost[] 
 }
 
 /** Parse a non-mana alternate-cost line such as Force of Will's pitch cost. */
-export function parseNonManaAlternativeCost(
+function parseNonManaAlternativeCostUntraced(
   line: string,
   card: OracleCard,
 ): { costs: AbilityCost[]; manaCost?: ParsedManaCost; condition?: Condition } | null {
@@ -294,11 +295,38 @@ export function parseNonManaAlternativeCost(
 }
 
 /** Parse the "As an additional cost to cast this spell, ..." header. */
-export function parseSpellAdditionalCost(line: string): AbilityCost[] | null {
+function parseSpellAdditionalCostUntraced(line: string): AbilityCost[] | null {
   const m = line.match(/^as an additional cost to cast this spell, (.+)$/i);
   if (m === null) return null;
   // "pay X life" (Toxic Deluge): X is announced with the spell (CR 601.2b) and paid as a cost
   // while casting (CR 601.2h). The caller marks the spell as announcing X.
   if (m[1] === 'pay x life') return [{ kind: 'payLifeValue', amount: { kind: 'xValue' } }];
   return parseActivationCosts(m[1] as string);
+}
+
+/** `parseActivationCostsUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
+export function parseActivationCosts(
+  ...args: Parameters<typeof parseActivationCostsUntraced>
+): ReturnType<typeof parseActivationCostsUntraced> {
+  const result = parseActivationCostsUntraced(...args);
+  if (result === null) noteSlotFailure('cost', args[0]);
+  return result;
+}
+
+/** `parseNonManaAlternativeCostUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
+export function parseNonManaAlternativeCost(
+  ...args: Parameters<typeof parseNonManaAlternativeCostUntraced>
+): ReturnType<typeof parseNonManaAlternativeCostUntraced> {
+  const result = parseNonManaAlternativeCostUntraced(...args);
+  if (result === null) noteSlotFailure('cost', args[0]);
+  return result;
+}
+
+/** `parseSpellAdditionalCostUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
+export function parseSpellAdditionalCost(
+  ...args: Parameters<typeof parseSpellAdditionalCostUntraced>
+): ReturnType<typeof parseSpellAdditionalCostUntraced> {
+  const result = parseSpellAdditionalCostUntraced(...args);
+  if (result === null) noteSlotFailure('cost', args[0]);
+  return result;
 }

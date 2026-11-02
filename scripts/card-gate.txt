@@ -175,3 +175,5 @@ packages/server/src/cards/facet-report.test.ts
 packages/engine/tests/cards/pilot-new
 packages/engine/tests/pilot-current
 packages/server/src/cards/pilot-current
+packages/engine/tests/grammar-diagnostics.test.ts
+packages/server/src/cards/edhrec-triage.test.ts

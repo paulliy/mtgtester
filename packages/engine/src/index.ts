@@ -53,7 +53,8 @@ export type {
 } from './state/types';
 
 // Card interpretation (the server will reuse this to pre-flight decks in Phase 3).
-export { interpretCard } from './cards/interpret';
+export { interpretCard, interpretCardWithDiagnostics } from './cards/interpret';
+export type { GrammarSlot, SlotFailure } from './cards/grammar/diagnostics';
 export type {
   CardDefinition,
   Ability,

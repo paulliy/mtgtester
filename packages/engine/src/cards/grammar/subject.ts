@@ -42,6 +42,7 @@ import {
   withKeyword,
 } from '../selector';
 import { PERMANENT_CARD_TYPES } from '../definition';
+import { noteSlotFailure } from './diagnostics';
 
 /**
  * Allocates a target slot of the given kind and returns its index (ADR 0004). `filter` further
@@ -112,7 +113,7 @@ export const ANY_SPELL: Selector = { kind: 'type', value: '*any spell*' };
  * Parse the subject of an anthem — "other Elves you control", "creatures your opponents
  * control" — into a `Selector`. Returns null when any part is unrecognized.
  */
-export function parseSubject(phrase: string, card: OracleCard): Selector | null {
+function parseSubjectUntraced(phrase: string, card: OracleCard): Selector | null {
   const parts: Selector[] = [];
   let noun = phrase;
 
@@ -319,7 +320,7 @@ export function parseSubject(phrase: string, card: OracleCard): Selector | null 
  * Returns null for anything unrecognized, leaving the card unmodeled: a trigger with a subject
  * that silently matches nothing would never fire, which is a misplay every game.
  */
-export function parseTriggerSubject(phrase: string, card: OracleCard): Selector | null {
+function parseTriggerSubjectUntraced(phrase: string, card: OracleCard): Selector | null {
   // Aura/Equipment combat triggers refer to the permanent attached to this source.
   if (/^(equipped|enchanted) creature$/.test(phrase)) return { kind: 'attachedToSource' };
   const selfOrOther = phrase.match(
@@ -408,7 +409,7 @@ export function parseTriggerSubject(phrase: string, card: OracleCard): Selector 
  * The subject of a mass effect — "each creature without flying", "each Dragon you control".
  * Plural `parseSubject` with a singular head, plus the keyword clause only mass effects use.
  */
-export function parseMassSubject(phrase: string, card: OracleCard): Selector | null {
+function parseMassSubjectUntraced(phrase: string, card: OracleCard): Selector | null {
   let noun = phrase;
   const parts: Selector[] = [];
 
@@ -493,7 +494,7 @@ export function parseMassSubject(phrase: string, card: OracleCard): Selector | n
  * Distinct from `parseTriggerSubject`: "permanent" is not a real card type (CR 110), so a bare
  * "permanent card" means "any of the six permanent card types", not a single `ofType`.
  */
-export function parseCardFilterPhrase(phrase: string, card: OracleCard): Selector | null {
+function parseCardFilterPhraseUntraced(phrase: string, card: OracleCard): Selector | null {
   // "a Dragon creature card or Ugin planeswalker card" / "a Dragon spell or an Omen spell" —
   // alternatives, any of which qualifies. Split before anything else so each side is read whole.
   if (/ or /.test(phrase)) {
@@ -565,7 +566,7 @@ export function parseCardFilterPhrase(phrase: string, card: OracleCard): Selecto
 }
 
 /** "a Plains, Island, Swamp, or Mountain card" / "up to two basic land cards" → a `Selector`. */
-export function parseSearchFilter(phrase: string, card: OracleCard): Selector | null {
+function parseSearchFilterUntraced(phrase: string, card: OracleCard): Selector | null {
   // "a creature card OF THE CHOSEN TYPE" (Herald's Horn) - stripped first, because it trails
   // the noun everything below reads. The chosen type is per-permanent state recorded as the
   // source entered (`entersChoosingOption`), so it is a selector, not a literal subtype.
@@ -622,7 +623,7 @@ export function parseSearchFilter(phrase: string, card: OracleCard): Selector | 
  * stripping the trailing "spell": "a Dragon spell" and "a Dragon" describe the same
  * characteristics, and only the zone differs.
  */
-export function parseSpellFilter(phrase: string, card: OracleCard): Selector | null {
+function parseSpellFilterUntraced(phrase: string, card: OracleCard): Selector | null {
   // "Spells OF THE CHOSEN TYPE you cast..." (Morophon) - the qualifier sits on the subject here,
   // where Herald's Horn prints it after "you cast". Same selector either way.
   const chosen = phrase.match(/^(.+) of the chosen type$/);
@@ -682,7 +683,7 @@ export function parseCompoundPermanentTypeNoun(text: string): Selector | null {
   return anyOf(...types.map((t) => ofType(t)));
 }
 
-export function parseTargetClause(
+function parseTargetClauseUntraced(
   text: string,
 ): { kind: TargetKind; filter?: Selector; controller?: TargetSpec['controller'] } | null {
   let cleaned = text.trim();
@@ -735,4 +736,67 @@ export function parseTargetClause(
     filter: filter === undefined ? compound : allOf(filter, compound),
     ...(controller !== undefined ? { controller } : {}),
   };
+}
+
+/** `parseSubjectUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
+export function parseSubject(
+  ...args: Parameters<typeof parseSubjectUntraced>
+): ReturnType<typeof parseSubjectUntraced> {
+  const result = parseSubjectUntraced(...args);
+  if (result === null) noteSlotFailure('subject', args[0]);
+  return result;
+}
+
+/** `parseTriggerSubjectUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
+export function parseTriggerSubject(
+  ...args: Parameters<typeof parseTriggerSubjectUntraced>
+): ReturnType<typeof parseTriggerSubjectUntraced> {
+  const result = parseTriggerSubjectUntraced(...args);
+  if (result === null) noteSlotFailure('subject', args[0]);
+  return result;
+}
+
+/** `parseMassSubjectUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
+export function parseMassSubject(
+  ...args: Parameters<typeof parseMassSubjectUntraced>
+): ReturnType<typeof parseMassSubjectUntraced> {
+  const result = parseMassSubjectUntraced(...args);
+  if (result === null) noteSlotFailure('subject', args[0]);
+  return result;
+}
+
+/** `parseCardFilterPhraseUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
+export function parseCardFilterPhrase(
+  ...args: Parameters<typeof parseCardFilterPhraseUntraced>
+): ReturnType<typeof parseCardFilterPhraseUntraced> {
+  const result = parseCardFilterPhraseUntraced(...args);
+  if (result === null) noteSlotFailure('card filter', args[0]);
+  return result;
+}
+
+/** `parseSearchFilterUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
+export function parseSearchFilter(
+  ...args: Parameters<typeof parseSearchFilterUntraced>
+): ReturnType<typeof parseSearchFilterUntraced> {
+  const result = parseSearchFilterUntraced(...args);
+  if (result === null) noteSlotFailure('card filter', args[0]);
+  return result;
+}
+
+/** `parseSpellFilterUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
+export function parseSpellFilter(
+  ...args: Parameters<typeof parseSpellFilterUntraced>
+): ReturnType<typeof parseSpellFilterUntraced> {
+  const result = parseSpellFilterUntraced(...args);
+  if (result === null) noteSlotFailure('spell filter', args[0]);
+  return result;
+}
+
+/** `parseTargetClauseUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
+export function parseTargetClause(
+  ...args: Parameters<typeof parseTargetClauseUntraced>
+): ReturnType<typeof parseTargetClauseUntraced> {
+  const result = parseTargetClauseUntraced(...args);
+  if (result === null) noteSlotFailure('target', args[0]);
+  return result;
 }

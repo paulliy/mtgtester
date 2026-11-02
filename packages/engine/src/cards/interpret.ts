@@ -59,6 +59,7 @@ import {
   parseTriggerLine,
   splitSentences,
 } from './grammar/effect';
+import { collectSlotDiagnostics, type SlotFailure } from './grammar/diagnostics';
 import type { Condition } from './condition';
 import { countPermanents } from './condition';
 import { CREATURE_TYPES } from './creature-types';
@@ -2606,6 +2607,19 @@ function buildPathwayLand(card: OracleCard): {
 /** Interpret one oracle card. Never throws â€” unmodeled cards are reported, not errors. */
 export function interpretCard(card: OracleCard): CardDefinition {
   return transformDefinition(interpretOracleCard(card));
+}
+
+/**
+ * `interpretCard`, plus the slot failures recorded while it ran (ADR 0038 decision 2): which
+ * subject, amount, condition, cost, trigger event or effect sentence the grammar could not read.
+ * For triage only; the definition is exactly what `interpretCard` returns.
+ */
+export function interpretCardWithDiagnostics(card: OracleCard): {
+  definition: CardDefinition;
+  failures: SlotFailure[];
+} {
+  const { result, failures } = collectSlotDiagnostics(() => interpretCard(card));
+  return { definition: result, failures };
 }
 
 /** `interpretCard` without the test-only transform: its recursive calls for halves and faces. */

@@ -16,6 +16,10 @@ docs/mtg-commander-ai-simulator-brief.md
 # byte-for-byte by the suites that read them. Reformatting them makes those tests fail with a
 # diff that has no semantic content. Regenerate with the scripts, never with prettier.
 packages/engine/tests/fixtures
+# The EDHREC triage queue and summary, written byte-for-byte by `bun run edhrec:triage` and
+# compared byte-for-byte by its --check (part of snapshots:check).
+packages/server/fixtures/edhrec-triage.json
+docs/plans/edhrec-triage.md
 
 # Generated browser and graph analysis artifacts
 graphify-out
