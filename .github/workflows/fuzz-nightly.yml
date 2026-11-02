@@ -1,8 +1,8 @@
 name: Nightly fuzz
 
-# ADR 0034 decision 8: the authoritative fuzz run. Each night plays the next 48 seeds, so the
-# nights cover new pods; a failure opens an issue (or comments on the open one) with each failing
-# seed, its decks and the command that replays it.
+# ADR 0034 decision 8: the authoritative fuzz run. Each night that main changed plays the next 48
+# seeds, so the nights cover new pods; a failure opens an issue (or comments on the open one) with
+# each failing seed, its decks and the command that replays it.
 on:
   schedule:
     - cron: '23 7 * * *'
@@ -19,15 +19,28 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+      # ADR 0036: a scheduled run plays only when main changed in the last 25 hours; a manual
+      # dispatch always plays.
+      - id: recent
+        if: github.event_name == 'schedule'
+        shell: bash
+        run: |
+          age=$(( $(date +%s) - $(git log -1 --format=%ct HEAD) ))
+          if (( age > 25 * 3600 )); then
+            echo "No commit on main in the last 25 hours: skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
       - uses: ./.github/actions/setup-bun-deps
+        if: steps.recent.outputs.skip != 'true'
       - id: fuzz
+        if: steps.recent.outputs.skip != 'true'
         run: >-
           bun run fuzz --from "$(( (RUN_NUMBER - 1) * 48 ))" --games 48 --jobs 4
           --json fuzz.json --report fuzz-report.md
         env:
           RUN_NUMBER: ${{ github.run_number }}
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && steps.recent.outputs.skip != 'true'
         continue-on-error: true
         with:
           name: nightly-fuzz-results

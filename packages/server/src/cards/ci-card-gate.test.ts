@@ -10,12 +10,25 @@ const workflow = readFileSync(resolve('.github/workflows/ci.yml'), 'utf8');
 describe('mandatory card CI gate', () => {
   it('exposes stable required-check names on pull requests', () => {
     expect(workflow).toContain('pull_request:');
-    expect(workflow).toContain('name: Quality / Format');
-    expect(workflow).toContain('name: Quality / Typecheck');
-    expect(workflow).toContain('name: Quality / Lint');
-    expect(workflow).toContain('name: Quality / Web build');
+    // ADR 0036: the quick checks share one job, and `CI / Gate` is the single required check.
+    expect(workflow).toContain('name: Quality / Format, typecheck, lint, web build');
+    expect(workflow).toContain('run: bun run format:check');
+    expect(workflow).toContain('run: bun run typecheck');
+    expect(workflow).toContain('run: bun run lint');
+    expect(workflow).toContain('run: bun run --cwd apps/web build');
     expect(workflow).toContain('name: Engine / Full test suite');
     expect(workflow).toContain('name: Cards / Offline verification gate');
+    expect(workflow).toContain('name: CI / Gate');
+  });
+
+  it('gates merging on the full run and shares one Vitest listing', () => {
+    expect(workflow).toContain("contains(github.event.pull_request.labels.*.name, 'ci:full')");
+    expect(workflow).toContain(
+      'needs: [changes, quality, card-verification, engine-tests, viewer-evidence]',
+    );
+    for (const check of ['check:suite-collect', 'check:manifest-tests', 'mutate-cards --changed']) {
+      expect(workflow).toContain(`bun run ${check} --collected "$RUNNER_TEMP/vitest-list.json"`);
+    }
   });
 
   it('runs the offline gate and both authored-data snapshot checks', () => {

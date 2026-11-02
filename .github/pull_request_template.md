@@ -22,4 +22,4 @@ Complete this section for every card whose modeled behavior changes. Use
       presented as behavioral proof.
 - [ ] Unsupported mechanics remain explicitly unsupported.
 - [ ] Snapshot changes were inspected before regeneration.
-- [ ] Mandatory local checks and CI checks executed; failures, skips, and blockers are listed.
+- [ ] Mandatory local checks and CI checks executed (`ci:full` label applied and `CI / Gate` green before merging); failures, skips, and blockers are listed.

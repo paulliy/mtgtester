@@ -5,6 +5,10 @@
  * import the files but run nothing and start no server) and fails on a file it collects nothing
  * from. A file that declares untracked data with `// suite-requires: <path>` may collect nothing
  * while that path is missing; the run lists it, so what CI never runs stays visible.
+ *
+ *   --collected <json>    reuse a `vitest list --json` listing of the default `vitest.config.ts`
+ *                         (CI lists it once for this check, `check:manifest-tests` and
+ *                         `mutate-cards`); other runners are still listed here
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
@@ -29,16 +33,28 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
+const args = process.argv.slice(2);
+const collectedFlag = args.indexOf('--collected');
+const givenListing = collectedFlag === -1 ? null : (args[collectedFlag + 1] ?? null);
+if (collectedFlag !== -1 && givenListing === null) {
+  console.error('--collected needs the path of a `vitest list --json` listing.');
+  process.exit(1);
+}
+
 const collected = new Map<string, Map<string, number>>();
 const scratch = mkdtempSync(join(tmpdir(), 'suite-collect-'));
 try {
   for (const runner of runners) {
     const started = Date.now();
     if (runner.kind === 'vitest') {
-      const out = join(scratch, 'vitest.json');
-      execFileSync('bunx', ['vitest', 'list', '--config', runner.config, `--json=${out}`], {
-        stdio: ['ignore', 'ignore', 'inherit'],
-      });
+      // `vitest list` with no `--config` lists `vitest.config.ts`, as the given listing did.
+      const reuse = givenListing !== null && runner.config === 'vitest.config.ts';
+      const out = reuse ? givenListing : join(scratch, 'vitest.json');
+      if (!reuse) {
+        execFileSync('bunx', ['vitest', 'list', '--config', runner.config, `--json=${out}`], {
+          stdio: ['ignore', 'ignore', 'inherit'],
+        });
+      }
       collected.set(runner.config, countVitestList(readFileSync(out, 'utf8'), root));
     } else {
       const json = execFileSync(
