@@ -4,24 +4,44 @@
 > community decks were added to the coverage list and the Scryfall bulk was refreshed:
 > **597 / 802 unique cards modeled (74.4%)** across 12 decks.
 >
+> Staples (2026-11-02): the list is now EDHREC's top 200 nonland cards, **185 / 200 modeled**;
+> see below and [the EDHREC ready list](edhrec-ready-list.md).
+>
 > The earlier baseline (107 / 200 of the most-included EDH cards, measured 2026-08-07 at
 > `83120f5`) is preserved below — it measures a different population and is still the right
 > instrument for "what do players actually cast". The two numbers are complements, not rivals.
 
 ## Where the measurement comes from
 
-The 200 cards are the most-included cards in Commander by deck count (user-supplied CSV),
-resolved against live Scryfall data via `/cards/collection` and converted with the production
-[`toOracleCard`](../../packages/server/src/cards/scryfall.ts) before running through
-`interpretCard`. This matters: it is a _real-world_ frequency ranking, not the seven precon
-fixture decks the engine was built against, so it is the first coverage number here that
-reflects what players actually cast. The seven-deck coverage report (`bun run coverage`) needs
-the gitignored 180 MB bulk file and measures a different, precon-shaped population — the two
-numbers are not comparable and neither supersedes the other.
+**Since 2026-11-02 the staple list is EDHREC's own ranking.** `packages/server/fixtures/edh-staples-200.txt`
+holds the 200 most-included nonland cards on EDHREC over the past two years (10,468,351 decks),
+written by `bun run edhrec:fetch` from the frozen ranking in
+`packages/server/fixtures/edhrec-ranking.json`. EDHREC ranks lands separately, so unlike the
+earlier user-supplied list this one has no lands; land coverage is measured by the fixture decks
+and by the ready list below. The 73 staples that were not yet in the pinned Oracle fixture were
+added to `coverage-oracle.json` and `coverage-contract.json`.
 
-Reproduce with the three `scryfall_response_*.json` batches and the checker in the session
-scratchpad; nothing about this measurement is committed, by design (the responses are ~2 MB of
-third-party data with no test value).
+Measured against the pinned fixture: **185 / 200 (92.5%)**. The top 100 are all modeled; the 15
+gaps sit between ranks 177 and 198 of the nonland ranking. They are listed in
+`coverage-contract.json` under `staples.knownUnmodeled`, which `bun run staples` enforces as a
+ratchet: a staple outside the list that is unmodeled fails, and a listed staple that becomes
+modeled fails until it is removed from the list. `bun run staples --complete` still requires all 200.
+
+The frozen ranking keeps the 12,820 cards (nonland and nonbasic land) that fill 95% of all
+nonbasic card slots in those decks. `bun run edhrec:ready-list` measures every one of them against
+the Scryfall bank and writes [the EDHREC ready list](edhrec-ready-list.md): the cards already
+modeled (2,999, 50.1% of slots) and the cards blocked by exactly one unparsed rules line (5,917,
+a further 28.3% of slots). That second list is the cheapest coverage left: each card needs one
+sentence of grammar, and lines shared by several cards are grouped at the top.
+
+### The earlier population (2026-08-07)
+
+The first 200 cards were the most-included cards in Commander by deck count, lands included
+(user-supplied CSV), resolved against live Scryfall data via `/cards/collection` and converted with
+the production [`toOracleCard`](../../packages/server/src/cards/scryfall.ts) before running through
+`interpretCard`. It was the first coverage number here that reflected what players actually cast.
+The seven-deck coverage report (`bun run coverage`) measures a different, precon-shaped population;
+the two numbers are not comparable and neither supersedes the other.
 
 ## What the two new decks changed (2026-08-28)
 

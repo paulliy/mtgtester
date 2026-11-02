@@ -1,14 +1,17 @@
 /**
- * Offline model-coverage check for the committed 200-card EDH staple population.
+ * Offline model-coverage check for the committed 200-card EDH staple population: the 200 most-
+ * included nonland cards on EDHREC, written by `bun run edhrec:fetch`.
  *
  *   bun run staples
  *   bun run staples --json
+ *   bun run staples --complete             # also fail while any staple is unmodeled
  *   bun run staples --bulk                 # the local Scryfall bulk cache instead of the pinned fixture
  *   bun run staples --oracle-fixture packages/server/fixtures/coverage-oracle.json
  *
  * The ranking itself is frozen as names only. Card data comes from the pinned Oracle fixture by
  * default, or from the local gitignored Scryfall bulk cache with `--bulk`; this command never uses
- * the network. Both routes enforce the same baseline.
+ * the network. Both routes enforce the same baseline, including the known-unmodeled ratchet in
+ * `coverage-contract.json`: the unmodeled staples must be exactly the listed ones.
  */
 
 import { readFileSync } from 'node:fs';
@@ -16,7 +19,11 @@ import { resolve } from 'node:path';
 import { coverageInput } from './coverage-input';
 import { measureCoverage } from '../cards/coverage';
 import { checkCoverageBaseline } from '../cards/coverage-baseline';
-import { assertCompleteCoverage } from '../cards/coverage-contract';
+import {
+  assertCompleteCoverage,
+  assertKnownUnmodeled,
+  type CoveragePopulation,
+} from '../cards/coverage-contract';
 
 const FIXTURE_PATH = 'packages/server/fixtures/edh-staples-200.txt';
 const EXPECTED_CARDS = 200;
@@ -60,6 +67,10 @@ function main(): void {
   ]);
 
   checkCoverageBaseline(report, index, 'staples');
+  const contract = JSON.parse(
+    readFileSync(resolve('packages/server/fixtures/coverage-contract.json'), 'utf8'),
+  ) as { staples: CoveragePopulation };
+  assertKnownUnmodeled(report, contract.staples);
   if (process.argv.includes('--complete')) assertCompleteCoverage(report);
   if (json) {
     console.log(JSON.stringify(report, null, 2));
