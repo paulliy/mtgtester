@@ -1563,9 +1563,11 @@ export type Effect =
         attachEquipment?: true;
         /** "Put one of them into your hand": a matching card must be taken, with no decline. */
         required?: true;
+        /** "Put two of them into your hand" (Stock Up): that many picks, hand destination only. */
+        count?: number;
       };
-      /** Where everything not taken ends up. */
-      rest: 'bottomRandom' | 'topAnyOrder' | 'bottomAnyOrder';
+      /** Where everything not taken ends up; `graveyard`: "and the rest into your graveyard". */
+      rest: 'bottomRandom' | 'topAnyOrder' | 'bottomAnyOrder' | 'graveyard';
       /** After replacing the looked-at cards, offer to shuffle the whole library. */
       mayShuffle?: true;
     }

@@ -67,9 +67,9 @@ export function registerCoveragePr09Overrides(): void {
   replaceCard(
     'e91240bc-4a13-4131-9379-5ddac6555f4a',
     'Adaptive Omnitool',
-    [
-      'unrecognized rules text: "Whenever equipped creature attacks, look at the top six cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on the bottom of your library in a random order."',
-    ],
+    // The look-at-the-top grammar reads the attack line now (Phase 4 batch 2); the reviewed def
+    // stays, the same lookAtTopN IR.
+    [],
     {
       triggers: [
         triggered(whenAttacks(ATTACHED), {

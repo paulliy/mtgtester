@@ -6,22 +6,22 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 | Failing slot | Cards | Share of slots |
 | ------------ | ----: | -------------: |
-| effect | 2890 | 13.41% |
-| subject | 1060 | 5.31% |
-| line | 760 | 4.26% |
+| effect | 2855 | 13.26% |
+| subject | 1066 | 5.34% |
+| line | 788 | 4.38% |
 | trigger event | 495 | 2.09% |
 | cost | 307 | 1.34% |
 | condition | 184 | 0.81% |
 | target | 168 | 0.79% |
-| card filter | 22 | 0.06% |
+| card filter | 23 | 0.07% |
 | amount | 20 | 0.12% |
 | spell filter | 11 | 0.09% |
 
 `line` means no slot recorded a failure inside the line: the line matched no sentence shape at all.
 
-## effect (2890)
+## effect (2855)
 
-- 69 × `look at the top n cards of your library` (Growing Rites of Itlimoc, Loot, Exuberant Explorer, Stock Up)
+- 34 × `look at the top n cards of your library` (Loot, Exuberant Explorer, Experimental Augury, Lim-Dûl's Vault)
 - 31 × `pay {m}` (Lifecrafter's Bestiary, Leaf-Crowned Visionary, Mind's Eye)
 - 14 × `reveal the top n cards of your library` (Fact or Fiction, Genesis Wave, Grisly Salvage)
 - 14 × `exile the top card of your library` (Blazing Crescendo, Cori Mountain Monastery, Count on Luck)
@@ -37,16 +37,16 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 9 × `pay {m}{m}` (Bramble Sovereign, Roar of Resistance, Alesha, Who Smiles at Death)
 - 8 × `discover n` (Hit the Mother Lode, Hidden Nursery, Hidden Volcano)
 
-## subject (1060)
+## subject (1066)
 
 - 27 × `you may` (Mockingbird, Vesuva, Phantasmal Image)
 - 25 × `~` (Yahenni, Undying Partisan, Marvin, Murderous Mimic, Paradise Druid)
 - 20 × `commander creatures you own` (Agent of the Iron Throne, Inspiring Leader, Guild Artisan)
 - 19 × `target creature you control` (Sylvan Safekeeper, Zack Fair, Royal Treatment)
 - 14 × `all sliver creatures` (Sliver Legion, Sinew Sliver, Winged Sliver)
+- 10 × `historic` (Jhoira's Familiar, Jhoira, Weatherlight Captain, Monumental Henge)
 - 10 × `this creature enters or` (Stitcher's Supplier, Patron of the Arts, Vinereap Mentor)
 - 10 × `all slivers` (Gemhide Sliver, Harmonic Sliver, Crystalline Sliver)
-- 8 × `historic` (Jhoira's Familiar, Jhoira, Weatherlight Captain, Teshar, Ancestor's Apostle)
 - 8 × `another target creature you control` (Giver of Runes, Selfless Savior, Pippin, Guard of the Citadel)
 - 8 × `it` (Biosynthic Burst, Flaming Fist, Fervent Charge)
 - 8 × `opponent` (Goblin Chainwhirler, Voldaren Epicure, Knight Paladin)
@@ -55,7 +55,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 6 × `artifact card with mana value n` (Whir of Invention, Trinket Mage, Trophy Mage)
 - 6 × `this artifact enters or` (Ichor Wellspring, Prized Statue, Mycosynth Wellspring)
 
-## line (760)
+## line (788)
 
 - 11 × `modular n` (Arcbound Ravager, Arcbound Crusher, Scrapyard Recombiner)
 - 10 × `when this land enters, it deals n damage to target opponent` (Abraded Bluffs, Bristling Backwoods, Jagged Barrens)
@@ -145,7 +145,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 2 × `nonland permanent and all other permanents with the same name as that permanent` (Maelstrom Pulse, Echoing Truth)
 - 2 × `artifact, enchantment, or creature with power n or greater` (Exorcise, Make Your Move)
 
-## card filter (22)
+## card filter (23)
 
 - 3 × `nonland permanent` (Emeria Shepherd, Return to the Light Realms, Pull Through the Weft)
 - 2 × `spacecraft` (Seedship Broodtender, Scrounge for Eternity)
@@ -158,10 +158,10 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 1 × `instant and sorcery` (Wisdom of Ages)
 - 1 × `artifact card, up to n target enchantment card, up to n target instant card, up to n target sorcery card, and up to n target planeswalker` (Reconstruct History)
 - 1 × `creature card and all other cards with the same name as that` (Echoing Return)
+- 1 × `card that shares a creature type with that creature` (Conjurer's Mantle)
 - 1 × `artifact creature` (Scarecrone)
 - 1 × `basic land` (Groundskeeper)
 - 1 × `historic permanent card` (Thran Temporal Gateway)
-- 1 × `artifact, enchantment, and planeswalker` (Triumphant Reckoning)
 
 ## amount (20)
 

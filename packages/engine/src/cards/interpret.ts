@@ -90,7 +90,6 @@ import {
 import type { Value } from './value';
 import { constant } from './value';
 import {
-  activated,
   costReductionFor,
   mana,
   manaCost,
@@ -99,7 +98,6 @@ import {
   onCombatDamageToPlayer,
   onDies,
   onEtb,
-  SAC_SELF,
   TAP,
   triggered,
   whenEnters,
@@ -2843,15 +2841,9 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
         description: 'Dragon spells or abilities',
       },
     });
-    activatedAbilities.push(
-      activated({
-        costs: [mana('{R}'), TAP, SAC_SELF],
-        effects: [
-          { op: 'searchLibrary', filter: ofSubtype('Dragon'), destinations: [{ zone: 'hand' }] },
-        ],
-        description: 'Search Dragon',
-      }),
-    );
+    // Its sacrifice ability ("look at the top seven cards … reveal a Dragon card") is read by the
+    // look-at-the-top grammar. It used to be bespoke here as a search of the whole library,
+    // which the card never says.
     reasons.length = 0;
   } else if (card.name === 'Rivaz of the Claw') {
     manaAbilities.push({

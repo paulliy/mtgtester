@@ -827,6 +827,48 @@ export function parseLookAtTopBlock(lower: string, card: OracleCard): Effect[] |
   const m = normalized.match(
     /^look at the top (\w+) cards of your library\. you may put (?:a|an) (.+?) from among them (onto the battlefield( tapped)?|into your hand)\. put the rest (on the bottom of your library in a random order|on top of your library in any order)$/,
   );
+  // "You may reveal a creature card from among them and put it into your hand. Put the rest on
+  // the bottom of your library in a random order." (Monumental Henge, Growing Rites of Itlimoc).
+  const reveal = normalized.match(
+    /^look at the top (\w+) cards of your library\. you may reveal (?:a|an) (.+?) from among them and put (?:it|that card) into your hand\. put the rest on the bottom of your library in (a random|any) order$/,
+  );
+  if (reveal !== null) {
+    const count = parseAmount(reveal[1] as string);
+    const filter = parseSearchFilter(reveal[2] as string, card);
+    if (count === null || filter === null) return null;
+    return [
+      {
+        op: 'lookAtTopN',
+        count,
+        mayPut: { filter, destination: { zone: 'hand' }, reveal: true },
+        rest: reveal[3] === 'any' ? 'bottomAnyOrder' : 'bottomRandom',
+      },
+    ];
+  }
+  // "Put one of them into your hand and the rest into your graveyard." (Forbidden Alchemy),
+  // "Put two of them into your hand and the rest on the bottom of your library in any order."
+  // (Stock Up), "… and the other on the bottom of your library." (Sleight of Hand): required picks.
+  const picks = normalized.match(
+    /^look at the top (\w+) cards of your library\. put (\w+) of (?:them|those cards) into your hand and the (?:rest|other) (into your graveyard|on the bottom of your library(?: in any order)?)$/,
+  );
+  if (picks !== null) {
+    const count = parseAmount(picks[1] as string);
+    const take = parseAmount(picks[2] as string);
+    if (count === null || take === null || take < 1 || take >= count) return null;
+    return [
+      {
+        op: 'lookAtTopN',
+        count,
+        mayPut: {
+          filter: { kind: 'allOf', of: [] },
+          destination: { zone: 'hand' },
+          required: true,
+          ...(take > 1 ? { count: take } : {}),
+        },
+        rest: picks[3] === 'into your graveyard' ? 'graveyard' : 'bottomAnyOrder',
+      },
+    ];
+  }
   if (m === null) return null;
 
   const count = parseAmount(m[1] as string);

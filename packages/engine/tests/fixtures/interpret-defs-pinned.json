@@ -77662,19 +77662,22 @@
     "activatedAbilities": [
       {
         "ability": {
-          "description": "Search Dragon",
+          "description": "{R}, {T}, Sacrifice this artifact: Look at the top seven cards of your library. You may reveal a Dragon card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
           "effects": [
             {
-              "destinations": [
-                {
+              "count": 7,
+              "mayPut": {
+                "destination": {
                   "zone": "hand"
-                }
-              ],
-              "filter": {
-                "kind": "subtype",
-                "value": "Dragon"
+                },
+                "filter": {
+                  "kind": "subtype",
+                  "value": "Dragon"
+                },
+                "reveal": true
               },
-              "op": "searchLibrary"
+              "op": "lookAtTopN",
+              "rest": "bottomRandom"
             }
           ],
           "kind": "activated",

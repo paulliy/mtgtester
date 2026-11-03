@@ -315,6 +315,7 @@ const shapes = {
         reveal: leaf,
         attachEquipment: leaf,
         required: leaf,
+        count: leaf,
       } satisfies Fields<Objects<Property<Effect, 'mayPut'>>>,
     },
     rest: leaf,

@@ -9882,9 +9882,43 @@ function* lookAtTopN(
     }
   }
 
+  // "Put two of them into your hand" (Stock Up): the further picks, each from what is left.
+  const alsoTaken: EngineCardObject[] = [];
+  if (mayPut !== undefined && (mayPut.count ?? 1) > 1 && mayPut.destination.zone === 'hand') {
+    const selectorSource = { cardId: source.cardId, controllerId: player.id };
+    for (let pick = 1; pick < (mayPut.count ?? 1); pick++) {
+      const remaining = looked.filter(
+        (card) =>
+          player.library.includes(card) &&
+          card !== taken &&
+          selectMatches(cardZoneCandidate(ctx, card, player.id), mayPut.filter, selectorSource),
+      );
+      if (remaining.length === 0) break;
+      const chosen =
+        remaining.length === 1
+          ? remaining[0]!
+          : yield* chooseCard(ctx, {
+              player: player.id,
+              prompt: `${source.name}: put another card from among them into your hand.`,
+              cards: remaining,
+              type: 'putFromTop',
+              verb: 'Put into your hand',
+            });
+      if (chosen === null || chosen === undefined) break;
+      yield* moveObject(ctx, chosen, { zone: 'hand' });
+      alsoTaken.push(chosen);
+    }
+  }
+
   // Move the chosen card first, then reorder only the remainder. Reordering within a library
   // is not a zone change; the chosen card's actual move above uses the normal transition path.
-  const rest = looked.filter((card) => player.library.includes(card) && card !== taken);
+  const rest = looked.filter(
+    (card) => player.library.includes(card) && card !== taken && !alsoTaken.includes(card),
+  );
+  if (effect.rest === 'graveyard') {
+    for (const card of rest) yield* moveObject(ctx, card, { zone: 'graveyard' });
+    return;
+  }
   let ordered = rest;
   if (effect.rest === 'topAnyOrder') {
     ordered = yield* orderForLibrary(ctx, source, player, rest, 'top');
