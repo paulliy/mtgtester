@@ -1390,12 +1390,6 @@ export function addSagaLoreCounters(ctx: GameContext, playerId: PlayerId): void 
   }
 }
 
-/**
- * Put counters on a permanent. `+1/+1` and `-1/-1` feed layer 7c through `perm.counters`, so
- * effective P/T follows immediately; pairs of them annihilate at the next SBA check (CR 704.5r).
- * A single placement is the one-placement case of the simultaneous batch, with the ability's
- * controller as the placing player; the return value stays "counters actually placed".
- */
 /** Counters a permanent puts on itself outside an ability's resolution (turning face up). */
 export function placeCountersOn(
   ctx: GameContext,
@@ -1417,6 +1411,12 @@ export function placeCountersOn(
   );
 }
 
+/**
+ * Put counters on a permanent. `+1/+1` and `-1/-1` feed layer 7c through `perm.counters`, so
+ * effective P/T follows immediately; pairs of them annihilate at the next SBA check (CR 704.5r).
+ * A single placement is the one-placement case of the simultaneous batch, with the ability's
+ * controller as the placing player; the return value stays "counters actually placed".
+ */
 function addCounters(
   ctx: GameContext,
   source: EffectSource,
@@ -9917,6 +9917,12 @@ function* lookAtTopN(
   );
   if (effect.rest === 'graveyard') {
     for (const card of rest) yield* moveObject(ctx, card, { zone: 'graveyard' });
+    emit(
+      ctx,
+      'lookAtTop',
+      { player: player.id, looked: looked.length, took: taken?.name ?? null },
+      player.id,
+    );
     return;
   }
   let ordered = rest;

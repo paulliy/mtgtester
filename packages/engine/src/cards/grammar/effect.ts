@@ -633,14 +633,6 @@ export function parseExileTopPlayableBlock(lower: string): Effect[] | null {
 }
 
 /**
- * "Look at the top eight cards of your library. You may put a Dragon creature card from among
- * them onto the battlefield. Put the rest on the bottom of your library in a random order."
- *
- * Matched as a whole THREE-sentence block rather than sentence by sentence: the later sentences
- * refer to "them" and "the rest", which only mean anything relative to the first. Parsing them
- * independently would need the IR to carry a revealed set between ops, which it does not.
- */
-/**
  * "Look at the top four cards of target opponent's library, exile one of them face down, then
  * put the rest on the bottom of that library in a random order. You may cast that card for as
  * long as it remains exiled, and mana of any type can be spent to cast that spell." (Gonti; Thief
@@ -693,6 +685,14 @@ export function parseExileFaceDownPlayableBlock(
 /** Thrown when a vote outcome would allocate a target slot, which the vote cannot announce. */
 class VoteTargetRefused extends Error {}
 
+/**
+ * "Look at the top eight cards of your library. You may put a Dragon creature card from among
+ * them onto the battlefield. Put the rest on the bottom of your library in a random order."
+ *
+ * Matched as a whole THREE-sentence block rather than sentence by sentence: the later sentences
+ * refer to "them" and "the rest", which only mean anything relative to the first. Parsing them
+ * independently would need the IR to carry a revealed set between ops, which it does not.
+ */
 export function parseLookAtTopBlock(lower: string, card: OracleCard): Effect[] | null {
   const normalized = lower.replace(/\.$/, '');
   // Will of the council (CR 701.38): "Starting with you, each player votes for time or

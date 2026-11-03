@@ -1169,13 +1169,13 @@ export function selectPermanents(
   });
 }
 
-/** Compute one permanent's current characteristics through the layer system. */
 /** Ward {2} of a face-down permanent cast with disguise or cloaked (CR 702.168a, 701.58a). */
 const FACE_DOWN_WARD: WardCost = {
   kind: 'mana',
   cost: parseManaCost('{2}').cost as ParsedManaCost,
 };
 
+/** Compute one permanent's current characteristics through the layer system. */
 export function computeCharacteristics(ctx: GameContext, perm: EnginePermanent): Characteristics {
   // Only pass `extra` when the permanent is genuinely off the battlefield — otherwise every
   // query for a different permanent would be a distinct cache key and never hit.
