@@ -1,7 +1,9 @@
 # Plan: modelling the EDHREC coverage list
 
 Status: in progress. Phases retooled 2026-11-02 after decisions D1 to D4 below. Phase 1 steps 1
-to 6 are done; step 7 (offline pins) needs network access to Scryfall. See the Phase 1 status. Baseline: `253d682`. Scope: the 15 unmodeled EDHREC staples and the 5,917 cards in the
+to 6 are done; step 7 (offline pins) is still open. Phase 3 is done (2026-11-03): all 15 staples
+are modeled. Phase 2 is done except face-down exile and face-down permanents. See each phase's
+status. Baseline: `253d682`. Scope: the 15 unmodeled EDHREC staples and the 5,917 cards in the
 [EDHREC ready list](edhrec-ready-list.md) that are blocked by exactly one unparsed rules line.
 
 Related: [EDH staple coverage](edh-staple-coverage.md) (earlier tiers),
@@ -227,6 +229,32 @@ Exit: both nets unchanged through steps 2 to 5, and `interpret.ts` reduced to ca
 
 ### Phase 2: subsystems (D4)
 
+Status (2026-11-03): four of the five subsystems are done; face-down exile and face-down
+permanents are still open.
+
+- **Last-known counters**: The Ozolith. A leave-the-battlefield head over another permanent reads
+  "if it had counters on it" from the departed object's last-known facts (CR 603.10a). "Put
+  those counters on ~" transfers them, and the new `moveAllCounters` op follows CR 122.5 (nothing
+  moves when either object is gone or both are the same object).
+- **Copy with exceptions**: Phyrexian Metamorph. `cards/grammar/copy.ts` reads "You may have this
+  … enter as a copy of …, except …" into `entersAsCopy`. It covers copy candidates, added card
+  types (copiable values, CR 707.9b, with a copy-of-a-copy test), "isn't legendary" and
+  implemented keywords. Clone, Copy Artifact, Mirrormade, Clever Impersonator and nine more
+  one-line cards close, and Sculpting Steel's override is retired. Added subtypes and supertypes
+  ("it's a Bird in addition", Mockingbird) and quoted abilities stay unparsed.
+- **Modal DFC with a permanent front face**: Witch Enchanter. A land face can be played whatever
+  the front face is. A land-face permanent gets only that face's characteristics
+  (`landFacePermanentDefinition`, CR 712.8f), so no front-face static, rule static or trigger
+  reaches it.
+- **Voting**: Plea for Power. The `councilVote` op (CR 701.38a) has every player vote once, in
+  turn order starting with the controller, and each vote is a public event. The Will of the
+  council template covers Tyrant's Choice, and `takeExtraTurn` covers Time Sieve and Temporal
+  Manipulation. Still open: secret votes (Mob Verdict), Council's dilemma per-vote counts
+  (Expropriate), extra votes (Brago's Representative), "whenever players finish voting"
+  triggers, and outcomes that target.
+- **Face-down exile and face-down permanents**: not started. They need the `PlayerView`
+  privacy work described below.
+
 Each subsystem adds features, so each brings its own executor tests and contract tests (D1).
 Main-thread rules decisions are listed for each.
 
@@ -246,6 +274,25 @@ Exit: each subsystem has an executor test for every rule decision in the table, 
 were waiting only on it are modeled or listed with the line that still blocks them.
 
 ### Phase 3: the 15 staples
+
+Status (2026-11-03): done. `bun run staples --complete` passes at 200/200 and `knownUnmodeled`
+is empty. Each staple has a scenario file in `packages/engine/tests/scenarios/` that the engine
+runner and the Card Test Lab both play, a viewer flow in `runner-card-test-lab.spec.ts`, and a
+manifest entry. Every staple stays `implemented-unreviewed` until a human review. Features beyond
+the table below:
+
+- Faerie Mastermind's "second card each turn" is now part of the trigger event
+  (`ordinalThisTurn`), not an intervening-if. A third draw before the trigger resolves no longer
+  counters it (CR 603.4), and a regression scenario covers it.
+- Shadowspear uses a new timestamp-ordered layer-6 `removeKeywords`, so a later grant gives the
+  keyword back (CR 613.7). Arcane Lighthouse's `denyKeywords` still holds against every grant.
+- Flusterstorm adds the Storm keyword (CR 702.40a), which counts every player's spells cast
+  before it this turn, and a general "Counter target <type> spell [unless …]" production.
+- Finale of Devastation adds a two-zone search: library, graveyard or both, may find nothing
+  (CR 701.19b), and a shuffle only when the library was searched.
+- Braids is an override in a new `edhrec-staples` batch over a new
+  `sacrificeThenOpponentsShareTypeOrPunish` op. Opponents answer in APNAP order and sacrifice
+  together.
 
 Ordered so that each staple lands together with the grammar it shares with other ranked cards.
 Ranks are positions in the combined ranking, as in the ready list; the staples file ranks nonland
