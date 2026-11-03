@@ -174,17 +174,9 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBITOverrides(): void {
   // Explore the Vastlands (creature // enchantment) stays `unimplemented()` there too.
 
   // Wear // Tear: restored in coverage PR11b; the interpreter casts each split half and fuses.
-  defineCard(
-    '2679d0dd-ba30-4a1c-b6a0-b3ac6c790496',
-    'Boros Charm',
-    [
-      'unrecognized rules text: "Choose one —"',
-      'unrecognized rules text: "• ~ deals 4 damage to target player or planeswalker."',
-      'unrecognized rules text: "• Permanents you control gain indestructible until end of turn."',
-      'unrecognized rules text: "• Target creature gains double strike until end of turn."',
-    ],
-    BOROS_CHARM,
-  );
+  // Every Boros Charm mode now parses (the "deals 4 damage to target player or planeswalker"
+  // production, Phase 4 batch 1); the def stays for its reviewed mode descriptions.
+  defineCard('2679d0dd-ba30-4a1c-b6a0-b3ac6c790496', 'Boros Charm', [], BOROS_CHARM);
   defineCard(
     '5e62b51d-faec-4aa0-9504-cf2c282d08ea',
     'Rakdos Charm',
@@ -231,58 +223,43 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBITOverrides(): void {
   // parses generically as a stack-based activated ability (`interpret.ts`'s `MANA_ABILITY_RE`
   // case in `parseEffectSentence`), with no token/typeLine divergence risk the way the
   // destroy-and-create-token cards above have. Deleted rather than kept-empty.
-  defineCard(
-    '8fa3ac81-3dfe-4565-be99-5554f7597b4b',
-    'Boros Garrison',
-    [
-      'unrecognized rules text: "When this land enters, return a land you control to its owner\'s hand."',
+  // The grammar reads "return a land you control to its owner's hand" (Phase 4 batch 1), so
+  // there is no unmodeled reason left to claim; the def stays, the same IR as the grammar's.
+  defineCard('8fa3ac81-3dfe-4565-be99-5554f7597b4b', 'Boros Garrison', [], {
+    triggers: [
+      {
+        kind: 'triggered',
+        trigger: { when: 'enters', subject: { kind: 'self' } },
+        targets: [],
+        effects: [{ op: 'returnOneToHand', selector: allOf(ofType('Land'), YOURS) }],
+        description: 'Enters — return a land you control to its owner’s hand',
+      },
     ],
-    {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: { when: 'enters', subject: { kind: 'self' } },
-          targets: [],
-          effects: [{ op: 'returnOneToHand', selector: allOf(ofType('Land'), YOURS) }],
-          description: 'Enters — return a land you control to its owner’s hand',
-        },
-      ],
-    },
-  );
-  defineCard(
-    'aa00ae0b-7c0f-427e-8102-ce0e2a6af5df',
-    'Orzhov Basilica',
-    [
-      'unrecognized rules text: "When this land enters, return a land you control to its owner\'s hand."',
+  });
+  // The grammar reads "return a land you control to its owner's hand" (Phase 4 batch 1), so
+  // there is no unmodeled reason left to claim; the def stays, the same IR as the grammar's.
+  defineCard('aa00ae0b-7c0f-427e-8102-ce0e2a6af5df', 'Orzhov Basilica', [], {
+    triggers: [
+      {
+        kind: 'triggered',
+        trigger: { when: 'enters', subject: { kind: 'self' } },
+        targets: [],
+        effects: [{ op: 'returnOneToHand', selector: allOf(ofType('Land'), YOURS) }],
+        description: 'Enters — return a land you control to its owner’s hand',
+      },
     ],
-    {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: { when: 'enters', subject: { kind: 'self' } },
-          targets: [],
-          effects: [{ op: 'returnOneToHand', selector: allOf(ofType('Land'), YOURS) }],
-          description: 'Enters — return a land you control to its owner’s hand',
-        },
-      ],
-    },
-  );
-  defineCard(
-    '0a023964-2905-4928-9c3e-dc63e6ebd218',
-    'Rakdos Carnarium',
-    [
-      'unrecognized rules text: "When this land enters, return a land you control to its owner\'s hand."',
+  });
+  // The grammar reads "return a land you control to its owner's hand" (Phase 4 batch 1), so
+  // there is no unmodeled reason left to claim; the def stays, the same IR as the grammar's.
+  defineCard('0a023964-2905-4928-9c3e-dc63e6ebd218', 'Rakdos Carnarium', [], {
+    triggers: [
+      {
+        kind: 'triggered',
+        trigger: { when: 'enters', subject: { kind: 'self' } },
+        targets: [],
+        effects: [{ op: 'returnOneToHand', selector: allOf(ofType('Land'), YOURS) }],
+        description: 'Enters — return a land you control to its owner’s hand',
+      },
     ],
-    {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: { when: 'enters', subject: { kind: 'self' } },
-          targets: [],
-          effects: [{ op: 'returnOneToHand', selector: allOf(ofType('Land'), YOURS) }],
-          description: 'Enters — return a land you control to its owner’s hand',
-        },
-      ],
-    },
-  );
+  });
 }

@@ -6,9 +6,9 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 | Failing slot | Cards | Share of slots |
 | ------------ | ----: | -------------: |
-| effect | 2984 | 14.01% |
+| effect | 2890 | 13.41% |
 | subject | 1060 | 5.31% |
-| line | 666 | 3.66% |
+| line | 760 | 4.26% |
 | trigger event | 495 | 2.09% |
 | cost | 307 | 1.34% |
 | condition | 184 | 0.81% |
@@ -19,23 +19,23 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 `line` means no slot recorded a failure inside the line: the line matched no sentence shape at all.
 
-## effect (2984)
+## effect (2890)
 
 - 69 × `look at the top n cards of your library` (Growing Rites of Itlimoc, Loot, Exuberant Explorer, Stock Up)
 - 31 × `pay {m}` (Lifecrafter's Bestiary, Leaf-Crowned Visionary, Mind's Eye)
 - 14 × `reveal the top n cards of your library` (Fact or Fiction, Genesis Wave, Grisly Salvage)
-- 14 × `target player mills n cards` (Hedron Crab, Thought Scour, Grinding Station)
 - 14 × `exile the top card of your library` (Blazing Crescendo, Cori Mountain Monastery, Count on Luck)
 - 13 × `choose a creature type` (Distant Melody, Kindred Dominance, Raise the Palisade)
-- 13 × `investigate` (Deduce, Thraben Inspector, Bygone Bishop)
-- 12 × `each opponent discards a card` (Burglar Rat, Virus Beetle, Elderfang Disciple)
 - 12 × `gain control of target creature until end of turn` (Coercive Recruiter, Act of Treason, Song-Mad Treachery)
-- 11 × `return a land you control to its owner's hand` (Simic Growth Chamber, Golgari Rot Farm, Dimir Aqueduct)
 - 11 × `exile the top n cards of your library` (Bonehoard Dracosaur, Sword of Forge and Frontier, Reckless Impulse)
 - 11 × `reveal the top card of your library` (Ad Nauseam, Coiling Oracle, Descendants' Path)
-- 11 × `gain n life` (Soul's Attendant, Auriok Champion, Deathgreeter)
-- 11 × `it deals n damage to target opponent` (Abraded Bluffs, Bristling Backwoods, Jagged Barrens)
-- 10 × `prevent all combat damage that would be dealt this turn` (Fog, Spore Frog, Kami of False Hope)
+- 10 × `look at the top card of your library` (Risen Reef, Explorer's Scope, Sarinth Steelseeker)
+- 10 × `it deals n damage to any target` (Fanatical Firebrand, Pyrite Spellbomb, Weather Maker)
+- 9 × `the ring tempts you` (Fiery Inscription, Ringsight, Claim the Precious)
+- 9 × `attach it to target creature you control` (Celestial Armor, Maul of the Skyclaves, Cliffhaven Kitesail)
+- 9 × `amass orcs n` (Gothmog, Morgul Lieutenant, Saruman's Trickery, Grishnákh, Brash Instigator)
+- 9 × `pay {m}{m}` (Bramble Sovereign, Roar of Resistance, Alesha, Who Smiles at Death)
+- 8 × `discover n` (Hit the Mother Lode, Hidden Nursery, Hidden Volcano)
 
 ## subject (1060)
 
@@ -55,23 +55,23 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 6 × `artifact card with mana value n` (Whir of Invention, Trinket Mage, Trophy Mage)
 - 6 × `this artifact enters or` (Ichor Wellspring, Prized Statue, Mycosynth Wellspring)
 
-## line (666)
+## line (760)
 
 - 11 × `modular n` (Arcbound Ravager, Arcbound Crusher, Scrapyard Recombiner)
+- 10 × `when this land enters, it deals n damage to target opponent` (Abraded Bluffs, Bristling Backwoods, Jagged Barrens)
 - 10 × `toxic n` (Myr Convert, Bloated Contaminator, Blightbelly Rat)
 - 9 × `storm` (Grapeshot, Empty the Warrens, Chatterstorm)
+- 8 × `when this land enters, return a land you control to its owner's hand` (Simic Growth Chamber, Golgari Rot Farm, Dimir Aqueduct)
 - 8 × `mobilize n` (Voice of Victory, Bone-Cairn Butcher, Venerated Stormsinger)
 - 8 × `myriad` (Goldlust Triad, Scion of Calamity, Dalek Squadron)
+- 7 × `when this creature enters, each opponent discards a card` (Burglar Rat, Virus Beetle, Elderfang Disciple)
+- 6 × `prevent all combat damage that would be dealt this turn` (Fog, Moment's Peace, Holy Day)
 - 6 × `squad {m}` (Ultramarines Honour Guard, Sicarian Infiltrator, Space Marine Devastator)
 - 5 × `prowess` (Stormcatch Mentor, Queen Brahne, Monastery Swiftspear)
 - 5 × `~ enters tapped with n charge counters on it` (Vivid Creek, Vivid Grove, Vivid Meadow)
 - 5 × `buyback {m}` (Capsize, Sprout Swarm, Mystic Speculation)
 - 4 × `~ doesn't untap during your untap step` (Basalt Monolith, Grim Monolith, Goblin Sharpshooter)
 - 4 × `exalted` (Ignoble Hierarch, Noble Hierarch, Cathedral of War)
-- 4 × `dredge n` (Life from the Loam, Dakmor Salvage, Shenanigans)
-- 4 × `delve` (Treasure Cruise, Murderous Cut, Become Immense)
-- 4 × `target creature you control deals damage equal to its power to target creature or planeswalker you don't control` (Stump Stomp, Bite Down, Master's Rebuke)
-- 4 × `partner` (Rograkh, Son of Rohgahh, Brinelin, the Moon Kraken, Ishai, Ojutai Dragonspeaker)
 
 ## trigger event (495)
 

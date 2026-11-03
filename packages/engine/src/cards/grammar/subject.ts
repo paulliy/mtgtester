@@ -719,6 +719,9 @@ function parseTargetClauseUntraced(
     cleaned = manaValueClause[1] as string;
   }
 
+  // "target opponent": a player slot restricted to the ability controller's opponents, not any
+  // player (CR 115.2: an opponent is never yourself).
+  if (cleaned === 'opponent' && controller === undefined) controller = 'opponent';
   const kind = parseTargetNoun(cleaned);
   if (kind !== null) {
     return {

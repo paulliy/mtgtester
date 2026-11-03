@@ -57,7 +57,8 @@ export function registerReviewedFiveOverrides(): void {
   defineCard(
     '77b832a8-a3af-44fe-bc67-72510d292667',
     'Gev, Scaled Scorch',
-    ['Ward—Pay 2 life.', 'Whenever you cast a Lizard spell, ~ deals 1 damage to target opponent.'],
+    // The Lizard trigger's line now parses (Phase 4 batch 1); the def keeps the same IR.
+    ['Ward—Pay 2 life.'],
     {
       ward: { kind: 'life', amount: 2 },
       triggers: [

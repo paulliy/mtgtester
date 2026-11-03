@@ -72,7 +72,7 @@ import {
 } from '../selector';
 import type { Value } from '../value';
 import { constant } from '../value';
-import { canonicalizeToken, FOOD, MUTAGEN, TREASURE } from '../tokens';
+import { canonicalizeToken, CLUE, FOOD, MUTAGEN, TREASURE } from '../tokens';
 import { noteSlotFailure } from './diagnostics';
 
 /** Split a line into sentences, dropping the terminal period of each. */
@@ -1639,6 +1639,60 @@ function parseEffectSentenceUntraced(
             keywords: keywords as KeywordAbility[],
           },
         ];
+    }
+  }
+  // Phase 4 batch 1: common sentences over existing ops.
+  // "you may gain 1 life" reaches here as "gain 1 life" once the optional prefix is stripped.
+  {
+    const m = s.match(/^gain (\w+) life$/);
+    const n = m === null ? null : parseAmount(m[1] as string);
+    if (n !== null) return [{ op: 'gainLife', amount: constant(n) }];
+  }
+  // "Investigate" (CR 701.36a): create a Clue token.
+  if (s === 'investigate') return [{ op: 'createToken', spec: CLUE, count: constant(1) }];
+  // "Each opponent discards a card" / "each player discards two cards": each chooses (CR 701.9).
+  {
+    const m = s.match(/^each (opponent|player) discards (a card|(\w+) cards)$/);
+    const n = m === null ? null : m[3] === undefined ? 1 : parseAmount(m[3] as string);
+    if (m !== null && n !== null && n > 0)
+      return [
+        {
+          op: 'discardEachPlayer',
+          scope: m[1] === 'opponent' ? 'opponents' : 'all',
+          count: constant(n),
+        },
+      ];
+  }
+  // "Target player mills three cards" (Hedron Crab, Thought Scour).
+  {
+    const m = s.match(/^target player mills (a card|(\w+) cards)$/);
+    const n = m === null ? null : m[2] === undefined ? 1 : parseAmount(m[2] as string);
+    if (m !== null && n !== null && n > 0)
+      return [{ op: 'millTargetPlayer', target: alloc('player'), count: n }];
+  }
+  // Fog: "Prevent all combat damage that would be dealt this turn" (CR 615).
+  if (s === 'prevent all combat damage that would be dealt this turn')
+    return [{ op: 'preventCombatDamageAll' }];
+  // Karoo lands: "return a land you control to its owner's hand", chosen on resolution.
+  {
+    const m = s.match(/^return an? (.+) you control to its owner's hand$/);
+    if (m !== null && !/\btarget\b/.test(m[1] as string)) {
+      const kind = parseSubject(m[1] as string, card);
+      if (kind !== null) return [{ op: 'returnOneToHand', selector: allOf(kind, YOURS) }];
+    }
+  }
+  // "it deals 1 damage to target opponent" (Abraded Bluffs): with a self head "it" is the source.
+  {
+    const m = s.match(
+      /^(~|it) deals (\w+) damage to target (opponent|player|player or planeswalker)$/,
+    );
+    const n = m === null ? null : parseAmount(m[2] as string);
+    if (m !== null && n !== null && (m[1] === '~' || opts.triggerObject !== true)) {
+      const target =
+        m[3] === 'opponent'
+          ? alloc('player', undefined, 'opponent')
+          : alloc(m[3] === 'player' ? 'player' : 'playerOrPlaneswalker');
+      return [{ op: 'dealDamage', target, amount: constant(n) }];
     }
   }
   // "Manifest dread" (CR 701.62a, Innocuous Rat).

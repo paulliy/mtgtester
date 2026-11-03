@@ -121,7 +121,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   defineCard(
     '932708ae-9d5c-4561-aa8b-0d2222d37fdc',
     'Darkness',
-    ['Prevent all combat damage that would be dealt this turn.'],
+    // The grammar reads Fog's sentence (Phase 4 batch 1); the def stays as the same IR.
+    [],
     {
       spellAbility: {
         kind: 'spell',
