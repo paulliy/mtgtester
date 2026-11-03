@@ -27,6 +27,11 @@ function canonical(value: unknown): unknown {
   return out;
 }
 
+/** A definition with its object keys sorted, as the snapshots serialize it. */
+export function canonicalDefinition(definition: unknown): unknown {
+  return canonical(definition);
+}
+
 /** `interpretCard(card)` for every card in `cards`, as canonical JSON with a trailing newline. */
 export function interpretSnapshot(cards: OracleCard[]): string {
   const defs = [...cards]

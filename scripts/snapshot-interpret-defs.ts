@@ -1,48 +1,129 @@
 /**
- * Write or verify the golden snapshot of `interpretCard`'s output over the committed 93-card
- * Ur-Dragon fixture. See `packages/engine/src/cards/interpret-snapshot.ts` for what this proves
- * and why the fixture is the right one for it (it's exactly the deck the hand-authored
- * name-keyed special cases in interpret.ts were written for).
+ * Write or verify the golden snapshots of `interpretCard`'s output (ADR 0038 decision 5).
  *
- *   bun run scripts/snapshot-interpret-defs.ts            # write the baseline
- *   bun run scripts/snapshot-interpret-defs.ts --check    # diff against it; non-zero on drift
+ *   bun run scripts/snapshot-interpret-defs.ts            # write the baselines
+ *   bun run scripts/snapshot-interpret-defs.ts --check    # diff against them; non-zero on drift
+ *
+ * Three sets, each a net for a different part of the parser:
+ *
+ * - the 93-card Ur-Dragon fixture, the deck interpret.ts's name-keyed special cases were written
+ *   for (see `packages/engine/src/cards/interpret-snapshot.ts`);
+ * - the full pinned coverage fixture (`coverage-oracle.json`), every real card the coverage gates
+ *   read;
+ * - the one-line probe corpus: each ready-list blocking line on a synthetic card
+ *   (`scripts/interpret-corpus.ts`). A refactor must leave its outcomes unchanged; a coverage
+ *   change shows its yield as rows that turned `modeled`.
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import type { OracleCard } from '@mtg/shared';
+import type { OracleCard } from '../packages/shared/src';
 import { interpretSnapshot } from '../packages/engine/src/cards/interpret-snapshot';
+import {
+  ONE_LINE_CORPUS_PATH,
+  ONE_LINE_OUTCOMES_PATH,
+  oneLineOutcomes,
+  type OneLineCorpusRow,
+} from './interpret-corpus';
 
-const FIXTURE = 'packages/engine/tests/fixtures/urdragon-oracle.json';
-const SNAPSHOT_PATH = 'packages/engine/tests/fixtures/interpret-defs.json';
+interface SnapshotSet {
+  label: string;
+  path: string;
+  render: () => string;
+  /** Names of the entries that differ between two renders, for the drift report. */
+  changed: (before: string, after: string) => string[];
+  size: number;
+}
 
-const cards = JSON.parse(readFileSync(FIXTURE, 'utf8')) as OracleCard[];
+const readJson = <T>(path: string): T => JSON.parse(readFileSync(path, 'utf8')) as T;
+
+function cardSet(label: string, fixture: string, path: string): SnapshotSet {
+  const cards = readJson<OracleCard[]>(fixture);
+  const nameOf = new Map(cards.map((card) => [card.oracleId, card.name]));
+  const index = (json: string): Map<string, string> =>
+    new Map(
+      (JSON.parse(json) as { oracleId: string }[]).map((e) => [e.oracleId, JSON.stringify(e)]),
+    );
+  return {
+    label,
+    path,
+    size: cards.length,
+    render: () => interpretSnapshot(cards),
+    changed: (before, after) => {
+      const was = index(before);
+      const now = index(after);
+      const ids = new Set([...was.keys(), ...now.keys()]);
+      return [...ids].filter((id) => was.get(id) !== now.get(id)).map((id) => nameOf.get(id) ?? id);
+    },
+  };
+}
+
+function corpusSet(): SnapshotSet {
+  const rows = readJson<OneLineCorpusRow[]>(ONE_LINE_CORPUS_PATH);
+  const nameOf = new Map(rows.map((row) => [String(row.rank), row.name]));
+  const index = (tsv: string): Map<string, string> =>
+    new Map(
+      tsv
+        .trimEnd()
+        .split('\n')
+        .slice(1)
+        .map((line) => [line.slice(0, line.indexOf('\t')), line]),
+    );
+  return {
+    label: 'one-line corpus outcomes',
+    path: ONE_LINE_OUTCOMES_PATH,
+    size: rows.length,
+    render: () => oneLineOutcomes(rows),
+    changed: (before, after) => {
+      const was = index(before);
+      const now = index(after);
+      const ranks = new Set([...was.keys(), ...now.keys()]);
+      return [...ranks]
+        .filter((rank) => was.get(rank) !== now.get(rank))
+        .map((rank) => {
+          const outcome = (line: string | undefined) => line?.split('\t')[1] ?? 'absent';
+          return `${rank}. ${nameOf.get(rank) ?? '?'}: ${outcome(was.get(rank))} -> ${outcome(now.get(rank))}`;
+        });
+    },
+  };
+}
+
+const sets: SnapshotSet[] = [
+  cardSet(
+    'interpret defs',
+    'packages/engine/tests/fixtures/urdragon-oracle.json',
+    'packages/engine/tests/fixtures/interpret-defs.json',
+  ),
+  cardSet(
+    'pinned interpret defs',
+    'packages/server/fixtures/coverage-oracle.json',
+    'packages/engine/tests/fixtures/interpret-defs-pinned.json',
+  ),
+  corpusSet(),
+];
+
 const check = process.argv.includes('--check');
-const current = interpretSnapshot(cards);
-
-if (!check) {
-  writeFileSync(SNAPSHOT_PATH, current);
-  console.log(`wrote ${SNAPSHOT_PATH} (${cards.length} cards)`);
-  process.exit(0);
+let drifted = false;
+for (const set of sets) {
+  const current = set.render();
+  if (!check) {
+    writeFileSync(set.path, current);
+    console.log(`wrote ${set.path} (${set.size} entries)`);
+    continue;
+  }
+  if (!existsSync(set.path)) {
+    console.error(`no baseline at ${set.path}; run without --check first`);
+    drifted = true;
+    continue;
+  }
+  const baseline = readFileSync(set.path, 'utf8');
+  if (baseline === current) {
+    console.log(`${set.label} unchanged (${set.size} entries)`);
+    continue;
+  }
+  drifted = true;
+  const changed = set.changed(baseline, current);
+  console.error(`${set.label} DRIFTED: ${changed.length} of ${set.size} entries changed`);
+  for (const name of changed.slice(0, 30)) console.error(`  changed: ${name}`);
+  if (changed.length > 30) console.error(`  … and ${changed.length - 30} more`);
 }
-
-if (!existsSync(SNAPSHOT_PATH)) {
-  console.error(`no baseline at ${SNAPSHOT_PATH} — run without --check first`);
-  process.exit(1);
-}
-
-const baseline = readFileSync(SNAPSHOT_PATH, 'utf8');
-if (baseline === current) {
-  console.log(`interpret defs unchanged (${cards.length} cards)`);
-  process.exit(0);
-}
-
-const index = (json: string): Map<string, string> =>
-  new Map((JSON.parse(json) as { oracleId: string }[]).map((e) => [e.oracleId, JSON.stringify(e)]));
-const before = index(baseline);
-const after = index(current);
-const changed = [...after.keys()].filter((k) => before.has(k) && before.get(k) !== after.get(k));
-
-console.error(`interpret defs DRIFTED: ${changed.length} of ${cards.length} cards changed`);
-const byId = new Map(cards.map((c) => [c.oracleId, c.name]));
-for (const id of changed.slice(0, 30)) console.error(`  changed: ${byId.get(id) ?? id}`);
-process.exit(1);
+process.exit(drifted ? 1 : 0);
