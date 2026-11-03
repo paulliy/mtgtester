@@ -396,6 +396,41 @@ async function expectThreeDrawn(page: Page): Promise<void> {
   await passUntil(page, logLine(page, /game over/));
 }
 
+const faceDown = (page: Page, seat = 'P1'): Locator =>
+  permanent(page, seat, 'Face-down permanent');
+
+/** Cast a hand card face down through its source-action tray and wait for the face-down permanent. */
+async function castFaceDown(page: Page, name: string): Promise<void> {
+  const card = hand(page, name);
+  await passUntil(page, card.and(page.locator('.actionable')));
+  await card.click();
+  await page
+    .locator('.source-actions .source-action-row button')
+    .filter({ hasText: /face down/i })
+    .first()
+    .click();
+  await confirmButton(page).click();
+  await passStackUntil(page, faceDown(page));
+}
+
+/** Turn your face-down permanent face up and wait for `name` to show on the battlefield. */
+async function turnFaceUp(page: Page, name: string): Promise<void> {
+  await activate(page, faceDown(page), /face up/i);
+  await passStackUntil(page, permanent(page, 'P1', name));
+  await expect(faceDown(page)).toHaveCount(0);
+}
+
+/** Cast Gonti targeting P2 and exile Scenario Elk face down from the revealed cards. */
+async function castGonti(page: Page): Promise<void> {
+  const gonti = hand(page, 'Gonti, Lord of Luxury');
+  await passUntil(page, gonti.and(page.locator('.actionable')));
+  await gonti.click();
+  await confirmButton(page).click();
+  const exile = cardChoice(page, 'Scenario Elk', 'Exile face down');
+  await passStackUntil(page, exile);
+  await exile.click();
+}
+
 const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
   'mizzium-mortars-target': async (page) => {
     await castWith(page, hand(page, 'Mizzium Mortars'), {
@@ -1550,6 +1585,106 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
   'plea-knowledge-wins': async (page) => {
     await castPlea(page, 'time');
     await expectThreeDrawn(page);
+  },
+  'vigilante-turned-up-destroys': async (page) => {
+    await castFaceDown(page, 'Nantuko Vigilante');
+    await turnFaceUp(page, 'Nantuko Vigilante');
+    await passStackUntil(page, inZone(page, 'P2', 'Graveyard', 'Scenario Relic'));
+    await expect(permanent(page, 'P2', 'Scenario Relic')).toHaveCount(0);
+  },
+  'vigilante-cast-face-up-no-trigger': async (page) => {
+    await castWith(page, hand(page, 'Nantuko Vigilante'), {
+      mode: /^Cast Nantuko Vigilante(?! face down)/,
+      resolves: /Nantuko Vigilante[^]*resolves/,
+    });
+    await passUntil(page, logLine(page, /game over/));
+    await expect(permanent(page, 'P1', 'Nantuko Vigilante')).toHaveCount(1);
+    await expect(permanent(page, 'P2', 'Scenario Relic')).toHaveCount(1);
+  },
+  'lurker-megamorph-counter': async (page) => {
+    await castFaceDown(page, 'Gudul Lurker');
+    await turnFaceUp(page, 'Gudul Lurker');
+    await expect(permanent(page, 'P1', 'Gudul Lurker').locator('.counters')).toContainText(
+      /\+1\/\+1.*1/,
+    );
+  },
+  'lurker-cast-face-up-no-counter': async (page) => {
+    await castWith(page, hand(page, 'Gudul Lurker'), { resolves: /Gudul Lurker[^]*resolves/ });
+    await expect(permanent(page, 'P1', 'Gudul Lurker')).toHaveCount(1);
+    await expect(permanent(page, 'P1', 'Gudul Lurker').locator('.counters')).toHaveCount(0);
+  },
+  'bonebrute-disguise-ward': async (page) => {
+    await castFaceDown(page, 'Hunted Bonebrute');
+    await passUntil(page, logLine(page, /game over/));
+    await expect(faceDown(page)).toHaveCount(1);
+    await expect(inZone(page, 'P2', 'Graveyard', 'Scenario Bolt')).toHaveCount(1);
+  },
+  'bonebrute-turned-up': async (page) => {
+    await castFaceDown(page, 'Hunted Bonebrute');
+    await turnFaceUp(page, 'Hunted Bonebrute');
+    await expect(permanent(page, 'P2', 'Dog')).toHaveCount(0);
+  },
+  'hydra-turned-up-five-counters': async (page) => {
+    await castFaceDown(page, 'Hooded Hydra');
+    await turnFaceUp(page, 'Hooded Hydra');
+    await expect(permanent(page, 'P1', 'Hooded Hydra').locator('.counters')).toContainText(
+      /\+1\/\+1.*5/,
+    );
+  },
+  'rat-dies-manifest-dread': async (page) => {
+    const snuff = hand(page, 'Scenario Snuff');
+    await passUntil(page, snuff.and(page.locator('.actionable')));
+    await snuff.click();
+    const rat = permanent(page, 'P1', 'Innocuous Rat').first();
+    await expect(rat).toHaveClass(/targetable|actionable/);
+    await rat.click();
+    await confirmButton(page).click();
+    const manifest = cardChoice(page, 'Scenario Bee', 'Manifest');
+    await passStackUntil(page, manifest);
+    await manifest.click();
+    await passUntil(page, faceDown(page));
+    await expect(inZone(page, 'P1', 'Graveyard', 'Scenario Ant')).toHaveCount(1);
+    await expect(inZone(page, 'P1', 'Graveyard', 'Innocuous Rat')).toHaveCount(1);
+    await expect(inZone(page, 'P1', 'Graveyard', 'Scenario Bee')).toHaveCount(0);
+  },
+  'gonti-exile-and-cast-any-type': async (page) => {
+    await castGonti(page);
+    const elk = inZone(page, 'P2', 'Exile', 'Scenario Elk');
+    await passStackUntil(page, elk);
+    const exiled = seatZone(page, 'P2', 'Exile')
+      .locator('.zone-card-thumb')
+      .filter({ has: elk });
+    await expect(exiled).toHaveClass(/actionable/);
+    await exiled.click();
+    await confirmButton(page).click();
+    await passStackUntil(page, permanent(page, 'P1', 'Scenario Elk'));
+    await expect(permanent(page, 'P1', 'Gonti, Lord of Luxury')).toHaveCount(1);
+  },
+  'gonti-later-turn': async (page) => {
+    await castGonti(page);
+    await passUntil(page, logLine(page, /game over/));
+    await expect(inZone(page, 'P2', 'Exile', 'Scenario Elk')).toHaveCount(1);
+    await expect(
+      seatZone(page, 'P2', 'Exile').locator('.zone-card-thumb').filter({
+        has: inZone(page, 'P2', 'Exile', 'Scenario Elk'),
+      }),
+    ).toHaveClass(/actionable/);
+  },
+  'thief-hits-exiles-one': async (page) => {
+    await attack(page, [['Thief of Sanity', 'P2']]);
+    const exile = cardChoice(page, 'Scenario Elk', 'Exile face down');
+    await passStackUntil(page, exile);
+    await exile.click();
+    await passUntil(page, logLine(page, /game over/));
+    await expect(inZone(page, 'P2', 'Exile', 'Scenario Elk')).toHaveCount(0);
+    await expect(life(page, 'P2')).toHaveText('38');
+    await expect(inZone(page, 'P2', 'Graveyard', 'Scenario Ant')).toHaveCount(1);
+    await expect(inZone(page, 'P2', 'Graveyard', 'Scenario Bee')).toHaveCount(1);
+  },
+  'grasp-search-and-play-land': async (page) => {
+    await castWith(page, hand(page, "Praetor's Grasp"), {
+      resolves: /Praetor's Grasp[^]*resolves/,
+    });
   },
 };
 
