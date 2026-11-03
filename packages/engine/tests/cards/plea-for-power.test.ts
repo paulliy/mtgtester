@@ -31,7 +31,7 @@ describe('Plea for Power', () => {
       .getState()
       .eventLog.slice(run.firstSequence)
       .filter((event) => event.type === 'vote')
-      .map((event) => (event.payload as { player: string; choice: string }).player);
+      .map((event) => (event.payload as { voter: string }).voter);
     expect(votes).toEqual(['P1', 'P2', 'P3', 'P4']);
   });
 });

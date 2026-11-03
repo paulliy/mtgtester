@@ -8171,7 +8171,11 @@ function* executeAbilityEffects(
             player: voter.id,
             prompt: `${source.name}: vote for ${effect.choices[0]} or ${effect.choices[1]}.`,
             options: effect.choices.map((choice) =>
-              plainOption({ type: 'vote', description: `Vote for ${choice}`, verb: 'Vote' }),
+              plainOption({
+                type: 'vote',
+                description: `Vote for ${choice}`,
+                verb: `Vote for ${choice}`,
+              }),
             ),
           };
           const index = outcome.index === 1 ? 1 : 0;
@@ -8179,7 +8183,7 @@ function* executeAbilityEffects(
           emit(
             ctx,
             'vote',
-            { source: source.name, player: voter.id, choice: effect.choices[index] },
+            { source: source.name, voter: voter.id, name: effect.choices[index] },
             voter.id,
           );
         }

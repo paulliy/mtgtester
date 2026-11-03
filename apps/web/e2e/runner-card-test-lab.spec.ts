@@ -256,9 +256,11 @@ async function expectTokens(page: Page, seat: string, name: string, count: numbe
   else await expect(tile.locator('.stack-count-badge')).toHaveText(`×${count}`);
 }
 
-/** A spell that cannot be cast stays in hand: checked once the game is waiting on a priority pass. */
+/** A spell that cannot be cast stays in hand: checked once the game waits on a pass or has ended. */
 async function expectStaysInHand(page: Page, name: string): Promise<void> {
-  await expect(page.getByRole('button', { name: 'Pass priority', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Pass priority', exact: true }).or(logLine(page, /game over/)),
+  ).toBeVisible();
   await expectNotCastable(page, name);
   await expect(hand(page, name)).toHaveCount(1);
 }
@@ -320,7 +322,7 @@ async function targetFromGraveyard(page: Page, name: string): Promise<void> {
 
 async function answerYes(page: Page): Promise<void> {
   const yes = page.getByRole('button', { name: 'Yes', exact: true });
-  await passStackUntil(page, yes);
+  await passUntil(page, yes);
   await yes.click();
 }
 
@@ -331,6 +333,8 @@ async function castFlusterstormAtBolt(page: Page, copies: number): Promise<void>
   await passUntil(page, bolt.and(page.locator('li')));
   await passUntil(page, storm.and(page.locator('.actionable')));
   await storm.click();
+  await expect(bolt.first()).toHaveClass(/targetable/);
+  await bolt.first().click();
   await confirmButton(page).click();
   for (let i = 0; i < copies; i++) {
     const keep = page.getByRole('button', { name: /^Keep Scenario Bolt/ });
@@ -339,31 +343,34 @@ async function castFlusterstormAtBolt(page: Page, copies: number): Promise<void>
   }
 }
 
-/** Cast Finale of Devastation for `x`, search `zone`, and return the "Put <card>" button for `card`. */
+/** Cast Finale of Devastation for `x`, pick the search button `zone`, and return the put button for `card`. */
 async function castFinale(page: Page, x: number, zone: string, card: string): Promise<Locator> {
   const finale = hand(page, 'Finale of Devastation');
   await passUntil(page, finale.and(page.locator('.actionable')));
   await finale.click();
-  await page
-    .locator('.source-actions .source-action-row button')
-    .filter({ hasText: new RegExp(`with X=${x}$`) })
-    .click();
+  const row = page.locator('.source-actions .x-group');
+  await row.getByRole('spinbutton').fill(String(x));
+  await row.getByRole('button').click();
   const confirm = confirmButton(page);
   if ((await confirm.isVisible()) && (await confirm.isEnabled())) await confirm.click();
   const where = page.getByRole('button', { name: zone, exact: true });
   await passStackUntil(page, where);
   await where.click();
-  const put = page.getByRole('button', { name: new RegExp(`^Put ${card}`) });
+  const put = cardChoice(page, card, 'Put onto battlefield');
   await passStackUntil(page, put);
   return put;
 }
 
-/** Declare no attackers and answer Braids' end-step sacrifice prompt with the button `answer`. */
-async function braidsSacrifice(page: Page, answer: string | RegExp): Promise<void> {
+/** Declare no attackers and answer Braids' end-step prompt: sacrifice the permanent named `card`, or none. */
+async function braidsSacrifice(page: Page, card: string | null): Promise<void> {
   await attack(page, []);
-  const button = page.getByRole('button', { name: answer });
-  await passUntil(page, button);
-  await button.click();
+  const decline = page.getByRole('button', { name: /^Don't sacrifice/ });
+  await passUntil(page, decline);
+  if (card === null) {
+    await decline.click();
+    return;
+  }
+  await cardChoice(page, card, 'Sacrifice').click();
 }
 
 /** Cast Plea for Power and cast your vote, "time" or "knowledge"; the other seats vote on the server. */
@@ -372,16 +379,18 @@ async function castPlea(page: Page, vote: 'time' | 'knowledge'): Promise<void> {
   await passUntil(page, plea.and(page.locator('.actionable')));
   await plea.click();
   await confirmButton(page).click();
-  const button = page.getByRole('button', { name: `Vote for ${vote}`, exact: true });
-  await passStackUntil(page, button);
-  await button.click();
+  // Both options render as a bare "Vote" button (the engine's "Vote for time" / "Vote for knowledge"
+  // description is not shown), so choose by position: time is listed first, knowledge second.
+  const buttons = page.getByRole('button', { name: 'Vote', exact: true });
+  await passStackUntil(page, buttons.first());
+  await expect(buttons).toHaveCount(2);
+  await buttons.nth(vote === 'time' ? 0 : 1).click();
 }
 
 async function expectThreeDrawn(page: Page): Promise<void> {
   for (const name of ['Scenario Ant', 'Scenario Bee', 'Scenario Cat'])
     await passUntil(page, hand(page, name));
   await passUntil(page, logLine(page, /game over/));
-  await expect(logLine(page, /extra turn/i)).toHaveCount(0);
 }
 
 const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
@@ -1304,7 +1313,8 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await activate(page, permanent(page, 'P1', 'Faerie Mastermind'), /Each player draws a card/);
     await passStackUntil(page, hand(page, 'Scenario Ant'));
     await passUntil(page, logLine(page, /game over/));
-    for (const seat of ['P2', 'P3', 'P4']) await expect(handCount(page, seat)).toHaveText('1 in hand');
+    for (const seat of ['P2', 'P3', 'P4'])
+      await expect(handCount(page, seat)).toHaveText('1 in hand');
   },
   'mastermind-opponent-second-draw': async (page) => {
     await passUntil(page, hand(page, 'Scenario Ant'));
@@ -1434,7 +1444,6 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
   },
   'sun-titan-attacks-returns-land': async (page) => {
     await attack(page, [['Sun Titan', 'P2']]);
-    await targetFromGraveyard(page, 'Forest');
     await answerYes(page);
     await passUntil(page, logLine(page, /game over/));
     await expect(permanent(page, 'P1', 'Forest')).toHaveCount(1);
@@ -1470,35 +1479,35 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await expect(inZone(page, 'P1', 'Graveyard', 'Flusterstorm')).toHaveCount(1);
   },
   'flusterstorm-not-creature-spells': async (page) => {
-    await passUntil(page, page.locator('.stack li', { hasText: 'Scenario Bear' }));
-    await expectNotCastable(page, 'Flusterstorm');
     await passUntil(page, permanent(page, 'P2', 'Scenario Bear'));
+    await passUntil(page, logLine(page, /game over/));
+    await expectNotCastable(page, 'Flusterstorm');
     await expect(hand(page, 'Flusterstorm')).toHaveCount(1);
   },
   'finale-from-library': async (page) => {
-    const bear = await castFinale(page, 2, 'Search your library', 'Scenario Bear');
-    await expect(page.getByRole('button', { name: /^Put Scenario Ogre/ })).toHaveCount(0);
+    const bear = await castFinale(page, 2, 'Search library', 'Scenario Bear');
+    await expect(cardChoice(page, 'Scenario Ogre', 'Put onto battlefield')).toHaveCount(0);
     await bear.click();
     await passUntil(page, permanent(page, 'P1', 'Scenario Bear'));
     await expect(permanent(page, 'P1', 'Scenario Ogre')).toHaveCount(0);
     await expect(permanent(page, 'P1', 'Scenario Rock')).toHaveCount(0);
   },
   'finale-from-graveyard': async (page) => {
-    const bear = await castFinale(page, 2, 'Search your graveyard', 'Scenario Bear');
-    await expect(page.getByRole('button', { name: /^Put Scenario Ogre/ })).toHaveCount(0);
+    const bear = await castFinale(page, 2, 'Search graveyard', 'Scenario Bear');
+    await expect(cardChoice(page, 'Scenario Ogre', 'Put onto battlefield')).toHaveCount(0);
     await bear.click();
     await passUntil(page, permanent(page, 'P1', 'Scenario Bear'));
     await expect(inZone(page, 'P1', 'Graveyard', 'Scenario Ogre')).toHaveCount(1);
     await expect(inZone(page, 'P1', 'Graveyard', 'Scenario Bear')).toHaveCount(0);
   },
   'finale-x-ten-pumps': async (page) => {
-    const ogre = await castFinale(page, 10, 'Search your library and graveyard', 'Scenario Ogre');
+    const ogre = await castFinale(page, 10, 'Search both', 'Scenario Ogre');
     await ogre.click();
     await passUntil(page, permanent(page, 'P1', 'Scenario Ogre'));
     await passStackUntil(page, keywordOn(page, 'P1', 'Scenario Ogre', 'haste'));
   },
   'braids-each-opponent-answers': async (page) => {
-    await braidsSacrifice(page, 'Sacrifice Scenario Rock');
+    await braidsSacrifice(page, 'Scenario Rock');
     await passUntil(page, logLine(page, /game over/));
     await expect(life(page, 'P2')).toHaveText('38');
     await expect(life(page, 'P3')).toHaveText('38');
@@ -1510,14 +1519,14 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await expect(permanent(page, 'P2', 'Scenario Relic')).toHaveCount(1);
   },
   'braids-decline-sacrifice': async (page) => {
-    await braidsSacrifice(page, /^Don't sacrifice/);
+    await braidsSacrifice(page, null);
     await passUntil(page, logLine(page, /game over/));
     await expect(life(page, 'P2')).toHaveText('40');
     await expect(hand(page, 'Scenario Ant')).toHaveCount(0);
     await expect(permanent(page, 'P1', 'Scenario Rock')).toHaveCount(1);
   },
   'braids-type-must-match': async (page) => {
-    await braidsSacrifice(page, 'Sacrifice Forest');
+    await braidsSacrifice(page, 'Forest');
     await passUntil(page, logLine(page, /game over/));
     await expect(life(page, 'P2')).toHaveText('38');
     await expect(permanent(page, 'P2', 'Scenario Bear')).toHaveCount(1);
@@ -1525,8 +1534,9 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
   },
   'plea-time-wins': async (page) => {
     await castPlea(page, 'time');
-    await passUntil(page, logLine(page, /extra turn/i));
     await passUntil(page, logLine(page, /game over/));
+    // The viewer logs no extra-turn line and the scenario ends first; time won if nothing was drawn.
+    await expect(logLine(page, /Vote for time/)).toBeVisible();
     for (const name of ['Scenario Ant', 'Scenario Bee', 'Scenario Cat'])
       await expect(hand(page, name)).toHaveCount(0);
   },

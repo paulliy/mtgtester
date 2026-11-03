@@ -42,9 +42,12 @@ describe('slot diagnostics', () => {
 
   it('names the effect sentence when the head parses and the body does not', () => {
     const { failures } = interpretCardWithDiagnostics(
-      creature('{3}{U}: Each player draws a card.'),
+      creature('{3}{U}: Each player exiles their graveyard face down.'),
     );
-    expect(failures).toContainEqual({ slot: 'effect', text: 'each player draws a card' });
+    expect(failures).toContainEqual({
+      slot: 'effect',
+      text: 'each player exiles their graveyard face down',
+    });
   });
 
   it('returns exactly the definition interpretCard returns', () => {

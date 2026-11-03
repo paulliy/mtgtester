@@ -197,9 +197,9 @@ describe('Tier 3 trigger-event vocabulary', () => {
     });
     const def = interpretCard(secondDrawWatcher);
     expect(def.modeled, def.unmodeledReasons.join('; ')).toBe(true);
-    expect(def.triggers[0]?.trigger).toMatchObject({
-      condition: { kind: 'eventPlayerDrawCount', cmp: '==', n: 2 },
-    });
+    // Part of the event, not an intervening-if (CR 603.4): a later draw cannot undo it.
+    expect(def.triggers[0]?.trigger).toMatchObject({ when: 'drawsCard', ordinalThisTurn: 2 });
+    expect(def.triggers[0]?.trigger).not.toHaveProperty('condition');
 
     spawn(ctx, 'P1', secondDrawWatcher);
     const player = ctx.state.players.find((candidate) => candidate.id === 'P1')!;
