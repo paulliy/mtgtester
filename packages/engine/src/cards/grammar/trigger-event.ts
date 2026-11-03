@@ -349,19 +349,15 @@ function parseTriggerHeadUntraced(firstLine: string, card: OracleCard): ParsedTr
     const match = drawCount ?? draw;
     if (match === null) return null;
     const playerPhrase = match[1] as string;
-    heads = [
-      {
-        when: 'drawsCard',
-        player:
-          playerPhrase === 'you' ? 'you' : playerPhrase === 'an opponent' ? 'opponent' : 'each',
-      },
-    ];
+    const player =
+      playerPhrase === 'you' ? 'you' : playerPhrase === 'an opponent' ? 'opponent' : 'each';
+    heads = [{ when: 'drawsCard', player }];
     if (drawCount !== null) {
       const ordinal = { second: 2, third: 3, fourth: 4, fifth: 5, sixth: 6 }[match[2] as string];
       if (ordinal === undefined) return null;
-      // "your SECOND card each turn" fires once, on that draw — not on every draw from the
-      // second onward, which is what a '>=' here would mean.
-      implicitCondition = { kind: 'eventPlayerDrawCount', cmp: '==', n: ordinal };
+      // "your SECOND card each turn" fires once, on that draw, and it is part of the event, not
+      // an intervening-if (CR 603.4): a later draw before it resolves does not undo it.
+      heads = [{ when: 'drawsCard', player, ordinalThisTurn: ordinal }];
       body = match[3] as string;
     } else {
       body = match[2] as string;

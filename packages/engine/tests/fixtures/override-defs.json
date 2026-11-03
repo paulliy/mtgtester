@@ -16722,28 +16722,6 @@
     }
   },
   {
-    "oracleId": "bccb06f1-8839-4104-9ffa-c79a817f8378",
-    "name": "Jet Medallion",
-    "handledLines": [
-      "Black spells you cast cost {1} less to cast."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 1
-          },
-          "filter": {
-            "kind": "color",
-            "value": "B"
-          },
-          "kind": "costReduction"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "bd002797-a545-4bee-88bf-b878436e7cca",
     "name": "Brokers Hideout",
     "handledLines": [
@@ -33844,28 +33822,6 @@
             },
             "when": "attacks"
           }
-        }
-      ]
-    }
-  },
-  {
-    "oracleId": "oracle-jet-medallion",
-    "name": "Jet Medallion",
-    "handledLines": [
-      "Black spells you cast cost {1} less to cast."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 1
-          },
-          "filter": {
-            "kind": "color",
-            "value": "B"
-          },
-          "kind": "costReduction"
         }
       ]
     }

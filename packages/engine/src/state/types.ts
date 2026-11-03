@@ -700,6 +700,7 @@ export interface UntilEotEffect extends ContinuousEffect {
     | 'grantKeyword'
     | 'grantProtection'
     | 'denyKeywords'
+    | 'loseKeywords'
     | 'grantAbility'
     | 'cantBeBlocked'
     | 'becomeCreature'
@@ -717,6 +718,8 @@ export interface UntilEotEffect extends ContinuousEffect {
   protectionFrom?: Color[];
   /** Keywords the affected permanents lose and can't have (`denyKeywords`, Arcane Lighthouse). */
   deniedKeywords?: KeywordAbility[];
+  /** Keywords the affected permanents lose until end of turn (`loseKeywords`, Shadowspear). */
+  lostKeywords?: KeywordAbility[];
   ability?: Ability;
   /** `grantActivatedAbility` / `grantManaAbility`: "This Saga gains '{T}: Add {C}.'" */
   activatedAbility?: ActivatedAbility;

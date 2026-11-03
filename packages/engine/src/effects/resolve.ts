@@ -2268,6 +2268,28 @@ function* executeAbilityEffects(
         });
         break;
       }
+      case 'loseKeywordsEachUntilEot': {
+        const affected = affectedBy(ctx, source, effect.selector);
+        const lost = effect.keywords.join(' and ');
+        if (affected.length > 0) {
+          ctx.state.effects.push({
+            id: `eff-${ctx.state.nextObjectNum++}`,
+            sourceId: source.cardId,
+            description: describeMassEffect(affected, `lose ${lost}`),
+            targetCardIds: affected.map((p) => p.cardId),
+            targetObjectIds: affected.map((p) => p.id),
+            kind: 'loseKeywords',
+            lostKeywords: [...effect.keywords],
+            timestamp: ctx.state.nextTimestamp++,
+          });
+        } else noop(ctx, 'loseKeywordsEachUntilEot', 'nothingQualifies');
+        emit(ctx, 'loseKeywords', {
+          source: source.name,
+          targets: affected.map((p) => p.name),
+          keywords: [...effect.keywords],
+        });
+        break;
+      }
       case 'denyKeywordsEachUntilEot': {
         const affected = affectedBy(ctx, source, effect.selector);
         const lost = effect.keywords.join(' and ');
@@ -4150,6 +4172,15 @@ function* executeAbilityEffects(
         } else if (choice?.type === 'discard') {
           yield* discardCards(ctx, player, 1);
         } else loseLife(ctx, player, amountOf(effect.amount));
+        break;
+      }
+      case 'eachPlayerDraws': {
+        const count = Math.max(0, Math.floor(amountOf(effect.count)));
+        for (const player of playersInApnapOrder(ctx)) {
+          if (player.hasLost || (effect.scope === 'opponents' && player.id === controller.id))
+            continue;
+          yield* drawCards(ctx, player, count);
+        }
         break;
       }
       case 'millEachPlayer': {

@@ -6,38 +6,38 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 | Failing slot | Cards | Share of slots |
 | ------------ | ----: | -------------: |
-| effect | 3022 | 14.35% |
-| subject | 1076 | 5.70% |
-| line | 607 | 2.93% |
+| effect | 3015 | 14.22% |
+| subject | 1055 | 5.29% |
+| line | 633 | 3.45% |
 | trigger event | 505 | 2.11% |
 | cost | 307 | 1.34% |
 | condition | 184 | 0.81% |
 | target | 168 | 0.79% |
 | amount | 20 | 0.12% |
-| card filter | 17 | 0.06% |
+| card filter | 19 | 0.06% |
 | spell filter | 11 | 0.09% |
 
 `line` means no slot recorded a failure inside the line: the line matched no sentence shape at all.
 
-## effect (3022)
+## effect (3015)
 
 - 69 × `look at the top n cards of your library` (Growing Rites of Itlimoc, Loot, Exuberant Explorer, Stock Up)
 - 31 × `pay {m}` (Lifecrafter's Bestiary, Leaf-Crowned Visionary, Mind's Eye)
 - 14 × `reveal the top n cards of your library` (Fact or Fiction, Genesis Wave, Grisly Salvage)
+- 14 × `target player mills n cards` (Hedron Crab, Thought Scour, Grinding Station)
 - 14 × `exile the top card of your library` (Blazing Crescendo, Cori Mountain Monastery, Count on Luck)
 - 13 × `choose a creature type` (Distant Melody, Kindred Dominance, Raise the Palisade)
-- 13 × `target player mills n cards` (Hedron Crab, Thought Scour, Grinding Station)
 - 13 × `investigate` (Deduce, Thraben Inspector, Bygone Bishop)
 - 12 × `each opponent discards a card` (Burglar Rat, Virus Beetle, Elderfang Disciple)
 - 12 × `gain control of target creature until end of turn` (Coercive Recruiter, Act of Treason, Song-Mad Treachery)
 - 11 × `return a land you control to its owner's hand` (Simic Growth Chamber, Golgari Rot Farm, Dimir Aqueduct)
 - 11 × `exile the top n cards of your library` (Bonehoard Dracosaur, Sword of Forge and Frontier, Reckless Impulse)
 - 11 × `reveal the top card of your library` (Ad Nauseam, Coiling Oracle, Descendants' Path)
+- 11 × `gain n life` (Soul's Attendant, Auriok Champion, Deathgreeter)
 - 11 × `it deals n damage to target opponent` (Abraded Bluffs, Bristling Backwoods, Jagged Barrens)
 - 10 × `prevent all combat damage that would be dealt this turn` (Fog, Spore Frog, Kami of False Hope)
-- 10 × `look at the top card of your library` (Risen Reef, Explorer's Scope, Sarinth Steelseeker)
 
-## subject (1076)
+## subject (1055)
 
 - 27 × `you may` (Mockingbird, Vesuva, Phantasmal Image)
 - 25 × `~` (Yahenni, Undying Partisan, Marvin, Murderous Mimic, Paradise Druid)
@@ -47,15 +47,15 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 10 × `this creature enters or` (Stitcher's Supplier, Patron of the Arts, Vinereap Mentor)
 - 10 × `all slivers` (Gemhide Sliver, Harmonic Sliver, Crystalline Sliver)
 - 8 × `historic` (Jhoira's Familiar, Jhoira, Weatherlight Captain, Teshar, Ancestor's Apostle)
+- 8 × `another target creature you control` (Giver of Runes, Selfless Savior, Pippin, Guard of the Citadel)
 - 8 × `it` (Biosynthic Burst, Flaming Fist, Fervent Charge)
 - 8 × `opponent` (Goblin Chainwhirler, Voldaren Epicure, Knight Paladin)
 - 8 × `this spacecraft` (Extinguisher Battleship, Larval Scoutlander, Sledge-Class Seedship)
 - 7 × `your commander` (Tome of Legends, Siege-Gang Lieutenant, Loyal Subordinate)
-- 7 × `another target creature you control` (Giver of Runes, Selfless Savior, Pippin, Guard of the Citadel)
 - 6 × `artifact card with mana value n` (Whir of Invention, Trinket Mage, Trophy Mage)
 - 6 × `this artifact enters or` (Ichor Wellspring, Prized Statue, Mycosynth Wellspring)
 
-## line (607)
+## line (633)
 
 - 11 × `modular n` (Arcbound Ravager, Arcbound Crusher, Scrapyard Recombiner)
 - 10 × `toxic n` (Myr Convert, Bloated Contaminator, Blightbelly Rat)
@@ -148,18 +148,18 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 ## amount (20)
 
 - 4 × `that many` (Tolarian Winds, Hex Magic, Illuminate History)
+- 3 × `the greatest power among creatures you control` (Overwhelming Stampede, Pathbreaker Ibex, Ghalta the Unstoppable)
 - 3 × `n` (Arabella, Abandoned Doll, Crypt Rats, Silklash Spider)
-- 2 × `the greatest power among creatures you control` (Overwhelming Stampede, Ghalta the Unstoppable)
 - 2 × `its power` (Goldvein Hydra, Threefold Thunderhulk)
-- 2 × `the amount of life you gained this turn` (Blossoming Bogbeast, Defiling Daemogoth)
 - 2 × `all` (Coalition Relic, Bounty of the Luxa)
 - 1 × `the life they lost this turn` (Wound Reflection)
 - 1 × `this creature's power and as a mutant in addition to its other types` (Master Biomancer)
 - 1 × `that card's power` (Golbez, Crystal Collector)
 - 1 × `the greatest mana value among elementals you control` (Sunderflock)
+- 1 × `the amount of life you gained this turn` (Defiling Daemogoth)
 - 1 × `your life total` (Death's Shadow)
 
-## card filter (17)
+## card filter (19)
 
 - 3 × `nonland permanent` (Emeria Shepherd, Return to the Light Realms, Pull Through the Weft)
 - 2 × `instant and/or sorcery` (Scholar of the Ages, Divergent Equation)
@@ -167,6 +167,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 1 × `red instant` (Pyromancer's Goggles)
 - 1 × `bat, lizard, rat,` (Mudflat Village)
 - 1 × `creature card with mana value equal to the number of charge counters on this artifact` (Aether Vial)
+- 1 × `instant and sorcery` (Wisdom of Ages)
 - 1 × `artifact card, up to n target enchantment card, up to n target instant card, up to n target sorcery card, and up to n target planeswalker` (Reconstruct History)
 - 1 × `creature card and all other cards with the same name as that` (Echoing Return)
 - 1 × `spacecraft` (Seedship Broodtender)
@@ -174,7 +175,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 1 × `basic land` (Groundskeeper)
 - 1 × `historic permanent card` (Thran Temporal Gateway)
 - 1 × `vehicle` (Broodheart Engine)
-- 1 × `green` (Revive)
+- 1 × `artifact, enchantment, and planeswalker` (Triumphant Reckoning)
 
 ## spell filter (11)
 

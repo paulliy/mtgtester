@@ -326,6 +326,12 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
         op: { layer: 6, addProtection: eff.protectionFrom },
         timestamp: eff.timestamp,
       });
+    } else if (eff.kind === 'loseKeywords' && eff.lostKeywords !== undefined) {
+      out.push({
+        applies,
+        op: { layer: 6, removeKeywords: eff.lostKeywords },
+        timestamp: eff.timestamp,
+      });
     } else if (eff.kind === 'denyKeywords' && eff.deniedKeywords !== undefined) {
       out.push({
         applies,
@@ -703,6 +709,8 @@ function applyOpTo(
         chars.triggers.push(op.addTrigger);
       } else if ('denyKeywords' in op) {
         chars.keywords = chars.keywords.filter((keyword) => !op.denyKeywords.includes(keyword));
+      } else if ('removeKeywords' in op) {
+        chars.keywords = chars.keywords.filter((keyword) => !op.removeKeywords.includes(keyword));
       } else if ('addKeyword' in op) {
         if (!chars.keywords.includes(op.addKeyword)) {
           chars.keywords.push(op.addKeyword);

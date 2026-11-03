@@ -17,7 +17,7 @@ import type { Color, OracleCard } from '@mtg/shared';
 import { emptyCost, parseManaCost } from '../../mana/cost';
 import type { ManaUnit, ParsedManaCost } from '../../mana/cost';
 import type { ManaRestriction, SearchDestination } from '../ability';
-import { SELF_SUBJECT } from '../ability';
+import { IMPLEMENTED_KEYWORDS, SELF_SUBJECT } from '../ability';
 import type {
   Ability,
   Effect,
@@ -1464,6 +1464,50 @@ function parseEffectSentenceUntraced(
       { op: 'fight', first: 'triggerObject', second: alloc('creature', undefined, 'opponent') },
     ];
   }
+  // "Add {R} for each tapped land your opponents control" (Mana Geyser): a resolving spell's
+  // mana, counted as it resolves (CR 608.2h).
+  {
+    const m = s.match(/^add (\{[wubrgc]\}) for each (.+)$/);
+    if (m !== null && !/\btarget\b/.test(m[2] as string)) {
+      const symbol = manaSymbols(m[1] as string)[0];
+      const amount = parseDynamicCountValue(`the number of ${m[2] as string}`, card);
+      if (symbol === undefined || amount === null) return null;
+      return [{ op: 'addMana', amount, colors: [symbol] }];
+    }
+  }
+  // "Permanents your opponents control lose hexproof and indestructible until end of turn"
+  // (Shadowspear): a mass layer-6 removal, the permanents fixed as it resolves (CR 611.2c).
+  {
+    const m = s.match(/^(.+?) lose ([a-z ]+?)(?: and ([a-z ]+?))? until end of turn$/);
+    if (m !== null && !/\btarget\b|^(?:it|~|they)$/.test(m[1] as string)) {
+      const keywords = [m[2], m[3]].filter((word): word is string => word !== undefined);
+      const selector = parseMassSubject(m[1] as string, card);
+      if (
+        selector !== null &&
+        keywords.every((word) => (IMPLEMENTED_KEYWORDS as readonly string[]).includes(word))
+      )
+        return [
+          {
+            op: 'loseKeywordsEachUntilEot',
+            selector,
+            keywords: keywords as KeywordAbility[],
+          },
+        ];
+    }
+  }
+  // "Each player draws a card" (Faerie Mastermind) / "each opponent draws two cards".
+  {
+    const m = s.match(/^each (player|opponent) draws (a card|(\w+) cards)$/);
+    const n = m === null ? null : m[3] === undefined ? 1 : parseAmount(m[3] as string);
+    if (m !== null && n !== null && n > 0)
+      return [
+        {
+          op: 'eachPlayerDraws',
+          scope: m[1] === 'player' ? 'all' : 'opponents',
+          count: constant(n),
+        },
+      ];
+  }
   if (s === "~ fights target creature you don't control") {
     return [{ op: 'fight', first: 'source', second: alloc('creature', undefined, 'opponent') }];
   }
@@ -2095,12 +2139,27 @@ function parseEffectSentenceUntraced(
     // "each other creature you control with base power and toughness 1/1 gets +X/+X until end
     // of turn, where X is the number of +1/+1 counters on ~" (Bess): X is fixed on resolution
     // (CR 608.2h) and the affected set with it (CR 611.2c).
-    const where = s.match(/^(.+?) gets? \+x\/\+x until end of turn, where x is (.+)$/);
+    // "creatures you control gain trample and get +X/+X until end of turn, where X is the number
+    // of creatures you control" (Craterhoof Behemoth): the keywords ride on the same set.
+    const where = s.match(
+      /^(.+?) (?:gains? ([a-z ,]+?) and )?gets? \+x\/\+x(?: and gains? ([a-z ,]+?))? until end of turn, where x is (.+)$/,
+    );
     if (where !== null) {
       const selector = parseSubject(where[1] as string, card);
-      const count = parseDynamicCountValue(where[2] as string, card);
+      const count = parseDynamicCountValue(where[4] as string, card);
       if (selector === null || count === null) return null;
-      return [{ op: 'pumpEachUntilEot', selector, power: count, toughness: count }];
+      const effects: Effect[] = [
+        { op: 'pumpEachUntilEot', selector, power: count, toughness: count },
+      ];
+      for (const text of [where[2], where[3]]) {
+        if (text === undefined) continue;
+        const parsed = parseKeywordLine(text);
+        if (parsed === null || parsed.ward !== undefined || parsed.protectionFrom !== undefined)
+          return null;
+        for (const keyword of parsed.keywords)
+          effects.push({ op: 'grantKeywordEachUntilEot', selector, keyword });
+      }
+      return effects;
     }
     // "Whenever enchanted creature attacks, each other creature that's attacking one of your
     // opponents gets +1/+1 until end of turn" (Martial Impetus): "other" is beside the attacking
@@ -2432,9 +2491,11 @@ function parseEffectSentenceUntraced(
   // Generic mass removal filter ("destroy all creatures that aren't enchanted", "exile all nonland permanents", etc.)
   {
     const m = s.match(
-      /^(destroy|exile|return) all (.+?)(?: to (?:its owner's hand|their owners' hands))?$/,
+      /^(destroy|exile|return) all (.+?)( to (?:its owner's hand|their owners' hands|their owner's hand))?$/,
     );
-    if (m) {
+    // A return names its destination ("to their owner's hand", Aetherize); one without it is
+    // some other zone change this production does not read.
+    if (m && (m[1] !== 'return' || m[3] !== undefined)) {
       const action = m[1] as string;
       const phrase = m[2] as string;
       let selector: Selector | null = null;

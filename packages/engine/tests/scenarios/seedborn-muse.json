@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 1,
+  "card": "Seedborn Muse",
+  "supportCards": [
+    {
+      "name": "Scenario Grove",
+      "typeLine": "Land",
+      "oracleText": "{T}: Add {G}."
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature \u2014 Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Rock",
+      "typeLine": "Artifact",
+      "manaCost": "{2}",
+      "oracleText": "{T}: Add {C}."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "seedborn-cast-then-untap-on-opponent-turn",
+      "title": "Seedborn Muse: cast it, and your lands untap during the next player's untap step",
+      "clauses": [1],
+      "instructions": [
+        "Cast Seedborn Muse, tapping all five lands, and pass the turn.",
+        "In P2's untap step, your lands untap too."
+      ],
+      "expectedOutcome": "After P2's untap step, your Scenario Grove and Seedborn Muse are untapped.",
+      "seats": {
+        "P1": {
+          "hand": ["Seedborn Muse"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest", "Scenario Grove"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Seedborn Muse/"
+        }
+      ],
+      "continue": {
+        "throughCombat": true,
+        "toPostcombatMain": true,
+        "toEndStep": true,
+        "throughNextTurn": true
+      },
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Seedborn Muse"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Scenario Grove",
+            "equals": false
+          }
+        },
+        {
+          "event": {
+            "type": "untap",
+            "payload": "\"player\":\"P1\""
+          }
+        }
+      ]
+    },
+    {
+      "id": "seedborn-untaps-each-permanent-type",
+      "title": "Seedborn Muse: a tapped creature and artifact you control untap during P2's untap step",
+      "clauses": [1],
+      "instructions": [
+        "Declare no attackers.",
+        "Pass the turn: in P2's untap step your tapped Scenario Bear and Scenario Rock untap."
+      ],
+      "expectedOutcome": "Scenario Bear and Scenario Rock are untapped after P2's untap step.",
+      "seats": {
+        "P1": {
+          "battlefield": [
+            "Seedborn Muse",
+            {
+              "card": "Scenario Bear",
+              "tapped": true
+            },
+            {
+              "card": "Scenario Rock",
+              "tapped": true
+            }
+          ]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["__no_attack__"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true,
+        "toPostcombatMain": true,
+        "toEndStep": true,
+        "throughNextTurn": true
+      },
+      "expect": [
+        {
+          "tapped": {
+            "card": "Scenario Bear",
+            "equals": false
+          }
+        },
+        {
+          "tapped": {
+            "card": "Scenario Rock",
+            "equals": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "seedborn-not-opponents-permanents",
+      "title": "Seedborn Muse: another player's permanents do not untap in someone else's untap step",
+      "clauses": [1],
+      "instructions": [
+        "Declare no attackers.",
+        "Pass the turn: in P2's untap step, P3's tapped Scenario Rock stays tapped."
+      ],
+      "expectedOutcome": "Your Scenario Bear untaps; P3's Scenario Rock is still tapped.",
+      "seats": {
+        "P1": {
+          "battlefield": [
+            "Seedborn Muse",
+            {
+              "card": "Scenario Bear",
+              "tapped": true
+            }
+          ]
+        },
+        "P2": {},
+        "P3": {
+          "battlefield": [
+            {
+              "card": "Scenario Rock",
+              "tapped": true
+            }
+          ]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["__no_attack__"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true,
+        "toPostcombatMain": true,
+        "toEndStep": true,
+        "throughNextTurn": true
+      },
+      "expect": [
+        {
+          "tapped": {
+            "card": "Scenario Bear",
+            "equals": false
+          }
+        },
+        {
+          "tapped": {
+            "card": "Scenario Rock",
+            "player": "P3",
+            "equals": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "seedborn-not-during-own-turn",
+      "title": "Seedborn Muse: during your own turn, nothing untaps after your untap step",
+      "clauses": [1],
+      "instructions": [
+        "Declare no attackers.",
+        "Play out your turn: your tapped Scenario Rock stays tapped until P2's untap step."
+      ],
+      "expectedOutcome": "At your end step, Scenario Rock is still tapped.",
+      "seats": {
+        "P1": {
+          "battlefield": [
+            "Seedborn Muse",
+            {
+              "card": "Scenario Rock",
+              "tapped": true
+            }
+          ]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["__no_attack__"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true,
+        "toPostcombatMain": true,
+        "toEndStep": true
+      },
+      "expect": [
+        {
+          "tapped": {
+            "card": "Scenario Rock",
+            "equals": true
+          }
+        },
+        {
+          "event": {
+            "type": "untap",
+            "count": 0
+          }
+        }
+      ]
+    }
+  ]
+}

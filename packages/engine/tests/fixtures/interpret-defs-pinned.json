@@ -6283,11 +6283,23 @@
       "colorless": 0,
       "generic": 2
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Ruby Medallion",
     "oracleId": "0c367958-729e-416d-988b-098e90e7a1fd",
     "power": null,
-    "ruleStatics": [],
+    "ruleStatics": [
+      {
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "filter": {
+          "kind": "color",
+          "value": "R"
+        },
+        "kind": "costReduction"
+      }
+    ],
     "scryfallId": "630febf5-58ff-4dab-a5a8-575ebc5435a6",
     "spellAbility": null,
     "staticEffects": [],
@@ -6299,9 +6311,7 @@
     "types": [
       "Artifact"
     ],
-    "unmodeledReasons": [
-      "unrecognized rules text: \"Red spells you cast cost {1} less to cast.\""
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [
@@ -25348,11 +25358,15 @@
       "colorless": 0,
       "generic": 3
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Seedborn Muse",
     "oracleId": "463865bc-087e-477b-9e86-84e77f1ad931",
     "power": 2,
-    "ruleStatics": [],
+    "ruleStatics": [
+      {
+        "kind": "untapDuringOthersUntapSteps"
+      }
+    ],
     "scryfallId": "76f58441-5674-4f1e-af9b-94e14ab7e619",
     "spellAbility": null,
     "staticEffects": [],
@@ -25366,9 +25380,7 @@
     "types": [
       "Creature"
     ],
-    "unmodeledReasons": [
-      "unrecognized rules text: \"Untap all permanents you control during each other player's untap step.\""
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [
@@ -44200,13 +44212,34 @@
       "colorless": 0,
       "generic": 3
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Aetherize",
     "oracleId": "7c779721-cd1b-4696-9ae9-68ccc284ed2a",
     "power": null,
     "ruleStatics": [],
     "scryfallId": "1e5530fc-0291-4a17-b048-c5d24e6f51d8",
-    "spellAbility": null,
+    "spellAbility": {
+      "effects": [
+        {
+          "op": "returnToHandEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "combatRole",
+                "role": "attacking"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          }
+        }
+      ],
+      "kind": "spell",
+      "targets": []
+    },
     "staticEffects": [],
     "subtypes": [],
     "supertypes": [],
@@ -44216,9 +44249,7 @@
     "types": [
       "Instant"
     ],
-    "unmodeledReasons": [
-      "unrecognized rules text: \"Return all attacking creatures to their owner's hand.\""
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [
@@ -49088,6 +49119,43 @@
     "activatedAbilities": [
       {
         "ability": {
+          "description": "{1}: Permanents your opponents control lose hexproof and indestructible until end of turn.",
+          "effects": [
+            {
+              "keywords": [
+                "hexproof",
+                "indestructible"
+              ],
+              "op": "loseKeywordsEachUntilEot",
+              "selector": {
+                "kind": "controller",
+                "who": "opponents"
+              }
+            }
+          ],
+          "kind": "activated",
+          "targets": []
+        },
+        "costs": [
+          {
+            "cost": {
+              "colored": {
+                "B": 0,
+                "G": 0,
+                "R": 0,
+                "U": 0,
+                "W": 0
+              },
+              "colorless": 0,
+              "generic": 1
+            },
+            "kind": "mana"
+          }
+        ],
+        "timing": "any"
+      },
+      {
+        "ability": {
           "description": "Equip {2}",
           "effects": [
             {
@@ -49141,7 +49209,7 @@
       "colorless": 0,
       "generic": 1
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Shadowspear",
     "oracleId": "8b27326f-e7b8-4a4d-b589-df459246d19a",
     "power": null,
@@ -49191,9 +49259,7 @@
     "types": [
       "Artifact"
     ],
-    "unmodeledReasons": [
-      "unrecognized rules text: \"{1}: Permanents your opponents control lose hexproof and indestructible until end of turn.\""
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [],
@@ -49789,7 +49855,7 @@
       "colorless": 0,
       "generic": 5
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Craterhoof Behemoth",
     "oracleId": "8c52bd39-0586-48ca-b263-17210cf9feb6",
     "power": 5,
@@ -49802,14 +49868,94 @@
     ],
     "supertypes": [],
     "toughness": 5,
-    "triggers": [],
+    "triggers": [
+      {
+        "description": "When this creature enters, creatures you control gain trample and get +X/+X until end of turn, where X is the number of creatures you control.",
+        "effects": [
+          {
+            "op": "pumpEachUntilEot",
+            "power": {
+              "kind": "countPermanents",
+              "scope": "you",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                ]
+              }
+            },
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "toughness": {
+              "kind": "countPermanents",
+              "scope": "you",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "keyword": "trample",
+            "op": "grantKeywordEachUntilEot",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "enters"
+        }
+      }
+    ],
     "typeLine": "Creature — Beast",
     "types": [
       "Creature"
     ],
-    "unmodeledReasons": [
-      "unrecognized rules text: \"When this creature enters, creatures you control gain trample and get +X/+X until end of turn, where X is the number of creatures you control.\""
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [],
@@ -58847,13 +58993,41 @@
       "colorless": 0,
       "generic": 3
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Mana Geyser",
     "oracleId": "a8dba58b-2956-492e-ae30-49db2ae68e53",
     "power": null,
     "ruleStatics": [],
     "scryfallId": "dfbda387-3c7d-4c80-97c3-60c9d4757244",
-    "spellAbility": null,
+    "spellAbility": {
+      "effects": [
+        {
+          "amount": {
+            "kind": "countTappedPermanents",
+            "scope": "opponents",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            }
+          },
+          "colors": [
+            "R"
+          ],
+          "op": "addMana"
+        }
+      ],
+      "kind": "spell",
+      "targets": []
+    },
     "staticEffects": [],
     "subtypes": [],
     "supertypes": [],
@@ -58863,9 +59037,7 @@
     "types": [
       "Sorcery"
     ],
-    "unmodeledReasons": [
-      "unrecognized rules text: \"Add {R} for each tapped land your opponents control.\""
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [],
@@ -58992,7 +59164,42 @@
     "unmodeledReasons": []
   },
   {
-    "activatedAbilities": [],
+    "activatedAbilities": [
+      {
+        "ability": {
+          "description": "{3}{U}: Each player draws a card.",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "eachPlayerDraws",
+              "scope": "all"
+            }
+          ],
+          "kind": "activated",
+          "targets": []
+        },
+        "costs": [
+          {
+            "cost": {
+              "colored": {
+                "B": 0,
+                "G": 0,
+                "R": 0,
+                "U": 1,
+                "W": 0
+              },
+              "colorless": 0,
+              "generic": 3
+            },
+            "kind": "mana"
+          }
+        ],
+        "timing": "any"
+      }
+    ],
     "colorIdentity": [
       "U"
     ],
@@ -59019,7 +59226,7 @@
       "colorless": 0,
       "generic": 1
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Faerie Mastermind",
     "oracleId": "a984db23-40ea-428d-829f-e944267280f8",
     "power": 2,
@@ -59049,11 +59256,7 @@
         "optional": false,
         "targets": [],
         "trigger": {
-          "condition": {
-            "cmp": "==",
-            "kind": "eventPlayerDrawCount",
-            "n": 2
-          },
+          "ordinalThisTurn": 2,
           "player": "opponent",
           "when": "drawsCard"
         }
@@ -59063,9 +59266,7 @@
     "types": [
       "Creature"
     ],
-    "unmodeledReasons": [
-      "unrecognized rules text: \"{3}{U}: Each player draws a card.\""
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [],
@@ -63619,11 +63820,32 @@
       "colorless": 0,
       "generic": 3
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Urza's Incubator",
     "oracleId": "b380c04b-0bce-4328-8f0a-1425e48bee72",
     "power": null,
-    "ruleStatics": [],
+    "ruleStatics": [
+      {
+        "allPlayers": true,
+        "amount": {
+          "kind": "const",
+          "n": 2
+        },
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "chosenSubtype"
+            }
+          ]
+        },
+        "kind": "costReduction"
+      }
+    ],
     "scryfallId": "c4589226-6072-409b-b598-ebd87f675a6a",
     "spellAbility": null,
     "staticEffects": [],
@@ -63635,9 +63857,7 @@
     "types": [
       "Artifact"
     ],
-    "unmodeledReasons": [
-      "unrecognized rules text: \"Creature spells of the chosen type cost {2} less to cast.\""
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [

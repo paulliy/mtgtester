@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "card": "Craterhoof Behemoth",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature \u2014 Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Wolf",
+      "typeLine": "Creature \u2014 Wolf",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Rival",
+      "typeLine": "Creature \u2014 Rival",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "craterhoof-pumps-and-attacks",
+      "title": "Craterhoof Behemoth: three creatures get +3/+3 and trample, and attack with haste",
+      "clauses": [1, 2],
+      "instructions": [
+        "Cast Craterhoof Behemoth with Scenario Bear and Scenario Wolf on the battlefield.",
+        "Attack P2 with all three creatures."
+      ],
+      "expectedOutcome": "X is 3: Bear and Wolf are 5/5 and Craterhoof 8/8, all with trample; P2 takes 18 and is at 22 life.",
+      "seats": {
+        "P1": {
+          "hand": ["Craterhoof Behemoth"],
+          "battlefield": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Scenario Bear",
+            "Scenario Wolf"
+          ]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Craterhoof Behemoth/"
+        },
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2", "P2", "P2"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 22
+          }
+        },
+        {
+          "keywords": {
+            "card": "Scenario Bear",
+            "has": ["trample"]
+          }
+        },
+        {
+          "keywords": {
+            "card": "Craterhoof Behemoth",
+            "has": ["trample", "haste"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "craterhoof-not-opponents-creatures",
+      "title": "Craterhoof Behemoth: an opponent's creature gets nothing",
+      "clauses": [2],
+      "instructions": ["Cast Craterhoof Behemoth."],
+      "expectedOutcome": "Your Scenario Bear has trample; P2's Scenario Rival does not.",
+      "seats": {
+        "P1": {
+          "hand": ["Craterhoof Behemoth"],
+          "battlefield": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Scenario Bear"
+          ]
+        },
+        "P2": {
+          "battlefield": ["Scenario Rival"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Craterhoof Behemoth/"
+        }
+      ],
+      "expect": [
+        {
+          "keywords": {
+            "card": "Scenario Bear",
+            "has": ["trample"]
+          }
+        },
+        {
+          "keywords": {
+            "card": "Scenario Rival",
+            "lacks": ["trample"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "craterhoof-alone",
+      "title": "Craterhoof Behemoth: alone, X is 1 and it attacks as a 6/6 trampler",
+      "clauses": [1, 2],
+      "instructions": ["Cast Craterhoof Behemoth with no other creatures and attack P2."],
+      "expectedOutcome": "Craterhoof is 6/6 with trample and haste; P2 takes 6 and is at 34 life.",
+      "seats": {
+        "P1": {
+          "hand": ["Craterhoof Behemoth"],
+          "battlefield": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest"
+          ]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Craterhoof Behemoth/"
+        },
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 34
+          }
+        }
+      ]
+    }
+  ]
+}

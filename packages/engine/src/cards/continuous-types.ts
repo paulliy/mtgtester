@@ -68,6 +68,11 @@ export type ContinuousOp =
    * again after every other layer-6 effect, so a later grant cannot restore them.
    */
   | { layer: 6; denyKeywords: KeywordAbility[] }
+  /**
+   * Lose these keywords (Shadowspear): removed in timestamp order with the other layer-6 effects
+   * (CR 613.7), so a grant with a later timestamp gives them back, unlike `denyKeywords`.
+   */
+  | { layer: 6; removeKeywords: KeywordAbility[] }
   /** "Creatures with counters on them can't be blocked" (Herald of Secret Streams). */
   | { layer: 6; setCantBeBlocked: true }
   /** "Creatures your opponents control attack each combat if able." */

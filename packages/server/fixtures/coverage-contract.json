@@ -1337,20 +1337,8 @@
     ],
     "knownUnmodeled": [
       {
-        "oracleId": "7c779721-cd1b-4696-9ae9-68ccc284ed2a",
-        "name": "Aetherize"
-      },
-      {
         "oracleId": "e0445c80-fa53-4c3e-881e-940e9fce7f57",
         "name": "Braids, Arisen Nightmare"
-      },
-      {
-        "oracleId": "8c52bd39-0586-48ca-b263-17210cf9feb6",
-        "name": "Craterhoof Behemoth"
-      },
-      {
-        "oracleId": "a984db23-40ea-428d-829f-e944267280f8",
-        "name": "Faerie Mastermind"
       },
       {
         "oracleId": "69872a9a-fe54-4e58-940c-89395af71acd",
@@ -1361,28 +1349,8 @@
         "name": "Flusterstorm"
       },
       {
-        "oracleId": "a8dba58b-2956-492e-ae30-49db2ae68e53",
-        "name": "Mana Geyser"
-      },
-      {
-        "oracleId": "0c367958-729e-416d-988b-098e90e7a1fd",
-        "name": "Ruby Medallion"
-      },
-      {
-        "oracleId": "463865bc-087e-477b-9e86-84e77f1ad931",
-        "name": "Seedborn Muse"
-      },
-      {
-        "oracleId": "8b27326f-e7b8-4a4d-b589-df459246d19a",
-        "name": "Shadowspear"
-      },
-      {
         "oracleId": "b2e950fb-cb7e-40a0-a311-5bbdd0477b29",
         "name": "Sun Titan"
-      },
-      {
-        "oracleId": "b380c04b-0bce-4328-8f0a-1425e48bee72",
-        "name": "Urza's Incubator"
       }
     ]
   },

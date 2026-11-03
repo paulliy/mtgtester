@@ -663,6 +663,12 @@ export type Effect =
    */
   | { op: 'denyKeywordsEachUntilEot'; selector: Selector; keywords: KeywordAbility[] }
   /**
+   * "Permanents your opponents control lose hexproof and indestructible until end of turn"
+   * (Shadowspear): the permanents are fixed as it resolves (CR 611.2c) and lose the keywords in
+   * layer 6 at this effect's timestamp, so a later grant restores them (CR 613.7).
+   */
+  | { op: 'loseKeywordsEachUntilEot'; selector: Selector; keywords: KeywordAbility[] }
+  /**
    * "Those creatures gain `keyword` until end of turn" for an `attackDeclared` trigger (Frontier
    * Warmonger): exactly the creatures of the firing's attack group, bound when it fired and still
    * on the battlefield as the same objects (CR 400.7); the set is fixed at resolution (CR 611.2c).
@@ -1161,6 +1167,11 @@ export type Effect =
   /** The affected player may discard a card; otherwise they lose the specified life. */
   | { op: 'discardOrLoseLife'; target: EffectRef; amount: Value }
   | { op: 'millEachPlayer'; scope: 'all' | 'opponents'; count: Value }
+  /**
+   * "Each player draws a card" (Faerie Mastermind), "Each opponent draws two cards": every
+   * player in scope who has not lost draws, in APNAP order (CR 101.4).
+   */
+  | { op: 'eachPlayerDraws'; scope: 'all' | 'opponents'; count: Value }
   | { op: 'eachPlayerLosesLifeAndDraws'; amount: Value; count: Value }
   | { op: 'discardChosenPlayers'; targetSlot: number; count: Value }
   | { op: 'millAndLoseLifeChosenPlayers'; targetSlot: number; count: Value; amount: Value }

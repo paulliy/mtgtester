@@ -1,14 +1,6 @@
 import { searchLibraryCards } from '../effect-builders';
-import { allOf, CHOSEN_SUBTYPE, NONLAND, ofColor, ofType, OTHER, YOURS } from '../selector';
-import {
-  activated,
-  costReductionFor,
-  mana,
-  onAttacks,
-  spell,
-  targetSlots,
-  triggered,
-} from '../templates';
+import { allOf, CHOSEN_SUBTYPE, NONLAND, ofType, OTHER, YOURS } from '../selector';
+import { activated, mana, onAttacks, spell, targetSlots, triggered } from '../templates';
 import { constant } from '../value';
 import { defineCard } from './index';
 
@@ -17,14 +9,8 @@ import { defineCard } from './index';
  * current workflow, authored and finished by hand as PR11b was, to time against `pilot-new`.
  */
 export function registerPilotCurrentOverrides(): void {
-  // "Black spells you cast cost {1} less to cast." A cost reduction applies only to the generic
-  // part of the total cost (CR 601.2f), so a spell whose cost is all {B} costs the same.
-  defineCard(
-    'bccb06f1-8839-4104-9ffa-c79a817f8378',
-    'Jet Medallion',
-    ['Black spells you cast cost {1} less to cast.'],
-    { ruleStatics: [costReductionFor(ofColor('B'), 1)] },
-  );
+  // Jet Medallion: the spell-filter slot reads the color word, so the interpreter models "Black
+  // spells you cast cost {1} less to cast" and no override remains.
 
   // "You may play an additional land this turn. Draw a card." The spell grants one more land play
   // this turn (CR 305.2) and plays nothing itself; the parser's draw stays the second effect.

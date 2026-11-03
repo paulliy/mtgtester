@@ -7,6 +7,7 @@
     "Aether Channeler": "340f9c527f82807166ad11f5929dc8ddc727045317a5039a8bdaa6848d967ec1",
     "Aether Hub": "a6641d8a589b60feec25b6da189a097707da60158d6196778bc6365bcccf88ec",
     "Aetheric Amplifier": "22243544923ec334e7ae37b5b5e30c9d3ba8372ba0dea881bcd3f07387177be6",
+    "Aetherize": "3c515f80bbd6a29da8ec2ea11e6f7cedd25aaefc8124820c768c8983acf44648",
     "Aetherspouts": "e9fdf15040b36de302358c10ec5d475df068174c144c585e4b2aca553fcaa666",
     "Aetherworks Marvel": "4b4ead37bd8be62cbb692c14475ead91307cd0aef4fc4b4293a640bb1a8078dd",
     "Agitator Ant": "02655069d32bb3566e265f4d4ee06a65e89067c753c393dcb57eca89f7cbb53a",
@@ -63,6 +64,7 @@
     "Bolt Bend": "e34731fbc50dbe1140b6c7d27cdd63b5d046c6fddf99c7f3e9e5c03981fd62bc",
     "Boseiju, Who Endures": "e13a9c4ab62181dc08a0dc0efb251f9bfb97aa8fce2c5545561f0b78e868970f",
     "Bottomless Pit": "3e70a3db7bc2437db19f3e7479ebb4eb3a3de4e96aed439d799fc53b2a858d93",
+    "Braids, Arisen Nightmare": "dabca9c4b2522112d857cb7103573005d1735aabf628bcbaadc0858f2e7ef2b5",
     "Bramble Familiar // Fetch Quest": "8217032a57a5b897949603680b0ebc4da62c1c018f5155b2028cd9e893f6525c",
     "Brash Taunter": "811ca00fb845c5c1d6c5a9e1e67d6114c45a9af8f482ad5de6d04549f9dd130c",
     "Breena, the Demagogue": "1a3ea33cc0a417228dcd76cf55f55186215b4f741905684aaeeae17e74d16996",
@@ -101,6 +103,7 @@
     "Council's Judgment": "fc8ad609d7a659cefbc858742af30f585db3edc89eca1de03dec248a1e8eb0a1",
     "Counterspell": "6a3c9be444a6680f94cee9f52ce8059456a80b77f407c19a6c004105138b1eec",
     "Cranial Plating": "839a622b17160d32a4e55cddfabe41e707f6da95bdc5f96908679d28ae211580",
+    "Craterhoof Behemoth": "99afcf161845fe00ebe197831a068d35c643b7a7c88608a22c6e65ec98130292",
     "Cryptek": "0e2e938f02e241942dfec466a4126d540bde0e05bf063a6dcfadfec206b85666",
     "Crystal Dragon // Rob the Hoard": "01325c8dd9bb53ff36a07f8d7adebb407a75f90fc3da63121683d0ba8f78fbab",
     "Crystal, Inhuman Princess": "8a355e5c6a459e628aff3fb7c22a648424b60a76abf57295153c83289528c385",
@@ -158,11 +161,13 @@
     "Fabled Passage": "fd064f3f1c8289f7cd3a05433a31b03a8676ba4ce9035cd6706bd37087c9a7ef",
     "Fae of Wishes // Granted": "2d36f7f1294bfa2620150fc4c5cf95701879be7dfb3d719380a56fdc7b9c1e23",
     "Faerie Guidemother // Gift of the Fae": "188852577f595a0fb00608e655d0f57d4d1054ebe6daed2513fae011a534d2b6",
+    "Faerie Mastermind": "c0630be4eec3d7b471c761910e452d409e166fe42d5e49ee682c312df2ccd1dd",
     "Fallen Ideal": "3ba13764d452400831541e37c2b7a16dca91265614e3b979c6d5f27f229e0950",
     "Fang Dragon // Forktail Sweep": "c659b8da42cc11db41431201cc87d9ba1b080fc31749f032b8d7008e5572e58e",
     "Ferocious Werefox // Guard Change": "8ae13a55d7a76704207c7cb4f9b4e671599232e33e7124604003d2d6e32a5a96",
     "Fierce Guardianship": "bed73877ab5abe9f0e996cfb5dcd30da8730631557ce1d42b9238e6660be1a7c",
     "Fight or Flight": "87361a2f2f9561600e683449cee33346035b87c01ba17471e690dbeb90c4a1b7",
+    "Finale of Devastation": "678ba2349c8f28cd8bec04ff652ca826b51c994534a6e82fbf8e8691fcbaf66a",
     "Finneas, Ace Archer": "00e1495e7bebbf263cf6809022878d58016492044ae18a32f092274897ded028",
     "Firemane Commando": "20c0287a3dd96d72f6a5f557813f972125a91a6506ed4b957cf022bf32a2437a",
     "Firkraag, Cunning Instigator": "c4087982a8080ccc5e5214a58683928378c732ba9e32679700dd7e87a7299579",
@@ -173,6 +178,7 @@
     "Flare of Malice": "d358e361fe29eb5d7bb7a2b7150da42213f3ec722749868738013cf835d87ec0",
     "Flayer of the Hatebound": "83e8fbc4e2f4fd410df3e650ed4506fd40c65570897c3e5d7af777e88d35c7bc",
     "Flickerwisp": "2c5047d9ba2f69bc11fae70409c7de721dce424a456f595cdd7c9705b7830404",
+    "Flusterstorm": "545deccdecdfa8ffa11609ba6900608e7cadb1283cce9892ae1ca9b0e6c27870",
     "Foe-Razer Regent": "538901867581226afa96f2206428146725bae81b91a1120ce5a42696a415e4ea",
     "Forbidding Spirit": "a15c65a6ecf3766c5ab5a38ef6ed59680bbd503c8bb0098a1924f2cf7fe2e9fc",
     "Force of Negation": "b8a0dc17dcd160b416c672ab9e916b5615465e19a3d3a4a2bddcc23138561cf4",
@@ -276,6 +282,7 @@
     "Madame Null, Power Broker": "3fd679e8d950b507d99a4a070fcc8d785e9eaae1ffc54f74694a0460a67e32ed",
     "Mahadi, Emporium Master": "a30b4eb0457c37784311162d42413ea17546cc3f1b4ac7864fecb5e721713fd2",
     "Malakir Rebirth // Malakir Mire": "e0707453e36b4abf8fa1bdc6bb1870907515b78f1a6deab2881d497ca1431b7f",
+    "Mana Geyser": "df0f3dd0847eb5cf60a9067bfc458c264d65562e36e24db219b209b18d74b3cd",
     "Mana Leak": "03099f6c339bfd576aa3e49f1c4da939008e5b5191c5f3531181a570f22d2ba0",
     "Mana Sculpt": "5298846e6acc7903bd8f2241686004c997e783ec07ff45890abdc9c27b80caee",
     "Mana Vault": "3f4b086c293816418c1076321ea9f445886dc0f7ba70e71c36217c617b92406c",
@@ -375,6 +382,7 @@
     "Roaming Throne": "a968a6b40b698d78552e6a7decbaa1da3634382d27f36587e8eecb5dd6bfd150",
     "Rosethorn Acolyte // Seasonal Ritual": "cdc42fa27547837c3d909e26b860727ac825f98c1ef4535874aa1e5680f01896",
     "Rowan Kenrith": "3a74578b3722e817e7cc110ea95ba5daa61fe9b1c49f448855f1177c8f2f240a",
+    "Ruby Medallion": "9de2af87febd426c1c1dff25c63ed3a46ec3f34df43de5c2d76148a320e9e0d2",
     "Rule of Law": "91cc78622dd7a33386e448320654ea40d3c61eeac6a26d7183e521fb1898dbe3",
     "Rumor Gatherer": "d5b18ba7956be7118501bc486db3177a7bc8ebca881b24c031834ada00e7a19c",
     "Sage of Fables": "1423e05e7e7fc5bf74c33c20c1f368ebd1f4224c9c5112df484d654181aeb382",
@@ -395,8 +403,10 @@
     "Sea Hag // Aquatic Ingress": "8aaeed4c8480ac8d07de92a833494b6a12f561a713bd9c9717d1d01c6ce79ebc",
     "Secluded Courtyard": "a3fd538bad9823de3269c43d5faf906abeebfada84e68558ea9d28ac86d512f2",
     "Securitron Squadron": "3db94733b1abcfae54bce169a795378f4e2edacbc9cbdfab1258d3983cd83a90",
+    "Seedborn Muse": "935a4f4894058f7e912b131fe97931e288fe276c4766cb0d4cb320604a14a6aa",
     "Sejiri Shelter // Sejiri Glacier": "2c459001fbd313a67f4cd39b878d4d1b1a854a24d191dba61fc8011d163cc218",
     "Selfless Squire": "debd579414a52e7e7cc408bd06d4bf3f3862f42f108196365a37c3f6d72dc6a6",
+    "Shadowspear": "8c191023b8029044c8e9f8eedc9f7bbe9b3e11231c5c15f3560897de3abc5ad4",
     "Shadrix Silverquill": "b3b27d30058d4a228950317e549d90e7bef45703c68c5015257378827bebfd5a",
     "Shanna, Sisay's Legacy": "be30e80acedc68cd53c18c247fe2816c890d8ff2c2523baf34373e9f7ba8b565",
     "Shard of the Nightbringer": "4c7f7779f494bcf3ef533a08cb6e5c2569a29f7845c354e2d31bb827a925ae3a",
@@ -423,6 +433,7 @@
     "Stonehide Ancient // Warning Tremor": "54d28d41801700b34e48dc3ca0abc3bf58b3b9392c525366ae3ea71994ae7bb2",
     "Stormshriek Feral // Flush Out": "b3f35f2f7f727ffbbf729a33e782b9abdda4b079cd9d23c29e46c1a4c4e73a53",
     "Stubborn Denial": "bdaa41055aa2184ee87b53e0f78353afe78283a064ccc310e3e6984e5c136f40",
+    "Sun Titan": "08c2cf665d45ba911d1a04180a470311b3bf07b4137fb314c499e999afaeb776",
     "Sunbird's Invocation": "be08ff24672e75b23eb03cf79632ba6e9a3860e772bfddd47a592d65e9cfa160",
     "Sunforger": "0ae447b31437ff4e3964e1bf8803b551ef7725ee95a31e9d6b168e860bb57b0e",
     "Sweet-Gum Recluse": "b7a06140e0022bef19a4a2e2b61c1d72dd7173f61421f1acfe414da5eee7e541",
@@ -483,6 +494,7 @@
     "Unbreakable Formation": "c0032b5882eac2dab751071f0e153e44f6a893f674fca87ab09b69e8ff7ecc22",
     "Unquestioned Authority": "5d0e89744f57d1bf4d94be83fcbcb618da89c0cd6c207d13a9fda6543b080e57",
     "Untimely Malfunction": "c731141ee3cdd337701555e3faa7e8e928fa3bd92117178dbff35c38bf0e9333",
+    "Urza's Incubator": "b3c2b488d20fba1c17600e29bf2aa6d817d4deb4dfbc342bf10c72193c501678",
     "Urza's Saga": "af2957876fc1d3287eaf3740e9ebd11d65924f1b62859fb62ceafb570f68d339",
     "Valakut Awakening // Valakut Stoneforge": "2e683a7ba9875b006532bca335c30b7a298b97b5f42738a0c93a6e1149953c7c",
     "Vandalblast": "939b8ed66d5dbaf542fffb63c75bf1731472c8b7a57754627419c4e7c35b25e9",
@@ -1234,6 +1246,38 @@
       "loyalty": null,
       "defense": null,
       "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "08c2cf665d45ba911d1a04180a470311b3bf07b4137fb314c499e999afaeb776": {
+      "oracleId": "b2e950fb-cb7e-40a0-a311-5bbdd0477b29",
+      "scryfallId": "f03f6cab-3800-4b90-921a-01f384cef35f",
+      "name": "Sun Titan",
+      "manaCost": "{4}{W}{W}",
+      "cmc": 6,
+      "colors": [
+        "W"
+      ],
+      "colorIdentity": [
+        "W"
+      ],
+      "typeLine": "Creature — Giant",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "oracleText": "Vigilance\nWhenever this creature enters or attacks, you may return target permanent card with mana value 3 or less from your graveyard to the battlefield.",
+      "power": "6",
+      "toughness": "6",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Vigilance"
+      ],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
@@ -4525,6 +4569,34 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "3c515f80bbd6a29da8ec2ea11e6f7cedd25aaefc8124820c768c8983acf44648": {
+      "oracleId": "7c779721-cd1b-4696-9ae9-68ccc284ed2a",
+      "scryfallId": "1e5530fc-0291-4a17-b048-c5d24e6f51d8",
+      "name": "Aetherize",
+      "manaCost": "{3}{U}",
+      "cmc": 4,
+      "colors": [
+        "U"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "typeLine": "Instant",
+      "supertypes": [],
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "oracleText": "Return all attacking creatures to their owner's hand.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "3ce31ea519774646789dc1b1d4327135f344b35248ec34024a4c7d3c594f1d6d": {
       "oracleId": "b01d61cc-9844-4191-86a0-f2db6d42d6e5",
       "scryfallId": "84056124-1a6f-4274-bee2-74cf0debddb5",
@@ -5924,6 +5996,36 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "545deccdecdfa8ffa11609ba6900608e7cadb1283cce9892ae1ca9b0e6c27870": {
+      "oracleId": "86bf58f2-7f25-4e10-b797-25e0e8e67769",
+      "scryfallId": "f900eeb7-7c45-44bc-ad3a-0bbe594ecf50",
+      "name": "Flusterstorm",
+      "manaCost": "{U}",
+      "cmc": 1,
+      "colors": [
+        "U"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "typeLine": "Instant",
+      "supertypes": [],
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "oracleText": "Counter target instant or sorcery spell unless its controller pays {1}.\nStorm (When you cast this spell, copy it for each spell cast before it this turn. You may choose new targets for the copies.)",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Storm"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "54d28d41801700b34e48dc3ca0abc3bf58b3b9392c525366ae3ea71994ae7bb2": {
       "oracleId": "3fb5fe93-f61a-46bc-85ef-419ed1ea3522",
       "scryfallId": "59677b9d-2978-4c32-aaab-dc8f7eb5a7d8",
@@ -7131,6 +7233,34 @@
       "keywords": [
         "Enchant"
       ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "678ba2349c8f28cd8bec04ff652ca826b51c994534a6e82fbf8e8691fcbaf66a": {
+      "oracleId": "69872a9a-fe54-4e58-940c-89395af71acd",
+      "scryfallId": "b10d99bf-b2ce-4443-b924-ff0eb8be1033",
+      "name": "Finale of Devastation",
+      "manaCost": "{X}{G}{G}",
+      "cmc": 2,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "typeLine": "Sorcery",
+      "supertypes": [],
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "oracleText": "Search your library and/or graveyard for a creature card with mana value X or less and put it onto the battlefield. If you search your library this way, shuffle. If X is 10 or more, creatures you control get +X/+X and gain haste until end of turn.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
@@ -9434,6 +9564,36 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "8c191023b8029044c8e9f8eedc9f7bbe9b3e11231c5c15f3560897de3abc5ad4": {
+      "oracleId": "8b27326f-e7b8-4a4d-b589-df459246d19a",
+      "scryfallId": "939c6e19-4b27-4023-bb9c-ae440f91e21c",
+      "name": "Shadowspear",
+      "manaCost": "{1}",
+      "cmc": 1,
+      "colors": [],
+      "colorIdentity": [],
+      "typeLine": "Legendary Artifact — Equipment",
+      "supertypes": [
+        "Legendary"
+      ],
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Equipment"
+      ],
+      "oracleText": "Equipped creature gets +1/+1 and has trample and lifelink.\n{1}: Permanents your opponents control lose hexproof and indestructible until end of turn.\nEquip {2}",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Equip"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "8cb9a3f6392ac36ec4284df171a42f02873b495754ca2f156053cb4478cf43a4": {
       "oracleId": "05d7222b-cc08-4f1f-8e35-6058599572ba",
       "scryfallId": "443b6f30-1493-4d48-93d9-a91e22a7ebb3",
@@ -9830,6 +9990,36 @@
       "oracleText": "Search your library for a card, put that card into your hand, discard a card at random, then shuffle.",
       "power": null,
       "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "935a4f4894058f7e912b131fe97931e288fe276c4766cb0d4cb320604a14a6aa": {
+      "oracleId": "463865bc-087e-477b-9e86-84e77f1ad931",
+      "scryfallId": "76f58441-5674-4f1e-af9b-94e14ab7e619",
+      "name": "Seedborn Muse",
+      "manaCost": "{3}{G}{G}",
+      "cmc": 5,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "typeLine": "Creature — Spirit",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Spirit"
+      ],
+      "oracleText": "Untap all permanents you control during each other player's untap step.",
+      "power": "2",
+      "toughness": "4",
       "loyalty": null,
       "defense": null,
       "keywords": [],
@@ -10375,6 +10565,38 @@
         "defense": null
       }
     },
+    "99afcf161845fe00ebe197831a068d35c643b7a7c88608a22c6e65ec98130292": {
+      "oracleId": "8c52bd39-0586-48ca-b263-17210cf9feb6",
+      "scryfallId": "276f5cee-a501-4658-bd4d-7a044bf1ccbc",
+      "name": "Craterhoof Behemoth",
+      "manaCost": "{5}{G}{G}{G}",
+      "cmc": 8,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "typeLine": "Creature — Beast",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "oracleText": "Haste\nWhen this creature enters, creatures you control gain trample and get +X/+X until end of turn, where X is the number of creatures you control.",
+      "power": "5",
+      "toughness": "5",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Haste"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "9a0e59d80b1bbc7de43858d5ed720217e11ecd7c85afc8c65ac96fae7e1f24e2": {
       "oracleId": "5e62b51d-faec-4aa0-9504-cf2c282d08ea",
       "scryfallId": "64b67170-1602-4050-80c0-ade2a6cac211",
@@ -10585,6 +10807,30 @@
       "keywords": [
         "Flying"
       ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "9de2af87febd426c1c1dff25c63ed3a46ec3f34df43de5c2d76148a320e9e0d2": {
+      "oracleId": "0c367958-729e-416d-988b-098e90e7a1fd",
+      "scryfallId": "630febf5-58ff-4dab-a5a8-575ebc5435a6",
+      "name": "Ruby Medallion",
+      "manaCost": "{2}",
+      "cmc": 2,
+      "colors": [],
+      "colorIdentity": [],
+      "typeLine": "Artifact",
+      "supertypes": [],
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [],
+      "oracleText": "Red spells you cast cost {1} less to cast.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
@@ -12132,6 +12378,30 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "b3c2b488d20fba1c17600e29bf2aa6d817d4deb4dfbc342bf10c72193c501678": {
+      "oracleId": "b380c04b-0bce-4328-8f0a-1425e48bee72",
+      "scryfallId": "c4589226-6072-409b-b598-ebd87f675a6a",
+      "name": "Urza's Incubator",
+      "manaCost": "{3}",
+      "cmc": 3,
+      "colors": [],
+      "colorIdentity": [],
+      "typeLine": "Artifact",
+      "supertypes": [],
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [],
+      "oracleText": "As this artifact enters, choose a creature type.\nCreature spells of the chosen type cost {2} less to cast.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "b3c938ef77cde5231aae8b1bdd9f449aac40013646206f61171c16679c2885c5": {
       "oracleId": "77807103-bcd5-479f-bedd-f5d97aa6d3d2",
       "scryfallId": "5f11f053-5150-4a76-b2ca-9df3a0629911",
@@ -13089,6 +13359,40 @@
       "defense": null,
       "keywords": [
         "Addendum"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "c0630be4eec3d7b471c761910e452d409e166fe42d5e49ee682c312df2ccd1dd": {
+      "oracleId": "a984db23-40ea-428d-829f-e944267280f8",
+      "scryfallId": "bc9a7599-3c7d-4b83-bff3-e3d1f20f1b0f",
+      "name": "Faerie Mastermind",
+      "manaCost": "{1}{U}",
+      "cmc": 2,
+      "colors": [
+        "U"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "typeLine": "Creature — Faerie Rogue",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Faerie",
+        "Rogue"
+      ],
+      "oracleText": "Flash\nFlying\nWhenever an opponent draws their second card each turn, you draw a card.\n{3}{U}: Each player draws a card.",
+      "power": "2",
+      "toughness": "1",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Flying",
+        "Flash"
       ],
       "layout": "normal",
       "commanderLegality": "legal",
@@ -14661,6 +14965,38 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "dabca9c4b2522112d857cb7103573005d1735aabf628bcbaadc0858f2e7ef2b5": {
+      "oracleId": "e0445c80-fa53-4c3e-881e-940e9fce7f57",
+      "scryfallId": "f96223d0-04c4-40c2-87a9-0c6bc74adddb",
+      "name": "Braids, Arisen Nightmare",
+      "manaCost": "{1}{B}{B}",
+      "cmc": 3,
+      "colors": [
+        "B"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "typeLine": "Legendary Creature — Nightmare",
+      "supertypes": [
+        "Legendary"
+      ],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Nightmare"
+      ],
+      "oracleText": "At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each opponent may sacrifice a permanent of their choice that shares a card type with it. For each opponent who doesn't, that player loses 2 life and you draw a card.",
+      "power": "3",
+      "toughness": "3",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "dae3d703ffc51a500bb39e219e9d6c8251e68bd1f636f75cd4d3e5d24a22fad1": {
       "oracleId": "c0adbddc-b070-4c5f-afe0-0474c72a9251",
       "scryfallId": "7f273641-c5f3-48bc-b89e-3cff52d26a0b",
@@ -14994,6 +15330,34 @@
         "Trample",
         "Double"
       ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "df0f3dd0847eb5cf60a9067bfc458c264d65562e36e24db219b209b18d74b3cd": {
+      "oracleId": "a8dba58b-2956-492e-ae30-49db2ae68e53",
+      "scryfallId": "dfbda387-3c7d-4c80-97c3-60c9d4757244",
+      "name": "Mana Geyser",
+      "manaCost": "{3}{R}{R}",
+      "cmc": 5,
+      "colors": [
+        "R"
+      ],
+      "colorIdentity": [
+        "R"
+      ],
+      "typeLine": "Sorcery",
+      "supertypes": [],
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "oracleText": "Add {R} for each tapped land your opponents control.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false

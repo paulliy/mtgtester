@@ -8,7 +8,7 @@ import { assertTriggerEventFamily } from '../cards/trigger-contracts';
 
 import type { Phase, PlayerId, Step } from '@mtg/shared';
 import { evaluateCondition } from '../cards/condition';
-import { computeCharacteristics } from '../effects/continuous';
+import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { runCombatPhase } from '../combat/combat';
 import type { GameGen } from '../decisions';
 import { addSagaLoreCounters, drawCards, endUntilEotEffects } from '../effects/resolve';
@@ -20,7 +20,7 @@ import {
   expireRegenerationShields,
   playerById,
 } from '../state/objects';
-import { hasNoMaximumHandSize, triggersOf } from '../state/queries';
+import { gatherRuleStatics, hasNoMaximumHandSize, triggersOf } from '../state/queries';
 import type { EffectExpiry, EngineCardObject, ExtraCombat, GameContext } from '../state/types';
 import { allOf, ofType, YOURS } from '../cards/selector';
 import { emptyManaPools, runPrioritySequence } from './priority';
@@ -184,6 +184,26 @@ function untapStep(ctx: GameContext): void {
     }
   }
   emit(ctx, 'untap', { player: ap.id, count: untapped }, ap.id);
+  // Seedborn Muse (CR 502.3): its controller's permanents untap in another player's untap step
+  // too, in the same turn-based action. A "doesn't untap during your untap step" restriction is
+  // about its controller's own step, so it does not stop this one.
+  const others = new Set<string>();
+  for (const { controllerId, sourceCardId, static: rule } of gatherRuleStatics(ctx)) {
+    if (rule.kind !== 'untapDuringOthersUntapSteps' || controllerId === ap.id) continue;
+    let count = 0;
+    for (const perm of ctx.state.battlefield) {
+      if (perm.controllerId !== controllerId || !perm.tapped || others.has(perm.id)) continue;
+      if (
+        rule.filter !== undefined &&
+        !matchesSelector(ctx, perm, rule.filter, { cardId: sourceCardId, controllerId })
+      )
+        continue;
+      perm.tapped = false;
+      others.add(perm.id);
+      count += 1;
+    }
+    if (count > 0) emit(ctx, 'untap', { player: controllerId, count }, controllerId);
+  }
 }
 
 /**

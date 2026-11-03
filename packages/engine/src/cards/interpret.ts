@@ -25,6 +25,7 @@ import { COLOR_WORDS, KEYWORD_SET, parseAmount, resolveSubtype, titleCase } from
 import {
   ANY_SPELL,
   parseCardFilterPhrase,
+  parseMassSubject,
   parseSpellFilter,
   parseSubject,
   parseTargetClause,
@@ -2073,6 +2074,43 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
             ? CHOSEN_SUBTYPE
             : allOf(base, CHOSEN_SUBTYPE);
       return [costReductionFor(filter, Number(m[3]))];
+    }
+  }
+  // "Untap all permanents you control during each other player's untap step." (Seedborn Muse):
+  // part of every other player's untap step (CR 502.3), so a rule static, never a trigger.
+  {
+    if (
+      /^untap (?:~|this (?:artifact|creature|land|permanent)) during each other player's untap step$/.test(
+        lower,
+      )
+    )
+      return [{ kind: 'untapDuringOthersUntapSteps', filter: SELF }];
+    const m = lower.match(/^untap all (.+?) you control during each other player's untap step$/);
+    if (m !== null) {
+      if (m[1] === 'permanents') return [{ kind: 'untapDuringOthersUntapSteps' }];
+      const filter = parseMassSubject(m[1] as string, card);
+      if (filter === null) return null;
+      return [{ kind: 'untapDuringOthersUntapSteps', filter }];
+    }
+  }
+  // "Creature spells of the chosen type cost {2} less to cast." (Urza's Incubator), "Spells cost
+  // {1} less to cast." (Helm of Awakening): no "you cast", so every player's spells.
+  {
+    const m = lower.match(
+      /^((?:.+ )?spells?(?: of the chosen type)?) cost \{(\d+)\} less to cast$/,
+    );
+    if (m !== null && !/\byou cast\b/.test(m[1] as string)) {
+      const parsed = parseSpellFilter(m[1] as string, card);
+      if (parsed === null) return null;
+      const filter = parsed === ANY_SPELL ? undefined : parsed;
+      return [
+        {
+          kind: 'costReduction',
+          amount: constant(Number(m[2])),
+          ...(filter === undefined ? {} : { filter }),
+          allPlayers: true,
+        },
+      ];
     }
   }
   // "Each spell you cast that's red or green costs {1} less to cast." (Goblin Anarchomancer) â€”

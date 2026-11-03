@@ -649,6 +649,8 @@ function parseSpellFilterUntraced(phrase: string, card: OracleCard): Selector | 
     return base === null ? null : allOf(base, bound);
   }
   if (noun === 'noncreature') return not(ofType('Creature'));
+  // "Red spells you cast cost {1} less to cast" (Ruby Medallion): the spell's color (CR 105.2).
+  if (COLOR_WORDS[noun] !== undefined) return ofColor(COLOR_WORDS[noun] as Color);
   // "Whenever you cast an Aura spell" (Kor Spiritdancer): the spell's subtype (CR 205.3h).
   if (noun === 'aura') return ofSubtype('Aura');
   // "an instant or sorcery spell" (Archmage Emeritus) / "Instant and sorcery spells" (Goblin
