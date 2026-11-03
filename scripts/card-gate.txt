@@ -194,3 +194,4 @@ packages/engine/tests/cards/urzas-incubator.test.ts
 packages/engine/tests/cards/witch-enchanter.test.ts
 packages/engine/tests/move-all-counters.test.ts
 packages/engine/tests/cards/plea-for-power.test.ts
+packages/server/src/cards/edhrec-pins.test.ts

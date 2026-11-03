@@ -1,7 +1,7 @@
 # Plan: modelling the EDHREC coverage list
 
 Status: in progress. Phases retooled 2026-11-02 after decisions D1 to D4 below. Phase 1 steps 1
-to 6 are done; step 7 (offline pins) is still open. Phase 3 is done (2026-11-03): all 15 staples
+to 7 are done. Phase 3 is done (2026-11-03): all 15 staples
 are modeled. Phase 2 is done except face-down exile and face-down permanents. See each phase's
 status. Baseline: `253d682`. Scope: the 15 unmodeled EDHREC staples and the 5,917 cards in the
 [EDHREC ready list](edhrec-ready-list.md) that are blocked by exactly one unparsed rules line.
@@ -187,7 +187,7 @@ and reads test output.
 
 ### Phase 1: parser foundation (D2, D3)
 
-Status (2026-11-02): steps 1 to 6 done; step 7 waits for network access to Scryfall.
+Status (2026-11-03): steps 1 to 7 done.
 
 - The nets are in `snapshots:check`, together with `edhrec:triage --check`.
 - `cards/grammar/` holds `words`, `subject`, `amount`, `condition`, `cost`, `trigger-event`,
@@ -223,6 +223,10 @@ any card's behavior. Each step is a pure refactor proven by the nets in step 1.1
 7. **Offline pins (D3).** A `coverage:pin` command copies the Oracle records of ready-list cards
    from the bank into a pinned fixture, and a ratchet records the modeled set. The command needs
    the bank, so it runs on a machine that has `data/scryfall-oracle-cards.json`.
+   Done: `packages/server/fixtures/edhrec-pinned-oracle.json` pins 8,972 ready-list cards, one
+   per line, and only ever adds or refreshes. `edhrec-modeled.json` records the 3,094 that model.
+   `coverage:pin --check`, which runs in `snapshots:check`, fails offline on a regressed or
+   unrecorded modeled card. So does `edhrec-pins.test.ts` in the card gate.
 
 Exit: both nets unchanged through steps 2 to 5, and `interpret.ts` reduced to card assembly
 (faces, layouts, keyword lines) over the grammar modules.
