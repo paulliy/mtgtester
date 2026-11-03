@@ -61,6 +61,7 @@ describe('Phyrexian Metamorph', () => {
         decision.options[0]?.description === 'Copy Copy Bear'
           ? { index: 0, targets: new Map() }
           : undefined,
+      { strict: true },
     ).value as EnginePermanent;
     expect(computeCharacteristics(ctx, asCopy).types.sort()).toEqual(['Artifact', 'Creature']);
     const clone = conjure(
@@ -85,6 +86,7 @@ describe('Phyrexian Metamorph', () => {
         // The Metamorph copy is the second Copy Bear on the battlefield, after P2's.
         return { index: 1, targets: new Map() };
       },
+      { strict: true },
     ).value as EnginePermanent;
     expect(offered).toEqual(['Copy Copy Bear', 'Copy Copy Bear', 'Enter normally']);
     expect(computeCharacteristics(ctx, cloned).types.sort()).toEqual(['Artifact', 'Creature']);
@@ -104,8 +106,14 @@ describe('Phyrexian Metamorph', () => {
       oracle({ name: 'Copy Bear', typeLine: 'Creature — Bear', power: '2', toughness: '2' }),
     );
     const metamorph = conjure(ctx, 'P1', pinStore.get('Phyrexian Metamorph'), 'hand');
-    const asCopy = pump(moveObject(ctx, metamorph, { zone: 'battlefield', controllerId: 'P1' }))
-      .value as EnginePermanent;
+    const asCopy = pump(
+      moveObject(ctx, metamorph, { zone: 'battlefield', controllerId: 'P1' }),
+      (decision) =>
+        decision.options[0]?.description === 'Copy Copy Bear'
+          ? { index: 0, targets: new Map() }
+          : undefined,
+      { strict: true },
+    ).value as EnginePermanent;
     expect(asCopy.name).toBe('Copy Bear');
     expect(computeCharacteristics(ctx, asCopy).power).toBe(2);
     expect(computeCharacteristics(ctx, bear).types).toEqual(['Creature']);

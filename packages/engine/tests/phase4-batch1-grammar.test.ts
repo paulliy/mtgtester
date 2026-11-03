@@ -46,6 +46,8 @@ function run(ctx: GameContext, card: OracleCard, ability: Ability, targets: stri
       ability,
       targets,
     ),
+    undefined,
+    { strict: true },
   );
 }
 const player = (ctx: GameContext, id: string) => ctx.state.players.find((p) => p.id === id)!;

@@ -10,6 +10,7 @@ import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
 import { conjure, copies, forest, gameConfig, oracle, pump } from './fixtures';
+import { script } from './script';
 
 function pod(seed: string): GameContext {
   const ctx = createGame(
@@ -46,6 +47,7 @@ function run(ctx: GameContext, text: string, answer?: Parameters<typeof pump>[1]
       [],
     ),
     answer,
+    { strict: true },
   );
 }
 
@@ -56,6 +58,7 @@ describe('Phase 4 batch 2: look at the top N', () => {
     run(
       ctx,
       'Look at the top four cards of your library. Put one of them into your hand and the rest into your graveyard.',
+      script([{ prompt: 'put a card from among the top 4', choose: 'Put Look A into your hand' }]),
     );
     expect(p1(ctx).hand.map((c) => c.name)).toEqual(['Look A']);
     expect(
@@ -72,6 +75,11 @@ describe('Phase 4 batch 2: look at the top N', () => {
     run(
       ctx,
       'Look at the top five cards of your library. Put two of them into your hand and the rest on the bottom of your library in any order.',
+      script([
+        { prompt: 'put a card from among the top 5', choose: 'Put Look A into your hand' },
+        { prompt: 'put another card from among them', choose: 'Look B' },
+        { prompt: 'reorder the cards on the bottom', choose: 'Keep the current bottom order' },
+      ]),
     );
     expect(p1(ctx).hand).toHaveLength(2);
     expect(p1(ctx).library).toHaveLength(size - 2);
