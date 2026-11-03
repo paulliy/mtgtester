@@ -130,6 +130,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   sacrificeNonlandOrDiscardOrLoseLife: { target: player },
   transferCountersFromSource: { target: permanent },
   moveCounters: { from: permanent, to: permanent },
+  moveAllCounters: { from: permanent, to: permanent },
   bolster: {},
   distributeCountersFromSource: {},
   mayPayLifeForTriggerPowerAndCounter: {},

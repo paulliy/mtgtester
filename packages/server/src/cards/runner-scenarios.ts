@@ -173,6 +173,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'phyrexian-metamorph.json',
+    file: scenarioFile(
+      'phyrexian-metamorph.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/phyrexian-metamorph.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'professional-face-breaker.json',
     file: scenarioFile(
       'professional-face-breaker.json',
@@ -215,6 +228,29 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       readFileSync(
         new URL(
           '../../../../packages/engine/tests/scenarios/takenuma-abandoned-mire.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'the-ozolith.json',
+    file: scenarioFile(
+      'the-ozolith.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/the-ozolith.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'witch-enchanter.json',
+    file: scenarioFile(
+      'witch-enchanter.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/witch-enchanter.json',
           import.meta.url,
         ),
         'utf8',

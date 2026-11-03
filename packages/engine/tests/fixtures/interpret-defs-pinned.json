@@ -1777,6 +1777,53 @@
   },
   {
     "activatedAbilities": [],
+    "alternativeCasts": [
+      {
+        "description": "Witch-Blessed Meadow",
+        "kind": "mdfc",
+        "landFace": {
+          "colors": [],
+          "entersTapped": false,
+          "entersTappedUnless": {
+            "kind": "mayPayLife",
+            "n": 3
+          },
+          "frontManaCost": "{3}{W}",
+          "frontOracleText": "When this creature enters, destroy target artifact or enchantment an opponent controls.",
+          "manaAbilities": [
+            {
+              "units": [
+                [
+                  "W"
+                ]
+              ]
+            }
+          ],
+          "manaCost": null,
+          "name": "Witch-Blessed Meadow",
+          "oracleText": "As this land enters, you may pay 3 life. If you don't, it enters tapped.\n{T}: Add {W}.",
+          "subtypes": [],
+          "supertypes": [],
+          "typeLine": "Land",
+          "types": [
+            "Land"
+          ]
+        },
+        "manaCost": {
+          "colored": {
+            "B": 0,
+            "G": 0,
+            "R": 0,
+            "U": 0,
+            "W": 0
+          },
+          "colorless": 0,
+          "generic": 0
+        },
+        "name": "Witch-Blessed Meadow",
+        "typeLine": "Land"
+      }
+    ],
     "colorIdentity": [
       "W"
     ],
@@ -1800,7 +1847,7 @@
       "colorless": 0,
       "generic": 3
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Witch Enchanter // Witch-Blessed Meadow",
     "oracleId": "0355249a-8e4e-41db-9cea-1b901faffbe6",
     "power": 2,
@@ -1843,9 +1890,7 @@
     "types": [
       "Creature"
     ],
-    "unmodeledReasons": [
-      "unsupported layout \"modal_dfc\""
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [],
@@ -9986,7 +10031,7 @@
       "colorless": 0,
       "generic": 1
     },
-    "modeled": false,
+    "modeled": true,
     "name": "The Ozolith",
     "oracleId": "1946ded1-5f53-409f-b0a6-5433bb0357d2",
     "power": null,
@@ -9999,15 +10044,77 @@
       "Legendary"
     ],
     "toughness": null,
-    "triggers": [],
+    "triggers": [
+      {
+        "description": "Whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on ~.",
+        "effects": [
+          {
+            "op": "transferCountersFromTriggerObject",
+            "target": "source"
+          }
+        ],
+        "kind": "triggered",
+        "optional": false,
+        "targets": [],
+        "trigger": {
+          "condition": {
+            "kind": "triggerObjectMatches",
+            "selector": {
+              "kind": "hasAnyCounter"
+            }
+          },
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "when": "leavesBattlefield"
+        }
+      },
+      {
+        "description": "At the beginning of combat on your turn, if ~ has counters on it, you may move all counters from ~ onto target creature.",
+        "effects": [
+          {
+            "from": "source",
+            "op": "moveAllCounters",
+            "to": 0
+          }
+        ],
+        "kind": "triggered",
+        "optional": true,
+        "targets": [
+          {
+            "kind": "creature"
+          }
+        ],
+        "trigger": {
+          "condition": {
+            "kind": "sourceMatches",
+            "selector": {
+              "kind": "hasAnyCounter"
+            }
+          },
+          "player": "you",
+          "when": "beginningOfCombat"
+        }
+      }
+    ],
     "typeLine": "Legendary Artifact",
     "types": [
       "Artifact"
     ],
-    "unmodeledReasons": [
-      "unrecognized rules text: \"Whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on ~.\"",
-      "unrecognized rules text: \"At the beginning of combat on your turn, if ~ has counters on it, you may move all counters from ~ onto target creature.\""
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [],
@@ -19091,6 +19198,24 @@
       "U"
     ],
     "defense": null,
+    "entersAsCopy": {
+      "addTypes": [
+        "Artifact"
+      ],
+      "selector": {
+        "kind": "anyOf",
+        "of": [
+          {
+            "kind": "type",
+            "value": "Artifact"
+          },
+          {
+            "kind": "type",
+            "value": "Creature"
+          }
+        ]
+      }
+    },
     "entersTapped": false,
     "hasUnsupportedCost": false,
     "keywords": [],
@@ -19110,7 +19235,7 @@
         "U"
       ]
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Phyrexian Metamorph",
     "oracleId": "340bbe8b-e987-4c3e-ab4e-9dee63e57d4f",
     "power": 0,
@@ -19130,9 +19255,7 @@
       "Artifact",
       "Creature"
     ],
-    "unmodeledReasons": [
-      "unrecognized rules text: \"You may have this creature enter as a copy of any artifact or creature on the battlefield, except it's an artifact in addition to its other types.\""
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [],

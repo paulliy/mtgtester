@@ -400,6 +400,7 @@ const effectExpressions = {
   sacrificeNonlandOrDiscardOrLoseLife: { amount: numberValue },
   transferCountersFromSource: {},
   moveCounters: { counter: text, count: finite },
+  moveAllCounters: {},
   bolster: { count: finite },
   distributeCountersFromSource: { selector: selector },
   mayPayLifeForTriggerPowerAndCounter: {},

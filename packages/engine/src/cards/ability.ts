@@ -755,6 +755,13 @@ export type Effect =
    */
   | { op: 'moveCounters'; from: EffectRef; to: EffectRef; counter: string; count: number }
   /**
+   * "Move all counters from ~ onto target creature" (The Ozolith): every counter of every kind on
+   * `from` is removed and that many of each kind put on `to` (CR 122.5), so counter-placement
+   * replacements apply to the second half. If either object is gone, or they are the same object,
+   * nothing moves.
+   */
+  | { op: 'moveAllCounters'; from: EffectRef; to: EffectRef }
+  /**
    * "Bolster N" (CR 701.39a): as it resolves, the controller chooses a creature with the least
    * toughness among creatures they control and puts N +1/+1 counters on it. Not a target.
    */

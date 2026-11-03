@@ -9253,21 +9253,6 @@
     }
   },
   {
-    "oracleId": "6c85271c-c711-49b0-a72e-9e576c33714d",
-    "name": "Sculpting Steel",
-    "handledLines": [
-      "You may have this artifact enter as a copy of any artifact on the battlefield."
-    ],
-    "def": {
-      "entersAsCopy": {
-        "selector": {
-          "kind": "type",
-          "value": "Artifact"
-        }
-      }
-    }
-  },
-  {
     "oracleId": "6c948f71-5c86-450c-8828-df4d8deaf1dd",
     "name": "Intermediate Chirography",
     "handledLines": [
@@ -41142,21 +41127,6 @@
           }
         }
       ]
-    }
-  },
-  {
-    "oracleId": "oracle-sculpting-steel",
-    "name": "Sculpting Steel",
-    "handledLines": [
-      "You may have this artifact enter as a copy of any artifact on the battlefield."
-    ],
-    "def": {
-      "entersAsCopy": {
-        "selector": {
-          "kind": "type",
-          "value": "Artifact"
-        }
-      }
     }
   },
   {

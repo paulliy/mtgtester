@@ -6,9 +6,9 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 | Failing slot | Cards | Share of slots |
 | ------------ | ----: | -------------: |
-| effect | 3020 | 14.34% |
-| subject | 1084 | 5.73% |
-| line | 601 | 2.89% |
+| effect | 3022 | 14.35% |
+| subject | 1076 | 5.70% |
+| line | 607 | 2.93% |
 | trigger event | 505 | 2.11% |
 | cost | 307 | 1.34% |
 | condition | 184 | 0.81% |
@@ -19,7 +19,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 `line` means no slot recorded a failure inside the line: the line matched no sentence shape at all.
 
-## effect (3020)
+## effect (3022)
 
 - 69 × `look at the top n cards of your library` (Growing Rites of Itlimoc, Loot, Exuberant Explorer, Stock Up)
 - 31 × `pay {m}` (Lifecrafter's Bestiary, Leaf-Crowned Visionary, Mind's Eye)
@@ -27,9 +27,9 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 14 × `exile the top card of your library` (Blazing Crescendo, Cori Mountain Monastery, Count on Luck)
 - 13 × `choose a creature type` (Distant Melody, Kindred Dominance, Raise the Palisade)
 - 13 × `target player mills n cards` (Hedron Crab, Thought Scour, Grinding Station)
+- 13 × `investigate` (Deduce, Thraben Inspector, Bygone Bishop)
 - 12 × `each opponent discards a card` (Burglar Rat, Virus Beetle, Elderfang Disciple)
 - 12 × `gain control of target creature until end of turn` (Coercive Recruiter, Act of Treason, Song-Mad Treachery)
-- 12 × `investigate` (Deduce, Thraben Inspector, Bygone Bishop)
 - 11 × `return a land you control to its owner's hand` (Simic Growth Chamber, Golgari Rot Farm, Dimir Aqueduct)
 - 11 × `exile the top n cards of your library` (Bonehoard Dracosaur, Sword of Forge and Frontier, Reckless Impulse)
 - 11 × `reveal the top card of your library` (Ad Nauseam, Coiling Oracle, Descendants' Path)
@@ -37,9 +37,9 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 10 × `prevent all combat damage that would be dealt this turn` (Fog, Spore Frog, Kami of False Hope)
 - 10 × `look at the top card of your library` (Risen Reef, Explorer's Scope, Sarinth Steelseeker)
 
-## subject (1084)
+## subject (1076)
 
-- 40 × `you may` (Phyrexian Metamorph, Mockingbird, Vesuva)
+- 27 × `you may` (Mockingbird, Vesuva, Phantasmal Image)
 - 25 × `~` (Yahenni, Undying Partisan, Marvin, Murderous Mimic, Paradise Druid)
 - 20 × `commander creatures you own` (Agent of the Iron Throne, Inspiring Leader, Guild Artisan)
 - 19 × `target creature you control` (Sylvan Safekeeper, Zack Fair, Royal Treatment)
@@ -55,7 +55,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 6 × `artifact card with mana value n` (Whir of Invention, Trinket Mage, Trophy Mage)
 - 6 × `this artifact enters or` (Ichor Wellspring, Prized Statue, Mycosynth Wellspring)
 
-## line (601)
+## line (607)
 
 - 11 × `modular n` (Arcbound Ravager, Arcbound Crusher, Scrapyard Recombiner)
 - 10 × `toxic n` (Myr Convert, Bloated Contaminator, Blightbelly Rat)

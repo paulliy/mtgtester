@@ -336,6 +336,7 @@
     "Peema Trailblazer": "ac39b4f00910602a5d4f2038f9ed5a9c13f09de367d4c89bc66eaa8efc823f51",
     "Pensive Professor": "d1bbff061cf9949664fef0a0f27c26aae1413e512e17fc6b85db90ca429500e8",
     "Perch Protection": "e9adf2313e4738116e684727c9ebc9efc4d3a1e85ee65f91f9040d618252c80d",
+    "Phyrexian Metamorph": "db37c1301b7b7e3a6f2e48e3ac6f446b39e2aafaae415fb01d5e63f82b129a12",
     "Phyrexian Tower": "a7c3b5164f1d8387cf0508abed41b57dedd73a2e831e98327d32155adb566321",
     "Picklock Prankster // Free the Fae": "8978c741c951dc259bb2025586aa8bff8167e754b21d92f04a5ef62dbd001951",
     "Pillar Launch": "f162418730ef90329bb2d144683d20b18a3b5cf53d6490f138478bb3202e7222",
@@ -446,6 +447,7 @@
     "The Haunt of Hightower": "85b6c7f3a24a701a82b107aa6b27a0a07cc0796d83f3dcc13d7bedfbd6870e31",
     "The One Ring": "76bff693c91a40628a95ba5fffe76c9a2a69394a1c0d7ac9fbf8d99cffd3a9ad",
     "The Ooze": "b62bfacc5e4d0b4478a1a3f5f84b9e78cdc6f381d6ad8ce42fa9b7da74521387",
+    "The Ozolith": "7a940d7903bdd75ee579e196b382f71ccc373ba1bd9467ee1dbbbf0d4e2160cc",
     "The Thing": "dec568f46ce9c8621a6b2415d420f8b28d7a761f7a8d2c118642fc04c78b2792",
     "The War in Heaven": "34c80ebeb69c7ccffe0143a205a1e08d8fd70ccd80065988f57c57a202a77f26",
     "Their Number Is Legion": "41b6712d088b044a1c75a4ef825006b3774b32f673850f48bb207b10e00e24a6",
@@ -510,6 +512,7 @@
     "Winds of Abandon": "62f5a964ae8ac62e5f3f9ee30f5c4ca887a1b438d1af4bcf43ae256998350143",
     "Wings of the Cosmos": "5fdd92ddcf33636bf004e8dec6f43428aab4951e034712138ad64148d9998c08",
     "Wishclaw Talisman": "446292abbc221b8f58e0346f35354508e4d3b7866c29c7f51c91c80a046f1c33",
+    "Witch Enchanter // Witch-Blessed Meadow": "2a9f0691d6b84a5df0d54fb2f95fbd6ad65bb9833b374a59546fa2def782bc9e",
     "Witch's Web": "d172c753f92c81cf243538129405b14792d3855b02124a7cb1779ca958ed8b79",
     "Woodland Acolyte // Mend the Wilds": "f5f96c0e61f618a8aea7980123840a07d9f904deb5d24d378f6cf1af1bce8d9d",
     "Xenagos, God of Revels": "dfe7ee79fe6d8e7918e0add5c742cc721d77cd73ae45bb751f259920e02ed91a",
@@ -3320,6 +3323,48 @@
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
+    },
+    "2a9f0691d6b84a5df0d54fb2f95fbd6ad65bb9833b374a59546fa2def782bc9e": {
+      "oracleId": "0355249a-8e4e-41db-9cea-1b901faffbe6",
+      "scryfallId": "62061e7c-cf19-4f03-b8fa-2bdba62d6b0b",
+      "name": "Witch Enchanter // Witch-Blessed Meadow",
+      "manaCost": "{3}{W}",
+      "cmc": 4,
+      "colors": [
+        "W"
+      ],
+      "colorIdentity": [
+        "W"
+      ],
+      "typeLine": "Creature — Human Warlock",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Warlock"
+      ],
+      "oracleText": "When this creature enters, destroy target artifact or enchantment an opponent controls.",
+      "power": "2",
+      "toughness": "2",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "modal_dfc",
+      "commanderLegality": "legal",
+      "isBasicLand": false,
+      "backFace": {
+        "name": "Witch-Blessed Meadow",
+        "typeLine": "Land",
+        "oracleText": "As this land enters, you may pay 3 life. If you don't, it enters tapped.\n{T}: Add {W}.",
+        "manaCost": null,
+        "colors": [],
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null
+      }
     },
     "2ac080c4876bc2f35e96353ef6b83f20e9f7f9cb8b4a5d89fd8ffa7507eb2417": {
       "oracleId": "8a0e35ac-6c03-4922-b3b4-e419419fe3d7",
@@ -7978,6 +8023,32 @@
       "keywords": [
         "Enchant"
       ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "7a940d7903bdd75ee579e196b382f71ccc373ba1bd9467ee1dbbbf0d4e2160cc": {
+      "oracleId": "1946ded1-5f53-409f-b0a6-5433bb0357d2",
+      "scryfallId": "9341ed06-53db-4604-b60a-3ea9129afbc2",
+      "name": "The Ozolith",
+      "manaCost": "{1}",
+      "cmc": 1,
+      "colors": [],
+      "colorIdentity": [],
+      "typeLine": "Legendary Artifact",
+      "supertypes": [
+        "Legendary"
+      ],
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [],
+      "oracleText": "Whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on The Ozolith.\nAt the beginning of combat on your turn, if The Ozolith has counters on it, you may move all counters from The Ozolith onto target creature.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
@@ -14640,6 +14711,38 @@
       "oracleText": "Each nonland card in your hand without foretell has foretell. Its foretell cost is equal to its mana cost reduced by {2}. (During your turn, you may pay {2} and exile it from your hand face down. Cast it on a later turn for its foretell cost.)\nWhenever you foretell a card, this creature gets +2/+0 until end of turn.",
       "power": "0",
       "toughness": "3",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "db37c1301b7b7e3a6f2e48e3ac6f446b39e2aafaae415fb01d5e63f82b129a12": {
+      "oracleId": "340bbe8b-e987-4c3e-ab4e-9dee63e57d4f",
+      "scryfallId": "a564c2e8-f49f-4ed7-850f-7c8bc92e4926",
+      "name": "Phyrexian Metamorph",
+      "manaCost": "{3}{U/P}",
+      "cmc": 4,
+      "colors": [
+        "U"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "typeLine": "Artifact Creature — Phyrexian Shapeshifter",
+      "supertypes": [],
+      "types": [
+        "Artifact",
+        "Creature"
+      ],
+      "subtypes": [
+        "Phyrexian",
+        "Shapeshifter"
+      ],
+      "oracleText": "({U/P} can be paid with either {U} or 2 life.)\nYou may have this creature enter as a copy of any artifact or creature on the battlefield, except it's an artifact in addition to its other types.",
+      "power": "0",
+      "toughness": "0",
       "loyalty": null,
       "defense": null,
       "keywords": [],

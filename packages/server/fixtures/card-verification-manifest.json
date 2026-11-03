@@ -18314,6 +18314,153 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "1946ded1-5f53-409f-b0a6-5433bb0357d2": {
+      "name": "The Ozolith",
+      "oracleSha256": "7a940d7903bdd75ee579e196b382f71ccc373ba1bd9467ee1dbbbf0d4e2160cc",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on The Ozolith.",
+          "implementation": [
+            "leavesBattlefield trigger over a creature you control (permanent subject)",
+            "intervening-if triggerObjectMatches hasAnyCounter, read from the departed creature's last-known facts (CR 603.10a)",
+            "Effect.transferCountersFromTriggerObject onto the source"
+          ],
+          "engineTestIds": [
+            "cards/the-ozolith.test.ts::ozolith-collects-dying-counters",
+            "cards/the-ozolith.test.ts::ozolith-collects-bounced-counters",
+            "cards/the-ozolith.test.ts::ozolith-ignores-counterless-creature",
+            "cards/the-ozolith.test.ts::ozolith-ignores-opponent-creature",
+            "cards/the-ozolith.test.ts::ozolith-ignores-noncreature-permanent"
+          ],
+          "viewerScenarioIds": [
+            "ozolith-collects-dying-counters",
+            "ozolith-collects-bounced-counters",
+            "ozolith-ignores-counterless-creature",
+            "ozolith-ignores-opponent-creature",
+            "ozolith-ignores-noncreature-permanent"
+          ]
+        },
+        {
+          "oracleText": "At the beginning of combat on your turn, if The Ozolith has counters on it, you may move all counters from The Ozolith onto target creature.",
+          "implementation": [
+            "beginningOfCombat (you) trigger, optional, one creature target",
+            "intervening-if sourceMatches hasAnyCounter, rechecked on resolution (CR 603.4)",
+            "Effect.moveAllCounters from the source (CR 122.5)"
+          ],
+          "engineTestIds": [
+            "cards/the-ozolith.test.ts::ozolith-moves-all-counters-at-combat",
+            "cards/the-ozolith.test.ts::ozolith-declines-move",
+            "cards/the-ozolith.test.ts::ozolith-no-counters-no-combat-trigger"
+          ],
+          "viewerScenarioIds": [
+            "ozolith-moves-all-counters-at-combat",
+            "ozolith-declines-move",
+            "ozolith-no-counters-no-combat-trigger"
+          ],
+          "contractTestIds": [
+            "moves every counter of every kind and leaves the source with none",
+            "moves nothing onto the object the counters are already on (CR 122.5)",
+            "removes nothing when the target has left the battlefield (CR 122.5)"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "340bbe8b-e987-4c3e-ab4e-9dee63e57d4f": {
+      "name": "Phyrexian Metamorph",
+      "oracleSha256": "db37c1301b7b7e3a6f2e48e3ac6f446b39e2aafaae415fb01d5e63f82b129a12",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "({U/P} can be paid with either {U} or 2 life.)",
+          "implementation": [
+            "Phyrexian mana symbol {U/P} in the mana cost, payable with {U} or 2 life (CR 107.4f)",
+            "normal creature spell cast and resolution"
+          ],
+          "engineTestIds": [
+            "cards/phyrexian-metamorph.test.ts::metamorph-pays-life",
+            "cards/phyrexian-metamorph.test.ts::metamorph-copies-creature-as-artifact",
+            "cards/phyrexian-metamorph.test.ts::metamorph-copies-artifact"
+          ],
+          "viewerScenarioIds": ["metamorph-pays-life", "metamorph-copies-creature-as-artifact"]
+        },
+        {
+          "oracleText": "You may have this creature enter as a copy of any artifact or creature on the battlefield, except it's an artifact in addition to its other types.",
+          "implementation": [
+            "CardDefinition.entersAsCopy from the copy grammar (cards/grammar/copy.ts): selector artifact or creature, any controller",
+            "addTypes Artifact as a copiable value (CR 707.9b), applied in moveObject before enters triggers (CR 707.2, 614.1c)",
+            "decline enters as the printed 0/0, which state-based actions put into the graveyard"
+          ],
+          "engineTestIds": [
+            "cards/phyrexian-metamorph.test.ts::metamorph-copies-creature-as-artifact",
+            "cards/phyrexian-metamorph.test.ts::metamorph-copies-artifact",
+            "cards/phyrexian-metamorph.test.ts::metamorph-enters-normally",
+            "cards/phyrexian-metamorph.test.ts::metamorph-only-artifacts-and-creatures",
+            "cards/phyrexian-metamorph.test.ts::metamorph-c02-candidates",
+            "cards/phyrexian-metamorph.test.ts::metamorph-c02-copy-of-copy",
+            "cards/phyrexian-metamorph.test.ts::metamorph-c02-original-unchanged"
+          ],
+          "viewerScenarioIds": [
+            "metamorph-copies-creature-as-artifact",
+            "metamorph-copies-artifact",
+            "metamorph-enters-normally",
+            "metamorph-only-artifacts-and-creatures"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0355249a-8e4e-41db-9cea-1b901faffbe6": {
+      "name": "Witch Enchanter // Witch-Blessed Meadow",
+      "oracleSha256": "2a9f0691d6b84a5df0d54fb2f95fbd6ad65bb9833b374a59546fa2def782bc9e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, destroy target artifact or enchantment an opponent controls.",
+          "implementation": [
+            "front creature face cast normally at {3}{W}",
+            "enters (self) trigger: destroy one target artifact or enchantment, controller opponent"
+          ],
+          "engineTestIds": [
+            "cards/witch-enchanter.test.ts::witch-enchanter-destroys-artifact",
+            "cards/witch-enchanter.test.ts::witch-enchanter-only-opponents"
+          ],
+          "viewerScenarioIds": [
+            "witch-enchanter-destroys-artifact",
+            "witch-enchanter-only-opponents"
+          ]
+        },
+        {
+          "oracleText": "As this land enters, you may pay 3 life. If you don't, it enters tapped.",
+          "implementation": [
+            "modal DFC land face as an alternative play (AlternativeCast kind mdfc, landFace) for a permanent front face (CR 712.11b)",
+            "entersTappedUnless mayPayLife 3 on the land face",
+            "landFacePermanentDefinition: with the land face up, none of the front face's characteristics or abilities apply (CR 712.8f)"
+          ],
+          "engineTestIds": [
+            "cards/witch-enchanter.test.ts::witch-meadow-pay-life-untapped",
+            "cards/witch-enchanter.test.ts::witch-meadow-enters-tapped",
+            "cards/witch-enchanter.test.ts::witch-meadow-is-not-a-creature"
+          ],
+          "viewerScenarioIds": [
+            "witch-meadow-pay-life-untapped",
+            "witch-meadow-enters-tapped",
+            "witch-meadow-is-not-a-creature"
+          ]
+        },
+        {
+          "oracleText": "{T}: Add {W}.",
+          "implementation": ["land-face mana ability {T}: Add {W}"],
+          "engineTestIds": [
+            "cards/witch-enchanter.test.ts::witch-meadow-pay-life-untapped",
+            "cards/witch-enchanter.test.ts::witch-meadow-is-not-a-creature"
+          ],
+          "viewerScenarioIds": ["witch-meadow-pay-life-untapped", "witch-meadow-is-not-a-creature"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

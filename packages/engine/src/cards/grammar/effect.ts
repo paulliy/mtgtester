@@ -1127,6 +1127,7 @@ function parseEffectSentenceUntraced(
     triggerObject?: boolean;
     /** Every head is this object leaving the battlefield: its last-known facts are the event's. */
     departedSelf?: boolean;
+    departedTriggerObject?: boolean;
     /** Every head is this object going from the battlefield to a graveyard. */
     departedToGraveyard?: boolean;
     /** Every head is the creature this Aura or Equipment is attached to dying. */
@@ -2505,6 +2506,30 @@ function parseEffectSentenceUntraced(
   // Aura card the source became once it followed its creature to the graveyard.
   if (opts.attachedDies === true && s === "return this card to its owner's hand")
     return [{ op: 'returnDepartedSourceToHand', fromGraveyard: true }];
+  // "put those counters on ~" (The Ozolith): every counter the departed trigger object last had
+  // (CR 603.10a), each kind and number, onto this ability's source, through counter-placement
+  // replacements. Only a head that watches another object names "those counters".
+  if (
+    opts.triggerObject === true &&
+    opts.departedTriggerObject === true &&
+    s === 'put those counters on ~'
+  )
+    return [{ op: 'transferCountersFromTriggerObject', target: 'source' }];
+  // "move all counters from ~ onto target creature" (The Ozolith): every kind (CR 122.5).
+  {
+    const m = s.match(/^move all counters from ~ onto target (.+)$/);
+    if (m !== null) {
+      const parsed = parseTargetClause(m[1] as string);
+      if (parsed === null || parsed.kind !== 'creature') return null;
+      return [
+        {
+          op: 'moveAllCounters',
+          from: 'source',
+          to: alloc(parsed.kind, parsed.filter, parsed.controller),
+        },
+      ];
+    }
+  }
   // "put those counters on target creature you control" (Iron Apprentice): every counter the
   // departed source last had (CR 603.10a), each kind and number, through counter-placement
   // replacements.
@@ -3048,6 +3073,26 @@ export function parseTriggerLine(line: string, card: OracleCard): Ability[] | nu
     if (heads.some((head) => head.when !== 'enters')) return null;
     heads = heads.map((head) => ({ ...head, entersWithoutManaSpentToCast: true as const }));
     body = iff[2] as string;
+  } else if (
+    iff !== null &&
+    iff[1] === 'it had counters on it' &&
+    heads.every(
+      (head) =>
+        (head.when === 'dies' || head.when === 'leavesBattlefield') &&
+        head.subject.kind === 'permanent' &&
+        head.aggregate === undefined,
+    )
+  ) {
+    // "Whenever a creature you control leaves the battlefield, if it had counters on it"
+    // (The Ozolith): the departed trigger object's last-known counters (CR 603.10a), of any kind.
+    // One departing object per firing, so not for an aggregate head.
+    condition = { kind: 'triggerObjectMatches', selector: { kind: 'hasAnyCounter' } };
+    body = iff[2] as string;
+  } else if (iff !== null && iff[1] === '~ has counters on it') {
+    // "if ~ has counters on it" (The Ozolith): any kind of counter on the ability's own source,
+    // checked as it triggers and again as it resolves (CR 603.4).
+    condition = { kind: 'sourceMatches', selector: { kind: 'hasAnyCounter' } };
+    body = iff[2] as string;
   } else if (iff !== null && /^(?:it|~) had counters on it$/.test(iff[1] as string)) {
     // "When this creature dies, if it had counters on it" (Iron Apprentice): the departed
     // creature's last-known counters (CR 603.10a), of any kind. Only a self-departure head names
@@ -3225,6 +3270,13 @@ export function parseTriggerLine(line: string, card: OracleCard): Ability[] | nu
         (head.when === 'dies' || head.when === 'leavesBattlefield') &&
         'subject' in head &&
         head.subject.kind === 'self',
+    ),
+    departedTriggerObject: heads.every(
+      (head) =>
+        (head.when === 'dies' || head.when === 'leavesBattlefield') &&
+        'subject' in head &&
+        head.subject.kind === 'permanent' &&
+        head.aggregate === undefined,
     ),
     departedToGraveyard: heads.every(
       (head) =>

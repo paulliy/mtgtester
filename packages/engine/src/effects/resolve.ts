@@ -5102,6 +5102,29 @@ function* executeAbilityEffects(
         addCounters(ctx, source, to, effect.counter, moved);
         break;
       }
+      case 'moveAllCounters': {
+        const fromId = ref(effect.from);
+        const toId = ref(effect.to);
+        const from = fromId === null ? undefined : findPermanent(ctx, fromId);
+        const to = toId === null ? undefined : findPermanent(ctx, toId);
+        if (from === undefined || to === undefined) {
+          noop(ctx, 'moveAllCounters.objectGone', 'objectGone');
+          break;
+        }
+        // CR 122.5: moving a counter onto the object it is already on is not possible.
+        if (from.id === to.id) {
+          noop(ctx, 'moveAllCounters.sameObject', 'nothingQualifies');
+          break;
+        }
+        const moving = Object.entries(from.counters).filter(([, count]) => count > 0);
+        for (const [counter] of moving) delete from.counters[counter];
+        if (moving.length > 0) expireCounterBoundAttackRestrictions(from);
+        for (const [counter, count] of moving) {
+          emit(ctx, 'removeCounter', { target: from.name, counter, count });
+          addCounters(ctx, source, to, counter, count);
+        }
+        break;
+      }
       case 'mayPayLifeForTriggerPowerAndCounter': {
         const facts = eventObjectFacts(ctx, scope);
         if (facts === undefined) break;

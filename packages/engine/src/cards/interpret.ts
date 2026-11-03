@@ -20,6 +20,7 @@ import type { AbilityCost, ActivatedAbility, AlternativeCast, MdfcLandFace } fro
 import { transformDefinition } from '../testing/definition-transform';
 import { SELF_SUBJECT } from './ability';
 import type { Ability, Effect, KeywordAbility, TargetSpec, TokenSpec } from './ability';
+import { parseEntersAsCopy } from './grammar/copy';
 import { COLOR_WORDS, KEYWORD_SET, parseAmount, resolveSubtype, titleCase } from './grammar/words';
 import {
   ANY_SPELL,
@@ -2259,14 +2260,16 @@ function parseSimpleLandFace(typeLine: string, oracleText: string): Color | null
  * what the land can actually do.
  */
 /**
- * Parse the land face of a spell // land modal DFC. The back face is deliberately represented as
- * an alternate cast rather than a second CardDefinition: it is playable from hand, but only as a
- * land, and its front face remains the spell used by the normal casting path.
+ * Parse the land face of a spell // land or permanent // land modal DFC (Witch Enchanter //
+ * Witch-Blessed Meadow). The back face is deliberately represented as an alternate cast rather
+ * than a second CardDefinition: it is playable from hand, but only as a land, and its front face
+ * remains the spell used by the normal casting path. A permanent played this way has only the land
+ * face's characteristics (CR 712.8f, `landFacePermanentDefinition`), so none of the front face's
+ * abilities reach it.
  */
 function buildMdfcLandFace(card: OracleCard): AlternativeCast | null {
   const back = card.backFace;
   if (card.layout !== 'modal_dfc' || back === undefined || card.types.includes('Land')) return null;
-  if (!card.types.includes('Instant') && !card.types.includes('Sorcery')) return null;
 
   const typeParts = back.typeLine.split(/\s+—\s+/);
   const typeWords = (typeParts[0] ?? '').trim().split(/\s+/).filter(Boolean);
@@ -2723,6 +2726,7 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
   let castFromGraveyard = false;
   let optionalAdditionalCost: CardDefinition['optionalAdditionalCost'];
   let morphCost: ParsedManaCost | undefined;
+  let entersAsCopy: CardDefinition['entersAsCopy'];
   let alternativeCasts: import('./ability').AlternativeCast[] | undefined =
     mdfcLandFace === null ? undefined : [mdfcLandFace];
 
@@ -3349,6 +3353,15 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
         UNSUPPORTED_MANA_RE.test(split.effectText)
       ) {
         reasons.push(`unsupported mana production: "${line}"`);
+        continue;
+      }
+    }
+    // 2b. "You may have this creature enter as a copy of …" (CR 707.2): an as-enters copy
+    //     replacement, applied in `moveObject` before enters triggers are queued.
+    if (entersAsCopy === undefined) {
+      const copy = parseEntersAsCopy(lower, card);
+      if (copy !== null) {
+        entersAsCopy = copy;
         continue;
       }
     }
@@ -4148,6 +4161,7 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
       ...(announcesX ? { announcesX: true } : {}),
       ...(optionalAdditionalCost !== undefined ? { optionalAdditionalCost } : {}),
       ...(morphCost !== undefined ? { morphCost } : {}),
+      ...(entersAsCopy !== undefined ? { entersAsCopy } : {}),
       modeled: reasons.length === 0,
       unmodeledReasons: reasons,
     }),

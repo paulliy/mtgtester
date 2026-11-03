@@ -46,6 +46,59 @@ export function mdfcLandFaceDefinition(
   };
 }
 
+const landFaceDefinitions = new WeakMap<CardDefinition, CardDefinition>();
+
+/**
+ * A modal double-faced permanent with its land face up (CR 712.8f): it has only that face's
+ * characteristics, so none of the front face's abilities (an enters trigger, a static ability, a
+ * rule static, entry counters, an as-enters copy) reach it, whatever the front face's type.
+ * Memoized per definition, so the layer cache sees one definition object for the face.
+ */
+export function landFacePermanentDefinition(
+  definition: CardDefinition,
+  alternative: AlternativeCast,
+): CardDefinition {
+  const face = alternative.kind === 'mdfc' ? alternative.landFace : undefined;
+  if (face === undefined) return definition;
+  const cached = landFaceDefinitions.get(definition);
+  if (cached !== undefined) return cached;
+  const land: CardDefinition = {
+    oracleId: definition.oracleId,
+    ...(definition.scryfallId !== undefined ? { scryfallId: definition.scryfallId } : {}),
+    name: face.name,
+    typeLine: face.typeLine,
+    supertypes: [...face.supertypes],
+    types: [...face.types],
+    subtypes: [...face.subtypes],
+    colors: [...face.colors],
+    colorIdentity: definition.colorIdentity,
+    manaCost: null,
+    hasUnsupportedCost: false,
+    power: null,
+    toughness: null,
+    loyalty: null,
+    defense: null,
+    keywords: [],
+    manaAbilities: face.manaAbilities,
+    activatedAbilities: [],
+    spellAbility: null,
+    entersTapped: face.entersTapped,
+    ...(face.entersTappedUnless !== undefined
+      ? { entersTappedUnless: face.entersTappedUnless }
+      : {}),
+    ...(definition.alternativeCasts !== undefined
+      ? { alternativeCasts: definition.alternativeCasts }
+      : {}),
+    triggers: [],
+    staticEffects: [],
+    ruleStatics: [],
+    modeled: definition.modeled,
+    unmodeledReasons: definition.unmodeledReasons,
+  };
+  landFaceDefinitions.set(definition, land);
+  return land;
+}
+
 /** Modal faces retain the chosen characteristics on the battlefield and reset elsewhere. */
 export function selectedPermanentDefinition(
   definition: CardDefinition,
@@ -54,6 +107,10 @@ export function selectedPermanentDefinition(
 ): CardDefinition {
   if (definition.roomDoors !== undefined) return roomDefinition(definition, unlockedDoors ?? []);
   if (face !== 'back') return definition;
+  const landFace = definition.alternativeCasts?.find(
+    (entry) => entry.kind === 'mdfc' && entry.landFace !== undefined,
+  );
+  if (landFace !== undefined) return landFacePermanentDefinition(definition, landFace);
   const alternative = definition.alternativeCasts?.find(
     (entry) => entry.kind === 'mdfc' && entry.spellFace !== undefined,
   );

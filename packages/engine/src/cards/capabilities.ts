@@ -977,6 +977,7 @@ const families = {
       sacrificeNonlandOrDiscardOrLoseLife: true,
       transferCountersFromSource: true,
       moveCounters: true,
+      moveAllCounters: true,
       bolster: true,
       distributeCountersFromSource: true,
       mayPayLifeForTriggerPowerAndCounter: true,

@@ -161,6 +161,39 @@ async function channelTakenuma(page: Page): Promise<void> {
   if ((await confirm.isVisible()) && (await confirm.isEnabled())) await confirm.click();
 }
 
+/** Cast Phyrexian Metamorph and answer its as-enters copy choice with `copy`, or enter normally. */
+async function castMetamorph(page: Page, copy: string | null): Promise<void> {
+  const metamorph = hand(page, 'Phyrexian Metamorph');
+  await passUntil(page, metamorph.and(page.locator('.actionable')));
+  await metamorph.click();
+  await confirmButton(page).click();
+  const choice =
+    copy === null
+      ? page.getByRole('button', { name: /Enter normally|Decline/ }).first()
+      : cardChoice(page, copy, 'Copy');
+  await passStackUntil(page, choice);
+  await choice.click();
+}
+
+/** Play Witch Enchanter's land face from your hand and answer its life payment. */
+async function playWitchMeadow(page: Page, payLife: boolean): Promise<void> {
+  const card = hand(page, 'Witch Enchanter // Witch-Blessed Meadow');
+  await passUntil(page, card.and(page.locator('.actionable')));
+  await card.click();
+  const play = page
+    .locator('.source-actions .source-action-row button')
+    .filter({ hasText: /Witch-Blessed Meadow/ });
+  if ((await play.count()) > 0) await play.first().click();
+  const confirm = confirmButton(page);
+  if ((await confirm.isVisible()) && (await confirm.isEnabled())) await confirm.click();
+  const answer = page.getByRole('button', {
+    name: payLife ? /^Pay 3 life/ : /^Don't pay 3 life/,
+  });
+  await passUntil(page, answer);
+  await answer.click();
+  await passUntil(page, permanent(page, 'P1', 'Witch-Blessed Meadow'));
+}
+
 /** Cast Mox Diamond; its entering replacement asks before it finishes resolving. */
 async function castMoxDiamond(page: Page): Promise<void> {
   const mox = hand(page, 'Mox Diamond');
@@ -918,6 +951,161 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await expect(cardChoice(page, 'Scenario Trinket', 'Exile')).toHaveCount(0);
     await expect(cardChoice(page, 'Mountain', 'Exile')).toHaveCount(0);
     await expect(hand(page, 'Scenario Trinket')).toHaveCount(1);
+  },
+  'metamorph-copies-creature-as-artifact': async (page) => {
+    await castMetamorph(page, 'Scenario Bear');
+    await passUntil(page, permanent(page, 'P1', 'Scenario Bear'));
+    await castWith(page, hand(page, 'Scenario Shatter'), {
+      targets: [['P1', 'Scenario Bear']],
+      resolves: /Scenario Shatter[^]*resolves/,
+    });
+    await expect(permanent(page, 'P1', 'Scenario Bear')).toHaveCount(0);
+    await expect(permanent(page, 'P2', 'Scenario Bear')).toHaveCount(1);
+    await expect(inZone(page, 'P1', 'Graveyard', 'Phyrexian Metamorph')).toHaveCount(1);
+  },
+  'metamorph-copies-artifact': async (page) => {
+    await castMetamorph(page, 'Scenario Rock');
+    await passUntil(page, permanent(page, 'P1', 'Scenario Rock'));
+    await castWith(page, hand(page, 'Scenario Imp'), { resolves: /Scenario Imp[^]*resolves/ });
+    await expect(permanent(page, 'P1', 'Scenario Imp')).toHaveCount(1);
+    await expect(permanent(page, 'P1', 'Scenario Rock').locator('.tap-badge')).toHaveCount(1);
+  },
+  'metamorph-enters-normally': async (page) => {
+    await castMetamorph(page, null);
+    await passUntil(page, inZone(page, 'P1', 'Graveyard', 'Phyrexian Metamorph'));
+    await expect(permanent(page, 'P1', 'Phyrexian Metamorph')).toHaveCount(0);
+    await expect(permanent(page, 'P1', 'Scenario Bear')).toHaveCount(0);
+  },
+  'metamorph-only-artifacts-and-creatures': async (page) => {
+    const metamorph = hand(page, 'Phyrexian Metamorph');
+    await passUntil(page, metamorph.and(page.locator('.actionable')));
+    await metamorph.click();
+    await confirmButton(page).click();
+    const bear = cardChoice(page, 'Scenario Bear', 'Copy');
+    await passStackUntil(page, bear);
+    await expect(cardChoice(page, 'Scenario Rock', 'Copy')).toHaveCount(1);
+    await expect(cardChoice(page, 'Scenario Charm', 'Copy')).toHaveCount(0);
+    await expect(cardChoice(page, 'Forest', 'Copy')).toHaveCount(0);
+    await bear.click();
+    await passUntil(page, permanent(page, 'P1', 'Scenario Bear'));
+  },
+  'metamorph-pays-life': async (page) => {
+    await castMetamorph(page, 'Scenario Bear');
+    await passUntil(page, permanent(page, 'P1', 'Scenario Bear'));
+    await expect(life(page, 'P1')).toHaveText('38');
+  },
+  'witch-enchanter-destroys-artifact': async (page) => {
+    await castWith(page, hand(page, 'Witch Enchanter // Witch-Blessed Meadow'), {
+      resolves: /Witch Enchanter[^]*resolves/,
+    });
+    await passStackUntil(page, inZone(page, 'P2', 'Graveyard', 'Scenario Rock'));
+    await expect(permanent(page, 'P2', 'Scenario Rock')).toHaveCount(0);
+    await expect(permanent(page, 'P1', 'Witch Enchanter // Witch-Blessed Meadow')).toHaveCount(1);
+  },
+  'witch-enchanter-only-opponents': async (page) => {
+    await castWith(page, hand(page, 'Witch Enchanter // Witch-Blessed Meadow'), {
+      resolves: /Witch Enchanter[^]*resolves/,
+    });
+    await passStackUntil(page, inZone(page, 'P2', 'Graveyard', 'Scenario Charm'));
+    await expect(permanent(page, 'P1', 'Scenario Relic')).toHaveCount(1);
+    await expect(permanent(page, 'P2', 'Scenario Bear')).toHaveCount(1);
+  },
+  'witch-meadow-pay-life-untapped': async (page) => {
+    await playWitchMeadow(page, true);
+    await expect(life(page, 'P1')).toHaveText('37');
+    await castWith(page, hand(page, 'Scenario Squire'), {
+      resolves: /Scenario Squire[^]*resolves/,
+    });
+    await expect(permanent(page, 'P1', 'Scenario Squire')).toHaveCount(1);
+    await expect(permanent(page, 'P2', 'Scenario Rock')).toHaveCount(1);
+  },
+  'witch-meadow-enters-tapped': async (page) => {
+    await playWitchMeadow(page, false);
+    await expect(life(page, 'P1')).toHaveText('40');
+    await expect(permanent(page, 'P1', 'Witch-Blessed Meadow').locator('.tap-badge')).toHaveCount(
+      1,
+    );
+    await expect(permanent(page, 'P2', 'Scenario Rock')).toHaveCount(1);
+  },
+  'witch-meadow-is-not-a-creature': async (page) => {
+    await playWitchMeadow(page, true);
+    await castWith(page, hand(page, 'Scenario Wrath'), { resolves: /Scenario Wrath[^]*resolves/ });
+    await expect(permanent(page, 'P2', 'Scenario Bear')).toHaveCount(0);
+    await expect(permanent(page, 'P1', 'Witch-Blessed Meadow')).toHaveCount(1);
+  },
+  'ozolith-collects-dying-counters': async (page) => {
+    await castWith(page, hand(page, 'Scenario Snuff'), {
+      targets: [['P1', 'Scenario Bear']],
+      resolves: /Scenario Snuff[^]*resolves/,
+    });
+    const ozolith = permanent(page, 'P1', 'The Ozolith');
+    await passStackUntil(page, ozolith.locator('.counters').filter({ hasText: /flying/i }));
+    await expect(ozolith.locator('.counters')).toContainText(/\+1\/\+1.*2/);
+    await expect(inZone(page, 'P1', 'Graveyard', 'Scenario Bear')).toHaveCount(1);
+  },
+  'ozolith-collects-bounced-counters': async (page) => {
+    await castWith(page, hand(page, 'Scenario Unsummon'), {
+      targets: [['P1', 'Scenario Bear']],
+      resolves: /Scenario Unsummon[^]*resolves/,
+    });
+    const ozolith = permanent(page, 'P1', 'The Ozolith');
+    await passStackUntil(page, ozolith.locator('.counters'));
+    await expect(ozolith.locator('.counters')).toContainText(/\+1\/\+1.*3/);
+    await expect(hand(page, 'Scenario Bear')).toHaveCount(1);
+  },
+  'ozolith-ignores-counterless-creature': async (page) => {
+    await castWith(page, hand(page, 'Scenario Snuff'), {
+      targets: [['P1', 'Scenario Bear']],
+      resolves: /Scenario Snuff[^]*resolves/,
+    });
+    await passUntil(page, logLine(page, /game over/));
+    await expect(inZone(page, 'P1', 'Graveyard', 'Scenario Bear')).toHaveCount(1);
+    await expect(permanent(page, 'P1', 'The Ozolith').locator('.counters')).toHaveCount(0);
+  },
+  'ozolith-ignores-opponent-creature': async (page) => {
+    await castWith(page, hand(page, 'Scenario Snuff'), {
+      targets: [['P2', 'Scenario Bear']],
+      resolves: /Scenario Snuff[^]*resolves/,
+    });
+    await passUntil(page, logLine(page, /game over/));
+    await expect(inZone(page, 'P2', 'Graveyard', 'Scenario Bear')).toHaveCount(1);
+    await expect(permanent(page, 'P1', 'The Ozolith').locator('.counters')).toHaveCount(0);
+  },
+  'ozolith-ignores-noncreature-permanent': async (page) => {
+    await castWith(page, hand(page, 'Scenario Shatter'), {
+      targets: [['P1', 'Scenario Relic']],
+      resolves: /Scenario Shatter[^]*resolves/,
+    });
+    await passUntil(page, logLine(page, /game over/));
+    await expect(inZone(page, 'P1', 'Graveyard', 'Scenario Relic')).toHaveCount(1);
+    await expect(permanent(page, 'P1', 'The Ozolith').locator('.counters')).toHaveCount(0);
+  },
+  'ozolith-moves-all-counters-at-combat': async (page) => {
+    const yes = page.getByRole('button', { name: 'Yes', exact: true });
+    await passUntil(page, yes);
+    await yes.click();
+    await attack(page, []);
+    const wolf = permanent(page, 'P1', 'Scenario Wolf');
+    await passUntil(page, wolf.locator('.counters').filter({ hasText: /flying/i }));
+    await expect(wolf.locator('.counters')).toContainText(/\+1\/\+1.*2/);
+    await expect(permanent(page, 'P1', 'The Ozolith').locator('.counters')).toHaveCount(0);
+  },
+  'ozolith-declines-move': async (page) => {
+    const no = page.getByRole('button', { name: 'No', exact: true });
+    await passUntil(page, no);
+    await no.click();
+    await attack(page, []);
+    await passUntil(page, logLine(page, /game over/));
+    await expect(permanent(page, 'P1', 'The Ozolith').locator('.counters')).toContainText(
+      /\+1\/\+1.*2/,
+    );
+    await expect(permanent(page, 'P1', 'Scenario Wolf').locator('.counters')).toHaveCount(0);
+  },
+  'ozolith-no-counters-no-combat-trigger': async (page) => {
+    await attack(page, []);
+    await passUntil(page, logLine(page, /game over/));
+    await expect(page.getByRole('button', { name: 'Yes', exact: true })).toHaveCount(0);
+    await expect(permanent(page, 'P1', 'Scenario Wolf').locator('.counters')).toHaveCount(0);
   },
 };
 
