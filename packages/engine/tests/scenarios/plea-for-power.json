@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 1,
+  "card": "Plea for Power",
+  "supportCards": [
+    {
+      "name": "Scenario Ant",
+      "typeLine": "Creature \u2014 Insect",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Bee",
+      "typeLine": "Creature \u2014 Insect",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Cat",
+      "typeLine": "Creature \u2014 Insect",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "plea-time-wins",
+      "title": "Plea for Power: time gets more votes, and you take an extra turn",
+      "clauses": [1],
+      "instructions": [
+        "Cast Plea for Power and vote for time.",
+        "The other players vote time, time, knowledge."
+      ],
+      "expectedOutcome": "Three time votes to one: you take an extra turn after this one and draw nothing.",
+      "seats": {
+        "P1": {
+          "hand": ["Plea for Power"],
+          "battlefield": ["Island", "Island", "Island", "Island"],
+          "libraryTop": ["Scenario Ant", "Scenario Bee", "Scenario Cat"]
+        },
+        "P2": {},
+        "P3": {},
+        "P4": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Plea for Power/"
+        },
+        {
+          "player": "P1",
+          "choose": "Vote for time"
+        },
+        {
+          "player": "P2",
+          "choose": "Vote for time"
+        },
+        {
+          "player": "P3",
+          "choose": "Vote for time"
+        },
+        {
+          "player": "P4",
+          "choose": "Vote for knowledge"
+        }
+      ],
+      "expect": [
+        {
+          "event": {
+            "type": "extraTurn",
+            "count": 1
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "lacks": ["Scenario Ant", "Scenario Bee", "Scenario Cat"]
+          }
+        },
+        {
+          "event": {
+            "type": "vote",
+            "count": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "plea-tie-draws",
+      "title": "Plea for Power: a tied vote draws three cards",
+      "clauses": [1],
+      "instructions": [
+        "Cast Plea for Power and vote for time.",
+        "The other players vote time, knowledge, knowledge."
+      ],
+      "expectedOutcome": "Two votes each: the tie goes to knowledge, so you draw three cards and take no extra turn.",
+      "seats": {
+        "P1": {
+          "hand": ["Plea for Power"],
+          "battlefield": ["Island", "Island", "Island", "Island"],
+          "libraryTop": ["Scenario Ant", "Scenario Bee", "Scenario Cat"]
+        },
+        "P2": {},
+        "P3": {},
+        "P4": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Plea for Power/"
+        },
+        {
+          "player": "P1",
+          "choose": "Vote for time"
+        },
+        {
+          "player": "P2",
+          "choose": "Vote for time"
+        },
+        {
+          "player": "P3",
+          "choose": "Vote for knowledge"
+        },
+        {
+          "player": "P4",
+          "choose": "Vote for knowledge"
+        }
+      ],
+      "expect": [
+        {
+          "event": {
+            "type": "extraTurn",
+            "count": 0
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Ant", "Scenario Bee", "Scenario Cat"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "plea-knowledge-wins",
+      "title": "Plea for Power: knowledge gets more votes, and you draw three cards",
+      "clauses": [1],
+      "instructions": [
+        "Cast Plea for Power and vote for time.",
+        "The other players vote knowledge, knowledge, knowledge."
+      ],
+      "expectedOutcome": "Knowledge wins three to one: you draw three cards.",
+      "seats": {
+        "P1": {
+          "hand": ["Plea for Power"],
+          "battlefield": ["Island", "Island", "Island", "Island"],
+          "libraryTop": ["Scenario Ant", "Scenario Bee", "Scenario Cat"]
+        },
+        "P2": {},
+        "P3": {},
+        "P4": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Plea for Power/"
+        },
+        {
+          "player": "P1",
+          "choose": "Vote for time"
+        },
+        {
+          "player": "P2",
+          "choose": "Vote for knowledge"
+        },
+        {
+          "player": "P3",
+          "choose": "Vote for knowledge"
+        },
+        {
+          "player": "P4",
+          "choose": "Vote for knowledge"
+        }
+      ],
+      "expect": [
+        {
+          "event": {
+            "type": "extraTurn",
+            "count": 0
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Ant", "Scenario Bee", "Scenario Cat"]
+          }
+        }
+      ]
+    }
+  ]
+}

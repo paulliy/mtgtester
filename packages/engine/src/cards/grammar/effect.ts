@@ -640,8 +640,51 @@ export function parseExileTopPlayableBlock(lower: string): Effect[] | null {
  * refer to "them" and "the rest", which only mean anything relative to the first. Parsing them
  * independently would need the IR to carry a revealed set between ops, which it does not.
  */
+/** Thrown when a vote outcome would allocate a target slot, which the vote cannot announce. */
+class VoteTargetRefused extends Error {}
+
 export function parseLookAtTopBlock(lower: string, card: OracleCard): Effect[] | null {
   const normalized = lower.replace(/\.$/, '');
+  // Will of the council (CR 701.38): "Starting with you, each player votes for time or
+  // knowledge. If time gets more votes, …. If knowledge gets more votes or the vote is tied, …."
+  // (Plea for Power). Each outcome is ordinary effect grammar; a target inside one is not read
+  // here, since the vote's outcome is unknown when targets would be chosen.
+  {
+    const vote = normalized.match(
+      /^starting with you, each player votes for ([a-z]+) or ([a-z]+)\. if ([a-z]+) gets more votes, (.+?)\. if ([a-z]+) gets more votes or the vote is tied, (.+)$/,
+    );
+    if (vote !== null && vote[3] === vote[1] && vote[5] === vote[2]) {
+      const refuse: SlotAllocator = () => {
+        throw new VoteTargetRefused();
+      };
+      const outcome = (text: string): Effect[] | null => {
+        const effects: Effect[] = [];
+        for (const sentence of text.split(/\. /)) {
+          let parsed: Effect[] | null;
+          try {
+            parsed = parseEffectSentence(sentence, refuse, card);
+          } catch (error) {
+            if (error instanceof VoteTargetRefused) return null;
+            throw error;
+          }
+          if (parsed === null) return null;
+          effects.push(...parsed);
+        }
+        return effects;
+      };
+      const more = outcome(vote[4] as string);
+      const otherwise = outcome(vote[6] as string);
+      if (more === null || otherwise === null) return null;
+      return [
+        {
+          op: 'councilVote',
+          choices: [vote[1] as string, vote[2] as string],
+          more,
+          otherwise,
+        },
+      ];
+    }
+  }
   // "Search your library and/or graveyard for a creature card with mana value X or less and put
   // it onto the battlefield. If you search your library this way, shuffle. If X is 10 or more,
   // creatures you control get +X/+X and gain haste until end of turn." (Finale of Devastation):
@@ -1548,6 +1591,8 @@ function parseEffectSentenceUntraced(
         ];
     }
   }
+  // "Take an extra turn after this one" (Plea for Power's time outcome, CR 500.7).
+  if (s === 'take an extra turn after this one') return [{ op: 'takeExtraTurn' }];
   // "Each player draws a card" (Faerie Mastermind) / "each opponent draws two cards".
   {
     const m = s.match(/^each (player|opponent) draws (a card|(\w+) cards)$/);

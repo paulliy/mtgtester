@@ -18853,6 +18853,29 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "8b886623-5c96-48dd-a3d2-fd5865c58ff5": {
+      "name": "Plea for Power",
+      "oracleSha256": "90bc766289228956478db3d2320cfc9e240f315526cc885d2f6c04685a5eec71",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Will of the council — Starting with you, each player votes for time or knowledge. If time gets more votes, take an extra turn after this one. If knowledge gets more votes or the vote is tied, draw three cards.",
+          "implementation": [
+            "Effect.councilVote (new, CR 701.38): each player votes once, in turn order starting with the controller; votes are public events; `more` on a strict majority for the first choice, otherwise on any other result (ties included)",
+            "Effect.takeExtraTurn (new, CR 500.7)",
+            "draw three cards"
+          ],
+          "engineTestIds": [
+            "cards/plea-for-power.test.ts::plea-time-wins",
+            "cards/plea-for-power.test.ts::plea-tie-draws",
+            "cards/plea-for-power.test.ts::plea-knowledge-wins",
+            "cards/plea-for-power.test.ts::plea-votes-in-turn-order"
+          ],
+          "viewerScenarioIds": ["plea-time-wins", "plea-tie-draws", "plea-knowledge-wins"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

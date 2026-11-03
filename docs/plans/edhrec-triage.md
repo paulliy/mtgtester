@@ -6,9 +6,9 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 | Failing slot | Cards | Share of slots |
 | ------------ | ----: | -------------: |
-| effect | 2992 | 14.07% |
-| subject | 1058 | 5.30% |
-| line | 650 | 3.59% |
+| effect | 2984 | 14.03% |
+| subject | 1059 | 5.30% |
+| line | 657 | 3.62% |
 | trigger event | 505 | 2.11% |
 | cost | 307 | 1.34% |
 | condition | 184 | 0.81% |
@@ -19,7 +19,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 `line` means no slot recorded a failure inside the line: the line matched no sentence shape at all.
 
-## effect (2992)
+## effect (2984)
 
 - 69 × `look at the top n cards of your library` (Growing Rites of Itlimoc, Loot, Exuberant Explorer, Stock Up)
 - 31 × `pay {m}` (Lifecrafter's Bestiary, Leaf-Crowned Visionary, Mind's Eye)
@@ -37,7 +37,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 11 × `it deals n damage to target opponent` (Abraded Bluffs, Bristling Backwoods, Jagged Barrens)
 - 10 × `prevent all combat damage that would be dealt this turn` (Fog, Spore Frog, Kami of False Hope)
 
-## subject (1058)
+## subject (1059)
 
 - 27 × `you may` (Mockingbird, Vesuva, Phantasmal Image)
 - 25 × `~` (Yahenni, Undying Partisan, Marvin, Murderous Mimic, Paradise Druid)
@@ -55,7 +55,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 6 × `artifact card with mana value n` (Whir of Invention, Trinket Mage, Trophy Mage)
 - 6 × `this artifact enters or` (Ichor Wellspring, Prized Statue, Mycosynth Wellspring)
 
-## line (650)
+## line (657)
 
 - 11 × `modular n` (Arcbound Ravager, Arcbound Crusher, Scrapyard Recombiner)
 - 10 × `toxic n` (Myr Convert, Bloated Contaminator, Blightbelly Rat)

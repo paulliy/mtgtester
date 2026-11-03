@@ -268,6 +268,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'plea-for-power.json',
+    file: scenarioFile(
+      'plea-for-power.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/plea-for-power.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'professional-face-breaker.json',
     file: scenarioFile(
       'professional-face-breaker.json',

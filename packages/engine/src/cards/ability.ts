@@ -1282,6 +1282,24 @@ export type Effect =
    */
   | { op: 'sacrificeThenOpponentsShareTypeOrPunish'; selector: Selector; life: Value }
   /**
+   * "Take an extra turn after this one" (Plea for Power, CR 500.7): the controller's extra turn
+   * comes directly after this one, ahead of extra turns created earlier.
+   */
+  | { op: 'takeExtraTurn' }
+  /**
+   * Will of the council: "Starting with you, each player votes for A or B. If A gets more votes,
+   * …. If B gets more votes or the vote is tied, …." (Plea for Power, CR 701.38). Each player
+   * who has not lost votes once, in turn order starting with the controller (CR 701.38a); the
+   * votes are public. `more` runs when `choices[0]` has strictly more votes, `otherwise` on any
+   * other result. No extra-vote effects exist in the engine, so each player votes once.
+   */
+  | {
+      op: 'councilVote';
+      choices: [string, string];
+      more: Effect[];
+      otherwise: Effect[];
+    }
+  /**
    * "Search your library and/or graveyard for a creature card with mana value X or less and put
    * it onto the battlefield. If you search your library this way, shuffle." (Finale of
    * Devastation): the controller chooses which of the two zones to search, may find nothing

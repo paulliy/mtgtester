@@ -193,3 +193,4 @@ packages/engine/tests/cards/the-ozolith.test.ts
 packages/engine/tests/cards/urzas-incubator.test.ts
 packages/engine/tests/cards/witch-enchanter.test.ts
 packages/engine/tests/move-all-counters.test.ts
+packages/engine/tests/cards/plea-for-power.test.ts

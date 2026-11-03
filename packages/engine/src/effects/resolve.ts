@@ -1,3 +1,4 @@
+import { playersInTurnOrderFrom } from '../targets/per-player';
 import { targetingSourceFields } from '../targets/context';
 import type { TargetingSource } from '../targets/context';
 import { copyData } from '../state/copy-data';
@@ -8153,6 +8154,47 @@ function* executeAbilityEffects(
             divisionAmounts,
           );
         }
+        break;
+      }
+      case 'takeExtraTurn':
+        // CR 500.7: the most recently created extra turn is taken first.
+        (ctx.state.extraTurns ??= []).unshift(controller.id);
+        emit(ctx, 'extraTurn', { player: controller.id, source: source.name }, controller.id);
+        break;
+      case 'councilVote': {
+        const tally = [0, 0];
+        for (const voterId of playersInTurnOrderFrom(ctx, controller.id)) {
+          const voter = playerById(ctx, voterId);
+          if (voter.hasLost) continue;
+          const outcome = yield {
+            decisionType: 'general' as const,
+            player: voter.id,
+            prompt: `${source.name}: vote for ${effect.choices[0]} or ${effect.choices[1]}.`,
+            options: effect.choices.map((choice) =>
+              plainOption({ type: 'vote', description: `Vote for ${choice}`, verb: 'Vote' }),
+            ),
+          };
+          const index = outcome.index === 1 ? 1 : 0;
+          tally[index] = (tally[index] ?? 0) + 1;
+          emit(
+            ctx,
+            'vote',
+            { source: source.name, player: voter.id, choice: effect.choices[index] },
+            voter.id,
+          );
+        }
+        const chosen = (tally[0] ?? 0) > (tally[1] ?? 0) ? effect.more : effect.otherwise;
+        if (chosen.length > 0)
+          yield* executeAbility(
+            ctx,
+            source,
+            { ...ability, effects: chosen },
+            targets,
+            triggerObjectCardId,
+            extraScope,
+            countTargets,
+            divisionAmounts,
+          );
         break;
       }
       case 'conditionalEffect': {

@@ -54,6 +54,7 @@
     "Bilbo, Luckwearer // Burglar's Plot": "d251e9cbbeef3703077bb0422ba6f617b5697e4148b560cc472b9b12689a5470",
     "Bilbo's Gambit": "21f251166fa3895f74a7ffd11f2914f0c02a73564ca5ab87a76680b43633bf48",
     "Biotransference": "75cf757c56952b0b058583a69b3c9be8d425de68030a2fe0d1fc3c3fa82ef0e7",
+    "Bite of the Black Rose": "84215ef9486c9d47827953d939042b83729e67e3671cb006dc668ef6309f6395",
     "Black Bolt, Inhuman King": "db53d857faae9d00e9f233eae5e77aaefaf2798661c14cc011220e1f7e5a5c23",
     "Blasphemous Edict": "6994bb591cb20faee9759d2070892083e2cea7b20e36ece110b5cc740790b4d3",
     "Bloomvine Regent // Claim Territory": "923a1d4e57487e65b17e92d1cfa6fdbf5afbd6b3d0f858826bd94ced7b8b6372",
@@ -88,6 +89,7 @@
     "Chrome Mox": "50b6f2fe62f9c9aa09d73975c9121171f1ab274b6700eede6181a025b4b3aaaf",
     "Clever Concealment": "fc013d57e113d5dedda518615a991151aaf8eaebedb9d05877a3ef90838f19fa",
     "Cloak of Confusion": "ad25a794244abd775a070eff00cdd3a8b80efa826b43b47d1f8d46d6f95849bc",
+    "Coercive Portal": "0e8d3f5950c9e0188d416adc24a8abb6b713021ab09b216c2f614f6a2aa25cc8",
     "Colossal Badger // Dig Deep": "e2de0bea44b3ebe4fcbc504727825bd38da4c3ee45e6262a40957a50cf32a070",
     "Combat Calligrapher": "14ed62e99aefd29f2bdb7438445b5787d32bdb14c528e3a05d8e02154c55bc25",
     "Comeuppance": "c51d55e7df204a7b74f5ccfe5f5a58b4349adecad02f0c0fe15b2b1940059d75",
@@ -280,6 +282,7 @@
     "Loran of the Third Path": "1113e09d5ae37057a26a4ed71a643206eb4ca8bb572b7116b0107ff2ebdd3454",
     "Lurking Predators": "c8e0377f7eee329c48107ab2ea4931f08562c81696cbdf6470863fa619c848d1",
     "Madame Null, Power Broker": "3fd679e8d950b507d99a4a070fcc8d785e9eaae1ffc54f74694a0460a67e32ed",
+    "Magister of Worth": "451bf4625ff0897b90c9916de15185ef9e81de89f0bc1be1fcfb170f7d77c653",
     "Mahadi, Emporium Master": "a30b4eb0457c37784311162d42413ea17546cc3f1b4ac7864fecb5e721713fd2",
     "Malakir Rebirth // Malakir Mire": "e0707453e36b4abf8fa1bdc6bb1870907515b78f1a6deab2881d497ca1431b7f",
     "Mana Geyser": "df0f3dd0847eb5cf60a9067bfc458c264d65562e36e24db219b209b18d74b3cd",
@@ -349,6 +352,7 @@
     "Pillar Launch": "f162418730ef90329bb2d144683d20b18a3b5cf53d6490f138478bb3202e7222",
     "Planar Void": "146d72b8e678921fad84434578e02fd647a18c6cf2733a55c2df2d45080cf066",
     "Plasmancer": "0aedfcf7611280dfaf130e91c553dbc2a0bce3d94f087201255ccd6db34ea22e",
+    "Plea for Power": "90bc766289228956478db3d2320cfc9e240f315526cc885d2f6c04685a5eec71",
     "Pollen-Shield Hare // Hare Raising": "e139ce1467890defe4570012d05bc71e1a9f3ab90acd017ac9b18133ededd3e1",
     "Power Pack": "f25d0c1c02ee8d07ec889e88ed83b5c610fbd4e0f8b87c4a266f761ced1248af",
     "Pramikon, Sky Rampart": "d702c231a2760d45148ddb29a6d6a89916d769c2b1f04d12b6e4d7e709733a9a",
@@ -389,6 +393,7 @@
     "Sagu Wildling // Roost Seek": "f997e2d8f7092364903b38c042797174867921f3f62d277c3d8976be2282394b",
     "Saheeli, Radiant Creator": "5fcdbdb1b0038c993dbfaa0905e47e68330a156d06911f6f550ed0be28799102",
     "Saheeli, Sublime Artificer": "22041222bc7cfde403035d47087197fba7f989d871488b4dcf41108c33aa408b",
+    "Sail into the West": "026e83682a1ec7bbf9fd97a7bdeeca88206da7a6d641f92350052bc19f353d7b",
     "Sarkhan, the Dragonspeaker": "150f68361dcf9407b348c0f71a49eff08d630c6cfe6b36dc335196bf58d6af81",
     "Satoru, the Infiltrator": "61506504750f785352e9318aa606928d134418fd60f7036ea0a1c5c971b5b564",
     "Sautekh Immortal": "26aff26dc163a5d13ad98195d74dcfd5d2260ab0cfad68928b3ac90c457ec21a",
@@ -490,6 +495,7 @@
     "Twining Twins // Swift Spiral": "f11ba0e7da5bb2a6cde3005674f15eddd0fc5f3f7199c2ca7bc7b40628f15186",
     "Twinmaw Stormbrood // Charring Bite": "e4a32ed5cdf16ad1fb9782f2c9f950187b93d3bc5befa3ad637ab498438aef21",
     "Two-Headed Hunter // Twice the Rage": "70dec740af0e3e6c4f015d8d470f00534cff0f462eee0ec033eb51718854f54d",
+    "Tyrant's Choice": "a56919c3dcd1a8f5f626f7b08f37346decc85d51bdf35e350a1e4c09bd8e7272",
     "Tyrant's Familiar": "c5d073e500e8090f478e0095df9dde5215600f5bcb347d0fbdbbe526b8c020c4",
     "Unbreakable Formation": "c0032b5882eac2dab751071f0e153e44f6a893f674fca87ab09b69e8ff7ecc22",
     "Unquestioned Authority": "5d0e89744f57d1bf4d94be83fcbcb618da89c0cd6c207d13a9fda6543b080e57",
@@ -903,6 +909,38 @@
       "defense": null,
       "keywords": [
         "Mill"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "026e83682a1ec7bbf9fd97a7bdeeca88206da7a6d641f92350052bc19f353d7b": {
+      "oracleId": "0a8956d0-bd37-4305-8443-4df043796f6e",
+      "scryfallId": "b293d4cb-0920-46ef-bf4e-fc6a796df290",
+      "name": "Sail into the West",
+      "manaCost": "{2}{G}{U}",
+      "cmc": 4,
+      "colors": [
+        "G",
+        "U"
+      ],
+      "colorIdentity": [
+        "G",
+        "U"
+      ],
+      "typeLine": "Instant",
+      "supertypes": [],
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "oracleText": "Will of the council — Starting with you, each player votes for return or embark. If return gets more votes, each player returns up to two cards from their graveyard to their hand, then you exile Sail into the West. If embark gets more votes or the vote is tied, each player may discard their hand and draw seven cards.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Will of the council"
       ],
       "layout": "normal",
       "commanderLegality": "legal",
@@ -1722,6 +1760,32 @@
       "defense": null,
       "keywords": [
         "Flying"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "0e8d3f5950c9e0188d416adc24a8abb6b713021ab09b216c2f614f6a2aa25cc8": {
+      "oracleId": "eea4feef-2595-4ed2-92a0-11ccb3e7d40e",
+      "scryfallId": "18e8c013-1a56-4894-a4f5-6ec564bcbe9b",
+      "name": "Coercive Portal",
+      "manaCost": "{4}",
+      "cmc": 4,
+      "colors": [],
+      "colorIdentity": [],
+      "typeLine": "Artifact",
+      "supertypes": [],
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [],
+      "oracleText": "Will of the council — At the beginning of your upkeep, starting with you, each player votes for carnage or homage. If carnage gets more votes, sacrifice this artifact and destroy all nonland permanents. If homage gets more votes or the vote is tied, draw a card.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Will of the council"
       ],
       "layout": "normal",
       "commanderLegality": "legal",
@@ -5230,6 +5294,41 @@
       "defense": null,
       "keywords": [
         "Enchant"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "451bf4625ff0897b90c9916de15185ef9e81de89f0bc1be1fcfb170f7d77c653": {
+      "oracleId": "0429d146-332f-4fb0-8273-c73679ca6d47",
+      "scryfallId": "e32b7d4b-60ac-4970-9af0-8c50623f6d64",
+      "name": "Magister of Worth",
+      "manaCost": "{4}{W}{B}",
+      "cmc": 6,
+      "colors": [
+        "B",
+        "W"
+      ],
+      "colorIdentity": [
+        "B",
+        "W"
+      ],
+      "typeLine": "Creature — Angel",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Angel"
+      ],
+      "oracleText": "Flying\nWill of the council — When this creature enters, starting with you, each player votes for grace or condemnation. If grace gets more votes, each player returns each creature card from their graveyard to the battlefield. If condemnation gets more votes or the vote is tied, destroy all creatures other than this creature.",
+      "power": "4",
+      "toughness": "4",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Flying",
+        "Will of the council"
       ],
       "layout": "normal",
       "commanderLegality": "legal",
@@ -9035,6 +9134,36 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "84215ef9486c9d47827953d939042b83729e67e3671cb006dc668ef6309f6395": {
+      "oracleId": "4db04e23-e1da-4c41-9dba-5502dfff73fb",
+      "scryfallId": "254d1363-1204-41d2-9799-34484a3eb211",
+      "name": "Bite of the Black Rose",
+      "manaCost": "{3}{B}",
+      "cmc": 4,
+      "colors": [
+        "B"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "typeLine": "Sorcery",
+      "supertypes": [],
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "oracleText": "Will of the council — Starting with you, each player votes for sickness or psychosis. If sickness gets more votes, creatures your opponents control get -2/-2 until end of turn. If psychosis gets more votes or the vote is tied, each opponent discards two cards.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Will of the council"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "84dae8d5dda46754cf0940c8ab0ae82c8f482127d11f9a9388faa97907bae26b": {
       "oracleId": "f762c225-1c8c-4f12-aa88-c8c89e0a7185",
       "scryfallId": "e77a8fd4-af5f-42b3-a87e-788baf2562dd",
@@ -9839,6 +9968,36 @@
       "loyalty": null,
       "defense": null,
       "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "90bc766289228956478db3d2320cfc9e240f315526cc885d2f6c04685a5eec71": {
+      "oracleId": "8b886623-5c96-48dd-a3d2-fd5865c58ff5",
+      "scryfallId": "9f810725-4da0-460f-b50e-a7ff05aa4c00",
+      "name": "Plea for Power",
+      "manaCost": "{3}{U}",
+      "cmc": 4,
+      "colors": [
+        "U"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "typeLine": "Sorcery",
+      "supertypes": [],
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "oracleText": "Will of the council — Starting with you, each player votes for time or knowledge. If time gets more votes, take an extra turn after this one. If knowledge gets more votes or the vote is tied, draw three cards.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Will of the council"
+      ],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
@@ -11263,6 +11422,36 @@
       "loyalty": null,
       "defense": null,
       "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "a56919c3dcd1a8f5f626f7b08f37346decc85d51bdf35e350a1e4c09bd8e7272": {
+      "oracleId": "ee7d2c2f-e32f-4be6-82ac-ff1e32055376",
+      "scryfallId": "5ed37b1c-7377-40bd-ae98-7f5ce56156b1",
+      "name": "Tyrant's Choice",
+      "manaCost": "{1}{B}",
+      "cmc": 2,
+      "colors": [
+        "B"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "typeLine": "Sorcery",
+      "supertypes": [],
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "oracleText": "Will of the council — Starting with you, each player votes for death or torture. If death gets more votes, each opponent sacrifices a creature of their choice. If torture gets more votes or the vote is tied, each opponent loses 4 life.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Will of the council"
+      ],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false

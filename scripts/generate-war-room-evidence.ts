@@ -281,6 +281,7 @@ const SOURCE_FILES = [
   'packages/engine/tests/scenarios/orcish-bowmasters.json',
   'packages/engine/tests/scenarios/path-to-exile.json',
   'packages/engine/tests/scenarios/phyrexian-metamorph.json',
+  'packages/engine/tests/scenarios/plea-for-power.json',
   'packages/engine/tests/scenarios/professional-face-breaker.json',
   'packages/engine/tests/scenarios/ragavan-nimble-pilferer.json',
   'packages/engine/tests/scenarios/ruby-medallion.json',
