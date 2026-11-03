@@ -6,10 +6,10 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 | Failing slot | Cards | Share of slots |
 | ------------ | ----: | -------------: |
-| effect | 2984 | 14.03% |
-| subject | 1059 | 5.30% |
-| line | 657 | 3.62% |
-| trigger event | 505 | 2.11% |
+| effect | 2984 | 14.01% |
+| subject | 1060 | 5.31% |
+| line | 666 | 3.66% |
+| trigger event | 495 | 2.09% |
 | cost | 307 | 1.34% |
 | condition | 184 | 0.81% |
 | target | 168 | 0.79% |
@@ -37,7 +37,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 11 × `it deals n damage to target opponent` (Abraded Bluffs, Bristling Backwoods, Jagged Barrens)
 - 10 × `prevent all combat damage that would be dealt this turn` (Fog, Spore Frog, Kami of False Hope)
 
-## subject (1059)
+## subject (1060)
 
 - 27 × `you may` (Mockingbird, Vesuva, Phantasmal Image)
 - 25 × `~` (Yahenni, Undying Partisan, Marvin, Murderous Mimic, Paradise Druid)
@@ -55,7 +55,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 6 × `artifact card with mana value n` (Whir of Invention, Trinket Mage, Trophy Mage)
 - 6 × `this artifact enters or` (Ichor Wellspring, Prized Statue, Mycosynth Wellspring)
 
-## line (657)
+## line (666)
 
 - 11 × `modular n` (Arcbound Ravager, Arcbound Crusher, Scrapyard Recombiner)
 - 10 × `toxic n` (Myr Convert, Bloated Contaminator, Blightbelly Rat)
@@ -73,7 +73,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 4 × `target creature you control deals damage equal to its power to target creature or planeswalker you don't control` (Stump Stomp, Bite Down, Master's Rebuke)
 - 4 × `partner` (Rograkh, Son of Rohgahh, Brinelin, the Moon Kraken, Ishai, Ojutai Dragonspeaker)
 
-## trigger event (505)
+## trigger event (495)
 
 - 4 × `at the beginning of each player's draw step, that player draws an additional card` (Dictate of Kruphix, Kami of the Crescent Moon, Spiteful Visions)
 - 4 × `whenever enchanted land is tapped for mana, its controller adds an additional n mana of any color` (Fertile Ground, Trace of Abundance, Buried in the Garden)

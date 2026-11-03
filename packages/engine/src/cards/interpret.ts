@@ -54,6 +54,7 @@ import {
   parseEffectSentence,
   parseExileReturnAtNextEndStepBlock,
   parseKeywordLine,
+  parseExileFaceDownPlayableBlock,
   parseLookAtTopBlock,
   parseManaSpendClause,
   parseModalSpellBlock,
@@ -2764,6 +2765,8 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
   let castFromGraveyard = false;
   let optionalAdditionalCost: CardDefinition['optionalAdditionalCost'];
   let morphCost: ParsedManaCost | undefined;
+  let faceDownVariant: CardDefinition['faceDownVariant'];
+  let asTurnedFaceUpCounters: Record<string, number> | undefined;
   let entersAsCopy: CardDefinition['entersAsCopy'];
   let alternativeCasts: import('./ability').AlternativeCast[] | undefined =
     mdfcLandFace === null ? undefined : [mdfcLandFace];
@@ -2995,7 +2998,22 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
             parseDestroyThenLoseLifeEqualToManaValueBlock(spellBlockText, card) ??
             parseLivingDeathBlock(spellBlockText) ??
             parseVictimizeBlock(spellBlockText) ??
-            parseAddendumMassBlock(spellBlockText);
+            parseAddendumMassBlock(spellBlockText) ??
+            (() => {
+              // Praetor's Grasp: a face-down exile its caster may play (CR 406.3).
+              const targets: TargetSpec[] = [];
+              const effects = parseExileFaceDownPlayableBlock(
+                spellBlockText.toLowerCase(),
+                (kind, filter, controller) =>
+                  targets.push({
+                    kind,
+                    ...(filter !== undefined ? { filter } : {}),
+                    ...(controller !== undefined ? { controller } : {}),
+                  }) - 1,
+                false,
+              );
+              return effects === null ? null : { targets, effects };
+            })();
           if (wholeSpell !== null) {
             spellTargets.push(...wholeSpell.targets);
             spellEffects.push(...wholeSpell.effects);
@@ -3778,13 +3796,27 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
     // "Morph {B}" (CR 702.37): cast face down as a 2/2 for {3} (`castFaceDown`), and turn it
     // face up any time you have priority by paying this cost (`turnFaceUp`).
     {
-      const m = lower.match(/^morph ((?:\{[^}]+\})+)(?:\s*\(.*\))?\.?$/i);
+      // "Megamorph {U}" (CR 702.37b) and "Disguise {1}{B}" (CR 702.168) are morph with a rider.
+      const m = lower.match(/^(morph|megamorph|disguise) ((?:\{[^}]+\})+)(?:\s*\(.*\))?\.?$/i);
       if (m) {
-        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+        const cost = parseManaCost((m[2] as string).toUpperCase() as never);
         if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
           morphCost = cost.cost;
+          if (m[1] !== 'morph') faceDownVariant = m[1] as 'megamorph' | 'disguise';
           continue;
         }
+      }
+    }
+    // "As this creature is turned face up, put five +1/+1 counters on it" (Hooded Hydra): the
+    // counters are there as it turns face up, before its "turned face up" triggers (CR 708.8).
+    {
+      const m = lower.match(
+        /^as (?:~|this creature) is turned face up, put (\w+) ([+-]\d+\/[+-]\d+|\w+) counters? on it$/,
+      );
+      const n = m === null ? null : parseAmount(m[1] as string);
+      if (m !== null && n !== null && n > 0) {
+        asTurnedFaceUpCounters = { [m[2] as string]: n };
+        continue;
       }
     }
     // "Replicate {2}" (CR 702.56a): an additional cost payable any number of times, and a cast
@@ -4199,6 +4231,8 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
       ...(announcesX ? { announcesX: true } : {}),
       ...(optionalAdditionalCost !== undefined ? { optionalAdditionalCost } : {}),
       ...(morphCost !== undefined ? { morphCost } : {}),
+      ...(faceDownVariant !== undefined && morphCost !== undefined ? { faceDownVariant } : {}),
+      ...(asTurnedFaceUpCounters !== undefined ? { asTurnedFaceUpCounters } : {}),
       ...(entersAsCopy !== undefined ? { entersAsCopy } : {}),
       modeled: reasons.length === 0,
       unmodeledReasons: reasons,

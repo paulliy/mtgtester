@@ -679,6 +679,8 @@ const effectExpressions = {
   chaosWarp: {},
   manifestTop: {},
   manifestTopForTargetController: {},
+  manifestDread: {},
+  exileFaceDownPlayable: {},
   opponentMayDrawOrMillThenDamage: {},
   lookAtTopNCastOneFree: {
     count: (value, path, issues) =>

@@ -19,6 +19,7 @@ export function triggerEventFamily(
     case 'dealsDamageToOpponent':
     case 'becomesTapped':
     case 'becomesCrewed':
+    case 'turnedFaceUp':
     case 'fights':
     case 'becomesTargeted':
     case 'enchantedPlayerAttacked':
@@ -111,6 +112,7 @@ export function triggerProvidesEventPlayer(when: TriggerHead['when']): boolean {
     case 'becomesBlocked':
     case 'becomesTapped':
     case 'becomesCrewed':
+    case 'turnedFaceUp':
     case 'fights':
     case 'dealtDamage':
     case 'sacrificed':

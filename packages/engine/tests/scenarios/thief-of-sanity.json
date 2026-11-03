@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "card": "Thief of Sanity",
+  "supportCards": [
+    {
+      "name": "Scenario Elk",
+      "typeLine": "Creature \u2014 Elk",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2",
+      "oracleText": ""
+    },
+    {
+      "name": "Scenario Ant",
+      "typeLine": "Creature \u2014 Insect",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1",
+      "oracleText": ""
+    },
+    {
+      "name": "Scenario Bee",
+      "typeLine": "Creature \u2014 Insect",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1",
+      "oracleText": ""
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "thief-hits-exiles-one",
+      "title": "Thief of Sanity: combat damage exiles one of the top three face down; the rest go to the graveyard",
+      "clauses": [1, 2],
+      "instructions": ["Attack P2 with Thief of Sanity; exile Scenario Elk face down."],
+      "expectedOutcome": "Scenario Elk is exiled face down; Scenario Ant and Scenario Bee are in P2's graveyard; P2 is at 38.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Thief of Sanity"]
+        },
+        "P2": {
+          "libraryTop": ["Scenario Ant", "Scenario Elk", "Scenario Bee"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P1",
+          "choose": "Exile face down Scenario Elk"
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "exile",
+            "has": ["Scenario Elk"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "has": ["Scenario Ant", "Scenario Bee"]
+          }
+        },
+        {
+          "life": {
+            "player": "P2",
+            "equals": 38
+          }
+        }
+      ]
+    }
+  ]
+}

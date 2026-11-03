@@ -25,6 +25,7 @@ import {
   manaSourcesFor,
   playersInApnapOrder,
 } from '../state/queries';
+import { faceDownExileVisibleTo } from './face-down';
 import { computeCharacteristics } from '../effects/continuous';
 import { playerById } from '../state/objects';
 import type { EngineCardObject, EnginePlayerState, GameContext } from '../state/types';
@@ -144,8 +145,10 @@ function permanentViews(ctx: GameContext): PermanentView[] {
  */
 function exileViews(ctx: GameContext, playerId: PlayerId): CardView[] {
   return ctx.state.exile.map((card) =>
-    (card.attachedToCardId === undefined && card.foretold === undefined) ||
-    card.ownerId === playerId
+    (card.attachedToCardId === undefined &&
+      card.foretold === undefined &&
+      card.exiledFaceDown !== true) ||
+    faceDownExileVisibleTo(card, playerId)
       ? nameOnlyView(card.id, card.name)
       : nameOnlyView(card.id, 'Face-down card'),
   );

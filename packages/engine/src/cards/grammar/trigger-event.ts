@@ -31,7 +31,7 @@ import { noteSlotFailure } from './diagnostics';
  * they are the same event seen from two vantage points (see `TriggerSubject`).
  */
 export const OBJECT_TRIGGER_HEAD_RE =
-  /^when(?:ever)? (.+?) (enters from (?:a|your) graveyard|enters or leaves the battlefield|enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|leaves the battlefield|is put into a graveyard from the battlefield or is put into exile from the battlefield|is put into a graveyard from the battlefield|dies or is put into exile from the battlefield|dies|attacks|becomes tapped|becomes crewed|deals combat damage to a player), (.*)$/;
+  /^when(?:ever)? (.+?) (enters from (?:a|your) graveyard|enters or leaves the battlefield|enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|leaves the battlefield|is put into a graveyard from the battlefield or is put into exile from the battlefield|is put into a graveyard from the battlefield|dies or is put into exile from the battlefield|dies|attacks|becomes tapped|becomes crewed|is turned face up|deals combat damage to a player), (.*)$/;
 
 export const STEP_TRIGGER_HEAD_RE =
   /^at the beginning of (your|each(?: player's)?) (upkeep|end step|combat|first main phase|precombat main phase), (.*)$/;
@@ -462,11 +462,14 @@ function parseTriggerHeadUntraced(firstLine: string, card: OracleCard): ParsedTr
                 ? // City of Brass. `becomesTapped` is queued from every tap path already, including
                   // `payAbilityCosts(..., 'tapForMana')` - so tapping the land for mana fires it.
                   ['becomesTapped']
-                : event === 'becomes crewed'
-                  ? // Ghost Ark. Queued only when a crew ability resolves (CR 702.122e), never
-                    // from another "becomes an artifact creature" effect.
-                    ['becomesCrewed']
-                  : ['dealsCombatDamageToPlayer'];
+                : event === 'is turned face up'
+                  ? // Morph, megamorph, disguise and manifest (CR 708.8); queued by `turnFaceUp`.
+                    ['turnedFaceUp']
+                  : event === 'becomes crewed'
+                    ? // Ghost Ark. Queued only when a crew ability resolves (CR 702.122e), never
+                      // from another "becomes an artifact creature" effect.
+                      ['becomesCrewed']
+                    : ['dealsCombatDamageToPlayer'];
     body = m[3] as string;
 
     let subject: TriggerSubject;

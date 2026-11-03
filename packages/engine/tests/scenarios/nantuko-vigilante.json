@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "card": "Nantuko Vigilante",
+  "supportCards": [
+    {
+      "name": "Scenario Relic",
+      "typeLine": "Artifact",
+      "manaCost": "{2}",
+      "oracleText": ""
+    },
+    {
+      "name": "Scenario Rock",
+      "typeLine": "Artifact",
+      "manaCost": "{2}",
+      "oracleText": ""
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "vigilante-turned-up-destroys",
+      "title": "Nantuko Vigilante: turned face up, it destroys an artifact",
+      "clauses": [1, 2],
+      "instructions": [
+        "Cast Nantuko Vigilante face down for {3}.",
+        "Turn it face up for {1}{G}; its trigger destroys P2's Scenario Relic."
+      ],
+      "expectedOutcome": "Nantuko Vigilante is face up and Scenario Relic is in P2's graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Nantuko Vigilante"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest", "Forest"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Relic"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Nantuko Vigilante face down/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Turn Nantuko Vigilante face up/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Nantuko Vigilante"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "has": ["Scenario Relic"]
+          }
+        },
+        {
+          "event": {
+            "type": "turnedFaceUp",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "vigilante-cast-face-up-no-trigger",
+      "title": "Nantuko Vigilante: cast face up, it never triggers",
+      "clauses": [2],
+      "instructions": ["Cast Nantuko Vigilante face up for {3}{G}."],
+      "expectedOutcome": "It enters face up and Scenario Relic stays: being turned face up is not entering.",
+      "seats": {
+        "P1": {
+          "hand": ["Nantuko Vigilante"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Relic"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Nantuko Vigilante(?! face down)/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "battlefield",
+            "has": ["Scenario Relic"]
+          }
+        },
+        {
+          "event": {
+            "type": "triggerOnStack",
+            "count": 0
+          }
+        }
+      ]
+    }
+  ]
+}

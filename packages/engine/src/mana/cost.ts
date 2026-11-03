@@ -1095,3 +1095,20 @@ export function combinedManaCost(a: ParsedManaCost, b: ParsedManaCost): ParsedMa
     ...(phyrexian.length > 0 ? { phyrexian } : {}),
   };
 }
+
+/**
+ * "Mana of any type can be spent to cast that spell" (Gonti, Lord of Luxury): every colored,
+ * colorless and hybrid pip may be paid by any mana, which is exactly a generic pip. Phyrexian pips
+ * keep their life alternative. Restrictions on the mana and the record of what was spent are
+ * unchanged, since the same mana entries pay.
+ */
+export function anyTypeCost(cost: ParsedManaCost): ParsedManaCost {
+  const colored = ALL_COLORS.reduce((sum, color) => sum + cost.colored[color], 0);
+  const { hybrid: _hybrid, ...rest } = cost;
+  return {
+    ...rest,
+    generic: cost.generic + colored + cost.colorless + (cost.hybrid?.length ?? 0),
+    colorless: 0,
+    colored: { W: 0, U: 0, B: 0, R: 0, G: 0 },
+  };
+}

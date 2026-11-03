@@ -115,6 +115,7 @@ export const TRIGGER_SCOPE_FIELDS: Record<TriggerWhen, readonly ScopeField[]> = 
   becomesBlocked: [],
   becomesTapped: [],
   becomesCrewed: [],
+  turnedFaceUp: [],
   fights: [],
   dealtDamage: ['damageDealt'],
   sacrificed: [],

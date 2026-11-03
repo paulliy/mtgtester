@@ -69,6 +69,7 @@ import {
   totalPips,
   withX,
 } from '../mana/cost';
+import { anyTypeCost } from '../mana/cost';
 import type { ManaSource, ParsedManaCost, PaymentPlan } from '../mana/cost';
 import {
   activatingAbilitiesBlockedFor,
@@ -791,9 +792,15 @@ export function computePriorityOptions(
     ) =>
       planSpellPayment(paymentCtx, paymentPlayer, {
         mana:
-          fromExile && obj.playableUntilEotBy === player.id && obj.spendAsAnyColorUntilEot === true
-            ? { ...mana, spendAsAnyColor: true }
-            : mana,
+          fromExile &&
+          obj.playableUntilEotBy === player.id &&
+          obj.spendAsAnyTypeWhileExiled === true
+            ? anyTypeCost(mana)
+            : fromExile &&
+                obj.playableUntilEotBy === player.id &&
+                obj.spendAsAnyColorUntilEot === true
+              ? { ...mana, spendAsAnyColor: true }
+              : mana,
         costs,
         sourceCardId: obj.cardId,
         sourceOracleId: obj.oracleId,

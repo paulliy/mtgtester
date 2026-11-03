@@ -27,7 +27,7 @@ import { evaluateCondition } from '../cards/condition';
 import { mdfcLandFaceDefinition } from '../cards/spell-faces';
 import type { AbilityCost } from '../cards/definition';
 import type { DecisionOutcome, GameGen } from '../decisions';
-import { payAbilityCosts, payManaCost } from '../effects/resolve';
+import { payAbilityCosts, payManaCost, placeCountersOn } from '../effects/resolve';
 import { computeCharacteristics } from '../effects/continuous';
 
 import { emit, debug } from '../log/log';
@@ -40,6 +40,7 @@ import {
   moveObject,
   queueActivationTriggers,
   queuePlayerTriggersForEvent,
+  queueTriggersForObject,
   unlockRoomDoor,
 } from '../state/objects';
 import {
@@ -649,8 +650,17 @@ export function* applyPriorityAction(
       // CR 708.8: it keeps its status, counters and damage, and does not enter the battlefield.
       perm.faceDown = false;
       delete perm.manifested;
-      perm.name = getDefByOracleId(ctx, perm.oracleId, perm.name).name;
+      delete perm.faceDownWard;
+      const faceUp = getDefByOracleId(ctx, perm.oracleId, perm.name);
+      perm.name = faceUp.name;
       emit(ctx, 'turnedFaceUp', { name: perm.name, cardId: perm.cardId }, player.id);
+      // Megamorph (CR 702.37b): turned up for its megamorph cost, it gets a +1/+1 counter; and
+      // "as it is turned face up" counters (Hooded Hydra) are there before any trigger sees it.
+      if (faceUp.faceDownVariant === 'megamorph' && way.via === undefined)
+        placeCountersOn(ctx, perm, '+1/+1', 1);
+      for (const [counter, count] of Object.entries(faceUp.asTurnedFaceUpCounters ?? {}))
+        placeCountersOn(ctx, perm, counter, count);
+      queueTriggersForObject(ctx, 'turnedFaceUp', perm);
       return;
     }
 

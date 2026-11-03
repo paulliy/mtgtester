@@ -18876,6 +18876,169 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "28ea78dc-7ad6-4006-aaf8-4b25057ec019": {
+      "name": "Nantuko Vigilante",
+      "oracleSha256": "cefc5c5d355546425c93640efb61b3ee3ddd9c5b918a48ec7a943a05c1d6722e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Morph {1}{G}",
+          "implementation": [
+            "morph {1}{G}: cast face down for {3}, turn face up as a special action (CR 702.37)"
+          ],
+          "engineTestIds": ["cards/nantuko-vigilante.test.ts::vigilante-turned-up-destroys"],
+          "viewerScenarioIds": ["vigilante-turned-up-destroys"]
+        },
+        {
+          "oracleText": "When this creature is turned face up, destroy target artifact or enchantment.",
+          "implementation": [
+            "turnedFaceUp (self) trigger event (new), queued by the turn-face-up special action (CR 708.8); destroy target artifact or enchantment"
+          ],
+          "engineTestIds": [
+            "cards/nantuko-vigilante.test.ts::vigilante-turned-up-destroys",
+            "cards/nantuko-vigilante.test.ts::vigilante-cast-face-up-no-trigger"
+          ],
+          "viewerScenarioIds": ["vigilante-turned-up-destroys", "vigilante-cast-face-up-no-trigger"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "bde976c6-afed-44bb-8e3d-4103289dff5e": {
+      "name": "Gudul Lurker",
+      "oracleSha256": "2c3eaaf1c2f4d3949f482585cf60eec4ee5ad195f5724d20c4fb0cb4dd2471bf",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Megamorph {U}",
+          "implementation": [
+            "megamorph {U} (new): morphCost + faceDownVariant megamorph; turned face up for that cost, it gets a +1/+1 counter (CR 702.37b)"
+          ],
+          "engineTestIds": [
+            "cards/gudul-lurker.test.ts::lurker-megamorph-counter",
+            "cards/gudul-lurker.test.ts::lurker-cast-face-up-no-counter"
+          ],
+          "viewerScenarioIds": ["lurker-megamorph-counter", "lurker-cast-face-up-no-counter"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c1d9c41a-0941-4b7e-b8a6-890d30386458": {
+      "name": "Hunted Bonebrute",
+      "oracleSha256": "dfa3026556bd64246990c2339a39fcd2d9e5d2e6d7306bb584a2160f23fec682",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Disguise {1}{B}",
+          "implementation": [
+            "disguise {1}{B} (new): morphCost + faceDownVariant disguise; cast face down, the permanent has ward {2} (faceDownWard, CR 702.168a), cleared as it turns face up"
+          ],
+          "engineTestIds": [
+            "cards/hunted-bonebrute.test.ts::bonebrute-disguise-ward",
+            "cards/hunted-bonebrute.test.ts::bonebrute-turned-up"
+          ],
+          "viewerScenarioIds": ["bonebrute-disguise-ward", "bonebrute-turned-up"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "637ddd65-112d-40f7-9bab-a61724d9165c": {
+      "name": "Hooded Hydra",
+      "oracleSha256": "576562e4f5b294c5c4c48aa1437b3774af944aae580b5b30548a7511712585f3",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Morph {3}{G}{G}",
+          "implementation": ["morph {3}{G}{G}"],
+          "engineTestIds": ["cards/hooded-hydra.test.ts::hydra-turned-up-five-counters"],
+          "viewerScenarioIds": ["hydra-turned-up-five-counters"]
+        },
+        {
+          "oracleText": "As this creature is turned face up, put five +1/+1 counters on it.",
+          "implementation": [
+            "asTurnedFaceUpCounters (new): five +1/+1 counters placed as it turns face up, before its turned-face-up triggers (CR 708.8)"
+          ],
+          "engineTestIds": ["cards/hooded-hydra.test.ts::hydra-turned-up-five-counters"],
+          "viewerScenarioIds": ["hydra-turned-up-five-counters"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "114725ef-ac81-4d13-9153-0a303c3ce9c4": {
+      "name": "Innocuous Rat",
+      "oracleSha256": "d6c8f84df61474d5541ec36019e5585c86db107dfc028f362257d206886a496b",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature dies, manifest dread.",
+          "implementation": [
+            "dies trigger; Effect.manifestDread (new, CR 701.62a): look at the top two, manifest one face down, the other to the graveyard"
+          ],
+          "engineTestIds": ["cards/innocuous-rat.test.ts::rat-dies-manifest-dread"],
+          "viewerScenarioIds": ["rat-dies-manifest-dread"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d5be0ff6-39d9-4f9f-a028-e62dc38463f2": {
+      "name": "Gonti, Lord of Luxury",
+      "oracleSha256": "3d75366c1dcf191f0384f54341c49d028a78c577a69518e0180cc825da1040e1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When Gonti enters, look at the top four cards of target opponent's library, exile one of them face down, then put the rest on the bottom of that library in a random order. You may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell.",
+          "implementation": [
+            "enters trigger with a target opponent; Effect.exileFaceDownPlayable (new): look at the top four, exile one face down, the rest to the bottom in a random order",
+            "only the exiler may look at it (faceDownVisibleTo, CR 406.3); cast permission lasts while exiled (playableWhileExiled); mana of any type (anyTypeCost)"
+          ],
+          "engineTestIds": [
+            "cards/gonti-lord-of-luxury.test.ts::gonti-exile-and-cast-any-type",
+            "cards/gonti-lord-of-luxury.test.ts::gonti-later-turn",
+            "cards/gonti-lord-of-luxury.test.ts::gonti-c02-privacy",
+            "cards/gonti-lord-of-luxury.test.ts::gonti-c02-lasts"
+          ],
+          "viewerScenarioIds": ["gonti-exile-and-cast-any-type", "gonti-later-turn"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "68b51d58-7566-4a26-8c31-8da32799bea7": {
+      "name": "Thief of Sanity",
+      "oracleSha256": "44352787996dea003a98385b5d1be63c2be3915a0495ff7de8a606115a9e5bf0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Flying",
+          "implementation": ["flying keyword"],
+          "engineTestIds": ["cards/thief-of-sanity.test.ts::thief-hits-exiles-one"],
+          "viewerScenarioIds": ["thief-hits-exiles-one"]
+        },
+        {
+          "oracleText": "Whenever this creature deals combat damage to a player, look at the top three cards of that player's library, exile one of them face down, then put the rest into their graveyard. You may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell.",
+          "implementation": [
+            "combat damage to a player trigger; Effect.exileFaceDownPlayable from the event player's library, rest to the graveyard"
+          ],
+          "engineTestIds": ["cards/thief-of-sanity.test.ts::thief-hits-exiles-one"],
+          "viewerScenarioIds": ["thief-hits-exiles-one"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6d56aeb1-0a50-46b6-abdb-cd6575a98dc3": {
+      "name": "Praetor's Grasp",
+      "oracleSha256": "fddcf76ddaa649c4b02d29e534d7f28189bece057e52a5e23b4dec382c4696c5",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Search target opponent's library for a card and exile it face down. Then that player shuffles. You may play that card for as long as it remains exiled.",
+          "implementation": [
+            "Effect.exileFaceDownPlayable search mode: search target opponent's library, exile face down, shuffle; play (lands included) while exiled"
+          ],
+          "engineTestIds": ["cards/praetors-grasp.test.ts::grasp-search-and-play-land"],
+          "viewerScenarioIds": ["grasp-search-and-play-land"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

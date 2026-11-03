@@ -179,6 +179,62 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'gonti-lord-of-luxury.json',
+    file: scenarioFile(
+      'gonti-lord-of-luxury.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/gonti-lord-of-luxury.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'gudul-lurker.json',
+    file: scenarioFile(
+      'gudul-lurker.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/gudul-lurker.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'hooded-hydra.json',
+    file: scenarioFile(
+      'hooded-hydra.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/hooded-hydra.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'hunted-bonebrute.json',
+    file: scenarioFile(
+      'hunted-bonebrute.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/hunted-bonebrute.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'innocuous-rat.json',
+    file: scenarioFile(
+      'innocuous-rat.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/innocuous-rat.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'inspiring-call.json',
     file: scenarioFile(
       'inspiring-call.json',
@@ -232,6 +288,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'nantuko-vigilante.json',
+    file: scenarioFile(
+      'nantuko-vigilante.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/nantuko-vigilante.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'orcish-bowmasters.json',
     file: scenarioFile(
       'orcish-bowmasters.json',
@@ -273,6 +342,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       'plea-for-power.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/plea-for-power.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'praetors-grasp.json',
+    file: scenarioFile(
+      'praetors-grasp.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/praetors-grasp.json', import.meta.url),
         'utf8',
       ),
     ),
@@ -372,6 +451,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       'the-ozolith.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/the-ozolith.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'thief-of-sanity.json',
+    file: scenarioFile(
+      'thief-of-sanity.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/thief-of-sanity.json',
+          import.meta.url,
+        ),
         'utf8',
       ),
     ),

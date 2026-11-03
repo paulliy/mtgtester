@@ -640,6 +640,56 @@ export function parseExileTopPlayableBlock(lower: string): Effect[] | null {
  * refer to "them" and "the rest", which only mean anything relative to the first. Parsing them
  * independently would need the IR to carry a revealed set between ops, which it does not.
  */
+/**
+ * "Look at the top four cards of target opponent's library, exile one of them face down, then
+ * put the rest on the bottom of that library in a random order. You may cast that card for as
+ * long as it remains exiled, and mana of any type can be spent to cast that spell." (Gonti; Thief
+ * of Sanity reads "that player's library … into their graveyard"), and Praetor's Grasp's search.
+ * `eventPlayer` says whether "that player" has a referent (a combat-damage head).
+ */
+export function parseExileFaceDownPlayableBlock(
+  lower: string,
+  alloc: SlotAllocator,
+  eventPlayer: boolean,
+): Effect[] | null {
+  const text = lower.replace(/\.$/, '');
+  const look = text.match(
+    /^look at the top (\w+) cards of (target opponent's|that player's) library, exile one of them face down, then put the rest (on the bottom of that library in a random order|into their graveyard)\. you may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell$/,
+  );
+  if (look !== null) {
+    const count = parseAmount(look[1] as string);
+    if (count === null || count < 1) return null;
+    if (look[2] === "that player's" && !eventPlayer) return null;
+    return [
+      {
+        op: 'exileFaceDownPlayable',
+        library:
+          look[2] === "that player's" ? 'eventPlayer' : alloc('player', undefined, 'opponent'),
+        from: {
+          look: count,
+          rest: look[3] === 'into their graveyard' ? 'graveyard' : 'bottomRandom',
+        },
+        castOnly: true,
+        anyType: true,
+      },
+    ];
+  }
+  if (
+    text ===
+    "search target opponent's library for a card and exile it face down. then that player shuffles. you may play that card for as long as it remains exiled"
+  )
+    return [
+      {
+        op: 'exileFaceDownPlayable',
+        library: alloc('player', undefined, 'opponent'),
+        from: 'search',
+        castOnly: false,
+        anyType: false,
+      },
+    ];
+  return null;
+}
+
 /** Thrown when a vote outcome would allocate a target slot, which the vote cannot announce. */
 class VoteTargetRefused extends Error {}
 
@@ -1591,6 +1641,8 @@ function parseEffectSentenceUntraced(
         ];
     }
   }
+  // "Manifest dread" (CR 701.62a, Innocuous Rat).
+  if (s === 'manifest dread') return [{ op: 'manifestDread', player: 'you' }];
   // "Take an extra turn after this one" (Plea for Power's time outcome, CR 500.7).
   if (s === 'take an extra turn after this one') return [{ op: 'takeExtraTurn' }];
   // "Each player draws a card" (Faerie Mastermind) / "each opponent draws two cards".
@@ -3501,6 +3553,11 @@ export function parseTriggerLine(line: string, card: OracleCard): Ability[] | nu
     paidTransform ??
     (modalBlock === null
       ? (parseBlinkChosenBlock(body, allocCount) ??
+        parseExileFaceDownPlayableBlock(
+          body,
+          alloc,
+          heads.every((head) => head.when === 'dealsCombatDamageToPlayer'),
+        ) ??
         parseLookAtTopBlock(body, card) ??
         parseExileTopPlayableBlock(body) ??
         parseAddManaTriggerBlock(body, card) ??

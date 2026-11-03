@@ -1396,6 +1396,27 @@ export function addSagaLoreCounters(ctx: GameContext, playerId: PlayerId): void 
  * A single placement is the one-placement case of the simultaneous batch, with the ability's
  * controller as the placing player; the return value stays "counters actually placed".
  */
+/** Counters a permanent puts on itself outside an ability's resolution (turning face up). */
+export function placeCountersOn(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  counter: string,
+  count: number,
+): number {
+  return addCounters(
+    ctx,
+    {
+      cardId: perm.cardId,
+      name: perm.name,
+      oracleId: perm.oracleId,
+      controllerId: perm.controllerId,
+    },
+    perm,
+    counter,
+    count,
+  );
+}
+
 function addCounters(
   ctx: GameContext,
   source: EffectSource,
@@ -7738,6 +7759,91 @@ function* executeAbilityEffects(
         });
         break;
       }
+      case 'exileFaceDownPlayable': {
+        const ownerId =
+          effect.library === 'eventPlayer' ? drawRecipient('eventPlayer').id : ref(effect.library);
+        const owner =
+          ownerId === null ? undefined : ctx.state.players.find((p) => p.id === ownerId);
+        if (owner === undefined || owner.hasLost) {
+          noop(ctx, 'exileFaceDownPlayable', 'targetIllegal');
+          break;
+        }
+        const candidates =
+          effect.from === 'search' ? [...owner.library] : owner.library.slice(0, effect.from.look);
+        const chosen = yield* chooseCard(ctx, {
+          player: controller.id,
+          prompt:
+            effect.from === 'search'
+              ? `${source.name}: search ${owner.id}'s library for a card to exile face down.`
+              : `${source.name}: choose a card to exile face down.`,
+          cards: candidates,
+          type: 'exileFaceDown',
+          verb: 'Exile face down',
+          ...(effect.from === 'search'
+            ? {
+                decline: { type: 'findNothing', description: 'Find nothing', verb: 'Find nothing' },
+              }
+            : {}),
+        });
+        if (chosen !== null) {
+          const moved = (yield* moveObject(ctx, chosen, {
+            zone: 'exile',
+            faceDown: true,
+          })) as EngineCardObject | null;
+          if (moved !== null && moved.zone === 'exile') {
+            moved.playableUntilEotBy = controller.id;
+            moved.playableWhileExiled = true;
+            moved.faceDownVisibleTo = [controller.id];
+            if (effect.castOnly) moved.castOnlyUntilEot = true;
+            if (effect.anyType) moved.spendAsAnyTypeWhileExiled = true;
+          }
+        }
+        if (effect.from === 'search') shuffleLibrary(ctx, owner);
+        else {
+          const rest = candidates.filter((card) => card !== chosen && owner.library.includes(card));
+          if (effect.from.rest === 'graveyard') {
+            for (const card of rest) yield* moveObject(ctx, card, { zone: 'graveyard' });
+          } else {
+            ctx.rng.shuffle(rest);
+            for (const card of rest) {
+              owner.library.splice(owner.library.indexOf(card), 1);
+              owner.library.push(card);
+            }
+          }
+        }
+        break;
+      }
+      case 'manifestDread': {
+        const playerId =
+          effect.player === 'eventPlayer' ? drawRecipient('eventPlayer').id : controller.id;
+        const player = playerById(ctx, playerId);
+        const looked = player.library.slice(0, 2);
+        if (looked.length === 0) {
+          noop(ctx, 'manifestDread', 'nothingQualifies');
+          break;
+        }
+        const chosen =
+          looked.length === 1
+            ? looked[0]!
+            : ((yield* chooseCard(ctx, {
+                player: player.id,
+                prompt: `${source.name}: manifest dread — choose the card to put onto the battlefield face down; the other goes to your graveyard.`,
+                cards: looked,
+                type: 'manifestDread',
+                verb: 'Manifest',
+              })) ?? looked[0]!);
+        yield* moveObject(ctx, chosen, {
+          zone: 'battlefield',
+          controllerId: player.id,
+          faceDown: true,
+          manifested: true,
+        });
+        for (const card of looked)
+          if (card !== chosen && player.library.includes(card))
+            yield* moveObject(ctx, card, { zone: 'graveyard' });
+        emit(ctx, 'manifestDread', { player: player.id, source: source.name }, player.id);
+        break;
+      }
       case 'manifestTopForTargetController': {
         const targetId = ref(effect.target);
         const target = targetId === null ? undefined : findPermanent(ctx, targetId);
@@ -10654,6 +10760,7 @@ export function endUntilEotEffects(ctx: GameContext): void {
     delete perm.copyNameOverride;
   }
   for (const card of ctx.state.exile) {
+    if (card.playableWhileExiled === true) continue;
     if (card.playableUntilEotBy !== undefined) delete card.playableUntilEotBy;
     delete card.castOnlyUntilEot;
     delete card.spendAsAnyColorUntilEot;

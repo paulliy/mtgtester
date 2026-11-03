@@ -382,6 +382,8 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   chaosWarp: { target: permanent },
   manifestTop: {},
   manifestTopForTargetController: { target: permanent },
+  manifestDread: {},
+  exileFaceDownPlayable: { library: player },
   opponentMayDrawOrMillThenDamage: { target: player },
   lookAtTopNCastOneFree: {},
   castAnyFromHandFree: {},

@@ -156,6 +156,8 @@ export interface MoveDestination {
   /** With `faceDown`: it was manifested, so a creature card can be turned face up for its mana
    * cost (CR 701.40b). A face-down spell that resolves is not manifested. */
   manifested?: true;
+  /** It enters face down with ward {2} (disguise, cloak). */
+  faceDownWard?: true;
   /** Library only: where to put it. Defaults to 'top'. Index 0 is the top. */
   libraryPosition?: 'top' | 'bottom';
   /**
@@ -1135,6 +1137,7 @@ export function* moveObject(
     perm.attachedTo = target.attachedTo ?? null;
     if (target.bestowed === true && perm.attachedTo !== null) perm.bestowed = true;
     if (target.manifested === true && perm.faceDown === true) perm.manifested = true;
+    if (target.faceDownWard === true && perm.faceDown === true) perm.faceDownWard = true;
     ctx.state.battlefield.push(perm);
     next = perm;
     if (target.addTypes !== undefined && target.addTypes.length > 0) {

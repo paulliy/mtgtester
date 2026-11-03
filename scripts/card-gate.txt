@@ -195,3 +195,11 @@ packages/engine/tests/cards/witch-enchanter.test.ts
 packages/engine/tests/move-all-counters.test.ts
 packages/engine/tests/cards/plea-for-power.test.ts
 packages/server/src/cards/edhrec-pins.test.ts
+packages/engine/tests/cards/nantuko-vigilante.test.ts
+packages/engine/tests/cards/gudul-lurker.test.ts
+packages/engine/tests/cards/hunted-bonebrute.test.ts
+packages/engine/tests/cards/hooded-hydra.test.ts
+packages/engine/tests/cards/innocuous-rat.test.ts
+packages/engine/tests/cards/gonti-lord-of-luxury.test.ts
+packages/engine/tests/cards/thief-of-sanity.test.ts
+packages/engine/tests/cards/praetors-grasp.test.ts

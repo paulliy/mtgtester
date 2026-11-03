@@ -37,7 +37,7 @@ import { selectedPermanentDefinition } from '../cards/spell-faces';
 import { counterCount, KEYWORD_COUNTERS } from '../state/counters';
 import { evaluateCondition } from '../cards/condition';
 import type { Condition } from '../cards/condition';
-import type { ManaAbilitySpec } from '../cards/ability';
+import type { ManaAbilitySpec, WardCost } from '../cards/ability';
 import type { Characteristics, ContinuousOp, StaticEffect } from '../cards/continuous-types';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches, selectorIsEventOnly } from '../cards/selector';
@@ -45,7 +45,7 @@ import { CREATURE_TYPES } from '../cards/creature-types';
 import { evaluateValue, isDynamicValue } from '../cards/value';
 import type { LayerValueScope } from '../cards/value';
 import type { ManaUnit } from '../mana/cost';
-import { manaValueOf, parseManaCost } from '../mana/cost';
+import { manaValueOf, parseManaCost, type ParsedManaCost } from '../mana/cost';
 import type { EnginePermanent, GameContext } from '../state/types';
 import { digestOf, getCached, sampleCacheHit, setCached } from './layer-cache';
 
@@ -1013,7 +1013,9 @@ function runLayerPass(
             ? transformFace !== undefined
               ? (transformFace.ward ?? null)
               : (def.ward ?? null)
-            : null,
+            : perm.faceDown === true && perm.faceDownWard === true
+              ? FACE_DOWN_WARD
+              : null,
         protectionFrom:
           !perm.faceDown && landFace === undefined
             ? [
@@ -1168,6 +1170,12 @@ export function selectPermanents(
 }
 
 /** Compute one permanent's current characteristics through the layer system. */
+/** Ward {2} of a face-down permanent cast with disguise or cloaked (CR 702.168a, 701.58a). */
+const FACE_DOWN_WARD: WardCost = {
+  kind: 'mana',
+  cost: parseManaCost('{2}').cost as ParsedManaCost,
+};
+
 export function computeCharacteristics(ctx: GameContext, perm: EnginePermanent): Characteristics {
   // Only pass `extra` when the permanent is genuinely off the battlefield — otherwise every
   // query for a different permanent would be a distinct cache key and never hit.

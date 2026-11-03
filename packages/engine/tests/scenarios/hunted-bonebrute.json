@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "card": "Hunted Bonebrute",
+  "supportCards": [
+    {
+      "name": "Scenario Bolt",
+      "typeLine": "Instant",
+      "manaCost": "{R}",
+      "oracleText": "Scenario Bolt deals 3 damage to any target."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "bonebrute-disguise-ward",
+      "title": "Hunted Bonebrute: cast with disguise, the face-down 2/2 has ward {2}",
+      "clauses": [4],
+      "instructions": [
+        "Cast Hunted Bonebrute face down for {3}.",
+        "P2 casts Scenario Bolt at it and cannot pay ward {2}."
+      ],
+      "expectedOutcome": "Scenario Bolt is countered by ward and the face-down permanent survives.",
+      "seats": {
+        "P1": {
+          "hand": ["Hunted Bonebrute"],
+          "battlefield": ["Swamp", "Swamp", "Swamp"]
+        },
+        "P2": {
+          "hand": ["Scenario Bolt"],
+          "battlefield": ["Mountain"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Hunted Bonebrute face down/"
+        },
+        {
+          "player": "P2",
+          "choose": "Pass priority"
+        },
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Bolt/",
+          "targets": ["Face-down permanent"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Face-down permanent"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "has": ["Scenario Bolt"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "bonebrute-turned-up",
+      "title": "Hunted Bonebrute: turned face up for its disguise cost",
+      "clauses": [4],
+      "instructions": ["Cast Hunted Bonebrute face down for {3}, then turn it face up for {1}{B}."],
+      "expectedOutcome": "Hunted Bonebrute is face up; turning face up is not entering, so P2 gets no Dogs.",
+      "seats": {
+        "P1": {
+          "hand": ["Hunted Bonebrute"],
+          "battlefield": ["Swamp", "Swamp", "Swamp", "Swamp", "Swamp"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Hunted Bonebrute face down/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Turn Hunted Bonebrute face up/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Hunted Bonebrute"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "battlefield",
+            "lacks": ["Dog"]
+          }
+        }
+      ]
+    }
+  ]
+}

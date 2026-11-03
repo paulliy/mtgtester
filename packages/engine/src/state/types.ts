@@ -411,6 +411,11 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
   faceDown?: boolean;
   /** Face down because it was manifested (CR 701.40), not cast face down. */
   manifested?: true;
+  /**
+   * The face-down permanent has ward {2}: it was cast face down using disguise (CR 702.168a) or
+   * cloaked (CR 701.58a). Cleared as it is turned face up.
+   */
+  faceDownWard?: true;
 }
 
 /** Non-battlefield engine object living in graveyard/exile with 903.9a bookkeeping. */
@@ -477,6 +482,19 @@ export interface EngineCardObject extends EngineObject, CastRecord {
   castOnlyUntilEot?: true;
   /** Grenzo: only mana spent casting this exact exiled object receives this permission. */
   spendAsAnyColorUntilEot?: true;
+  /**
+   * "You may cast that card for as long as it remains exiled" (Gonti, Thief of Sanity, Praetor's
+   * Grasp): the `playableUntilEotBy` / `castOnlyUntilEot` grant is not cleared at cleanup; it
+   * lasts while this exile object exists (a zone change makes a new object without it).
+   */
+  playableWhileExiled?: true;
+  /** "Mana of any type can be spent to cast that spell" (Gonti): every pip may be paid by any mana. */
+  spendAsAnyTypeWhileExiled?: true;
+  /**
+   * Who may look at this face-down exiled card (CR 406.3): the player allowed to play it. When
+   * set, its owner may not look unless named here.
+   */
+  faceDownVisibleTo?: PlayerId[];
   /** Rebound's one-shot permission to cast this card from exile at the next upkeep. */
   reboundCastBy?: PlayerId;
   /** Power Pack replaces only a move from the spell’s stack object to a graveyard. */

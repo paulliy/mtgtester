@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "card": "Gonti, Lord of Luxury",
+  "supportCards": [
+    {
+      "name": "Scenario Elk",
+      "typeLine": "Creature \u2014 Elk",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2",
+      "oracleText": ""
+    },
+    {
+      "name": "Scenario Ant",
+      "typeLine": "Creature \u2014 Insect",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1",
+      "oracleText": ""
+    },
+    {
+      "name": "Scenario Bee",
+      "typeLine": "Creature \u2014 Insect",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1",
+      "oracleText": ""
+    },
+    {
+      "name": "Scenario Cat",
+      "typeLine": "Creature \u2014 Cat",
+      "manaCost": "{W}",
+      "power": "1",
+      "toughness": "1",
+      "oracleText": ""
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "gonti-exile-and-cast-any-type",
+      "title": "Gonti, Lord of Luxury: exile one of P2's top four face down and cast it with any mana",
+      "clauses": [2],
+      "instructions": [
+        "Cast Gonti targeting P2; exile Scenario Elk face down.",
+        "Cast Scenario Elk ({1}{G}) with two Swamps."
+      ],
+      "expectedOutcome": "Scenario Elk enters under your control; the other three go to the bottom of P2's library.",
+      "seats": {
+        "P1": {
+          "hand": ["Gonti, Lord of Luxury"],
+          "battlefield": ["Swamp", "Swamp", "Swamp", "Swamp", "Swamp", "Swamp"]
+        },
+        "P2": {
+          "libraryTop": ["Scenario Ant", "Scenario Elk", "Scenario Bee", "Scenario Cat"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Gonti/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Targets for Gonti/",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P1",
+          "choose": "Exile face down Scenario Elk"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Elk/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Gonti, Lord of Luxury", "Scenario Elk"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "library",
+            "has": ["Scenario Ant", "Scenario Bee", "Scenario Cat"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "gonti-later-turn",
+      "title": "Gonti, Lord of Luxury: the exiled card stays castable on a later turn",
+      "clauses": [2],
+      "instructions": [
+        "Cast Gonti targeting P2 and exile Scenario Elk face down.",
+        "Pass the turn; on your next turn the permission still holds (checked by the engine test)."
+      ],
+      "expectedOutcome": "Scenario Elk stays in exile, castable by you, after the turn ends.",
+      "seats": {
+        "P1": {
+          "hand": ["Gonti, Lord of Luxury"],
+          "battlefield": ["Swamp", "Swamp", "Swamp", "Swamp"]
+        },
+        "P2": {
+          "libraryTop": ["Scenario Elk", "Scenario Ant", "Scenario Bee", "Scenario Cat"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Gonti/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Targets for Gonti/",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P1",
+          "choose": "Exile face down Scenario Elk"
+        }
+      ],
+      "continue": {
+        "throughCombat": true,
+        "toPostcombatMain": true,
+        "toEndStep": true,
+        "throughNextTurn": true
+      },
+      "expect": [
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "exile",
+            "has": ["Scenario Elk"]
+          }
+        }
+      ]
+    }
+  ]
+}

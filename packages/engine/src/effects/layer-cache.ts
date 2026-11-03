@@ -145,6 +145,7 @@ export function digestOf(
     h = mix(h, (perm.power ?? 0) + 0x10000);
     h = mix(h, (perm.toughness ?? 0) + 0x10000);
     h = mix(h, perm.faceDown === true ? 1 : 0);
+    h = mix(h, perm.faceDownWard === true ? 1 : 0);
     h = mix(h, perm.transformed ? 1 : 0);
     // A bestowed Aura's type-changing effect ends as it becomes unattached (CR 702.103f).
     h = mix(h, perm.bestowed === true ? 1 : 0);

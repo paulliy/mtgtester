@@ -228,6 +228,11 @@ export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): Ga
       ...(bestowed ? { bestowed: true } : {}),
       // A face-down spell becomes a face-down permanent (CR 708.4).
       ...(spell.alternativeCastKind === 'faceDown' ? { faceDown: true } : {}),
+      // Cast face down using disguise, it has ward {2} as a face-down permanent (CR 702.168a).
+      ...(spell.alternativeCastKind === 'faceDown' &&
+      ctx.defs.get(card.oracleId)?.faceDownVariant === 'disguise'
+        ? { faceDownWard: true }
+        : {}),
     });
     if (card.isCardCopy === true && moved?.zone === 'battlefield') {
       moved.isToken = true;

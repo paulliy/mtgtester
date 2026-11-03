@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "card": "Gudul Lurker",
+  "supportCards": [],
+  "scenarios": [
+    {
+      "id": "lurker-megamorph-counter",
+      "title": "Gudul Lurker: turned face up for its megamorph cost, it gets a +1/+1 counter",
+      "clauses": [2],
+      "instructions": ["Cast Gudul Lurker face down for {3}, then turn it face up for {U}."],
+      "expectedOutcome": "Gudul Lurker is face up with one +1/+1 counter.",
+      "seats": {
+        "P1": {
+          "hand": ["Gudul Lurker"],
+          "battlefield": ["Island", "Island", "Island", "Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Gudul Lurker face down/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Turn Gudul Lurker face up/"
+        }
+      ],
+      "expect": [
+        {
+          "counters": {
+            "card": "Gudul Lurker",
+            "counter": "+1/+1",
+            "equals": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "lurker-cast-face-up-no-counter",
+      "title": "Gudul Lurker: cast face up, it has no counter",
+      "clauses": [2],
+      "instructions": ["Cast Gudul Lurker face up for {U}."],
+      "expectedOutcome": "Gudul Lurker has no +1/+1 counter.",
+      "seats": {
+        "P1": {
+          "hand": ["Gudul Lurker"],
+          "battlefield": ["Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Gudul Lurker \\(/"
+        }
+      ],
+      "expect": [
+        {
+          "counters": {
+            "card": "Gudul Lurker",
+            "counter": "+1/+1",
+            "equals": 0
+          }
+        }
+      ]
+    }
+  ]
+}

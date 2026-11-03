@@ -1872,6 +1872,29 @@ export type Effect =
   | { op: 'chaosWarp'; target: EffectRef }
   | { op: 'manifestTop'; player: 'you' | 'eventPlayer' }
   | { op: 'manifestTopForTargetController'; target: EffectRef }
+  /**
+   * "Look at the top four cards of target opponent's library, exile one of them face down, then
+   * put the rest on the bottom of that library in a random order. You may cast that card for as
+   * long as it remains exiled, and mana of any type can be spent to cast that spell." (Gonti,
+   * Thief of Sanity), and "Search target opponent's library for a card and exile it face down.
+   * Then that player shuffles. You may play that card for as long as it remains exiled."
+   * (Praetor's Grasp). The exiled card is face down (CR 406.3), and only this ability's controller
+   * may look at it; the permission lasts while it stays exiled.
+   */
+  | {
+      op: 'exileFaceDownPlayable';
+      /** Whose library: an announced player target, or the trigger's event player. */
+      library: EffectRef | 'eventPlayer';
+      from: { look: number; rest: 'bottomRandom' | 'graveyard' } | 'search';
+      castOnly: boolean;
+      anyType: boolean;
+    }
+  /**
+   * "Manifest dread" (CR 701.62a): the player looks at the top two cards of their library, puts
+   * one onto the battlefield face down as a manifested 2/2 creature and the other into their
+   * graveyard. With one card left it is the one manifested.
+   */
+  | { op: 'manifestDread'; player: 'you' | 'eventPlayer' }
   | {
       op: 'opponentMayDrawOrMillThenDamage';
       target: EffectRef;
@@ -2261,6 +2284,8 @@ export type ObjectTriggerWhen =
    */
   | 'leavesBattlefield'
   | 'transformsInto'
+  /** "When this creature is turned face up" (CR 708.8): the special action, not an entry. */
+  | 'turnedFaceUp'
   /**
    * "Whenever one or more +1/+1 counters are put on this creature" (Pensive Professor): one
    * event per placement, including a permanent entering with counters (CR 122.6). `counter`

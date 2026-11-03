@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "card": "Hooded Hydra",
+  "supportCards": [],
+  "scenarios": [
+    {
+      "id": "hydra-turned-up-five-counters",
+      "title": "Hooded Hydra: as it is turned face up, it gets five +1/+1 counters",
+      "clauses": [3, 4],
+      "instructions": ["Cast Hooded Hydra face down for {3}, then turn it face up for {3}{G}{G}."],
+      "expectedOutcome": "Hooded Hydra is face up with five +1/+1 counters.",
+      "seats": {
+        "P1": {
+          "hand": ["Hooded Hydra"],
+          "battlefield": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest"
+          ]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Hooded Hydra face down/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Turn Hooded Hydra face up/"
+        }
+      ],
+      "expect": [
+        {
+          "counters": {
+            "card": "Hooded Hydra",
+            "counter": "+1/+1",
+            "equals": 5
+          }
+        }
+      ]
+    }
+  ]
+}
