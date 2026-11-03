@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "card": "Simic Growth Chamber",
+  "scenarios": [
+    {
+      "id": "simic-growth-chamber-returns-own-land",
+      "title": "Simic Growth Chamber: it enters tapped and returns a land you control, never an opponent's",
+      "clauses": [1, 2],
+      "instructions": [
+        "Play Simic Growth Chamber; it enters tapped.",
+        "When its trigger resolves, return your Forest to your hand: P2's lands are not offered."
+      ],
+      "expectedOutcome": "Simic Growth Chamber is tapped, your Forest is in your hand, and P2 keeps its Island.",
+      "seats": {
+        "P1": {
+          "hand": ["Simic Growth Chamber"],
+          "battlefield": ["Forest"]
+        },
+        "P2": {
+          "battlefield": ["Island"]
+        }
+      },
+      "script": [
+        { "player": "P1", "choose": "/^Play Simic Growth Chamber/" },
+        { "player": "P1", "choose": "Return Forest to its owner’s hand" }
+      ],
+      "expect": [
+        { "tapped": { "card": "Simic Growth Chamber", "equals": true } },
+        { "zone": { "player": "P1", "zone": "hand", "has": ["Forest"] } },
+        { "zone": { "player": "P2", "zone": "battlefield", "has": ["Island"] } }
+      ]
+    }
+  ]
+}

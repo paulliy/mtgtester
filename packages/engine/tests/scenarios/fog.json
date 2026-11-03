@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "card": "Fog",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "fog-prevents-combat-damage",
+      "title": "Fog: no combat damage is dealt this turn",
+      "clauses": [1],
+      "instructions": [
+        "P2 attacks you with two Scenario Bears.",
+        "Cast Fog after attackers are declared."
+      ],
+      "expectedOutcome": "You stay at 40 life, and no damage is dealt.",
+      "turn": {
+        "player": "P2"
+      },
+      "seats": {
+        "P1": {
+          "hand": ["Fog"],
+          "battlefield": ["Forest"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Bear", "Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P2",
+          "choose": "Declare attackers",
+          "targets": ["P1", "P1"]
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Fog/"
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 40
+          }
+        },
+        {
+          "event": {
+            "type": "damage",
+            "count": 0
+          }
+        }
+      ]
+    }
+  ]
+}

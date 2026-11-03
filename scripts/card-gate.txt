@@ -205,3 +205,12 @@ packages/engine/tests/cards/thief-of-sanity.test.ts
 packages/engine/tests/cards/praetors-grasp.test.ts
 packages/engine/tests/phase4-batch1-grammar.test.ts
 packages/engine/tests/phase4-batch2-grammar.test.ts
+packages/engine/tests/cards/thraben-inspector.test.ts
+packages/engine/tests/cards/burglar-rat.test.ts
+packages/engine/tests/cards/glimpse-the-unthinkable.test.ts
+packages/engine/tests/cards/fog.test.ts
+packages/engine/tests/cards/simic-growth-chamber.test.ts
+packages/engine/tests/cards/abraded-bluffs.test.ts
+packages/engine/tests/cards/forbidden-alchemy.test.ts
+packages/engine/tests/cards/adventurous-impulse.test.ts
+packages/engine/tests/cards/souls-attendant.test.ts

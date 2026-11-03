@@ -51,12 +51,35 @@ const scenarioFile = (name: string, text: string): CardScenarioFile =>
  */
 export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScenarioFile }> = [
   {
+    name: 'abraded-bluffs.json',
+    file: scenarioFile(
+      'abraded-bluffs.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/abraded-bluffs.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'academy-manufactor.json',
     file: scenarioFile(
       'academy-manufactor.json',
       readFileSync(
         new URL(
           '../../../../packages/engine/tests/scenarios/academy-manufactor.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'adventurous-impulse.json',
+    file: scenarioFile(
+      'adventurous-impulse.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/adventurous-impulse.json',
           import.meta.url,
         ),
         'utf8',
@@ -82,6 +105,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
           '../../../../packages/engine/tests/scenarios/braids-arisen-nightmare.json',
           import.meta.url,
         ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'burglar-rat.json',
+    file: scenarioFile(
+      'burglar-rat.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/burglar-rat.json', import.meta.url),
         'utf8',
       ),
     ),
@@ -174,6 +207,42 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       'flusterstorm.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/flusterstorm.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'fog.json',
+    file: scenarioFile(
+      'fog.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/fog.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'forbidden-alchemy.json',
+    file: scenarioFile(
+      'forbidden-alchemy.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/forbidden-alchemy.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'glimpse-the-unthinkable.json',
+    file: scenarioFile(
+      'glimpse-the-unthinkable.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/glimpse-the-unthinkable.json',
+          import.meta.url,
+        ),
         'utf8',
       ),
     ),
@@ -413,6 +482,32 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'simic-growth-chamber.json',
+    file: scenarioFile(
+      'simic-growth-chamber.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/simic-growth-chamber.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'souls-attendant.json',
+    file: scenarioFile(
+      'souls-attendant.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/souls-attendant.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'sun-titan.json',
     file: scenarioFile(
       'sun-titan.json',
@@ -462,6 +557,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       readFileSync(
         new URL(
           '../../../../packages/engine/tests/scenarios/thief-of-sanity.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'thraben-inspector.json',
+    file: scenarioFile(
+      'thraben-inspector.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/thraben-inspector.json',
           import.meta.url,
         ),
         'utf8',

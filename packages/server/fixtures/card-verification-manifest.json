@@ -19039,6 +19039,189 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "caa02547-66e3-4e27-a2d3-5e94f3e7a069": {
+      "name": "Thraben Inspector",
+      "oracleSha256": "fcd14a5bfbf9f6717d8df2d44be298396b7f08c547154a4bf7b76057cec09f82",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, investigate. (Create a Clue token. It's an artifact with \"{2}, Sacrifice this token: Draw a card.\")",
+          "implementation": [
+            "enters trigger; Effect.createToken CLUE via the \"investigate\" production (CR 701.36a)"
+          ],
+          "engineTestIds": ["cards/thraben-inspector.test.ts::thraben-inspector-investigates"],
+          "viewerScenarioIds": ["thraben-inspector-investigates"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2f807301-37df-4724-871a-08e3512b07b3": {
+      "name": "Burglar Rat",
+      "oracleSha256": "d10871deff9167d8039379d8d7592288c0e22b5f63222c5734372e2de9669e47",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, each opponent discards a card.",
+          "implementation": [
+            "enters trigger; Effect.discardEachPlayer scope opponents, via the \"each opponent discards\" production"
+          ],
+          "engineTestIds": ["cards/burglar-rat.test.ts::burglar-rat-each-opponent-discards"],
+          "viewerScenarioIds": ["burglar-rat-each-opponent-discards"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "552f0163-a19d-4671-888f-044fc0354875": {
+      "name": "Glimpse the Unthinkable",
+      "oracleSha256": "59f2909db161b8881b303f79dae09c1cf82b2928a47912a542f1c340f2290a72",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target player mills ten cards.",
+          "implementation": [
+            "spell; Effect.mill on a player target, via the \"target player mills N\" production"
+          ],
+          "engineTestIds": ["cards/glimpse-the-unthinkable.test.ts::glimpse-mills-target-player"],
+          "viewerScenarioIds": ["glimpse-mills-target-player"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "27e9db49-7af7-4bef-ad4c-bf5dfb92030d": {
+      "name": "Fog",
+      "oracleSha256": "0608fd185825dafe5282c1195d57c6f2ba4ab73b724a60bc8e91edbe266302cf",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Prevent all combat damage that would be dealt this turn.",
+          "implementation": [
+            "spell; Effect.preventAllCombatDamage, via the Fog production (CR 615)"
+          ],
+          "engineTestIds": ["cards/fog.test.ts::fog-prevents-combat-damage"],
+          "viewerScenarioIds": ["fog-prevents-combat-damage"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "046f5783-cc7b-416a-8cf6-2bcef9c2cc1a": {
+      "name": "Simic Growth Chamber",
+      "oracleSha256": "7e5d25c3efd3238ae420531ebef357c7e0629b6e9d387a69afffcce9638314ea",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This land enters tapped.",
+          "implementation": ["entersTapped replacement"],
+          "engineTestIds": [
+            "cards/simic-growth-chamber.test.ts::simic-growth-chamber-returns-own-land"
+          ],
+          "viewerScenarioIds": ["simic-growth-chamber-returns-own-land"]
+        },
+        {
+          "oracleText": "When this land enters, return a land you control to its owner's hand.",
+          "implementation": [
+            "enters trigger; Effect.returnOneToHand over lands you control, chosen on resolution (no target)"
+          ],
+          "engineTestIds": [
+            "cards/simic-growth-chamber.test.ts::simic-growth-chamber-returns-own-land"
+          ],
+          "viewerScenarioIds": ["simic-growth-chamber-returns-own-land"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ca7d093c-0533-493f-9ad3-8af30118fbfc": {
+      "name": "Abraded Bluffs",
+      "oracleSha256": "355b49ef950c5e48265c91e69cf794ee00039ac10068a31500f5cb4d653d9552",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This land enters tapped.",
+          "implementation": ["entersTapped replacement"],
+          "engineTestIds": ["cards/abraded-bluffs.test.ts::abraded-bluffs-pings-opponent"],
+          "viewerScenarioIds": ["abraded-bluffs-pings-opponent"]
+        },
+        {
+          "oracleText": "When this land enters, it deals 1 damage to target opponent.",
+          "implementation": [
+            "enters trigger; Effect.damage 1 to a player target restricted to opponents"
+          ],
+          "engineTestIds": ["cards/abraded-bluffs.test.ts::abraded-bluffs-pings-opponent"],
+          "viewerScenarioIds": ["abraded-bluffs-pings-opponent"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "66d65cda-e3d1-4a00-8ff3-c6d5ef0ab0c1": {
+      "name": "Forbidden Alchemy",
+      "oracleSha256": "765bb1b67d8a3ed38c8c7b6cc4aa271d7afd464c9859f4311e268bacce9b7dc8",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Look at the top four cards of your library. Put one of them into your hand and the rest into your graveyard.",
+          "implementation": [
+            "spell; Effect.lookAtTopN 4, mayPut required into hand, rest graveyard"
+          ],
+          "engineTestIds": [
+            "cards/forbidden-alchemy.test.ts::forbidden-alchemy-one-to-hand-rest-graveyard",
+            "cards/forbidden-alchemy.test.ts::forbidden-alchemy-flashback"
+          ],
+          "viewerScenarioIds": [
+            "forbidden-alchemy-one-to-hand-rest-graveyard",
+            "forbidden-alchemy-flashback"
+          ]
+        },
+        {
+          "oracleText": "Flashback {6}{B} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+          "implementation": [
+            "keyword flashback: cast from the graveyard for {6}{B}, then exiled (CR 702.34a)"
+          ],
+          "engineTestIds": ["cards/forbidden-alchemy.test.ts::forbidden-alchemy-flashback"],
+          "viewerScenarioIds": ["forbidden-alchemy-flashback"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5bf49f39-b3d5-4148-8dc2-b5b5011769d2": {
+      "name": "Adventurous Impulse",
+      "oracleSha256": "5b999e41d3fbb51e1c018f12db59220b912608f690f4414be5fc244fb369300a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Look at the top three cards of your library. You may reveal a creature or land card from among them and put it into your hand. Put the rest on the bottom of your library in any order.",
+          "implementation": [
+            "spell; Effect.lookAtTopN 3, mayPut creature or land with reveal into hand, rest bottomAnyOrder"
+          ],
+          "engineTestIds": [
+            "cards/adventurous-impulse.test.ts::adventurous-impulse-reveals-creature",
+            "cards/adventurous-impulse.test.ts::adventurous-impulse-declines"
+          ],
+          "viewerScenarioIds": [
+            "adventurous-impulse-reveals-creature",
+            "adventurous-impulse-declines"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "045a9d3d-c20d-427f-a77b-0bffc6f55526": {
+      "name": "Soul's Attendant",
+      "oracleSha256": "3f6d9899065a463a00de879573aa2249d1898fc0ed130d9098137cd7ca689995",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever another creature enters, you may gain 1 life.",
+          "implementation": [
+            "another-creature-enters trigger, optional; Effect.gainLife 1 via the subjectless \"gain N life\" production"
+          ],
+          "engineTestIds": [
+            "cards/souls-attendant.test.ts::souls-attendant-gains-life",
+            "cards/souls-attendant.test.ts::souls-attendant-declines"
+          ],
+          "viewerScenarioIds": ["souls-attendant-gains-life", "souls-attendant-declines"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

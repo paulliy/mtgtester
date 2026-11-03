@@ -436,6 +436,31 @@ async function targetPlayer(page: Page, seat: string): Promise<void> {
   await confirmButton(page).click();
 }
 
+/** Cast a spell from your hand that targets nothing, without waiting for it to resolve. */
+async function castNow(page: Page, name: string): Promise<void> {
+  const card = hand(page, name);
+  await passUntil(page, card.and(page.locator('.actionable')));
+  await card.click();
+  await confirmButton(page).click();
+}
+
+/** Play the land `name` from your hand, through its own menu when the card offers more than one action. */
+async function playLand(page: Page, name: string): Promise<void> {
+  const land = hand(page, name);
+  await passUntil(page, land.and(page.locator('.actionable')));
+  await land.click();
+  // A bare `/^Play/` would also match "Playable now" entries the play is about to take away.
+  const play = page.locator('.source-actions').getByRole('button', { name: /^Play/ }).first();
+  if (
+    await play.waitFor({ state: 'visible', timeout: 1_000 }).then(
+      () => true,
+      () => false,
+    )
+  )
+    await play.click();
+  await passUntil(page, permanent(page, 'P1', name));
+}
+
 /** The thumbnail of the card `name` in `seat`'s exile zone. */
 const exileThumb = (page: Page, seat: string, name: string): Locator =>
   seatZone(page, seat, 'Exile')
@@ -1706,6 +1731,134 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     // The shuffle is an engine event the viewer does not log; the Forest left P2's library.
     await expect(logLine(page, /Praetor's Grasp resolves/)).toBeVisible();
     await expect(page.locator('.opponent[data-seat="P2"]').getByText(/exile 0/)).toBeVisible();
+  },
+  // EDHREC plan Phase 4: one card per new grammar production.
+  'thraben-inspector-investigates': async (page) => {
+    await castWith(page, hand(page, 'Thraben Inspector'), {
+      resolves: /Thraben Inspector[^]*resolves/,
+    });
+    await passStackUntil(page, permanent(page, 'P1', 'Clue'));
+    await activate(page, permanent(page, 'P1', 'Clue'), /Draw a card/);
+    await passStackUntil(page, logLine(page, /Clue[^]*resolves/));
+    await expect(permanent(page, 'P1', 'Clue')).toHaveCount(0);
+    await expect(permanent(page, 'P1', 'Thraben Inspector')).toHaveCount(1);
+    await expect(hand(page, 'Plains')).toHaveCount(1);
+  },
+  'burglar-rat-each-opponent-discards': async (page) => {
+    await castWith(page, hand(page, 'Burglar Rat'), { resolves: /Burglar Rat[^]*resolves/ });
+    for (const seat of ['P2', 'P3', 'P4'])
+      await passStackUntil(page, inZone(page, seat, 'Graveyard', 'Forest'));
+    await expect(hand(page, 'Island')).toHaveCount(1);
+    await expect(inZone(page, 'P1', 'Graveyard', 'Island')).toHaveCount(0);
+  },
+  'glimpse-mills-target-player': async (page) => {
+    const glimpse = hand(page, 'Glimpse the Unthinkable');
+    await passUntil(page, glimpse.and(page.locator('.actionable')));
+    await glimpse.click();
+    await page.locator('.opponent[data-seat="P2"] > header').click();
+    await confirmButton(page).click();
+    await passStackUntil(page, logLine(page, /Glimpse the Unthinkable[^]*resolves/));
+    await expect(page.locator('.opponent[data-seat="P2"]').getByText(/gy 10/)).toBeVisible();
+    await expect(inZone(page, 'P1', 'Graveyard', 'Glimpse the Unthinkable')).toHaveCount(1);
+    await expect(seatZone(page, 'P1', 'Graveyard').getByRole('img')).toHaveCount(1);
+  },
+  'fog-prevents-combat-damage': async (page) => {
+    await passUntil(page, page.locator('.opponent[data-seat="P2"] .attacking').first());
+    await castWith(page, hand(page, 'Fog'), { resolves: /Fog[^]*resolves/ });
+    await passUntil(page, logLine(page, /game over/));
+    await expect(life(page, 'P1')).toHaveText('40');
+  },
+  'simic-growth-chamber-returns-own-land': async (page) => {
+    await playLand(page, 'Simic Growth Chamber');
+    // The return is chosen on the board as the trigger resolves; it targets nothing.
+    await passStackUntil(page, page.getByText(/choose a permanent to return/).first());
+    const forest = permanent(page, 'P1', 'Forest').first();
+    await expect(forest).toHaveClass(/actionable|targetable/);
+    // Only your own lands are offered: P2's Island is not.
+    await expect(permanent(page, 'P2', 'Island')).not.toHaveClass(/actionable|targetable/);
+    await forest.click();
+    const confirm = confirmButton(page);
+    if ((await confirm.isVisible()) && (await confirm.isEnabled())) await confirm.click();
+    await passUntil(page, hand(page, 'Forest'));
+    await expect(permanent(page, 'P1', 'Simic Growth Chamber').locator('.tap-badge')).toHaveCount(
+      1,
+    );
+    await expect(permanent(page, 'P2', 'Island')).toHaveCount(1);
+  },
+  'abraded-bluffs-pings-opponent': async (page) => {
+    await playLand(page, 'Abraded Bluffs');
+    await targetPlayer(page, 'P3');
+    await passStackUntil(page, life(page, 'P3').filter({ hasText: '39' }));
+    await expect(life(page, 'P1')).toHaveText('40');
+    await expect(permanent(page, 'P1', 'Abraded Bluffs').locator('.tap-badge')).toHaveCount(1);
+  },
+  'forbidden-alchemy-one-to-hand-rest-graveyard': async (page) => {
+    await castNow(page, 'Forbidden Alchemy');
+    const cat = cardChoice(page, 'Scenario Cat', 'Put into your hand');
+    await passStackUntil(page, cat);
+    // Taking one is required: there is no decline.
+    await expect(page.getByRole('button', { name: 'Put none of them' })).toHaveCount(0);
+    await cat.click();
+    await passUntil(page, hand(page, 'Scenario Cat'));
+    for (const name of ['Scenario Ant', 'Scenario Bear', 'Scenario Dog', 'Forbidden Alchemy'])
+      await expect(inZone(page, 'P1', 'Graveyard', name)).toHaveCount(1);
+  },
+  'forbidden-alchemy-flashback': async (page) => {
+    const offer = page
+      .locator('.playable-now')
+      .getByRole('button', { name: /Forbidden Alchemy/ })
+      .first();
+    await passUntil(page, offer);
+    await offer.click();
+    await confirmButton(page).click();
+    const ant = cardChoice(page, 'Scenario Ant', 'Put into your hand');
+    await passStackUntil(page, ant);
+    await ant.click();
+    await passUntil(page, hand(page, 'Scenario Ant'));
+    await expect(inZone(page, 'P1', 'Exile', 'Forbidden Alchemy')).toHaveCount(1);
+    await expect(inZone(page, 'P1', 'Graveyard', 'Forbidden Alchemy')).toHaveCount(0);
+    for (const name of ['Scenario Bear', 'Scenario Cat', 'Scenario Dog'])
+      await expect(inZone(page, 'P1', 'Graveyard', name)).toHaveCount(1);
+  },
+  'adventurous-impulse-reveals-creature': async (page) => {
+    await castNow(page, 'Adventurous Impulse');
+    const bear = cardChoice(page, 'Scenario Bear', 'Put into your hand');
+    await passStackUntil(page, bear);
+    // Neither an artifact nor an enchantment is a creature or land card.
+    await expect(cardChoice(page, 'Scenario Relic', 'Put into your hand')).toHaveCount(0);
+    await expect(cardChoice(page, 'Scenario Charm', 'Put into your hand')).toHaveCount(0);
+    await bear.click();
+    const keep = page.getByRole('button', { name: 'Keep current order' });
+    await passUntil(page, keep);
+    await keep.click();
+    await passUntil(page, hand(page, 'Scenario Bear'));
+    await expect(hand(page, 'Scenario Relic')).toHaveCount(0);
+  },
+  'adventurous-impulse-declines': async (page) => {
+    await castNow(page, 'Adventurous Impulse');
+    const none = page.getByRole('button', { name: 'Put none of them' });
+    await passStackUntil(page, none);
+    await none.click();
+    const keep = page.getByRole('button', { name: 'Keep current order' });
+    await passUntil(page, keep);
+    await keep.click();
+    await expect(inZone(page, 'P1', 'Graveyard', 'Adventurous Impulse')).toHaveCount(1);
+    await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(0);
+  },
+  'souls-attendant-gains-life': async (page) => {
+    await castWith(page, hand(page, 'Scenario Bear'), { resolves: /Scenario Bear[^]*resolves/ });
+    const yes = page.getByRole('button', { name: 'Yes', exact: true });
+    await passStackUntil(page, yes);
+    await yes.click();
+    await passStackUntil(page, life(page, 'P1').filter({ hasText: '41' }));
+  },
+  'souls-attendant-declines': async (page) => {
+    await castWith(page, hand(page, 'Scenario Bear'), { resolves: /Scenario Bear[^]*resolves/ });
+    const no = page.getByRole('button', { name: 'No', exact: true });
+    await passStackUntil(page, no);
+    await no.click();
+    await expect(permanent(page, 'P1', 'Scenario Bear')).toHaveCount(1);
+    await expect(life(page, 'P1')).toHaveText('40');
   },
 };
 

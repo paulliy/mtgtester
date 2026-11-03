@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "card": "Burglar Rat",
+  "scenarios": [
+    {
+      "id": "burglar-rat-each-opponent-discards",
+      "title": "Burglar Rat: each opponent discards a card, and you do not",
+      "clauses": [1],
+      "instructions": ["Cast Burglar Rat; when it enters, each opponent discards a card."],
+      "expectedOutcome": "P2, P3 and P4 each discard their Forest; your Island stays in your hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Burglar Rat", "Island"],
+          "battlefield": ["Swamp", "Swamp"]
+        },
+        "P2": { "hand": ["Forest"] },
+        "P3": { "hand": ["Forest"] },
+        "P4": { "hand": ["Forest"] }
+      },
+      "script": [{ "player": "P1", "choose": "/^Cast Burglar Rat/" }],
+      "expect": [
+        { "zone": { "player": "P1", "zone": "hand", "has": ["Island"] } },
+        { "zone": { "player": "P2", "zone": "graveyard", "has": ["Forest"] } },
+        { "zone": { "player": "P3", "zone": "graveyard", "has": ["Forest"] } },
+        { "zone": { "player": "P4", "zone": "graveyard", "has": ["Forest"] } }
+      ]
+    }
+  ]
+}
