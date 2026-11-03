@@ -183,12 +183,17 @@ async function playWitchMeadow(page: Page, payLife: boolean): Promise<void> {
   const play = page
     .locator('.source-actions .source-action-row button')
     .filter({ hasText: /Witch-Blessed Meadow/ });
-  if ((await play.count()) > 0) await play.first().click();
-  const confirm = confirmButton(page);
-  if ((await confirm.isVisible()) && (await confirm.isEnabled())) await confirm.click();
   const answer = page.getByRole('button', {
     name: payLife ? /^Pay 3 life/ : /^Don't pay 3 life/,
   });
+  // When the creature face cannot be cast, clicking the card plays the land face at once;
+  // otherwise the land face is its own source-action button. Wait for whichever appears.
+  await expect(play.first().or(answer)).toBeVisible();
+  if (await play.first().isVisible()) {
+    await play.first().click();
+    const confirm = confirmButton(page);
+    if ((await confirm.isVisible()) && (await confirm.isEnabled())) await confirm.click();
+  }
   await passUntil(page, answer);
   await answer.click();
   await passUntil(page, permanent(page, 'P1', 'Witch-Blessed Meadow'));
@@ -379,12 +384,10 @@ async function castPlea(page: Page, vote: 'time' | 'knowledge'): Promise<void> {
   await passUntil(page, plea.and(page.locator('.actionable')));
   await plea.click();
   await confirmButton(page).click();
-  // Both options render as a bare "Vote" button (the engine's "Vote for time" / "Vote for knowledge"
-  // description is not shown), so choose by position: time is listed first, knowledge second.
-  const buttons = page.getByRole('button', { name: 'Vote', exact: true });
-  await passStackUntil(page, buttons.first());
-  await expect(buttons).toHaveCount(2);
-  await buttons.nth(vote === 'time' ? 0 : 1).click();
+  const button = page.getByRole('button', { name: `Vote for ${vote}`, exact: true });
+  await passStackUntil(page, button);
+  await expect(page.getByRole('button', { name: /^Vote for / })).toHaveCount(2);
+  await button.click();
 }
 
 async function expectThreeDrawn(page: Page): Promise<void> {
@@ -1535,8 +1538,8 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
   'plea-time-wins': async (page) => {
     await castPlea(page, 'time');
     await passUntil(page, logLine(page, /game over/));
-    // The viewer logs no extra-turn line and the scenario ends first; time won if nothing was drawn.
-    await expect(logLine(page, /Vote for time/)).toBeVisible();
+    // The scenario ends before the extra turn begins; time won, so nothing was drawn.
+    await expect(logLine(page, /votes for time/)).toBeVisible();
     for (const name of ['Scenario Ant', 'Scenario Bee', 'Scenario Cat'])
       await expect(hand(page, name)).toHaveCount(0);
   },
