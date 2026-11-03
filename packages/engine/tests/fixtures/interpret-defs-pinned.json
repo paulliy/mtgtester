@@ -37119,13 +37119,84 @@
       "generic": 0,
       "x": 1
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Finale of Devastation",
     "oracleId": "69872a9a-fe54-4e58-940c-89395af71acd",
     "power": null,
     "ruleStatics": [],
     "scryfallId": "b10d99bf-b2ce-4443-b924-ff0eb8be1033",
-    "spellAbility": null,
+    "spellAbility": {
+      "effects": [
+        {
+          "filter": {
+            "kind": "type",
+            "value": "Creature"
+          },
+          "maxManaValue": {
+            "kind": "xValue"
+          },
+          "op": "searchLibraryAndOrGraveyardToBattlefield"
+        },
+        {
+          "condition": {
+            "cmp": ">=",
+            "kind": "compareValues",
+            "left": {
+              "kind": "xValue"
+            },
+            "right": {
+              "kind": "const",
+              "n": 10
+            }
+          },
+          "else": [],
+          "op": "conditionalEffect",
+          "then": [
+            {
+              "op": "pumpEachUntilEot",
+              "power": {
+                "kind": "xValue"
+              },
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                ]
+              },
+              "toughness": {
+                "kind": "xValue"
+              }
+            },
+            {
+              "keyword": "haste",
+              "op": "grantKeywordEachUntilEot",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "kind": "spell",
+      "targets": []
+    },
     "staticEffects": [],
     "subtypes": [],
     "supertypes": [],
@@ -37135,9 +37206,7 @@
     "types": [
       "Sorcery"
     ],
-    "unmodeledReasons": [
-      "unrecognized rules text: \"Search your library and/or graveyard for a creature card with mana value X or less and put it onto the battlefield. If you search your library this way, shuffle. If X is 10 or more, creatures you control get +X/+X and gain haste until end of turn.\""
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [],
@@ -47651,7 +47720,9 @@
     "defense": null,
     "entersTapped": false,
     "hasUnsupportedCost": false,
-    "keywords": [],
+    "keywords": [
+      "storm"
+    ],
     "loyalty": null,
     "manaAbilities": [],
     "manaCost": {
@@ -47665,13 +47736,50 @@
       "colorless": 0,
       "generic": 0
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Flusterstorm",
     "oracleId": "86bf58f2-7f25-4e10-b797-25e0e8e67769",
     "power": null,
     "ruleStatics": [],
     "scryfallId": "f900eeb7-7c45-44bc-ad3a-0bbe594ecf50",
-    "spellAbility": null,
+    "spellAbility": {
+      "effects": [
+        {
+          "cost": {
+            "colored": {
+              "B": 0,
+              "G": 0,
+              "R": 0,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 1
+          },
+          "op": "counterUnlessControllerPays",
+          "target": 0
+        }
+      ],
+      "kind": "spell",
+      "targets": [
+        {
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Instant"
+              },
+              {
+                "kind": "type",
+                "value": "Sorcery"
+              }
+            ]
+          },
+          "kind": "spell"
+        }
+      ]
+    },
     "staticEffects": [],
     "subtypes": [],
     "supertypes": [],
@@ -47681,10 +47789,7 @@
     "types": [
       "Instant"
     ],
-    "unmodeledReasons": [
-      "unrecognized rules text: \"Counter target instant or sorcery spell unless its controller pays {1}.\"",
-      "unrecognized rules text: \"Storm\""
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [
@@ -63491,7 +63596,7 @@
       "colorless": 0,
       "generic": 4
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Sun Titan",
     "oracleId": "b2e950fb-cb7e-40a0-a311-5bbdd0477b29",
     "power": 6,
@@ -63504,14 +63609,133 @@
     ],
     "supertypes": [],
     "toughness": 6,
-    "triggers": [],
+    "triggers": [
+      {
+        "description": "Whenever this creature enters or attacks, you may return target permanent card with mana value 3 or less from your graveyard to the battlefield.",
+        "effects": [
+          {
+            "op": "graveyardToBattlefield",
+            "target": 0
+          }
+        ],
+        "kind": "triggered",
+        "optional": true,
+        "targets": [
+          {
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Enchantment"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Land"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Planeswalker"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Battle"
+                    }
+                  ]
+                },
+                {
+                  "kind": "manaValueAtMost",
+                  "n": 3
+                }
+              ]
+            },
+            "kind": "cardInGraveyard"
+          }
+        ],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "enters"
+        }
+      },
+      {
+        "description": "Whenever this creature enters or attacks, you may return target permanent card with mana value 3 or less from your graveyard to the battlefield.",
+        "effects": [
+          {
+            "op": "graveyardToBattlefield",
+            "target": 0
+          }
+        ],
+        "kind": "triggered",
+        "optional": true,
+        "targets": [
+          {
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Enchantment"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Land"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Planeswalker"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Battle"
+                    }
+                  ]
+                },
+                {
+                  "kind": "manaValueAtMost",
+                  "n": 3
+                }
+              ]
+            },
+            "kind": "cardInGraveyard"
+          }
+        ],
+        "trigger": {
+          "subject": {
+            "kind": "self"
+          },
+          "when": "attacks"
+        }
+      }
+    ],
     "typeLine": "Creature — Giant",
     "types": [
       "Creature"
     ],
-    "unmodeledReasons": [
-      "unrecognized rules text: \"Whenever this creature enters or attacks, you may return target permanent card with mana value 3 or less from your graveyard to the battlefield.\""
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [],
@@ -80173,7 +80397,7 @@
       "colorless": 0,
       "generic": 1
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Braids, Arisen Nightmare",
     "oracleId": "e0445c80-fa53-4c3e-881e-940e9fce7f57",
     "power": 3,
@@ -80188,14 +80412,56 @@
       "Legendary"
     ],
     "toughness": 3,
-    "triggers": [],
+    "triggers": [
+      {
+        "description": "At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker; each opponent may sacrifice a permanent sharing a card type with it, and each who does not loses 2 life while you draw a card",
+        "effects": [
+          {
+            "life": {
+              "kind": "const",
+              "n": 2
+            },
+            "op": "sacrificeThenOpponentsShareTypeOrPunish",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "type",
+                  "value": "Enchantment"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                },
+                {
+                  "kind": "type",
+                  "value": "Planeswalker"
+                }
+              ]
+            }
+          }
+        ],
+        "kind": "triggered",
+        "targets": [],
+        "trigger": {
+          "player": "you",
+          "when": "endStep"
+        }
+      }
+    ],
     "typeLine": "Legendary Creature — Nightmare",
     "types": [
       "Creature"
     ],
-    "unmodeledReasons": [
-      "unrecognized rules text: \"At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each opponent may sacrifice a permanent of their choice that shares a card type with it. For each opponent who doesn't, that player loses 2 life and you draw a card.\""
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [

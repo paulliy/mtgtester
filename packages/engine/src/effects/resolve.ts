@@ -29,7 +29,7 @@ import {
   setCounterCount,
   expireCounterBoundAttackRestrictions,
 } from '../state/counters';
-import { isPermanentCard } from '../cards/definition';
+import { isPermanentCard, PERMANENT_CARD_TYPES } from '../cards/definition';
 import type { ObjectFacts } from '../cards/source-identity';
 import { eventObjectFacts, sourceObjectFacts, sourceObjectState } from '../cards/source-identity';
 import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
@@ -70,7 +70,14 @@ import type {
 } from '../cards/definition';
 import { queueBecomesTargetedTriggers, queueWardTriggers } from '../actions/apply';
 import { evaluateCondition, isChoiceCondition, resolveCondition } from '../cards/condition';
-import { allOf, ofSupertype, ofType, selectMatches, YOURS } from '../cards/selector';
+import {
+  allOf,
+  manaValueAtMost,
+  ofSupertype,
+  ofType,
+  selectMatches,
+  YOURS,
+} from '../cards/selector';
 import type { GameGen } from '../decisions';
 import { optionAt } from '../decisions';
 import { EngineInvariantError, UnmodeledCardError } from '../errors';
@@ -6097,6 +6104,120 @@ function* executeAbilityEffects(
           effect.reveal === true,
         );
         if (effect.bind !== undefined) effectBindings.set(effect.bind, foundCardIds);
+        break;
+      }
+      case 'sacrificeThenOpponentsShareTypeOrPunish': {
+        const lifeLoss = amountOf(effect.life);
+        const own = affectedBy(ctx, source, effect.selector).filter(
+          (permanent) => permanent.controllerId === controller.id,
+        );
+        const sacrificed = yield* chooseCard(ctx, {
+          player: controller.id,
+          prompt: `${source.name}: you may sacrifice an artifact, creature, enchantment, land, or planeswalker.`,
+          cards: own,
+          type: 'sacrifice',
+          verb: 'Sacrifice',
+          decline: { type: 'decline', description: "Don't sacrifice", verb: 'Decline' },
+        });
+        if (sacrificed === null) {
+          noop(ctx, 'sacrificeThenOpponentsShareTypeOrPunish', 'nothingQualifies');
+          break;
+        }
+        // "shares a card type with it": its card types as it last existed (CR 608.2h).
+        const types = computeCharacteristics(ctx, sacrificed as EnginePermanent).types.filter(
+          (type) => (PERMANENT_CARD_TYPES as readonly string[]).includes(type),
+        );
+        yield* movePermanentsToGraveyard(ctx, [sacrificed as EnginePermanent], 'sacrifice');
+        const answers: { player: EnginePlayerState; permanent: EnginePermanent | null }[] = [];
+        for (const opponent of playersInApnapOrder(ctx)) {
+          if (opponent.id === controller.id || opponent.hasLost) continue;
+          const sharing = ctx.state.battlefield.filter(
+            (permanent) =>
+              permanent.controllerId === opponent.id &&
+              computeCharacteristics(ctx, permanent).types.some((type) => types.includes(type)),
+          );
+          const chosen = yield* chooseCard(ctx, {
+            player: opponent.id,
+            prompt: `${source.name}: sacrifice a permanent that shares a card type with ${sacrificed.name}, or lose ${lifeLoss} life while ${controller.id} draws a card?`,
+            cards: sharing,
+            type: 'sacrifice',
+            verb: 'Sacrifice',
+            decline: {
+              type: 'decline',
+              description: `Don't sacrifice (lose ${lifeLoss} life)`,
+              verb: 'Decline',
+            },
+          });
+          answers.push({ player: opponent, permanent: chosen as EnginePermanent | null });
+        }
+        const offered = answers.flatMap(({ permanent }) => (permanent === null ? [] : [permanent]));
+        if (offered.length > 0) yield* movePermanentsToGraveyard(ctx, offered, 'sacrifice');
+        for (const { player, permanent } of answers) {
+          if (permanent !== null) continue;
+          loseLife(ctx, player, lifeLoss);
+          yield* drawCards(ctx, controller, 1);
+        }
+        break;
+      }
+      case 'searchLibraryAndOrGraveyardToBattlefield': {
+        const zoneChoice = yield {
+          decisionType: 'general' as const,
+          player: controller.id,
+          prompt: `${source.name}: search your library, your graveyard, or both?`,
+          options: [
+            plainOption({
+              type: 'searchZones',
+              description: 'Search your library and graveyard',
+              verb: 'Search both',
+            }),
+            plainOption({
+              type: 'searchZones',
+              description: 'Search your library',
+              verb: 'Search library',
+            }),
+            plainOption({
+              type: 'searchZones',
+              description: 'Search your graveyard',
+              verb: 'Search graveyard',
+            }),
+          ],
+        };
+        const searchesLibrary = zoneChoice.index !== 2;
+        const searchesGraveyard = zoneChoice.index !== 1;
+        const bound = allOf(effect.filter, manaValueAtMost(amountOf(effect.maxManaValue)));
+        const selectorSource = { cardId: source.cardId, controllerId: controller.id };
+        const matches = [
+          ...(searchesLibrary ? controller.library : []),
+          ...(searchesGraveyard ? controller.graveyard : []),
+        ].filter((card) =>
+          selectMatches(cardZoneCandidate(ctx, card, controller.id), bound, selectorSource),
+        );
+        const outcome = yield {
+          decisionType: 'general' as const,
+          player: controller.id,
+          prompt: `${source.name}: choose a card to put onto the battlefield.`,
+          options: [
+            ...matches.map((card) =>
+              cardOption(ctx, card, {
+                viewerId: controller.id,
+                type: 'findCard',
+                description: `Put ${card.name} onto the battlefield (from your ${card.zone})`,
+                verb: 'Put onto battlefield',
+              }),
+            ),
+            plainOption({
+              type: 'findNothing',
+              description: 'Find nothing',
+              verb: 'Find nothing',
+              role: 'decline',
+            }),
+          ],
+        };
+        const found = matches[outcome.index];
+        if (found !== undefined)
+          yield* moveObject(ctx, found, { zone: 'battlefield', controllerId: controller.id });
+        else noop(ctx, 'searchLibraryAndOrGraveyardToBattlefield', 'nothingQualifies');
+        if (searchesLibrary) shuffleLibrary(ctx, controller);
         break;
       }
       case 'searchLibraryGroup': {

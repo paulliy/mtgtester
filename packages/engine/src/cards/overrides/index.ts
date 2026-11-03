@@ -110,6 +110,7 @@ import { registerWhiteBlackControlPerchOverrides } from './white-black-control-p
 import { registerMiniPilotOverrides } from './mini-pilot';
 import { registerPilotCurrentOverrides } from './pilot-current';
 import { registerPilotNewOverrides } from './pilot-new';
+import { registerEdhrecStapleOverrides } from './edhrec-staples';
 
 export interface CardOverride {
   oracleId: OracleId;
@@ -261,6 +262,7 @@ registerDeck('coverage-pr12', registerCoveragePr12Overrides);
 registerDeck('mini-pilot', registerMiniPilotOverrides);
 registerDeck('pilot-new', registerPilotNewOverrides);
 registerDeck('pilot-current', registerPilotCurrentOverrides);
+registerDeck('edhrec-staples', registerEdhrecStapleOverrides);
 
 /** Register an override. Exported for the per-card modules and for tests. */
 export function registerOverride(override: CardOverride): void {

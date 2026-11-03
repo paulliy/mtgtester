@@ -536,6 +536,8 @@ const effectExpressions = {
   discardTarget: { count: numberValue },
   discardOrLoseLife: { amount: numberValue },
   millEachPlayer: { count: numberValue },
+  sacrificeThenOpponentsShareTypeOrPunish: { selector: selector, life: numberValue },
+  searchLibraryAndOrGraveyardToBattlefield: { filter: selector, maxManaValue: numberValue },
   eachPlayerDraws: { count: numberValue },
   eachPlayerLosesLifeAndDraws: { amount: numberValue, count: numberValue },
   discardChosenPlayers: { count: numberValue },

@@ -6,20 +6,20 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 | Failing slot | Cards | Share of slots |
 | ------------ | ----: | -------------: |
-| effect | 3015 | 14.22% |
-| subject | 1055 | 5.29% |
-| line | 633 | 3.45% |
+| effect | 2992 | 14.07% |
+| subject | 1058 | 5.30% |
+| line | 650 | 3.59% |
 | trigger event | 505 | 2.11% |
 | cost | 307 | 1.34% |
 | condition | 184 | 0.81% |
 | target | 168 | 0.79% |
+| card filter | 22 | 0.06% |
 | amount | 20 | 0.12% |
-| card filter | 19 | 0.06% |
 | spell filter | 11 | 0.09% |
 
 `line` means no slot recorded a failure inside the line: the line matched no sentence shape at all.
 
-## effect (3015)
+## effect (2992)
 
 - 69 × `look at the top n cards of your library` (Growing Rites of Itlimoc, Loot, Exuberant Explorer, Stock Up)
 - 31 × `pay {m}` (Lifecrafter's Bestiary, Leaf-Crowned Visionary, Mind's Eye)
@@ -37,7 +37,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 11 × `it deals n damage to target opponent` (Abraded Bluffs, Bristling Backwoods, Jagged Barrens)
 - 10 × `prevent all combat damage that would be dealt this turn` (Fog, Spore Frog, Kami of False Hope)
 
-## subject (1055)
+## subject (1058)
 
 - 27 × `you may` (Mockingbird, Vesuva, Phantasmal Image)
 - 25 × `~` (Yahenni, Undying Partisan, Marvin, Murderous Mimic, Paradise Druid)
@@ -55,7 +55,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 6 × `artifact card with mana value n` (Whir of Invention, Trinket Mage, Trophy Mage)
 - 6 × `this artifact enters or` (Ichor Wellspring, Prized Statue, Mycosynth Wellspring)
 
-## line (633)
+## line (650)
 
 - 11 × `modular n` (Arcbound Ravager, Arcbound Crusher, Scrapyard Recombiner)
 - 10 × `toxic n` (Myr Convert, Bloated Contaminator, Blightbelly Rat)
@@ -145,6 +145,24 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 2 × `nonland permanent and all other permanents with the same name as that permanent` (Maelstrom Pulse, Echoing Truth)
 - 2 × `artifact, enchantment, or creature with power n or greater` (Exorcise, Make Your Move)
 
+## card filter (22)
+
+- 3 × `nonland permanent` (Emeria Shepherd, Return to the Light Realms, Pull Through the Weft)
+- 2 × `spacecraft` (Seedship Broodtender, Scrounge for Eternity)
+- 2 × `instant and/or sorcery` (Scholar of the Ages, Divergent Equation)
+- 2 × `vehicle` (Broodheart Engine, Imperial Recovery Unit)
+- 1 × `artifact and enchantment` (Brilliant Restoration)
+- 1 × `red instant` (Pyromancer's Goggles)
+- 1 × `bat, lizard, rat,` (Mudflat Village)
+- 1 × `creature card with mana value equal to the number of charge counters on this artifact` (Aether Vial)
+- 1 × `instant and sorcery` (Wisdom of Ages)
+- 1 × `artifact card, up to n target enchantment card, up to n target instant card, up to n target sorcery card, and up to n target planeswalker` (Reconstruct History)
+- 1 × `creature card and all other cards with the same name as that` (Echoing Return)
+- 1 × `artifact creature` (Scarecrone)
+- 1 × `basic land` (Groundskeeper)
+- 1 × `historic permanent card` (Thran Temporal Gateway)
+- 1 × `artifact, enchantment, and planeswalker` (Triumphant Reckoning)
+
 ## amount (20)
 
 - 4 × `that many` (Tolarian Winds, Hex Magic, Illuminate History)
@@ -158,24 +176,6 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 1 × `the greatest mana value among elementals you control` (Sunderflock)
 - 1 × `the amount of life you gained this turn` (Defiling Daemogoth)
 - 1 × `your life total` (Death's Shadow)
-
-## card filter (19)
-
-- 3 × `nonland permanent` (Emeria Shepherd, Return to the Light Realms, Pull Through the Weft)
-- 2 × `instant and/or sorcery` (Scholar of the Ages, Divergent Equation)
-- 1 × `artifact and enchantment` (Brilliant Restoration)
-- 1 × `red instant` (Pyromancer's Goggles)
-- 1 × `bat, lizard, rat,` (Mudflat Village)
-- 1 × `creature card with mana value equal to the number of charge counters on this artifact` (Aether Vial)
-- 1 × `instant and sorcery` (Wisdom of Ages)
-- 1 × `artifact card, up to n target enchantment card, up to n target instant card, up to n target sorcery card, and up to n target planeswalker` (Reconstruct History)
-- 1 × `creature card and all other cards with the same name as that` (Echoing Return)
-- 1 × `spacecraft` (Seedship Broodtender)
-- 1 × `artifact creature` (Scarecrone)
-- 1 × `basic land` (Groundskeeper)
-- 1 × `historic permanent card` (Thran Temporal Gateway)
-- 1 × `vehicle` (Broodheart Engine)
-- 1 × `artifact, enchantment, and planeswalker` (Triumphant Reckoning)
 
 ## spell filter (11)
 

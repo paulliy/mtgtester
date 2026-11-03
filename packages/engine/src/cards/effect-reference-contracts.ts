@@ -247,6 +247,8 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   discardTarget: { target: player },
   discardOrLoseLife: { target: player },
   millEachPlayer: {},
+  sacrificeThenOpponentsShareTypeOrPunish: {},
+  searchLibraryAndOrGraveyardToBattlefield: {},
   eachPlayerDraws: {},
   eachPlayerLosesLifeAndDraws: {},
   discardChosenPlayers: { targetSlot: many(player) },

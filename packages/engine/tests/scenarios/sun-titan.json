@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "card": "Sun Titan",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature \u2014 Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Ogre",
+      "typeLine": "Creature \u2014 Ogre",
+      "manaCost": "{3}{R}",
+      "power": "4",
+      "toughness": "4"
+    },
+    {
+      "name": "Scenario Rock",
+      "typeLine": "Artifact",
+      "manaCost": "{2}",
+      "oracleText": "{T}: Add {C}."
+    },
+    {
+      "name": "Scenario Bolt",
+      "typeLine": "Instant",
+      "manaCost": "{R}",
+      "oracleText": "Scenario Bolt deals 3 damage to any target."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "sun-titan-enters-returns",
+      "title": "Sun Titan: as it enters, return a permanent card with mana value 3 or less",
+      "clauses": [2],
+      "instructions": ["Cast Sun Titan and use its trigger on Scenario Bear in your graveyard."],
+      "expectedOutcome": "Scenario Bear returns to the battlefield; Scenario Ogre (mana value 4) and Scenario Bolt (an instant) stay in your graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Sun Titan"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains", "Plains", "Plains"],
+          "graveyard": ["Scenario Bear", "Scenario Rock", "Scenario Ogre", "Scenario Bolt"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Sun Titan/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Targets for Sun Titan/",
+          "targets": ["Scenario Bear"]
+        },
+        {
+          "player": "P1",
+          "choose": "Yes"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Sun Titan", "Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Rock", "Scenario Ogre", "Scenario Bolt"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "sun-titan-attacks-returns-land",
+      "title": "Sun Titan: when it attacks, return a land card (mana value 0)",
+      "clauses": [1, 2],
+      "instructions": [
+        "Attack P2 with Sun Titan and use its trigger on the Forest in your graveyard."
+      ],
+      "expectedOutcome": "The Forest returns to the battlefield, Sun Titan stays untapped (vigilance), and P2 takes 6.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Sun Titan"],
+          "graveyard": ["Forest", "Scenario Ogre"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P1",
+          "choose": "Yes"
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Forest"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Ogre"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Sun Titan",
+            "equals": false
+          }
+        },
+        {
+          "life": {
+            "player": "P2",
+            "equals": 34
+          }
+        }
+      ]
+    },
+    {
+      "id": "sun-titan-decline",
+      "title": "Sun Titan: decline the trigger and nothing returns",
+      "clauses": [2],
+      "instructions": ["Cast Sun Titan and decline its trigger."],
+      "expectedOutcome": "Scenario Bear stays in your graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Sun Titan"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains", "Plains", "Plains"],
+          "graveyard": ["Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Sun Titan/"
+        },
+        {
+          "player": "P1",
+          "choose": "No"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Bear"]
+          }
+        }
+      ]
+    }
+  ]
+}

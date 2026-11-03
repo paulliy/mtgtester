@@ -1335,24 +1335,7 @@
         ]
       }
     ],
-    "knownUnmodeled": [
-      {
-        "oracleId": "e0445c80-fa53-4c3e-881e-940e9fce7f57",
-        "name": "Braids, Arisen Nightmare"
-      },
-      {
-        "oracleId": "69872a9a-fe54-4e58-940c-89395af71acd",
-        "name": "Finale of Devastation"
-      },
-      {
-        "oracleId": "86bf58f2-7f25-4e10-b797-25e0e8e67769",
-        "name": "Flusterstorm"
-      },
-      {
-        "oracleId": "b2e950fb-cb7e-40a0-a311-5bbdd0477b29",
-        "name": "Sun Titan"
-      }
-    ]
+    "knownUnmodeled": []
   },
   "oracle": [
     {
@@ -4387,7 +4370,7 @@
     },
     {
       "oracleId": "e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe",
-      "name": "Olórin's Searing Light",
+      "name": "Ol\u00f3rin's Searing Light",
       "sha256": "74b48c19f85169bedb91b2a35f8d7d0315725b1c5e5f74d820366ace70a43641"
     },
     {

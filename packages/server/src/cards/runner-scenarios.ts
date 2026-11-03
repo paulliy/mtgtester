@@ -64,11 +64,47 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'aetherize.json',
+    file: scenarioFile(
+      'aetherize.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/aetherize.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'braids-arisen-nightmare.json',
+    file: scenarioFile(
+      'braids-arisen-nightmare.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/braids-arisen-nightmare.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'chrome-mox.json',
     file: scenarioFile(
       'chrome-mox.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/chrome-mox.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'craterhoof-behemoth.json',
+    file: scenarioFile(
+      'craterhoof-behemoth.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/craterhoof-behemoth.json',
+          import.meta.url,
+        ),
         'utf8',
       ),
     ),
@@ -107,11 +143,57 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'faerie-mastermind.json',
+    file: scenarioFile(
+      'faerie-mastermind.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/faerie-mastermind.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'finale-of-devastation.json',
+    file: scenarioFile(
+      'finale-of-devastation.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/finale-of-devastation.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'flusterstorm.json',
+    file: scenarioFile(
+      'flusterstorm.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/flusterstorm.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'inspiring-call.json',
     file: scenarioFile(
       'inspiring-call.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/inspiring-call.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'mana-geyser.json',
+    file: scenarioFile(
+      'mana-geyser.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/mana-geyser.json', import.meta.url),
         'utf8',
       ),
     ),
@@ -212,6 +294,46 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'ruby-medallion.json',
+    file: scenarioFile(
+      'ruby-medallion.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/ruby-medallion.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'seedborn-muse.json',
+    file: scenarioFile(
+      'seedborn-muse.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/seedborn-muse.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'shadowspear.json',
+    file: scenarioFile(
+      'shadowspear.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/shadowspear.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'sun-titan.json',
+    file: scenarioFile(
+      'sun-titan.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/sun-titan.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'sylvan-library.json',
     file: scenarioFile(
       'sylvan-library.json',
@@ -240,6 +362,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       'the-ozolith.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/the-ozolith.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'urzas-incubator.json',
+    file: scenarioFile(
+      'urzas-incubator.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/urzas-incubator.json',
+          import.meta.url,
+        ),
         'utf8',
       ),
     ),

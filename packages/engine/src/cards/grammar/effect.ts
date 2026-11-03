@@ -39,9 +39,11 @@ import {
   SELF_OBJECT_RE,
 } from './words';
 import {
+  ANY_SPELL,
   parseCardFilterPhrase,
   parseMassSubject,
   parseSearchFilter,
+  parseSpellFilter,
   parseSubject,
   parseTargetClause,
 } from './subject';
@@ -64,6 +66,7 @@ import {
   not,
   ofSubtype,
   ofSupertype,
+  manaValueAtLeast,
   manaValueAtMost,
   ofType,
 } from '../selector';
@@ -639,6 +642,56 @@ export function parseExileTopPlayableBlock(lower: string): Effect[] | null {
  */
 export function parseLookAtTopBlock(lower: string, card: OracleCard): Effect[] | null {
   const normalized = lower.replace(/\.$/, '');
+  // "Search your library and/or graveyard for a creature card with mana value X or less and put
+  // it onto the battlefield. If you search your library this way, shuffle. If X is 10 or more,
+  // creatures you control get +X/+X and gain haste until end of turn." (Finale of Devastation):
+  // the shuffle is part of the two-zone search, and the rider reads the announced X.
+  {
+    const finale = normalized.match(
+      /^search your library and\/or graveyard for (?:a|an) (.+?) card with mana value x or less and put it onto the battlefield\. if you search your library this way, shuffle(?:\. if x is (\d+) or more, (.+?) get \+x\/\+x and gain ([a-z ,]+?) until end of turn)?$/,
+    );
+    if (finale !== null) {
+      const filter = parseCardFilterPhrase(`${finale[1] as string} card`, card);
+      if (filter === null) return null;
+      const effects: Effect[] = [
+        {
+          op: 'searchLibraryAndOrGraveyardToBattlefield',
+          filter,
+          maxManaValue: { kind: 'xValue' },
+        },
+      ];
+      if (finale[2] !== undefined) {
+        const selector = parseSubject(finale[3] as string, card);
+        const keywords = parseKeywordLine(finale[4] as string);
+        if (selector === null || keywords === null || keywords.ward !== undefined) return null;
+        if (keywords.protectionFrom !== undefined) return null;
+        effects.push({
+          op: 'conditionalEffect',
+          condition: {
+            kind: 'compareValues',
+            left: { kind: 'xValue' },
+            cmp: '>=',
+            right: constant(Number(finale[2])),
+          },
+          then: [
+            {
+              op: 'pumpEachUntilEot',
+              selector,
+              power: { kind: 'xValue' },
+              toughness: { kind: 'xValue' },
+            },
+            ...keywords.keywords.map((keyword): Effect => ({
+              op: 'grantKeywordEachUntilEot',
+              selector,
+              keyword,
+            })),
+          ],
+          else: [],
+        });
+      }
+      return effects;
+    }
+  }
   const reorder = normalized.match(
     /^look at the top (\w+) cards of your library, then put them back in any order(?:\. you may shuffle(?: your library)?)?(?:\. draw a card)?$/,
   );
@@ -2342,6 +2395,25 @@ function parseEffectSentenceUntraced(
       }
     }
   }
+  // "Counter target instant or sorcery spell unless its controller pays {1}" (Flusterstorm),
+  // "Counter target creature spell" (Essence Scatter): a spell target narrowed by the spell
+  // filter slot, read from the spell as it is on the stack.
+  {
+    const m = s.match(/^counter target (.+?) spell(?: unless its controller pays (\{[^}]+\}))?$/);
+    if (
+      m !== null &&
+      m[1] !== 'noncreature' &&
+      !/\b(?:or ability|you control|an opponent controls)\b/.test(m[1] as string)
+    ) {
+      const filter = parseSpellFilter(`${m[1] as string} spell`, card);
+      if (filter === null || filter === ANY_SPELL) return null;
+      const target = alloc('spell', filter);
+      if (m[2] === undefined) return [{ op: 'counter', target }];
+      const parsedCost = parseManaCost((m[2] as string).toUpperCase() as never);
+      if (parsedCost.cost === null) return null;
+      return [{ op: 'counterUnlessControllerPays', target, cost: parsedCost.cost }];
+    }
+  }
   // "Add {B}{B}{B}." (a ritual spell) / "Add {U}{B}." (the effect half of a signet's activated
   // ability, once its `{1}, {T}` cost has already routed it away from `parseManaAbilityLine` —
   // that function refuses any cost paid in mana, so a rock with a mana activation cost falls
@@ -2452,20 +2524,29 @@ function parseEffectSentenceUntraced(
     // between "target" and "card" at all — the filter group is optional, and its absence means
     // an unrestricted `cardInGraveyard` slot (any card, CR 608.2b), not "any permanent card".
     const m = s.match(
-      /^return (?:up to (\w+) )?(other )?target(?: (.+?))? (?:card|cards) from (your|a) graveyard to (the battlefield|your hand)$/,
+      /^return (?:up to (\w+) )?(other )?target(?: (.+?))? (?:card|cards)(?: with mana value (\d+) or (less|greater))? from (your|a) graveyard to (the battlefield|your hand)$/,
     );
     if (m) {
       const typePhrase = m[3];
-      const filter = typePhrase === undefined ? null : parseCardFilterPhrase(typePhrase, card);
-      if (typePhrase === undefined || filter !== null) {
+      const typeFilter = typePhrase === undefined ? null : parseCardFilterPhrase(typePhrase, card);
+      // "with mana value 3 or less" (Sun Titan): a bound on the same graveyard card.
+      const bound =
+        m[4] === undefined
+          ? undefined
+          : m[5] === 'less'
+            ? manaValueAtMost(Number(m[4]))
+            : manaValueAtLeast(Number(m[4]));
+      if (typePhrase === undefined || typeFilter !== null) {
+        const filter =
+          bound === undefined ? typeFilter : typeFilter === null ? bound : allOf(typeFilter, bound);
         const target = alloc(
           'cardInGraveyard',
           filter ?? undefined,
           undefined,
-          m[4] === 'a' ? 'any' : undefined,
+          m[6] === 'a' ? 'any' : undefined,
         );
         return [
-          m[5] === 'the battlefield'
+          m[7] === 'the battlefield'
             ? { op: 'graveyardToBattlefield', target }
             : { op: 'graveyardToHand', target },
         ];

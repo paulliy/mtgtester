@@ -18410,7 +18410,13 @@
           ]
         }
       ],
-      "gameplayAiScenarioIds": []
+      "gameplayAiScenarioIds": [],
+      "facetNotes": [
+        {
+          "facet": "optional",
+          "reason": "\"You may have it enter as a copy\" is the entersAsCopy choice itself, whose \"Enter normally\" option is the decline; it is not an optional ability flag."
+        }
+      ]
     },
     "0355249a-8e4e-41db-9cea-1b901faffbe6": {
       "name": "Witch Enchanter // Witch-Blessed Meadow",
@@ -18458,6 +18464,392 @@
             "cards/witch-enchanter.test.ts::witch-meadow-is-not-a-creature"
           ],
           "viewerScenarioIds": ["witch-meadow-pay-life-untapped", "witch-meadow-is-not-a-creature"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0c367958-729e-416d-988b-098e90e7a1fd": {
+      "name": "Ruby Medallion",
+      "oracleSha256": "9de2af87febd426c1c1dff25c63ed3a46ec3f34df43de5c2d76148a320e9e0d2",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Red spells you cast cost {1} less to cast.",
+          "implementation": [
+            "spell filter slot reads a color word: ofColor(R)",
+            "ruleStatics costReduction {1} for spells you cast (generic only, CR 601.2f)"
+          ],
+          "engineTestIds": [
+            "cards/ruby-medallion.test.ts::ruby-medallion-reduces-red",
+            "cards/ruby-medallion.test.ts::ruby-medallion-not-other-colors",
+            "cards/ruby-medallion.test.ts::ruby-medallion-not-colored-mana"
+          ],
+          "viewerScenarioIds": [
+            "ruby-medallion-reduces-red",
+            "ruby-medallion-not-other-colors",
+            "ruby-medallion-not-colored-mana"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b380c04b-0bce-4328-8f0a-1425e48bee72": {
+      "name": "Urza's Incubator",
+      "oracleSha256": "b3c2b488d20fba1c17600e29bf2aa6d817d4deb4dfbc342bf10c72193c501678",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "As this artifact enters, choose a creature type.",
+          "implementation": [
+            "entersChoosingOption creature type, from the decklist's creature types"
+          ],
+          "engineTestIds": ["cards/urzas-incubator.test.ts::incubator-chosen-type-cheaper"],
+          "viewerScenarioIds": ["incubator-chosen-type-cheaper"]
+        },
+        {
+          "oracleText": "Creature spells of the chosen type cost {2} less to cast.",
+          "implementation": [
+            "ruleStatics costReduction {2}, filter Creature and the source's chosen subtype",
+            "allPlayers: no \"you cast\", so every player's spells (new)"
+          ],
+          "engineTestIds": [
+            "cards/urzas-incubator.test.ts::incubator-chosen-type-cheaper",
+            "cards/urzas-incubator.test.ts::incubator-other-type-full-price",
+            "cards/urzas-incubator.test.ts::incubator-reduces-opponents-spells"
+          ],
+          "viewerScenarioIds": [
+            "incubator-chosen-type-cheaper",
+            "incubator-other-type-full-price",
+            "incubator-reduces-opponents-spells"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "463865bc-087e-477b-9e86-84e77f1ad931": {
+      "name": "Seedborn Muse",
+      "oracleSha256": "935a4f4894058f7e912b131fe97931e288fe276c4766cb0d4cb320604a14a6aa",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Untap all permanents you control during each other player's untap step.",
+          "implementation": [
+            "ruleStatics untapDuringOthersUntapSteps (new): applied in each other player's untap step turn-based action (CR 502.3), never a trigger"
+          ],
+          "engineTestIds": [
+            "cards/seedborn-muse.test.ts::seedborn-cast-then-untap-on-opponent-turn",
+            "cards/seedborn-muse.test.ts::seedborn-untaps-each-permanent-type",
+            "cards/seedborn-muse.test.ts::seedborn-not-opponents-permanents",
+            "cards/seedborn-muse.test.ts::seedborn-not-during-own-turn"
+          ],
+          "viewerScenarioIds": [
+            "seedborn-cast-then-untap-on-opponent-turn",
+            "seedborn-untaps-each-permanent-type",
+            "seedborn-not-opponents-permanents",
+            "seedborn-not-during-own-turn"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "facetNotes": [
+        {
+          "facet": "other",
+          "reason": "\"each other player's untap step\" is the rule static untapDuringOthersUntapSteps; it names other players, not another object, so there is no \"another\" selector to count."
+        }
+      ]
+    },
+    "a984db23-40ea-428d-829f-e944267280f8": {
+      "name": "Faerie Mastermind",
+      "oracleSha256": "c0630be4eec3d7b471c761910e452d409e166fe42d5e49ee682c312df2ccd1dd",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Flash",
+          "implementation": ["flash keyword"],
+          "engineTestIds": ["cards/faerie-mastermind.test.ts::mastermind-flash-on-opponent-turn"],
+          "viewerScenarioIds": ["mastermind-flash-on-opponent-turn"]
+        },
+        {
+          "oracleText": "Flying",
+          "implementation": ["flying keyword"],
+          "engineTestIds": ["cards/faerie-mastermind.test.ts::mastermind-flash-on-opponent-turn"],
+          "viewerScenarioIds": ["mastermind-flash-on-opponent-turn"]
+        },
+        {
+          "oracleText": "Whenever an opponent draws their second card each turn, you draw a card.",
+          "implementation": [
+            "drawsCard opponent trigger with ordinalThisTurn 2: part of the event, not an intervening-if (CR 603.4) (fixed in this change)"
+          ],
+          "engineTestIds": [
+            "cards/faerie-mastermind.test.ts::mastermind-opponent-second-draw",
+            "cards/faerie-mastermind.test.ts::mastermind-opponent-first-draw",
+            "cards/faerie-mastermind.test.ts::mastermind-third-draw-still-resolves"
+          ],
+          "viewerScenarioIds": [
+            "mastermind-opponent-second-draw",
+            "mastermind-opponent-first-draw",
+            "mastermind-third-draw-still-resolves"
+          ]
+        },
+        {
+          "oracleText": "{3}{U}: Each player draws a card.",
+          "implementation": [
+            "activated {3}{U}: Effect.eachPlayerDraws scope all, APNAP order (new)"
+          ],
+          "engineTestIds": ["cards/faerie-mastermind.test.ts::mastermind-each-player-draws"],
+          "viewerScenarioIds": ["mastermind-each-player-draws"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "7c779721-cd1b-4696-9ae9-68ccc284ed2a": {
+      "name": "Aetherize",
+      "oracleSha256": "3c515f80bbd6a29da8ec2ea11e6f7cedd25aaefc8124820c768c8983acf44648",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Return all attacking creatures to their owner's hand.",
+          "implementation": [
+            "mass bounce grammar: returnToHandEach over combatRole attacking creatures; the set is fixed on resolution (CR 611.2c)"
+          ],
+          "engineTestIds": [
+            "cards/aetherize.test.ts::aetherize-returns-attackers",
+            "cards/aetherize.test.ts::aetherize-outside-combat"
+          ],
+          "viewerScenarioIds": ["aetherize-returns-attackers", "aetherize-outside-combat"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a8dba58b-2956-492e-ae30-49db2ae68e53": {
+      "name": "Mana Geyser",
+      "oracleSha256": "df0f3dd0847eb5cf60a9067bfc458c264d65562e36e24db219b209b18d74b3cd",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Add {R} for each tapped land your opponents control.",
+          "implementation": [
+            "Effect.addMana, amount countTappedPermanents land, opponents, counted on resolution (CR 608.2h)"
+          ],
+          "engineTestIds": [
+            "cards/mana-geyser.test.ts::mana-geyser-counts-opponents-tapped-lands",
+            "cards/mana-geyser.test.ts::mana-geyser-ignores-untapped-and-own-lands"
+          ],
+          "viewerScenarioIds": [
+            "mana-geyser-counts-opponents-tapped-lands",
+            "mana-geyser-ignores-untapped-and-own-lands"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8b27326f-e7b8-4a4d-b589-df459246d19a": {
+      "name": "Shadowspear",
+      "oracleSha256": "8c191023b8029044c8e9f8eedc9f7bbe9b3e11231c5c15f3560897de3abc5ad4",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Equipped creature gets +1/+1 and has trample and lifelink.",
+          "implementation": ["equipment static: attachedToSource +1/+1, trample, lifelink"],
+          "engineTestIds": ["cards/shadowspear.test.ts::shadowspear-equipped-creature"],
+          "viewerScenarioIds": ["shadowspear-equipped-creature"]
+        },
+        {
+          "oracleText": "{1}: Permanents your opponents control lose hexproof and indestructible until end of turn.",
+          "implementation": [
+            "Effect.loseKeywordsEachUntilEot (new): layer-6 removeKeywords at its timestamp, so a later grant restores it (CR 613.7); affected set fixed on resolution (CR 611.2c)"
+          ],
+          "engineTestIds": [
+            "cards/shadowspear.test.ts::shadowspear-strips-hexproof",
+            "cards/shadowspear.test.ts::shadowspear-strips-indestructible",
+            "cards/shadowspear.test.ts::shadowspear-only-opponents",
+            "cards/shadowspear.test.ts::shadowspear-later-grant-wins"
+          ],
+          "viewerScenarioIds": [
+            "shadowspear-strips-hexproof",
+            "shadowspear-strips-indestructible",
+            "shadowspear-only-opponents",
+            "shadowspear-later-grant-wins"
+          ]
+        },
+        {
+          "oracleText": "Equip {2}",
+          "implementation": ["Equip {2}: attachSelfTo a creature you control, sorcery timing"],
+          "engineTestIds": ["cards/shadowspear.test.ts::shadowspear-equipped-creature"],
+          "viewerScenarioIds": ["shadowspear-equipped-creature"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8c52bd39-0586-48ca-b263-17210cf9feb6": {
+      "name": "Craterhoof Behemoth",
+      "oracleSha256": "99afcf161845fe00ebe197831a068d35c643b7a7c88608a22c6e65ec98130292",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Haste",
+          "implementation": ["haste keyword"],
+          "engineTestIds": [
+            "cards/craterhoof-behemoth.test.ts::craterhoof-pumps-and-attacks",
+            "cards/craterhoof-behemoth.test.ts::craterhoof-alone"
+          ],
+          "viewerScenarioIds": ["craterhoof-pumps-and-attacks", "craterhoof-alone"]
+        },
+        {
+          "oracleText": "When this creature enters, creatures you control gain trample and get +X/+X until end of turn, where X is the number of creatures you control.",
+          "implementation": [
+            "enters trigger: pumpEachUntilEot by countPermanents creatures you control (X fixed on resolution) and grantKeywordEachUntilEot trample on the same set"
+          ],
+          "engineTestIds": [
+            "cards/craterhoof-behemoth.test.ts::craterhoof-pumps-and-attacks",
+            "cards/craterhoof-behemoth.test.ts::craterhoof-not-opponents-creatures",
+            "cards/craterhoof-behemoth.test.ts::craterhoof-alone"
+          ],
+          "viewerScenarioIds": [
+            "craterhoof-pumps-and-attacks",
+            "craterhoof-not-opponents-creatures",
+            "craterhoof-alone"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "facetNotes": [
+        {
+          "facet": "untilEndOfTurn",
+          "reason": "One \"until end of turn\" spans both the +X/+X and the trample grant, which are two ops over the same set."
+        }
+      ]
+    },
+    "b2e950fb-cb7e-40a0-a311-5bbdd0477b29": {
+      "name": "Sun Titan",
+      "oracleSha256": "08c2cf665d45ba911d1a04180a470311b3bf07b4137fb314c499e999afaeb776",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Vigilance",
+          "implementation": ["vigilance keyword"],
+          "engineTestIds": ["cards/sun-titan.test.ts::sun-titan-attacks-returns-land"],
+          "viewerScenarioIds": ["sun-titan-attacks-returns-land"]
+        },
+        {
+          "oracleText": "Whenever this creature enters or attacks, you may return target permanent card with mana value 3 or less from your graveyard to the battlefield.",
+          "implementation": [
+            "enters and attacks triggers (one per event), optional, cardInGraveyard target: permanent card with manaValueAtMost 3 (new qualifier), graveyardToBattlefield"
+          ],
+          "engineTestIds": [
+            "cards/sun-titan.test.ts::sun-titan-enters-returns",
+            "cards/sun-titan.test.ts::sun-titan-attacks-returns-land",
+            "cards/sun-titan.test.ts::sun-titan-decline",
+            "cards/sun-titan.test.ts::sun-titan-c02-candidates"
+          ],
+          "viewerScenarioIds": [
+            "sun-titan-enters-returns",
+            "sun-titan-attacks-returns-land",
+            "sun-titan-decline"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "facetNotes": [
+        {
+          "facet": "optional",
+          "reason": "\"enters or attacks\" is one ability with two trigger events, modeled as one trigger per event; each is the same optional ability."
+        },
+        {
+          "facet": "targetCount",
+          "reason": "The same target slot appears once on each of the two per-event triggers."
+        }
+      ]
+    },
+    "86bf58f2-7f25-4e10-b797-25e0e8e67769": {
+      "name": "Flusterstorm",
+      "oracleSha256": "545deccdecdfa8ffa11609ba6900608e7cadb1283cce9892ae1ca9b0e6c27870",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target instant or sorcery spell unless its controller pays {1}.",
+          "implementation": [
+            "spell target narrowed by the spell filter slot (instant or sorcery), Effect.counterUnlessControllerPays {1}"
+          ],
+          "engineTestIds": [
+            "cards/flusterstorm.test.ts::flusterstorm-storm-counters",
+            "cards/flusterstorm.test.ts::flusterstorm-controller-pays",
+            "cards/flusterstorm.test.ts::flusterstorm-not-creature-spells",
+            "cards/flusterstorm.test.ts::flusterstorm-c01-no-creature-target"
+          ],
+          "viewerScenarioIds": [
+            "flusterstorm-storm-counters",
+            "flusterstorm-controller-pays",
+            "flusterstorm-not-creature-spells"
+          ]
+        },
+        {
+          "oracleText": "Storm",
+          "implementation": [
+            "storm keyword (new): cast trigger replicateCopies for every player's spells cast before it this turn, each copy may choose new targets (CR 702.40a)"
+          ],
+          "engineTestIds": [
+            "cards/flusterstorm.test.ts::flusterstorm-storm-counters",
+            "cards/flusterstorm.test.ts::flusterstorm-controller-pays"
+          ],
+          "viewerScenarioIds": ["flusterstorm-storm-counters", "flusterstorm-controller-pays"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "69872a9a-fe54-4e58-940c-89395af71acd": {
+      "name": "Finale of Devastation",
+      "oracleSha256": "678ba2349c8f28cd8bec04ff652ca826b51c994534a6e82fbf8e8691fcbaf66a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Search your library and/or graveyard for a creature card with mana value X or less and put it onto the battlefield. If you search your library this way, shuffle. If X is 10 or more, creatures you control get +X/+X and gain haste until end of turn.",
+          "implementation": [
+            "Effect.searchLibraryAndOrGraveyardToBattlefield (new): choose library, graveyard or both; a creature card with mana value at most the announced X; may find nothing (CR 701.19b); shuffle only when the library was searched",
+            "conditionalEffect compareValues X >= 10: pumpEachUntilEot +X/+X and grantKeywordEachUntilEot haste over creatures you control"
+          ],
+          "engineTestIds": [
+            "cards/finale-of-devastation.test.ts::finale-from-library",
+            "cards/finale-of-devastation.test.ts::finale-from-graveyard",
+            "cards/finale-of-devastation.test.ts::finale-x-ten-pumps",
+            "cards/finale-of-devastation.test.ts::finale-c01-mana-value-bound"
+          ],
+          "viewerScenarioIds": [
+            "finale-from-library",
+            "finale-from-graveyard",
+            "finale-x-ten-pumps"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "facetNotes": [
+        {
+          "facet": "untilEndOfTurn",
+          "reason": "One \"until end of turn\" spans both the +X/+X and the haste grant, which are two ops over the same set."
+        }
+      ]
+    },
+    "e0445c80-fa53-4c3e-881e-940e9fce7f57": {
+      "name": "Braids, Arisen Nightmare",
+      "oracleSha256": "dabca9c4b2522112d857cb7103573005d1735aabf628bcbaadc0858f2e7ef2b5",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each opponent may sacrifice a permanent of their choice that shares a card type with it. For each opponent who doesn't, that player loses 2 life and you draw a card.",
+          "implementation": [
+            "override (edhrec-staples.ts): endStep you trigger",
+            "Effect.sacrificeThenOpponentsShareTypeOrPunish (new): optional sacrifice of an artifact, creature, enchantment, land or planeswalker; each opponent in APNAP order (CR 101.4) may choose a permanent sharing a card type with it as it last existed; chosen permanents are sacrificed together; each opponent who did not loses 2 life and you draw a card"
+          ],
+          "engineTestIds": [
+            "cards/edhrec-staples/braids-arisen-nightmare.test.ts::braids-each-opponent-answers",
+            "cards/edhrec-staples/braids-arisen-nightmare.test.ts::braids-decline-sacrifice",
+            "cards/edhrec-staples/braids-arisen-nightmare.test.ts::braids-type-must-match"
+          ],
+          "viewerScenarioIds": [
+            "braids-each-opponent-answers",
+            "braids-decline-sacrifice",
+            "braids-type-must-match"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []

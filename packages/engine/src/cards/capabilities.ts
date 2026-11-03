@@ -1096,6 +1096,8 @@ const families = {
       discardTarget: true,
       discardOrLoseLife: true,
       millEachPlayer: true,
+      sacrificeThenOpponentsShareTypeOrPunish: true,
+      searchLibraryAndOrGraveyardToBattlefield: true,
       eachPlayerDraws: true,
       eachPlayerLosesLifeAndDraws: true,
       discardChosenPlayers: true,

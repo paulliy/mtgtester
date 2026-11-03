@@ -408,6 +408,7 @@ export const IMPLEMENTED_KEYWORDS = [
   'improvise',
   'infect',
   'cascade',
+  'storm',
   'rebound',
   'split second',
 ] as const;
@@ -1269,6 +1270,28 @@ export type Effect =
        * destination is a hidden zone such as the hand.
        */
       reveal?: boolean;
+    }
+  /**
+   * "You may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each
+   * opponent may sacrifice a permanent of their choice that shares a card type with it. For each
+   * opponent who doesn't, that player loses 2 life and you draw a card." (Braids, Arisen
+   * Nightmare): the controller's optional sacrifice of a permanent matching `selector`; then each
+   * opponent, in APNAP order (CR 101.4), chooses a permanent sharing a card type with the
+   * sacrificed one as it last existed, or none. The chosen ones are sacrificed together, and each
+   * opponent who did not sacrifice loses `life` and the controller draws a card.
+   */
+  | { op: 'sacrificeThenOpponentsShareTypeOrPunish'; selector: Selector; life: Value }
+  /**
+   * "Search your library and/or graveyard for a creature card with mana value X or less and put
+   * it onto the battlefield. If you search your library this way, shuffle." (Finale of
+   * Devastation): the controller chooses which of the two zones to search, may find nothing
+   * (CR 701.19b), and shuffles only when the library was searched. `maxManaValue` is read as it
+   * resolves.
+   */
+  | {
+      op: 'searchLibraryAndOrGraveyardToBattlefield';
+      filter: Selector;
+      maxManaValue: Value;
     }
   /**
    * Choose a set of cards in one private-library decision, then validate the set as a whole.
