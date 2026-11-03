@@ -343,6 +343,17 @@ at 200/200 and `knownUnmodeled` is empty.
 
 ### Phase 4: grammar breadth
 
+Status (2026-11-03): in progress. Two batches have landed, worked from the
+[triage](edhrec-triage.md) queue (its largest effect-slot groups) rather than strictly in the
+order below. The pinned ratchet is at 3,237 modeled.
+
+- **Batch 1:** subjectless "gain N life", investigate, "each opponent discards", "target player
+  mills", Fog, karoo returns, and "it deals N damage to target opponent". It also fixed
+  "target opponent" being read as any player. The corpus net closes 97 cards.
+- **Batch 2:** the "look at the top N" reveal and pick shapes. It also fixed Orb of Dragonkind,
+  which searched its whole library instead of looking at the top seven. The corpus net closes
+  28 cards.
+
 Extend the Phase 1 slots, in order of the cards each closes:
 
 1. **Amounts** (227 cards close on this alone): `X`, `for each <selector>`, `equal to <value>`,
