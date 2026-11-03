@@ -2,7 +2,7 @@
 
 Status: in progress. Phases retooled 2026-11-02 after decisions D1 to D4 below. Phase 1 steps 1
 to 7 are done. Phase 3 is done (2026-11-03): all 15 staples
-are modeled. Phase 2 is done except face-down exile and face-down permanents. See each phase's
+are modeled. Phase 2 is done; each subsystem lists the cards it still leaves open. See each phase's
 status. Baseline: `253d682`. Scope: the 15 unmodeled EDHREC staples and the 5,917 cards in the
 [EDHREC ready list](edhrec-ready-list.md) that are blocked by exactly one unparsed rules line.
 
@@ -233,8 +233,7 @@ Exit: both nets unchanged through steps 2 to 5, and `interpret.ts` reduced to ca
 
 ### Phase 2: subsystems (D4)
 
-Status (2026-11-03): four of the five subsystems are done; face-down exile and face-down
-permanents are still open.
+Status (2026-11-03): all five subsystems have landed; each lists the cards it still leaves open.
 
 - **Last-known counters**: The Ozolith. A leave-the-battlefield head over another permanent reads
   "if it had counters on it" from the departed object's last-known facts (CR 603.10a). "Put
@@ -256,8 +255,25 @@ permanents are still open.
   Manipulation. Still open: secret votes (Mob Verdict), Council's dilemma per-vote counts
   (Expropriate), extra votes (Brago's Representative), "whenever players finish voting"
   triggers, and outcomes that target.
-- **Face-down exile and face-down permanents**: not started. They need the `PlayerView`
-  privacy work described below.
+- **Face-down permanents**: Nantuko Vigilante, Gudul Lurker, Hunted Bonebrute, Hooded Hydra
+  and Innocuous Rat.
+  - A "turned face up" trigger event (CR 708.8), queued by the turn-face-up special action.
+  - Megamorph's +1/+1 counter (CR 702.37b).
+  - Disguise's ward {2} on the face-down permanent (CR 702.168a). A manifested card does not
+    get it.
+  - "As this creature is turned face up, put N counters on it".
+  - The `manifestDread` op (CR 701.62a).
+  - Still open: cloak, turning permanents face down (Cyber Conversion), "its controller
+    manifests dread" (needs the departed creature's last-known controller), and Vesuvan
+    Shapeshifter.
+- **Face-down exile**: Gonti, Lord of Luxury, Thief of Sanity and Praetor's Grasp.
+  - The `exileFaceDownPlayable` op exiles a card face down from the top N or by search.
+  - The permission to cast or play it lasts while the card stays exiled.
+  - Only the player allowed to play it may look at it (CR 406.3), in both the spectator board
+    and the AI's `PlayerView`. The AI view now also redacts a generic face-down exiled card.
+  - "Mana of any type can be spent" makes every pip generic for that cast (`anyTypeCost`).
+  - Still open: face-down piles (Hostile Negotiations, Riddles in the Dark), Scroll Rack and
+    Memory Jar.
 
 Each subsystem adds features, so each brings its own executor tests and contract tests (D1).
 Main-thread rules decisions are listed for each.
