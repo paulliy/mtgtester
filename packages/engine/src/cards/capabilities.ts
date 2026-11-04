@@ -1121,6 +1121,7 @@ const families = {
       loseLife: true,
       loseLifeTarget: true,
       drawTarget: true,
+      gainLifeTarget: true,
       cascade: true,
       reboundCastFromExile: true,
       eachOpponentLosesLife: true,

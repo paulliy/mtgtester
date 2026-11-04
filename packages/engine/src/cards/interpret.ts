@@ -55,6 +55,7 @@ import {
 import {
   ANTHEM_RE,
   appendSentenceEffects,
+  soleTargetSince,
   MANA_ABILITY_RE,
   manaSymbols,
   parseCreateTokenSentence,
@@ -1369,10 +1370,18 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
     parseLookAtTopBlock(split.effectText, card) ??
     [];
   if (effects.length === 0) {
+    let lastTarget: number | undefined;
     for (const sentence of splitSentences(split.effectText)) {
-      const parsed = parseEffectSentence(sentence, alloc, card);
+      const slotsBefore = targets.length;
+      const parsed = parseEffectSentence(
+        sentence,
+        alloc,
+        card,
+        lastTarget === undefined ? {} : { lastTarget },
+      );
       if (parsed === null) return null;
       appendSentenceEffects(effects, sentence, parsed);
+      lastTarget = soleTargetSince(targets, slotsBefore);
     }
   }
   if (effects.length === 0) return null;
@@ -4252,13 +4261,22 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
         return base + lineTargets.length - 1;
       };
       let allParsed = sentences.length > 0;
+      let lastTarget: number | undefined;
       for (const sentence of sentences) {
-        const parsed = parseEffectSentence(sentence, lineAlloc, card);
+        const slotsBefore = lineTargets.length;
+        const parsed = parseEffectSentence(
+          sentence,
+          lineAlloc,
+          card,
+          lastTarget === undefined ? {} : { lastTarget },
+        );
         if (parsed === null) {
           allParsed = false;
           break;
         }
         appendSentenceEffects(lineEffects, sentence, parsed);
+        const local = soleTargetSince(lineTargets, slotsBefore);
+        lastTarget = local === undefined ? undefined : base + local;
       }
       if (allParsed) {
         spellTargets.push(...lineTargets);

@@ -254,3 +254,6 @@ packages/engine/tests/cards/tithe-drinker.test.ts
 packages/engine/tests/cards/seers-sundial.test.ts
 packages/engine/tests/cards/goblin-wardriver.test.ts
 packages/engine/tests/phase4-batch6-grammar.test.ts
+packages/engine/tests/phase4-batch7-grammar.test.ts
+packages/engine/tests/cards/natures-claim.test.ts
+packages/engine/tests/cards/vapor-snag.test.ts

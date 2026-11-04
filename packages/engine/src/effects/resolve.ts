@@ -2005,7 +2005,21 @@ function* executeAbilityEffects(
       // The controller of a targeted permanent, as of resolution (a player id, like 'eventPlayer').
       const permanentId = ref(r.controllerOf);
       const permanent = permanentId === null ? undefined : findPermanent(ctx, permanentId);
-      return permanent === undefined ? null : (permanent.controllerId as unknown as ObjectId);
+      if (permanent !== undefined) return permanent.controllerId as unknown as ObjectId;
+      // A legal target an earlier instruction of this ability moved off the battlefield ("Destroy
+      // target artifact. Its controller gains 4 life."): its controller as last known, captured
+      // as this resolution began (CR 608.2h).
+      const slot = r.controllerOf;
+      if (typeof slot === 'number') {
+        const id = targets[slot];
+        const spec = ability.targets[slot];
+        // Only a target still legal as the resolution began: an illegal one affects nothing.
+        if (id !== undefined && spec !== undefined && stillLegal(id, spec, slot)) {
+          const lastKnown = refControllerCache.get(slot);
+          if (lastKnown !== undefined) return lastKnown as unknown as ObjectId;
+        }
+      }
+      return null;
     }
     if (r === 'source') return sourcePermanent()?.id ?? null;
     if (r === 'eventPlayer') {
@@ -4541,6 +4555,14 @@ function* executeAbilityEffects(
             yield* drawCards(ctx, drawer, effect.count);
           }
         }
+        break;
+      }
+      case 'gainLifeTarget': {
+        const targetId = ref(effect.target);
+        const target =
+          targetId === null ? undefined : ctx.state.players.find((p) => p.id === targetId);
+        if (target === undefined || target.hasLost) break;
+        gainLife(ctx, target, amountOf(effect.amount));
         break;
       }
       case 'drawTarget': {

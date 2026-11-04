@@ -555,6 +555,7 @@ const effectExpressions = {
   loseLife: { amount: numberValue },
   loseLifeTarget: { amount: numberValue },
   drawTarget: { count: numberValue },
+  gainLifeTarget: { amount: numberValue },
   cascade: {},
   reboundCastFromExile: {},
   eachOpponentLosesLife: { amount: numericExpression },

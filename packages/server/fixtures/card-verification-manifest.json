@@ -19938,6 +19938,38 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "6d4e558e-9109-4918-a082-fdcbaffd516b": {
+      "name": "Nature's Claim",
+      "oracleSha256": "1f276473b4050a3071164147d33d22aab8c40231908542f4673b0a9424de1fdc",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Destroy target artifact or enchantment. Its controller gains 4 life.",
+          "implementation": [
+            "spell; Effect.destroy on an artifact-or-enchantment target, then Effect.gainLifeTarget for the target's controller as last known (CR 608.2h)"
+          ],
+          "engineTestIds": ["cards/natures-claim.test.ts::natures-claim-controller-gains"],
+          "viewerScenarioIds": ["natures-claim-controller-gains"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a1408bae-ed5f-4837-a1a7-438dc30a2786": {
+      "name": "Vapor Snag",
+      "oracleSha256": "acbc865ea503c35840cb18f4ad4595734210ed22082aa2e3dceeb9379bcbd4ca",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Return target creature to its owner's hand. Its controller loses 1 life.",
+          "implementation": [
+            "spell; Effect.returnToHand on a creature target, then Effect.loseLifeTarget for the target's controller as last known (CR 608.2h)"
+          ],
+          "engineTestIds": ["cards/vapor-snag.test.ts::vapor-snag-bounce-and-drain"],
+          "viewerScenarioIds": ["vapor-snag-bounce-and-drain"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

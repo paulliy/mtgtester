@@ -26,6 +26,8 @@ export interface PlayerVerbOptions {
   eventPlayer?: boolean;
   /** A surrounding "where X is …" defines X (`parseAmountForm`). */
   xBound?: boolean;
+  /** The previous sentence's one permanent target, which "its controller" names. */
+  lastTarget?: number;
 }
 
 /**
@@ -43,7 +45,7 @@ export function knowsX(card: OracleCard, opts: { xBound?: boolean }): boolean {
 }
 
 const SUBJECT_RE =
-  /^(you|target player|target opponent|each player|each opponent|that player|they) (.+)$/;
+  /^(you|target player|target opponent|each player|each opponent|that player|they|its controller|that creature's controller|that permanent's controller) (.+)$/;
 
 function parseScope(
   phrase: string,
@@ -64,6 +66,14 @@ function parseScope(
     case 'that player':
     case 'they':
       return opts.eventPlayer === true ? { kind: 'one', ref: 'eventPlayer' } : null;
+    // "Destroy target artifact. Its controller gains 4 life." (Nature's Claim): the controller of
+    // the previous sentence's target, last known if that sentence moved it (CR 608.2h).
+    case 'its controller':
+    case "that creature's controller":
+    case "that permanent's controller":
+      return opts.lastTarget === undefined
+        ? null
+        : { kind: 'one', ref: { controllerOf: opts.lastTarget } };
     default:
       return null;
   }
@@ -103,6 +113,7 @@ function parseVerb(
   switch (verb) {
     case 'gain':
       if (scope.kind === 'you') return [{ op: 'gainLife', amount }];
+      if (scope.kind === 'one') return [{ op: 'gainLifeTarget', target: scope.ref, amount }];
       if (scope.kind === 'each' && scope.scope === 'all')
         return [{ op: 'eachPlayerGainsLife', amount }];
       return null;

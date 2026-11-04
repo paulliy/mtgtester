@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "card": "Nature's Claim",
+  "supportCards": [{ "name": "Scenario Relic", "typeLine": "Artifact", "manaCost": "{1}" }],
+  "scenarios": [
+    {
+      "id": "natures-claim-controller-gains",
+      "title": "Nature's Claim: the destroyed artifact's controller gains 4 life",
+      "clauses": [1],
+      "instructions": ["Cast Nature's Claim targeting P2's Scenario Relic."],
+      "expectedOutcome": "Scenario Relic is in P2's graveyard and P2 is at 44; you stay at 40.",
+      "seats": {
+        "P1": { "hand": ["Nature's Claim"], "battlefield": ["Forest"] },
+        "P2": { "battlefield": ["Scenario Relic"] }
+      },
+      "script": [
+        { "player": "P1", "choose": "/^Cast Nature's Claim/", "targets": ["Scenario Relic"] }
+      ],
+      "expect": [
+        { "zone": { "player": "P2", "zone": "graveyard", "has": ["Scenario Relic"] } },
+        { "life": { "player": "P2", "equals": 44 } },
+        { "life": { "player": "P1", "equals": 40 } }
+      ]
+    }
+  ]
+}

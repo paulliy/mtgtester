@@ -1223,6 +1223,11 @@ export type Effect =
   /** "Target player draws two cards." (Sign in Blood) — the target draws, not the controller
    * (contrast `drawTargetAndController`, where both do). */
   | { op: 'drawTarget'; target: EffectRef; count: Value }
+  /**
+   * "Target player gains 3 life" / "Its controller gains 4 life" (Nature's Claim): a player other
+   * than the ability's controller gains life (CR 119.10).
+   */
+  | { op: 'gainLifeTarget'; target: EffectRef; amount: Value }
   /** Cascade — reveal until a lower-mana-value nonland, then optionally cast it for free. */
   | { op: 'cascade' }
   /** Rebound's optional next-upkeep cast from exile. */

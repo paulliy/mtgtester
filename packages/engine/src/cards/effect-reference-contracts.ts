@@ -264,6 +264,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   loseLife: {},
   loseLifeTarget: { target: player },
   drawTarget: { target: player },
+  gainLifeTarget: { target: player },
   cascade: {},
   reboundCastFromExile: {},
   eachOpponentLosesLife: {},

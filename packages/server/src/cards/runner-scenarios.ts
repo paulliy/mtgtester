@@ -634,6 +634,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'natures-claim.json',
+    file: scenarioFile(
+      'natures-claim.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/natures-claim.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'noble-hierarch.json',
     file: scenarioFile(
       'noble-hierarch.json',
@@ -958,6 +968,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
           '../../../../packages/engine/tests/scenarios/urzas-incubator.json',
           import.meta.url,
         ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'vapor-snag.json',
+    file: scenarioFile(
+      'vapor-snag.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/vapor-snag.json', import.meta.url),
         'utf8',
       ),
     ),

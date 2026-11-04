@@ -79,6 +79,24 @@ import { parsePlayerVerbSentence } from './player-verb';
 import { parseDamageSentence } from './damage';
 import { triggerProvidesEventPlayer } from '../trigger-contracts';
 
+/**
+ * The slot a sentence allocated, when it allocated exactly one and that one is a permanent: what a
+ * following "its controller" refers back to.
+ */
+export function soleTargetSince(targets: TargetSpec[], before: number): number | undefined {
+  if (targets.length !== before + 1) return undefined;
+  const kind = targets[before]?.kind;
+  const notPermanent: TargetKind[] = [
+    'player',
+    'spell',
+    'noncreatureSpell',
+    'anyTarget',
+    'playerOrPlaneswalker',
+    'cardInGraveyard',
+  ];
+  return kind === undefined || notPermanent.includes(kind) ? undefined : before;
+}
+
 /** Split a line into sentences, dropping the terminal period of each. */
 export function splitSentences(line: string): string[] {
   return line
@@ -1325,6 +1343,8 @@ function parseEffectSentenceUntraced(
     xBound?: boolean;
     /** The sentence opens with "It" right after one that created a token: "it" is that token. */
     afterToken?: boolean;
+    /** The previous sentence's one permanent target, which "its controller" names. */
+    lastTarget?: number;
     /** Every head is this object leaving the battlefield: its last-known facts are the event's. */
     departedSelf?: boolean;
     departedTriggerObject?: boolean;
@@ -3811,7 +3831,9 @@ export function parseTriggerLine(line: string, card: OracleCard): Ability[] | nu
       : []);
   if (effects === null) {
     effects = [];
+    let lastTarget: number | undefined;
     for (const [index, sentence] of splitSentences(body).entries()) {
+      const slotsBefore = targets.length;
       // A later sentence's "it" may name an object an earlier one made ("create a token. Put a
       // +1/+1 counter on it"), so only the first sentence reads a bare "it" as the source.
       // After a sentence that created a token, "it" is that token (Krenko, Baron of Tin Street:
@@ -3827,9 +3849,11 @@ export function parseTriggerLine(line: string, card: OracleCard): Ability[] | nu
               ...opts,
               selfSubject: false,
               ...(afterToken ? { triggerObject: false, afterToken: true } : {}),
+              ...(lastTarget !== undefined ? { lastTarget } : {}),
             };
       const parsed = parseEffectSentence(sentence, alloc, card, sentenceOpts);
       if (parsed === null) return null;
+      lastTarget = soleTargetSince(targets, slotsBefore);
       appendSentenceEffects(effects, sentence, parsed);
     }
   }

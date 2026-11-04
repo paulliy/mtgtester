@@ -360,6 +360,7 @@
     "Mystic Sanctuary": "e893509bf714c1d47fb25d292a62e3a3c8a39c7d40915c5f97d1fcabea94688e",
     "Namor, Atlantean King": "8f49c3a3c5992e8672714ddeb6cefbc9c87a0c1fed6b80e0272eda3883f643fa",
     "Nantuko Vigilante": "cefc5c5d355546425c93640efb61b3ee3ddd9c5b918a48ec7a943a05c1d6722e",
+    "Nature's Claim": "1f276473b4050a3071164147d33d22aab8c40231908542f4673b0a9424de1fdc",
     "Necrogen Mists": "304b0b1c7df5b09fbc24084a3cf9c15f64002fa89eb7364bf966168cd503314a",
     "Necron Deathmark": "9ea0d5feb506abd7f1b877e3898f5a1aa655060699a83b69ca1753ef2eb20ae6",
     "Negate": "95d0b259f772498940d17e63d82acb30a3774388579245c6b672d6c38572fc6e",
@@ -558,6 +559,7 @@
     "Urza's Saga": "af2957876fc1d3287eaf3740e9ebd11d65924f1b62859fb62ceafb570f68d339",
     "Valakut Awakening // Valakut Stoneforge": "2e683a7ba9875b006532bca335c30b7a298b97b5f42738a0c93a6e1149953c7c",
     "Vandalblast": "939b8ed66d5dbaf542fffb63c75bf1731472c8b7a57754627419c4e7c35b25e9",
+    "Vapor Snag": "acbc865ea503c35840cb18f4ad4595734210ed22082aa2e3dceeb9379bcbd4ca",
     "Varchild, Betrayer of Kjeldor": "04ba70c67014069858dcb1361c33002279471f1afe6a57438689d248a8df0b68",
     "Vastwood Surge": "5922182fae289ab48ae49f025ac55977e4bf45975284d4d5b0663666de3fd5f5",
     "Vault Skyward": "fd8263eb64b7120b6769f85483db2b4ab42f56da2675a07e69c902b28705bfe1",
@@ -3068,6 +3070,34 @@
       "keywords": [
         "Lord of the Pyrrhian Legions"
       ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "1f276473b4050a3071164147d33d22aab8c40231908542f4673b0a9424de1fdc": {
+      "oracleId": "6d4e558e-9109-4918-a082-fdcbaffd516b",
+      "scryfallId": "d24b6640-ef2f-4c92-beb3-afdf78f9c2d5",
+      "name": "Nature's Claim",
+      "manaCost": "{G}",
+      "cmc": 1,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "typeLine": "Instant",
+      "supertypes": [],
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "oracleText": "Destroy target artifact or enchantment. Its controller gains 4 life.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
@@ -13391,6 +13421,34 @@
         "Trample",
         "Exhaust"
       ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "acbc865ea503c35840cb18f4ad4595734210ed22082aa2e3dceeb9379bcbd4ca": {
+      "oracleId": "a1408bae-ed5f-4837-a1a7-438dc30a2786",
+      "scryfallId": "59f26d0a-e9f3-442f-b5c6-8016cf736432",
+      "name": "Vapor Snag",
+      "manaCost": "{U}",
+      "cmc": 1,
+      "colors": [
+        "U"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "typeLine": "Instant",
+      "supertypes": [],
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "oracleText": "Return target creature to its owner's hand. Its controller loses 1 life.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
