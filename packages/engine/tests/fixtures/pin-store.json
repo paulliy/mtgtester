@@ -29,6 +29,7 @@
     "Anrakyr the Traveller": "1f11aa229db25bcdc8cb4b657fc98252b59975ad92a97811bae330033a79dcf9",
     "Aquatic Alchemist // Bubble Up": "17dfd03dc045add0607b785bf3fb8bb340aae8c7765419083a736697bcbef928",
     "Arachnoid Adaptation": "d9b73202b6cace12f3e6abeb0092c444da95d44ad7134e58dbc2f99fc00ef689",
+    "Arbor Elf": "293b116c091c6f02e2741696c8f084f272701ad282fc88ec6c989e845bc9edd8",
     "Arcane Denial": "7d764e957064fa08627fd48a85e1ea9aa50de341ffa09a88c2d36d0598156746",
     "Arcane Lighthouse": "50c9be824477d2117ecd0d97711dc046d652c3f1a425274089313866a7aa6ae1",
     "Arcbond": "c9f9a7fd462c5e9860928053ebcbc0d98b77f2fe5342f50eef740c4aa7fd24c3",
@@ -127,6 +128,7 @@
     "Dark Confidant": "5c863d76ea0fab57e7161cd133318e755931aeab32971b0985d9149b35b2346e",
     "Dawn's Truce": "9b94a7f24557052e39ba56e4a491a924a83f664f8eea7d2f37ff14dcd488877b",
     "Deafening Silence": "6a34ae14eb2e264035ad80521b0eca32dbe9b933dbc30b35a6cfd219e0f47bea",
+    "Death's Shadow": "405025177941e44e7b90dd0c6c3ba4ef90c7c353ad51aa94b7b40e158fd3b84c",
     "Decadent Dragon // Expensive Taste": "f526863c10d25ef90de79016ff4dfe96da4730d89ba31714f6ac42760b8dfc27",
     "Defacing Duskmage // Vandal's Edit": "893dd89057bd4227854f34bd35cd06a3c453a6cdce3ea8dd377ee6d7f844f2db",
     "Deflecting Palm": "3993eb90435f19d48756dd73a5c98c1f311389efee795e82a5f8aa58277b936a",
@@ -137,6 +139,7 @@
     "Disciple of Bolas": "92ab227dd89d69ae9d3d94f70245c3c2db6cee90216cb6a39c10fdda47324338",
     "Display of Power": "04e7139139882df20b82d5db6199236f5ea8cbae1917249f20ad24269127625c",
     "Dollmaker's Shop // Porcelain Gallery": "1c35524e7fddd802fb1b0914bd1b6b10a1548ca20a8eaae70c839e1401173412",
+    "Doom Blade": "8e330b184c842bf2eee624c22a034712dca95eab5bdbbe7e076806bd79e1eb10",
     "Doorkeeper Thrull": "34ad95ef1162e46cb2fe6e2bad6fe4dd85b3430a6eb1f42ca199079bca18383e",
     "Dragon Mage": "7538fb83023a8f039c6c5e9ab24fc7d5fba9a0ec0f13defa7ff5f9136bdd3b1a",
     "Dragon Man, Reformed Robot": "4bccbf1da7acacbac2989fce0b90717e43625a905d3a3a50b389cf8b0d732543",
@@ -205,10 +208,12 @@
     "Frolicking Familiar // Blow Off Steam": "b33cc724d4863acca78a3f5112bdfebfd738cfec3da786cc05eaa7dec0113cbc",
     "Frontier Siege": "1b195bc9d7e3f03e803eb4ad56d689fbd073b725d5ce8076b9998e0740982641",
     "Frontier Warmonger": "044d015a5eddb088abf9886152e757d272a25c2beea3f16771376e4fe2c229de",
+    "Fungal Sprouting": "26200c4a65d30424df9804b69f8cf3a90c022877f6673268ffbe1be82d917615",
     "Galactus, Devourer of Worlds": "d71a8ad0835e3e153d9026cce25fb4ed98e23778c66a132719b06efd69b53b42",
     "Galvanic Iteration": "4cf8b379abf387f20b3755b04b624dd638f032c2339c8c2e883f19946830ddf3",
     "Gamble": "934d0933d263bf738552d55cfe4dce7a576f04de4afc4177c49721db32f0bee7",
     "Garenbrig Carver // Shield's Might": "dff2740deec27a0c8c11296690a612761fecd2de81f776acbd6fb51fcb012e35",
+    "Geier Reach Sanitarium": "ababdf79f5857439a58b7d488e48b955d78fa19f59c070cbdda0a0bf2b966adc",
     "Gemstone Caverns": "dae3d703ffc51a500bb39e219e9d6c8251e68bd1f636f75cd4d3e5d24a22fad1",
     "Genesis Ultimatum": "4e63fe81fc6953ad87c5b9a63b600f8854de58debbd9701cf4e53ddc11250573",
     "Geth's Grimoire": "5b69db18aafa89cd067bbe5be9d0b6397b00200abe381fbfea927a3d6e682a91",
@@ -343,6 +348,7 @@
     "Mordant Dragon": "5f4a39ae0545bf5d50bac488bb58ac3101bb6ac10eeb19f289e2159a39d40552",
     "Mother of Runes": "9a9f376d70f688a3c9319ffc71697a0a397d659b9e681f89327d93112211dbe1",
     "Mox Diamond": "d992ed712f925955e57609fb1112798f56a60155c3020de23df503a080759465",
+    "Muscle Sliver": "83856a582698aa922406210fd10a2c03f44265ab6967267d8fc32dab12e73d1e",
     "Myr Convert": "8d4318c68dc4f76179e6dd3ad10826cfa299c8ea9c702c2adc9b180d34a1a837",
     "Myriad Landscape": "696f038611a9d1540a151ab63ccc13e36fd4aa355a54806e741eb6a44f77442b",
     "Mystic Forge": "cf9d7ad93231927235c7773cf421c5d1865449e1166b7c23272cbce063d989dc",
@@ -443,6 +449,7 @@
     "Securitron Squadron": "3db94733b1abcfae54bce169a795378f4e2edacbc9cbdfab1258d3983cd83a90",
     "Seedborn Muse": "935a4f4894058f7e912b131fe97931e288fe276c4766cb0d4cb320604a14a6aa",
     "Sejiri Shelter // Sejiri Glacier": "2c459001fbd313a67f4cd39b878d4d1b1a854a24d191dba61fc8011d163cc218",
+    "Selfless Savior": "2a45b36d697c2012356864348373ef96d1174be38e74338f440142e87554d83c",
     "Selfless Squire": "debd579414a52e7e7cc408bd06d4bf3f3862f42f108196365a37c3f6d72dc6a6",
     "Shadowspear": "8c191023b8029044c8e9f8eedc9f7bbe9b3e11231c5c15f3560897de3abc5ad4",
     "Shadrix Silverquill": "b3b27d30058d4a228950317e549d90e7bef45703c68c5015257378827bebfd5a",
@@ -561,6 +568,7 @@
     "War Room": "7014d3a7b8e20db7e2a12576165361775173e73cb28f1106afa40a659d6d0c74",
     "War's Toll": "715b41d0cd1402f6bfbb0639a40dc11ba07df7b410fde9d856b17d50b271b5e0",
     "Waste Not": "45df10c919fc24aac9c6c7a0120063af74262ed0fd1d18776c39f852a54ad04d",
+    "Wasteland": "df341dbf1ab987564ed412036700ef50407b811a5a591ff20aadb0b9d3fe924e",
     "Watcher for Tomorrow": "02360583993a6941a09046d20aefacec8e53d3acaa1cc092eee1f67eff3f2e57",
     "Wear // Tear": "fe984b8abf1ac010710964b66352478f43b6cb9de73b93cf0baa4b179a1e091f",
     "Weathered Wayfarer": "42ef11f806b155602ccdd9ce54d2cd2e123a4df1d42d90c83dcedad110cfaafd",
@@ -3477,6 +3485,34 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "26200c4a65d30424df9804b69f8cf3a90c022877f6673268ffbe1be82d917615": {
+      "oracleId": "303d4533-0c6b-4f93-80e8-b1f5926f4cd4",
+      "scryfallId": "97413ae3-037e-4786-85a3-e92604acd771",
+      "name": "Fungal Sprouting",
+      "manaCost": "{3}{G}",
+      "cmc": 4,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "typeLine": "Sorcery",
+      "supertypes": [],
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "oracleText": "Create X 1/1 green Saproling creature tokens, where X is the greatest power among creatures you control.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "26aff26dc163a5d13ad98195d74dcfd5d2260ab0cfad68928b3ac90c457ec21a": {
       "oracleId": "7388a797-d40d-4783-a281-d17bc159b856",
       "scryfallId": "c57778d7-fbd7-482f-b895-c033592f7af6",
@@ -3571,6 +3607,37 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "293b116c091c6f02e2741696c8f084f272701ad282fc88ec6c989e845bc9edd8": {
+      "oracleId": "4567a528-75f0-4ea6-b927-3a500caf76ac",
+      "scryfallId": "4b81165e-f091-4211-8b47-5ea6868b0d4c",
+      "name": "Arbor Elf",
+      "manaCost": "{G}",
+      "cmc": 1,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "typeLine": "Creature — Elf Druid",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf",
+        "Druid"
+      ],
+      "oracleText": "{T}: Untap target Forest.",
+      "power": "1",
+      "toughness": "1",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "294c6a6c10bd00986e54805eac0ca985651580e023bd6de062521979da53002f": {
       "oracleId": "c8f6cc1f-b7e4-470d-8d48-ef848d7c1116",
       "scryfallId": "99083707-2152-42c0-b5c3-b4f97ec20190",
@@ -3633,6 +3700,36 @@
       "oracleText": "This artifact enters tapped.\nWhen this artifact enters, you get {E}{E}{E} (three energy counters).\n{T}: Add {C}.\n{T}, Pay {E}: Add one mana of any color.",
       "power": null,
       "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "2a45b36d697c2012356864348373ef96d1174be38e74338f440142e87554d83c": {
+      "oracleId": "49dc3434-2501-4788-84f2-93e55730f67c",
+      "scryfallId": "6911759c-7177-402c-a95a-f9f46efaf521",
+      "name": "Selfless Savior",
+      "manaCost": "{W}",
+      "cmc": 1,
+      "colors": [
+        "W"
+      ],
+      "colorIdentity": [
+        "W"
+      ],
+      "typeLine": "Creature — Dog",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dog"
+      ],
+      "oracleText": "Sacrifice this creature: Another target creature you control gains indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy it.)",
+      "power": "1",
+      "toughness": "1",
       "loyalty": null,
       "defense": null,
       "keywords": [],
@@ -5475,6 +5572,36 @@
       "oracleText": "Whenever a player casts a spell, you may put a +1/+1 counter on this creature.\nAt the beginning of your upkeep, you may move any number of +1/+1 counters from this creature onto other creatures.",
       "power": "0",
       "toughness": "3",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "405025177941e44e7b90dd0c6c3ba4ef90c7c353ad51aa94b7b40e158fd3b84c": {
+      "oracleId": "e08722b3-0f79-4c82-b298-603e04a37857",
+      "scryfallId": "5526ff6e-c079-4ad4-ac8d-5e26ecacf50d",
+      "name": "Death's Shadow",
+      "manaCost": "{B}",
+      "cmc": 1,
+      "colors": [
+        "B"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "typeLine": "Creature — Avatar",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Avatar"
+      ],
+      "oracleText": "This creature gets -X/-X, where X is your life total.",
+      "power": "13",
+      "toughness": "13",
       "loyalty": null,
       "defense": null,
       "keywords": [],
@@ -9902,6 +10029,36 @@
         "defense": null
       }
     },
+    "83856a582698aa922406210fd10a2c03f44265ab6967267d8fc32dab12e73d1e": {
+      "oracleId": "06e0459f-d691-4470-884a-27c09b6612d2",
+      "scryfallId": "f36faada-4f9c-43f9-b3e4-55714737a5c9",
+      "name": "Muscle Sliver",
+      "manaCost": "{1}{G}",
+      "cmc": 2,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "typeLine": "Creature — Sliver",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Sliver"
+      ],
+      "oracleText": "All Sliver creatures get +1/+1.",
+      "power": "1",
+      "toughness": "1",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "839a622b17160d32a4e55cddfabe41e707f6da95bdc5f96908679d28ae211580": {
       "oracleId": "75564721-e4e9-463a-b49e-f0c7cd6f53a7",
       "scryfallId": "e1375f17-bc25-4a65-98b7-4785bbdbe974",
@@ -10699,6 +10856,34 @@
       "keywords": [
         "Mill"
       ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "8e330b184c842bf2eee624c22a034712dca95eab5bdbbe7e076806bd79e1eb10": {
+      "oracleId": "59e7f2ae-4535-4191-98be-3e65b6b2befa",
+      "scryfallId": "5dcd0c4e-4047-47a2-8969-c62616d457c2",
+      "name": "Doom Blade",
+      "manaCost": "{1}{B}",
+      "cmc": 2,
+      "colors": [
+        "B"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "typeLine": "Instant",
+      "supertypes": [],
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "oracleText": "Destroy target nonblack creature.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
@@ -13007,6 +13192,32 @@
       "keywords": [
         "Discover"
       ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "ababdf79f5857439a58b7d488e48b955d78fa19f59c070cbdda0a0bf2b966adc": {
+      "oracleId": "7b9fafe7-d26a-4ed5-b4c4-ce13763770b5",
+      "scryfallId": "4b9c92f0-4242-4a3e-9ede-6a4935f5c75d",
+      "name": "Geier Reach Sanitarium",
+      "manaCost": null,
+      "cmc": 0,
+      "colors": [],
+      "colorIdentity": [],
+      "typeLine": "Legendary Land",
+      "supertypes": [
+        "Legendary"
+      ],
+      "types": [
+        "Land"
+      ],
+      "subtypes": [],
+      "oracleText": "{T}: Add {C}.\n{2}, {T}: Each player draws a card, then discards a card.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
@@ -16642,6 +16853,30 @@
       ],
       "subtypes": [],
       "oracleText": "Add {R} for each tapped land your opponents control.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "df341dbf1ab987564ed412036700ef50407b811a5a591ff20aadb0b9d3fe924e": {
+      "oracleId": "09a70ae8-3859-4a09-901d-dce063fa3b5f",
+      "scryfallId": "aaafb9bc-7cea-4624-a227-595544fa42b0",
+      "name": "Wasteland",
+      "manaCost": null,
+      "cmc": 0,
+      "colors": [],
+      "colorIdentity": [],
+      "typeLine": "Land",
+      "supertypes": [],
+      "types": [
+        "Land"
+      ],
+      "subtypes": [],
+      "oracleText": "{T}: Add {C}.\n{T}, Sacrifice this land: Destroy target nonbasic land.",
       "power": null,
       "toughness": null,
       "loyalty": null,

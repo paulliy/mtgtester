@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "card": "Muscle Sliver",
+  "supportCards": [
+    {
+      "name": "Scenario Sliver",
+      "typeLine": "Creature \u2014 Sliver",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "muscle-sliver-pumps-every-sliver",
+      "title": "Muscle Sliver: every Sliver creature, on any side, gets +1/+1",
+      "clauses": [1],
+      "instructions": [
+        "P2 attacks you with Scenario Sliver; your Muscle Sliver is tapped and cannot block."
+      ],
+      "expectedOutcome": "P2's Scenario Sliver deals 2 damage; you are at 38.",
+      "turn": {
+        "player": "P2"
+      },
+      "seats": {
+        "P1": {
+          "battlefield": [
+            {
+              "card": "Muscle Sliver",
+              "tapped": true
+            }
+          ]
+        },
+        "P2": {
+          "battlefield": ["Scenario Sliver"]
+        }
+      },
+      "script": [
+        {
+          "player": "P2",
+          "choose": "Declare attackers",
+          "targets": ["P1"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 38
+          }
+        }
+      ]
+    }
+  ]
+}

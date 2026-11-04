@@ -205,10 +205,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
   defineCard(
     '1d5ff280-7f4d-4801-aefd-9b6e6b1f2818',
     'Ajani, Caller of the Pride',
-    [
-      '+1: Put a +1/+1 counter on up to one target creature.',
-      '−8: Create X 2/2 white Cat creature tokens, where X is your life total.',
-    ],
+    ['+1: Put a +1/+1 counter on up to one target creature.'],
     {
       activatedAbilities: [
         {

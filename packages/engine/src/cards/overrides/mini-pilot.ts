@@ -71,7 +71,9 @@ export function registerMiniPilotOverrides(): void {
     'e0b5b3af-af89-4b91-8b55-947ec095d6f2',
     'Ettercap // Web Shot',
     'Web Shot',
-    ['Destroy target creature with flying.'],
+    // "Destroy target creature with flying." is read by the interpreter since EDHREC plan Phase 4
+    // batch 5 (qualified target nouns); the def keeps the same spell.
+    [],
     {
       spellAbility: spell({
         targets: flier.targets,

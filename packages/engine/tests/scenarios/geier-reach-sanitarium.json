@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "card": "Geier Reach Sanitarium",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{C}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "geier-reach-taps-for-colorless",
+      "title": "Geier Reach Sanitarium: it taps for {C}",
+      "clauses": [1],
+      "instructions": ["Cast Scenario Bear with the Sanitarium's mana."],
+      "expectedOutcome": "Scenario Bear is on the battlefield.",
+      "seats": { "P1": { "hand": ["Scenario Bear"], "battlefield": ["Geier Reach Sanitarium"] } },
+      "script": [{ "player": "P1", "choose": "/^Cast Scenario Bear/" }],
+      "expect": [{ "zone": { "player": "P1", "zone": "battlefield", "has": ["Scenario Bear"] } }]
+    },
+    {
+      "id": "geier-reach-each-player-loots",
+      "title": "Geier Reach Sanitarium: each player draws a card, then discards a card",
+      "clauses": [2],
+      "instructions": ["Activate the second ability; each player draws, then discards."],
+      "expectedOutcome": "Each player has a card in their graveyard.",
+      "seats": {
+        "P1": { "battlefield": ["Geier Reach Sanitarium", "Plains", "Plains"] }
+      },
+      "script": [{ "player": "P1", "choose": "/Geier Reach Sanitarium.*draw|Each player draws/" }],
+      "expect": [{ "event": { "type": "discard", "count": 4 } }]
+    }
+  ]
+}

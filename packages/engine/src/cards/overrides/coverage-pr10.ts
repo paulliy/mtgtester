@@ -690,7 +690,6 @@ export function registerPr10CharacteristicsOverrides(): void {
     'ea86abfa-6cab-4ef0-8463-34136fc25b59',
     'Duplicant',
     [
-      'When this creature enters, you may exile target nontoken creature.',
       "As long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with it. It's still a Shapeshifter.",
     ],
     {

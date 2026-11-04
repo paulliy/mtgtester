@@ -343,9 +343,9 @@ at 200/200 and `knownUnmodeled` is empty.
 
 ### Phase 4: grammar breadth
 
-Status (2026-11-04): in progress. Three batches have landed, worked from the
+Status (2026-11-04): in progress. Five batches have landed, worked from the
 [triage](edhrec-triage.md) queue (its largest groups) rather than strictly in the order below.
-The pinned ratchet is at 3,290 modeled. The triage file is a baseline snapshot; the live queue is
+The pinned ratchet is at 3,627 modeled. The triage file is a baseline snapshot; the live queue is
 the pinned cards whose one unmodeled reason is the same line shape.
 
 - **Batch 1:** subjectless "gain N life", investigate, "each opponent discards", "target player
@@ -366,6 +366,36 @@ the pinned cards whose one unmodeled reason is the same line shape.
   The pinned ratchet gains 53 cards and the corpus net closes 51. Still open in the same family:
   myriad, mobilize, umbra armor, ninjutsu, encore, madness, buyback, squad, delve and the other
   cost keywords.
+
+- **Batch 4:** phrase-level productions, each tried only after the sentence-level parse fails,
+  so no sentence that already parsed changes.
+  - Amount forms (`grammar/amount-forms.ts`): "…, where X is V", "<verb> … equal to V" and
+    "<effect> for each N", over every verb the effect grammar already reads.
+  - Player verbs (`grammar/player-verb.ts`): you, target player or opponent, each player or
+    opponent, and the event's player ("that player", "they") with gain or lose life, draw,
+    discard and mill, any count phrase, and a second clause joined by "and".
+  - Damage clauses (`grammar/damage.ts`). A bare X is read only where it is defined.
+  - "Whenever you / an opponent gain(s) or lose(s) life" trigger events.
+  - Short shapes: reveal lands, "add one mana of any color", blink spells, counter-removal
+    costs, "attacks each combat if able", edicts, Equipment that attach as they enter.
+  - Fixes found by checking each newly modeled card: "put a counter on it" made a phantom
+    target, and "Shuffle ~ into its owner's library" left the spell in the graveyard.
+
+  The pinned ratchet goes from 3,290 to 3,474. Recon Craft Theta regresses on purpose (its
+  counter went to a target instead of its token).
+
+- **Batch 5:** value phrases (greatest power, toughness or mana value among, your life total,
+  cards in your hand, opponents you have, card types in your graveyard), qualified target nouns
+  ("nonblack creature", "nonbasic land", "attacking or blocking creature", "target Forest",
+  "creature with power 4 or greater"), "another target", tap and untap of any target, "all"
+  subjects (Slivers), historic spells, basic land types in a search (Landscapes), Devoid, and
+  ", then" between player clauses.
+  - Fixes: "gets -X/-X, where X is" lost its sign (Death's Shadow). A static whose power or
+    toughness the layer engine cannot evaluate threw as layers were applied: Wight of the
+    Reliquary now has its graveyard count in the layer engine, and Faeburrow Elder ("for each
+    color among permanents") is refused by a new validation instead of crashing in play.
+
+  The pinned ratchet goes from 3,474 to 3,627.
 
 Extend the Phase 1 slots, in order of the cards each closes:
 

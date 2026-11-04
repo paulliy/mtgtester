@@ -3841,6 +3841,36 @@ function parseBatch4Forms(
   if (/^each player sacrifices a creature(?: of their choice)?$/.test(s)) {
     return [{ op: 'sacrificeEachPlayer', count: 1, filter: 'creature' }];
   }
+  // "Target creature you control gains shroud until end of turn" (Sylvan Safekeeper) / "another
+  // target creature you control gains indestructible until end of turn" (Selfless Savior): any
+  // creature target the target grammar reads, one grant per keyword.
+  {
+    const m = s.match(/^(another )?target (.+?) gains ([a-z ,]+) until end of turn$/);
+    const clause = m === null ? null : parseTargetClause(`${m[1] ?? ''}${m[2] as string}`);
+    const listed = m === null ? null : parseKeywordLine(m[3] as string);
+    if (
+      m !== null &&
+      clause !== null &&
+      clause.kind === 'creature' &&
+      listed !== null &&
+      listed.keywords.length > 0 &&
+      listed.ward === undefined &&
+      listed.protectionFrom === undefined
+    ) {
+      const target = alloc(clause.kind, clause.filter, clause.controller);
+      return listed.keywords.map((keyword) => ({ op: 'grantKeywordUntilEot', target, keyword }));
+    }
+  }
+  // "Untap target Forest" (Arbor Elf) / "Tap target permanent" / "untap target legendary
+  // permanent" (Minamo): any target noun the target grammar reads, never a player.
+  {
+    const m = s.match(/^(untap|tap) (another )?target (.+)$/);
+    const clause = m === null ? null : parseTargetClause(`${m[2] ?? ''}${m[3] as string}`);
+    if (m !== null && clause !== null && clause.kind !== 'player' && clause.kind !== 'spell') {
+      const target = alloc(clause.kind, clause.filter, clause.controller);
+      return [{ op: m[1] === 'untap' ? 'untapTarget' : 'tapTarget', target }];
+    }
+  }
   // "When this Equipment enters, attach it to target creature you control" (Maul of the
   // Skyclaves): "it" is the entering Equipment itself (CR 301.5).
   if (

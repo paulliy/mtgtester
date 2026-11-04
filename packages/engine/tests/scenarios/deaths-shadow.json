@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "card": "Death's Shadow",
+  "scenarios": [
+    {
+      "id": "deaths-shadow-shrinks-by-life",
+      "title": "Death's Shadow: at 5 life it is an 8/8",
+      "clauses": [1],
+      "instructions": ["Attack P2 with Death's Shadow while you are at 5 life."],
+      "expectedOutcome": "P2 takes 8 damage.",
+      "seats": { "P1": { "life": 5, "battlefield": ["Death's Shadow"] } },
+      "script": [{ "player": "P1", "choose": "Declare attackers", "targets": ["P2"] }],
+      "continue": { "throughCombat": true },
+      "expect": [{ "life": { "player": "P2", "equals": 32 } }]
+    },
+    {
+      "id": "deaths-shadow-dies-at-high-life",
+      "title": "Death's Shadow: at 40 life it is -27/-27 and dies",
+      "clauses": [1],
+      "instructions": ["Cast Death's Shadow at 40 life."],
+      "expectedOutcome": "Death's Shadow is put into your graveyard as a state-based action.",
+      "seats": { "P1": { "hand": ["Death's Shadow"], "battlefield": ["Swamp"] } },
+      "script": [{ "player": "P1", "choose": "/^Cast Death's Shadow/" }],
+      "expect": [{ "zone": { "player": "P1", "zone": "graveyard", "has": ["Death's Shadow"] } }]
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "card": "Wasteland",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{C}",
+      "power": "2",
+      "toughness": "2"
+    },
+    { "name": "Scenario Dual", "typeLine": "Land", "oracleText": "{T}: Add {G}." }
+  ],
+  "scenarios": [
+    {
+      "id": "wasteland-taps-for-colorless",
+      "title": "Wasteland: it taps for {C}",
+      "clauses": [1],
+      "instructions": ["Cast Scenario Bear with Wasteland's mana."],
+      "expectedOutcome": "Scenario Bear is on the battlefield and Wasteland is tapped.",
+      "seats": { "P1": { "hand": ["Scenario Bear"], "battlefield": ["Wasteland"] } },
+      "script": [{ "player": "P1", "choose": "/^Cast Scenario Bear/" }],
+      "expect": [
+        { "zone": { "player": "P1", "zone": "battlefield", "has": ["Scenario Bear"] } },
+        { "tapped": { "card": "Wasteland", "equals": true } }
+      ]
+    },
+    {
+      "id": "wasteland-destroys-nonbasic",
+      "title": "Wasteland: sacrificed, it destroys target nonbasic land",
+      "clauses": [2],
+      "instructions": ["Activate Wasteland's second ability targeting P2's Scenario Dual."],
+      "expectedOutcome": "Wasteland and Scenario Dual are in graveyards; P2's Forest stays.",
+      "seats": {
+        "P1": { "battlefield": ["Wasteland"] },
+        "P2": { "battlefield": ["Scenario Dual", "Forest"] }
+      },
+      "script": [
+        { "player": "P1", "choose": "/Wasteland.*Destroy|Destroy/", "targets": ["Scenario Dual"] }
+      ],
+      "expect": [
+        { "zone": { "player": "P1", "zone": "graveyard", "has": ["Wasteland"] } },
+        { "zone": { "player": "P2", "zone": "graveyard", "has": ["Scenario Dual"] } },
+        { "zone": { "player": "P2", "zone": "battlefield", "has": ["Forest"] } }
+      ]
+    }
+  ]
+}

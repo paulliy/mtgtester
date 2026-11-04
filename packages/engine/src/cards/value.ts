@@ -375,6 +375,39 @@ export function isDynamicValue(value: Value): boolean {
   }
 }
 
+/**
+ * True when the layer engine (`evaluateValue`) can answer this value from the board and the
+ * static's controller. A static ability whose value it cannot answer would throw as layers are
+ * applied, so the grammar refuses such a static rather than reporting it modeled.
+ */
+export function layerEvaluable(value: Value): boolean {
+  switch (value.kind) {
+    case 'plus':
+    case 'negate':
+    case 'times':
+      return layerEvaluable(value.of);
+    case 'lifeTotal':
+      return value.scope !== 'eventPlayer';
+    case 'const':
+    case 'cardTypesInAllGraveyards':
+    case 'cardTypesInYourGraveyard':
+    case 'greatestNoncreatureManaValueYouControlOrInGraveyard':
+    case 'cardTypesInOpponentsGraveyards':
+    case 'timesAttackedThisTurn':
+    case 'countersOnSelf':
+    case 'countPermanents':
+    case 'countCardsInZone':
+    case 'aurasYouControlAttachedToCreatures':
+    case 'aurasAttachedToSource':
+    case 'devotionTo':
+    case 'commanderCastCount':
+    case 'commanderIdentityColorCount':
+      return true;
+    default:
+      return false;
+  }
+}
+
 /** True when this value needs a resolving ability's scope, so the layer engine cannot answer it. */
 export function needsScope(value: Value): boolean {
   switch (value.kind) {
@@ -520,6 +553,11 @@ export type LayerValueScope = Pick<ValueScope, 'controllerId' | 'countPermanents
   /** For `timesAttackedThisTurn`: the count of the one object the effect is being applied to. */
   affectedTimesAttacked?: number;
   countAurasYouControlAttachedToCreatures?: () => number;
+  countCardsInZone?: (
+    zone: 'graveyard' | 'hand' | 'library',
+    selector: Selector,
+    owner: 'you' | 'opponents' | 'all',
+  ) => number;
   countAurasAttachedToSource?: () => number;
   /** Dragon Man: noncreature permanents read as the layers have them so far (CR 613.8a). */
   greatestNoncreatureManaValue?: () => number;
@@ -561,6 +599,10 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
         throw new Error('engine bug: value countPermanents needs a layer evaluation scope');
       }
       return scope.countPermanents(value.selector, value.scope);
+    case 'countCardsInZone':
+      if (scope?.countCardsInZone === undefined)
+        throw new Error('engine bug: value countCardsInZone needs a layer evaluation scope');
+      return scope.countCardsInZone(value.zone, value.selector, value.owner);
     case 'aurasYouControlAttachedToCreatures':
       if (scope?.countAurasYouControlAttachedToCreatures === undefined) {
         throw new Error('engine bug: attached Aura count needs a layer evaluation scope');
@@ -592,6 +634,13 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
       if (!player) return 0;
       return Object.values(player.commanderCastCount).reduce((sum, n) => sum + n, 0);
     }
+    case 'lifeTotal': {
+      // "where X is your life total" (Death's Shadow): the static's controller's life, read by
+      // the layer engine like any other board fact (CR 613's "you" is its controller).
+      if (value.scope === 'eventPlayer' || scope?.controllerId === undefined)
+        throw new Error("engine bug: a layer life total needs the static effect's controller");
+      return ctx.state.players.find((p) => p.id === scope.controllerId)?.life ?? 0;
+    }
     case 'commanderIdentityColorCount': {
       if (scope?.controllerId === undefined) {
         throw new Error(
@@ -603,7 +652,6 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
     }
     case 'countTappedPermanents':
     case 'countPermanentsControlledByTarget':
-    case 'countCardsInZone':
     case 'colorsAmongPermanents':
     case 'colorsAmongPermanentsAndSpellsCastThisTurn':
     case 'countOpponents':
@@ -627,7 +675,6 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
     case 'allCountersOnSelf':
     case 'countersOnTarget':
     case 'manaValueOfTarget':
-    case 'lifeTotal':
     case 'countOpponentsWithFewerCreatures':
     case 'creaturesDiedThisTurn':
     case 'powerOfSource':

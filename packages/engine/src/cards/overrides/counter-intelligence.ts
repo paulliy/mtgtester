@@ -70,7 +70,7 @@ export function registerCOUNTER_INTELLIGENCEOverrides(): void {
   defineCard(
     '133c99c0-3652-410f-8100-68015a47af9f',
     'Dispatch',
-    ['Tap target creature.', 'If you control three or more artifacts, exile that creature.'],
+    ['If you control three or more artifacts, exile that creature.'],
     {
       spellAbility: {
         kind: 'spell',

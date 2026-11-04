@@ -19656,6 +19656,152 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "303d4533-0c6b-4f93-80e8-b1f5926f4cd4": {
+      "name": "Fungal Sprouting",
+      "oracleSha256": "26200c4a65d30424df9804b69f8cf3a90c022877f6673268ffbe1be82d917615",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Create X 1/1 green Saproling creature tokens, where X is the greatest power among creatures you control.",
+          "implementation": [
+            "spell; Effect.createToken Saproling, count greatestPowerAmong creatures you control (where-X form over the greatest-power value phrase)"
+          ],
+          "engineTestIds": ["cards/fungal-sprouting.test.ts::fungal-sprouting-greatest-power"],
+          "viewerScenarioIds": ["fungal-sprouting-greatest-power"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4567a528-75f0-4ea6-b927-3a500caf76ac": {
+      "name": "Arbor Elf",
+      "oracleSha256": "293b116c091c6f02e2741696c8f084f272701ad282fc88ec6c989e845bc9edd8",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{T}: Untap target Forest.",
+          "implementation": [
+            "activated {T}; Effect.untapTarget on a permanent target filtered to the Forest subtype (qualified target noun)"
+          ],
+          "engineTestIds": ["cards/arbor-elf.test.ts::arbor-elf-untaps-forest"],
+          "viewerScenarioIds": ["arbor-elf-untaps-forest"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "59e7f2ae-4535-4191-98be-3e65b6b2befa": {
+      "name": "Doom Blade",
+      "oracleSha256": "8e330b184c842bf2eee624c22a034712dca95eab5bdbbe7e076806bd79e1eb10",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Destroy target nonblack creature.",
+          "implementation": [
+            "spell; Effect.destroy on a creature target filtered to not black (qualified target noun; the filter is rechecked on resolution, CR 608.2b)"
+          ],
+          "engineTestIds": [
+            "cards/doom-blade.test.ts::doom-blade-destroys-nonblack",
+            "cards/doom-blade.test.ts::doom-blade-cannot-target-black"
+          ],
+          "viewerScenarioIds": ["doom-blade-destroys-nonblack", "doom-blade-cannot-target-black"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "06e0459f-d691-4470-884a-27c09b6612d2": {
+      "name": "Muscle Sliver",
+      "oracleSha256": "83856a582698aa922406210fd10a2c03f44265ab6967267d8fc32dab12e73d1e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "All Sliver creatures get +1/+1.",
+          "implementation": [
+            "static layer 7d +1/+1 on every Sliver creature, whoever controls it (\"all\" subject)"
+          ],
+          "engineTestIds": ["cards/muscle-sliver.test.ts::muscle-sliver-pumps-every-sliver"],
+          "viewerScenarioIds": ["muscle-sliver-pumps-every-sliver"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "49dc3434-2501-4788-84f2-93e55730f67c": {
+      "name": "Selfless Savior",
+      "oracleSha256": "2a45b36d697c2012356864348373ef96d1174be38e74338f440142e87554d83c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Sacrifice this creature: Another target creature you control gains indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy it.)",
+          "implementation": [
+            "activated, cost sacrificeSelf; Effect.grantKeywordUntilEot indestructible on another target creature you control"
+          ],
+          "engineTestIds": ["cards/selfless-savior.test.ts::selfless-savior-grants-indestructible"],
+          "viewerScenarioIds": ["selfless-savior-grants-indestructible"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "09a70ae8-3859-4a09-901d-dce063fa3b5f": {
+      "name": "Wasteland",
+      "oracleSha256": "df341dbf1ab987564ed412036700ef50407b811a5a591ff20aadb0b9d3fe924e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{T}: Add {C}.",
+          "implementation": ["mana ability {T}: {C}"],
+          "engineTestIds": ["cards/wasteland.test.ts::wasteland-taps-for-colorless"],
+          "viewerScenarioIds": ["wasteland-taps-for-colorless"]
+        },
+        {
+          "oracleText": "{T}, Sacrifice this land: Destroy target nonbasic land.",
+          "implementation": [
+            "activated {T} + sacrificeSelf; Effect.destroy on a land target filtered to nonbasic (qualified target noun)"
+          ],
+          "engineTestIds": ["cards/wasteland.test.ts::wasteland-destroys-nonbasic"],
+          "viewerScenarioIds": ["wasteland-destroys-nonbasic"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "7b9fafe7-d26a-4ed5-b4c4-ce13763770b5": {
+      "name": "Geier Reach Sanitarium",
+      "oracleSha256": "ababdf79f5857439a58b7d488e48b955d78fa19f59c070cbdda0a0bf2b966adc",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{T}: Add {C}.",
+          "implementation": ["mana ability {T}: {C}"],
+          "engineTestIds": ["cards/geier-reach-sanitarium.test.ts::geier-reach-taps-for-colorless"],
+          "viewerScenarioIds": ["geier-reach-taps-for-colorless"]
+        },
+        {
+          "oracleText": "{2}, {T}: Each player draws a card, then discards a card.",
+          "implementation": [
+            "activated {2},{T}; Effect.eachPlayerDraws all 1, then Effect.discardEachPlayer all 1 (player-verb \", then\" clause)"
+          ],
+          "engineTestIds": ["cards/geier-reach-sanitarium.test.ts::geier-reach-each-player-loots"],
+          "viewerScenarioIds": ["geier-reach-each-player-loots"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e08722b3-0f79-4c82-b298-603e04a37857": {
+      "name": "Death's Shadow",
+      "oracleSha256": "405025177941e44e7b90dd0c6c3ba4ef90c7c353ad51aa94b7b40e158fd3b84c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature gets -X/-X, where X is your life total.",
+          "implementation": [
+            "static layer 7d on self, power and toughness negate(lifeTotal you): the -X sign is kept"
+          ],
+          "engineTestIds": [
+            "cards/deaths-shadow.test.ts::deaths-shadow-shrinks-by-life",
+            "cards/deaths-shadow.test.ts::deaths-shadow-dies-at-high-life"
+          ],
+          "viewerScenarioIds": ["deaths-shadow-shrinks-by-life", "deaths-shadow-dies-at-high-life"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

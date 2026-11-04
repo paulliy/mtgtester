@@ -762,6 +762,8 @@ describe('independent selected spell face contracts', () => {
     'Ettercap // Web Shot',
     'Smitten Swordmaster // Curry Favor',
     'Rosethorn Acolyte // Seasonal Ritual',
+    // Batch 5's qualified target nouns read "Destroy target tapped creature."
+    'Threadbind Clique // Rip the Seams',
   ];
 
   it.each(

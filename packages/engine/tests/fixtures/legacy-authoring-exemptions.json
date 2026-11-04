@@ -8,7 +8,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/counter-intelligence.ts",
-      "sha256": "0467104db7793bce2c35ac96131f3506d5af5c67f3e6c36a9a4878acebbb1c5f",
+      "sha256": "a7d90e943f16fa76df8341957cf63c5fca01210f869390c3a9b6b9d9c01518b1",
       "description": "Dispatch"
     },
     {
@@ -328,7 +328,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
-      "sha256": "af7b4cc498f809a577bfee48a2cd9fde5601fb5414ac26da57064b7a9ab74203",
+      "sha256": "782dd9618ecaabde9dabc63141e43373020e498d3ee35767362a7cd67887a36f",
       "description": "registerLIVING_ENERGYOverrides"
     },
     {
@@ -428,7 +428,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
-      "sha256": "75a97c5eda1a0a887bdabad35e90a71a96c30676bf95bd604c676772ebbf8638",
+      "sha256": "380d87857991dd3f56e3e287fb299ab332ce828fe0d8e0ce8f6cdc28642b81b8",
       "description": "One with the Machine"
     },
     {
@@ -553,7 +553,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "sha256": "0fa0e7efcbfc5186617d35b1f003db0f4d488ddab46c7646dcff8c5fab0fa706",
+      "sha256": "dafc652b500b86286b4fd73ce57a8ce0ec330f1e387d2732393f3e9f8a85c6dd",
       "description": "Go for the Throat"
     },
     {
@@ -573,7 +573,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "sha256": "cd4c70cb3c0c6074c74fd58c13bc037abc424dd4b160f09d093f9e6ace89445a",
+      "sha256": "32cebad51193134d7f46a8062113c76e6421e65c7dd3758b85eb1a778d4dda7f",
       "description": "registerNECRON_DYNASTIESOverrides"
     },
     {
@@ -768,7 +768,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/token-triumph.ts",
-      "sha256": "acdadbffa56d5e3cfada2c2851f39b5668cfe0a240dbd8b5f358a007a3b732a8",
+      "sha256": "694c5bc7abd2296bce21eb04e4f23630d980abf9ea048d1115203c23156a4c56",
       "description": "Ajani, Caller of the Pride"
     },
     {

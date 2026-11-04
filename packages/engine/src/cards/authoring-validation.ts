@@ -26,6 +26,8 @@ import {
 } from './effect-reference-contracts';
 import type { ReferenceContract, TargetDomain } from './effect-reference-contracts';
 import { assertNever } from '../utils/assert-never';
+import { layerEvaluable } from './value';
+import type { Value } from './value';
 import { TRIGGER_SCOPE_FIELDS, VALUE_SCOPE_NEEDS } from './scope-contracts';
 import type { ScopeField } from './scope-contracts';
 
@@ -1514,6 +1516,20 @@ export function validateCardDefinition(definition: CardDefinition): AuthoringIss
   ] as const)
     if (!Array.isArray(definition[field]))
       issues.push({ path: `definition.${field}`, message: `${field} must be an array` });
+  // A static's power and toughness are read by the layer engine, which answers only board values
+  // (`layerEvaluable`); any other value would throw as layers are applied.
+  if (Array.isArray(definition.staticEffects))
+    definition.staticEffects.forEach((effect, index) => {
+      const op = effect.op as { power?: unknown; toughness?: unknown };
+      for (const key of ['power', 'toughness'] as const) {
+        const value = op[key];
+        if (value !== undefined && typeof value === 'object' && !layerEvaluable(value as Value))
+          issues.push({
+            path: `definition.staticEffects[${index}].op.${key}`,
+            message: 'static value the layer engine cannot evaluate',
+          });
+      }
+    });
   if (definition.gift !== undefined && !['treasure', 'card', 'extraTurn'].includes(definition.gift))
     issues.push({ path: 'definition.gift', message: 'unsupported gift kind' });
   if (definition.manaCost !== null)

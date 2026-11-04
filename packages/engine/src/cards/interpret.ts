@@ -1536,12 +1536,15 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
           ? { kind: 'aurasAttachedToSource' }
           : parseDynamicCountValue('the number of ' + (m[4] as string), card);
       if (affects !== null && count !== null) {
-        const power = (m[2] as string).toLowerCase().includes('x')
-          ? count
-          : { kind: 'times' as const, of: count, n: Number(m[2]) };
-        const toughness = (m[3] as string).toLowerCase().includes('x')
-          ? count
-          : { kind: 'times' as const, of: count, n: Number(m[3]) };
+        // "-X/-X" keeps its sign: the count is negated, never applied as a bonus.
+        const signed = (part: string): Value =>
+          part.toLowerCase().includes('x')
+            ? part.startsWith('-')
+              ? { kind: 'negate', of: count }
+              : count
+            : { kind: 'times' as const, of: count, n: Number(part) };
+        const power = signed(m[2] as string);
+        const toughness = signed(m[3] as string);
         return [{ affects, op: { layer: 7, sublayer: 'd', power, toughness } }];
       }
     }
@@ -1552,8 +1555,13 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
       const affects =
         (m[1] as string) === '~' ? { kind: 'self' as const } : parseSubject(m[1] as string, card);
       const count = parseDynamicCountValue(m[4] as string, card);
-      if (affects !== null && count !== null)
-        return [{ affects, op: { layer: 7, sublayer: 'd', power: count, toughness: count } }];
+      // "This creature gets -X/-X, where X is your life total" (Death's Shadow): the sign stays.
+      const signed = (part: string): Value | null =>
+        count === null ? null : part.startsWith('-') ? { kind: 'negate', of: count } : count;
+      const power = signed(m[2] as string);
+      const toughness = signed(m[3] as string);
+      if (affects !== null && power !== null && toughness !== null)
+        return [{ affects, op: { layer: 7, sublayer: 'd', power, toughness } }];
     }
   }
   if (lower === 'all creatures have double strike and attack each combat if able') {
@@ -3461,6 +3469,10 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
         }
       }
     }
+    // Devoid (CR 702.114a): a characteristic-defining ability making the card colorless in every
+    // zone. Oracle data already lists such a card with no colors, which is where the engine reads
+    // color from; a card whose data disagrees is not read.
+    if (lower === 'devoid' && card.colors.length === 0) continue;
     // Toxic N (CR 702.164): combat damage to a player also gives that many poison counters.
     // Instances add up to the total toxic value (CR 702.164b).
     {

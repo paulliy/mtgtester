@@ -1731,8 +1731,7 @@
     "oracleId": "133c99c0-3652-410f-8100-68015a47af9f",
     "name": "Dispatch",
     "handledLines": [
-      "If you control three or more artifacts, exile that creature.",
-      "Tap target creature."
+      "If you control three or more artifacts, exile that creature."
     ],
     "def": {
       "spellAbility": {
@@ -2543,8 +2542,7 @@
     "oracleId": "1d5ff280-7f4d-4801-aefd-9b6e6b1f2818",
     "name": "Ajani, Caller of the Pride",
     "handledLines": [
-      "+1: Put a +1/+1 counter on up to one target creature.",
-      "−8: Create X 2/2 white Cat creature tokens, where X is your life total."
+      "+1: Put a +1/+1 counter on up to one target creature."
     ],
     "def": {
       "activatedAbilities": [
@@ -4127,9 +4125,7 @@
   {
     "oracleId": "2f092562-9e17-43cd-aeb8-d0567f99363e",
     "name": "Go for the Throat",
-    "handledLines": [
-      "Destroy target nonartifact creature."
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Destroy target nonartifact creature",
@@ -7289,9 +7285,7 @@
   {
     "oracleId": "55b72b1f-6463-406a-8824-d99a3c028285",
     "name": "Vicious Rumors",
-    "handledLines": [
-      "unrecognized rules text: \"~ deals 1 damage to each opponent. Each opponent discards a card, then mills a card. You gain 1 life.\""
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Each opponent takes 1 damage, discards and mills a card. You gain 1 life",
@@ -10455,9 +10449,7 @@
   {
     "oracleId": "757eadac-dd29-4a7f-8683-5bc823168326",
     "name": "One with the Machine",
-    "handledLines": [
-      "Draw cards equal to the greatest mana value among artifacts you control."
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Draw cards equal to the greatest mana value among artifacts you control",
@@ -10847,9 +10839,7 @@
   {
     "oracleId": "78427103-9543-41fb-b6d4-72963fe87275",
     "name": "The Great Henge",
-    "handledLines": [
-      "This spell costs {X} less to cast, where X is the greatest power among creatures you control."
-    ],
+    "handledLines": [],
     "def": {
       "ruleStatics": [
         {
@@ -19727,9 +19717,7 @@
   {
     "oracleId": "e0b5b3af-af89-4b91-8b55-947ec095d6f2:back",
     "name": "Web Shot",
-    "handledLines": [
-      "Destroy target creature with flying."
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Destroy target creature with flying",
@@ -21046,8 +21034,7 @@
     "oracleId": "ea86abfa-6cab-4ef0-8463-34136fc25b59",
     "name": "Duplicant",
     "handledLines": [
-      "As long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with it. It's still a Shapeshifter.",
-      "When this creature enters, you may exile target nontoken creature."
+      "As long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with it. It's still a Shapeshifter."
     ],
     "def": {
       "copyLastExiledCreature": true,
@@ -24126,8 +24113,7 @@
     "oracleId": "oracle-ajani-caller-of-the-pride",
     "name": "Ajani, Caller of the Pride",
     "handledLines": [
-      "+1: Put a +1/+1 counter on up to one target creature.",
-      "−8: Create X 2/2 white Cat creature tokens, where X is your life total."
+      "+1: Put a +1/+1 counter on up to one target creature."
     ],
     "def": {
       "activatedAbilities": [
@@ -29103,8 +29089,7 @@
     "oracleId": "oracle-dispatch",
     "name": "Dispatch",
     "handledLines": [
-      "If you control three or more artifacts, exile that creature.",
-      "Tap target creature."
+      "If you control three or more artifacts, exile that creature."
     ],
     "def": {
       "spellAbility": {
@@ -29811,8 +29796,7 @@
     "oracleId": "oracle-duplicant",
     "name": "Duplicant",
     "handledLines": [
-      "As long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with it. It's still a Shapeshifter.",
-      "When this creature enters, you may exile target nontoken creature."
+      "As long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with it. It's still a Shapeshifter."
     ],
     "def": {
       "copyLastExiledCreature": true,
@@ -30525,9 +30509,7 @@
   {
     "oracleId": "oracle-ettercap-web-shot:back",
     "name": "Web Shot",
-    "handledLines": [
-      "Destroy target creature with flying."
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Destroy target creature with flying",
@@ -32204,9 +32186,7 @@
   {
     "oracleId": "oracle-go-for-the-throat",
     "name": "Go for the Throat",
-    "handledLines": [
-      "Destroy target nonartifact creature."
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Destroy target nonartifact creature",
@@ -37802,9 +37782,7 @@
   {
     "oracleId": "oracle-one-with-the-machine",
     "name": "One with the Machine",
-    "handledLines": [
-      "Draw cards equal to the greatest mana value among artifacts you control."
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Draw cards equal to the greatest mana value among artifacts you control",
@@ -43759,9 +43737,7 @@
   {
     "oracleId": "oracle-the-great-henge",
     "name": "The Great Henge",
-    "handledLines": [
-      "This spell costs {X} less to cast, where X is the greatest power among creatures you control."
-    ],
+    "handledLines": [],
     "def": {
       "ruleStatics": [
         {
@@ -45872,9 +45848,7 @@
   {
     "oracleId": "oracle-vicious-rumors",
     "name": "Vicious Rumors",
-    "handledLines": [
-      "unrecognized rules text: \"~ deals 1 damage to each opponent. Each opponent discards a card, then mills a card. You gain 1 life.\""
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Each opponent takes 1 damage, discards and mills a card. You gain 1 life",

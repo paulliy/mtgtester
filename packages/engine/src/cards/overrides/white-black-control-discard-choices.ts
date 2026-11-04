@@ -64,9 +64,7 @@ export function registerWhiteBlackControlDiscardChoiceOverrides(): void {
   replaceCard(
     '55b72b1f-6463-406a-8824-d99a3c028285',
     'Vicious Rumors',
-    [
-      'unrecognized rules text: "~ deals 1 damage to each opponent. Each opponent discards a card, then mills a card. You gain 1 life."',
-    ],
+    [],
     {
       spellAbility: spell({
         effects: [

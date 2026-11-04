@@ -190,19 +190,14 @@ export function registerNECRON_DYNASTIESOverrides(): void {
   // Gilded Lotus: the generic grammar reads "Add three mana of any one color" (coverage PR02),
   // producing exactly the definition this override authored, so it was deleted (overrides rule 5).
 
-  defineCard(
-    '2f092562-9e17-43cd-aeb8-d0567f99363e',
-    'Go for the Throat',
-    ['Destroy target nonartifact creature.'],
-    {
-      spellAbility: {
-        kind: 'spell',
-        targets: [{ kind: 'creature', filter: not(ofType('Artifact')) }],
-        effects: [{ op: 'destroy', target: 0 }],
-        description: 'Destroy target nonartifact creature',
-      },
+  defineCard('2f092562-9e17-43cd-aeb8-d0567f99363e', 'Go for the Throat', [], {
+    spellAbility: {
+      kind: 'spell',
+      targets: [{ kind: 'creature', filter: not(ofType('Artifact')) }],
+      effects: [{ op: 'destroy', target: 0 }],
+      description: 'Destroy target nonartifact creature',
     },
-  );
+  });
 
   // Hexmark Destroyer: restored in coverage PR07 (see coverage-pr07.ts).
 

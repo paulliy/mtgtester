@@ -237,3 +237,12 @@ packages/engine/tests/cards/gruesome-fate.test.ts
 packages/engine/tests/cards/offer-immortality.test.ts
 packages/engine/tests/cards/languish.test.ts
 packages/engine/tests/phase4-batch4-grammar.test.ts
+packages/engine/tests/cards/fungal-sprouting.test.ts
+packages/engine/tests/cards/arbor-elf.test.ts
+packages/engine/tests/cards/doom-blade.test.ts
+packages/engine/tests/cards/muscle-sliver.test.ts
+packages/engine/tests/cards/selfless-savior.test.ts
+packages/engine/tests/cards/wasteland.test.ts
+packages/engine/tests/cards/geier-reach-sanitarium.test.ts
+packages/engine/tests/cards/deaths-shadow.test.ts
+packages/engine/tests/phase4-batch5-grammar.test.ts

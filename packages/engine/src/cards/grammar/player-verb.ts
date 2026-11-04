@@ -198,7 +198,10 @@ export function parsePlayerVerbSentence(
 
 /** Split "draws two cards and loses 2 life" into its clauses (at most two). */
 function splitAnd(rest: string): string[] {
-  const index = rest.indexOf(' and ');
-  if (index < 0) return [rest];
-  return [rest.slice(0, index), rest.slice(index + ' and '.length)];
+  // "draws a card, then discards a card" (Geier Reach Sanitarium): in order, same subject.
+  for (const joint of [' and ', ', then ']) {
+    const index = rest.indexOf(joint);
+    if (index >= 0) return [rest.slice(0, index), rest.slice(index + joint.length)];
+  }
+  return [rest];
 }

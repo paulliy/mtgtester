@@ -1192,7 +1192,7 @@ export function registerLIVING_ENERGYOverrides(): void {
   defineCard(
     '757eadac-dd29-4a7f-8683-5bc823168326',
     'One with the Machine',
-    ['Draw cards equal to the greatest mana value among artifacts you control.'],
+    [],
     ONE_WITH_THE_MACHINE_DEF,
   );
 

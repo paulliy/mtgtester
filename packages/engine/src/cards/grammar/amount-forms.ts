@@ -86,6 +86,10 @@ export function scaleByCount(effects: Effect[], per: Value): Effect[] | null {
 export function parseForEachCount(noun: string, card: OracleCard): Value | null {
   const text = noun.trim();
   if (text === 'opponent you have' || text === 'opponent') return { kind: 'countOpponents' };
+  // Every player still in the game: your opponents and you.
+  if (text === 'player') return { kind: 'plus', of: { kind: 'countOpponents' }, n: 1 };
+  if (text === 'card in your hand')
+    return parseDynamicCountValue('the number of cards in your hand', card);
   return parseDynamicCountValue(`the number of ${text}`, card);
 }
 

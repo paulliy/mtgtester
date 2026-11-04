@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "card": "Doom Blade",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Shade",
+      "typeLine": "Creature — Shade",
+      "manaCost": "{B}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "doom-blade-destroys-nonblack",
+      "title": "Doom Blade: it destroys a nonblack creature",
+      "clauses": [1],
+      "instructions": ["Cast Doom Blade targeting P2's Scenario Bear."],
+      "expectedOutcome": "Scenario Bear is in P2's graveyard.",
+      "seats": {
+        "P1": { "hand": ["Doom Blade"], "battlefield": ["Swamp", "Swamp"] },
+        "P2": { "battlefield": ["Scenario Bear"] }
+      },
+      "script": [{ "player": "P1", "choose": "/^Cast Doom Blade/", "targets": ["Scenario Bear"] }],
+      "expect": [{ "zone": { "player": "P2", "zone": "graveyard", "has": ["Scenario Bear"] } }]
+    },
+    {
+      "id": "doom-blade-cannot-target-black",
+      "title": "Doom Blade: a black creature is not a legal target",
+      "clauses": [1],
+      "instructions": ["Try to cast Doom Blade when P2 controls only a black creature."],
+      "expectedOutcome": "Doom Blade cannot be cast and stays in your hand.",
+      "seats": {
+        "P1": { "hand": ["Doom Blade"], "battlefield": ["Swamp", "Swamp"] },
+        "P2": { "battlefield": [{ "card": "Scenario Shade" }] }
+      },
+      "script": [],
+      "expect": [
+        { "zone": { "player": "P1", "zone": "hand", "has": ["Doom Blade"] } },
+        { "zone": { "player": "P2", "zone": "battlefield", "has": ["Scenario Shade"] } }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "card": "Arbor Elf",
+  "scenarios": [
+    {
+      "id": "arbor-elf-untaps-forest",
+      "title": "Arbor Elf: it untaps target Forest",
+      "clauses": [1],
+      "instructions": ["Tap Arbor Elf targeting your tapped Forest."],
+      "expectedOutcome": "The Forest is untapped and Arbor Elf is tapped.",
+      "seats": { "P1": { "battlefield": ["Arbor Elf", { "card": "Forest", "tapped": true }] } },
+      "script": [{ "player": "P1", "choose": "/Arbor Elf/", "targets": ["Forest"] }],
+      "expect": [
+        { "tapped": { "card": "Forest", "equals": false } },
+        { "tapped": { "card": "Arbor Elf", "equals": true } }
+      ]
+    }
+  ]
+}
