@@ -11246,13 +11246,14 @@ export function* payAbilityCosts(
                 controllerId: player.id,
               }),
           );
-          // Owing exactly as many as remain eligible is no choice: every one of them goes, in
-          // one step (Bolas's Citadel with exactly ten nonland permanents asks nothing).
+          // Owing exactly as many as remain eligible is no choice: every one of them goes
+          // (Bolas's Citadel with exactly ten nonland permanents asks nothing). They leave in
+          // one event, so a dies watcher among them sees every one go, whatever the battlefield
+          // order (CR 603.10a); one at a time, the order would decide what it saw.
           if (eligible.length === count - i) {
-            for (const chosen of eligible) {
+            for (const chosen of eligible)
               emit(ctx, 'sacrifice', { name: chosen.name, cardId: chosen.cardId }, player.id);
-              yield* moveObject(ctx, chosen, { zone: 'graveyard', reason: 'sacrifice' });
-            }
+            yield* movePermanentsToGraveyard(ctx, eligible, 'sacrifice');
             break;
           }
           const options = eligible.filter(
