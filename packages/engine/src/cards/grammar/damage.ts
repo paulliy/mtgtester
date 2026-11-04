@@ -21,6 +21,7 @@ export interface DamageOptions {
   eventPlayer?: boolean;
   thatMany?: Value;
   xBound?: boolean;
+  lastPlayerTarget?: number;
 }
 
 const isSpell = (card: OracleCard): boolean =>
@@ -76,6 +77,7 @@ export function parseDamageSentence(
         ? [{ op: 'damageController', amount: amount.n }]
         : null;
     case 'that player':
+      if (opts.lastPlayerTarget !== undefined) return one(opts.lastPlayerTarget);
       return opts.eventPlayer === true ? one('eventPlayer') : null;
     case 'target opponent':
       return one(alloc('player', undefined, 'opponent'));

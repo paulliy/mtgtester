@@ -55,6 +55,7 @@ import {
 import {
   ANTHEM_RE,
   appendSentenceEffects,
+  solePlayerTargetSince,
   soleTargetSince,
   MANA_ABILITY_RE,
   manaSymbols,
@@ -1371,17 +1372,17 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
     [];
   if (effects.length === 0) {
     let lastTarget: number | undefined;
+    let lastPlayerTarget: number | undefined;
     for (const sentence of splitSentences(split.effectText)) {
       const slotsBefore = targets.length;
-      const parsed = parseEffectSentence(
-        sentence,
-        alloc,
-        card,
-        lastTarget === undefined ? {} : { lastTarget },
-      );
+      const parsed = parseEffectSentence(sentence, alloc, card, {
+        ...(lastTarget === undefined ? {} : { lastTarget }),
+        ...(lastPlayerTarget === undefined ? {} : { lastPlayerTarget }),
+      });
       if (parsed === null) return null;
       appendSentenceEffects(effects, sentence, parsed);
       lastTarget = soleTargetSince(targets, slotsBefore);
+      lastPlayerTarget = solePlayerTargetSince(targets, slotsBefore);
     }
   }
   if (effects.length === 0) return null;
@@ -4262,14 +4263,13 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
       };
       let allParsed = sentences.length > 0;
       let lastTarget: number | undefined;
+      let lastPlayerTarget: number | undefined;
       for (const sentence of sentences) {
         const slotsBefore = lineTargets.length;
-        const parsed = parseEffectSentence(
-          sentence,
-          lineAlloc,
-          card,
-          lastTarget === undefined ? {} : { lastTarget },
-        );
+        const parsed = parseEffectSentence(sentence, lineAlloc, card, {
+          ...(lastTarget === undefined ? {} : { lastTarget }),
+          ...(lastPlayerTarget === undefined ? {} : { lastPlayerTarget }),
+        });
         if (parsed === null) {
           allParsed = false;
           break;
@@ -4277,6 +4277,8 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
         appendSentenceEffects(lineEffects, sentence, parsed);
         const local = soleTargetSince(lineTargets, slotsBefore);
         lastTarget = local === undefined ? undefined : base + local;
+        const localPlayer = solePlayerTargetSince(lineTargets, slotsBefore);
+        lastPlayerTarget = localPlayer === undefined ? undefined : base + localPlayer;
       }
       if (allParsed) {
         spellTargets.push(...lineTargets);

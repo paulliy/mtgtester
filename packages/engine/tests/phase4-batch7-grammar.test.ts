@@ -91,4 +91,34 @@ describe('Phase 4 batch 7: "its controller"', () => {
     expect(player(ctx, 'P2').life).toBe(43);
     expect(player(ctx, 'P1').life).toBe(40);
   });
+
+  it('"that player" after a targeted player is that target, not the event player (Memory Worm)', () => {
+    const card = oracle({
+      name: 'P7 Worm',
+      typeLine: 'Creature — Worm',
+      manaCost: '{1}{B}',
+      power: '1',
+      toughness: '1',
+      oracleText:
+        'Whenever you cast a spell, this creature deals 2 damage to target player. That player discards a card, then draws a card.',
+    });
+    const def = interpretCard(card);
+    expect(def.triggers[0]!.effects).toEqual([
+      { op: 'dealDamage', target: 0, amount: { kind: 'const', n: 2 } },
+      { op: 'discardTarget', target: 0, count: { kind: 'const', n: 1 } },
+      { op: 'drawTarget', target: 0, count: { kind: 'const', n: 1 } },
+    ]);
+  });
+
+  it('"that player" after a targeted player is refused where only the event player could be read', () => {
+    const def = interpretCard(
+      oracle({
+        name: 'P7 Ward',
+        typeLine: 'Enchantment',
+        oracleText:
+          'Whenever an opponent casts a spell, target player gains 1 life. That player gets a poison counter.',
+      }),
+    );
+    expect(def.modeled).toBe(false);
+  });
 });

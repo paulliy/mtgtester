@@ -28,6 +28,8 @@ export interface PlayerVerbOptions {
   xBound?: boolean;
   /** The previous sentence's one permanent target, which "its controller" names. */
   lastTarget?: number;
+  /** The previous sentence's one player target, which "that player" and "they" name. */
+  lastPlayerTarget?: number;
 }
 
 /**
@@ -65,6 +67,7 @@ function parseScope(
       return { kind: 'one', ref: alloc('player', undefined, 'opponent') };
     case 'that player':
     case 'they':
+      if (opts.lastPlayerTarget !== undefined) return { kind: 'one', ref: opts.lastPlayerTarget };
       return opts.eventPlayer === true ? { kind: 'one', ref: 'eventPlayer' } : null;
     // "Destroy target artifact. Its controller gains 4 life." (Nature's Claim): the controller of
     // the previous sentence's target, last known if that sentence moved it (CR 608.2h).

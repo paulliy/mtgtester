@@ -97,6 +97,15 @@ export function soleTargetSince(targets: TargetSpec[], before: number): number |
   return kind === undefined || notPermanent.includes(kind) ? undefined : before;
 }
 
+/**
+ * The slot a sentence allocated, when it allocated exactly one and that one is a player: what a
+ * following "that player" or "they" refers back to (Memory Worm: "… deals 2 damage to target
+ * player. That player discards a card, …").
+ */
+export function solePlayerTargetSince(targets: TargetSpec[], before: number): number | undefined {
+  return targets.length === before + 1 && targets[before]?.kind === 'player' ? before : undefined;
+}
+
 /** Split a line into sentences, dropping the terminal period of each. */
 export function splitSentences(line: string): string[] {
   return line
@@ -1345,6 +1354,8 @@ function parseEffectSentenceUntraced(
     afterToken?: boolean;
     /** The previous sentence's one permanent target, which "its controller" names. */
     lastTarget?: number;
+    /** The previous sentence's one player target, which "that player" and "they" name. */
+    lastPlayerTarget?: number;
     /** Every head is this object leaving the battlefield: its last-known facts are the event's. */
     departedSelf?: boolean;
     departedTriggerObject?: boolean;
@@ -3832,6 +3843,7 @@ export function parseTriggerLine(line: string, card: OracleCard): Ability[] | nu
   if (effects === null) {
     effects = [];
     let lastTarget: number | undefined;
+    let lastPlayerTarget: number | undefined;
     for (const [index, sentence] of splitSentences(body).entries()) {
       const slotsBefore = targets.length;
       // A later sentence's "it" may name an object an earlier one made ("create a token. Put a
@@ -3850,10 +3862,12 @@ export function parseTriggerLine(line: string, card: OracleCard): Ability[] | nu
               selfSubject: false,
               ...(afterToken ? { triggerObject: false, afterToken: true } : {}),
               ...(lastTarget !== undefined ? { lastTarget } : {}),
+              ...(lastPlayerTarget !== undefined ? { lastPlayerTarget } : {}),
             };
       const parsed = parseEffectSentence(sentence, alloc, card, sentenceOpts);
       if (parsed === null) return null;
       lastTarget = soleTargetSince(targets, slotsBefore);
+      lastPlayerTarget = solePlayerTargetSince(targets, slotsBefore);
       appendSentenceEffects(effects, sentence, parsed);
     }
   }
@@ -3883,6 +3897,15 @@ export function parseEffectSentence(
   ...args: Parameters<typeof parseEffectSentenceUntraced>
 ): ReturnType<typeof parseEffectSentenceUntraced> {
   const lower = args[0].toLowerCase().replace(/’/g, "'");
+  // After a sentence that targeted one player, "that player" / "they" is that player, not the
+  // event's: read it only where that referent is honored, and refuse it anywhere else.
+  if (args[3]?.lastPlayerTarget !== undefined && /^(?:that player|they)\b/.test(lower)) {
+    const bound =
+      parsePlayerVerbSentence(lower, args[1], args[2], args[3]) ??
+      parseDamageSentence(lower, args[1], args[2], args[3]);
+    if (bound === null) noteSlotFailure('effect', args[0]);
+    return bound;
+  }
   const result =
     parseEffectSentenceUntraced(...args) ??
     parsePlayerVerbSentence(lower, args[1], args[2], args[3] ?? {}) ??
