@@ -11,7 +11,7 @@ import { priorityCheckpoint } from '../src/sba/sba';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { createGame } from '../src/state/game';
 import { movePermanentsToGraveyard, queueTriggersForObject } from '../src/state/objects';
-import { forestsPod, gameConfig, oracle, pump, spawn } from './fixtures';
+import { forestsPod, gameConfig, oracle, pumpStrict, spawn } from './fixtures';
 
 const creature = (oracleText: string, extra: Partial<OracleCard> = {}): OracleCard =>
   oracle({
@@ -155,9 +155,9 @@ describe('Phase 4 batch 6: keywords', () => {
     const entered = spawn(ctx, 'P1', probe);
     entered.optionalCostCounts = { squad: 2 };
     queueTriggersForObject(ctx, 'enters', entered);
-    pump(priorityCheckpoint(ctx));
-    pump(movePermanentsToGraveyard(ctx, [entered]));
-    pump(resolveTopOfStack(ctx));
+    pumpStrict(priorityCheckpoint(ctx));
+    pumpStrict(movePermanentsToGraveyard(ctx, [entered]));
+    pumpStrict(resolveTopOfStack(ctx));
     const copies = ctx.state.battlefield.filter((p) => p.name === 'P6 Squad Probe');
     expect(copies).toHaveLength(2);
     expect(copies.every((p) => p.isToken === true)).toBe(true);
