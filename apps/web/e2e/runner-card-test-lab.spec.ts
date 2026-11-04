@@ -1860,6 +1860,147 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await expect(permanent(page, 'P1', 'Scenario Bear')).toHaveCount(1);
     await expect(life(page, 'P1')).toHaveText('40');
   },
+  // EDHREC plan Phase 4 batch 3: keywords and short line shapes.
+  'swiftspear-prowess-noncreature': async (page) => {
+    await castWith(page, hand(page, 'Scenario Ponder'), {
+      resolves: /Scenario Ponder[^]*resolves/,
+    });
+    await passStackUntil(
+      page,
+      permanent(page, 'P1', 'Monastery Swiftspear').filter({ hasText: '2/3' }),
+    );
+    await attack(page, [['Monastery Swiftspear', 'P2']]);
+    await passUntil(page, logLine(page, /game over/));
+    await expect(life(page, 'P2')).toHaveText('38');
+  },
+  'swiftspear-no-prowess-on-creature': async (page) => {
+    await castWith(page, hand(page, 'Scenario Bear'), { resolves: /Scenario Bear[^]*resolves/ });
+    await expect(
+      permanent(page, 'P1', 'Monastery Swiftspear').filter({ hasText: '1/2' }),
+    ).toHaveCount(1);
+    await attack(page, [['Monastery Swiftspear', 'P2']]);
+    await passUntil(page, logLine(page, /game over/));
+    await expect(life(page, 'P2')).toHaveText('39');
+  },
+  'swiftspear-haste': async (page) => {
+    await castWith(page, hand(page, 'Monastery Swiftspear'), {
+      resolves: /Monastery Swiftspear[^]*resolves/,
+    });
+    await attack(page, [['Monastery Swiftspear', 'P2']]);
+    await passUntil(page, logLine(page, /game over/));
+    await expect(life(page, 'P2')).toHaveText('39');
+  },
+  'hierarch-exalted-attacks-alone': async (page) => {
+    await attack(page, [['Scenario Bear', 'P2']]);
+    await passStackUntil(page, permanent(page, 'P1', 'Scenario Bear').filter({ hasText: '3/3' }));
+    await passUntil(page, logLine(page, /game over/));
+    await expect(life(page, 'P2')).toHaveText('37');
+  },
+  'hierarch-no-exalted-with-two-attackers': async (page) => {
+    await attack(page, [
+      ['Noble Hierarch', 'P2'],
+      ['Scenario Bear', 'P2'],
+    ]);
+    await passUntil(page, logLine(page, /game over/));
+    await expect(life(page, 'P2')).toHaveText('38');
+    await expect(logLine(page, /Exalted/)).toHaveCount(0);
+  },
+  'hierarch-taps-for-mana': async (page) => {
+    await castWith(page, hand(page, 'Scenario Owl'), { resolves: /Scenario Owl[^]*resolves/ });
+    await expect(permanent(page, 'P1', 'Scenario Owl')).toHaveCount(1);
+    await expect(permanent(page, 'P1', 'Noble Hierarch').locator('.tap-badge')).toHaveCount(1);
+  },
+  'modular-enters-with-counter': async (page) => {
+    await castWith(page, hand(page, 'Arcbound Worker'), {
+      resolves: /Arcbound Worker[^]*resolves/,
+    });
+    await expect(permanent(page, 'P1', 'Arcbound Worker').locator('.counters')).toContainText(
+      /\+1\/\+1.*1/,
+    );
+  },
+  'modular-moves-counters-on-death': async (page) => {
+    await castWith(page, hand(page, 'Scenario Snuff'), {
+      targets: [['P1', 'Arcbound Worker']],
+      resolves: /Scenario Snuff[^]*resolves/,
+    });
+    const yes = page.getByRole('button', { name: 'Yes', exact: true });
+    await passStackUntil(page, yes);
+    await yes.click();
+    await passStackUntil(
+      page,
+      permanent(page, 'P1', 'Scenario Golem').locator('.counters').filter({ hasText: /2/ }),
+    );
+    await expect(inZone(page, 'P1', 'Graveyard', 'Arcbound Worker')).toHaveCount(1);
+  },
+  'modular-needs-artifact-creature': async (page) => {
+    await castWith(page, hand(page, 'Scenario Snuff'), {
+      targets: [['P1', 'Arcbound Worker']],
+      resolves: /Scenario Snuff[^]*resolves/,
+    });
+    await passStackUntil(page, inZone(page, 'P1', 'Graveyard', 'Arcbound Worker'));
+    await expect(page.getByRole('button', { name: 'Yes', exact: true })).toHaveCount(0);
+    await expect(permanent(page, 'P1', 'Scenario Bear').locator('.counters')).toHaveCount(0);
+  },
+  'myr-convert-toxic-poisons': async (page) => {
+    await attack(page, [['Myr Convert', 'P2']]);
+    await passUntil(page, logLine(page, /game over/));
+    await expect(life(page, 'P2')).toHaveText('38');
+    await expect(page.locator('.opponent[data-seat="P2"] .counter-poison')).toContainText('1');
+  },
+  'myr-convert-pays-life-for-mana': async (page) => {
+    await castWith(page, hand(page, 'Scenario Owl'), { resolves: /Scenario Owl[^]*resolves/ });
+    await expect(permanent(page, 'P1', 'Scenario Owl')).toHaveCount(1);
+    await expect(life(page, 'P1')).toHaveText('38');
+  },
+  'grim-monolith-stays-tapped': async (page) => {
+    await passUntil(page, logLine(page, /game over/));
+    await expect(permanent(page, 'P1', 'Grim Monolith').locator('.tap-badge')).toHaveCount(1);
+    await expect(permanent(page, 'P1', 'Island').locator('.tap-badge')).toHaveCount(0);
+  },
+  'grim-monolith-pay-to-untap': async (page) => {
+    const monolith = permanent(page, 'P1', 'Grim Monolith');
+    await activate(page, monolith, /Untap/);
+    await passStackUntil(page, logLine(page, /Untap this artifact\. resolves/));
+    await expect(monolith.locator('.tap-badge')).toHaveCount(0);
+    await castWith(page, hand(page, 'Scenario Giant'), { resolves: /Scenario Giant[^]*resolves/ });
+    await expect(permanent(page, 'P1', 'Scenario Giant')).toHaveCount(1);
+    await expect(monolith.locator('.tap-badge')).toHaveCount(1);
+  },
+  'vivid-creek-enters-tapped-with-counters': async (page) => {
+    await playLand(page, 'Vivid Creek');
+    const creek = permanent(page, 'P1', 'Vivid Creek');
+    await expect(creek.locator('.tap-badge')).toHaveCount(1);
+    await expect(creek.locator('.counters')).toContainText(/charge.*2/i);
+  },
+  'vivid-creek-any-color': async (page) => {
+    await castWith(page, hand(page, 'Scenario Elf'), { resolves: /Scenario Elf[^]*resolves/ });
+    await expect(permanent(page, 'P1', 'Scenario Elf')).toHaveCount(1);
+    await expect(permanent(page, 'P1', 'Vivid Creek').locator('.counters')).toContainText(
+      /charge.*1/i,
+    );
+  },
+  'razortrap-gorge-enters-tapped': async (page) => {
+    await playLand(page, 'Razortrap Gorge');
+    await expect(permanent(page, 'P1', 'Razortrap Gorge').locator('.tap-badge')).toHaveCount(1);
+  },
+  'razortrap-gorge-enters-untapped': async (page) => {
+    await playLand(page, 'Razortrap Gorge');
+    await expect(permanent(page, 'P1', 'Razortrap Gorge').locator('.tap-badge')).toHaveCount(0);
+    await castWith(page, hand(page, 'Scenario Imp'), { resolves: /Scenario Imp[^]*resolves/ });
+    await expect(permanent(page, 'P1', 'Scenario Imp')).toHaveCount(1);
+  },
+  'fervent-charge-pumps-each-attacker': async (page) => {
+    await attack(page, [
+      ['Scenario Bear', 'P2'],
+      ['Scenario Wolf', 'P2'],
+    ]);
+    // Two triggers at once: put them on the stack in either order.
+    const order = page.locator('.decision-panel').getByRole('button', { name: /Fervent Charge/ });
+    await passUntil(page, order.first());
+    await order.first().click();
+    await passUntil(page, logLine(page, /game over/));
+    await expect(life(page, 'P2')).toHaveText('33');
+  },
 };
 
 test.describe('Runner scenarios in the Card Test Lab', () => {
