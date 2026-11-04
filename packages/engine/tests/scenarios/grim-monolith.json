@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "card": "Grim Monolith",
+  "supportCards": [
+    {
+      "name": "Scenario Giant",
+      "typeLine": "Creature — Giant",
+      "manaCost": "{3}",
+      "power": "3",
+      "toughness": "3"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "grim-monolith-stays-tapped",
+      "title": "Grim Monolith: it does not untap during your untap step",
+      "clauses": [1],
+      "instructions": [
+        "Pass priority to your next turn; Grim Monolith stays tapped while your Island untaps."
+      ],
+      "expectedOutcome": "Grim Monolith is still tapped and Island is untapped.",
+      "turn": {
+        "player": "P4"
+      },
+      "continue": {
+        "throughPrecombatMains": 1
+      },
+      "seats": {
+        "P1": {
+          "battlefield": [
+            {
+              "card": "Grim Monolith",
+              "tapped": true
+            },
+            {
+              "card": "Island",
+              "tapped": true
+            }
+          ]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "tapped": {
+            "card": "Grim Monolith",
+            "equals": true
+          }
+        },
+        {
+          "tapped": {
+            "card": "Island",
+            "equals": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "grim-monolith-pay-to-untap",
+      "title": "Grim Monolith: pay {4} to untap it, then tap it for {C}{C}{C}",
+      "clauses": [2, 3],
+      "instructions": [
+        "Pay {4} to untap Grim Monolith, then cast Scenario Giant with its three colorless mana."
+      ],
+      "expectedOutcome": "Scenario Giant is on the battlefield and Grim Monolith is tapped again.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Giant"],
+          "battlefield": [
+            {
+              "card": "Grim Monolith",
+              "tapped": true
+            },
+            "Island",
+            "Island",
+            "Island",
+            "Island"
+          ]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/Untap/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Giant/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Giant"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Grim Monolith",
+            "equals": true
+          }
+        }
+      ]
+    }
+  ]
+}

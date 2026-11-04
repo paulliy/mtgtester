@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "card": "Vivid Creek",
+  "supportCards": [
+    {
+      "name": "Scenario Elf",
+      "typeLine": "Creature — Elf",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "vivid-creek-enters-tapped-with-counters",
+      "title": "Vivid Creek: it enters tapped with two charge counters",
+      "clauses": [1],
+      "instructions": ["Play Vivid Creek."],
+      "expectedOutcome": "Vivid Creek is tapped with two charge counters.",
+      "seats": {
+        "P1": {
+          "hand": ["Vivid Creek"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Play Vivid Creek/"
+        }
+      ],
+      "expect": [
+        {
+          "tapped": {
+            "card": "Vivid Creek",
+            "equals": true
+          }
+        },
+        {
+          "counters": {
+            "card": "Vivid Creek",
+            "counter": "charge",
+            "equals": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "vivid-creek-any-color",
+      "title": "Vivid Creek: remove a charge counter for mana of any color",
+      "clauses": [2, 3],
+      "instructions": ["Cast Scenario Elf, paying {G} with Vivid Creek's charge counter."],
+      "expectedOutcome": "Scenario Elf is on the battlefield and Vivid Creek has one charge counter left.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Elf"],
+          "battlefield": [
+            {
+              "card": "Vivid Creek",
+              "counters": {
+                "charge": 2
+              }
+            }
+          ]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Elf/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Elf"]
+          }
+        },
+        {
+          "counters": {
+            "card": "Vivid Creek",
+            "counter": "charge",
+            "equals": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -214,3 +214,12 @@ packages/engine/tests/cards/abraded-bluffs.test.ts
 packages/engine/tests/cards/forbidden-alchemy.test.ts
 packages/engine/tests/cards/adventurous-impulse.test.ts
 packages/engine/tests/cards/souls-attendant.test.ts
+packages/engine/tests/cards/monastery-swiftspear.test.ts
+packages/engine/tests/cards/noble-hierarch.test.ts
+packages/engine/tests/cards/arcbound-worker.test.ts
+packages/engine/tests/cards/myr-convert.test.ts
+packages/engine/tests/cards/grim-monolith.test.ts
+packages/engine/tests/cards/vivid-creek.test.ts
+packages/engine/tests/cards/razortrap-gorge.test.ts
+packages/engine/tests/cards/fervent-charge.test.ts
+packages/engine/tests/phase4-batch3-grammar.test.ts

@@ -343,9 +343,10 @@ at 200/200 and `knownUnmodeled` is empty.
 
 ### Phase 4: grammar breadth
 
-Status (2026-11-03): in progress. Two batches have landed, worked from the
-[triage](edhrec-triage.md) queue (its largest effect-slot groups) rather than strictly in the
-order below. The pinned ratchet is at 3,237 modeled.
+Status (2026-11-04): in progress. Three batches have landed, worked from the
+[triage](edhrec-triage.md) queue (its largest groups) rather than strictly in the order below.
+The pinned ratchet is at 3,290 modeled. The triage file is a baseline snapshot; the live queue is
+the pinned cards whose one unmodeled reason is the same line shape.
 
 - **Batch 1:** subjectless "gain N life", investigate, "each opponent discards", "target player
   mills", Fog, karoo returns, and "it deals N damage to target opponent". It also fixed
@@ -353,6 +354,18 @@ order below. The pinned ratchet is at 3,237 modeled.
 - **Batch 2:** the "look at the top N" reveal and pick shapes. It also fixed Orb of Dragonkind,
   which searched its whole library instead of looking at the top seven. The corpus net closes
   28 cards.
+- **Batch 3:** keywords and short line shapes.
+  - Prowess and exalted expand to their reminder-text triggers. Exalted adds an "attacks alone"
+    qualifier on the attack event (CR 506.5).
+  - Modular N gets entry counters plus a dies trigger.
+  - Toxic N gets a toxic value in the characteristics and poison on combat damage.
+  - The trigger-subject pump "it gets +N/+N until end of turn".
+  - Line shapes: "doesn't untap during your untap step", "enters tapped with N counters" (Vivid;
+    stun counters are refused), and "enters tapped unless a player has N or less life".
+
+  The pinned ratchet gains 53 cards and the corpus net closes 51. Still open in the same family:
+  myriad, mobilize, umbra armor, ninjutsu, encore, madness, buyback, squad, delve and the other
+  cost keywords.
 
 Extend the Phase 1 slots, in order of the cards each closes:
 

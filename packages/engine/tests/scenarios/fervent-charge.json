@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "card": "Fervent Charge",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Wolf",
+      "typeLine": "Creature — Wolf",
+      "manaCost": "{1}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "fervent-charge-pumps-each-attacker",
+      "title": "Fervent Charge: each attacking creature you control gets +2/+2",
+      "clauses": [1],
+      "instructions": [
+        "Attack P2 with Scenario Bear and Scenario Wolf.",
+        "Put the two Fervent Charge triggers on the stack in either order."
+      ],
+      "expectedOutcome": "Scenario Bear is 4/4 and Scenario Wolf 3/3; P2 takes 7 and is at 33.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Fervent Charge", "Scenario Bear", "Scenario Wolf"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2", "P2"]
+        },
+        {
+          "player": "P1",
+          "choose": "/^Fervent Charge: Whenever/"
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 33
+          }
+        }
+      ]
+    }
+  ]
+}

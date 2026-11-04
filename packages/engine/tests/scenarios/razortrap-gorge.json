@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "card": "Razortrap Gorge",
+  "supportCards": [
+    {
+      "name": "Scenario Imp",
+      "typeLine": "Creature — Imp",
+      "manaCost": "{R}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "razortrap-gorge-enters-tapped",
+      "title": "Razortrap Gorge: with every player above 13 life it enters tapped",
+      "clauses": [1],
+      "instructions": ["Play Razortrap Gorge while every player is at 40 life."],
+      "expectedOutcome": "Razortrap Gorge is tapped.",
+      "seats": {
+        "P1": {
+          "hand": ["Razortrap Gorge"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Play Razortrap Gorge/"
+        }
+      ],
+      "expect": [
+        {
+          "tapped": {
+            "card": "Razortrap Gorge",
+            "equals": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "razortrap-gorge-enters-untapped",
+      "title": "Razortrap Gorge: when any player has 13 or less life it enters untapped",
+      "clauses": [1, 2],
+      "instructions": [
+        "Play Razortrap Gorge while P3 is at 13 life, then cast Scenario Imp with it."
+      ],
+      "expectedOutcome": "Razortrap Gorge enters untapped and pays for Scenario Imp.",
+      "seats": {
+        "P1": {
+          "hand": ["Razortrap Gorge", "Scenario Imp"]
+        },
+        "P3": {
+          "life": 13
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Play Razortrap Gorge/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Imp/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Imp"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Razortrap Gorge",
+            "equals": true
+          }
+        }
+      ]
+    }
+  ]
+}

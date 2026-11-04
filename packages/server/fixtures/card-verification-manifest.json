@@ -19222,6 +19222,199 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "dafd2713-d1bc-474b-b390-d2ff20b5375e": {
+      "name": "Monastery Swiftspear",
+      "oracleSha256": "2c242984851a6280b0eb0555d780ced3a184e3ccbc298e819f74bacee8a9d12b",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Haste",
+          "implementation": ["keyword haste"],
+          "engineTestIds": ["cards/monastery-swiftspear.test.ts::swiftspear-haste"],
+          "viewerScenarioIds": ["swiftspear-haste"]
+        },
+        {
+          "oracleText": "Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)",
+          "implementation": [
+            "prowess expanded to its reminder trigger: castsSpell you, noncreature filter; Effect.pumpUntilEot source +1/+1 (CR 702.108a)"
+          ],
+          "engineTestIds": [
+            "cards/monastery-swiftspear.test.ts::swiftspear-prowess-noncreature",
+            "cards/monastery-swiftspear.test.ts::swiftspear-no-prowess-on-creature"
+          ],
+          "viewerScenarioIds": [
+            "swiftspear-prowess-noncreature",
+            "swiftspear-no-prowess-on-creature"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "98aa9424-5912-4bd6-9300-b3972a31d8af": {
+      "name": "Noble Hierarch",
+      "oracleSha256": "33e9585643fc0d9fc2f6bb6b2a9a44d897086e50c6b4ea1bccc88d4c70547112",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Exalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)",
+          "implementation": [
+            "exalted expanded to its reminder trigger: attacks head with alone (CR 506.5, 702.83a); Effect.pumpUntilEot triggerObject +1/+1"
+          ],
+          "engineTestIds": [
+            "cards/noble-hierarch.test.ts::hierarch-exalted-attacks-alone",
+            "cards/noble-hierarch.test.ts::hierarch-no-exalted-with-two-attackers"
+          ],
+          "viewerScenarioIds": [
+            "hierarch-exalted-attacks-alone",
+            "hierarch-no-exalted-with-two-attackers"
+          ]
+        },
+        {
+          "oracleText": "{T}: Add {G}, {W}, or {U}.",
+          "implementation": ["mana ability: one of {G}, {W}, {U}"],
+          "engineTestIds": ["cards/noble-hierarch.test.ts::hierarch-taps-for-mana"],
+          "viewerScenarioIds": ["hierarch-taps-for-mana"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6d9af084-cd5d-4242-b0f0-24a36d0a75d4": {
+      "name": "Arcbound Worker",
+      "oracleSha256": "15d6215e12ca850403cb20ada4e915e7ce7b12a76abdaa352ec07566bc45d192",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Modular 1 (This creature enters with a +1/+1 counter on it. When it dies, you may put its +1/+1 counters on target artifact creature.)",
+          "implementation": [
+            "modular expanded: entersWithCounters +1/+1, and an optional dies trigger; Effect.transferCountersFromSource counter +1/+1 at target artifact creature (CR 702.43a)"
+          ],
+          "engineTestIds": [
+            "cards/arcbound-worker.test.ts::modular-enters-with-counter",
+            "cards/arcbound-worker.test.ts::modular-moves-counters-on-death",
+            "cards/arcbound-worker.test.ts::modular-needs-artifact-creature"
+          ],
+          "viewerScenarioIds": [
+            "modular-enters-with-counter",
+            "modular-moves-counters-on-death",
+            "modular-needs-artifact-creature"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6abf433e-27da-4abb-b262-3af792a1db23": {
+      "name": "Myr Convert",
+      "oracleSha256": "8d4318c68dc4f76179e6dd3ad10826cfa299c8ea9c702c2adc9b180d34a1a837",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Toxic 1 (Players dealt combat damage by this creature also get a poison counter.)",
+          "implementation": [
+            "CardDefinition.toxic, Characteristics.toxic; combat damage to a player adds poison counters (CR 702.164c)"
+          ],
+          "engineTestIds": ["cards/myr-convert.test.ts::myr-convert-toxic-poisons"],
+          "viewerScenarioIds": ["myr-convert-toxic-poisons"]
+        },
+        {
+          "oracleText": "{T}, Pay 2 life: Add one mana of any color.",
+          "implementation": ["mana ability with a 2 life cost: one mana of any color"],
+          "engineTestIds": ["cards/myr-convert.test.ts::myr-convert-pays-life-for-mana"],
+          "viewerScenarioIds": ["myr-convert-pays-life-for-mana"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "229d6627-1292-4ae1-8849-b0f956fa6540": {
+      "name": "Grim Monolith",
+      "oracleSha256": "4af9be2430222103074c75495f96eb8eee6979fb403fa94993ef6b8770a07617",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This artifact doesn't untap during your untap step.",
+          "implementation": ["CardDefinition.doesntUntapDuringUntapStep (CR 502.3)"],
+          "engineTestIds": ["cards/grim-monolith.test.ts::grim-monolith-stays-tapped"],
+          "viewerScenarioIds": ["grim-monolith-stays-tapped"]
+        },
+        {
+          "oracleText": "{T}: Add {C}{C}{C}.",
+          "implementation": ["mana ability {C}{C}{C}"],
+          "engineTestIds": ["cards/grim-monolith.test.ts::grim-monolith-pay-to-untap"],
+          "viewerScenarioIds": ["grim-monolith-pay-to-untap"]
+        },
+        {
+          "oracleText": "{4}: Untap this artifact.",
+          "implementation": ["activated ability: {4}, untap this artifact"],
+          "engineTestIds": ["cards/grim-monolith.test.ts::grim-monolith-pay-to-untap"],
+          "viewerScenarioIds": ["grim-monolith-pay-to-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2da7c49f-cc1e-45d9-9cbf-067e92b0daef": {
+      "name": "Vivid Creek",
+      "oracleSha256": "367ba0735ca30fc563c630465bdad29fba936399ba9f92fd28bce8548c7fecc1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This land enters tapped with two charge counters on it.",
+          "implementation": ["entersTapped and entersWithCounters charge 2"],
+          "engineTestIds": ["cards/vivid-creek.test.ts::vivid-creek-enters-tapped-with-counters"],
+          "viewerScenarioIds": ["vivid-creek-enters-tapped-with-counters"]
+        },
+        {
+          "oracleText": "{T}: Add {U}.",
+          "implementation": ["mana ability {U}"],
+          "engineTestIds": ["cards/vivid-creek.test.ts::vivid-creek-any-color"],
+          "viewerScenarioIds": ["vivid-creek-any-color"]
+        },
+        {
+          "oracleText": "{T}, Remove a charge counter from this land: Add one mana of any color.",
+          "implementation": ["mana ability: remove a charge counter, one mana of any color"],
+          "engineTestIds": ["cards/vivid-creek.test.ts::vivid-creek-any-color"],
+          "viewerScenarioIds": ["vivid-creek-any-color"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8f69bd3a-244e-42d8-bfac-5a426f4b54b4": {
+      "name": "Razortrap Gorge",
+      "oracleSha256": "a111896d59d8e1afe2c7624816da0f5c4ad3c9f9fd7fcca95f938c4bb65bed65",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This land enters tapped unless a player has 13 or less life.",
+          "implementation": ["entersTappedUnless Condition.anyPlayerLifeAtMost 13 (CR 614.1c)"],
+          "engineTestIds": [
+            "cards/razortrap-gorge.test.ts::razortrap-gorge-enters-tapped",
+            "cards/razortrap-gorge.test.ts::razortrap-gorge-enters-untapped"
+          ],
+          "viewerScenarioIds": ["razortrap-gorge-enters-tapped", "razortrap-gorge-enters-untapped"]
+        },
+        {
+          "oracleText": "{T}: Add {B} or {R}.",
+          "implementation": ["mana ability {B} or {R}"],
+          "engineTestIds": ["cards/razortrap-gorge.test.ts::razortrap-gorge-enters-untapped"],
+          "viewerScenarioIds": ["razortrap-gorge-enters-untapped"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6226db2b-d1a8-4c41-b802-67d3f65d2ca3": {
+      "name": "Fervent Charge",
+      "oracleSha256": "2b795360d43fd14f1955f9c4e046f78b2279c708f399f2c920f8071189cc9ff1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever a creature you control attacks, it gets +2/+2 until end of turn.",
+          "implementation": [
+            "attacks trigger over creatures you control; Effect.pumpUntilEot triggerObject +2/+2"
+          ],
+          "engineTestIds": ["cards/fervent-charge.test.ts::fervent-charge-pumps-each-attacker"],
+          "viewerScenarioIds": ["fervent-charge-pumps-each-attacker"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

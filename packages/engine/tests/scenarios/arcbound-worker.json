@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "card": "Arcbound Worker",
+  "supportCards": [
+    {
+      "name": "Scenario Snuff",
+      "typeLine": "Instant",
+      "manaCost": "{B}",
+      "oracleText": "Destroy target creature."
+    },
+    {
+      "name": "Scenario Golem",
+      "typeLine": "Artifact Creature — Golem",
+      "manaCost": "{1}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "modular-enters-with-counter",
+      "title": "Arcbound Worker: it enters with a +1/+1 counter",
+      "clauses": [1],
+      "instructions": ["Cast Arcbound Worker."],
+      "expectedOutcome": "Arcbound Worker is a 1/1 with one +1/+1 counter.",
+      "seats": {
+        "P1": {
+          "hand": ["Arcbound Worker"],
+          "battlefield": ["Plains"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Arcbound Worker/"
+        }
+      ],
+      "expect": [
+        {
+          "counters": {
+            "card": "Arcbound Worker",
+            "counter": "+1/+1",
+            "equals": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "modular-moves-counters-on-death",
+      "title": "Arcbound Worker: when it dies, its +1/+1 counters go onto an artifact creature",
+      "clauses": [1],
+      "instructions": [
+        "Cast Scenario Snuff on Arcbound Worker, which has two +1/+1 counters, and put them on Scenario Golem."
+      ],
+      "expectedOutcome": "Arcbound Worker dies and Scenario Golem gets two +1/+1 counters.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Snuff"],
+          "battlefield": [
+            "Swamp",
+            {
+              "card": "Arcbound Worker",
+              "counters": {
+                "+1/+1": 2
+              }
+            },
+            "Scenario Golem"
+          ]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Snuff/",
+          "targets": ["Arcbound Worker"]
+        },
+        {
+          "player": "P1",
+          "choose": "Yes"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Arcbound Worker"]
+          }
+        },
+        {
+          "counters": {
+            "card": "Scenario Golem",
+            "counter": "+1/+1",
+            "equals": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "modular-needs-artifact-creature",
+      "title": "Arcbound Worker: a non-artifact creature cannot receive the counters",
+      "clauses": [1],
+      "instructions": ["Cast Scenario Snuff on Arcbound Worker with only Scenario Bear beside it."],
+      "expectedOutcome": "Arcbound Worker dies; with no artifact creature to target, Scenario Bear gets no counters.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Snuff"],
+          "battlefield": [
+            "Swamp",
+            {
+              "card": "Arcbound Worker",
+              "counters": {
+                "+1/+1": 1
+              }
+            },
+            "Scenario Bear"
+          ]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Snuff/",
+          "targets": ["Arcbound Worker"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Arcbound Worker"]
+          }
+        },
+        {
+          "counters": {
+            "card": "Scenario Bear",
+            "counter": "+1/+1",
+            "equals": 0
+          }
+        }
+      ]
+    }
+  ]
+}

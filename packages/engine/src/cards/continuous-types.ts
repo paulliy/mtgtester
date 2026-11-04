@@ -141,6 +141,8 @@ export interface Characteristics {
    * pool grants a second one, and silently combining them would be a guess.
    */
   ward: WardCost | null;
+  /** Total toxic value (CR 702.164b); absent or 0 for none. */
+  toxic?: number;
   /** Qualities this permanent has protection from (CR 702.16). */
   protectionFrom: ProtectionQuality[];
   /** Computed evasion from a layer-6 effect, separate from printed characteristics. */

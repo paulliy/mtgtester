@@ -691,6 +691,7 @@ function applyOpTo(
         chars.manaAbilities = [];
         if (chars.activatedAbilities) chars.activatedAbilities = [];
         chars.ward = null;
+        delete chars.toxic;
         chars.protectionFrom = [];
         chars.loseAbilities = true;
       } else if ('addManaAbility' in op) {
@@ -798,6 +799,7 @@ function cloneWork(work: WorkMap): WorkMap {
         colors: [...entry.chars.colors],
         keywords: [...entry.chars.keywords],
         ward: entry.chars.ward,
+        ...(entry.chars.toxic !== undefined ? { toxic: entry.chars.toxic } : {}),
         protectionFrom: [...entry.chars.protectionFrom],
         cantBeBlocked: entry.chars.cantBeBlocked,
         ...(entry.chars.staticGoadedBy === undefined
@@ -892,6 +894,7 @@ function finishLayer4(ctx: GameContext, work: WorkMap): void {
       chars.keywords = [];
       chars.triggers = [];
       chars.ward = null;
+      delete chars.toxic;
       chars.protectionFrom = [];
     }
 
@@ -1016,6 +1019,9 @@ function runLayerPass(
             : perm.faceDown === true && perm.faceDownWard === true
               ? FACE_DOWN_WARD
               : null,
+        ...(!perm.faceDown && landFace === undefined && transformFace === undefined && def.toxic
+          ? { toxic: def.toxic }
+          : {}),
         protectionFrom:
           !perm.faceDown && landFace === undefined
             ? [

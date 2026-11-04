@@ -6,12 +6,12 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 | Failing slot | Cards | Share of slots |
 | ------------ | ----: | -------------: |
-| effect | 2855 | 13.26% |
-| subject | 1066 | 5.34% |
-| line | 788 | 4.38% |
-| trigger event | 495 | 2.09% |
+| effect | 2858 | 13.26% |
+| subject | 1073 | 5.35% |
+| line | 800 | 4.40% |
+| trigger event | 483 | 2.07% |
 | cost | 307 | 1.34% |
-| condition | 184 | 0.81% |
+| condition | 174 | 0.79% |
 | target | 168 | 0.79% |
 | card filter | 23 | 0.07% |
 | amount | 20 | 0.12% |
@@ -19,12 +19,12 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 `line` means no slot recorded a failure inside the line: the line matched no sentence shape at all.
 
-## effect (2855)
+## effect (2858)
 
 - 34 × `look at the top n cards of your library` (Loot, Exuberant Explorer, Experimental Augury, Lim-Dûl's Vault)
 - 31 × `pay {m}` (Lifecrafter's Bestiary, Leaf-Crowned Visionary, Mind's Eye)
+- 15 × `exile the top card of your library` (Blazing Crescendo, Cori Mountain Monastery, Count on Luck)
 - 14 × `reveal the top n cards of your library` (Fact or Fiction, Genesis Wave, Grisly Salvage)
-- 14 × `exile the top card of your library` (Blazing Crescendo, Cori Mountain Monastery, Count on Luck)
 - 13 × `choose a creature type` (Distant Melody, Kindred Dominance, Raise the Palisade)
 - 12 × `gain control of target creature until end of turn` (Coercive Recruiter, Act of Treason, Song-Mad Treachery)
 - 11 × `exile the top n cards of your library` (Bonehoard Dracosaur, Sword of Forge and Frontier, Reckless Impulse)
@@ -37,7 +37,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 9 × `pay {m}{m}` (Bramble Sovereign, Roar of Resistance, Alesha, Who Smiles at Death)
 - 8 × `discover n` (Hit the Mother Lode, Hidden Nursery, Hidden Volcano)
 
-## subject (1066)
+## subject (1073)
 
 - 27 × `you may` (Mockingbird, Vesuva, Phantasmal Image)
 - 25 × `~` (Yahenni, Undying Partisan, Marvin, Murderous Mimic, Paradise Druid)
@@ -47,19 +47,20 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 10 × `historic` (Jhoira's Familiar, Jhoira, Weatherlight Captain, Monumental Henge)
 - 10 × `this creature enters or` (Stitcher's Supplier, Patron of the Arts, Vinereap Mentor)
 - 10 × `all slivers` (Gemhide Sliver, Harmonic Sliver, Crystalline Sliver)
+- 9 × `it` (Idolized, Biosynthic Burst, Flaming Fist)
 - 8 × `another target creature you control` (Giver of Runes, Selfless Savior, Pippin, Guard of the Citadel)
-- 8 × `it` (Biosynthic Burst, Flaming Fist, Fervent Charge)
 - 8 × `opponent` (Goblin Chainwhirler, Voldaren Epicure, Knight Paladin)
 - 8 × `this spacecraft` (Extinguisher Battleship, Larval Scoutlander, Sledge-Class Seedship)
 - 7 × `your commander` (Tome of Legends, Siege-Gang Lieutenant, Loyal Subordinate)
 - 6 × `artifact card with mana value n` (Whir of Invention, Trinket Mage, Trophy Mage)
 - 6 × `this artifact enters or` (Ichor Wellspring, Prized Statue, Mycosynth Wellspring)
 
-## line (788)
+## line (800)
 
 - 11 × `modular n` (Arcbound Ravager, Arcbound Crusher, Scrapyard Recombiner)
 - 10 × `when this land enters, it deals n damage to target opponent` (Abraded Bluffs, Bristling Backwoods, Jagged Barrens)
 - 10 × `toxic n` (Myr Convert, Bloated Contaminator, Blightbelly Rat)
+- 10 × `~ enters tapped unless a player has n or less life` (Razortrap Gorge, Neglected Manor, Raucous Carnival)
 - 9 × `storm` (Grapeshot, Empty the Warrens, Chatterstorm)
 - 8 × `when this land enters, return a land you control to its owner's hand` (Simic Growth Chamber, Golgari Rot Farm, Dimir Aqueduct)
 - 8 × `mobilize n` (Voice of Victory, Bone-Cairn Butcher, Venerated Stormsinger)
@@ -71,9 +72,8 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 5 × `~ enters tapped with n charge counters on it` (Vivid Creek, Vivid Grove, Vivid Meadow)
 - 5 × `buyback {m}` (Capsize, Sprout Swarm, Mystic Speculation)
 - 4 × `~ doesn't untap during your untap step` (Basalt Monolith, Grim Monolith, Goblin Sharpshooter)
-- 4 × `exalted` (Ignoble Hierarch, Noble Hierarch, Cathedral of War)
 
-## trigger event (495)
+## trigger event (483)
 
 - 4 × `at the beginning of each player's draw step, that player draws an additional card` (Dictate of Kruphix, Kami of the Crescent Moon, Spiteful Visions)
 - 4 × `whenever enchanted land is tapped for mana, its controller adds an additional n mana of any color` (Fertile Ground, Trace of Abundance, Buried in the Garden)
@@ -109,9 +109,8 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 3 × `sacrifice a food` (Cauldron Familiar, Bill the Pony, Mushroom Watchdogs)
 - 3 × `{m}, return a land you control to its owner's hand` (Meloku the Clouded Mirror, Oboro Breezecaller, Wonderscape Sage)
 
-## condition (184)
+## condition (174)
 
-- 10 × `a player has n or less life` (Razortrap Gorge, Neglected Manor, Raucous Carnival)
 - 9 × `you gained life this turn` (Witch of the Moors, Lathiel, the Bounteous Dawn, Crested Sunmare)
 - 9 × `a creature died this turn` (Deathreap Ritual, Reaper from the Abyss, Muster the Departed)
 - 7 × `you cast it from your hand` (Wakening Sun's Avatar, Cyclone Summoner, Angel of the Dire Hour)
@@ -126,6 +125,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 3 × `it was a creature` (Enduring Vitality, Enduring Curiosity, Harold and Bob, First Numens)
 - 3 × `a permanent left the battlefield under your control this turn` (Hidden Stockpile, Call for Unity, Aid from the Cowl)
 - 3 × `an opponent lost life this turn` (Falkenrath Pit Fighter, Flamecache Gecko, Stromkirk Bloodthief)
+- 3 × `you gained or lost life this turn` (Star Charter, Starseer Mentor, Starlit Soothsayer)
 
 ## target (168)
 

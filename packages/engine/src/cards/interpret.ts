@@ -2764,6 +2764,8 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
   let optionalAdditionalCost: CardDefinition['optionalAdditionalCost'];
   let morphCost: ParsedManaCost | undefined;
   let faceDownVariant: CardDefinition['faceDownVariant'];
+  let toxic = 0;
+  let doesntUntapDuringUntapStep = false;
   let asTurnedFaceUpCounters: Record<string, number> | undefined;
   let entersAsCopy: CardDefinition['entersAsCopy'];
   let alternativeCasts: import('./ability').AlternativeCast[] | undefined =
@@ -3370,6 +3372,66 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
         continue;
       }
     }
+    // Keywords that are triggered abilities, read through the grammar as their reminder text
+    // says: prowess (CR 702.108a) and exalted (CR 702.83a). Each instance is its own trigger.
+    {
+      const reminder =
+        lower === 'prowess'
+          ? 'Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.'
+          : lower === 'exalted'
+            ? 'Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.'
+            : null;
+      if (reminder !== null) {
+        const parsed = parseTriggerLine(reminder, card);
+        if (parsed !== null) {
+          triggers.push(
+            ...parsed.map((ability) => ({
+              ...ability,
+              description: lower === 'prowess' ? 'Prowess' : 'Exalted',
+            })),
+          );
+          continue;
+        }
+      }
+    }
+    // Modular N (CR 702.43a): "This permanent enters with N +1/+1 counters on it" and "When this
+    // permanent is put into a graveyard from the battlefield, you may put a +1/+1 counter on
+    // target artifact creature for each +1/+1 counter on this permanent."
+    {
+      const modular = lower.match(/^modular (\w+)$/);
+      const n = modular === null ? null : parseAmount(modular[1] as string);
+      const previous = entersWithCounters['+1/+1'];
+      if (n !== null && n > 0 && (previous === undefined || typeof previous === 'number')) {
+        const parsed = parseTriggerLine(
+          'When this creature dies, you may put its +1/+1 counters on target artifact creature.',
+          card,
+        );
+        if (parsed !== null) {
+          entersWithCounters['+1/+1'] = (previous ?? 0) + n;
+          triggers.push(...parsed.map((ability) => ({ ...ability, description: `Modular ${n}` })));
+          continue;
+        }
+      }
+    }
+    // Toxic N (CR 702.164): combat damage to a player also gives that many poison counters.
+    // Instances add up to the total toxic value (CR 702.164b).
+    {
+      const m = lower.match(/^toxic (\w+)$/);
+      const n = m === null ? null : parseAmount(m[1] as string);
+      if (n !== null && n > 0) {
+        toxic += n;
+        continue;
+      }
+    }
+    // "~ doesn't untap during your untap step" (Grim Monolith, CR 502.3).
+    if (
+      /^(?:~|this (?:artifact|creature|land|permanent)) doesn't untap during your untap step$/.test(
+        lower,
+      )
+    ) {
+      doesntUntapDuringUntapStep = true;
+      continue;
+    }
     // 1. A pure keyword list ("Flying, vigilance", "Flying, ward {3}").
     {
       const parsed = parseKeywordLine(lower.replace(/;/g, ','));
@@ -3417,6 +3479,25 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
     if (/^(?:~|this land) enters (?:the battlefield )?tapped$/.test(lower)) {
       entersTapped = true;
       continue;
+    }
+    // "~ enters tapped with two charge counters on it" (Vivid lands): both replacements at once.
+    {
+      const m = lower.match(
+        /^(?:~|this land) enters (?:the battlefield )?tapped with (\w+) ([a-z]+) counters? on it$/,
+      );
+      const n = m === null ? null : parseAmount(m[1] as string);
+      // Stun counters have a rule of their own (CR 122.1d) the engine does not implement.
+      if (
+        m !== null &&
+        n !== null &&
+        n > 0 &&
+        m[2] !== 'stun' &&
+        entersWithCounters[m[2] as string] === undefined
+      ) {
+        entersTapped = true;
+        entersWithCounters[m[2] as string] = n;
+        continue;
+      }
     }
     // 3a. Enters tapped UNLESS a condition holds â€” a replacement effect (CR 614.1c), resolved
     //     in `moveObject` before the permanent exists. See `entersTappedUnless`.
@@ -4223,6 +4304,8 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
       ...(announcesX ? { announcesX: true } : {}),
       ...(optionalAdditionalCost !== undefined ? { optionalAdditionalCost } : {}),
       ...(morphCost !== undefined ? { morphCost } : {}),
+      ...(toxic > 0 ? { toxic } : {}),
+      ...(doesntUntapDuringUntapStep ? { doesntUntapDuringUntapStep: true } : {}),
       ...(faceDownVariant !== undefined && morphCost !== undefined ? { faceDownVariant } : {}),
       ...(asTurnedFaceUpCounters !== undefined ? { asTurnedFaceUpCounters } : {}),
       ...(entersAsCopy !== undefined ? { entersAsCopy } : {}),

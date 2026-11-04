@@ -31,7 +31,7 @@ import { noteSlotFailure } from './diagnostics';
  * they are the same event seen from two vantage points (see `TriggerSubject`).
  */
 export const OBJECT_TRIGGER_HEAD_RE =
-  /^when(?:ever)? (.+?) (enters from (?:a|your) graveyard|enters or leaves the battlefield|enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|leaves the battlefield|is put into a graveyard from the battlefield or is put into exile from the battlefield|is put into a graveyard from the battlefield|dies or is put into exile from the battlefield|dies|attacks|becomes tapped|becomes crewed|is turned face up|deals combat damage to a player), (.*)$/;
+  /^when(?:ever)? (.+?) (enters from (?:a|your) graveyard|enters or leaves the battlefield|enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|leaves the battlefield|is put into a graveyard from the battlefield or is put into exile from the battlefield|is put into a graveyard from the battlefield|dies or is put into exile from the battlefield|dies|attacks alone|attacks|becomes tapped|becomes crewed|is turned face up|deals combat damage to a player), (.*)$/;
 
 export const STEP_TRIGGER_HEAD_RE =
   /^at the beginning of (your|each(?: player's)?) (upkeep|end step|combat|first main phase|precombat main phase), (.*)$/;
@@ -456,7 +456,7 @@ function parseTriggerHeadUntraced(firstLine: string, card: OracleCard): ParsedTr
           ? ['leavesBattlefield']
           : event === 'dies'
             ? ['dies']
-            : event === 'attacks'
+            : event === 'attacks' || event === 'attacks alone'
               ? ['attacks']
               : event === 'becomes tapped'
                 ? // City of Brass. `becomesTapped` is queued from every tap path already, including
@@ -492,6 +492,11 @@ function parseTriggerHeadUntraced(firstLine: string, card: OracleCard): ParsedTr
       : event === 'is put into a graveyard from the battlefield'
         ? (['graveyard'] as ('graveyard' | 'exile')[])
         : undefined;
+    // "attacks alone" (exalted, CR 702.83a): the only creature declared as an attacker (CR 506.5).
+    if (event === 'attacks alone') {
+      heads = [{ when: 'attacks', subject, alone: true }];
+      return { heads, body, implicitCondition, eventCondition };
+    }
     heads = events.map((when) =>
       leavesTo !== undefined
         ? { when, subject, leavesTo }
