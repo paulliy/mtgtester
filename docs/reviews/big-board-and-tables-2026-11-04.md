@@ -39,9 +39,9 @@ removed:
 
 | Pod | Board            | Before | After  | Slowest step before → after |
 | --- | ---------------- | ------ | ------ | --------------------------- |
-| 1   | up to 59, random | 49.9 s | 36.0 s | 2.5 s → under 2 s           |
-| 2   | up to 71         | 99.6 s | 22.9 s | 5.4 s → 1.4 s               |
-| 6   | small            | 8.0 s  | 5.5 s  |                             |
+| 1   | up to 59, random | 49.9 s | 38.4 s | 1.1 s → 1.1 s               |
+| 2   | up to 71         | 99.6 s | 26.8 s | 11.7 s → 1.5 s              |
+| 6   | small            | 8.0 s  | 6.0 s  | under 1 s                   |
 
 Three games ran in parallel on four cores for each column, so the absolute times carry load
 noise; the event logs were identical in every run. What remains is mostly `digestOf` itself:
