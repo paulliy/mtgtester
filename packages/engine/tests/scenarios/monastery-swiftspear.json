@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "card": "Monastery Swiftspear",
+  "supportCards": [
+    {
+      "name": "Scenario Ponder",
+      "typeLine": "Sorcery",
+      "manaCost": "{R}",
+      "oracleText": "Draw a card."
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{R}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "swiftspear-prowess-noncreature",
+      "title": "Monastery Swiftspear: a noncreature spell triggers prowess, and it attacks as a 2/3",
+      "clauses": [2],
+      "instructions": ["Cast Scenario Ponder, then attack P2 with Monastery Swiftspear."],
+      "expectedOutcome": "Prowess makes Monastery Swiftspear 2/3 until end of turn; P2 takes 2 and is at 38.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Ponder"],
+          "battlefield": ["Mountain", "Monastery Swiftspear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Ponder/"
+        },
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 38
+          }
+        }
+      ]
+    },
+    {
+      "id": "swiftspear-no-prowess-on-creature",
+      "title": "Monastery Swiftspear: a creature spell does not trigger prowess",
+      "clauses": [2],
+      "instructions": ["Cast Scenario Bear, then attack P2 with Monastery Swiftspear."],
+      "expectedOutcome": "No prowess trigger; P2 takes 1 and is at 39.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Bear"],
+          "battlefield": ["Mountain", "Monastery Swiftspear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Bear/"
+        },
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 39
+          }
+        }
+      ]
+    },
+    {
+      "id": "swiftspear-haste",
+      "title": "Monastery Swiftspear: with haste it attacks the turn it is cast",
+      "clauses": [1],
+      "instructions": ["Cast Monastery Swiftspear and attack P2 with it this turn."],
+      "expectedOutcome": "Monastery Swiftspear attacks right away; P2 takes 1 and is at 39.",
+      "seats": {
+        "P1": {
+          "hand": ["Monastery Swiftspear"],
+          "battlefield": ["Mountain"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Monastery Swiftspear/"
+        },
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 39
+          }
+        }
+      ]
+    }
+  ]
+}

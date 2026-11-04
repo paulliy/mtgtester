@@ -282,6 +282,11 @@ export interface CardDefinition {
   emptyLibraryCreatureReplacement?: boolean;
   /** "This doesn't untap during your untap step" (Mana Vault, CR 502.3). */
   doesntUntapDuringUntapStep?: boolean;
+  /**
+   * Total toxic value (CR 702.164b): combat damage this deals to a player also gives that player
+   * this many poison counters. Parameterized, so not in `keywords`.
+   */
+  toxic?: number;
   /** Triggered abilities (kind 'triggered'). */
   triggers: Ability[];
   /** Continuous effects this card contributes while a permanent (static abilities / CDAs). */

@@ -89,6 +89,11 @@ export type Condition =
   | { kind: 'controlsLandsWithSameName'; n: number }
   /** "you have two or more opponents" — counts players still in the game, not permanents. */
   | { kind: 'opponentCount'; cmp: '>=' | '<='; n: number }
+  /**
+   * "unless a player has 13 or less life" (Razortrap Gorge): some player still in the game has
+   * at most `n` life.
+   */
+  | { kind: 'anyPlayerLifeAtMost'; n: number }
   /** "you may pay 2 life" — a choice, not a fact. Only `resolveCondition` can answer it. */
   | { kind: 'mayPayLife'; n: number }
   /**
@@ -276,6 +281,7 @@ export function isChoiceCondition(condition: Condition): boolean {
     case 'countPermanents':
     case 'opponentControlsMore':
     case 'opponentCount':
+    case 'anyPlayerLifeAtMost':
     case 'excessDamageDealtTo':
     case 'opponentDealtDamageThisTurn':
     case 'opponentDiscardedThisTurn':
@@ -496,6 +502,8 @@ export function evaluateCondition(
     }
     case 'opponentCount':
       return compare(opponentsOf(ctx, source.controllerId).length, condition.cmp, condition.n);
+    case 'anyPlayerLifeAtMost':
+      return ctx.state.players.some((player) => !player.hasLost && player.life <= condition.n);
     case 'excessDamageDealtTo': {
       const opponentIds = new Set(opponentsOf(ctx, source.controllerId).map((p) => p.id));
       return ctx.state.excessDamageControllerIds.some((id) => opponentIds.has(id));

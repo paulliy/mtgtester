@@ -2078,6 +2078,7 @@ function* dealCombatDamage(
           sourceIsCommander: a.source.isCommander,
           sourceHasLifelink: traits.lifelink,
           sourceHasInfect: traits.infect,
+          sourceToxic: traits.toxic,
         },
       );
       // Prevented damage was never dealt: no "deals combat damage to a player" trigger, and no

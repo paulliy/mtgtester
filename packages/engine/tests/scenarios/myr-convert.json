@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "card": "Myr Convert",
+  "supportCards": [
+    {
+      "name": "Scenario Owl",
+      "typeLine": "Creature — Bird",
+      "manaCost": "{U}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "myr-convert-toxic-poisons",
+      "title": "Myr Convert: combat damage to a player also gives a poison counter",
+      "clauses": [1],
+      "instructions": ["Attack P2 with Myr Convert."],
+      "expectedOutcome": "P2 takes 2, is at 38, and gets one poison counter.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Myr Convert"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 38
+          }
+        },
+        {
+          "event": {
+            "type": "counters",
+            "count": 1,
+            "payload": "\"counter\":\"poison\""
+          }
+        }
+      ]
+    },
+    {
+      "id": "myr-convert-pays-life-for-mana",
+      "title": "Myr Convert: tap and pay 2 life for one mana of any color",
+      "clauses": [2],
+      "instructions": ["Cast Scenario Owl with Myr Convert's mana."],
+      "expectedOutcome": "Scenario Owl is on the battlefield and you are at 38 life.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Owl"],
+          "battlefield": ["Myr Convert"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Owl/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Owl"]
+          }
+        },
+        {
+          "life": {
+            "player": "P1",
+            "equals": 38
+          }
+        }
+      ]
+    }
+  ]
+}

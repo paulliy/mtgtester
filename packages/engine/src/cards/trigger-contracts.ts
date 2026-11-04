@@ -159,6 +159,7 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
           'attackingPlayerIsEventPlayer',
           'subjectControllerIsEventPlayer',
           'withOtherAttackers',
+          'alone',
           'counter',
           'chapter',
           'byYou',

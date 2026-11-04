@@ -3968,8 +3968,7 @@
     "oracleId": "2e2ace5b-4018-43af-8e72-ebafec1a7739",
     "name": "Harmonic Prodigy",
     "handledLines": [
-      "If a triggered ability of a Shaman or another Wizard you control triggers, that ability triggers an additional time.",
-      "Prowess"
+      "If a triggered ability of a Shaman or another Wizard you control triggers, that ability triggers an additional time."
     ],
     "def": {
       "ruleStatics": [
@@ -10105,11 +10104,9 @@
     "name": "Mana Vault",
     "handledLines": [
       "unrecognized rules text: \"At the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you.\"",
-      "unrecognized rules text: \"At the beginning of your upkeep, you may pay {4}. If you do, untap this artifact.\"",
-      "unrecognized rules text: \"~ doesn't untap during your untap step.\""
+      "unrecognized rules text: \"At the beginning of your upkeep, you may pay {4}. If you do, untap this artifact.\""
     ],
     "def": {
-      "doesntUntapDuringUntapStep": true,
       "triggers": [
         {
           "description": "At the beginning of your upkeep, you may pay {4} to untap this",
@@ -32606,8 +32603,7 @@
     "oracleId": "oracle-harmonic-prodigy",
     "name": "Harmonic Prodigy",
     "handledLines": [
-      "If a triggered ability of a Shaman or another Wizard you control triggers, that ability triggers an additional time.",
-      "Prowess"
+      "If a triggered ability of a Shaman or another Wizard you control triggers, that ability triggers an additional time."
     ],
     "def": {
       "ruleStatics": [
@@ -35506,11 +35502,9 @@
     "name": "Mana Vault",
     "handledLines": [
       "unrecognized rules text: \"At the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you.\"",
-      "unrecognized rules text: \"At the beginning of your upkeep, you may pay {4}. If you do, untap this artifact.\"",
-      "unrecognized rules text: \"~ doesn't untap during your untap step.\""
+      "unrecognized rules text: \"At the beginning of your upkeep, you may pay {4}. If you do, untap this artifact.\""
     ],
     "def": {
-      "doesntUntapDuringUntapStep": true,
       "triggers": [
         {
           "description": "At the beginning of your upkeep, you may pay {4} to untap this",

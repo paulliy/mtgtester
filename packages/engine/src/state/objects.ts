@@ -2616,6 +2616,8 @@ export function queueTriggersForEvent(
         if ('byYou' in spec && spec.byYou === true && s.playerId !== source.controllerId)
           return false;
         if ('forMana' in spec && spec.forMana === true && s.forMana !== true) return false;
+        // "attacks alone" (CR 506.5): the declared set is this one creature.
+        if ('alone' in spec && spec.alone === true && subjects.length !== 1) return false;
         // "...attack an opponent" (Firkraag) is about attacking the player; a creature attacking
         // only a planeswalker of theirs isn't attacking that opponent.
         if (

@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "card": "Noble Hierarch",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Owl",
+      "typeLine": "Creature — Bird",
+      "manaCost": "{U}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "hierarch-exalted-attacks-alone",
+      "title": "Noble Hierarch: a creature attacking alone gets +1/+1 from exalted",
+      "clauses": [1],
+      "instructions": ["Attack P2 with Scenario Bear alone."],
+      "expectedOutcome": "Exalted makes Scenario Bear 3/3; P2 takes 3 and is at 37.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Noble Hierarch", "Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["__no_attack__", "P2"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 37
+          }
+        }
+      ]
+    },
+    {
+      "id": "hierarch-no-exalted-with-two-attackers",
+      "title": "Noble Hierarch: two attackers are not attacking alone, so exalted does not trigger",
+      "clauses": [1],
+      "instructions": ["Attack P2 with Noble Hierarch and Scenario Bear."],
+      "expectedOutcome": "No exalted trigger; P2 takes 2 and is at 38.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Noble Hierarch", "Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2", "P2"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 38
+          }
+        },
+        {
+          "event": {
+            "type": "triggerOnStack",
+            "count": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "hierarch-taps-for-mana",
+      "title": "Noble Hierarch: tap for {G}, {W} or {U}",
+      "clauses": [2],
+      "instructions": ["Cast Scenario Owl with Noble Hierarch's {U}."],
+      "expectedOutcome": "Scenario Owl is on the battlefield and Noble Hierarch is tapped.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Owl"],
+          "battlefield": ["Noble Hierarch"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Owl/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Owl"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Noble Hierarch",
+            "equals": true
+          }
+        }
+      ]
+    }
+  ]
+}

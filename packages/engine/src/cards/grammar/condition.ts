@@ -136,6 +136,12 @@ function parseActivationConditionUntraced(text: string, card: OracleCard): Condi
  * silently entered untapped would be a real (if small) misplay every game.
  */
 function parseEntersUnlessClauseUntraced(clause: string, card: OracleCard): Condition | null {
+  // "a player has 13 or less life" (Razortrap Gorge and the other Duskmourn lands).
+  {
+    const m = clause.match(/^a player has (\w+) or less life$/);
+    const n = m === null ? null : parseAmount(m[1] as string);
+    if (n !== null) return { kind: 'anyPlayerLifeAtMost', n };
+  }
   // "you have two or more opponents"
   {
     const m = clause.match(/^you have (\w+) or (more|fewer) opponents$/);

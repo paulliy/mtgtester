@@ -130,7 +130,8 @@ export function registerReviewedFiveOverrides(): void {
     '2e2ace5b-4018-43af-8e72-ebafec1a7739',
     'Harmonic Prodigy',
     [
-      'Prowess',
+      // "Prowess" is read by the interpreter (EDHREC plan Phase 4 batch 3); the def keeps the same
+      // prowess trigger.
       'If a triggered ability of a Shaman or another Wizard you control triggers, that ability triggers an additional time.',
     ],
     {

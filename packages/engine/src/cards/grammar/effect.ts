@@ -2081,6 +2081,20 @@ function parseEffectSentenceUntraced(
       "return that card to the battlefield under its owner's control at the beginning of the next end step"
   )
     return [{ op: 'returnDiedTriggerObjectAtNextEndStep', returnUnder: 'owner' }];
+  // "that creature gets +1/+1 until end of turn" (exalted, CR 702.83a; "it gets …"): the
+  // trigger's subject, a fixed bonus.
+  if (opts.triggerObject === true) {
+    const m = s.match(/^(?:it|that creature) gets ([+-]\d+)\/([+-]\d+) until end of turn$/);
+    if (m !== null)
+      return [
+        {
+          op: 'pumpUntilEot',
+          target: 'triggerObject',
+          power: Number(m[1]),
+          toughness: Number(m[2]),
+        },
+      ];
+  }
   // "it gains double strike until end of turn" — the trigger's subject (Atarka, World Render).
   if (opts.triggerObject === true) {
     const m = s.match(/^it gains ([a-z ]+) until end of turn$/);
@@ -2877,6 +2891,27 @@ function parseEffectSentenceUntraced(
         {
           op: 'transferCountersFromSource',
           target: alloc(parsed.kind, parsed.filter, parsed.controller),
+        },
+      ];
+    }
+  }
+  // "you may put its +1/+1 counters on target artifact creature" (Modular, CR 702.43a): the
+  // departed source's last-known counters of that one kind.
+  {
+    const m = s.match(/^put its ([+-]\d+\/[+-]\d+) counters on target (.+)$/);
+    if (m !== null) {
+      if (opts.departedSelf !== true) return null;
+      // "target artifact creature": a creature slot narrowed to artifacts.
+      const parsed =
+        m[2] === 'artifact creature'
+          ? { kind: 'creature' as const, filter: ofType('Artifact'), controller: undefined }
+          : parseTargetClause(m[2] as string);
+      if (parsed === null || parsed.kind !== 'creature') return null;
+      return [
+        {
+          op: 'transferCountersFromSource',
+          target: alloc(parsed.kind, parsed.filter, parsed.controller),
+          counter: m[1] as string,
         },
       ];
     }

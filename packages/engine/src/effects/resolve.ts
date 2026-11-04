@@ -398,6 +398,8 @@ export function* dealDamageToPlayer(
     sourceIsCommander: boolean;
     sourceHasLifelink: boolean;
     sourceHasInfect?: boolean;
+    /** Total toxic value of a combat-damage source (CR 702.164c). */
+    sourceToxic?: number;
     /** Internal simultaneous player-damage batch: modifiers were planned before any life changed. */
     preparedAmount?: true;
     deferredObservations?: (() => void)[];
@@ -441,6 +443,24 @@ export function* dealDamageToPlayer(
     // The infect branch above is deliberately excluded: it gives poison counters instead.
     noteLifeLost(ctx, target.id, before - target.life);
     if (target.life < before) ctx.state.lifeLostThisTurn[target.id] = true;
+  }
+  // Toxic (CR 702.164c): combat damage dealt to a player by a source with toxic also gives that
+  // player poison counters equal to its total toxic value, in addition to the damage's results.
+  if (opts.combat && (opts.sourceToxic ?? 0) > 0) {
+    const toxic = opts.sourceToxic as number;
+    target.poisonCounters += toxic;
+    emit(
+      ctx,
+      'counters',
+      {
+        source: source.name,
+        target: target.id,
+        counter: 'poison',
+        added: toxic,
+        total: target.poisonCounters,
+      },
+      source.controllerId,
+    );
   }
   ctx.state.damageDealtToPlayersThisTurn[target.id] =
     (ctx.state.damageDealtToPlayersThisTurn[target.id] ?? 0) + amount;
@@ -5075,7 +5095,8 @@ function* executeAbilityEffects(
         const counters = sourceObjectFacts(ctx, scope)?.counters;
         if (target !== undefined && counters !== undefined) {
           for (const [counter, count] of Object.entries(counters))
-            addCounters(ctx, source, target, counter, count);
+            if (effect.counter === undefined || effect.counter === counter)
+              addCounters(ctx, source, target, counter, count);
         }
         break;
       }
@@ -11525,12 +11546,20 @@ export function permanentSource(perm: EnginePermanent): EffectSource {
 export function combatDamageTraits(
   ctx: GameContext,
   perm: EnginePermanent,
-): { deathtouch: boolean; lifelink: boolean; infect: boolean; colors: Color[]; types: string[] } {
+): {
+  deathtouch: boolean;
+  lifelink: boolean;
+  infect: boolean;
+  toxic: number;
+  colors: Color[];
+  types: string[];
+} {
   const chars = computeCharacteristics(ctx, perm);
   return {
     deathtouch: chars.keywords.includes('deathtouch'),
     lifelink: chars.keywords.includes('lifelink'),
     infect: chars.keywords.includes('infect'),
+    toxic: chars.toxic ?? 0,
     // Protection reads the source's colors and card types (CR 702.16a).
     colors: [...chars.colors],
     types: [...chars.types],

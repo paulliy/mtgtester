@@ -216,17 +216,16 @@ function cumulativeUpkeep(generic: number): Ability {
 /** PR11.03, .08, .09, .12, .15, .16, .17, .19, .28: permanents with a lifecycle. */
 function registerPr11LifecycleOverrides(): void {
   // PR11.19: the untap is optional and paid on resolution; the draw-step damage is an
-  // intervening if on the artifact being tapped.
+  // intervening if on the artifact being tapped. "Doesn't untap during your untap step" is read by
+  // the interpreter (EDHREC plan Phase 4 batch 3).
   extendCard(
     '736892cb-a34b-4bb9-b56c-e26e3db207a2',
     'Mana Vault',
     [
-      'unrecognized rules text: "~ doesn\'t untap during your untap step."',
       'unrecognized rules text: "At the beginning of your upkeep, you may pay {4}. If you do, untap this artifact."',
       'unrecognized rules text: "At the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you."',
     ],
     {
-      doesntUntapDuringUntapStep: true,
       triggers: [
         triggered(onUpkeep('you'), {
           effects: [

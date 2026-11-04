@@ -754,7 +754,15 @@ export type Effect =
    * Apprentice): every counter the ability's own source last had (CR 603.10a), each kind and
    * number, through counter-placement replacements.
    */
-  | { op: 'transferCountersFromSource'; target: EffectRef }
+  | {
+      op: 'transferCountersFromSource';
+      target: EffectRef;
+      /**
+       * Only this kind (Modular, CR 702.43a: "a +1/+1 counter … for each +1/+1 counter on this
+       * permanent"); absent, every kind moves.
+       */
+      counter?: string;
+    }
   /**
    * "Move a +1/+1 counter from this creature onto it" (Graft, CR 702.58a): remove up to `count`
    * counters of the kind from `from` and put that many on `to` (CR 122.5), so counter-placement
@@ -2363,6 +2371,11 @@ export type TriggerHead =
        * event, counted among the attackers declared with it, not an intervening-if (CR 603.4).
        */
       withOtherAttackers?: number;
+      /**
+       * "attacks alone" (exalted, CR 702.83a): the subject is the only creature declared as an
+       * attacker this combat (CR 506.5). Part of the event, read from the declared set.
+       */
+      alone?: true;
       /** `countersPut`: only a placement that includes this counter kind. */
       counter?: string;
       /**

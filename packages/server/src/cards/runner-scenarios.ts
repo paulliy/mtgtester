@@ -97,6 +97,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'arcbound-worker.json',
+    file: scenarioFile(
+      'arcbound-worker.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/arcbound-worker.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'braids-arisen-nightmare.json',
     file: scenarioFile(
       'braids-arisen-nightmare.json',
@@ -189,6 +202,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'fervent-charge.json',
+    file: scenarioFile(
+      'fervent-charge.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/fervent-charge.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'finale-of-devastation.json',
     file: scenarioFile(
       'finale-of-devastation.json',
@@ -256,6 +279,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
           '../../../../packages/engine/tests/scenarios/gonti-lord-of-luxury.json',
           import.meta.url,
         ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'grim-monolith.json',
+    file: scenarioFile(
+      'grim-monolith.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/grim-monolith.json', import.meta.url),
         'utf8',
       ),
     ),
@@ -347,11 +380,34 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'monastery-swiftspear.json',
+    file: scenarioFile(
+      'monastery-swiftspear.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/monastery-swiftspear.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'mox-diamond.json',
     file: scenarioFile(
       'mox-diamond.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/mox-diamond.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'myr-convert.json',
+    file: scenarioFile(
+      'myr-convert.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/myr-convert.json', import.meta.url),
         'utf8',
       ),
     ),
@@ -365,6 +421,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
           '../../../../packages/engine/tests/scenarios/nantuko-vigilante.json',
           import.meta.url,
         ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'noble-hierarch.json',
+    file: scenarioFile(
+      'noble-hierarch.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/noble-hierarch.json', import.meta.url),
         'utf8',
       ),
     ),
@@ -445,6 +511,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       readFileSync(
         new URL(
           '../../../../packages/engine/tests/scenarios/ragavan-nimble-pilferer.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'razortrap-gorge.json',
+    file: scenarioFile(
+      'razortrap-gorge.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/razortrap-gorge.json',
           import.meta.url,
         ),
         'utf8',
@@ -585,6 +664,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
           '../../../../packages/engine/tests/scenarios/urzas-incubator.json',
           import.meta.url,
         ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'vivid-creek.json',
+    file: scenarioFile(
+      'vivid-creek.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/vivid-creek.json', import.meta.url),
         'utf8',
       ),
     ),
