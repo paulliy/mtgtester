@@ -406,7 +406,8 @@ const CHECKS: Record<string, (result: Result) => void> = {
       r.state.battlefield.filter((perm) => perm.controllerId === 'P1').map((perm) => perm.name),
     ).toEqual(['Swamp']);
     expect(['P1', 'P2', 'P3', 'P4'].map((seat) => r.player(seat).life)).toEqual([40, 30, 30, 30]);
-    expect(r.asked).toHaveLength(9);
+    // Exactly ten nonland permanents: every one must go, so no pick is asked.
+    expect(r.asked).toEqual([]);
   },
   'pilot-current-etali-primal-storm-viewer-cast-both': (r) => {
     expect(r.picked).toEqual([

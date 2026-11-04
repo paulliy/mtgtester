@@ -895,8 +895,7 @@ describe("Bolas's Citadel", () => {
     source.tapped = false;
     const options = activate();
     expect(options).toHaveLength(1);
-    // Exactly ten nonland permanents, so all go; the engine still asks for the first nine one at a
-    // time (the last has one candidate).
+    // Exactly ten nonland permanents, so all go: a forced payment asks nothing.
     const prompts: string[] = [];
     pump(
       applyPriorityAction(
@@ -911,11 +910,41 @@ describe("Bolas's Citadel", () => {
       },
       { strict: true },
     );
-    expect(prompts).toHaveLength(9);
+    expect(prompts).toEqual([]);
     expect(ctx.state.battlefield.map((perm) => perm.name)).toEqual(['Forest']);
+    expect(playerById(ctx, 'P1').graveyard).toHaveLength(10);
     pumpStrict(resolveTopOfStack(ctx));
     expect(playerById(ctx, 'P2').life).toBe(30);
     expect(playerById(ctx, 'P1').life).toBe(40);
+  });
+
+  it('bolas-citadel-sacrifice-choice — with eleven nonland permanents the player picks which ten go', () => {
+    const ctx = mainPhase('citadel-eleven');
+    const source = spawn(ctx, 'P1', citadel());
+    const relic = (name: string) => oracle({ name, typeLine: 'Artifact', manaCost: '{1}' });
+    for (let i = 0; i < 9; i++) spawn(ctx, 'P1', relic('Pilot Relic'));
+    const keeper = spawn(ctx, 'P1', relic('Pilot Keeper'));
+    const option = computePriorityOptions(ctx, playerById(ctx, 'P1')).find((candidate) => {
+      const payload = candidate.payload as PriorityActionPayload;
+      return payload.kind === 'activateAbility' && payload.objectId === source.id;
+    });
+    expect(option).toBeDefined();
+    // One spare permanent is a real choice, so every pick is asked; the player keeps the Keeper.
+    const prompts: string[] = [];
+    pump(
+      applyPriorityAction(ctx, playerById(ctx, 'P1'), option!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+      (decision) => {
+        prompts.push(decision.prompt);
+        const index = decision.options.findIndex((candidate) => candidate.payload !== keeper.id);
+        return { index, targets: new Map() };
+      },
+      { strict: true },
+    );
+    expect(prompts).toHaveLength(10);
+    expect(ctx.state.battlefield.map((perm) => perm.name)).toEqual(['Pilot Keeper']);
   });
 });
 
