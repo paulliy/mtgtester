@@ -830,6 +830,29 @@ function parseTargetQualifier(word: string): Selector | null {
 const NO_CARD = { subtypes: [] } as unknown as OracleCard;
 
 function parseQualifiedTargetNoun(text: string): { kind: TargetKind; filter?: Selector } | null {
+  // "artifact, enchantment, or creature with flying" (Broken Wings): a trailing "with …" belongs
+  // to the last alternative only, so an artifact without flying is still a legal target.
+  {
+    const list = text.match(/^((?:[a-z]+, )+(?:or )?|[a-z]+ or )([a-z]+) (with .+)$/);
+    if (list !== null) {
+      const heads = (list[1] as string)
+        .replace(/,? or $|, $/, '')
+        .split(/, (?:or )?| or /)
+        .filter(Boolean);
+      const types = [...heads, list[2] as string].map((word) => CARD_TYPE_SINGULARS[word]);
+      if (types.some((type) => type === undefined || type === 'Instant' || type === 'Sorcery'))
+        return null;
+      const last = parseQualifiedTargetNoun(`${list[2] as string} ${list[3] as string}`);
+      if (last === null || last.filter === undefined) return null;
+      return {
+        kind: 'permanent',
+        filter: anyOf(
+          ...types.slice(0, -1).map((type) => ofType(type as string)),
+          allOf(ofType(types.at(-1) as string), last.filter),
+        ),
+      };
+    }
+  }
   let rest = text;
   const filters: Selector[] = [];
   // A trailing "with power N or greater/less" or "with <keyword>".

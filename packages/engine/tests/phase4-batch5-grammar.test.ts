@@ -8,7 +8,9 @@
 import { describe, expect, it } from 'vitest';
 import type { OracleCard } from '@mtg/shared';
 import { interpretCard } from '../src/cards/interpret';
-import { computeCharacteristics } from '../src/effects/continuous';
+import { candidateOf, computeCharacteristics } from '../src/effects/continuous';
+import { selectMatches } from '../src/cards/selector';
+import type { Selector } from '../src/cards/selector';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
 import { conjure, copies, forest, gameConfig, oracle, spawn } from './fixtures';
@@ -107,6 +109,26 @@ describe('Phase 4 batch 5: target nouns and subjects', () => {
       kind: 'creature',
       filter: { kind: 'powerAtLeast', n: 4 },
     });
+  });
+
+  it('"artifact, enchantment, or creature with flying" restricts only the creature', () => {
+    const target = interpretCard(
+      spell('Destroy target artifact, enchantment, or creature with flying.'),
+    ).spellAbility!.targets[0]!;
+    const ctx = pod('p5-broken-wings');
+    const source = { cardId: 'p5-source', controllerId: 'P1' };
+    const matches = (card: OracleCard): boolean => {
+      const perm = spawn(ctx, 'P2', card);
+      return selectMatches(
+        candidateOf(ctx, perm, computeCharacteristics(ctx, perm)),
+        target.filter as Selector,
+        source,
+      );
+    };
+    const artifact = oracle({ name: 'P5 Relic', typeLine: 'Artifact', oracleText: '' });
+    expect(matches(artifact)).toBe(true);
+    expect(matches(creature('P5 Bear', ''))).toBe(false);
+    expect(matches(creature('P5 Bird', 'Flying'))).toBe(true);
   });
 
   it('refuses an unknown qualifier rather than dropping it', () => {
