@@ -512,10 +512,7 @@ export function registerCoveragePr09Overrides(): void {
   replaceCard(
     'f2ef8bda-373d-4387-900d-0f1b6ccf72e9',
     'Trumpeting Carnosaur',
-    [
-      'unrecognized rules text: "When this creature enters, discover 5."',
-      'unrecognized rules text: "{2}{R}, Discard this card: It deals 3 damage to target creature or planeswalker."',
-    ],
+    ['unrecognized rules text: "When this creature enters, discover 5."'],
     {
       triggers: [
         triggered(onEtb(), {

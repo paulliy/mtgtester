@@ -23,12 +23,7 @@ export function registerWhiteBlackControlDiscardChoiceOverrides(): void {
   replaceCard(
     'b8619990-9dc2-4fcc-bc7e-457b77cd2a8e',
     'Rankle, Master of Pranks',
-    [
-      'unrecognized rules text: "Whenever ~ deals combat damage to a player, choose any number —"',
-      'unrecognized rules text: "• Each player discards a card."',
-      'unrecognized rules text: "• Each player loses 1 life and draws a card."',
-      'unrecognized rules text: "• Each player sacrifices a creature of their choice."',
-    ],
+    [],
     {
       triggers: [
         triggered(

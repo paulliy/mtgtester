@@ -124,9 +124,7 @@
   {
     "oracleId": "00de57d2-7cb6-4337-9bc6-f6711e4dfabf",
     "name": "Game Trail",
-    "handledLines": [
-      "As this land enters, you may reveal a Mountain or Forest card from your hand. If you don't, this land enters tapped."
-    ],
+    "handledLines": [],
     "def": {
       "entersTappedUnless": {
         "kind": "mayRevealCardFromHand",
@@ -1809,9 +1807,7 @@
   {
     "oracleId": "14c3ff84-1e82-4606-a433-869fc52cc382",
     "name": "Syr Konrad, the Grim",
-    "handledLines": [
-      "{1}{B}: Each player mills a card."
-    ],
+    "handledLines": [],
     "def": {
       "activatedAbilities": [
         {
@@ -2548,7 +2544,6 @@
     "name": "Ajani, Caller of the Pride",
     "handledLines": [
       "+1: Put a +1/+1 counter on up to one target creature.",
-      "−3: Target creature gains flying and double strike until end of turn.",
       "−8: Create X 2/2 white Cat creature tokens, where X is your life total."
     ],
     "def": {
@@ -4675,9 +4670,7 @@
   {
     "oracleId": "33f52df8-4b44-4422-8b0a-37fead9c894b",
     "name": "Vineglimmer Snarl",
-    "handledLines": [
-      "As this land enters, you may reveal a Forest or Island card from your hand. If you don't, this land enters tapped."
-    ],
+    "handledLines": [],
     "def": {
       "entersTappedUnless": {
         "kind": "mayRevealCardFromHand",
@@ -5208,9 +5201,7 @@
   {
     "oracleId": "38abf769-e4ef-4b47-9c79-c8cda0b90f6c",
     "name": "Collective Unconscious",
-    "handledLines": [
-      "Draw a card for each creature you control."
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Draw a card for each creature you control.",
@@ -5397,9 +5388,7 @@
     "oracleId": "3aa83ed2-f48b-4ce6-a614-2c54ddf50538",
     "name": "The One Ring",
     "handledLines": [
-      "unrecognized rules text: \"At the beginning of your upkeep, you lose 1 life for each burden counter on ~.\"",
-      "unrecognized rules text: \"When ~ enters, if you cast it, you gain protection from everything until your next turn.\"",
-      "unrecognized rules text: \"{T}: Put a burden counter on ~, then draw a card for each burden counter on ~.\""
+      "unrecognized rules text: \"When ~ enters, if you cast it, you gain protection from everything until your next turn.\""
     ],
     "def": {
       "activatedAbilities": [
@@ -6205,7 +6194,6 @@
     "oracleId": "473a7998-669d-4181-83fe-f178a2e781f0",
     "name": "Out of the Tombs",
     "handledLines": [
-      "unrecognized rules text: \"At the beginning of your upkeep, put two eon counters on this enchantment, then mill cards equal to the number of eon counters on it.\"",
       "unrecognized rules text: \"If you would draw a card while your library has no cards in it, instead return a creature card from your graveyard to the battlefield. If you can't, you lose the game.\""
     ],
     "def": {
@@ -6326,9 +6314,7 @@
   {
     "oracleId": "48ddba1e-2ad7-463f-9307-d2379a800e51",
     "name": "Mizzium Mortars",
-    "handledLines": [
-      "~ deals 4 damage to target creature you don't control."
-    ],
+    "handledLines": [],
     "def": {
       "alternativeCasts": [
         {
@@ -6543,8 +6529,7 @@
     "oracleId": "4c3ad545-b375-44a7-a24e-58baacc4e4b6",
     "name": "Annie Joins Up",
     "handledLines": [
-      "If a triggered ability of a legendary creature you control triggers, that ability triggers an additional time.",
-      "When ~ enters, it deals 5 damage to target creature or planeswalker an opponent controls."
+      "If a triggered ability of a legendary creature you control triggers, that ability triggers an additional time."
     ],
     "def": {
       "ruleStatics": [
@@ -7429,9 +7414,7 @@
   {
     "oracleId": "56f1a16a-9f41-41fb-b580-c200bca27cd6",
     "name": "Fortified Village",
-    "handledLines": [
-      "As this land enters, you may reveal a Forest or Plains card from your hand. If you don't, this land enters tapped."
-    ],
+    "handledLines": [],
     "def": {
       "entersTappedUnless": {
         "kind": "mayRevealCardFromHand",
@@ -9249,7 +9232,6 @@
     "handledLines": [
       "unrecognized rules text: \"At the beginning of each end step, if a modified creature died under your control this turn, create a 2/1 white and black Inkling creature token with flying.\"",
       "unrecognized rules text: \"When this Class enters, create a 2/1 white and black Inkling creature token with flying.\"",
-      "unrecognized rules text: \"Whenever you lose life for the first time each turn, put a +1/+1 counter on target creature you control.\"",
       "unrecognized rules text: \"{1}{B}: Level 2\"",
       "unrecognized rules text: \"{2}{B}: Level 3\"",
       "unsupported layout \"class\""
@@ -9882,9 +9864,7 @@
   {
     "oracleId": "7137aae6-260d-41de-8b4e-42a8cf752697",
     "name": "Frostboil Snarl",
-    "handledLines": [
-      "As this land enters, you may reveal an Island or Mountain card from your hand. If you don't, this land enters tapped."
-    ],
+    "handledLines": [],
     "def": {
       "entersTappedUnless": {
         "kind": "mayRevealCardFromHand",
@@ -13335,9 +13315,7 @@
   {
     "oracleId": "99fd4b51-1698-4168-9366-a6ea2df22361",
     "name": "Electrickery",
-    "handledLines": [
-      "~ deals 1 damage to target creature you don't control."
-    ],
+    "handledLines": [],
     "def": {
       "alternativeCasts": [
         {
@@ -13560,9 +13538,7 @@
   {
     "oracleId": "9aab386c-d48c-4611-b757-aa69b26cc1b1",
     "name": "Camaraderie",
-    "handledLines": [
-      "You gain X life and draw X cards, where X is the number of creatures you control. Creatures you control get +1/+1 until end of turn."
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "You gain X life and draw X cards, where X is the number of creatures you control. Creatures you control get +1/+1 until end of turn.",
@@ -16065,12 +16041,7 @@
   {
     "oracleId": "b8619990-9dc2-4fcc-bc7e-457b77cd2a8e",
     "name": "Rankle, Master of Pranks",
-    "handledLines": [
-      "unrecognized rules text: \"Whenever ~ deals combat damage to a player, choose any number —\"",
-      "unrecognized rules text: \"• Each player discards a card.\"",
-      "unrecognized rules text: \"• Each player loses 1 life and draws a card.\"",
-      "unrecognized rules text: \"• Each player sacrifices a creature of their choice.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -17678,9 +17649,7 @@
   {
     "oracleId": "c9fc13d6-bd10-47bc-b2b6-7f67a1f3371e",
     "name": "Shineshadow Snarl",
-    "handledLines": [
-      "As this land enters, you may reveal a Plains or Swamp card from your hand. If you don't, this land enters tapped."
-    ],
+    "handledLines": [],
     "def": {
       "entersTappedUnless": {
         "kind": "mayRevealCardFromHand",
@@ -17914,9 +17883,7 @@
   {
     "oracleId": "cd1eda60-53e4-44d0-9b2c-7a57395e291f",
     "name": "Conjurer's Closet",
-    "handledLines": [
-      "At the beginning of your end step, you may exile target creature you control, then return that card to the battlefield under your control."
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -18314,10 +18281,7 @@
   {
     "oracleId": "d1d171de-1c6d-4fb9-817a-9c689c709f3d",
     "name": "Shamanic Revelation",
-    "handledLines": [
-      "Draw a card for each creature you control.",
-      "You gain 4 life for each creature you control with power 4 or greater."
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Draw for creatures; gain four life per creature with power four or greater",
@@ -19302,9 +19266,7 @@
   {
     "oracleId": "db25d48e-e5eb-4364-9d7a-f9757ee4ccbe",
     "name": "Necrogen Mists",
-    "handledLines": [
-      "unrecognized rules text: \"At the beginning of each player's upkeep, that player discards a card.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -22006,8 +21968,7 @@
     "oracleId": "f2ef8bda-373d-4387-900d-0f1b6ccf72e9",
     "name": "Trumpeting Carnosaur",
     "handledLines": [
-      "unrecognized rules text: \"When this creature enters, discover 5.\"",
-      "unrecognized rules text: \"{2}{R}, Discard this card: It deals 3 damage to target creature or planeswalker.\""
+      "unrecognized rules text: \"When this creature enters, discover 5.\""
     ],
     "def": {
       "activatedAbilities": [
@@ -22237,9 +22198,7 @@
   {
     "oracleId": "f488f679-f5d5-4e61-b0c8-0b0eb622df0d",
     "name": "Oppression",
-    "handledLines": [
-      "unrecognized rules text: \"Whenever a player casts a spell, that player discards a card.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -22754,8 +22713,7 @@
     "oracleId": "f8e17f4f-080d-4bba-bd05-ca27e94ccecc",
     "name": "Terror of the Peaks",
     "handledLines": [
-      "Spells your opponents cast that target this creature cost an additional 3 life to cast.",
-      "Whenever another creature you control enters, this creature deals damage equal to that creature's power to any target."
+      "Spells your opponents cast that target this creature cost an additional 3 life to cast."
     ],
     "def": {
       "ruleStatics": [
@@ -24169,7 +24127,6 @@
     "name": "Ajani, Caller of the Pride",
     "handledLines": [
       "+1: Put a +1/+1 counter on up to one target creature.",
-      "−3: Target creature gains flying and double strike until end of turn.",
       "−8: Create X 2/2 white Cat creature tokens, where X is your life total."
     ],
     "def": {
@@ -24594,8 +24551,7 @@
     "oracleId": "oracle-annie-joins-up",
     "name": "Annie Joins Up",
     "handledLines": [
-      "If a triggered ability of a legendary creature you control triggers, that ability triggers an additional time.",
-      "When ~ enters, it deals 5 damage to target creature or planeswalker an opponent controls."
+      "If a triggered ability of a legendary creature you control triggers, that ability triggers an additional time."
     ],
     "def": {
       "ruleStatics": [
@@ -26851,9 +26807,7 @@
   {
     "oracleId": "oracle-camaraderie",
     "name": "Camaraderie",
-    "handledLines": [
-      "You gain X life and draw X cards, where X is the number of creatures you control. Creatures you control get +1/+1 until end of turn."
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "You gain X life and draw X cards, where X is the number of creatures you control. Creatures you control get +1/+1 until end of turn.",
@@ -27749,9 +27703,7 @@
   {
     "oracleId": "oracle-collective-unconscious",
     "name": "Collective Unconscious",
-    "handledLines": [
-      "Draw a card for each creature you control."
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Draw a card for each creature you control.",
@@ -28000,9 +27952,7 @@
   {
     "oracleId": "oracle-conjurer-s-closet",
     "name": "Conjurer's Closet",
-    "handledLines": [
-      "At the beginning of your end step, you may exile target creature you control, then return that card to the battlefield under your control."
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -30181,9 +30131,7 @@
   {
     "oracleId": "oracle-electrickery",
     "name": "Electrickery",
-    "handledLines": [
-      "~ deals 1 damage to target creature you don't control."
-    ],
+    "handledLines": [],
     "def": {
       "alternativeCasts": [
         {
@@ -31481,9 +31429,7 @@
   {
     "oracleId": "oracle-fortified-village",
     "name": "Fortified Village",
-    "handledLines": [
-      "As this land enters, you may reveal a Forest or Plains card from your hand. If you don't, this land enters tapped."
-    ],
+    "handledLines": [],
     "def": {
       "entersTappedUnless": {
         "kind": "mayRevealCardFromHand",
@@ -31663,9 +31609,7 @@
   {
     "oracleId": "oracle-frostboil-snarl",
     "name": "Frostboil Snarl",
-    "handledLines": [
-      "As this land enters, you may reveal an Island or Mountain card from your hand. If you don't, this land enters tapped."
-    ],
+    "handledLines": [],
     "def": {
       "entersTappedUnless": {
         "kind": "mayRevealCardFromHand",
@@ -31850,9 +31794,7 @@
   {
     "oracleId": "oracle-game-trail",
     "name": "Game Trail",
-    "handledLines": [
-      "As this land enters, you may reveal a Mountain or Forest card from your hand. If you don't, this land enters tapped."
-    ],
+    "handledLines": [],
     "def": {
       "entersTappedUnless": {
         "kind": "mayRevealCardFromHand",
@@ -33448,7 +33390,6 @@
     "handledLines": [
       "unrecognized rules text: \"At the beginning of each end step, if a modified creature died under your control this turn, create a 2/1 white and black Inkling creature token with flying.\"",
       "unrecognized rules text: \"When this Class enters, create a 2/1 white and black Inkling creature token with flying.\"",
-      "unrecognized rules text: \"Whenever you lose life for the first time each turn, put a +1/+1 counter on target creature you control.\"",
       "unrecognized rules text: \"{1}{B}: Level 2\"",
       "unrecognized rules text: \"{2}{B}: Level 3\"",
       "unsupported layout \"class\""
@@ -36370,9 +36311,7 @@
   {
     "oracleId": "oracle-mizzium-mortars",
     "name": "Mizzium Mortars",
-    "handledLines": [
-      "~ deals 4 damage to target creature you don't control."
-    ],
+    "handledLines": [],
     "def": {
       "alternativeCasts": [
         {
@@ -37222,9 +37161,7 @@
   {
     "oracleId": "oracle-necrogen-mists",
     "name": "Necrogen Mists",
-    "handledLines": [
-      "unrecognized rules text: \"At the beginning of each player's upkeep, that player discards a card.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -37892,9 +37829,7 @@
   {
     "oracleId": "oracle-oppression",
     "name": "Oppression",
-    "handledLines": [
-      "unrecognized rules text: \"Whenever a player casts a spell, that player discards a card.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -38074,7 +38009,6 @@
     "oracleId": "oracle-out-of-the-tombs",
     "name": "Out of the Tombs",
     "handledLines": [
-      "unrecognized rules text: \"At the beginning of your upkeep, put two eon counters on this enchantment, then mill cards equal to the number of eon counters on it.\"",
       "unrecognized rules text: \"If you would draw a card while your library has no cards in it, instead return a creature card from your graveyard to the battlefield. If you can't, you lose the game.\""
     ],
     "def": {
@@ -39507,12 +39441,7 @@
   {
     "oracleId": "oracle-rankle-master-of-pranks",
     "name": "Rankle, Master of Pranks",
-    "handledLines": [
-      "unrecognized rules text: \"Whenever ~ deals combat damage to a player, choose any number —\"",
-      "unrecognized rules text: \"• Each player discards a card.\"",
-      "unrecognized rules text: \"• Each player loses 1 life and draws a card.\"",
-      "unrecognized rules text: \"• Each player sacrifices a creature of their choice.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -41652,10 +41581,7 @@
   {
     "oracleId": "oracle-shamanic-revelation",
     "name": "Shamanic Revelation",
-    "handledLines": [
-      "Draw a card for each creature you control.",
-      "You gain 4 life for each creature you control with power 4 or greater."
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Draw for creatures; gain four life per creature with power four or greater",
@@ -41732,9 +41658,7 @@
   {
     "oracleId": "oracle-shineshadow-snarl",
     "name": "Shineshadow Snarl",
-    "handledLines": [
-      "As this land enters, you may reveal a Plains or Swamp card from your hand. If you don't, this land enters tapped."
-    ],
+    "handledLines": [],
     "def": {
       "entersTappedUnless": {
         "kind": "mayRevealCardFromHand",
@@ -43063,9 +42987,7 @@
   {
     "oracleId": "oracle-syr-konrad-the-grim",
     "name": "Syr Konrad, the Grim",
-    "handledLines": [
-      "{1}{B}: Each player mills a card."
-    ],
+    "handledLines": [],
     "def": {
       "activatedAbilities": [
         {
@@ -43703,8 +43625,7 @@
     "oracleId": "oracle-terror-of-the-peaks",
     "name": "Terror of the Peaks",
     "handledLines": [
-      "Spells your opponents cast that target this creature cost an additional 3 life to cast.",
-      "Whenever another creature you control enters, this creature deals damage equal to that creature's power to any target."
+      "Spells your opponents cast that target this creature cost an additional 3 life to cast."
     ],
     "def": {
       "ruleStatics": [
@@ -43931,9 +43852,7 @@
     "oracleId": "oracle-the-one-ring",
     "name": "The One Ring",
     "handledLines": [
-      "unrecognized rules text: \"At the beginning of your upkeep, you lose 1 life for each burden counter on ~.\"",
-      "unrecognized rules text: \"When ~ enters, if you cast it, you gain protection from everything until your next turn.\"",
-      "unrecognized rules text: \"{T}: Put a burden counter on ~, then draw a card for each burden counter on ~.\""
+      "unrecognized rules text: \"When ~ enters, if you cast it, you gain protection from everything until your next turn.\""
     ],
     "def": {
       "activatedAbilities": [
@@ -45089,8 +45008,7 @@
     "oracleId": "oracle-trumpeting-carnosaur",
     "name": "Trumpeting Carnosaur",
     "handledLines": [
-      "unrecognized rules text: \"When this creature enters, discover 5.\"",
-      "unrecognized rules text: \"{2}{R}, Discard this card: It deals 3 damage to target creature or planeswalker.\""
+      "unrecognized rules text: \"When this creature enters, discover 5.\""
     ],
     "def": {
       "activatedAbilities": [
@@ -46101,9 +46019,7 @@
   {
     "oracleId": "oracle-vineglimmer-snarl",
     "name": "Vineglimmer Snarl",
-    "handledLines": [
-      "As this land enters, you may reveal a Forest or Island card from your hand. If you don't, this land enters tapped."
-    ],
+    "handledLines": [],
     "def": {
       "entersTappedUnless": {
         "kind": "mayRevealCardFromHand",

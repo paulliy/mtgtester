@@ -1988,7 +1988,12 @@ export type Effect =
   /** "return a card exiled with it at random to its owner's hand" (Negative Zone Portal). */
   | { op: 'returnRandomExiledWithSourceToHand' }
   | { op: 'exileAndManifestTarget'; target: EffectRef }
-  | { op: 'blinkTarget'; target: EffectRef }
+  /**
+   * Exile the target, then return that card to the battlefield (CR 400.7: a new object). Without
+   * `returnUnder` it returns under the controller it had; "under its owner's control" (Ephemerate)
+   * is `owner`, "under your control" (Cloudshift) is `you`, the ability's controller.
+   */
+  | { op: 'blinkTarget'; target: EffectRef; returnUnder?: 'owner' | 'you' }
   | { op: 'blinkOneCreatureYouControl' }
   | { op: 'untapTarget'; target: EffectRef }
   | { op: 'tapTarget'; target: EffectRef }
@@ -2438,7 +2443,7 @@ export type TriggerHead =
   | { when: 'precombatMain'; player: 'you' | 'each' }
   | { when: 'secondMainPhase'; player: 'you' | 'each' }
   /** "Whenever you gain life" (Dawn of Hope) — player-scoped, like the step triggers above. */
-  | { when: 'gainsLife'; player: 'you' | 'each' }
+  | { when: 'gainsLife'; player: 'you' | 'each' | 'opponent' }
   /**
    * "Whenever you lose life" (CR 119.3): queued once per life-loss event, damage included, with
    * the amount actually lost. `firstTimeEachTurn`: "for the first time each turn" (Intermediate

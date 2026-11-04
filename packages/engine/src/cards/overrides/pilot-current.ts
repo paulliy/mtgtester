@@ -132,20 +132,15 @@ export function registerPilotCurrentOverrides(): void {
   // "{1}{B}: Each player mills a card." Every player, the controller included, puts their top
   // card into their graveyard (CR 701.13); a creature card milled this way is "put into a
   // graveyard from anywhere other than the battlefield", which Konrad's parsed trigger answers.
-  defineCard(
-    '14c3ff84-1e82-4606-a433-869fc52cc382',
-    'Syr Konrad, the Grim',
-    ['{1}{B}: Each player mills a card.'],
-    {
-      activatedAbilities: [
-        activated({
-          costs: [mana('{1}{B}')],
-          effects: [{ op: 'millEachPlayer', scope: 'all', count: constant(1) }],
-          description: '{1}{B}: Each player mills a card',
-        }),
-      ],
-    },
-  );
+  defineCard('14c3ff84-1e82-4606-a433-869fc52cc382', 'Syr Konrad, the Grim', [], {
+    activatedAbilities: [
+      activated({
+        costs: [mana('{1}{B}')],
+        effects: [{ op: 'millEachPlayer', scope: 'all', count: constant(1) }],
+        description: '{1}{B}: Each player mills a card',
+      }),
+    ],
+  });
   // "Choose one — • Destroy target artifact. • Change the target of target spell or ability with
   // a single target. • One or two target creatures can't block this turn." Only the chosen mode's
   // targets are chosen (CR 700.2b). The redirect may pick only a new legal target, and leaves the

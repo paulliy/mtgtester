@@ -21,7 +21,14 @@ import { transformDefinition } from '../testing/definition-transform';
 import { SELF_SUBJECT } from './ability';
 import type { Ability, Effect, KeywordAbility, TargetSpec, TokenSpec } from './ability';
 import { parseEntersAsCopy } from './grammar/copy';
-import { COLOR_WORDS, KEYWORD_SET, parseAmount, resolveSubtype, titleCase } from './grammar/words';
+import {
+  COLOR_WORDS,
+  KEYWORD_SET,
+  parseAmount,
+  resolveSubtype,
+  SELF_OBJECT_RE,
+  titleCase,
+} from './grammar/words';
 import {
   ANY_SPELL,
   parseCardFilterPhrase,
@@ -876,6 +883,32 @@ const ENTERS_TAPPED_UNLESS_RE = /^(?:~|this land) enters (?:the battlefield )?ta
 const ENTERS_PAY_LIFE_RE =
   /^as (?:~|this land) enters, you may pay (\d+) life\. if you don't, it enters tapped$/;
 
+/**
+ * The reveal lands (CR 701.20a): "As this land enters, you may reveal an Island or Swamp card from
+ * your hand. If you don't, this land enters tapped." (Choked Estuary, the Snarls) and the older
+ * "~ enters tapped unless you reveal a Plains or Swamp card from your hand." Both are the same
+ * as-enters choice, offered only while the hand holds a card of one of the named subtypes.
+ */
+const ENTERS_REVEAL_RE =
+  /^as (?:~|this land) enters, you may reveal an? (\w+)(?: or (?:an? )?(\w+))? card from your hand\. if you don't, (?:~|this land|it) enters tapped$/;
+
+function parseEntersRevealChoice(lower: string, card: OracleCard): Condition | null {
+  const m =
+    lower.match(ENTERS_REVEAL_RE) ??
+    lower.match(
+      /^(?:~|this land) enters (?:the battlefield )?tapped unless you reveal an? (\w+)(?: or (?:an? )?(\w+))? card from your hand$/,
+    );
+  if (m === null) return null;
+  const subtypes: string[] = [];
+  for (const word of [m[1], m[2]]) {
+    if (word === undefined) continue;
+    const subtype = resolveSubtype(titleCase(word), card);
+    if (subtype === null) return null;
+    subtypes.push(subtype);
+  }
+  return { kind: 'mayRevealCardFromHand', subtypes };
+}
+
 /** "Add {G} or {W}." / "Add {W}, {U}, or {B}." â€” ONE unit, several symbol choices. */
 const MANA_CHOICE_RE = /^add (\{[wubrgc]\}(?:,? (?:or )?\{[wubrgc]\})+)$/;
 /**
@@ -1534,6 +1567,21 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
   }
   if (lower === 'creatures your opponents control attack each combat if able') {
     const affects = parseSubject('creatures your opponents control', card);
+    if (affects !== null) return [{ affects, op: { layer: 6, setMustAttackEachCombat: true } }];
+  }
+  // "~ attacks each combat if able" (Toski, Darksteel Juggernaut) and "enchanted creature attacks
+  // each combat if able": a requirement (CR 508.1d) on the source or the creature it is attached to.
+  {
+    const m = lower.match(/^(.+?) attacks? each combat if able$/);
+    const subject = m === null ? null : (m[1] as string);
+    const affects: Selector | null =
+      subject === null
+        ? null
+        : SELF_OBJECT_RE.test(subject)
+          ? SELF
+          : subject === 'enchanted creature' || subject === 'equipped creature'
+            ? { kind: 'attachedToSource' }
+            : null;
     if (affects !== null) return [{ affects, op: { layer: 6, setMustAttackEachCombat: true } }];
   }
   // "Enchanted/Equipped creature ... and is goaded" (CR 701.38 - it attacks each combat if able
@@ -3515,6 +3563,11 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
       const pay = lower.match(ENTERS_PAY_LIFE_RE);
       if (pay) {
         entersTappedUnless = { kind: 'mayPayLife', n: Number(pay[1]) };
+        continue;
+      }
+      const reveal = parseEntersRevealChoice(lower, card);
+      if (reveal !== null) {
+        entersTappedUnless = reveal;
         continue;
       }
     }

@@ -123,8 +123,6 @@ function registerPr11PhasingOverrides(): void {
     'The One Ring',
     [
       'unrecognized rules text: "When ~ enters, if you cast it, you gain protection from everything until your next turn."',
-      'unrecognized rules text: "At the beginning of your upkeep, you lose 1 life for each burden counter on ~."',
-      'unrecognized rules text: "{T}: Put a burden counter on ~, then draw a card for each burden counter on ~."',
     ],
     {
       triggers: [
@@ -284,7 +282,6 @@ function registerPr11LifecycleOverrides(): void {
     '473a7998-669d-4181-83fe-f178a2e781f0',
     'Out of the Tombs',
     [
-      'unrecognized rules text: "At the beginning of your upkeep, put two eon counters on this enchantment, then mill cards equal to the number of eon counters on it."',
       'unrecognized rules text: "If you would draw a card while your library has no cards in it, instead return a creature card from your graveyard to the battlefield. If you can\'t, you lose the game."',
     ],
     {

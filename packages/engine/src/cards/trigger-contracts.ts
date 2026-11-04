@@ -419,7 +419,7 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
       validateExpression('selector', head['filter'], `${path}.filter`, issues);
   } else if (
     !(
-      head['when'] === 'drawsCard'
+      head['when'] === 'drawsCard' || head['when'] === 'gainsLife' || head['when'] === 'losesLife'
         ? ['you', 'each', 'opponent']
         : head['when'] === 'foretells' || head['when'] === 'activatesAbility'
           ? ['you']

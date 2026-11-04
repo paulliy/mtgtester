@@ -88,7 +88,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "sha256": "7dc927073a2b5f793573cd782f390c1db4daa9c58d6fe9f9da42399ecc77aafc",
+      "sha256": "e0b2a25b9b21dc7ae78e843d96e320fcb8ad48b25264913310a70c7a07326d20",
       "description": "Shamanic Revelation"
     },
     {
@@ -133,7 +133,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "sha256": "542d0793445ff57b23d4eeb1b3ba406d6b1fef99af61bd06b7b89483c63e658c",
+      "sha256": "6b4390d70d5e23f0eba63e8b70ca31b08715ed18a2b2eaab178f355fd793fca7",
       "description": "registerDRACONIC_DESTRUCTIONOverrides"
     },
     {
@@ -323,12 +323,12 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
-      "sha256": "1175a0cca5564e7f4ed615f27e27277fc3854566d956dc2065f3288b4e4bca50",
+      "sha256": "8e8f0983eeffeb474ede4bae640a7fb241e3c0d74fd607ad514a6cff47c865cd",
       "description": "Conjurer's Closet"
     },
     {
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
-      "sha256": "94a9db5bdae24d9e995342ba3a9497b45f203b039c7d00527a79dd7026e36f43",
+      "sha256": "af7b4cc498f809a577bfee48a2cd9fde5601fb5414ac26da57064b7a9ab74203",
       "description": "registerLIVING_ENERGYOverrides"
     },
     {
@@ -768,7 +768,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/token-triumph.ts",
-      "sha256": "7840d914b805aa8d0380afbc4540c00a24a14a12f6bd02f0c85ee4b660f7c73e",
+      "sha256": "acdadbffa56d5e3cfada2c2851f39b5668cfe0a240dbd8b5f358a007a3b732a8",
       "description": "Ajani, Caller of the Pride"
     },
     {
@@ -833,12 +833,12 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/token-triumph.ts",
-      "sha256": "49f9b4572e6ae457a2cb05cc5ed340f4beee27dde5d3a602c9d6192c5c32a1d5",
+      "sha256": "e34c9b263f6305653a787a91d57a9f44d8ef6817fba4800a0ccf18976bff901d",
       "description": "Collective Unconscious"
     },
     {
       "file": "packages/engine/src/cards/overrides/token-triumph.ts",
-      "sha256": "b2cdf30225774e65ce93544775c24040d2d3a4d5b0cc1b35a61112d603743ff3",
+      "sha256": "af194cabcb41292affa41d9377f61dbc0f30f9a9c35c81bd1a759a5ce3c9477f",
       "description": "Camaraderie"
     },
     {
@@ -963,7 +963,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
-      "sha256": "d714080fd6ddb55fe1b2944a93c25642bdb4f51423d149ebbf79d2870007bc29",
+      "sha256": "2099c81bb404150b7dff80d01963676c0d68edfca86eeacfcd2fa9065a471805",
       "description": "Terror of the Peaks"
     },
     {

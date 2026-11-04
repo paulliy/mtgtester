@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "card": "Choked Estuary",
+  "scenarios": [
+    {
+      "id": "choked-estuary-reveal-untapped",
+      "title": "Choked Estuary: revealing an Island from your hand, it enters untapped",
+      "clauses": [1, 2],
+      "instructions": ["Play Choked Estuary and reveal the Island in your hand."],
+      "expectedOutcome": "Choked Estuary is untapped, and the Island stays in your hand.",
+      "seats": { "P1": { "hand": ["Choked Estuary", "Island"] } },
+      "script": [
+        { "player": "P1", "choose": "/^Play Choked Estuary/" },
+        { "player": "P1", "choose": "/^Reveal/" }
+      ],
+      "expect": [
+        { "tapped": { "card": "Choked Estuary", "equals": false } },
+        { "zone": { "player": "P1", "zone": "hand", "has": ["Island"] } },
+        { "event": { "type": "revealCard", "count": 1 } }
+      ]
+    },
+    {
+      "id": "choked-estuary-no-reveal-tapped",
+      "title": "Choked Estuary: with no Island or Swamp in hand it enters tapped",
+      "clauses": [1],
+      "instructions": ["Play Choked Estuary holding only a Forest."],
+      "expectedOutcome": "Choked Estuary is tapped; nothing was revealed.",
+      "seats": { "P1": { "hand": ["Choked Estuary", "Forest"] } },
+      "script": [{ "player": "P1", "choose": "/^Play Choked Estuary/" }],
+      "expect": [
+        { "tapped": { "card": "Choked Estuary", "equals": true } },
+        { "event": { "type": "revealCard", "count": 0 } }
+      ]
+    }
+  ]
+}

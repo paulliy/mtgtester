@@ -142,6 +142,11 @@ function parseTriggerHeadUntraced(firstLine: string, card: OracleCard): ParsedTr
   const drawExceptFirst = firstLine.match(DRAW_EXCEPT_FIRST_TRIGGER_HEAD_RE);
   const draw = firstLine.match(DRAW_TRIGGER_HEAD_RE);
   const foretell = firstLine.match(FORETELL_TRIGGER_HEAD_RE);
+  // "Whenever you gain life" (Ajani's Pridemate) / "Whenever an opponent loses life" (Exquisite
+  // Blood): one event per life gain or loss, with the amount (CR 119.9, 119.10).
+  const lifeChange = firstLine.match(
+    /^whenever (you|a player|an opponent) (gains?|loses?) life( for the first time each turn)?, (.*)$/,
+  );
   const graveyardCrossing = firstLine.match(GRAVEYARD_CROSSING_TRIGGER_HEAD_RE);
   // "Whenever one or more artifact cards leave your graveyard" (Imotekh the Stormlord): one
   // aggregate event per batch of cards leaving (CR 603.2c); a card is in its owner's graveyard,
@@ -342,6 +347,18 @@ function parseTriggerHeadUntraced(firstLine: string, card: OracleCard): ParsedTr
       },
     ];
     body = tokenCreated[3] as string;
+  } else if (lifeChange !== null) {
+    const playerPhrase = lifeChange[1] as string;
+    const player =
+      playerPhrase === 'you' ? 'you' : playerPhrase === 'an opponent' ? 'opponent' : 'each';
+    const gains = (lifeChange[2] as string).startsWith('gain');
+    const firstTime = lifeChange[3] !== undefined;
+    // The engine's life-gain event has no "first time each turn" qualifier.
+    if (gains && firstTime) return null;
+    heads = gains
+      ? [{ when: 'gainsLife', player }]
+      : [{ when: 'losesLife', player, ...(firstTime ? { firstTimeEachTurn: true as const } : {}) }];
+    body = lifeChange[4] as string;
   } else if (foretell !== null) {
     heads = [{ when: 'foretells', player: 'you' }];
     body = foretell[1] as string;

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "card": "Krenko, Mob Boss",
+  "supportCards": [
+    {
+      "name": "Scenario Goblin",
+      "typeLine": "Creature — Goblin",
+      "manaCost": "{R}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "krenko-makes-x-goblins",
+      "title": "Krenko, Mob Boss: X is the number of Goblins you control as it resolves",
+      "clauses": [1],
+      "instructions": ["Tap Krenko with one other Goblin on your side."],
+      "expectedOutcome": "You create two Goblin tokens: Krenko and Scenario Goblin are two Goblins.",
+      "seats": {
+        "P1": { "battlefield": ["Krenko, Mob Boss", "Scenario Goblin"] },
+        "P2": { "battlefield": ["Scenario Goblin"] }
+      },
+      "script": [{ "player": "P1", "choose": "/Krenko, Mob Boss/" }],
+      "expect": [{ "event": { "type": "tokenCreated", "count": 2, "payload": "Goblin" } }]
+    }
+  ]
+}

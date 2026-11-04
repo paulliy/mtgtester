@@ -8222,7 +8222,12 @@ function* executeAbilityEffects(
         const target = targetId === null ? undefined : findPermanent(ctx, targetId);
         if (target === undefined) break;
         const targetCardId = target.cardId;
-        const targetController = target.controllerId;
+        const targetController =
+          effect.returnUnder === 'owner'
+            ? target.ownerId
+            : effect.returnUnder === 'you'
+              ? source.controllerId
+              : target.controllerId;
         yield* moveObject(ctx, target, { zone: 'exile' });
         const exiled = ctx.state.exile.find((card) => card.cardId === targetCardId);
         if (exiled !== undefined)

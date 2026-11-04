@@ -190,7 +190,7 @@ function parseActivationCostsUntraced(costText: string, card?: OracleCard): Abil
       });
       continue;
     }
-    const counters = part.match(/^remove (\w+) (\w+) counters? from (.+)$/);
+    const counters = part.match(/^remove (\w+) ([+-]\d+\/[+-]\d+|\w+) counters? from (.+)$/);
     if (counters !== null) {
       if (!SELF_OBJECT_RE.test(counters[3] as string)) return null;
       const count = parseAmount(counters[1] as string);

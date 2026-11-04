@@ -74,6 +74,10 @@ import type { Value } from '../value';
 import { constant } from '../value';
 import { canonicalizeToken, CLUE, FOOD, MUTAGEN, TREASURE } from '../tokens';
 import { noteSlotFailure } from './diagnostics';
+import { bindX, parseForEachCount, rewriteEqualTo, scaleByCount } from './amount-forms';
+import { parsePlayerVerbSentence } from './player-verb';
+import { parseDamageSentence } from './damage';
+import { triggerProvidesEventPlayer } from '../trigger-contracts';
 
 /** Split a line into sentences, dropping the terminal period of each. */
 export function splitSentences(line: string): string[] {
@@ -1313,6 +1317,12 @@ function parseEffectSentenceUntraced(
   card: OracleCard,
   opts: {
     triggerObject?: boolean;
+    /** Every head's subject is the source itself ("Whenever ~ attacks"): a bare "it" is the source. */
+    selfSubject?: boolean;
+    /** Every head's event names a player, whom "that player" and "they" refer to. */
+    eventPlayer?: boolean;
+    /** A surrounding "where X is …" defines X for this sentence (`parseAmountForm`). */
+    xBound?: boolean;
     /** Every head is this object leaving the battlefield: its last-known facts are the event's. */
     departedSelf?: boolean;
     departedTriggerObject?: boolean;
@@ -1378,6 +1388,27 @@ function parseEffectSentenceUntraced(
     if (sacrifice !== null) {
       const filter = parseMassSubject(sacrifice[1] as string, card);
       if (filter !== null) return [{ op: 'sacrificeOneEachOpponent', filter }];
+    }
+  }
+  // "Exile target creature you control, then return it to the battlefield under its owner's
+  // control." (Ephemerate) / "… return that card … under your control" (Cloudshift). The returned
+  // card is a new object (CR 400.7).
+  {
+    const blink = s.match(
+      /^exile (another )?target (.+?), then return (?:it|that card) to the battlefield under (its owner's|your) control$/,
+    );
+    const clause =
+      blink === null ? null : parseTargetClause(`${blink[1] ?? ''}${blink[2] as string}`);
+    if (blink !== null && clause !== null && clause.kind !== 'player') {
+      const slot = alloc(clause.kind, clause.filter, clause.controller);
+      if (typeof slot === 'number')
+        return [
+          {
+            op: 'blinkTarget',
+            target: slot,
+            returnUnder: blink[3] === 'your' ? 'you' : 'owner',
+          },
+        ];
     }
   }
   if (s === 'exile all graveyards') return [{ op: 'exileAllGraveyards' }];
@@ -1492,7 +1523,9 @@ function parseEffectSentenceUntraced(
   // reading a "target" that belongs to the other half — "target creature gets +3/+3 and gains
   // trample until end of turn" is ONE effect on ONE target (CR 601.2c), and the whole-sentence
   // handler below is the one that reads it correctly.
-  for (const match of s.matchAll(/\s+and\s+/g)) {
+  // A trailing "where X is …" defines X for both halves, so it is read around the whole
+  // sentence (`parseAmountForm`) rather than split off with the second half alone.
+  for (const match of /, where x is /.test(s) ? [] : s.matchAll(/\s+and\s+/g)) {
     const i = match.index ?? -1;
     if (i <= 0) continue;
     const halves = [s.slice(0, i), s.slice(i + match[0].length)] as const;
@@ -1619,8 +1652,13 @@ function parseEffectSentenceUntraced(
       return [{ op: 'gainLife', amount: { kind: 'countPermanents', selector, scope: 'you' } }];
     }
   }
+  // "Shuffle Blue Sun's Zenith into its owner's library": the resolving spell itself goes into
+  // the library, then it is shuffled. A bare library shuffle would leave the card in the
+  // graveyard. On a permanent "~" is not the resolving spell, which this does not read.
   if (s === "shuffle ~ into its owner's library" || s === 'shuffle ~ into your library') {
-    return [{ op: 'shuffle' }];
+    return card.types.includes('Instant') || card.types.includes('Sorcery')
+      ? [{ op: 'resolvingSpellShuffleIntoLibrary' }]
+      : null;
   }
 
   if (s === "target creature you control fights target creature you don't control") {
@@ -2361,12 +2399,29 @@ function parseEffectSentenceUntraced(
   }
   // "target creature gains flying until end of turn"
   {
-    const m = s.match(/^target creature gains ([a-z ]+) until end of turn$/);
+    const m = s.match(/^target creature gains ([a-z ,]+) until end of turn$/);
     if (m) {
-      if (!KEYWORD_SET.has(m[1] as string)) return null;
-      return [
-        { op: 'grantKeywordUntilEot', target: alloc('creature'), keyword: m[1] as KeywordAbility },
-      ];
+      if (KEYWORD_SET.has(m[1] as string)) {
+        return [
+          {
+            op: 'grantKeywordUntilEot',
+            target: alloc('creature'),
+            keyword: m[1] as KeywordAbility,
+          },
+        ];
+      }
+      // "gains deathtouch and indestructible until end of turn" (Offer Immortality): one grant
+      // per keyword, all on the same target.
+      const listed = parseKeywordLine(m[1] as string);
+      if (
+        listed === null ||
+        listed.keywords.length < 2 ||
+        listed.ward !== undefined ||
+        listed.protectionFrom !== undefined
+      )
+        return null;
+      const target = alloc('creature');
+      return listed.keywords.map((keyword) => ({ op: 'grantKeywordUntilEot', target, keyword }));
     }
   }
   // "Creatures you control get +3/+3 and gain trample until end of turn" (Overrun). Untargeted:
@@ -2441,7 +2496,11 @@ function parseEffectSentenceUntraced(
     }
     const m = s.match(MASS_UNTIL_EOT_RE);
     if (m) {
-      const selector = parseSubject(m[1] as string, card);
+      // "All creatures get -4/-4 until end of turn" (Languish): "all" adds nothing to the subject.
+      const subject = m[1] as string;
+      const selector =
+        parseSubject(subject, card) ??
+        (subject.startsWith('all ') ? parseSubject(subject.slice('all '.length), card) : null);
       if (selector === null) return null;
       const effects: Effect[] = [];
       if (m[2] !== undefined) {
@@ -2628,6 +2687,20 @@ function parseEffectSentenceUntraced(
   // a ordinary effect too). Fixed symbols only: "Add {U} or {B}" is a player choice, a shape
   // `parseManaProduction`'s `MANA_CHOICE_RE` already owns for true mana abilities and which this
   // sentence-level path does not attempt to duplicate.
+  // "Add one mana of any color." (Lotus Cobra) / "Add {R} or {G}." as a RESOLVING effect: a
+  // trigger or a spell that adds mana uses the stack (CR 605.1b), so it is an effect, not a mana
+  // ability. One mana, one color choice. "two mana of any one color" is all one color and is not
+  // read here: `addMana` asks per mana.
+  {
+    if (s === 'add one mana of any color' || s === 'add one mana of any one color') {
+      return [{ op: 'addMana', amount: constant(1), colors: 'any' }];
+    }
+    const choice = s.match(/^add (\{[wubrgc]\}(?:, \{[wubrgc]\})*,? or \{[wubrgc]\})$/);
+    if (choice !== null) {
+      const symbols = [...new Set(manaSymbols((choice[1] as string).replace(/,? or /g, '')))];
+      if (symbols.length >= 2) return [{ op: 'addMana', amount: constant(1), colors: symbols }];
+    }
+  }
   {
     const m = s.match(MANA_ABILITY_RE);
     if (m) {
@@ -2925,9 +2998,13 @@ function parseEffectSentenceUntraced(
       const count = parseAmount(m[1] as string);
       if (count === null) return null;
       const counter = m[2] as string;
+      // "it" names the trigger's object. Anywhere else it refers back to an earlier sentence's
+      // object (Match the Odds: "Create a 1/1 … token. Put a +1/+1 counter on it …"), which a
+      // fresh target slot would silently retarget.
+      if (m[3] === 'it' && opts.triggerObject !== true && opts.selfSubject !== true) return null;
       return m[3] === 'it' && opts.triggerObject === true
         ? [{ op: 'putCounters', target: 'triggerObject', counter, count }]
-        : m[3] === '~' || m[3] === 'this creature'
+        : m[3] === '~' || m[3] === 'this creature' || m[3] === 'it'
           ? [{ op: 'putCountersEach', selector: SELF, counter, count }]
           : [{ op: 'putCounters', target: alloc('creature'), counter, count }];
     }
@@ -3635,6 +3712,8 @@ export function parseTriggerLine(line: string, card: OracleCard): Ability[] | nu
   const firstHead = heads[0] as TriggerHead;
   const opts = {
     triggerObject: 'subject' in firstHead && firstHead.subject.kind === 'permanent',
+    selfSubject: heads.every((head) => 'subject' in head && head.subject.kind === 'self'),
+    eventPlayer: heads.every((head) => triggerProvidesEventPlayer(head.when)),
     departedSelf: heads.every(
       (head) =>
         (head.when === 'dies' || head.when === 'leavesBattlefield') &&
@@ -3669,7 +3748,10 @@ export function parseTriggerLine(line: string, card: OracleCard): Ability[] | nu
     allocCount,
     // What "that many" refers back to. A combat-damage head makes it the damage; an aggregate
     // head makes it the number of objects. See `parseCountPhrase`.
-    ...(firstHead.when === 'dealsCombatDamageToPlayer'
+    // A life-gain or life-loss head carries its amount the same way ("that much life").
+    ...(firstHead.when === 'dealsCombatDamageToPlayer' ||
+    firstHead.when === 'gainsLife' ||
+    firstHead.when === 'losesLife'
       ? { thatMany: { kind: 'damageDealt' } as Value }
       : 'aggregate' in firstHead && firstHead.aggregate === true
         ? { thatMany: { kind: 'triggerCount' } as Value }
@@ -3703,8 +3785,11 @@ export function parseTriggerLine(line: string, card: OracleCard): Ability[] | nu
       : []);
   if (effects === null) {
     effects = [];
-    for (const sentence of splitSentences(body)) {
-      const parsed = parseEffectSentence(sentence, alloc, card, opts);
+    for (const [index, sentence] of splitSentences(body).entries()) {
+      // A later sentence's "it" may name an object an earlier one made ("create a token. Put a
+      // +1/+1 counter on it"), so only the first sentence reads a bare "it" as the source.
+      const sentenceOpts = index === 0 ? opts : { ...opts, selfSubject: false };
+      const parsed = parseEffectSentence(sentence, alloc, card, sentenceOpts);
       if (parsed === null) return null;
       appendSentenceEffects(effects, sentence, parsed);
     }
@@ -3730,7 +3815,76 @@ export function parseTriggerLine(line: string, card: OracleCard): Ability[] | nu
 export function parseEffectSentence(
   ...args: Parameters<typeof parseEffectSentenceUntraced>
 ): ReturnType<typeof parseEffectSentenceUntraced> {
-  const result = parseEffectSentenceUntraced(...args);
+  const lower = args[0].toLowerCase().replace(/’/g, "'");
+  const result =
+    parseEffectSentenceUntraced(...args) ??
+    parsePlayerVerbSentence(lower, args[1], args[2], args[3] ?? {}) ??
+    parseDamageSentence(lower, args[1], args[2], args[3] ?? {}) ??
+    parseBatch4Forms(lower, args[1], args[2], args[3] ?? {}) ??
+    parseAmountForm(...args);
   if (result === null) noteSlotFailure('effect', args[0]);
   return result;
+}
+
+/**
+ * Short sentence shapes over existing ops (EDHREC plan Phase 4 batch 4), tried only once the
+ * sentence-level parse fails.
+ */
+function parseBatch4Forms(
+  s: string,
+  alloc: SlotAllocator,
+  card: OracleCard,
+  opts: { selfSubject?: boolean },
+): Effect[] | null {
+  // "Each player sacrifices a creature of their choice" (Fleshbag Marauder): APNAP choices, then
+  // every chosen creature is sacrificed at once (CR 101.4).
+  if (/^each player sacrifices a creature(?: of their choice)?$/.test(s)) {
+    return [{ op: 'sacrificeEachPlayer', count: 1, filter: 'creature' }];
+  }
+  // "When this Equipment enters, attach it to target creature you control" (Maul of the
+  // Skyclaves): "it" is the entering Equipment itself (CR 301.5).
+  if (
+    opts.selfSubject === true &&
+    card.subtypes.includes('Equipment') &&
+    s === 'attach it to target creature you control'
+  ) {
+    return [{ op: 'attachSelfTo', target: alloc('creature', undefined, 'you') }];
+  }
+  return null;
+}
+
+/**
+ * The amount forms of `amount-forms.ts`, tried only once the sentence itself did not parse:
+ * "…, where X is V", "<verb> … equal to V" and "<effect> for each N". The wrapped sentence is
+ * parsed with an ordinary amount, which is then replaced by the counted value.
+ */
+function parseAmountForm(
+  ...args: Parameters<typeof parseEffectSentenceUntraced>
+): ReturnType<typeof parseEffectSentenceUntraced> {
+  const [sentence, alloc, card, opts] = args;
+  const s = sentence.toLowerCase().replace(/’/g, "'");
+  // A card that announces no X still reads "x" in the wrapped sentence: X is defined right here.
+  const withX: OracleCard = (card.manaCost ?? '').includes('{X}')
+    ? card
+    : { ...card, manaCost: `{X}${card.manaCost ?? ''}` };
+  const bound = (body: string, valuePhrase: string): Effect[] | null => {
+    const value = parseDynamicCountValue(valuePhrase, card, opts);
+    if (value === null) return null;
+    const parsed = parseEffectSentence(body, alloc, withX, { ...opts, xBound: true });
+    if (parsed === null) return null;
+    const { effects, replaced } = bindX(parsed, value);
+    return replaced > 0 ? effects : null;
+  };
+  const where = s.match(/^(.+), where x is (.+)$/);
+  if (where !== null) return bound(where[1] as string, where[2] as string);
+  const equal = rewriteEqualTo(s);
+  if (equal !== null) return bound(equal.body, equal.value);
+  const forEach = s.match(/^(.+?) for each (.+)$/);
+  if (forEach !== null && !/\bfor each\b/.test(forEach[2] as string)) {
+    const per = parseForEachCount(forEach[2] as string, card);
+    if (per === null) return null;
+    const parsed = parseEffectSentence(forEach[1] as string, alloc, card, opts);
+    return parsed === null ? null : scaleByCount(parsed, per);
+  }
+  return null;
 }

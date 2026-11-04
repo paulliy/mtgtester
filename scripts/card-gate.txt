@@ -223,3 +223,17 @@ packages/engine/tests/cards/vivid-creek.test.ts
 packages/engine/tests/cards/razortrap-gorge.test.ts
 packages/engine/tests/cards/fervent-charge.test.ts
 packages/engine/tests/phase4-batch3-grammar.test.ts
+packages/engine/tests/cards/choked-estuary.test.ts
+packages/engine/tests/cards/lotus-cobra.test.ts
+packages/engine/tests/cards/cloudshift.test.ts
+packages/engine/tests/cards/triskelion.test.ts
+packages/engine/tests/cards/ajanis-pridemate.test.ts
+packages/engine/tests/cards/sanguine-bond.test.ts
+packages/engine/tests/cards/krenko-mob-boss.test.ts
+packages/engine/tests/cards/memory-erosion.test.ts
+packages/engine/tests/cards/fleshbag-marauder.test.ts
+packages/engine/tests/cards/blaze.test.ts
+packages/engine/tests/cards/gruesome-fate.test.ts
+packages/engine/tests/cards/offer-immortality.test.ts
+packages/engine/tests/cards/languish.test.ts
+packages/engine/tests/phase4-batch4-grammar.test.ts

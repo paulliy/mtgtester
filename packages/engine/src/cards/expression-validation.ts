@@ -709,7 +709,7 @@ const effectExpressions = {
   flipCoin: {},
   returnRandomExiledWithSourceToHand: {},
   exileAndManifestTarget: {},
-  blinkTarget: {},
+  blinkTarget: { returnUnder: optional(oneOf('owner', 'you')) },
   blinkOneCreatureYouControl: {},
   untapTarget: {},
   tapTarget: {},

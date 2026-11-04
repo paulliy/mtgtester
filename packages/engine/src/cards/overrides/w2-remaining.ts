@@ -353,10 +353,7 @@ export function registerW2RemainingOverrides(): void {
   defineCard(
     'f8e17f4f-080d-4bba-bd05-ca27e94ccecc',
     'Terror of the Peaks',
-    [
-      'Spells your opponents cast that target this creature cost an additional 3 life to cast.',
-      "Whenever another creature you control enters, this creature deals damage equal to that creature's power to any target.",
-    ],
+    ['Spells your opponents cast that target this creature cost an additional 3 life to cast.'],
     {
       ruleStatics: [{ kind: 'targetLifeTax', amount: 3 }],
       triggers: [

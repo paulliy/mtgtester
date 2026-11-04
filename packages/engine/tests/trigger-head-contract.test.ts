@@ -24,7 +24,7 @@ const malformed = [
   { name: 'spell subject', head: { when: 'castsSpell', caster: 'you', subject: { kind: 'self' } } },
   { name: 'missing spell caster', head: { when: 'castsSpell' } },
   { name: 'invalid spell caster', head: { when: 'castsSpell', caster: 'friendly' } },
-  { name: 'invalid player scope', head: { when: 'gainsLife', player: 'opponent' } },
+  { name: 'invalid player scope', head: { when: 'gainsLife', player: 'enchanted' } },
   { name: 'missing step player', head: { when: 'upkeep' } },
   { name: 'fractional spell ordinal', head: { when: 'castsSpell', caster: 'you', ordinal: 1.5 } },
   {

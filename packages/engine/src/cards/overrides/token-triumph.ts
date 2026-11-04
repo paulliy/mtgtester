@@ -161,7 +161,8 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
     '56f1a16a-9f41-41fb-b580-c200bca27cd6',
     'Fortified Village',
     [
-      "As this land enters, you may reveal a Forest or Plains card from your hand. If you don't, this land enters tapped.",
+      // The reveal-land line is read by the interpreter (EDHREC plan Phase 4 batch 4); the def
+      // keeps the same as-enters choice.
     ],
     {
       entersTappedUnless: {
@@ -206,7 +207,6 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
     'Ajani, Caller of the Pride',
     [
       '+1: Put a +1/+1 counter on up to one target creature.',
-      '−3: Target creature gains flying and double strike until end of turn.',
       '−8: Create X 2/2 white Cat creature tokens, where X is your life total.',
     ],
     {
@@ -636,7 +636,10 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
   defineCard(
     '38abf769-e4ef-4b47-9c79-c8cda0b90f6c',
     'Collective Unconscious',
-    ['Draw a card for each creature you control.'],
+    [
+      // The draw line is read by the interpreter (EDHREC plan Phase 4 batch 4); the def keeps the
+      // same draw.
+    ],
     {
       spellAbility: {
         kind: 'spell',
@@ -656,45 +659,38 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
     },
   );
   // Camaraderie
-  defineCard(
-    '9aab386c-d48c-4611-b757-aa69b26cc1b1',
-    'Camaraderie',
-    [
-      'You gain X life and draw X cards, where X is the number of creatures you control. Creatures you control get +1/+1 until end of turn.',
-    ],
-    {
-      spellAbility: {
-        kind: 'spell',
-        targets: [],
-        effects: [
-          {
-            op: 'gainLife',
-            amount: {
-              kind: 'countPermanents',
-              selector: allOf(ofType('Creature'), YOURS),
-              scope: 'you',
-            },
-          },
-          {
-            op: 'draw',
-            count: {
-              kind: 'countPermanents',
-              selector: allOf(ofType('Creature'), YOURS),
-              scope: 'you',
-            },
-          },
-          {
-            op: 'pumpEachUntilEot',
+  defineCard('9aab386c-d48c-4611-b757-aa69b26cc1b1', 'Camaraderie', [], {
+    spellAbility: {
+      kind: 'spell',
+      targets: [],
+      effects: [
+        {
+          op: 'gainLife',
+          amount: {
+            kind: 'countPermanents',
             selector: allOf(ofType('Creature'), YOURS),
-            power: 1,
-            toughness: 1,
+            scope: 'you',
           },
-        ],
-        description:
-          'You gain X life and draw X cards, where X is the number of creatures you control. Creatures you control get +1/+1 until end of turn.',
-      },
+        },
+        {
+          op: 'draw',
+          count: {
+            kind: 'countPermanents',
+            selector: allOf(ofType('Creature'), YOURS),
+            scope: 'you',
+          },
+        },
+        {
+          op: 'pumpEachUntilEot',
+          selector: allOf(ofType('Creature'), YOURS),
+          power: 1,
+          toughness: 1,
+        },
+      ],
+      description:
+        'You gain X life and draw X cards, where X is the number of creatures you control. Creatures you control get +1/+1 until end of turn.',
     },
-  );
+  });
   // Hour of Reckoning: restored in coverage PR02. Convoke is a real payment now, so no override
   // remains.
 }

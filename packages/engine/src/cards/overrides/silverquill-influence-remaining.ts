@@ -23,7 +23,8 @@ const HANDLED_LINE_FIXES: Record<string, string[]> = {
     'unrecognized rules text: "Enchanted creature gets +1/+1 and has vigilance."',
   ],
   'c9fc13d6-bd10-47bc-b2b6-7f67a1f3371e': [
-    "As this land enters, you may reveal a Plains or Swamp card from your hand. If you don't, this land enters tapped.",
+    // The reveal-land line is read by the interpreter (EDHREC plan Phase 4 batch 4); the def
+    // keeps the same as-enters choice.
   ],
   '2598294c-a9a7-4bef-a562-23f297a80536': [
     "Whenever enchanted creature attacks, reveal cards from the top of your library until you reveal an Aura card. You may put that card onto the battlefield. If you don't, put it into your hand. Put the rest on the bottom of your library in a random order.",
@@ -290,7 +291,8 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
     'c9fc13d6-bd10-47bc-b2b6-7f67a1f3371e',
     'Shineshadow Snarl',
     [
-      'unrecognized rules text: "Shineshadow Snarl enters the battlefield tapped unless you reveal a Plains or Swamp card from your hand."',
+      // The reveal-land line is read by the interpreter (EDHREC plan Phase 4 batch 4); the def
+      // keeps the same as-enters choice.
     ],
     { entersTappedUnless: { kind: 'mayRevealCardFromHand', subtypes: ['Plains', 'Swamp'] } },
   );

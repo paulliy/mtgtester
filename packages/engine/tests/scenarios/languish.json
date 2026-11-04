@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "card": "Languish",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Giant",
+      "typeLine": "Creature — Giant",
+      "manaCost": "{5}",
+      "power": "5",
+      "toughness": "5"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "languish-shrinks-every-creature",
+      "title": "Languish: all creatures get -4/-4, yours included",
+      "clauses": [1],
+      "instructions": ["Cast Languish."],
+      "expectedOutcome": "Both Scenario Bears die; Scenario Giant survives as a 1/1.",
+      "seats": {
+        "P1": {
+          "hand": ["Languish"],
+          "battlefield": ["Swamp", "Swamp", "Swamp", "Swamp", "Scenario Bear"]
+        },
+        "P2": { "battlefield": ["Scenario Bear", "Scenario Giant"] }
+      },
+      "script": [{ "player": "P1", "choose": "/^Cast Languish/" }],
+      "expect": [
+        { "zone": { "player": "P1", "zone": "graveyard", "has": ["Scenario Bear", "Languish"] } },
+        { "zone": { "player": "P2", "zone": "graveyard", "has": ["Scenario Bear"] } },
+        { "zone": { "player": "P2", "zone": "battlefield", "has": ["Scenario Giant"] } }
+      ]
+    }
+  ]
+}

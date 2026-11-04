@@ -755,7 +755,14 @@ describe('independent selected spell face contracts', () => {
   );
 
   // Faces authored since this contract was written, each tested with its own batch.
-  const authoredFaces = ['Ettercap // Web Shot']; // mini-pilot batch, tests/cards/mini-pilot
+  // Ettercap: mini-pilot batch, tests/cards/mini-pilot. Curry Favor and Seasonal Ritual: read by
+  // the EDHREC plan Phase 4 batch 4 productions (where-X, add one mana of any color), whose tests
+  // are tests/phase4-batch4-grammar.test.ts.
+  const authoredFaces = [
+    'Ettercap // Web Shot',
+    'Smitten Swordmaster // Curry Favor',
+    'Rosethorn Acolyte // Seasonal Ritual',
+  ];
 
   it.each(
     pinned.cards.filter(

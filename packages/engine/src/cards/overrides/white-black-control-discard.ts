@@ -44,9 +44,7 @@ export function registerWhiteBlackControlDiscardOverrides(): void {
   replaceCard(
     'db25d48e-e5eb-4364-9d7a-f9757ee4ccbe',
     'Necrogen Mists',
-    [
-      'unrecognized rules text: "At the beginning of each player\'s upkeep, that player discards a card."',
-    ],
+    [],
     {
       triggers: [
         triggered(onUpkeep('each'), {
@@ -83,7 +81,7 @@ export function registerWhiteBlackControlDiscardOverrides(): void {
   replaceCard(
     'f488f679-f5d5-4e61-b0c8-0b0eb622df0d',
     'Oppression',
-    ['unrecognized rules text: "Whenever a player casts a spell, that player discards a card."'],
+    [],
     {
       triggers: [
         triggered(onCast('each'), {

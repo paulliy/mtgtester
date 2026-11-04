@@ -335,7 +335,6 @@ export function registerPr10TriggerDoublingOverrides(): void {
     '4c3ad545-b375-44a7-a24e-58baacc4e4b6',
     'Annie Joins Up',
     [
-      'When ~ enters, it deals 5 damage to target creature or planeswalker an opponent controls.',
       'If a triggered ability of a legendary creature you control triggers, that ability triggers an additional time.',
     ],
     {

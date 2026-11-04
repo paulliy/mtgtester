@@ -52,14 +52,14 @@ export function registerMiniPilotOverrides(): void {
   defineCard(
     '48ddba1e-2ad7-463f-9307-d2379a800e51',
     'Mizzium Mortars',
-    ["~ deals 4 damage to target creature you don't control."],
+    [],
     damageWithOverload(4, '{3}{R}{R}{R}', 'Overload {3}{R}{R}{R}'),
   );
 
   defineCard(
     '99fd4b51-1698-4168-9366-a6ea2df22361',
     'Electrickery',
-    ["~ deals 1 damage to target creature you don't control."],
+    [],
     damageWithOverload(1, '{1}{R}', 'Overload {1}{R}'),
   );
 

@@ -83978,7 +83978,7 @@
           }
         },
         {
-          "op": "shuffle"
+          "op": "resolvingSpellShuffleIntoLibrary"
         }
       ],
       "kind": "spell",
