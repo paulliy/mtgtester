@@ -22,7 +22,7 @@ const pool = buildSupportedPool(
 // A sweep game that reaches table talk within the turn cap. The decks come from every modeled
 // card in the pinned fixture, so pinning more cards changes the game: re-pick the seed from
 // `bun run diplomacy-sweep` if this game stops talking.
-const SEED = 'diplomacy-g1';
+const SEED = 'diplomacy-g4';
 
 function seats(): SeatSetup[] {
   return [1, 2, 3, 4].map((n) => {

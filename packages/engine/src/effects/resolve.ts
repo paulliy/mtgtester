@@ -1,3 +1,4 @@
+import { playersInTurnOrderFrom } from '../targets/per-player';
 import { targetingSourceFields } from '../targets/context';
 import type { TargetingSource } from '../targets/context';
 import { copyData } from '../state/copy-data';
@@ -29,7 +30,7 @@ import {
   setCounterCount,
   expireCounterBoundAttackRestrictions,
 } from '../state/counters';
-import { isPermanentCard } from '../cards/definition';
+import { isPermanentCard, PERMANENT_CARD_TYPES } from '../cards/definition';
 import type { ObjectFacts } from '../cards/source-identity';
 import { eventObjectFacts, sourceObjectFacts, sourceObjectState } from '../cards/source-identity';
 import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
@@ -70,7 +71,14 @@ import type {
 } from '../cards/definition';
 import { queueBecomesTargetedTriggers, queueWardTriggers } from '../actions/apply';
 import { evaluateCondition, isChoiceCondition, resolveCondition } from '../cards/condition';
-import { allOf, ofSupertype, ofType, selectMatches, YOURS } from '../cards/selector';
+import {
+  allOf,
+  manaValueAtMost,
+  ofSupertype,
+  ofType,
+  selectMatches,
+  YOURS,
+} from '../cards/selector';
 import type { GameGen } from '../decisions';
 import { optionAt } from '../decisions';
 import { EngineInvariantError, UnmodeledCardError } from '../errors';
@@ -1382,6 +1390,27 @@ export function addSagaLoreCounters(ctx: GameContext, playerId: PlayerId): void 
   }
 }
 
+/** Counters a permanent puts on itself outside an ability's resolution (turning face up). */
+export function placeCountersOn(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  counter: string,
+  count: number,
+): number {
+  return addCounters(
+    ctx,
+    {
+      cardId: perm.cardId,
+      name: perm.name,
+      oracleId: perm.oracleId,
+      controllerId: perm.controllerId,
+    },
+    perm,
+    counter,
+    count,
+  );
+}
+
 /**
  * Put counters on a permanent. `+1/+1` and `-1/-1` feed layer 7c through `perm.counters`, so
  * effective P/T follows immediately; pairs of them annihilate at the next SBA check (CR 704.5r).
@@ -2265,6 +2294,28 @@ function* executeAbilityEffects(
           source: source.name,
           targets: affected.map((p) => p.name),
           keyword: effect.keyword,
+        });
+        break;
+      }
+      case 'loseKeywordsEachUntilEot': {
+        const affected = affectedBy(ctx, source, effect.selector);
+        const lost = effect.keywords.join(' and ');
+        if (affected.length > 0) {
+          ctx.state.effects.push({
+            id: `eff-${ctx.state.nextObjectNum++}`,
+            sourceId: source.cardId,
+            description: describeMassEffect(affected, `lose ${lost}`),
+            targetCardIds: affected.map((p) => p.cardId),
+            targetObjectIds: affected.map((p) => p.id),
+            kind: 'loseKeywords',
+            lostKeywords: [...effect.keywords],
+            timestamp: ctx.state.nextTimestamp++,
+          });
+        } else noop(ctx, 'loseKeywordsEachUntilEot', 'nothingQualifies');
+        emit(ctx, 'loseKeywords', {
+          source: source.name,
+          targets: affected.map((p) => p.name),
+          keywords: [...effect.keywords],
         });
         break;
       }
@@ -4152,6 +4203,15 @@ function* executeAbilityEffects(
         } else loseLife(ctx, player, amountOf(effect.amount));
         break;
       }
+      case 'eachPlayerDraws': {
+        const count = Math.max(0, Math.floor(amountOf(effect.count)));
+        for (const player of playersInApnapOrder(ctx)) {
+          if (player.hasLost || (effect.scope === 'opponents' && player.id === controller.id))
+            continue;
+          yield* drawCards(ctx, player, count);
+        }
+        break;
+      }
       case 'millEachPlayer': {
         const count = Math.max(0, Math.floor(amountOf(effect.count)));
         for (const player of playersInApnapOrder(ctx)) {
@@ -5102,6 +5162,29 @@ function* executeAbilityEffects(
         addCounters(ctx, source, to, effect.counter, moved);
         break;
       }
+      case 'moveAllCounters': {
+        const fromId = ref(effect.from);
+        const toId = ref(effect.to);
+        const from = fromId === null ? undefined : findPermanent(ctx, fromId);
+        const to = toId === null ? undefined : findPermanent(ctx, toId);
+        if (from === undefined || to === undefined) {
+          noop(ctx, 'moveAllCounters.objectGone', 'objectGone');
+          break;
+        }
+        // CR 122.5: moving a counter onto the object it is already on is not possible.
+        if (from.id === to.id) {
+          noop(ctx, 'moveAllCounters.sameObject', 'nothingQualifies');
+          break;
+        }
+        const moving = Object.entries(from.counters).filter(([, count]) => count > 0);
+        for (const [counter] of moving) delete from.counters[counter];
+        if (moving.length > 0) expireCounterBoundAttackRestrictions(from);
+        for (const [counter, count] of moving) {
+          emit(ctx, 'removeCounter', { target: from.name, counter, count });
+          addCounters(ctx, source, to, counter, count);
+        }
+        break;
+      }
       case 'mayPayLifeForTriggerPowerAndCounter': {
         const facts = eventObjectFacts(ctx, scope);
         if (facts === undefined) break;
@@ -6043,6 +6126,120 @@ function* executeAbilityEffects(
           effect.reveal === true,
         );
         if (effect.bind !== undefined) effectBindings.set(effect.bind, foundCardIds);
+        break;
+      }
+      case 'sacrificeThenOpponentsShareTypeOrPunish': {
+        const lifeLoss = amountOf(effect.life);
+        const own = affectedBy(ctx, source, effect.selector).filter(
+          (permanent) => permanent.controllerId === controller.id,
+        );
+        const sacrificed = yield* chooseCard(ctx, {
+          player: controller.id,
+          prompt: `${source.name}: you may sacrifice an artifact, creature, enchantment, land, or planeswalker.`,
+          cards: own,
+          type: 'sacrifice',
+          verb: 'Sacrifice',
+          decline: { type: 'decline', description: "Don't sacrifice", verb: 'Decline' },
+        });
+        if (sacrificed === null) {
+          noop(ctx, 'sacrificeThenOpponentsShareTypeOrPunish', 'nothingQualifies');
+          break;
+        }
+        // "shares a card type with it": its card types as it last existed (CR 608.2h).
+        const types = computeCharacteristics(ctx, sacrificed as EnginePermanent).types.filter(
+          (type) => (PERMANENT_CARD_TYPES as readonly string[]).includes(type),
+        );
+        yield* movePermanentsToGraveyard(ctx, [sacrificed as EnginePermanent], 'sacrifice');
+        const answers: { player: EnginePlayerState; permanent: EnginePermanent | null }[] = [];
+        for (const opponent of playersInApnapOrder(ctx)) {
+          if (opponent.id === controller.id || opponent.hasLost) continue;
+          const sharing = ctx.state.battlefield.filter(
+            (permanent) =>
+              permanent.controllerId === opponent.id &&
+              computeCharacteristics(ctx, permanent).types.some((type) => types.includes(type)),
+          );
+          const chosen = yield* chooseCard(ctx, {
+            player: opponent.id,
+            prompt: `${source.name}: sacrifice a permanent that shares a card type with ${sacrificed.name}, or lose ${lifeLoss} life while ${controller.id} draws a card?`,
+            cards: sharing,
+            type: 'sacrifice',
+            verb: 'Sacrifice',
+            decline: {
+              type: 'decline',
+              description: `Don't sacrifice (lose ${lifeLoss} life)`,
+              verb: 'Decline',
+            },
+          });
+          answers.push({ player: opponent, permanent: chosen as EnginePermanent | null });
+        }
+        const offered = answers.flatMap(({ permanent }) => (permanent === null ? [] : [permanent]));
+        if (offered.length > 0) yield* movePermanentsToGraveyard(ctx, offered, 'sacrifice');
+        for (const { player, permanent } of answers) {
+          if (permanent !== null) continue;
+          loseLife(ctx, player, lifeLoss);
+          yield* drawCards(ctx, controller, 1);
+        }
+        break;
+      }
+      case 'searchLibraryAndOrGraveyardToBattlefield': {
+        const zoneChoice = yield {
+          decisionType: 'general' as const,
+          player: controller.id,
+          prompt: `${source.name}: search your library, your graveyard, or both?`,
+          options: [
+            plainOption({
+              type: 'searchZones',
+              description: 'Search your library and graveyard',
+              verb: 'Search both',
+            }),
+            plainOption({
+              type: 'searchZones',
+              description: 'Search your library',
+              verb: 'Search library',
+            }),
+            plainOption({
+              type: 'searchZones',
+              description: 'Search your graveyard',
+              verb: 'Search graveyard',
+            }),
+          ],
+        };
+        const searchesLibrary = zoneChoice.index !== 2;
+        const searchesGraveyard = zoneChoice.index !== 1;
+        const bound = allOf(effect.filter, manaValueAtMost(amountOf(effect.maxManaValue)));
+        const selectorSource = { cardId: source.cardId, controllerId: controller.id };
+        const matches = [
+          ...(searchesLibrary ? controller.library : []),
+          ...(searchesGraveyard ? controller.graveyard : []),
+        ].filter((card) =>
+          selectMatches(cardZoneCandidate(ctx, card, controller.id), bound, selectorSource),
+        );
+        const outcome = yield {
+          decisionType: 'general' as const,
+          player: controller.id,
+          prompt: `${source.name}: choose a card to put onto the battlefield.`,
+          options: [
+            ...matches.map((card) =>
+              cardOption(ctx, card, {
+                viewerId: controller.id,
+                type: 'findCard',
+                description: `Put ${card.name} onto the battlefield (from your ${card.zone})`,
+                verb: 'Put onto battlefield',
+              }),
+            ),
+            plainOption({
+              type: 'findNothing',
+              description: 'Find nothing',
+              verb: 'Find nothing',
+              role: 'decline',
+            }),
+          ],
+        };
+        const found = matches[outcome.index];
+        if (found !== undefined)
+          yield* moveObject(ctx, found, { zone: 'battlefield', controllerId: controller.id });
+        else noop(ctx, 'searchLibraryAndOrGraveyardToBattlefield', 'nothingQualifies');
+        if (searchesLibrary) shuffleLibrary(ctx, controller);
         break;
       }
       case 'searchLibraryGroup': {
@@ -7562,6 +7759,91 @@ function* executeAbilityEffects(
         });
         break;
       }
+      case 'exileFaceDownPlayable': {
+        const ownerId =
+          effect.library === 'eventPlayer' ? drawRecipient('eventPlayer').id : ref(effect.library);
+        const owner =
+          ownerId === null ? undefined : ctx.state.players.find((p) => p.id === ownerId);
+        if (owner === undefined || owner.hasLost) {
+          noop(ctx, 'exileFaceDownPlayable', 'targetIllegal');
+          break;
+        }
+        const candidates =
+          effect.from === 'search' ? [...owner.library] : owner.library.slice(0, effect.from.look);
+        const chosen = yield* chooseCard(ctx, {
+          player: controller.id,
+          prompt:
+            effect.from === 'search'
+              ? `${source.name}: search ${owner.id}'s library for a card to exile face down.`
+              : `${source.name}: choose a card to exile face down.`,
+          cards: candidates,
+          type: 'exileFaceDown',
+          verb: 'Exile face down',
+          ...(effect.from === 'search'
+            ? {
+                decline: { type: 'findNothing', description: 'Find nothing', verb: 'Find nothing' },
+              }
+            : {}),
+        });
+        if (chosen !== null) {
+          const moved = (yield* moveObject(ctx, chosen, {
+            zone: 'exile',
+            faceDown: true,
+          })) as EngineCardObject | null;
+          if (moved !== null && moved.zone === 'exile') {
+            moved.playableUntilEotBy = controller.id;
+            moved.playableWhileExiled = true;
+            moved.faceDownVisibleTo = [controller.id];
+            if (effect.castOnly) moved.castOnlyUntilEot = true;
+            if (effect.anyType) moved.spendAsAnyTypeWhileExiled = true;
+          }
+        }
+        if (effect.from === 'search') shuffleLibrary(ctx, owner);
+        else {
+          const rest = candidates.filter((card) => card !== chosen && owner.library.includes(card));
+          if (effect.from.rest === 'graveyard') {
+            for (const card of rest) yield* moveObject(ctx, card, { zone: 'graveyard' });
+          } else {
+            ctx.rng.shuffle(rest);
+            for (const card of rest) {
+              owner.library.splice(owner.library.indexOf(card), 1);
+              owner.library.push(card);
+            }
+          }
+        }
+        break;
+      }
+      case 'manifestDread': {
+        const playerId =
+          effect.player === 'eventPlayer' ? drawRecipient('eventPlayer').id : controller.id;
+        const player = playerById(ctx, playerId);
+        const looked = player.library.slice(0, 2);
+        if (looked.length === 0) {
+          noop(ctx, 'manifestDread', 'nothingQualifies');
+          break;
+        }
+        const chosen =
+          looked.length === 1
+            ? looked[0]!
+            : ((yield* chooseCard(ctx, {
+                player: player.id,
+                prompt: `${source.name}: manifest dread — choose the card to put onto the battlefield face down; the other goes to your graveyard.`,
+                cards: looked,
+                type: 'manifestDread',
+                verb: 'Manifest',
+              })) ?? looked[0]!);
+        yield* moveObject(ctx, chosen, {
+          zone: 'battlefield',
+          controllerId: player.id,
+          faceDown: true,
+          manifested: true,
+        });
+        for (const card of looked)
+          if (card !== chosen && player.library.includes(card))
+            yield* moveObject(ctx, card, { zone: 'graveyard' });
+        emit(ctx, 'manifestDread', { player: player.id, source: source.name }, player.id);
+        break;
+      }
       case 'manifestTopForTargetController': {
         const targetId = ref(effect.target);
         const target = targetId === null ? undefined : findPermanent(ctx, targetId);
@@ -7978,6 +8260,51 @@ function* executeAbilityEffects(
             divisionAmounts,
           );
         }
+        break;
+      }
+      case 'takeExtraTurn':
+        // CR 500.7: the most recently created extra turn is taken first.
+        (ctx.state.extraTurns ??= []).unshift(controller.id);
+        emit(ctx, 'extraTurn', { player: controller.id, source: source.name }, controller.id);
+        break;
+      case 'councilVote': {
+        const tally = [0, 0];
+        for (const voterId of playersInTurnOrderFrom(ctx, controller.id)) {
+          const voter = playerById(ctx, voterId);
+          if (voter.hasLost) continue;
+          const outcome = yield {
+            decisionType: 'general' as const,
+            player: voter.id,
+            prompt: `${source.name}: vote for ${effect.choices[0]} or ${effect.choices[1]}.`,
+            options: effect.choices.map((choice) =>
+              plainOption({
+                type: 'vote',
+                description: `Vote for ${choice}`,
+                verb: `Vote for ${choice}`,
+              }),
+            ),
+          };
+          const index = outcome.index === 1 ? 1 : 0;
+          tally[index] = (tally[index] ?? 0) + 1;
+          emit(
+            ctx,
+            'vote',
+            { source: source.name, voter: voter.id, name: effect.choices[index] },
+            voter.id,
+          );
+        }
+        const chosen = (tally[0] ?? 0) > (tally[1] ?? 0) ? effect.more : effect.otherwise;
+        if (chosen.length > 0)
+          yield* executeAbility(
+            ctx,
+            source,
+            { ...ability, effects: chosen },
+            targets,
+            triggerObjectCardId,
+            extraScope,
+            countTargets,
+            divisionAmounts,
+          );
         break;
       }
       case 'conditionalEffect': {
@@ -9555,9 +9882,49 @@ function* lookAtTopN(
     }
   }
 
+  // "Put two of them into your hand" (Stock Up): the further picks, each from what is left.
+  const alsoTaken: EngineCardObject[] = [];
+  if (mayPut !== undefined && (mayPut.count ?? 1) > 1 && mayPut.destination.zone === 'hand') {
+    const selectorSource = { cardId: source.cardId, controllerId: player.id };
+    for (let pick = 1; pick < (mayPut.count ?? 1); pick++) {
+      const remaining = looked.filter(
+        (card) =>
+          player.library.includes(card) &&
+          card !== taken &&
+          selectMatches(cardZoneCandidate(ctx, card, player.id), mayPut.filter, selectorSource),
+      );
+      if (remaining.length === 0) break;
+      const chosen =
+        remaining.length === 1
+          ? remaining[0]!
+          : yield* chooseCard(ctx, {
+              player: player.id,
+              prompt: `${source.name}: put another card from among them into your hand.`,
+              cards: remaining,
+              type: 'putFromTop',
+              verb: 'Put into your hand',
+            });
+      if (chosen === null || chosen === undefined) break;
+      yield* moveObject(ctx, chosen, { zone: 'hand' });
+      alsoTaken.push(chosen);
+    }
+  }
+
   // Move the chosen card first, then reorder only the remainder. Reordering within a library
   // is not a zone change; the chosen card's actual move above uses the normal transition path.
-  const rest = looked.filter((card) => player.library.includes(card) && card !== taken);
+  const rest = looked.filter(
+    (card) => player.library.includes(card) && card !== taken && !alsoTaken.includes(card),
+  );
+  if (effect.rest === 'graveyard') {
+    for (const card of rest) yield* moveObject(ctx, card, { zone: 'graveyard' });
+    emit(
+      ctx,
+      'lookAtTop',
+      { player: player.id, looked: looked.length, took: taken?.name ?? null },
+      player.id,
+    );
+    return;
+  }
   let ordered = rest;
   if (effect.rest === 'topAnyOrder') {
     ordered = yield* orderForLibrary(ctx, source, player, rest, 'top');
@@ -10433,6 +10800,7 @@ export function endUntilEotEffects(ctx: GameContext): void {
     delete perm.copyNameOverride;
   }
   for (const card of ctx.state.exile) {
+    if (card.playableWhileExiled === true) continue;
     if (card.playableUntilEotBy !== undefined) delete card.playableUntilEotBy;
     delete card.castOnlyUntilEot;
     delete card.spendAsAnyColorUntilEot;

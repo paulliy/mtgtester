@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "card": "Thraben Inspector",
+  "scenarios": [
+    {
+      "id": "thraben-inspector-investigates",
+      "title": "Thraben Inspector: entering investigates, and the Clue draws a card",
+      "clauses": [1],
+      "instructions": [
+        "Cast Thraben Inspector; its enters trigger creates a Clue token.",
+        "Pay {2} and sacrifice the Clue to draw a card."
+      ],
+      "expectedOutcome": "The Clue is gone and you drew Plains from the top of your library.",
+      "seats": {
+        "P1": {
+          "hand": ["Thraben Inspector"],
+          "battlefield": ["Plains", "Plains", "Plains"],
+          "libraryTop": ["Plains"]
+        }
+      },
+      "script": [
+        { "player": "P1", "choose": "/^Cast Thraben Inspector/" },
+        { "player": "P1", "choose": "/Clue.*Draw a card|Draw a card/" }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Thraben Inspector"],
+            "lacks": ["Clue"]
+          }
+        },
+        { "zone": { "player": "P1", "zone": "hand", "has": ["Plains"] } },
+        { "event": { "type": "tokenCreated", "count": 1, "payload": "Clue" } }
+      ]
+    }
+  ]
+}

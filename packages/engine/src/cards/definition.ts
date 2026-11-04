@@ -264,6 +264,14 @@ export interface CardDefinition {
   };
   /** Morph is represented as a face-down cast/activation marker in the authored model. */
   morphCost?: ParsedManaCost;
+  /**
+   * Which face-down keyword `morphCost` belongs to: megamorph puts a +1/+1 counter on it as it
+   * is turned face up for that cost (CR 702.37b); disguise gives the face-down permanent ward
+   * {2} (CR 702.168a). Absent for plain morph.
+   */
+  faceDownVariant?: 'megamorph' | 'disguise';
+  /** "As this creature is turned face up, put five +1/+1 counters on it" (Hooded Hydra). */
+  asTurnedFaceUpCounters?: Record<string, number>;
   /** The printed "can't block" characteristic. */
   cantBlock?: boolean;
   /** The printed "can't be blocked" characteristic. */

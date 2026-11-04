@@ -31,7 +31,7 @@ import { noteSlotFailure } from './diagnostics';
  * they are the same event seen from two vantage points (see `TriggerSubject`).
  */
 export const OBJECT_TRIGGER_HEAD_RE =
-  /^when(?:ever)? (.+?) (enters from (?:a|your) graveyard|enters or leaves the battlefield|enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|leaves the battlefield|is put into a graveyard from the battlefield or is put into exile from the battlefield|is put into a graveyard from the battlefield|dies or is put into exile from the battlefield|dies|attacks|becomes tapped|becomes crewed|deals combat damage to a player), (.*)$/;
+  /^when(?:ever)? (.+?) (enters from (?:a|your) graveyard|enters or leaves the battlefield|enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|leaves the battlefield|is put into a graveyard from the battlefield or is put into exile from the battlefield|is put into a graveyard from the battlefield|dies or is put into exile from the battlefield|dies|attacks|becomes tapped|becomes crewed|is turned face up|deals combat damage to a player), (.*)$/;
 
 export const STEP_TRIGGER_HEAD_RE =
   /^at the beginning of (your|each(?: player's)?) (upkeep|end step|combat|first main phase|precombat main phase), (.*)$/;
@@ -349,19 +349,15 @@ function parseTriggerHeadUntraced(firstLine: string, card: OracleCard): ParsedTr
     const match = drawCount ?? draw;
     if (match === null) return null;
     const playerPhrase = match[1] as string;
-    heads = [
-      {
-        when: 'drawsCard',
-        player:
-          playerPhrase === 'you' ? 'you' : playerPhrase === 'an opponent' ? 'opponent' : 'each',
-      },
-    ];
+    const player =
+      playerPhrase === 'you' ? 'you' : playerPhrase === 'an opponent' ? 'opponent' : 'each';
+    heads = [{ when: 'drawsCard', player }];
     if (drawCount !== null) {
       const ordinal = { second: 2, third: 3, fourth: 4, fifth: 5, sixth: 6 }[match[2] as string];
       if (ordinal === undefined) return null;
-      // "your SECOND card each turn" fires once, on that draw — not on every draw from the
-      // second onward, which is what a '>=' here would mean.
-      implicitCondition = { kind: 'eventPlayerDrawCount', cmp: '==', n: ordinal };
+      // "your SECOND card each turn" fires once, on that draw, and it is part of the event, not
+      // an intervening-if (CR 603.4): a later draw before it resolves does not undo it.
+      heads = [{ when: 'drawsCard', player, ordinalThisTurn: ordinal }];
       body = match[3] as string;
     } else {
       body = match[2] as string;
@@ -466,11 +462,14 @@ function parseTriggerHeadUntraced(firstLine: string, card: OracleCard): ParsedTr
                 ? // City of Brass. `becomesTapped` is queued from every tap path already, including
                   // `payAbilityCosts(..., 'tapForMana')` - so tapping the land for mana fires it.
                   ['becomesTapped']
-                : event === 'becomes crewed'
-                  ? // Ghost Ark. Queued only when a crew ability resolves (CR 702.122e), never
-                    // from another "becomes an artifact creature" effect.
-                    ['becomesCrewed']
-                  : ['dealsCombatDamageToPlayer'];
+                : event === 'is turned face up'
+                  ? // Morph, megamorph, disguise and manifest (CR 708.8); queued by `turnFaceUp`.
+                    ['turnedFaceUp']
+                  : event === 'becomes crewed'
+                    ? // Ghost Ark. Queued only when a crew ability resolves (CR 702.122e), never
+                      // from another "becomes an artifact creature" effect.
+                      ['becomesCrewed']
+                    : ['dealsCombatDamageToPlayer'];
     body = m[3] as string;
 
     let subject: TriggerSubject;

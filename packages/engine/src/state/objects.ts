@@ -156,6 +156,8 @@ export interface MoveDestination {
   /** With `faceDown`: it was manifested, so a creature card can be turned face up for its mana
    * cost (CR 701.40b). A face-down spell that resolves is not manifested. */
   manifested?: true;
+  /** It enters face down with ward {2} (disguise, cloak). */
+  faceDownWard?: true;
   /** Library only: where to put it. Defaults to 'top'. Index 0 is the top. */
   libraryPosition?: 'top' | 'bottom';
   /**
@@ -1135,6 +1137,7 @@ export function* moveObject(
     perm.attachedTo = target.attachedTo ?? null;
     if (target.bestowed === true && perm.attachedTo !== null) perm.bestowed = true;
     if (target.manifested === true && perm.faceDown === true) perm.manifested = true;
+    if (target.faceDownWard === true && perm.faceDown === true) perm.faceDownWard = true;
     ctx.state.battlefield.push(perm);
     next = perm;
     if (target.addTypes !== undefined && target.addTypes.length > 0) {
@@ -3455,6 +3458,33 @@ export function queueKeywordCastTriggers(ctx: GameContext, spell: EngineStackObj
         description: `${spell.description}: Replicate ${replicated}`,
       },
     });
+  }
+  // Storm (CR 702.40a): "When you cast this spell, copy it for each other spell that was cast
+  // before it this turn. You may choose new targets for the copies." Every player's spells
+  // count; this one was already counted as it became cast, and no later spell can be "before" it.
+  const stormCount = def.keywords.filter((keyword) => keyword === 'storm').length;
+  if (stormCount > 0) {
+    const before =
+      ctx.state.players.reduce((total, player) => total + player.spellsCastThisTurn, 0) - 1;
+    for (let i = 0; i < stormCount; i++)
+      ctx.state.pendingTriggers.push({
+        controllerId: spell.controllerId,
+        sourceCardId: spell.sourceCardId,
+        sourceOracleId: spell.sourceOracleId,
+        sourceName: spell.description,
+        ability: {
+          kind: 'triggered',
+          targets: [],
+          effects: [
+            {
+              op: 'replicateCopies',
+              count: Math.max(0, before),
+              spell: castSpellSnapshot(ctx, spell, def),
+            },
+          ],
+          description: `${spell.description}: Storm (${Math.max(0, before)})`,
+        },
+      });
   }
   const cascadeCount = def.keywords.filter((keyword) => keyword === 'cascade').length;
   if (cascadeCount === 0) return;

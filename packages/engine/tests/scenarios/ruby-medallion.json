@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "card": "Ruby Medallion",
+  "supportCards": [
+    {
+      "name": "Scenario Ogre",
+      "typeLine": "Creature \u2014 Ogre",
+      "manaCost": "{1}{R}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Elk",
+      "typeLine": "Creature \u2014 Elk",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Hellion",
+      "typeLine": "Creature \u2014 Hellion",
+      "manaCost": "{R}{R}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "ruby-medallion-reduces-red",
+      "title": "Ruby Medallion: a red spell costs {1} less",
+      "clauses": [1],
+      "instructions": ["Cast Scenario Ogre ({1}{R}) with one Mountain."],
+      "expectedOutcome": "Scenario Ogre is cast for {R} alone and is on the battlefield.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Ogre"],
+          "battlefield": ["Ruby Medallion", "Mountain"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Ogre/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Ogre"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Mountain",
+            "equals": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "ruby-medallion-not-other-colors",
+      "title": "Ruby Medallion: a green spell costs full price",
+      "clauses": [1],
+      "instructions": ["With one Forest, Scenario Elk ({1}{G}) cannot be cast."],
+      "expectedOutcome": "Scenario Elk is not castable and stays in your hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Elk"],
+          "battlefield": ["Ruby Medallion", "Forest"]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Elk"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ruby-medallion-not-colored-mana",
+      "title": "Ruby Medallion: it reduces only generic mana",
+      "clauses": [1],
+      "instructions": ["With one Mountain, Scenario Hellion ({R}{R}) cannot be cast."],
+      "expectedOutcome": "Scenario Hellion is not castable and stays in your hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Hellion"],
+          "battlefield": ["Ruby Medallion", "Mountain"]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Hellion"]
+          }
+        }
+      ]
+    }
+  ]
+}

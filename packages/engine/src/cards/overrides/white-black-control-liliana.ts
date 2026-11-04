@@ -20,7 +20,7 @@ export function registerWhiteBlackControlLilianaOverrides(): void {
     '0ba134d8-ee7d-48ec-8dc6-57942b8e9261',
     'Liliana of the Veil',
     [
-      'unrecognized rules text: "+1: Each player discards a card."',
+      // "+1: Each player discards a card." now parses (Phase 4 batch 1).
       'unrecognized rules text: "−2: Target player sacrifices a creature."',
       'unrecognized rules text: "−6: Separate all permanents target player controls into two piles. That player sacrifices all permanents in the pile of their choice."',
     ],

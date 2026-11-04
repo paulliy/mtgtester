@@ -1335,68 +1335,7 @@
         ]
       }
     ],
-    "knownUnmodeled": [
-      {
-        "oracleId": "7c779721-cd1b-4696-9ae9-68ccc284ed2a",
-        "name": "Aetherize"
-      },
-      {
-        "oracleId": "e0445c80-fa53-4c3e-881e-940e9fce7f57",
-        "name": "Braids, Arisen Nightmare"
-      },
-      {
-        "oracleId": "8c52bd39-0586-48ca-b263-17210cf9feb6",
-        "name": "Craterhoof Behemoth"
-      },
-      {
-        "oracleId": "a984db23-40ea-428d-829f-e944267280f8",
-        "name": "Faerie Mastermind"
-      },
-      {
-        "oracleId": "69872a9a-fe54-4e58-940c-89395af71acd",
-        "name": "Finale of Devastation"
-      },
-      {
-        "oracleId": "86bf58f2-7f25-4e10-b797-25e0e8e67769",
-        "name": "Flusterstorm"
-      },
-      {
-        "oracleId": "a8dba58b-2956-492e-ae30-49db2ae68e53",
-        "name": "Mana Geyser"
-      },
-      {
-        "oracleId": "340bbe8b-e987-4c3e-ab4e-9dee63e57d4f",
-        "name": "Phyrexian Metamorph"
-      },
-      {
-        "oracleId": "0c367958-729e-416d-988b-098e90e7a1fd",
-        "name": "Ruby Medallion"
-      },
-      {
-        "oracleId": "463865bc-087e-477b-9e86-84e77f1ad931",
-        "name": "Seedborn Muse"
-      },
-      {
-        "oracleId": "8b27326f-e7b8-4a4d-b589-df459246d19a",
-        "name": "Shadowspear"
-      },
-      {
-        "oracleId": "b2e950fb-cb7e-40a0-a311-5bbdd0477b29",
-        "name": "Sun Titan"
-      },
-      {
-        "oracleId": "1946ded1-5f53-409f-b0a6-5433bb0357d2",
-        "name": "The Ozolith"
-      },
-      {
-        "oracleId": "b380c04b-0bce-4328-8f0a-1425e48bee72",
-        "name": "Urza's Incubator"
-      },
-      {
-        "oracleId": "0355249a-8e4e-41db-9cea-1b901faffbe6",
-        "name": "Witch Enchanter // Witch-Blessed Meadow"
-      }
-    ]
+    "knownUnmodeled": []
   },
   "oracle": [
     {
@@ -4431,7 +4370,7 @@
     },
     {
       "oracleId": "e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe",
-      "name": "Olórin's Searing Light",
+      "name": "Ol\u00f3rin's Searing Light",
       "sha256": "74b48c19f85169bedb91b2a35f8d7d0315725b1c5e5f74d820366ace70a43641"
     },
     {

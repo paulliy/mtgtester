@@ -90,6 +90,11 @@ export type RuleStatic =
       minimumMana?: number;
       /** "As long as you control your commander" — the reduction applies only while true. */
       condition?: import('./condition').Condition;
+      /**
+       * "Creature spells of the chosen type cost {2} less to cast" (Urza's Incubator): no "you
+       * cast", so the reduction applies to every player's spells, not only its controller's.
+       */
+      allPlayers?: true;
     }
   /**
    * "Creature spells you control can't be countered" (Rhythm of the Wild) — a STATE-DEPENDENT
@@ -108,6 +113,12 @@ export type RuleStatic =
   /** Each player's own cast tally applies, including spells cast before the source entered. */
   | { kind: 'spellCastLimit'; category: 'any' | 'noncreature'; limit: number }
   | { kind: 'otherPermanentsEnterTapped'; filter: Selector }
+  /**
+   * "Untap all permanents you control during each other player's untap step" (Seedborn Muse,
+   * CR 502.3): part of the untap turn-based action of every player but the source's controller,
+   * so it uses no stack. `filter` narrows which of the controller's permanents untap.
+   */
+  | { kind: 'untapDuringOthersUntapSteps'; filter?: Selector }
   | { kind: 'suppressObjectTriggers'; events: ('enters' | 'dies')[]; filter: Selector }
   /**
    * "You may cast Dragon spells from the top of your library" (Korlessa, Scale Singer).

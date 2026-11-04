@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "card": "Mana Geyser",
+  "supportCards": [
+    {
+      "name": "Scenario Giant",
+      "typeLine": "Creature \u2014 Giant",
+      "manaCost": "{R}{R}{R}{R}{R}",
+      "power": "5",
+      "toughness": "5"
+    },
+    {
+      "name": "Scenario Imp",
+      "typeLine": "Creature \u2014 Imp",
+      "manaCost": "{R}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "mana-geyser-counts-opponents-tapped-lands",
+      "title": "Mana Geyser: add {R} for each tapped land your opponents control",
+      "clauses": [1],
+      "instructions": [
+        "Cast Mana Geyser: P2 and P3 control five tapped lands between them.",
+        "Cast Scenario Giant ({R}{R}{R}{R}{R}) with the mana."
+      ],
+      "expectedOutcome": "Mana Geyser adds five red mana and Scenario Giant is cast with it.",
+      "seats": {
+        "P1": {
+          "hand": ["Mana Geyser", "Scenario Giant"],
+          "battlefield": ["Mountain", "Mountain", "Mountain", "Mountain", "Mountain"]
+        },
+        "P2": {
+          "battlefield": [
+            {
+              "card": "Forest",
+              "tapped": true
+            },
+            {
+              "card": "Forest",
+              "tapped": true
+            },
+            {
+              "card": "Forest",
+              "tapped": true
+            }
+          ]
+        },
+        "P3": {
+          "battlefield": [
+            {
+              "card": "Island",
+              "tapped": true
+            },
+            {
+              "card": "Island",
+              "tapped": true
+            }
+          ]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Mana Geyser/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Giant/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Giant"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Mana Geyser"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mana-geyser-ignores-untapped-and-own-lands",
+      "title": "Mana Geyser: untapped opponent lands and your own tapped lands add nothing",
+      "clauses": [1],
+      "instructions": [
+        "Cast Mana Geyser: P2 has one tapped Forest and two untapped; your five Mountains are tapped for it.",
+        "Cast Scenario Imp with the one red mana; Scenario Giant stays uncastable."
+      ],
+      "expectedOutcome": "Mana Geyser adds one red mana, Scenario Imp is cast, and Scenario Giant stays in your hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Mana Geyser", "Scenario Giant", "Scenario Imp"],
+          "battlefield": ["Mountain", "Mountain", "Mountain", "Mountain", "Mountain"]
+        },
+        "P2": {
+          "battlefield": [
+            {
+              "card": "Forest",
+              "tapped": true
+            },
+            "Forest",
+            "Forest"
+          ]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Mana Geyser/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Imp/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Imp"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Giant"]
+          }
+        }
+      ]
+    }
+  ]
+}

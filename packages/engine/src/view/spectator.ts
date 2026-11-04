@@ -24,6 +24,7 @@ import type {
   SpectatorState,
 } from '@mtg/shared';
 import { COMMANDER_DAMAGE_LETHAL } from '@mtg/shared';
+import { faceDownExileVisibleTo } from './face-down';
 import { computeCharacteristics } from '../effects/continuous';
 import { manaSourcesFor, scryfallIdOf } from '../state/queries';
 import { copyImageFace, playerById } from '../state/objects';
@@ -483,7 +484,8 @@ export function buildPlayerBoardState(ctx: GameContext, playerId: string): Playe
     ),
     exile: spectator.exile.map((card) => {
       const engineCard = ctx.state.exile.find((candidate) => candidate.id === card.id);
-      if (!isExiledFaceDown(engineCard) || engineCard?.ownerId === playerId) return card;
+      if (!isExiledFaceDown(engineCard) || faceDownExileVisibleTo(engineCard!, playerId))
+        return card;
       return disclose(card, FACE_DOWN_CARD_FIELDS, {
         name: 'Face-down card',
         typeLine: '',

@@ -6,74 +6,74 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 | Failing slot | Cards | Share of slots |
 | ------------ | ----: | -------------: |
-| effect | 3020 | 14.34% |
-| subject | 1084 | 5.73% |
-| line | 601 | 2.89% |
-| trigger event | 505 | 2.11% |
+| effect | 2855 | 13.26% |
+| subject | 1066 | 5.34% |
+| line | 788 | 4.38% |
+| trigger event | 495 | 2.09% |
 | cost | 307 | 1.34% |
 | condition | 184 | 0.81% |
 | target | 168 | 0.79% |
+| card filter | 23 | 0.07% |
 | amount | 20 | 0.12% |
-| card filter | 17 | 0.06% |
 | spell filter | 11 | 0.09% |
 
 `line` means no slot recorded a failure inside the line: the line matched no sentence shape at all.
 
-## effect (3020)
+## effect (2855)
 
-- 69 × `look at the top n cards of your library` (Growing Rites of Itlimoc, Loot, Exuberant Explorer, Stock Up)
+- 34 × `look at the top n cards of your library` (Loot, Exuberant Explorer, Experimental Augury, Lim-Dûl's Vault)
 - 31 × `pay {m}` (Lifecrafter's Bestiary, Leaf-Crowned Visionary, Mind's Eye)
 - 14 × `reveal the top n cards of your library` (Fact or Fiction, Genesis Wave, Grisly Salvage)
 - 14 × `exile the top card of your library` (Blazing Crescendo, Cori Mountain Monastery, Count on Luck)
 - 13 × `choose a creature type` (Distant Melody, Kindred Dominance, Raise the Palisade)
-- 13 × `target player mills n cards` (Hedron Crab, Thought Scour, Grinding Station)
-- 12 × `each opponent discards a card` (Burglar Rat, Virus Beetle, Elderfang Disciple)
 - 12 × `gain control of target creature until end of turn` (Coercive Recruiter, Act of Treason, Song-Mad Treachery)
-- 12 × `investigate` (Deduce, Thraben Inspector, Bygone Bishop)
-- 11 × `return a land you control to its owner's hand` (Simic Growth Chamber, Golgari Rot Farm, Dimir Aqueduct)
 - 11 × `exile the top n cards of your library` (Bonehoard Dracosaur, Sword of Forge and Frontier, Reckless Impulse)
 - 11 × `reveal the top card of your library` (Ad Nauseam, Coiling Oracle, Descendants' Path)
-- 11 × `it deals n damage to target opponent` (Abraded Bluffs, Bristling Backwoods, Jagged Barrens)
-- 10 × `prevent all combat damage that would be dealt this turn` (Fog, Spore Frog, Kami of False Hope)
 - 10 × `look at the top card of your library` (Risen Reef, Explorer's Scope, Sarinth Steelseeker)
+- 10 × `it deals n damage to any target` (Fanatical Firebrand, Pyrite Spellbomb, Weather Maker)
+- 9 × `the ring tempts you` (Fiery Inscription, Ringsight, Claim the Precious)
+- 9 × `attach it to target creature you control` (Celestial Armor, Maul of the Skyclaves, Cliffhaven Kitesail)
+- 9 × `amass orcs n` (Gothmog, Morgul Lieutenant, Saruman's Trickery, Grishnákh, Brash Instigator)
+- 9 × `pay {m}{m}` (Bramble Sovereign, Roar of Resistance, Alesha, Who Smiles at Death)
+- 8 × `discover n` (Hit the Mother Lode, Hidden Nursery, Hidden Volcano)
 
-## subject (1084)
+## subject (1066)
 
-- 40 × `you may` (Phyrexian Metamorph, Mockingbird, Vesuva)
+- 27 × `you may` (Mockingbird, Vesuva, Phantasmal Image)
 - 25 × `~` (Yahenni, Undying Partisan, Marvin, Murderous Mimic, Paradise Druid)
 - 20 × `commander creatures you own` (Agent of the Iron Throne, Inspiring Leader, Guild Artisan)
 - 19 × `target creature you control` (Sylvan Safekeeper, Zack Fair, Royal Treatment)
 - 14 × `all sliver creatures` (Sliver Legion, Sinew Sliver, Winged Sliver)
+- 10 × `historic` (Jhoira's Familiar, Jhoira, Weatherlight Captain, Monumental Henge)
 - 10 × `this creature enters or` (Stitcher's Supplier, Patron of the Arts, Vinereap Mentor)
 - 10 × `all slivers` (Gemhide Sliver, Harmonic Sliver, Crystalline Sliver)
-- 8 × `historic` (Jhoira's Familiar, Jhoira, Weatherlight Captain, Teshar, Ancestor's Apostle)
+- 8 × `another target creature you control` (Giver of Runes, Selfless Savior, Pippin, Guard of the Citadel)
 - 8 × `it` (Biosynthic Burst, Flaming Fist, Fervent Charge)
 - 8 × `opponent` (Goblin Chainwhirler, Voldaren Epicure, Knight Paladin)
 - 8 × `this spacecraft` (Extinguisher Battleship, Larval Scoutlander, Sledge-Class Seedship)
 - 7 × `your commander` (Tome of Legends, Siege-Gang Lieutenant, Loyal Subordinate)
-- 7 × `another target creature you control` (Giver of Runes, Selfless Savior, Pippin, Guard of the Citadel)
 - 6 × `artifact card with mana value n` (Whir of Invention, Trinket Mage, Trophy Mage)
 - 6 × `this artifact enters or` (Ichor Wellspring, Prized Statue, Mycosynth Wellspring)
 
-## line (601)
+## line (788)
 
 - 11 × `modular n` (Arcbound Ravager, Arcbound Crusher, Scrapyard Recombiner)
+- 10 × `when this land enters, it deals n damage to target opponent` (Abraded Bluffs, Bristling Backwoods, Jagged Barrens)
 - 10 × `toxic n` (Myr Convert, Bloated Contaminator, Blightbelly Rat)
 - 9 × `storm` (Grapeshot, Empty the Warrens, Chatterstorm)
+- 8 × `when this land enters, return a land you control to its owner's hand` (Simic Growth Chamber, Golgari Rot Farm, Dimir Aqueduct)
 - 8 × `mobilize n` (Voice of Victory, Bone-Cairn Butcher, Venerated Stormsinger)
 - 8 × `myriad` (Goldlust Triad, Scion of Calamity, Dalek Squadron)
+- 7 × `when this creature enters, each opponent discards a card` (Burglar Rat, Virus Beetle, Elderfang Disciple)
+- 6 × `prevent all combat damage that would be dealt this turn` (Fog, Moment's Peace, Holy Day)
 - 6 × `squad {m}` (Ultramarines Honour Guard, Sicarian Infiltrator, Space Marine Devastator)
 - 5 × `prowess` (Stormcatch Mentor, Queen Brahne, Monastery Swiftspear)
 - 5 × `~ enters tapped with n charge counters on it` (Vivid Creek, Vivid Grove, Vivid Meadow)
 - 5 × `buyback {m}` (Capsize, Sprout Swarm, Mystic Speculation)
 - 4 × `~ doesn't untap during your untap step` (Basalt Monolith, Grim Monolith, Goblin Sharpshooter)
 - 4 × `exalted` (Ignoble Hierarch, Noble Hierarch, Cathedral of War)
-- 4 × `dredge n` (Life from the Loam, Dakmor Salvage, Shenanigans)
-- 4 × `delve` (Treasure Cruise, Murderous Cut, Become Immense)
-- 4 × `target creature you control deals damage equal to its power to target creature or planeswalker you don't control` (Stump Stomp, Bite Down, Master's Rebuke)
-- 4 × `partner` (Rograkh, Son of Rohgahh, Brinelin, the Moon Kraken, Ishai, Ojutai Dragonspeaker)
 
-## trigger event (505)
+## trigger event (495)
 
 - 4 × `at the beginning of each player's draw step, that player draws an additional card` (Dictate of Kruphix, Kami of the Crescent Moon, Spiteful Visions)
 - 4 × `whenever enchanted land is tapped for mana, its controller adds an additional n mana of any color` (Fertile Ground, Trace of Abundance, Buried in the Garden)
@@ -145,36 +145,37 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 2 × `nonland permanent and all other permanents with the same name as that permanent` (Maelstrom Pulse, Echoing Truth)
 - 2 × `artifact, enchantment, or creature with power n or greater` (Exorcise, Make Your Move)
 
+## card filter (23)
+
+- 3 × `nonland permanent` (Emeria Shepherd, Return to the Light Realms, Pull Through the Weft)
+- 2 × `spacecraft` (Seedship Broodtender, Scrounge for Eternity)
+- 2 × `instant and/or sorcery` (Scholar of the Ages, Divergent Equation)
+- 2 × `vehicle` (Broodheart Engine, Imperial Recovery Unit)
+- 1 × `artifact and enchantment` (Brilliant Restoration)
+- 1 × `red instant` (Pyromancer's Goggles)
+- 1 × `bat, lizard, rat,` (Mudflat Village)
+- 1 × `creature card with mana value equal to the number of charge counters on this artifact` (Aether Vial)
+- 1 × `instant and sorcery` (Wisdom of Ages)
+- 1 × `artifact card, up to n target enchantment card, up to n target instant card, up to n target sorcery card, and up to n target planeswalker` (Reconstruct History)
+- 1 × `creature card and all other cards with the same name as that` (Echoing Return)
+- 1 × `card that shares a creature type with that creature` (Conjurer's Mantle)
+- 1 × `artifact creature` (Scarecrone)
+- 1 × `basic land` (Groundskeeper)
+- 1 × `historic permanent card` (Thran Temporal Gateway)
+
 ## amount (20)
 
 - 4 × `that many` (Tolarian Winds, Hex Magic, Illuminate History)
+- 3 × `the greatest power among creatures you control` (Overwhelming Stampede, Pathbreaker Ibex, Ghalta the Unstoppable)
 - 3 × `n` (Arabella, Abandoned Doll, Crypt Rats, Silklash Spider)
-- 2 × `the greatest power among creatures you control` (Overwhelming Stampede, Ghalta the Unstoppable)
 - 2 × `its power` (Goldvein Hydra, Threefold Thunderhulk)
-- 2 × `the amount of life you gained this turn` (Blossoming Bogbeast, Defiling Daemogoth)
 - 2 × `all` (Coalition Relic, Bounty of the Luxa)
 - 1 × `the life they lost this turn` (Wound Reflection)
 - 1 × `this creature's power and as a mutant in addition to its other types` (Master Biomancer)
 - 1 × `that card's power` (Golbez, Crystal Collector)
 - 1 × `the greatest mana value among elementals you control` (Sunderflock)
+- 1 × `the amount of life you gained this turn` (Defiling Daemogoth)
 - 1 × `your life total` (Death's Shadow)
-
-## card filter (17)
-
-- 3 × `nonland permanent` (Emeria Shepherd, Return to the Light Realms, Pull Through the Weft)
-- 2 × `instant and/or sorcery` (Scholar of the Ages, Divergent Equation)
-- 1 × `artifact and enchantment` (Brilliant Restoration)
-- 1 × `red instant` (Pyromancer's Goggles)
-- 1 × `bat, lizard, rat,` (Mudflat Village)
-- 1 × `creature card with mana value equal to the number of charge counters on this artifact` (Aether Vial)
-- 1 × `artifact card, up to n target enchantment card, up to n target instant card, up to n target sorcery card, and up to n target planeswalker` (Reconstruct History)
-- 1 × `creature card and all other cards with the same name as that` (Echoing Return)
-- 1 × `spacecraft` (Seedship Broodtender)
-- 1 × `artifact creature` (Scarecrone)
-- 1 × `basic land` (Groundskeeper)
-- 1 × `historic permanent card` (Thran Temporal Gateway)
-- 1 × `vehicle` (Broodheart Engine)
-- 1 × `green` (Revive)
 
 ## spell filter (11)
 

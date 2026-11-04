@@ -1,0 +1,250 @@
+{
+  "schemaVersion": 1,
+  "card": "Shadowspear",
+  "supportCards": [
+    {
+      "name": "Scenario Troll",
+      "typeLine": "Creature \u2014 Troll",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2",
+      "oracleText": "Hexproof"
+    },
+    {
+      "name": "Scenario Golem",
+      "typeLine": "Creature \u2014 Golem",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2",
+      "oracleText": "Indestructible"
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature \u2014 Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2",
+      "oracleText": ""
+    },
+    {
+      "name": "Scenario Bolt",
+      "typeLine": "Instant",
+      "manaCost": "{R}",
+      "oracleText": "Scenario Bolt deals 3 damage to target creature."
+    },
+    {
+      "name": "Scenario Snuff",
+      "typeLine": "Instant",
+      "manaCost": "{B}",
+      "oracleText": "Destroy target creature."
+    },
+    {
+      "name": "Scenario Veil",
+      "typeLine": "Instant",
+      "manaCost": "{G}",
+      "oracleText": "Target creature gains hexproof until end of turn."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "shadowspear-strips-hexproof",
+      "title": "Shadowspear: opponents' permanents lose hexproof, so their creature can be targeted",
+      "clauses": [2],
+      "instructions": [
+        "Activate Shadowspear's {1} ability.",
+        "Cast Scenario Bolt on P2's Scenario Troll."
+      ],
+      "expectedOutcome": "Scenario Troll loses hexproof and dies to Scenario Bolt.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Bolt"],
+          "battlefield": ["Shadowspear", "Mountain", "Mountain"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Troll"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/lose hexproof and indestructible/"
+        },
+        {
+          "player": "P1",
+          "choose": "Pass priority"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Bolt/",
+          "targets": ["Scenario Troll"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "has": ["Scenario Troll"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "shadowspear-strips-indestructible",
+      "title": "Shadowspear: opponents' permanents lose indestructible, so their creature can be destroyed",
+      "clauses": [2],
+      "instructions": [
+        "Activate Shadowspear's {1} ability.",
+        "Cast Scenario Snuff on P2's Scenario Golem."
+      ],
+      "expectedOutcome": "Scenario Golem loses indestructible and is destroyed.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Snuff"],
+          "battlefield": ["Shadowspear", "Swamp", "Swamp"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Golem"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/lose hexproof and indestructible/"
+        },
+        {
+          "player": "P1",
+          "choose": "Pass priority"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Snuff/",
+          "targets": ["Scenario Golem"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "has": ["Scenario Golem"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "shadowspear-only-opponents",
+      "title": "Shadowspear: your own permanents keep hexproof and indestructible",
+      "clauses": [2],
+      "instructions": ["Activate Shadowspear's {1} ability."],
+      "expectedOutcome": "P2's Scenario Troll loses hexproof; your Scenario Troll and Scenario Golem keep their keywords.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Shadowspear", "Mountain", "Scenario Troll", "Scenario Golem"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Troll"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/lose hexproof and indestructible/"
+        }
+      ],
+      "expect": [
+        {
+          "keywords": {
+            "card": "Scenario Troll",
+            "player": "P2",
+            "lacks": ["hexproof"]
+          }
+        },
+        {
+          "keywords": {
+            "card": "Scenario Troll",
+            "player": "P1",
+            "has": ["hexproof"]
+          }
+        },
+        {
+          "keywords": {
+            "card": "Scenario Golem",
+            "player": "P1",
+            "has": ["indestructible"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "shadowspear-later-grant-wins",
+      "title": "Shadowspear: a hexproof grant after the ability resolves gives hexproof back",
+      "clauses": [2],
+      "instructions": [
+        "Activate Shadowspear's {1} ability.",
+        "After it resolves, P2 casts Scenario Veil on Scenario Troll."
+      ],
+      "expectedOutcome": "Scenario Troll has hexproof again: the later effect wins (CR 613.7).",
+      "seats": {
+        "P1": {
+          "battlefield": ["Shadowspear", "Mountain"]
+        },
+        "P2": {
+          "hand": ["Scenario Veil"],
+          "battlefield": ["Scenario Troll", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/lose hexproof and indestructible/"
+        },
+        {
+          "player": "P2",
+          "choose": "Pass priority"
+        },
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Veil/",
+          "targets": ["Scenario Troll"]
+        }
+      ],
+      "expect": [
+        {
+          "keywords": {
+            "card": "Scenario Troll",
+            "player": "P2",
+            "has": ["hexproof"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "shadowspear-equipped-creature",
+      "title": "Shadowspear: equipped creature gets +1/+1 and has trample and lifelink",
+      "clauses": [1, 3],
+      "instructions": ["Equip Shadowspear to Scenario Bear for {2}."],
+      "expectedOutcome": "Scenario Bear has trample and lifelink.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Shadowspear", "Mountain", "Mountain", "Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/Equip \\{2\\}/",
+          "targets": ["Scenario Bear"]
+        }
+      ],
+      "expect": [
+        {
+          "keywords": {
+            "card": "Scenario Bear",
+            "has": ["trample", "lifelink"]
+          }
+        }
+      ]
+    }
+  ]
+}

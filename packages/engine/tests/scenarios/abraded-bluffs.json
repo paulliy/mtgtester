@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "card": "Abraded Bluffs",
+  "scenarios": [
+    {
+      "id": "abraded-bluffs-pings-opponent",
+      "title": "Abraded Bluffs: it enters tapped and deals 1 damage to the target opponent",
+      "clauses": [1, 2],
+      "instructions": ["Play Abraded Bluffs and target P3 with its enters trigger."],
+      "expectedOutcome": "Abraded Bluffs is tapped and P3 is at 39 life; you stay at 40.",
+      "seats": {
+        "P1": {
+          "hand": ["Abraded Bluffs"]
+        }
+      },
+      "script": [
+        { "player": "P1", "choose": "/^Play Abraded Bluffs/" },
+        { "player": "P1", "choose": "/Abraded Bluffs/", "targets": ["P3"] }
+      ],
+      "expect": [
+        { "tapped": { "card": "Abraded Bluffs", "equals": true } },
+        { "life": { "player": "P3", "equals": 39 } },
+        { "life": { "player": "P1", "equals": 40 } }
+      ]
+    }
+  ]
+}

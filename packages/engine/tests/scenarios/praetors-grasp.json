@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "card": "Praetor's Grasp",
+  "supportCards": [
+    {
+      "name": "Scenario Elk",
+      "typeLine": "Creature \u2014 Elk",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2",
+      "oracleText": ""
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "grasp-search-and-play-land",
+      "title": "Praetor's Grasp: exile a land from P2's library face down and play it",
+      "clauses": [1],
+      "instructions": [
+        "Cast Praetor's Grasp targeting P2 and exile a Forest face down.",
+        "Play that Forest."
+      ],
+      "expectedOutcome": "The Forest is on your battlefield and P2's library was shuffled.",
+      "seats": {
+        "P1": {
+          "hand": ["Praetor's Grasp"],
+          "battlefield": ["Swamp", "Swamp", "Swamp"]
+        },
+        "P2": {
+          "libraryTop": ["Scenario Elk", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Praetor's Grasp/",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P1",
+          "choose": "Exile face down Forest"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Play Forest/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Forest"]
+          }
+        },
+        {
+          "event": {
+            "type": "shuffle",
+            "count": 1
+          }
+        }
+      ]
+    }
+  ]
+}

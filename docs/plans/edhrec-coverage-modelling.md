@@ -1,7 +1,9 @@
 # Plan: modelling the EDHREC coverage list
 
 Status: in progress. Phases retooled 2026-11-02 after decisions D1 to D4 below. Phase 1 steps 1
-to 6 are done; step 7 (offline pins) needs network access to Scryfall. See the Phase 1 status. Baseline: `253d682`. Scope: the 15 unmodeled EDHREC staples and the 5,917 cards in the
+to 7 are done. Phase 3 is done (2026-11-03): all 15 staples
+are modeled. Phase 2 is done; each subsystem lists the cards it still leaves open. See each phase's
+status. Baseline: `253d682`. Scope: the 15 unmodeled EDHREC staples and the 5,917 cards in the
 [EDHREC ready list](edhrec-ready-list.md) that are blocked by exactly one unparsed rules line.
 
 Related: [EDH staple coverage](edh-staple-coverage.md) (earlier tiers),
@@ -185,7 +187,7 @@ and reads test output.
 
 ### Phase 1: parser foundation (D2, D3)
 
-Status (2026-11-02): steps 1 to 6 done; step 7 waits for network access to Scryfall.
+Status (2026-11-03): steps 1 to 7 done.
 
 - The nets are in `snapshots:check`, together with `edhrec:triage --check`.
 - `cards/grammar/` holds `words`, `subject`, `amount`, `condition`, `cost`, `trigger-event`,
@@ -221,11 +223,57 @@ any card's behavior. Each step is a pure refactor proven by the nets in step 1.1
 7. **Offline pins (D3).** A `coverage:pin` command copies the Oracle records of ready-list cards
    from the bank into a pinned fixture, and a ratchet records the modeled set. The command needs
    the bank, so it runs on a machine that has `data/scryfall-oracle-cards.json`.
+   Done: `packages/server/fixtures/edhrec-pinned-oracle.json` pins 8,972 ready-list cards, one
+   per line, and only ever adds or refreshes. `edhrec-modeled.json` records the 3,094 that model.
+   `coverage:pin --check`, which runs in `snapshots:check`, fails offline on a regressed or
+   unrecorded modeled card. So does `edhrec-pins.test.ts` in the card gate.
 
 Exit: both nets unchanged through steps 2 to 5, and `interpret.ts` reduced to card assembly
 (faces, layouts, keyword lines) over the grammar modules.
 
 ### Phase 2: subsystems (D4)
+
+Status (2026-11-03): all five subsystems have landed; each lists the cards it still leaves open.
+
+- **Last-known counters**: The Ozolith. A leave-the-battlefield head over another permanent reads
+  "if it had counters on it" from the departed object's last-known facts (CR 603.10a). "Put
+  those counters on ~" transfers them, and the new `moveAllCounters` op follows CR 122.5 (nothing
+  moves when either object is gone or both are the same object).
+- **Copy with exceptions**: Phyrexian Metamorph. `cards/grammar/copy.ts` reads "You may have this
+  … enter as a copy of …, except …" into `entersAsCopy`. It covers copy candidates, added card
+  types (copiable values, CR 707.9b, with a copy-of-a-copy test), "isn't legendary" and
+  implemented keywords. Clone, Copy Artifact, Mirrormade, Clever Impersonator and nine more
+  one-line cards close, and Sculpting Steel's override is retired. Added subtypes and supertypes
+  ("it's a Bird in addition", Mockingbird) and quoted abilities stay unparsed.
+- **Modal DFC with a permanent front face**: Witch Enchanter. A land face can be played whatever
+  the front face is. A land-face permanent gets only that face's characteristics
+  (`landFacePermanentDefinition`, CR 712.8f), so no front-face static, rule static or trigger
+  reaches it.
+- **Voting**: Plea for Power. The `councilVote` op (CR 701.38a) has every player vote once, in
+  turn order starting with the controller, and each vote is a public event. The Will of the
+  council template covers Tyrant's Choice, and `takeExtraTurn` covers Time Sieve and Temporal
+  Manipulation. Still open: secret votes (Mob Verdict), Council's dilemma per-vote counts
+  (Expropriate), extra votes (Brago's Representative), "whenever players finish voting"
+  triggers, and outcomes that target.
+- **Face-down permanents**: Nantuko Vigilante, Gudul Lurker, Hunted Bonebrute, Hooded Hydra
+  and Innocuous Rat.
+  - A "turned face up" trigger event (CR 708.8), queued by the turn-face-up special action.
+  - Megamorph's +1/+1 counter (CR 702.37b).
+  - Disguise's ward {2} on the face-down permanent (CR 702.168a). A manifested card does not
+    get it.
+  - "As this creature is turned face up, put N counters on it".
+  - The `manifestDread` op (CR 701.62a).
+  - Still open: cloak, turning permanents face down (Cyber Conversion), "its controller
+    manifests dread" (needs the departed creature's last-known controller), and Vesuvan
+    Shapeshifter.
+- **Face-down exile**: Gonti, Lord of Luxury, Thief of Sanity and Praetor's Grasp.
+  - The `exileFaceDownPlayable` op exiles a card face down from the top N or by search.
+  - The permission to cast or play it lasts while the card stays exiled.
+  - Only the player allowed to play it may look at it (CR 406.3), in both the spectator board
+    and the AI's `PlayerView`. The AI view now also redacts a generic face-down exiled card.
+  - "Mana of any type can be spent" makes every pip generic for that cast (`anyTypeCost`).
+  - Still open: face-down piles (Hostile Negotiations, Riddles in the Dark), Scroll Rack and
+    Memory Jar.
 
 Each subsystem adds features, so each brings its own executor tests and contract tests (D1).
 Main-thread rules decisions are listed for each.
@@ -246,6 +294,25 @@ Exit: each subsystem has an executor test for every rule decision in the table, 
 were waiting only on it are modeled or listed with the line that still blocks them.
 
 ### Phase 3: the 15 staples
+
+Status (2026-11-03): done. `bun run staples --complete` passes at 200/200 and `knownUnmodeled`
+is empty. Each staple has a scenario file in `packages/engine/tests/scenarios/` that the engine
+runner and the Card Test Lab both play, a viewer flow in `runner-card-test-lab.spec.ts`, and a
+manifest entry. Every staple stays `implemented-unreviewed` until a human review. Features beyond
+the table below:
+
+- Faerie Mastermind's "second card each turn" is now part of the trigger event
+  (`ordinalThisTurn`), not an intervening-if. A third draw before the trigger resolves no longer
+  counters it (CR 603.4), and a regression scenario covers it.
+- Shadowspear uses a new timestamp-ordered layer-6 `removeKeywords`, so a later grant gives the
+  keyword back (CR 613.7). Arcane Lighthouse's `denyKeywords` still holds against every grant.
+- Flusterstorm adds the Storm keyword (CR 702.40a), which counts every player's spells cast
+  before it this turn, and a general "Counter target <type> spell [unless …]" production.
+- Finale of Devastation adds a two-zone search: library, graveyard or both, may find nothing
+  (CR 701.19b), and a shuffle only when the library was searched.
+- Braids is an override in a new `edhrec-staples` batch over a new
+  `sacrificeThenOpponentsShareTypeOrPunish` op. Opponents answer in APNAP order and sacrifice
+  together.
 
 Ordered so that each staple lands together with the grammar it shares with other ranked cards.
 Ranks are positions in the combined ranking, as in the ready list; the staples file ranks nonland
@@ -275,6 +342,17 @@ standard (D1): a manifest entry, engine and viewer evidence, and passing mutatio
 at 200/200 and `knownUnmodeled` is empty.
 
 ### Phase 4: grammar breadth
+
+Status (2026-11-03): in progress. Two batches have landed, worked from the
+[triage](edhrec-triage.md) queue (its largest effect-slot groups) rather than strictly in the
+order below. The pinned ratchet is at 3,237 modeled.
+
+- **Batch 1:** subjectless "gain N life", investigate, "each opponent discards", "target player
+  mills", Fog, karoo returns, and "it deals N damage to target opponent". It also fixed
+  "target opponent" being read as any player. The corpus net closes 97 cards.
+- **Batch 2:** the "look at the top N" reveal and pick shapes. It also fixed Orb of Dragonkind,
+  which searched its whole library instead of looking at the top seven. The corpus net closes
+  28 cards.
 
 Extend the Phase 1 slots, in order of the cards each closes:
 

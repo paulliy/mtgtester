@@ -786,6 +786,8 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
         message: 'suppression supports enters and dies events only',
       });
   }
+  if (valueKind === 'untapDuringOthersUntapSteps' && record['filter'] !== undefined)
+    validateExpression('selector', record['filter'], `${path}.filter`, issues);
   if (valueKind === 'graveyardToExile') {
     if (!['all', 'opponents'].includes(record['scope'] as string))
       issues.push({

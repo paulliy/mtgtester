@@ -121,7 +121,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   defineCard(
     '932708ae-9d5c-4561-aa8b-0d2222d37fdc',
     'Darkness',
-    ['Prevent all combat damage that would be dealt this turn.'],
+    // The grammar reads Fog's sentence (Phase 4 batch 1); the def stays as the same IR.
+    [],
     {
       spellAbility: {
         kind: 'spell',
@@ -264,12 +265,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   // replacement counted from the creatures that died this turn, so no override remains.
   // Sceptre of Eternal Glory: restored in coverage PR02. The interpreter reads the three-mana
   // ability and its same-name-lands condition, so no override remains.
-  defineCard(
-    '6c85271c-c711-49b0-a72e-9e576c33714d',
-    'Sculpting Steel',
-    ['You may have this artifact enter as a copy of any artifact on the battlefield.'],
-    { entersAsCopy: { selector: ofType('Artifact') } },
-  );
+  // Sculpting Steel: the interpreter reads its "enter as a copy of any artifact" line (the copy
+  // grammar, cards/grammar/copy.ts), so no override remains.
   // Shard of the Nightbringer: restored in coverage PR03. The interpreter reads "if you cast it"
   // from the permanent's cast record and the targeted half-life drain, so no override remains.
   // Shard of the Void Dragon: restored in coverage PR03. The interpreter reads the attack edict

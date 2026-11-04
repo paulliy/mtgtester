@@ -1206,9 +1206,7 @@
   {
     "oracleId": "0a023964-2905-4928-9c3e-dc63e6ebd218",
     "name": "Rakdos Carnarium",
-    "handledLines": [
-      "unrecognized rules text: \"When this land enters, return a land you control to its owner's hand.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -1278,7 +1276,6 @@
     "oracleId": "0ba134d8-ee7d-48ec-8dc6-57942b8e9261",
     "name": "Liliana of the Veil",
     "handledLines": [
-      "unrecognized rules text: \"+1: Each player discards a card.\"",
       "unrecognized rules text: \"−2: Target player sacrifices a creature.\"",
       "unrecognized rules text: \"−6: Separate all permanents target player controls into two piles. That player sacrifices all permanents in the pile of their choice.\""
     ],
@@ -3236,12 +3233,7 @@
   {
     "oracleId": "2679d0dd-ba30-4a1c-b6a0-b3ac6c790496",
     "name": "Boros Charm",
-    "handledLines": [
-      "unrecognized rules text: \"Choose one —\"",
-      "unrecognized rules text: \"• Permanents you control gain indestructible until end of turn.\"",
-      "unrecognized rules text: \"• Target creature gains double strike until end of turn.\"",
-      "unrecognized rules text: \"• ~ deals 4 damage to target player or planeswalker.\""
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Choose one — Boros Charm mode",
@@ -9253,21 +9245,6 @@
     }
   },
   {
-    "oracleId": "6c85271c-c711-49b0-a72e-9e576c33714d",
-    "name": "Sculpting Steel",
-    "handledLines": [
-      "You may have this artifact enter as a copy of any artifact on the battlefield."
-    ],
-    "def": {
-      "entersAsCopy": {
-        "selector": {
-          "kind": "type",
-          "value": "Artifact"
-        }
-      }
-    }
-  },
-  {
     "oracleId": "6c948f71-5c86-450c-8828-df4d8deaf1dd",
     "name": "Intermediate Chirography",
     "handledLines": [
@@ -10758,8 +10735,7 @@
     "oracleId": "77b832a8-a3af-44fe-bc67-72510d292667",
     "name": "Gev, Scaled Scorch",
     "handledLines": [
-      "Ward—Pay 2 life.",
-      "Whenever you cast a Lizard spell, ~ deals 1 damage to target opponent."
+      "Ward—Pay 2 life."
     ],
     "def": {
       "triggers": [
@@ -12670,9 +12646,7 @@
   {
     "oracleId": "8fa3ac81-3dfe-4565-be99-5554f7597b4b",
     "name": "Boros Garrison",
-    "handledLines": [
-      "unrecognized rules text: \"When this land enters, return a land you control to its owner's hand.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -12832,9 +12806,7 @@
   {
     "oracleId": "932708ae-9d5c-4561-aa8b-0d2222d37fdc",
     "name": "Darkness",
-    "handledLines": [
-      "Prevent all combat damage that would be dealt this turn."
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Prevent all combat damage this turn",
@@ -14575,9 +14547,7 @@
   {
     "oracleId": "aa00ae0b-7c0f-427e-8102-ce0e2a6af5df",
     "name": "Orzhov Basilica",
-    "handledLines": [
-      "unrecognized rules text: \"When this land enters, return a land you control to its owner's hand.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -16732,28 +16702,6 @@
             },
             "when": "enters"
           }
-        }
-      ]
-    }
-  },
-  {
-    "oracleId": "bccb06f1-8839-4104-9ffa-c79a817f8378",
-    "name": "Jet Medallion",
-    "handledLines": [
-      "Black spells you cast cost {1} less to cast."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 1
-          },
-          "filter": {
-            "kind": "color",
-            "value": "B"
-          },
-          "kind": "costReduction"
         }
       ]
     }
@@ -19764,6 +19712,60 @@
     }
   },
   {
+    "oracleId": "e0445c80-fa53-4c3e-881e-940e9fce7f57",
+    "name": "Braids, Arisen Nightmare",
+    "handledLines": [
+      "At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each opponent may sacrifice a permanent of their choice that shares a card type with it. For each opponent who doesn't, that player loses 2 life and you draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker; each opponent may sacrifice a permanent sharing a card type with it, and each who does not loses 2 life while you draw a card",
+          "effects": [
+            {
+              "life": {
+                "kind": "const",
+                "n": 2
+              },
+              "op": "sacrificeThenOpponentsShareTypeOrPunish",
+              "selector": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Enchantment"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Planeswalker"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "e0b5b3af-af89-4b91-8b55-947ec095d6f2:back",
     "name": "Web Shot",
     "handledLines": [
@@ -20865,9 +20867,7 @@
   {
     "oracleId": "e91240bc-4a13-4131-9379-5ddac6555f4a",
     "name": "Adaptive Omnitool",
-    "handledLines": [
-      "unrecognized rules text: \"Whenever equipped creature attacks, look at the top six cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -23597,9 +23597,7 @@
   {
     "oracleId": "oracle-adaptive-omnitool",
     "name": "Adaptive Omnitool",
-    "handledLines": [
-      "unrecognized rules text: \"Whenever equipped creature attacks, look at the top six cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -26275,12 +26273,7 @@
   {
     "oracleId": "oracle-boros-charm",
     "name": "Boros Charm",
-    "handledLines": [
-      "unrecognized rules text: \"Choose one —\"",
-      "unrecognized rules text: \"• Permanents you control gain indestructible until end of turn.\"",
-      "unrecognized rules text: \"• Target creature gains double strike until end of turn.\"",
-      "unrecognized rules text: \"• ~ deals 4 damage to target player or planeswalker.\""
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Choose one — Boros Charm mode",
@@ -26349,9 +26342,7 @@
   {
     "oracleId": "oracle-boros-garrison",
     "name": "Boros Garrison",
-    "handledLines": [
-      "unrecognized rules text: \"When this land enters, return a land you control to its owner's hand.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -26515,6 +26506,60 @@
           "trigger": {
             "player": "each",
             "when": "upkeep"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-braids-arisen-nightmare",
+    "name": "Braids, Arisen Nightmare",
+    "handledLines": [
+      "At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each opponent may sacrifice a permanent of their choice that shares a card type with it. For each opponent who doesn't, that player loses 2 life and you draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker; each opponent may sacrifice a permanent sharing a card type with it, and each who does not loses 2 life while you draw a card",
+          "effects": [
+            {
+              "life": {
+                "kind": "const",
+                "n": 2
+              },
+              "op": "sacrificeThenOpponentsShareTypeOrPunish",
+              "selector": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Enchantment"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Planeswalker"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
           }
         }
       ]
@@ -28502,9 +28547,7 @@
   {
     "oracleId": "oracle-darkness",
     "name": "Darkness",
-    "handledLines": [
-      "Prevent all combat damage that would be dealt this turn."
-    ],
+    "handledLines": [],
     "def": {
       "spellAbility": {
         "description": "Prevent all combat damage this turn",
@@ -31967,8 +32010,7 @@
     "oracleId": "oracle-gev-scaled-scorch",
     "name": "Gev, Scaled Scorch",
     "handledLines": [
-      "Ward—Pay 2 life.",
-      "Whenever you cast a Lizard spell, ~ deals 1 damage to target opponent."
+      "Ward—Pay 2 life."
     ],
     "def": {
       "triggers": [
@@ -33864,28 +33906,6 @@
     }
   },
   {
-    "oracleId": "oracle-jet-medallion",
-    "name": "Jet Medallion",
-    "handledLines": [
-      "Black spells you cast cost {1} less to cast."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 1
-          },
-          "filter": {
-            "kind": "color",
-            "value": "B"
-          },
-          "kind": "costReduction"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "oracle-kairi-the-swirling-sky",
     "name": "Kairi, the Swirling Sky",
     "handledLines": [
@@ -34756,7 +34776,6 @@
     "oracleId": "oracle-liliana-of-the-veil",
     "name": "Liliana of the Veil",
     "handledLines": [
-      "unrecognized rules text: \"+1: Each player discards a card.\"",
       "unrecognized rules text: \"−2: Target player sacrifices a creature.\"",
       "unrecognized rules text: \"−6: Separate all permanents target player controls into two piles. That player sacrifices all permanents in the pile of their choice.\""
     ],
@@ -38022,9 +38041,7 @@
   {
     "oracleId": "oracle-orzhov-basilica",
     "name": "Orzhov Basilica",
-    "handledLines": [
-      "unrecognized rules text: \"When this land enters, return a land you control to its owner's hand.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -39341,9 +39358,7 @@
   {
     "oracleId": "oracle-rakdos-carnarium",
     "name": "Rakdos Carnarium",
-    "handledLines": [
-      "unrecognized rules text: \"When this land enters, return a land you control to its owner's hand.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -41142,21 +41157,6 @@
           }
         }
       ]
-    }
-  },
-  {
-    "oracleId": "oracle-sculpting-steel",
-    "name": "Sculpting Steel",
-    "handledLines": [
-      "You may have this artifact enter as a copy of any artifact on the battlefield."
-    ],
-    "def": {
-      "entersAsCopy": {
-        "selector": {
-          "kind": "type",
-          "value": "Artifact"
-        }
-      }
     }
   },
   {

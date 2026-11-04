@@ -5579,14 +5579,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 21,
+      "uniqueOracleIds": 20,
       "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 32,
+      "uniqueOracleIds": 31,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
@@ -6998,6 +6998,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
       "restoredIn": "coverage-pr11b",
       "note": "Containment deleted: the interpreter models split cards, each half cast on its own and both fused from hand (CR 709, 702.102); engine evidence in packages/engine/tests/pr11b-split.test.ts."
+    },
+    {
+      "oracleId": "6c85271c-c711-49b0-a72e-9e576c33714d",
+      "name": "Sculpting Steel",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "edhrec-phase-2",
+      "note": "Registration deleted: the copy grammar (packages/engine/src/cards/grammar/copy.ts) reads its as-enters copy line into the same entersAsCopy artifact selector; copy behavior evidence in packages/engine/tests/cards/phyrexian-metamorph.test.ts."
+    },
+    {
+      "oracleId": "6c85271c-c711-49b0-a72e-9e576c33714d",
+      "name": "Sculpting Steel",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "edhrec-phase-2",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, removed together with the other registration); see the necron-dynasties-remaining.ts entry."
     }
   ]
 }

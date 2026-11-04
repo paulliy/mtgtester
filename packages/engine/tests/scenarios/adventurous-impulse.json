@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "card": "Adventurous Impulse",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}",
+      "power": "1",
+      "toughness": "1"
+    },
+    { "name": "Scenario Relic", "typeLine": "Artifact", "manaCost": "{1}", "oracleText": "" },
+    { "name": "Scenario Charm", "typeLine": "Enchantment", "manaCost": "{1}", "oracleText": "" }
+  ],
+  "scenarios": [
+    {
+      "id": "adventurous-impulse-reveals-creature",
+      "title": "Adventurous Impulse: reveal a creature from the top three into your hand; the rest go to the bottom",
+      "clauses": [1],
+      "instructions": [
+        "Cast Adventurous Impulse: only Scenario Bear is offered, as the other two are neither creatures nor lands.",
+        "Put Scenario Bear into your hand and keep the order of the rest."
+      ],
+      "expectedOutcome": "Scenario Bear is in your hand; Scenario Relic and Scenario Charm are on the bottom of your library.",
+      "seats": {
+        "P1": {
+          "hand": ["Adventurous Impulse"],
+          "battlefield": ["Forest"],
+          "libraryTop": ["Scenario Relic", "Scenario Bear", "Scenario Charm"]
+        }
+      },
+      "script": [
+        { "player": "P1", "choose": "/^Cast Adventurous Impulse/" },
+        { "player": "P1", "choose": "Put Scenario Bear into your hand" },
+        { "player": "P1", "choose": "Keep the current bottom order" }
+      ],
+      "expect": [
+        { "zone": { "player": "P1", "zone": "hand", "has": ["Scenario Bear"] } },
+        {
+          "zone": { "player": "P1", "zone": "library", "has": ["Scenario Relic", "Scenario Charm"] }
+        },
+        { "event": { "type": "revealCard", "count": 1, "payload": "Scenario Bear" } }
+      ]
+    },
+    {
+      "id": "adventurous-impulse-declines",
+      "title": "Adventurous Impulse: taking nothing puts all three on the bottom",
+      "clauses": [1],
+      "instructions": ["Cast Adventurous Impulse and put none of them into your hand."],
+      "expectedOutcome": "Your hand is empty and nothing is revealed.",
+      "seats": {
+        "P1": {
+          "hand": ["Adventurous Impulse"],
+          "battlefield": ["Forest"],
+          "libraryTop": ["Scenario Relic", "Scenario Bear", "Scenario Charm"]
+        }
+      },
+      "script": [
+        { "player": "P1", "choose": "/^Cast Adventurous Impulse/" },
+        { "player": "P1", "choose": "Put none of them" },
+        { "player": "P1", "choose": "Keep the current bottom order" }
+      ],
+      "expect": [
+        { "zone": { "player": "P1", "zone": "hand", "lacks": ["Scenario Bear"] } },
+        { "event": { "type": "revealCard", "count": 0 } }
+      ]
+    }
+  ]
+}

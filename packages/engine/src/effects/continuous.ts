@@ -37,7 +37,7 @@ import { selectedPermanentDefinition } from '../cards/spell-faces';
 import { counterCount, KEYWORD_COUNTERS } from '../state/counters';
 import { evaluateCondition } from '../cards/condition';
 import type { Condition } from '../cards/condition';
-import type { ManaAbilitySpec } from '../cards/ability';
+import type { ManaAbilitySpec, WardCost } from '../cards/ability';
 import type { Characteristics, ContinuousOp, StaticEffect } from '../cards/continuous-types';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches, selectorIsEventOnly } from '../cards/selector';
@@ -45,7 +45,7 @@ import { CREATURE_TYPES } from '../cards/creature-types';
 import { evaluateValue, isDynamicValue } from '../cards/value';
 import type { LayerValueScope } from '../cards/value';
 import type { ManaUnit } from '../mana/cost';
-import { manaValueOf, parseManaCost } from '../mana/cost';
+import { manaValueOf, parseManaCost, type ParsedManaCost } from '../mana/cost';
 import type { EnginePermanent, GameContext } from '../state/types';
 import { digestOf, getCached, sampleCacheHit, setCached } from './layer-cache';
 
@@ -324,6 +324,12 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
       out.push({
         applies,
         op: { layer: 6, addProtection: eff.protectionFrom },
+        timestamp: eff.timestamp,
+      });
+    } else if (eff.kind === 'loseKeywords' && eff.lostKeywords !== undefined) {
+      out.push({
+        applies,
+        op: { layer: 6, removeKeywords: eff.lostKeywords },
         timestamp: eff.timestamp,
       });
     } else if (eff.kind === 'denyKeywords' && eff.deniedKeywords !== undefined) {
@@ -703,6 +709,8 @@ function applyOpTo(
         chars.triggers.push(op.addTrigger);
       } else if ('denyKeywords' in op) {
         chars.keywords = chars.keywords.filter((keyword) => !op.denyKeywords.includes(keyword));
+      } else if ('removeKeywords' in op) {
+        chars.keywords = chars.keywords.filter((keyword) => !op.removeKeywords.includes(keyword));
       } else if ('addKeyword' in op) {
         if (!chars.keywords.includes(op.addKeyword)) {
           chars.keywords.push(op.addKeyword);
@@ -1005,7 +1013,9 @@ function runLayerPass(
             ? transformFace !== undefined
               ? (transformFace.ward ?? null)
               : (def.ward ?? null)
-            : null,
+            : perm.faceDown === true && perm.faceDownWard === true
+              ? FACE_DOWN_WARD
+              : null,
         protectionFrom:
           !perm.faceDown && landFace === undefined
             ? [
@@ -1158,6 +1168,12 @@ export function selectPermanents(
     return chars !== undefined && selectMatches(candidateOf(ctx, perm, chars), selector, source);
   });
 }
+
+/** Ward {2} of a face-down permanent cast with disguise or cloaked (CR 702.168a, 701.58a). */
+const FACE_DOWN_WARD: WardCost = {
+  kind: 'mana',
+  cost: parseManaCost('{2}').cost as ParsedManaCost,
+};
 
 /** Compute one permanent's current characteristics through the layer system. */
 export function computeCharacteristics(ctx: GameContext, perm: EnginePermanent): Characteristics {

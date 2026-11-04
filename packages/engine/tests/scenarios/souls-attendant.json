@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "card": "Soul's Attendant",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "souls-attendant-gains-life",
+      "title": "Soul's Attendant: another creature enters, and you may gain 1 life",
+      "clauses": [1],
+      "instructions": ["Cast Scenario Bear and accept Soul's Attendant's trigger."],
+      "expectedOutcome": "You are at 41 life.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Bear"],
+          "battlefield": ["Plains", "Soul's Attendant"]
+        }
+      },
+      "script": [
+        { "player": "P1", "choose": "/^Cast Scenario Bear/" },
+        { "player": "P1", "choose": "Yes" }
+      ],
+      "expect": [{ "life": { "player": "P1", "equals": 41 } }]
+    },
+    {
+      "id": "souls-attendant-declines",
+      "title": "Soul's Attendant: declining the trigger gains nothing",
+      "clauses": [1],
+      "instructions": ["Cast Scenario Bear and decline Soul's Attendant's trigger."],
+      "expectedOutcome": "You stay at 40 life.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Bear"],
+          "battlefield": ["Plains", "Soul's Attendant"]
+        }
+      },
+      "script": [
+        { "player": "P1", "choose": "/^Cast Scenario Bear/" },
+        { "player": "P1", "choose": "No" }
+      ],
+      "expect": [{ "life": { "player": "P1", "equals": 40 } }]
+    }
+  ]
+}

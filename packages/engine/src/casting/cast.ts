@@ -22,6 +22,7 @@ import { mayCastCommanderFromCommand } from './permissions';
 
 import { evaluateValueIn } from '../effects/values';
 import { emit, debug } from '../log/log';
+import { anyTypeCost } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
 import {
   addGeneric,
@@ -999,6 +1000,12 @@ function* proposeCast(
     obj.spendAsAnyColorUntilEot === true
   )
     cost = { ...cost, spendAsAnyColor: true };
+  if (
+    payload.fromExile === true &&
+    obj.playableUntilEotBy === player.id &&
+    obj.spendAsAnyTypeWhileExiled === true
+  )
+    cost = anyTypeCost(cost);
   // Payment preview narrows targeting continuations before anything is paid.
   const beforeTargetReduction = applyRed(addManaCosts(cost, manaPortionOf(castingAdditionalCosts)));
   // Convoke (CR 702.51): untapped creatures may help pay for this spell.

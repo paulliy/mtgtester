@@ -1,12 +1,15 @@
 {
   "schemaVersion": 1,
   "names": {
+    "Abraded Bluffs": "355b49ef950c5e48265c91e69cf794ee00039ac10068a31500f5cb4d653d9552",
     "Academy Manufactor": "16dc5dc9fb1e0b295a8de67ee15d44b85a304a9bb87e2cb96679a4329c7a0dea",
     "Acrobatic Leap": "fcfacb70bc721c6162126f36d5c5e017cf01518bcfbede8a3c901ae0b55252d1",
     "Adaptive Omnitool": "23f49352f91de30d07f418f38b2658e0e346bf1088ec63c1210be8b44f438b12",
+    "Adventurous Impulse": "5b999e41d3fbb51e1c018f12db59220b912608f690f4414be5fc244fb369300a",
     "Aether Channeler": "340f9c527f82807166ad11f5929dc8ddc727045317a5039a8bdaa6848d967ec1",
     "Aether Hub": "a6641d8a589b60feec25b6da189a097707da60158d6196778bc6365bcccf88ec",
     "Aetheric Amplifier": "22243544923ec334e7ae37b5b5e30c9d3ba8372ba0dea881bcd3f07387177be6",
+    "Aetherize": "3c515f80bbd6a29da8ec2ea11e6f7cedd25aaefc8124820c768c8983acf44648",
     "Aetherspouts": "e9fdf15040b36de302358c10ec5d475df068174c144c585e4b2aca553fcaa666",
     "Aetherworks Marvel": "4b4ead37bd8be62cbb692c14475ead91307cd0aef4fc4b4293a640bb1a8078dd",
     "Agitator Ant": "02655069d32bb3566e265f4d4ee06a65e89067c753c393dcb57eca89f7cbb53a",
@@ -53,6 +56,7 @@
     "Bilbo, Luckwearer // Burglar's Plot": "d251e9cbbeef3703077bb0422ba6f617b5697e4148b560cc472b9b12689a5470",
     "Bilbo's Gambit": "21f251166fa3895f74a7ffd11f2914f0c02a73564ca5ab87a76680b43633bf48",
     "Biotransference": "75cf757c56952b0b058583a69b3c9be8d425de68030a2fe0d1fc3c3fa82ef0e7",
+    "Bite of the Black Rose": "84215ef9486c9d47827953d939042b83729e67e3671cb006dc668ef6309f6395",
     "Black Bolt, Inhuman King": "db53d857faae9d00e9f233eae5e77aaefaf2798661c14cc011220e1f7e5a5c23",
     "Blasphemous Edict": "6994bb591cb20faee9759d2070892083e2cea7b20e36ece110b5cc740790b4d3",
     "Bloomvine Regent // Claim Territory": "923a1d4e57487e65b17e92d1cfa6fdbf5afbd6b3d0f858826bd94ced7b8b6372",
@@ -63,11 +67,13 @@
     "Bolt Bend": "e34731fbc50dbe1140b6c7d27cdd63b5d046c6fddf99c7f3e9e5c03981fd62bc",
     "Boseiju, Who Endures": "e13a9c4ab62181dc08a0dc0efb251f9bfb97aa8fce2c5545561f0b78e868970f",
     "Bottomless Pit": "3e70a3db7bc2437db19f3e7479ebb4eb3a3de4e96aed439d799fc53b2a858d93",
+    "Braids, Arisen Nightmare": "dabca9c4b2522112d857cb7103573005d1735aabf628bcbaadc0858f2e7ef2b5",
     "Bramble Familiar // Fetch Quest": "8217032a57a5b897949603680b0ebc4da62c1c018f5155b2028cd9e893f6525c",
     "Brash Taunter": "811ca00fb845c5c1d6c5a9e1e67d6114c45a9af8f482ad5de6d04549f9dd130c",
     "Breena, the Demagogue": "1a3ea33cc0a417228dcd76cf55f55186215b4f741905684aaeeae17e74d16996",
     "Brokers Hideout": "9bb13d41853e16160f5e38c4c1470a7b91403284e0e1306f001227d86a7435d5",
     "Bull's Strength": "9864fcb04d3b818b414c01e9bdba9611ddfd87b05deeefa82a19936e67ffc26d",
+    "Burglar Rat": "d10871deff9167d8039379d8d7592288c0e22b5f63222c5734372e2de9669e47",
     "Burst of Strength": "206527eb5bdd82c2847b01cfffead941f32c30165781efbf6dd79878e3ccb832",
     "Caged Sun": "391e9b8768e82cdb8d8ab67bb2f38747ce52929cae80bfe7d734d2f37c95cbe8",
     "Call Forth the Tempest": "c48b93c22b22cbd4fc9fdac7bb9504e1651e7a9025e5e3bf58d675be756241f6",
@@ -86,6 +92,7 @@
     "Chrome Mox": "50b6f2fe62f9c9aa09d73975c9121171f1ab274b6700eede6181a025b4b3aaaf",
     "Clever Concealment": "fc013d57e113d5dedda518615a991151aaf8eaebedb9d05877a3ef90838f19fa",
     "Cloak of Confusion": "ad25a794244abd775a070eff00cdd3a8b80efa826b43b47d1f8d46d6f95849bc",
+    "Coercive Portal": "0e8d3f5950c9e0188d416adc24a8abb6b713021ab09b216c2f614f6a2aa25cc8",
     "Colossal Badger // Dig Deep": "e2de0bea44b3ebe4fcbc504727825bd38da4c3ee45e6262a40957a50cf32a070",
     "Combat Calligrapher": "14ed62e99aefd29f2bdb7438445b5787d32bdb14c528e3a05d8e02154c55bc25",
     "Comeuppance": "c51d55e7df204a7b74f5ccfe5f5a58b4349adecad02f0c0fe15b2b1940059d75",
@@ -101,6 +108,7 @@
     "Council's Judgment": "fc8ad609d7a659cefbc858742af30f585db3edc89eca1de03dec248a1e8eb0a1",
     "Counterspell": "6a3c9be444a6680f94cee9f52ce8059456a80b77f407c19a6c004105138b1eec",
     "Cranial Plating": "839a622b17160d32a4e55cddfabe41e707f6da95bdc5f96908679d28ae211580",
+    "Craterhoof Behemoth": "99afcf161845fe00ebe197831a068d35c643b7a7c88608a22c6e65ec98130292",
     "Cryptek": "0e2e938f02e241942dfec466a4126d540bde0e05bf063a6dcfadfec206b85666",
     "Crystal Dragon // Rob the Hoard": "01325c8dd9bb53ff36a07f8d7adebb407a75f90fc3da63121683d0ba8f78fbab",
     "Crystal, Inhuman Princess": "8a355e5c6a459e628aff3fb7c22a648424b60a76abf57295153c83289528c385",
@@ -158,11 +166,13 @@
     "Fabled Passage": "fd064f3f1c8289f7cd3a05433a31b03a8676ba4ce9035cd6706bd37087c9a7ef",
     "Fae of Wishes // Granted": "2d36f7f1294bfa2620150fc4c5cf95701879be7dfb3d719380a56fdc7b9c1e23",
     "Faerie Guidemother // Gift of the Fae": "188852577f595a0fb00608e655d0f57d4d1054ebe6daed2513fae011a534d2b6",
+    "Faerie Mastermind": "c0630be4eec3d7b471c761910e452d409e166fe42d5e49ee682c312df2ccd1dd",
     "Fallen Ideal": "3ba13764d452400831541e37c2b7a16dca91265614e3b979c6d5f27f229e0950",
     "Fang Dragon // Forktail Sweep": "c659b8da42cc11db41431201cc87d9ba1b080fc31749f032b8d7008e5572e58e",
     "Ferocious Werefox // Guard Change": "8ae13a55d7a76704207c7cb4f9b4e671599232e33e7124604003d2d6e32a5a96",
     "Fierce Guardianship": "bed73877ab5abe9f0e996cfb5dcd30da8730631557ce1d42b9238e6660be1a7c",
     "Fight or Flight": "87361a2f2f9561600e683449cee33346035b87c01ba17471e690dbeb90c4a1b7",
+    "Finale of Devastation": "678ba2349c8f28cd8bec04ff652ca826b51c994534a6e82fbf8e8691fcbaf66a",
     "Finneas, Ace Archer": "00e1495e7bebbf263cf6809022878d58016492044ae18a32f092274897ded028",
     "Firemane Commando": "20c0287a3dd96d72f6a5f557813f972125a91a6506ed4b957cf022bf32a2437a",
     "Firkraag, Cunning Instigator": "c4087982a8080ccc5e5214a58683928378c732ba9e32679700dd7e87a7299579",
@@ -173,7 +183,10 @@
     "Flare of Malice": "d358e361fe29eb5d7bb7a2b7150da42213f3ec722749868738013cf835d87ec0",
     "Flayer of the Hatebound": "83e8fbc4e2f4fd410df3e650ed4506fd40c65570897c3e5d7af777e88d35c7bc",
     "Flickerwisp": "2c5047d9ba2f69bc11fae70409c7de721dce424a456f595cdd7c9705b7830404",
+    "Flusterstorm": "545deccdecdfa8ffa11609ba6900608e7cadb1283cce9892ae1ca9b0e6c27870",
     "Foe-Razer Regent": "538901867581226afa96f2206428146725bae81b91a1120ce5a42696a415e4ea",
+    "Fog": "0608fd185825dafe5282c1195d57c6f2ba4ab73b724a60bc8e91edbe266302cf",
+    "Forbidden Alchemy": "765bb1b67d8a3ed38c8c7b6cc4aa271d7afd464c9859f4311e268bacce9b7dc8",
     "Forbidding Spirit": "a15c65a6ecf3766c5ab5a38ef6ed59680bbd503c8bb0098a1924f2cf7fe2e9fc",
     "Force of Negation": "b8a0dc17dcd160b416c672ab9e916b5615465e19a3d3a4a2bddcc23138561cf4",
     "Forge of Heroes": "b3c938ef77cde5231aae8b1bdd9f449aac40013646206f61171c16679c2885c5",
@@ -199,15 +212,18 @@
     "Gingerbread Hunter // Puny Snack": "84dae8d5dda46754cf0940c8ab0ae82c8f482127d11f9a9388faa97907bae26b",
     "Gleeful Arsonist": "b4a3ce9d3e4fe7ed7f998c785be7bba031639225544a3a577952cd0bfe875143",
     "Glen Elendra Archmage": "13ec34cf29e69f3cc44cf9c8d95e931ce380bfb01361c0e6778e12daf91a9578",
+    "Glimpse the Unthinkable": "59f2909db161b8881b303f79dae09c1cf82b2928a47912a542f1c340f2290a72",
     "Glóin the Mighty // Easy Pickings": "1a3fa5186e45225f7060aa55ad0db47276957869b58714f870f621af6f4915ad",
     "Goblin Spymaster": "dc6ec963c76cddaf6add831da4fd2f1eaf97c23fc0b035f66702f1ecefc40736",
     "God-Eternal Rhonas": "9df5c8f3e19a33b551697b160048537779dba35bd4d3e445302bd8e861ed57e6",
     "Gollum, Silent Slinker // Meager Meal": "f8a80a8a9ac6f361fad42de176c66285eb8752ada6fe734511074149f7414ad9",
+    "Gonti, Lord of Luxury": "3d75366c1dcf191f0384f54341c49d028a78c577a69518e0180cc825da1040e1",
     "Grave Pact": "95b1368f1aaf0c60f22dc006f5ffaf16c914c304264770543b7f60cd522b105a",
     "Great Ugly-Looking Goblin // Clap! Snap!": "6d89104f9c19a53bdce3b26d7bd675305cd296e5d138be404ee0c8e9c9cf955a",
     "Grenzo, Havoc Raiser": "5414ea7f762d778522e75b0ee59ad593e5e325900812c02509fba7a40603cb58",
     "Grim Haruspex": "a82c1aeef591b7eaeb584f94d66076ac45cfafde3a65de88cdb36f4ae14866ef",
     "Guard Gomazoa": "c74c28c601c8f2f0527f10baab04b1fe96da7dd1ebac4bff48d4909fffb22eeb",
+    "Gudul Lurker": "2c3eaaf1c2f4d3949f482585cf60eec4ee5ad195f5724d20c4fb0cb4dd2471bf",
     "Gut, True Soul Zealot": "57480a490d28aa07da41e084c8f776cafc6e85a4b1aeffc5d3446ca56da46c47",
     "Harmonic Prodigy": "fe545e2745d11e9dc0bad5601cbd80e3c45b4ad87f0f7ab982ed13eaba7e9b75",
     "Harvest Season": "3f013020bdf1351d15c88eff85e1030be7f07537aff30256a911ba95125b7c9f",
@@ -216,10 +232,12 @@
     "Herald of Secret Streams": "6b4d444a6d00b905def277af0d239e2d03b82ed76db22978a02e438eee9d2e0b",
     "Hexmark Destroyer": "f588c035d61896dcd748e00c9f6ce673da4d8356f8230ec0a7e42394223a4470",
     "High Stride": "7d49b4a305963db938ffbbf0229a4528ca68bf8a22a1ebe6dacde8b1b61c9d3c",
+    "Hooded Hydra": "576562e4f5b294c5c4c48aa1437b3774af944aae580b5b30548a7511712585f3",
     "Horn of Valhalla // Ysgard's Call": "83286b713c5253e0aea484b73a6f065021a0e7f1918c63194f6369a7824f147f",
     "Hour of Reckoning": "5eb44a788bb619b66c8ba3006f639178af53b512c0aedf77cbbbcee0c0e8c135",
     "Human Torch": "f335ec2abc29e719d8092c9d014a85aaf39073c6c40d93548a0d66f8846826a4",
     "Humble Defector": "ab20c63164ea397b563967afac0fda59a57eedf602b7e4ecc3845c3cb092a3dc",
+    "Hunted Bonebrute": "dfa3026556bd64246990c2339a39fcd2d9e5d2e6d7306bb584a2160f23fec682",
     "Hunted Phantasm": "5db639eed21e5fba575b7576efaa1bf465568f35128c648fd81c36856e1b7536",
     "Hunting Wilds": "b673b9cfa9797a896494a8d2751fe9cce08e1787a1e866d6b8b23ce3b3ba5804",
     "Hushbringer": "cb7031304a5cf6ff57f97f9590d97b3d91c0a66a4ac15937926bb0a4810837a5",
@@ -233,6 +251,7 @@
     "Imotekh the Stormlord": "389742a3862725250d3388b5fa5f0200082ca1cf88295b1f2472ff1e31a9c14c",
     "Imp's Mischief": "ff07c155d9e445bf1175adebbfa3860a5c1efa0b21f705535e777b680797f890",
     "Improvisation Capstone": "ed0c8fbc3615cff301866d51874c3a7c0c12fe681f0fc5ef55ed72b419609c62",
+    "Innocuous Rat": "d6c8f84df61474d5541ec36019e5585c86db107dfc028f362257d206886a496b",
     "Insolence": "27763625e27b1e341fb84b8ec0ad0699da88842e1fb68d3cdcfedc28cfa1565e",
     "Inspiring Call": "c650024b4da3fb908aa01ec00751a29d8d6c13255ca027e98bc9a8e0c25cf1d1",
     "Intermediate Chirography": "cc793f0486cdb04f472c10c7449ef03a7813227931f526a6b8d296ccdbabe932",
@@ -274,8 +293,10 @@
     "Loran of the Third Path": "1113e09d5ae37057a26a4ed71a643206eb4ca8bb572b7116b0107ff2ebdd3454",
     "Lurking Predators": "c8e0377f7eee329c48107ab2ea4931f08562c81696cbdf6470863fa619c848d1",
     "Madame Null, Power Broker": "3fd679e8d950b507d99a4a070fcc8d785e9eaae1ffc54f74694a0460a67e32ed",
+    "Magister of Worth": "451bf4625ff0897b90c9916de15185ef9e81de89f0bc1be1fcfb170f7d77c653",
     "Mahadi, Emporium Master": "a30b4eb0457c37784311162d42413ea17546cc3f1b4ac7864fecb5e721713fd2",
     "Malakir Rebirth // Malakir Mire": "e0707453e36b4abf8fa1bdc6bb1870907515b78f1a6deab2881d497ca1431b7f",
+    "Mana Geyser": "df0f3dd0847eb5cf60a9067bfc458c264d65562e36e24db219b209b18d74b3cd",
     "Mana Leak": "03099f6c339bfd576aa3e49f1c4da939008e5b5191c5f3531181a570f22d2ba0",
     "Mana Sculpt": "5298846e6acc7903bd8f2241686004c997e783ec07ff45890abdc9c27b80caee",
     "Mana Vault": "3f4b086c293816418c1076321ea9f445886dc0f7ba70e71c36217c617b92406c",
@@ -313,6 +334,7 @@
     "Mystic Remora": "1d1cc6e3169c56b64038ea4a887b0ebe7e3898aadf6fb5b35221630fe12d04a0",
     "Mystic Sanctuary": "e893509bf714c1d47fb25d292a62e3a3c8a39c7d40915c5f97d1fcabea94688e",
     "Namor, Atlantean King": "8f49c3a3c5992e8672714ddeb6cefbc9c87a0c1fed6b80e0272eda3883f643fa",
+    "Nantuko Vigilante": "cefc5c5d355546425c93640efb61b3ee3ddd9c5b918a48ec7a943a05c1d6722e",
     "Necrogen Mists": "304b0b1c7df5b09fbc24084a3cf9c15f64002fa89eb7364bf966168cd503314a",
     "Necron Deathmark": "9ea0d5feb506abd7f1b877e3898f5a1aa655060699a83b69ca1753ef2eb20ae6",
     "Negate": "95d0b259f772498940d17e63d82acb30a3774388579245c6b672d6c38572fc6e",
@@ -336,13 +358,16 @@
     "Peema Trailblazer": "ac39b4f00910602a5d4f2038f9ed5a9c13f09de367d4c89bc66eaa8efc823f51",
     "Pensive Professor": "d1bbff061cf9949664fef0a0f27c26aae1413e512e17fc6b85db90ca429500e8",
     "Perch Protection": "e9adf2313e4738116e684727c9ebc9efc4d3a1e85ee65f91f9040d618252c80d",
+    "Phyrexian Metamorph": "db37c1301b7b7e3a6f2e48e3ac6f446b39e2aafaae415fb01d5e63f82b129a12",
     "Phyrexian Tower": "a7c3b5164f1d8387cf0508abed41b57dedd73a2e831e98327d32155adb566321",
     "Picklock Prankster // Free the Fae": "8978c741c951dc259bb2025586aa8bff8167e754b21d92f04a5ef62dbd001951",
     "Pillar Launch": "f162418730ef90329bb2d144683d20b18a3b5cf53d6490f138478bb3202e7222",
     "Planar Void": "146d72b8e678921fad84434578e02fd647a18c6cf2733a55c2df2d45080cf066",
     "Plasmancer": "0aedfcf7611280dfaf130e91c553dbc2a0bce3d94f087201255ccd6db34ea22e",
+    "Plea for Power": "90bc766289228956478db3d2320cfc9e240f315526cc885d2f6c04685a5eec71",
     "Pollen-Shield Hare // Hare Raising": "e139ce1467890defe4570012d05bc71e1a9f3ab90acd017ac9b18133ededd3e1",
     "Power Pack": "f25d0c1c02ee8d07ec889e88ed83b5c610fbd4e0f8b87c4a266f761ced1248af",
+    "Praetor's Grasp": "fddcf76ddaa649c4b02d29e534d7f28189bece057e52a5e23b4dec382c4696c5",
     "Pramikon, Sky Rampart": "d702c231a2760d45148ddb29a6d6a89916d769c2b1f04d12b6e4d7e709733a9a",
     "Professional Face-Breaker": "7ff1be0d60a259e5c662c128d0e177fda06a929189549c760de547ff27ae3658",
     "Promise of Loyalty": "2c168d95b98fc29bee9fb1d7a562d50070400c32fe9b4476196eb820d301b472",
@@ -354,6 +379,7 @@
     "Ragavan, Nimble Pilferer": "81603cf20aba624f8e0b93e53359993a31f047d317768f92676a51c5dd6f60dd",
     "Rakdos Charm": "9a0e59d80b1bbc7de43858d5ed720217e11ecd7c85afc8c65ac96fae7e1f24e2",
     "Rankle, Master of Pranks": "069593a2fb3dd2d4d28b5741f452ef3bad6c9662a747880792f1daa37e96836f",
+    "Rattleclaw Mystic": "6b626f6d1d0ea2e4ebbfc670bdeb0a26c0c1594593fbd065253411862c4ac40f",
     "Reality Shift": "bf2b48653701608f7cd081357bccad6a95ae8127597042346b72439a9ca9600a",
     "Realm-Cloaked Giant // Cast Off": "a24caaea63b65839b17e8182c2a9fcbb7f2649e98e1ef2bfebe8d7066394dbdc",
     "Rebuff the Wicked": "e071417dfbbacce2cd007719b51c66433b5cb3fbf85cd829a9f3cc366e9a237e",
@@ -374,12 +400,14 @@
     "Roaming Throne": "a968a6b40b698d78552e6a7decbaa1da3634382d27f36587e8eecb5dd6bfd150",
     "Rosethorn Acolyte // Seasonal Ritual": "cdc42fa27547837c3d909e26b860727ac825f98c1ef4535874aa1e5680f01896",
     "Rowan Kenrith": "3a74578b3722e817e7cc110ea95ba5daa61fe9b1c49f448855f1177c8f2f240a",
+    "Ruby Medallion": "9de2af87febd426c1c1dff25c63ed3a46ec3f34df43de5c2d76148a320e9e0d2",
     "Rule of Law": "91cc78622dd7a33386e448320654ea40d3c61eeac6a26d7183e521fb1898dbe3",
     "Rumor Gatherer": "d5b18ba7956be7118501bc486db3177a7bc8ebca881b24c031834ada00e7a19c",
     "Sage of Fables": "1423e05e7e7fc5bf74c33c20c1f368ebd1f4224c9c5112df484d654181aeb382",
     "Sagu Wildling // Roost Seek": "f997e2d8f7092364903b38c042797174867921f3f62d277c3d8976be2282394b",
     "Saheeli, Radiant Creator": "5fcdbdb1b0038c993dbfaa0905e47e68330a156d06911f6f550ed0be28799102",
     "Saheeli, Sublime Artificer": "22041222bc7cfde403035d47087197fba7f989d871488b4dcf41108c33aa408b",
+    "Sail into the West": "026e83682a1ec7bbf9fd97a7bdeeca88206da7a6d641f92350052bc19f353d7b",
     "Sarkhan, the Dragonspeaker": "150f68361dcf9407b348c0f71a49eff08d630c6cfe6b36dc335196bf58d6af81",
     "Satoru, the Infiltrator": "61506504750f785352e9318aa606928d134418fd60f7036ea0a1c5c971b5b564",
     "Sautekh Immortal": "26aff26dc163a5d13ad98195d74dcfd5d2260ab0cfad68928b3ac90c457ec21a",
@@ -394,8 +422,10 @@
     "Sea Hag // Aquatic Ingress": "8aaeed4c8480ac8d07de92a833494b6a12f561a713bd9c9717d1d01c6ce79ebc",
     "Secluded Courtyard": "a3fd538bad9823de3269c43d5faf906abeebfada84e68558ea9d28ac86d512f2",
     "Securitron Squadron": "3db94733b1abcfae54bce169a795378f4e2edacbc9cbdfab1258d3983cd83a90",
+    "Seedborn Muse": "935a4f4894058f7e912b131fe97931e288fe276c4766cb0d4cb320604a14a6aa",
     "Sejiri Shelter // Sejiri Glacier": "2c459001fbd313a67f4cd39b878d4d1b1a854a24d191dba61fc8011d163cc218",
     "Selfless Squire": "debd579414a52e7e7cc408bd06d4bf3f3862f42f108196365a37c3f6d72dc6a6",
+    "Shadowspear": "8c191023b8029044c8e9f8eedc9f7bbe9b3e11231c5c15f3560897de3abc5ad4",
     "Shadrix Silverquill": "b3b27d30058d4a228950317e549d90e7bef45703c68c5015257378827bebfd5a",
     "Shanna, Sisay's Legacy": "be30e80acedc68cd53c18c247fe2816c890d8ff2c2523baf34373e9f7ba8b565",
     "Shard of the Nightbringer": "4c7f7779f494bcf3ef533a08cb6e5c2569a29f7845c354e2d31bb827a925ae3a",
@@ -405,6 +435,7 @@
     "Shielded by Faith": "d2578f1927629d5684b6da7702f4465f5a18d70f92da7acb414b894f52510fc7",
     "Silver Surfer, Galactus's Herald": "76cfc351217a248650d6247412f17b37a4286ee0df779aacb1d91bcdb8ac3efb",
     "Silverflame Squire // On Alert": "3f14e028196c80fd66eb72f20601363ab48397a85ca2842f5e5f6aac3ba3c3bf",
+    "Simic Growth Chamber": "7e5d25c3efd3238ae420531ebef357c7e0629b6e9d387a69afffcce9638314ea",
     "Siren Stormtamer": "9dc28d7eaa27c68a9f2ffde7ccae5f28f74f2b27baff511fe5b11e2d822cfc2d",
     "Siren's Call": "71bf9bf7017f371060a98c8ac43be0cf459f3029cb115c1a86bce0f4a09a467f",
     "Sivitri, Dragon Master": "f3e1cc6f16f788685d23f89ea4ee1c95a0122e8053265fb69cc371ac01490b64",
@@ -417,11 +448,13 @@
     "Songbirds' Blessing": "7d9f1b0535da2a928bbec915f98ab6f0a26234f87f4645072076ea205b2374c0",
     "Soul Snare": "994bae03a713184fd5257172464dc1836785328517d213136f2f45d5c4e89855",
     "Soul-Guide Lantern": "93d00eeabc06f7b9cfb8d6d1ca01b8a6cce4ba7b83905a680d591c3aa5fb93ec",
+    "Soul's Attendant": "3f6d9899065a463a00de879573aa2249d1898fc0ed130d9098137cd7ca689995",
     "Spirit Mantle": "79c2fc57e55befcba9e2dd8eb331e2c5345be9dfbfdd5d40915c0a3b23f1d543",
     "Stone of Erech": "e15fa33bcd6283f55ec175f1ea4d8b2bb245aea1eecebaafd8cabe51bded8f84",
     "Stonehide Ancient // Warning Tremor": "54d28d41801700b34e48dc3ca0abc3bf58b3b9392c525366ae3ea71994ae7bb2",
     "Stormshriek Feral // Flush Out": "b3f35f2f7f727ffbbf729a33e782b9abdda4b079cd9d23c29e46c1a4c4e73a53",
     "Stubborn Denial": "bdaa41055aa2184ee87b53e0f78353afe78283a064ccc310e3e6984e5c136f40",
+    "Sun Titan": "08c2cf665d45ba911d1a04180a470311b3bf07b4137fb314c499e999afaeb776",
     "Sunbird's Invocation": "be08ff24672e75b23eb03cf79632ba6e9a3860e772bfddd47a592d65e9cfa160",
     "Sunforger": "0ae447b31437ff4e3964e1bf8803b551ef7725ee95a31e9d6b168e860bb57b0e",
     "Sweet-Gum Recluse": "b7a06140e0022bef19a4a2e2b61c1d72dd7173f61421f1acfe414da5eee7e541",
@@ -446,10 +479,13 @@
     "The Haunt of Hightower": "85b6c7f3a24a701a82b107aa6b27a0a07cc0796d83f3dcc13d7bedfbd6870e31",
     "The One Ring": "76bff693c91a40628a95ba5fffe76c9a2a69394a1c0d7ac9fbf8d99cffd3a9ad",
     "The Ooze": "b62bfacc5e4d0b4478a1a3f5f84b9e78cdc6f381d6ad8ce42fa9b7da74521387",
+    "The Ozolith": "7a940d7903bdd75ee579e196b382f71ccc373ba1bd9467ee1dbbbf0d4e2160cc",
     "The Thing": "dec568f46ce9c8621a6b2415d420f8b28d7a761f7a8d2c118642fc04c78b2792",
     "The War in Heaven": "34c80ebeb69c7ccffe0143a205a1e08d8fd70ccd80065988f57c57a202a77f26",
     "Their Number Is Legion": "41b6712d088b044a1c75a4ef825006b3774b32f673850f48bb207b10e00e24a6",
+    "Thief of Sanity": "44352787996dea003a98385b5d1be63c2be3915a0495ff7de8a606115a9e5bf0",
     "Thoughtseize": "d2e0f7e4f16b67aaa4e218a844393a9d167c546a9aab748d908b19661eeda516",
+    "Thraben Inspector": "fcd14a5bfbf9f6717d8df2d44be298396b7f08c547154a4bf7b76057cec09f82",
     "Thran Vigil": "4681435b0c455851a223742deeff9a29d95407a7824801e31dda9b479173a4ad",
     "Thranduil, Sindarin Liege // Silvan Rally": "06196599de9628e77fa563e390ba68a34de2d6a4fdde7d513ddf13a6d7d5b54e",
     "Threadbind Clique // Rip the Seams": "2fdefa93c2d2af46398c3ef33c0c9f231818b156a6bd5d285bfb4bdc52395043",
@@ -477,10 +513,13 @@
     "Twining Twins // Swift Spiral": "f11ba0e7da5bb2a6cde3005674f15eddd0fc5f3f7199c2ca7bc7b40628f15186",
     "Twinmaw Stormbrood // Charring Bite": "e4a32ed5cdf16ad1fb9782f2c9f950187b93d3bc5befa3ad637ab498438aef21",
     "Two-Headed Hunter // Twice the Rage": "70dec740af0e3e6c4f015d8d470f00534cff0f462eee0ec033eb51718854f54d",
+    "Tyrant's Choice": "a56919c3dcd1a8f5f626f7b08f37346decc85d51bdf35e350a1e4c09bd8e7272",
     "Tyrant's Familiar": "c5d073e500e8090f478e0095df9dde5215600f5bcb347d0fbdbbe526b8c020c4",
     "Unbreakable Formation": "c0032b5882eac2dab751071f0e153e44f6a893f674fca87ab09b69e8ff7ecc22",
     "Unquestioned Authority": "5d0e89744f57d1bf4d94be83fcbcb618da89c0cd6c207d13a9fda6543b080e57",
     "Untimely Malfunction": "c731141ee3cdd337701555e3faa7e8e928fa3bd92117178dbff35c38bf0e9333",
+    "Unwanted Remake": "039df5e4afbef277bbf5485927687b2a3057bea3370e0960afba4cfd6bb96bb2",
+    "Urza's Incubator": "b3c2b488d20fba1c17600e29bf2aa6d817d4deb4dfbc342bf10c72193c501678",
     "Urza's Saga": "af2957876fc1d3287eaf3740e9ebd11d65924f1b62859fb62ceafb570f68d339",
     "Valakut Awakening // Valakut Stoneforge": "2e683a7ba9875b006532bca335c30b7a298b97b5f42738a0c93a6e1149953c7c",
     "Vandalblast": "939b8ed66d5dbaf542fffb63c75bf1731472c8b7a57754627419c4e7c35b25e9",
@@ -510,6 +549,7 @@
     "Winds of Abandon": "62f5a964ae8ac62e5f3f9ee30f5c4ca887a1b438d1af4bcf43ae256998350143",
     "Wings of the Cosmos": "5fdd92ddcf33636bf004e8dec6f43428aab4951e034712138ad64148d9998c08",
     "Wishclaw Talisman": "446292abbc221b8f58e0346f35354508e4d3b7866c29c7f51c91c80a046f1c33",
+    "Witch Enchanter // Witch-Blessed Meadow": "2a9f0691d6b84a5df0d54fb2f95fbd6ad65bb9833b374a59546fa2def782bc9e",
     "Witch's Web": "d172c753f92c81cf243538129405b14792d3855b02124a7cb1779ca958ed8b79",
     "Woodland Acolyte // Mend the Wilds": "f5f96c0e61f618a8aea7980123840a07d9f904deb5d24d378f6cf1af1bce8d9d",
     "Xenagos, God of Revels": "dfe7ee79fe6d8e7918e0add5c742cc721d77cd73ae45bb751f259920e02ed91a",
@@ -893,6 +933,38 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "026e83682a1ec7bbf9fd97a7bdeeca88206da7a6d641f92350052bc19f353d7b": {
+      "oracleId": "0a8956d0-bd37-4305-8443-4df043796f6e",
+      "scryfallId": "b293d4cb-0920-46ef-bf4e-fc6a796df290",
+      "name": "Sail into the West",
+      "manaCost": "{2}{G}{U}",
+      "cmc": 4,
+      "colors": [
+        "G",
+        "U"
+      ],
+      "colorIdentity": [
+        "G",
+        "U"
+      ],
+      "typeLine": "Instant",
+      "supertypes": [],
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "oracleText": "Will of the council — Starting with you, each player votes for return or embark. If return gets more votes, each player returns up to two cards from their graveyard to their hand, then you exile Sail into the West. If embark gets more votes or the vote is tied, each player may discard their hand and draw seven cards.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Will of the council"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "02f950e975bf811cef8ede88a5696b037d694e2bf32db8f67bafc9c9060c6648": {
       "oracleId": "a2192c80-c48f-44e2-807c-2f9ee1aa1152",
       "scryfallId": "19f20c0a-22be-4a9c-96ce-4047f7a2d424",
@@ -958,6 +1030,34 @@
       ],
       "subtypes": [],
       "oracleText": "Counter target spell unless its controller pays {3}.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "039df5e4afbef277bbf5485927687b2a3057bea3370e0960afba4cfd6bb96bb2": {
+      "oracleId": "90aa9113-5148-486b-a1c6-b4230e6d3e41",
+      "scryfallId": "7b54447f-1daf-4352-b5c3-3c0ec8b8f4d0",
+      "name": "Unwanted Remake",
+      "manaCost": "{W}",
+      "cmc": 1,
+      "colors": [
+        "W"
+      ],
+      "colorIdentity": [
+        "W"
+      ],
+      "typeLine": "Instant",
+      "supertypes": [],
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "oracleText": "Destroy target creature. Its controller manifests dread. (That player looks at the top two cards of their library, then puts one onto the battlefield face down as a 2/2 creature and the other into their graveyard. If it's a creature card, it can be turned face up any time for its mana cost.)",
       "power": null,
       "toughness": null,
       "loyalty": null,
@@ -1117,6 +1217,34 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "0608fd185825dafe5282c1195d57c6f2ba4ab73b724a60bc8e91edbe266302cf": {
+      "oracleId": "27e9db49-7af7-4bef-ad4c-bf5dfb92030d",
+      "scryfallId": "bbc3152e-7b3b-4ac6-8b33-abfebde216aa",
+      "name": "Fog",
+      "manaCost": "{G}",
+      "cmc": 1,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "typeLine": "Instant",
+      "supertypes": [],
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "oracleText": "Prevent all combat damage that would be dealt this turn.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "06196599de9628e77fa563e390ba68a34de2d6a4fdde7d513ddf13a6d7d5b54e": {
       "oracleId": "f6771d32-395e-4832-b33d-cbc12dff1516",
       "scryfallId": "481870ee-d1f7-421b-86e1-570ea933bbbc",
@@ -1231,6 +1359,38 @@
       "loyalty": null,
       "defense": null,
       "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "08c2cf665d45ba911d1a04180a470311b3bf07b4137fb314c499e999afaeb776": {
+      "oracleId": "b2e950fb-cb7e-40a0-a311-5bbdd0477b29",
+      "scryfallId": "f03f6cab-3800-4b90-921a-01f384cef35f",
+      "name": "Sun Titan",
+      "manaCost": "{4}{W}{W}",
+      "cmc": 6,
+      "colors": [
+        "W"
+      ],
+      "colorIdentity": [
+        "W"
+      ],
+      "typeLine": "Creature — Giant",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "oracleText": "Vigilance\nWhenever this creature enters or attacks, you may return target permanent card with mana value 3 or less from your graveyard to the battlefield.",
+      "power": "6",
+      "toughness": "6",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Vigilance"
+      ],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
@@ -1675,6 +1835,32 @@
       "defense": null,
       "keywords": [
         "Flying"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "0e8d3f5950c9e0188d416adc24a8abb6b713021ab09b216c2f614f6a2aa25cc8": {
+      "oracleId": "eea4feef-2595-4ed2-92a0-11ccb3e7d40e",
+      "scryfallId": "18e8c013-1a56-4894-a4f5-6ec564bcbe9b",
+      "name": "Coercive Portal",
+      "manaCost": "{4}",
+      "cmc": 4,
+      "colors": [],
+      "colorIdentity": [],
+      "typeLine": "Artifact",
+      "supertypes": [],
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [],
+      "oracleText": "Will of the council — At the beginning of your upkeep, starting with you, each player votes for carnage or homage. If carnage gets more votes, sacrifice this artifact and destroy all nonland permanents. If homage gets more votes or the vote is tied, draw a card.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Will of the council"
       ],
       "layout": "normal",
       "commanderLegality": "legal",
@@ -3321,6 +3507,48 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "2a9f0691d6b84a5df0d54fb2f95fbd6ad65bb9833b374a59546fa2def782bc9e": {
+      "oracleId": "0355249a-8e4e-41db-9cea-1b901faffbe6",
+      "scryfallId": "62061e7c-cf19-4f03-b8fa-2bdba62d6b0b",
+      "name": "Witch Enchanter // Witch-Blessed Meadow",
+      "manaCost": "{3}{W}",
+      "cmc": 4,
+      "colors": [
+        "W"
+      ],
+      "colorIdentity": [
+        "W"
+      ],
+      "typeLine": "Creature — Human Warlock",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Warlock"
+      ],
+      "oracleText": "When this creature enters, destroy target artifact or enchantment an opponent controls.",
+      "power": "2",
+      "toughness": "2",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "modal_dfc",
+      "commanderLegality": "legal",
+      "isBasicLand": false,
+      "backFace": {
+        "name": "Witch-Blessed Meadow",
+        "typeLine": "Land",
+        "oracleText": "As this land enters, you may pay 3 life. If you don't, it enters tapped.\n{T}: Add {W}.",
+        "manaCost": null,
+        "colors": [],
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null
+      }
+    },
     "2ac080c4876bc2f35e96353ef6b83f20e9f7f9cb8b4a5d89fd8ffa7507eb2417": {
       "oracleId": "8a0e35ac-6c03-4922-b3b4-e419419fe3d7",
       "scryfallId": "6b8e6435-7de4-41d5-bc7d-8e24c11897d0",
@@ -3474,6 +3702,38 @@
       "loyalty": null,
       "defense": null,
       "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "2c3eaaf1c2f4d3949f482585cf60eec4ee5ad195f5724d20c4fb0cb4dd2471bf": {
+      "oracleId": "bde976c6-afed-44bb-8e3d-4103289dff5e",
+      "scryfallId": "c84d5344-2d15-43da-b536-27e0d308606b",
+      "name": "Gudul Lurker",
+      "manaCost": "{U}",
+      "cmc": 1,
+      "colors": [
+        "U"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "typeLine": "Creature — Salamander",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Salamander"
+      ],
+      "oracleText": "This creature can't be blocked.\nMegamorph {U} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its megamorph cost and put a +1/+1 counter on it.)",
+      "power": "1",
+      "toughness": "1",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Megamorph"
+      ],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
@@ -4018,6 +4278,35 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "355b49ef950c5e48265c91e69cf794ee00039ac10068a31500f5cb4d653d9552": {
+      "oracleId": "ca7d093c-0533-493f-9ad3-8af30118fbfc",
+      "scryfallId": "19e96521-b4ce-4a36-a887-200e05ccc804",
+      "name": "Abraded Bluffs",
+      "manaCost": null,
+      "cmc": 0,
+      "colors": [],
+      "colorIdentity": [
+        "R",
+        "W"
+      ],
+      "typeLine": "Land — Desert",
+      "supertypes": [],
+      "types": [
+        "Land"
+      ],
+      "subtypes": [
+        "Desert"
+      ],
+      "oracleText": "This land enters tapped.\nWhen this land enters, it deals 1 damage to target opponent.\n{T}: Add {R} or {W}.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "36384c4717eb98cb0c4b0d99f53f8926e38be5eaf929cc46a2d73fc78583599b": {
       "oracleId": "9ba89c25-5302-414f-a2ec-436b8981999d",
       "scryfallId": "2d9e3793-7ddc-45c5-b25d-acd5cb96026f",
@@ -4480,6 +4769,34 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "3c515f80bbd6a29da8ec2ea11e6f7cedd25aaefc8124820c768c8983acf44648": {
+      "oracleId": "7c779721-cd1b-4696-9ae9-68ccc284ed2a",
+      "scryfallId": "1e5530fc-0291-4a17-b048-c5d24e6f51d8",
+      "name": "Aetherize",
+      "manaCost": "{3}{U}",
+      "cmc": 4,
+      "colors": [
+        "U"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "typeLine": "Instant",
+      "supertypes": [],
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "oracleText": "Return all attacking creatures to their owner's hand.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "3ce31ea519774646789dc1b1d4327135f344b35248ec34024a4c7d3c594f1d6d": {
       "oracleId": "b01d61cc-9844-4191-86a0-f2db6d42d6e5",
       "scryfallId": "84056124-1a6f-4274-bee2-74cf0debddb5",
@@ -4506,6 +4823,41 @@
       "defense": null,
       "keywords": [
         "Overload"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "3d75366c1dcf191f0384f54341c49d028a78c577a69518e0180cc825da1040e1": {
+      "oracleId": "d5be0ff6-39d9-4f9f-a028-e62dc38463f2",
+      "scryfallId": "fbbb3aef-af1f-4b77-b7d6-64cfd706a9d9",
+      "name": "Gonti, Lord of Luxury",
+      "manaCost": "{2}{B}{B}",
+      "cmc": 4,
+      "colors": [
+        "B"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "typeLine": "Legendary Creature — Aetherborn Rogue",
+      "supertypes": [
+        "Legendary"
+      ],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Aetherborn",
+        "Rogue"
+      ],
+      "oracleText": "Deathtouch\nWhen Gonti enters, look at the top four cards of target opponent's library, exile one of them face down, then put the rest on the bottom of that library in a random order. You may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell.",
+      "power": "2",
+      "toughness": "3",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Deathtouch"
       ],
       "layout": "normal",
       "commanderLegality": "legal",
@@ -4662,6 +5014,37 @@
       "oracleText": "This artifact doesn't untap during your untap step.\nAt the beginning of your upkeep, you may pay {4}. If you do, untap this artifact.\nAt the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you.\n{T}: Add {C}{C}{C}.",
       "power": null,
       "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "3f6d9899065a463a00de879573aa2249d1898fc0ed130d9098137cd7ca689995": {
+      "oracleId": "045a9d3d-c20d-427f-a77b-0bffc6f55526",
+      "scryfallId": "3223c0ac-cc22-4886-8919-11273b477cc7",
+      "name": "Soul's Attendant",
+      "manaCost": "{W}",
+      "cmc": 1,
+      "colors": [
+        "W"
+      ],
+      "colorIdentity": [
+        "W"
+      ],
+      "typeLine": "Creature — Human Cleric",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Cleric"
+      ],
+      "oracleText": "Whenever another creature enters, you may gain 1 life.",
+      "power": "1",
+      "toughness": "1",
       "loyalty": null,
       "defense": null,
       "keywords": [],
@@ -5058,6 +5441,40 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "44352787996dea003a98385b5d1be63c2be3915a0495ff7de8a606115a9e5bf0": {
+      "oracleId": "68b51d58-7566-4a26-8c31-8da32799bea7",
+      "scryfallId": "94946d6c-1edb-46e9-a5ae-0ca2a016a7cd",
+      "name": "Thief of Sanity",
+      "manaCost": "{1}{U}{B}",
+      "cmc": 3,
+      "colors": [
+        "B",
+        "U"
+      ],
+      "colorIdentity": [
+        "B",
+        "U"
+      ],
+      "typeLine": "Creature — Specter",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Specter"
+      ],
+      "oracleText": "Flying\nWhenever this creature deals combat damage to a player, look at the top three cards of that player's library, exile one of them face down, then put the rest into their graveyard. You may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell.",
+      "power": "2",
+      "toughness": "2",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Flying"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "446292abbc221b8f58e0346f35354508e4d3b7866c29c7f51c91c80a046f1c33": {
       "oracleId": "81c70ae7-3c18-4c9b-8505-e4db9e0e6518",
       "scryfallId": "69d0f5bd-ccea-49b2-bd79-ad5e4d850cf5",
@@ -5113,6 +5530,41 @@
       "defense": null,
       "keywords": [
         "Enchant"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "451bf4625ff0897b90c9916de15185ef9e81de89f0bc1be1fcfb170f7d77c653": {
+      "oracleId": "0429d146-332f-4fb0-8273-c73679ca6d47",
+      "scryfallId": "e32b7d4b-60ac-4970-9af0-8c50623f6d64",
+      "name": "Magister of Worth",
+      "manaCost": "{4}{W}{B}",
+      "cmc": 6,
+      "colors": [
+        "B",
+        "W"
+      ],
+      "colorIdentity": [
+        "B",
+        "W"
+      ],
+      "typeLine": "Creature — Angel",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Angel"
+      ],
+      "oracleText": "Flying\nWill of the council — When this creature enters, starting with you, each player votes for grace or condemnation. If grace gets more votes, each player returns each creature card from their graveyard to the battlefield. If condemnation gets more votes or the vote is tied, destroy all creatures other than this creature.",
+      "power": "4",
+      "toughness": "4",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Flying",
+        "Will of the council"
       ],
       "layout": "normal",
       "commanderLegality": "legal",
@@ -5879,6 +6331,36 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "545deccdecdfa8ffa11609ba6900608e7cadb1283cce9892ae1ca9b0e6c27870": {
+      "oracleId": "86bf58f2-7f25-4e10-b797-25e0e8e67769",
+      "scryfallId": "f900eeb7-7c45-44bc-ad3a-0bbe594ecf50",
+      "name": "Flusterstorm",
+      "manaCost": "{U}",
+      "cmc": 1,
+      "colors": [
+        "U"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "typeLine": "Instant",
+      "supertypes": [],
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "oracleText": "Counter target instant or sorcery spell unless its controller pays {1}.\nStorm (When you cast this spell, copy it for each spell cast before it this turn. You may choose new targets for the copies.)",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Storm"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "54d28d41801700b34e48dc3ca0abc3bf58b3b9392c525366ae3ea71994ae7bb2": {
       "oracleId": "3fb5fe93-f61a-46bc-85ef-419ed1ea3522",
       "scryfallId": "59677b9d-2978-4c32-aaab-dc8f7eb5a7d8",
@@ -6106,6 +6588,39 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "576562e4f5b294c5c4c48aa1437b3774af944aae580b5b30548a7511712585f3": {
+      "oracleId": "637ddd65-112d-40f7-9bab-a61724d9165c",
+      "scryfallId": "828f752e-cf94-4d0e-913d-aa425a005849",
+      "name": "Hooded Hydra",
+      "manaCost": "{X}{G}{G}",
+      "cmc": 2,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "typeLine": "Creature — Snake Hydra",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Snake",
+        "Hydra"
+      ],
+      "oracleText": "This creature enters with X +1/+1 counters on it.\nWhen this creature dies, create a 1/1 green Snake creature token for each +1/+1 counter on it.\nMorph {3}{G}{G}\nAs this creature is turned face up, put five +1/+1 counters on it.",
+      "power": "0",
+      "toughness": "0",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Morph"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "577296054aa293bdd2a53ec72c948a29dcbf2c6c698ec8faf8b5a157d8e64267": {
       "oracleId": "33fa949c-f29e-4a98-9381-ecfa9e5c3f6d",
       "scryfallId": "a0d824ea-75d2-4de5-923b-813bba44e80b",
@@ -6253,6 +6768,38 @@
         "defense": null
       }
     },
+    "59f2909db161b8881b303f79dae09c1cf82b2928a47912a542f1c340f2290a72": {
+      "oracleId": "552f0163-a19d-4671-888f-044fc0354875",
+      "scryfallId": "c54a2256-673d-4d93-9e1d-7790bf254881",
+      "name": "Glimpse the Unthinkable",
+      "manaCost": "{U}{B}",
+      "cmc": 2,
+      "colors": [
+        "B",
+        "U"
+      ],
+      "colorIdentity": [
+        "B",
+        "U"
+      ],
+      "typeLine": "Sorcery",
+      "supertypes": [],
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "oracleText": "Target player mills ten cards.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Mill"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "5abee12570a0c0eb3f59f49417651ea5416ef70a985d592cf714d5457c008c0c": {
       "oracleId": "f8bf3d91-cb50-48ce-88c6-cdcb37b64b57",
       "scryfallId": "721df547-d777-4247-b130-a4e247445b04",
@@ -6331,6 +6878,34 @@
         "Book"
       ],
       "oracleText": "Whenever an opponent discards a card, you may draw a card.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "5b999e41d3fbb51e1c018f12db59220b912608f690f4414be5fc244fb369300a": {
+      "oracleId": "5bf49f39-b3d5-4148-8dc2-b5b5011769d2",
+      "scryfallId": "30811fb2-5767-4106-9a8d-6091f61969c6",
+      "name": "Adventurous Impulse",
+      "manaCost": "{G}",
+      "cmc": 1,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "typeLine": "Sorcery",
+      "supertypes": [],
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "oracleText": "Look at the top three cards of your library. You may reveal a creature or land card from among them and put it into your hand. Put the rest on the bottom of your library in any order.",
       "power": null,
       "toughness": null,
       "loyalty": null,
@@ -7090,6 +7665,34 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "678ba2349c8f28cd8bec04ff652ca826b51c994534a6e82fbf8e8691fcbaf66a": {
+      "oracleId": "69872a9a-fe54-4e58-940c-89395af71acd",
+      "scryfallId": "b10d99bf-b2ce-4443-b924-ff0eb8be1033",
+      "name": "Finale of Devastation",
+      "manaCost": "{X}{G}{G}",
+      "cmc": 2,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "typeLine": "Sorcery",
+      "supertypes": [],
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "oracleText": "Search your library and/or graveyard for a creature card with mana value X or less and put it onto the battlefield. If you search your library this way, shuffle. If X is 10 or more, creatures you control get +X/+X and gain haste until end of turn.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "696f038611a9d1540a151ab63ccc13e36fd4aa355a54806e741eb6a44f77442b": {
       "oracleId": "2549bc57-9ffb-4053-9f10-f2a5f792b845",
       "scryfallId": "a0e2098f-1d94-491a-a7e9-a45a9f69e3a8",
@@ -7225,6 +7828,41 @@
       "loyalty": null,
       "defense": null,
       "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "6b626f6d1d0ea2e4ebbfc670bdeb0a26c0c1594593fbd065253411862c4ac40f": {
+      "oracleId": "84c9d8b8-8dd9-41fc-a2b6-af1ffb9090f9",
+      "scryfallId": "4fb6c2e0-eeaa-4d60-aab7-2b8c739a9278",
+      "name": "Rattleclaw Mystic",
+      "manaCost": "{1}{G}",
+      "cmc": 2,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G",
+        "R",
+        "U"
+      ],
+      "typeLine": "Creature — Human Shaman",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Shaman"
+      ],
+      "oracleText": "{T}: Add {G}, {U}, or {R}.\nMorph {2} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)\nWhen this creature is turned face up, add {G}{U}{R}.",
+      "power": "2",
+      "toughness": "1",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Morph"
+      ],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
@@ -7891,6 +8529,37 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "765bb1b67d8a3ed38c8c7b6cc4aa271d7afd464c9859f4311e268bacce9b7dc8": {
+      "oracleId": "66d65cda-e3d1-4a00-8ff3-c6d5ef0ab0c1",
+      "scryfallId": "04def7e3-10e4-4733-8c19-8fa6e4469086",
+      "name": "Forbidden Alchemy",
+      "manaCost": "{2}{U}",
+      "cmc": 3,
+      "colors": [
+        "U"
+      ],
+      "colorIdentity": [
+        "B",
+        "U"
+      ],
+      "typeLine": "Instant",
+      "supertypes": [],
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "oracleText": "Look at the top four cards of your library. Put one of them into your hand and the rest into your graveyard.\nFlashback {6}{B} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Flashback"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "76bff693c91a40628a95ba5fffe76c9a2a69394a1c0d7ac9fbf8d99cffd3a9ad": {
       "oracleId": "3aa83ed2-f48b-4ce6-a614-2c54ddf50538",
       "scryfallId": "d5806e68-1054-458e-866d-1f2470f682b2",
@@ -7978,6 +8647,32 @@
       "keywords": [
         "Enchant"
       ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "7a940d7903bdd75ee579e196b382f71ccc373ba1bd9467ee1dbbbf0d4e2160cc": {
+      "oracleId": "1946ded1-5f53-409f-b0a6-5433bb0357d2",
+      "scryfallId": "9341ed06-53db-4604-b60a-3ea9129afbc2",
+      "name": "The Ozolith",
+      "manaCost": "{1}",
+      "cmc": 1,
+      "colors": [],
+      "colorIdentity": [],
+      "typeLine": "Legendary Artifact",
+      "supertypes": [
+        "Legendary"
+      ],
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [],
+      "oracleText": "Whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on The Ozolith.\nAt the beginning of combat on your turn, if The Ozolith has counters on it, you may move all counters from The Ozolith onto target creature.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
@@ -8265,6 +8960,33 @@
         "loyalty": null,
         "defense": null
       }
+    },
+    "7e5d25c3efd3238ae420531ebef357c7e0629b6e9d387a69afffcce9638314ea": {
+      "oracleId": "046f5783-cc7b-416a-8cf6-2bcef9c2cc1a",
+      "scryfallId": "212d97c5-c144-483b-b42e-00623477e928",
+      "name": "Simic Growth Chamber",
+      "manaCost": null,
+      "cmc": 0,
+      "colors": [],
+      "colorIdentity": [
+        "G",
+        "U"
+      ],
+      "typeLine": "Land",
+      "supertypes": [],
+      "types": [
+        "Land"
+      ],
+      "subtypes": [],
+      "oracleText": "This land enters tapped.\nWhen this land enters, return a land you control to its owner's hand.\n{T}: Add {G}{U}.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
     },
     "7ee3ea23ccddee7bf5fb93516721c0f1203123c2ecd92d2bbb91f4d5a7d0e38f": {
       "oracleId": "629b3aee-b8fd-495a-a988-815a0aaf3e82",
@@ -8834,6 +9556,36 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "84215ef9486c9d47827953d939042b83729e67e3671cb006dc668ef6309f6395": {
+      "oracleId": "4db04e23-e1da-4c41-9dba-5502dfff73fb",
+      "scryfallId": "254d1363-1204-41d2-9799-34484a3eb211",
+      "name": "Bite of the Black Rose",
+      "manaCost": "{3}{B}",
+      "cmc": 4,
+      "colors": [
+        "B"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "typeLine": "Sorcery",
+      "supertypes": [],
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "oracleText": "Will of the council — Starting with you, each player votes for sickness or psychosis. If sickness gets more votes, creatures your opponents control get -2/-2 until end of turn. If psychosis gets more votes or the vote is tied, each opponent discards two cards.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Will of the council"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "84dae8d5dda46754cf0940c8ab0ae82c8f482127d11f9a9388faa97907bae26b": {
       "oracleId": "f762c225-1c8c-4f12-aa88-c8c89e0a7185",
       "scryfallId": "e77a8fd4-af5f-42b3-a87e-788baf2562dd",
@@ -9363,6 +10115,36 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "8c191023b8029044c8e9f8eedc9f7bbe9b3e11231c5c15f3560897de3abc5ad4": {
+      "oracleId": "8b27326f-e7b8-4a4d-b589-df459246d19a",
+      "scryfallId": "939c6e19-4b27-4023-bb9c-ae440f91e21c",
+      "name": "Shadowspear",
+      "manaCost": "{1}",
+      "cmc": 1,
+      "colors": [],
+      "colorIdentity": [],
+      "typeLine": "Legendary Artifact — Equipment",
+      "supertypes": [
+        "Legendary"
+      ],
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Equipment"
+      ],
+      "oracleText": "Equipped creature gets +1/+1 and has trample and lifelink.\n{1}: Permanents your opponents control lose hexproof and indestructible until end of turn.\nEquip {2}",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Equip"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "8cb9a3f6392ac36ec4284df171a42f02873b495754ca2f156053cb4478cf43a4": {
       "oracleId": "05d7222b-cc08-4f1f-8e35-6058599572ba",
       "scryfallId": "443b6f30-1493-4d48-93d9-a91e22a7ebb3",
@@ -9612,6 +10394,36 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "90bc766289228956478db3d2320cfc9e240f315526cc885d2f6c04685a5eec71": {
+      "oracleId": "8b886623-5c96-48dd-a3d2-fd5865c58ff5",
+      "scryfallId": "9f810725-4da0-460f-b50e-a7ff05aa4c00",
+      "name": "Plea for Power",
+      "manaCost": "{3}{U}",
+      "cmc": 4,
+      "colors": [
+        "U"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "typeLine": "Sorcery",
+      "supertypes": [],
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "oracleText": "Will of the council — Starting with you, each player votes for time or knowledge. If time gets more votes, take an extra turn after this one. If knowledge gets more votes or the vote is tied, draw three cards.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Will of the council"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "91aabae6b80a8744b6cd0ed2cb400bb224b003ed6907b5c9bebfcdbad5394cb8": {
       "oracleId": "fda61506-ed79-47fd-badd-639185297913",
       "scryfallId": "d1af92a1-a86a-43eb-82fd-394f1168111e",
@@ -9759,6 +10571,36 @@
       "oracleText": "Search your library for a card, put that card into your hand, discard a card at random, then shuffle.",
       "power": null,
       "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "935a4f4894058f7e912b131fe97931e288fe276c4766cb0d4cb320604a14a6aa": {
+      "oracleId": "463865bc-087e-477b-9e86-84e77f1ad931",
+      "scryfallId": "76f58441-5674-4f1e-af9b-94e14ab7e619",
+      "name": "Seedborn Muse",
+      "manaCost": "{3}{G}{G}",
+      "cmc": 5,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "typeLine": "Creature — Spirit",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Spirit"
+      ],
+      "oracleText": "Untap all permanents you control during each other player's untap step.",
+      "power": "2",
+      "toughness": "4",
       "loyalty": null,
       "defense": null,
       "keywords": [],
@@ -10304,6 +11146,38 @@
         "defense": null
       }
     },
+    "99afcf161845fe00ebe197831a068d35c643b7a7c88608a22c6e65ec98130292": {
+      "oracleId": "8c52bd39-0586-48ca-b263-17210cf9feb6",
+      "scryfallId": "276f5cee-a501-4658-bd4d-7a044bf1ccbc",
+      "name": "Craterhoof Behemoth",
+      "manaCost": "{5}{G}{G}{G}",
+      "cmc": 8,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "typeLine": "Creature — Beast",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "oracleText": "Haste\nWhen this creature enters, creatures you control gain trample and get +X/+X until end of turn, where X is the number of creatures you control.",
+      "power": "5",
+      "toughness": "5",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Haste"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "9a0e59d80b1bbc7de43858d5ed720217e11ecd7c85afc8c65ac96fae7e1f24e2": {
       "oracleId": "5e62b51d-faec-4aa0-9504-cf2c282d08ea",
       "scryfallId": "64b67170-1602-4050-80c0-ade2a6cac211",
@@ -10514,6 +11388,30 @@
       "keywords": [
         "Flying"
       ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "9de2af87febd426c1c1dff25c63ed3a46ec3f34df43de5c2d76148a320e9e0d2": {
+      "oracleId": "0c367958-729e-416d-988b-098e90e7a1fd",
+      "scryfallId": "630febf5-58ff-4dab-a5a8-575ebc5435a6",
+      "name": "Ruby Medallion",
+      "manaCost": "{2}",
+      "cmc": 2,
+      "colors": [],
+      "colorIdentity": [],
+      "typeLine": "Artifact",
+      "supertypes": [],
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [],
+      "oracleText": "Red spells you cast cost {1} less to cast.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
@@ -10946,6 +11844,36 @@
       "loyalty": null,
       "defense": null,
       "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "a56919c3dcd1a8f5f626f7b08f37346decc85d51bdf35e350a1e4c09bd8e7272": {
+      "oracleId": "ee7d2c2f-e32f-4be6-82ac-ff1e32055376",
+      "scryfallId": "5ed37b1c-7377-40bd-ae98-7f5ce56156b1",
+      "name": "Tyrant's Choice",
+      "manaCost": "{1}{B}",
+      "cmc": 2,
+      "colors": [
+        "B"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "typeLine": "Sorcery",
+      "supertypes": [],
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "oracleText": "Will of the council — Starting with you, each player votes for death or torture. If death gets more votes, each opponent sacrifices a creature of their choice. If torture gets more votes or the vote is tied, each opponent loses 4 life.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Will of the council"
+      ],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
@@ -12061,6 +12989,30 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "b3c2b488d20fba1c17600e29bf2aa6d817d4deb4dfbc342bf10c72193c501678": {
+      "oracleId": "b380c04b-0bce-4328-8f0a-1425e48bee72",
+      "scryfallId": "c4589226-6072-409b-b598-ebd87f675a6a",
+      "name": "Urza's Incubator",
+      "manaCost": "{3}",
+      "cmc": 3,
+      "colors": [],
+      "colorIdentity": [],
+      "typeLine": "Artifact",
+      "supertypes": [],
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [],
+      "oracleText": "As this artifact enters, choose a creature type.\nCreature spells of the chosen type cost {2} less to cast.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "b3c938ef77cde5231aae8b1bdd9f449aac40013646206f61171c16679c2885c5": {
       "oracleId": "77807103-bcd5-479f-bedd-f5d97aa6d3d2",
       "scryfallId": "5f11f053-5150-4a76-b2ca-9df3a0629911",
@@ -13023,6 +13975,40 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "c0630be4eec3d7b471c761910e452d409e166fe42d5e49ee682c312df2ccd1dd": {
+      "oracleId": "a984db23-40ea-428d-829f-e944267280f8",
+      "scryfallId": "bc9a7599-3c7d-4b83-bff3-e3d1f20f1b0f",
+      "name": "Faerie Mastermind",
+      "manaCost": "{1}{U}",
+      "cmc": 2,
+      "colors": [
+        "U"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "typeLine": "Creature — Faerie Rogue",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Faerie",
+        "Rogue"
+      ],
+      "oracleText": "Flash\nFlying\nWhenever an opponent draws their second card each turn, you draw a card.\n{3}{U}: Each player draws a card.",
+      "power": "2",
+      "toughness": "1",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Flying",
+        "Flash"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "c157c1c01986c4c86651ae7c3cb70dfd09daf80ea13f016e3b0b1a351a020bcf": {
       "oracleId": "85aa53e8-f062-4d02-bc69-1413f7f0dcf1",
       "scryfallId": "af7979d8-21f3-40ba-8a2e-7ebad210e48b",
@@ -13849,6 +14835,40 @@
         "defense": null
       }
     },
+    "cefc5c5d355546425c93640efb61b3ee3ddd9c5b918a48ec7a943a05c1d6722e": {
+      "oracleId": "28ea78dc-7ad6-4006-aaf8-4b25057ec019",
+      "scryfallId": "ec33d7d5-08f4-4737-bc5f-0be4b595395a",
+      "name": "Nantuko Vigilante",
+      "manaCost": "{3}{G}",
+      "cmc": 4,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "typeLine": "Creature — Insect Druid Mutant",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Insect",
+        "Druid",
+        "Mutant"
+      ],
+      "oracleText": "Morph {1}{G} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)\nWhen this creature is turned face up, destroy target artifact or enchantment.",
+      "power": "3",
+      "toughness": "2",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Morph"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "cf9d7ad93231927235c7773cf421c5d1865449e1166b7c23272cbce063d989dc": {
       "oracleId": "994bc16d-fdc6-475c-96df-beeb4d5aa03e",
       "scryfallId": "bc0de77a-c503-4000-9eb5-aa28a5e91082",
@@ -14001,6 +15021,36 @@
       "oracleText": "When Rishkar enters, put a +1/+1 counter on each of up to two target creatures.\nEach creature you control with a counter on it has \"{T}: Add {G}.\"",
       "power": "2",
       "toughness": "2",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "d10871deff9167d8039379d8d7592288c0e22b5f63222c5734372e2de9669e47": {
+      "oracleId": "2f807301-37df-4724-871a-08e3512b07b3",
+      "scryfallId": "de1c8758-ce3d-49cf-8173-c0eb46f5e7bc",
+      "name": "Burglar Rat",
+      "manaCost": "{1}{B}",
+      "cmc": 2,
+      "colors": [
+        "B"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "typeLine": "Creature — Rat",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Rat"
+      ],
+      "oracleText": "When this creature enters, each opponent discards a card.",
+      "power": "1",
+      "toughness": "1",
       "loyalty": null,
       "defense": null,
       "keywords": [],
@@ -14357,6 +15407,39 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "d6c8f84df61474d5541ec36019e5585c86db107dfc028f362257d206886a496b": {
+      "oracleId": "114725ef-ac81-4d13-9153-0a303c3ce9c4",
+      "scryfallId": "94edbbc5-5673-4753-bfad-4432c4b7dca4",
+      "name": "Innocuous Rat",
+      "manaCost": "{1}{B}",
+      "cmc": 2,
+      "colors": [
+        "B"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "typeLine": "Creature — Rat",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Rat"
+      ],
+      "oracleText": "When this creature dies, manifest dread. (Look at the top two cards of your library. Put one onto the battlefield face down as a 2/2 creature and the other into your graveyard. Turn it face up any time for its mana cost if it's a creature card.)",
+      "power": "1",
+      "toughness": "1",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Manifest",
+        "Manifest dread"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "d6f51e80f201a57dad225bd9f055c7d41727a5a5e286652550d2825dd828acdc": {
       "oracleId": "655aece2-f33a-46e0-8f80-112ae8a457fe",
       "scryfallId": "e03d8676-f693-4155-b75f-dcbe2890ccb0",
@@ -14590,6 +15673,38 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "dabca9c4b2522112d857cb7103573005d1735aabf628bcbaadc0858f2e7ef2b5": {
+      "oracleId": "e0445c80-fa53-4c3e-881e-940e9fce7f57",
+      "scryfallId": "f96223d0-04c4-40c2-87a9-0c6bc74adddb",
+      "name": "Braids, Arisen Nightmare",
+      "manaCost": "{1}{B}{B}",
+      "cmc": 3,
+      "colors": [
+        "B"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "typeLine": "Legendary Creature — Nightmare",
+      "supertypes": [
+        "Legendary"
+      ],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Nightmare"
+      ],
+      "oracleText": "At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each opponent may sacrifice a permanent of their choice that shares a card type with it. For each opponent who doesn't, that player loses 2 life and you draw a card.",
+      "power": "3",
+      "toughness": "3",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "dae3d703ffc51a500bb39e219e9d6c8251e68bd1f636f75cd4d3e5d24a22fad1": {
       "oracleId": "c0adbddc-b070-4c5f-afe0-0474c72a9251",
       "scryfallId": "7f273641-c5f3-48bc-b89e-3cff52d26a0b",
@@ -14640,6 +15755,38 @@
       "oracleText": "Each nonland card in your hand without foretell has foretell. Its foretell cost is equal to its mana cost reduced by {2}. (During your turn, you may pay {2} and exile it from your hand face down. Cast it on a later turn for its foretell cost.)\nWhenever you foretell a card, this creature gets +2/+0 until end of turn.",
       "power": "0",
       "toughness": "3",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "db37c1301b7b7e3a6f2e48e3ac6f446b39e2aafaae415fb01d5e63f82b129a12": {
+      "oracleId": "340bbe8b-e987-4c3e-ab4e-9dee63e57d4f",
+      "scryfallId": "a564c2e8-f49f-4ed7-850f-7c8bc92e4926",
+      "name": "Phyrexian Metamorph",
+      "manaCost": "{3}{U/P}",
+      "cmc": 4,
+      "colors": [
+        "U"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "typeLine": "Artifact Creature — Phyrexian Shapeshifter",
+      "supertypes": [],
+      "types": [
+        "Artifact",
+        "Creature"
+      ],
+      "subtypes": [
+        "Phyrexian",
+        "Shapeshifter"
+      ],
+      "oracleText": "({U/P} can be paid with either {U} or 2 life.)\nYou may have this creature enter as a copy of any artifact or creature on the battlefield, except it's an artifact in addition to its other types.",
+      "power": "0",
+      "toughness": "0",
       "loyalty": null,
       "defense": null,
       "keywords": [],
@@ -14895,6 +16042,34 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "df0f3dd0847eb5cf60a9067bfc458c264d65562e36e24db219b209b18d74b3cd": {
+      "oracleId": "a8dba58b-2956-492e-ae30-49db2ae68e53",
+      "scryfallId": "dfbda387-3c7d-4c80-97c3-60c9d4757244",
+      "name": "Mana Geyser",
+      "manaCost": "{3}{R}{R}",
+      "cmc": 5,
+      "colors": [
+        "R"
+      ],
+      "colorIdentity": [
+        "R"
+      ],
+      "typeLine": "Sorcery",
+      "supertypes": [],
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "oracleText": "Add {R} for each tapped land your opponents control.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "df84f96797f0c251da35c103e53e92ec7f0d95c61ab6e3d27ee61a8867db5f71": {
       "oracleId": "04853f06-3fd2-445d-9b0d-d68d0f116635",
       "scryfallId": "8ca7f49a-ab5a-49de-b07b-96c803daaf7d",
@@ -14928,6 +16103,40 @@
         "Deathtouch",
         "Flying",
         "Lifelink"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "dfa3026556bd64246990c2339a39fcd2d9e5d2e6d7306bb584a2160f23fec682": {
+      "oracleId": "c1d9c41a-0941-4b7e-b8a6-890d30386458",
+      "scryfallId": "a4ca0e10-8b7c-4ce2-888b-752fc909757a",
+      "name": "Hunted Bonebrute",
+      "manaCost": "{2}{B}",
+      "cmc": 3,
+      "colors": [
+        "B"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "typeLine": "Creature — Skeleton Beast",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Skeleton",
+        "Beast"
+      ],
+      "oracleText": "Menace\nWhen this creature enters, target opponent creates two 1/1 white Dog creature tokens.\nWhen this creature dies, each opponent loses 3 life.\nDisguise {1}{B}",
+      "power": "6",
+      "toughness": "2",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Menace",
+        "Disguise"
       ],
       "layout": "normal",
       "commanderLegality": "legal",
@@ -17354,6 +18563,39 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "fcd14a5bfbf9f6717d8df2d44be298396b7f08c547154a4bf7b76057cec09f82": {
+      "oracleId": "caa02547-66e3-4e27-a2d3-5e94f3e7a069",
+      "scryfallId": "08a5007f-06a0-40fa-a252-c38baa6b5c6f",
+      "name": "Thraben Inspector",
+      "manaCost": "{W}",
+      "cmc": 1,
+      "colors": [
+        "W"
+      ],
+      "colorIdentity": [
+        "W"
+      ],
+      "typeLine": "Creature — Human Soldier",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Soldier"
+      ],
+      "oracleText": "When this creature enters, investigate. (Create a Clue token. It's an artifact with \"{2}, Sacrifice this token: Draw a card.\")",
+      "power": "1",
+      "toughness": "2",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Investigate"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "fcfacb70bc721c6162126f36d5c5e017cf01518bcfbede8a3c901ae0b55252d1": {
       "oracleId": "1347224f-421e-4270-8e50-cf25c875909c",
       "scryfallId": "a8b4bc34-cc8d-41d0-88ee-f40ec95cc0b8",
@@ -17464,6 +18706,34 @@
         "Matter Absorption",
         "Spear of the Void Dragon"
       ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "fddcf76ddaa649c4b02d29e534d7f28189bece057e52a5e23b4dec382c4696c5": {
+      "oracleId": "6d56aeb1-0a50-46b6-abdb-cd6575a98dc3",
+      "scryfallId": "9588be49-d9b5-4491-a5a0-10bcadc9f8b3",
+      "name": "Praetor's Grasp",
+      "manaCost": "{1}{B}{B}",
+      "cmc": 3,
+      "colors": [
+        "B"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "typeLine": "Sorcery",
+      "supertypes": [],
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "oracleText": "Search target opponent's library for a card and exile it face down. Then that player shuffles. You may play that card for as long as it remains exiled.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false

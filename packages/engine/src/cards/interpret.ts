@@ -20,10 +20,12 @@ import type { AbilityCost, ActivatedAbility, AlternativeCast, MdfcLandFace } fro
 import { transformDefinition } from '../testing/definition-transform';
 import { SELF_SUBJECT } from './ability';
 import type { Ability, Effect, KeywordAbility, TargetSpec, TokenSpec } from './ability';
+import { parseEntersAsCopy } from './grammar/copy';
 import { COLOR_WORDS, KEYWORD_SET, parseAmount, resolveSubtype, titleCase } from './grammar/words';
 import {
   ANY_SPELL,
   parseCardFilterPhrase,
+  parseMassSubject,
   parseSpellFilter,
   parseSubject,
   parseTargetClause,
@@ -52,6 +54,7 @@ import {
   parseEffectSentence,
   parseExileReturnAtNextEndStepBlock,
   parseKeywordLine,
+  parseExileFaceDownPlayableBlock,
   parseLookAtTopBlock,
   parseManaSpendClause,
   parseModalSpellBlock,
@@ -87,7 +90,6 @@ import {
 import type { Value } from './value';
 import { constant } from './value';
 import {
-  activated,
   costReductionFor,
   mana,
   manaCost,
@@ -96,7 +98,6 @@ import {
   onCombatDamageToPlayer,
   onDies,
   onEtb,
-  SAC_SELF,
   TAP,
   triggered,
   whenEnters,
@@ -2074,6 +2075,43 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
       return [costReductionFor(filter, Number(m[3]))];
     }
   }
+  // "Untap all permanents you control during each other player's untap step." (Seedborn Muse):
+  // part of every other player's untap step (CR 502.3), so a rule static, never a trigger.
+  {
+    if (
+      /^untap (?:~|this (?:artifact|creature|land|permanent)) during each other player's untap step$/.test(
+        lower,
+      )
+    )
+      return [{ kind: 'untapDuringOthersUntapSteps', filter: SELF }];
+    const m = lower.match(/^untap all (.+?) you control during each other player's untap step$/);
+    if (m !== null) {
+      if (m[1] === 'permanents') return [{ kind: 'untapDuringOthersUntapSteps' }];
+      const filter = parseMassSubject(m[1] as string, card);
+      if (filter === null) return null;
+      return [{ kind: 'untapDuringOthersUntapSteps', filter }];
+    }
+  }
+  // "Creature spells of the chosen type cost {2} less to cast." (Urza's Incubator), "Spells cost
+  // {1} less to cast." (Helm of Awakening): no "you cast", so every player's spells.
+  {
+    const m = lower.match(
+      /^((?:.+ )?spells?(?: of the chosen type)?) cost \{(\d+)\} less to cast$/,
+    );
+    if (m !== null && !/\byou cast\b/.test(m[1] as string)) {
+      const parsed = parseSpellFilter(m[1] as string, card);
+      if (parsed === null) return null;
+      const filter = parsed === ANY_SPELL ? undefined : parsed;
+      return [
+        {
+          kind: 'costReduction',
+          amount: constant(Number(m[2])),
+          ...(filter === undefined ? {} : { filter }),
+          allPlayers: true,
+        },
+      ];
+    }
+  }
   // "Each spell you cast that's red or green costs {1} less to cast." (Goblin Anarchomancer) â€”
   // the same shape, but the subject is a color pair instead of a card type, and the verb order
   // is reversed ("costs" trails the clause rather than "cost" following the subject).
@@ -2259,14 +2297,16 @@ function parseSimpleLandFace(typeLine: string, oracleText: string): Color | null
  * what the land can actually do.
  */
 /**
- * Parse the land face of a spell // land modal DFC. The back face is deliberately represented as
- * an alternate cast rather than a second CardDefinition: it is playable from hand, but only as a
- * land, and its front face remains the spell used by the normal casting path.
+ * Parse the land face of a spell // land or permanent // land modal DFC (Witch Enchanter //
+ * Witch-Blessed Meadow). The back face is deliberately represented as an alternate cast rather
+ * than a second CardDefinition: it is playable from hand, but only as a land, and its front face
+ * remains the spell used by the normal casting path. A permanent played this way has only the land
+ * face's characteristics (CR 712.8f, `landFacePermanentDefinition`), so none of the front face's
+ * abilities reach it.
  */
 function buildMdfcLandFace(card: OracleCard): AlternativeCast | null {
   const back = card.backFace;
   if (card.layout !== 'modal_dfc' || back === undefined || card.types.includes('Land')) return null;
-  if (!card.types.includes('Instant') && !card.types.includes('Sorcery')) return null;
 
   const typeParts = back.typeLine.split(/\s+—\s+/);
   const typeWords = (typeParts[0] ?? '').trim().split(/\s+/).filter(Boolean);
@@ -2723,6 +2763,9 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
   let castFromGraveyard = false;
   let optionalAdditionalCost: CardDefinition['optionalAdditionalCost'];
   let morphCost: ParsedManaCost | undefined;
+  let faceDownVariant: CardDefinition['faceDownVariant'];
+  let asTurnedFaceUpCounters: Record<string, number> | undefined;
+  let entersAsCopy: CardDefinition['entersAsCopy'];
   let alternativeCasts: import('./ability').AlternativeCast[] | undefined =
     mdfcLandFace === null ? undefined : [mdfcLandFace];
 
@@ -2798,15 +2841,9 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
         description: 'Dragon spells or abilities',
       },
     });
-    activatedAbilities.push(
-      activated({
-        costs: [mana('{R}'), TAP, SAC_SELF],
-        effects: [
-          { op: 'searchLibrary', filter: ofSubtype('Dragon'), destinations: [{ zone: 'hand' }] },
-        ],
-        description: 'Search Dragon',
-      }),
-    );
+    // Its sacrifice ability ("look at the top seven cards … reveal a Dragon card") is read by the
+    // look-at-the-top grammar. It used to be bespoke here as a search of the whole library,
+    // which the card never says.
     reasons.length = 0;
   } else if (card.name === 'Rivaz of the Claw') {
     manaAbilities.push({
@@ -2953,7 +2990,22 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
             parseDestroyThenLoseLifeEqualToManaValueBlock(spellBlockText, card) ??
             parseLivingDeathBlock(spellBlockText) ??
             parseVictimizeBlock(spellBlockText) ??
-            parseAddendumMassBlock(spellBlockText);
+            parseAddendumMassBlock(spellBlockText) ??
+            (() => {
+              // Praetor's Grasp: a face-down exile its caster may play (CR 406.3).
+              const targets: TargetSpec[] = [];
+              const effects = parseExileFaceDownPlayableBlock(
+                spellBlockText.toLowerCase(),
+                (kind, filter, controller) =>
+                  targets.push({
+                    kind,
+                    ...(filter !== undefined ? { filter } : {}),
+                    ...(controller !== undefined ? { controller } : {}),
+                  }) - 1,
+                false,
+              );
+              return effects === null ? null : { targets, effects };
+            })();
           if (wholeSpell !== null) {
             spellTargets.push(...wholeSpell.targets);
             spellEffects.push(...wholeSpell.effects);
@@ -3352,6 +3404,15 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
         continue;
       }
     }
+    // 2b. "You may have this creature enter as a copy of …" (CR 707.2): an as-enters copy
+    //     replacement, applied in `moveObject` before enters triggers are queued.
+    if (entersAsCopy === undefined) {
+      const copy = parseEntersAsCopy(lower, card);
+      if (copy !== null) {
+        entersAsCopy = copy;
+        continue;
+      }
+    }
     // 3. Enters tapped.
     if (/^(?:~|this land) enters (?:the battlefield )?tapped$/.test(lower)) {
       entersTapped = true;
@@ -3727,13 +3788,27 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
     // "Morph {B}" (CR 702.37): cast face down as a 2/2 for {3} (`castFaceDown`), and turn it
     // face up any time you have priority by paying this cost (`turnFaceUp`).
     {
-      const m = lower.match(/^morph ((?:\{[^}]+\})+)(?:\s*\(.*\))?\.?$/i);
+      // "Megamorph {U}" (CR 702.37b) and "Disguise {1}{B}" (CR 702.168) are morph with a rider.
+      const m = lower.match(/^(morph|megamorph|disguise) ((?:\{[^}]+\})+)(?:\s*\(.*\))?\.?$/i);
       if (m) {
-        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+        const cost = parseManaCost((m[2] as string).toUpperCase() as never);
         if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
           morphCost = cost.cost;
+          if (m[1] !== 'morph') faceDownVariant = m[1] as 'megamorph' | 'disguise';
           continue;
         }
+      }
+    }
+    // "As this creature is turned face up, put five +1/+1 counters on it" (Hooded Hydra): the
+    // counters are there as it turns face up, before its "turned face up" triggers (CR 708.8).
+    {
+      const m = lower.match(
+        /^as (?:~|this creature) is turned face up, put (\w+) ([+-]\d+\/[+-]\d+|\w+) counters? on it$/,
+      );
+      const n = m === null ? null : parseAmount(m[1] as string);
+      if (m !== null && n !== null && n > 0) {
+        asTurnedFaceUpCounters = { [m[2] as string]: n };
+        continue;
       }
     }
     // "Replicate {2}" (CR 702.56a): an additional cost payable any number of times, and a cast
@@ -4148,6 +4223,9 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
       ...(announcesX ? { announcesX: true } : {}),
       ...(optionalAdditionalCost !== undefined ? { optionalAdditionalCost } : {}),
       ...(morphCost !== undefined ? { morphCost } : {}),
+      ...(faceDownVariant !== undefined && morphCost !== undefined ? { faceDownVariant } : {}),
+      ...(asTurnedFaceUpCounters !== undefined ? { asTurnedFaceUpCounters } : {}),
+      ...(entersAsCopy !== undefined ? { entersAsCopy } : {}),
       modeled: reasons.length === 0,
       unmodeledReasons: reasons,
     }),

@@ -408,6 +408,7 @@ export const IMPLEMENTED_KEYWORDS = [
   'improvise',
   'infect',
   'cascade',
+  'storm',
   'rebound',
   'split second',
 ] as const;
@@ -663,6 +664,12 @@ export type Effect =
    */
   | { op: 'denyKeywordsEachUntilEot'; selector: Selector; keywords: KeywordAbility[] }
   /**
+   * "Permanents your opponents control lose hexproof and indestructible until end of turn"
+   * (Shadowspear): the permanents are fixed as it resolves (CR 611.2c) and lose the keywords in
+   * layer 6 at this effect's timestamp, so a later grant restores them (CR 613.7).
+   */
+  | { op: 'loseKeywordsEachUntilEot'; selector: Selector; keywords: KeywordAbility[] }
+  /**
    * "Those creatures gain `keyword` until end of turn" for an `attackDeclared` trigger (Frontier
    * Warmonger): exactly the creatures of the firing's attack group, bound when it fired and still
    * on the battlefield as the same objects (CR 400.7); the set is fixed at resolution (CR 611.2c).
@@ -754,6 +761,13 @@ export type Effect =
    * replacements apply to the second half. If either object is gone, nothing moves.
    */
   | { op: 'moveCounters'; from: EffectRef; to: EffectRef; counter: string; count: number }
+  /**
+   * "Move all counters from ~ onto target creature" (The Ozolith): every counter of every kind on
+   * `from` is removed and that many of each kind put on `to` (CR 122.5), so counter-placement
+   * replacements apply to the second half. If either object is gone, or they are the same object,
+   * nothing moves.
+   */
+  | { op: 'moveAllCounters'; from: EffectRef; to: EffectRef }
   /**
    * "Bolster N" (CR 701.39a): as it resolves, the controller chooses a creature with the least
    * toughness among creatures they control and puts N +1/+1 counters on it. Not a target.
@@ -1154,6 +1168,11 @@ export type Effect =
   /** The affected player may discard a card; otherwise they lose the specified life. */
   | { op: 'discardOrLoseLife'; target: EffectRef; amount: Value }
   | { op: 'millEachPlayer'; scope: 'all' | 'opponents'; count: Value }
+  /**
+   * "Each player draws a card" (Faerie Mastermind), "Each opponent draws two cards": every
+   * player in scope who has not lost draws, in APNAP order (CR 101.4).
+   */
+  | { op: 'eachPlayerDraws'; scope: 'all' | 'opponents'; count: Value }
   | { op: 'eachPlayerLosesLifeAndDraws'; amount: Value; count: Value }
   | { op: 'discardChosenPlayers'; targetSlot: number; count: Value }
   | { op: 'millAndLoseLifeChosenPlayers'; targetSlot: number; count: Value; amount: Value }
@@ -1251,6 +1270,46 @@ export type Effect =
        * destination is a hidden zone such as the hand.
        */
       reveal?: boolean;
+    }
+  /**
+   * "You may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each
+   * opponent may sacrifice a permanent of their choice that shares a card type with it. For each
+   * opponent who doesn't, that player loses 2 life and you draw a card." (Braids, Arisen
+   * Nightmare): the controller's optional sacrifice of a permanent matching `selector`; then each
+   * opponent, in APNAP order (CR 101.4), chooses a permanent sharing a card type with the
+   * sacrificed one as it last existed, or none. The chosen ones are sacrificed together, and each
+   * opponent who did not sacrifice loses `life` and the controller draws a card.
+   */
+  | { op: 'sacrificeThenOpponentsShareTypeOrPunish'; selector: Selector; life: Value }
+  /**
+   * "Take an extra turn after this one" (Plea for Power, CR 500.7): the controller's extra turn
+   * comes directly after this one, ahead of extra turns created earlier.
+   */
+  | { op: 'takeExtraTurn' }
+  /**
+   * Will of the council: "Starting with you, each player votes for A or B. If A gets more votes,
+   * …. If B gets more votes or the vote is tied, …." (Plea for Power, CR 701.38). Each player
+   * who has not lost votes once, in turn order starting with the controller (CR 701.38a); the
+   * votes are public. `more` runs when `choices[0]` has strictly more votes, `otherwise` on any
+   * other result. No extra-vote effects exist in the engine, so each player votes once.
+   */
+  | {
+      op: 'councilVote';
+      choices: [string, string];
+      more: Effect[];
+      otherwise: Effect[];
+    }
+  /**
+   * "Search your library and/or graveyard for a creature card with mana value X or less and put
+   * it onto the battlefield. If you search your library this way, shuffle." (Finale of
+   * Devastation): the controller chooses which of the two zones to search, may find nothing
+   * (CR 701.19b), and shuffles only when the library was searched. `maxManaValue` is read as it
+   * resolves.
+   */
+  | {
+      op: 'searchLibraryAndOrGraveyardToBattlefield';
+      filter: Selector;
+      maxManaValue: Value;
     }
   /**
    * Choose a set of cards in one private-library decision, then validate the set as a whole.
@@ -1504,9 +1563,11 @@ export type Effect =
         attachEquipment?: true;
         /** "Put one of them into your hand": a matching card must be taken, with no decline. */
         required?: true;
+        /** "Put two of them into your hand" (Stock Up): that many picks, hand destination only. */
+        count?: number;
       };
-      /** Where everything not taken ends up. */
-      rest: 'bottomRandom' | 'topAnyOrder' | 'bottomAnyOrder';
+      /** Where everything not taken ends up; `graveyard`: "and the rest into your graveyard". */
+      rest: 'bottomRandom' | 'topAnyOrder' | 'bottomAnyOrder' | 'graveyard';
       /** After replacing the looked-at cards, offer to shuffle the whole library. */
       mayShuffle?: true;
     }
@@ -1813,6 +1874,29 @@ export type Effect =
   | { op: 'chaosWarp'; target: EffectRef }
   | { op: 'manifestTop'; player: 'you' | 'eventPlayer' }
   | { op: 'manifestTopForTargetController'; target: EffectRef }
+  /**
+   * "Look at the top four cards of target opponent's library, exile one of them face down, then
+   * put the rest on the bottom of that library in a random order. You may cast that card for as
+   * long as it remains exiled, and mana of any type can be spent to cast that spell." (Gonti,
+   * Thief of Sanity), and "Search target opponent's library for a card and exile it face down.
+   * Then that player shuffles. You may play that card for as long as it remains exiled."
+   * (Praetor's Grasp). The exiled card is face down (CR 406.3), and only this ability's controller
+   * may look at it; the permission lasts while it stays exiled.
+   */
+  | {
+      op: 'exileFaceDownPlayable';
+      /** Whose library: an announced player target, or the trigger's event player. */
+      library: EffectRef | 'eventPlayer';
+      from: { look: number; rest: 'bottomRandom' | 'graveyard' } | 'search';
+      castOnly: boolean;
+      anyType: boolean;
+    }
+  /**
+   * "Manifest dread" (CR 701.62a): the player looks at the top two cards of their library, puts
+   * one onto the battlefield face down as a manifested 2/2 creature and the other into their
+   * graveyard. With one card left it is the one manifested.
+   */
+  | { op: 'manifestDread'; player: 'you' | 'eventPlayer' }
   | {
       op: 'opponentMayDrawOrMillThenDamage';
       target: EffectRef;
@@ -2202,6 +2286,8 @@ export type ObjectTriggerWhen =
    */
   | 'leavesBattlefield'
   | 'transformsInto'
+  /** "When this creature is turned face up" (CR 708.8): the special action, not an entry. */
+  | 'turnedFaceUp'
   /**
    * "Whenever one or more +1/+1 counters are put on this creature" (Pensive Professor): one
    * event per placement, including a permanent entering with counters (CR 122.6). `counter`

@@ -17,7 +17,7 @@ import type { Color, OracleCard } from '@mtg/shared';
 import { emptyCost, parseManaCost } from '../../mana/cost';
 import type { ManaUnit, ParsedManaCost } from '../../mana/cost';
 import type { ManaRestriction, SearchDestination } from '../ability';
-import { SELF_SUBJECT } from '../ability';
+import { IMPLEMENTED_KEYWORDS, SELF_SUBJECT } from '../ability';
 import type {
   Ability,
   Effect,
@@ -39,9 +39,11 @@ import {
   SELF_OBJECT_RE,
 } from './words';
 import {
+  ANY_SPELL,
   parseCardFilterPhrase,
   parseMassSubject,
   parseSearchFilter,
+  parseSpellFilter,
   parseSubject,
   parseTargetClause,
 } from './subject';
@@ -64,12 +66,13 @@ import {
   not,
   ofSubtype,
   ofSupertype,
+  manaValueAtLeast,
   manaValueAtMost,
   ofType,
 } from '../selector';
 import type { Value } from '../value';
 import { constant } from '../value';
-import { canonicalizeToken, FOOD, MUTAGEN, TREASURE } from '../tokens';
+import { canonicalizeToken, CLUE, FOOD, MUTAGEN, TREASURE } from '../tokens';
 import { noteSlotFailure } from './diagnostics';
 
 /** Split a line into sentences, dropping the terminal period of each. */
@@ -630,6 +633,59 @@ export function parseExileTopPlayableBlock(lower: string): Effect[] | null {
 }
 
 /**
+ * "Look at the top four cards of target opponent's library, exile one of them face down, then
+ * put the rest on the bottom of that library in a random order. You may cast that card for as
+ * long as it remains exiled, and mana of any type can be spent to cast that spell." (Gonti; Thief
+ * of Sanity reads "that player's library … into their graveyard"), and Praetor's Grasp's search.
+ * `eventPlayer` says whether "that player" has a referent (a combat-damage head).
+ */
+export function parseExileFaceDownPlayableBlock(
+  lower: string,
+  alloc: SlotAllocator,
+  eventPlayer: boolean,
+): Effect[] | null {
+  const text = lower.replace(/\.$/, '');
+  const look = text.match(
+    /^look at the top (\w+) cards of (target opponent's|that player's) library, exile one of them face down, then put the rest (on the bottom of that library in a random order|into their graveyard)\. you may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell$/,
+  );
+  if (look !== null) {
+    const count = parseAmount(look[1] as string);
+    if (count === null || count < 1) return null;
+    if (look[2] === "that player's" && !eventPlayer) return null;
+    return [
+      {
+        op: 'exileFaceDownPlayable',
+        library:
+          look[2] === "that player's" ? 'eventPlayer' : alloc('player', undefined, 'opponent'),
+        from: {
+          look: count,
+          rest: look[3] === 'into their graveyard' ? 'graveyard' : 'bottomRandom',
+        },
+        castOnly: true,
+        anyType: true,
+      },
+    ];
+  }
+  if (
+    text ===
+    "search target opponent's library for a card and exile it face down. then that player shuffles. you may play that card for as long as it remains exiled"
+  )
+    return [
+      {
+        op: 'exileFaceDownPlayable',
+        library: alloc('player', undefined, 'opponent'),
+        from: 'search',
+        castOnly: false,
+        anyType: false,
+      },
+    ];
+  return null;
+}
+
+/** Thrown when a vote outcome would allocate a target slot, which the vote cannot announce. */
+class VoteTargetRefused extends Error {}
+
+/**
  * "Look at the top eight cards of your library. You may put a Dragon creature card from among
  * them onto the battlefield. Put the rest on the bottom of your library in a random order."
  *
@@ -639,6 +695,96 @@ export function parseExileTopPlayableBlock(lower: string): Effect[] | null {
  */
 export function parseLookAtTopBlock(lower: string, card: OracleCard): Effect[] | null {
   const normalized = lower.replace(/\.$/, '');
+  // Will of the council (CR 701.38): "Starting with you, each player votes for time or
+  // knowledge. If time gets more votes, …. If knowledge gets more votes or the vote is tied, …."
+  // (Plea for Power). Each outcome is ordinary effect grammar; a target inside one is not read
+  // here, since the vote's outcome is unknown when targets would be chosen.
+  {
+    const vote = normalized.match(
+      /^starting with you, each player votes for ([a-z]+) or ([a-z]+)\. if ([a-z]+) gets more votes, (.+?)\. if ([a-z]+) gets more votes or the vote is tied, (.+)$/,
+    );
+    if (vote !== null && vote[3] === vote[1] && vote[5] === vote[2]) {
+      const refuse: SlotAllocator = () => {
+        throw new VoteTargetRefused();
+      };
+      const outcome = (text: string): Effect[] | null => {
+        const effects: Effect[] = [];
+        for (const sentence of text.split(/\. /)) {
+          let parsed: Effect[] | null;
+          try {
+            parsed = parseEffectSentence(sentence, refuse, card);
+          } catch (error) {
+            if (error instanceof VoteTargetRefused) return null;
+            throw error;
+          }
+          if (parsed === null) return null;
+          effects.push(...parsed);
+        }
+        return effects;
+      };
+      const more = outcome(vote[4] as string);
+      const otherwise = outcome(vote[6] as string);
+      if (more === null || otherwise === null) return null;
+      return [
+        {
+          op: 'councilVote',
+          choices: [vote[1] as string, vote[2] as string],
+          more,
+          otherwise,
+        },
+      ];
+    }
+  }
+  // "Search your library and/or graveyard for a creature card with mana value X or less and put
+  // it onto the battlefield. If you search your library this way, shuffle. If X is 10 or more,
+  // creatures you control get +X/+X and gain haste until end of turn." (Finale of Devastation):
+  // the shuffle is part of the two-zone search, and the rider reads the announced X.
+  {
+    const finale = normalized.match(
+      /^search your library and\/or graveyard for (?:a|an) (.+?) card with mana value x or less and put it onto the battlefield\. if you search your library this way, shuffle(?:\. if x is (\d+) or more, (.+?) get \+x\/\+x and gain ([a-z ,]+?) until end of turn)?$/,
+    );
+    if (finale !== null) {
+      const filter = parseCardFilterPhrase(`${finale[1] as string} card`, card);
+      if (filter === null) return null;
+      const effects: Effect[] = [
+        {
+          op: 'searchLibraryAndOrGraveyardToBattlefield',
+          filter,
+          maxManaValue: { kind: 'xValue' },
+        },
+      ];
+      if (finale[2] !== undefined) {
+        const selector = parseSubject(finale[3] as string, card);
+        const keywords = parseKeywordLine(finale[4] as string);
+        if (selector === null || keywords === null || keywords.ward !== undefined) return null;
+        if (keywords.protectionFrom !== undefined) return null;
+        effects.push({
+          op: 'conditionalEffect',
+          condition: {
+            kind: 'compareValues',
+            left: { kind: 'xValue' },
+            cmp: '>=',
+            right: constant(Number(finale[2])),
+          },
+          then: [
+            {
+              op: 'pumpEachUntilEot',
+              selector,
+              power: { kind: 'xValue' },
+              toughness: { kind: 'xValue' },
+            },
+            ...keywords.keywords.map((keyword): Effect => ({
+              op: 'grantKeywordEachUntilEot',
+              selector,
+              keyword,
+            })),
+          ],
+          else: [],
+        });
+      }
+      return effects;
+    }
+  }
   const reorder = normalized.match(
     /^look at the top (\w+) cards of your library, then put them back in any order(?:\. you may shuffle(?: your library)?)?(?:\. draw a card)?$/,
   );
@@ -681,6 +827,48 @@ export function parseLookAtTopBlock(lower: string, card: OracleCard): Effect[] |
   const m = normalized.match(
     /^look at the top (\w+) cards of your library\. you may put (?:a|an) (.+?) from among them (onto the battlefield( tapped)?|into your hand)\. put the rest (on the bottom of your library in a random order|on top of your library in any order)$/,
   );
+  // "You may reveal a creature card from among them and put it into your hand. Put the rest on
+  // the bottom of your library in a random order." (Monumental Henge, Growing Rites of Itlimoc).
+  const reveal = normalized.match(
+    /^look at the top (\w+) cards of your library\. you may reveal (?:a|an) (.+?) from among them and put (?:it|that card) into your hand\. put the rest on the bottom of your library in (a random|any) order$/,
+  );
+  if (reveal !== null) {
+    const count = parseAmount(reveal[1] as string);
+    const filter = parseSearchFilter(reveal[2] as string, card);
+    if (count === null || filter === null) return null;
+    return [
+      {
+        op: 'lookAtTopN',
+        count,
+        mayPut: { filter, destination: { zone: 'hand' }, reveal: true },
+        rest: reveal[3] === 'any' ? 'bottomAnyOrder' : 'bottomRandom',
+      },
+    ];
+  }
+  // "Put one of them into your hand and the rest into your graveyard." (Forbidden Alchemy),
+  // "Put two of them into your hand and the rest on the bottom of your library in any order."
+  // (Stock Up), "… and the other on the bottom of your library." (Sleight of Hand): required picks.
+  const picks = normalized.match(
+    /^look at the top (\w+) cards of your library\. put (\w+) of (?:them|those cards) into your hand and the (?:rest|other) (into your graveyard|on the bottom of your library(?: in any order)?)$/,
+  );
+  if (picks !== null) {
+    const count = parseAmount(picks[1] as string);
+    const take = parseAmount(picks[2] as string);
+    if (count === null || take === null || take < 1 || take >= count) return null;
+    return [
+      {
+        op: 'lookAtTopN',
+        count,
+        mayPut: {
+          filter: { kind: 'allOf', of: [] },
+          destination: { zone: 'hand' },
+          required: true,
+          ...(take > 1 ? { count: take } : {}),
+        },
+        rest: picks[3] === 'into your graveyard' ? 'graveyard' : 'bottomAnyOrder',
+      },
+    ];
+  }
   if (m === null) return null;
 
   const count = parseAmount(m[1] as string);
@@ -1127,6 +1315,7 @@ function parseEffectSentenceUntraced(
     triggerObject?: boolean;
     /** Every head is this object leaving the battlefield: its last-known facts are the event's. */
     departedSelf?: boolean;
+    departedTriggerObject?: boolean;
     /** Every head is this object going from the battlefield to a graveyard. */
     departedToGraveyard?: boolean;
     /** Every head is the creature this Aura or Equipment is attached to dying. */
@@ -1462,6 +1651,108 @@ function parseEffectSentenceUntraced(
     return [
       { op: 'fight', first: 'triggerObject', second: alloc('creature', undefined, 'opponent') },
     ];
+  }
+  // "Add {R} for each tapped land your opponents control" (Mana Geyser): a resolving spell's
+  // mana, counted as it resolves (CR 608.2h).
+  {
+    const m = s.match(/^add (\{[wubrgc]\}) for each (.+)$/);
+    if (m !== null && !/\btarget\b/.test(m[2] as string)) {
+      const symbol = manaSymbols(m[1] as string)[0];
+      const amount = parseDynamicCountValue(`the number of ${m[2] as string}`, card);
+      if (symbol === undefined || amount === null) return null;
+      return [{ op: 'addMana', amount, colors: [symbol] }];
+    }
+  }
+  // "Permanents your opponents control lose hexproof and indestructible until end of turn"
+  // (Shadowspear): a mass layer-6 removal, the permanents fixed as it resolves (CR 611.2c).
+  {
+    const m = s.match(/^(.+?) lose ([a-z ]+?)(?: and ([a-z ]+?))? until end of turn$/);
+    if (m !== null && !/\btarget\b|^(?:it|~|they)$/.test(m[1] as string)) {
+      const keywords = [m[2], m[3]].filter((word): word is string => word !== undefined);
+      const selector = parseMassSubject(m[1] as string, card);
+      if (
+        selector !== null &&
+        keywords.every((word) => (IMPLEMENTED_KEYWORDS as readonly string[]).includes(word))
+      )
+        return [
+          {
+            op: 'loseKeywordsEachUntilEot',
+            selector,
+            keywords: keywords as KeywordAbility[],
+          },
+        ];
+    }
+  }
+  // Phase 4 batch 1: common sentences over existing ops.
+  // "you may gain 1 life" reaches here as "gain 1 life" once the optional prefix is stripped.
+  {
+    const m = s.match(/^gain (\w+) life$/);
+    const n = m === null ? null : parseAmount(m[1] as string);
+    if (n !== null) return [{ op: 'gainLife', amount: constant(n) }];
+  }
+  // "Investigate" (CR 701.36a): create a Clue token.
+  if (s === 'investigate') return [{ op: 'createToken', spec: CLUE, count: constant(1) }];
+  // "Each opponent discards a card" / "each player discards two cards": each chooses (CR 701.9).
+  {
+    const m = s.match(/^each (opponent|player) discards (a card|(\w+) cards)$/);
+    const n = m === null ? null : m[3] === undefined ? 1 : parseAmount(m[3] as string);
+    if (m !== null && n !== null && n > 0)
+      return [
+        {
+          op: 'discardEachPlayer',
+          scope: m[1] === 'opponent' ? 'opponents' : 'all',
+          count: constant(n),
+        },
+      ];
+  }
+  // "Target player mills three cards" (Hedron Crab, Thought Scour).
+  {
+    const m = s.match(/^target player mills (a card|(\w+) cards)$/);
+    const n = m === null ? null : m[2] === undefined ? 1 : parseAmount(m[2] as string);
+    if (m !== null && n !== null && n > 0)
+      return [{ op: 'millTargetPlayer', target: alloc('player'), count: n }];
+  }
+  // Fog: "Prevent all combat damage that would be dealt this turn" (CR 615).
+  if (s === 'prevent all combat damage that would be dealt this turn')
+    return [{ op: 'preventCombatDamageAll' }];
+  // Karoo lands: "return a land you control to its owner's hand", chosen on resolution.
+  {
+    const m = s.match(/^return an? (.+) you control to its owner's hand$/);
+    if (m !== null && !/\btarget\b/.test(m[1] as string)) {
+      const kind = parseSubject(m[1] as string, card);
+      if (kind !== null) return [{ op: 'returnOneToHand', selector: allOf(kind, YOURS) }];
+    }
+  }
+  // "it deals 1 damage to target opponent" (Abraded Bluffs): with a self head "it" is the source.
+  {
+    const m = s.match(
+      /^(~|it) deals (\w+) damage to target (opponent|player|player or planeswalker)$/,
+    );
+    const n = m === null ? null : parseAmount(m[2] as string);
+    if (m !== null && n !== null && (m[1] === '~' || opts.triggerObject !== true)) {
+      const target =
+        m[3] === 'opponent'
+          ? alloc('player', undefined, 'opponent')
+          : alloc(m[3] === 'player' ? 'player' : 'playerOrPlaneswalker');
+      return [{ op: 'dealDamage', target, amount: constant(n) }];
+    }
+  }
+  // "Manifest dread" (CR 701.62a, Innocuous Rat).
+  if (s === 'manifest dread') return [{ op: 'manifestDread', player: 'you' }];
+  // "Take an extra turn after this one" (Plea for Power's time outcome, CR 500.7).
+  if (s === 'take an extra turn after this one') return [{ op: 'takeExtraTurn' }];
+  // "Each player draws a card" (Faerie Mastermind) / "each opponent draws two cards".
+  {
+    const m = s.match(/^each (player|opponent) draws (a card|(\w+) cards)$/);
+    const n = m === null ? null : m[3] === undefined ? 1 : parseAmount(m[3] as string);
+    if (m !== null && n !== null && n > 0)
+      return [
+        {
+          op: 'eachPlayerDraws',
+          scope: m[1] === 'player' ? 'all' : 'opponents',
+          count: constant(n),
+        },
+      ];
   }
   if (s === "~ fights target creature you don't control") {
     return [{ op: 'fight', first: 'source', second: alloc('creature', undefined, 'opponent') }];
@@ -2094,12 +2385,27 @@ function parseEffectSentenceUntraced(
     // "each other creature you control with base power and toughness 1/1 gets +X/+X until end
     // of turn, where X is the number of +1/+1 counters on ~" (Bess): X is fixed on resolution
     // (CR 608.2h) and the affected set with it (CR 611.2c).
-    const where = s.match(/^(.+?) gets? \+x\/\+x until end of turn, where x is (.+)$/);
+    // "creatures you control gain trample and get +X/+X until end of turn, where X is the number
+    // of creatures you control" (Craterhoof Behemoth): the keywords ride on the same set.
+    const where = s.match(
+      /^(.+?) (?:gains? ([a-z ,]+?) and )?gets? \+x\/\+x(?: and gains? ([a-z ,]+?))? until end of turn, where x is (.+)$/,
+    );
     if (where !== null) {
       const selector = parseSubject(where[1] as string, card);
-      const count = parseDynamicCountValue(where[2] as string, card);
+      const count = parseDynamicCountValue(where[4] as string, card);
       if (selector === null || count === null) return null;
-      return [{ op: 'pumpEachUntilEot', selector, power: count, toughness: count }];
+      const effects: Effect[] = [
+        { op: 'pumpEachUntilEot', selector, power: count, toughness: count },
+      ];
+      for (const text of [where[2], where[3]]) {
+        if (text === undefined) continue;
+        const parsed = parseKeywordLine(text);
+        if (parsed === null || parsed.ward !== undefined || parsed.protectionFrom !== undefined)
+          return null;
+        for (const keyword of parsed.keywords)
+          effects.push({ op: 'grantKeywordEachUntilEot', selector, keyword });
+      }
+      return effects;
     }
     // "Whenever enchanted creature attacks, each other creature that's attacking one of your
     // opponents gets +1/+1 until end of turn" (Martial Impetus): "other" is beside the attacking
@@ -2282,6 +2588,25 @@ function parseEffectSentenceUntraced(
       }
     }
   }
+  // "Counter target instant or sorcery spell unless its controller pays {1}" (Flusterstorm),
+  // "Counter target creature spell" (Essence Scatter): a spell target narrowed by the spell
+  // filter slot, read from the spell as it is on the stack.
+  {
+    const m = s.match(/^counter target (.+?) spell(?: unless its controller pays (\{[^}]+\}))?$/);
+    if (
+      m !== null &&
+      m[1] !== 'noncreature' &&
+      !/\b(?:or ability|you control|an opponent controls)\b/.test(m[1] as string)
+    ) {
+      const filter = parseSpellFilter(`${m[1] as string} spell`, card);
+      if (filter === null || filter === ANY_SPELL) return null;
+      const target = alloc('spell', filter);
+      if (m[2] === undefined) return [{ op: 'counter', target }];
+      const parsedCost = parseManaCost((m[2] as string).toUpperCase() as never);
+      if (parsedCost.cost === null) return null;
+      return [{ op: 'counterUnlessControllerPays', target, cost: parsedCost.cost }];
+    }
+  }
   // "Add {B}{B}{B}." (a ritual spell) / "Add {U}{B}." (the effect half of a signet's activated
   // ability, once its `{1}, {T}` cost has already routed it away from `parseManaAbilityLine` —
   // that function refuses any cost paid in mana, so a rock with a mana activation cost falls
@@ -2392,20 +2717,29 @@ function parseEffectSentenceUntraced(
     // between "target" and "card" at all — the filter group is optional, and its absence means
     // an unrestricted `cardInGraveyard` slot (any card, CR 608.2b), not "any permanent card".
     const m = s.match(
-      /^return (?:up to (\w+) )?(other )?target(?: (.+?))? (?:card|cards) from (your|a) graveyard to (the battlefield|your hand)$/,
+      /^return (?:up to (\w+) )?(other )?target(?: (.+?))? (?:card|cards)(?: with mana value (\d+) or (less|greater))? from (your|a) graveyard to (the battlefield|your hand)$/,
     );
     if (m) {
       const typePhrase = m[3];
-      const filter = typePhrase === undefined ? null : parseCardFilterPhrase(typePhrase, card);
-      if (typePhrase === undefined || filter !== null) {
+      const typeFilter = typePhrase === undefined ? null : parseCardFilterPhrase(typePhrase, card);
+      // "with mana value 3 or less" (Sun Titan): a bound on the same graveyard card.
+      const bound =
+        m[4] === undefined
+          ? undefined
+          : m[5] === 'less'
+            ? manaValueAtMost(Number(m[4]))
+            : manaValueAtLeast(Number(m[4]));
+      if (typePhrase === undefined || typeFilter !== null) {
+        const filter =
+          bound === undefined ? typeFilter : typeFilter === null ? bound : allOf(typeFilter, bound);
         const target = alloc(
           'cardInGraveyard',
           filter ?? undefined,
           undefined,
-          m[4] === 'a' ? 'any' : undefined,
+          m[6] === 'a' ? 'any' : undefined,
         );
         return [
-          m[5] === 'the battlefield'
+          m[7] === 'the battlefield'
             ? { op: 'graveyardToBattlefield', target }
             : { op: 'graveyardToHand', target },
         ];
@@ -2431,9 +2765,11 @@ function parseEffectSentenceUntraced(
   // Generic mass removal filter ("destroy all creatures that aren't enchanted", "exile all nonland permanents", etc.)
   {
     const m = s.match(
-      /^(destroy|exile|return) all (.+?)(?: to (?:its owner's hand|their owners' hands))?$/,
+      /^(destroy|exile|return) all (.+?)( to (?:its owner's hand|their owners' hands|their owner's hand))?$/,
     );
-    if (m) {
+    // A return names its destination ("to their owner's hand", Aetherize); one without it is
+    // some other zone change this production does not read.
+    if (m && (m[1] !== 'return' || m[3] !== undefined)) {
       const action = m[1] as string;
       const phrase = m[2] as string;
       let selector: Selector | null = null;
@@ -2505,6 +2841,30 @@ function parseEffectSentenceUntraced(
   // Aura card the source became once it followed its creature to the graveyard.
   if (opts.attachedDies === true && s === "return this card to its owner's hand")
     return [{ op: 'returnDepartedSourceToHand', fromGraveyard: true }];
+  // "put those counters on ~" (The Ozolith): every counter the departed trigger object last had
+  // (CR 603.10a), each kind and number, onto this ability's source, through counter-placement
+  // replacements. Only a head that watches another object names "those counters".
+  if (
+    opts.triggerObject === true &&
+    opts.departedTriggerObject === true &&
+    s === 'put those counters on ~'
+  )
+    return [{ op: 'transferCountersFromTriggerObject', target: 'source' }];
+  // "move all counters from ~ onto target creature" (The Ozolith): every kind (CR 122.5).
+  {
+    const m = s.match(/^move all counters from ~ onto target (.+)$/);
+    if (m !== null) {
+      const parsed = parseTargetClause(m[1] as string);
+      if (parsed === null || parsed.kind !== 'creature') return null;
+      return [
+        {
+          op: 'moveAllCounters',
+          from: 'source',
+          to: alloc(parsed.kind, parsed.filter, parsed.controller),
+        },
+      ];
+    }
+  }
   // "put those counters on target creature you control" (Iron Apprentice): every counter the
   // departed source last had (CR 603.10a), each kind and number, through counter-placement
   // replacements.
@@ -3048,6 +3408,26 @@ export function parseTriggerLine(line: string, card: OracleCard): Ability[] | nu
     if (heads.some((head) => head.when !== 'enters')) return null;
     heads = heads.map((head) => ({ ...head, entersWithoutManaSpentToCast: true as const }));
     body = iff[2] as string;
+  } else if (
+    iff !== null &&
+    iff[1] === 'it had counters on it' &&
+    heads.every(
+      (head) =>
+        (head.when === 'dies' || head.when === 'leavesBattlefield') &&
+        head.subject.kind === 'permanent' &&
+        head.aggregate === undefined,
+    )
+  ) {
+    // "Whenever a creature you control leaves the battlefield, if it had counters on it"
+    // (The Ozolith): the departed trigger object's last-known counters (CR 603.10a), of any kind.
+    // One departing object per firing, so not for an aggregate head.
+    condition = { kind: 'triggerObjectMatches', selector: { kind: 'hasAnyCounter' } };
+    body = iff[2] as string;
+  } else if (iff !== null && iff[1] === '~ has counters on it') {
+    // "if ~ has counters on it" (The Ozolith): any kind of counter on the ability's own source,
+    // checked as it triggers and again as it resolves (CR 603.4).
+    condition = { kind: 'sourceMatches', selector: { kind: 'hasAnyCounter' } };
+    body = iff[2] as string;
   } else if (iff !== null && /^(?:it|~) had counters on it$/.test(iff[1] as string)) {
     // "When this creature dies, if it had counters on it" (Iron Apprentice): the departed
     // creature's last-known counters (CR 603.10a), of any kind. Only a self-departure head names
@@ -3226,6 +3606,13 @@ export function parseTriggerLine(line: string, card: OracleCard): Ability[] | nu
         'subject' in head &&
         head.subject.kind === 'self',
     ),
+    departedTriggerObject: heads.every(
+      (head) =>
+        (head.when === 'dies' || head.when === 'leavesBattlefield') &&
+        'subject' in head &&
+        head.subject.kind === 'permanent' &&
+        head.aggregate === undefined,
+    ),
     departedToGraveyard: heads.every(
       (head) =>
         'subject' in head &&
@@ -3262,6 +3649,11 @@ export function parseTriggerLine(line: string, card: OracleCard): Ability[] | nu
     paidTransform ??
     (modalBlock === null
       ? (parseBlinkChosenBlock(body, allocCount) ??
+        parseExileFaceDownPlayableBlock(
+          body,
+          alloc,
+          heads.every((head) => head.when === 'dealsCombatDamageToPlayer'),
+        ) ??
         parseLookAtTopBlock(body, card) ??
         parseExileTopPlayableBlock(body) ??
         parseAddManaTriggerBlock(body, card) ??

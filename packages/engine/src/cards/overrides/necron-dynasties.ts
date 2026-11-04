@@ -337,9 +337,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
 
   // Sautekh Immortal: restored in coverage PR04 (see necron-dynasties-remaining.ts).
 
-  unimplemented('6c85271c-c711-49b0-a72e-9e576c33714d', 'Sculpting Steel', [
-    'You may have this artifact enter as a copy of any artifact on the battlefield.',
-  ]);
+  // Sculpting Steel: read by the copy grammar (see necron-dynasties-remaining.ts).
 
   // Shard of the Nightbringer: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 

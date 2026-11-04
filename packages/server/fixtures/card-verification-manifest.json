@@ -18314,6 +18314,914 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "1946ded1-5f53-409f-b0a6-5433bb0357d2": {
+      "name": "The Ozolith",
+      "oracleSha256": "7a940d7903bdd75ee579e196b382f71ccc373ba1bd9467ee1dbbbf0d4e2160cc",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on The Ozolith.",
+          "implementation": [
+            "leavesBattlefield trigger over a creature you control (permanent subject)",
+            "intervening-if triggerObjectMatches hasAnyCounter, read from the departed creature's last-known facts (CR 603.10a)",
+            "Effect.transferCountersFromTriggerObject onto the source"
+          ],
+          "engineTestIds": [
+            "cards/the-ozolith.test.ts::ozolith-collects-dying-counters",
+            "cards/the-ozolith.test.ts::ozolith-collects-bounced-counters",
+            "cards/the-ozolith.test.ts::ozolith-ignores-counterless-creature",
+            "cards/the-ozolith.test.ts::ozolith-ignores-opponent-creature",
+            "cards/the-ozolith.test.ts::ozolith-ignores-noncreature-permanent"
+          ],
+          "viewerScenarioIds": [
+            "ozolith-collects-dying-counters",
+            "ozolith-collects-bounced-counters",
+            "ozolith-ignores-counterless-creature",
+            "ozolith-ignores-opponent-creature",
+            "ozolith-ignores-noncreature-permanent"
+          ]
+        },
+        {
+          "oracleText": "At the beginning of combat on your turn, if The Ozolith has counters on it, you may move all counters from The Ozolith onto target creature.",
+          "implementation": [
+            "beginningOfCombat (you) trigger, optional, one creature target",
+            "intervening-if sourceMatches hasAnyCounter, rechecked on resolution (CR 603.4)",
+            "Effect.moveAllCounters from the source (CR 122.5)"
+          ],
+          "engineTestIds": [
+            "cards/the-ozolith.test.ts::ozolith-moves-all-counters-at-combat",
+            "cards/the-ozolith.test.ts::ozolith-declines-move",
+            "cards/the-ozolith.test.ts::ozolith-no-counters-no-combat-trigger"
+          ],
+          "viewerScenarioIds": [
+            "ozolith-moves-all-counters-at-combat",
+            "ozolith-declines-move",
+            "ozolith-no-counters-no-combat-trigger"
+          ],
+          "contractTestIds": [
+            "moves every counter of every kind and leaves the source with none",
+            "moves nothing onto the object the counters are already on (CR 122.5)",
+            "removes nothing when the target has left the battlefield (CR 122.5)"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "340bbe8b-e987-4c3e-ab4e-9dee63e57d4f": {
+      "name": "Phyrexian Metamorph",
+      "oracleSha256": "db37c1301b7b7e3a6f2e48e3ac6f446b39e2aafaae415fb01d5e63f82b129a12",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "({U/P} can be paid with either {U} or 2 life.)",
+          "implementation": [
+            "Phyrexian mana symbol {U/P} in the mana cost, payable with {U} or 2 life (CR 107.4f)",
+            "normal creature spell cast and resolution"
+          ],
+          "engineTestIds": [
+            "cards/phyrexian-metamorph.test.ts::metamorph-pays-life",
+            "cards/phyrexian-metamorph.test.ts::metamorph-copies-creature-as-artifact",
+            "cards/phyrexian-metamorph.test.ts::metamorph-copies-artifact"
+          ],
+          "viewerScenarioIds": ["metamorph-pays-life", "metamorph-copies-creature-as-artifact"]
+        },
+        {
+          "oracleText": "You may have this creature enter as a copy of any artifact or creature on the battlefield, except it's an artifact in addition to its other types.",
+          "implementation": [
+            "CardDefinition.entersAsCopy from the copy grammar (cards/grammar/copy.ts): selector artifact or creature, any controller",
+            "addTypes Artifact as a copiable value (CR 707.9b), applied in moveObject before enters triggers (CR 707.2, 614.1c)",
+            "decline enters as the printed 0/0, which state-based actions put into the graveyard"
+          ],
+          "engineTestIds": [
+            "cards/phyrexian-metamorph.test.ts::metamorph-copies-creature-as-artifact",
+            "cards/phyrexian-metamorph.test.ts::metamorph-copies-artifact",
+            "cards/phyrexian-metamorph.test.ts::metamorph-enters-normally",
+            "cards/phyrexian-metamorph.test.ts::metamorph-only-artifacts-and-creatures",
+            "cards/phyrexian-metamorph.test.ts::metamorph-c02-candidates",
+            "cards/phyrexian-metamorph.test.ts::metamorph-c02-copy-of-copy",
+            "cards/phyrexian-metamorph.test.ts::metamorph-c02-original-unchanged"
+          ],
+          "viewerScenarioIds": [
+            "metamorph-copies-creature-as-artifact",
+            "metamorph-copies-artifact",
+            "metamorph-enters-normally",
+            "metamorph-only-artifacts-and-creatures"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "facetNotes": [
+        {
+          "facet": "optional",
+          "reason": "\"You may have it enter as a copy\" is the entersAsCopy choice itself, whose \"Enter normally\" option is the decline; it is not an optional ability flag."
+        }
+      ]
+    },
+    "0355249a-8e4e-41db-9cea-1b901faffbe6": {
+      "name": "Witch Enchanter // Witch-Blessed Meadow",
+      "oracleSha256": "2a9f0691d6b84a5df0d54fb2f95fbd6ad65bb9833b374a59546fa2def782bc9e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, destroy target artifact or enchantment an opponent controls.",
+          "implementation": [
+            "front creature face cast normally at {3}{W}",
+            "enters (self) trigger: destroy one target artifact or enchantment, controller opponent"
+          ],
+          "engineTestIds": [
+            "cards/witch-enchanter.test.ts::witch-enchanter-destroys-artifact",
+            "cards/witch-enchanter.test.ts::witch-enchanter-only-opponents"
+          ],
+          "viewerScenarioIds": [
+            "witch-enchanter-destroys-artifact",
+            "witch-enchanter-only-opponents"
+          ]
+        },
+        {
+          "oracleText": "As this land enters, you may pay 3 life. If you don't, it enters tapped.",
+          "implementation": [
+            "modal DFC land face as an alternative play (AlternativeCast kind mdfc, landFace) for a permanent front face (CR 712.11b)",
+            "entersTappedUnless mayPayLife 3 on the land face",
+            "landFacePermanentDefinition: with the land face up, none of the front face's characteristics or abilities apply (CR 712.8f)"
+          ],
+          "engineTestIds": [
+            "cards/witch-enchanter.test.ts::witch-meadow-pay-life-untapped",
+            "cards/witch-enchanter.test.ts::witch-meadow-enters-tapped",
+            "cards/witch-enchanter.test.ts::witch-meadow-is-not-a-creature"
+          ],
+          "viewerScenarioIds": [
+            "witch-meadow-pay-life-untapped",
+            "witch-meadow-enters-tapped",
+            "witch-meadow-is-not-a-creature"
+          ]
+        },
+        {
+          "oracleText": "{T}: Add {W}.",
+          "implementation": ["land-face mana ability {T}: Add {W}"],
+          "engineTestIds": [
+            "cards/witch-enchanter.test.ts::witch-meadow-pay-life-untapped",
+            "cards/witch-enchanter.test.ts::witch-meadow-is-not-a-creature"
+          ],
+          "viewerScenarioIds": ["witch-meadow-pay-life-untapped", "witch-meadow-is-not-a-creature"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0c367958-729e-416d-988b-098e90e7a1fd": {
+      "name": "Ruby Medallion",
+      "oracleSha256": "9de2af87febd426c1c1dff25c63ed3a46ec3f34df43de5c2d76148a320e9e0d2",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Red spells you cast cost {1} less to cast.",
+          "implementation": [
+            "spell filter slot reads a color word: ofColor(R)",
+            "ruleStatics costReduction {1} for spells you cast (generic only, CR 601.2f)"
+          ],
+          "engineTestIds": [
+            "cards/ruby-medallion.test.ts::ruby-medallion-reduces-red",
+            "cards/ruby-medallion.test.ts::ruby-medallion-not-other-colors",
+            "cards/ruby-medallion.test.ts::ruby-medallion-not-colored-mana"
+          ],
+          "viewerScenarioIds": [
+            "ruby-medallion-reduces-red",
+            "ruby-medallion-not-other-colors",
+            "ruby-medallion-not-colored-mana"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b380c04b-0bce-4328-8f0a-1425e48bee72": {
+      "name": "Urza's Incubator",
+      "oracleSha256": "b3c2b488d20fba1c17600e29bf2aa6d817d4deb4dfbc342bf10c72193c501678",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "As this artifact enters, choose a creature type.",
+          "implementation": [
+            "entersChoosingOption creature type, from the decklist's creature types"
+          ],
+          "engineTestIds": ["cards/urzas-incubator.test.ts::incubator-chosen-type-cheaper"],
+          "viewerScenarioIds": ["incubator-chosen-type-cheaper"]
+        },
+        {
+          "oracleText": "Creature spells of the chosen type cost {2} less to cast.",
+          "implementation": [
+            "ruleStatics costReduction {2}, filter Creature and the source's chosen subtype",
+            "allPlayers: no \"you cast\", so every player's spells (new)"
+          ],
+          "engineTestIds": [
+            "cards/urzas-incubator.test.ts::incubator-chosen-type-cheaper",
+            "cards/urzas-incubator.test.ts::incubator-other-type-full-price",
+            "cards/urzas-incubator.test.ts::incubator-reduces-opponents-spells"
+          ],
+          "viewerScenarioIds": [
+            "incubator-chosen-type-cheaper",
+            "incubator-other-type-full-price",
+            "incubator-reduces-opponents-spells"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "463865bc-087e-477b-9e86-84e77f1ad931": {
+      "name": "Seedborn Muse",
+      "oracleSha256": "935a4f4894058f7e912b131fe97931e288fe276c4766cb0d4cb320604a14a6aa",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Untap all permanents you control during each other player's untap step.",
+          "implementation": [
+            "ruleStatics untapDuringOthersUntapSteps (new): applied in each other player's untap step turn-based action (CR 502.3), never a trigger"
+          ],
+          "engineTestIds": [
+            "cards/seedborn-muse.test.ts::seedborn-cast-then-untap-on-opponent-turn",
+            "cards/seedborn-muse.test.ts::seedborn-untaps-each-permanent-type",
+            "cards/seedborn-muse.test.ts::seedborn-not-opponents-permanents",
+            "cards/seedborn-muse.test.ts::seedborn-not-during-own-turn"
+          ],
+          "viewerScenarioIds": [
+            "seedborn-cast-then-untap-on-opponent-turn",
+            "seedborn-untaps-each-permanent-type",
+            "seedborn-not-opponents-permanents",
+            "seedborn-not-during-own-turn"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "facetNotes": [
+        {
+          "facet": "other",
+          "reason": "\"each other player's untap step\" is the rule static untapDuringOthersUntapSteps; it names other players, not another object, so there is no \"another\" selector to count."
+        }
+      ]
+    },
+    "a984db23-40ea-428d-829f-e944267280f8": {
+      "name": "Faerie Mastermind",
+      "oracleSha256": "c0630be4eec3d7b471c761910e452d409e166fe42d5e49ee682c312df2ccd1dd",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Flash",
+          "implementation": ["flash keyword"],
+          "engineTestIds": ["cards/faerie-mastermind.test.ts::mastermind-flash-on-opponent-turn"],
+          "viewerScenarioIds": ["mastermind-flash-on-opponent-turn"]
+        },
+        {
+          "oracleText": "Flying",
+          "implementation": ["flying keyword"],
+          "engineTestIds": ["cards/faerie-mastermind.test.ts::mastermind-flash-on-opponent-turn"],
+          "viewerScenarioIds": ["mastermind-flash-on-opponent-turn"]
+        },
+        {
+          "oracleText": "Whenever an opponent draws their second card each turn, you draw a card.",
+          "implementation": [
+            "drawsCard opponent trigger with ordinalThisTurn 2: part of the event, not an intervening-if (CR 603.4) (fixed in this change)"
+          ],
+          "engineTestIds": [
+            "cards/faerie-mastermind.test.ts::mastermind-opponent-second-draw",
+            "cards/faerie-mastermind.test.ts::mastermind-opponent-first-draw",
+            "cards/faerie-mastermind.test.ts::mastermind-third-draw-still-resolves"
+          ],
+          "viewerScenarioIds": [
+            "mastermind-opponent-second-draw",
+            "mastermind-opponent-first-draw",
+            "mastermind-third-draw-still-resolves"
+          ]
+        },
+        {
+          "oracleText": "{3}{U}: Each player draws a card.",
+          "implementation": [
+            "activated {3}{U}: Effect.eachPlayerDraws scope all, APNAP order (new)"
+          ],
+          "engineTestIds": ["cards/faerie-mastermind.test.ts::mastermind-each-player-draws"],
+          "viewerScenarioIds": ["mastermind-each-player-draws"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "7c779721-cd1b-4696-9ae9-68ccc284ed2a": {
+      "name": "Aetherize",
+      "oracleSha256": "3c515f80bbd6a29da8ec2ea11e6f7cedd25aaefc8124820c768c8983acf44648",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Return all attacking creatures to their owner's hand.",
+          "implementation": [
+            "mass bounce grammar: returnToHandEach over combatRole attacking creatures; the set is fixed on resolution (CR 611.2c)"
+          ],
+          "engineTestIds": [
+            "cards/aetherize.test.ts::aetherize-returns-attackers",
+            "cards/aetherize.test.ts::aetherize-outside-combat"
+          ],
+          "viewerScenarioIds": ["aetherize-returns-attackers", "aetherize-outside-combat"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a8dba58b-2956-492e-ae30-49db2ae68e53": {
+      "name": "Mana Geyser",
+      "oracleSha256": "df0f3dd0847eb5cf60a9067bfc458c264d65562e36e24db219b209b18d74b3cd",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Add {R} for each tapped land your opponents control.",
+          "implementation": [
+            "Effect.addMana, amount countTappedPermanents land, opponents, counted on resolution (CR 608.2h)"
+          ],
+          "engineTestIds": [
+            "cards/mana-geyser.test.ts::mana-geyser-counts-opponents-tapped-lands",
+            "cards/mana-geyser.test.ts::mana-geyser-ignores-untapped-and-own-lands"
+          ],
+          "viewerScenarioIds": [
+            "mana-geyser-counts-opponents-tapped-lands",
+            "mana-geyser-ignores-untapped-and-own-lands"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8b27326f-e7b8-4a4d-b589-df459246d19a": {
+      "name": "Shadowspear",
+      "oracleSha256": "8c191023b8029044c8e9f8eedc9f7bbe9b3e11231c5c15f3560897de3abc5ad4",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Equipped creature gets +1/+1 and has trample and lifelink.",
+          "implementation": ["equipment static: attachedToSource +1/+1, trample, lifelink"],
+          "engineTestIds": ["cards/shadowspear.test.ts::shadowspear-equipped-creature"],
+          "viewerScenarioIds": ["shadowspear-equipped-creature"]
+        },
+        {
+          "oracleText": "{1}: Permanents your opponents control lose hexproof and indestructible until end of turn.",
+          "implementation": [
+            "Effect.loseKeywordsEachUntilEot (new): layer-6 removeKeywords at its timestamp, so a later grant restores it (CR 613.7); affected set fixed on resolution (CR 611.2c)"
+          ],
+          "engineTestIds": [
+            "cards/shadowspear.test.ts::shadowspear-strips-hexproof",
+            "cards/shadowspear.test.ts::shadowspear-strips-indestructible",
+            "cards/shadowspear.test.ts::shadowspear-only-opponents",
+            "cards/shadowspear.test.ts::shadowspear-later-grant-wins"
+          ],
+          "viewerScenarioIds": [
+            "shadowspear-strips-hexproof",
+            "shadowspear-strips-indestructible",
+            "shadowspear-only-opponents",
+            "shadowspear-later-grant-wins"
+          ]
+        },
+        {
+          "oracleText": "Equip {2}",
+          "implementation": ["Equip {2}: attachSelfTo a creature you control, sorcery timing"],
+          "engineTestIds": ["cards/shadowspear.test.ts::shadowspear-equipped-creature"],
+          "viewerScenarioIds": ["shadowspear-equipped-creature"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8c52bd39-0586-48ca-b263-17210cf9feb6": {
+      "name": "Craterhoof Behemoth",
+      "oracleSha256": "99afcf161845fe00ebe197831a068d35c643b7a7c88608a22c6e65ec98130292",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Haste",
+          "implementation": ["haste keyword"],
+          "engineTestIds": [
+            "cards/craterhoof-behemoth.test.ts::craterhoof-pumps-and-attacks",
+            "cards/craterhoof-behemoth.test.ts::craterhoof-alone"
+          ],
+          "viewerScenarioIds": ["craterhoof-pumps-and-attacks", "craterhoof-alone"]
+        },
+        {
+          "oracleText": "When this creature enters, creatures you control gain trample and get +X/+X until end of turn, where X is the number of creatures you control.",
+          "implementation": [
+            "enters trigger: pumpEachUntilEot by countPermanents creatures you control (X fixed on resolution) and grantKeywordEachUntilEot trample on the same set"
+          ],
+          "engineTestIds": [
+            "cards/craterhoof-behemoth.test.ts::craterhoof-pumps-and-attacks",
+            "cards/craterhoof-behemoth.test.ts::craterhoof-not-opponents-creatures",
+            "cards/craterhoof-behemoth.test.ts::craterhoof-alone"
+          ],
+          "viewerScenarioIds": [
+            "craterhoof-pumps-and-attacks",
+            "craterhoof-not-opponents-creatures",
+            "craterhoof-alone"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "facetNotes": [
+        {
+          "facet": "untilEndOfTurn",
+          "reason": "One \"until end of turn\" spans both the +X/+X and the trample grant, which are two ops over the same set."
+        }
+      ]
+    },
+    "b2e950fb-cb7e-40a0-a311-5bbdd0477b29": {
+      "name": "Sun Titan",
+      "oracleSha256": "08c2cf665d45ba911d1a04180a470311b3bf07b4137fb314c499e999afaeb776",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Vigilance",
+          "implementation": ["vigilance keyword"],
+          "engineTestIds": ["cards/sun-titan.test.ts::sun-titan-attacks-returns-land"],
+          "viewerScenarioIds": ["sun-titan-attacks-returns-land"]
+        },
+        {
+          "oracleText": "Whenever this creature enters or attacks, you may return target permanent card with mana value 3 or less from your graveyard to the battlefield.",
+          "implementation": [
+            "enters and attacks triggers (one per event), optional, cardInGraveyard target: permanent card with manaValueAtMost 3 (new qualifier), graveyardToBattlefield"
+          ],
+          "engineTestIds": [
+            "cards/sun-titan.test.ts::sun-titan-enters-returns",
+            "cards/sun-titan.test.ts::sun-titan-attacks-returns-land",
+            "cards/sun-titan.test.ts::sun-titan-decline",
+            "cards/sun-titan.test.ts::sun-titan-c02-candidates"
+          ],
+          "viewerScenarioIds": [
+            "sun-titan-enters-returns",
+            "sun-titan-attacks-returns-land",
+            "sun-titan-decline"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "facetNotes": [
+        {
+          "facet": "optional",
+          "reason": "\"enters or attacks\" is one ability with two trigger events, modeled as one trigger per event; each is the same optional ability."
+        },
+        {
+          "facet": "targetCount",
+          "reason": "The same target slot appears once on each of the two per-event triggers."
+        }
+      ]
+    },
+    "86bf58f2-7f25-4e10-b797-25e0e8e67769": {
+      "name": "Flusterstorm",
+      "oracleSha256": "545deccdecdfa8ffa11609ba6900608e7cadb1283cce9892ae1ca9b0e6c27870",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target instant or sorcery spell unless its controller pays {1}.",
+          "implementation": [
+            "spell target narrowed by the spell filter slot (instant or sorcery), Effect.counterUnlessControllerPays {1}"
+          ],
+          "engineTestIds": [
+            "cards/flusterstorm.test.ts::flusterstorm-storm-counters",
+            "cards/flusterstorm.test.ts::flusterstorm-controller-pays",
+            "cards/flusterstorm.test.ts::flusterstorm-not-creature-spells",
+            "cards/flusterstorm.test.ts::flusterstorm-c01-no-creature-target"
+          ],
+          "viewerScenarioIds": [
+            "flusterstorm-storm-counters",
+            "flusterstorm-controller-pays",
+            "flusterstorm-not-creature-spells"
+          ]
+        },
+        {
+          "oracleText": "Storm",
+          "implementation": [
+            "storm keyword (new): cast trigger replicateCopies for every player's spells cast before it this turn, each copy may choose new targets (CR 702.40a)"
+          ],
+          "engineTestIds": [
+            "cards/flusterstorm.test.ts::flusterstorm-storm-counters",
+            "cards/flusterstorm.test.ts::flusterstorm-controller-pays"
+          ],
+          "viewerScenarioIds": ["flusterstorm-storm-counters", "flusterstorm-controller-pays"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "69872a9a-fe54-4e58-940c-89395af71acd": {
+      "name": "Finale of Devastation",
+      "oracleSha256": "678ba2349c8f28cd8bec04ff652ca826b51c994534a6e82fbf8e8691fcbaf66a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Search your library and/or graveyard for a creature card with mana value X or less and put it onto the battlefield. If you search your library this way, shuffle. If X is 10 or more, creatures you control get +X/+X and gain haste until end of turn.",
+          "implementation": [
+            "Effect.searchLibraryAndOrGraveyardToBattlefield (new): choose library, graveyard or both; a creature card with mana value at most the announced X; may find nothing (CR 701.19b); shuffle only when the library was searched",
+            "conditionalEffect compareValues X >= 10: pumpEachUntilEot +X/+X and grantKeywordEachUntilEot haste over creatures you control"
+          ],
+          "engineTestIds": [
+            "cards/finale-of-devastation.test.ts::finale-from-library",
+            "cards/finale-of-devastation.test.ts::finale-from-graveyard",
+            "cards/finale-of-devastation.test.ts::finale-x-ten-pumps",
+            "cards/finale-of-devastation.test.ts::finale-c01-mana-value-bound"
+          ],
+          "viewerScenarioIds": [
+            "finale-from-library",
+            "finale-from-graveyard",
+            "finale-x-ten-pumps"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "facetNotes": [
+        {
+          "facet": "untilEndOfTurn",
+          "reason": "One \"until end of turn\" spans both the +X/+X and the haste grant, which are two ops over the same set."
+        }
+      ]
+    },
+    "e0445c80-fa53-4c3e-881e-940e9fce7f57": {
+      "name": "Braids, Arisen Nightmare",
+      "oracleSha256": "dabca9c4b2522112d857cb7103573005d1735aabf628bcbaadc0858f2e7ef2b5",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each opponent may sacrifice a permanent of their choice that shares a card type with it. For each opponent who doesn't, that player loses 2 life and you draw a card.",
+          "implementation": [
+            "override (edhrec-staples.ts): endStep you trigger",
+            "Effect.sacrificeThenOpponentsShareTypeOrPunish (new): optional sacrifice of an artifact, creature, enchantment, land or planeswalker; each opponent in APNAP order (CR 101.4) may choose a permanent sharing a card type with it as it last existed; chosen permanents are sacrificed together; each opponent who did not loses 2 life and you draw a card"
+          ],
+          "engineTestIds": [
+            "cards/edhrec-staples/braids-arisen-nightmare.test.ts::braids-each-opponent-answers",
+            "cards/edhrec-staples/braids-arisen-nightmare.test.ts::braids-decline-sacrifice",
+            "cards/edhrec-staples/braids-arisen-nightmare.test.ts::braids-type-must-match"
+          ],
+          "viewerScenarioIds": [
+            "braids-each-opponent-answers",
+            "braids-decline-sacrifice",
+            "braids-type-must-match"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8b886623-5c96-48dd-a3d2-fd5865c58ff5": {
+      "name": "Plea for Power",
+      "oracleSha256": "90bc766289228956478db3d2320cfc9e240f315526cc885d2f6c04685a5eec71",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Will of the council — Starting with you, each player votes for time or knowledge. If time gets more votes, take an extra turn after this one. If knowledge gets more votes or the vote is tied, draw three cards.",
+          "implementation": [
+            "Effect.councilVote (new, CR 701.38): each player votes once, in turn order starting with the controller; votes are public events; `more` on a strict majority for the first choice, otherwise on any other result (ties included)",
+            "Effect.takeExtraTurn (new, CR 500.7)",
+            "draw three cards"
+          ],
+          "engineTestIds": [
+            "cards/plea-for-power.test.ts::plea-time-wins",
+            "cards/plea-for-power.test.ts::plea-tie-draws",
+            "cards/plea-for-power.test.ts::plea-knowledge-wins",
+            "cards/plea-for-power.test.ts::plea-votes-in-turn-order"
+          ],
+          "viewerScenarioIds": ["plea-time-wins", "plea-tie-draws", "plea-knowledge-wins"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "28ea78dc-7ad6-4006-aaf8-4b25057ec019": {
+      "name": "Nantuko Vigilante",
+      "oracleSha256": "cefc5c5d355546425c93640efb61b3ee3ddd9c5b918a48ec7a943a05c1d6722e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Morph {1}{G}",
+          "implementation": [
+            "morph {1}{G}: cast face down for {3}, turn face up as a special action (CR 702.37)"
+          ],
+          "engineTestIds": ["cards/nantuko-vigilante.test.ts::vigilante-turned-up-destroys"],
+          "viewerScenarioIds": ["vigilante-turned-up-destroys"]
+        },
+        {
+          "oracleText": "When this creature is turned face up, destroy target artifact or enchantment.",
+          "implementation": [
+            "turnedFaceUp (self) trigger event (new), queued by the turn-face-up special action (CR 708.8); destroy target artifact or enchantment"
+          ],
+          "engineTestIds": [
+            "cards/nantuko-vigilante.test.ts::vigilante-turned-up-destroys",
+            "cards/nantuko-vigilante.test.ts::vigilante-cast-face-up-no-trigger"
+          ],
+          "viewerScenarioIds": ["vigilante-turned-up-destroys", "vigilante-cast-face-up-no-trigger"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "bde976c6-afed-44bb-8e3d-4103289dff5e": {
+      "name": "Gudul Lurker",
+      "oracleSha256": "2c3eaaf1c2f4d3949f482585cf60eec4ee5ad195f5724d20c4fb0cb4dd2471bf",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Megamorph {U}",
+          "implementation": [
+            "megamorph {U} (new): morphCost + faceDownVariant megamorph; turned face up for that cost, it gets a +1/+1 counter (CR 702.37b)"
+          ],
+          "engineTestIds": [
+            "cards/gudul-lurker.test.ts::lurker-megamorph-counter",
+            "cards/gudul-lurker.test.ts::lurker-cast-face-up-no-counter"
+          ],
+          "viewerScenarioIds": ["lurker-megamorph-counter", "lurker-cast-face-up-no-counter"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c1d9c41a-0941-4b7e-b8a6-890d30386458": {
+      "name": "Hunted Bonebrute",
+      "oracleSha256": "dfa3026556bd64246990c2339a39fcd2d9e5d2e6d7306bb584a2160f23fec682",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Disguise {1}{B}",
+          "implementation": [
+            "disguise {1}{B} (new): morphCost + faceDownVariant disguise; cast face down, the permanent has ward {2} (faceDownWard, CR 702.168a), cleared as it turns face up"
+          ],
+          "engineTestIds": [
+            "cards/hunted-bonebrute.test.ts::bonebrute-disguise-ward",
+            "cards/hunted-bonebrute.test.ts::bonebrute-turned-up"
+          ],
+          "viewerScenarioIds": ["bonebrute-disguise-ward", "bonebrute-turned-up"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "637ddd65-112d-40f7-9bab-a61724d9165c": {
+      "name": "Hooded Hydra",
+      "oracleSha256": "576562e4f5b294c5c4c48aa1437b3774af944aae580b5b30548a7511712585f3",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Morph {3}{G}{G}",
+          "implementation": ["morph {3}{G}{G}"],
+          "engineTestIds": ["cards/hooded-hydra.test.ts::hydra-turned-up-five-counters"],
+          "viewerScenarioIds": ["hydra-turned-up-five-counters"]
+        },
+        {
+          "oracleText": "As this creature is turned face up, put five +1/+1 counters on it.",
+          "implementation": [
+            "asTurnedFaceUpCounters (new): five +1/+1 counters placed as it turns face up, before its turned-face-up triggers (CR 708.8)"
+          ],
+          "engineTestIds": ["cards/hooded-hydra.test.ts::hydra-turned-up-five-counters"],
+          "viewerScenarioIds": ["hydra-turned-up-five-counters"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "114725ef-ac81-4d13-9153-0a303c3ce9c4": {
+      "name": "Innocuous Rat",
+      "oracleSha256": "d6c8f84df61474d5541ec36019e5585c86db107dfc028f362257d206886a496b",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature dies, manifest dread.",
+          "implementation": [
+            "dies trigger; Effect.manifestDread (new, CR 701.62a): look at the top two, manifest one face down, the other to the graveyard"
+          ],
+          "engineTestIds": ["cards/innocuous-rat.test.ts::rat-dies-manifest-dread"],
+          "viewerScenarioIds": ["rat-dies-manifest-dread"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d5be0ff6-39d9-4f9f-a028-e62dc38463f2": {
+      "name": "Gonti, Lord of Luxury",
+      "oracleSha256": "3d75366c1dcf191f0384f54341c49d028a78c577a69518e0180cc825da1040e1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When Gonti enters, look at the top four cards of target opponent's library, exile one of them face down, then put the rest on the bottom of that library in a random order. You may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell.",
+          "implementation": [
+            "enters trigger with a target opponent; Effect.exileFaceDownPlayable (new): look at the top four, exile one face down, the rest to the bottom in a random order",
+            "only the exiler may look at it (faceDownVisibleTo, CR 406.3); cast permission lasts while exiled (playableWhileExiled); mana of any type (anyTypeCost)"
+          ],
+          "engineTestIds": [
+            "cards/gonti-lord-of-luxury.test.ts::gonti-exile-and-cast-any-type",
+            "cards/gonti-lord-of-luxury.test.ts::gonti-later-turn",
+            "cards/gonti-lord-of-luxury.test.ts::gonti-c02-privacy",
+            "cards/gonti-lord-of-luxury.test.ts::gonti-c02-lasts"
+          ],
+          "viewerScenarioIds": ["gonti-exile-and-cast-any-type", "gonti-later-turn"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "68b51d58-7566-4a26-8c31-8da32799bea7": {
+      "name": "Thief of Sanity",
+      "oracleSha256": "44352787996dea003a98385b5d1be63c2be3915a0495ff7de8a606115a9e5bf0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Flying",
+          "implementation": ["flying keyword"],
+          "engineTestIds": ["cards/thief-of-sanity.test.ts::thief-hits-exiles-one"],
+          "viewerScenarioIds": ["thief-hits-exiles-one"]
+        },
+        {
+          "oracleText": "Whenever this creature deals combat damage to a player, look at the top three cards of that player's library, exile one of them face down, then put the rest into their graveyard. You may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell.",
+          "implementation": [
+            "combat damage to a player trigger; Effect.exileFaceDownPlayable from the event player's library, rest to the graveyard"
+          ],
+          "engineTestIds": ["cards/thief-of-sanity.test.ts::thief-hits-exiles-one"],
+          "viewerScenarioIds": ["thief-hits-exiles-one"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6d56aeb1-0a50-46b6-abdb-cd6575a98dc3": {
+      "name": "Praetor's Grasp",
+      "oracleSha256": "fddcf76ddaa649c4b02d29e534d7f28189bece057e52a5e23b4dec382c4696c5",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Search target opponent's library for a card and exile it face down. Then that player shuffles. You may play that card for as long as it remains exiled.",
+          "implementation": [
+            "Effect.exileFaceDownPlayable search mode: search target opponent's library, exile face down, shuffle; play (lands included) while exiled"
+          ],
+          "engineTestIds": ["cards/praetors-grasp.test.ts::grasp-search-and-play-land"],
+          "viewerScenarioIds": ["grasp-search-and-play-land"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "caa02547-66e3-4e27-a2d3-5e94f3e7a069": {
+      "name": "Thraben Inspector",
+      "oracleSha256": "fcd14a5bfbf9f6717d8df2d44be298396b7f08c547154a4bf7b76057cec09f82",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, investigate. (Create a Clue token. It's an artifact with \"{2}, Sacrifice this token: Draw a card.\")",
+          "implementation": [
+            "enters trigger; Effect.createToken CLUE via the \"investigate\" production (CR 701.36a)"
+          ],
+          "engineTestIds": ["cards/thraben-inspector.test.ts::thraben-inspector-investigates"],
+          "viewerScenarioIds": ["thraben-inspector-investigates"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2f807301-37df-4724-871a-08e3512b07b3": {
+      "name": "Burglar Rat",
+      "oracleSha256": "d10871deff9167d8039379d8d7592288c0e22b5f63222c5734372e2de9669e47",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, each opponent discards a card.",
+          "implementation": [
+            "enters trigger; Effect.discardEachPlayer scope opponents, via the \"each opponent discards\" production"
+          ],
+          "engineTestIds": ["cards/burglar-rat.test.ts::burglar-rat-each-opponent-discards"],
+          "viewerScenarioIds": ["burglar-rat-each-opponent-discards"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "552f0163-a19d-4671-888f-044fc0354875": {
+      "name": "Glimpse the Unthinkable",
+      "oracleSha256": "59f2909db161b8881b303f79dae09c1cf82b2928a47912a542f1c340f2290a72",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target player mills ten cards.",
+          "implementation": [
+            "spell; Effect.mill on a player target, via the \"target player mills N\" production"
+          ],
+          "engineTestIds": ["cards/glimpse-the-unthinkable.test.ts::glimpse-mills-target-player"],
+          "viewerScenarioIds": ["glimpse-mills-target-player"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "27e9db49-7af7-4bef-ad4c-bf5dfb92030d": {
+      "name": "Fog",
+      "oracleSha256": "0608fd185825dafe5282c1195d57c6f2ba4ab73b724a60bc8e91edbe266302cf",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Prevent all combat damage that would be dealt this turn.",
+          "implementation": [
+            "spell; Effect.preventAllCombatDamage, via the Fog production (CR 615)"
+          ],
+          "engineTestIds": ["cards/fog.test.ts::fog-prevents-combat-damage"],
+          "viewerScenarioIds": ["fog-prevents-combat-damage"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "046f5783-cc7b-416a-8cf6-2bcef9c2cc1a": {
+      "name": "Simic Growth Chamber",
+      "oracleSha256": "7e5d25c3efd3238ae420531ebef357c7e0629b6e9d387a69afffcce9638314ea",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This land enters tapped.",
+          "implementation": ["entersTapped replacement"],
+          "engineTestIds": [
+            "cards/simic-growth-chamber.test.ts::simic-growth-chamber-returns-own-land"
+          ],
+          "viewerScenarioIds": ["simic-growth-chamber-returns-own-land"]
+        },
+        {
+          "oracleText": "When this land enters, return a land you control to its owner's hand.",
+          "implementation": [
+            "enters trigger; Effect.returnOneToHand over lands you control, chosen on resolution (no target)"
+          ],
+          "engineTestIds": [
+            "cards/simic-growth-chamber.test.ts::simic-growth-chamber-returns-own-land"
+          ],
+          "viewerScenarioIds": ["simic-growth-chamber-returns-own-land"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ca7d093c-0533-493f-9ad3-8af30118fbfc": {
+      "name": "Abraded Bluffs",
+      "oracleSha256": "355b49ef950c5e48265c91e69cf794ee00039ac10068a31500f5cb4d653d9552",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This land enters tapped.",
+          "implementation": ["entersTapped replacement"],
+          "engineTestIds": ["cards/abraded-bluffs.test.ts::abraded-bluffs-pings-opponent"],
+          "viewerScenarioIds": ["abraded-bluffs-pings-opponent"]
+        },
+        {
+          "oracleText": "When this land enters, it deals 1 damage to target opponent.",
+          "implementation": [
+            "enters trigger; Effect.damage 1 to a player target restricted to opponents"
+          ],
+          "engineTestIds": ["cards/abraded-bluffs.test.ts::abraded-bluffs-pings-opponent"],
+          "viewerScenarioIds": ["abraded-bluffs-pings-opponent"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "66d65cda-e3d1-4a00-8ff3-c6d5ef0ab0c1": {
+      "name": "Forbidden Alchemy",
+      "oracleSha256": "765bb1b67d8a3ed38c8c7b6cc4aa271d7afd464c9859f4311e268bacce9b7dc8",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Look at the top four cards of your library. Put one of them into your hand and the rest into your graveyard.",
+          "implementation": [
+            "spell; Effect.lookAtTopN 4, mayPut required into hand, rest graveyard"
+          ],
+          "engineTestIds": [
+            "cards/forbidden-alchemy.test.ts::forbidden-alchemy-one-to-hand-rest-graveyard",
+            "cards/forbidden-alchemy.test.ts::forbidden-alchemy-flashback"
+          ],
+          "viewerScenarioIds": [
+            "forbidden-alchemy-one-to-hand-rest-graveyard",
+            "forbidden-alchemy-flashback"
+          ]
+        },
+        {
+          "oracleText": "Flashback {6}{B} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+          "implementation": [
+            "keyword flashback: cast from the graveyard for {6}{B}, then exiled (CR 702.34a)"
+          ],
+          "engineTestIds": ["cards/forbidden-alchemy.test.ts::forbidden-alchemy-flashback"],
+          "viewerScenarioIds": ["forbidden-alchemy-flashback"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5bf49f39-b3d5-4148-8dc2-b5b5011769d2": {
+      "name": "Adventurous Impulse",
+      "oracleSha256": "5b999e41d3fbb51e1c018f12db59220b912608f690f4414be5fc244fb369300a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Look at the top three cards of your library. You may reveal a creature or land card from among them and put it into your hand. Put the rest on the bottom of your library in any order.",
+          "implementation": [
+            "spell; Effect.lookAtTopN 3, mayPut creature or land with reveal into hand, rest bottomAnyOrder"
+          ],
+          "engineTestIds": [
+            "cards/adventurous-impulse.test.ts::adventurous-impulse-reveals-creature",
+            "cards/adventurous-impulse.test.ts::adventurous-impulse-declines"
+          ],
+          "viewerScenarioIds": [
+            "adventurous-impulse-reveals-creature",
+            "adventurous-impulse-declines"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "045a9d3d-c20d-427f-a77b-0bffc6f55526": {
+      "name": "Soul's Attendant",
+      "oracleSha256": "3f6d9899065a463a00de879573aa2249d1898fc0ed130d9098137cd7ca689995",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever another creature enters, you may gain 1 life.",
+          "implementation": [
+            "another-creature-enters trigger, optional; Effect.gainLife 1 via the subjectless \"gain N life\" production"
+          ],
+          "engineTestIds": [
+            "cards/souls-attendant.test.ts::souls-attendant-gains-life",
+            "cards/souls-attendant.test.ts::souls-attendant-declines"
+          ],
+          "viewerScenarioIds": ["souls-attendant-gains-life", "souls-attendant-declines"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

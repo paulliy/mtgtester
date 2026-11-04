@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "card": "Forbidden Alchemy",
+  "supportCards": [
+    {
+      "name": "Scenario Ant",
+      "typeLine": "Creature — Insect",
+      "manaCost": "{1}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Cat",
+      "typeLine": "Creature — Cat",
+      "manaCost": "{1}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Dog",
+      "typeLine": "Creature — Dog",
+      "manaCost": "{1}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "forbidden-alchemy-one-to-hand-rest-graveyard",
+      "title": "Forbidden Alchemy: one of the top four goes to your hand and the other three to your graveyard",
+      "clauses": [1],
+      "instructions": ["Cast Forbidden Alchemy and put Scenario Cat into your hand."],
+      "expectedOutcome": "Scenario Cat is in your hand; Scenario Ant, Scenario Bear and Scenario Dog are in your graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Forbidden Alchemy"],
+          "battlefield": ["Island", "Island", "Island"],
+          "libraryTop": ["Scenario Ant", "Scenario Bear", "Scenario Cat", "Scenario Dog"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Forbidden Alchemy/"
+        },
+        {
+          "player": "P1",
+          "choose": "Put Scenario Cat into your hand"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Cat"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Ant", "Scenario Bear", "Scenario Dog", "Forbidden Alchemy"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "forbidden-alchemy-flashback",
+      "title": "Forbidden Alchemy: cast it from your graveyard for its flashback cost, then it is exiled",
+      "clauses": [1, 2],
+      "instructions": [
+        "Cast Forbidden Alchemy from your graveyard for {6}{B} and put Scenario Ant into your hand."
+      ],
+      "expectedOutcome": "Scenario Ant is in your hand, the other three are in your graveyard, and Forbidden Alchemy is exiled.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Forbidden Alchemy"],
+          "battlefield": ["Swamp", "Island", "Island", "Island", "Island", "Island", "Island"],
+          "libraryTop": ["Scenario Ant", "Scenario Bear", "Scenario Cat", "Scenario Dog"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Forbidden Alchemy.*from your graveyard/"
+        },
+        {
+          "player": "P1",
+          "choose": "Put Scenario Ant into your hand"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Ant"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Bear", "Scenario Cat", "Scenario Dog"],
+            "lacks": ["Forbidden Alchemy"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "exile",
+            "has": ["Forbidden Alchemy"]
+          }
+        }
+      ]
+    }
+  ]
+}

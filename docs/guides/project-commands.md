@@ -12,7 +12,7 @@ bun run --cwd apps/web build            # web build
 bun run test                            # full Vitest suite
 bun run test <path-or-filter>           # one test file or pattern
 bun run test:card-gate                  # offline card verification gate: every test file in scripts/card-gate.txt
-bun run snapshots:check                 # interpretation/override snapshot drift, incl. the pinned fixture and one-line corpus nets (ADR 0038)
+bun run snapshots:check                 # interpretation/override snapshot drift, incl. the pinned fixture and one-line corpus nets (ADR 0038), and the EDHREC modeled ratchet
 bun run scripts/one-line-corpus.ts [--check] # rebuild the one-line probe corpus after the ready list changes
 bun run check:manifest-tests [--report] # each manifest engine test ID names one collected test (lists Vitest, ~2.5 min)
 bun run mutate-cards --card "<name>"    # IR mutation: each mutant of the card must fail one of its manifest tests on an assertion
@@ -49,6 +49,8 @@ bun run edhrec:fetch [--share 0.95]     # network: refreeze the EDHREC ranking a
 bun run edhrec:ready-list [--check]     # needs the bulk bank: docs/plans/edhrec-ready-list.md
 bun run edhrec:triage [--check]         # offline: the failing grammar slot of each one-line card (docs/plans/edhrec-triage.md)
 bun run edhrec:triage --bank F --out D  # the same from real Oracle text, written into D
+bun run coverage:pin [--bank F]         # needs the bulk bank: pin ready-list Oracle records (append-only) and re-ratchet
+bun run coverage:pin --ratchet|--check  # offline: record, or check, which pinned EDHREC cards model
 bun run coverage:rebaseline [--bulk | --oracle-fixture <file> [--write]]   # review Oracle drift; see below
 bun run coverage:snapshot [url...]
 bun run scryfall:update [--from oracle-cards.jsonl.gz]   # refresh data/ from Scryfall, or from a downloaded snapshot

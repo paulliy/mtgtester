@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "card": "Flusterstorm",
+  "supportCards": [
+    {
+      "name": "Scenario Opt",
+      "typeLine": "Instant",
+      "manaCost": "{U}",
+      "oracleText": "Draw a card."
+    },
+    {
+      "name": "Scenario Bolt",
+      "typeLine": "Instant",
+      "manaCost": "{R}",
+      "oracleText": "Scenario Bolt deals 3 damage to any target."
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature \u2014 Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "flusterstorm-storm-counters",
+      "title": "Flusterstorm: with storm copies, P2 cannot pay and the instant is countered",
+      "clauses": [1, 2],
+      "instructions": [
+        "Cast Scenario Opt.",
+        "When P2 casts Scenario Bolt at you, cast Flusterstorm targeting it; keep the copies' targets."
+      ],
+      "expectedOutcome": "Storm makes two copies; P2 has no mana to pay, so Scenario Bolt is countered and you stay at 40 life.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Opt", "Flusterstorm"],
+          "battlefield": ["Island", "Island"]
+        },
+        "P2": {
+          "hand": ["Scenario Bolt"],
+          "battlefield": ["Mountain"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Opt/"
+        },
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Bolt/",
+          "targets": ["P1"]
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Flusterstorm/",
+          "targets": ["Scenario Bolt"]
+        },
+        {
+          "player": "P1",
+          "choose": "/^Keep Scenario Bolt/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Keep Scenario Bolt/"
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "has": ["Scenario Bolt"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Flusterstorm", "Scenario Opt"]
+          }
+        },
+        {
+          "event": {
+            "type": "spellCopied",
+            "count": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "flusterstorm-controller-pays",
+      "title": "Flusterstorm: with one storm copy, P2 pays {1} twice and the instant resolves",
+      "clauses": [1, 2],
+      "instructions": [
+        "When P2 casts Scenario Bolt at you, cast Flusterstorm targeting it; keep the copy's target.",
+        "P2 pays {1} for the copy and {1} for Flusterstorm."
+      ],
+      "expectedOutcome": "Storm makes one copy (Scenario Bolt was cast before it); P2 pays both times and Scenario Bolt deals 3 damage to you.",
+      "seats": {
+        "P1": {
+          "hand": ["Flusterstorm"],
+          "battlefield": ["Island"]
+        },
+        "P2": {
+          "hand": ["Scenario Bolt"],
+          "battlefield": ["Mountain", "Mountain", "Mountain"]
+        }
+      },
+      "script": [
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Bolt/",
+          "targets": ["P1"]
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Flusterstorm/",
+          "targets": ["Scenario Bolt"]
+        },
+        {
+          "player": "P1",
+          "choose": "/^Keep Scenario Bolt/"
+        },
+        {
+          "player": "P2",
+          "choose": "/^Pay/"
+        },
+        {
+          "player": "P2",
+          "choose": "/^Pay/"
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 37
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Flusterstorm"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "flusterstorm-not-creature-spells",
+      "title": "Flusterstorm: a creature spell is not a legal target",
+      "clauses": [1],
+      "instructions": ["P2 casts Scenario Bear: Flusterstorm cannot be cast at it."],
+      "expectedOutcome": "Scenario Bear resolves and Flusterstorm stays in your hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Flusterstorm"],
+          "battlefield": ["Island"]
+        },
+        "P2": {
+          "hand": ["Scenario Bear"],
+          "battlefield": ["Forest", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Bear/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "battlefield",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Flusterstorm"]
+          }
+        }
+      ],
+      "turn": {
+        "player": "P2"
+      }
+    }
+  ]
+}

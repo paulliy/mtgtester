@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "card": "Innocuous Rat",
+  "supportCards": [
+    {
+      "name": "Scenario Snuff",
+      "typeLine": "Instant",
+      "manaCost": "{B}",
+      "oracleText": "Destroy target creature."
+    },
+    {
+      "name": "Scenario Ant",
+      "typeLine": "Creature \u2014 Insect",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1",
+      "oracleText": ""
+    },
+    {
+      "name": "Scenario Bee",
+      "typeLine": "Creature \u2014 Insect",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1",
+      "oracleText": ""
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "rat-dies-manifest-dread",
+      "title": "Innocuous Rat: when it dies, manifest dread",
+      "clauses": [1],
+      "instructions": [
+        "Cast Scenario Snuff on Innocuous Rat.",
+        "Manifest dread: put Scenario Bee onto the battlefield face down; Scenario Ant goes to your graveyard."
+      ],
+      "expectedOutcome": "A face-down 2/2 is on your battlefield, and Scenario Ant and Innocuous Rat are in your graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Snuff"],
+          "battlefield": ["Innocuous Rat", "Swamp"],
+          "libraryTop": ["Scenario Ant", "Scenario Bee"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Snuff/",
+          "targets": ["Innocuous Rat"]
+        },
+        {
+          "player": "P1",
+          "choose": "Manifest Scenario Bee"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Face-down permanent"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Ant", "Innocuous Rat"],
+            "lacks": ["Scenario Bee"]
+          }
+        },
+        {
+          "event": {
+            "type": "manifestDread",
+            "count": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -69,6 +69,7 @@ import {
   totalPips,
   withX,
 } from '../mana/cost';
+import { anyTypeCost } from '../mana/cost';
 import type { ManaSource, ParsedManaCost, PaymentPlan } from '../mana/cost';
 import {
   activatingAbilitiesBlockedFor,
@@ -446,7 +447,7 @@ export function costReductionFor(
     if ((entry.static.appliesTo ?? 'cast') !== 'cast') continue;
     // Target-dependent reductions are priced once targets are known: `targetedCostReductionFor`.
     if (entry.static.targetFilter !== undefined) continue;
-    if (entry.controllerId !== casterId) continue;
+    if (entry.controllerId !== casterId && entry.static.allPlayers !== true) continue;
     if (entry.static.yourTurnOnly === true && ctx.state.currentTurnPlayer !== casterId) continue;
     if (entry.static.excludesSelf === true && entry.sourceCardId === castCardId) continue;
     // "This spell costs {3} less to cast if you control a creature with power 4 or greater"
@@ -791,9 +792,15 @@ export function computePriorityOptions(
     ) =>
       planSpellPayment(paymentCtx, paymentPlayer, {
         mana:
-          fromExile && obj.playableUntilEotBy === player.id && obj.spendAsAnyColorUntilEot === true
-            ? { ...mana, spendAsAnyColor: true }
-            : mana,
+          fromExile &&
+          obj.playableUntilEotBy === player.id &&
+          obj.spendAsAnyTypeWhileExiled === true
+            ? anyTypeCost(mana)
+            : fromExile &&
+                obj.playableUntilEotBy === player.id &&
+                obj.spendAsAnyColorUntilEot === true
+              ? { ...mana, spendAsAnyColor: true }
+              : mana,
         costs,
         sourceCardId: obj.cardId,
         sourceOracleId: obj.oracleId,

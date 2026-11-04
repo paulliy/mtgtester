@@ -98,6 +98,23 @@ function parseDynamicCountValueUntraced(
     const base = parseDynamicCountValue('the number of ' + (plus[1] as string), card, opts);
     return base === null ? null : { kind: 'plus', of: base, n: 1 };
   }
+  // "for each tapped land your opponents control" (Mana Geyser): tapped permanents, scoped by
+  // the subject the same way the untapped count below is.
+  const tapped = text.match(/^(?:the )?number of tapped (.+)$/);
+  if (tapped !== null) {
+    const noun = tapped[1] as string;
+    const selector = parseSubject(noun, card);
+    if (selector !== null)
+      return {
+        kind: 'countTappedPermanents',
+        selector,
+        scope: /\byour opponents control\b|\ban opponent controls\b/.test(noun)
+          ? 'opponents'
+          : /\byou control\b/.test(noun)
+            ? 'you'
+            : 'all',
+      };
+  }
   const number = text.match(/^(?:the )?number of (.+)$/);
   if (number !== null) {
     const noun = number[1] as string;

@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "card": "Finale of Devastation",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature \u2014 Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Ogre",
+      "typeLine": "Creature \u2014 Ogre",
+      "manaCost": "{3}{R}",
+      "power": "4",
+      "toughness": "4"
+    },
+    {
+      "name": "Scenario Rock",
+      "typeLine": "Artifact",
+      "manaCost": "{1}",
+      "oracleText": ""
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "finale-from-library",
+      "title": "Finale of Devastation: X=2, search your library for a creature card with mana value 2 or less",
+      "clauses": [1],
+      "instructions": [
+        "Cast Finale of Devastation with X=2, search your library, and put Scenario Bear onto the battlefield."
+      ],
+      "expectedOutcome": "Scenario Bear enters from your library; Scenario Ogre (mana value 4) is not offered; your library is shuffled.",
+      "seats": {
+        "P1": {
+          "hand": ["Finale of Devastation"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest"],
+          "libraryTop": ["Scenario Ogre", "Scenario Bear", "Scenario Rock"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Finale of Devastation .* with X=2$/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Search your library$/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Put Scenario Bear/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "library",
+            "has": ["Scenario Ogre", "Scenario Rock"]
+          }
+        },
+        {
+          "event": {
+            "type": "shuffle",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "finale-from-graveyard",
+      "title": "Finale of Devastation: search only your graveyard, and the library is not shuffled",
+      "clauses": [1],
+      "instructions": [
+        "Cast Finale of Devastation with X=2, search your graveyard, and put Scenario Bear onto the battlefield."
+      ],
+      "expectedOutcome": "Scenario Bear returns from your graveyard and your library is not shuffled.",
+      "seats": {
+        "P1": {
+          "hand": ["Finale of Devastation"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest"],
+          "graveyard": ["Scenario Bear", "Scenario Ogre"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Finale of Devastation .* with X=2$/"
+        },
+        {
+          "player": "P1",
+          "choose": "Search your graveyard"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Put Scenario Bear/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Ogre"]
+          }
+        },
+        {
+          "event": {
+            "type": "shuffle",
+            "count": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "finale-x-ten-pumps",
+      "title": "Finale of Devastation: with X=10, creatures you control get +10/+10 and haste",
+      "clauses": [1],
+      "instructions": [
+        "Cast Finale of Devastation with X=10, search both zones, and put Scenario Ogre onto the battlefield."
+      ],
+      "expectedOutcome": "Scenario Ogre enters and, with your other creatures, gets +10/+10 and haste.",
+      "seats": {
+        "P1": {
+          "hand": ["Finale of Devastation"],
+          "battlefield": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": ["Scenario Ogre"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Finale of Devastation .* with X=10$/"
+        },
+        {
+          "player": "P1",
+          "choose": "Search your library and graveyard"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Put Scenario Ogre/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Ogre"]
+          }
+        },
+        {
+          "keywords": {
+            "card": "Scenario Ogre",
+            "has": ["haste"]
+          }
+        }
+      ]
+    }
+  ]
+}

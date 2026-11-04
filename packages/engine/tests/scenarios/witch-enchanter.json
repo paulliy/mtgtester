@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "card": "Witch Enchanter // Witch-Blessed Meadow",
+  "supportCards": [
+    {
+      "name": "Scenario Rock",
+      "typeLine": "Artifact",
+      "manaCost": "{2}",
+      "oracleText": "{T}: Add {C}."
+    },
+    { "name": "Scenario Charm", "typeLine": "Enchantment", "manaCost": "{1}{W}", "oracleText": "" },
+    { "name": "Scenario Relic", "typeLine": "Artifact", "manaCost": "{2}", "oracleText": "" },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Squire",
+      "typeLine": "Creature — Human",
+      "manaCost": "{W}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Wrath",
+      "typeLine": "Sorcery",
+      "manaCost": "{W}",
+      "oracleText": "Destroy all creatures."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "witch-enchanter-destroys-artifact",
+      "title": "Witch Enchanter: cast the creature face, and its enters trigger destroys an opponent's artifact",
+      "clauses": [1],
+      "instructions": ["Cast Witch Enchanter and target P2's Scenario Rock with its trigger."],
+      "expectedOutcome": "Witch Enchanter is a 2/2 on your battlefield and P2's Scenario Rock is destroyed.",
+      "seats": {
+        "P1": {
+          "hand": ["Witch Enchanter // Witch-Blessed Meadow"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains"]
+        },
+        "P2": { "battlefield": ["Scenario Rock"] }
+      },
+      "script": [{ "player": "P1", "choose": "/^Cast Witch Enchanter/" }],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Witch Enchanter // Witch-Blessed Meadow"]
+          }
+        },
+        { "zone": { "player": "P2", "zone": "graveyard", "has": ["Scenario Rock"] } }
+      ]
+    },
+    {
+      "id": "witch-enchanter-only-opponents",
+      "title": "Witch Enchanter: its trigger can target only an artifact or enchantment an opponent controls",
+      "clauses": [1],
+      "instructions": [
+        "Cast Witch Enchanter: your own Scenario Relic and P2's Scenario Bear are not offered as targets; target P2's Scenario Charm."
+      ],
+      "expectedOutcome": "P2's Scenario Charm is destroyed; your Scenario Relic and P2's Scenario Bear stay.",
+      "seats": {
+        "P1": {
+          "hand": ["Witch Enchanter // Witch-Blessed Meadow"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains", "Scenario Relic"]
+        },
+        "P2": { "battlefield": ["Scenario Charm", "Scenario Bear"] }
+      },
+      "script": [{ "player": "P1", "choose": "/^Cast Witch Enchanter/" }],
+      "expect": [
+        { "zone": { "player": "P2", "zone": "graveyard", "has": ["Scenario Charm"] } },
+        { "zone": { "player": "P1", "zone": "battlefield", "has": ["Scenario Relic"] } },
+        { "zone": { "player": "P2", "zone": "battlefield", "has": ["Scenario Bear"] } }
+      ]
+    },
+    {
+      "id": "witch-meadow-pay-life-untapped",
+      "title": "Witch-Blessed Meadow: play the land face, pay 3 life, and tap it for white",
+      "clauses": [2, 3],
+      "instructions": [
+        "Play Witch-Blessed Meadow and pay 3 life so it enters untapped.",
+        "Cast Scenario Squire with its white mana."
+      ],
+      "expectedOutcome": "You are at 37 life, Scenario Squire is on the battlefield, and P2's Scenario Rock is untouched: the creature face's trigger never happens.",
+      "seats": {
+        "P1": { "hand": ["Witch Enchanter // Witch-Blessed Meadow", "Scenario Squire"] },
+        "P2": { "battlefield": ["Scenario Rock"] }
+      },
+      "script": [
+        { "player": "P1", "choose": "/^Play Witch-Blessed Meadow/" },
+        { "player": "P1", "choose": "/^Pay 3 life/" },
+        { "player": "P1", "choose": "/^Cast Scenario Squire/" }
+      ],
+      "expect": [
+        { "life": { "player": "P1", "equals": 37 } },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Witch-Blessed Meadow", "Scenario Squire"]
+          }
+        },
+        { "zone": { "player": "P2", "zone": "battlefield", "has": ["Scenario Rock"] } },
+        { "tapped": { "card": "Witch-Blessed Meadow", "equals": true } },
+        { "event": { "type": "triggerOnStack", "count": 0 } }
+      ]
+    },
+    {
+      "id": "witch-meadow-enters-tapped",
+      "title": "Witch-Blessed Meadow: decline the life payment and it enters tapped",
+      "clauses": [2],
+      "instructions": ["Play Witch-Blessed Meadow and don't pay life."],
+      "expectedOutcome": "Witch-Blessed Meadow enters tapped, you stay at 40 life, and nothing triggers.",
+      "seats": {
+        "P1": { "hand": ["Witch Enchanter // Witch-Blessed Meadow"] },
+        "P2": { "battlefield": ["Scenario Rock"] }
+      },
+      "script": [
+        { "player": "P1", "choose": "/^Play Witch-Blessed Meadow/" },
+        { "player": "P1", "choose": "/^Don't pay/" }
+      ],
+      "expect": [
+        { "life": { "player": "P1", "equals": 40 } },
+        { "tapped": { "card": "Witch-Blessed Meadow", "equals": true } },
+        { "zone": { "player": "P2", "zone": "battlefield", "has": ["Scenario Rock"] } },
+        { "event": { "type": "triggerOnStack", "count": 0 } }
+      ]
+    },
+    {
+      "id": "witch-meadow-is-not-a-creature",
+      "title": "Witch-Blessed Meadow: the land face is not a creature, so a board wipe leaves it",
+      "clauses": [2, 3],
+      "instructions": [
+        "Play Witch-Blessed Meadow, pay 3 life, and cast Scenario Wrath with its mana."
+      ],
+      "expectedOutcome": "Scenario Bear dies and Witch-Blessed Meadow stays on the battlefield.",
+      "seats": {
+        "P1": { "hand": ["Witch Enchanter // Witch-Blessed Meadow", "Scenario Wrath"] },
+        "P2": { "battlefield": ["Scenario Bear"] }
+      },
+      "script": [
+        { "player": "P1", "choose": "/^Play Witch-Blessed Meadow/" },
+        { "player": "P1", "choose": "/^Pay 3 life/" },
+        { "player": "P1", "choose": "/^Cast Scenario Wrath/" }
+      ],
+      "expect": [
+        { "zone": { "player": "P1", "zone": "battlefield", "has": ["Witch-Blessed Meadow"] } },
+        { "zone": { "player": "P2", "zone": "graveyard", "has": ["Scenario Bear"] } }
+      ]
+    }
+  ]
+}

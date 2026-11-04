@@ -30,3 +30,6 @@ tmp
 # Historical byte-for-byte audit snapshot
 docs/reviews/2026-09-04/override-defs-before-audit-fixes.json
 dist-table
+
+# One pinned card per line (bun run coverage:pin), so a diff names the cards that changed
+packages/server/fixtures/edhrec-pinned-oracle.json

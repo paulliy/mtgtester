@@ -1,0 +1,254 @@
+{
+  "schemaVersion": 1,
+  "card": "Braids, Arisen Nightmare",
+  "supportCards": [
+    {
+      "name": "Scenario Rock",
+      "typeLine": "Artifact",
+      "manaCost": "{1}",
+      "oracleText": ""
+    },
+    {
+      "name": "Scenario Relic",
+      "typeLine": "Artifact",
+      "manaCost": "{1}",
+      "oracleText": ""
+    },
+    {
+      "name": "Scenario Idol",
+      "typeLine": "Artifact",
+      "manaCost": "{1}",
+      "oracleText": ""
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature \u2014 Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Ant",
+      "typeLine": "Creature \u2014 Insect",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Cat",
+      "typeLine": "Creature \u2014 Cat",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "braids-each-opponent-answers",
+      "title": "Braids, Arisen Nightmare: sacrifice an artifact; each opponent sacrifices one or loses 2 life while you draw",
+      "clauses": [1],
+      "instructions": [
+        "Declare no attackers. In your end step, sacrifice Scenario Rock to Braids.",
+        "P2 declines, P3 has no artifact, P4 sacrifices Scenario Idol."
+      ],
+      "expectedOutcome": "P2 and P3 each lose 2 life and you draw two cards; P4 sacrifices Scenario Idol and keeps its life.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Braids, Arisen Nightmare", "Scenario Rock"],
+          "libraryTop": ["Scenario Ant", "Scenario Cat"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Relic"]
+        },
+        "P3": {
+          "battlefield": ["Scenario Bear"]
+        },
+        "P4": {
+          "battlefield": ["Scenario Idol"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["__no_attack__"]
+        },
+        {
+          "player": "P1",
+          "choose": "Sacrifice Scenario Rock"
+        },
+        {
+          "player": "P2",
+          "choose": "/^Don't sacrifice/"
+        },
+        {
+          "player": "P4",
+          "choose": "Sacrifice Scenario Idol"
+        }
+      ],
+      "continue": {
+        "throughCombat": true,
+        "toPostcombatMain": true,
+        "toEndStep": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 38
+          }
+        },
+        {
+          "life": {
+            "player": "P3",
+            "equals": 38
+          }
+        },
+        {
+          "life": {
+            "player": "P4",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Ant", "Scenario Cat"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Rock"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P4",
+            "zone": "graveyard",
+            "has": ["Scenario Idol"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "battlefield",
+            "has": ["Scenario Relic"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "braids-decline-sacrifice",
+      "title": "Braids, Arisen Nightmare: decline the sacrifice and nothing happens",
+      "clauses": [1],
+      "instructions": ["Declare no attackers. In your end step, don't sacrifice anything."],
+      "expectedOutcome": "No one loses life and you draw nothing.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Braids, Arisen Nightmare", "Scenario Rock"],
+          "libraryTop": ["Scenario Ant"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Relic"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["__no_attack__"]
+        },
+        {
+          "player": "P1",
+          "choose": "/^Don't sacrifice/"
+        }
+      ],
+      "continue": {
+        "throughCombat": true,
+        "toPostcombatMain": true,
+        "toEndStep": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "lacks": ["Scenario Ant"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Rock"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "braids-type-must-match",
+      "title": "Braids, Arisen Nightmare: an opponent's creature does not share a type with a sacrificed land",
+      "clauses": [1],
+      "instructions": [
+        "Declare no attackers. In your end step, sacrifice a Forest to Braids: P2 controls only a creature."
+      ],
+      "expectedOutcome": "P2 cannot sacrifice its Scenario Bear for the land, loses 2 life, and you draw a card.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Braids, Arisen Nightmare", "Forest"],
+          "libraryTop": ["Scenario Ant"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["__no_attack__"]
+        },
+        {
+          "player": "P1",
+          "choose": "Sacrifice Forest"
+        }
+      ],
+      "continue": {
+        "throughCombat": true,
+        "toPostcombatMain": true,
+        "toEndStep": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 38
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "battlefield",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Ant"]
+          }
+        }
+      ]
+    }
+  ]
+}

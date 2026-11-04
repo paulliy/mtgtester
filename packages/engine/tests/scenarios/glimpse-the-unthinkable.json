@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "card": "Glimpse the Unthinkable",
+  "scenarios": [
+    {
+      "id": "glimpse-mills-target-player",
+      "title": "Glimpse the Unthinkable: the target player mills ten cards",
+      "clauses": [1],
+      "instructions": ["Cast Glimpse the Unthinkable targeting P2."],
+      "expectedOutcome": "P2 mills ten cards, one mill event each; you mill none.",
+      "seats": {
+        "P1": {
+          "hand": ["Glimpse the Unthinkable"],
+          "battlefield": ["Island", "Swamp"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Glimpse the Unthinkable/",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Glimpse the Unthinkable"]
+          }
+        },
+        {
+          "event": {
+            "type": "mill",
+            "count": 10,
+            "payload": "\"player\":\"P2\""
+          }
+        },
+        {
+          "event": {
+            "type": "mill",
+            "count": 0,
+            "payload": "\"player\":\"P1\""
+          }
+        }
+      ]
+    }
+  ]
+}
