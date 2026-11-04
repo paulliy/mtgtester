@@ -1,4 +1,4 @@
-import { clearCached } from '../effects/layer-cache';
+import { clearCached, getCached, setCached } from '../effects/layer-cache';
 import type { GameContext } from '../state/types';
 
 /**
@@ -47,9 +47,13 @@ export function castingCheckpoint(ctx: GameContext): () => void {
   capture(ctx.resolutionObjectFacts);
   // What a rolled-back cast recorded never happened (ADR 0034 decision 4).
   const diagnostics = ctx.diagnostics?.mark();
+  // The layer results for the state being restored. Every read checks them against a digest of
+  // the current state, so restoring them is no less safe than clearing, and saves a full pass.
+  const layers = getCached(ctx);
   return () => {
     for (const revert of restore) revert();
     if (diagnostics !== undefined) ctx.diagnostics?.truncate(diagnostics);
-    clearCached(ctx);
+    if (layers === undefined) clearCached(ctx);
+    else setCached(ctx, layers);
   };
 }

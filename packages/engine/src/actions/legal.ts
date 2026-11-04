@@ -1828,9 +1828,10 @@ export function computePriorityOptions(
   }
 
   // Activated abilities of permanents this player controls (CR 602).
+  const ruleStatics = gatherRuleStatics(ctx);
   for (const perm of ctx.state.battlefield) {
     if (perm.controllerId !== player.id) continue;
-    if (activatingAbilitiesBlockedFor(ctx, player.id, perm)) continue;
+    if (activatingAbilitiesBlockedFor(ctx, player.id, perm, ruleStatics)) continue;
     const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
     const activatedAbilities =
       computeCharacteristics(ctx, perm).activatedAbilities ?? def.activatedAbilities;
