@@ -2240,6 +2240,25 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await passStackUntil(page, hand(page, 'Island'));
     await expect(permanent(page, 'P1', 'Ripjaw Raptor')).toHaveCount(1);
   },
+  // EDHREC plan Phase 4 batch 7: "its controller" after a targeted sentence.
+  'natures-claim-controller-gains': async (page) => {
+    await castWith(page, hand(page, "Nature's Claim"), {
+      targets: [['P2', 'Scenario Relic']],
+      resolves: /Nature's Claim[^]*resolves/,
+    });
+    await expect(permanent(page, 'P2', 'Scenario Relic')).toHaveCount(0);
+    await expect(inZone(page, 'P2', 'Graveyard', 'Scenario Relic')).toHaveCount(1);
+    await expect(life(page, 'P2')).toHaveText('44');
+    await expect(life(page, 'P1')).toHaveText('40');
+  },
+  'vapor-snag-bounce-and-drain': async (page) => {
+    await castWith(page, hand(page, 'Vapor Snag'), {
+      targets: [['P2', 'Scenario Bear']],
+      resolves: /Vapor Snag[^]*resolves/,
+    });
+    await expect(permanent(page, 'P2', 'Scenario Bear')).toHaveCount(0);
+    await expect(life(page, 'P2')).toHaveText('39');
+  },
   'megrim-pings-discarding-opponent': async (page) => {
     await castWith(page, hand(page, 'Scenario Raid'), { resolves: /Scenario Raid[^]*resolves/ });
     await passStackUntil(page, life(page, 'P2').filter({ hasText: '38' }));
