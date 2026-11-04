@@ -19802,6 +19802,23 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "70a6f08e-854d-4e2f-9d8c-c45ec3231157": {
+      "name": "Faeburrow Elder",
+      "oracleSha256": "1cffbb91cbe9335f998928b39dda36244f0a494df65a88cacd28ecd404a27e54",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "Its \"+1/+1 for each color among permanents you control\" static needs the colors of permanents while layers are applied, which the layer engine cannot evaluate; read as modeled, it crashed once on the battlefield (EDHREC plan Phase 4 batch 5).",
+      "clauses": [
+        {
+          "oracleText": "This creature gets +1/+1 for each color among permanents you control.",
+          "implementation": [
+            "unsupported: Its \"+1/+1 for each color among permanents you control\" static needs the colors of permanents while layers are applied, which the layer engine cannot evaluate; read as modeled, it crashed once on the battlefield (EDHREC plan Phase 4 batch 5)."
+          ],
+          "engineTestIds": ["faeburrow-elder-static-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

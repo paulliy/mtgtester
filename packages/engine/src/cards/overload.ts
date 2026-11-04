@@ -100,6 +100,20 @@ export function deriveOverloadAbility(ability: Ability | null): Ability | null {
   ) {
     return { ...ability, targets: [], effects: [{ op: 'overloadBounceAllNonlandOpponents' }] };
   }
+  // "Tap target creature you don't control" overloaded taps each of them (Blustersquall).
+  if (
+    effect.op === 'tapTarget' &&
+    Object.keys(effect).every((key) => key === 'op' || key === 'target') &&
+    effect.target === 0 &&
+    target.kind === 'creature' &&
+    target.controller === 'opponent'
+  ) {
+    return {
+      ...ability,
+      targets: [],
+      effects: [{ op: 'tapEach', selector: allOf(ofType('Creature'), OPPONENTS) }],
+    };
+  }
   // "Target player discards two cards" overloaded is "Each player discards two cards" (Mind
   // Rake, CR 702.96b); "target opponent" becomes each opponent.
   if (

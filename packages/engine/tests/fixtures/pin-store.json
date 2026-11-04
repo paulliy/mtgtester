@@ -173,6 +173,7 @@
     "Expressive Iteration": "d5590037b1223c19eec19f928c0f1efdf6cb50bc5d802cd17cfd3c9666b60980",
     "Fabled Passage": "fd064f3f1c8289f7cd3a05433a31b03a8676ba4ce9035cd6706bd37087c9a7ef",
     "Fae of Wishes // Granted": "2d36f7f1294bfa2620150fc4c5cf95701879be7dfb3d719380a56fdc7b9c1e23",
+    "Faeburrow Elder": "1cffbb91cbe9335f998928b39dda36244f0a494df65a88cacd28ecd404a27e54",
     "Faerie Guidemother // Gift of the Fae": "188852577f595a0fb00608e655d0f57d4d1054ebe6daed2513fae011a534d2b6",
     "Faerie Mastermind": "c0630be4eec3d7b471c761910e452d409e166fe42d5e49ee682c312df2ccd1dd",
     "Fallen Ideal": "3ba13764d452400831541e37c2b7a16dca91265614e3b979c6d5f27f229e0950",
@@ -2927,6 +2928,41 @@
       "loyalty": null,
       "defense": null,
       "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "1cffbb91cbe9335f998928b39dda36244f0a494df65a88cacd28ecd404a27e54": {
+      "oracleId": "70a6f08e-854d-4e2f-9d8c-c45ec3231157",
+      "scryfallId": "145dcac4-2c53-4ae9-9ede-24dc07474b01",
+      "name": "Faeburrow Elder",
+      "manaCost": "{1}{G}{W}",
+      "cmc": 3,
+      "colors": [
+        "G",
+        "W"
+      ],
+      "colorIdentity": [
+        "G",
+        "W"
+      ],
+      "typeLine": "Creature — Treefolk Druid",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Treefolk",
+        "Druid"
+      ],
+      "oracleText": "Vigilance\nThis creature gets +1/+1 for each color among permanents you control.\n{T}: For each color among permanents you control, add one mana of that color.",
+      "power": "0",
+      "toughness": "0",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Vigilance"
+      ],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false

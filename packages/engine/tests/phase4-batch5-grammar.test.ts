@@ -186,3 +186,20 @@ describe('Phase 4 batch 5: Devoid and player clauses', () => {
     ]);
   });
 });
+
+describe('Phase 4 batch 5: contained cards', () => {
+  it('faeburrow-elder-static-contained', async () => {
+    const { readFileSync } = await import('node:fs');
+    const cards = JSON.parse(
+      readFileSync(
+        new URL('../../server/fixtures/edhrec-pinned-oracle.json', import.meta.url),
+        'utf8',
+      ),
+    ) as { card: OracleCard }[];
+    const def = interpretCard(cards.find(({ card }) => card.name === 'Faeburrow Elder')!.card);
+    expect(def.modeled).toBe(false);
+    expect(def.unmodeledReasons.join('; ')).toContain(
+      'static value the layer engine cannot evaluate',
+    );
+  });
+});
