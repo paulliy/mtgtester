@@ -211,6 +211,7 @@ describe('spell additional casting costs', () => {
           prompts.push(decision.prompt);
           return { index: 0, targets: new Map() };
         },
+        { strict: true },
       );
       return { ctx, player, prompts };
     };
