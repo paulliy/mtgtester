@@ -2758,6 +2758,11 @@ export function queueTriggersForEvent(
             ...(amounts.length > 0
               ? { damageDealt: amounts.reduce((sum, s) => sum + (s.amount ?? 0), 0) }
               : {}),
+            // The optional costs paid for this object (squad, kicker), captured now so its own
+            // trigger still counts them once it has left the battlefield (CR 113.7a).
+            ...(spec.subject.kind === 'self' && source.optionalCostCounts !== undefined
+              ? { resolvingOptionalCostCounts: { ...source.optionalCostCounts } }
+              : {}),
           };
           ctx.state.pendingTriggers.push({
             controllerId: source.controllerId,

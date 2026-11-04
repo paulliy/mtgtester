@@ -7,7 +7,11 @@
 import { describe, expect, it } from 'vitest';
 import type { OracleCard } from '@mtg/shared';
 import { interpretCard } from '../src/cards/interpret';
-import { oracle } from './fixtures';
+import { priorityCheckpoint } from '../src/sba/sba';
+import { resolveTopOfStack } from '../src/stack/stack';
+import { createGame } from '../src/state/game';
+import { movePermanentsToGraveyard, queueTriggersForObject } from '../src/state/objects';
+import { forestsPod, gameConfig, oracle, pump, spawn } from './fixtures';
 
 const creature = (oracleText: string, extra: Partial<OracleCard> = {}): OracleCard =>
   oracle({
@@ -143,6 +147,20 @@ describe('Phase 4 batch 6: keywords', () => {
       interpretCard(oracle({ name: 'P6 Spell', typeLine: 'Sorcery', oracleText: 'Squad {2}' }))
         .modeled,
     ).toBe(false);
+  });
+
+  it('squad keeps its paid count once the creature has left (CR 113.7a)', () => {
+    const ctx = createGame(gameConfig(forestsPod(), { seed: 'p6-squad-left' }));
+    const probe = creature('Squad {2}', { name: 'P6 Squad Probe' });
+    const entered = spawn(ctx, 'P1', probe);
+    entered.optionalCostCounts = { squad: 2 };
+    queueTriggersForObject(ctx, 'enters', entered);
+    pump(priorityCheckpoint(ctx));
+    pump(movePermanentsToGraveyard(ctx, [entered]));
+    pump(resolveTopOfStack(ctx));
+    const copies = ctx.state.battlefield.filter((p) => p.name === 'P6 Squad Probe');
+    expect(copies).toHaveLength(2);
+    expect(copies.every((p) => p.isToken === true)).toBe(true);
   });
 
   it('battle cry pumps only the other attackers', () => {
