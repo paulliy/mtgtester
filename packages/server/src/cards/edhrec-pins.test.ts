@@ -101,5 +101,7 @@ describe('EDHREC offline pins (coverage plan D3)', () => {
       newlyModeled: [],
       fixtureChanged: false,
     });
-  });
+    // It interprets all 8,972 pinned cards (about 4 s alone); a loaded parallel run needs more
+    // than the default 5 s.
+  }, 60_000);
 });
