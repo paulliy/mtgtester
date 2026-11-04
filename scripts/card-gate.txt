@@ -246,3 +246,11 @@ packages/engine/tests/cards/wasteland.test.ts
 packages/engine/tests/cards/geier-reach-sanitarium.test.ts
 packages/engine/tests/cards/deaths-shadow.test.ts
 packages/engine/tests/phase4-batch5-grammar.test.ts
+packages/engine/tests/cards/howling-golem.test.ts
+packages/engine/tests/cards/ophiomancer.test.ts
+packages/engine/tests/cards/ripjaw-raptor.test.ts
+packages/engine/tests/cards/megrim.test.ts
+packages/engine/tests/cards/tithe-drinker.test.ts
+packages/engine/tests/cards/seers-sundial.test.ts
+packages/engine/tests/cards/goblin-wardriver.test.ts
+packages/engine/tests/phase4-batch6-grammar.test.ts

@@ -124,6 +124,7 @@ function parseSubjectUntraced(phrase: string, card: OracleCard): Selector | null
   if (noun.startsWith('each ')) noun = noun.slice('each '.length);
   // "All Sliver creatures get +1/+1" (Muscle Sliver): "all" adds nothing to the subject.
   if (noun.startsWith('all ')) noun = noun.slice('all '.length);
+
   // "Commander creatures you own have …" (Inspiring Leader and the other Backgrounds, CR 903.3):
   // your commanders that are creatures, wherever control has gone.
   if (noun === 'commander creatures you own')
@@ -876,11 +877,22 @@ function parseQualifiedTargetNoun(text: string): { kind: TargetKind; filter?: Se
   return { kind, filter: filters.length === 1 ? (filters[0] as Selector) : allOf(...filters) };
 }
 
+/**
+ * "(each) other attacking creature(s)" (battle cry): "other" in front of a subject the rest
+ * reads, tried only after the subject parser failed.
+ */
+function parseOtherSubject(phrase: string, card: OracleCard): Selector | null {
+  const m = phrase.match(/^(?:each )?other (.+)$/);
+  if (m === null) return null;
+  const rest = parseSubjectUntraced(m[1] as string, card);
+  return rest === null ? null : allOf(OTHER, rest);
+}
+
 /** `parseSubjectUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
 export function parseSubject(
   ...args: Parameters<typeof parseSubjectUntraced>
 ): ReturnType<typeof parseSubjectUntraced> {
-  const result = parseSubjectUntraced(...args);
+  const result = parseSubjectUntraced(...args) ?? parseOtherSubject(...args);
   if (result === null) noteSlotFailure('subject', args[0]);
   return result;
 }

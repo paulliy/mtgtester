@@ -325,77 +325,65 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
     },
   );
   // Loyal Guardian
-  defineCard(
-    'de1cfa83-2049-48ab-b093-2f120a3ef4f2',
-    'Loyal Guardian',
-    [
-      'At the beginning of combat on your turn, if you control your commander, put a +1/+1 counter on each creature you control.',
+  defineCard('de1cfa83-2049-48ab-b093-2f120a3ef4f2', 'Loyal Guardian', [], {
+    triggers: [
+      {
+        kind: 'triggered',
+        trigger: {
+          when: 'beginningOfCombat',
+          player: 'you',
+          condition: { kind: 'controlsYourCommander' },
+        },
+        targets: [],
+        effects: [
+          {
+            op: 'putCountersEach',
+            selector: allOf(ofType('Creature'), YOURS),
+            counter: '+1/+1',
+            count: 1,
+          },
+        ],
+        description: 'Put a +1/+1 counter on each creature you control.',
+      },
     ],
-    {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'beginningOfCombat',
-            player: 'you',
-            condition: { kind: 'controlsYourCommander' },
-          },
-          targets: [],
-          effects: [
-            {
-              op: 'putCountersEach',
-              selector: allOf(ofType('Creature'), YOURS),
-              counter: '+1/+1',
-              count: 1,
-            },
-          ],
-          description: 'Put a +1/+1 counter on each creature you control.',
-        },
-      ],
-    },
-  );
+  });
   // Dawn of Hope
-  defineCard(
-    'd7a38484-2acc-49a6-b32d-d54dddb14d31',
-    'Dawn of Hope',
-    ['Whenever you gain life, you may pay {2}. If you do, draw a card.'],
-    {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: { when: 'gainsLife', player: 'you' },
+  defineCard('d7a38484-2acc-49a6-b32d-d54dddb14d31', 'Dawn of Hope', [], {
+    triggers: [
+      {
+        kind: 'triggered',
+        trigger: { when: 'gainsLife', player: 'you' },
+        targets: [],
+        effects: [
+          {
+            op: 'conditionalEffect',
+            condition: { kind: 'mayPayMana', cost: manaCost('{2}') },
+            then: [{ op: 'draw', count: constant(1) }],
+            else: [],
+          },
+        ],
+        description: 'Whenever you gain life, you may pay {2}. If you do, draw a card.',
+      },
+    ],
+    activatedAbilities: [
+      {
+        costs: [mana('{3}{W}')],
+        timing: 'any',
+        ability: {
+          kind: 'activated',
           targets: [],
           effects: [
             {
-              op: 'conditionalEffect',
-              condition: { kind: 'mayPayMana', cost: manaCost('{2}') },
-              then: [{ op: 'draw', count: constant(1) }],
-              else: [],
+              op: 'createToken',
+              spec: SOLDIER_1_1_LIFELINK,
+              count: constant(1),
             },
           ],
-          description: 'Whenever you gain life, you may pay {2}. If you do, draw a card.',
+          description: '{3}{W}: Create a 1/1 white Soldier creature token with lifelink.',
         },
-      ],
-      activatedAbilities: [
-        {
-          costs: [mana('{3}{W}')],
-          timing: 'any',
-          ability: {
-            kind: 'activated',
-            targets: [],
-            effects: [
-              {
-                op: 'createToken',
-                spec: SOLDIER_1_1_LIFELINK,
-                count: constant(1),
-              },
-            ],
-            description: '{3}{W}: Create a 1/1 white Soldier creature token with lifelink.',
-          },
-        },
-      ],
-    },
-  );
+      },
+    ],
+  });
   // Hornet Nest
   defineCard(
     '123d2b6e-114e-4767-860d-50790382ca4a',

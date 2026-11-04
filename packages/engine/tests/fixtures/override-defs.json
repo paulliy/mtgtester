@@ -138,11 +138,7 @@
   {
     "oracleId": "00fdcc19-88ed-46c3-91f0-095806228105",
     "name": "Waste Not",
-    "handledLines": [
-      "unrecognized rules text: \"Whenever an opponent discards a creature card, create a 2/2 black Zombie creature token.\"",
-      "unrecognized rules text: \"Whenever an opponent discards a land card, add {B}{B}.\"",
-      "unrecognized rules text: \"Whenever an opponent discards a noncreature, nonland card, draw a card.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -5231,12 +5227,7 @@
   {
     "oracleId": "397b9dcf-690a-4a58-8637-bb9baab7cc2f",
     "name": "Elder Gargaroth",
-    "handledLines": [
-      "Whenever this creature attacks or blocks, choose one —",
-      "• Create a 3/3 green Beast creature token.",
-      "• Draw a card.",
-      "• You gain 3 life."
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -10077,46 +10068,10 @@
     "oracleId": "736892cb-a34b-4bb9-b56c-e26e3db207a2",
     "name": "Mana Vault",
     "handledLines": [
-      "unrecognized rules text: \"At the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you.\"",
-      "unrecognized rules text: \"At the beginning of your upkeep, you may pay {4}. If you do, untap this artifact.\""
+      "unrecognized rules text: \"At the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you.\""
     ],
     "def": {
       "triggers": [
-        {
-          "description": "At the beginning of your upkeep, you may pay {4} to untap this",
-          "effects": [
-            {
-              "condition": {
-                "cost": {
-                  "colored": {
-                    "B": 0,
-                    "G": 0,
-                    "R": 0,
-                    "U": 0,
-                    "W": 0
-                  },
-                  "colorless": 0,
-                  "generic": 4
-                },
-                "kind": "mayPayMana"
-              },
-              "else": [],
-              "op": "conditionalEffect",
-              "then": [
-                {
-                  "op": "untapTarget",
-                  "target": "source"
-                }
-              ]
-            }
-          ],
-          "kind": "triggered",
-          "targets": [],
-          "trigger": {
-            "player": "you",
-            "when": "upkeep"
-          }
-        },
         {
           "description": "At the beginning of your draw step, if this is tapped, it deals 1 damage to you",
           "effects": [
@@ -12790,9 +12745,7 @@
   {
     "oracleId": "96312b75-3110-4506-9f95-0c6c17d9da11",
     "name": "Securitron Squadron",
-    "handledLines": [
-      "Squad {3}"
-    ],
+    "handledLines": [],
     "def": {
       "optionalAdditionalCost": {
         "cost": {
@@ -18418,9 +18371,7 @@
   {
     "oracleId": "d2d9ecea-7925-420e-98b9-2f87f41f387c",
     "name": "Land Tax",
-    "handledLines": [
-      "At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle."
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -18811,9 +18762,7 @@
   {
     "oracleId": "d7a38484-2acc-49a6-b32d-d54dddb14d31",
     "name": "Dawn of Hope",
-    "handledLines": [
-      "Whenever you gain life, you may pay {2}. If you do, draw a card."
-    ],
+    "handledLines": [],
     "def": {
       "activatedAbilities": [
         {
@@ -19519,9 +19468,7 @@
   {
     "oracleId": "de1cfa83-2049-48ab-b093-2f120a3ef4f2",
     "name": "Loyal Guardian",
-    "handledLines": [
-      "At the beginning of combat on your turn, if you control your commander, put a +1/+1 counter on each creature you control."
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -21796,9 +21743,7 @@
   {
     "oracleId": "ef809e99-34a2-4471-8269-f56bf8037686",
     "name": "Geth's Grimoire",
-    "handledLines": [
-      "unrecognized rules text: \"Whenever an opponent discards a card, you may draw a card.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -28558,9 +28503,7 @@
   {
     "oracleId": "oracle-dawn-of-hope",
     "name": "Dawn of Hope",
-    "handledLines": [
-      "Whenever you gain life, you may pay {2}. If you do, draw a card."
-    ],
+    "handledLines": [],
     "def": {
       "activatedAbilities": [
         {
@@ -29963,12 +29906,7 @@
   {
     "oracleId": "oracle-elder-gargaroth",
     "name": "Elder Gargaroth",
-    "handledLines": [
-      "Whenever this creature attacks or blocks, choose one —",
-      "• Create a 3/3 green Beast creature token.",
-      "• Draw a card.",
-      "• You gain 3 life."
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -31900,9 +31838,7 @@
   {
     "oracleId": "oracle-geth-s-grimoire",
     "name": "Geth's Grimoire",
-    "handledLines": [
-      "unrecognized rules text: \"Whenever an opponent discards a card, you may draw a card.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -34386,9 +34322,7 @@
   {
     "oracleId": "oracle-land-tax",
     "name": "Land Tax",
-    "handledLines": [
-      "At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle."
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -35065,9 +34999,7 @@
   {
     "oracleId": "oracle-loyal-guardian",
     "name": "Loyal Guardian",
-    "handledLines": [
-      "At the beginning of combat on your turn, if you control your commander, put a +1/+1 counter on each creature you control."
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -35422,46 +35354,10 @@
     "oracleId": "oracle-mana-vault",
     "name": "Mana Vault",
     "handledLines": [
-      "unrecognized rules text: \"At the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you.\"",
-      "unrecognized rules text: \"At the beginning of your upkeep, you may pay {4}. If you do, untap this artifact.\""
+      "unrecognized rules text: \"At the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you.\""
     ],
     "def": {
       "triggers": [
-        {
-          "description": "At the beginning of your upkeep, you may pay {4} to untap this",
-          "effects": [
-            {
-              "condition": {
-                "cost": {
-                  "colored": {
-                    "B": 0,
-                    "G": 0,
-                    "R": 0,
-                    "U": 0,
-                    "W": 0
-                  },
-                  "colorless": 0,
-                  "generic": 4
-                },
-                "kind": "mayPayMana"
-              },
-              "else": [],
-              "op": "conditionalEffect",
-              "then": [
-                {
-                  "op": "untapTarget",
-                  "target": "source"
-                }
-              ]
-            }
-          ],
-          "kind": "triggered",
-          "targets": [],
-          "trigger": {
-            "player": "you",
-            "when": "upkeep"
-          }
-        },
         {
           "description": "At the beginning of your draw step, if this is tapped, it deals 1 damage to you",
           "effects": [
@@ -41221,9 +41117,7 @@
   {
     "oracleId": "oracle-securitron-squadron",
     "name": "Securitron Squadron",
-    "handledLines": [
-      "Squad {3}"
-    ],
+    "handledLines": [],
     "def": {
       "optionalAdditionalCost": {
         "cost": {
@@ -46371,11 +46265,7 @@
   {
     "oracleId": "oracle-waste-not",
     "name": "Waste Not",
-    "handledLines": [
-      "unrecognized rules text: \"Whenever an opponent discards a creature card, create a 2/2 black Zombie creature token.\"",
-      "unrecognized rules text: \"Whenever an opponent discards a land card, add {B}{B}.\"",
-      "unrecognized rules text: \"Whenever an opponent discards a noncreature, nonland card, draw a card.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {

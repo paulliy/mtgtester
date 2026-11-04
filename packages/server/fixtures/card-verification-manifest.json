@@ -19819,6 +19819,125 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "75269a31-3819-4410-8bb7-10de16810a5e": {
+      "name": "Howling Golem",
+      "oracleSha256": "f6f0bbb7aec743f8598ccd586e4e39bfb23e3611a1df0261e8c4db351794b0a7",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever this creature attacks or blocks, each player draws a card.",
+          "implementation": [
+            "compound trigger head attacks + blocks on self; Effect.eachPlayerDraws all 1"
+          ],
+          "engineTestIds": ["cards/howling-golem.test.ts::howling-golem-attack-each-draws"],
+          "viewerScenarioIds": ["howling-golem-attack-each-draws"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "55eca80c-dcd8-4c2f-aa0f-fb0aec7b80f7": {
+      "name": "Ophiomancer",
+      "oracleSha256": "e917a95119e377d732e553e35c825961242422954d58747b95b6d551413670fa",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "At the beginning of each upkeep, if you control no Snakes, create a 1/1 black Snake creature token with deathtouch.",
+          "implementation": [
+            "trigger upkeep each, intervening-if countPermanents Snakes you control <= 0 (CR 603.4); Effect.createToken Snake with deathtouch"
+          ],
+          "engineTestIds": ["cards/ophiomancer.test.ts::ophiomancer-snake-each-upkeep"],
+          "viewerScenarioIds": ["ophiomancer-snake-each-upkeep"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "80bb9ce4-1f3c-42ca-b75f-9a6b2f42073b": {
+      "name": "Ripjaw Raptor",
+      "oracleSha256": "d6bc599ce95bfd7ab7e48e89c6e4a89d7722b23ee59295f08cdeec73da3ea3e2",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Enrage — Whenever this creature is dealt damage, draw a card.",
+          "implementation": [
+            "trigger dealtDamage on self (\"is dealt damage\" head); Effect.draw 1"
+          ],
+          "engineTestIds": ["cards/ripjaw-raptor.test.ts::ripjaw-raptor-enrage-draws"],
+          "viewerScenarioIds": ["ripjaw-raptor-enrage-draws"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "633ad9e2-9f55-4a1c-9248-661ad4b0e1dc": {
+      "name": "Megrim",
+      "oracleSha256": "83d9ee580125628f230c3ee7f31f48b970801e38ac17de620b9defa5fbaedaa0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever an opponent discards a card, this enchantment deals 2 damage to that player.",
+          "implementation": ["trigger discardsCard opponent; Effect.dealDamage eventPlayer 2"],
+          "engineTestIds": ["cards/megrim.test.ts::megrim-pings-discarding-opponent"],
+          "viewerScenarioIds": ["megrim-pings-discarding-opponent"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "06b1fd96-a3ad-4ebd-9ea4-b3cfb4c9c43d": {
+      "name": "Tithe Drinker",
+      "oracleSha256": "31d53d9d67f7b86d8bf3e6272052f18151af7f8e6d45584b9cd4e76a57f987ab",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Lifelink (Damage dealt by this creature also causes you to gain that much life.)",
+          "implementation": ["keyword lifelink"],
+          "engineTestIds": ["cards/tithe-drinker.test.ts::tithe-drinker-lifelink"],
+          "viewerScenarioIds": ["tithe-drinker-lifelink"]
+        },
+        {
+          "oracleText": "Extort (Whenever you cast a spell, you may pay {W/B}. If you do, each opponent loses 1 life and you gain that much life.)",
+          "implementation": [
+            "extort expanded to its reminder trigger: castsSpell you; conditionalEffect mayPayMana {W/B}, then eachOpponentLosesLife 1 and gainLifeEqualToLifeLostThisWay (CR 702.101a)"
+          ],
+          "engineTestIds": ["cards/tithe-drinker.test.ts::tithe-drinker-extort"],
+          "viewerScenarioIds": ["tithe-drinker-extort"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9929d7ba-cdc5-4099-a0ee-3a15073336f3": {
+      "name": "Seer's Sundial",
+      "oracleSha256": "b6f55310e02c1cbf757fb86da11315a03d8b9d81ff5badc3905052bcc2176227",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Landfall — Whenever a land you control enters, you may pay {2}. If you do, draw a card.",
+          "implementation": [
+            "trigger enters land you control; conditionalEffect mayPayMana {2} then draw 1 (the \"you may pay … If you do\" production, CR 608.2c)"
+          ],
+          "engineTestIds": [
+            "cards/seers-sundial.test.ts::seers-sundial-pay-draw",
+            "cards/seers-sundial.test.ts::seers-sundial-cannot-pay"
+          ],
+          "viewerScenarioIds": ["seers-sundial-pay-draw", "seers-sundial-cannot-pay"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "10849bbb-50ca-4194-a7cb-fa872272b29b": {
+      "name": "Goblin Wardriver",
+      "oracleSha256": "a5f8d79474593af80166fbd66eff85f0876c044e012a9b2601bc28c178a22b25",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Battle cry (Whenever this creature attacks, each other attacking creature gets +1/+0 until end of turn.)",
+          "implementation": [
+            "battle cry expanded to its reminder trigger: attacks self; pumpEachUntilEot other attacking creatures +1/+0 (CR 702.91a)"
+          ],
+          "engineTestIds": ["cards/goblin-wardriver.test.ts::goblin-wardriver-battle-cry"],
+          "viewerScenarioIds": ["goblin-wardriver-battle-cry"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

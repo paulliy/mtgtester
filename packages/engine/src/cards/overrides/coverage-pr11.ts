@@ -220,22 +220,12 @@ function registerPr11LifecycleOverrides(): void {
     '736892cb-a34b-4bb9-b56c-e26e3db207a2',
     'Mana Vault',
     [
-      'unrecognized rules text: "At the beginning of your upkeep, you may pay {4}. If you do, untap this artifact."',
       'unrecognized rules text: "At the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you."',
     ],
     {
+      // The upkeep untap ("you may pay {4}. If you do, untap this artifact.") is read by the
+      // interpreter since EDHREC plan Phase 4 batch 6, as the same conditional untap.
       triggers: [
-        triggered(onUpkeep('you'), {
-          effects: [
-            {
-              op: 'conditionalEffect',
-              condition: { kind: 'mayPayMana', cost: manaCost('{4}') },
-              then: [{ op: 'untapTarget', target: 'source' }],
-              else: [],
-            },
-          ],
-          description: 'At the beginning of your upkeep, you may pay {4} to untap this',
-        }),
         triggered(onDrawStep('you'), {
           condition: { kind: 'not', of: { kind: 'isUntapped' } },
           effects: [{ op: 'damageController', amount: 1 }],

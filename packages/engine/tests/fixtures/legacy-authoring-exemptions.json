@@ -328,7 +328,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
-      "sha256": "782dd9618ecaabde9dabc63141e43373020e498d3ee35767362a7cd67887a36f",
+      "sha256": "660fefc9bd3176e28eb9330cd1ef65dba036313188887f25400931ee6bd6249e",
       "description": "registerLIVING_ENERGYOverrides"
     },
     {
@@ -713,7 +713,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
-      "sha256": "2def8c34ee147df4eaff3fcfc864341384ac02d45b2f57e9cc6d883f2beeddec",
+      "sha256": "bb6b054128c39811c38dea9a3f85905b65084b8cc58c26d921e41331692c5b51",
       "description": "Land Tax"
     },
     {
@@ -783,12 +783,12 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/token-triumph.ts",
-      "sha256": "229f689e47d77ce449f7c1c434393ee582a0cb76e3e1f387b32e8530c041acb5",
+      "sha256": "7200f318a8d3ca93e9752eb21373c439ec4b0dcad19d4cbf812622c6ae8100d7",
       "description": "Loyal Guardian"
     },
     {
       "file": "packages/engine/src/cards/overrides/token-triumph.ts",
-      "sha256": "b12d21888acd74f9a6ae3e7d95f46c7811cb45973edca802290ce8421ac8fa4d",
+      "sha256": "9e1855faad9aefb84e83775e7722e8c1444c1e3d8553321332361a843bb2dc5f",
       "description": "Dawn of Hope"
     },
     {

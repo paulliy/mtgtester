@@ -119,7 +119,7 @@ export function registerWhiteBlackControlDiscardOverrides(): void {
   replaceCard(
     'ef809e99-34a2-4471-8269-f56bf8037686',
     "Geth's Grimoire",
-    ['unrecognized rules text: "Whenever an opponent discards a card, you may draw a card."'],
+    [],
     {
       triggers: [
         triggered(

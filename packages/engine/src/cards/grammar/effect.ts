@@ -1323,6 +1323,8 @@ function parseEffectSentenceUntraced(
     eventPlayer?: boolean;
     /** A surrounding "where X is …" defines X for this sentence (`parseAmountForm`). */
     xBound?: boolean;
+    /** The sentence opens with "It" right after one that created a token: "it" is that token. */
+    afterToken?: boolean;
     /** Every head is this object leaving the battlefield: its last-known facts are the event's. */
     departedSelf?: boolean;
     departedTriggerObject?: boolean;
@@ -1616,6 +1618,8 @@ function parseEffectSentenceUntraced(
       ];
   }
   if (s === 'it gains haste until end of turn') {
+    // Right after "create a … token", "it" is the token, which no op here can name.
+    if (opts.afterToken === true) return null;
     return opts.triggerObject === true
       ? [{ op: 'grantKeywordUntilEot', target: 'triggerObject', keyword: 'haste' }]
       : [{ op: 'grantHasteToResolvingSpell' }];
@@ -3654,11 +3658,33 @@ export function parseTriggerLine(line: string, card: OracleCard): Ability[] | nu
       },
     ];
   }
+  // "you may pay {G}. If you do, draw a card." (Lifecrafter's Bestiary) / "you may pay 2 life. If
+  // you do, …": the payment is offered as the ability resolves, and the rest happens only if it
+  // was paid (CR 608.2c). Read once the body's own sentences are allocated (below).
+  const paidThen =
+    paidTransform === null && reflexive === null
+      ? body.match(/^you may pay ((?:\{[^}]+\})+|\w+ life)\. if you do, (.+?)\.?$/)
+      : null;
+  let paidCondition: Condition | null = null;
+  if (paidThen !== null) {
+    const life = (paidThen[1] as string).match(/^(\w+) life$/);
+    if (life !== null) {
+      const n = parseAmount(life[1] as string);
+      if (n !== null && n > 0) paidCondition = { kind: 'mayPayLife', n };
+    } else {
+      const parsed = parseManaCost((paidThen[1] as string).toUpperCase() as never);
+      if (parsed.cost !== null && parsed.unsupportedSymbols.length === 0)
+        paidCondition = { kind: 'mayPayMana', cost: parsed.cost };
+    }
+    if (paidCondition === null) return null;
+    body = paidThen[2] as string;
+  }
   // "you may move any number of … counters" (Forgotten Ancient) is one choice, zero included: the
   // division is the decline, so it is not also a "use this ability?" prompt.
   let optional =
     paidTransform === null &&
     reflexive === null &&
+    paidCondition === null &&
     body.startsWith('you may ') &&
     !body.startsWith('you may move any number of ');
   if (body.startsWith('you may have ')) {
@@ -3788,13 +3814,30 @@ export function parseTriggerLine(line: string, card: OracleCard): Ability[] | nu
     for (const [index, sentence] of splitSentences(body).entries()) {
       // A later sentence's "it" may name an object an earlier one made ("create a token. Put a
       // +1/+1 counter on it"), so only the first sentence reads a bare "it" as the source.
-      const sentenceOpts = index === 0 ? opts : { ...opts, selfSubject: false };
+      // After a sentence that created a token, "it" is that token (Krenko, Baron of Tin Street:
+      // "create a 1/1 … token. It gains haste"), never the trigger's object or the source.
+      // A sentence that names its referent first ("If that enchantment is an Aura, … attach it")
+      // is left alone; one that opens with a bare "It" right after the token is about the token.
+      const afterToken =
+        /^it\b/i.test(sentence) && effects.some((effect) => effect.op === 'createToken');
+      const sentenceOpts =
+        index === 0
+          ? opts
+          : {
+              ...opts,
+              selfSubject: false,
+              ...(afterToken ? { triggerObject: false, afterToken: true } : {}),
+            };
       const parsed = parseEffectSentence(sentence, alloc, card, sentenceOpts);
       if (parsed === null) return null;
       appendSentenceEffects(effects, sentence, parsed);
     }
   }
   if (effects.length === 0 && modalBlock === null) return null;
+  if (paidCondition !== null) {
+    if (modalBlock !== null) return null;
+    effects = [{ op: 'conditionalEffect', condition: paidCondition, then: effects, else: [] }];
+  }
 
   return heads.map((head) => ({
     kind: 'triggered' as const,

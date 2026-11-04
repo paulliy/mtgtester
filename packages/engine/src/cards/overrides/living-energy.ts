@@ -1220,10 +1220,8 @@ export function registerLIVING_ENERGYOverrides(): void {
     '397b9dcf-690a-4a58-8637-bb9baab7cc2f',
     'Elder Gargaroth',
     [
-      'Whenever this creature attacks or blocks, choose one \u2014',
-      '\u2022 Create a 3/3 green Beast creature token.',
-      '\u2022 You gain 3 life.',
-      '\u2022 Draw a card.',
+      // The modal attack-or-block trigger is read by the interpreter since EDHREC plan Phase 4
+      // batch 6 (compound trigger heads); the def keeps the same trigger.
     ],
     ELDER_GARGAROTH_DEF,
     'replace the earlier generated inline definition with the reviewed shared constant',

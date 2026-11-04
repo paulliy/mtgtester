@@ -40960,7 +40960,7 @@
     "toughness": null,
     "triggers": [
       {
-        "description": "At the beginning of your upkeep, you may pay {4} to untap this",
+        "description": "At the beginning of your upkeep, you may pay {4}. If you do, untap this artifact.",
         "effects": [
           {
             "condition": {
@@ -40988,6 +40988,7 @@
           }
         ],
         "kind": "triggered",
+        "optional": false,
         "targets": [],
         "trigger": {
           "player": "you",

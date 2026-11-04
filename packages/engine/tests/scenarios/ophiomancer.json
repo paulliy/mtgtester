@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "card": "Ophiomancer",
+  "scenarios": [
+    {
+      "id": "ophiomancer-snake-each-upkeep",
+      "title": "Ophiomancer: at each upkeep, with no Snake, it makes one",
+      "clauses": [1],
+      "instructions": ["Pass to the next player's upkeep, then the one after."],
+      "expectedOutcome": "One Snake is created at the first upkeep; the second finds a Snake and makes none.",
+      "seats": { "P1": { "battlefield": ["Ophiomancer"] } },
+      "script": [],
+      "continue": { "throughUpkeeps": 2 },
+      "expect": [{ "event": { "type": "tokenCreated", "count": 1, "payload": "Snake" } }]
+    }
+  ]
+}

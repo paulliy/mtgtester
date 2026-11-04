@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "card": "Ripjaw Raptor",
+  "supportCards": [
+    {
+      "name": "Scenario Shock",
+      "typeLine": "Instant",
+      "manaCost": "{R}",
+      "oracleText": "Scenario Shock deals 1 damage to any target."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "ripjaw-raptor-enrage-draws",
+      "title": "Ripjaw Raptor: dealt damage, it draws a card",
+      "clauses": [1],
+      "instructions": ["Cast Scenario Shock targeting Ripjaw Raptor."],
+      "expectedOutcome": "You draw the Island on top of your library.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Shock"],
+          "battlefield": ["Mountain", "Ripjaw Raptor"],
+          "libraryTop": ["Island"]
+        }
+      },
+      "script": [
+        { "player": "P1", "choose": "/^Cast Scenario Shock/", "targets": ["Ripjaw Raptor"] }
+      ],
+      "expect": [{ "zone": { "player": "P1", "zone": "hand", "has": ["Island"] } }]
+    }
+  ]
+}

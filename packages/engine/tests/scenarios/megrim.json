@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "card": "Megrim",
+  "supportCards": [
+    {
+      "name": "Scenario Raid",
+      "typeLine": "Sorcery",
+      "manaCost": "{B}",
+      "oracleText": "Each opponent discards a card."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "megrim-pings-discarding-opponent",
+      "title": "Megrim: each opponent who discards takes 2",
+      "clauses": [1],
+      "instructions": ["Cast Scenario Raid; only P2 has a card to discard."],
+      "expectedOutcome": "P2 is at 38 life; P3 discarded nothing and is at 40.",
+      "seats": {
+        "P1": { "hand": ["Scenario Raid"], "battlefield": ["Swamp", "Megrim"] },
+        "P2": { "hand": ["Forest"] }
+      },
+      "script": [{ "player": "P1", "choose": "/^Cast Scenario Raid/" }],
+      "expect": [
+        { "life": { "player": "P2", "equals": 38 } },
+        { "life": { "player": "P3", "equals": 40 } }
+      ]
+    }
+  ]
+}

@@ -3430,21 +3430,54 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
     }
     // Keywords that are triggered abilities, read through the grammar as their reminder text
     // says: prowess (CR 702.108a) and exalted (CR 702.83a). Each instance is its own trigger.
+    // Battle cry (CR 702.91a) and extort (CR 702.101a) are read the same way.
     {
-      const reminder =
-        lower === 'prowess'
-          ? 'Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.'
-          : lower === 'exalted'
-            ? 'Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.'
-            : null;
-      if (reminder !== null) {
-        const parsed = parseTriggerLine(reminder, card);
+      const reminders: Record<string, [string, string]> = {
+        prowess: [
+          'Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.',
+          'Prowess',
+        ],
+        exalted: [
+          'Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.',
+          'Exalted',
+        ],
+        'battle cry': [
+          'Whenever this creature attacks, each other attacking creature gets +1/+0 until end of turn.',
+          'Battle cry',
+        ],
+        extort: [
+          'Whenever you cast a spell, you may pay {W/B}. If you do, each opponent loses 1 life and you gain life equal to the life lost this way.',
+          'Extort',
+        ],
+      };
+      const reminder = reminders[lower];
+      if (reminder !== undefined) {
+        const parsed = parseTriggerLine(reminder[0], card);
         if (parsed !== null) {
+          triggers.push(...parsed.map((ability) => ({ ...ability, description: reminder[1] })));
+          continue;
+        }
+      }
+    }
+    // Squad [cost] (CR 702.157a): an optional additional cost paid any number of times, and an
+    // enters trigger making a token copy of the creature for each time it was paid.
+    {
+      const m = lower.match(/^squad ((?:\{[^}]+\})+)$/);
+      if (m !== null && optionalAdditionalCost === undefined && card.types.includes('Creature')) {
+        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+        if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
+          optionalAdditionalCost = { mechanic: 'squad', cost: cost.cost, repeatable: true };
           triggers.push(
-            ...parsed.map((ability) => ({
-              ...ability,
-              description: lower === 'prowess' ? 'Prowess' : 'Exalted',
-            })),
+            triggered(onEtb(), {
+              effects: [
+                {
+                  op: 'createTokenCopyOf',
+                  ref: 'source',
+                  count: { kind: 'optionalCostCount', mechanic: 'squad' },
+                },
+              ],
+              description: 'Squad',
+            }),
           );
           continue;
         }

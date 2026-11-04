@@ -6,56 +6,56 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 | Failing slot | Cards | Share of slots |
 | ------------ | ----: | -------------: |
-| effect | 2508 | 11.59% |
-| subject | 1133 | 5.61% |
-| line | 1044 | 5.86% |
-| trigger event | 460 | 1.83% |
+| effect | 2514 | 11.62% |
+| subject | 1151 | 5.69% |
+| line | 1099 | 6.07% |
+| trigger event | 391 | 1.55% |
 | cost | 298 | 1.26% |
-| condition | 178 | 0.81% |
-| amount | 138 | 0.63% |
-| target | 123 | 0.53% |
-| card filter | 24 | 0.07% |
+| condition | 154 | 0.69% |
+| amount | 149 | 0.70% |
+| target | 125 | 0.53% |
+| card filter | 25 | 0.07% |
 | spell filter | 11 | 0.09% |
 
 `line` means no slot recorded a failure inside the line: the line matched no sentence shape at all.
 
-## effect (2508)
+## effect (2514)
 
 - 39 × `look at the top n cards of your library` (Thassa's Oracle, Loot, Exuberant Explorer, Experimental Augury)
-- 31 × `pay {m}` (Lifecrafter's Bestiary, Leaf-Crowned Visionary, Mind's Eye)
 - 16 × `exile the top card of your library` (Blazing Crescendo, Cori Mountain Monastery, Count on Luck)
 - 14 × `reveal the top n cards of your library` (Fact or Fiction, Genesis Wave, Grisly Salvage)
 - 13 × `choose a creature type` (Distant Melody, Kindred Dominance, Raise the Palisade)
 - 12 × `exile the top n cards of your library` (Bonehoard Dracosaur, Sword of Forge and Frontier, Reckless Impulse)
 - 12 × `gain control of target creature until end of turn` (Coercive Recruiter, Act of Treason, Song-Mad Treachery)
 - 11 × `reveal the top card of your library` (Ad Nauseam, Coiling Oracle, Descendants' Path)
+- 11 × `look at the top card of your library` (Risen Reef, Explorer's Scope, Sarinth Steelseeker)
 - 10 × `the ring tempts you` (Fiery Inscription, Ringsight, Claim the Precious)
-- 10 × `look at the top card of your library` (Risen Reef, Explorer's Scope, Sarinth Steelseeker)
-- 10 × `pay {m}{m}` (Bramble Sovereign, Roar of Resistance, Alesha, Who Smiles at Death)
+- 9 × `exile it` (Patron of the Vein, Greenwarden of Murasa, Undead Butler)
 - 9 × `attach it to target creature you control` (Celestial Armor, Maul of the Skyclaves, Cliffhaven Kitesail)
 - 8 × `sacrifice it` (Riveteers Overlook, Cabaretti Courtyard, Maestros Theater)
+- 8 × `create a token that's a copy of this creature` (Homunculus Horde, Giant Adephage, Polyraptor)
 - 8 × `discover n` (Hit the Mother Lode, Hidden Nursery, Hidden Volcano)
-- 8 × `exile it` (Patron of the Vein, Greenwarden of Murasa, Undead Butler)
+- 8 × `populate` (Nesting Dovehawk, Determined Iteration, Growing Ranks)
 
-## subject (1133)
+## subject (1151)
 
 - 27 × `you may` (Mockingbird, Vesuva, Phantasmal Image)
 - 25 × `~` (Yahenni, Undying Partisan, Marvin, Murderous Mimic, Paradise Druid)
-- 18 × `target creature you control` (Sylvan Safekeeper, Zack Fair, Royal Treatment)
-- 13 × `it` (Idolized, Rampaging Brontodon, Biosynthic Burst)
+- 19 × `target creature you control` (Sylvan Safekeeper, Zack Fair, Royal Treatment)
+- 14 × `it` (Idolized, Rampaging Brontodon, Biosynthic Burst)
 - 10 × `this creature enters or` (Stitcher's Supplier, Patron of the Arts, Vinereap Mentor)
 - 9 × `shrines you control` (Sanctum of Stone Fangs, Sanctum of Calm Waters, Sanctum of Fruitful Harvest)
 - 8 × `another target creature you control` (Giver of Runes, Selfless Savior, Pippin, Guard of the Citadel)
 - 8 × `opponent` (Goblin Chainwhirler, Voldaren Epicure, Knight Paladin)
 - 8 × `this spacecraft` (Extinguisher Battleship, Larval Scoutlander, Sledge-Class Seedship)
 - 7 × `aura` (Open the Armory, Axgard Armory, Heliod's Pilgrim)
-- 7 × `your commander` (Tome of Legends, Siege-Gang Lieutenant, Loyal Subordinate)
+- 7 × `equipment` (Steelshaper's Gift, Masterwork of Ingenuity, Stonehewer Giant)
+- 7 × `shrine you control` (Honden of Seeing Winds, Go-Shintai of Shared Purpose, Honden of Cleansing Fire)
 - 6 × `artifact card with mana value n` (Whir of Invention, Trinket Mage, Trophy Mage)
 - 6 × `this artifact enters or` (Ichor Wellspring, Prized Statue, Mycosynth Wellspring)
 - 6 × `cards in your hand` (Castle Locthwain, Alandra, Sky Dreamer, Jolrael, Mwonvuli Recluse)
-- 6 × `equipment` (Steelshaper's Gift, Masterwork of Ingenuity, Stonehewer Giant)
 
-## line (1044)
+## line (1099)
 
 - 11 × `modular n` (Arcbound Ravager, Arcbound Crusher, Scrapyard Recombiner)
 - 10 × `when this land enters, it deals n damage to target opponent` (Abraded Bluffs, Bristling Backwoods, Jagged Barrens)
@@ -73,23 +73,23 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 5 × `buyback {m}` (Capsize, Sprout Swarm, Mystic Speculation)
 - 4 × `~ doesn't untap during your untap step` (Basalt Monolith, Grim Monolith, Goblin Sharpshooter)
 
-## trigger event (460)
+## trigger event (391)
 
-- 4 × `at the beginning of each player's draw step, that player draws an additional card` (Dictate of Kruphix, Kami of the Crescent Moon, Spiteful Visions)
 - 4 × `whenever enchanted land is tapped for mana, its controller adds an additional n mana of any color` (Fertile Ground, Trace of Abundance, Buried in the Garden)
 - 4 × `whenever enchanted creature deals damage, you gain that much life` (Spirit Link, Vampiric Link, Armadillo Cloak)
 - 4 × `whenever a player taps a land for mana, that player adds n mana of any type that land produced` (Mana Flare, Heartbeat of Spring, Dictate of Karametra)
 - 3 × `whenever enchanted creature deals damage to an opponent, you may draw a card` (Curiosity, Ophidian Eye, Keen Sense)
-- 2 × `at the beginning of the end step, if no creatures are on the battlefield, sacrifice this enchantment` (Pyrohemia, Pestilence)
 - 2 × `whenever this creature deals combat damage to a player or planeswalker, proliferate` (Grateful Apparition, Guildpact Informant)
 - 2 × `whenever a creature you control becomes blocked, you may return it to its owner's hand` (Grazilaxx, Illithid Scholar, Cunning Evasion)
 - 2 × `whenever this equipment becomes unattached from a permanent, sacrifice that permanent` (Grafted Exoskeleton, Grafted Wargear)
 - 2 × `whenever you attack with n or more creatures, draw a card` (Chivalric Alliance, Military Intelligence)
 - 2 × `whenever you discard n or more cards, put that many +n/+n counters on this creature` (Marauding Mako, Scrounging Skyray)
 - 2 × `when you next cast an instant or sorcery spell this turn, copy that spell. you may choose new targets for the copy` (Teach by Example, Doublecast)
-- 2 × `whenever you attack, draw a card, then discard a card` (Temmet, Naktamun's Will, Boosted Sloop)
 - 2 × `whenever enchanted land is tapped for mana, its controller adds an additional n mana in any combination of colors` (Dawn's Reflection, Market Festival)
 - 1 × `at the beginning of your next upkeep, pay {m}{m}{m}. if you don't, you lose the game` (Pact of Negation)
+- 1 × `whenever an opponent searches their library, you gain n life and draw a card` (Archivist of Oghma)
+- 1 × `whenever you tap this land for mana, target opponent creates a p/t colorless spirit creature token` (Forbidden Orchard)
+- 1 × `whenever you put n or more +n/+n counters on a creature you control, you may draw that many cards. do this only once each turn` (Terrasymbiosis)
 
 ## cost (298)
 
@@ -109,43 +109,43 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 3 × `tap an untapped wizard you control` (Azami, Lady of Scrolls, Patron Wizard, Galecaster Colossus)
 - 3 × `{m}, sacrifice another creature or artifact` (Ahriman, Acolyte of Aclazotz, Stormclaw Rager)
 
-## condition (178)
+## condition (154)
 
 - 9 × `you gained life this turn` (Witch of the Moors, Lathiel, the Bounteous Dawn, Crested Sunmare)
-- 9 × `a creature died this turn` (Deathreap Ritual, Reaper from the Abyss, Muster the Departed)
 - 7 × `you cast it from your hand` (Wakening Sun's Avatar, Cyclone Summoner, Angel of the Dire Hour)
 - 6 × `you gained n or more life this turn` (The Gaffer, Valkyrie Harbinger, Angelic Accord)
-- 5 × `an opponent controls more lands than you` (Knight of the White Orchid, Loyal Warhound, Claim Jumper)
-- 5 × `there are n or more cards in your graveyard` (Cephalid Coliseum, Kiora, the Rising Tide, Barbarian Ring)
 - 5 × `you attacked this turn` (Alesha, Who Laughs at Fate, Searslicer Goblin, Bloodsoaked Champion)
 - 5 × `this land entered this turn or if you control a basic land` (Dark Fortress, Gleaming Bastion, Hidden Lair)
-- 4 × `there are n or more card types among cards in your graveyard` (Shifting Woodland, Demolisher Spawn, Osseous Sticktwister)
+- 4 × `there are n or more cards in your graveyard` (Cephalid Coliseum, Barbarian Ring, Cabal Pit)
 - 4 × `you descended this turn` (Enterprising Scallywag, Ruin-Lurker Bat, Zoyowa Lava-Tongue)
-- 4 × `creatures you control have total power n or greater` (Shaman of Forgotten Ways, Surrak, the Hunt Caller, Owlbear Shepherd)
 - 3 × `it was a creature` (Enduring Vitality, Enduring Curiosity, Harold and Bob, First Numens)
 - 3 × `a permanent left the battlefield under your control this turn` (Hidden Stockpile, Call for Unity, Aid from the Cowl)
-- 3 × `an opponent lost life this turn` (Falkenrath Pit Fighter, Flamecache Gecko, Stromkirk Bloodthief)
 - 3 × `you gained or lost life this turn` (Star Charter, Starseer Mentor, Starlit Soothsayer)
+- 2 × `you control a basic land` (Abandoned Air Temple, Agna Qel'a)
+- 2 × `you control a legendary creature` (The Shire, Haunt of the Dead Marshes)
+- 2 × `you attacked with creatures with total power n or greater this combat` (Battle Cry Goblin, Minion of the Mighty)
+- 2 × `you put a counter on a creature this turn` (Lasting Tarfire, Lord Jyscal Guado)
+- 2 × `a creature died under your control this turn` (Denethor, Ruling Steward, Essenceknit Scholar)
 
-## amount (138)
+## amount (149)
 
 - 23 × `its power` (Chandra's Ignition, Goldvein Hydra, Threefold Thunderhulk)
 - 9 × `that spell's mana value` (Kaervek the Merciless, Spell Swindle, Chrome Host Seedshark)
 - 7 × `the sacrificed creature's power` (Greater Good, Altar of Dementia, Kazuul's Fury)
 - 7 × `that creature's toughness` (Verdant Sun's Avatar, Canopy Gargantuan, Pantlaza, Sun-Favored)
 - 7 × `the amount of life you gained this turn` (Celestine, the Living Saint, Defiling Daemogoth, Assemble the Entmoot)
+- 6 × `that many` (Tolarian Winds, Hex Magic, Broodhatch Nantuko)
+- 5 × `an additional` (Howling Mine, Dictate of Kruphix, Kami of the Crescent Moon)
 - 4 × `its toughness` (Momentous Fall, Wolverine Riders, Angelic Chorus)
-- 4 × `that many` (Tolarian Winds, Hex Magic, Illuminate History)
+- 4 × `that much` (Screaming Nemesis, Foul-Tongue Shriek, Mogg Maniac)
 - 4 × `its mana value` (Sister Hospitaller, Excise the Imperfect, Graywater's Fixer)
 - 4 × `the amount of mana spent to cast that spell` (Manaform Hellkite, Shantotto, Tactician Magician, Smoldering Egg)
 - 3 × `the result` (Ancient Brass Dragon, Ancient Bronze Dragon, Bucknard's Everfull Purse)
 - 3 × `n` (Arabella, Abandoned Doll, Crypt Rats, Silklash Spider)
 - 3 × `that creature's power` (Ziatora, the Incinerator, Grisly Spectacle, Infested Thrinax)
 - 3 × `the sacrificed creature's toughness` (Geralf, Visionary Stitcher, Miren, the Moaning Well, Disciple of Griselbrand)
-- 2 × `n plus the sacrificed creature's mana value` (Eldritch Evolution, Metamorphosis)
-- 2 × `the power of target creature you control` (Soul's Majesty, Wall of Reverence)
 
-## target (123)
+## target (125)
 
 - 7 × `player's graveyard` (Tormod's Crypt, Angel of Finality, Remorseful Cleric)
 - 5 × `creature card from a graveyard` (Cemetery Reaper, Ardyn, the Usurper, Summoner's Sending)
@@ -163,7 +163,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 1 × `noncreature artifact or noncreature enchantment` (Haywire Mite)
 - 1 × `card that's an instant or sorcery from your graveyard` (Mizzix's Mastery)
 
-## card filter (24)
+## card filter (25)
 
 - 3 × `nonland permanent` (Emeria Shepherd, Return to the Light Realms, Pull Through the Weft)
 - 2 × `spacecraft` (Seedship Broodtender, Scrounge for Eternity)
@@ -172,6 +172,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 1 × `artifact and enchantment` (Brilliant Restoration)
 - 1 × `red instant` (Pyromancer's Goggles)
 - 1 × `bat, lizard, rat,` (Mudflat Village)
+- 1 × `island, pirate,` (Mary Read and Anne Bonny)
 - 1 × `creature card with mana value equal to the number of charge counters on this artifact` (Aether Vial)
 - 1 × `instant and sorcery` (Wisdom of Ages)
 - 1 × `artifact card, up to n target enchantment card, up to n target instant card, up to n target sorcery card, and up to n target planeswalker` (Reconstruct History)
@@ -179,7 +180,6 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 1 × `activate abilities` (Cryptic Trilobite)
 - 1 × `card that shares a creature type with that creature` (Conjurer's Mantle)
 - 1 × `artifact creature` (Scarecrone)
-- 1 × `basic land` (Groundskeeper)
 
 ## spell filter (11)
 

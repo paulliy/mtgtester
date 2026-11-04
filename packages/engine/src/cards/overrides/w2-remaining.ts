@@ -264,7 +264,7 @@ export function registerW2RemainingOverrides(): void {
     },
   );
 
-  defineCard('96312b75-3110-4506-9f95-0c6c17d9da11', 'Securitron Squadron', ['Squad {3}'], {
+  defineCard('96312b75-3110-4506-9f95-0c6c17d9da11', 'Securitron Squadron', [], {
     optionalAdditionalCost: {
       mechanic: 'squad',
       cost: manaCost('{3}'),

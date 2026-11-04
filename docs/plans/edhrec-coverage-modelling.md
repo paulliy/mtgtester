@@ -343,9 +343,9 @@ at 200/200 and `knownUnmodeled` is empty.
 
 ### Phase 4: grammar breadth
 
-Status (2026-11-04): in progress. Five batches have landed, worked from the
+Status (2026-11-04): done. Six batches have landed, worked from the
 [triage](edhrec-triage.md) queue (its largest groups) rather than strictly in the order below.
-The pinned ratchet is at 3,627 modeled. The triage file is a baseline snapshot; the live queue is
+The pinned ratchet is at 3,714 modeled. The triage file is a baseline snapshot; the live queue is
 the pinned cards whose one unmodeled reason is the same line shape.
 
 - **Batch 1:** subjectless "gain N life", investigate, "each opponent discards", "target player
@@ -396,6 +396,35 @@ the pinned cards whose one unmodeled reason is the same line shape.
     color among permanents") is refused by a new validation instead of crashing in play.
 
   The pinned ratchet goes from 3,474 to 3,627.
+
+- **Batch 6:** the remaining Phase 4 steps over machinery the engine already has.
+  - Trigger events (step 2): each opponent's and enchanted player's steps, each player's draw
+    step, "the end step", end of combat, "whenever you attack", "you / an opponent discard(s)
+    a card", "is dealt damage", and compound heads ("enters or dies", "attacks or blocks",
+    "enters or is put into a graveyard from the battlefield").
+  - Intervening-if conditions (step 3): a creature died this turn, an opponent lost life this
+    turn, you have N or more life, N or more cards or card types in your graveyard, an opponent
+    controls more lands, you control your commander, total power, "you control (no|a|N or
+    more) <subject>", the source is untapped, it was cast.
+  - Payments inside effects (step 4): "you may pay {M} / N life. If you do, …" in a trigger,
+    paid as it resolves.
+  - Keywords (step 6): battle cry, extort and squad.
+  - Fix: after "create a … token", a sentence opening "It gains haste" was read as giving haste
+    to a spell on the stack (Krenko, Baron of Tin Street); it is now refused.
+
+  The pinned ratchet goes from 3,627 to 3,714.
+
+  Phase 4's steps are each covered now. What they leave open needs new engine machinery rather
+  than grammar, and moves to Phases 5 and 6 with the cards it blocks:
+  - Keywords with their own rules: mobilize (tokens sacrificed at the next end step), myriad,
+    umbra armor, ninjutsu, encore, madness, buyback, delve, transmute, suspend, living weapon,
+    eternalize, dredge, partner, freerunning, evolve, landwalk, foretell costs, retrace.
+  - "its controller …" after a removal sentence needs a target-player life gain op and the
+    target's last-known controller (CR 608.2h).
+  - "you may discard a card. If you do" needs a discard choice the condition can see.
+  - Trigger events with no engine event: cycling, scry, committing a crime, expend, a source
+    dealing noncombat damage, an enchanted creature dealing damage, "becomes the target of a
+    spell or ability you control".
 
 Extend the Phase 1 slots, in order of the cards each closes:
 
