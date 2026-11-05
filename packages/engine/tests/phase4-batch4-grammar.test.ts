@@ -219,6 +219,21 @@ describe('Phase 4 batch 4: player verbs and damage', () => {
     run(ctx, card, def.activatedAbilities[0]!.ability);
     for (const id of ['P1', 'P2', 'P3', 'P4']) expect(player(ctx, id).life).toBe(39);
   });
+
+  it("damage to each player is the source's, so its lifelink applies (Spear Spewer)", () => {
+    const card = creature(
+      'P4 Lifelink Spewer',
+      'Defender, lifelink\n{T}: This creature deals 1 damage to each player.',
+    );
+    const def = interpretCard(card);
+    expect(def.modeled).toBe(true);
+    const ctx = pod('p4-each-player-lifelink');
+    const spewer = spawn(ctx, 'P1', card);
+    run(ctx, card, def.activatedAbilities[0]!.ability, [], {}, spewer.cardId);
+    // Four players are dealt 1 each, and the controller gains 4 from lifelink: 40 - 1 + 4.
+    expect(player(ctx, 'P1').life).toBe(43);
+    for (const id of ['P2', 'P3', 'P4']) expect(player(ctx, id).life).toBe(39);
+  });
 });
 
 describe('Phase 4 batch 4: life-change trigger events', () => {

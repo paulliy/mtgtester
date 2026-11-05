@@ -6136,11 +6136,9 @@ function* executeAbilityEffects(
             yield* dealDamageToObject(ctx, damageSource, player.id, amount);
             continue;
           }
-          yield* dealDamageToPlayer(ctx, source, player, amount, {
-            combat: false,
-            sourceIsCommander: false,
-            sourceHasLifelink: false,
-          });
+          // Otherwise the ability's own source deals it, with its lifelink and infect, last-known
+          // if it has left (CR 702.15b, 702.90b, 113.7a), as for each-opponent damage.
+          yield* dealDamageToObject(ctx, source, player.id, amount);
         }
         break;
       }
