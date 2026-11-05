@@ -179,6 +179,30 @@ describe('Phase 4 batch 6: keywords', () => {
     expect(ctx.state.players.find((p) => p.id === 'P1')!.hand.length).toBe(handBefore + 3);
   });
 
+  it('squad paid twice creates both copies in one event: one "one or more tokens enter" trigger', () => {
+    const ctx = createGame(gameConfig(forestsPod(), { seed: 'p6-squad-one-event' }));
+    const watcher = oracle({
+      name: 'P6 Token Watcher',
+      typeLine: 'Enchantment',
+      oracleText: 'Whenever one or more tokens you control enter, draw a card.',
+    });
+    spawn(ctx, 'P1', watcher);
+    const entered = spawn(ctx, 'P1', creature('Squad {2}', { name: 'P6 Squad Batch' }));
+    entered.optionalCostCounts = { squad: 2 };
+    queueTriggersForObject(ctx, 'enters', entered);
+    pumpStrict(priorityCheckpoint(ctx));
+    // The squad trigger is the only one waiting; resolving it creates the copies.
+    ctx.state.pendingTriggers = [];
+    pumpStrict(resolveTopOfStack(ctx));
+    const copies = ctx.state.battlefield.filter((p) => p.name === 'P6 Squad Batch' && p.isToken);
+    expect(copies).toHaveLength(2);
+    // "For each time its squad cost was paid" is one creation event (CR 111.1, 702.157a).
+    const tokenWatches = ctx.state.pendingTriggers.filter((t) => t.sourceCardId !== entered.cardId);
+    expect(tokenWatches.filter((t) => t.ability.effects.some((e) => e.op === 'draw'))).toHaveLength(
+      1,
+    );
+  });
+
   it('battle cry pumps only the other attackers', () => {
     const effects = interpretCard(creature('Battle cry')).triggers[0]!.effects;
     expect(effects[0]).toMatchObject({

@@ -6899,29 +6899,31 @@ function* executeAbilityEffects(
           break;
         }
         // Every token each creation makes, a replacement's (Academy Manufactor's three, a
-        // doubler's extra) included, is one of "those tokens" the rider applies to.
-        for (let i = 0; i < amountOf(effect.count); i++) {
-          const entering = yield* tokensEntering(controller.id);
-          for (const token of createTokens(ctx, spec, entering, controller.id, false, true)) {
-            if (copyOptions.goadedForRestOfGame === true)
-              addGoadRequirement(ctx, token, controller.id, true);
-            if (copyOptions.sacrificeAt === 'endStep') {
-              ctx.state.delayedTriggers.push({
-                id: `dt-${ctx.state.nextObjectNum++}`,
-                sourceCardId: source.cardId,
-                sourceOracleId: source.oracleId,
-                controllerId: source.controllerId,
-                targetId: token.cardId,
-                when: 'endStep',
-                expiry: 'endStep',
-                ability: {
-                  kind: 'triggered',
-                  targets: [],
-                  effects: [{ op: 'sacrifice', target: 'triggerObject' }],
-                  description: 'Sacrifice the token at the beginning of the next end step',
-                },
-              });
-            }
+        // doubler's extra) included, is one of "those tokens" the rider applies to. "Create N
+        // copies" (squad's "for each time") is one creation event, so the tokens enter together
+        // and "whenever one or more tokens enter" triggers once.
+        let entering = 0;
+        for (let i = 0; i < amountOf(effect.count); i++)
+          entering += yield* tokensEntering(controller.id);
+        for (const token of createTokens(ctx, spec, entering, controller.id, false, true)) {
+          if (copyOptions.goadedForRestOfGame === true)
+            addGoadRequirement(ctx, token, controller.id, true);
+          if (copyOptions.sacrificeAt === 'endStep') {
+            ctx.state.delayedTriggers.push({
+              id: `dt-${ctx.state.nextObjectNum++}`,
+              sourceCardId: source.cardId,
+              sourceOracleId: source.oracleId,
+              controllerId: source.controllerId,
+              targetId: token.cardId,
+              when: 'endStep',
+              expiry: 'endStep',
+              ability: {
+                kind: 'triggered',
+                targets: [],
+                effects: [{ op: 'sacrifice', target: 'triggerObject' }],
+                description: 'Sacrifice the token at the beginning of the next end step',
+              },
+            });
           }
         }
         break;
