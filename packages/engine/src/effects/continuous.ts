@@ -481,6 +481,66 @@ export function printedManaValue(ctx: GameContext, perm: EnginePermanent): numbe
   return manaValueOf(selectedPermanentDefinition(def, perm.face, perm.unlockedDoors).manaCost);
 }
 
+/** What is attached to one object, as `candidateOf` reports it. */
+interface Attachments {
+  isEnchanted: boolean;
+  isEquipped: boolean;
+  auraControllerIds: string[];
+}
+
+const NO_ATTACHMENTS: Attachments = {
+  isEnchanted: false,
+  isEquipped: false,
+  auraControllerIds: [],
+};
+
+/** Fold `other`, attached to the object `into` describes, into it. */
+function addAttachment(ctx: GameContext, into: Attachments, other: EnginePermanent): void {
+  const def = ctx.defs.get(other.oracleId);
+  if (def === undefined) return;
+  // A bestowed permanent is an Aura while bestowed (CR 702.103b), though printed a creature.
+  const isAura = def.subtypes.includes('Aura') || other.bestowed === true;
+  if (isAura) into.auraControllerIds.push(other.controllerId);
+  if (isAura || def.types.includes('Enchantment')) into.isEnchanted = true;
+  if (def.subtypes.includes('Equipment') || def.types.includes('Artifact')) into.isEquipped = true;
+}
+
+/**
+ * Attachments by the object they are attached to, built once for a stretch of code that reads
+ * many candidates and changes nothing: a layer pass, or `selectPermanents`. Scanning the
+ * battlefield in `candidateOf` instead made every layer pass O(effects × permanents²), the
+ * largest cost on a big board. Keyed on the context, so a pass over a copy does not read it.
+ */
+let attachmentIndex: { ctx: GameContext; byTarget: Map<string, Attachments> } | null = null;
+
+function withAttachmentIndex<T>(ctx: GameContext, run: () => T): T {
+  const previous = attachmentIndex;
+  const byTarget = new Map<string, Attachments>();
+  for (const other of ctx.state.battlefield) {
+    if (other.attachedTo === null) continue;
+    let entry = byTarget.get(other.attachedTo);
+    if (entry === undefined) {
+      entry = { isEnchanted: false, isEquipped: false, auraControllerIds: [] };
+      byTarget.set(other.attachedTo, entry);
+    }
+    addAttachment(ctx, entry, other);
+  }
+  attachmentIndex = { ctx, byTarget };
+  try {
+    return run();
+  } finally {
+    attachmentIndex = previous;
+  }
+}
+
+function attachmentsOf(ctx: GameContext, perm: EnginePermanent): Attachments {
+  if (attachmentIndex?.ctx === ctx) return attachmentIndex.byTarget.get(perm.id) ?? NO_ATTACHMENTS;
+  const found: Attachments = { isEnchanted: false, isEquipped: false, auraControllerIds: [] };
+  for (const other of ctx.state.battlefield)
+    if (other.attachedTo === perm.id) addAttachment(ctx, found, other);
+  return found;
+}
+
 /** The one place a `SelectorCandidate` is built, so every selector reads the same fields. */
 export function candidateOf(
   ctx: GameContext,
@@ -488,25 +548,7 @@ export function candidateOf(
   chars: Characteristics,
   includeCombatDefender = false,
 ): SelectorCandidate {
-  let isEnchanted = false;
-  let isEquipped = false;
-  const auraControllerIds: string[] = [];
-  for (const other of ctx.state.battlefield) {
-    if (other.attachedTo === perm.id) {
-      const def = ctx.defs.get(other.oracleId);
-      if (def !== undefined) {
-        // A bestowed permanent is an Aura while bestowed (CR 702.103b), though printed a creature.
-        const isAura = def.subtypes.includes('Aura') || other.bestowed === true;
-        if (isAura) auraControllerIds.push(other.controllerId);
-        if (isAura || def.types.includes('Enchantment')) {
-          isEnchanted = true;
-        }
-        if (def.subtypes.includes('Equipment') || def.types.includes('Artifact')) {
-          isEquipped = true;
-        }
-      }
-    }
-  }
+  const { isEnchanted, isEquipped, auraControllerIds } = attachmentsOf(ctx, perm);
   // Absent (not 0) when the def can't be found, so `manaValueAtMost`/`manaValueAtLeast`
   // correctly never match rather than matching everything as mana value 0. Off the battlefield,
   // `cardZoneCandidate` applies the same rule via `spellManaValue(def, undefined)`.
@@ -552,7 +594,7 @@ export function candidateOf(
     // copy effect has already rewritten (CR 707.2).
     ...(perm.faceDown ? {} : { name: perm.name }),
     isEnchanted,
-    ...(auraControllerIds.length === 0 ? {} : { auraControllerIds }),
+    ...(auraControllerIds.length === 0 ? {} : { auraControllerIds: [...auraControllerIds] }),
     isEquipped,
     inCombat: perm.attacking !== null || perm.blocking !== null,
     combatRole: perm.attacking !== null ? 'attacking' : perm.blocking !== null ? 'blocking' : null,
@@ -836,17 +878,33 @@ function cloneWork(work: WorkMap): WorkMap {
   return out;
 }
 
-/** CR 613.8a: would applying `other` first change what `effect` does? */
-function dependsOn(
+/**
+ * CR 613.8a: would applying `other` first change what `effect` does? One instance answers for
+ * one state of `work`: each effect's fingerprint there, and each trial state with one other
+ * effect applied, are computed once and shared by every pair that needs them. Both are pure
+ * functions of `work`, so this answers exactly as probing each pair afresh did, with k
+ * fingerprints and k trial applications per round instead of k² of each.
+ */
+function dependencyProbe(
   ctx: GameContext,
   work: WorkMap,
-  effect: LayerEffect,
-  other: LayerEffect,
-): boolean {
-  const before = fingerprint(ctx, work, effect);
-  const trial = cloneWork(work);
-  applyOne(ctx, trial, other);
-  return fingerprint(ctx, trial, effect) !== before;
+): (effect: LayerEffect, other: LayerEffect) => boolean {
+  const before = new Map<LayerEffect, string>();
+  const trials = new Map<LayerEffect, WorkMap>();
+  return (effect, other) => {
+    let fingerprintBefore = before.get(effect);
+    if (fingerprintBefore === undefined) {
+      fingerprintBefore = fingerprint(ctx, work, effect);
+      before.set(effect, fingerprintBefore);
+    }
+    let trial = trials.get(other);
+    if (trial === undefined) {
+      trial = cloneWork(work);
+      applyOne(ctx, trial, other);
+      trials.set(other, trial);
+    }
+    return fingerprint(ctx, trial, effect) !== fingerprintBefore;
+  };
 }
 
 /**
@@ -882,8 +940,9 @@ function applyGroup(
   const remaining = [...group].sort((a, b) => a.timestamp - b.timestamp);
   while (remaining.length > 0) {
     // 613.8b: the earliest-timestamped effect that depends on nothing still unapplied.
+    const dependsOn = dependencyProbe(ctx, work);
     const next = remaining.findIndex((effect, i) =>
-      remaining.every((other, j) => j === i || !dependsOn(ctx, work, effect, other)),
+      remaining.every((other, j) => j === i || !dependsOn(effect, other)),
     );
     if (next === -1) {
       // 613.8c: a dependency loop — ignore dependency, use timestamp order.
@@ -963,7 +1022,7 @@ function runLayers(
 ): { map: Map<string, Characteristics>; usedGraveyards: boolean } {
   layerPassDepth++;
   try {
-    return runLayerPass(ctx, perms);
+    return withAttachmentIndex(ctx, () => runLayerPass(ctx, perms));
   } finally {
     layerPassDepth--;
   }
@@ -1183,10 +1242,12 @@ export function selectPermanents(
   source: SelectorSource,
 ): EnginePermanent[] {
   const all = computeAllCharacteristics(ctx);
-  return ctx.state.battlefield.filter((perm) => {
-    const chars = all.get(perm.cardId);
-    return chars !== undefined && selectMatches(candidateOf(ctx, perm, chars), selector, source);
-  });
+  return withAttachmentIndex(ctx, () =>
+    ctx.state.battlefield.filter((perm) => {
+      const chars = all.get(perm.cardId);
+      return chars !== undefined && selectMatches(candidateOf(ctx, perm, chars), selector, source);
+    }),
+  );
 }
 
 /** Ward {2} of a face-down permanent cast with disguise or cloaked (CR 702.168a, 701.58a). */

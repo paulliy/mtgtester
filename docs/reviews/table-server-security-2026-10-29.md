@@ -96,6 +96,9 @@ is opt-in, accepts private-range peers only, and every player sees a banner sayi
 
 - **A manual LAN game across two machines** with `--insecure-lan` is the M5 exit's last item. It
   needs two machines on one network and is owed by the owner; the scripted runs above cover the
-  same code paths on loopback, and `exposure.test.ts` covers the LAN address rules.
+  same code paths on loopback, and `exposure.test.ts` covers the LAN address rules. On
+  2026-11-04 a game was played between two network namespaces on one machine, which separates
+  the network stacks but not the machines ([follow-up](big-board-and-tables-2026-11-04.md)).
 - **The web client (M6)** adds the table pages. Its bundle-manifest test keeps tester views out
-  of the table build; a follow-up review should cover the served bundle once it exists.
+  of the table build. The served bundle was reviewed on 2026-11-04
+  ([follow-up](big-board-and-tables-2026-11-04.md)): its policy now runs only its own scripts.

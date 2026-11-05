@@ -13,9 +13,28 @@ const DECKS = {
   P2: readFileSync('apps/web/e2e/fixtures/table-deck-p2.txt', 'utf8'),
 };
 
+/**
+ * Content Security Policy refusals seen by any table page. The served policy allows only the
+ * bundle's own scripts and Scryfall's image and search hosts; a refusal means the app needs
+ * something the policy blocks, or the policy has a gap the app relies on.
+ */
+const cspViolations: string[] = [];
+const watchCsp = (page: Page): void => {
+  page.on('console', (message) => {
+    if (message.type() === 'error' && /Content Security Policy/i.test(message.text()))
+      cspViolations.push(message.text());
+  });
+};
+
+test.afterEach(() => {
+  expect(cspViolations).toEqual([]);
+  cspViolations.length = 0;
+});
+
 /** Every board starts with the log, piles and opponents' zones open, as in the tester specs. */
 async function openPage(browser: Browser, origin: string): Promise<Page> {
   const context = await browser.newContext({ baseURL: origin });
+  context.on('page', watchCsp);
   await context.addInitScript(() => {
     try {
       localStorage.setItem('mtg.playerGameInfoOpen', 'true');

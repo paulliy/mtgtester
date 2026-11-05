@@ -100,6 +100,24 @@ function hashStringUncached(s: string): number {
 }
 
 /**
+ * A number for each definition object, so the digest sees a definition replaced under the same
+ * oracle id (`ctx.defs.set`). The engine adds definitions only under new oracle ids, but a test
+ * or a tool that swaps one must not read the old one's results. Weak, so definitions are not kept.
+ */
+const DEFINITION_IDS = new WeakMap<object, number>();
+let nextDefinitionId = 1;
+
+function definitionId(definition: object | undefined): number {
+  if (definition === undefined) return 0;
+  let id = DEFINITION_IDS.get(definition);
+  if (id === undefined) {
+    id = nextDefinitionId++;
+    DEFINITION_IDS.set(definition, id);
+  }
+  return id;
+}
+
+/**
  * Fold every counter generically rather than the two the layer engine reads today, so an op
  * that starts reading a new counter kind cannot silently get a stale answer. String key order
  * is insertion order, which is deterministic.
@@ -139,6 +157,7 @@ export function digestOf(
         (perm.unlockedDoors?.includes('right') ? 2 : 0),
     );
     h = mix(h, hashString(perm.oracleId));
+    h = mix(h, definitionId(ctx.defs.get(perm.oracleId)));
     // Selectors read the controller ("creatures you control"). Nothing reassigns this today —
     // layer 2 is not implemented — but folding it keeps the digest honest when it arrives.
     h = mix(h, hashString(perm.controllerId));
@@ -213,6 +232,7 @@ export function digestOf(
   }
 
   h = mix(h, extra === undefined ? 0 : extra.timestamp + 1);
+  if (extra !== undefined) h = mix(h, definitionId(ctx.defs.get(extra.oracleId)));
 
   // A static ability's `condition` can read game-level state no permanent carries: "as long as
   // it entered this turn" (the turn number), "during your turn" (the active player), graveyard,

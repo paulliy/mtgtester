@@ -294,11 +294,21 @@ describe('static files', () => {
     const root = asResponse(await handle(ctx, request('/')));
     expect(root.status).toBe(200);
     expect(await root.text()).toContain('<title>built</title>');
-    expect(root.headers.get('content-security-policy')).toContain("frame-ancestors 'none'");
+    // The page holds seat tokens in localStorage: only its own scripts may run, nothing embeds it.
+    const csp = root.headers.get('content-security-policy') ?? '';
+    for (const directive of [
+      "script-src 'self'",
+      "object-src 'none'",
+      "base-uri 'none'",
+      "frame-ancestors 'none'",
+    ])
+      expect(csp).toContain(directive);
+    expect(csp).not.toMatch(/script-src[^;]*'unsafe-(inline|eval)'/);
     const invitePage = asResponse(await handle(ctx, request('/t/abcdefghijklmnop')));
     expect(await invitePage.text()).toContain('<title>built</title>');
     const script = asResponse(await handle(ctx, request('/assets/app-abc.js')));
     expect(script.status).toBe(200);
+    expect(script.headers.get('content-security-policy')).toBe(csp);
     expect(script.headers.get('content-type')).toContain('text/javascript');
     expect(await script.text()).toBe('console.log("app")');
     const css = asResponse(await handle(ctx, request('/assets/app-abc.css')));

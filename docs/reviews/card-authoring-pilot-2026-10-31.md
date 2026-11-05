@@ -145,9 +145,10 @@ is a test fix, not a `fix(...)` commit, and the card's behavior did not change.
    failed. Etali's first draft claimed its line with the card's name where the interpreter writes
    `~`; a check of the interpreted definition caught it before the tests ran.
    `card:new` prints exactly the unparsed lines, so the new arm cannot make this mistake.
-9. **Ten-of-ten sacrifice asks nine times, open.** "Sacrifice ten nonland permanents" asks for each
-   pick even when exactly ten candidates exist (the last is automatic). Changing it changes every
-   multi-sacrifice decision stream, so it is left for its own change.
+9. **Ten-of-ten sacrifice asks nine times, fixed 2026-11-04.** "Sacrifice ten nonland permanents"
+   asked for each pick even when exactly ten candidates existed (the last was automatic). An
+   activation's sacrifice cost now takes every candidate without asking when it owes as many as
+   there are ([big-board review](big-board-and-tables-2026-11-04.md)).
 10. **A borderline rule static.** Academy Manufactor's `createClueFoodAndTreasure` is named for the
     effect it replaces, not the card, and no other printed card uses it today. It is a rule static,
     not an op, so the target holds, but it is the kind of one-card IR the ADR discourages.

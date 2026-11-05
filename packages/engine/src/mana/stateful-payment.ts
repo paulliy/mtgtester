@@ -1,4 +1,5 @@
 import { copyData } from '../state/copy-data';
+import { getCached, setCached } from '../effects/layer-cache';
 import { playerLifeLocked } from '../state/phasing';
 import type { EnginePlayerState, GameContext } from '../state/types';
 import type {
@@ -27,20 +28,30 @@ const bounds = { states: 2048, activations: 32, productions: 256 };
  */
 function clone(ctx: GameContext): GameContext {
   const { sequenceSnapshots: _snapshots, eventLog, ...state } = ctx.state;
-  return {
+  const copy: GameContext = {
     state: { ...copyData(state), eventLog: eventLog.slice() },
     defs: new Map(ctx.defs),
     debugLog: [],
     rng: ctx.rng.clone(),
   };
+  // The copy starts with the original's layer results: its state is the same, and the cache is
+  // checked against a digest of the copy's own state on every read, so a copy that diverges
+  // recomputes. Starting cold cost a full layer pass for every state the search visits.
+  const layers = getCached(ctx);
+  if (layers !== undefined) setCached(copy, layers);
+  return copy;
 }
 
-const ANY_TYPE: ManaUnit = ['W', 'U', 'B', 'R', 'G', 'C'];
-
 /**
- * The most a source can produce while no activation can raise production: its units, or for a
- * dynamic source one unit of any type (five for `colorsAmongPermanents`, a unit per color). Null
- * for production no ceiling covers: a state-dependent amount or a rider's addition.
+ * The most a source can produce while no activation can raise production: its units. That holds
+ * for a dynamic source too (Exotic Orchard, Reflecting Pool, Mox Amber): `manaSourcesFor` has
+ * already resolved its symbols in this state. They are read from permanents' characteristics,
+ * exile contents, entry choices and commander identity, and a fixed-capacity activation (tap and
+ * mana costs, a life gain or damage rider) changes none of them. That is the same premise the
+ * count bound rests on: if an activation could change a characteristic, it could add a mana
+ * ability too. Counting the dynamic source as "any type" instead let an Orchard that makes only
+ * {G} pass for a white source, and the search tried every subset of the other lands to disprove
+ * it. Null for production no ceiling covers: a state-dependent amount or a rider's addition.
  */
 function ceilingUnits(source: ManaSource): ManaUnit[] | null {
   if (source.stateDependentProduction !== true) return source.units;
@@ -51,7 +62,7 @@ function ceilingUnits(source: ManaSource): ManaUnit[] | null {
     spec.conditionalUnits !== undefined
   )
     return null;
-  return Array.from({ length: spec.dynamic === 'colorsAmongPermanents' ? 5 : 1 }, () => ANY_TYPE);
+  return source.units;
 }
 
 export function needsStatefulManaPayment(
@@ -102,21 +113,37 @@ export function planStatefulManaPayment(
   // capacity, so it can only prune an impossible payment. Phyrexian pips may use life instead.
   // A dynamic source (Exotic Orchard) changes which symbols it makes, not how many: it counts at
   // its kind's most (`ceilingUnits`).
-  const fixedCapacity = ctx.state.battlefield
+  const ownCharacteristics = ctx.state.battlefield
     .filter((permanent) => permanent.controllerId === player.id)
-    .flatMap((permanent) => computeCharacteristics(ctx, permanent).manaAbilities)
-    .every(
-      (ability) =>
-        ability.amount === undefined &&
-        ability.conditionalUnits === undefined &&
-        ability.condition === undefined &&
-        (ability.costs === undefined ||
-          (ability.costs.some((cost) => cost.kind === 'tap') &&
-            ability.costs.every((cost) => cost.kind === 'tap' || cost.kind === 'mana'))) &&
-        (ability.onActivate ?? []).every(
-          (effect) => effect.op === 'gainLife' || effect.op === 'damageController',
-        ),
-    );
+    .map((permanent) => computeCharacteristics(ctx, permanent));
+  const ownAbilities = ownCharacteristics.flatMap((chars) => chars.manaAbilities);
+  const fixedCapacity = ownAbilities.every(
+    (ability) =>
+      ability.amount === undefined &&
+      ability.conditionalUnits === undefined &&
+      ability.condition === undefined &&
+      (ability.costs === undefined ||
+        (ability.costs.some((cost) => cost.kind === 'tap') &&
+          ability.costs.every((cost) => cost.kind === 'tap' || cost.kind === 'mana'))) &&
+      (ability.onActivate ?? []).every(
+        (effect) => effect.op === 'gainLife' || effect.op === 'damageController',
+      ),
+  );
+  // Under fixed capacity no cost pays energy and the only riders gain life or deal damage to the
+  // controller, so energy never changes and life rises only through a life-gain rider or a
+  // damage rider from a lifelink source (with infect it gives poison, not life loss). A
+  // reservation the payer cannot meet now then stays unmet in every state, and the search would
+  // only try every subset of activations proving so (fuzz-11: {2}{B} and 32 life at 29 life,
+  // sixteen lands, halted after a minute).
+  const lifeCanRise = ownCharacteristics.some((chars) =>
+    chars.manaAbilities.some((ability) =>
+      (ability.onActivate ?? []).some(
+        (effect) =>
+          effect.op === 'gainLife' ||
+          (effect.op === 'damageController' && chars.keywords.includes('lifelink')),
+      ),
+    ),
+  );
   const productions = (source: ManaSource, activation: number): ProducedMana[][] => {
     let choices: ProducedMana[][] = [[]];
     for (const unit of source.units) {
@@ -155,6 +182,14 @@ export function planStatefulManaPayment(
           produced: [...produced, ...final.produced],
         };
     }
+    if (
+      fixedCapacity &&
+      (payer.energy < energyReserved ||
+        (lifeReserved > 0 &&
+          !lifeCanRise &&
+          (playerLifeLocked(snapshot, payer.id) || payer.life < lifeReserved)))
+    )
+      return null;
     const key = JSON.stringify([
       snapshot.state.players.map((p) => [
         p.id,
