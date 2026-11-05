@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "card": "Howling Golem",
+  "scenarios": [
+    {
+      "id": "howling-golem-attack-each-draws",
+      "title": "Howling Golem: when it attacks, each player draws a card",
+      "clauses": [1],
+      "instructions": ["Attack P2 with Howling Golem."],
+      "expectedOutcome": "Each player draws a card; you draw the Island on top of your library.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Howling Golem"],
+          "libraryTop": ["Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Island"]
+          }
+        },
+        {
+          "event": {
+            "type": "draw",
+            "count": 4
+          }
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      }
+    }
+  ]
+}

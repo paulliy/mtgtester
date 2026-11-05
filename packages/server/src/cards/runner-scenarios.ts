@@ -97,6 +97,29 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'ajanis-pridemate.json',
+    file: scenarioFile(
+      'ajanis-pridemate.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/ajanis-pridemate.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'arbor-elf.json',
+    file: scenarioFile(
+      'arbor-elf.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/arbor-elf.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'arcbound-worker.json',
     file: scenarioFile(
       'arcbound-worker.json',
@@ -105,6 +128,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
           '../../../../packages/engine/tests/scenarios/arcbound-worker.json',
           import.meta.url,
         ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'blaze.json',
+    file: scenarioFile(
+      'blaze.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/blaze.json', import.meta.url),
         'utf8',
       ),
     ),
@@ -133,11 +166,31 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'choked-estuary.json',
+    file: scenarioFile(
+      'choked-estuary.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/choked-estuary.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'chrome-mox.json',
     file: scenarioFile(
       'chrome-mox.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/chrome-mox.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'cloudshift.json',
+    file: scenarioFile(
+      'cloudshift.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/cloudshift.json', import.meta.url),
         'utf8',
       ),
     ),
@@ -151,6 +204,26 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
           '../../../../packages/engine/tests/scenarios/craterhoof-behemoth.json',
           import.meta.url,
         ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'deaths-shadow.json',
+    file: scenarioFile(
+      'deaths-shadow.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/deaths-shadow.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'doom-blade.json',
+    file: scenarioFile(
+      'doom-blade.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/doom-blade.json', import.meta.url),
         'utf8',
       ),
     ),
@@ -225,6 +298,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'fleshbag-marauder.json',
+    file: scenarioFile(
+      'fleshbag-marauder.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/fleshbag-marauder.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'flusterstorm.json',
     file: scenarioFile(
       'flusterstorm.json',
@@ -258,12 +344,51 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'fungal-sprouting.json',
+    file: scenarioFile(
+      'fungal-sprouting.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/fungal-sprouting.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'geier-reach-sanitarium.json',
+    file: scenarioFile(
+      'geier-reach-sanitarium.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/geier-reach-sanitarium.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'glimpse-the-unthinkable.json',
     file: scenarioFile(
       'glimpse-the-unthinkable.json',
       readFileSync(
         new URL(
           '../../../../packages/engine/tests/scenarios/glimpse-the-unthinkable.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'goblin-wardriver.json',
+    file: scenarioFile(
+      'goblin-wardriver.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/goblin-wardriver.json',
           import.meta.url,
         ),
         'utf8',
@@ -294,6 +419,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'gruesome-fate.json',
+    file: scenarioFile(
+      'gruesome-fate.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/gruesome-fate.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'gudul-lurker.json',
     file: scenarioFile(
       'gudul-lurker.json',
@@ -309,6 +444,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       'hooded-hydra.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/hooded-hydra.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'howling-golem.json',
+    file: scenarioFile(
+      'howling-golem.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/howling-golem.json', import.meta.url),
         'utf8',
       ),
     ),
@@ -347,11 +492,64 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'krenko-mob-boss.json',
+    file: scenarioFile(
+      'krenko-mob-boss.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/krenko-mob-boss.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'languish.json',
+    file: scenarioFile(
+      'languish.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/languish.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'lotus-cobra.json',
+    file: scenarioFile(
+      'lotus-cobra.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/lotus-cobra.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'mana-geyser.json',
     file: scenarioFile(
       'mana-geyser.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/mana-geyser.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'megrim.json',
+    file: scenarioFile(
+      'megrim.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/megrim.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'memory-erosion.json',
+    file: scenarioFile(
+      'memory-erosion.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/memory-erosion.json', import.meta.url),
         'utf8',
       ),
     ),
@@ -403,6 +601,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'muscle-sliver.json',
+    file: scenarioFile(
+      'muscle-sliver.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/muscle-sliver.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'myr-convert.json',
     file: scenarioFile(
       'myr-convert.json',
@@ -426,11 +634,44 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'natures-claim.json',
+    file: scenarioFile(
+      'natures-claim.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/natures-claim.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'noble-hierarch.json',
     file: scenarioFile(
       'noble-hierarch.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/noble-hierarch.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'offer-immortality.json',
+    file: scenarioFile(
+      'offer-immortality.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/offer-immortality.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'ophiomancer.json',
+    file: scenarioFile(
+      'ophiomancer.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/ophiomancer.json', import.meta.url),
         'utf8',
       ),
     ),
@@ -531,6 +772,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'ripjaw-raptor.json',
+    file: scenarioFile(
+      'ripjaw-raptor.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/ripjaw-raptor.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'ruby-medallion.json',
     file: scenarioFile(
       'ruby-medallion.json',
@@ -541,11 +792,44 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'sanguine-bond.json',
+    file: scenarioFile(
+      'sanguine-bond.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/sanguine-bond.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'seedborn-muse.json',
     file: scenarioFile(
       'seedborn-muse.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/seedborn-muse.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'seers-sundial.json',
+    file: scenarioFile(
+      'seers-sundial.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/seers-sundial.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'selfless-savior.json',
+    file: scenarioFile(
+      'selfless-savior.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/selfless-savior.json',
+          import.meta.url,
+        ),
         'utf8',
       ),
     ),
@@ -656,6 +940,26 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'tithe-drinker.json',
+    file: scenarioFile(
+      'tithe-drinker.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/tithe-drinker.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'triskelion.json',
+    file: scenarioFile(
+      'triskelion.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/triskelion.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'urzas-incubator.json',
     file: scenarioFile(
       'urzas-incubator.json',
@@ -669,11 +973,31 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'vapor-snag.json',
+    file: scenarioFile(
+      'vapor-snag.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/vapor-snag.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'vivid-creek.json',
     file: scenarioFile(
       'vivid-creek.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/vivid-creek.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'wasteland.json',
+    file: scenarioFile(
+      'wasteland.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/wasteland.json', import.meta.url),
         'utf8',
       ),
     ),

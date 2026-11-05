@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "card": "Offer Immortality",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "offer-immortality-grants-both",
+      "title": "Offer Immortality: the target gains deathtouch and indestructible",
+      "clauses": [1],
+      "instructions": ["Cast Offer Immortality targeting your Scenario Bear."],
+      "expectedOutcome": "Scenario Bear has deathtouch and indestructible.",
+      "seats": {
+        "P1": { "hand": ["Offer Immortality"], "battlefield": ["Swamp", "Swamp", "Scenario Bear"] }
+      },
+      "script": [
+        { "player": "P1", "choose": "/^Cast Offer Immortality/", "targets": ["Scenario Bear"] }
+      ],
+      "expect": [
+        { "keywords": { "card": "Scenario Bear", "has": ["deathtouch", "indestructible"] } }
+      ]
+    }
+  ]
+}

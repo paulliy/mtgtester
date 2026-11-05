@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "card": "Fleshbag Marauder",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "fleshbag-each-player-sacrifices",
+      "title": "Fleshbag Marauder: each player sacrifices a creature, Fleshbag itself if it is yours",
+      "clauses": [1],
+      "instructions": ["Cast Fleshbag Marauder; sacrifice Fleshbag Marauder to its own trigger."],
+      "expectedOutcome": "Fleshbag Marauder and P2's Scenario Bear are in graveyards; P3 had no creature.",
+      "seats": {
+        "P1": { "hand": ["Fleshbag Marauder"], "battlefield": ["Swamp", "Swamp", "Swamp"] },
+        "P2": { "battlefield": ["Scenario Bear"] }
+      },
+      "script": [{ "player": "P1", "choose": "/^Cast Fleshbag Marauder/" }],
+      "expect": [
+        { "zone": { "player": "P1", "zone": "graveyard", "has": ["Fleshbag Marauder"] } },
+        { "zone": { "player": "P2", "zone": "graveyard", "has": ["Scenario Bear"] } }
+      ]
+    }
+  ]
+}

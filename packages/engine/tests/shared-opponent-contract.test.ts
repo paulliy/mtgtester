@@ -55,9 +55,15 @@ describe('independent shared-opponent effect contracts', () => {
       typeLine: 'Artifact',
       oracleText: text,
     });
+    // The interpreter reads this line since EDHREC plan Phase 4 batch 6 (a life-gain head with
+    // a life-total intervening if), as the same trigger registered by hand below.
     const base = interpretCard(watcher);
-    expect(base.unmodeledReasons).toHaveLength(1);
-    const remaining = base.unmodeledReasons.filter((reason) => !reason.includes(text));
+    expect(base.triggers[0]?.trigger).toMatchObject({
+      when: 'gainsLife',
+      player: 'each',
+      condition: { kind: 'compareValues', left: { kind: 'lifeTotal', scope: 'you' } },
+    });
+    const remaining = base.unmodeledReasons;
     expect(remaining).toEqual([]);
     registerCustomDef(ctx, {
       ...base,

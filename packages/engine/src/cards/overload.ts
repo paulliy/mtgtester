@@ -47,6 +47,12 @@ const exileSearchFields = { op: 'lower', target: 'lower' } satisfies Record<
   keyof Extract<Effect, { op: 'exileCreatureAndControllerSearchBasicLand' }>,
   FieldRole
 >;
+const discardFields = {
+  op: 'lower',
+  target: 'lower',
+  count: 'copy',
+  atRandom: 'unsupported',
+} satisfies Record<keyof Extract<Effect, { op: 'discardTarget' }>, FieldRole>;
 function withinFields(value: object, fields: Record<string, FieldRole>): boolean {
   return Object.entries(value).every(
     ([key, entry]) =>
@@ -93,6 +99,41 @@ export function deriveOverloadAbility(ability: Ability | null): Ability | null {
     target.kind === 'nonlandPermanent'
   ) {
     return { ...ability, targets: [], effects: [{ op: 'overloadBounceAllNonlandOpponents' }] };
+  }
+  // "Tap target creature you don't control" overloaded taps each of them (Blustersquall).
+  if (
+    effect.op === 'tapTarget' &&
+    Object.keys(effect).every((key) => key === 'op' || key === 'target') &&
+    effect.target === 0 &&
+    target.kind === 'creature' &&
+    target.controller === 'opponent'
+  ) {
+    return {
+      ...ability,
+      targets: [],
+      effects: [{ op: 'tapEach', selector: allOf(ofType('Creature'), OPPONENTS) }],
+    };
+  }
+  // "Target player discards two cards" overloaded is "Each player discards two cards" (Mind
+  // Rake, CR 702.96b); "target opponent" becomes each opponent.
+  if (
+    effect.op === 'discardTarget' &&
+    withinFields(effect, discardFields) &&
+    effect.target === 0 &&
+    target.kind === 'player' &&
+    (target.controller === undefined || target.controller === 'opponent')
+  ) {
+    return {
+      ...ability,
+      targets: [],
+      effects: [
+        {
+          op: 'discardEachPlayer',
+          scope: target.controller === 'opponent' ? 'opponents' : 'all',
+          count: effect.count,
+        },
+      ],
+    };
   }
   if (
     effect.op === 'destroy' &&

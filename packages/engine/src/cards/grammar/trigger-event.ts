@@ -9,7 +9,13 @@ import type { OracleCard } from '@mtg/shared';
 import { SELF_SUBJECT } from '../ability';
 import type { ObjectTriggerWhen, TriggerHead, TriggerSubject } from '../ability';
 import { CARD_TYPE_SINGULARS } from './words';
-import { ANY_SPELL, parseSpellFilter, parseSubject, parseTriggerSubject } from './subject';
+import {
+  ANY_SPELL,
+  parseCardFilterPhrase,
+  parseSpellFilter,
+  parseSubject,
+  parseTriggerSubject,
+} from './subject';
 import { parseConditionClause } from './condition';
 import type { Condition } from '../condition';
 import {
@@ -142,6 +148,11 @@ function parseTriggerHeadUntraced(firstLine: string, card: OracleCard): ParsedTr
   const drawExceptFirst = firstLine.match(DRAW_EXCEPT_FIRST_TRIGGER_HEAD_RE);
   const draw = firstLine.match(DRAW_TRIGGER_HEAD_RE);
   const foretell = firstLine.match(FORETELL_TRIGGER_HEAD_RE);
+  // "Whenever you gain life" (Ajani's Pridemate) / "Whenever an opponent loses life" (Exquisite
+  // Blood): one event per life gain or loss, with the amount (CR 119.9, 119.10).
+  const lifeChange = firstLine.match(
+    /^whenever (you|a player|an opponent) (gains?|loses?) life( for the first time each turn)?, (.*)$/,
+  );
   const graveyardCrossing = firstLine.match(GRAVEYARD_CROSSING_TRIGGER_HEAD_RE);
   // "Whenever one or more artifact cards leave your graveyard" (Imotekh the Stormlord): one
   // aggregate event per batch of cards leaving (CR 603.2c); a card is in its owner's graveyard,
@@ -342,6 +353,18 @@ function parseTriggerHeadUntraced(firstLine: string, card: OracleCard): ParsedTr
       },
     ];
     body = tokenCreated[3] as string;
+  } else if (lifeChange !== null) {
+    const playerPhrase = lifeChange[1] as string;
+    const player =
+      playerPhrase === 'you' ? 'you' : playerPhrase === 'an opponent' ? 'opponent' : 'each';
+    const gains = (lifeChange[2] as string).startsWith('gain');
+    const firstTime = lifeChange[3] !== undefined;
+    // The engine's life-gain event has no "first time each turn" qualifier.
+    if (gains && firstTime) return null;
+    heads = gains
+      ? [{ when: 'gainsLife', player }]
+      : [{ when: 'losesLife', player, ...(firstTime ? { firstTimeEachTurn: true as const } : {}) }];
+    body = lifeChange[4] as string;
   } else if (foretell !== null) {
     heads = [{ when: 'foretells', player: 'you' }];
     body = foretell[1] as string;
@@ -436,7 +459,7 @@ function parseTriggerHeadUntraced(firstLine: string, card: OracleCard): ParsedTr
     body = firstLine.slice('whenever enchanted player is attacked, '.length);
   } else {
     const m = firstLine.match(OBJECT_TRIGGER_HEAD_RE);
-    if (m === null) return null;
+    if (m === null) return parseMoreTriggerHeads(firstLine, card);
     const subjectPhrase = m[1] as string;
     const event = m[2] as string;
     const events: ObjectTriggerWhen[] = event.startsWith('enters')
@@ -477,7 +500,9 @@ function parseTriggerHeadUntraced(firstLine: string, card: OracleCard): ParsedTr
       subject = SELF_SUBJECT;
     } else {
       const selector = parseTriggerSubject(subjectPhrase, card);
-      if (selector === null) return null;
+      // "When this creature enters or dies" reaches here as the subject "this creature enters
+      // or" dying; the compound reading is tried instead.
+      if (selector === null) return parseMoreTriggerHeads(firstLine, card);
       subject = { kind: 'permanent', selector };
     }
     // "enters from a graveyard" / "enters from your graveyard" (CR 603.6a): the origin zone is
@@ -513,6 +538,118 @@ function parseTriggerHeadUntraced(firstLine: string, card: OracleCard): ParsedTr
     );
   }
   return { heads, body, implicitCondition, eventCondition };
+}
+
+/**
+ * Trigger heads over events the engine already dispatches (EDHREC plan Phase 4 step 2), tried
+ * only once every other head failed, so no head that already parsed changes.
+ */
+function parseMoreTriggerHeads(firstLine: string, card: OracleCard): ParsedTriggerHead | null {
+  const none = { implicitCondition: undefined, eventCondition: undefined };
+  // "At the beginning of each opponent's upkeep" / "enchanted player's upkeep" / "each player's
+  // draw step" / "the end step" (each player's) / "end of combat".
+  const step = firstLine.match(
+    /^at the beginning of (your|each player's|each opponent's|enchanted player's|the|each) (upkeep|end step|draw step|combat|end of combat), (.*)$/,
+  );
+  if (step !== null) {
+    const when =
+      step[2] === 'upkeep'
+        ? 'upkeep'
+        : step[2] === 'end step'
+          ? 'endStep'
+          : step[2] === 'draw step'
+            ? 'drawStep'
+            : step[2] === 'combat'
+              ? 'beginningOfCombat'
+              : 'endOfCombat';
+    const player =
+      step[1] === 'your'
+        ? 'you'
+        : step[1] === "each opponent's"
+          ? 'opponent'
+          : step[1] === "enchanted player's"
+            ? 'enchanted'
+            : 'each';
+    // The engine queues an opponent's step only for upkeep, end step and combat.
+    if (player === 'opponent' && (when === 'drawStep' || when === 'endOfCombat')) return null;
+    if (player === 'enchanted' && !card.subtypes.includes('Aura')) return null;
+    return { heads: [{ when, player }], body: step[3] as string, ...none };
+  }
+  // "Whenever you attack" (with no "for each opponent"): the aggregate attack (CR 508.1).
+  const attack = firstLine.match(/^whenever you attack, (.*)$/);
+  if (attack !== null)
+    return {
+      heads: [
+        {
+          when: 'attacks',
+          subject: { kind: 'permanent', selector: allOf(ofType('Creature'), YOURS) },
+          aggregate: true,
+        },
+      ],
+      body: attack[1] as string,
+      ...none,
+    };
+  // "Whenever you discard a card" / "an opponent discards a creature card".
+  const discard = firstLine.match(
+    /^whenever (you|a player|an opponent) discards? an? (?:(.+?) )?card, (.*)$/,
+  );
+  if (discard !== null) {
+    const filter = discard[2] === undefined ? undefined : parseCardFilterPhrase(discard[2], card);
+    if (discard[2] !== undefined && filter === null) return null;
+    const player =
+      discard[1] === 'you' ? 'you' : discard[1] === 'an opponent' ? 'opponent' : 'each';
+    return {
+      heads: [
+        {
+          when: 'discardsCard',
+          player,
+          ...(filter !== undefined && filter !== null ? { filter } : {}),
+        },
+      ],
+      body: discard[3] as string,
+      ...none,
+    };
+  }
+  // "Whenever this creature is dealt damage" (Ripjaw Raptor).
+  const dealt = firstLine.match(/^whenever (.+?) is dealt damage, (.*)$/);
+  if (dealt !== null && SELF_TRIGGER_SUBJECT_RE.test(dealt[1] as string))
+    return {
+      heads: [{ when: 'dealtDamage', subject: SELF_SUBJECT }],
+      body: dealt[2] as string,
+      ...none,
+    };
+  // Compound heads: "When this creature enters or dies" (two triggers, CR 603.2), "attacks or
+  // blocks", "enters or is put into a graveyard from the battlefield".
+  const compound = firstLine.match(
+    /^when(?:ever)? (.+?) (enters or dies|attacks or blocks|enters or is put into a graveyard from the battlefield), (.*)$/,
+  );
+  if (compound !== null) {
+    const subjectPhrase = compound[1] as string;
+    let subject: TriggerSubject;
+    if (SELF_TRIGGER_SUBJECT_RE.test(subjectPhrase)) subject = SELF_SUBJECT;
+    else {
+      const selector = parseTriggerSubject(subjectPhrase, card);
+      if (selector === null) return null;
+      subject = { kind: 'permanent', selector };
+    }
+    const heads: TriggerHead[] =
+      compound[2] === 'enters or dies'
+        ? [
+            { when: 'enters', subject },
+            { when: 'dies', subject },
+          ]
+        : compound[2] === 'attacks or blocks'
+          ? [
+              { when: 'attacks', subject },
+              { when: 'blocks', subject },
+            ]
+          : [
+              { when: 'enters', subject },
+              { when: 'leavesBattlefield', subject, leavesTo: ['graveyard'] },
+            ];
+    return { heads, body: compound[3] as string, ...none };
+  }
+  return null;
 }
 
 /** `parseTriggerHeadUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */

@@ -161,7 +161,8 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
     '56f1a16a-9f41-41fb-b580-c200bca27cd6',
     'Fortified Village',
     [
-      "As this land enters, you may reveal a Forest or Plains card from your hand. If you don't, this land enters tapped.",
+      // The reveal-land line is read by the interpreter (EDHREC plan Phase 4 batch 4); the def
+      // keeps the same as-enters choice.
     ],
     {
       entersTappedUnless: {
@@ -204,11 +205,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
   defineCard(
     '1d5ff280-7f4d-4801-aefd-9b6e6b1f2818',
     'Ajani, Caller of the Pride',
-    [
-      '+1: Put a +1/+1 counter on up to one target creature.',
-      '−3: Target creature gains flying and double strike until end of turn.',
-      '−8: Create X 2/2 white Cat creature tokens, where X is your life total.',
-    ],
+    ['+1: Put a +1/+1 counter on up to one target creature.'],
     {
       activatedAbilities: [
         {
@@ -328,77 +325,65 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
     },
   );
   // Loyal Guardian
-  defineCard(
-    'de1cfa83-2049-48ab-b093-2f120a3ef4f2',
-    'Loyal Guardian',
-    [
-      'At the beginning of combat on your turn, if you control your commander, put a +1/+1 counter on each creature you control.',
+  defineCard('de1cfa83-2049-48ab-b093-2f120a3ef4f2', 'Loyal Guardian', [], {
+    triggers: [
+      {
+        kind: 'triggered',
+        trigger: {
+          when: 'beginningOfCombat',
+          player: 'you',
+          condition: { kind: 'controlsYourCommander' },
+        },
+        targets: [],
+        effects: [
+          {
+            op: 'putCountersEach',
+            selector: allOf(ofType('Creature'), YOURS),
+            counter: '+1/+1',
+            count: 1,
+          },
+        ],
+        description: 'Put a +1/+1 counter on each creature you control.',
+      },
     ],
-    {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'beginningOfCombat',
-            player: 'you',
-            condition: { kind: 'controlsYourCommander' },
-          },
-          targets: [],
-          effects: [
-            {
-              op: 'putCountersEach',
-              selector: allOf(ofType('Creature'), YOURS),
-              counter: '+1/+1',
-              count: 1,
-            },
-          ],
-          description: 'Put a +1/+1 counter on each creature you control.',
-        },
-      ],
-    },
-  );
+  });
   // Dawn of Hope
-  defineCard(
-    'd7a38484-2acc-49a6-b32d-d54dddb14d31',
-    'Dawn of Hope',
-    ['Whenever you gain life, you may pay {2}. If you do, draw a card.'],
-    {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: { when: 'gainsLife', player: 'you' },
+  defineCard('d7a38484-2acc-49a6-b32d-d54dddb14d31', 'Dawn of Hope', [], {
+    triggers: [
+      {
+        kind: 'triggered',
+        trigger: { when: 'gainsLife', player: 'you' },
+        targets: [],
+        effects: [
+          {
+            op: 'conditionalEffect',
+            condition: { kind: 'mayPayMana', cost: manaCost('{2}') },
+            then: [{ op: 'draw', count: constant(1) }],
+            else: [],
+          },
+        ],
+        description: 'Whenever you gain life, you may pay {2}. If you do, draw a card.',
+      },
+    ],
+    activatedAbilities: [
+      {
+        costs: [mana('{3}{W}')],
+        timing: 'any',
+        ability: {
+          kind: 'activated',
           targets: [],
           effects: [
             {
-              op: 'conditionalEffect',
-              condition: { kind: 'mayPayMana', cost: manaCost('{2}') },
-              then: [{ op: 'draw', count: constant(1) }],
-              else: [],
+              op: 'createToken',
+              spec: SOLDIER_1_1_LIFELINK,
+              count: constant(1),
             },
           ],
-          description: 'Whenever you gain life, you may pay {2}. If you do, draw a card.',
+          description: '{3}{W}: Create a 1/1 white Soldier creature token with lifelink.',
         },
-      ],
-      activatedAbilities: [
-        {
-          costs: [mana('{3}{W}')],
-          timing: 'any',
-          ability: {
-            kind: 'activated',
-            targets: [],
-            effects: [
-              {
-                op: 'createToken',
-                spec: SOLDIER_1_1_LIFELINK,
-                count: constant(1),
-              },
-            ],
-            description: '{3}{W}: Create a 1/1 white Soldier creature token with lifelink.',
-          },
-        },
-      ],
-    },
-  );
+      },
+    ],
+  });
   // Hornet Nest
   defineCard(
     '123d2b6e-114e-4767-860d-50790382ca4a',
@@ -636,7 +621,10 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
   defineCard(
     '38abf769-e4ef-4b47-9c79-c8cda0b90f6c',
     'Collective Unconscious',
-    ['Draw a card for each creature you control.'],
+    [
+      // The draw line is read by the interpreter (EDHREC plan Phase 4 batch 4); the def keeps the
+      // same draw.
+    ],
     {
       spellAbility: {
         kind: 'spell',
@@ -656,45 +644,38 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
     },
   );
   // Camaraderie
-  defineCard(
-    '9aab386c-d48c-4611-b757-aa69b26cc1b1',
-    'Camaraderie',
-    [
-      'You gain X life and draw X cards, where X is the number of creatures you control. Creatures you control get +1/+1 until end of turn.',
-    ],
-    {
-      spellAbility: {
-        kind: 'spell',
-        targets: [],
-        effects: [
-          {
-            op: 'gainLife',
-            amount: {
-              kind: 'countPermanents',
-              selector: allOf(ofType('Creature'), YOURS),
-              scope: 'you',
-            },
-          },
-          {
-            op: 'draw',
-            count: {
-              kind: 'countPermanents',
-              selector: allOf(ofType('Creature'), YOURS),
-              scope: 'you',
-            },
-          },
-          {
-            op: 'pumpEachUntilEot',
+  defineCard('9aab386c-d48c-4611-b757-aa69b26cc1b1', 'Camaraderie', [], {
+    spellAbility: {
+      kind: 'spell',
+      targets: [],
+      effects: [
+        {
+          op: 'gainLife',
+          amount: {
+            kind: 'countPermanents',
             selector: allOf(ofType('Creature'), YOURS),
-            power: 1,
-            toughness: 1,
+            scope: 'you',
           },
-        ],
-        description:
-          'You gain X life and draw X cards, where X is the number of creatures you control. Creatures you control get +1/+1 until end of turn.',
-      },
+        },
+        {
+          op: 'draw',
+          count: {
+            kind: 'countPermanents',
+            selector: allOf(ofType('Creature'), YOURS),
+            scope: 'you',
+          },
+        },
+        {
+          op: 'pumpEachUntilEot',
+          selector: allOf(ofType('Creature'), YOURS),
+          power: 1,
+          toughness: 1,
+        },
+      ],
+      description:
+        'You gain X life and draw X cards, where X is the number of creatures you control. Creatures you control get +1/+1 until end of turn.',
     },
-  );
+  });
   // Hour of Reckoning: restored in coverage PR02. Convoke is a real payment now, so no override
   // remains.
 }

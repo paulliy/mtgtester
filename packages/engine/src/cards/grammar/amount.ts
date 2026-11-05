@@ -148,6 +148,44 @@ function parseDynamicCountValueUntraced(
   }
   if (text === 'the number of opponents who lost life this turn')
     return { kind: 'opponentsLostLifeThisTurn' };
+  // EDHREC plan Phase 4 batch 5: value phrases the amount forms reach most often.
+  if (text === 'the number of opponents you have') return { kind: 'countOpponents' };
+  if (text === 'your life total') return { kind: 'lifeTotal', scope: 'you' };
+  if (text === 'the number of card types among cards in your graveyard')
+    return { kind: 'cardTypesInYourGraveyard' };
+  // "the number of cards in your hand": every card there (an empty `allOf` matches anything).
+  const cardsInZone = text.match(/^the number of cards in your (graveyard|hand|library)$/);
+  if (cardsInZone !== null)
+    return {
+      kind: 'countCardsInZone',
+      zone: cardsInZone[1] as 'graveyard' | 'hand' | 'library',
+      selector: { kind: 'allOf', of: [] },
+      owner: 'you',
+    };
+  // "the greatest power among creatures you control" (Overwhelming Stampede); 0 with none.
+  const greatest = text.match(/^the greatest (power|toughness|mana value) among (.+)$/);
+  if (greatest !== null) {
+    const noun = greatest[2] as string;
+    const selector = parseSubject(noun, card);
+    if (selector !== null) {
+      const scope: 'you' | 'opponents' | 'all' =
+        /\byour opponents control\b|\ban opponent controls\b/.test(noun)
+          ? 'opponents'
+          : /\byou control\b/.test(noun)
+            ? 'you'
+            : 'all';
+      return {
+        kind:
+          greatest[1] === 'power'
+            ? 'greatestPowerAmong'
+            : greatest[1] === 'toughness'
+              ? 'greatestToughnessAmong'
+              : 'greatestManaValueAmong',
+        selector,
+        scope,
+      };
+    }
+  }
   return null;
 }
 

@@ -21,7 +21,14 @@ import { transformDefinition } from '../testing/definition-transform';
 import { SELF_SUBJECT } from './ability';
 import type { Ability, Effect, KeywordAbility, TargetSpec, TokenSpec } from './ability';
 import { parseEntersAsCopy } from './grammar/copy';
-import { COLOR_WORDS, KEYWORD_SET, parseAmount, resolveSubtype, titleCase } from './grammar/words';
+import {
+  COLOR_WORDS,
+  KEYWORD_SET,
+  parseAmount,
+  resolveSubtype,
+  SELF_OBJECT_RE,
+  titleCase,
+} from './grammar/words';
 import {
   ANY_SPELL,
   parseCardFilterPhrase,
@@ -48,6 +55,8 @@ import {
 import {
   ANTHEM_RE,
   appendSentenceEffects,
+  solePlayerTargetSince,
+  soleTargetSince,
   MANA_ABILITY_RE,
   manaSymbols,
   parseCreateTokenSentence,
@@ -876,6 +885,32 @@ const ENTERS_TAPPED_UNLESS_RE = /^(?:~|this land) enters (?:the battlefield )?ta
 const ENTERS_PAY_LIFE_RE =
   /^as (?:~|this land) enters, you may pay (\d+) life\. if you don't, it enters tapped$/;
 
+/**
+ * The reveal lands (CR 701.20a): "As this land enters, you may reveal an Island or Swamp card from
+ * your hand. If you don't, this land enters tapped." (Choked Estuary, the Snarls) and the older
+ * "~ enters tapped unless you reveal a Plains or Swamp card from your hand." Both are the same
+ * as-enters choice, offered only while the hand holds a card of one of the named subtypes.
+ */
+const ENTERS_REVEAL_RE =
+  /^as (?:~|this land) enters, you may reveal an? (\w+)(?: or (?:an? )?(\w+))? card from your hand\. if you don't, (?:~|this land|it) enters tapped$/;
+
+function parseEntersRevealChoice(lower: string, card: OracleCard): Condition | null {
+  const m =
+    lower.match(ENTERS_REVEAL_RE) ??
+    lower.match(
+      /^(?:~|this land) enters (?:the battlefield )?tapped unless you reveal an? (\w+)(?: or (?:an? )?(\w+))? card from your hand$/,
+    );
+  if (m === null) return null;
+  const subtypes: string[] = [];
+  for (const word of [m[1], m[2]]) {
+    if (word === undefined) continue;
+    const subtype = resolveSubtype(titleCase(word), card);
+    if (subtype === null) return null;
+    subtypes.push(subtype);
+  }
+  return { kind: 'mayRevealCardFromHand', subtypes };
+}
+
 /** "Add {G} or {W}." / "Add {W}, {U}, or {B}." â€” ONE unit, several symbol choices. */
 const MANA_CHOICE_RE = /^add (\{[wubrgc]\}(?:,? (?:or )?\{[wubrgc]\})+)$/;
 /**
@@ -1336,10 +1371,18 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
     parseLookAtTopBlock(split.effectText, card) ??
     [];
   if (effects.length === 0) {
+    let lastTarget: number | undefined;
+    let lastPlayerTarget: number | undefined;
     for (const sentence of splitSentences(split.effectText)) {
-      const parsed = parseEffectSentence(sentence, alloc, card);
+      const slotsBefore = targets.length;
+      const parsed = parseEffectSentence(sentence, alloc, card, {
+        ...(lastTarget === undefined ? {} : { lastTarget }),
+        ...(lastPlayerTarget === undefined ? {} : { lastPlayerTarget }),
+      });
       if (parsed === null) return null;
       appendSentenceEffects(effects, sentence, parsed);
+      lastTarget = soleTargetSince(targets, slotsBefore);
+      lastPlayerTarget = solePlayerTargetSince(targets, slotsBefore);
     }
   }
   if (effects.length === 0) return null;
@@ -1503,12 +1546,15 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
           ? { kind: 'aurasAttachedToSource' }
           : parseDynamicCountValue('the number of ' + (m[4] as string), card);
       if (affects !== null && count !== null) {
-        const power = (m[2] as string).toLowerCase().includes('x')
-          ? count
-          : { kind: 'times' as const, of: count, n: Number(m[2]) };
-        const toughness = (m[3] as string).toLowerCase().includes('x')
-          ? count
-          : { kind: 'times' as const, of: count, n: Number(m[3]) };
+        // "-X/-X" keeps its sign: the count is negated, never applied as a bonus.
+        const signed = (part: string): Value =>
+          part.toLowerCase().includes('x')
+            ? part.startsWith('-')
+              ? { kind: 'negate', of: count }
+              : count
+            : { kind: 'times' as const, of: count, n: Number(part) };
+        const power = signed(m[2] as string);
+        const toughness = signed(m[3] as string);
         return [{ affects, op: { layer: 7, sublayer: 'd', power, toughness } }];
       }
     }
@@ -1519,8 +1565,13 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
       const affects =
         (m[1] as string) === '~' ? { kind: 'self' as const } : parseSubject(m[1] as string, card);
       const count = parseDynamicCountValue(m[4] as string, card);
-      if (affects !== null && count !== null)
-        return [{ affects, op: { layer: 7, sublayer: 'd', power: count, toughness: count } }];
+      // "This creature gets -X/-X, where X is your life total" (Death's Shadow): the sign stays.
+      const signed = (part: string): Value | null =>
+        count === null ? null : part.startsWith('-') ? { kind: 'negate', of: count } : count;
+      const power = signed(m[2] as string);
+      const toughness = signed(m[3] as string);
+      if (affects !== null && power !== null && toughness !== null)
+        return [{ affects, op: { layer: 7, sublayer: 'd', power, toughness } }];
     }
   }
   if (lower === 'all creatures have double strike and attack each combat if able') {
@@ -1534,6 +1585,21 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
   }
   if (lower === 'creatures your opponents control attack each combat if able') {
     const affects = parseSubject('creatures your opponents control', card);
+    if (affects !== null) return [{ affects, op: { layer: 6, setMustAttackEachCombat: true } }];
+  }
+  // "~ attacks each combat if able" (Toski, Darksteel Juggernaut) and "enchanted creature attacks
+  // each combat if able": a requirement (CR 508.1d) on the source or the creature it is attached to.
+  {
+    const m = lower.match(/^(.+?) attacks? each combat if able$/);
+    const subject = m === null ? null : (m[1] as string);
+    const affects: Selector | null =
+      subject === null
+        ? null
+        : SELF_OBJECT_RE.test(subject)
+          ? SELF
+          : subject === 'enchanted creature' || subject === 'equipped creature'
+            ? { kind: 'attachedToSource' }
+            : null;
     if (affects !== null) return [{ affects, op: { layer: 6, setMustAttackEachCombat: true } }];
   }
   // "Enchanted/Equipped creature ... and is goaded" (CR 701.38 - it attacks each combat if able
@@ -3374,21 +3440,54 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
     }
     // Keywords that are triggered abilities, read through the grammar as their reminder text
     // says: prowess (CR 702.108a) and exalted (CR 702.83a). Each instance is its own trigger.
+    // Battle cry (CR 702.91a) and extort (CR 702.101a) are read the same way.
     {
-      const reminder =
-        lower === 'prowess'
-          ? 'Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.'
-          : lower === 'exalted'
-            ? 'Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.'
-            : null;
-      if (reminder !== null) {
-        const parsed = parseTriggerLine(reminder, card);
+      const reminders: Record<string, [string, string]> = {
+        prowess: [
+          'Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.',
+          'Prowess',
+        ],
+        exalted: [
+          'Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.',
+          'Exalted',
+        ],
+        'battle cry': [
+          'Whenever this creature attacks, each other attacking creature gets +1/+0 until end of turn.',
+          'Battle cry',
+        ],
+        extort: [
+          'Whenever you cast a spell, you may pay {W/B}. If you do, each opponent loses 1 life and you gain life equal to the life lost this way.',
+          'Extort',
+        ],
+      };
+      const reminder = reminders[lower];
+      if (reminder !== undefined) {
+        const parsed = parseTriggerLine(reminder[0], card);
         if (parsed !== null) {
+          triggers.push(...parsed.map((ability) => ({ ...ability, description: reminder[1] })));
+          continue;
+        }
+      }
+    }
+    // Squad [cost] (CR 702.157a): an optional additional cost paid any number of times, and an
+    // enters trigger making a token copy of the creature for each time it was paid.
+    {
+      const m = lower.match(/^squad ((?:\{[^}]+\})+)$/);
+      if (m !== null && optionalAdditionalCost === undefined && card.types.includes('Creature')) {
+        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+        if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
+          optionalAdditionalCost = { mechanic: 'squad', cost: cost.cost, repeatable: true };
           triggers.push(
-            ...parsed.map((ability) => ({
-              ...ability,
-              description: lower === 'prowess' ? 'Prowess' : 'Exalted',
-            })),
+            triggered(onEtb(), {
+              effects: [
+                {
+                  op: 'createTokenCopyOf',
+                  ref: 'source',
+                  count: { kind: 'optionalCostCount', mechanic: 'squad' },
+                },
+              ],
+              description: 'Squad',
+            }),
           );
           continue;
         }
@@ -3413,6 +3512,10 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
         }
       }
     }
+    // Devoid (CR 702.114a): a characteristic-defining ability making the card colorless in every
+    // zone. Oracle data already lists such a card with no colors, which is where the engine reads
+    // color from; a card whose data disagrees is not read.
+    if (lower === 'devoid' && card.colors.length === 0) continue;
     // Toxic N (CR 702.164): combat damage to a player also gives that many poison counters.
     // Instances add up to the total toxic value (CR 702.164b).
     {
@@ -3515,6 +3618,11 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
       const pay = lower.match(ENTERS_PAY_LIFE_RE);
       if (pay) {
         entersTappedUnless = { kind: 'mayPayLife', n: Number(pay[1]) };
+        continue;
+      }
+      const reveal = parseEntersRevealChoice(lower, card);
+      if (reveal !== null) {
+        entersTappedUnless = reveal;
         continue;
       }
     }
@@ -4154,13 +4262,23 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
         return base + lineTargets.length - 1;
       };
       let allParsed = sentences.length > 0;
+      let lastTarget: number | undefined;
+      let lastPlayerTarget: number | undefined;
       for (const sentence of sentences) {
-        const parsed = parseEffectSentence(sentence, lineAlloc, card);
+        const slotsBefore = lineTargets.length;
+        const parsed = parseEffectSentence(sentence, lineAlloc, card, {
+          ...(lastTarget === undefined ? {} : { lastTarget }),
+          ...(lastPlayerTarget === undefined ? {} : { lastPlayerTarget }),
+        });
         if (parsed === null) {
           allParsed = false;
           break;
         }
         appendSentenceEffects(lineEffects, sentence, parsed);
+        const local = soleTargetSince(lineTargets, slotsBefore);
+        lastTarget = local === undefined ? undefined : base + local;
+        const localPlayer = solePlayerTargetSince(lineTargets, slotsBefore);
+        lastPlayerTarget = localPlayer === undefined ? undefined : base + localPlayer;
       }
       if (allParsed) {
         spellTargets.push(...lineTargets);

@@ -23,7 +23,8 @@ const HANDLED_LINE_FIXES: Record<string, string[]> = {
     'unrecognized rules text: "Enchanted creature gets +1/+1 and has vigilance."',
   ],
   'c9fc13d6-bd10-47bc-b2b6-7f67a1f3371e': [
-    "As this land enters, you may reveal a Plains or Swamp card from your hand. If you don't, this land enters tapped.",
+    // The reveal-land line is read by the interpreter (EDHREC plan Phase 4 batch 4); the def
+    // keeps the same as-enters choice.
   ],
   '2598294c-a9a7-4bef-a562-23f297a80536': [
     "Whenever enchanted creature attacks, reveal cards from the top of your library until you reveal an Aura card. You may put that card onto the battlefield. If you don't, put it into your hand. Put the rest on the bottom of your library in a random order.",
@@ -208,40 +209,33 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
   // Coverage PR01 (was contained by silverquill-remaining-batch-3): an intervening-if upkeep
   // trigger (checked as it triggers and as it resolves, CR 603.4), "you may" on resolution, and a
   // revealed search for up to three basic lands into hand.
-  defineCard(
-    'd2d9ecea-7925-420e-98b9-2f87f41f387c',
-    'Land Tax',
-    [
-      'At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle.',
-    ],
-    {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'upkeep',
-            player: 'you',
-            condition: { kind: 'opponentControlsMore', selector: ofType('Land') },
-          },
-          optional: true,
-          targets: [],
-          effects: [
-            {
-              op: 'searchLibrary',
-              filter: allOf(ofSupertype('Basic'), ofType('Land')),
-              destinations: [{ zone: 'hand' }],
-              count: constant(3),
-              allowFailToFind: true,
-              reveal: true,
-            },
-            { op: 'shuffle' },
-          ],
-          description:
-            'You may search for up to three basic lands, reveal them, and put them into your hand',
+  defineCard('d2d9ecea-7925-420e-98b9-2f87f41f387c', 'Land Tax', [], {
+    triggers: [
+      {
+        kind: 'triggered',
+        trigger: {
+          when: 'upkeep',
+          player: 'you',
+          condition: { kind: 'opponentControlsMore', selector: ofType('Land') },
         },
-      ],
-    },
-  );
+        optional: true,
+        targets: [],
+        effects: [
+          {
+            op: 'searchLibrary',
+            filter: allOf(ofSupertype('Basic'), ofType('Land')),
+            destinations: [{ zone: 'hand' }],
+            count: constant(3),
+            allowFailToFind: true,
+            reveal: true,
+          },
+          { op: 'shuffle' },
+        ],
+        description:
+          'You may search for up to three basic lands, reveal them, and put them into your hand',
+      },
+    ],
+  });
   // Martial Impetus: restored in coverage PR05. The interpreter reads the +1/+1 and goad on the
   // enchanted creature, and its attack trigger pumps each other creature attacking an opponent of
   // the Aura's controller, not every creature in combat.
@@ -290,7 +284,8 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
     'c9fc13d6-bd10-47bc-b2b6-7f67a1f3371e',
     'Shineshadow Snarl',
     [
-      'unrecognized rules text: "Shineshadow Snarl enters the battlefield tapped unless you reveal a Plains or Swamp card from your hand."',
+      // The reveal-land line is read by the interpreter (EDHREC plan Phase 4 batch 4); the def
+      // keeps the same as-enters choice.
     ],
     { entersTappedUnless: { kind: 'mayRevealCardFromHand', subtypes: ['Plains', 'Swamp'] } },
   );

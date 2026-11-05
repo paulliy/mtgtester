@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "card": "Fungal Sprouting",
+  "supportCards": [
+    {
+      "name": "Scenario Giant",
+      "typeLine": "Creature — Giant",
+      "manaCost": "{5}",
+      "power": "4",
+      "toughness": "4"
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "fungal-sprouting-greatest-power",
+      "title": "Fungal Sprouting: X is the greatest power among creatures you control",
+      "clauses": [1],
+      "instructions": [
+        "Cast Fungal Sprouting with a 4/4 and a 2/2 on your side and a 5/5 on P2's."
+      ],
+      "expectedOutcome": "You create four Saproling tokens: P2's creature does not count.",
+      "seats": {
+        "P1": {
+          "hand": ["Fungal Sprouting"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest", "Scenario Giant", "Scenario Bear"]
+        },
+        "P2": { "battlefield": [{ "card": "Scenario Giant", "counters": { "+1/+1": 1 } }] }
+      },
+      "script": [{ "player": "P1", "choose": "/^Cast Fungal Sprouting/" }],
+      "expect": [{ "event": { "type": "tokenCreated", "count": 4, "payload": "Saproling" } }]
+    }
+  ]
+}

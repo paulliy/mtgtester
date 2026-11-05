@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "card": "Triskelion",
+  "scenarios": [
+    {
+      "id": "triskelion-enters-with-counters",
+      "title": "Triskelion: it enters with three +1/+1 counters",
+      "clauses": [1],
+      "instructions": ["Cast Triskelion."],
+      "expectedOutcome": "Triskelion is on the battlefield with three +1/+1 counters.",
+      "seats": {
+        "P1": {
+          "hand": ["Triskelion"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains", "Plains", "Plains"]
+        }
+      },
+      "script": [{ "player": "P1", "choose": "/^Cast Triskelion/" }],
+      "expect": [{ "counters": { "card": "Triskelion", "counter": "+1/+1", "equals": 3 } }]
+    },
+    {
+      "id": "triskelion-remove-counter-pings",
+      "title": "Triskelion: removing a +1/+1 counter deals 1 damage to any target",
+      "clauses": [2],
+      "instructions": ["Remove a +1/+1 counter from Triskelion targeting P2."],
+      "expectedOutcome": "P2 is at 39 life and Triskelion has two counters left.",
+      "seats": { "P1": { "battlefield": [{ "card": "Triskelion", "counters": { "+1/+1": 3 } }] } },
+      "script": [{ "player": "P1", "choose": "/Triskelion/", "targets": ["P2"] }],
+      "expect": [
+        { "life": { "player": "P2", "equals": 39 } },
+        { "counters": { "card": "Triskelion", "counter": "+1/+1", "equals": 2 } }
+      ]
+    }
+  ]
+}

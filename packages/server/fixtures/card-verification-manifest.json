@@ -8699,19 +8699,18 @@
     "11ad6e75-9bbd-40ea-b04a-e6a61db3bcda": {
       "name": "Smitten Swordmaster // Curry Favor",
       "oracleSha256": "95c85cc00ff930a70266794bc2730818ca201c8039a2a2ffbc84459b519f2160",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "oracleText": "You gain X life and each opponent loses X life, where X is the number of Knights you control.",
           "implementation": [
-            "explicit unsupported spell clause: Curry Favor: unrecognized rules text: \"You gain X life and each opponent loses X life, where X is the number of Knights you control.\""
+            "Adventure face: you gain X life and each opponent loses X life, X counted at resolution as the Knights you control (EDHREC Phase 4 batch 4 where-X amount)"
           ],
-          "engineTestIds": ["face-unparsed-clause-contained"],
+          "engineTestIds": ["face-curry-favor", "face-curry-favor-none"],
           "viewerScenarioIds": []
         }
       ],
-      "gameplayAiScenarioIds": [],
-      "unsupportedReason": "Curry Favor: unrecognized rules text: \"You gain X life and each opponent loses X life, where X is the number of Knights you control.\""
+      "gameplayAiScenarioIds": []
     },
     "1c751201-24ba-4e5c-bf44-71c3e4693a92": {
       "name": "Conceited Witch // Price of Beauty",
@@ -9140,19 +9139,18 @@
     "639a8804-8513-4ba4-8683-ea1e2e5a9530": {
       "name": "Rosethorn Acolyte // Seasonal Ritual",
       "oracleSha256": "cdc42fa27547837c3d909e26b860727ac825f98c1ef4535874aa1e5680f01896",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "oracleText": "Add one mana of any color. (Then exile this card. You may cast the creature later from exile.)",
           "implementation": [
-            "explicit unsupported spell clause: Seasonal Ritual: unrecognized rules text: \"Add one mana of any color.\""
+            "Adventure face: add one mana of any color (EDHREC Phase 4 batch 4 mana production)"
           ],
-          "engineTestIds": ["face-unparsed-clause-contained"],
+          "engineTestIds": ["face-seasonal-ritual"],
           "viewerScenarioIds": []
         }
       ],
-      "gameplayAiScenarioIds": [],
-      "unsupportedReason": "Seasonal Ritual: unrecognized rules text: \"Add one mana of any color.\""
+      "gameplayAiScenarioIds": []
     },
     "6505a53b-00db-44c4-8eaa-09a1a01451a4": {
       "name": "Glóin the Mighty // Easy Pickings",
@@ -9554,19 +9552,18 @@
     "bd575e82-99e7-44c7-ab93-d33f5678e1ad": {
       "name": "Threadbind Clique // Rip the Seams",
       "oracleSha256": "2fdefa93c2d2af46398c3ef33c0c9f231818b156a6bd5d285bfb4bdc52395043",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "oracleText": "Destroy target tapped creature. (Then exile this card. You may cast the creature later from exile.)",
           "implementation": [
-            "explicit unsupported spell clause: Rip the Seams: unrecognized rules text: \"Destroy target tapped creature.\""
+            "Adventure face: destroy target tapped creature (EDHREC Phase 4 batch 5 qualified target noun)"
           ],
-          "engineTestIds": ["face-unparsed-clause-contained"],
+          "engineTestIds": ["face-rip-the-seams"],
           "viewerScenarioIds": []
         }
       ],
-      "gameplayAiScenarioIds": [],
-      "unsupportedReason": "Rip the Seams: unrecognized rules text: \"Destroy target tapped creature.\""
+      "gameplayAiScenarioIds": []
     },
     "c075637a-e94c-4b8d-8a9e-20ee3dfa8fe7": {
       "name": "Fang Dragon // Forktail Sweep",
@@ -19412,6 +19409,561 @@
           ],
           "engineTestIds": ["cards/fervent-charge.test.ts::fervent-charge-pumps-each-attacker"],
           "viewerScenarioIds": ["fervent-charge-pumps-each-attacker"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d473b507-8c33-4118-bc10-b0a268776074": {
+      "name": "Choked Estuary",
+      "oracleSha256": "078556c55530431a68dca94e8299dd3ba6048f93986720160bcb922c5097ae99",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "As this land enters, you may reveal an Island or Swamp card from your hand. If you don't, this land enters tapped.",
+          "implementation": [
+            "entersTappedUnless mayRevealCardFromHand Island/Swamp: an as-enters choice offered only with a qualifying card in hand (CR 701.20a, 614.1c), via the reveal-land production"
+          ],
+          "engineTestIds": [
+            "cards/choked-estuary.test.ts::choked-estuary-reveal-untapped",
+            "cards/choked-estuary.test.ts::choked-estuary-no-reveal-tapped"
+          ],
+          "viewerScenarioIds": ["choked-estuary-reveal-untapped", "choked-estuary-no-reveal-tapped"]
+        },
+        {
+          "oracleText": "{T}: Add {U} or {B}.",
+          "implementation": ["mana ability: one unit {U} or {B}"],
+          "engineTestIds": ["cards/choked-estuary.test.ts::choked-estuary-reveal-untapped"],
+          "viewerScenarioIds": ["choked-estuary-reveal-untapped"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8ad91f64-ccab-4edc-bd54-b2ee9267d614": {
+      "name": "Lotus Cobra",
+      "oracleSha256": "42b91a02e953caded5dada024164a5188922839eeaf6e15a44a2f4a626b10dbb",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Landfall — Whenever a land you control enters, add one mana of any color.",
+          "implementation": [
+            "landfall: enters trigger on a land you control; Effect.addMana one mana, colors any, as a resolving effect (CR 605.1b), via the add-one-mana production"
+          ],
+          "engineTestIds": [
+            "cards/lotus-cobra.test.ts::lotus-cobra-landfall-mana",
+            "cards/lotus-cobra.test.ts::lotus-cobra-ignores-opponent-land"
+          ],
+          "viewerScenarioIds": ["lotus-cobra-landfall-mana", "lotus-cobra-ignores-opponent-land"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6879f5ce-7a1b-4606-bad1-885779b0d456": {
+      "name": "Cloudshift",
+      "oracleSha256": "f395c17bce6ec6a28a8660e3e654a9000472994865f503c606bf0994b6ce4977",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Exile target creature you control, then return that card to the battlefield under your control.",
+          "implementation": [
+            "spell; Effect.blinkTarget returnUnder you: the returned card is a new object (CR 400.7)"
+          ],
+          "engineTestIds": ["cards/cloudshift.test.ts::cloudshift-blinks-own-creature"],
+          "viewerScenarioIds": ["cloudshift-blinks-own-creature"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "74f67dcf-5afb-45aa-8d4b-3cdb23f6f2a1": {
+      "name": "Triskelion",
+      "oracleSha256": "460ab9834ab67114229a0ab37c1af2ff7f09f194a473c5f94c16c07031040cab",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature enters with three +1/+1 counters on it.",
+          "implementation": ["entersWithCounters +1/+1: 3 (CR 614.1c)"],
+          "engineTestIds": ["cards/triskelion.test.ts::triskelion-enters-with-counters"],
+          "viewerScenarioIds": ["triskelion-enters-with-counters"]
+        },
+        {
+          "oracleText": "Remove a +1/+1 counter from this creature: It deals 1 damage to any target.",
+          "implementation": [
+            "activated; cost removeCounters +1/+1 x1 (counter cost production); Effect.dealDamage any target from the source, via the damage-clause production"
+          ],
+          "engineTestIds": ["cards/triskelion.test.ts::triskelion-remove-counter-pings"],
+          "viewerScenarioIds": ["triskelion-remove-counter-pings"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "95e94dea-5ac0-4d6f-adec-ca147aee861f": {
+      "name": "Ajani's Pridemate",
+      "oracleSha256": "d8971200d44affdca08b8c9595284c1ae463b828f5f33bff43b4e1e950b3381a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever you gain life, put a +1/+1 counter on this creature.",
+          "implementation": [
+            "trigger gainsLife player you (life-change trigger event, CR 119.9); Effect.putCountersEach self +1/+1"
+          ],
+          "engineTestIds": [
+            "cards/ajanis-pridemate.test.ts::pridemate-counter-on-life-gain",
+            "cards/ajanis-pridemate.test.ts::pridemate-no-counter-on-opponent-gain"
+          ],
+          "viewerScenarioIds": [
+            "pridemate-counter-on-life-gain",
+            "pridemate-no-counter-on-opponent-gain"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "73089a39-a2f6-4aa2-a058-e6551475153d": {
+      "name": "Sanguine Bond",
+      "oracleSha256": "1c95f1dfa2d81fccaacec607e03233f24223facc35fe6c6bd36d866d328aa63d",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever you gain life, target opponent loses that much life.",
+          "implementation": [
+            "trigger gainsLife player you; Effect.loseLifeTarget target opponent, amount damageDealt (the life gained: \"that much\")"
+          ],
+          "engineTestIds": [
+            "cards/sanguine-bond.test.ts::sanguine-bond-drains-that-much",
+            "cards/sanguine-bond.test.ts::sanguine-bond-ignores-opponent-gain"
+          ],
+          "viewerScenarioIds": [
+            "sanguine-bond-drains-that-much",
+            "sanguine-bond-ignores-opponent-gain"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "68418069-f615-40ef-ae0d-764192acae00": {
+      "name": "Krenko, Mob Boss",
+      "oracleSha256": "49ca4d9654351833b0b825df840b85bf3646a813e334cd4949144502dcb4bfbf",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{T}: Create X 1/1 red Goblin creature tokens, where X is the number of Goblins you control.",
+          "implementation": [
+            "activated {T}; Effect.createToken Goblin, count countPermanents Goblins you control, counted as it resolves (the where-X amount form)"
+          ],
+          "engineTestIds": ["cards/krenko-mob-boss.test.ts::krenko-makes-x-goblins"],
+          "viewerScenarioIds": ["krenko-makes-x-goblins"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f4a96881-586d-44ad-b427-5cdf8988f9a1": {
+      "name": "Memory Erosion",
+      "oracleSha256": "736e956c3db68c6cfe3bd94406f8d0ebb684da699081ed8637c6506ec0b93daa",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever an opponent casts a spell, that player mills two cards.",
+          "implementation": [
+            "trigger castsSpell opponent; Effect.millTargetPlayer eventPlayer 2 (player-verb production, \"that player\")"
+          ],
+          "engineTestIds": [
+            "cards/memory-erosion.test.ts::memory-erosion-mills-caster",
+            "cards/memory-erosion.test.ts::memory-erosion-ignores-your-spells"
+          ],
+          "viewerScenarioIds": ["memory-erosion-mills-caster", "memory-erosion-ignores-your-spells"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4b1bf05e-753e-4350-a913-894cf3cecc0c": {
+      "name": "Fleshbag Marauder",
+      "oracleSha256": "6d6605fa8f52c7f96aae4a3fea46a03522819a45ee7fffe136271320b349b183",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, each player sacrifices a creature of their choice.",
+          "implementation": [
+            "enters trigger; Effect.sacrificeEachPlayer 1 creature, choices in APNAP order (CR 101.4)"
+          ],
+          "engineTestIds": ["cards/fleshbag-marauder.test.ts::fleshbag-each-player-sacrifices"],
+          "viewerScenarioIds": ["fleshbag-each-player-sacrifices"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0596920f-9946-42f4-a03b-24aab67f9f1b": {
+      "name": "Blaze",
+      "oracleSha256": "d2ffd25175a082515bc6cb373663c4566c8982099637b5090063646b3097c0bb",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Blaze deals X damage to any target.",
+          "implementation": [
+            "spell; Effect.dealDamage any target, amount xValue (the announced X, CR 601.2b), via the damage-clause production"
+          ],
+          "engineTestIds": ["cards/blaze.test.ts::blaze-deals-x"],
+          "viewerScenarioIds": ["blaze-deals-x"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "cf874feb-00fe-4e48-b57a-cf8b9855c057": {
+      "name": "Gruesome Fate",
+      "oracleSha256": "9ea5034e3a0969f98e1707a0c20024d5136d51a0e6059f91b680993e05efff9c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Each opponent loses 1 life for each creature you control.",
+          "implementation": [
+            "spell; Effect.eachOpponentLosesLife, amount countPermanents creatures you control (the for-each amount form)"
+          ],
+          "engineTestIds": ["cards/gruesome-fate.test.ts::gruesome-fate-per-creature"],
+          "viewerScenarioIds": ["gruesome-fate-per-creature"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "be4499e6-616a-4c11-b37e-9201d2492682": {
+      "name": "Offer Immortality",
+      "oracleSha256": "f59af0b2459b681508dcd99377609959ea2776f6d29ce82341c3cf5fa0310b71",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gains deathtouch and indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy it.)",
+          "implementation": [
+            "spell; two Effect.grantKeywordUntilEot on one creature target: deathtouch, indestructible"
+          ],
+          "engineTestIds": ["cards/offer-immortality.test.ts::offer-immortality-grants-both"],
+          "viewerScenarioIds": ["offer-immortality-grants-both"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ef1a83f2-6707-41a2-b5ed-861c8e45ae07": {
+      "name": "Languish",
+      "oracleSha256": "088fcbb735a2d2634e91ad90a0a0eb5bf3f5f38abe54e000e27eec8eee21c902",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "All creatures get -4/-4 until end of turn.",
+          "implementation": [
+            "spell; Effect.pumpEachUntilEot every creature -4/-4, fixed as it resolves (CR 611.2c)"
+          ],
+          "engineTestIds": ["cards/languish.test.ts::languish-shrinks-every-creature"],
+          "viewerScenarioIds": ["languish-shrinks-every-creature"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "303d4533-0c6b-4f93-80e8-b1f5926f4cd4": {
+      "name": "Fungal Sprouting",
+      "oracleSha256": "26200c4a65d30424df9804b69f8cf3a90c022877f6673268ffbe1be82d917615",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Create X 1/1 green Saproling creature tokens, where X is the greatest power among creatures you control.",
+          "implementation": [
+            "spell; Effect.createToken Saproling, count greatestPowerAmong creatures you control (where-X form over the greatest-power value phrase)"
+          ],
+          "engineTestIds": ["cards/fungal-sprouting.test.ts::fungal-sprouting-greatest-power"],
+          "viewerScenarioIds": ["fungal-sprouting-greatest-power"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4567a528-75f0-4ea6-b927-3a500caf76ac": {
+      "name": "Arbor Elf",
+      "oracleSha256": "293b116c091c6f02e2741696c8f084f272701ad282fc88ec6c989e845bc9edd8",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{T}: Untap target Forest.",
+          "implementation": [
+            "activated {T}; Effect.untapTarget on a permanent target filtered to the Forest subtype (qualified target noun)"
+          ],
+          "engineTestIds": ["cards/arbor-elf.test.ts::arbor-elf-untaps-forest"],
+          "viewerScenarioIds": ["arbor-elf-untaps-forest"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "59e7f2ae-4535-4191-98be-3e65b6b2befa": {
+      "name": "Doom Blade",
+      "oracleSha256": "8e330b184c842bf2eee624c22a034712dca95eab5bdbbe7e076806bd79e1eb10",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Destroy target nonblack creature.",
+          "implementation": [
+            "spell; Effect.destroy on a creature target filtered to not black (qualified target noun; the filter is rechecked on resolution, CR 608.2b)"
+          ],
+          "engineTestIds": [
+            "cards/doom-blade.test.ts::doom-blade-destroys-nonblack",
+            "cards/doom-blade.test.ts::doom-blade-cannot-target-black"
+          ],
+          "viewerScenarioIds": ["doom-blade-destroys-nonblack", "doom-blade-cannot-target-black"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "06e0459f-d691-4470-884a-27c09b6612d2": {
+      "name": "Muscle Sliver",
+      "oracleSha256": "83856a582698aa922406210fd10a2c03f44265ab6967267d8fc32dab12e73d1e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "All Sliver creatures get +1/+1.",
+          "implementation": [
+            "static layer 7d +1/+1 on every Sliver creature, whoever controls it (\"all\" subject)"
+          ],
+          "engineTestIds": ["cards/muscle-sliver.test.ts::muscle-sliver-pumps-every-sliver"],
+          "viewerScenarioIds": ["muscle-sliver-pumps-every-sliver"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "49dc3434-2501-4788-84f2-93e55730f67c": {
+      "name": "Selfless Savior",
+      "oracleSha256": "2a45b36d697c2012356864348373ef96d1174be38e74338f440142e87554d83c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Sacrifice this creature: Another target creature you control gains indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy it.)",
+          "implementation": [
+            "activated, cost sacrificeSelf; Effect.grantKeywordUntilEot indestructible on another target creature you control"
+          ],
+          "engineTestIds": ["cards/selfless-savior.test.ts::selfless-savior-grants-indestructible"],
+          "viewerScenarioIds": ["selfless-savior-grants-indestructible"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "09a70ae8-3859-4a09-901d-dce063fa3b5f": {
+      "name": "Wasteland",
+      "oracleSha256": "df341dbf1ab987564ed412036700ef50407b811a5a591ff20aadb0b9d3fe924e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{T}: Add {C}.",
+          "implementation": ["mana ability {T}: {C}"],
+          "engineTestIds": ["cards/wasteland.test.ts::wasteland-taps-for-colorless"],
+          "viewerScenarioIds": ["wasteland-taps-for-colorless"]
+        },
+        {
+          "oracleText": "{T}, Sacrifice this land: Destroy target nonbasic land.",
+          "implementation": [
+            "activated {T} + sacrificeSelf; Effect.destroy on a land target filtered to nonbasic (qualified target noun)"
+          ],
+          "engineTestIds": ["cards/wasteland.test.ts::wasteland-destroys-nonbasic"],
+          "viewerScenarioIds": ["wasteland-destroys-nonbasic"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "7b9fafe7-d26a-4ed5-b4c4-ce13763770b5": {
+      "name": "Geier Reach Sanitarium",
+      "oracleSha256": "ababdf79f5857439a58b7d488e48b955d78fa19f59c070cbdda0a0bf2b966adc",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{T}: Add {C}.",
+          "implementation": ["mana ability {T}: {C}"],
+          "engineTestIds": ["cards/geier-reach-sanitarium.test.ts::geier-reach-taps-for-colorless"],
+          "viewerScenarioIds": ["geier-reach-taps-for-colorless"]
+        },
+        {
+          "oracleText": "{2}, {T}: Each player draws a card, then discards a card.",
+          "implementation": [
+            "activated {2},{T}; Effect.eachPlayerDraws all 1, then Effect.discardEachPlayer all 1 (player-verb \", then\" clause)"
+          ],
+          "engineTestIds": ["cards/geier-reach-sanitarium.test.ts::geier-reach-each-player-loots"],
+          "viewerScenarioIds": ["geier-reach-each-player-loots"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e08722b3-0f79-4c82-b298-603e04a37857": {
+      "name": "Death's Shadow",
+      "oracleSha256": "405025177941e44e7b90dd0c6c3ba4ef90c7c353ad51aa94b7b40e158fd3b84c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature gets -X/-X, where X is your life total.",
+          "implementation": [
+            "static layer 7d on self, power and toughness negate(lifeTotal you): the -X sign is kept"
+          ],
+          "engineTestIds": [
+            "cards/deaths-shadow.test.ts::deaths-shadow-shrinks-by-life",
+            "cards/deaths-shadow.test.ts::deaths-shadow-dies-at-high-life"
+          ],
+          "viewerScenarioIds": ["deaths-shadow-shrinks-by-life", "deaths-shadow-dies-at-high-life"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "70a6f08e-854d-4e2f-9d8c-c45ec3231157": {
+      "name": "Faeburrow Elder",
+      "oracleSha256": "1cffbb91cbe9335f998928b39dda36244f0a494df65a88cacd28ecd404a27e54",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "Its \"+1/+1 for each color among permanents you control\" static needs the colors of permanents while layers are applied, which the layer engine cannot evaluate; read as modeled, it crashed once on the battlefield (EDHREC plan Phase 4 batch 5).",
+      "clauses": [
+        {
+          "oracleText": "This creature gets +1/+1 for each color among permanents you control.",
+          "implementation": [
+            "unsupported: Its \"+1/+1 for each color among permanents you control\" static needs the colors of permanents while layers are applied, which the layer engine cannot evaluate; read as modeled, it crashed once on the battlefield (EDHREC plan Phase 4 batch 5)."
+          ],
+          "engineTestIds": ["faeburrow-elder-static-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "75269a31-3819-4410-8bb7-10de16810a5e": {
+      "name": "Howling Golem",
+      "oracleSha256": "f6f0bbb7aec743f8598ccd586e4e39bfb23e3611a1df0261e8c4db351794b0a7",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever this creature attacks or blocks, each player draws a card.",
+          "implementation": [
+            "compound trigger head attacks + blocks on self; Effect.eachPlayerDraws all 1"
+          ],
+          "engineTestIds": ["cards/howling-golem.test.ts::howling-golem-attack-each-draws"],
+          "viewerScenarioIds": ["howling-golem-attack-each-draws"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "55eca80c-dcd8-4c2f-aa0f-fb0aec7b80f7": {
+      "name": "Ophiomancer",
+      "oracleSha256": "e917a95119e377d732e553e35c825961242422954d58747b95b6d551413670fa",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "At the beginning of each upkeep, if you control no Snakes, create a 1/1 black Snake creature token with deathtouch.",
+          "implementation": [
+            "trigger upkeep each, intervening-if countPermanents Snakes you control <= 0 (CR 603.4); Effect.createToken Snake with deathtouch"
+          ],
+          "engineTestIds": ["cards/ophiomancer.test.ts::ophiomancer-snake-each-upkeep"],
+          "viewerScenarioIds": ["ophiomancer-snake-each-upkeep"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "80bb9ce4-1f3c-42ca-b75f-9a6b2f42073b": {
+      "name": "Ripjaw Raptor",
+      "oracleSha256": "d6bc599ce95bfd7ab7e48e89c6e4a89d7722b23ee59295f08cdeec73da3ea3e2",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Enrage — Whenever this creature is dealt damage, draw a card.",
+          "implementation": [
+            "trigger dealtDamage on self (\"is dealt damage\" head); Effect.draw 1"
+          ],
+          "engineTestIds": ["cards/ripjaw-raptor.test.ts::ripjaw-raptor-enrage-draws"],
+          "viewerScenarioIds": ["ripjaw-raptor-enrage-draws"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "633ad9e2-9f55-4a1c-9248-661ad4b0e1dc": {
+      "name": "Megrim",
+      "oracleSha256": "83d9ee580125628f230c3ee7f31f48b970801e38ac17de620b9defa5fbaedaa0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Whenever an opponent discards a card, this enchantment deals 2 damage to that player.",
+          "implementation": ["trigger discardsCard opponent; Effect.dealDamage eventPlayer 2"],
+          "engineTestIds": ["cards/megrim.test.ts::megrim-pings-discarding-opponent"],
+          "viewerScenarioIds": ["megrim-pings-discarding-opponent"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "06b1fd96-a3ad-4ebd-9ea4-b3cfb4c9c43d": {
+      "name": "Tithe Drinker",
+      "oracleSha256": "31d53d9d67f7b86d8bf3e6272052f18151af7f8e6d45584b9cd4e76a57f987ab",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Lifelink (Damage dealt by this creature also causes you to gain that much life.)",
+          "implementation": ["keyword lifelink"],
+          "engineTestIds": ["cards/tithe-drinker.test.ts::tithe-drinker-lifelink"],
+          "viewerScenarioIds": ["tithe-drinker-lifelink"]
+        },
+        {
+          "oracleText": "Extort (Whenever you cast a spell, you may pay {W/B}. If you do, each opponent loses 1 life and you gain that much life.)",
+          "implementation": [
+            "extort expanded to its reminder trigger: castsSpell you; conditionalEffect mayPayMana {W/B}, then eachOpponentLosesLife 1 and gainLifeEqualToLifeLostThisWay (CR 702.101a)"
+          ],
+          "engineTestIds": ["cards/tithe-drinker.test.ts::tithe-drinker-extort"],
+          "viewerScenarioIds": ["tithe-drinker-extort"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9929d7ba-cdc5-4099-a0ee-3a15073336f3": {
+      "name": "Seer's Sundial",
+      "oracleSha256": "b6f55310e02c1cbf757fb86da11315a03d8b9d81ff5badc3905052bcc2176227",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Landfall — Whenever a land you control enters, you may pay {2}. If you do, draw a card.",
+          "implementation": [
+            "trigger enters land you control; conditionalEffect mayPayMana {2} then draw 1 (the \"you may pay … If you do\" production, CR 608.2c)"
+          ],
+          "engineTestIds": [
+            "cards/seers-sundial.test.ts::seers-sundial-pay-draw",
+            "cards/seers-sundial.test.ts::seers-sundial-cannot-pay"
+          ],
+          "viewerScenarioIds": ["seers-sundial-pay-draw", "seers-sundial-cannot-pay"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "10849bbb-50ca-4194-a7cb-fa872272b29b": {
+      "name": "Goblin Wardriver",
+      "oracleSha256": "a5f8d79474593af80166fbd66eff85f0876c044e012a9b2601bc28c178a22b25",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Battle cry (Whenever this creature attacks, each other attacking creature gets +1/+0 until end of turn.)",
+          "implementation": [
+            "battle cry expanded to its reminder trigger: attacks self; pumpEachUntilEot other attacking creatures +1/+0 (CR 702.91a)"
+          ],
+          "engineTestIds": ["cards/goblin-wardriver.test.ts::goblin-wardriver-battle-cry"],
+          "viewerScenarioIds": ["goblin-wardriver-battle-cry"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6d4e558e-9109-4918-a082-fdcbaffd516b": {
+      "name": "Nature's Claim",
+      "oracleSha256": "1f276473b4050a3071164147d33d22aab8c40231908542f4673b0a9424de1fdc",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Destroy target artifact or enchantment. Its controller gains 4 life.",
+          "implementation": [
+            "spell; Effect.destroy on an artifact-or-enchantment target, then Effect.gainLifeTarget for the target's controller as last known (CR 608.2h)"
+          ],
+          "engineTestIds": ["cards/natures-claim.test.ts::natures-claim-controller-gains"],
+          "viewerScenarioIds": ["natures-claim-controller-gains"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a1408bae-ed5f-4837-a1a7-438dc30a2786": {
+      "name": "Vapor Snag",
+      "oracleSha256": "acbc865ea503c35840cb18f4ad4595734210ed22082aa2e3dceeb9379bcbd4ca",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Return target creature to its owner's hand. Its controller loses 1 life.",
+          "implementation": [
+            "spell; Effect.returnToHand on a creature target, then Effect.loseLifeTarget for the target's controller as last known (CR 608.2h)"
+          ],
+          "engineTestIds": ["cards/vapor-snag.test.ts::vapor-snag-bounce-and-drain"],
+          "viewerScenarioIds": ["vapor-snag-bounce-and-drain"]
         }
       ],
       "gameplayAiScenarioIds": []

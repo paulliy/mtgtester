@@ -335,7 +335,6 @@ export function registerPr10TriggerDoublingOverrides(): void {
     '4c3ad545-b375-44a7-a24e-58baacc4e4b6',
     'Annie Joins Up',
     [
-      'When ~ enters, it deals 5 damage to target creature or planeswalker an opponent controls.',
       'If a triggered ability of a legendary creature you control triggers, that ability triggers an additional time.',
     ],
     {
@@ -691,7 +690,6 @@ export function registerPr10CharacteristicsOverrides(): void {
     'ea86abfa-6cab-4ef0-8463-34136fc25b59',
     'Duplicant',
     [
-      'When this creature enters, you may exile target nontoken creature.',
       "As long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with it. It's still a Shapeshifter.",
     ],
     {

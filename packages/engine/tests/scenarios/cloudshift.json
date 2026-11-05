@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "card": "Cloudshift",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "cloudshift-blinks-own-creature",
+      "title": "Cloudshift: the creature leaves and returns as a new object, its counters gone",
+      "clauses": [1],
+      "instructions": ["Cast Cloudshift targeting your Scenario Bear, which has a +1/+1 counter."],
+      "expectedOutcome": "Scenario Bear is back on the battlefield under your control with no counters.",
+      "seats": {
+        "P1": {
+          "hand": ["Cloudshift"],
+          "battlefield": ["Plains", { "card": "Scenario Bear", "counters": { "+1/+1": 1 } }]
+        }
+      },
+      "script": [{ "player": "P1", "choose": "/^Cast Cloudshift/", "targets": ["Scenario Bear"] }],
+      "expect": [
+        { "zone": { "player": "P1", "zone": "battlefield", "has": ["Scenario Bear"] } },
+        { "counters": { "card": "Scenario Bear", "counter": "+1/+1", "equals": 0 } },
+        { "zone": { "player": "P1", "zone": "graveyard", "has": ["Cloudshift"] } }
+      ]
+    }
+  ]
+}

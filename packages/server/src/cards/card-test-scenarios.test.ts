@@ -940,7 +940,9 @@ describe('deterministic Card Test Lab scenarios', () => {
       'body-launderer-viewer-connive',
       'body-launderer-viewer-return',
     ]);
-  });
+    // The first test of the file builds the whole catalog, every runner scenario included; under
+    // the card gate's parallel load that takes more than the default 5 s.
+  }, 30_000);
 
   it('runs Tribute Mage through normal casting, payment, priority, search, and shuffle', () => {
     const { scenario, decisions } = runScenario();

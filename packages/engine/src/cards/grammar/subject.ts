@@ -122,6 +122,13 @@ function parseSubjectUntraced(phrase: string, card: OracleCard): Selector | null
   if (/^(equipped|enchanted|fortified) /.test(noun)) return { kind: 'attachedToSource' };
 
   if (noun.startsWith('each ')) noun = noun.slice('each '.length);
+  // "All Sliver creatures get +1/+1" (Muscle Sliver): "all" adds nothing to the subject.
+  if (noun.startsWith('all ')) noun = noun.slice('all '.length);
+
+  // "Commander creatures you own have …" (Inspiring Leader and the other Backgrounds, CR 903.3):
+  // your commanders that are creatures, wherever control has gone.
+  if (noun === 'commander creatures you own')
+    return allOf({ kind: 'isCommander' }, ofType('Creature'), { kind: 'owner', who: 'you' });
   // "creatures that are enchanted by an Aura you control" (Killian, Decisive Mentor).
   const enchantedByYours = noun.match(/^(.+) that are enchanted by an aura you control$/);
   if (enchantedByYours !== null) {
@@ -597,6 +604,16 @@ function parseSearchFilterUntraced(phrase: string, card: OracleCard): Selector |
 
   // "basic land" — a supertype plus a type, not a subtype.
   if (noun === 'basic land') return allOf(ofSupertype('Basic'), ofType('Land'));
+  // "a basic Forest, Island, or Mountain card" (the Landscapes, Riveteers Overlook): a basic land
+  // of one of the named basic land types (CR 205.3i).
+  {
+    const basics = noun.match(/^basic ([a-z]+(?:, [a-z]+)*,? or [a-z]+)$/);
+    if (basics !== null) {
+      const types = (basics[1] as string).split(/,? or |, /).map(titleCase);
+      if (types.every((type) => LAND_SUBTYPES.includes(type)))
+        return allOf(ofSupertype('Basic'), anyOf(...types.map(ofSubtype)));
+    }
+  }
 
   // "Plains, Island, Swamp, or Mountain" — a list of land subtypes, any of which qualifies.
   const alternatives = noun.split(/,? or |, /).map((n) => n.trim());
@@ -649,6 +666,10 @@ function parseSpellFilterUntraced(phrase: string, card: OracleCard): Selector | 
     return base === null ? null : allOf(base, bound);
   }
   if (noun === 'noncreature') return not(ofType('Creature'));
+  // "Whenever you cast a historic spell" (Jhoira's Familiar): artifacts, legendaries and Sagas
+  // are historic (CR 700.6).
+  if (noun === 'historic')
+    return anyOf(ofType('Artifact'), ofSupertype('Legendary'), ofSubtype('Saga'));
   // "Red spells you cast cost {1} less to cast" (Ruby Medallion): the spell's color (CR 105.2).
   if (COLOR_WORDS[noun] !== undefined) return ofColor(COLOR_WORDS[noun] as Color);
   // "Whenever you cast an Aura spell" (Kor Spiritdancer): the spell's subtype (CR 205.3h).
@@ -702,6 +723,20 @@ function parseTargetClauseUntraced(
   }
 
   let filter: Selector | undefined = undefined;
+  // "another target creature you control" (Selfless Savior): any but the ability's source.
+  if (cleaned.startsWith('another ')) {
+    const rest = parseTargetClauseUntraced(cleaned.slice('another '.length));
+    if (rest === null || rest.kind === 'player') return null;
+    return {
+      kind: rest.kind,
+      filter: rest.filter === undefined ? OTHER : allOf(OTHER, rest.filter),
+      ...(controller !== undefined
+        ? { controller }
+        : rest.controller !== undefined
+          ? { controller: rest.controller }
+          : {}),
+    };
+  }
   if (cleaned.startsWith('monocolored ')) {
     filter = IS_MONOCOLORED;
     cleaned = cleaned.replace(/^monocolored\s+/, '').trim();
@@ -735,7 +770,24 @@ function parseTargetClauseUntraced(
   // permanent-type alternation instead (see `parseCompoundPermanentTypeNoun`). `filter` can
   // already hold `IS_MONOCOLORED` from above; combine rather than overwrite.
   const compound = parseCompoundPermanentTypeNoun(cleaned);
-  if (compound === null) return null;
+  if (compound === null) {
+    // EDHREC plan Phase 4 batch 5: a target noun with qualifiers ("nonblack creature",
+    // "nonbasic land", "attacking or blocking creature", "Forest", "legendary permanent",
+    // "creature with power 4 or greater", "artifact, enchantment, or creature with flying").
+    const qualified = parseQualifiedTargetNoun(cleaned);
+    if (qualified === null) return null;
+    const merged =
+      qualified.filter === undefined
+        ? filter
+        : filter === undefined
+          ? qualified.filter
+          : allOf(filter, qualified.filter);
+    return {
+      kind: qualified.kind,
+      ...(merged !== undefined ? { filter: merged } : {}),
+      ...(controller !== undefined ? { controller } : {}),
+    };
+  }
   return {
     kind: 'permanent',
     filter: filter === undefined ? compound : allOf(filter, compound),
@@ -743,11 +795,127 @@ function parseTargetClauseUntraced(
   };
 }
 
+const QUALIFIER_SUPERTYPES: Record<string, string> = {
+  legendary: 'Legendary',
+  basic: 'Basic',
+  snow: 'Snow',
+};
+
+/** One leading word of a target noun as a selector: "nonblack", "legendary", "tapped", "red". */
+function parseTargetQualifier(word: string): Selector | null {
+  const negated = word.match(/^non-?(.+)$/);
+  if (negated !== null) {
+    const inner = negated[1] as string;
+    if (inner === 'token') return not(IS_TOKEN);
+    const color = COLOR_WORDS[inner];
+    if (color !== undefined) return not(ofColor(color as Color));
+    const supertype = QUALIFIER_SUPERTYPES[inner];
+    if (supertype !== undefined) return not(ofSupertype(supertype));
+    const type = CARD_TYPE_SINGULARS[inner];
+    if (type !== undefined) return not(ofType(type));
+    const subtype = resolveSubtype(titleCase(inner), NO_CARD);
+    return subtype === null ? null : not(ofSubtype(subtype));
+  }
+  const color = COLOR_WORDS[word];
+  if (color !== undefined) return ofColor(color as Color);
+  const supertype = QUALIFIER_SUPERTYPES[word];
+  if (supertype !== undefined) return ofSupertype(supertype);
+  if (word === 'tapped') return { kind: 'tapped' };
+  if (word === 'untapped') return not({ kind: 'tapped' });
+  if (word === 'attacking') return { kind: 'combatRole', role: 'attacking' };
+  if (word === 'blocking') return { kind: 'combatRole', role: 'blocking' };
+  return null;
+}
+
+const NO_CARD = { subtypes: [] } as unknown as OracleCard;
+
+function parseQualifiedTargetNoun(text: string): { kind: TargetKind; filter?: Selector } | null {
+  // "artifact, enchantment, or creature with flying" (Broken Wings): a trailing "with …" belongs
+  // to the last alternative only, so an artifact without flying is still a legal target.
+  {
+    const list = text.match(/^((?:[a-z]+, )+(?:or )?|[a-z]+ or )([a-z]+) (with .+)$/);
+    if (list !== null) {
+      const heads = (list[1] as string)
+        .replace(/,? or $|, $/, '')
+        .split(/, (?:or )?| or /)
+        .filter(Boolean);
+      const types = [...heads, list[2] as string].map((word) => CARD_TYPE_SINGULARS[word]);
+      if (types.some((type) => type === undefined || type === 'Instant' || type === 'Sorcery'))
+        return null;
+      const last = parseQualifiedTargetNoun(`${list[2] as string} ${list[3] as string}`);
+      if (last === null || last.filter === undefined) return null;
+      return {
+        kind: 'permanent',
+        filter: anyOf(
+          ...types.slice(0, -1).map((type) => ofType(type as string)),
+          allOf(ofType(types.at(-1) as string), last.filter),
+        ),
+      };
+    }
+  }
+  let rest = text;
+  const filters: Selector[] = [];
+  // A trailing "with power N or greater/less" or "with <keyword>".
+  const power = rest.match(/^(.+) with power (\d+) or (greater|less)$/);
+  if (power !== null) {
+    const n = Number(power[2]);
+    filters.push(power[3] === 'greater' ? powerAtLeast(n) : { kind: 'powerAtMost', n });
+    rest = power[1] as string;
+  } else {
+    const keyword = rest.match(/^(.+) with ([a-z ]+)$/);
+    if (keyword !== null && KEYWORD_SET.has(keyword[2] as string)) {
+      filters.push(withKeyword(keyword[2] as string));
+      rest = keyword[1] as string;
+    }
+  }
+  if (rest.startsWith('attacking or blocking ')) {
+    filters.push({ kind: 'inCombat' });
+    rest = rest.slice('attacking or blocking '.length);
+  }
+  // Leading qualifiers, possibly comma-separated ("nonartifact, nonblack creature").
+  for (;;) {
+    const m = rest.match(/^([a-z-]+),? (.+)$/);
+    if (m === null) break;
+    const qualifier = parseTargetQualifier(m[1] as string);
+    if (qualifier === null) break;
+    filters.push(qualifier);
+    rest = m[2] as string;
+  }
+  if (filters.length === 0 && !/^[a-z]+$/.test(rest)) return null;
+  let kind = parseTargetNoun(rest);
+  if (kind === null) {
+    const compound = parseCompoundPermanentTypeNoun(rest);
+    if (compound !== null) {
+      kind = 'permanent';
+      filters.unshift(compound);
+    } else {
+      // A bare subtype: "target Forest", "target Wizard".
+      const subtype = resolveSubtype(titleCase(rest), NO_CARD);
+      if (subtype === null) return null;
+      kind = 'permanent';
+      filters.unshift(ofSubtype(subtype));
+    }
+  }
+  if (kind === 'player' || kind === 'spell' || filters.length === 0) return null;
+  return { kind, filter: filters.length === 1 ? (filters[0] as Selector) : allOf(...filters) };
+}
+
+/**
+ * "(each) other attacking creature(s)" (battle cry): "other" in front of a subject the rest
+ * reads, tried only after the subject parser failed.
+ */
+function parseOtherSubject(phrase: string, card: OracleCard): Selector | null {
+  const m = phrase.match(/^(?:each )?other (.+)$/);
+  if (m === null) return null;
+  const rest = parseSubjectUntraced(m[1] as string, card);
+  return rest === null ? null : allOf(OTHER, rest);
+}
+
 /** `parseSubjectUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
 export function parseSubject(
   ...args: Parameters<typeof parseSubjectUntraced>
 ): ReturnType<typeof parseSubjectUntraced> {
-  const result = parseSubjectUntraced(...args);
+  const result = parseSubjectUntraced(...args) ?? parseOtherSubject(...args);
   if (result === null) noteSlotFailure('subject', args[0]);
   return result;
 }

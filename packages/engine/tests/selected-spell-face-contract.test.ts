@@ -14,8 +14,19 @@ import { resolveTopOfStack } from '../src/stack/stack';
 import { isCreatureSpell, spellMatchesSelector } from '../src/targets/legality';
 import { buildPlayerView } from '../src/view/view';
 import { buildSpectatorState } from '../src/view/spectator';
-import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import {
+  bear,
+  conjure,
+  copies,
+  forest,
+  gameConfig,
+  oracle,
+  pump,
+  pumpStrict,
+  spawn,
+} from './fixtures';
 import { cloneContractContext } from './helpers/contract-harness';
+import { script } from './script';
 
 const pinned = JSON.parse(
   readFileSync(new URL('./fixtures/selected-spell-faces-oracle.json', import.meta.url), 'utf8'),
@@ -755,7 +766,16 @@ describe('independent selected spell face contracts', () => {
   );
 
   // Faces authored since this contract was written, each tested with its own batch.
-  const authoredFaces = ['Ettercap // Web Shot']; // mini-pilot batch, tests/cards/mini-pilot
+  // Ettercap: mini-pilot batch, tests/cards/mini-pilot. Curry Favor and Seasonal Ritual: read by
+  // the EDHREC plan Phase 4 batch 4 productions (where-X, add one mana of any color), whose tests
+  // are tests/phase4-batch4-grammar.test.ts.
+  const authoredFaces = [
+    'Ettercap // Web Shot',
+    'Smitten Swordmaster // Curry Favor',
+    'Rosethorn Acolyte // Seasonal Ritual',
+    // Batch 5's qualified target nouns read "Destroy target tapped creature."
+    'Threadbind Clique // Rip the Seams',
+  ];
 
   it.each(
     pinned.cards.filter(
@@ -773,6 +793,83 @@ describe('independent selected spell face contracts', () => {
       expect(() => state.options()).toThrow('Unmodeled card');
     },
   );
+});
+
+describe('selected spell faces the EDHREC Phase 4 productions read', () => {
+  const pinnedFace = (prefix: string) =>
+    pinned.cards.find(({ card }) => card.name.startsWith(prefix))!.card;
+  const knight = () =>
+    oracle({
+      name: 'Face contract knight',
+      typeLine: 'Creature — Human Knight',
+      manaCost: '{1}',
+      power: '1',
+      toughness: '1',
+    });
+  const life = (state: ReturnType<typeof setup>, id: string) =>
+    state.ctx.state.players.find((p) => p.id === id)!.life;
+
+  it('face-curry-favor — Smitten Swordmaster: Curry Favor drains X, X the Knights you control', () => {
+    const state = setup(pinnedFace('Smitten Swordmaster'));
+    expect(interpretCard(pinnedFace('Smitten Swordmaster')).modeled).toBe(true);
+    spawn(state.ctx, 'P1', knight());
+    spawn(state.ctx, 'P1', knight());
+    spawn(state.ctx, 'P2', knight());
+    addMana(state.player, [{ symbol: 'B' }]);
+    const [you, opponent] = [life(state, 'P1'), life(state, 'P2')];
+    state.cast();
+    pumpStrict(resolveTopOfStack(state.ctx));
+    // Two Knights you control; the opponent's Knight does not count.
+    expect(life(state, 'P1')).toBe(you + 2);
+    expect(life(state, 'P2')).toBe(opponent - 2);
+  });
+
+  it('face-curry-favor-none — Smitten Swordmaster: with no Knights, Curry Favor changes no life', () => {
+    const state = setup(pinnedFace('Smitten Swordmaster'));
+    addMana(state.player, [{ symbol: 'B' }]);
+    const [you, opponent] = [life(state, 'P1'), life(state, 'P2')];
+    state.cast();
+    pumpStrict(resolveTopOfStack(state.ctx));
+    expect(life(state, 'P1')).toBe(you);
+    expect(life(state, 'P2')).toBe(opponent);
+  });
+
+  it('face-seasonal-ritual — Rosethorn Acolyte: Seasonal Ritual adds one mana', () => {
+    const state = setup(pinnedFace('Rosethorn Acolyte'));
+    addMana(state.player, [{ symbol: 'G' }]);
+    state.cast();
+    expect(state.player.manaEntries).toHaveLength(0);
+    const { decisions } = pump(
+      resolveTopOfStack(state.ctx),
+      script([
+        {
+          prompt: 'distribute all 1 mana',
+          label: 'Seasonal Ritual color',
+          choose: 'allowed: {U}',
+        },
+      ]),
+    );
+    // One mana, and the player picks its color from all five.
+    expect(decisions[0]!.manaSplit).toEqual({ amount: 1, colors: ['W', 'U', 'B', 'R', 'G'] });
+    expect(state.player.manaEntries.map((entry) => entry.symbol)).toEqual(['U']);
+  });
+
+  it('face-rip-the-seams — Threadbind Clique: Rip the Seams destroys a tapped creature only', () => {
+    const state = setup(pinnedFace('Threadbind Clique'));
+    const untapped = spawn(state.ctx, 'P2', bear());
+    addMana(state.player, [{ symbol: 'W' }, { symbol: 'C' }, { symbol: 'C' }]);
+    // An untapped creature is not a legal target, so the face is not offered.
+    expect(state.options()).toEqual([]);
+    const tapped = spawn(state.ctx, 'P2', bear());
+    tapped.tapped = true;
+    const slot = state.options()[0]?.targets?.[0]?.options ?? [];
+    expect(slot).toContain(tapped.id);
+    expect(slot).not.toContain(untapped.id);
+    state.cast(new Map([[0, tapped.id]]));
+    pumpStrict(resolveTopOfStack(state.ctx));
+    expect(state.ctx.state.battlefield.some((p) => p.id === tapped.id)).toBe(false);
+    expect(state.ctx.state.battlefield.some((p) => p.id === untapped.id)).toBe(true);
+  });
 });
 
 it('face-commander-tax — offers and casts Easy Pickings from the command zone with tax', () => {

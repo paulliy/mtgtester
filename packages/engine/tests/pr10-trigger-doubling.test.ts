@@ -4,7 +4,7 @@ import { computeCharacteristics } from '../src/effects/continuous';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { additionalTypedTriggerCopies } from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
-import { oracle, pump, pumpStrict, spawn } from './fixtures';
+import { oracle, pump, spawn } from './fixtures';
 import {
   bear,
   castFromHand,
@@ -110,8 +110,20 @@ describe('PR10.24 Annie Joins Up', () => {
     putPendingTriggersOnStack(ctx, () => ({ index: 0, targets: new Map([[0, theirs.id]]) }));
     // Annie Joins Up is not a creature, so its own trigger is not doubled.
     expect(ctx.state.stack).toHaveLength(1);
-    // The trigger is mandatory: no "use it?" is asked, and exactly 5 damage is marked.
-    const { decisions } = pumpStrict(resolveTopOfStack(ctx));
+    // The trigger is mandatory: no "use it?" is asked, and exactly 5 damage is marked. An optional
+    // trigger's question is answered (accepted) and recorded, so it fails the assertion below
+    // rather than throwing.
+    const { decisions } = pump(
+      resolveTopOfStack(ctx),
+      (decision) =>
+        decision.decisionType === 'optionalTrigger'
+          ? {
+              index: decision.options.findIndex((o) => o.type === 'acceptTrigger'),
+              targets: new Map(),
+            }
+          : undefined,
+      { strict: true },
+    );
     expect(decisions.map((decision) => decision.decisionType)).not.toContain('optionalTrigger');
     expect(theirs.damageMarked).toBe(5);
     settle(ctx);

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "card": "Seer's Sundial",
+  "scenarios": [
+    {
+      "id": "seers-sundial-pay-draw",
+      "title": "Seer's Sundial: a land enters, pay {2} to draw",
+      "clauses": [1],
+      "instructions": ["Play Forest and pay {2} for the Sundial."],
+      "expectedOutcome": "You draw the Island on top of your library.",
+      "seats": {
+        "P1": {
+          "hand": ["Forest"],
+          "battlefield": ["Plains", "Plains", "Seer's Sundial"],
+          "libraryTop": ["Island"]
+        }
+      },
+      "script": [
+        { "player": "P1", "choose": "/^Play Forest/" },
+        { "player": "P1", "choose": "/^Pay/" }
+      ],
+      "expect": [{ "zone": { "player": "P1", "zone": "hand", "has": ["Island"] } }]
+    },
+    {
+      "id": "seers-sundial-cannot-pay",
+      "title": "Seer's Sundial: with no mana to pay, nothing is drawn",
+      "clauses": [1],
+      "instructions": ["Play Forest with no other untapped land."],
+      "expectedOutcome": "The Island stays on top of your library.",
+      "seats": {
+        "P1": { "hand": ["Forest"], "battlefield": ["Seer's Sundial"], "libraryTop": ["Island"] }
+      },
+      "script": [{ "player": "P1", "choose": "/^Play Forest/" }],
+      "expect": [{ "zone": { "player": "P1", "zone": "hand", "lacks": ["Island"] } }]
+    }
+  ]
+}

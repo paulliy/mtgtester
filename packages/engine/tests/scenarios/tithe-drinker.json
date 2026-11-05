@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "card": "Tithe Drinker",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{W}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "tithe-drinker-extort",
+      "title": "Tithe Drinker: extort drains each opponent for {W/B}",
+      "clauses": [2],
+      "instructions": ["Cast Scenario Bear, then pay {W/B} for extort."],
+      "expectedOutcome": "Each opponent is at 39 and you are at 43.",
+      "seats": {
+        "P1": { "hand": ["Scenario Bear"], "battlefield": ["Plains", "Plains", "Tithe Drinker"] }
+      },
+      "script": [
+        { "player": "P1", "choose": "/^Cast Scenario Bear/" },
+        { "player": "P1", "choose": "/^Pay/" }
+      ],
+      "expect": [
+        { "life": { "player": "P2", "equals": 39 } },
+        { "life": { "player": "P4", "equals": 39 } },
+        { "life": { "player": "P1", "equals": 43 } }
+      ]
+    },
+    {
+      "id": "tithe-drinker-lifelink",
+      "title": "Tithe Drinker: lifelink",
+      "clauses": [1],
+      "instructions": ["Attack P2 with Tithe Drinker."],
+      "expectedOutcome": "P2 is at 38 and you are at 42.",
+      "seats": { "P1": { "battlefield": ["Tithe Drinker"] } },
+      "script": [{ "player": "P1", "choose": "Declare attackers", "targets": ["P2"] }],
+      "continue": { "throughCombat": true },
+      "expect": [
+        { "life": { "player": "P2", "equals": 38 } },
+        { "life": { "player": "P1", "equals": 42 } }
+      ]
+    }
+  ]
+}

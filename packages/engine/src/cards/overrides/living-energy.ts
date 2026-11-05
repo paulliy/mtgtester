@@ -1087,7 +1087,8 @@ export function registerLIVING_ENERGYOverrides(): void {
     '7137aae6-260d-41de-8b4e-42a8cf752697',
     'Frostboil Snarl',
     [
-      "As this land enters, you may reveal an Island or Mountain card from your hand. If you don't, this land enters tapped.",
+      // The reveal-land line is read by the interpreter (EDHREC plan Phase 4 batch 4); the def
+      // keeps the same as-enters choice.
     ],
     FROSTBOIL_SNARL_DEF,
   );
@@ -1096,7 +1097,8 @@ export function registerLIVING_ENERGYOverrides(): void {
     '33f52df8-4b44-4422-8b0a-37fead9c894b',
     'Vineglimmer Snarl',
     [
-      "As this land enters, you may reveal a Forest or Island card from your hand. If you don't, this land enters tapped.",
+      // The reveal-land line is read by the interpreter (EDHREC plan Phase 4 batch 4); the def
+      // keeps the same as-enters choice.
     ],
     VINEGLIMMER_SNARL_DEF,
   );
@@ -1132,7 +1134,8 @@ export function registerLIVING_ENERGYOverrides(): void {
     'cd1eda60-53e4-44d0-9b2c-7a57395e291f',
     "Conjurer's Closet",
     [
-      'At the beginning of your end step, you may exile target creature you control, then return that card to the battlefield under your control.',
+      // The blink line is read by the interpreter (EDHREC plan Phase 4 batch 4); the def keeps
+      // the same trigger.
     ],
     {
       triggers: [
@@ -1189,7 +1192,7 @@ export function registerLIVING_ENERGYOverrides(): void {
   defineCard(
     '757eadac-dd29-4a7f-8683-5bc823168326',
     'One with the Machine',
-    ['Draw cards equal to the greatest mana value among artifacts you control.'],
+    [],
     ONE_WITH_THE_MACHINE_DEF,
   );
 
@@ -1217,10 +1220,8 @@ export function registerLIVING_ENERGYOverrides(): void {
     '397b9dcf-690a-4a58-8637-bb9baab7cc2f',
     'Elder Gargaroth',
     [
-      'Whenever this creature attacks or blocks, choose one \u2014',
-      '\u2022 Create a 3/3 green Beast creature token.',
-      '\u2022 You gain 3 life.',
-      '\u2022 Draw a card.',
+      // The modal attack-or-block trigger is read by the interpreter since EDHREC plan Phase 4
+      // batch 6 (compound trigger heads); the def keeps the same trigger.
     ],
     ELDER_GARGAROTH_DEF,
     'replace the earlier generated inline definition with the reviewed shared constant',

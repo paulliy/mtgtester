@@ -522,7 +522,12 @@ function* dealDamageToPlayersTogether(
     plans.push({ player: hit.player, amount: adjusted.amount });
   }
   const observations: (() => void)[] = [];
-  const permanent = ctx.state.battlefield.find((entry) => entry.id === source.id);
+  // The source on the battlefield, found as dealDamageToObject finds it: by card, and by object
+  // when the source names one.
+  const permanent = ctx.state.battlefield.find(
+    (entry) =>
+      entry.cardId === source.cardId && (source.id === undefined || entry.id === source.id),
+  );
   const lifelink =
     permanent === undefined
       ? source.lastKnownDamageKeywords?.includes('lifelink') === true
@@ -2005,7 +2010,21 @@ function* executeAbilityEffects(
       // The controller of a targeted permanent, as of resolution (a player id, like 'eventPlayer').
       const permanentId = ref(r.controllerOf);
       const permanent = permanentId === null ? undefined : findPermanent(ctx, permanentId);
-      return permanent === undefined ? null : (permanent.controllerId as unknown as ObjectId);
+      if (permanent !== undefined) return permanent.controllerId as unknown as ObjectId;
+      // A legal target an earlier instruction of this ability moved off the battlefield ("Destroy
+      // target artifact. Its controller gains 4 life."): its controller as last known, captured
+      // as this resolution began (CR 608.2h).
+      const slot = r.controllerOf;
+      if (typeof slot === 'number') {
+        const id = targets[slot];
+        const spec = ability.targets[slot];
+        // Only a target still legal as the resolution began: an illegal one affects nothing.
+        if (id !== undefined && spec !== undefined && stillLegal(id, spec, slot)) {
+          const lastKnown = refControllerCache.get(slot);
+          if (lastKnown !== undefined) return lastKnown as unknown as ObjectId;
+        }
+      }
+      return null;
     }
     if (r === 'source') return sourcePermanent()?.id ?? null;
     if (r === 'eventPlayer') {
@@ -4543,6 +4562,14 @@ function* executeAbilityEffects(
         }
         break;
       }
+      case 'gainLifeTarget': {
+        const targetId = ref(effect.target);
+        const target =
+          targetId === null ? undefined : ctx.state.players.find((p) => p.id === targetId);
+        if (target === undefined || target.hasLost) break;
+        gainLife(ctx, target, amountOf(effect.amount));
+        break;
+      }
       case 'drawTarget': {
         const targetId = ref(effect.target);
         const target =
@@ -6109,17 +6136,20 @@ function* executeAbilityEffects(
         const damageSource =
           effect.source === undefined ? undefined : damageSourceOf(effect.source);
         if (effect.source !== undefined && damageSource === undefined) break;
-        for (const player of ctx.state.players.filter((p) => !p.hasLost)) {
-          if (damageSource !== undefined) {
+        const players = ctx.state.players.filter((p) => !p.hasLost);
+        if (damageSource !== undefined) {
+          for (const player of players)
             yield* dealDamageToObject(ctx, damageSource, player.id, amount);
-            continue;
-          }
-          yield* dealDamageToPlayer(ctx, source, player, amount, {
-            combat: false,
-            sourceIsCommander: false,
-            sourceHasLifelink: false,
-          });
+          break;
         }
+        // Otherwise the ability's own source deals it, with its lifelink and infect, last-known
+        // if it has left (CR 702.15b, 702.90b, 113.7a). It is dealt to every player at once, so
+        // lifelink is one life-gain event, not one per player (CR 120.3f, 119.9).
+        yield* dealDamageToPlayersTogether(
+          ctx,
+          source,
+          players.map((player) => ({ player, amount })),
+        );
         break;
       }
       case 'cascade':
@@ -6869,29 +6899,31 @@ function* executeAbilityEffects(
           break;
         }
         // Every token each creation makes, a replacement's (Academy Manufactor's three, a
-        // doubler's extra) included, is one of "those tokens" the rider applies to.
-        for (let i = 0; i < amountOf(effect.count); i++) {
-          const entering = yield* tokensEntering(controller.id);
-          for (const token of createTokens(ctx, spec, entering, controller.id, false, true)) {
-            if (copyOptions.goadedForRestOfGame === true)
-              addGoadRequirement(ctx, token, controller.id, true);
-            if (copyOptions.sacrificeAt === 'endStep') {
-              ctx.state.delayedTriggers.push({
-                id: `dt-${ctx.state.nextObjectNum++}`,
-                sourceCardId: source.cardId,
-                sourceOracleId: source.oracleId,
-                controllerId: source.controllerId,
-                targetId: token.cardId,
-                when: 'endStep',
-                expiry: 'endStep',
-                ability: {
-                  kind: 'triggered',
-                  targets: [],
-                  effects: [{ op: 'sacrifice', target: 'triggerObject' }],
-                  description: 'Sacrifice the token at the beginning of the next end step',
-                },
-              });
-            }
+        // doubler's extra) included, is one of "those tokens" the rider applies to. "Create N
+        // copies" (squad's "for each time") is one creation event, so the tokens enter together
+        // and "whenever one or more tokens enter" triggers once.
+        let entering = 0;
+        for (let i = 0; i < amountOf(effect.count); i++)
+          entering += yield* tokensEntering(controller.id);
+        for (const token of createTokens(ctx, spec, entering, controller.id, false, true)) {
+          if (copyOptions.goadedForRestOfGame === true)
+            addGoadRequirement(ctx, token, controller.id, true);
+          if (copyOptions.sacrificeAt === 'endStep') {
+            ctx.state.delayedTriggers.push({
+              id: `dt-${ctx.state.nextObjectNum++}`,
+              sourceCardId: source.cardId,
+              sourceOracleId: source.oracleId,
+              controllerId: source.controllerId,
+              targetId: token.cardId,
+              when: 'endStep',
+              expiry: 'endStep',
+              ability: {
+                kind: 'triggered',
+                targets: [],
+                effects: [{ op: 'sacrifice', target: 'triggerObject' }],
+                description: 'Sacrifice the token at the beginning of the next end step',
+              },
+            });
           }
         }
         break;
@@ -8222,7 +8254,12 @@ function* executeAbilityEffects(
         const target = targetId === null ? undefined : findPermanent(ctx, targetId);
         if (target === undefined) break;
         const targetCardId = target.cardId;
-        const targetController = target.controllerId;
+        const targetController =
+          effect.returnUnder === 'owner'
+            ? target.ownerId
+            : effect.returnUnder === 'you'
+              ? source.controllerId
+              : target.controllerId;
         yield* moveObject(ctx, target, { zone: 'exile' });
         const exiled = ctx.state.exile.find((card) => card.cardId === targetCardId);
         if (exiled !== undefined)

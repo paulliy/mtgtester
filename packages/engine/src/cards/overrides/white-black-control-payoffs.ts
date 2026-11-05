@@ -35,11 +35,7 @@ export function registerWhiteBlackControlPayoffOverrides(): void {
   replaceCard(
     '00fdcc19-88ed-46c3-91f0-095806228105',
     'Waste Not',
-    [
-      'unrecognized rules text: "Whenever an opponent discards a creature card, create a 2/2 black Zombie creature token."',
-      'unrecognized rules text: "Whenever an opponent discards a land card, add {B}{B}."',
-      'unrecognized rules text: "Whenever an opponent discards a noncreature, nonland card, draw a card."',
-    ],
+    [],
     {
       triggers: [
         triggered(

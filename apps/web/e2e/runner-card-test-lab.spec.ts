@@ -2001,6 +2001,306 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await passUntil(page, logLine(page, /game over/));
     await expect(life(page, 'P2')).toHaveText('33');
   },
+  // EDHREC plan Phase 4 batch 4: amount forms, player verbs, damage clauses, life-change triggers.
+  'choked-estuary-reveal-untapped': async (page) => {
+    const estuary = hand(page, 'Choked Estuary');
+    await passUntil(page, estuary.and(page.locator('.actionable')));
+    await estuary.click();
+    const play = page.locator('.source-actions').getByRole('button', { name: /^Play/ }).first();
+    if (await play.isVisible()) await play.click();
+    const reveal = page.getByRole('button', { name: /^Reveal/ }).first();
+    await passUntil(page, reveal);
+    await reveal.click();
+    await passUntil(page, permanent(page, 'P1', 'Choked Estuary'));
+    await expect(tapBadge(page, 'P1', 'Choked Estuary')).toHaveCount(0);
+    await expect(hand(page, 'Island')).toHaveCount(1);
+    await expect(logLine(page, /reveal/i)).toBeVisible();
+  },
+  'choked-estuary-no-reveal-tapped': async (page) => {
+    await playLand(page, 'Choked Estuary');
+    await expect(tapBadge(page, 'P1', 'Choked Estuary')).toHaveCount(1);
+    await expect(hand(page, 'Forest')).toHaveCount(1);
+  },
+  'lotus-cobra-landfall-mana': async (page) => {
+    await playLand(page, 'Forest');
+    const white = page.getByRole('button', { name: /^Distribute 1 mana \(allowed: \{W\}/ });
+    await passStackUntil(page, white);
+    await white.click();
+    await castWith(page, hand(page, 'Scenario Squire'), {
+      resolves: /Scenario Squire[^]*resolves/,
+    });
+    await expect(permanent(page, 'P1', 'Scenario Squire')).toHaveCount(1);
+    await expectTapped(page, [['P1', 'Forest']]);
+  },
+  'lotus-cobra-ignores-opponent-land': async (page) => {
+    await passUntil(page, permanent(page, 'P2', 'Forest'));
+    await expect(logLine(page, /Lotus Cobra/)).toHaveCount(0);
+    await expect(permanent(page, 'P1', 'Lotus Cobra')).toHaveCount(1);
+  },
+  'cloudshift-blinks-own-creature': async (page) => {
+    await expect(permanent(page, 'P1', 'Scenario Bear').locator('.counters')).toContainText(/1/);
+    await castWith(page, hand(page, 'Cloudshift'), {
+      targets: [['P1', 'Scenario Bear']],
+      resolves: /Cloudshift[^]*resolves/,
+    });
+    await expect(inZone(page, 'P1', 'Graveyard', 'Cloudshift')).toHaveCount(1);
+    await expect(permanent(page, 'P1', 'Scenario Bear')).toHaveCount(1);
+    await expect(permanent(page, 'P1', 'Scenario Bear').locator('.counters')).toHaveCount(0);
+  },
+  'triskelion-enters-with-counters': async (page) => {
+    await castWith(page, hand(page, 'Triskelion'), { resolves: /Triskelion[^]*resolves/ });
+    await expect(permanent(page, 'P1', 'Triskelion').locator('.counters')).toContainText(/3/);
+  },
+  'triskelion-remove-counter-pings': async (page) => {
+    await activate(page, permanent(page, 'P1', 'Triskelion'), /Remove/);
+    await targetPlayer(page, 'P2');
+    await passStackUntil(page, life(page, 'P2').filter({ hasText: '39' }));
+    await expect(permanent(page, 'P1', 'Triskelion').locator('.counters')).toContainText(/2/);
+  },
+  'pridemate-counter-on-life-gain': async (page) => {
+    await castWith(page, hand(page, 'Scenario Salve'), { resolves: /Scenario Salve[^]*resolves/ });
+    await expect(life(page, 'P1')).toHaveText('43');
+    const pridemate = permanent(page, 'P1', "Ajani's Pridemate");
+    await passStackUntil(page, pridemate.locator('.counters'));
+    await expect(pridemate.locator('.counters')).toContainText(/1/);
+  },
+  'pridemate-no-counter-on-opponent-gain': async (page) => {
+    await passUntil(page, life(page, 'P2').filter({ hasText: '43' }));
+    await expect(permanent(page, 'P1', "Ajani's Pridemate").locator('.counters')).toHaveCount(0);
+  },
+  'sanguine-bond-drains-that-much': async (page) => {
+    await castWith(page, hand(page, 'Scenario Salve'), { resolves: /Scenario Salve[^]*resolves/ });
+    await targetPlayer(page, 'P3');
+    await passStackUntil(page, life(page, 'P3').filter({ hasText: '37' }));
+    await expect(life(page, 'P1')).toHaveText('43');
+    await expect(life(page, 'P2')).toHaveText('40');
+  },
+  'sanguine-bond-ignores-opponent-gain': async (page) => {
+    await passUntil(page, life(page, 'P2').filter({ hasText: '43' }));
+    await expect(life(page, 'P3')).toHaveText('40');
+    await expect(life(page, 'P4')).toHaveText('40');
+    await expect(life(page, 'P1')).toHaveText('40');
+  },
+  'krenko-makes-x-goblins': async (page) => {
+    await activate(page, permanent(page, 'P1', 'Krenko, Mob Boss'), /Create/);
+    await passStackUntil(page, permanent(page, 'P1', 'Goblin'));
+    await expectTokens(page, 'P1', 'Goblin', 2);
+    await expectTapped(page, [['P1', 'Krenko, Mob Boss']]);
+  },
+  'memory-erosion-mills-caster': async (page) => {
+    await passUntil(page, inZone(page, 'P2', 'Graveyard', 'Island').first());
+    await expect(inZone(page, 'P2', 'Graveyard', 'Island')).toHaveCount(2);
+    await expect(inZone(page, 'P1', 'Graveyard', 'Island')).toHaveCount(0);
+  },
+  'memory-erosion-ignores-your-spells': async (page) => {
+    await castWith(page, hand(page, 'Scenario Bear'), { resolves: /Scenario Bear[^]*resolves/ });
+    await expect(permanent(page, 'P1', 'Scenario Bear')).toHaveCount(1);
+    await expect(inZone(page, 'P1', 'Graveyard', 'Island')).toHaveCount(0);
+  },
+  'fleshbag-each-player-sacrifices': async (page) => {
+    await castWith(page, hand(page, 'Fleshbag Marauder'), {
+      resolves: /Fleshbag Marauder[^]*resolves/,
+    });
+    // Fleshbag is P1's only creature, so it is sacrificed without a choice.
+    await passStackUntil(page, inZone(page, 'P2', 'Graveyard', 'Scenario Bear'));
+    await expect(inZone(page, 'P1', 'Graveyard', 'Fleshbag Marauder')).toHaveCount(1);
+  },
+  'blaze-deals-x': async (page) => {
+    const blaze = hand(page, 'Blaze');
+    await passUntil(page, blaze.and(page.locator('.actionable')));
+    await blaze.click();
+    const row = page.locator('.source-actions .x-group');
+    await row.getByRole('spinbutton').fill('3');
+    await row.getByRole('button').click();
+    await page.locator('.opponent[data-seat="P2"] > header').click();
+    await confirmButton(page).click();
+    await passStackUntil(page, life(page, 'P2').filter({ hasText: '37' }));
+  },
+  'gruesome-fate-per-creature': async (page) => {
+    await castWith(page, hand(page, 'Gruesome Fate'), { resolves: /Gruesome Fate[^]*resolves/ });
+    for (const seat of ['P2', 'P3', 'P4'])
+      await passStackUntil(page, life(page, seat).filter({ hasText: '38' }));
+    await expect(life(page, 'P1')).toHaveText('40');
+  },
+  'offer-immortality-grants-both': async (page) => {
+    await castWith(page, hand(page, 'Offer Immortality'), {
+      targets: [['P1', 'Scenario Bear']],
+      resolves: /Offer Immortality[^]*resolves/,
+    });
+    await passStackUntil(page, keywordOn(page, 'P1', 'Scenario Bear', 'deathtouch'));
+    await expect(keywordOn(page, 'P1', 'Scenario Bear', 'indestructible')).toHaveCount(1);
+  },
+  'languish-shrinks-every-creature': async (page) => {
+    await castWith(page, hand(page, 'Languish'), { resolves: /Languish[^]*resolves/ });
+    await passStackUntil(page, inZone(page, 'P2', 'Graveyard', 'Scenario Bear'));
+    await expect(inZone(page, 'P1', 'Graveyard', 'Scenario Bear')).toHaveCount(1);
+    await expect(inZone(page, 'P1', 'Graveyard', 'Languish')).toHaveCount(1);
+    await expect(permanent(page, 'P2', 'Scenario Giant').filter({ hasText: '1/1' })).toHaveCount(1);
+  },
+  // EDHREC plan Phase 4 batches 5 and 6.
+  'fungal-sprouting-greatest-power': async (page) => {
+    await castWith(page, hand(page, 'Fungal Sprouting'), {
+      resolves: /Fungal Sprouting[^]*resolves/,
+    });
+    await passStackUntil(page, permanent(page, 'P1', 'Saproling'));
+    // The 4/4 is the greatest power on your side; P2's 5/5 does not count.
+    await expectTokens(page, 'P1', 'Saproling', 4);
+  },
+  'arbor-elf-untaps-forest': async (page) => {
+    await activate(page, permanent(page, 'P1', 'Arbor Elf'), /Untap/);
+    await targetAndConfirm(page, [['P1', 'Forest']]);
+    const forest = permanent(page, 'P1', 'Forest');
+    await passStackUntil(page, logLine(page, /Untap target Forest[^]*resolves/));
+    await expect(forest.locator('.tap-badge')).toHaveCount(0);
+    await expect(tapBadge(page, 'P1', 'Arbor Elf')).toHaveCount(1);
+  },
+  'doom-blade-destroys-nonblack': async (page) => {
+    await castWith(page, hand(page, 'Doom Blade'), {
+      targets: [['P2', 'Scenario Bear']],
+      resolves: /Doom Blade[^]*resolves/,
+    });
+    await expect(permanent(page, 'P2', 'Scenario Bear')).toHaveCount(0);
+    await expect(inZone(page, 'P2', 'Graveyard', 'Scenario Bear')).toHaveCount(1);
+  },
+  'doom-blade-cannot-target-black': async (page) => {
+    await expectStaysInHand(page, 'Doom Blade');
+    await expect(permanent(page, 'P2', 'Scenario Shade')).toHaveCount(1);
+  },
+  'muscle-sliver-pumps-every-sliver': async (page) => {
+    // P2's turn: its Sliver attacks; the tapped Muscle Sliver cannot block.
+    const declare = page.getByRole('button', { name: /Declare blockers/ });
+    await passUntil(page, declare.or(life(page, 'P1').filter({ hasText: '38' })));
+    if (await declare.isVisible()) {
+      await declare.click();
+      await page.getByRole('button', { name: 'Confirm blocks' }).click();
+    }
+    await passUntil(page, life(page, 'P1').filter({ hasText: '38' }));
+    await expect(permanent(page, 'P2', 'Scenario Sliver')).toHaveCount(1);
+  },
+  'selfless-savior-grants-indestructible': async (page) => {
+    await activate(page, permanent(page, 'P1', 'Selfless Savior'), /Sacrifice/);
+    await targetAndConfirm(page, [['P1', 'Scenario Bear']]);
+    await passStackUntil(page, keywordOn(page, 'P1', 'Scenario Bear', 'indestructible'));
+    await expect(inZone(page, 'P1', 'Graveyard', 'Selfless Savior')).toHaveCount(1);
+  },
+  'wasteland-taps-for-colorless': async (page) => {
+    await castWith(page, hand(page, 'Scenario Bear'), { resolves: /Scenario Bear[^]*resolves/ });
+    await expect(permanent(page, 'P1', 'Scenario Bear')).toHaveCount(1);
+    await expectTapped(page, [['P1', 'Wasteland']]);
+  },
+  'wasteland-destroys-nonbasic': async (page) => {
+    await activate(page, permanent(page, 'P1', 'Wasteland'), /Destroy/);
+    await targetAndConfirm(page, [['P2', 'Scenario Dual']]);
+    await passStackUntil(page, inZone(page, 'P2', 'Graveyard', 'Scenario Dual'));
+    await expect(inZone(page, 'P1', 'Graveyard', 'Wasteland')).toHaveCount(1);
+    await expect(permanent(page, 'P2', 'Forest')).toHaveCount(1);
+  },
+  'geier-reach-taps-for-colorless': async (page) => {
+    await castWith(page, hand(page, 'Scenario Bear'), { resolves: /Scenario Bear[^]*resolves/ });
+    await expect(permanent(page, 'P1', 'Scenario Bear')).toHaveCount(1);
+  },
+  'geier-reach-each-player-loots': async (page) => {
+    await activate(page, permanent(page, 'P1', 'Geier Reach Sanitarium'), /draws/i);
+    await passStackUntil(page, logLine(page, /Each player draws[^]*resolves/));
+    for (const seat of ['P1', 'P2', 'P3', 'P4'])
+      await passStackUntil(
+        page,
+        seatZone(page, seat, 'Graveyard').locator('.zone-card-thumb').first(),
+      );
+  },
+  'deaths-shadow-shrinks-by-life': async (page) => {
+    await attack(page, [["Death's Shadow", 'P2']]);
+    await passUntil(page, logLine(page, /game over/));
+    await expect(life(page, 'P2')).toHaveText('32');
+  },
+  'deaths-shadow-dies-at-high-life': async (page) => {
+    await castWith(page, hand(page, "Death's Shadow"), {
+      resolves: /Death's Shadow[^]*resolves/,
+    });
+    await passStackUntil(page, inZone(page, 'P1', 'Graveyard', "Death's Shadow"));
+    await expect(permanent(page, 'P1', "Death's Shadow")).toHaveCount(0);
+  },
+  'howling-golem-attack-each-draws': async (page) => {
+    await attack(page, [['Howling Golem', 'P2']]);
+    await passUntil(page, hand(page, 'Island'));
+    await passUntil(page, logLine(page, /game over/));
+    await expect(hand(page, 'Island')).toHaveCount(1);
+  },
+  'ophiomancer-snake-each-upkeep': async (page) => {
+    await passUntil(page, permanent(page, 'P1', 'Snake'));
+    // The second upkeep finds a Snake and makes none: the token stays a single one.
+    await passUntil(page, logLine(page, /game over/));
+    await expectTokens(page, 'P1', 'Snake', 1);
+  },
+  'ripjaw-raptor-enrage-draws': async (page) => {
+    await castWith(page, hand(page, 'Scenario Shock'), {
+      targets: [['P1', 'Ripjaw Raptor']],
+      resolves: /Scenario Shock[^]*resolves/,
+    });
+    await passStackUntil(page, hand(page, 'Island'));
+    await expect(permanent(page, 'P1', 'Ripjaw Raptor')).toHaveCount(1);
+  },
+  // EDHREC plan Phase 4 batch 7: "its controller" after a targeted sentence.
+  'natures-claim-controller-gains': async (page) => {
+    await castWith(page, hand(page, "Nature's Claim"), {
+      targets: [['P2', 'Scenario Relic']],
+      resolves: /Nature's Claim[^]*resolves/,
+    });
+    await expect(permanent(page, 'P2', 'Scenario Relic')).toHaveCount(0);
+    await expect(inZone(page, 'P2', 'Graveyard', 'Scenario Relic')).toHaveCount(1);
+    await expect(life(page, 'P2')).toHaveText('44');
+    await expect(life(page, 'P1')).toHaveText('40');
+  },
+  'vapor-snag-bounce-and-drain': async (page) => {
+    await castWith(page, hand(page, 'Vapor Snag'), {
+      targets: [['P2', 'Scenario Bear']],
+      resolves: /Vapor Snag[^]*resolves/,
+    });
+    await expect(permanent(page, 'P2', 'Scenario Bear')).toHaveCount(0);
+    await expect(life(page, 'P2')).toHaveText('39');
+  },
+  'megrim-pings-discarding-opponent': async (page) => {
+    await castWith(page, hand(page, 'Scenario Raid'), { resolves: /Scenario Raid[^]*resolves/ });
+    await passStackUntil(page, life(page, 'P2').filter({ hasText: '38' }));
+    await expect(life(page, 'P3')).toHaveText('40');
+  },
+  'tithe-drinker-extort': async (page) => {
+    // Extort asks for its payment as the Bear is cast, before the Bear resolves.
+    await castNow(page, 'Scenario Bear');
+    const pay = page.getByRole('button', { name: /^Pay/ }).first();
+    await passStackUntil(page, pay);
+    await pay.click();
+    await passStackUntil(page, life(page, 'P2').filter({ hasText: '39' }));
+    await expect(life(page, 'P4')).toHaveText('39');
+    await expect(life(page, 'P1')).toHaveText('43');
+  },
+  'tithe-drinker-lifelink': async (page) => {
+    await attack(page, [['Tithe Drinker', 'P2']]);
+    await passUntil(page, logLine(page, /game over/));
+    await expect(life(page, 'P2')).toHaveText('38');
+    await expect(life(page, 'P1')).toHaveText('42');
+  },
+  'seers-sundial-pay-draw': async (page) => {
+    await playLand(page, 'Forest');
+    const pay = page.getByRole('button', { name: /^Pay/ }).first();
+    await passStackUntil(page, pay);
+    await pay.click();
+    await passStackUntil(page, hand(page, 'Island'));
+  },
+  'seers-sundial-cannot-pay': async (page) => {
+    await playLand(page, 'Forest');
+    await expectStaysInHand(page, 'Forest').catch(() => undefined);
+    await expect(permanent(page, 'P1', 'Forest')).toHaveCount(1);
+    await expect(hand(page, 'Island')).toHaveCount(0);
+  },
+  'goblin-wardriver-battle-cry': async (page) => {
+    await attack(page, [
+      ['Goblin Wardriver', 'P2'],
+      ['Scenario Bear', 'P2'],
+    ]);
+    await passUntil(page, logLine(page, /game over/));
+    await expect(life(page, 'P2')).toHaveText('35');
+  },
 };
 
 test.describe('Runner scenarios in the Card Test Lab', () => {

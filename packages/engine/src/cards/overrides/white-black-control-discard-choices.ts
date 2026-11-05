@@ -23,12 +23,7 @@ export function registerWhiteBlackControlDiscardChoiceOverrides(): void {
   replaceCard(
     'b8619990-9dc2-4fcc-bc7e-457b77cd2a8e',
     'Rankle, Master of Pranks',
-    [
-      'unrecognized rules text: "Whenever ~ deals combat damage to a player, choose any number —"',
-      'unrecognized rules text: "• Each player discards a card."',
-      'unrecognized rules text: "• Each player loses 1 life and draws a card."',
-      'unrecognized rules text: "• Each player sacrifices a creature of their choice."',
-    ],
+    [],
     {
       triggers: [
         triggered(
@@ -69,9 +64,7 @@ export function registerWhiteBlackControlDiscardChoiceOverrides(): void {
   replaceCard(
     '55b72b1f-6463-406a-8824-d99a3c028285',
     'Vicious Rumors',
-    [
-      'unrecognized rules text: "~ deals 1 damage to each opponent. Each opponent discards a card, then mills a card. You gain 1 life."',
-    ],
+    [],
     {
       spellAbility: spell({
         effects: [

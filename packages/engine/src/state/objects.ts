@@ -2758,6 +2758,16 @@ export function queueTriggersForEvent(
             ...(amounts.length > 0
               ? { damageDealt: amounts.reduce((sum, s) => sum + (s.amount ?? 0), 0) }
               : {}),
+            // The optional costs paid for this object (squad, kicker), captured now so its own
+            // trigger still counts them once it has left the battlefield (CR 113.7a).
+            ...(spec.subject.kind === 'self' && source.optionalCostCounts !== undefined
+              ? { resolvingOptionalCostCounts: { ...source.optionalCostCounts } }
+              : {}),
+            // An enters trigger that refers to X uses the X its spell was cast with (CR 107.3m),
+            // captured now so it holds once the permanent has left. Other triggers keep X = 0.
+            ...(when === 'enters' && spec.subject.kind === 'self' && source.announcedX !== undefined
+              ? { x: source.announcedX }
+              : {}),
           };
           ctx.state.pendingTriggers.push({
             controllerId: source.controllerId,

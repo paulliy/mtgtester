@@ -52,14 +52,14 @@ export function registerMiniPilotOverrides(): void {
   defineCard(
     '48ddba1e-2ad7-463f-9307-d2379a800e51',
     'Mizzium Mortars',
-    ["~ deals 4 damage to target creature you don't control."],
+    [],
     damageWithOverload(4, '{3}{R}{R}{R}', 'Overload {3}{R}{R}{R}'),
   );
 
   defineCard(
     '99fd4b51-1698-4168-9366-a6ea2df22361',
     'Electrickery',
-    ["~ deals 1 damage to target creature you don't control."],
+    [],
     damageWithOverload(1, '{1}{R}', 'Overload {1}{R}'),
   );
 
@@ -71,7 +71,9 @@ export function registerMiniPilotOverrides(): void {
     'e0b5b3af-af89-4b91-8b55-947ec095d6f2',
     'Ettercap // Web Shot',
     'Web Shot',
-    ['Destroy target creature with flying.'],
+    // "Destroy target creature with flying." is read by the interpreter since EDHREC plan Phase 4
+    // batch 5 (qualified target nouns); the def keeps the same spell.
+    [],
     {
       spellAbility: spell({
         targets: flier.targets,

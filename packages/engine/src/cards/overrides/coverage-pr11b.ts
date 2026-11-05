@@ -130,7 +130,6 @@ function registerPr11bClass(): void {
       'unsupported layout "class"',
       'unrecognized rules text: "When this Class enters, create a 2/1 white and black Inkling creature token with flying."',
       'unrecognized rules text: "{1}{B}: Level 2"',
-      'unrecognized rules text: "Whenever you lose life for the first time each turn, put a +1/+1 counter on target creature you control."',
       'unrecognized rules text: "{2}{B}: Level 3"',
       'unrecognized rules text: "At the beginning of each end step, if a modified creature died under your control this turn, create a 2/1 white and black Inkling creature token with flying."',
     ],

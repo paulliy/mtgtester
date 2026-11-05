@@ -47,6 +47,7 @@ import type { LayerValueScope } from '../cards/value';
 import type { ManaUnit } from '../mana/cost';
 import { manaValueOf, parseManaCost, type ParsedManaCost } from '../mana/cost';
 import type { EnginePermanent, GameContext } from '../state/types';
+import { cardZoneCandidate } from '../state/queries';
 import { digestOf, getCached, sampleCacheHit, setCached } from './layer-cache';
 
 /** Basic-land subtype → intrinsic mana ability (CR 305.6), for Blood Moon's mana override. */
@@ -659,6 +660,19 @@ function scopeOf(
         if (who === 'you' && entry.perm.controllerId !== source.controllerId) continue;
         if (who === 'opponents' && entry.perm.controllerId === source.controllerId) continue;
         count += 1;
+      }
+      return count;
+    },
+    // "for each creature card in your graveyard" (Wight of the Reliquary): cards in a zone
+    // read as they are, no layer dependency (CR 613.1 applies to permanents only).
+    countCardsInZone: (zone, selector, owner) => {
+      let count = 0;
+      for (const player of ctx.state.players) {
+        if (player.hasLost) continue;
+        if (owner === 'you' && player.id !== source.controllerId) continue;
+        if (owner === 'opponents' && player.id === source.controllerId) continue;
+        for (const card of player[zone])
+          if (selectMatches(cardZoneCandidate(ctx, card, player.id), selector, source)) count += 1;
       }
       return count;
     },

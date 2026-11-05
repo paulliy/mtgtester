@@ -141,7 +141,12 @@ describe('white-black-control discard cards — pinned Oracle', () => {
     for (const name of names) {
       const entry = cards.get(name)!;
       expect(entry.sha256).toBe(pins[name]);
-      expect(getOverride(entry.card.oracleId)?.handledLines).toHaveLength(1);
+      // The interpreter reads Necrogen Mists' and Oppression's lines since EDHREC plan Phase 4
+      // batch 4 (player verbs); their overrides keep the same definition and claim nothing.
+      // Geth's Grimoire's discard trigger is read since batch 6 (opponent discard heads).
+      const grammarRead =
+        name === 'Necrogen Mists' || name === 'Oppression' || name === "Geth's Grimoire";
+      expect(getOverride(entry.card.oracleId)?.handledLines).toHaveLength(grammarRead ? 0 : 1);
       const definition = interpretCard(entry.card);
       expect(definition.modeled, `${name}: ${definition.unmodeledReasons.join('; ')}`).toBe(true);
       expect(definition.unmodeledReasons).toEqual([]);

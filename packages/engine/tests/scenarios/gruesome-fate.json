@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "card": "Gruesome Fate",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "gruesome-fate-per-creature",
+      "title": "Gruesome Fate: each opponent loses 1 life for each creature you control",
+      "clauses": [1],
+      "instructions": ["Cast Gruesome Fate with two creatures on your side and one on P2's."],
+      "expectedOutcome": "Each opponent is at 38 life; you stay at 40.",
+      "seats": {
+        "P1": {
+          "hand": ["Gruesome Fate"],
+          "battlefield": ["Swamp", "Swamp", "Swamp", "Scenario Bear", "Scenario Bear"]
+        },
+        "P2": { "battlefield": ["Scenario Bear"] }
+      },
+      "script": [{ "player": "P1", "choose": "/^Cast Gruesome Fate/" }],
+      "expect": [
+        { "life": { "player": "P2", "equals": 38 } },
+        { "life": { "player": "P3", "equals": 38 } },
+        { "life": { "player": "P4", "equals": 38 } },
+        { "life": { "player": "P1", "equals": 40 } }
+      ]
+    }
+  ]
+}

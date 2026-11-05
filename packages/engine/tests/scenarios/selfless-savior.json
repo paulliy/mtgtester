@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "card": "Selfless Savior",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "selfless-savior-grants-indestructible",
+      "title": "Selfless Savior: sacrificed, another creature you control gains indestructible",
+      "clauses": [1],
+      "instructions": ["Sacrifice Selfless Savior targeting Scenario Bear."],
+      "expectedOutcome": "Selfless Savior is in your graveyard and Scenario Bear has indestructible.",
+      "seats": { "P1": { "battlefield": ["Selfless Savior", "Scenario Bear"] } },
+      "script": [{ "player": "P1", "choose": "/Selfless Savior/", "targets": ["Scenario Bear"] }],
+      "expect": [
+        { "zone": { "player": "P1", "zone": "graveyard", "has": ["Selfless Savior"] } },
+        { "keywords": { "card": "Scenario Bear", "has": ["indestructible"] } }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "card": "Goblin Wardriver",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "goblin-wardriver-battle-cry",
+      "title": "Goblin Wardriver: battle cry pumps each other attacker",
+      "clauses": [1],
+      "instructions": ["Attack P2 with Goblin Wardriver and Scenario Bear."],
+      "expectedOutcome": "P2 takes 2 + 3 = 5 and is at 35.",
+      "seats": { "P1": { "battlefield": ["Goblin Wardriver", "Scenario Bear"] } },
+      "script": [{ "player": "P1", "choose": "Declare attackers", "targets": ["P2", "P2"] }],
+      "continue": { "throughCombat": true },
+      "expect": [{ "life": { "player": "P2", "equals": 35 } }]
+    }
+  ]
+}

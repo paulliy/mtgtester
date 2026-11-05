@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "card": "Ajani's Pridemate",
+  "supportCards": [
+    {
+      "name": "Scenario Salve",
+      "typeLine": "Instant",
+      "manaCost": "{W}",
+      "oracleText": "You gain 3 life."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "pridemate-counter-on-life-gain",
+      "title": "Ajani's Pridemate: gaining life puts a +1/+1 counter on it",
+      "clauses": [1],
+      "instructions": ["Cast Scenario Salve to gain 3 life."],
+      "expectedOutcome": "You are at 43 life and Ajani's Pridemate has one +1/+1 counter.",
+      "seats": {
+        "P1": { "hand": ["Scenario Salve"], "battlefield": ["Plains", "Ajani's Pridemate"] }
+      },
+      "script": [{ "player": "P1", "choose": "/^Cast Scenario Salve/" }],
+      "expect": [
+        { "life": { "player": "P1", "equals": 43 } },
+        { "counters": { "card": "Ajani's Pridemate", "counter": "+1/+1", "equals": 1 } }
+      ]
+    },
+    {
+      "id": "pridemate-no-counter-on-opponent-gain",
+      "title": "Ajani's Pridemate: an opponent gaining life does nothing",
+      "clauses": [1],
+      "instructions": ["P2 casts Scenario Salve on their turn."],
+      "expectedOutcome": "P2 is at 43 life and Ajani's Pridemate has no counters.",
+      "turn": { "player": "P2" },
+      "seats": {
+        "P1": { "battlefield": ["Ajani's Pridemate"] },
+        "P2": { "hand": ["Scenario Salve"], "battlefield": ["Plains"] }
+      },
+      "script": [{ "player": "P2", "choose": "/^Cast Scenario Salve/" }],
+      "expect": [
+        { "life": { "player": "P2", "equals": 43 } },
+        { "counters": { "card": "Ajani's Pridemate", "counter": "+1/+1", "equals": 0 } }
+      ]
+    }
+  ]
+}

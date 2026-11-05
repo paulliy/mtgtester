@@ -10,6 +10,7 @@ import { parseSubject, parseTriggerSubject } from './subject';
 import type { Condition } from '../condition';
 import { countPermanents } from '../condition';
 import type { Selector } from '../selector';
+import type { Value } from '../value';
 import { OTHER, allOf, anyOf, ofSubtype, ofSupertype, ofType } from '../selector';
 import { noteSlotFailure } from './diagnostics';
 
@@ -198,11 +199,73 @@ function parseEntersUnlessClauseUntraced(clause: string, card: OracleCard): Cond
   return null;
 }
 
+const atLeast = (left: Value, n: number): Condition => ({
+  kind: 'compareValues',
+  left,
+  cmp: '>=',
+  right: { kind: 'const', n },
+});
+
+/**
+ * Turn-history, life and board conditions (EDHREC plan Phase 4 step 3) over `Value`s and
+ * `Condition`s the engine already evaluates. Tried only once the clause parser failed.
+ */
+function parseMoreConditions(clause: string, card: OracleCard): Condition | null {
+  if (clause === 'a creature died this turn') return atLeast({ kind: 'creaturesDiedThisTurn' }, 1);
+  if (clause === 'an opponent lost life this turn')
+    return atLeast({ kind: 'opponentsLostLifeThisTurn' }, 1);
+  if (clause === 'it was cast') return { kind: 'sourceWasCast' };
+  if (clause === 'you control your commander') return { kind: 'controlsYourCommander' };
+  if (/^(?:~|this (?:artifact|creature|enchantment|land|permanent)) is untapped$/.test(clause))
+    return { kind: 'isUntapped' };
+  if (clause === 'an opponent controls more lands than you')
+    return { kind: 'opponentControlsMore', selector: ofType('Land') };
+  {
+    const m = clause.match(/^you have (\w+) or more life$/);
+    const n = m === null ? null : parseAmount(m[1] as string);
+    if (n !== null) return atLeast({ kind: 'lifeTotal', scope: 'you' }, n);
+  }
+  {
+    const m = clause.match(/^there are (\w+) or more cards in your graveyard$/);
+    const n = m === null ? null : parseAmount(m[1] as string);
+    if (n !== null) return { kind: 'cardsInYourGraveyard', cmp: '>=', n };
+  }
+  {
+    const m = clause.match(/^there are (\w+) or more card types among cards in your graveyard$/);
+    const n = m === null ? null : parseAmount(m[1] as string);
+    if (n !== null) return atLeast({ kind: 'cardTypesInYourGraveyard' }, n);
+  }
+  {
+    const m = clause.match(/^creatures you control have total power (\w+) or greater$/);
+    const n = m === null ? null : parseAmount(m[1] as string);
+    if (n !== null) return { kind: 'totalCreaturePower', scope: 'you', cmp: '>=', n };
+  }
+  // "you control a legendary creature" / "you control no Snakes" / "you control ten or more
+  // Treasures" / "no creatures are on the battlefield".
+  {
+    const none = clause.match(/^you control no (.+)$/);
+    if (none !== null) {
+      const selector = parseSubject(none[1] as string, card);
+      if (selector !== null) return countPermanents(selector, 'you', '<=', 0);
+    }
+    if (clause === 'no creatures are on the battlefield')
+      return countPermanents(ofType('Creature'), 'all', '<=', 0);
+    const some = clause.match(/^you control (an?|\w+ or more) (.+)$/);
+    if (some !== null) {
+      const word = (some[1] as string).replace(/ or more$/, '');
+      const n = word === 'a' || word === 'an' ? 1 : parseAmount(word);
+      const selector = parseSubject(some[2] as string, card);
+      if (n !== null && selector !== null) return countPermanents(selector, 'you', '>=', n);
+    }
+  }
+  return null;
+}
+
 /** `parseConditionClauseUntraced`, recording a failure for slot diagnostics (ADR 0038 decision 2). */
 export function parseConditionClause(
   ...args: Parameters<typeof parseConditionClauseUntraced>
 ): ReturnType<typeof parseConditionClauseUntraced> {
-  const result = parseConditionClauseUntraced(...args);
+  const result = parseConditionClauseUntraced(...args) ?? parseMoreConditions(...args);
   if (result === null) noteSlotFailure('condition', args[0]);
   return result;
 }

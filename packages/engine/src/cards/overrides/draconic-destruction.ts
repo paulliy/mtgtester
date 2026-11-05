@@ -257,43 +257,35 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
 
   // Dragonkin Berserker: restored in coverage PR02 (no override remains).
 
-  defineCard(
-    'd1d171de-1c6d-4fb9-817a-9c689c709f3d',
-    'Shamanic Revelation',
-    [
-      'Draw a card for each creature you control.',
-      'You gain 4 life for each creature you control with power 4 or greater.',
-    ],
-    {
-      spellAbility: {
-        kind: 'spell',
-        targets: [],
-        effects: [
-          {
-            op: 'draw',
-            count: {
+  defineCard('d1d171de-1c6d-4fb9-817a-9c689c709f3d', 'Shamanic Revelation', [], {
+    spellAbility: {
+      kind: 'spell',
+      targets: [],
+      effects: [
+        {
+          op: 'draw',
+          count: {
+            kind: 'countPermanents',
+            selector: allOf(ofType('Creature'), YOURS),
+            scope: 'you',
+          },
+        },
+        {
+          op: 'gainLife',
+          amount: {
+            kind: 'times',
+            of: {
               kind: 'countPermanents',
-              selector: allOf(ofType('Creature'), YOURS),
+              selector: allOf(ofType('Creature'), YOURS, { kind: 'powerAtLeast', n: 4 }),
               scope: 'you',
             },
+            n: 4,
           },
-          {
-            op: 'gainLife',
-            amount: {
-              kind: 'times',
-              of: {
-                kind: 'countPermanents',
-                selector: allOf(ofType('Creature'), YOURS, { kind: 'powerAtLeast', n: 4 }),
-                scope: 'you',
-              },
-              n: 4,
-            },
-          },
-        ],
-        description: 'Draw for creatures; gain four life per creature with power four or greater',
-      },
+        },
+      ],
+      description: 'Draw for creatures; gain four life per creature with power four or greater',
     },
-  );
+  });
 
   defineCard(
     '05b6f9e3-9acd-43a6-acff-caa811aaf0a1',
@@ -451,7 +443,8 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     '00de57d2-7cb6-4337-9bc6-f6711e4dfabf',
     'Game Trail',
     [
-      "As this land enters, you may reveal a Mountain or Forest card from your hand. If you don't, this land enters tapped.",
+      // The reveal-land line is read by the interpreter (EDHREC plan Phase 4 batch 4); the def
+      // keeps the same as-enters choice.
     ],
     { entersTappedUnless: { kind: 'mayRevealCardFromHand', subtypes: ['Mountain', 'Forest'] } },
   );

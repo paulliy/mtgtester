@@ -123,8 +123,6 @@ function registerPr11PhasingOverrides(): void {
     'The One Ring',
     [
       'unrecognized rules text: "When ~ enters, if you cast it, you gain protection from everything until your next turn."',
-      'unrecognized rules text: "At the beginning of your upkeep, you lose 1 life for each burden counter on ~."',
-      'unrecognized rules text: "{T}: Put a burden counter on ~, then draw a card for each burden counter on ~."',
     ],
     {
       triggers: [
@@ -222,22 +220,12 @@ function registerPr11LifecycleOverrides(): void {
     '736892cb-a34b-4bb9-b56c-e26e3db207a2',
     'Mana Vault',
     [
-      'unrecognized rules text: "At the beginning of your upkeep, you may pay {4}. If you do, untap this artifact."',
       'unrecognized rules text: "At the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you."',
     ],
     {
+      // The upkeep untap ("you may pay {4}. If you do, untap this artifact.") is read by the
+      // interpreter since EDHREC plan Phase 4 batch 6, as the same conditional untap.
       triggers: [
-        triggered(onUpkeep('you'), {
-          effects: [
-            {
-              op: 'conditionalEffect',
-              condition: { kind: 'mayPayMana', cost: manaCost('{4}') },
-              then: [{ op: 'untapTarget', target: 'source' }],
-              else: [],
-            },
-          ],
-          description: 'At the beginning of your upkeep, you may pay {4} to untap this',
-        }),
         triggered(onDrawStep('you'), {
           condition: { kind: 'not', of: { kind: 'isUntapped' } },
           effects: [{ op: 'damageController', amount: 1 }],
@@ -284,7 +272,6 @@ function registerPr11LifecycleOverrides(): void {
     '473a7998-669d-4181-83fe-f178a2e781f0',
     'Out of the Tombs',
     [
-      'unrecognized rules text: "At the beginning of your upkeep, put two eon counters on this enchantment, then mill cards equal to the number of eon counters on it."',
       'unrecognized rules text: "If you would draw a card while your library has no cards in it, instead return a creature card from your graveyard to the battlefield. If you can\'t, you lose the game."',
     ],
     {
