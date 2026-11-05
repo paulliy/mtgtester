@@ -163,6 +163,22 @@ describe('Phase 4 batch 6: keywords', () => {
     expect(copies.every((p) => p.isToken === true)).toBe(true);
   });
 
+  it('an enters trigger reads the X its spell was cast with, even once it has left (CR 107.3m)', () => {
+    const ctx = createGame(gameConfig(forestsPod(), { seed: 'p6-gadwick-x' }));
+    const gadwick = creature(
+      'When Gadwick enters, draw X cards.\nWhenever you cast a blue spell, tap target nonland permanent an opponent controls.',
+      { name: 'Gadwick, the Wizened', manaCost: '{X}{U}{U}{U}' },
+    );
+    const entered = spawn(ctx, 'P1', gadwick);
+    entered.announcedX = 3;
+    const handBefore = ctx.state.players.find((p) => p.id === 'P1')!.hand.length;
+    queueTriggersForObject(ctx, 'enters', entered);
+    pumpStrict(priorityCheckpoint(ctx));
+    pumpStrict(movePermanentsToGraveyard(ctx, [entered]));
+    pumpStrict(resolveTopOfStack(ctx));
+    expect(ctx.state.players.find((p) => p.id === 'P1')!.hand.length).toBe(handBefore + 3);
+  });
+
   it('battle cry pumps only the other attackers', () => {
     const effects = interpretCard(creature('Battle cry')).triggers[0]!.effects;
     expect(effects[0]).toMatchObject({

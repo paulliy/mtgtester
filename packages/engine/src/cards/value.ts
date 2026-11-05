@@ -165,6 +165,7 @@ export type TriggerScope = Pick<
   | 'eventObjectDestinationId'
   | 'triggerObjectFacts'
   | 'resolvingOptionalCostCounts'
+  | 'x'
 >;
 
 export type Value =
