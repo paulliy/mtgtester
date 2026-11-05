@@ -8699,19 +8699,18 @@
     "11ad6e75-9bbd-40ea-b04a-e6a61db3bcda": {
       "name": "Smitten Swordmaster // Curry Favor",
       "oracleSha256": "95c85cc00ff930a70266794bc2730818ca201c8039a2a2ffbc84459b519f2160",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "oracleText": "You gain X life and each opponent loses X life, where X is the number of Knights you control.",
           "implementation": [
-            "explicit unsupported spell clause: Curry Favor: unrecognized rules text: \"You gain X life and each opponent loses X life, where X is the number of Knights you control.\""
+            "Adventure face: you gain X life and each opponent loses X life, X counted at resolution as the Knights you control (EDHREC Phase 4 batch 4 where-X amount)"
           ],
-          "engineTestIds": ["face-unparsed-clause-contained"],
+          "engineTestIds": ["face-curry-favor", "face-curry-favor-none"],
           "viewerScenarioIds": []
         }
       ],
-      "gameplayAiScenarioIds": [],
-      "unsupportedReason": "Curry Favor: unrecognized rules text: \"You gain X life and each opponent loses X life, where X is the number of Knights you control.\""
+      "gameplayAiScenarioIds": []
     },
     "1c751201-24ba-4e5c-bf44-71c3e4693a92": {
       "name": "Conceited Witch // Price of Beauty",
@@ -9140,19 +9139,18 @@
     "639a8804-8513-4ba4-8683-ea1e2e5a9530": {
       "name": "Rosethorn Acolyte // Seasonal Ritual",
       "oracleSha256": "cdc42fa27547837c3d909e26b860727ac825f98c1ef4535874aa1e5680f01896",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "oracleText": "Add one mana of any color. (Then exile this card. You may cast the creature later from exile.)",
           "implementation": [
-            "explicit unsupported spell clause: Seasonal Ritual: unrecognized rules text: \"Add one mana of any color.\""
+            "Adventure face: add one mana of any color (EDHREC Phase 4 batch 4 mana production)"
           ],
-          "engineTestIds": ["face-unparsed-clause-contained"],
+          "engineTestIds": ["face-seasonal-ritual"],
           "viewerScenarioIds": []
         }
       ],
-      "gameplayAiScenarioIds": [],
-      "unsupportedReason": "Seasonal Ritual: unrecognized rules text: \"Add one mana of any color.\""
+      "gameplayAiScenarioIds": []
     },
     "6505a53b-00db-44c4-8eaa-09a1a01451a4": {
       "name": "Glóin the Mighty // Easy Pickings",
@@ -9554,19 +9552,18 @@
     "bd575e82-99e7-44c7-ab93-d33f5678e1ad": {
       "name": "Threadbind Clique // Rip the Seams",
       "oracleSha256": "2fdefa93c2d2af46398c3ef33c0c9f231818b156a6bd5d285bfb4bdc52395043",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "oracleText": "Destroy target tapped creature. (Then exile this card. You may cast the creature later from exile.)",
           "implementation": [
-            "explicit unsupported spell clause: Rip the Seams: unrecognized rules text: \"Destroy target tapped creature.\""
+            "Adventure face: destroy target tapped creature (EDHREC Phase 4 batch 5 qualified target noun)"
           ],
-          "engineTestIds": ["face-unparsed-clause-contained"],
+          "engineTestIds": ["face-rip-the-seams"],
           "viewerScenarioIds": []
         }
       ],
-      "gameplayAiScenarioIds": [],
-      "unsupportedReason": "Rip the Seams: unrecognized rules text: \"Destroy target tapped creature.\""
+      "gameplayAiScenarioIds": []
     },
     "c075637a-e94c-4b8d-8a9e-20ee3dfa8fe7": {
       "name": "Fang Dragon // Forktail Sweep",
