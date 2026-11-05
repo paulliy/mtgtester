@@ -21,6 +21,8 @@ name: CI
 # the suites and lab scenarios a pull request left out. The advisory PR fuzz job needs its own
 # `ci:fuzz` label. The weekly run repeats everything, with every lab scenario, on main when a commit
 # touched the engine in the last week.
+# Artifacts are kept 7 days (traces, fuzz results) or 14 (primitive evidence): nothing downloads
+# them later, and the repository's Actions storage quota fills otherwise.
 # Commits pushed after a pull request's last run are not checked, and `CI / Gate` reports on the
 # commit a run checked. To check a new head, add a label (removing and re-adding one works); the
 # run then checks the pull request as it is at that moment.
@@ -255,6 +257,7 @@ jobs:
             test-results/primitive-contracts/
             test-results/primitive-impact.json
           if-no-files-found: error
+          retention-days: 14
 
   # The full suite, then the checks that read the Vitest collection. The suite run writes a JSON
   # report that becomes the collection listing shared by suite-collect, manifest-tests and IR
@@ -319,6 +322,7 @@ jobs:
           name: fuzz-results
           path: fuzz.json
           if-no-files-found: ignore
+          retention-days: 7
 
   # The Card Test Lab, setup and table Playwright suites share one job, so the browser and its
   # system packages are installed once. Each suite runs when its label picked it; the table suite
@@ -402,6 +406,7 @@ jobs:
             test-results/
             lab-selection/
           if-no-files-found: error
+          retention-days: 7
 
   # The single required check. It fails when any job it waits on failed or was cancelled, and on a
   # ready pull request that changed code but has no `ci:` label picking a slow suite. It names the

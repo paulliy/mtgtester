@@ -45,6 +45,7 @@ jobs:
             fuzz.json
             fuzz-report.md
           if-no-files-found: ignore
+          retention-days: 14
       - name: Open or update the fuzz issue
         if: failure() && steps.fuzz.outcome == 'failure' && hashFiles('fuzz-report.md') != ''
         env:
