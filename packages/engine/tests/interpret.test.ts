@@ -278,7 +278,7 @@ describe('oracle-text interpreter (brief §6)', () => {
 
   it('marks unrecognized rules text, weird layouts, and * P/T as unmodeled', () => {
     const weird = interpretCard(
-      oracle({ name: 'Weirdo', oracleText: 'Whenever you cast a spell, investigate.' }),
+      oracle({ name: 'Weirdo', oracleText: 'Whenever you cast a spell, flibber the gnome.' }),
     );
     expect(weird.modeled).toBe(false);
 

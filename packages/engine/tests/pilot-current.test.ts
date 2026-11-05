@@ -895,8 +895,7 @@ describe("Bolas's Citadel", () => {
     source.tapped = false;
     const options = activate();
     expect(options).toHaveLength(1);
-    // Exactly ten nonland permanents, so all go; the engine still asks for the first nine one at a
-    // time (the last has one candidate).
+    // Exactly ten nonland permanents, so all go: a forced payment asks nothing.
     const prompts: string[] = [];
     pump(
       applyPriorityAction(
@@ -911,11 +910,89 @@ describe("Bolas's Citadel", () => {
       },
       { strict: true },
     );
-    expect(prompts).toHaveLength(9);
+    expect(prompts).toEqual([]);
     expect(ctx.state.battlefield.map((perm) => perm.name)).toEqual(['Forest']);
+    expect(playerById(ctx, 'P1').graveyard).toHaveLength(10);
     pumpStrict(resolveTopOfStack(ctx));
     expect(playerById(ctx, 'P2').life).toBe(30);
     expect(playerById(ctx, 'P1').life).toBe(40);
+  });
+
+  it('bolas-citadel-sacrifice-choice — with eleven nonland permanents the player picks which ten go', () => {
+    const ctx = mainPhase('citadel-eleven');
+    const source = spawn(ctx, 'P1', citadel());
+    const relic = (name: string) => oracle({ name, typeLine: 'Artifact', manaCost: '{1}' });
+    for (let i = 0; i < 9; i++) spawn(ctx, 'P1', relic('Pilot Relic'));
+    const keeper = spawn(ctx, 'P1', relic('Pilot Keeper'));
+    const option = computePriorityOptions(ctx, playerById(ctx, 'P1')).find((candidate) => {
+      const payload = candidate.payload as PriorityActionPayload;
+      return payload.kind === 'activateAbility' && payload.objectId === source.id;
+    });
+    expect(option).toBeDefined();
+    // One spare permanent is a real choice, so every pick is asked; the player keeps the Keeper.
+    const prompts: string[] = [];
+    pump(
+      applyPriorityAction(ctx, playerById(ctx, 'P1'), option!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+      (decision) => {
+        prompts.push(decision.prompt);
+        const index = decision.options.findIndex((candidate) => candidate.payload !== keeper.id);
+        return { index, targets: new Map() };
+      },
+      { strict: true },
+    );
+    expect(prompts).toHaveLength(10);
+    expect(ctx.state.battlefield.map((perm) => perm.name)).toEqual(['Pilot Keeper']);
+  });
+
+  it('bolas-citadel-sacrifice-together — a forced sacrifice is one event, so a dies watcher sees every creature go', () => {
+    const ctx = mainPhase('citadel-together');
+    const source = spawn(ctx, 'P1', citadel());
+    // The watcher comes first on the battlefield: sacrificed one at a time, it would leave
+    // before the others died and see only itself (CR 603.10a).
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Pilot Cutthroat',
+        typeLine: 'Creature — Human',
+        manaCost: '{1}',
+        power: '1',
+        toughness: '1',
+        oracleText:
+          'Whenever this creature or another creature you control dies, each opponent loses 1 life.',
+      }),
+    );
+    for (let i = 0; i < 8; i++)
+      spawn(
+        ctx,
+        'P1',
+        oracle({
+          name: 'Pilot Fodder',
+          typeLine: 'Creature — Human',
+          manaCost: '{1}',
+          power: '1',
+          toughness: '1',
+        }),
+      );
+    const option = computePriorityOptions(ctx, playerById(ctx, 'P1')).find((candidate) => {
+      const payload = candidate.payload as PriorityActionPayload;
+      return payload.kind === 'activateAbility' && payload.objectId === source.id;
+    });
+    expect(option).toBeDefined();
+    pumpStrict(
+      applyPriorityAction(ctx, playerById(ctx, 'P1'), option!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+    );
+    expect(ctx.state.battlefield).toHaveLength(0);
+    // Nine creatures died together, the watcher among them: nine triggers.
+    expect(
+      ctx.state.pendingTriggers.filter((trigger) => trigger.sourceName === 'Pilot Cutthroat'),
+    ).toHaveLength(9);
   });
 });
 

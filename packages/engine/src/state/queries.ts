@@ -20,6 +20,7 @@ import type {
 } from '../cards/definition';
 import { TAP_COST } from '../cards/definition';
 import type { RuleStatic } from '../cards/rule-statics';
+import type { Characteristics } from '../cards/continuous-types';
 import type { TargetingSource } from '../targets/context';
 import { evaluateCondition } from '../cards/condition';
 import { evaluateValue } from '../cards/value';
@@ -27,6 +28,7 @@ import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selec
 import { bindChosenOption, selectMatches } from '../cards/selector';
 import {
   candidateOf,
+  computeAllCharacteristics,
   computeCharacteristics,
   matchesSelector,
   selectPermanents,
@@ -1047,13 +1049,14 @@ export function manaSourcesFor(
   const tierByCard = new Map(
     permanents.map(({ perm, chars }) => [perm.cardId, priority(chars.types)]),
   );
+  const statics = gatherRuleStatics(ctx);
   for (const { perm, chars } of permanents) {
     // Grand Abolisher bars opponents from activating abilities of artifacts, creatures and
     // enchantments during its controller's turn — and a mana ability is an activated ability
     // (CR 605.1a), so the restriction reaches Sol Ring and Birds of Paradise too. Checked here
     // rather than only in `computePriorityOptions`, because a source that cannot be activated
     // is not available to pay for anything either.
-    if (activatingAbilitiesBlockedFor(ctx, playerId, perm)) continue;
+    if (activatingAbilitiesBlockedFor(ctx, playerId, perm, statics)) continue;
     // Mana abilities are computed, not printed: a layer-4 subtype change replaces them
     // (Blood Moon → a Mountain that taps for R), layer 6 can remove them outright, and layer 6
     // can also GRANT them (Chromatic Lantern).
@@ -1401,6 +1404,7 @@ export interface RuleStaticEntry {
  */
 export function gatherRuleStatics(ctx: GameContext): RuleStaticEntry[] {
   const out: RuleStaticEntry[] = [];
+  let all: Map<string, Characteristics> | undefined;
   for (const perm of ctx.state.battlefield) {
     if (perm.faceDown) continue;
     const printed = ctx.defs.get(perm.oracleId);
@@ -1408,8 +1412,13 @@ export function gatherRuleStatics(ctx: GameContext): RuleStaticEntry[] {
     const def = selectedPermanentDefinition(printed, perm.face, perm.unlockedDoors);
     const printedRuleStatics =
       perm.transformed && def.backFace !== undefined ? def.backFace.ruleStatics : def.ruleStatics;
-    if (printedRuleStatics.length === 0 || computeCharacteristics(ctx, perm).loseAbilities)
-      continue;
+    if (printedRuleStatics.length === 0) continue;
+    // One lookup for the whole board: `computeCharacteristics` per permanent digests the whole
+    // board each time, which made this quadratic and `manaSourcesFor` cubic on a big board.
+    all ??= computeAllCharacteristics(ctx);
+    const chars = all.get(perm.cardId);
+    if (chars === undefined) throw new Error(`engine bug: no characteristics for ${perm.name}`);
+    if (chars.loseAbilities) continue;
     for (const rs of printedRuleStatics) {
       if (rs.kind === 'costReduction' && rs.selfOnly === true) continue;
       out.push({
@@ -1548,13 +1557,17 @@ export function castingSpellsBlockedFor(
  * (Last March of the Ents) — this is re-checked at the moment of countering (CR 611.2), since the
  * source (Rhythm of the Wild) could have left the battlefield since the spell was cast.
  */
-/** Does a rule static currently forbid this player from activating this permanent's ability? */
+/**
+ * Does a rule static currently forbid this player from activating this permanent's ability?
+ * A caller asking about many permanents in one unchanged state passes `statics`, gathered once.
+ */
 export function activatingAbilitiesBlockedFor(
   ctx: GameContext,
   playerId: PlayerId,
   permanent: EnginePermanent,
+  statics: readonly RuleStaticEntry[] = gatherRuleStatics(ctx),
 ): boolean {
-  return gatherRuleStatics(ctx).some((entry) => {
+  return statics.some((entry) => {
     if (entry.static.kind !== 'cantActivateAbilities') return false;
     if (entry.static.who !== 'all' && entry.controllerId === playerId) return false;
     if (entry.static.yourTurnOnly && ctx.state.currentTurnPlayer !== entry.controllerId)

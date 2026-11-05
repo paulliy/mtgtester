@@ -69,6 +69,11 @@ function loadCards(config: TableConfig): {
 }
 
 function main(): void {
+  // Bun 1.3's `server.stop()` never settles once a table socket has closed, so shutdown would hang.
+  if (!Bun.semver.satisfies(Bun.version, '>=1.4.3')) {
+    console.error(`\nserve:table needs Bun 1.4.3 or later (this is ${Bun.version}).\n`);
+    process.exit(1);
+  }
   const result = loadTableConfig(process.env, process.argv.slice(2));
   if (!result.ok) {
     console.error(`\nserve:table refused to start: ${result.error.message}\n`);

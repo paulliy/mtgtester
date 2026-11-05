@@ -11237,19 +11237,31 @@ export function* payAbilityCosts(
       case 'sacrificeOther': {
         const count = cost.count ?? 1;
         for (let i = 0; i < count; i++) {
-          const options = ctx.state.battlefield.filter(
+          const eligible = ctx.state.battlefield.filter(
             (candidate) =>
               sacrificeCandidateAllowed(ctx, cost, perm, candidate) &&
               candidate.controllerId === player.id &&
               matchesSelector(ctx, candidate, cost.selector, {
                 cardId: perm.cardId,
                 controllerId: player.id,
-              }) &&
-              (canSacrifice?.(candidate, [
+              }),
+          );
+          // Owing exactly as many as remain eligible is no choice: every one of them goes
+          // (Bolas's Citadel with exactly ten nonland permanents asks nothing). They leave in
+          // one event, so a dies watcher among them sees every one go, whatever the battlefield
+          // order (CR 603.10a); one at a time, the order would decide what it saw.
+          if (eligible.length === count - i) {
+            for (const chosen of eligible)
+              emit(ctx, 'sacrifice', { name: chosen.name, cardId: chosen.cardId }, player.id);
+            yield* movePermanentsToGraveyard(ctx, eligible, 'sacrifice');
+            break;
+          }
+          const options = eligible.filter(
+            (candidate) =>
+              canSacrifice?.(candidate, [
                 { ...cost, count: count - i - 1 },
                 ...costs.slice(costIndex + 1),
-              ]) ??
-                true),
+              ]) ?? true,
           );
           if (options.length === 0) throw new Error('engine bug: sacrifice cost became unpayable');
           const outcome = yield {

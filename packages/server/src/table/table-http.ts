@@ -29,8 +29,6 @@ import { TABLE_MAX_FRAME_CHARS, type HubSocket, type TableSocketHub } from './ta
 import { constantTimeEqual } from './tokens';
 
 const MAX_BODY_CHARS = 4096;
-/** How long `stop()` waits for Bun's server stop to settle (see `stop`). */
-const STOP_SETTLE_MS = 1000;
 const MAX_SECRET_CHARS = 256;
 const TABLE_ID_PATTERN = /^[A-Za-z0-9_-]{16,64}$/;
 
@@ -55,9 +53,29 @@ const CONTENT_TYPES: Readonly<Record<string, string>> = {
   txt: 'text/plain; charset=utf-8',
 };
 
+/**
+ * The built table app's policy. The page keeps its seat and host tokens in `localStorage`, so a
+ * script that ran in it could take a seat: only the bundle's own scripts run, and nothing is
+ * framed, embedded or posted elsewhere. Card images come from Scryfall's image host and token
+ * art from its search API. `'self'` covers the page's own socket (CSP Level 3). Inline styles
+ * stay allowed, because Vue writes hoisted static markup, `style` attributes and all, through
+ * `innerHTML`; they cannot run script.
+ */
+export const TABLE_PAGE_CSP = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: https://cards.scryfall.io",
+  "connect-src 'self' https://api.scryfall.com",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join('; ');
+
 /** Headers every page carries: it cannot be framed, sniffed or leaked through a referrer. */
 const PAGE_HEADERS: Readonly<Record<string, string>> = {
-  'content-security-policy': "frame-ancestors 'none'",
+  'content-security-policy': TABLE_PAGE_CSP,
   'x-content-type-options': 'nosniff',
   'referrer-policy': 'no-referrer',
 };
@@ -470,17 +488,9 @@ export function startTableServer(deps: TableServerDeps): RunningTableServer {
     async stop() {
       clearInterval(timer);
       await hub.shutdown();
-      // Bun 1.3.14 stops listening at once, but once a server-side WebSocket has been closed the
-      // promise `server.stop()` returns never settles (fixed in Bun 1.4). Wait for it only briefly,
-      // so a shutdown after any table connection still finishes.
-      let settleTimer: ReturnType<typeof setTimeout> | undefined;
-      await Promise.race([
-        server.stop(true),
-        new Promise<void>((settle) => {
-          settleTimer = setTimeout(settle, STOP_SETTLE_MS);
-        }),
-      ]);
-      clearTimeout(settleTimer);
+      // Bun 1.3.14 never settled this once a server-side WebSocket had closed; 1.4 does, and
+      // `package.json` requires it.
+      await server.stop(true);
     },
   };
 }

@@ -169,6 +169,68 @@ describe('spell additional casting costs', () => {
     expect(ctx.state.battlefield.some((perm) => perm.cardId === first.cardId)).toBe(true);
   });
 
+  it('pays a forced multi-sacrifice spell cost without asking, and asks when there is a spare', () => {
+    const cast = (creatures: number) => {
+      const ctx = pod(`sacrifice-two-${creatures}`);
+      const player = ctx.state.players.find((candidate) => candidate.id === 'P1')!;
+      const spell = conjure(
+        ctx,
+        'P1',
+        oracle({
+          name: 'Twin Offering',
+          typeLine: 'Sorcery',
+          manaCost: '{B}',
+          oracleText:
+            'As an additional cost to cast this spell, sacrifice two creatures.' +
+            String.fromCharCode(10) +
+            'Draw two cards.',
+        }),
+        'hand',
+      );
+      addMana(player, [{ symbol: 'B' }]);
+      for (let i = 0; i < creatures; i++)
+        spawn(
+          ctx,
+          'P1',
+          oracle({ name: `Offered ${i}`, typeLine: 'Creature — Test', manaCost: '{1}' }),
+        );
+      const option = computePriorityOptions(ctx, player).find(
+        (candidate) =>
+          candidate.type === 'castSpell' &&
+          (candidate.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>).objectId ===
+            spell.id,
+      );
+      expect(option).toBeDefined();
+      const prompts: string[] = [];
+      pump(
+        applyPriorityAction(ctx, player, option!.payload as PriorityActionPayload, {
+          index: 0,
+          targets: new Map(),
+        }),
+        (decision) => {
+          prompts.push(decision.prompt);
+          return { index: 0, targets: new Map() };
+        },
+        { strict: true },
+      );
+      return { ctx, player, prompts };
+    };
+
+    // Exactly two creatures: both must go, so nothing is asked.
+    const forced = cast(2);
+    expect(forced.prompts.filter((prompt) => prompt.includes('sacrifice'))).toEqual([]);
+    expect(forced.ctx.state.battlefield).toHaveLength(0);
+    expect(forced.player.graveyard.map((card) => card.name).sort()).toEqual([
+      'Offered 0',
+      'Offered 1',
+    ]);
+
+    // Three creatures: which two is a choice, so both picks are asked.
+    const choice = cast(3);
+    expect(choice.prompts.filter((prompt) => prompt.includes('sacrifice'))).toHaveLength(2);
+    expect(choice.ctx.state.battlefield).toHaveLength(1);
+  });
+
   it('does not offer a discard spell with no other card, then discards a different hand card at announcement', () => {
     const ctx = pod('thrill-of-possibility');
     const player = ctx.state.players.find((candidate) => candidate.id === 'P1')!;

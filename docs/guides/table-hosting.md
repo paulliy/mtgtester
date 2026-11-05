@@ -8,6 +8,14 @@ there are no accounts and no public matchmaking.
 seed to anyone connected, and runs debug and analysis endpoints. Only `serve:table` is built to be
 reached from another machine.
 
+`serve:table` needs Bun 1.4.3 or later and refuses to start on an older one: Bun 1.3's
+`server.stop()` never settles once a table socket has closed, so shutdown would hang.
+
+The table page's Content Security Policy runs only the bundle's own scripts. Players' browsers
+fetch card images from `cards.scryfall.io` and token art from `api.scryfall.com` themselves, so
+Scryfall sees each player's address; on a network with no internet access the board shows the
+cards' placeholder faces instead.
+
 ## Modes
 
 | Mode        | Command                                       | For                                         |

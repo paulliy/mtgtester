@@ -320,19 +320,9 @@ const FLOWS: Record<string, (page: Page) => Promise<void>> = {
     await citadel.click();
     const confirm = confirmButton(page);
     if ((await confirm.count()) > 0) await confirm.click();
-    // Each sacrifice is picked on the board: the Citadel, then eight of the nine grouped Relics;
-    // the last pick has one candidate left. The Swamp is never highlighted.
-    const picks = ["Bolas's Citadel", ...Array<string>(8).fill('Pilot Lab Relic')];
-    for (const [index, name] of picks.entries()) {
-      await expect(
-        page.getByText(`choose permanent ${index + 1} of 10 to sacrifice`),
-      ).toBeVisible();
-      await expect(permanent(page, 'P1', 'Swamp')).not.toHaveClass(/targetable|actionable/);
-      const pick = permanent(page, 'P1', name).first();
-      await expect(pick).toHaveClass(/targetable|actionable/);
-      await pick.click();
-      await confirmButton(page).click();
-    }
+    // Exactly ten nonland permanents: all ten go with no pick asked, and the Swamp stays.
+    await expect(page.getByText(/to sacrifice as an activation cost/)).toHaveCount(0);
+    await expect(permanent(page, 'P1', 'Pilot Lab Relic')).toHaveCount(0);
     await passStackUntil(page, life(page, 'P2').filter({ hasText: '30' }));
     await expect(life(page, 'P3')).toHaveText('30');
     await expect(life(page, 'P4')).toHaveText('30');

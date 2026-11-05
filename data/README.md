@@ -37,6 +37,20 @@ checksum-pinned file named by the repository variables `SCRYFALL_BULK_URL` and
 against the baseline in `packages/server/fixtures/bulk-population.json`. After moving the pin,
 build the bank from the new file and record its baseline with `bun run bulk-smoke --write`.
 
+The baseline is recorded for this pin (2026-11-04). Set these repository variables (Settings,
+Secrets and variables, Actions, Variables) for the job to run:
+
+| Variable              | Value                                                                       |
+| --------------------- | --------------------------------------------------------------------------- |
+| `SCRYFALL_BULK_URL`   | `https://data.scryfall.io/oracle-cards/oracle-cards-20261103220204.jsonl.gz` |
+| `SCRYFALL_BULK_SHA256` | `2a21d4d3b31e15b9947cea566eea6fa435bdeefb8e1b1f193f462f61e00fcc7d`          |
+
+That file is 25,308,067 bytes and builds a bank of 39,287 cards whose SHA-256 is
+`d6d36538bf62…` (the build is byte-for-byte reproducible). Against it `bulk-smoke` reads 35,460
+cards, 7,987 modeled, none throwing and none invalid, and the six bulk-only suites pass 58 tests
+with nothing skipped. Scryfall still served the 2026-08-28 snapshot two months later, so a pinned
+URL lasts; if one is ever removed, the job's download fails and the pin moves.
+
 ### After a refresh
 
 Newer oracle text can make a hand-authored override redundant: Scryfall rewrites older cards

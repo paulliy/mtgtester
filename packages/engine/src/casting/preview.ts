@@ -1,4 +1,5 @@
 import type { CardDefinition } from '../cards/definition';
+import { getCached, setCached } from '../effects/layer-cache';
 import type { EngineCardObject, EngineStackObject, GameContext } from '../state/types';
 
 /** Fixture-only settled stack entry; arranging a scenario does not perform or emit a cast. */
@@ -56,7 +57,7 @@ export function castingPreviewContext(
   const without = (cards: EngineCardObject[]) => cards.filter((entry) => entry !== card);
   // A preview is speculative: it records nothing in the diagnostics sink (ADR 0034 decision 4).
   const { diagnostics: _diagnostics, ...game } = ctx;
-  return {
+  const preview: GameContext = {
     ...game,
     state: {
       ...ctx.state,
@@ -75,4 +76,17 @@ export function castingPreviewContext(
       stack: [...ctx.state.stack, proposed],
     },
   };
+  // Start from the layer results of the last preview of this state, or of the state itself.
+  // Previews of one state differ only in which card left which zone, which the layer digest
+  // sees as zone sizes, so the last preview's results usually serve the next one; every read
+  // checks them against a digest of the preview's own state. A cold start cost a full layer pass
+  // for every card considered at every priority, the largest cost left on a big board.
+  const last = LAST_PREVIEW.get(ctx);
+  const layers = (last === undefined ? undefined : getCached(last)) ?? getCached(ctx);
+  if (layers !== undefined) setCached(preview, layers);
+  LAST_PREVIEW.set(ctx, preview);
+  return preview;
 }
+
+/** The last preview made of each context, whose layer results seed the next one. */
+const LAST_PREVIEW = new WeakMap<GameContext, GameContext>();

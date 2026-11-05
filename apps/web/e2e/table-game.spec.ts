@@ -13,9 +13,28 @@ const DECKS = {
   P2: readFileSync('apps/web/e2e/fixtures/table-deck-p2.txt', 'utf8'),
 };
 
+/**
+ * Content Security Policy refusals seen by any table page. The served policy allows only the
+ * bundle's own scripts and Scryfall's image and search hosts; a refusal means the app needs
+ * something the policy blocks, or the policy has a gap the app relies on.
+ */
+const cspViolations: string[] = [];
+const watchCsp = (page: Page): void => {
+  page.on('console', (message) => {
+    if (message.type() === 'error' && /Content Security Policy/i.test(message.text()))
+      cspViolations.push(message.text());
+  });
+};
+
+test.afterEach(() => {
+  expect(cspViolations).toEqual([]);
+  cspViolations.length = 0;
+});
+
 /** Every board starts with the log, piles and opponents' zones open, as in the tester specs. */
 async function openPage(browser: Browser, origin: string): Promise<Page> {
   const context = await browser.newContext({ baseURL: origin });
+  context.on('page', watchCsp);
   await context.addInitScript(() => {
     try {
       localStorage.setItem('mtg.playerGameInfoOpen', 'true');
@@ -149,6 +168,8 @@ interface Request {
   step: string | null;
   activePlayer: string;
   actions: string[];
+  /** Objects on the stack when the decision was sent. */
+  stack: number;
 }
 
 /** Every decision the server puts to this page's seat, in order. */
@@ -158,7 +179,10 @@ function recordRequests(page: Page): Request[] {
     socket.on('framereceived', (frame) => {
       const message = JSON.parse(String(frame.payload)) as {
         type: string;
-        payload: { request?: Request & { legalActions: { description: string }[] } };
+        payload: {
+          request?: Request & { legalActions: { description: string }[] };
+          state?: { stack: unknown[] };
+        };
       };
       const request = message.payload.request;
       if (message.type !== 'playerActionRequired' || request === undefined) return;
@@ -167,6 +191,7 @@ function recordRequests(page: Page): Request[] {
         step: request.step,
         activePlayer: request.activePlayer,
         actions: request.legalActions.map((action) => action.description),
+        stack: message.payload.state?.stack.length ?? 0,
       });
     }),
   );
@@ -305,9 +330,12 @@ test('two people and two bots play a table game through to the post-game replay'
   // Yielded in an opponent's upkeep, which was offered: that turn's draw and the next turn's
   // upkeep and draw are quiet, and none of them is offered now.
   const yieldTurn = hostRequests[yieldedAt - 1]!.turn;
-  const quietWindow = (request: Request) =>
+  // A window is quiet only with an empty stack: an opponent's spell or ability on it is a new
+  // reason to reconsider, which smart yield offers again by design.
+  const opponentsBeginning = (request: Request) =>
     request.activePlayer !== 'P1' && (request.step === 'upkeep' || request.step === 'draw');
-  expect(quietWindow(hostRequests[yieldedAt - 1]!)).toBe(true);
+  const quietWindow = (request: Request) => opponentsBeginning(request) && request.stack === 0;
+  expect(opponentsBeginning(hostRequests[yieldedAt - 1]!)).toBe(true);
   const offeredAfter = hostRequests
     .slice(yieldedAt)
     .filter((request) => request.turn <= yieldTurn + 1 && quietWindow(request));
