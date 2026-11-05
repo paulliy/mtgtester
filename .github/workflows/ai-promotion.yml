@@ -86,3 +86,4 @@ jobs:
           name: ai-promotion-${{ github.run_id }}
           path: benchmark-output/promotion/
           if-no-files-found: error
+          retention-days: 30
