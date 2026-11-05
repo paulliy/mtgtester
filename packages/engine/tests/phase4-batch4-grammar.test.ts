@@ -234,6 +234,26 @@ describe('Phase 4 batch 4: player verbs and damage', () => {
     expect(player(ctx, 'P1').life).toBe(43);
     for (const id of ['P2', 'P3', 'P4']) expect(player(ctx, id).life).toBe(39);
   });
+
+  it('lifelink damage to each player is one life-gain event (one "whenever you gain life")', () => {
+    const card = creature(
+      'P4 Lifelink Spewer',
+      'Defender, lifelink\n{T}: This creature deals 1 damage to each player.',
+    );
+    const watcher = oracle({
+      name: 'P4 Gain Watcher',
+      typeLine: 'Enchantment',
+      oracleText: 'Whenever you gain life, target opponent loses that much life.',
+    });
+    const def = interpretCard(card);
+    const ctx = pod('p4-each-player-one-gain');
+    const spewer = spawn(ctx, 'P1', card);
+    spawn(ctx, 'P1', watcher);
+    run(ctx, card, def.activatedAbilities[0]!.ability, [], {}, spewer.cardId);
+    // Damage dealt at once by one source: lifelink gains 4 in a single event (CR 120.3f).
+    expect(ctx.state.pendingTriggers).toHaveLength(1);
+    expect(ctx.state.pendingTriggers[0]!.scope).toMatchObject({ damageDealt: 4 });
+  });
 });
 
 describe('Phase 4 batch 4: life-change trigger events', () => {

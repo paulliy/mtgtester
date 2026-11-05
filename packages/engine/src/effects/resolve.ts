@@ -522,7 +522,12 @@ function* dealDamageToPlayersTogether(
     plans.push({ player: hit.player, amount: adjusted.amount });
   }
   const observations: (() => void)[] = [];
-  const permanent = ctx.state.battlefield.find((entry) => entry.id === source.id);
+  // The source on the battlefield, found as dealDamageToObject finds it: by card, and by object
+  // when the source names one.
+  const permanent = ctx.state.battlefield.find(
+    (entry) =>
+      entry.cardId === source.cardId && (source.id === undefined || entry.id === source.id),
+  );
   const lifelink =
     permanent === undefined
       ? source.lastKnownDamageKeywords?.includes('lifelink') === true
@@ -6131,15 +6136,20 @@ function* executeAbilityEffects(
         const damageSource =
           effect.source === undefined ? undefined : damageSourceOf(effect.source);
         if (effect.source !== undefined && damageSource === undefined) break;
-        for (const player of ctx.state.players.filter((p) => !p.hasLost)) {
-          if (damageSource !== undefined) {
+        const players = ctx.state.players.filter((p) => !p.hasLost);
+        if (damageSource !== undefined) {
+          for (const player of players)
             yield* dealDamageToObject(ctx, damageSource, player.id, amount);
-            continue;
-          }
-          // Otherwise the ability's own source deals it, with its lifelink and infect, last-known
-          // if it has left (CR 702.15b, 702.90b, 113.7a), as for each-opponent damage.
-          yield* dealDamageToObject(ctx, source, player.id, amount);
+          break;
         }
+        // Otherwise the ability's own source deals it, with its lifelink and infect, last-known
+        // if it has left (CR 702.15b, 702.90b, 113.7a). It is dealt to every player at once, so
+        // lifelink is one life-gain event, not one per player (CR 120.3f, 119.9).
+        yield* dealDamageToPlayersTogether(
+          ctx,
+          source,
+          players.map((player) => ({ player, amount })),
+        );
         break;
       }
       case 'cascade':
