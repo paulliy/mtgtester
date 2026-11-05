@@ -169,6 +169,44 @@ describe('stateful mana payment bounds', () => {
     expect(castable(ctx, spell.id)).toBe(true);
   });
 
+  it('stateful-payment-bound-life-lifelink — a damage rider from a lifelink source can raise life', () => {
+    // Found by review on #55: an infect, lifelink mana source dealing damage to its controller
+    // gives poison counters instead of life loss and still gains the life, so its rider raises
+    // life. The life bound must not prune that payment.
+    const { ctx } = orchardPod(plains, '{1}{G}');
+    const elf = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Blighted Lifelinker',
+        typeLine: 'Creature — Elf',
+        power: '1',
+        toughness: '1',
+        oracleText:
+          'Infect, lifelink' +
+          String.fromCharCode(10) +
+          '{T}: Add {G}. This creature deals 1 damage to you.',
+      }),
+    );
+    elf.summoningSick = false;
+    const spell = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Costly Sorcery',
+        typeLine: 'Sorcery',
+        manaCost: '{1}{G}',
+        oracleText:
+          'As an additional cost to cast this spell, pay 2 life.' +
+          String.fromCharCode(10) +
+          'You gain 1 life.',
+      }),
+      'hand',
+    );
+    playerById(ctx, 'P1').life = 1;
+    expect(castable(ctx, spell.id)).toBe(true);
+  });
+
   it('stateful-payment-bound-dynamic — the dynamic source still pays the color it can make', () => {
     const { ctx, spell } = orchardPod(plains, '{1}{W}');
     expect(castable(ctx, spell)).toBe(true);

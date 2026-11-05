@@ -113,9 +113,10 @@ export function planStatefulManaPayment(
   // capacity, so it can only prune an impossible payment. Phyrexian pips may use life instead.
   // A dynamic source (Exotic Orchard) changes which symbols it makes, not how many: it counts at
   // its kind's most (`ceilingUnits`).
-  const ownAbilities = ctx.state.battlefield
+  const ownCharacteristics = ctx.state.battlefield
     .filter((permanent) => permanent.controllerId === player.id)
-    .flatMap((permanent) => computeCharacteristics(ctx, permanent).manaAbilities);
+    .map((permanent) => computeCharacteristics(ctx, permanent));
+  const ownAbilities = ownCharacteristics.flatMap((chars) => chars.manaAbilities);
   const fixedCapacity = ownAbilities.every(
     (ability) =>
       ability.amount === undefined &&
@@ -129,12 +130,19 @@ export function planStatefulManaPayment(
       ),
   );
   // Under fixed capacity no cost pays energy and the only riders gain life or deal damage to the
-  // controller, so energy never changes and life rises only through a life-gain rider. A
+  // controller, so energy never changes and life rises only through a life-gain rider or a
+  // damage rider from a lifelink source (with infect it gives poison, not life loss). A
   // reservation the payer cannot meet now then stays unmet in every state, and the search would
   // only try every subset of activations proving so (fuzz-11: {2}{B} and 32 life at 29 life,
   // sixteen lands, halted after a minute).
-  const lifeCanRise = ownAbilities.some((ability) =>
-    (ability.onActivate ?? []).some((effect) => effect.op === 'gainLife'),
+  const lifeCanRise = ownCharacteristics.some((chars) =>
+    chars.manaAbilities.some((ability) =>
+      (ability.onActivate ?? []).some(
+        (effect) =>
+          effect.op === 'gainLife' ||
+          (effect.op === 'damageController' && chars.keywords.includes('lifelink')),
+      ),
+    ),
   );
   const productions = (source: ManaSource, activation: number): ProducedMana[][] => {
     let choices: ProducedMana[][] = [[]];
