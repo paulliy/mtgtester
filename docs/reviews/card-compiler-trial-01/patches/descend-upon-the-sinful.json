@@ -1,0 +1,58 @@
+{
+  "name": "Descend upon the Sinful",
+  "oracleId": "9cbf95f4-3510-420b-9355-645450f4493d",
+  "handledLines": [
+    "Create a 4/4 white Angel creature token with flying if there are four or more card types among cards in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "exileEach",
+          "selector": {
+            "kind": "type",
+            "value": "Creature"
+          }
+        },
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "compareValues",
+            "left": {
+              "kind": "cardTypesInYourGraveyard"
+            },
+            "cmp": ">=",
+            "right": {
+              "kind": "const",
+              "n": 4
+            }
+          },
+          "then": [
+            {
+              "op": "createToken",
+              "spec": {
+                "name": "Angel",
+                "typeLine": "Token Creature — Angel",
+                "types": ["Creature"],
+                "subtypes": ["Angel"],
+                "colors": ["W"],
+                "power": 4,
+                "toughness": 4,
+                "keywords": ["flying"]
+              },
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "else": []
+        }
+      ],
+      "description": "Delirium — Create a 4/4 white Angel creature token with flying if there are four or more card types among cards in your graveyard."
+    }
+  }
+}

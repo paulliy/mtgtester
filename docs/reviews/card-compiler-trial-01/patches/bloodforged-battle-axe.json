@@ -1,0 +1,37 @@
+{
+  "name": "Bloodforged Battle-Axe",
+  "oracleId": "81a7f559-5edd-47ec-91f7-51e5ee998ed0",
+  "handledLines": [
+    "Whenever equipped creature deals combat damage to a player, create a token that's a copy of this Equipment."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "attachedToSource"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenCopyOf",
+            "ref": "source",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever equipped creature deals combat damage to a player, create a token that's a copy of this Equipment."
+      }
+    ]
+  }
+}

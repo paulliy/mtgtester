@@ -1,0 +1,23 @@
+{
+  "name": "On Thin Ice",
+  "oracleId": "6736bb96-6718-48bb-9385-789d3349dc20",
+  "handledLines": ["Enchant snow land you control"],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "land",
+          "controller": "you",
+          "filter": {
+            "kind": "supertype",
+            "value": "Snow"
+          }
+        }
+      ],
+      "effects": [],
+      "description": "Enchant snow land you control"
+    }
+  }
+}

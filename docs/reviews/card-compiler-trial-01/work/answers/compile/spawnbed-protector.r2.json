@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"\"Up to one target\" graveyard card needs a variable-count target slot, but no effect op consumes such a slot to return a card to hand (graveyardToHand only accepts an ordinary single-target slot, which would force a target and skip the token creation when none exists)."}

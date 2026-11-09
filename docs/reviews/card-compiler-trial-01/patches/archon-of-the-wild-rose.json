@@ -1,0 +1,70 @@
+{
+  "name": "Archon of the Wild Rose",
+  "oracleId": "180efbd4-0f77-41cc-8ae2-2e6ccf853d10",
+  "handledLines": [
+    "Other creatures you control that are enchanted by Auras you control have base power and toughness 4/4 and have flying."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "other"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "enchantedByAuraYouControl"
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "b",
+          "power": {
+            "kind": "const",
+            "n": 4
+          },
+          "toughness": {
+            "kind": "const",
+            "n": 4
+          }
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "other"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "enchantedByAuraYouControl"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "flying"
+        }
+      }
+    ]
+  }
+}

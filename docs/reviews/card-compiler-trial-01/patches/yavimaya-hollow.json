@@ -1,0 +1,47 @@
+{
+  "name": "Yavimaya Hollow",
+  "oracleId": "53d6113d-acdb-4754-9641-f7991a96c7b9",
+  "handledLines": ["{G}, {T}: Regenerate target creature."],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ],
+          "effects": [
+            {
+              "op": "regenerate",
+              "target": 0
+            }
+          ],
+          "description": "{G}, {T}: Regenerate target creature."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No Condition can test whether the spell was cast from the hand (only sourceWasCast exists), and a rebound cast from exile would wrongly create the Wizard token if the condition were approximated."}

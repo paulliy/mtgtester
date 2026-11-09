@@ -1,0 +1,34 @@
+{
+  "name": "Horobi, Death's Wail",
+  "oracleId": "44e8d51e-0885-49df-a77c-cf4a88e41bc1",
+  "handledLines": [
+    "Whenever a creature becomes the target of a spell or ability, destroy that creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "becomesTargeted",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "destroy",
+            "target": "triggerObject"
+          }
+        ],
+        "description": "Whenever a creature becomes the target of a spell or ability, destroy that creature."
+      }
+    ]
+  }
+}

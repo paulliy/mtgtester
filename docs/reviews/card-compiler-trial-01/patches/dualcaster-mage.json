@@ -1,0 +1,48 @@
+{
+  "name": "Dualcaster Mage",
+  "oracleId": "8eb7c0a5-6190-40de-b473-2d1daa3bbe28",
+  "handledLines": [
+    "When this creature enters, copy target instant or sorcery spell. You may choose new targets for the copy."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "spell",
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "copyTargetSpell",
+            "target": 0,
+            "newTargets": true
+          }
+        ],
+        "description": "When this creature enters, copy target instant or sorcery spell. You may choose new targets for the copy."
+      }
+    ]
+  }
+}

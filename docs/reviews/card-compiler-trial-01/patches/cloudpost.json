@@ -1,0 +1,21 @@
+{
+  "name": "Cloudpost",
+  "oracleId": "f705c0eb-9c6c-4315-a860-208ed0c5d93e",
+  "handledLines": ["{T}: Add {C} for each Locus on the battlefield."],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [["C"]],
+        "amount": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "subtype",
+            "value": "Locus"
+          },
+          "scope": "all"
+        }
+      }
+    ]
+  }
+}

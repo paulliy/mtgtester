@@ -1,0 +1,2 @@
+Target land you control that has the supertype Snow.
+This Aura has no effects.

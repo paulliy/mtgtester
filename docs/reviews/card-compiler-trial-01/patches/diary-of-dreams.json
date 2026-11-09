@@ -1,0 +1,59 @@
+{
+  "name": "Diary of Dreams",
+  "oracleId": "98b43c61-4563-4a29-8cf0-fb8b34f337ce",
+  "handledLines": [
+    "{5}, {T}: Draw a card. This ability costs {1} less to activate for each page counter on this artifact."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 5,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "draw",
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "{5}, {T}: Draw a card"
+        }
+      }
+    ],
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "appliesTo": "activate",
+        "selfOnly": true,
+        "amount": {
+          "kind": "countersOnSelf",
+          "counter": "page"
+        }
+      }
+    ]
+  }
+}
