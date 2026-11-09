@@ -272,3 +272,69 @@ export function digestOf(
 
   return h;
 }
+
+/**
+ * Read scopes: a stretch of engine code that changes nothing the layer digest covers, such as
+ * building a priority menu, gathering mana sources, or matching triggers to an event. Inside one
+ * each distinct digest is computed once and reused. Without a scope every characteristics query
+ * re-digests the whole battlefield, and the many loops that query each permanent in turn made
+ * those reads quadratic in board size: about 40% of engine CPU in measured bot games.
+ *
+ * A scope belongs to one context object. A speculative copy (the mana planner's `clone`, a
+ * casting preview) is a different object and digests as before, so it may be changed freely.
+ * State the digest does not read (the event log, pending triggers) may change inside a scope;
+ * anything it does read must not. The safety net: `MTG_VERIFY_LAYER_CACHE=1` re-digests on every
+ * scoped hit, and under `strictInvariants` one scoped hit in `SAMPLE_EVERY` is re-digested and
+ * each scope re-digests the state as it closes, so fuzz and the strict tests fail loudly when a
+ * scoped read starts changing a layer input.
+ */
+const SCOPES = new WeakMap<GameContext, Map<string, number>>();
+
+const VERIFY_SCOPES =
+  (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.[
+    'MTG_VERIFY_LAYER_CACHE'
+  ] === '1';
+
+const STALE = 'engine bug: a layer input changed inside a read scope';
+
+/** Run `read` inside a read scope on `ctx`. A nested scope on the same context joins the outer. */
+export function withReadScope<T>(ctx: GameContext, read: () => T): T {
+  if (SCOPES.has(ctx)) return read();
+  const digests = new Map<string, number>();
+  SCOPES.set(ctx, digests);
+  let result: T;
+  try {
+    result = read();
+  } finally {
+    SCOPES.delete(ctx);
+  }
+  if (ctx.strictInvariants === true || VERIFY_SCOPES) {
+    for (const [key, digest] of digests) {
+      if (key.startsWith('-|') && digestOf(ctx, undefined, key === '-|g') !== digest)
+        throw new Error(STALE);
+    }
+  }
+  return result;
+}
+
+/** `digestOf`, computed once per read scope for each distinct `extra` and graveyard flag. */
+export function scopedDigestOf(
+  ctx: GameContext,
+  extra: EnginePermanent | undefined,
+  includeGraveyards: boolean,
+): number {
+  const scope = SCOPES.get(ctx);
+  if (scope === undefined) return digestOf(ctx, extra, includeGraveyards);
+  const key =
+    (extra === undefined ? '-' : `${extra.cardId}:${extra.timestamp}:${extra.oracleId}`) +
+    (includeGraveyards ? '|g' : '|n');
+  const known = scope.get(key);
+  if (known === undefined) {
+    const digest = digestOf(ctx, extra, includeGraveyards);
+    scope.set(key, digest);
+    return digest;
+  }
+  if ((VERIFY_SCOPES || sampleCacheHit(ctx)) && digestOf(ctx, extra, includeGraveyards) !== known)
+    throw new Error(STALE);
+  return known;
+}

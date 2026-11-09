@@ -6,13 +6,7 @@ export function copyData<T>(value: T, copies = new Map<object, unknown>()): T {
   if (Array.isArray(value)) {
     const result: unknown[] = new Array(value.length);
     copies.set(value, result);
-    for (const [key, entry] of Object.entries(value))
-      Object.defineProperty(result, key, {
-        value: copyData(entry, copies),
-        writable: true,
-        enumerable: true,
-        configurable: true,
-      });
+    copyOwnEntries(value, result, copies);
     return result as T;
   }
   if (value instanceof Map) {
@@ -32,12 +26,31 @@ export function copyData<T>(value: T, copies = new Map<object, unknown>()): T {
     throw new Error('non-data object in engine context');
   const result: Record<string, unknown> = Object.create(prototype);
   copies.set(value, result);
-  for (const [key, entry] of Object.entries(value))
-    Object.defineProperty(result, key, {
-      value: copyData(entry, copies),
-      writable: true,
-      enumerable: true,
-      configurable: true,
-    });
+  copyOwnEntries(value, result, copies);
   return result as T;
+}
+
+/**
+ * Copy `source`'s own enumerable string-keyed properties onto `target` in `Object.entries` order.
+ * A plain assignment makes the same writable, enumerable, configurable data property as
+ * `defineProperty` does on a fresh object, without its descriptor object or the entry pairs; the
+ * one key where assignment differs, `__proto__`, still goes through `defineProperty`. This runs
+ * for every object of every state the mana planner copies, so the allocations mattered.
+ */
+function copyOwnEntries(source: object, target: object, copies: Map<object, unknown>): void {
+  const from = source as Record<string, unknown>;
+  const to = target as Record<string, unknown>;
+  const keys = Object.keys(from);
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i]!;
+    const entry = copyData(from[key], copies);
+    if (key === '__proto__')
+      Object.defineProperty(to, key, {
+        value: entry,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      });
+    else to[key] = entry;
+  }
 }
