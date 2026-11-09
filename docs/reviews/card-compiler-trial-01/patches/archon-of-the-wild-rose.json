@@ -1,6 +1,7 @@
 {
   "name": "Archon of the Wild Rose",
   "oracleId": "180efbd4-0f77-41cc-8ae2-2e6ccf853d10",
+  "source": "compiler@haiku-worker",
   "handledLines": [
     "Other creatures you control that are enchanted by Auras you control have base power and toughness 4/4 and have flying."
   ],

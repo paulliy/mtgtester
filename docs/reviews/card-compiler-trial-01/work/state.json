@@ -77,7 +77,8 @@
     ],
     "backTranslation": "When this enters, target instant or sorcery spell is copied. The copy may have new targets chosen for it.",
     "verdict": "same",
-    "differences": []
+    "differences": [],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Bitter Triumph",
@@ -89,7 +90,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The additional cost is a choice between discarding a card and paying 3 life, but spellAdditionalCosts lists costs that are all paid together, with no either/or option."
+    "inexpressibleReason": "The additional cost is a choice between discarding a card and paying 3 life, but spellAdditionalCosts lists costs that are all paid together, with no either/or option.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Damning Verdict",
@@ -135,7 +137,8 @@
     ],
     "backTranslation": "Destroy each creature that has no counters on it.",
     "verdict": "same",
-    "differences": []
+    "differences": [],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Bloodforged Battle-Axe",
@@ -156,8 +159,8 @@
         "abilityResolved": true,
         "resolved": [
           "Bloodforged Battle-Axe",
-          "Bloodforged Battle-Axe — Equip {2}",
-          "Bloodforged Battle-Axe — Whenever equipped creature deals combat damage to a player, create a token that's a copy of this Equipment."
+          "Bloodforged Battle-Axe \u2014 Equip {2}",
+          "Bloodforged Battle-Axe \u2014 Whenever equipped creature deals combat damage to a player, create a token that's a copy of this Equipment."
         ],
         "detail": "game ended",
         "decisions": 32,
@@ -220,7 +223,8 @@
     ],
     "backTranslation": "Whenever the creature this is attached to deals combat damage to a player, create a token that's a copy of this.",
     "verdict": "same",
-    "differences": []
+    "differences": [],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Ganax, Astral Hunter",
@@ -232,7 +236,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The schema has no Choose a Background mechanic (no Background choice or commander-zone second-commander relation), and the line is not reminder text."
+    "inexpressibleReason": "The schema has no Choose a Background mechanic (no Background choice or commander-zone second-commander relation), and the line is not reminder text.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Grand Arbiter Augustin IV",
@@ -244,7 +249,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The only opponent-spell cost increase (opponentNonHandSpellCostIncrease) applies just to spells cast from graveyards or exile, and no static taxes every spell opponents cast, so 'Spells your opponents cast cost {1} more to cast' cannot be stated exactly."
+    "inexpressibleReason": "The only opponent-spell cost increase (opponentNonHandSpellCostIncrease) applies just to spells cast from graveyards or exile, and no static taxes every spell opponents cast, so 'Spells your opponents cast cost {1} more to cast' cannot be stated exactly.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Starfield of Nyx",
@@ -256,7 +262,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The layer 7b base power and toughness must equal the affected permanent's own mana value, and the schema has no Value that reads the affected object's mana value in a static effect."
+    "inexpressibleReason": "The layer 7b base power and toughness must equal the affected permanent's own mana value, and the schema has no Value that reads the affected object's mana value in a static effect.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Transpose",
@@ -268,7 +275,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "No Condition can test whether the spell was cast from the hand (only sourceWasCast exists), and a rebound cast from exile would wrongly create the Wizard token if the condition were approximated."
+    "inexpressibleReason": "No Condition can test whether the spell was cast from the hand (only sourceWasCast exists), and a rebound cast from exile would wrongly create the Wizard token if the condition were approximated.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Germination Practicum",
@@ -280,7 +288,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "Paradigm needs the resolved spell exiled and then copied from exile for free at each first main phase; the only paradigm op (capstoneParadigm) is hardwired to the Improvisation Capstone's mana-value exile step, so it cannot express this card's behavior exactly."
+    "inexpressibleReason": "Paradigm needs the resolved spell exiled and then copied from exile for free at each first main phase; the only paradigm op (capstoneParadigm) is hardwired to the Improvisation Capstone's mana-value exile step, so it cannot express this card's behavior exactly.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Spawnbed Protector",
@@ -296,7 +305,8 @@
         "override.def.triggers[0].effects[0].target: effect target 0 does not reference an ordinary target slot"
       ]
     ],
-    "inexpressibleReason": "\"Up to one target\" graveyard card needs a variable-count target slot, but no effect op consumes such a slot to return a card to hand (graveyardToHand only accepts an ordinary single-target slot, which would force a target and skip the token creation when none exists)."
+    "inexpressibleReason": "\"Up to one target\" graveyard card needs a variable-count target slot, but no effect op consumes such a slot to return a card to hand (graveyardToHand only accepts an ordinary single-target slot, which would force a target and skip the token creation when none exists).",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Feline Sovereign",
@@ -308,7 +318,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "Protection quality can only be a color, multicolored, or creatures; the schema cannot express protection from the creature type Dogs."
+    "inexpressibleReason": "Protection quality can only be a color, multicolored, or creatures; the schema cannot express protection from the creature type Dogs.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Yavimaya Hollow",
@@ -328,7 +339,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Yavimaya Hollow — {G}, {T}: Regenerate target creature."
+          "Yavimaya Hollow \u2014 {G}, {T}: Regenerate target creature."
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -364,7 +375,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Yavimaya Hollow — {G}, {T}: Regenerate target creature."
+          "Yavimaya Hollow \u2014 {G}, {T}: Regenerate target creature."
         ],
         "detail": "game ended",
         "decisions": 25,
@@ -396,7 +407,8 @@
     ],
     "backTranslation": "{G}, {T}: Regenerate target creature.",
     "verdict": "same",
-    "differences": []
+    "differences": [],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Behold the Multiverse",
@@ -408,7 +420,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The card's own foretell (paying {2} on your turn to exile it face down from hand, then casting it later for {1}{U}) has no IR form; grantForetell only gives foretell to other cards in hand."
+    "inexpressibleReason": "The card's own foretell (paying {2} on your turn to exile it face down from hand, then casting it later for {1}{U}) has no IR form; grantForetell only gives foretell to other cards in hand.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Thundering Raiju",
@@ -462,7 +475,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Thundering Raiju — Whenever this creature attacks, put a +1/+1 counter on target creature you control. Then this creature deals X damage to each opponent, where X is the number of modified creatures you control other than this creature."
+          "Thundering Raiju \u2014 Whenever this creature attacks, put a +1/+1 counter on target creature you control. Then this creature deals X damage to each opponent, where X is the number of modified creatures you control other than this creature."
         ],
         "detail": "game ended",
         "decisions": 28,
@@ -495,7 +508,8 @@
     "verdict": "different",
     "differences": [
       "Text A sequences the counter placement before the damage with Then, so the counter can raise the damage count; Text B uses two independent triggers that may resolve in either order."
-    ]
+    ],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Absolute Virtue",
@@ -507,7 +521,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The schema has no protection quality for a player: protectionFrom only takes colors, 'multicolored' or 'creatures', so 'protection from each of your opponents' cannot be stated."
+    "inexpressibleReason": "The schema has no protection quality for a player: protectionFrom only takes colors, 'multicolored' or 'creatures', so 'protection from each of your opponents' cannot be stated.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Rat Colony",
@@ -519,7 +534,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The line is a deck-construction permission (any number of copies named Rat Colony in one deck), and the IR has no field for deck-building rules; the schema cannot state it."
+    "inexpressibleReason": "The line is a deck-construction permission (any number of copies named Rat Colony in one deck), and the IR has no field for deck-building rules; the schema cannot state it.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Goblin Chainwhirler",
@@ -540,7 +556,7 @@
         "abilityResolved": true,
         "resolved": [
           "Goblin Chainwhirler",
-          "Goblin Chainwhirler — When this creature enters, it deals 1 damage to each opponent and each creature and planeswalker they control."
+          "Goblin Chainwhirler \u2014 When this creature enters, it deals 1 damage to each opponent and each creature and planeswalker they control."
         ],
         "detail": "game ended",
         "decisions": 9,
@@ -601,7 +617,8 @@
     ],
     "backTranslation": "When this enters, each opponent is dealt 1 damage.\nWhen this enters, 1 damage is dealt to each creature and each planeswalker that opponents control.",
     "verdict": "same",
-    "differences": []
+    "differences": [],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Valkyrie's Call",
@@ -613,7 +630,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "There is no effect that returns the triggering creature with a +1/+1 counter on it and gives it flying and the Angel type indefinitely; the return ops cannot place a counter on a trigger object, and no static effect can bind to that one returned object."
+    "inexpressibleReason": "There is no effect that returns the triggering creature with a +1/+1 counter on it and gives it flying and the Angel type indefinitely; the return ops cannot place a counter on a trigger object, and no static effect can bind to that one returned object.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Smallpox",
@@ -625,7 +643,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "Each-player sacrifice ops take only a creature or any permanent, so the schema cannot say that each player sacrifices a land of their choice."
+    "inexpressibleReason": "Each-player sacrifice ops take only a creature or any permanent, so the schema cannot say that each player sacrifices a land of their choice.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Font of Agonies",
@@ -637,7 +656,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The schema has no trigger for a player paying life, so 'whenever you pay life' cannot be expressed, and the amount paid cannot be carried into the counter placement."
+    "inexpressibleReason": "The schema has no trigger for a player paying life, so 'whenever you pay life' cannot be expressed, and the amount paid cannot be carried into the counter placement.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Cloudpost",
@@ -712,7 +732,8 @@
     ],
     "backTranslation": "{T}: Add {C} for each Locus permanent on the battlefield, regardless of controller.",
     "verdict": "same",
-    "differences": []
+    "differences": [],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Blightwing Bandit",
@@ -724,7 +745,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The card looks at the opponent's library (the active player whose turn it is), but a castsSpell trigger's event player is the caster, and the schema offers no way to name the active opponent as the library owner without an announced target the card does not have."
+    "inexpressibleReason": "The card looks at the opponent's library (the active player whose turn it is), but a castsSpell trigger's event player is the caster, and the schema offers no way to name the active opponent as the library owner without an announced target the card does not have.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Adept Watershaper",
@@ -736,7 +758,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The affected set needs 'tapped creatures', but the tapped selector is event-only and a continuous static effect cannot read tapped-ness."
+    "inexpressibleReason": "The affected set needs 'tapped creatures', but the tapped selector is event-only and a continuous static effect cannot read tapped-ness.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Needle Drop",
@@ -748,7 +771,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The schema has no target restriction or selector for a permanent or player that was dealt damage this turn, so 'any target that was dealt damage this turn' cannot be stated exactly."
+    "inexpressibleReason": "The schema has no target restriction or selector for a permanent or player that was dealt damage this turn, so 'any target that was dealt damage this turn' cannot be stated exactly.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Great Arashin City",
@@ -760,7 +784,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The cost 'Exile a creature card from your graveyard' has no AbilityCost form: exileOtherCardsFromGraveyard counts cards of any type and is the escape cost, so the creature-card restriction cannot be stated exactly."
+    "inexpressibleReason": "The cost 'Exile a creature card from your graveyard' has no AbilityCost form: exileOtherCardsFromGraveyard counts cards of any type and is the escape cost, so the creature-card restriction cannot be stated exactly.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Scale Up",
@@ -772,7 +797,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The schema cannot make the target's creature types become exactly Wurm while keeping its other card types: becomeCreatureUntilEot only adds subtypes, and its replaceTypes option would drop the creature's other card types (such as Artifact or Enchantment)."
+    "inexpressibleReason": "The schema cannot make the target's creature types become exactly Wurm while keeping its other card types: becomeCreatureUntilEot only adds subtypes, and its replaceTypes option would drop the creature's other card types (such as Artifact or Enchantment).",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Samut, Vizier of Naktamun",
@@ -851,7 +877,8 @@
     ],
     "backTranslation": "Whenever a creature you control that entered this turn deals combat damage to a player, draw a card.",
     "verdict": "same",
-    "differences": []
+    "differences": [],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Charmbreaker Devils",
@@ -932,7 +959,8 @@
     "verdict": "different",
     "differences": [
       "Text A returns a random card from the graveyard without targeting; Text B makes the card a target of the ability, which changes what can respond and interact with it."
-    ]
+    ],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Treeguard Duo",
@@ -953,7 +981,7 @@
         "abilityResolved": true,
         "resolved": [
           "Treeguard Duo",
-          "Treeguard Duo — When this creature enters, until end of turn, target creature you control gains vigilance and gets +X/+X, where X is the number of creatures you control."
+          "Treeguard Duo \u2014 When this creature enters, until end of turn, target creature you control gains vigilance and gets +X/+X, where X is the number of creatures you control."
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -1015,7 +1043,8 @@
     ],
     "backTranslation": "When this enters, target creature you control gains vigilance until end of turn and gets +X/+X until end of turn, where X is the number of creatures you control.",
     "verdict": "same",
-    "differences": []
+    "differences": [],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Commander Liara Portyr",
@@ -1027,7 +1056,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The reduction is X = the number of players being attacked, which no Value expresses, and the reduction applies only to spells cast from exile this turn, which costReduction cannot restrict by zone."
+    "inexpressibleReason": "The reduction is X = the number of players being attacked, which no Value expresses, and the reduction applies only to spells cast from exile this turn, which costReduction cannot restrict by zone.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Morbid Curiosity",
@@ -1039,7 +1069,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "No value reads the mana value of the permanent sacrificed as the additional cost, so 'Draw cards equal to the mana value of the sacrificed permanent' cannot be stated exactly."
+    "inexpressibleReason": "No value reads the mana value of the permanent sacrificed as the additional cost, so 'Draw cards equal to the mana value of the sacrificed permanent' cannot be stated exactly.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Three Tree Scribe",
@@ -1051,7 +1082,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The schema's leavesBattlefield trigger can only be narrowed to graveyard or exile destinations (leavesTo), so it cannot express 'leaves the battlefield without dying' (any destination other than the graveyard)."
+    "inexpressibleReason": "The schema's leavesBattlefield trigger can only be narrowed to graveyard or exile destinations (leavesTo), so it cannot express 'leaves the battlefield without dying' (any destination other than the graveyard).",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Game Over",
@@ -1063,7 +1095,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The cost reduction condition needs each player's life compared with half their starting life total, and the schema has no reference to starting life total (a 20 or 40 value would be a guess that varies by format)."
+    "inexpressibleReason": "The cost reduction condition needs each player's life compared with half their starting life total, and the schema has no reference to starting life total (a 20 or 40 value would be a guess that varies by format).",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Diary of Dreams",
@@ -1084,7 +1117,7 @@
         "abilityResolved": true,
         "resolved": [
           "Diary of Dreams",
-          "Diary of Dreams — {5}, {T}: Draw a card"
+          "Diary of Dreams \u2014 {5}, {T}: Draw a card"
         ],
         "detail": "game ended",
         "decisions": 29,
@@ -1120,7 +1153,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Diary of Dreams — {5}, {T}: Draw a card"
+          "Diary of Dreams \u2014 {5}, {T}: Draw a card"
         ],
         "detail": "game ended",
         "decisions": 26,
@@ -1151,7 +1184,8 @@
     ],
     "backTranslation": "{5}, {T}: Draw a card.\nThe cost to activate the ability above is reduced by an amount equal to the number of page counters on this.",
     "verdict": "same",
-    "differences": []
+    "differences": [],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Release to the Wind",
@@ -1163,7 +1197,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The schema has no way to say that the card's owner (not its controller) may cast the exiled card without paying its mana cost for as long as it remains exiled; the exile half alone would be an incomplete card."
+    "inexpressibleReason": "The schema has no way to say that the card's owner (not its controller) may cast the exiled card without paying its mana cost for as long as it remains exiled; the exile half alone would be an incomplete card.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "On Thin Ice",
@@ -1239,7 +1274,8 @@
     "verdict": "different",
     "differences": [
       "Text B states the Aura has no effects, but the card's whole-card context has a When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield trigger."
-    ]
+    ],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Wolfcaller's Howl",
@@ -1251,7 +1287,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "No Value counts opponents by their hand size, so 'the number of your opponents with four or more cards in hand' cannot be expressed exactly."
+    "inexpressibleReason": "No Value counts opponents by their hand size, so 'the number of your opponents with four or more cards in hand' cannot be expressed exactly.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Hard-Hitting Question",
@@ -1302,7 +1339,8 @@
     ],
     "backTranslation": "Target creature you control and target permanent an opponent controls that is a creature or planeswalker.\nTarget creature you control deals damage equal to its power to target permanent an opponent controls that is a creature or planeswalker.",
     "verdict": "same",
-    "differences": []
+    "differences": [],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Archon of the Wild Rose",
@@ -1383,7 +1421,8 @@
     "verdict": "different",
     "differences": [
       "Text A sets base power and toughness to 4/4; Text B gives +4/+4, which changes the result for any creature whose base is not 0/0."
-    ]
+    ],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Thran Turbine",
@@ -1463,7 +1502,8 @@
     "verdict": "different",
     "differences": [
       "Text A only forbids spending the mana on spells, so it could pay for other things such as special actions; Text B restricts the mana to activating abilities only, which excludes special actions."
-    ]
+    ],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Pulse of Murasa",
@@ -1515,7 +1555,8 @@
     ],
     "backTranslation": "Target creature card or land card in any graveyard.\nPut that card into hand.\nYou gain 6 life.",
     "verdict": "same",
-    "differences": []
+    "differences": [],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Surrounded by Orcs",
@@ -1527,7 +1568,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The schema has no reference to the amassed Army's power (amass returns no object reference), and the targeted mill op takes only a fixed number, so 'mills X cards where X is the Army's power' cannot be said."
+    "inexpressibleReason": "The schema has no reference to the amassed Army's power (amass returns no object reference), and the targeted mill op takes only a fixed number, so 'mills X cards where X is the Army's power' cannot be said.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Horrific Assault",
@@ -1577,7 +1619,8 @@
     ],
     "backTranslation": "Target creature you control and target permanent an opponent controls that is a creature or planeswalker.\nTarget creature you control deals damage equal to its power to target permanent an opponent controls that is a creature or planeswalker.\nIf you control one or more permanents with the subtype Eldrazi, you gain 3 life.",
     "verdict": "same",
-    "differences": []
+    "differences": [],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Tri-Sentinel, Act of Vengeance",
@@ -1589,7 +1632,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "A perPlayer target slot iterates over every player, and no restriction to opponents is available, so 'for each opponent' with 'up to one target creature that player controls' cannot be stated exactly (it would also allow targeting your own creatures)."
+    "inexpressibleReason": "A perPlayer target slot iterates over every player, and no restriction to opponents is available, so 'for each opponent' with 'up to one target creature that player controls' cannot be stated exactly (it would also allow targeting your own creatures).",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Expedited Inheritance",
@@ -1601,7 +1645,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The schema cannot say that the damaged creature's controller (not this enchantment's controller) exiles and may play the cards until the end of that player's next turn: the only top-of-library exile playable effect is for the ability's controller and lasts until end of turn."
+    "inexpressibleReason": "The schema cannot say that the damaged creature's controller (not this enchantment's controller) exiles and may play the cards until the end of that player's next turn: the only top-of-library exile playable effect is for the ability's controller and lasts until end of turn.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Horobi, Death's Wail",
@@ -1681,7 +1726,8 @@
     ],
     "backTranslation": "Whenever a creature becomes targeted, destroy that creature. This ability doesn't target.",
     "verdict": "same",
-    "differences": []
+    "differences": [],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Emmara Tandris",
@@ -1693,7 +1739,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The schema has no static prevention effect over an arbitrary set of permanents (such as all creature tokens you control); damage shields and preventCombatDamageToSelf cover only one object, a player, or combat damage to the source itself."
+    "inexpressibleReason": "The schema has no static prevention effect over an arbitrary set of permanents (such as all creature tokens you control); damage shields and preventCombatDamageToSelf cover only one object, a player, or combat damage to the source itself.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Wurmwall Sweeper",
@@ -1714,8 +1761,8 @@
         "abilityResolved": true,
         "resolved": [
           "Wurmwall Sweeper",
-          "Wurmwall Sweeper — When this Spacecraft enters, surveil 2.",
-          "Wurmwall Sweeper — Station"
+          "Wurmwall Sweeper \u2014 When this Spacecraft enters, surveil 2.",
+          "Wurmwall Sweeper \u2014 Station"
         ],
         "detail": "game ended",
         "decisions": 26,
@@ -1778,7 +1825,8 @@
     ],
     "backTranslation": "When this enters, surveil 2.",
     "verdict": "same",
-    "differences": []
+    "differences": [],
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Thor, Asgard's Avenger",
@@ -1790,7 +1838,8 @@
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "The ruleStatics damage replacements only double, halve or prevent damage; the schema has no replacement that adds a fixed amount (plus 1) to another source's damage to opponents and their permanents."
+    "inexpressibleReason": "The ruleStatics damage replacements only double, halve or prevent damage; the schema has no replacement that adds a fixed amount (plus 1) to another source's damage to opponents and their permanents.",
+    "source": "compiler@haiku-worker"
   },
   {
     "name": "Descend upon the Sinful",
@@ -1835,6 +1884,7 @@
     ],
     "backTranslation": "Exile each creature.\nIf there are four or more card types among cards in your graveyard, create a 4/4 white Angel creature token with flying.",
     "verdict": "same",
-    "differences": []
+    "differences": [],
+    "source": "compiler@haiku-worker"
   }
 ]

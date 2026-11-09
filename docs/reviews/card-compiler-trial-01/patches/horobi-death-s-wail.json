@@ -1,6 +1,7 @@
 {
   "name": "Horobi, Death's Wail",
   "oracleId": "44e8d51e-0885-49df-a77c-cf4a88e41bc1",
+  "source": "compiler@haiku-worker",
   "handledLines": [
     "Whenever a creature becomes the target of a spell or ability, destroy that creature."
   ],

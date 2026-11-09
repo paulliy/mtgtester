@@ -22,13 +22,23 @@ model cannot invent primitives.
    permanents, on the battlefield, played through combat, end step and the next turn. Player 1 uses
    every action the card offers; other decisions are seeded random. It passes when the engine never
    halts, throws or breaks a strict invariant, and records whether the card's abilities resolved.
-5. **Back-translate**: a second call sees only the patch (descriptions removed, card name hidden) and
+5. **Text check** (`render.ts`, free): a deterministic renderer turns the patch back into English
+   and compares it with the Oracle lines after normalizing wording. A match settles the meaning
+   check with no model call. Anything it cannot render, or renders differently, goes on to 6 and 7.
+   On trial 01 it settled 9 of 20 valid patches, and both wrong patches fell through to the model.
+   `bun run scripts/card-compiler/render.ts --mismatches` reports its coverage on modeled cards.
+6. **Back-translate**: a second call sees only the patch (descriptions removed, card name hidden) and
    writes the rules text it implements.
-6. **Judge**: a third call compares the real lines with the back-translation and lists any difference
+7. **Judge**: a third call compares the real lines with the back-translation and lists any difference
    that would change a game. It never sees the IR.
 
-A card that passes 3 to 6 is `compiled-checked`. The checks take a patch from any source, so a patch
-translated from another engine goes through the same gate.
+A card that passes 3 to 7 is `compiled-checked`. The checks take a patch from any source, so a patch
+translated from another engine goes through the same gate (`run.ts import`).
+
+**Compiled cards are not playable.** `compiled-checked` means "ready for review", not "in the
+game". Nothing here registers a patch with the engine; every checked card goes to the review queue
+(`docs/reviews/compiled-card-queue.json`) and enters the card pool only after a person (or the main
+thread, under the card coverage workflow) reviews it.
 
 ## Running
 
@@ -51,3 +61,19 @@ command, a batch job, or an agent). `exec` records token usage and cost per call
 `CARD_COMPILER_RETRY_MODEL` (default `claude-sonnet-5-5`), `CARD_COMPILER_CONCURRENCY` (default 4).
 
 Accepted patches are written to `<trial>/patches/`. Nothing here registers them with the engine.
+
+Without an API key, Haiku and Sonnet worker agents answer the prompt files instead of `exec`; cost
+is then estimated from text size in `report`.
+
+### Patches from other sources
+
+```bash
+bun run scripts/card-compiler/run.ts import <trial> <patch-dir>   # e.g. XMage translations
+bun run scripts/card-compiler/run.ts check <trial>                # validate, smoke, text check
+bun run scripts/card-compiler/run.ts queue <trial> [<trial>...]   # rebuild the review queue
+```
+
+A patch file is one JSON per card: `{ name, oracleId, handledLines, compose: "append", def, source }`,
+where `source` names its origin, e.g. `xmage@31ede542` or `compiler@claude-haiku-5-5`. An imported
+patch that fails validation is `invalid` with no retry, since the compile prompt did not produce it.
+`queue` keeps a reviewer's verdict on an entry as long as the patch is unchanged.

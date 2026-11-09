@@ -1,6 +1,7 @@
 {
   "name": "Dualcaster Mage",
   "oracleId": "8eb7c0a5-6190-40de-b473-2d1daa3bbe28",
+  "source": "compiler@haiku-worker",
   "handledLines": [
     "When this creature enters, copy target instant or sorcery spell. You may choose new targets for the copy."
   ],

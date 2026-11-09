@@ -1,6 +1,7 @@
 {
   "name": "Yavimaya Hollow",
   "oracleId": "53d6113d-acdb-4754-9641-f7991a96c7b9",
+  "source": "compiler@haiku-worker",
   "handledLines": ["{G}, {T}: Regenerate target creature."],
   "compose": "append",
   "def": {

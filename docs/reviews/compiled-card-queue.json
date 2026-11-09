@@ -1,0 +1,500 @@
+{
+  "schemaVersion": 1,
+  "cards": [
+    {
+      "name": "Archon of the Wild Rose",
+      "oracleId": "180efbd4-0f77-41cc-8ae2-2e6ccf853d10",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Other creatures you control that are enchanted by Auras you control have base power and toughness 4/4 and have flying."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/archon-of-the-wild-rose.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "differences": [
+        "Text A sets base power and toughness to 4/4; Text B gives +4/+4, which changes the result for any creature whose base is not 0/0."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Bloodforged Battle-Axe",
+      "oracleId": "81a7f559-5edd-47ec-91f7-51e5ee998ed0",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever equipped creature deals combat damage to a player, create a token that's a copy of this Equipment."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/bloodforged-battle-axe.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Charmbreaker Devils",
+      "oracleId": "1b9df437-6988-4ddc-80c4-893e11076067",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "At the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/charmbreaker-devils.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "differences": [
+        "Text A returns a random card from the graveyard without targeting; Text B makes the card a target of the ability, which changes what can respond and interact with it."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Cloudpost",
+      "oracleId": "f705c0eb-9c6c-4315-a860-208ed0c5d93e",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["{T}: Add {C} for each Locus on the battlefield."],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/cloudpost.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Damning Verdict",
+      "oracleId": "355ed7ef-bfa6-4538-99fb-a2d203eb7005",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["Destroy all creatures with no counters on them."],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/damning-verdict.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Descend upon the Sinful",
+      "oracleId": "9cbf95f4-3510-420b-9355-645450f4493d",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Create a 4/4 white Angel creature token with flying if there are four or more card types among cards in your graveyard."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/descend-upon-the-sinful.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Diary of Dreams",
+      "oracleId": "98b43c61-4563-4a29-8cf0-fb8b34f337ce",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{5}, {T}: Draw a card. This ability costs {1} less to activate for each page counter on this artifact."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/diary-of-dreams.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Dualcaster Mage",
+      "oracleId": "8eb7c0a5-6190-40de-b473-2d1daa3bbe28",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this creature enters, copy target instant or sorcery spell. You may choose new targets for the copy."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/dualcaster-mage.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Goblin Chainwhirler",
+      "oracleId": "0342b085-be20-475a-bc38-59b9cb6012e8",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this creature enters, it deals 1 damage to each opponent and each creature and planeswalker they control."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/goblin-chainwhirler.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Hard-Hitting Question",
+      "oracleId": "05fdefb4-2be7-4d9a-9ab9-14bbbe72aef7",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/hard-hitting-question.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Horobi, Death's Wail",
+      "oracleId": "44e8d51e-0885-49df-a77c-cf4a88e41bc1",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever a creature becomes the target of a spell or ability, destroy that creature."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/horobi-death-s-wail.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Horrific Assault",
+      "oracleId": "4c7e091e-e3c1-446d-a442-4aacb3cdd575",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control. If you control an Eldrazi, you gain 3 life."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/horrific-assault.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "On Thin Ice",
+      "oracleId": "6736bb96-6718-48bb-9385-789d3349dc20",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": ["Enchant snow land you control"],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/on-thin-ice.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "differences": [
+        "Text B states the Aura has no effects, but the card's whole-card context has a When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield trigger."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Pulse of Murasa",
+      "oracleId": "d5b446a4-a761-42f0-acf0-ea0a1a9538d6",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Return target creature or land card from a graveyard to its owner's hand. You gain 6 life."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/pulse-of-murasa.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Samut, Vizier of Naktamun",
+      "oracleId": "178b3fdf-dbee-4245-a811-b21ff8a24f66",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever a creature you control deals combat damage to a player, if that creature entered this turn, draw a card."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/samut-vizier-of-naktamun.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Thran Turbine",
+      "oracleId": "6c31f06d-bf02-48a7-9c17-be2a226b8eae",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "At the beginning of your upkeep, you may add {C}{C}. This mana can't be spent to cast spells."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/thran-turbine.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "differences": [
+        "Text A only forbids spending the mana on spells, so it could pay for other things such as special actions; Text B restricts the mana to activating abilities only, which excludes special actions."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Thundering Raiju",
+      "oracleId": "3d713c11-36a7-4b19-8c42-a9b61ef5902c",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Whenever this creature attacks, put a +1/+1 counter on target creature you control. Then this creature deals X damage to each opponent, where X is the number of modified creatures you control other than this creature."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/thundering-raiju.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "differences": [
+        "Text A sequences the counter placement before the damage with Then, so the counter can raise the damage count; Text B uses two independent triggers that may resolve in either order."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Treeguard Duo",
+      "oracleId": "d7dfb4d5-8510-4904-abb7-834ec65d9bf3",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this creature enters, until end of turn, target creature you control gains vigilance and gets +X/+X, where X is the number of creatures you control."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/treeguard-duo.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Wurmwall Sweeper",
+      "oracleId": "320ed2ec-ef06-41fb-ac8a-72579f11544c",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["When this Spacecraft enters, surveil 2."],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/wurmwall-sweeper.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Yavimaya Hollow",
+      "oracleId": "53d6113d-acdb-4754-9641-f7991a96c7b9",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["{G}, {T}: Regenerate target creature."],
+      "patch": "docs/reviews/card-compiler-trial-01/patches/yavimaya-hollow.json",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    }
+  ]
+}

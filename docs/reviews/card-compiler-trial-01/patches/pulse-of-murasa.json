@@ -1,6 +1,7 @@
 {
   "name": "Pulse of Murasa",
   "oracleId": "d5b446a4-a761-42f0-acf0-ea0a1a9538d6",
+  "source": "compiler@haiku-worker",
   "handledLines": [
     "Return target creature or land card from a graveyard to its owner's hand. You gain 6 life."
   ],

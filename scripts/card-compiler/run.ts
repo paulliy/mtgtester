@@ -7,6 +7,8 @@
  *   bun run scripts/card-compiler/run.ts report <trial-dir>        # results.json and summary.md
  *
  *   bun run scripts/card-compiler/run.ts recheck <trial-dir>       # redo back-translation and judge
+ *   bun run scripts/card-compiler/run.ts import <trial-dir> <dir>  # check patches made elsewhere
+ *   bun run scripts/card-compiler/run.ts queue <trial-dir>...      # rebuild the review queue
  *
  * Stages are `compile`, `back` and `judge`. Every prompt is a file under <trial-dir>/work/prompts
  * and every answer a file under <trial-dir>/work/answers, so any executor can answer them: the
@@ -22,6 +24,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import type { CardDefinition } from '../../packages/engine/src/cards/definition';
+import { textCheck } from './render';
 import {
   applyPatch,
   compileTarget,
@@ -42,6 +45,28 @@ import {
 
 const MAX_COMPILE_ROUNDS = 3;
 
+/**
+ * The source tag of a patch this pipeline compiled itself. `CARD_COMPILER_SOURCE` overrides it
+ * when the prompts were answered by something other than `exec` (an agent, a batch job).
+ */
+function compilerSource(): string {
+  return (
+    process.env['CARD_COMPILER_SOURCE'] ??
+    `compiler@${process.env['CARD_COMPILER_MODEL'] ?? 'claude-haiku-5-5'}`
+  );
+}
+
+/** The shape every patch file has, whatever produced it. */
+export interface PatchFile {
+  name: string;
+  oracleId: string;
+  /** `compiler@<model>`, `xmage@<commit>`, or another producer's tag. */
+  source: string;
+  handledLines: string[];
+  compose: 'append';
+  def: Partial<CardDefinition>;
+}
+
 interface TargetRow {
   name: string;
   rank: number;
@@ -54,6 +79,15 @@ export interface CardState {
   rank: number;
   xmageBucket?: string;
   lines: string[];
+  /**
+   * Where the patch came from: `compiler@<model>` for this pipeline's own compile stage, or the
+   * tag an imported patch carries (`xmage@<commit>`).
+   */
+  source?: string;
+  /** The patch came from `import`, not the compile prompt, so it gets no compile retries. */
+  imported?: true;
+  /** How the meaning check was decided: the deterministic renderer, or model back-translation. */
+  textCheck?: 'renderer' | 'model';
   /** Compile rounds answered so far. */
   rounds: number;
   stage: 'compile' | 'invalid' | 'inexpressible' | 'back' | 'judge' | 'done' | 'stale';
@@ -174,9 +208,36 @@ function check(trial: string): void {
           state.valid = true;
           write(
             p.patch(state.name),
-            `${JSON.stringify({ name: state.name, oracleId: target.oracleId, handledLines: target.lines, compose: 'append', def: answer.def }, null, 2)}\n`,
+            `${JSON.stringify(
+              {
+                name: state.name,
+                oracleId: target.oracleId,
+                source: state.source ?? compilerSource(),
+                handledLines: target.lines,
+                compose: 'append',
+                def: answer.def,
+              },
+              null,
+              2,
+            )}\n`,
           );
           state.smoke = smokeTest(target, answer.def);
+          // Free meaning check first: render the IR back to English and compare it with the
+          // Oracle lines. Only when that cannot decide does the card go to the model check.
+          const text = textCheck(
+            answer.def,
+            target.lines,
+            target.name,
+            target.card.oracleText ?? '',
+          );
+          if (text.verdict === 'match') {
+            state.textCheck = 'renderer';
+            state.verdict = 'same';
+            state.differences = [];
+            state.stage = 'done';
+            continue;
+          }
+          state.textCheck = 'model';
           state.stage = 'back';
           write(p.prompt('back', state.name), backSuffix(target, answer.def));
           pending++;
@@ -186,7 +247,7 @@ function check(trial: string): void {
         issues = [`answer is not valid JSON in the required shape: ${String(error)}`];
       }
       state.validatorIssues.push(issues);
-      if (round >= MAX_COMPILE_ROUNDS) {
+      if (round >= MAX_COMPILE_ROUNDS || state.imported === true) {
         state.stage = 'invalid';
         continue;
       }
@@ -267,6 +328,155 @@ function recheck(trial: string): void {
   }
   saveState(trial, states);
   console.log('meaning check reset for every valid patch');
+}
+
+/**
+ * Take patches produced elsewhere (an XMage translator, a person) into a trial, so they go
+ * through exactly the checks compiled patches do. Each file in `patchDir` is a `PatchFile`. The
+ * patch becomes the card's first and only compile answer: a patch that fails validation is
+ * `invalid`, with no retry, because the compile prompt is not what produced it.
+ */
+function importPatches(trial: string, patchDir: string): void {
+  const p = paths(trial);
+  const byName = new Map(pinnedPool().map((row) => [row.card.name, row]));
+  const targetsPath = `${trial}/targets.json`;
+  const rows: TargetRow[] = existsSync(targetsPath)
+    ? (JSON.parse(readFileSync(targetsPath, 'utf8')) as TargetRow[])
+    : [];
+  const states = loadState(trial);
+  write(p.prefix('back'), BACK_PREFIX);
+  write(p.prefix('judge'), JUDGE_PREFIX);
+  let imported = 0;
+  for (const file of readdirSync(patchDir).filter((name) => name.endsWith('.json'))) {
+    const patch = JSON.parse(readFileSync(`${patchDir}/${file}`, 'utf8')) as PatchFile;
+    if (typeof patch.source !== 'string' || patch.source.length === 0)
+      throw new Error(`${file}: a patch needs a "source" tag`);
+    if (states.has(patch.name)) continue;
+    const pinned = byName.get(patch.name);
+    const target = pinned === undefined ? null : compileTarget(pinned);
+    if (pinned !== undefined && !rows.some((row) => row.name === patch.name))
+      rows.push({ name: patch.name, rank: pinned.rank, lines: target?.lines ?? [] });
+    if (target === null) {
+      // Modeled already, multi-face, or not in the pinned pool: nothing to check against.
+      states.set(patch.name, {
+        name: patch.name,
+        rank: pinned?.rank ?? 0,
+        lines: patch.handledLines,
+        source: patch.source,
+        imported: true,
+        rounds: 0,
+        stage: 'stale',
+        validatorIssues: [],
+      });
+      continue;
+    }
+    states.set(patch.name, {
+      name: patch.name,
+      rank: target.rank,
+      lines: target.lines,
+      source: patch.source,
+      imported: true,
+      rounds: 0,
+      stage: 'compile',
+      validatorIssues: [],
+    });
+    write(
+      p.answer('compile', patch.name, 1),
+      `${JSON.stringify({ status: 'compiled', def: patch.def })}\n`,
+    );
+    imported++;
+  }
+  write(targetsPath, `${JSON.stringify(rows, null, 2)}\n`);
+  saveState(trial, states);
+  console.log(`imported ${imported} patches; run check next`);
+}
+
+export type QueueStatus = 'compiled-checked' | 'meaning-differs' | 'smoke-failed' | 'invalid';
+
+/** One card awaiting human review. Nothing in the queue is registered with the engine. */
+export interface QueueEntry {
+  name: string;
+  oracleId: string;
+  source: string;
+  status: QueueStatus;
+  handledLines: string[];
+  /** Repository path of the patch file. */
+  patch: string | null;
+  trial: string;
+  textCheck?: 'renderer' | 'model';
+  differences?: string[];
+  validatorIssues?: string[];
+  smoke?: { scenario: string; ok: boolean; abilityResolved: boolean; detail: string }[];
+  /** Filled in by the reviewer: accepted, rejected, or null while waiting. */
+  review: { verdict: 'accepted' | 'rejected'; by: string; note?: string } | null;
+}
+
+const QUEUE_PATH = 'docs/reviews/compiled-card-queue.json';
+
+/**
+ * Rebuild the review queue from every trial directory given. Reviews already recorded in the
+ * queue are kept for cards whose patch is unchanged. Cards the compiler declined are not queued;
+ * they are a primitive backlog, listed in each trial's results.json.
+ */
+function queue(trials: string[]): void {
+  const previous = existsSync(QUEUE_PATH)
+    ? (JSON.parse(readFileSync(QUEUE_PATH, 'utf8')) as { cards: QueueEntry[] }).cards
+    : [];
+  const previousByKey = new Map(previous.map((entry) => [`${entry.name}|${entry.source}`, entry]));
+  const entries: QueueEntry[] = [];
+  for (const trial of trials) {
+    const p = paths(trial);
+    const targets = loadTargets(trial);
+    for (const state of loadState(trial).values()) {
+      const target = targets.get(state.name);
+      if (target === undefined) continue;
+      let status: QueueStatus | null = null;
+      if (state.stage === 'invalid') status = 'invalid';
+      else if (state.stage === 'done')
+        status = !smokeOk(state)
+          ? 'smoke-failed'
+          : state.verdict === 'same'
+            ? 'compiled-checked'
+            : 'meaning-differs';
+      if (status === null) continue;
+      const patchPath = existsSync(p.patch(state.name)) ? p.patch(state.name) : null;
+      const source = state.source ?? compilerSource();
+      const old = previousByKey.get(`${state.name}|${source}`);
+      const samePatch =
+        old?.patch !== null &&
+        old?.patch !== undefined &&
+        patchPath !== null &&
+        existsSync(old.patch) &&
+        readFileSync(old.patch, 'utf8') === readFileSync(patchPath, 'utf8');
+      entries.push({
+        name: state.name,
+        oracleId: target.oracleId,
+        source,
+        status,
+        handledLines: state.lines,
+        patch: patchPath,
+        trial,
+        ...(state.textCheck !== undefined && { textCheck: state.textCheck }),
+        ...(state.differences !== undefined &&
+          state.differences.length > 0 && { differences: state.differences }),
+        ...(status === 'invalid' && { validatorIssues: state.validatorIssues.at(-1) ?? [] }),
+        ...(state.smoke !== undefined && {
+          smoke: state.smoke.map((run) => ({
+            scenario: run.scenario,
+            ok: run.ok,
+            abilityResolved: run.abilityResolved,
+            detail: run.detail,
+          })),
+        }),
+        review: samePatch ? (old?.review ?? null) : null,
+      });
+    }
+  }
+  entries.sort((a, b) => a.name.localeCompare(b.name) || a.source.localeCompare(b.source));
+  write(QUEUE_PATH, `${JSON.stringify({ schemaVersion: 1, cards: entries }, null, 2)}\n`);
+  const counts = new Map<string, number>();
+  for (const entry of entries) counts.set(entry.status, (counts.get(entry.status) ?? 0) + 1);
+  console.log(`${entries.length} cards queued for review:`, Object.fromEntries(counts));
 }
 
 /** Prompts with no answer yet, for one stage. */
@@ -407,8 +617,14 @@ function report(trial: string): void {
 
 const [command, trial, stage] = process.argv.slice(2);
 if (trial === undefined)
-  throw new Error('usage: run.ts <prepare|exec|check|report> <trial-dir> [stage]');
-if (command === 'prepare') prepare(trial);
+  throw new Error(
+    'usage: run.ts <prepare|exec|check|report|recheck|import|queue> <trial-dir> [stage|patch-dir]',
+  );
+if (command === 'queue') queue(process.argv.slice(3));
+else if (command === 'import') {
+  if (stage === undefined) throw new Error('usage: run.ts import <trial-dir> <patch-dir>');
+  importPatches(trial, stage);
+} else if (command === 'prepare') prepare(trial);
 else if (command === 'check') check(trial);
 else if (command === 'report') report(trial);
 else if (command === 'recheck') recheck(trial);

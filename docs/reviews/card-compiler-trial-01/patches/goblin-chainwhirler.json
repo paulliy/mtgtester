@@ -1,6 +1,7 @@
 {
   "name": "Goblin Chainwhirler",
   "oracleId": "0342b085-be20-475a-bc38-59b9cb6012e8",
+  "source": "compiler@haiku-worker",
   "handledLines": [
     "When this creature enters, it deals 1 damage to each opponent and each creature and planeswalker they control."
   ],

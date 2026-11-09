@@ -1,6 +1,7 @@
 {
   "name": "Charmbreaker Devils",
   "oracleId": "1b9df437-6988-4ddc-80c4-893e11076067",
+  "source": "compiler@haiku-worker",
   "handledLines": [
     "At the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand."
   ],

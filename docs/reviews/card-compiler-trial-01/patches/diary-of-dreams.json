@@ -1,6 +1,7 @@
 {
   "name": "Diary of Dreams",
   "oracleId": "98b43c61-4563-4a29-8cf0-fb8b34f337ce",
+  "source": "compiler@haiku-worker",
   "handledLines": [
     "{5}, {T}: Draw a card. This ability costs {1} less to activate for each page counter on this artifact."
   ],

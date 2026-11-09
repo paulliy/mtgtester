@@ -1,6 +1,7 @@
 {
   "name": "Treeguard Duo",
   "oracleId": "d7dfb4d5-8510-4904-abb7-834ec65d9bf3",
+  "source": "compiler@haiku-worker",
   "handledLines": [
     "When this creature enters, until end of turn, target creature you control gains vigilance and gets +X/+X, where X is the number of creatures you control."
   ],

@@ -1,6 +1,7 @@
 {
   "name": "Bloodforged Battle-Axe",
   "oracleId": "81a7f559-5edd-47ec-91f7-51e5ee998ed0",
+  "source": "compiler@haiku-worker",
   "handledLines": [
     "Whenever equipped creature deals combat damage to a player, create a token that's a copy of this Equipment."
   ],
