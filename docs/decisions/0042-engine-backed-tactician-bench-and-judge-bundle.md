@@ -1,4 +1,4 @@
-# 0039 — Engine-backed tactician benchmark with a judge bundle, and one primer catalog
+# 0042 — Engine-backed tactician benchmark with a judge bundle, and one primer catalog
 
 Date: 2026-11-10
 
