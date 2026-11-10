@@ -460,3 +460,18 @@ describe('decideScored', () => {
     expect(ranked[0]!.score).toBe(ranked[1]!.score);
   });
 });
+
+describe('another target', () => {
+  it('never picks an "another target" action with one object for two slots', () => {
+    const copy: LegalAction = {
+      id: 1,
+      type: 'activateAbility',
+      description: 'Target artifact you control becomes a copy of another target artifact',
+      targets: [
+        { slot: 0, options: ['a1'] },
+        { slot: 1, options: ['a1'] },
+      ],
+    };
+    expect(decide(request([PASS, copy]), view(), new Rng('a')).actionId).toBe(0);
+  });
+});

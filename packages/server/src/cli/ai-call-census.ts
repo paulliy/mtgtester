@@ -170,7 +170,14 @@ async function main(): Promise<void> {
     };
     for (let g = 0; g < games; g++) {
       const started = performance.now();
-      const c = await censusGame(pool, `${seed}-${g}`, turnCap, mode);
+      let c: CensusCounts;
+      try {
+        c = await censusGame(pool, `${seed}-${g}`, turnCap, mode);
+      } catch (error) {
+        // An engine halt is one lost data point, reported, not a lost run.
+        console.error(`  ${mode.name} game ${g}: THREW ${(error as Error).message}`);
+        continue;
+      }
       console.error(
         `  ${mode.name} game ${g}: ${c.turns} turns, ${c.tactician + c.strategist} calls, ${Math.round(performance.now() - started)} ms`,
       );

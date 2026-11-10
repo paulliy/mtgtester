@@ -212,6 +212,29 @@ function optionScore(
   return 0;
 }
 
+function needsDistinctTargets(action: LegalAction): boolean {
+  return (action.targets?.length ?? 0) > 1 && /\banother target\b/i.test(action.description);
+}
+
+/** Whether every slot can get a different object (a small bipartite matching). */
+function distinctAssignmentExists(action: LegalAction): boolean {
+  const slots = action.targets ?? [];
+  const owner = new Map<string, number>();
+  const tryAssign = (i: number, seen: Set<string>): boolean => {
+    for (const option of slots[i]!.options) {
+      if (seen.has(option)) continue;
+      seen.add(option);
+      const holder = owner.get(option);
+      if (holder === undefined || tryAssign(holder, seen)) {
+        owner.set(option, i);
+        return true;
+      }
+    }
+    return false;
+  };
+  return slots.every((_, i) => tryAssign(i, new Set()));
+}
+
 /** Choose a target for every slot of `action` by polarity, threat and steering. */
 export function chooseTargets(action: LegalAction, ctx: PolicyContext): TargetChoice[] {
   const pressure = opponentPressure(ctx);
@@ -473,6 +496,10 @@ export function actionValue(action: LegalAction, ctx: PolicyContext): number | n
   // A hostile-only action whose best target is our own stuff is a misplay, whatever its roles.
   const hostile = bestHostileTargetValue(action, ctx);
   if (hostile !== null && hostile < 0) value += hostile;
+
+  // "Another target" (CR 115.3) with too few objects to go round: the menu offers it because it
+  // checks each slot alone, but no choice is legal, so never pick it.
+  if (needsDistinctTargets(action) && !distinctAssignmentExists(action)) return P.impossibleTargets;
 
   if (namedIn(steering?.prioritize, name)) value += P.prioritizeBonus;
   if (namedIn(steering?.hold, name)) value -= P.holdPenalty;

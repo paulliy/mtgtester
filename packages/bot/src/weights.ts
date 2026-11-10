@@ -230,6 +230,8 @@ export const WEIGHTS = {
     /** Resolution choices: accepting a may-trigger beats declining it. */
     acceptOptional: 1,
     choiceBase: 20,
+    /** An "another target" action whose slots cannot all get different objects. */
+    impossibleTargets: -100,
   },
 
   /**
