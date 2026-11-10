@@ -1,8 +1,8 @@
 /** Immutable component identities recorded by benchmark manifests and result rows. */
 export const AI_VERSIONS = Object.freeze({
   prompt: 'strategist-tactician-split-v2',
-  tacticianPrimer: 'decision-shaped-tactician-primer-v2',
-  strategistPrimer: 'strategist-primer-v2',
+  tacticianPrimer: 'decision-shaped-tactician-primer-v3',
+  strategistPrimer: 'strategist-primer-v3',
   context: 'modular-context-v3',
   publicMemory: 'public-memory-v1',
   stateFeatures: 'state-features-v1',

@@ -36,73 +36,145 @@ REQUIRED JSON OUTPUT FORMAT (Respond with ONLY this raw JSON object, no markdown
 /** Frozen compatibility name for the pre-split primer. */
 export const RULES_PRIMER = TACTICIAN_PRIMER;
 
-export const TACTICIAN_COMMON_PRIMER = `You are an AI player in a 4-player Commander game.
-The rules engine is authoritative. Choose only from legalActions and return compact JSON immediately.
-Develop your board, play lands on curve, preserve useful interaction, and pressure the player closest to winning. Treat life as a resource, avoid repeating no-op actions, and adapt any strategist advice to the current board.
-When no action is worthwhile, use an offered yield or pass action.
-
-Return ONLY one raw JSON object with requestId and actionId. Include supplemental response fields only when the current request requires them. Never invent an unavailable action or choice.`;
-
-const LAND_AND_MANA_PRIMER = `Land and mana data are authoritative. A source listing several colors normally produces one of them per tap. Prefer land plays that unlock the current turn while preserving needed colors and interaction.`;
-
-const TARGETING_PRIMER = `Targeted actions expose numbered target slots. Fill every required slot with an offered choice for that slot; do not copy ids from another slot or invent a target.`;
-
-const ATTACK_PRIMER = `This is one batched attack declaration. Fill every creature target slot with an offered defending player or planeswalker id, or __no_attack__. Different creatures may attack different opponents; obey forced-attack options and any attack-tax correction.`;
-
-const BLOCK_PRIMER = `This is one batched block declaration. Fill every blocker target slot with an offered attacker id or __no_block__. Several blockers may block one attacker; menace requires a legal multi-block assignment.`;
-
-const COMBAT_DAMAGE_PRIMER = `Return combatDamageSplit counts summing exactly to the stated amount. With trample, damage may reach the defending player or planeswalker only after every blocker has at least lethal damage assigned.`;
-
-/** Master Warcraft: choosing which of ANOTHER player's creatures attack. */
-const CHOOSE_ATTACKERS_PRIMER = `Choosing another player's attackers: this "attackDeclaration" only decides WHICH of the named player's creatures attack, and that player then chooses what each one attacks. For each slot, "choice" is the literal string "__attacks__" or "__no_attack__" ("__no_attack__" is only offered for creatures not forced to attack). Fill in EVERY slot.`;
-
-/** Master Warcraft: choosing the blocks of ANOTHER player's creatures. */
-const CHOOSE_FOREIGN_BLOCKS_PRIMER = `Choosing another player's blocks: the blockers in this "blockDeclaration" belong to the player named in the prompt, not to you, but you decide whether and how each one blocks. Fill in EVERY slot.`;
-
-const MANA_SPLIT_PRIMER = `Return manaSplit counts summing exactly to the stated amount and use only offered mana categories.`;
-
-const ORDER_OR_VALUE_PRIMER = `Return every supplemental field required by this request (modes, xValue, order, or selected cards) using only offered values and the requested cardinality.`;
-
-/** Build only the tactical instructions this decision can consume. */
-export function tacticianPrimerFor(request: DecisionRequest): string {
-  const fragments = [TACTICIAN_COMMON_PRIMER];
-  if (request.legalActions.some((action) => action.type === 'playLand')) {
-    fragments.push(LAND_AND_MANA_PRIMER);
-  }
-  if (request.legalActions.some((action) => (action.targets?.length ?? 0) > 0)) {
-    fragments.push(TARGETING_PRIMER);
-  }
-  if (request.decisionType === 'declareAttackers') fragments.push(ATTACK_PRIMER);
-  if (request.decisionType === 'declareBlockers') fragments.push(BLOCK_PRIMER);
-  if (request.legalActions.some((action) => action.data?.['chooseAttackers'] === true))
-    fragments.push(CHOOSE_ATTACKERS_PRIMER);
-  if (request.legalActions.some((action) => typeof action.data?.['blockingPlayer'] === 'string'))
-    fragments.push(CHOOSE_FOREIGN_BLOCKS_PRIMER);
-  if (request.combatDamageSplit !== undefined || request.decisionType === 'assignCombatDamage') {
-    fragments.push(COMBAT_DAMAGE_PRIMER);
-  }
-  if (request.manaSplit !== undefined) fragments.push(MANA_SPLIT_PRIMER);
-  if (['chooseModes', 'chooseX', 'orderTriggers', 'bottomCards'].includes(request.decisionType)) {
-    fragments.push(ORDER_OR_VALUE_PRIMER);
-  }
-  return fragments.join('\n\n');
+/** One live primer fragment, as sent to a model. */
+export interface PrimerSection {
+  /** Stable kebab-case id, e.g. 'tactician-common', 'tactician-attack', 'strategist'. */
+  id: string;
+  role: 'tactician' | 'strategist';
+  title: string;
+  /** Plain-English condition under which this section is sent, e.g. 'every tactical decision'. */
+  appliesWhen: string;
+  text: string;
 }
 
-/** Strategist-only instructions; tactical serialization stays in `TACTICIAN_PRIMER`. */
-export const STRATEGIST_PRIMER = `You are the strategist for one seat in a four-player Commander (EDH) game.
-The rules engine is authoritative. Your plan is advisory: every action still has to match a legal
-engine menu when the tactician reaches it.
+const COMMON_TEXT = `You are one seat in a 4-player Commander game (40 life; 21 combat damage from one commander kills). The engine is authoritative: pick one actionId from legalActions and reply with compact JSON at once.
+Payload: you (your state), opponents (cmdrDmg is commander damage they dealt you), battlefield, stack, recentLog, turnStrategy (advice only), legalActions.
+Check for lethal first, yours and theirs. Then play lands, develop, and aim attacks and removal at the player closest to winning (life, commander damage, board). Don't spend removal or counters on low-impact targets. Paying life for tempo is fine above about 15 life. Never repeat a no-op; if nothing is worthwhile, take an offered pass or yield.
+Reply with one raw JSON object {"requestId":"<id>","actionId":0}, extra fields only when required, optional "note" (one short sentence). Never invent an action or choice.`;
 
-Plan the active player's turn from the information that player may observe. Never assume hidden
-hands, library order, opponent decklists, future draws, or private reasoning. Evaluate public
-graveyards, exile, revealed library tops, commanders, current battlefield characteristics, the
-stack, life, poison, commander damage, and recent public actions.
-yourStrategyProfile describes YOUR deck only; it never describes an opponent's hidden decklist.
+const LAND_TEXT = `A source listing several colors makes one per tap. Play the land that lets you cast something this turn and covers colors you lack, untapped if you have a play. A playLand "unlocks" lists hand cards it makes castable.`;
 
-Set a concise objective, identify the public threats that can win or stop the plan, sequence lands
-and spells, reserve interaction or protection when justified, and adapt the line to likely
-opponent responses. Prefer conditional intentions over pretending an uncertain action will remain
-available. Do not adjudicate legality and do not invent card text.
+const TARGETING_TEXT = `Give one "targets" entry per slot, from that slot's offered options: "targets":[{"slot":0,"choice":"<offered id>"}].`;
+
+const ATTACK_TEXT = `One batched attack declaration: pick the attackDeclaration action and give EVERY creature slot an offered defender (seat or planeswalker id) or "__no_attack__" (not offered for forced attackers). Defenders may differ per creature. If rejected, fix only the flagged creatures.
+Attack only for a gain: lethal, unblocked damage, or a favorable trade. Attacking into a bigger untapped blocker for no gain loses the creature, and attackers tap, so keep back enough blockers to survive the next swing.
+"targets":[{"slot":0,"choice":"P2"},{"slot":1,"choice":"__no_attack__"}]`;
+
+const BLOCK_TEXT = `One batched block declaration: pick the blockDeclaration action and give EVERY blocker slot an offered attacker id or "__no_block__" (not offered for forced blockers). Several blockers may block one attacker; menace needs two or the proposal is rejected. If rejected, fix only the flagged blockers.
+Prefer blocks that kill the attacker and survive. Chump only to prevent lethal or protect something that matters.
+"targets":[{"slot":0,"choice":"<attacker id>"},{"slot":1,"choice":"__no_block__"}]`;
+
+const COMBAT_DAMAGE_TEXT = `Reply with "combatDamageSplit" mapping each id in the request's targets to a whole number summing exactly to "amount"; lethal need not go to each blocker first. With trample, the last target (defending player or planeswalker) gets damage only after every blocker has at least lethal.
+"combatDamageSplit":{"<blocker id>":3,"<defender id>":2}`;
+
+const CHOOSE_ATTACKERS_TEXT = `You choose another player's attackers; they pick the defenders. Give EVERY slot "__attacks__" or "__no_attack__" (the latter not offered for forced attackers), whichever is better for you.`;
+
+const CHOOSE_FOREIGN_BLOCKS_TEXT = `These blockers belong to the player named in the prompt, but you decide each block. Give EVERY slot an offered attacker id or "__no_block__".`;
+
+const MANA_SPLIT_TEXT = `Reply with "manaSplit" mapping each color in manaSplit.colors to a whole number summing exactly to manaSplit.amount: "manaSplit":{"R":2,"G":1}`;
+
+const ORDER_OR_VALUE_TEXT = `Each legal action is a complete choice (mode, X value, next trigger to stack, card to bottom). Pick one actionId; no extra fields are read. The last trigger placed resolves first.`;
+
+const STRATEGIST_TEXT = `You are the strategist for one seat in a four-player Commander (EDH) game. The rules engine is authoritative; your plan is advisory and every action must still match a legal engine menu when the tactician reaches it.
+
+Plan the active player's turn using only what that player may observe. Never assume hidden hands, library order, opponent decklists, future draws, or private reasoning. Use public graveyards, exile, revealed library tops, commanders, current battlefield characteristics, the stack, life, poison, commander damage, and recent public actions. yourStrategyProfile describes YOUR deck only, never an opponent's.
+
+Set a concise objective, name the public threats that can win or stop the plan, sequence lands and spells, reserve interaction or protection when justified, and adapt to likely opponent responses. Prefer conditional intentions to assuming an uncertain action stays available. Do not adjudicate legality or invent card text.
 
 Return ONLY this JSON envelope, preserving actionId 0 for parser compatibility:
 {"actionId":0,"turnStrategy":{"intent":"concise objective","threatOrder":["P2"],"manaPlan":"sequencing and reservation plan","plannedActions":[{"id":"a1","type":"playLand","name":"Card name","source":{"objectId":"visible object id","name":"Card name"},"phase":"precombatMain","step":null,"preconditions":[{"kind":"phaseReached","phase":"precombatMain","step":null}],"dependencies":[],"objective":"why this advances the plan","expectedEffect":"what public state should change","alternative":"what to do if unavailable"}]}}`;
+
+export const TACTICIAN_COMMON_PRIMER = COMMON_TEXT;
+
+/** Strategist-only instructions; tactical serialization stays in `TACTICIAN_PRIMER`. */
+export const STRATEGIST_PRIMER = STRATEGIST_TEXT;
+
+const tactician = (
+  id: string,
+  title: string,
+  appliesWhen: string,
+  text: string,
+): PrimerSection => ({ id, role: 'tactician', title, appliesWhen, text });
+
+const CATALOG: readonly PrimerSection[] = Object.freeze([
+  tactician('tactician-common', 'Tactician common', 'every tactical decision', COMMON_TEXT),
+  tactician('tactician-land-mana', 'Land and mana', 'a playLand action is legal', LAND_TEXT),
+  tactician(
+    'tactician-targeting',
+    'Targeting',
+    'any legal action has target slots',
+    TARGETING_TEXT,
+  ),
+  tactician(
+    'tactician-attack',
+    'Attack declaration',
+    'the decision is declareAttackers',
+    ATTACK_TEXT,
+  ),
+  tactician('tactician-block', 'Block declaration', 'the decision is declareBlockers', BLOCK_TEXT),
+  tactician(
+    'tactician-choose-attackers',
+    'Choosing another player’s attackers',
+    'a legal action is flagged chooseAttackers',
+    CHOOSE_ATTACKERS_TEXT,
+  ),
+  tactician(
+    'tactician-foreign-blocks',
+    'Choosing another player’s blocks',
+    'a legal action names a blockingPlayer',
+    CHOOSE_FOREIGN_BLOCKS_TEXT,
+  ),
+  tactician(
+    'tactician-combat-damage',
+    'Combat damage split',
+    'the request carries combatDamageSplit or is assignCombatDamage',
+    COMBAT_DAMAGE_TEXT,
+  ),
+  tactician('tactician-mana-split', 'Mana split', 'the request carries manaSplit', MANA_SPLIT_TEXT),
+  tactician(
+    'tactician-order-or-value',
+    'Modes, X, trigger order, bottoming',
+    'the decision is chooseModes, chooseX, orderTriggers or bottomCards',
+    ORDER_OR_VALUE_TEXT,
+  ),
+  {
+    id: 'strategist',
+    role: 'strategist',
+    title: 'Strategist',
+    appliesWhen: 'once per turn, as the strategist system prompt',
+    text: STRATEGIST_TEXT,
+  },
+]);
+
+/** Every live primer section, in the order they are concatenated. Excludes the frozen legacy primer. */
+export function primerCatalog(): PrimerSection[] {
+  return CATALOG.map((section) => ({ ...section }));
+}
+
+/** Ids of the tactician sections `tacticianPrimerFor(request)` would send for this request, in order. */
+export function tacticianPrimerSectionIds(request: DecisionRequest): string[] {
+  const actions = request.legalActions;
+  const ids = ['tactician-common'];
+  if (actions.some((action) => action.type === 'playLand')) ids.push('tactician-land-mana');
+  if (actions.some((action) => (action.targets?.length ?? 0) > 0)) ids.push('tactician-targeting');
+  if (request.decisionType === 'declareAttackers') ids.push('tactician-attack');
+  if (request.decisionType === 'declareBlockers') ids.push('tactician-block');
+  if (actions.some((action) => action.data?.['chooseAttackers'] === true))
+    ids.push('tactician-choose-attackers');
+  if (actions.some((action) => typeof action.data?.['blockingPlayer'] === 'string'))
+    ids.push('tactician-foreign-blocks');
+  if (request.combatDamageSplit !== undefined || request.decisionType === 'assignCombatDamage')
+    ids.push('tactician-combat-damage');
+  if (request.manaSplit !== undefined) ids.push('tactician-mana-split');
+  if (['chooseModes', 'chooseX', 'orderTriggers', 'bottomCards'].includes(request.decisionType))
+    ids.push('tactician-order-or-value');
+  return ids;
+}
+
+/** Build only the tactical instructions this decision can consume. */
+export function tacticianPrimerFor(request: DecisionRequest): string {
+  const byId = new Map(CATALOG.map((section) => [section.id, section.text]));
+  return tacticianPrimerSectionIds(request)
+    .map((id) => byId.get(id) ?? '')
+    .join('\n\n');
+}
