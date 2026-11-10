@@ -525,10 +525,15 @@ function idleReactivePenalty(
 function holdUpPenalty(mv: number, action: LegalAction, ctx: PolicyContext): number {
   const want = ctx.steering?.holdUpMana ?? 0;
   if (want <= 0 || action.data?.['instantSpeed'] === true) return 0;
-  // Each source row is one permanent; `count` is how much it makes. `availableMana` already folds
-  // these sources in, per symbol, so adding it would count them twice (and once per color for a
-  // five-color land). Floating mana is not separable from it and rarely matters here.
-  const untapped = ctx.view.manaSources.reduce((sum, m) => sum + m.count, 0);
+  // Each source row is one permanent. Its `count` sums every alternative mana ability, so a
+  // row that makes several kinds of mana (Aether Hub, Command Tower) usually yields one per
+  // tap; only a single-symbol row (Forest, Sol Ring) is taken at its count. That undercounts a
+  // few big multi-color rocks, which errs toward keeping mana up. `availableMana` folds these
+  // sources in per symbol, so adding it would count them twice.
+  const untapped = ctx.view.manaSources.reduce(
+    (sum, m) => sum + (m.symbols.length <= 1 ? m.count : 1),
+    0,
+  );
   return untapped - mv < want ? P.holdUpPenalty : 0;
 }
 

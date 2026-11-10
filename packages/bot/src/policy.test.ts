@@ -535,6 +535,18 @@ describe('steering', () => {
     expect(grouped.actionId).toBe(1);
   });
 
+  it('counts a multi-ability land like Aether Hub as one mana for hold-up', () => {
+    const actions = [PASS, spell(1, 'Sorcery', '{2}')];
+    const sources = [
+      { name: 'Aether Hub', symbols: ['C', 'W', 'U', 'B', 'R', 'G'], count: 2 },
+      { name: 'Forest', symbols: ['G'], count: 2 },
+    ];
+    const res = decide(request(actions), view({ manaSources: sources }), new Rng('a'), {
+      steering: { holdUpMana: 2 },
+    });
+    expect(res.actionId).toBe(0);
+  });
+
   function attack(subjects: Array<{ id: string; power: number; toughness: number }>): LegalAction {
     return {
       id: 0,
