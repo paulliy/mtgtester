@@ -48,6 +48,8 @@ export interface Tally {
   costKnown: boolean;
   /** Calls that failed after the client's own retries; the seat fell back to the bot. */
   failedCalls: number;
+  /** Rejected or timed-out attempts that reported tokens but no price; their cost is not in costUsd. */
+  unpricedAttempts: number;
 }
 
 export function emptyTally(): Tally {
@@ -59,6 +61,7 @@ export function emptyTally(): Tally {
     costUsd: 0,
     costKnown: true,
     failedCalls: 0,
+    unpricedAttempts: 0,
   };
 }
 
@@ -97,8 +100,16 @@ export function counting(
     const mode = modeByRequest.get(attempt.logicalRequestId);
     if (mode !== undefined && attempt.status !== 'accepted') {
       const { promptTokens, responseTokens, costUsd } = attempt.usage;
-      if (promptTokens !== undefined || responseTokens !== undefined || costUsd !== undefined) {
-        charge(tallies[mode], promptTokens, responseTokens, costUsd);
+      const tally = tallies[mode];
+      if (costUsd === undefined) {
+        // A timed-out or failed attempt may carry token estimates but no price. Count it apart
+        // instead of marking the whole mode's cost unknown.
+        if (promptTokens !== undefined || responseTokens !== undefined) {
+          tally.unpricedAttempts++;
+          charge(tally, promptTokens, responseTokens, 0);
+        }
+      } else {
+        charge(tally, promptTokens, responseTokens, costUsd);
       }
     }
     await outer?.(attempt);

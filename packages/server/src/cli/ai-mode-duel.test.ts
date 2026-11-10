@@ -32,4 +32,27 @@ describe('ai-mode-duel spend accounting', () => {
     expect(budget.spentUsd).toBeCloseTo(0.01);
     expect(tallies.bot.promptTokens).toBe(0);
   });
+
+  it('counts an unpriced failed attempt apart instead of making the cost unknown', async () => {
+    let observer: AiAttemptObserver | undefined;
+    const inner = {
+      activeModel: 'm',
+      setAttemptObserver(o: AiAttemptObserver | undefined) {
+        observer = o;
+      },
+      async requestDecision() {
+        await observer?.({
+          logicalRequestId: 'r1',
+          status: 'transport_error',
+          usage: { promptTokens: 80 },
+        } as AiNetworkAttempt);
+        throw new Error('timeout');
+      },
+    } as unknown as OpenAiCompatibleClient;
+    const tallies = { bot: emptyTally(), model: emptyTally() };
+    const budget: Budget = { maxUsd: 1, maxCalls: 10, spentUsd: 0, calls: 0, capped: false };
+    const client = counting(inner, 'tactician', () => 'model', tallies, budget);
+    await expect(client.requestDecision(prompt, request)).rejects.toThrow('timeout');
+    expect(tallies.model).toMatchObject({ costKnown: true, unpricedAttempts: 1, promptTokens: 80 });
+  });
 });
