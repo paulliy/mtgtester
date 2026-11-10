@@ -385,6 +385,28 @@ describe('card-aware priority scoring', () => {
     expect(first!.choice).not.toBe(second!.choice);
   });
 
+  it('reuses an opposing target rather than aim a hostile slot at its own permanent', () => {
+    // Hull Breach's artifact-and-enchantment mode: one object may fill both slots (CR 115.3).
+    const board = [creature('theirs', 'P2', 3, 3), creature('mine', 'P1', 3, 3)];
+    const breach: LegalAction = {
+      id: 1,
+      type: 'castSpell',
+      description: 'Cast Hull Breach',
+      targets: [
+        { slot: 0, options: ['theirs', 'mine'] },
+        { slot: 1, options: ['theirs', 'mine'] },
+      ],
+      data: { sourceName: 'Hull Breach', manaCost: '{R}{G}' },
+    };
+    const k = knowledge({
+      'Hull Breach': { manaValue: 2, roles: ['removal'], spellTargets: ['hostile', 'hostile'] },
+    });
+    const res = decide(request([PASS, breach]), view({ battlefield: board }), new Rng('a'), {
+      knowledge: k,
+    });
+    expect(res.targets!.map((t) => t.choice)).toEqual(['theirs', 'theirs']);
+  });
+
   it('does not float mana by activating a mana ability on its own', () => {
     // The engine's manual mana action shape (packages/engine/src/mana/manual.ts).
     const tap: LegalAction = {

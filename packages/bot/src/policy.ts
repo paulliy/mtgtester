@@ -269,6 +269,7 @@ function distinctAssignmentExists(action: LegalAction): boolean {
 export function chooseTargets(action: LegalAction, ctx: PolicyContext): TargetChoice[] {
   const pressure = opponentPressure(ctx);
   const taken = new Set<string>();
+  const distinct = needsDistinctTargets(action);
   const slots = action.targets ?? [];
   // Fill the most constrained slots first, so a slot with one option keeps it.
   const order = slots
@@ -282,21 +283,32 @@ export function chooseTargets(action: LegalAction, ctx: PolicyContext): TargetCh
   return chosen;
 
   function pickForSlot(slot: (typeof slots)[number]): TargetChoice {
-    // Some slots must differ from earlier ones ("another target", CR 115.3). The menu cannot say
-    // which, so prefer an option no earlier slot took whenever one exists.
+    // CR 115.3 lets one object fill several "target" words; only "another target" forbids it,
+    // and the menu cannot say which applies. So prefer an option no earlier slot took (two
+    // removal slots hit two threats), but for a slot that may repeat, never let that push a
+    // hostile slot onto our own permanent or a friendly one onto an opponent's.
     const fresh = slot.options.filter((o) => !taken.has(o));
-    const options = fresh.length > 0 ? fresh : slot.options;
-    const polarity = options.length <= 1 ? 'neutral' : slotPolarity(action, slot.slot, ctx);
-    let best = options[0] as string;
-    if (polarity !== 'neutral') {
-      let bestScore = -Infinity;
-      for (const option of options) {
-        const score = optionScore(option, polarity, ctx, pressure);
-        if (score > bestScore) {
-          bestScore = score;
-          best = option;
+    const polarity = slot.options.length <= 1 ? 'neutral' : slotPolarity(action, slot.slot, ctx);
+    const pick = (options: readonly string[]): { option: string; score: number } => {
+      let option = options[0] as string;
+      let score = polarity === 'neutral' ? 0 : -Infinity;
+      if (polarity !== 'neutral') {
+        for (const o of options) {
+          const value = optionScore(o, polarity, ctx, pressure);
+          if (value > score) {
+            score = value;
+            option = o;
+          }
         }
       }
+      return { option, score };
+    };
+    const any = pick(slot.options);
+    let best = any.option;
+    if (fresh.length > 0) {
+      const spread = pick(fresh);
+      const wrongSide = spread.score < 0 && spread.score < any.score;
+      if (distinct || !wrongSide) best = spread.option;
     }
     taken.add(best);
     return { slot: slot.slot, choice: best };
