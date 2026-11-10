@@ -9,7 +9,7 @@
  * patch shape the batch card compiler imports (`run.ts import`), with
  * `source: "xmage@<commit>"`. Nothing is registered with the engine.
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { OracleCard } from '../../packages/shared/src';
 import type { CardDefinition } from '../../packages/engine/src/cards/definition';
@@ -223,6 +223,9 @@ for (const row of triage) {
 // Keep the LIMIT most-played translations, plus every overlap card that translated.
 patches.sort((a, b) => b.decks - a.decks);
 const kept = patches.filter((p, i) => i < LIMIT || overlap.has(p.name));
+// Rebuild the patch directory from scratch so a patch this run no longer keeps (a lower --limit,
+// or an adapter that now refuses the card) cannot survive from an earlier run and be imported.
+rmSync(join(outDir, 'patches'), { recursive: true, force: true });
 mkdirSync(join(outDir, 'patches'), { recursive: true });
 for (const p of kept)
   writeFileSync(join(outDir, 'patches', `${p.slug}.json`), `${JSON.stringify(p.body, null, 2)}\n`);
