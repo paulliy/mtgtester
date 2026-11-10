@@ -198,7 +198,15 @@ function targetsFor(
     return attackDeclarationTargets(action, view);
   }
   if (action.type === 'blockDeclaration') return blockDeclarationTargets(action, view, opts);
-  if (diplomacy !== undefined) return complyingTargets(action, view, diplomacy);
+  if (diplomacy !== undefined) {
+    // Deals narrow the options; the card-aware policy still picks among what is left.
+    return complyingTargets(
+      action,
+      view,
+      diplomacy,
+      policy === undefined ? undefined : (restricted) => chooseTargets(restricted, policy),
+    );
+  }
   if (policy !== undefined) return chooseTargets(action, policy);
   return firstTargets(action);
 }

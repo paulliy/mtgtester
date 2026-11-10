@@ -292,6 +292,25 @@ describe('card-aware priority scoring', () => {
     expect(res.targets).toEqual([{ slot: 1, choice: 'mine' }]);
   });
 
+  it('still aims removal by polarity when diplomacy is on but no deal applies', () => {
+    const board = [creature('mine', 'P1', 5, 5), creature('theirs', 'P2', 3, 3)];
+    const removal: LegalAction = {
+      id: 1,
+      type: 'castSpell',
+      description: 'Cast Murder',
+      targets: [{ slot: 0, options: ['mine', 'theirs'] }],
+      data: { sourceName: 'Murder', manaCost: '{1}{B}{B}' },
+    };
+    const k = knowledge({
+      Murder: { manaValue: 3, roles: ['removal'], spellTargets: ['hostile'] },
+    });
+    const res = decide(request([PASS, removal]), view({ battlefield: board }), new Rng('a'), {
+      knowledge: k,
+      diplomacy: { obligations: () => [], startingOpponents: 3 },
+    });
+    expect(res.targets).toEqual([{ slot: 0, choice: 'theirs' }]);
+  });
+
   it('does not cast removal whose only targets are its own permanents', () => {
     const removal: LegalAction = {
       id: 1,

@@ -94,25 +94,38 @@ function forbiddenBy(
 }
 
 /**
- * Targets for a non-combat action that honor this seat's `noTarget`/`noCounter` obligations. The
- * plain bot's choice (the first option) stands when it complies; otherwise the first complying
- * option, or the first option when none complies. Choosing a seat whose protection was released
+ * Targets for a non-combat action that honor this seat's `noTarget`/`noCounter` obligations. Each
+ * slot is narrowed to its complying options (all of them when none complies), and `pick` chooses
+ * among those; without it, the first remaining option. Choosing a seat whose protection was released
  * is announced as self-defense.
  */
 export function complyingTargets(
   action: LegalAction,
   view: PlayerView,
   dip: DiplomacyPlay,
+  /** Picks among the complying options; the first option of each slot when omitted. */
+  pick?: (restricted: LegalAction) => TargetChoice[],
 ): TargetChoice[] {
   const ctx = targetContext(view, dip);
-  return (action.targets ?? []).map((slot) => {
-    const ok = slot.options.find((o) => forbiddenBy(ctx.binding, o, ctx).length === 0);
-    const choice = (ok ?? slot.options[0]) as string;
+  const restricted: LegalAction = {
+    ...action,
+    targets: (action.targets ?? []).map((slot) => {
+      const ok = slot.options.filter((o) => forbiddenBy(ctx.binding, o, ctx).length === 0);
+      return { ...slot, options: ok.length > 0 ? ok : slot.options };
+    }),
+  };
+  const choices =
+    pick?.(restricted) ??
+    (restricted.targets ?? []).map((slot) => ({
+      slot: slot.slot,
+      choice: slot.options[0] as string,
+    }));
+  for (const { choice } of choices) {
     for (const a of forbiddenBy(ctx.releasedOnes, choice, ctx)) {
       dip.reportBreach?.(a.dealId, 'selfDefense');
     }
-    return { slot: slot.slot, choice };
-  });
+  }
+  return choices;
 }
 
 /**

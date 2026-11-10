@@ -32,14 +32,14 @@ import {
   StrategyCoordinator,
   type AiConfig,
 } from '../ai';
-import type { AiClient } from '../ai/client';
+import type { AiAttemptObserver, AiClient } from '../ai/client';
 import type { AiPrompt } from '../ai/context';
 
 const FIXTURE = 'packages/server/fixtures/coverage-oracle.json';
 const SEATS: PlayerId[] = ['P1', 'P2', 'P3', 'P4'];
-type ModeName = 'bot' | 'model';
+export type ModeName = 'bot' | 'model';
 
-interface Tally {
+export interface Tally {
   tacticianCalls: number;
   strategistCalls: number;
   promptTokens: number;
@@ -50,7 +50,7 @@ interface Tally {
   failedCalls: number;
 }
 
-function emptyTally(): Tally {
+export function emptyTally(): Tally {
   return {
     tacticianCalls: 0,
     strategistCalls: 0,
@@ -62,7 +62,7 @@ function emptyTally(): Tally {
   };
 }
 
-interface Budget {
+export interface Budget {
   maxUsd: number;
   maxCalls: number;
   spentUsd: number;
@@ -70,44 +70,68 @@ interface Budget {
   capped: boolean;
 }
 
-/** Wraps a real client so every call is charged to the mode of the seat it was made for. */
-function counting(
-  inner: AiClient,
+/**
+ * Wraps a real client so every call is charged to the mode of the seat it was made for. A billed
+ * completion the client rejects (malformed JSON, empty content) never reaches the result, so its
+ * usage is taken from the client's attempt record instead; accepted attempts are counted from the
+ * result, so nothing is charged twice.
+ */
+export function counting(
+  inner: OpenAiCompatibleClient,
   role: 'tactician' | 'strategist',
   modeOf: (seat: PlayerId) => ModeName,
   tallies: Record<ModeName, Tally>,
   budget: Budget,
 ): AiClient {
+  const modeByRequest = new Map<string, ModeName>();
+  let outer: AiAttemptObserver | undefined;
+  const charge = (tally: Tally, promptTokens = 0, responseTokens = 0, costUsd?: number): void => {
+    tally.promptTokens += promptTokens;
+    tally.responseTokens += responseTokens;
+    if (typeof costUsd === 'number') {
+      tally.costUsd += costUsd;
+      budget.spentUsd += costUsd;
+    } else tally.costKnown = false;
+  };
+  inner.setAttemptObserver(async (attempt) => {
+    const mode = modeByRequest.get(attempt.logicalRequestId);
+    if (mode !== undefined && attempt.status !== 'accepted') {
+      const { promptTokens, responseTokens, costUsd } = attempt.usage;
+      if (promptTokens !== undefined || responseTokens !== undefined || costUsd !== undefined) {
+        charge(tallies[mode], promptTokens, responseTokens, costUsd);
+      }
+    }
+    await outer?.(attempt);
+  });
   return {
     get activeModel() {
       return inner.activeModel;
     },
-    ...(inner.setAttemptObserver === undefined
-      ? {}
-      : { setAttemptObserver: inner.setAttemptObserver.bind(inner) }),
+    setAttemptObserver(observer) {
+      outer = observer;
+    },
     async requestDecision(prompt: AiPrompt, request: DecisionRequest, signal?: AbortSignal) {
-      const tally = tallies[modeOf(request.decidingPlayer)];
+      const mode = modeOf(request.decidingPlayer);
+      const tally = tallies[mode];
       if (budget.spentUsd >= budget.maxUsd || budget.calls >= budget.maxCalls) {
         // Thrown before any request is sent: the provider falls back to the bot, for free.
         budget.capped = true;
         throw new Error('ai-mode-duel spend cap reached');
       }
       budget.calls++;
+      modeByRequest.set(request.requestId, mode);
       let result: Awaited<ReturnType<AiClient['requestDecision']>>;
       try {
         result = await inner.requestDecision(prompt, request, signal);
       } catch (error) {
         tally.failedCalls++;
         throw error;
+      } finally {
+        modeByRequest.delete(request.requestId);
       }
       if (role === 'tactician') tally.tacticianCalls++;
       else tally.strategistCalls++;
-      tally.promptTokens += result.meta.promptTokens;
-      tally.responseTokens += result.meta.responseTokens;
-      if (typeof result.meta.costUsd === 'number') {
-        tally.costUsd += result.meta.costUsd;
-        budget.spentUsd += result.meta.costUsd;
-      } else tally.costKnown = false;
+      charge(tally, result.meta.promptTokens, result.meta.responseTokens, result.meta.costUsd);
       return result;
     },
   };
