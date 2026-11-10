@@ -629,7 +629,12 @@ function abilityBody(ability: unknown): string {
   const used = new Set<number>();
   const text = joinEffects((ability['effects'] as unknown[]) ?? [], ctx, used);
   if (used.size !== targets.length) throw new Unrendered('ability:unused-target-slot');
-  return ability['optional'] === true ? `you may ${text[0]!.toLowerCase()}${text.slice(1)}` : text;
+  if (ability['optional'] !== true) return text;
+  // Declining an optional trigger skips every effect, but "you may" in printed text covers only
+  // its own sentence, so an optional ability with more than one effect cannot be compared safely.
+  if (((ability['effects'] as unknown[]) ?? []).length > 1)
+    throw new Unrendered('ability:optional-multi-effect');
+  return `you may ${text[0]!.toLowerCase()}${text.slice(1)}`;
 }
 
 function costText(cost: unknown): string {
@@ -690,7 +695,8 @@ export function renderBehavior(def: Partial<CardDefinition>): string[] {
           let symbols: string;
           if (units.every((unit) => unit.length === 1))
             symbols = units.map((unit) => `{${unit[0]}}`).join('');
-          else if (units.length === 1 && units[0]!.length === 5) symbols = 'one mana of any color';
+          else if (units.length === 1 && [...new Set(units[0])].sort().join('') === 'BGRUW')
+            symbols = 'one mana of any color';
           else if (units.length === 1)
             symbols = units[0]!.map((color) => `{${color}}`).join(' or ');
           else throw new Unrendered('manaAbility:choice');
