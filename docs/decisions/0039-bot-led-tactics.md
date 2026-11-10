@@ -58,17 +58,24 @@ against bot; the switch should flip after one comparison against the real tactic
 
 ## Measurements
 
-See the pull request for the run that accompanies this ADR. At the time of writing:
+`bun run ai-call-census`, six four-player games per mode, 40-turn cap (bot games end sooner, so
+per-turn numbers are the fair comparison):
 
-| Mode (40-turn census games) | Model calls per turn | Prompt tokens per turn |
+| Mode                        | Model calls per turn | Prompt tokens per turn |
 | --------------------------- | -------------------- | ---------------------- |
-| model (today)               | 5.3                  | about 16,000           |
-| bot, re-plan every turn     | 1.15                 | about 3,200            |
-| bot, re-plan on change      | see PR               | see PR                 |
-| bot, escalate close calls   | see PR               | see PR                 |
+| model (today)               | 5.57                 | about 17,300           |
+| bot, re-plan every turn     | 1.22                 | about 3,400            |
+| bot, re-plan on change      | 0.76                 | about 2,200            |
+| bot, escalate close calls   | about 1.05 (2 games) | not measured           |
 
-Bot league, card-aware bot (`knowledge`) against the pre-ADR bot (`legacy`): 44 wins to 28 over 80
-games (61%, 95% interval 50 to 72%), with the final run in the PR.
+Re-plan on change reused a seat's knobs 95 times in 209 turns. The escalation run is partial: two
+of its games halted on engine errors (`casting restriction is not met`, and a runaway past 20,000
+decisions) that the stub tactician's answers reached; those are engine issues to follow up.
+
+`bun run bot-league`, card-aware bot (`knowledge`) against the pre-ADR bot (`legacy`), 100 games,
+paired seeds with seats swapped: 62 wins to 28, 9 draws, 1 timeout (68.9% of decided games, 95%
+interval 59 to 79%), life share 0.67 to 0.33. Card knowledge from the IR is worth a little on its
+own: `knowledge` beat the same policy with mana value only (`policy`) 30 to 24.
 
 ## Consequences
 
