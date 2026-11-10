@@ -34,8 +34,8 @@
             {
               "op": "createToken",
               "spec": {
-                "name": "Kobold",
-                "typeLine": "Creature — Kobold",
+                "name": "Kobolds of Kher Keep",
+                "typeLine": "Creature \u2014 Kobold",
                 "types": ["Creature"],
                 "subtypes": ["Kobold"],
                 "colors": ["R"],

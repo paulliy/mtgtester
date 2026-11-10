@@ -5,7 +5,7 @@
  * For every pinned EDHREC card and every line of its Oracle text, the line is interpreted alone
  * (a copy of the card carrying only that line, under a fresh oracle id so no authored override
  * applies) and, separately, translated from the matching XMage ability. When both succeed the
- * two fragments are compared after canonicalization (descriptions and token display names
+ * two fragments are compared after canonicalization (descriptions and token type lines
  * dropped, `allOf`/`anyOf` members sorted). Disagreements are listed for review: each one is an
  * adapter bug, a parser bug, or a real difference between XMage and Oracle text.
  *
@@ -37,7 +37,7 @@ const KEYS = [
   'activatedAbilities',
   'triggers',
 ] as const;
-const DROP = new Set(['description', 'name', 'typeLine']);
+const DROP = new Set(['description', 'typeLine']);
 
 const isConst = (v: unknown) =>
   v !== null &&

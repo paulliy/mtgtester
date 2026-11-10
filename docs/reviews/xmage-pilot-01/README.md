@@ -59,7 +59,8 @@ still carry a verb or clause found no other case of this kind.
 ## Meaning-check false alarms
 
 Rerun with the compiler's updated back-translation conventions (`run.ts recheck`, Haiku workers):
-63 of 74 pass, up from 53. A hand audit of the 11 flags again found no wrong patch:
+63 of 74 pass, up from 53. A hand audit of the 11 flags found two patches with a real gap (the token names below) and no
+other wrong patch:
 
 - The back-translator dropped a field: `cantRegenerate` (Plague Wind), the damage source
   (Firespitter Whelp), and two read a layer 7d `+1/+1` as setting base power and toughness
@@ -67,7 +68,8 @@ Rerun with the compiler's updated back-translation conventions (`run.ts recheck`
 - The judge counted "Kithkin spells and Soldier spells" as two reductions against "Kithkin or
   Soldier spells". One static ability reduces a spell once, so both texts mean the same (four
   Banneret-style cards).
-- Token names the IR does not carry (Kher Keep, Koma, World-Eater).
+- Token names (Kher Keep, Koma, World-Eater). This one was a real gap: the adapter named tokens
+  by subtype. It now keeps a token's printed name and both patches were regenerated.
 - "Target commander" read as possibly including the command zone (Witch's Clinic).
 
 The first run's 21 flags fell into four groups, each fixed in the conventions since:
@@ -86,7 +88,10 @@ key. Estimated at under $0.01 for the run. Translation itself is deterministic a
 
 ## Files
 
-- `patches/`: the 74 patches, `source: "xmage@31ede542"`.
+- `patches/`: 72 of the 74 patches, `source: "xmage@31ede542"`. Aqueous Form and Cloak of Mists
+  were removed once the parser fix made the interpreter model them itself. Kher Keep and Koma,
+  World-Eater were regenerated after review to keep their tokens' names ("Kobolds of Kher Keep",
+  "Koma's Coil"), which name selectors compare.
 - `results.json`, `targets.json`, `work/`: the compiler checks' output.
 - `translation-results.json`: translation summary and per-card outcome for translated, invalid and
   spell-merge cards.

@@ -811,8 +811,11 @@ function token(e: JExpr | undefined, ctx: XmageContext): TokenSpec {
   const extra = types.filter((t) => t !== 'Creature');
   if (extra.length > 1 || (extra.length === 1 && extra[0] !== 'Artifact'))
     throw new Unmapped(`new ${cls}()`, 'token types');
+  // A token "named X" (Kobolds of Kher Keep, Koma's Coil) keeps that name: name selectors and
+  // "same name" checks compare it. XMage states it in the description it passes to super().
+  const named = /super\(\s*"(?:[^"\\]|\\.)*"\s*,\s*"[^"]*\bnamed ([^"]+)"/.exec(body)?.[1];
   return creatureToken({
-    name: subs.join(' '),
+    name: named ?? subs.join(' '),
     subtypes: subs,
     colors,
     power,

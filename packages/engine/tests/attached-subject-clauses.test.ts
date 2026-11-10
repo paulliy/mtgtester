@@ -10,11 +10,27 @@
  * output with XMage's implementations (scripts/xmage-import/agreement.ts).
  */
 import { describe, expect, it } from 'vitest';
+import { applyPriorityAction } from '../src/actions/apply';
+import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
 import { computeCharacteristics } from '../src/effects/continuous';
+import { addMana } from '../src/mana/pool';
+import { resolveTopOfStack } from '../src/stack/stack';
 import { createGame } from '../src/state/game';
+import { playerById } from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
-import { copies, forest, gameConfig, oracle, spawn } from './fixtures';
+import { runCombatAndExtraCombats } from '../src/turn/turn';
+import {
+  conjure,
+  copies,
+  declareAttacks,
+  declareBlocks,
+  forest,
+  gameConfig,
+  oracle,
+  pump,
+  spawn,
+} from './fixtures';
 
 const CLOAK = oracle({
   name: 'Whispersilk Cloak',
@@ -68,12 +84,62 @@ const bear = (name: string) =>
   oracle({ name, typeLine: 'Creature — Bear', power: '2', toughness: '2' });
 
 function pod(seed: string): GameContext {
-  return createGame(
+  const ctx = createGame(
     gameConfig(
       Array.from({ length: 4 }, () => ({ cards: copies(8, forest) })),
       { seed },
     ),
   );
+  ctx.state.currentTurnPlayer = 'P1';
+  ctx.state.activePlayerIndex = 0;
+  ctx.state.turnNumber = 3;
+  ctx.state.phase = 'precombatMain';
+  ctx.state.step = null;
+  return ctx;
+}
+
+/** P1's priority option on `objectId` whose description matches `pattern`. */
+function optionFor(ctx: GameContext, objectId: string, pattern?: RegExp) {
+  return computePriorityOptions(ctx, playerById(ctx, 'P1')).find((option) => {
+    const payload = option.payload as PriorityActionPayload;
+    return (
+      'objectId' in payload &&
+      payload.objectId === objectId &&
+      (pattern === undefined || pattern.test(option.description))
+    );
+  });
+}
+
+/** Take P1's option through the normal legality and payment path, then resolve it. */
+function takeAndResolve(
+  ctx: GameContext,
+  option: NonNullable<ReturnType<typeof optionFor>>,
+  targetId: string,
+) {
+  pump(
+    applyPriorityAction(ctx, playerById(ctx, 'P1'), option.payload as PriorityActionPayload, {
+      index: 0,
+      targets: new Map([[option.targets![0]!.slot, targetId]]),
+    }),
+  );
+  pump(resolveTopOfStack(ctx));
+}
+
+/** Every P1 creature attacks P2; returns the attackers P2 was offered as blockable. */
+function attackP2(ctx: GameContext): string[] {
+  const offered: string[] = [];
+  pump(runCombatAndExtraCombats(ctx), (decision) => {
+    if (decision.presentationAttackDeclaration !== undefined)
+      return declareAttacks(decision, () => 'P2');
+    if (decision.presentationBlockDeclaration !== undefined) {
+      for (const subject of decision.presentationBlockDeclaration.subjects)
+        offered.push(...subject.attackers.map((attacker) => attacker.attackerId));
+      return declareBlocks(decision, () => null);
+    }
+    const pass = decision.options.findIndex((option) => option.type === 'pass');
+    return { index: Math.max(pass, 0), targets: new Map() };
+  });
+  return offered;
 }
 
 describe('attached-subject clauses', () => {
@@ -88,6 +154,41 @@ describe('attached-subject clauses', () => {
     expect(chars.cantBeBlocked).toBe(true);
     expect(chars.keywords).toContain('shroud');
     expect(computeCharacteristics(ctx, other).cantBeBlocked).toBe(false);
+  });
+
+  it('Whispersilk Cloak, normal path: equipped through Equip {2}, its creature is never offered to blockers', () => {
+    const ctx = pod('attached-cloak-equip');
+    const cloak = spawn(ctx, 'P1', CLOAK);
+    const host = spawn(ctx, 'P1', bear('Lab Host'));
+    const plain = spawn(ctx, 'P1', bear('Lab Plain'));
+    spawn(ctx, 'P2', bear('Lab Blocker'));
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'C' }, { symbol: 'C' }]);
+    const equip = optionFor(ctx, cloak.id, /Equip/);
+    expect(equip, 'Equip {2} is offered').toBeDefined();
+    takeAndResolve(ctx, equip!, host.id);
+    expect(cloak.attachedTo).toBe(host.id);
+    const blockable = attackP2(ctx);
+    expect(blockable).not.toContain(host.id);
+    // Negative: the unequipped attacker beside it can still be blocked.
+    expect(blockable).toContain(plain.id);
+  });
+
+  it('Ethereal Armor, normal path: cast onto a creature, it buffs that creature only', () => {
+    const ctx = pod('attached-armor-cast');
+    const host = spawn(ctx, 'P1', bear('Lab Host'));
+    const other = spawn(ctx, 'P1', bear('Lab Other'));
+    const inHand = conjure(ctx, 'P1', ARMOR, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'W' }]);
+    const cast = optionFor(ctx, inHand.id);
+    expect(cast, 'Ethereal Armor can be cast').toBeDefined();
+    takeAndResolve(ctx, cast!, host.id);
+    const onHost = computeCharacteristics(ctx, host);
+    // Ethereal Armor is the one enchantment P1 controls.
+    expect([onHost.power, onHost.toughness]).toEqual([3, 3]);
+    expect(onHost.keywords).toContain('first strike');
+    const onOther = computeCharacteristics(ctx, other);
+    expect([onOther.power, onOther.toughness]).toEqual([2, 2]);
+    expect(onOther.keywords).not.toContain('first strike');
   });
 
   it('Ethereal Armor: +1/+1 per enchantment you control, plus first strike', () => {
