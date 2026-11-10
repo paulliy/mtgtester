@@ -3,27 +3,27 @@
     "source": "xmage@31ede542",
     "population": 5917,
     "outcomes": {
-      "translated": 74,
+      "translated": 71,
       "unmapped": 4386,
       "no-matching-ability": 642,
       "no-xmage-class": 24,
       "spell-merge": 13,
       "invalid": 5,
       "not-pinned": 74,
-      "already-modeled": 699
+      "already-modeled": 702
     },
-    "keptPatches": 74,
+    "keptPatches": 71,
     "overlap": {
-      "total": 30,
-      "translated": 1
+      "total": 0,
+      "translated": 0
     },
     "topUnmapped": [
       ["new SimpleStaticAbility(2)", 65],
       ["new ActivateIfConditionActivatedAbility(3)", 32],
       ["new ConditionalContinuousEffect(3)", 32],
       ["$spell.setTargetAdjuster()", 30],
-      ["new TargetPermanent(3)", 29],
-      ["$spell.addWatcher()", 28],
+      ["new TargetPermanent(3)", 28],
+      ["$spell.addWatcher()", 27],
       ["true", 27],
       ["new TargetCreaturePermanent(2)", 26],
       ["new DoIfCostPaid(2)", 24],
@@ -31,6 +31,7 @@
       ["new EntersBattlefieldThisOrAnotherTriggeredAbility(4)", 22],
       ["new SearchLibraryPutInHandEffect(2)", 22],
       ["new CreateDelayedTriggeredAbilityEffect(1)", 20],
+      ["unparsed constructor statement", 20],
       ["EntersBattlefieldTriggeredAbility.withInterveningIf()", 20],
       ["new GainControlTargetEffect(1)", 20],
       ["new LoyaltyAbility(2)", 19],
@@ -49,15 +50,14 @@
       ["StaticFilters.FILTER_CARD_CREATURE_YOUR_GRAVEYARD", 15],
       ["new TargetCardInGraveyard(1)", 15],
       ["new DamageAllEffect(2)", 15],
-      ["new TapTargetCost(1)", 15],
       ["new DealsDamageToAPlayerAllTriggeredAbility(5)", 15],
       ["BeginningOfEndStepTriggeredAbility.withInterveningIf()", 15],
       ["new BecomesCreatureSourceEffect(3)", 14],
+      ["new TapTargetCost(1)", 14],
       ["new AttacksWithCreaturesTriggeredAbility(2)", 14],
       ["new EntersBattlefieldControlledTriggeredAbility(2)", 13],
       ["new TargetCreatureOrPlaneswalker(0)", 13],
-      ["new GainAbilityControlledSpellsEffect(2)", 13],
-      ["new DiesCreatureTriggeredAbility(4)", 13]
+      ["new GainAbilityControlledSpellsEffect(2)", 13]
     ]
   },
   "results": [
@@ -78,15 +78,6 @@
       "line": "Black creature spells you cast cost {1} less to cast.",
       "overlap": false,
       "xmageClass": "b/BontusMonument",
-      "outcome": "translated"
-    },
-    {
-      "rank": 749,
-      "name": "Aqueous Form",
-      "decks": 192457,
-      "line": "Enchanted creature can't be blocked.",
-      "overlap": false,
-      "xmageClass": "a/AqueousForm",
       "outcome": "translated"
     },
     {
@@ -139,7 +130,7 @@
       "name": "Damning Verdict",
       "decks": 142859,
       "line": "Destroy all creatures with no counters on them.",
-      "overlap": true,
+      "overlap": false,
       "xmageClass": "d/DamningVerdict",
       "outcome": "translated"
     },
@@ -451,7 +442,7 @@
       "name": "Adept Watershaper",
       "decks": 24922,
       "line": "Other tapped creatures you control have indestructible.",
-      "overlap": true,
+      "overlap": false,
       "xmageClass": "a/AdeptWatershaper",
       "outcome": "invalid",
       "detail": "override.def.staticEffects[0].affects: event-only selector cannot participate in continuous layers"
@@ -772,15 +763,6 @@
       "detail": "card has other parsed spell effects"
     },
     {
-      "rank": 10920,
-      "name": "Cloak of Mists",
-      "decks": 10511,
-      "line": "Enchanted creature can't be blocked.",
-      "overlap": false,
-      "xmageClass": "c/CloakOfMists",
-      "outcome": "translated"
-    },
-    {
       "rank": 11078,
       "name": "Ulvenwald Observer",
       "decks": 10248,
@@ -842,15 +824,6 @@
       "line": "Sacrifice a Treasure: Create a 1/1 green and white Citizen creature token.",
       "overlap": false,
       "xmageClass": "s/StimulusPackage",
-      "outcome": "translated"
-    },
-    {
-      "rank": 11936,
-      "name": "Wall of Mulch",
-      "decks": 8857,
-      "line": "{G}, Sacrifice a ~: Draw a card.",
-      "overlap": false,
-      "xmageClass": "w/WallOfMulch",
       "outcome": "translated"
     },
     {

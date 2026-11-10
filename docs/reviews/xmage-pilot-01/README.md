@@ -40,9 +40,10 @@ its own mapping.
 The most common missing adapters are in `translation-results.json` (`topUnmapped`). They are
 mostly conditional wrappers (`ConditionalContinuousEffect`, `withInterveningIf`, `DoIfCostPaid`),
 multi-target forms, and less common triggers. An XMage anonymous class body (`new X(...) { ... }`)
-is refused, because it can override behavior the adapter would not see. So is any card whose
-constructor holds a statement the extractor cannot read, since it may add a cost or condition to
-the ability. No translated card was affected by either rule.
+is refused, because it can override behavior the adapter would not see. So is any card with a
+constructor or static-block statement the extractor cannot read, or that changes a local after
+it was already built into an ability, since either may add a cost, condition or restriction.
+No translated card was affected by these rules.
 
 ## Parser bugs found
 

@@ -79,6 +79,9 @@ export function extractCard(src: string): XCard {
     }
     fields[m[2]!] = { type: m[1]!, init, adds: [] };
   }
+  // A static-block statement other than a direct `filter.add(...)` (e.g. one inside an `if`) may
+  // narrow a filter; it is kept in `unparsed` so the card is refused rather than over-broad.
+  const staticUnparsed: string[] = [];
   for (const m of main.matchAll(/\n\s*static\s*\{/g)) {
     const open = m.index! + m[0].length - 1;
     const close = matchingBrace(main, open);
@@ -86,6 +89,8 @@ export function extractCard(src: string): XCard {
       const e = st.expr;
       if (e?.t === 'call' && e.target?.t === 'ref' && fields[e.target.path] && e.name === 'add') {
         fields[e.target.path]!.adds.push(...e.args);
+      } else {
+        staticUnparsed.push(st.text);
       }
     }
   }
@@ -93,16 +98,21 @@ export function extractCard(src: string): XCard {
     `public\\s+${cls}\\s*\\(\\s*UUID\\s+ownerId\\s*,\\s*CardSetInfo\\s+setInfo\\s*\\)\\s*\\{`,
   ).exec(src);
   const abilities: XAbility[] = [];
-  const unparsed: string[] = [];
+  const unparsed: string[] = [...staticUnparsed];
   if (ctor) {
     const open = ctor.index + ctor[0].length - 1;
     const body = src.slice(open + 1, matchingBrace(src, open));
     const locals = new Map<string, { expr: JExpr; comments: string[] }>();
     let spell: { expr: JExpr; comments: string[] } | null = null;
+    // Locals are inlined as snapshots. Java shares the object, so a mutation after a local has been
+    // inlined somewhere would be lost; such a mutation goes to `unparsed` instead.
+    const embedded = new Set<string>();
     const resolve = (e: JExpr): JExpr => {
       switch (e.t) {
         case 'ref':
-          return locals.has(e.path) ? locals.get(e.path)!.expr : e;
+          if (!locals.has(e.path)) return e;
+          embedded.add(e.path);
+          return locals.get(e.path)!.expr;
         case 'new':
           return { ...e, args: e.args.map(resolve) };
         case 'call':
@@ -146,6 +156,7 @@ export function extractCard(src: string): XCard {
       const assign = /^([a-z]\w*)\s*=\s*([\s\S]+)$/.exec(st.text);
       if (st.kind === 'decl' && st.declName && e) {
         locals.set(st.declName, { expr: resolve(e), comments: st.comment ? [st.comment] : [] });
+        embedded.delete(st.declName);
         continue;
       }
       if (assign && !st.text.startsWith('this.')) {
@@ -154,6 +165,7 @@ export function extractCard(src: string): XCard {
             expr: resolve(parseExpr(assign[2]!)),
             comments: st.comment ? [st.comment] : [],
           });
+          embedded.delete(assign[1]!);
           continue;
         } catch {
           /* fall through */
@@ -186,6 +198,10 @@ export function extractCard(src: string): XCard {
         continue;
       }
       const lr = e ? localRoot(e) : null;
+      if (e && lr && embedded.has(lr)) {
+        unparsed.push(st.text);
+        continue;
+      }
       if (e && lr) {
         const l = locals.get(lr)!;
         l.expr = rebaseLocal(e, l.expr);
