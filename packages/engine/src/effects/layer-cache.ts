@@ -58,9 +58,17 @@ const SAMPLE_EVERY = 64;
 const HITS = new WeakMap<GameContext, number>();
 
 export function sampleCacheHit(ctx: GameContext): boolean {
+  return sampleHit(HITS, ctx);
+}
+
+/** Scoped digest hits count apart: a scoped query also counts as a cache hit, and one shared
+ * counter would step by two per query, so one of the two samples would never fire in a scope. */
+const SCOPED_HITS = new WeakMap<GameContext, number>();
+
+function sampleHit(counter: WeakMap<GameContext, number>, ctx: GameContext): boolean {
   if (ctx.strictInvariants !== true) return false;
-  const hits = (HITS.get(ctx) ?? 0) + 1;
-  HITS.set(ctx, hits);
+  const hits = (counter.get(ctx) ?? 0) + 1;
+  counter.set(ctx, hits);
   return hits % SAMPLE_EVERY === 0;
 }
 
@@ -334,7 +342,10 @@ export function scopedDigestOf(
     scope.set(key, digest);
     return digest;
   }
-  if ((VERIFY_SCOPES || sampleCacheHit(ctx)) && digestOf(ctx, extra, includeGraveyards) !== known)
+  if (
+    (VERIFY_SCOPES || sampleHit(SCOPED_HITS, ctx)) &&
+    digestOf(ctx, extra, includeGraveyards) !== known
+  )
     throw new Error(STALE);
   return known;
 }
