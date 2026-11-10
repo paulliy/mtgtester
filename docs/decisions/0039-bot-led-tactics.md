@@ -68,7 +68,13 @@ per-turn numbers are the fair comparison):
 | bot, re-plan on change    | 0.76                 | about 2,200            |
 | bot, escalate close calls | 1.24 (4 of 6 games)  | about 3,700            |
 
-Re-plan on change reused a seat's knobs 95 times in 209 turns. The escalation run is partial (0.53 tactician calls per turn, all priority decisions): two
+Re-plan on change reused a seat's knobs 95 times in 209 turns.
+
+Two limits on these numbers. The census strategist stub answers `plannedActions: []`, so in model
+mode no decision is ever answered from a plan and every one becomes a tactician call; 5.57 and the
+saving ratio are upper bounds, since a real strategist plan answers some decisions for free. And
+0.76 assumes every strategist answer yields valid knobs: an answer whose knobs clean to nothing
+stores no steering, so that seat is asked again every turn (the 1.22 row) until one is valid. The escalation run is partial (0.53 tactician calls per turn, all priority decisions): two
 of its games halted on engine errors (`casting restriction is not met`, and a runaway past 20,000
 decisions) that the stub tactician's answers reached; those are engine issues to follow up.
 
@@ -76,6 +82,24 @@ decisions) that the stub tactician's answers reached; those are engine issues to
 paired seeds with seats swapped: 62 wins to 28, 9 draws, 1 timeout (68.9% of decided games, 95%
 interval 59 to 79%), life share 0.67 to 0.33. Card knowledge from the IR is worth a little on its
 own: `knowledge` beat the same policy with mana value only (`policy`) 30 to 24.
+
+### Paid game (`bun run ai-mode-duel`)
+
+One four-player game on OpenRouter, seed `mode-duel-1`, 60-turn cap, run from 6c0ae74 (before the
+late-knobs fix, so the bot seats' strategist numbers are a worst case). P1 and P3 bot-led, P2 and
+P4 model mode. The model seat P2 won on turn 45; 98 minutes, about $0.065 in all.
+
+| Mode  | Tactician calls | Strategist calls | Calls per turn | Prompt tokens per turn | Cost    | Failed calls |
+| ----- | --------------- | ---------------- | -------------- | ---------------------- | ------- | ------------ |
+| bot   | 0               | 12               | 0.27           | about 900              | $0.0174 | 3            |
+| model | 130             | 21               | 3.36           | about 11,800           | $0.0473 | 21           |
+
+The cost side holds: bot-led seats made about a twelfth of the calls and a thirteenth of the
+prompt tokens. The quality side is not settled by this game. Two of the three default tactician
+models (`qwen/qwen3.7-flash`, `poolside/laguna-s-2.1`) were unavailable, so the model seats ran on
+`sao10k/l3-lunaris-8b:nitro`, hit its rate limit 96 times, and had 33 decisions played by the
+fallback bot. One game is also one sample. A fair quality comparison needs an available tactician
+chain and several games with seats swapped.
 
 ## Consequences
 
