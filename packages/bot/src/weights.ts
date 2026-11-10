@@ -217,6 +217,9 @@ export const WEIGHTS = {
     /** Bottom a land when lands are more than this share of the hand. */
     bottomLandShare: 0.45,
 
+    /** Equip that only moves equipment to a worse creature, or crew with nothing to attack. */
+    pointlessActivation: -2,
+
     /** Values for things in hand and on the battlefield. */
     landPermanentValue: 2,
     otherPermanentBase: 2,

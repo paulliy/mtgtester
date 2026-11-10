@@ -475,3 +475,99 @@ describe('another target', () => {
     expect(decide(request([PASS, copy]), view(), new Rng('a')).actionId).toBe(0);
   });
 });
+
+describe('activations with no effect role', () => {
+  const counter: LegalAction = {
+    id: 1,
+    type: 'activateAbility',
+    description: 'Mutagen: put a counter',
+    targets: [{ slot: 0, options: ['theirs', 'mine'] }],
+    data: {
+      sourceName: 'Mutagen',
+      abilityDescription:
+        '{1}, {T}, Sacrifice this token: Put a +1/+1 counter on target creature. Activate only as a sorcery.',
+    },
+    interaction: { kind: 'source', sourceId: 'mutagen', sourceCardId: 'c-m', abilityIndex: 0 },
+  };
+
+  it('reads target polarity from the effect, not from a sacrifice in the cost', () => {
+    const board = [creature('theirs', 'P2', 4, 4), creature('mine', 'P1', 2, 2)];
+    const res = decide(request([counter]), view({ battlefield: board }), new Rng('a'));
+    expect(res.targets).toEqual([{ slot: 0, choice: 'mine' }]);
+  });
+
+  it('does not put a +1/+1 counter on an opposing creature when it has none of its own', () => {
+    const only = { ...counter, targets: [{ slot: 0, options: ['theirs'] }] };
+    const board = [creature('theirs', 'P2', 4, 4)];
+    expect(decide(request([PASS, only]), view({ battlefield: board }), new Rng('a')).actionId).toBe(
+      0,
+    );
+  });
+
+  function equip(options: string[]): LegalAction {
+    return {
+      id: 1,
+      type: 'activateAbility',
+      description: 'Sword: Equip {2}',
+      targets: [{ slot: 0, options }],
+      data: { sourceName: 'Sword', abilityDescription: 'Equip {2}', manaCost: '{2}' },
+      interaction: { kind: 'source', sourceId: 'sword', sourceCardId: 'c-s', abilityIndex: 0 },
+    };
+  }
+  const board = [creature('big', 'P1', 5, 5), creature('small', 'P1', 1, 1)];
+
+  it('equips its best creature', () => {
+    const res = decide(
+      request([PASS, equip(['big', 'small'])]),
+      view({ battlefield: board }),
+      new Rng('a'),
+    );
+    expect(res.actionId).toBe(1);
+    expect(res.targets).toEqual([{ slot: 0, choice: 'big' }]);
+  });
+
+  it('does not move equipment off its best creature, or equip twice in a turn', () => {
+    // The menu leaves out the creature the equipment is already on.
+    const moved = decide(
+      request([PASS, equip(['small'])]),
+      view({ battlefield: board }),
+      new Rng('a'),
+    );
+    expect(moved.actionId).toBe(0);
+    const again = decide(
+      request([PASS, equip(['big', 'small'])]),
+      view({ battlefield: board }),
+      new Rng('a'),
+      {
+        repeatCount: () => 1,
+      },
+    );
+    expect(again.actionId).toBe(0);
+  });
+
+  it('crews only an uncrewed vehicle before its own combat', () => {
+    const crew: LegalAction = {
+      id: 1,
+      type: 'activateAbility',
+      description: 'Scythe: Crew 2',
+      data: { sourceName: 'Scythe', abilityDescription: 'Crew 2' },
+      interaction: { kind: 'source', sourceId: 'scythe', sourceCardId: 'c-v', abilityIndex: 0 },
+    };
+    const vehicle: PermanentView = {
+      id: 'scythe',
+      controller: 'P1',
+      name: 'Scythe',
+      typeLine: 'Artifact — Vehicle',
+      tapped: false,
+      status: [],
+    };
+    const crewed = { ...vehicle, power: 4, toughness: 4 };
+    const go = (v: PermanentView, overrides: Partial<DecisionRequest> = {}): number =>
+      decide(request([PASS, crew], overrides), view({ battlefield: [v, ...board] }), new Rng('a'))
+        .actionId;
+    expect(go(vehicle)).toBe(1);
+    expect(go(crewed)).toBe(0);
+    expect(go(vehicle, { activePlayer: 'P2' })).toBe(0);
+    expect(go(vehicle, { phase: 'postcombatMain' })).toBe(0);
+  });
+});

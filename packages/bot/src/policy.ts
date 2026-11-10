@@ -30,6 +30,8 @@ export interface PolicyContext {
   steering?: BotSteering;
   /** Mulligans this seat has already taken this game. */
   mulligansTaken?: number;
+  /** Times this seat already activated the same ability on the same permanent this turn. */
+  repeatCount?: (action: LegalAction) => number;
 }
 
 // --- Small readers ---------------------------------------------------------------------------
@@ -145,6 +147,19 @@ function opponentPressure(ctx: PolicyContext): Map<PlayerId, number> {
 const HOSTILE_WORDS =
   /destroy|exile|damage|return .* to (its|their) owner|tap target|counter target|sacrifice|gain control|loses|-\d+\/-\d+|fights?|discard/i;
 
+/**
+ * The effect half of an action's text: an activated ability's cost ("{1}, Sacrifice this token:")
+ * says what is paid, not what happens to the target, so it must not make a +1/+1 counter hostile.
+ */
+function effectText(action: LegalAction): string {
+  const ability = action.data?.['abilityDescription'];
+  if (typeof ability === 'string' && ability.length > 0) {
+    const colon = ability.indexOf(': ');
+    return colon >= 0 ? ability.slice(colon + 2) : ability;
+  }
+  return action.description;
+}
+
 function slotPolarity(action: LegalAction, slot: number, ctx: PolicyContext): TargetPolarity {
   const traits = traitsFor(ctx, sourceNameOf(action, ctx.view));
   const index = abilityIndexOf(action);
@@ -153,7 +168,7 @@ function slotPolarity(action: LegalAction, slot: number, ctx: PolicyContext): Ta
       ? traits?.abilityTargets?.[index]?.[slot]
       : traits?.spellTargets?.[slot];
   if (fromIr !== undefined && fromIr !== 'neutral') return fromIr;
-  const text = `${action.description} ${String(action.data?.['abilityDescription'] ?? '')}`;
+  const text = effectText(action);
   if (HOSTILE_WORDS.test(text)) return 'hostile';
   if (/gets \+|gains|put .*\+1\/\+1|untap|regenerate|hexproof|indestructible/i.test(text)) {
     return 'friendly';
@@ -275,11 +290,19 @@ export function chooseTargets(action: LegalAction, ctx: PolicyContext): TargetCh
 
 /** The best a hostile slot of this action can do, or null when the action has no hostile slot. */
 function bestHostileTargetValue(action: LegalAction, ctx: PolicyContext): number | null {
+  return bestTargetValue(action, ctx, 'hostile');
+}
+
+function bestTargetValue(
+  action: LegalAction,
+  ctx: PolicyContext,
+  polarity: 'hostile' | 'friendly',
+): number | null {
   const pressure = opponentPressure(ctx);
   let best: number | null = null;
   (action.targets ?? []).forEach((slot, i) => {
-    if (slotPolarity(action, i, ctx) !== 'hostile') return;
-    const value = Math.max(...slot.options.map((o) => optionScore(o, 'hostile', ctx, pressure)));
+    if (slotPolarity(action, i, ctx) !== polarity) return;
+    const value = Math.max(...slot.options.map((o) => optionScore(o, polarity, ctx, pressure)));
     best = best === null ? value : Math.max(best, value);
   });
   return best;
@@ -491,11 +514,16 @@ export function actionValue(action: LegalAction, ctx: PolicyContext): number | n
     const roles = index === undefined ? [] : (traits?.abilityRoles?.[index] ?? []);
     value = WEIGHTS.tempo.activateAbility + roleValue(roles, action, ctx);
     value -= idleReactivePenalty(roles, ctx);
+    const misuse = attachOrCrewPenalty(action, ctx);
+    if (misuse !== null) return misuse;
   }
 
   // A hostile-only action whose best target is our own stuff is a misplay, whatever its roles.
   const hostile = bestHostileTargetValue(action, ctx);
   if (hostile !== null && hostile < 0) value += hostile;
+  // And a friendly-only action (a pump, a +1/+1 counter) whose only targets are theirs.
+  const friendly = bestTargetValue(action, ctx, 'friendly');
+  if (friendly !== null && friendly < 0) value += friendly;
 
   // "Another target" (CR 115.3) with too few objects to go round: the menu offers it because it
   // checks each slot alone, but no choice is legal, so never pick it.
@@ -504,6 +532,48 @@ export function actionValue(action: LegalAction, ctx: PolicyContext): number | n
   if (namedIn(steering?.prioritize, name)) value += P.prioritizeBonus;
   if (namedIn(steering?.hold, name)) value -= P.holdPenalty;
   return value;
+}
+
+const EQUIP = /^(Equip|Reconfigure)\b/i;
+const CREW = /^Crew\b/i;
+
+/**
+ * Equip and crew have no effect op worth a role, so the flat activation bonus made the bot move
+ * equipment back and forth between its own creatures and crew a vehicle that was already crewed.
+ * Returns the action's value when it is one of these, or null to leave the default.
+ */
+function attachOrCrewPenalty(action: LegalAction, ctx: PolicyContext): number | null {
+  const ability = String(action.data?.['abilityDescription'] ?? '');
+  const { view, request } = ctx;
+  const repeats = ctx.repeatCount?.(action) ?? 0;
+  if (EQUIP.test(ability)) {
+    // Once a turn is enough: a second equip of the same source only moves it again.
+    if (repeats > 0) return P.pointlessActivation;
+    const options = (action.targets ?? []).flatMap((t) => t.options);
+    const offered = new Set(options);
+    const own = view.battlefield.filter(
+      (p) => p.controller === view.seat && isCreaturePermanent(p),
+    );
+    const best = (list: PermanentView[]): number =>
+      list.reduce((m, p) => Math.max(m, permanentValue(p, ctx)), Number.NEGATIVE_INFINITY);
+    // The view does not show attachments, but the menu leaves out the creature this is already
+    // on. When the best creature is missing from the options, moving the equipment is a downgrade.
+    const bestOffered = best(own.filter((p) => offered.has(p.id)));
+    const bestElsewhere = best(own.filter((p) => !offered.has(p.id)));
+    if (options.length > 0 && bestElsewhere >= bestOffered) return P.pointlessActivation;
+    return null;
+  }
+  if (CREW.test(ability)) {
+    const sourceId = (action.interaction as { sourceId?: unknown } | undefined)?.sourceId;
+    const vehicle = view.battlefield.find((p) => p.id === sourceId);
+    const crewed = vehicle !== undefined && vehicle.power !== undefined && vehicle.power !== null;
+    const beforeOwnCombat =
+      request.activePlayer === view.seat &&
+      (request.phase === 'precombatMain' || request.step === 'beginCombat');
+    if (repeats > 0 || crewed || !beforeOwnCombat) return P.pointlessActivation;
+    return null;
+  }
+  return null;
 }
 
 // --- Choices outside the priority menu --------------------------------------------------------

@@ -76,6 +76,7 @@ function policyContext(
     ...(opts.knowledge === undefined ? {} : { knowledge: opts.knowledge }),
     ...(opts.steering === undefined ? {} : { steering: opts.steering }),
     ...(opts.mulligansTaken === undefined ? {} : { mulligansTaken: opts.mulligansTaken }),
+    ...(opts.repeatCount === undefined ? {} : { repeatCount: opts.repeatCount }),
   };
 }
 
