@@ -21,7 +21,10 @@ model cannot invent primitives.
 4. **Smoke** (`lib.ts` `smokeTest`): a generated four-player game with the card in hand and, for
    permanents, on the battlefield, played through combat, end step and the next turn. Player 1 uses
    every action the card offers; other decisions are seeded random. It passes when the engine never
-   halts, throws or breaks a strict invariant, and records whether the card's abilities resolved.
+   halts, throws or breaks a strict invariant within 600 decisions; reaching the cap is a failure,
+   since that is what a looping card looks like. It records whether the card's own abilities or
+   spell resolved, and the queue shows that as `smokeExercised`. A card with `smokeExercised: false`
+   only showed that it does not crash the engine.
 5. **Text check** (`render.ts`, free): a deterministic renderer turns the patch back into English
    and compares it with the Oracle lines after normalizing wording. A match settles the meaning
    check with no model call. Anything it cannot render, or renders differently, goes on to 6 and 7.

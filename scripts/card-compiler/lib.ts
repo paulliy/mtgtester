@@ -420,8 +420,9 @@ function runSmoke(target: CompileTarget, scenario: CardScenario): SmokeResult {
       }
       engine.submit(response);
     }
-    result.ok = true;
-    result.detail = `stopped after ${MAX_DECISIONS} decisions`;
+    // Hitting the cap is what a looping card looks like, so it is not a pass.
+    result.ok = false;
+    result.detail = `inconclusive: stopped after ${MAX_DECISIONS} decisions`;
   } catch (error) {
     result.detail = `threw: ${error instanceof Error ? error.message.split('\n')[0] : String(error)}`;
   }

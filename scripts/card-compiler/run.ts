@@ -362,7 +362,22 @@ function importPatches(trial: string, patchDir: string): void {
     const patch = JSON.parse(readFileSync(`${patchDir}/${file}`, 'utf8')) as PatchFile;
     if (typeof patch.source !== 'string' || patch.source.length === 0)
       throw new Error(`${file}: a patch needs a "source" tag`);
-    if (states.has(patch.name)) continue;
+    const answer = `${JSON.stringify({ status: 'compiled', def: patch.def })}\n`;
+    const existing = states.get(patch.name);
+    if (existing !== undefined) {
+      const previous = existsSync(p.answer('compile', patch.name, 1))
+        ? readFileSync(p.answer('compile', patch.name, 1), 'utf8')
+        : null;
+      if (existing.imported !== true || previous === answer) continue;
+      // The patch changed since it was checked: earlier results belong to the old bytes, so move
+      // its meaning-check answers aside and check it again from the start.
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      for (const stage of ['back', 'judge']) {
+        const old = p.answer(stage, patch.name);
+        if (existsSync(old)) renameSync(old, `${old}.stale-${stamp}`);
+      }
+      console.warn(`${patch.name}: patch changed since its last check; rechecking`);
+    }
     const pinned = byName.get(patch.name);
     const target = pinned === undefined ? null : compileTarget(pinned);
     if (pinned !== undefined && !rows.some((row) => row.name === patch.name))
@@ -391,10 +406,7 @@ function importPatches(trial: string, patchDir: string): void {
       stage: 'compile',
       validatorIssues: [],
     });
-    write(
-      p.answer('compile', patch.name, 1),
-      `${JSON.stringify({ status: 'compiled', def: patch.def })}\n`,
-    );
+    write(p.answer('compile', patch.name, 1), answer);
     imported++;
   }
   write(targetsPath, `${JSON.stringify(rows, null, 2)}\n`);
@@ -420,6 +432,11 @@ export interface QueueEntry {
   differences?: string[];
   validatorIssues?: string[];
   smoke?: { scenario: string; ok: boolean; abilityResolved: boolean; detail: string }[];
+  /**
+   * Whether any smoke game resolved one of the card's own abilities or the spell. When false the
+   * smoke run only shows the card does not crash the engine; it says nothing about the behavior.
+   */
+  smokeExercised?: boolean;
   /**
    * Cross-check against an independent translation of the same card (an XMage patch): whether the
    * two merged definitions have identical behavior (descriptions ignored, allOf/anyOf unordered).
@@ -543,6 +560,7 @@ function queue(args: string[]): void {
             ),
           }),
         ...(state.smoke !== undefined && {
+          smokeExercised: state.smoke.some((run) => run.abilityResolved),
           smoke: state.smoke.map((run) => ({
             scenario: run.scenario,
             ok: run.ok,

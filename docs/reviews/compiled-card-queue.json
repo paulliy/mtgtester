@@ -16,6 +16,7 @@
       "differences": [
         "Text A lets the sacrificed creature or artifact be any other creature or artifact, with no control restriction; Text B requires one you control."
       ],
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -47,6 +48,7 @@
       "differences": [
         "Text A doubles only tokens created under your control; Text B doubles tokens created under any player's control."
       ],
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -76,6 +78,7 @@
       "differences": [
         "Text A lets the sacrificed creature or artifact be any other creature or artifact, with no control restriction; Text B requires one you control."
       ],
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -104,6 +107,7 @@
       "patchSha256": "1507fbcb1ee644a10cb8502f25be279567b5fe03caf81d8ce891445b51e04cdf",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -135,6 +139,7 @@
       "differences": [
         "Text A returns a nonland permanent you control; Text B returns any object you control that is not a land, which can include a spell you control on the stack."
       ],
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -161,6 +166,7 @@
       "patchSha256": "69ad928fce62a487f732fc961780a4985cb57c7915e7947f2d6fb7bfcb31b478",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -186,6 +192,7 @@
       "differences": [
         "Text A says opponents' creatures lose hexproof as well as can't have or gain it; Text B only says they can't have hexproof, omitting that they lose it."
       ],
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -212,6 +219,7 @@
       "patchSha256": "c29a8d1d9ecc533fdd763b0cf9c9c161ef4153073b24d6387617ddcaf917b85c",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -242,6 +250,7 @@
       "differences": [
         "Text A sets base power and toughness to 4/4; Text B gives +4/+4, which changes the result for any creature whose base is not 0/0."
       ],
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -268,6 +277,7 @@
       "patchSha256": "2bfab8371124401d0139f50e3bbe7f3b251062680934b2083499fb95a96de86c",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -296,6 +306,7 @@
       "patchSha256": "c8e4e8d71af25d0f24088ce103e2187b108140cb9598f03a19bc7011b2cc9f9f",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -318,6 +329,7 @@
       "patchSha256": "c1f1299aa98596d8d3d13819f2b97833b9187029fca2bbe4309a40f33cd11f1c",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -348,6 +360,7 @@
         "source": "xmage@31ede542",
         "verdict": "identical"
       },
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -370,6 +383,7 @@
       "patchSha256": "5270dd12c6076578ef4ccdb20de47a3ba9f8e20985727c341c7aa30a2e66f995",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -398,6 +412,7 @@
       "patchSha256": "99322e87444df8da2124cb0bf178560eaff754d2d363ef65404bff2a1d753751",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -429,6 +444,7 @@
       "differences": [
         "Text A gives the equipped creature +1/+1 for each matching permanent, added to its own power and toughness; Text B sets its power and toughness each equal to the count, replacing them."
       ],
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -456,6 +472,7 @@
       "patch": "docs/reviews/card-compiler-trial-01/patches/bloodforged-battle-axe.json",
       "patchSha256": "25cb6d878b3b26e893d19e18b60f0f5f19024ae1c08867128a919cef9378087a",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -482,6 +499,7 @@
       "patchSha256": "ae7da36908736135b0cb067cb3de7052b5389a7953363074e06528c2f93d9347",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -508,6 +526,7 @@
       "patchSha256": "beb8e5d71f6c8bbb4f0b6de30191b83820466cd4756ab8b4960f51f46f50b28c",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -530,6 +549,7 @@
       "patchSha256": "39cb1ad49f472cd8053a27d87980164c2198639799747e3c593673df6385fe85",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -558,6 +578,7 @@
       "patchSha256": "c06301416d2f8fa8e80503995e219723c4e58d63aed56ac43593ade4e2c05cff",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -588,6 +609,7 @@
       "differences": [
         "Text A returns a random card from the graveyard without targeting; Text B makes the card a target of the ability, which changes what can respond and interact with it."
       ],
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -618,6 +640,7 @@
         "source": "xmage@31ede542",
         "verdict": "identical"
       },
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -643,6 +666,7 @@
       "patch": "docs/reviews/card-compiler-trial-01/patches/cloudpost.json",
       "patchSha256": "499e56f794f6aa5a43ae2c28cdfb0f4b95b2918f0fbbd9ad45dacb65cb5d7185",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -671,6 +695,7 @@
       "patchSha256": "79334b4114a564eb80c9fcd0e0304f3c7f8d8e0447c264f5a16fcf621b2d51ea",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -694,6 +719,7 @@
         "source": "xmage@31ede542",
         "verdict": "identical"
       },
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -716,6 +742,7 @@
       "patchSha256": "4d564937051b838da1eefaad6e30b572a894c89757933f1eeb7e581449e75f6d",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -744,6 +771,7 @@
       "patchSha256": "32cb9a84db9accd3e62fd967d4be17044b61544f27af213b349e1671514fe13b",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -765,6 +793,7 @@
       "patch": "docs/reviews/card-compiler-trial-01/patches/descend-upon-the-sinful.json",
       "patchSha256": "d087420ec352dac4cc398950248abed4ca1ab883125159367188d59dff721abb",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -790,6 +819,7 @@
       "differences": [
         "Text A includes the timing restriction 'Activate only as an instant'; Text B omits it."
       ],
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -817,6 +847,7 @@
       "patch": "docs/reviews/card-compiler-trial-01/patches/diary-of-dreams.json",
       "patchSha256": "03c588db4a9d96df8a62ee58653a90ca58dfcbf795f4d1270a83b6e8c8d035e6",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -845,6 +876,7 @@
       "patchSha256": "5fd98699c212776139b7e10bee4c3a2a773a4deaf0b83babddf50f659c43aa2c",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -867,6 +899,7 @@
       "patchSha256": "ab757e2cb8921fe3c7f14b00237c3c19b5200e5abec5de54b3e5ce7d4e4e2eb9",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -895,6 +928,7 @@
       "patchSha256": "8cd1b7cc60701be138f6be81ac873c0520040cd2ad6f01e5181183643a271cab",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -923,6 +957,7 @@
       "patchSha256": "6726fd21b361c78592f033fbd691ebf610aaa657d091158b9c09241b90ed95e3",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -951,6 +986,7 @@
       "patchSha256": "195b359e70069a811fbfdfa92c984ccb61a1040c01469b24f21bdeda84903fe2",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -977,6 +1013,7 @@
       "patchSha256": "3fc3a9d5fe320414ecb620e202c92bd2e6504473f29e3c550215b27ccf1ea884",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1004,6 +1041,7 @@
       "patch": "docs/reviews/card-compiler-trial-01/patches/dualcaster-mage.json",
       "patchSha256": "dfc442d0bf703c8952b5beb725f10954e6fec1fb73e92ff7a12592e25ed64d63",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1036,6 +1074,7 @@
         "Text B requires sacrificing 'another' artifact or creature that you control; Text A has no 'another' or 'you control' restriction on the sacrificed object.",
         "Text B adds 'This permanent may be sacrificed to pay this cost', a self-sacrifice option that does not appear in Text A."
       ],
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1064,6 +1103,7 @@
       "patchSha256": "8e1a541a60f9bd99b2f9a27b59f36d26fcf161417f78d5af7707ece6037ca0f9",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1092,6 +1132,7 @@
       "patchSha256": "07be8c61f2c75e752e8ae9ad7d7a4e669b80d6932c8c87654e93da3e884f27b3",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1117,6 +1158,7 @@
       "differences": [
         "Text B adds an intervening-if condition, 'if the defending player is the event player', that does not appear in Text A; the trigger's firing condition therefore differs."
       ],
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1145,6 +1187,7 @@
       "patchSha256": "5a13d4522f1cb40b1c68db6611899105ad377754ed8ff4230224a1f20118f9df",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1175,6 +1218,7 @@
         "source": "xmage@31ede542",
         "verdict": "identical"
       },
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1202,6 +1246,7 @@
       "patch": "docs/reviews/card-compiler-trial-01/patches/goblin-chainwhirler.json",
       "patchSha256": "3bfd3c0cfa2852c5b0b17c128644f8148e78105ba25d0cfd5bed1f50695666f5",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1234,6 +1279,7 @@
         "Text A flips three coins in one trigger and creates one token per win; Text B has three separate triggers that each flip one coin, which is a different count and timing of flips.",
         "Text A creates the Goblin token 'tapped and attacking'; Text B creates it only 'attacking' and omits 'tapped'."
       ],
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1266,6 +1312,7 @@
         "source": "xmage@31ede542",
         "verdict": "identical"
       },
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1294,6 +1341,7 @@
       "patchSha256": "98e3bb2c173c0e0bcde0a6fb14db1f54de046b089d228cfec988f62fcb53b0c3",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1322,6 +1370,7 @@
       "patchSha256": "46b231b7eb341b42665bb7e2a43bac55c259d57412f038f0a0ccca7a198b8d3b",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1350,6 +1399,7 @@
       "patchSha256": "db5403cbb07c82475fba537afcf2a48362e5fe5709f303dbd8e7a478db902167",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1376,6 +1426,7 @@
       "patchSha256": "7dc20d5d1107045746f5914be0566ae05cb09e9a706ae765d76e9bb86680ee8b",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1403,6 +1454,7 @@
       "patch": "docs/reviews/card-compiler-trial-01/patches/hard-hitting-question.json",
       "patchSha256": "0ecd495fdbce852bf6fd421f5761b86b06da61b91a04c47de1e6723a8aa2b8e2",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1429,6 +1481,7 @@
         "Text A has the controller create the two Thopter tokens; Text B says the target opponent creates them.",
         "Text A has the controller choose one target opponent and use the chosen player for life loss; Text B adds a separate targeting of the opponent for the tokens and for life loss."
       ],
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1450,6 +1503,7 @@
       "patch": "docs/reviews/card-compiler-trial-01/patches/horobi-death-s-wail.json",
       "patchSha256": "03f38ea812c425ca796e21bff283b0dc7d47e8e8923c1e6a00c9894947694f57",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1477,6 +1531,7 @@
       "patch": "docs/reviews/card-compiler-trial-01/patches/horrific-assault.json",
       "patchSha256": "0c6cfb5897f3fa63e302d7d509e474262661ae716fe7d37545413a61a3c9152e",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1499,6 +1554,7 @@
       "patchSha256": "9877f885977d1f2b488da689bc8c0330d84561b27f7ffe3d01a7897695f6b6cb",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1519,6 +1575,7 @@
       "patchSha256": "3d050b1b8d694ae0164abe28da9d942eea35b17c0a5b117efc18de74d5aaea31",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1541,6 +1598,7 @@
       "patchSha256": "20a826545bc47e9c3c9728c7d750cf37f0131df78208ad95bfc00fbda3efbee8",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1566,6 +1624,7 @@
       "differences": [
         "Text A makes the token not legendary unconditionally; Text B makes it not legendary only if the copied creature is non-legendary, so a legendary copied creature yields a legendary token under Text B."
       ],
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1588,6 +1647,7 @@
       "patchSha256": "b1935bead33f4f1fb53388df27cc434f1ce414295025788b28ebbb8195c95100",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1616,6 +1676,7 @@
       "patchSha256": "61cfffe8dc1cc21dc50c832fc81f9fb455bed525798a5ca00cfdcdb7fb42a1c3",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1648,6 +1709,7 @@
         "source": "xmage@31ede542",
         "verdict": "differs"
       },
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1676,6 +1738,7 @@
       "patchSha256": "e8d9ff175dc38cc00ce6c6f48e7a0b7ef2ed729423c467050e8b5877ea43466b",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1702,6 +1765,7 @@
       "patchSha256": "7ef8919562080b31c93bd84d000ec6d5919bfd3a87d3c1ced25cfde14c7b47d2",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1730,6 +1794,7 @@
       "patchSha256": "5d300fd87db307d12c8bd43d296b47aaa27e15c5d8397ba53df462354953af6d",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1752,6 +1817,7 @@
       "patchSha256": "8114b0e9205c0dd5c9da59ede3109ecab62dba87c86a2258adf7a25ca1405f02",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1777,6 +1843,7 @@
       "differences": [
         "Text A counts all permanent cards, including battle cards; Text B lists only artifact, creature, enchantment, land, and planeswalker, so a battle card going to the graveyard does not trigger under Text B."
       ],
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1809,6 +1876,7 @@
         "source": "xmage@31ede542",
         "verdict": "identical"
       },
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1837,6 +1905,7 @@
       "patchSha256": "8b2e7d7f361d413896bd03732e6e3e6acd2244f9f0bbc054d1c0ddae70c544e4",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1869,6 +1938,7 @@
         "source": "xmage@31ede542",
         "verdict": "identical"
       },
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1897,6 +1967,7 @@
       "patchSha256": "c5829bf08b773789abfe09e18eb31e911e5017b4fe0c2dc0b1682d1f7e154b7c",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1923,6 +1994,7 @@
       "patchSha256": "f4310f86a2dff68052231bdbd3433c7ef992f1b897f49809451f00ba5d8ac684",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1949,6 +2021,7 @@
       "patchSha256": "c02b29ac2db6bd2046e6152e6873cf0ceabcb869b2f896dec6f3de099f435ab8",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1975,6 +2048,7 @@
       "patchSha256": "2ed56107f7bee6e1e7d2847a0c0a7ccd6b739974922ce827481fc15360c96f4f",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2001,6 +2075,7 @@
       "patchSha256": "47a02f66100981ef82c850caf2c56975e600df1bd2b5bf0a13faca87feb68cdf",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "renderer",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2029,6 +2104,7 @@
       "patchSha256": "2809495b992f4455e94887934682eef4bbc55e51f18c3407994da21b0832442d",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2051,6 +2127,7 @@
       "differences": [
         "Text B states the Aura has no effects, but the card's whole-card context has a When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield trigger."
       ],
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2079,6 +2156,7 @@
       "patchSha256": "6ac58742eac634d9a0506c80ed8e3f567a2be36de531ea14c96934eb010a042d",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2105,6 +2183,7 @@
         "Text A makes casting optional ('You may cast'); Text B says 'Cast one of them' with no option to decline.",
         "Text A puts the rest on the bottom of the library in a random order; Text B omits this entirely."
       ],
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2136,6 +2215,7 @@
       "differences": [
         "Text A searches for any land card with a basic land type; Text B restricts the search to cards named Plains, Island, Swamp, Mountain, or Forest, which excludes nonbasic lands with basic land types."
       ],
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2167,6 +2247,7 @@
       "differences": [
         "Text A says 'You choose a nonland card' (the caster chooses); Text B says 'Discard a nonland card from it' with no chooser, which the opponent would make."
       ],
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2189,6 +2270,7 @@
       "patchSha256": "78a78be13cefca87e884c13c6654add40bb65f9f54f9830eda56a743111e61e6",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2220,6 +2302,7 @@
       "differences": [
         "Text A triggers on creature cards put into an opponent's graveyard (the graveyard's owner is the opponent); Text B triggers on creatures an opponent controls being put into any graveyard. These differ for stolen creatures and for opponent-controlled creatures owned by the caster."
       ],
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2247,6 +2330,7 @@
       "patch": "docs/reviews/card-compiler-trial-01/patches/pulse-of-murasa.json",
       "patchSha256": "448612460c6819e9e6e051c14608febd8a4ca2f899b393e37d153bc86caaba4f",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2269,6 +2353,7 @@
       "patchSha256": "03a9e36b1d0b04f6ad8772b4489bbbf6e02779e17dce3933db4bdcc869c33443",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "renderer",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2291,6 +2376,7 @@
       "patchSha256": "100fac1f71dbc99d57f1599ef718029fb635eff87c89965ac82014c43eefa66e",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2317,6 +2403,7 @@
       "patchSha256": "bdac4dd8c4455d6b9a96a81eb9f9895045981481f0f25eb7f0db86e88c488247",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2339,6 +2426,7 @@
       "patchSha256": "3f001b68b52f398c9696cf01ca7dcdf54f6d835d090e5b5e07b0f94b2d3a5d90",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2367,6 +2455,7 @@
       "patchSha256": "a744dfebea3dfb2d3f01fa8e430533a7bdc5026a695c57798d21d347352cafd1",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2394,6 +2483,7 @@
       "patch": "docs/reviews/card-compiler-trial-01/patches/samut-vizier-of-naktamun.json",
       "patchSha256": "be73825e5a5ba168b4dba8068b227dd1c9b65304c221a1f296a9fdbd7b75bc63",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2422,6 +2512,7 @@
       "patchSha256": "84c304fe2ee0b0ee0dc66a76d14d05a3be2f5a326e7479c23ed7511b22d60d75",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2444,6 +2535,7 @@
       "patchSha256": "b66810fc7921f29ec5b2f8641f49ecf61d9ecd8548966ae83247d2603c0c9dfb",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2472,6 +2564,7 @@
       "patchSha256": "f0a7fa87873d21737ef1ec9f07ad17731dcd2275f555b129e3f0fa2edf1c4b8a",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2500,6 +2593,7 @@
       "patchSha256": "e92fbb2cf8e976d9b978c2dbf64288878e4fa2849f6d618ce5b0b305d7edd979",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2522,6 +2616,7 @@
       "patchSha256": "cedb45a1bcf855b92e9b9a82405739945b8c701b7cf4351c439deefae4a37ffb",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2553,6 +2648,7 @@
       "differences": [
         "Text A doubles only +1/+1 counters; Text B doubles each kind of counter on the creature."
       ],
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2581,6 +2677,7 @@
       "patchSha256": "5f9bbd457823e79c091423738fc4afc72e633fd2044c45a2ec64398e20cdf6be",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2609,6 +2706,7 @@
       "patchSha256": "708c4d4597329462d16a8fdd7df1db3071d78212f7c1a82166ec196c41c7280f",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2637,6 +2735,7 @@
       "patchSha256": "dd727cd4e41952f4a2c73ab15dbda5b044a4edb7dc2ba5a7f879075d220d9263",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2659,6 +2758,7 @@
       "patchSha256": "b015d0c7afc37ffe947446ac556685f77da1bf45cfec86c04c1d4345130122b1",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2690,6 +2790,7 @@
       "differences": [
         "Text A says the player draws an additional card; Text B says the player draws a card, dropping the extra draw"
       ],
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2718,6 +2819,7 @@
       "patchSha256": "7093d7e722bb8430f752a99c5e0afcb3217ef7001d03106bc105759c95ab90b7",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "renderer",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2749,6 +2851,7 @@
       "differences": [
         "Text A searches for up to two basic land cards; Text B requires exactly two"
       ],
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2780,6 +2883,7 @@
       "differences": [
         "Text A lets the sacrifice be any other creature or artifact; Text B restricts it to one you control"
       ],
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2806,6 +2910,7 @@
       "patchSha256": "84d21caecf0953cc72db34f94ee7ae22d2f1953c8446ac8132d3d4ec63d5c62a",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2831,6 +2936,7 @@
       "differences": [
         "Text A requires the two tapped permanents to be untapped (\"Tap two untapped artifacts and/or creatures you control\"); Text B omits \"untapped\", so it does not state that tapped permanents cannot be chosen for the cost."
       ],
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2859,6 +2965,7 @@
       "patchSha256": "12f4c9ea97889379378a1113cdfb256ee68af5a066da616e975130777c778f31",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2882,6 +2989,7 @@
       "differences": [
         "Text A gives the ability to an enchanted land; Text B gives it to an enchanted creature"
       ],
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2910,6 +3018,7 @@
       "patchSha256": "06de3650771c903d9bec073a55501ebfe1206603dc700b1ba27bc7a471352992",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2938,6 +3047,7 @@
       "patchSha256": "7370d9d4ffc4452a5cc133b2e8c77d4614c30bc2759dae70df63cab778c240b3",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2966,6 +3076,7 @@
       "patchSha256": "d9ee351c45c158f074a5dbc5d87b4fc0867a8c504cf2da56694400db7177d754",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -2992,6 +3103,7 @@
       "patchSha256": "c8b57a216b14e1a05c3aa36a832bf199873f537680119569bc3c296ae95a5610",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -3022,6 +3134,7 @@
       "differences": [
         "Text A only forbids spending the mana on spells, so it could pay for other things such as special actions; Text B restricts the mana to activating abilities only, which excludes special actions."
       ],
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -3052,6 +3165,7 @@
       "differences": [
         "Text A sequences the counter placement before the damage with Then, so the counter can raise the damage count; Text B uses two independent triggers that may resolve in either order."
       ],
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -3078,6 +3192,7 @@
       "patchSha256": "2c4663093fc28a20788162214505969601088e1e4d9e7d9bcf13a699afd39aa3",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -3106,6 +3221,7 @@
       "patchSha256": "c83fe4bc27f018d81fe5d61e0967c9344fc016213e20901d90ab53bbfb893d4a",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -3128,6 +3244,7 @@
       "patchSha256": "bd9d114b376861379516fd448513266f656a7e537b9341b59235c6c47b758bb4",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -3155,6 +3272,7 @@
       "patch": "docs/reviews/card-compiler-trial-01/patches/treeguard-duo.json",
       "patchSha256": "29f3165b06b057dfc4c69ff8f6344bacac581e543120cfa2510a69160fa8b5ab",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -3181,6 +3299,7 @@
       "patchSha256": "33b7dc84d58bc45bdba4927e0289744f6458a506ee4f2906ae660f934a2a1b16",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -3201,6 +3320,7 @@
       "patchSha256": "2956c81d61ab1f8539e3a15dbede1a7b92c858820dccac9901ea78cd9fac1e60",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -3227,6 +3347,7 @@
       "patchSha256": "552a581f0c94e33dc8ee1529e1683197d96750bae0666e23b1c310c1c911a0e6",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -3249,6 +3370,7 @@
       "patchSha256": "fd01bf979f3029929d10260d003cd061a261c16abc80b3d8258cd540a9b1368e",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -3275,6 +3397,7 @@
       "patchSha256": "53ca70b1223e2b6ee74eccb3442a74ffa967a81fef7d8aa059ebc83eff63ff99",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -3305,6 +3428,7 @@
         "source": "xmage@31ede542",
         "verdict": "identical"
       },
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -3333,6 +3457,7 @@
       "patchSha256": "2db8668d9efb0efa03caca0269ea53f113722c0f94e2e74129836a52b71913b2",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -3358,6 +3483,7 @@
       "patch": "docs/reviews/card-compiler-trial-01/patches/wurmwall-sweeper.json",
       "patchSha256": "80bb96f7617abc73bbc22f32e8ec29f5589e2c42a31f15090fd1ef9d8482bf9f",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -3383,6 +3509,7 @@
       "patch": "docs/reviews/card-compiler-trial-01/patches/yavimaya-hollow.json",
       "patchSha256": "a637eae16db68d9a6a8fab4d67a6a472076d8d9338043183790f192f4a9c48ad",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -3411,6 +3538,7 @@
       "patchSha256": "6a5dd852c7865629c16d6ddfa088f1c42ceee2171e4bb6cb27237443e4a6937a",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
       "smoke": [
         {
           "scenario": "from-hand",
@@ -3439,6 +3567,7 @@
       "patchSha256": "674627ba072d16f83ea5d3f89e0be6e76aac3a4e2679a5ab74f07c24b857e93e",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",

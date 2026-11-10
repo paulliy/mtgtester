@@ -41,9 +41,10 @@ Every valid patch was audited by hand against Oracle text (main thread, rules re
   and random targets, and the judge saw the whole card; that fixed three alarms and produced three
   different ones, so the alarm rate is noise in a cheap model, not a prompt bug to tune away on these
   same 20 cards. A false alarm costs a review, not a wrong card.
-- **The smoke game never failed** on a validated patch. It confirms the card runs in a real game
-  (cast, abilities resolved in 15 of 20) but it is not where errors were caught; the validator and
-  the meaning check did that work.
+- **The smoke game never failed** on a validated patch, but that shows less than it sounds. It
+  proves the card does not crash the engine. In the games, the card's own ability or spell resolved
+  for 15 of 20 cards; for the rest, smoke checked nothing about the behavior. The validator and the
+  meaning check caught the errors.
 - **Refusals are honest.** Seven of the 30 refusals were checked against the engine source (Adept
   Watershaper, Grand Arbiter Augustin IV, Smallpox, Feline Sovereign, Game Over, Transpose, Spawnbed
   Protector); each named a real gap. None of the 30 looked like a line the IR can already say.

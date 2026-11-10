@@ -19,10 +19,14 @@ and waits there for review.
 | `invalid`          |     0 |       |
 | `inexpressible`    |   191 |   64% |
 
-- **Cost.** About $0.37 for the whole run, or about $0.004 per checked card. This is estimated from
+- **Cost (estimated, not measured).** About $0.37 for the whole run, or about $0.004 per checked
+  card. Worker agents made the calls, so nothing was billed. The figure is estimated from
   prompt and answer sizes at Claude API prices (`results.json`), with the schema prefix counted as a
   cache read. Compile calls are $0.36 of that. Over the 5,125-card pool, the same pass rate would give
-  about 1,450 checked cards for about $6.
+  about 1,450 checked cards for an estimated $6 at API prices.
+- **Smoke coverage.** In 61 of the 100 checked cards across both trials, no smoke game resolved the
+  card's own ability or spell. For those, smoke shows only that the card does not crash the engine.
+  The queue marks them `smokeExercised: false`, so a reviewer can sort on it.
 - **Retries.** Five patches failed validation in round 1. In round 2, four of them were fixed and one
   was declined.
 - **Hand audit.** I checked 10 random `compiled-checked` patches against Oracle text, and all 10 were
