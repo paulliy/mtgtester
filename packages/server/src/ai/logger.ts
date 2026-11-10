@@ -36,13 +36,16 @@ export type DecisionSource =
   | 'reflection'
   /** Reading a player's free-text deal into terms (ADR 0035 phase 4). */
   | 'dealDraft'
-  | 'jev';
+  | 'jev'
+  /** The card-aware heuristic bot in bot-led tactical mode (ADR 0039). */
+  | 'bot';
 
 /** Sources answered locally: recorded, but never billed and never rate-limited. */
 const SKIPPED_SOURCES: ReadonlySet<DecisionSource> = new Set<DecisionSource>([
   'heuristic',
   'cache',
   'plan',
+  'bot',
 ]);
 
 /** Placeholder metadata for a decision answered without contacting the model. */
@@ -353,7 +356,7 @@ export class AiCallLogger {
       .query(
         `SELECT
           COUNT(*) as totalDecisions,
-          SUM(CASE WHEN source IN ('heuristic', 'cache', 'plan') THEN 1 ELSE 0 END) as skippedCalls,
+          SUM(CASE WHEN source IN ('heuristic', 'cache', 'plan', 'bot') THEN 1 ELSE 0 END) as skippedCalls,
           SUM(was_retry) as retries,
           SUM(was_fallback) as fallbacks,
           SUM(prompt_tokens) as totalPromptTokens,

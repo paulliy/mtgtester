@@ -35,6 +35,8 @@
     "pilot:draw": "bun run scripts/pilot-draw.ts",
     "play-decks": "bun run packages/server/src/cli/play-decks.ts",
     "combat-sweep": "bun run packages/server/src/cli/combat-sweep.ts",
+    "bot-league": "bun run packages/server/src/cli/bot-league.ts",
+    "ai-call-census": "bun run packages/server/src/cli/ai-call-census.ts",
     "fuzz": "bun run packages/server/src/cli/fuzz.ts",
     "diplomacy-sweep": "bun run packages/server/src/cli/diplomacy-sweep.ts",
     "ai-bench": "bun run packages/server/src/cli/ai-bench.ts",

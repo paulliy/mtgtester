@@ -1,4 +1,5 @@
 import type {
+  BotSteering,
   DecisionRequest,
   DecisionResponse,
   LegalAction,
@@ -20,6 +21,14 @@ import {
   targetBreachPenalty,
   type DiplomacyPlay,
 } from './diplomacy/play';
+import type { CardKnowledge } from './card-knowledge';
+import {
+  actionValue,
+  chooseAttacks,
+  chooseTargets,
+  choiceValue,
+  type PolicyContext,
+} from './policy';
 import type { RandomSource } from './rng';
 import { passesVeto, totalDiscardCount, totalLifeCost, totalSacrificeCount } from './veto';
 import { WEIGHTS } from './weights';
@@ -43,13 +52,49 @@ export interface EvaluateOptions {
    * become threat-aware and this seat's deal obligations shape its targets and scores.
    */
   diplomacy?: DiplomacyPlay;
+  /** Card traits from the IR, by name (ADR 0039). Absent, the bot reads only the menu. */
+  knowledge?: CardKnowledge;
+  /** Strategist knobs (ADR 0039). Absent, every knob keeps its neutral default. */
+  steering?: BotSteering;
+  /** Mulligans this seat has taken this game, for the keep rule. */
+  mulligansTaken?: number;
+  /**
+   * Score with the pre-ADR 0039 flat per-type bonuses and first-option targets. Kept only so the
+   * bot league can measure the new policy against the old one inside one build.
+   */
+  legacy?: boolean;
+}
+
+function policyContext(
+  request: DecisionRequest,
+  view: PlayerView,
+  opts: EvaluateOptions,
+): PolicyContext {
+  return {
+    request,
+    view,
+    ...(opts.knowledge === undefined ? {} : { knowledge: opts.knowledge }),
+    ...(opts.steering === undefined ? {} : { steering: opts.steering }),
+    ...(opts.mulligansTaken === undefined ? {} : { mulligansTaken: opts.mulligansTaken }),
+  };
 }
 
 function firstTargets(action: LegalAction): TargetChoice[] {
-  return (action.targets ?? []).map((slot) => ({
-    slot: slot.slot,
-    choice: slot.options[0] as string,
-  }));
+  // "Another target" slots (CR 115.3) must differ from earlier ones, which the menu cannot mark,
+  // so take the first option no earlier slot took whenever there is one.
+  const taken = new Set<string>();
+  const slots = action.targets ?? [];
+  const order = slots
+    .map((_, i) => i)
+    .sort((a, b) => slots[a]!.options.length - slots[b]!.options.length);
+  const chosen: TargetChoice[] = new Array<TargetChoice>(slots.length);
+  for (const i of order) {
+    const slot = slots[i]!;
+    const choice = (slot.options.find((o) => !taken.has(o)) ?? slot.options[0]) as string;
+    taken.add(choice);
+    chosen[i] = { slot: slot.slot, choice };
+  }
+  return chosen;
 }
 
 /**
@@ -136,6 +181,7 @@ function targetsFor(
   view: PlayerView,
   opts: CombatSearchOptions | undefined,
   diplomacy?: DiplomacyPlay,
+  policy?: PolicyContext,
 ): TargetChoice[] {
   if (action.type === 'attackDeclaration') {
     if (diplomacy !== undefined && action.data?.['chooseAttackers'] !== true) {
@@ -145,10 +191,14 @@ function targetsFor(
       }
       return plan.targets;
     }
+    if (policy !== undefined && action.data?.['chooseAttackers'] !== true) {
+      return chooseAttacks(action, policy);
+    }
     return attackDeclarationTargets(action, view);
   }
   if (action.type === 'blockDeclaration') return blockDeclarationTargets(action, view, opts);
   if (diplomacy !== undefined) return complyingTargets(action, view, diplomacy);
+  if (policy !== undefined) return chooseTargets(action, policy);
   return firstTargets(action);
 }
 
@@ -218,6 +268,7 @@ export function evaluate(
 ): ScoredAction[] {
   const repeatCount = opts.repeatCount ?? (() => 0);
   const diplomacy = request.decisionType === 'priority' ? opts.diplomacy : undefined;
+  const policy = opts.legacy === true ? undefined : policyContext(request, view, opts);
   return request.legalActions
     .filter((action) => passesVeto(action, view.life))
     .map((action) => {
@@ -231,14 +282,25 @@ export function evaluate(
       // comment for the 1,270-activation game that found it.
       const repeats = repeatCount(action);
       const decay = WEIGHTS.repeatActivationDecay ** repeats;
+      const base =
+        policy === undefined
+          ? baseValue(action)
+          : (actionValue(action, policy) ?? choiceValue(action, policy) ?? baseValue(action));
       const score =
-        baseValue(action) * decay -
+        base * decay -
         costValue(action, view) -
         repeats * WEIGHTS.repeatActivationPenalty -
         (diplomacy === undefined ? 0 : targetBreachPenalty(action, view, diplomacy));
       return { action, score };
     })
     .sort((a, b) => b.score - a.score);
+}
+
+/** A decision plus the ranking it came from, for callers that judge the bot's confidence. */
+export interface ScoredDecision {
+  response: DecisionResponse;
+  /** Every non-vetoed action, best first. Empty for a forced or unscored path. */
+  ranked: ScoredAction[];
 }
 
 /**
@@ -251,6 +313,17 @@ export function decide(
   rng: RandomSource,
   opts: EvaluateOptions = {},
 ): DecisionResponse {
+  return decideScored(request, view, rng, opts).response;
+}
+
+/** `decide`, also returning the ranking (ADR 0039's escalate-when-unsure reads its margin). */
+export function decideScored(
+  request: DecisionRequest,
+  view: PlayerView,
+  rng: RandomSource,
+  opts: EvaluateOptions = {},
+): ScoredDecision {
+  const policy = opts.legacy === true ? undefined : policyContext(request, view, opts);
   // Combat-damage division (ADR 0023 Phase 4) isn't a "which option" choice at all — see
   // `combatDamageSplitFor`. Handled before the normal ranked-evaluate path since every offered
   // `assignDamage` option scores identically (all fall to the same default case in `baseValue`)
@@ -261,10 +334,13 @@ export function decide(
       throw new Error(`decision ${request.requestId} has no legal actions`);
     }
     return {
-      requestId: request.requestId,
-      actionId: fallback.id,
-      combatDamageSplit: combatDamageSplitFor(request.combatDamageSplit, view, opts.combatSearch),
-      note: 'Heuristic bot: dividing combat damage cheapest-lethal-first among blockers',
+      ranked: [],
+      response: {
+        requestId: request.requestId,
+        actionId: fallback.id,
+        combatDamageSplit: combatDamageSplitFor(request.combatDamageSplit, view, opts.combatSearch),
+        note: 'Heuristic bot: dividing combat damage cheapest-lethal-first among blockers',
+      },
     };
   }
 
@@ -278,19 +354,19 @@ export function decide(
     if (fallback === undefined) {
       throw new Error(`decision ${request.requestId} has no legal actions`);
     }
-    const targets = targetsFor(fallback, view, opts.combatSearch, opts.diplomacy);
+    const targets = targetsFor(fallback, view, opts.combatSearch, opts.diplomacy, policy);
     const response: DecisionResponse = { requestId: request.requestId, actionId: fallback.id };
     if (targets.length > 0) response.targets = targets;
     response.note = 'Heuristic bot: veto excluded every candidate, using first legal action';
-    return response;
+    return { response, ranked };
   }
 
   const topScore = ranked[0]!.score;
   const tied = ranked.filter((r) => r.score === topScore);
   const chosen = (tied[rng.nextInt(tied.length)] ?? ranked[0]!).action;
-  const targets = targetsFor(chosen, view, opts.combatSearch, opts.diplomacy);
+  const targets = targetsFor(chosen, view, opts.combatSearch, opts.diplomacy, policy);
   const response: DecisionResponse = { requestId: request.requestId, actionId: chosen.id };
   if (targets.length > 0) response.targets = targets;
   response.note = `Heuristic bot: ${chosen.type} (score ${topScore.toFixed(2)})`;
-  return response;
+  return { response, ranked };
 }

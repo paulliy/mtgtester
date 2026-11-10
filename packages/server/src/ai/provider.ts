@@ -27,6 +27,7 @@ import { preparePromptForCaching } from './prompt-cache';
 import { routeStrategy } from './strategy-router';
 import { DEFAULT_POLICY_REGISTRY, type PolicyRegistry } from './policy-registry';
 import type { JevPolicyBinding, JevPolicyOutcome } from './jev-policy';
+import { BotTactician } from './bot-tactician';
 
 /**
  * Errors where falling back per-decision would be dishonest: the budget or the credentials
@@ -69,6 +70,8 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
   private readonly strategy: StrategyCoordinator;
   /** The deal context the current request's prompt was built from (ADR 0035). */
   private decisionContext: { requestId: string; context: string | undefined } | null = null;
+  /** Bot-led tactics (ADR 0039), created on this seat's first decision in `bot` mode. */
+  private botTactician: BotTactician | null = null;
 
   constructor(
     private readonly client: AiClient,
@@ -122,8 +125,37 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     }
 
     const local = this.tryLocalAnswer(request, view);
-    if (local !== null) return local;
+    if (local !== null) {
+      if (this.config.tacticalMode === 'bot') this.botFor(request).record(request, local);
+      return local;
+    }
 
+    if (this.config.tacticalMode === 'bot') {
+      const bot = this.botFor(request);
+      const answer = bot.decide(request);
+      const escalate = this.config.botEscalation === 'uncertain' && answer.uncertain;
+      if (!escalate) {
+        bot.record(request, answer.response);
+        this.logLocal(request, answer.response, 'bot');
+        this.strategy.recordDecision(request, answer.response, 'bot');
+        return answer.response;
+      }
+      this.engine.addDebug?.('decision', `bot unsure for ${request.requestId}; asking the model`, {
+        source: 'bot',
+      });
+      const response = await this.decideViaModelOrFallback(request, view);
+      bot.record(request, response);
+      return response;
+    }
+
+    return await this.decideViaModelOrFallback(request, view);
+  }
+
+  /** Jev (when bound), then the tactician model, then escalation or the fallback bot. */
+  private async decideViaModelOrFallback(
+    request: DecisionRequest,
+    view: PlayerView,
+  ): Promise<DecisionResponse> {
     if (this.jev !== undefined) {
       const decision = this.jev.policy.decide(
         request,
@@ -178,6 +210,20 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     // compute-ahead, halt the match" by throwing, and that throw must reach the caller rather
     // than be caught above and quietly downgraded into the fallback it exists to prevent.
     return await this.escalateOrFallback(request, view, failure);
+  }
+
+  private botFor(request: DecisionRequest): BotTactician {
+    if (this.botTactician === null) {
+      const seat = request.decidingPlayer;
+      this.botTactician = new BotTactician(
+        this.engine,
+        seat,
+        request.gameId,
+        () => this.strategy.steeringFor(seat),
+        this.config.botEscalationMargin,
+      );
+    }
+    return this.botTactician;
   }
 
   private recordJevDebug(

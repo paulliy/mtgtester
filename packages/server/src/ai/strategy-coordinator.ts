@@ -1,5 +1,6 @@
 import type { Engine } from '@mtg/engine';
 import type {
+  BotSteering,
   DecisionRequest,
   DecisionResponse,
   GameId,
@@ -25,6 +26,7 @@ import { TurnPlanManager, type AcceptedPlanAction } from './turn-plan';
 import { AI_VERSIONS } from './versions';
 import type { SeatDiplomacyContext } from './diplomacy-context';
 import { preparePromptForCaching } from './prompt-cache';
+import { cleanSteering, steeringSignature } from './steering';
 
 interface QueueLike {
   enqueue<T>(fn: () => Promise<T>, signal?: AbortSignal): Promise<T>;
@@ -75,12 +77,17 @@ function thinDigest(list: RecentSeatDecision[]): RecentSeatDecision[] {
 }
 
 function cleanPlan(raw: TurnStrategy | undefined): TurnStrategy | null {
-  if (raw === undefined || typeof raw.intent !== 'string' || !Array.isArray(raw.plannedActions)) {
-    return null;
-  }
+  if (raw === undefined || typeof raw.intent !== 'string') return null;
+  // A knobs-only answer (bot-led mode, ADR 0039) has no action list; anything else must.
+  const rawActions = Array.isArray(raw.plannedActions)
+    ? raw.plannedActions
+    : raw.steering !== undefined
+      ? []
+      : null;
+  if (rawActions === null) return null;
 
   const plannedActions: PlannedAction[] = [];
-  for (const candidate of raw.plannedActions.slice(0, 16)) {
+  for (const candidate of rawActions.slice(0, 16)) {
     if (
       typeof candidate !== 'object' ||
       candidate === null ||
@@ -154,6 +161,8 @@ function cleanPlan(raw: TurnStrategy | undefined): TurnStrategy | null {
         }
       : {}),
     ...(typeof raw.manaPlan === 'string' ? { manaPlan: raw.manaPlan.slice(0, 500) } : {}),
+    // Validated against the live table where it is installed (`cleanSteering`).
+    ...(raw.steering !== undefined ? { steering: raw.steering } : {}),
   };
 }
 
@@ -194,6 +203,16 @@ export class StrategyCoordinator {
   private abortController: AbortController | null = null;
   /** Set by `cancel()` when the match halts/is abandoned — no further strategist call starts. */
   private cancelled = false;
+  /**
+   * Bot-led mode (ADR 0039): each seat's latest strategist knobs, kept across turns, with the
+   * table signature they were set against and how many of the seat's turns have reused them.
+   */
+  private readonly steeringBySeat = new Map<
+    PlayerId,
+    { steering: BotSteering; signature: string; reusedTurns: number }
+  >();
+  /** Strategist calls made and skipped because the knobs still fit, for measurement. */
+  readonly strategistStats = { calls: 0, reused: 0 };
   /**
    * Fires when a strategist plan installs, carrying its standing intent (ADR 0022). The session
    * turns this into a log annotation; nothing here depends on it being set.
@@ -299,6 +318,8 @@ export class StrategyCoordinator {
     }
 
     this.strategyAttempted = true;
+    if (this.reuseSteering(activePlayer)) return;
+    this.strategistStats.calls++;
     this.strategistGeneration++;
     const generation = this.strategistGeneration;
     this.activeGeneration = generation;
@@ -358,6 +379,7 @@ export class StrategyCoordinator {
           ? {}
           : { profile: this.deckProfiles.get(activePlayer)! }),
         ...(diplomacy === null ? {} : { diplomacy }),
+        ...(this.botLed() ? { botSteering: true } : {}),
         context: {
           includeMemory: this.config.contextMemoryEnabled,
           includeFeatures: this.config.contextFeaturesEnabled,
@@ -403,6 +425,19 @@ export class StrategyCoordinator {
       }
       this.strategy = strategy;
       this.planDealsKey = dealsKey;
+      if (this.botLed()) {
+        const steering = cleanSteering(
+          strategy.steering,
+          view.opponents.filter((o) => o.life > 0).map((o) => o.seat),
+        );
+        if (steering !== null) {
+          this.steeringBySeat.set(activePlayer, {
+            steering,
+            signature: steeringSignature(view),
+            reusedTurns: 0,
+          });
+        }
+      }
       const metadata: PlanArtifactMetadata = {
         planId: `${strategyRequest.requestId}:g${generation}`,
         generationId: generation,
@@ -455,6 +490,34 @@ export class StrategyCoordinator {
     } finally {
       if (this.pendingAcceptedActions === acceptedActions) this.pendingAcceptedActions = null;
     }
+  }
+
+  /** The strategist's current knobs for a seat in bot-led mode, if it has set any (ADR 0039). */
+  steeringFor(seat: PlayerId): BotSteering | undefined {
+    return this.steeringBySeat.get(seat)?.steering;
+  }
+
+  private botLed(): boolean {
+    return this.config.tacticalMode === 'bot';
+  }
+
+  /**
+   * `strategistReplan: 'onChange'`: skip this turn's strategist call when the seat already has
+   * knobs, the table's coarse signature has not moved since they were set, and they have been
+   * reused fewer than `strategistMaxReuseTurns` turns.
+   */
+  private reuseSteering(seat: PlayerId): boolean {
+    if (!this.botLed() || this.config.strategistReplan !== 'onChange') return false;
+    const current = this.steeringBySeat.get(seat);
+    if (current === undefined) return false;
+    if (current.reusedTurns >= this.config.strategistMaxReuseTurns) return false;
+    if (steeringSignature(this.engine.view(seat)) !== current.signature) return false;
+    current.reusedTurns++;
+    this.strategistStats.reused++;
+    this.engine.addDebug?.('decision', `strategist knobs reused for ${seat}`, {
+      reusedTurns: current.reusedTurns,
+    });
+    return true;
   }
 
   guidanceFor(

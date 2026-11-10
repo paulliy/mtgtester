@@ -71,6 +71,29 @@ export interface AiConfig {
    */
   decisionCacheEnabled: boolean;
   /**
+   * Who answers tactical decisions the local plan, heuristics and cache leave (ADR 0039).
+   * `model`: the tactician LLM, as before. `bot`: the card-aware heuristic bot, steered by the
+   * strategist's knobs, with the model asked only as `botEscalation` allows.
+   * Env: `AI_TACTICAL_MODE`. Default: `model`.
+   */
+  tacticalMode: 'model' | 'bot';
+  /**
+   * In `bot` mode, when the tactician model is still asked. `never`: not at all. `uncertain`:
+   * when the bot's top two options score within `botEscalationMargin` LEP of each other on a
+   * decision that changes the board. Env: `AI_BOT_ESCALATION`. Default: `never`.
+   */
+  botEscalation: 'never' | 'uncertain';
+  /** Score margin, in LEP, under which `uncertain` escalation asks the model. Default 1. */
+  botEscalationMargin: number;
+  /**
+   * In `bot` mode, how often the strategist is called for a seat. `everyTurn`: each of its turns.
+   * `onChange`: only when the table's coarse state has moved since its last knobs, or after
+   * `strategistMaxReuseTurns` of its turns. Env: `AI_STRATEGIST_REPLAN`. Default: `onChange`.
+   */
+  strategistReplan: 'everyTurn' | 'onChange';
+  /** Most own turns a seat's knobs are reused before the strategist is asked again. Default 3. */
+  strategistMaxReuseTurns: number;
+  /**
    * Filter out OpenRouter providers that do not support prompt caching.
    * Default: true.
    */
@@ -242,6 +265,11 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   strategistConcurrency: 1,
   heuristicsEnabled: true,
   decisionCacheEnabled: true,
+  tacticalMode: 'model',
+  botEscalation: 'never',
+  botEscalationMargin: 1,
+  strategistReplan: 'onChange',
+  strategistMaxReuseTurns: 3,
   filterNonCachingProviders: true,
   reasoningEnabled: false,
   reasoningEffort: 'low',
@@ -328,6 +356,17 @@ function parseBoolean(val: string | undefined, fallback: boolean): boolean {
   if (normalized === '0' || normalized === 'false' || normalized === 'no') return false;
   if (normalized === '1' || normalized === 'true' || normalized === 'yes') return true;
   return fallback;
+}
+
+function parseChoice<T extends string>(
+  val: string | undefined,
+  choices: readonly T[],
+  fallback: T,
+): T {
+  const trimmed = val?.trim();
+  return trimmed !== undefined && (choices as readonly string[]).includes(trimmed)
+    ? (trimmed as T)
+    : fallback;
 }
 
 function parseNumber(val: string | undefined, fallback: number): number {
@@ -554,6 +593,29 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
     decisionCacheEnabled: parseBoolean(
       env['AI_DECISION_CACHE_ENABLED'],
       DEFAULT_AI_CONFIG.decisionCacheEnabled,
+    ),
+    tacticalMode: parseChoice(
+      env['AI_TACTICAL_MODE'],
+      ['model', 'bot'] as const,
+      DEFAULT_AI_CONFIG.tacticalMode,
+    ),
+    botEscalation: parseChoice(
+      env['AI_BOT_ESCALATION'],
+      ['never', 'uncertain'] as const,
+      DEFAULT_AI_CONFIG.botEscalation,
+    ),
+    botEscalationMargin: parseNumber(
+      env['AI_BOT_ESCALATION_MARGIN'],
+      DEFAULT_AI_CONFIG.botEscalationMargin,
+    ),
+    strategistReplan: parseChoice(
+      env['AI_STRATEGIST_REPLAN'],
+      ['everyTurn', 'onChange'] as const,
+      DEFAULT_AI_CONFIG.strategistReplan,
+    ),
+    strategistMaxReuseTurns: parseNumber(
+      env['AI_STRATEGIST_MAX_REUSE_TURNS'],
+      DEFAULT_AI_CONFIG.strategistMaxReuseTurns,
     ),
     filterNonCachingProviders: parseBoolean(
       env['AI_FILTER_NON_CACHING_PROVIDERS'] || env['OPENROUTER_FILTER_NON_CACHING'],
