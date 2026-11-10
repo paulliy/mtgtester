@@ -10,6 +10,7 @@
         "{T}, Sacrifice another creature or artifact: Each opponent loses 1 life and you gain 1 life."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/acolyte-of-aclazotz.json",
+      "patchSha256": "1d95ed3ee5dfaeb0517c6443a524cacc8643b09bdd62015d8334f2969c008951",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -40,6 +41,7 @@
         "If one or more tokens would be created under your control, twice that many of those tokens are created instead."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/adrix-and-nev-twincasters.json",
+      "patchSha256": "c77ab69900ebc9237319a77fc35632c103264ace1315d2c5b40557fd904fcf5f",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -68,6 +70,7 @@
       "status": "meaning-differs",
       "handledLines": ["{3}, Sacrifice another creature or artifact: Draw a card."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/ahriman.json",
+      "patchSha256": "64c32fbb8b4100e575d9e7a08f15bf534dc83687b85a48753778c45f415bae71",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -98,6 +101,7 @@
         "When this Equipment enters, create a 1/1 white Soldier creature token, then attach this Equipment to it."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/ancestral-blade.json",
+      "patchSha256": "1507fbcb1ee644a10cb8502f25be279567b5fe03caf81d8ce891445b51e04cdf",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -125,6 +129,7 @@
         "When this creature enters, return a nonland permanent you control to its owner's hand."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/ancestral-statue.json",
+      "patchSha256": "a5bccecb68d58689811c99295172e08b0799f0511fb3fb673867b149246069c9",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -153,6 +158,7 @@
       "status": "compiled-checked",
       "handledLines": ["This spell costs {1} less to cast if you control a Wizard."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/arcane-epiphany.json",
+      "patchSha256": "69ad928fce62a487f732fc961780a4985cb57c7915e7947f2d6fb7bfcb31b478",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -174,6 +180,7 @@
         "Creatures your opponents control lose hexproof and can't have or gain hexproof."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/archetype-of-endurance.json",
+      "patchSha256": "07953196e090c16ab3f538067532950aab311f0d8fc7ffb38e8f988b3165e6d0",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -202,6 +209,7 @@
       "status": "compiled-checked",
       "handledLines": ["Whenever you cast a Faerie or Wizard permanent spell, copy it."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/archmage-of-echoes.json",
+      "patchSha256": "c29a8d1d9ecc533fdd763b0cf9c9c161ef4153073b24d6387617ddcaf917b85c",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -229,6 +237,7 @@
         "Other creatures you control that are enchanted by Auras you control have base power and toughness 4/4 and have flying."
       ],
       "patch": "docs/reviews/card-compiler-trial-01/patches/archon-of-the-wild-rose.json",
+      "patchSha256": "b104ee083fb0c885fb06e71d0fd59fe595322ba6e33f89695680df3bf2378f2a",
       "trial": "docs/reviews/card-compiler-trial-01",
       "differences": [
         "Text A sets base power and toughness to 4/4; Text B gives +4/+4, which changes the result for any creature whose base is not 0/0."
@@ -256,6 +265,7 @@
       "status": "compiled-checked",
       "handledLines": ["Nonblack creatures get -1/-1."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/ascendant-evincar.json",
+      "patchSha256": "2bfab8371124401d0139f50e3bbe7f3b251062680934b2083499fb95a96de86c",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -283,6 +293,7 @@
         "Amass Orcs X, then Goblins and Orcs you control gain double strike and haste until end of turn."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/assault-on-osgiliath.json",
+      "patchSha256": "c8e4e8d71af25d0f24088ce103e2187b108140cb9598f03a19bc7011b2cc9f9f",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -304,6 +315,7 @@
         "{T}: Choose a color. Add one mana of that color for each charge counter on this artifact."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/astral-cornucopia.json",
+      "patchSha256": "c1f1299aa98596d8d3d13819f2b97833b9187029fca2bbe4309a40f33cd11f1c",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -329,6 +341,7 @@
       "status": "compiled-checked",
       "handledLines": ["Destroy target artifact, battle, enchantment, or creature with flying."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/atraxa-s-fall.json",
+      "patchSha256": "8e195991993fff225d965dc92a79d68ef7eb06dc3a562e1b0ac9c9f3eae3baf1",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -350,6 +363,7 @@
         "Whenever ~ attacks for the first time each turn, untap all creatures you control. After this phase, there is an additional combat phase."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/aurelia-the-warleader.json",
+      "patchSha256": "5270dd12c6076578ef4ccdb20de47a3ba9f8e20985727c341c7aa30a2e66f995",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -377,6 +391,7 @@
         "{W}{U}: ~ becomes a 2/2 white and blue Bird artifact creature with flying until end of turn."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/azorius-keyrune.json",
+      "patchSha256": "99322e87444df8da2124cb0bf178560eaff754d2d363ef65404bff2a1d753751",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -404,6 +419,7 @@
         "Equipped creature gets +1/+1 for each Dwarf, Equipment, and/or Vehicle you control."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/bearded-axe.json",
+      "patchSha256": "749865ba1e2737ab3c22e5d9622c9754ff28826c5e3413f3dcf6d5ff8db17ddb",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -434,6 +450,7 @@
         "Whenever equipped creature deals combat damage to a player, create a token that's a copy of this Equipment."
       ],
       "patch": "docs/reviews/card-compiler-trial-01/patches/bloodforged-battle-axe.json",
+      "patchSha256": "25cb6d878b3b26e893d19e18b60f0f5f19024ae1c08867128a919cef9378087a",
       "trial": "docs/reviews/card-compiler-trial-01",
       "smoke": [
         {
@@ -458,6 +475,7 @@
       "status": "compiled-checked",
       "handledLines": ["{2}{G}, Exile this card from your graveyard: You gain 5 life."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/bramble-wurm.json",
+      "patchSha256": "ae7da36908736135b0cb067cb3de7052b5389a7953363074e06528c2f93d9347",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -483,6 +501,7 @@
       "status": "compiled-checked",
       "handledLines": ["For each land you control, create a Treasure token."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/brass-s-bounty.json",
+      "patchSha256": "beb8e5d71f6c8bbb4f0b6de30191b83820466cd4756ab8b4960f51f46f50b28c",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -504,6 +523,7 @@
         "Whenever enchanted land is tapped for mana, its controller adds an additional one mana of any color."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/buried-in-the-garden.json",
+      "patchSha256": "39cb1ad49f472cd8053a27d87980164c2198639799747e3c593673df6385fe85",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -531,6 +551,7 @@
         "{T}: Search your library for a legendary card, reveal that card, put it into your hand, then shuffle."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/captain-sisay.json",
+      "patchSha256": "c06301416d2f8fa8e80503995e219723c4e58d63aed56ac43593ade4e2c05cff",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -558,6 +579,7 @@
         "At the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand."
       ],
       "patch": "docs/reviews/card-compiler-trial-01/patches/charmbreaker-devils.json",
+      "patchSha256": "95475fc2868973ce35d6f638e3fac8aea78c4a876e7954e54e4727f20c5b0212",
       "trial": "docs/reviews/card-compiler-trial-01",
       "differences": [
         "Text A returns a random card from the graveyard without targeting; Text B makes the card a target of the ability, which changes what can respond and interact with it."
@@ -585,6 +607,7 @@
       "status": "compiled-checked",
       "handledLines": ["Enchanted creature can't be blocked."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/cloak-of-mists.json",
+      "patchSha256": "7af37d77cb9f6e7467072ea3d9591bbaaa6b699861d7b5d443f05b13b24d8c14",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -610,6 +633,7 @@
       "status": "compiled-checked",
       "handledLines": ["{T}: Add {C} for each Locus on the battlefield."],
       "patch": "docs/reviews/card-compiler-trial-01/patches/cloudpost.json",
+      "patchSha256": "499e56f794f6aa5a43ae2c28cdfb0f4b95b2918f0fbbd9ad45dacb65cb5d7185",
       "trial": "docs/reviews/card-compiler-trial-01",
       "smoke": [
         {
@@ -636,6 +660,7 @@
         "Return target creature card from your graveyard to your hand. Put a +1/+1 counter on up to one target Zombie you control."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/crawl-from-the-cellar.json",
+      "patchSha256": "79334b4114a564eb80c9fcd0e0304f3c7f8d8e0447c264f5a16fcf621b2d51ea",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -655,6 +680,7 @@
       "status": "compiled-checked",
       "handledLines": ["Destroy all creatures with no counters on them."],
       "patch": "docs/reviews/card-compiler-trial-01/patches/damning-verdict.json",
+      "patchSha256": "766c04cab1c2e71a66457385b6e1a3f846af3d604b610a918ddf00a05c7a5fbf",
       "trial": "docs/reviews/card-compiler-trial-01",
       "smoke": [
         {
@@ -675,6 +701,7 @@
         "Skeletons you control and other Zombies you control get +1/+1 and have deathtouch."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/death-baron.json",
+      "patchSha256": "4d564937051b838da1eefaad6e30b572a894c89757933f1eeb7e581449e75f6d",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -702,6 +729,7 @@
         "If there are four or more card types among cards in your graveyard, instead search your library for any card, put it into your hand, then shuffle."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/demonic-counsel.json",
+      "patchSha256": "32cb9a84db9accd3e62fd967d4be17044b61544f27af213b349e1671514fe13b",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -723,6 +751,7 @@
         "Create a 4/4 white Angel creature token with flying if there are four or more card types among cards in your graveyard."
       ],
       "patch": "docs/reviews/card-compiler-trial-01/patches/descend-upon-the-sinful.json",
+      "patchSha256": "d087420ec352dac4cc398950248abed4ca1ab883125159367188d59dff721abb",
       "trial": "docs/reviews/card-compiler-trial-01",
       "smoke": [
         {
@@ -743,6 +772,7 @@
         "{T}, Discard your hand, Sacrifice this creature: Add three mana of any one color. Activate only as an instant."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/diamond-lion.json",
+      "patchSha256": "9b073e0f3a111846d53cf133ddaad60ce52d45b6cde179e0185b669d380be19c",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -773,6 +803,7 @@
         "{5}, {T}: Draw a card. This ability costs {1} less to activate for each page counter on this artifact."
       ],
       "patch": "docs/reviews/card-compiler-trial-01/patches/diary-of-dreams.json",
+      "patchSha256": "03c588db4a9d96df8a62ee58653a90ca58dfcbf795f4d1270a83b6e8c8d035e6",
       "trial": "docs/reviews/card-compiler-trial-01",
       "smoke": [
         {
@@ -799,6 +830,7 @@
         "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/dissipate.json",
+      "patchSha256": "5fd98699c212776139b7e10bee4c3a2a773a4deaf0b83babddf50f659c43aa2c",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -820,6 +852,7 @@
         "Whenever an opponent draws their second card each turn, you may return this card from your graveyard to your hand."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/dogged-detective.json",
+      "patchSha256": "ab757e2cb8921fe3c7f14b00237c3c19b5200e5abec5de54b3e5ce7d4e4e2eb9",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -847,6 +880,7 @@
         "At the beginning of your upkeep, you may gain control of target permanent until end of turn. If you do, untap it and it gains haste until end of turn."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/dominus-of-fealty.json",
+      "patchSha256": "8cd1b7cc60701be138f6be81ac873c0520040cd2ad6f01e5181183643a271cab",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -874,6 +908,7 @@
         "As long as there are four or more card types among cards in your graveyard, this creature gets +2/+2, has flying, and attacks each combat if able."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/dragon-s-rage-channeler.json",
+      "patchSha256": "6726fd21b361c78592f033fbd691ebf610aaa657d091158b9c09241b90ed95e3",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -901,6 +936,7 @@
         "When ~ enters, it deals 5 damage divided as you choose among any number of target creatures and/or planeswalkers your opponents control."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/dragonlord-atarka.json",
+      "patchSha256": "195b359e70069a811fbfdfa92c984ccb61a1040c01469b24f21bdeda84903fe2",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -926,6 +962,7 @@
       "status": "compiled-checked",
       "handledLines": ["For Mirrodin!"],
       "patch": "docs/reviews/card-compiler-trial-02/patches/dragonwing-glider.json",
+      "patchSha256": "3fc3a9d5fe320414ecb620e202c92bd2e6504473f29e3c550215b27ccf1ea884",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -953,6 +990,7 @@
         "When this creature enters, copy target instant or sorcery spell. You may choose new targets for the copy."
       ],
       "patch": "docs/reviews/card-compiler-trial-01/patches/dualcaster-mage.json",
+      "patchSha256": "dfc442d0bf703c8952b5beb725f10954e6fec1fb73e92ff7a12592e25ed64d63",
       "trial": "docs/reviews/card-compiler-trial-01",
       "smoke": [
         {
@@ -979,6 +1017,7 @@
         "As an additional cost to cast this spell, sacrifice an artifact or creature."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/dusk-rose-reliquary.json",
+      "patchSha256": "cbb3cf5d8fe4b81d9769cc7e7da33a0b2a26b6493f9140ed4757163e5346db0f",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -1010,6 +1049,7 @@
         "Whenever a Knight you control deals combat damage to a player, put a +1/+1 counter on that creature and create a Blood token."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/exsanguinator-cavalry.json",
+      "patchSha256": "8e1a541a60f9bd99b2f9a27b59f36d26fcf161417f78d5af7707ece6037ca0f9",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1037,6 +1077,7 @@
         "Create a token that's a copy of target creature you control. If it's your turn, scry 2."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/fated-infatuation.json",
+      "patchSha256": "07be8c61f2c75e752e8ae9ad7d7a4e669b80d6932c8c87654e93da3e884f27b3",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1058,6 +1099,7 @@
         "Whenever ~ attacks, she deals X damage to defending player, where X is the number of attacking creatures."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/ghost-spider-gwen-stacy.json",
+      "patchSha256": "602394cbb835c4584d27c66666e0fbafb7ed7ae1a842e0d4d512c54441afc8b9",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -1088,6 +1130,7 @@
         "At the beginning of your upkeep, put a -1/-1 counter on enchanted creature."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/glistening-oil.json",
+      "patchSha256": "5a13d4522f1cb40b1c68db6611899105ad377754ed8ff4230224a1f20118f9df",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1113,6 +1156,7 @@
       "status": "compiled-checked",
       "handledLines": ["{1}{R}, {T}: Target Goblin creature gets +2/+0 until end of turn."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/goblin-burrows.json",
+      "patchSha256": "507270c5364cbbdeded1c43509f2bd0d18219962f33804c06ac7fcff85b03c79",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "renderer",
       "smoke": [
@@ -1140,6 +1184,7 @@
         "When this creature enters, it deals 1 damage to each opponent and each creature and planeswalker they control."
       ],
       "patch": "docs/reviews/card-compiler-trial-01/patches/goblin-chainwhirler.json",
+      "patchSha256": "3bfd3c0cfa2852c5b0b17c128644f8148e78105ba25d0cfd5bed1f50695666f5",
       "trial": "docs/reviews/card-compiler-trial-01",
       "smoke": [
         {
@@ -1166,6 +1211,7 @@
         "Whenever this creature attacks, flip three coins. For each flip you win, create a 1/1 red Goblin creature token that's tapped and attacking."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/goblin-traprunner.json",
+      "patchSha256": "7eb82989a87bffe6765eef9ef10c35867a3b8d11ae0ef29abb08d7a8540071bd",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -1197,6 +1243,7 @@
         "{2}{B}{R}, {T}, Sacrifice this land: Put two +1/+1 counters on target Goblin or Orc you control. Activate only as a sorcery."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/goblin-town.json",
+      "patchSha256": "28662438c529c768016e126a3a2c170cbd020c36c490ac0ec03f2bec2c3c8c34",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1224,6 +1271,7 @@
         "{3}{R}{R}: Create a 5/5 red Dragon Spirit creature token with flying. Activate only if you control an attacking modified creature."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/goro-goro-disciple-of-ryusei.json",
+      "patchSha256": "98e3bb2c173c0e0bcde0a6fb14db1f54de046b089d228cfec988f62fcb53b0c3",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1251,6 +1299,7 @@
         "{3}{B}, Sacrifice an artifact or creature: Return this card from your graveyard to the battlefield. Activate only as a sorcery."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/grafted-butcher.json",
+      "patchSha256": "46b231b7eb341b42665bb7e2a43bac55c259d57412f038f0a0ccca7a198b8d3b",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1278,6 +1327,7 @@
         "When this creature enters, any number of other target creatures you control phase out."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/guardian-of-faith.json",
+      "patchSha256": "db5403cbb07c82475fba537afcf2a48362e5fe5709f303dbd8e7a478db902167",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1303,6 +1353,7 @@
       "status": "compiled-checked",
       "handledLines": ["Nonbasic lands are Islands."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/harbinger-of-the-seas.json",
+      "patchSha256": "7dc20d5d1107045746f5914be0566ae05cb09e9a706ae765d76e9bb86680ee8b",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1330,6 +1381,7 @@
         "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control."
       ],
       "patch": "docs/reviews/card-compiler-trial-01/patches/hard-hitting-question.json",
+      "patchSha256": "0ecd495fdbce852bf6fd421f5761b86b06da61b91a04c47de1e6723a8aa2b8e2",
       "trial": "docs/reviews/card-compiler-trial-01",
       "smoke": [
         {
@@ -1350,6 +1402,7 @@
         "Choose target opponent. Create two 1/1 colorless Thopter artifact creature tokens with flying. Then the chosen player loses X life and you gain X life, where X is the number of artifacts you control."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/haunt-the-network.json",
+      "patchSha256": "c847cf7ff33b25240a108f6442e96c41209c05ccb4753fab5a5694c01b7bb3a5",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -1375,6 +1428,7 @@
         "Whenever a creature becomes the target of a spell or ability, destroy that creature."
       ],
       "patch": "docs/reviews/card-compiler-trial-01/patches/horobi-death-s-wail.json",
+      "patchSha256": "03f38ea812c425ca796e21bff283b0dc7d47e8e8923c1e6a00c9894947694f57",
       "trial": "docs/reviews/card-compiler-trial-01",
       "smoke": [
         {
@@ -1401,6 +1455,7 @@
         "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control. If you control an Eldrazi, you gain 3 life."
       ],
       "patch": "docs/reviews/card-compiler-trial-01/patches/horrific-assault.json",
+      "patchSha256": "0c6cfb5897f3fa63e302d7d509e474262661ae716fe7d37545413a61a3c9152e",
       "trial": "docs/reviews/card-compiler-trial-01",
       "smoke": [
         {
@@ -1421,6 +1476,7 @@
         "Put a -1/-1 counter on target creature, two -1/-1 counters on another target creature, and three -1/-1 counters on a third target creature."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/incremental-blight.json",
+      "patchSha256": "9877f885977d1f2b488da689bc8c0330d84561b27f7ffe3d01a7897695f6b6cb",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1440,6 +1496,7 @@
       "status": "compiled-checked",
       "handledLines": ["Add {R} for each card in your hand."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/inner-fire.json",
+      "patchSha256": "3d050b1b8d694ae0164abe28da9d942eea35b17c0a5b117efc18de74d5aaea31",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1461,6 +1518,7 @@
         "Search your library for a snow land card, put it onto the battlefield tapped, then shuffle."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/into-the-north.json",
+      "patchSha256": "20a826545bc47e9c3c9728c7d750cf37f0131df78208ad95bfc00fbda3efbee8",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1482,6 +1540,7 @@
         "Create a token that's a copy of target creature you control, except the token has flying and it isn't legendary."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/irenicus-s-vile-duplication.json",
+      "patchSha256": "cb77c41ecea28a7e2cfe4391ae43822e5974577c77c7301e1c80acbb2e20b27f",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -1506,6 +1565,7 @@
         "+1: Up to one target creature you control can't be blocked this turn. Draw a card, then discard a card."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/kaito-cunning-infiltrator.json",
+      "patchSha256": "b1935bead33f4f1fb53388df27cc434f1ce414295025788b28ebbb8195c95100",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1533,6 +1593,7 @@
         "{T}, Sacrifice a Forest or Plains: Search your library for a land card, put it onto the battlefield, then shuffle."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/knight-of-the-reliquary.json",
+      "patchSha256": "61cfffe8dc1cc21dc50c832fc81f9fb455bed525798a5ca00cfdcdb7fb42a1c3",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1560,6 +1621,7 @@
         "Whenever ~ deals combat damage to a player, create four 3/3 blue Serpent creature tokens named ~'s Coil."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/koma-world-eater.json",
+      "patchSha256": "9923adc06f5021864913c237dea8c930bf781c17ad25a604885b00f3620d30da",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1587,6 +1649,7 @@
         "Whenever an artifact is put into a graveyard from the battlefield, you may pay {R}. If you do, create a 1/1 red Goblin creature token. It gains haste until end of turn."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/krenko-baron-of-tin-street.json",
+      "patchSha256": "e8d9ff175dc38cc00ce6c6f48e7a0b7ef2ed729423c467050e8b5877ea43466b",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1612,6 +1675,7 @@
       "status": "compiled-checked",
       "handledLines": ["Whenever you discard a card, you may pay {1}. If you do, amass Zombies 2."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/lazotep-chancellor.json",
+      "patchSha256": "7ef8919562080b31c93bd84d000ec6d5919bfd3a87d3c1ced25cfde14c7b47d2",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1639,6 +1703,7 @@
         "Untap target creature. Until end of turn, it gains reach, hexproof, and \"Whenever this creature becomes tapped, it deals damage equal to its power to up to one target creature.\""
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/legolas-s-quick-reflexes.json",
+      "patchSha256": "5d300fd87db307d12c8bd43d296b47aaa27e15c5d8397ba53df462354953af6d",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1660,6 +1725,7 @@
         "Target creature gets +2/+2 until end of turn. If you cast this spell during your main phase, that creature gets +4/+4 until end of turn instead."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/might-of-old-krosa.json",
+      "patchSha256": "8114b0e9205c0dd5c9da59ede3109ecab62dba87c86a2258adf7a25ca1405f02",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1681,6 +1747,7 @@
         "Whenever one or more permanent cards are put into your graveyard from anywhere while this creature has a -1/-1 counter on it, remove a -1/-1 counter from this creature."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/moonshadow.json",
+      "patchSha256": "bdfcc11a6e2b050b61a004c1e34275f52b6e046a3d54d386c61000a724c3076e",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -1711,6 +1778,7 @@
         "When this creature dies, return another target Elf card from your graveyard to your hand."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/morcant-s-loyalist.json",
+      "patchSha256": "4a8bb9684192e974f3882f27b78c9fb913f10585c09e9628055097b1a0942575",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1738,6 +1806,7 @@
         "Whenever a land you control enters, double the number of +1/+1 counters on this creature."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/mossborn-hydra.json",
+      "patchSha256": "8b2e7d7f361d413896bd03732e6e3e6acd2244f9f0bbc054d1c0ddae70c544e4",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1765,6 +1834,7 @@
         "{1}{B}, {T}, Sacrifice this land: Return target Bat, Lizard, Rat, or Squirrel card from your graveyard to your hand."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/mudflat-village.json",
+      "patchSha256": "a01930e3b30f3a312af14655896effae50ead189157e71b4e464672fc9629366",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1792,6 +1862,7 @@
         "Whenever a creature you control deals combat damage to a player, put that many +1/+1 counters on it."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/necropolis-regent.json",
+      "patchSha256": "c5829bf08b773789abfe09e18eb31e911e5017b4fe0c2dc0b1682d1f7e154b7c",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1817,6 +1888,7 @@
       "status": "compiled-checked",
       "handledLines": ["Whenever you tap a Swamp for mana, add an additional {B}."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/nirkana-revenant.json",
+      "patchSha256": "f4310f86a2dff68052231bdbd3433c7ef992f1b897f49809451f00ba5d8ac684",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1842,6 +1914,7 @@
       "status": "compiled-checked",
       "handledLines": ["{G}{U}, {T}: Put a +1/+1 counter on each creature that entered this turn."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/novijen-heart-of-progress.json",
+      "patchSha256": "c02b29ac2db6bd2046e6152e6873cf0ceabcb869b2f896dec6f3de099f435ab8",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1867,6 +1940,7 @@
       "status": "compiled-checked",
       "handledLines": ["Activated abilities of artifacts can't be activated."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/null-rod.json",
+      "patchSha256": "2ed56107f7bee6e1e7d2847a0c0a7ccd6b739974922ce827481fc15360c96f4f",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1892,6 +1966,7 @@
       "status": "compiled-checked",
       "handledLines": ["{G}, {T}: Target legendary creature gets +1/+1 until end of turn."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/okina-temple-to-the-grandfathers.json",
+      "patchSha256": "47a02f66100981ef82c850caf2c56975e600df1bd2b5bf0a13faca87feb68cdf",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "renderer",
       "smoke": [
@@ -1919,6 +1994,7 @@
         "Each non-Vampire creature gets -X/-X until end of turn, where X is the number of Vampires you control."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/olivia-s-wrath.json",
+      "patchSha256": "2809495b992f4455e94887934682eef4bbc55e51f18c3407994da21b0832442d",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1938,6 +2014,7 @@
       "status": "meaning-differs",
       "handledLines": ["Enchant snow land you control"],
       "patch": "docs/reviews/card-compiler-trial-01/patches/on-thin-ice.json",
+      "patchSha256": "f8fd626833c3a7a4f70f59611347c809b16f8d8be0dcc9368748287aff0c1464",
       "trial": "docs/reviews/card-compiler-trial-01",
       "differences": [
         "Text B states the Aura has no effects, but the card's whole-card context has a When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield trigger."
@@ -1967,6 +2044,7 @@
         "Discard your hand. Then draw X cards, where X is the number of card types among cards in your graveyard."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/peer-past-the-veil.json",
+      "patchSha256": "6ac58742eac634d9a0506c80ed8e3f567a2be36de531ea14c96934eb010a042d",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -1988,6 +2066,7 @@
         "{3}, {T}: Look at the top X cards of your library, where X is the number of Bobbleheads you control. You may cast a spell with mana value 3 or less from among them without paying its mana cost. Put the rest on the bottom of your library in a random order."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/perception-bobblehead.json",
+      "patchSha256": "0baec15e543f456154998716358da722a9164dd61f14efd381728b951c10b485",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -2019,6 +2098,7 @@
         "{1}, Sacrifice a creature: Search your library for a land card with a basic land type, put it onto the battlefield tapped, then shuffle."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/perilous-forays.json",
+      "patchSha256": "a13d6302b221846398de9d8e8e8db63c222b439ecf9d7e5a8190fb24a9944c06",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -2049,6 +2129,7 @@
         "Target opponent reveals their hand. You choose a nonland card from it. That player discards that card."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/pilfer.json",
+      "patchSha256": "c9ae31116e47516e398a646c6350fd54c0cec8174ac92f48a1ba50a25e4d5715",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -2073,6 +2154,7 @@
         "{2}: Target creature with a +1/+1 counter on it gains shroud until end of turn."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/plaxcaster-frogling.json",
+      "patchSha256": "78a78be13cefca87e884c13c6654add40bb65f9f54f9830eda56a743111e61e6",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2100,6 +2182,7 @@
         "Whenever a creature card is put into an opponent's graveyard from anywhere, you gain 1 life."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/profane-memento.json",
+      "patchSha256": "2608fe62bb6871262f27413329ddd5144a475980e40ead9488044743923a95da",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -2130,6 +2213,7 @@
         "Return target creature or land card from a graveyard to its owner's hand. You gain 6 life."
       ],
       "patch": "docs/reviews/card-compiler-trial-01/patches/pulse-of-murasa.json",
+      "patchSha256": "448612460c6819e9e6e051c14608febd8a4ca2f899b393e37d153bc86caaba4f",
       "trial": "docs/reviews/card-compiler-trial-01",
       "smoke": [
         {
@@ -2150,6 +2234,7 @@
         "Target creature you control deals damage equal to its power to target creature you don't control."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/rabid-bite.json",
+      "patchSha256": "03a9e36b1d0b04f6ad8772b4489bbbf6e02779e17dce3933db4bdcc869c33443",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "renderer",
       "smoke": [
@@ -2171,6 +2256,7 @@
         "At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's red."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/ring-of-valkas.json",
+      "patchSha256": "100fac1f71dbc99d57f1599ef718029fb635eff87c89965ac82014c43eefa66e",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2196,6 +2282,7 @@
       "status": "compiled-checked",
       "handledLines": ["Add {R}{R}, then add {R} for each card named ~ in each graveyard."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/rite-of-flame.json",
+      "patchSha256": "bdac4dd8c4455d6b9a96a81eb9f9895045981481f0f25eb7f0db86e88c488247",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2217,6 +2304,7 @@
         "Whenever a creature you control is dealt damage, put a +1/+1 counter on it."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/rite-of-passage.json",
+      "patchSha256": "3f001b68b52f398c9696cf01ca7dcdf54f6d835d090e5b5e07b0f94b2d3a5d90",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2244,6 +2332,7 @@
         "Whenever you cast an instant, sorcery, or Wizard spell, this creature deals 1 damage to any target."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/rockslide-sorcerer.json",
+      "patchSha256": "a744dfebea3dfb2d3f01fa8e430533a7bdc5026a695c57798d21d347352cafd1",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2271,6 +2360,7 @@
         "Whenever a creature you control deals combat damage to a player, if that creature entered this turn, draw a card."
       ],
       "patch": "docs/reviews/card-compiler-trial-01/patches/samut-vizier-of-naktamun.json",
+      "patchSha256": "be73825e5a5ba168b4dba8068b227dd1c9b65304c221a1f296a9fdbd7b75bc63",
       "trial": "docs/reviews/card-compiler-trial-01",
       "smoke": [
         {
@@ -2297,6 +2387,7 @@
         "Put a +1/+1 counter on up to one target creature. You gain 2 life. You may play an additional land this turn."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/scale-the-heights.json",
+      "patchSha256": "84c304fe2ee0b0ee0dc66a76d14d05a3be2f5a326e7479c23ed7511b22d60d75",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2318,6 +2409,7 @@
         "{2}, {T}, Tap X untapped artifacts you control: Target creature gets +X/+0 until end of turn. Activate only as a sorcery."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/secluded-starforge.json",
+      "patchSha256": "b66810fc7921f29ec5b2f8641f49ecf61d9ecd8548966ae83247d2603c0c9dfb",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2345,6 +2437,7 @@
         "When this land enters, target creature you control gains protection from the color of your choice until end of turn."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/sejiri-steppe.json",
+      "patchSha256": "f0a7fa87873d21737ef1ec9f07ad17731dcd2275f555b129e3f0fa2edf1c4b8a",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2372,6 +2465,7 @@
         "Return target nonland permanent to its owner's hand. If that permanent had mana value 3 or less, proliferate."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/serum-snare.json",
+      "patchSha256": "e92fbb2cf8e976d9b978c2dbf64288878e4fa2849f6d618ce5b0b305d7edd979",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2393,6 +2487,7 @@
         "Whenever a Dragon you control attacks, creatures defending player controls get -1/-1 until end of turn."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/silumgar-the-drifting-death.json",
+      "patchSha256": "cedb45a1bcf855b92e9b9a82405739945b8c701b7cf4351c439deefae4a37ffb",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2420,6 +2515,7 @@
         "Whenever you cast a spell from anywhere other than your hand, double the number of +1/+1 counters on this creature."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/sisterhood-of-karn.json",
+      "patchSha256": "0adcad3a21cb3abd0a29edb2ad259959cb7bf5874781523426f493e82ce9a760",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -2450,6 +2546,7 @@
         "As long as this creature has three or more +1/+1 counters on it, it has flying and is a Knight in addition to its other types."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/skyknight-squire.json",
+      "patchSha256": "5f9bbd457823e79c091423738fc4afc72e633fd2044c45a2ec64398e20cdf6be",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2477,6 +2574,7 @@
         "Whenever ~ attacks, he deals damage equal to the number of Treasures you control to any target."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/smaug-the-magnificent.json",
+      "patchSha256": "708c4d4597329462d16a8fdd7df1db3071d78212f7c1a82166ec196c41c7280f",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2504,6 +2602,7 @@
         "Target creature you control fights up to one target creature you don't control."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/smell-fear.json",
+      "patchSha256": "dd727cd4e41952f4a2c73ab15dbda5b044a4edb7dc2ba5a7f879075d220d9263",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2525,6 +2624,7 @@
         "Whenever ~ becomes tapped, you may discard a card. If you do, draw a card."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/spider-gwen-free-spirit.json",
+      "patchSha256": "b015d0c7afc37ffe947446ac556685f77da1bf45cfec86c04c1d4345130122b1",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2552,6 +2652,7 @@
         "At the beginning of each player's draw step, that player draws an additional card."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/spiteful-visions.json",
+      "patchSha256": "56af93ae44fbc71a16143aefd9292072b0202d4a080049de9e9f359ade6cb745",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -2582,6 +2683,7 @@
         "At the beginning of your upkeep, put a spore counter on each Fungus you control."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/sporesower-thallid.json",
+      "patchSha256": "7093d7e722bb8430f752a99c5e0afcb3217ef7001d03106bc105759c95ab90b7",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "renderer",
       "smoke": [
@@ -2609,6 +2711,7 @@
         "When this creature enters, you may sacrifice a land. If you do, search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/springbloom-druid.json",
+      "patchSha256": "78260b3119a2095f6dc42c8b051fa581ccd4af01541756cba785eef6c737f145",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -2639,6 +2742,7 @@
         "{1}, Sacrifice another creature or artifact: Put a +1/+1 counter on this creature and draw a card. Activate only as a sorcery."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/stormclaw-rager.json",
+      "patchSha256": "eee3972a20b31e1732119a8cd1d4684c0e23cb3a32821ea38646febc38f887c3",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -2667,6 +2771,7 @@
       "status": "compiled-checked",
       "handledLines": ["Gain control of each noncommander creature with mana value 3 or less."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/subjugate-the-hobbits.json",
+      "patchSha256": "84d21caecf0953cc72db34f94ee7ae22d2f1953c8446ac8132d3d4ec63d5c62a",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2688,6 +2793,7 @@
         "Tap two untapped artifacts and/or creatures you control: ~ deals 1 damage to each opponent. Activate only as a sorcery."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/sunshot-militia.json",
+      "patchSha256": "3388332d6733db313a3591bc2573e7aafc4ae71c3249e6d2534a257d3f861a95",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -2718,6 +2824,7 @@
         "Target permanent you control gains hexproof and indestructible until end of turn. You gain 2 life."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/tamiyo-s-safekeeping.json",
+      "patchSha256": "12f4c9ea97889379378a1113cdfb256ee68af5a066da616e975130777c778f31",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2737,6 +2844,7 @@
       "status": "meaning-differs",
       "handledLines": ["Enchanted land has \"{1}{G}, {T}: Create a Tarmogoyf token.\""],
       "patch": "docs/reviews/card-compiler-trial-02/patches/tarmogoyf-nest.json",
+      "patchSha256": "ef0b06126e1747d982683b2bae3017e4fb7d80cfa3b0d8a676cbff4e01690b57",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "differences": [
@@ -2767,6 +2875,7 @@
         "Whenever another artifact or creature is put into a graveyard from the battlefield, put a +1/+1 counter on equipped creature."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/tarrian-s-soulcleaver.json",
+      "patchSha256": "06de3650771c903d9bec073a55501ebfe1206603dc700b1ba27bc7a471352992",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2794,6 +2903,7 @@
         "When this creature enters, you may search your library for a legendary card, reveal it, put it into your hand, then shuffle."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/thalia-s-lancers.json",
+      "patchSha256": "7370d9d4ffc4452a5cc133b2e8c77d4614c30bc2759dae70df63cab778c240b3",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2821,6 +2931,7 @@
         "Peaceful Coexistence — At the beginning of your end step, put a +1/+1 counter on each creature you control that didn't attack or enter this turn. Untap those creatures."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/the-fifth-doctor.json",
+      "patchSha256": "d9ee351c45c158f074a5dbc5d87b4fc0867a8c504cf2da56694400db7177d754",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2846,6 +2957,7 @@
       "status": "compiled-checked",
       "handledLines": ["{2}, {T}: Flip a coin. If you win the flip, create a Treasure token."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/the-gold-saucer.json",
+      "patchSha256": "c8b57a216b14e1a05c3aa36a832bf199873f537680119569bc3c296ae95a5610",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2873,6 +2985,7 @@
         "At the beginning of your upkeep, you may add {C}{C}. This mana can't be spent to cast spells."
       ],
       "patch": "docs/reviews/card-compiler-trial-01/patches/thran-turbine.json",
+      "patchSha256": "549b4da5a2fc537199df605db0c26a9342f8839cca23a00a4a5d14c44278fac3",
       "trial": "docs/reviews/card-compiler-trial-01",
       "differences": [
         "Text A only forbids spending the mana on spells, so it could pay for other things such as special actions; Text B restricts the mana to activating abilities only, which excludes special actions."
@@ -2902,6 +3015,7 @@
         "Whenever this creature attacks, put a +1/+1 counter on target creature you control. Then this creature deals X damage to each opponent, where X is the number of modified creatures you control other than this creature."
       ],
       "patch": "docs/reviews/card-compiler-trial-01/patches/thundering-raiju.json",
+      "patchSha256": "0d12c91395d8005acc9dc11397a24466da0d6a3737a10d84467ef72fe0267dfe",
       "trial": "docs/reviews/card-compiler-trial-01",
       "differences": [
         "Text A sequences the counter placement before the damage with Then, so the counter can raise the damage count; Text B uses two independent triggers that may resolve in either order."
@@ -2929,6 +3043,7 @@
       "status": "compiled-checked",
       "handledLines": ["Transmute {1}{U}{U}"],
       "patch": "docs/reviews/card-compiler-trial-02/patches/tolaria-west.json",
+      "patchSha256": "2c4663093fc28a20788162214505969601088e1e4d9e7d9bcf13a699afd39aa3",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2956,6 +3071,7 @@
         "Gain control of target creature until end of turn. Untap it. It gains trample and haste until end of turn."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/traitorous-blood.json",
+      "patchSha256": "c83fe4bc27f018d81fe5d61e0967c9344fc016213e20901d90ab53bbfb893d4a",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -2977,6 +3093,7 @@
         "When this creature enters, you may search your library for an artifact card with mana value 6 or greater, reveal it, put it into your hand, then shuffle."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/treasure-mage.json",
+      "patchSha256": "bd9d114b376861379516fd448513266f656a7e537b9341b59235c6c47b758bb4",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -3004,6 +3121,7 @@
         "When this creature enters, until end of turn, target creature you control gains vigilance and gets +X/+X, where X is the number of creatures you control."
       ],
       "patch": "docs/reviews/card-compiler-trial-01/patches/treeguard-duo.json",
+      "patchSha256": "29f3165b06b057dfc4c69ff8f6344bacac581e543120cfa2510a69160fa8b5ab",
       "trial": "docs/reviews/card-compiler-trial-01",
       "smoke": [
         {
@@ -3028,6 +3146,7 @@
       "status": "compiled-checked",
       "handledLines": ["You may tap or untap target artifact, creature, or land."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/twitch.json",
+      "patchSha256": "33b7dc84d58bc45bdba4927e0289744f6458a506ee4f2906ae660f934a2a1b16",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -3047,6 +3166,7 @@
       "status": "smoke-failed",
       "handledLines": ["{T}: Add an amount of {G} equal to this creature's power."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/viridian-joiner.json",
+      "patchSha256": "2956c81d61ab1f8539e3a15dbede1a7b92c858820dccac9901ea78cd9fac1e60",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -3072,6 +3192,7 @@
       "status": "compiled-checked",
       "handledLines": ["Populate."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/wake-the-reflections.json",
+      "patchSha256": "552a581f0c94e33dc8ee1529e1683197d96750bae0666e23b1c310c1c911a0e6",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -3093,6 +3214,7 @@
         "When this creature dies, if there's a Lesson card in your graveyard, you gain 2 life."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/walltop-sentries.json",
+      "patchSha256": "fd01bf979f3029929d10260d003cd061a261c16abc80b3d8258cd540a9b1368e",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -3118,6 +3240,7 @@
       "status": "compiled-checked",
       "handledLines": ["{T}: You gain 1 life for each Elf on the battlefield."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/wellwisher.json",
+      "patchSha256": "53ca70b1223e2b6ee74eccb3442a74ffa967a81fef7d8aa059ebc83eff63ff99",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -3143,6 +3266,7 @@
       "status": "compiled-checked",
       "handledLines": ["{2}, {T}: Target commander gains lifelink until end of turn."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/witch-s-clinic.json",
+      "patchSha256": "628e956f61d55aa69c5aebca8ab1d4038254f65612700a54b793fbe7b0556b15",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -3170,6 +3294,7 @@
         "Whenever equipped creature deals combat damage to a player, destroy all permanents other than this Equipment."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/worldslayer.json",
+      "patchSha256": "2db8668d9efb0efa03caca0269ea53f113722c0f94e2e74129836a52b71913b2",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -3195,6 +3320,7 @@
       "status": "compiled-checked",
       "handledLines": ["When this Spacecraft enters, surveil 2."],
       "patch": "docs/reviews/card-compiler-trial-01/patches/wurmwall-sweeper.json",
+      "patchSha256": "80bb96f7617abc73bbc22f32e8ec29f5589e2c42a31f15090fd1ef9d8482bf9f",
       "trial": "docs/reviews/card-compiler-trial-01",
       "smoke": [
         {
@@ -3219,6 +3345,7 @@
       "status": "compiled-checked",
       "handledLines": ["{G}, {T}: Regenerate target creature."],
       "patch": "docs/reviews/card-compiler-trial-01/patches/yavimaya-hollow.json",
+      "patchSha256": "a637eae16db68d9a6a8fab4d67a6a472076d8d9338043183790f192f4a9c48ad",
       "trial": "docs/reviews/card-compiler-trial-01",
       "smoke": [
         {
@@ -3245,6 +3372,7 @@
         "When this creature enters, gain control of target permanent until end of turn. Untap that permanent. It gains haste until end of turn."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/zealous-conscripts.json",
+      "patchSha256": "6a5dd852c7865629c16d6ddfa088f1c42ceee2171e4bb6cb27237443e4a6937a",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
@@ -3272,6 +3400,7 @@
         "Exile target artifact, creature, or enchantment. Its controller creates a Clue token."
       ],
       "patch": "docs/reviews/card-compiler-trial-02/patches/zuko-s-exile.json",
+      "patchSha256": "674627ba072d16f83ea5d3f89e0be6e76aac3a4e2679a5ab74f07c24b857e93e",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
       "smoke": [
