@@ -483,8 +483,14 @@ function roleValue(roles: readonly CardRole[], action: LegalAction, ctx: PolicyC
 }
 
 /** Instants that only matter in response or in combat score below pass when idle. */
-function idleReactivePenalty(roles: readonly CardRole[], ctx: PolicyContext): number {
+function idleReactivePenalty(
+  roles: readonly CardRole[],
+  action: LegalAction,
+  ctx: PolicyContext,
+): number {
   const { request, view } = ctx;
+  // A sorcery-speed pump (Overrun) can only be cast now, so there is nothing to hold it for.
+  if (action.type === 'castSpell' && action.data?.['instantSpeed'] !== true) return 0;
   const inCombat = request.phase === 'combat';
   const responding = view.stack.length > 0;
   if (roles.length > 0 && roles.every((r) => PROTECTIVE_OR_PUMP.has(r))) {
@@ -497,10 +503,11 @@ function idleReactivePenalty(roles: readonly CardRole[], ctx: PolicyContext): nu
 function holdUpPenalty(mv: number, action: LegalAction, ctx: PolicyContext): number {
   const want = ctx.steering?.holdUpMana ?? 0;
   if (want <= 0 || action.data?.['instantSpeed'] === true) return 0;
-  // Each source row is one permanent group; `count` says how many, and floating mana counts too.
-  const sources = ctx.view.manaSources.reduce((sum, m) => sum + m.count, 0);
-  const floating = Object.values(ctx.view.availableMana).reduce((sum, n) => sum + n, 0);
-  return sources + floating - mv < want ? P.holdUpPenalty : 0;
+  // Each source row is one permanent; `count` is how much it makes. `availableMana` already folds
+  // these sources in, per symbol, so adding it would count them twice (and once per color for a
+  // five-color land). Floating mana is not separable from it and rarely matters here.
+  const untapped = ctx.view.manaSources.reduce((sum, m) => sum + m.count, 0);
+  return untapped - mv < want ? P.holdUpPenalty : 0;
 }
 
 /**
@@ -537,13 +544,13 @@ export function actionValue(action: LegalAction, ctx: PolicyContext): number | n
         if (creatures >= P.overextendCreatures) value -= P.overextendPenalty;
       }
     }
-    value -= idleReactivePenalty(roles, ctx);
+    value -= idleReactivePenalty(roles, action, ctx);
     value -= holdUpPenalty(mv, action, ctx);
   } else {
     const index = abilityIndexOf(action);
     const roles = index === undefined ? [] : (traits?.abilityRoles?.[index] ?? []);
     value = WEIGHTS.tempo.activateAbility + roleValue(roles, action, ctx);
-    value -= idleReactivePenalty(roles, ctx);
+    value -= idleReactivePenalty(roles, action, ctx);
     const misuse = attachOrCrewPenalty(action, ctx);
     if (misuse !== null) return misuse;
   }

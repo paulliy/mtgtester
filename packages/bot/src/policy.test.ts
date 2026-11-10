@@ -353,6 +353,23 @@ describe('card-aware priority scoring', () => {
     expect(res.actionId).toBe(0);
   });
 
+  it('casts a sorcery-speed pump in its main phase', () => {
+    const overrun: LegalAction = {
+      id: 1,
+      type: 'castSpell',
+      description: 'Cast Overrun',
+      data: { sourceName: 'Overrun', manaCost: '{2}{G}{G}{G}', instantSpeed: false },
+    };
+    const k = knowledge({ Overrun: { manaValue: 5, roles: ['pump'] } });
+    const res = decide(
+      request([PASS, overrun]),
+      view({ battlefield: [creature('mine', 'P1', 2, 2)] }),
+      new Rng('a'),
+      { knowledge: k },
+    );
+    expect(res.actionId).toBe(1);
+  });
+
   it('picks different objects for two slots when it can', () => {
     const copy: LegalAction = {
       id: 1,
@@ -405,17 +422,28 @@ describe('steering', () => {
     expect(res.actionId).toBe(0);
   });
 
-  it('counts grouped sources and floating mana toward held mana', () => {
-    // One row of five Forests plus one floating G: casting {3} still leaves 3 up.
+  it('counts grouped sources once toward held mana', () => {
+    // The view folds untapped sources into availableMana too; they must not count twice.
     const actions = [PASS, spell(1, 'Sorcery', '{3}')];
-    const sources = [{ name: 'Forest', symbols: ['G'], count: 5 }];
-    const res = decide(
+    const forests = [1, 2, 3].map((n) => ({ name: `Forest ${n}`, symbols: ['G'], count: 1 }));
+    const held = decide(
       request(actions),
-      view({ manaSources: sources, availableMana: { G: 1 } }),
+      view({ manaSources: forests, availableMana: { G: 3 } }),
       new Rng('a'),
       { steering: { holdUpMana: 2 } },
     );
-    expect(res.actionId).toBe(1);
+    expect(held.actionId).toBe(0);
+    // One row that makes five (a grouped or multi-mana source) leaves two up after {3}.
+    const grouped = decide(
+      request(actions),
+      view({
+        manaSources: [{ name: 'Forest', symbols: ['G'], count: 5 }],
+        availableMana: { G: 5 },
+      }),
+      new Rng('a'),
+      { steering: { holdUpMana: 2 } },
+    );
+    expect(grouped.actionId).toBe(1);
   });
 
   function attack(subjects: Array<{ id: string; power: number; toughness: number }>): LegalAction {
