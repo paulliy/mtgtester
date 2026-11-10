@@ -223,9 +223,15 @@ export function withPatch<T>(
   }
 }
 
-/** Remove free-text `description` fields: the back-translator must read only the behavior. */
+/**
+ * Hide every free-text string before back-translation, so the back-translator reads only the
+ * behavior. This is an allow-list: short enum-like strings (op names, kinds, keywords, types,
+ * counter names, zones) are kept, and any other string, wherever it sits, becomes a placeholder.
+ * A compile answer therefore cannot pass the Oracle text through a token name or a new field.
+ */
 export function stripDescriptions(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(stripDescriptions);
+  if (typeof value === 'string') return ENUM_LIKE.test(value) ? value : '<text>';
   if (value === null || typeof value !== 'object') return value;
   const out: Record<string, unknown> = {};
   for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
@@ -234,6 +240,9 @@ export function stripDescriptions(value: unknown): unknown {
   }
   return out;
 }
+
+/** At most three words of letters, digits and symbol characters: "first strike", "+1/+1", "Treasure". */
+const ENUM_LIKE = /^[A-Za-z0-9+/'{}-]{1,24}( [A-Za-z0-9+/'{}-]{1,24}){0,2}$/;
 
 // ── Generated smoke test ──────────────────────────────────────────────────────────────────────
 

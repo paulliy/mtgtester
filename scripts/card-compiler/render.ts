@@ -70,7 +70,11 @@ function amount(value: unknown): string {
 }
 
 /** A dynamic amount as the "where X is …" clause, or null for a fixed number. */
-function dynamicX(value: unknown): string | null {
+/**
+ * `targetCount` is the number of target slots of the ability the value sits in: "its power" is
+ * only unambiguous when there is exactly one.
+ */
+function dynamicX(value: unknown, targetCount = 0): string | null {
   if (typeof value === 'number' || !isNode(value)) return null;
   switch (value['kind']) {
     case 'const':
@@ -90,6 +94,9 @@ function dynamicX(value: unknown): string | null {
       return `the number of ${String(value['counter'])} counters on ~`;
     case 'powerOfTarget':
       only(value, 'powerOfTarget', ['kind', 'target']);
+      // "its" names a slot only when the ability has a single target; any other shape would let a
+      // patch that reads the wrong slot render the same English as the right one.
+      if (value['target'] !== 0 || targetCount !== 1) throw new Unrendered('powerOfTarget.slot');
       return 'its power';
     default:
       throw new Unrendered(`value:${String(value['kind'])}`);
@@ -335,7 +342,7 @@ function effectText(effect: unknown, ctx: EffectContext, used: Set<number>): str
   const op = String(effect['op']);
   const t = (key = 'target') => targetRef(effect[key], ctx, used);
   const withX = (text: string, value: unknown): string => {
-    const x = dynamicX(value);
+    const x = dynamicX(value, ctx.targets.length);
     return x === null
       ? text.replace('{n}', amount(value))
       : `${text.replace('{n}', 'X')}, where X is ${x}`;
@@ -343,7 +350,7 @@ function effectText(effect: unknown, ctx: EffectContext, used: Set<number>): str
   switch (op) {
     case 'draw': {
       only(effect, op, ['op', 'count']);
-      const x = dynamicX(effect['count']);
+      const x = dynamicX(effect['count'], ctx.targets.length);
       if (x !== null) return `draw cards equal to ${x}`;
       const n = countWord(effect['count']);
       return n === 'a' ? 'draw a card' : `draw ${n} cards`;
@@ -399,7 +406,7 @@ function effectText(effect: unknown, ctx: EffectContext, used: Set<number>): str
       if (effect['source'] !== undefined) {
         const source = targetRef(effect['source'], ctx, new Set());
         used.add(effect['source'] as number);
-        const x = dynamicX(effect['amount']);
+        const x = dynamicX(effect['amount'], ctx.targets.length);
         if (x === null) throw new Unrendered('dealDamage.source-fixed');
         return `${source} deals damage equal to ${x} to ${target}`;
       }
@@ -436,7 +443,7 @@ function effectText(effect: unknown, ctx: EffectContext, used: Set<number>): str
     }
     case 'pumpUntilEot': {
       only(effect, op, ['op', 'target', 'power', 'toughness']);
-      return `${t()} gets ${pt(effect['power'], effect['toughness'])} until end of turn`;
+      return `${t()} gets ${pt(effect['power'], effect['toughness'], ctx.targets.length)} until end of turn`;
     }
     case 'grantKeywordUntilEot':
       only(effect, op, ['op', 'target', 'keyword']);
@@ -464,9 +471,9 @@ function effectText(effect: unknown, ctx: EffectContext, used: Set<number>): str
   }
 }
 
-function pt(power: unknown, toughness: unknown): string {
-  const px = dynamicX(power);
-  const tx = dynamicX(toughness);
+function pt(power: unknown, toughness: unknown, targetCount: number): string {
+  const px = dynamicX(power, targetCount);
+  const tx = dynamicX(toughness, targetCount);
   if (px !== null || tx !== null) {
     if (px !== tx) throw new Unrendered('pump:mixed-dynamic');
     return `+X/+X, where X is ${px}`;

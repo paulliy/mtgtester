@@ -15,6 +15,7 @@
  * `exec` command (Anthropic API), a batch job, or an agent. `check` is idempotent: run it after
  * each round of answers until nothing is pending.
  */
+import { createHash } from 'node:crypto';
 import {
   existsSync,
   mkdirSync,
@@ -411,6 +412,8 @@ export interface QueueEntry {
   handledLines: string[];
   /** Repository path of the patch file. */
   patch: string | null;
+  /** SHA-256 of the patch file's bytes; a recorded review applies only to this exact patch. */
+  patchSha256: string | null;
   trial: string;
   textCheck?: 'renderer' | 'model';
   differences?: string[];
@@ -451,12 +454,14 @@ function queue(trials: string[]): void {
       const patchPath = existsSync(p.patch(state.name)) ? p.patch(state.name) : null;
       const source = state.source ?? compilerSource();
       const old = previousByKey.get(`${state.name}|${source}`);
+      const patchSha256 =
+        patchPath === null
+          ? null
+          : createHash('sha256').update(readFileSync(patchPath)).digest('hex');
+      // A review is kept only for the exact bytes that were reviewed: a recompiled, re-imported
+      // or hand-edited patch goes back to waiting.
       const samePatch =
-        old?.patch !== null &&
-        old?.patch !== undefined &&
-        patchPath !== null &&
-        existsSync(old.patch) &&
-        readFileSync(old.patch, 'utf8') === readFileSync(patchPath, 'utf8');
+        patchSha256 !== null && old?.patchSha256 !== undefined && old.patchSha256 === patchSha256;
       entries.push({
         name: state.name,
         oracleId: target.oracleId,
@@ -464,6 +469,7 @@ function queue(trials: string[]): void {
         status,
         handledLines: state.lines,
         patch: patchPath,
+        patchSha256,
         trial,
         ...(state.textCheck !== undefined && { textCheck: state.textCheck }),
         ...(state.differences !== undefined &&
@@ -564,9 +570,14 @@ function report(trial: string): void {
     ? readFileSync(`${p.work}/usage.jsonl`, 'utf8')
         .split('\n')
         .filter((line) => line.trim().length > 0)
-        .map((line) => JSON.parse(line) as { stage: string; costUsd: number })
+        .map((line) => JSON.parse(line) as { stage: string; model: string; costUsd: number | null })
     : [];
-  const totalCost = usage.reduce((sum, row) => sum + row.costUsd, 0);
+  const unpriced = usage.filter((row) => row.costUsd === null);
+  if (unpriced.length > 0)
+    console.warn(
+      `warning: ${unpriced.length} calls used models with no price (${[...new Set(unpriced.map((row) => row.model))].join(', ')}); the measured cost leaves them out`,
+    );
+  const totalCost = usage.reduce((sum, row) => sum + (row.costUsd ?? 0), 0);
   const estimate = estimateCost(trial);
   const compiled = states.filter((state) => state.valid === true);
   const checked = compiled.filter((state) => smokeOk(state) && state.verdict === 'same');
