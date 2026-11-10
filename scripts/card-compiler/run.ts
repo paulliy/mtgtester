@@ -294,6 +294,15 @@ function check(trial: string): void {
   saveState(trial, states);
   const counts = new Map<string, number>();
   for (const state of states.values()) counts.set(state.stage, (counts.get(state.stage) ?? 0) + 1);
+  // An answer saved under the wrong extension would otherwise leave its card pending forever.
+  for (const stage of ['compile', 'back', 'judge']) {
+    const dir = `${p.work}/answers/${stage}`;
+    if (!existsSync(dir)) continue;
+    const want = stage === 'back' ? '.txt' : '.json';
+    for (const file of readdirSync(dir))
+      if (!file.endsWith(want))
+        console.warn(`warning: ${dir}/${file} is ignored; ${stage} answers must end in ${want}`);
+  }
   console.log(`${pending} prompts pending;`, Object.fromEntries(counts));
 }
 

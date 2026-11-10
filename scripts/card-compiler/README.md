@@ -55,7 +55,8 @@ bun run scripts/card-compiler/run.ts check <trial>
 bun run scripts/card-compiler/run.ts report <trial>
 ```
 
-Prompts and answers are files under `<trial>/work/`, so any executor can answer them (the `exec`
+Prompts and answers are files under `<trial>/work/` (answers: `.json` for compile and judge, `.txt` for
+back; `check` warns about any other file), so any executor can answer them (the `exec`
 command, a batch job, or an agent). `exec` records token usage and cost per call in
 `<trial>/work/usage.jsonl`. Settings: `CARD_COMPILER_MODEL` (default `claude-haiku-5-5`),
 `CARD_COMPILER_RETRY_MODEL` (default `claude-sonnet-5-5`), `CARD_COMPILER_CONCURRENCY` (default 4).
