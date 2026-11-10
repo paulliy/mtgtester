@@ -208,6 +208,82 @@ describe('OpenAiCompatibleClient streaming', () => {
   });
 });
 
+describe('OpenAiCompatibleClient streaming edge cases', () => {
+  it('reads the decision from streamed reasoning when the answer content is empty', async () => {
+    const fetchImpl = (async () =>
+      sse([
+        { id: 'gen-r', choices: [{ delta: { reasoning: 'thinking... {"actionId": 0}' } }] },
+        { id: 'gen-r', choices: [{ delta: {}, finish_reason: 'length' }] },
+        {
+          id: 'gen-r',
+          choices: [],
+          usage: { prompt_tokens: 10, completion_tokens: 9, cost: 1e-5 },
+        },
+      ])) as unknown as typeof fetch;
+    const client = new OpenAiCompatibleClient(config(), fetchImpl);
+    const { response } = await client.requestDecision(prompt(), request());
+    expect(response.actionId).toBe(0);
+  });
+
+  it('keeps a real error that lands after the deadline instead of calling it a timeout', async () => {
+    let calls = 0;
+    const fetchImpl = (async () => {
+      calls++;
+      // Ignores the abort signal, answers after the deadline has passed.
+      await new Promise((resolve) => setTimeout(resolve, 40));
+      return new Response('upstream exploded', { status: 500 });
+    }) as unknown as typeof fetch;
+    const client = new OpenAiCompatibleClient(
+      config({ requestTimeoutMs: 10, maxRetries: 1 }),
+      fetchImpl,
+      async () => {},
+    );
+    const error = await client.requestDecision(prompt(), request()).catch((e: unknown) => e);
+    expect(error).not.toBeInstanceOf(RequestTimeoutError);
+    expect(calls).toBe(2); // a 500 is still retried
+  });
+
+  it('moves later requests to the next model after repeated timeouts', async () => {
+    const models: string[] = [];
+    const fetchImpl = (async (_url: string, init: RequestInit) => {
+      const body = JSON.parse(String(init.body)) as { model: string };
+      models.push(body.model);
+      if (body.model === 'slow') return stallingSse([], init.signal ?? undefined);
+      return sse(answerChunks);
+    }) as unknown as typeof fetch;
+    const client = new OpenAiCompatibleClient(
+      config({ models: ['slow', 'fast'], requestTimeoutMs: 20 }),
+      fetchImpl,
+    );
+    for (let i = 0; i < 3; i++) {
+      await expect(client.requestDecision(prompt(), request())).rejects.toBeInstanceOf(
+        RequestTimeoutError,
+      );
+    }
+    expect(client.activeModel).toBe('fast');
+    const { response } = await client.requestDecision(prompt(), request());
+    expect(response.actionId).toBe(0);
+    expect(models).toEqual(['slow', 'slow', 'slow', 'fast']);
+  });
+
+  it('a cancelled request is not reported as a timeout', async () => {
+    const controller = new AbortController();
+    const fetchImpl = (async (_url: string, init: RequestInit) => {
+      setTimeout(() => controller.abort(), 5);
+      return stallingSse(
+        [{ id: 'gen-c', choices: [{ delta: { content: '{' } }] }],
+        init.signal ?? undefined,
+      );
+    }) as unknown as typeof fetch;
+    const client = new OpenAiCompatibleClient(config({ requestTimeoutMs: 5000 }), fetchImpl);
+    const error = await client
+      .requestDecision(prompt(), request(), controller.signal)
+      .catch((e: unknown) => e);
+    expect(error).not.toBeInstanceOf(RequestTimeoutError);
+    expect(client.unsettledAttempts().map((a) => a.generationId)).toEqual(['gen-c']);
+  });
+});
+
 describe('lookupGenerationCost', () => {
   it('waits for stats that are not ready yet, then gives up with null', async () => {
     let calls = 0;

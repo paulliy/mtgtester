@@ -36,6 +36,21 @@ import {
  * An attempt OpenRouter may have billed whose cost the response did not carry: a call we timed
  * out, or a stream that ended before its usage chunk. `settleUnknownCosts` looks these up.
  */
+/** Cap on attempts kept for cost settlement, so a long-running session cannot grow without end. */
+const MAX_UNSETTLED = 1000;
+
+/** Timeouts in a row after which later requests start on the next model in the chain. */
+const TIMEOUT_STREAK_LIMIT = 3;
+
+function isAbortLike(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return (
+    error.name === 'TimeoutError' ||
+    error.name === 'AbortError' ||
+    /aborted|timed? ?out/i.test(error.message)
+  );
+}
+
 export interface UnsettledAttempt {
   generationId: string;
   logicalRequestId: string;
@@ -187,6 +202,7 @@ export class OpenAiCompatibleClient implements AiClient {
   private readonly attemptCountsByRequest = new Map<string, number>();
   private attemptObserver: AiAttemptObserver | undefined;
   private unsettled: UnsettledAttempt[] = [];
+  private readonly timeoutStreaks = new Map<string, number>();
 
   constructor(
     private readonly config: AiConfig,
@@ -244,6 +260,8 @@ export class OpenAiCompatibleClient implements AiClient {
     if (generationId === undefined || generationId === '') return;
     if (this.unsettled.some((a) => a.generationId === generationId)) return;
     this.unsettled.push({ ...attempt, generationId });
+    // A long-lived server session never settles; keep the newest entries, not all of them.
+    if (this.unsettled.length > MAX_UNSETTLED) this.unsettled.shift();
   }
 
   get activeModel(): string {
@@ -571,7 +589,10 @@ export class OpenAiCompatibleClient implements AiClient {
               return { response: parsed, meta };
             } catch (caught) {
               let error = caught;
-              const timedOut = timeoutSignal.aborted && signal?.aborted !== true;
+              // Only an abort can be our deadline. A real error that lands just as the timer
+              // fires (an HTTP 500, a parse failure) keeps its own classification.
+              const timedOut =
+                timeoutSignal.aborted && signal?.aborted !== true && isAbortLike(caught);
               if (timedOut) {
                 error = new RequestTimeoutError(
                   currentModel,
@@ -642,6 +663,7 @@ export class OpenAiCompatibleClient implements AiClient {
           signal,
         );
 
+        this.timeoutStreaks.delete(currentModel);
         return metaResult;
       } catch (err) {
         if (err instanceof ModelUnavailableError || err instanceof DailyQuotaExhaustedError) {
@@ -652,6 +674,23 @@ export class OpenAiCompatibleClient implements AiClient {
           this.advanceModelIndex();
           console.warn(`  ⚠ ${currentModel} ${reason} — falling back to ${this.activeModel}`);
           continue;
+        }
+
+        if (err instanceof RequestTimeoutError) {
+          // A model that keeps blowing the deadline would be paid for on every decision. After
+          // a few timeouts in a row, later requests start on the next model in the chain.
+          const streak = (this.timeoutStreaks.get(currentModel) ?? 0) + 1;
+          this.timeoutStreaks.set(currentModel, streak);
+          if (streak >= TIMEOUT_STREAK_LIMIT && this.config.models.length > 1) {
+            this.timeoutStreaks.delete(currentModel);
+            if (this.activeModel === currentModel) {
+              this.advanceModelIndex();
+              console.warn(
+                `  ⚠ ${currentModel} timed out ${streak} times in a row — moving to ${this.activeModel}`,
+              );
+            }
+          }
+          throw err;
         }
 
         if (err instanceof RpmLimitError) {
