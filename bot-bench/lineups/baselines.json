@@ -1,0 +1,7 @@
+{
+  "models": [
+    { "id": "local-heuristic", "kind": "local", "policy": "heuristic" },
+    { "id": "local-first-legal", "kind": "local", "policy": "first-legal" },
+    { "id": "local-random", "kind": "local", "policy": "random" }
+  ]
+}

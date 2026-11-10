@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "id": "hold-the-counter",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Discipline: do not spend the only counterspell on a ramp spell",
+  "skills": ["interaction-discipline", "threat-assessment", "passing"],
+  "briefing": "P3 casts Rampant Growth on its own turn. P1 holds Counterspell with exactly two Islands untapped, and it is the only interaction P1 has. Two other opponents have full hands and plenty of mana. The right answer is to do nothing; the case measures whether a model can pass when it has a legal, castable, flashy action.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P3",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 6
+    },
+    "seats": {
+      "P1": {
+        "life": 34,
+        "hand": ["Counterspell", "Divination"],
+        "battlefield": [
+          "Island",
+          "Island",
+          {
+            "card": "Island",
+            "tapped": true
+          },
+          {
+            "card": "Island",
+            "tapped": true
+          },
+          "Wall of Omens"
+        ]
+      },
+      "P2": {
+        "life": 38,
+        "hand": ["Overrun", "Craterhoof Behemoth", "Harmonize", "Beast Within"],
+        "battlefield": [
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Kalonian Tusker",
+          "Leatherback Baloth",
+          "Llanowar Elves"
+        ]
+      },
+      "P3": {
+        "life": 36,
+        "hand": ["Rampant Growth", "Forest", "Grizzly Bears"],
+        "battlefield": ["Forest", "Forest", "Mountain", "Grizzly Bears"]
+      },
+      "P4": {
+        "life": 31,
+        "hand": ["Wrath of God", "Swords to Plowshares", "Serra Angel"],
+        "battlefield": ["Plains", "Plains", "Plains", "Plains", "Plains", "Serra Angel"]
+      }
+    }
+  },
+  "setup": [
+    {
+      "player": "P3",
+      "choose": "Cast Rampant Growth"
+    }
+  ],
+  "reference": {
+    "analysis": "Rampant Growth puts one tapped basic land onto the battlefield for the player with the smallest board at the table. Counterspell is P1's only answer to anything, and P2 (six lands, three creatures, four cards in hand) and P4 (five lands, a 4/4 flyer, three cards) are the players whose spells can actually end P1's game. Trading the counter for a two-mana ramp spell leaves P1 defenceless for a full turn cycle against all three opponents. Passing keeps the counter; yielding the turn is equivalent here because the engine breaks a yield when a new spell goes on the stack.",
+    "options": [
+      {
+        "label": "Pass and keep Counterspell",
+        "when": {
+          "choose": "Pass priority"
+        },
+        "grade": "best",
+        "why": "Keeps the only counterspell for a spell that matters."
+      },
+      {
+        "label": "Yield until end of turn",
+        "when": {
+          "choose": "Pass and yield"
+        },
+        "grade": "best",
+        "why": "Same as passing: the yield is cancelled if another spell is cast."
+      },
+      {
+        "label": "Counter Rampant Growth",
+        "when": {
+          "choose": "Cast Counterspell"
+        },
+        "grade": "blunder",
+        "why": "Spends the only counterspell on a land for the weakest board at the table."
+      }
+    ],
+    "otherwise": {
+      "grade": "weak",
+      "why": "Not a reviewed answer; nothing else at this decision should be worth a card."
+    }
+  },
+  "table": {
+    "policy": "passive"
+  }
+}

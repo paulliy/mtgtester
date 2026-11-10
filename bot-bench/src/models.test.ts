@@ -1,0 +1,214 @@
+import { describe, expect, it } from 'vitest';
+import { loadCases } from './case';
+import { fakeProvider, pick, type FakeTurn } from './fake-provider';
+import { modelMetrics } from './metrics';
+import { parseLineup, parseModelList, publicEntry, resolveLlmConfig } from './models';
+import { runLineup, type RunOptions, type TranscriptEntry } from './run';
+
+const cases = loadCases();
+const only = (...ids: string[]) => cases.filter((benchCase) => ids.includes(benchCase.id));
+const options = (fetchImpl: typeof fetch, extra: Partial<RunOptions> = {}): RunOptions => ({
+  mode: 'raw',
+  trials: 1,
+  concurrency: 2,
+  spendCapUsd: null,
+  env: {},
+  fetchImpl,
+  sleepImpl: () => Promise.resolve(),
+  ...extra,
+});
+
+describe('lineup parsing', () => {
+  it('reads the --models shorthand', () => {
+    expect(parseModelList('local:heuristic, openrouter:qwen/qwen3.7-flash@low')).toEqual([
+      { id: 'local-heuristic', kind: 'local', policy: 'heuristic' },
+      {
+        id: 'qwen-qwen3.7-flash-low',
+        kind: 'llm',
+        provider: 'openrouter',
+        model: 'qwen/qwen3.7-flash',
+        reasoning: 'low',
+      },
+    ]);
+  });
+
+  it('refuses a typo instead of ignoring it', () => {
+    expect(() => parseLineup([{ id: 'a', kind: 'llm', model: 'm', modle: 'x' }])).toThrow(/modle/);
+    expect(() => parseLineup([{ id: 'a', kind: 'local', policy: 'genius' }])).toThrow(/policy/);
+    expect(() => parseModelList('nonsense')).toThrow(/provider:model/);
+    expect(() => parseModelList('mystery:model')).toThrow(/provider must be one of/);
+    expect(() =>
+      parseLineup([
+        { id: 'a', kind: 'local', policy: 'random' },
+        { id: 'a', kind: 'local', policy: 'heuristic' },
+      ]),
+    ).toThrow(/repeats id/);
+  });
+
+  it('never prints where the key comes from', () => {
+    const [entry] = parseLineup([
+      { id: 'm', kind: 'llm', model: 'x', baseUrl: 'https://example.test/v1', apiKeyEnv: 'MY_KEY' },
+    ]);
+    expect(JSON.stringify(publicEntry(entry!))).not.toContain('MY_KEY');
+  });
+
+  it('needs a key for a remote endpoint and takes it from the named variable', () => {
+    const [entry] = parseModelList('groq:llama-test');
+    if (entry?.kind !== 'llm') throw new Error('expected a model entry');
+    expect(() => resolveLlmConfig(entry, { env: {}, mode: 'raw' })).toThrow(/GROQ_API_KEY/);
+    const config = resolveLlmConfig(entry, { env: { GROQ_API_KEY: 'k' }, mode: 'raw' });
+    expect(config).toMatchObject({
+      apiKey: 'k',
+      baseUrl: 'https://api.groq.com/openai/v1',
+      models: ['llama-test'],
+      heuristicsEnabled: false,
+      decisionCacheEnabled: false,
+      strategistEnabled: false,
+    });
+    expect(
+      resolveLlmConfig(entry, { env: { GROQ_API_KEY: 'k' }, mode: 'production' }),
+    ).toMatchObject({
+      heuristicsEnabled: true,
+    });
+  });
+});
+
+describe('a model in the tested seat, through the production pipeline', () => {
+  const lineup = parseLineup([
+    { id: 'fake', kind: 'llm', provider: 'openrouter', model: 'fake/secret-model-name' },
+  ]);
+
+  it('sends the production primer and scores the best answer', async () => {
+    const calls: FakeTurn[] = [];
+    const transcripts: TranscriptEntry[] = [];
+    const fetchImpl = fakeProvider(
+      (turn) => ({
+        content: pick(turn, 'Cast Lightning Bolt', ['P4'], 'P4 is at 3'),
+        promptTokens: 1500,
+        completionTokens: 40,
+        cost: 0.0002,
+      }),
+      calls,
+    );
+    const [result] = await runLineup(
+      only('burn-out-the-low-player'),
+      lineup,
+      options(fetchImpl, { onTranscript: (entry) => transcripts.push(entry) }),
+    );
+    const played = result!.cases[0]!;
+    expect(played.score.score).toBe(1);
+    expect(played.run.decisions[0]).toMatchObject({
+      action: 'Cast Lightning Bolt ({R}) → P4',
+      source: 'model',
+      note: 'P4 is at 3',
+      promptTokens: 1500,
+      responseTokens: 40,
+      costUsd: 0.0002,
+      costSource: 'reported',
+      requests: 1,
+    });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.messages[0]!.content).toContain('Check for lethal first');
+    expect(transcripts).toHaveLength(1);
+    expect(transcripts[0]).toMatchObject({ modelId: 'fake', caseId: 'burn-out-the-low-player' });
+    const metrics = modelMetrics(result!, only('burn-out-the-low-player'), 1);
+    expect(metrics.cost).toMatchObject({
+      totalUsd: 0.0002,
+      source: 'reported',
+      providerRequests: 1,
+    });
+    expect(metrics.accuracy.grades.best).toBe(1);
+    expect(metrics.reliability.firstTryLegal).toBe(1);
+  });
+
+  it('counts a corrective retry, and estimates cost from the price list when none is reported', async () => {
+    const priced = parseLineup([
+      {
+        id: 'priced',
+        kind: 'llm',
+        provider: 'openrouter',
+        model: 'fake/priced',
+        pricing: { inputPerMTok: 1, outputPerMTok: 2 },
+      },
+    ]);
+    const fetchImpl = fakeProvider((turn) =>
+      turn.attempt === 1
+        ? JSON.stringify({ requestId: turn.requestId, actionId: 42 })
+        : pick(turn, 'Cast Lightning Bolt', ['P4']),
+    );
+    const [result] = await runLineup(only('burn-out-the-low-player'), priced, options(fetchImpl));
+    const decision = result!.cases[0]!.run.decisions[0]!;
+    expect(decision.source).toBe('model-retry');
+    expect(decision.requests).toBe(2);
+    expect(decision.costSource).toBe('estimated');
+    // Two requests of 1200 prompt and 30 output tokens at $1 and $2 per million.
+    expect(decision.costUsd).toBeCloseTo((2400 * 1 + 60 * 2) / 1_000_000, 10);
+    expect(result!.cases[0]!.score.score).toBe(1);
+    expect(result!.cases[0]!.score.flags.join(' ')).toMatch(/corrective retry/);
+    expect(modelMetrics(result!, only('burn-out-the-low-player'), 1).reliability).toMatchObject({
+      correctiveRetries: 1,
+      firstTryLegal: 0,
+    });
+  });
+
+  it('scores nothing when the model never gives a legal answer and the bot has to play', async () => {
+    const fetchImpl = fakeProvider(() => 'I think attacking is good here.');
+    const [result] = await runLineup(only('counter-the-finisher'), lineup, options(fetchImpl));
+    const played = result!.cases[0]!;
+    // The heuristic fallback finds the counter, but that is not the model's answer.
+    expect(played.run.decisions[0]).toMatchObject({ source: 'fallback' });
+    // The first reply and the corrective retry, each sent again by the client's own retry.
+    expect(played.run.decisions[0]!.requests).toBeGreaterThanOrEqual(2);
+    expect(played.run.decisions[0]!.failure).toMatch(/no legal answer/);
+    expect(played.score.score).toBe(0);
+    expect(modelMetrics(result!, only('counter-the-finisher'), 1).accuracy.grades.noAnswer).toBe(1);
+  });
+
+  it('plays a whole turn decision by decision and meets every objective', async () => {
+    const fetchImpl = fakeProvider((turn) => {
+      const has = (text: string) => turn.legalActions.some((a) => a.description.includes(text));
+      if (has('Play Plains')) return pick(turn, 'Play Plains');
+      if (has('Cast Wrath of God')) return pick(turn, 'Cast Wrath of God');
+      if (has('Cast Serra Angel')) return pick(turn, 'Cast Serra Angel');
+      return pick(turn, 'Pass and yield');
+    });
+    const [result] = await runLineup(only('wrath-then-rebuild'), lineup, options(fetchImpl));
+    const played = result!.cases[0]!;
+    expect(played.run.decisions.slice(0, 3).map((decision) => decision.action)).toEqual([
+      'Play Plains',
+      'Cast Wrath of God ({2}{W}{W})',
+      'Cast Serra Angel ({3}{W}{W})',
+    ]);
+    expect(played.score.score).toBe(1);
+    expect(played.run.termination).toBe('complete');
+  });
+
+  it('stops asking a model that loops, and says so', async () => {
+    const fetchImpl = fakeProvider((turn) => pick(turn, 'Pass priority'));
+    const looping = { ...only('clear-the-blocker-and-pump')[0]!, maxActorDecisions: 2 };
+    const [result] = await runLineup([looping], lineup, options(fetchImpl));
+    expect(result!.cases[0]!.run.decisions).toHaveLength(2);
+    expect(result!.cases[0]!.run.termination).toBe('decision_cap');
+    expect(result!.cases[0]!.score.flags.join(' ')).toMatch(/stopped asking after 2 decisions/);
+  });
+
+  it('gives up on a model whose provider keeps failing instead of scoring the fallback', async () => {
+    const fetchImpl = fakeProvider(() => ({ status: 401, body: 'invalid_api_key' }));
+    const [result] = await runLineup(cases, lineup, options(fetchImpl));
+    expect(result!.status).toBe('aborted');
+    expect(result!.abortReason).toMatch(/failed at the provider/);
+    expect(result!.cases.length).toBeLessThan(cases.length);
+  });
+
+  it('stops spending once the cap is passed', async () => {
+    const fetchImpl = fakeProvider((turn) => ({ content: pick(turn, 'Pass priority'), cost: 0.6 }));
+    const [result] = await runLineup(
+      only('burn-out-the-low-player', 'hold-the-counter', 'land-for-the-turn'),
+      lineup,
+      options(fetchImpl, { spendCapUsd: 1 }),
+    );
+    expect(result!.status).toBe('aborted');
+    expect(result!.abortReason).toMatch(/spend cap/);
+    expect(result!.cases).toHaveLength(2);
+  });
+});

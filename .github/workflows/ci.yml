@@ -197,6 +197,8 @@ jobs:
           packages/server/src/ai/router-cache.test.ts
           packages/server/src/benchmark/h-k.test.ts
           packages/server/src/decks/strategy-profile.test.ts
+          packages/server/src/ai/primer.test.ts
+          bot-bench/src
 
   card-verification:
     name: Cards / Offline verification gate

@@ -1,0 +1,243 @@
+{
+  "schemaVersion": 1,
+  "id": "overrun-for-the-kill",
+  "role": "tactician",
+  "scope": "turn",
+  "title": "Land, Overrun, swing: sequence a lethal turn without tapping the attackers",
+  "skills": ["sequencing", "lethal", "mana-payment", "attack-targeting"],
+  "briefing": "P1 plays a whole turn. With the land drop, Overrun is castable from five Forests alone, which keeps Llanowar Elves untapped to attack as a 4/4 trampler. Overrun then makes 15 trampling power against P3 at 13 life behind one 2/1 blocker: lethal only if all three creatures attack P3. The traps: casting Overrun before the land (the Elves get tapped for mana and 11 power is not enough), casting Harmonize instead (same mana, no kill), attacking before casting Overrun, and attacking the wrong player. The blocked attacker's trample damage is a decision too: the seat must assign 1 to the blocker and the rest to the player, or the kill is lost at the last step.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 8
+    },
+    "seats": {
+      "P1": {
+        "life": 24,
+        "hand": ["Forest", "Overrun", "Harmonize"],
+        "battlefield": [
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Llanowar Elves",
+          "Kalonian Tusker",
+          "Grizzly Bears"
+        ],
+        "libraryTop": ["Island", "Island", "Island", "Island"]
+      },
+      "P2": {
+        "life": 36,
+        "battlefield": ["Mountain", "Mountain", "Mountain", "Leatherback Baloth", "Gigantosaurus"]
+      },
+      "P3": {
+        "life": 13,
+        "battlefield": ["Plains", "Plains", "Plains", "Savannah Lions"]
+      },
+      "P4": {
+        "life": 40,
+        "battlefield": ["Island", "Island", "Swamp"]
+      }
+    },
+    "continue": {
+      "throughCombat": true,
+      "toPostcombatMain": true,
+      "toEndStep": true
+    }
+  },
+  "table": {
+    "policy": "heuristic",
+    "script": [
+      {
+        "player": "P3",
+        "choose": "Declare blockers",
+        "assign": {
+          "Savannah Lions": "Kalonian Tusker"
+        }
+      }
+    ]
+  },
+  "reference": {
+    "analysis": "Five Forests after the land drop pay for Overrun ({2}{G}{G}{G}) exactly, so the Elves never need to tap. Overrun gives +3/+3 and trample: Elves 4/4, Tusker 6/6, Bears 5/5, 15 trampling power. P3 is at 13 with a 2/1 Savannah Lions; whichever attacker the Lions block, only 1 damage is absorbed, so 14 reaches P3. Without the land drop Overrun needs the Elves' mana, the Elves are tapped, and 11 power minus 1 absorbed is 10: not lethal. Harmonize draws three cards but costs the same turn's mana. P4 is open at 40 and P2 has a 10/10 and a 4/5. The engine then asks how the blocked creature divides its damage: lethal (1) to the Lions and everything else to P3. Assigning it all to the blocker throws the kill away. Every step is forced by the goal: land, Overrun precombat, all three at P3, trample over.",
+    "lines": [
+      {
+        "id": "land-overrun-swing",
+        "label": "Forest, Overrun, all three attack P3",
+        "grade": "best",
+        "why": "Eliminates P3 this turn and keeps all three creatures.",
+        "steps": [
+          {
+            "choose": "Play Forest"
+          },
+          {
+            "choose": "Cast Overrun"
+          },
+          {
+            "choose": "Declare attackers",
+            "assign": {
+              "Llanowar Elves": "P3",
+              "Kalonian Tusker": "P3",
+              "Grizzly Bears": "P3"
+            }
+          },
+          {
+            "choose": "damage",
+            "split": {
+              "Savannah Lions": 1,
+              "P3": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "forgot-to-trample",
+        "label": "Right line, but all combat damage assigned to the blocker",
+        "grade": "weak",
+        "why": "Everything correct until the damage split: with no trample damage assigned to the player P3 survives at 4.",
+        "steps": [
+          {
+            "choose": "Play Forest"
+          },
+          {
+            "choose": "Cast Overrun"
+          },
+          {
+            "choose": "Declare attackers",
+            "assign": {
+              "Llanowar Elves": "P3",
+              "Kalonian Tusker": "P3",
+              "Grizzly Bears": "P3"
+            }
+          },
+          {
+            "choose": "damage",
+            "split": {
+              "Savannah Lions": 6
+            }
+          }
+        ]
+      },
+      {
+        "id": "overrun-before-land",
+        "label": "Overrun first (Elves tapped for mana), then attack P3 with what is left",
+        "grade": "weak",
+        "why": "Same cards, wrong order: the Elves pay for Overrun and cannot attack, so P3 survives.",
+        "steps": [
+          {
+            "choose": "Cast Overrun"
+          },
+          {
+            "choose": "Play Forest"
+          },
+          {
+            "choose": "Declare attackers",
+            "assign": {
+              "Kalonian Tusker": "P3",
+              "Grizzly Bears": "P3"
+            }
+          },
+          {
+            "choose": "damage",
+            "split": {
+              "Savannah Lions": 1,
+              "P3": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "harmonize-and-poke",
+        "label": "Forest, Harmonize, attack P3 without Overrun",
+        "grade": "weak",
+        "why": "Card advantage instead of the kill; 6 power into a blocker leaves P3 healthy.",
+        "steps": [
+          {
+            "choose": "Play Forest"
+          },
+          {
+            "choose": "Cast Harmonize"
+          },
+          {
+            "choose": "Declare attackers",
+            "assign": {
+              "Llanowar Elves": "P3",
+              "Kalonian Tusker": "P3",
+              "Grizzly Bears": "P3"
+            }
+          }
+        ]
+      },
+      {
+        "id": "overrun-into-the-open-player",
+        "label": "Forest, Overrun, all three attack P4",
+        "grade": "weak",
+        "why": "15 damage to a 40-life player; P3 was dead on board.",
+        "steps": [
+          {
+            "choose": "Play Forest"
+          },
+          {
+            "choose": "Cast Overrun"
+          },
+          {
+            "choose": "Declare attackers",
+            "assign": {
+              "Llanowar Elves": "P4",
+              "Kalonian Tusker": "P4",
+              "Grizzly Bears": "P4"
+            }
+          }
+        ]
+      }
+    ],
+    "objectives": [
+      {
+        "id": "kill-p3",
+        "label": "P3 is eliminated this turn",
+        "points": 6,
+        "check": {
+          "eliminated": "P3"
+        }
+      },
+      {
+        "id": "land-drop",
+        "label": "The land drop is made",
+        "points": 1,
+        "check": {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "lacks": ["Forest"]
+          }
+        }
+      },
+      {
+        "id": "overrun-cast",
+        "label": "Overrun is cast",
+        "points": 1,
+        "check": {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Overrun"]
+          }
+        }
+      },
+      {
+        "id": "keep-the-team",
+        "label": "P1 loses no creature",
+        "points": 2,
+        "check": {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Llanowar Elves", "Kalonian Tusker", "Grizzly Bears"]
+          }
+        }
+      }
+    ]
+  }
+}
