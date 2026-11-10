@@ -29,20 +29,20 @@ its own mapping.
 | Outcome                                                      | Cards |
 | ------------------------------------------------------------ | ----: |
 | Translated                                                   |    71 |
-| Uses an XMage class, argument or call with no adapter        | 4,386 |
+| Uses an XMage class, argument or call with no adapter        | 4,399 |
 | No XMage ability confidently matches the Oracle line         |   642 |
 | Interpreter now models the card (triage fixture is stale)    |   702 |
 | Not in the pinned Oracle pool                                |    74 |
 | No XMage class for the name                                  |    24 |
-| Spell patch would replace parsed spell effects               |    13 |
 | Fails the validator (tapped selector in a continuous effect) |     5 |
 
 The most common missing adapters are in `translation-results.json` (`topUnmapped`). They are
 mostly conditional wrappers (`ConditionalContinuousEffect`, `withInterveningIf`, `DoIfCostPaid`),
 multi-target forms, and less common triggers. An XMage anonymous class body (`new X(...) { ... }`)
 is refused, because it can override behavior the adapter would not see. So is any card with a
-constructor or static-block statement the extractor cannot read, or that changes a local after
-it was already built into an ability, since either may add a cost, condition or restriction.
+constructor or static-block statement the extractor cannot read, that changes a local after it
+was already built into an ability, or that adds a spell cost, since each may add a cost,
+condition or restriction.
 No translated card was affected by these rules.
 
 ## Parser bugs found
@@ -103,6 +103,6 @@ key. Estimated at under $0.01 per run. Translation itself is deterministic and f
 
 - `patches/`: the 71 patches, `source: "xmage@31ede542"`.
 - `results.json`, `targets.json`, `work/`: the compiler checks' output from the final run.
-- `translation-results.json`: translation summary and per-card outcome for translated, invalid and
-  spell-merge cards.
+- `translation-results.json`: translation summary and per-card outcome for translated and invalid
+  cards.
 - `agreement.json`: the adapter accuracy check.

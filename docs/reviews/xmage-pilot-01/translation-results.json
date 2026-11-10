@@ -4,10 +4,10 @@
     "population": 5917,
     "outcomes": {
       "translated": 71,
-      "unmapped": 4386,
+      "unmapped": 4399,
       "no-matching-ability": 642,
       "no-xmage-class": 24,
-      "spell-merge": 13,
+      "spell-merge": 0,
       "invalid": 5,
       "not-pinned": 74,
       "already-modeled": 702
@@ -23,6 +23,7 @@
       ["new ConditionalContinuousEffect(3)", 32],
       ["$spell.setTargetAdjuster()", 30],
       ["new TargetPermanent(3)", 28],
+      ["$spell.addCost()", 27],
       ["$spell.addWatcher()", 27],
       ["true", 27],
       ["new TargetCreaturePermanent(2)", 26],
@@ -56,21 +57,10 @@
       ["new TapTargetCost(1)", 14],
       ["new AttacksWithCreaturesTriggeredAbility(2)", 14],
       ["new EntersBattlefieldControlledTriggeredAbility(2)", 13],
-      ["new TargetCreatureOrPlaneswalker(0)", 13],
       ["new GainAbilityControlledSpellsEffect(2)", 13]
     ]
   },
   "results": [
-    {
-      "rank": 415,
-      "name": "Demand Answers",
-      "decks": 301283,
-      "line": "As an additional cost to cast this spell, sacrifice an artifact or discard a card.",
-      "overlap": false,
-      "xmageClass": "d/DemandAnswers",
-      "outcome": "spell-merge",
-      "detail": "card has other parsed spell effects"
-    },
     {
       "rank": 653,
       "name": "Bontu's Monument",
@@ -272,16 +262,6 @@
       "outcome": "translated"
     },
     {
-      "rank": 3843,
-      "name": "Rite of Oblivion",
-      "decks": 42632,
-      "line": "As an additional cost to cast this spell, sacrifice a nonland permanent.",
-      "overlap": false,
-      "xmageClass": "r/RiteOfOblivion",
-      "outcome": "spell-merge",
-      "detail": "card has other parsed spell effects"
-    },
-    {
       "rank": 3922,
       "name": "Extinguish All Hope",
       "decks": 41701,
@@ -373,16 +353,6 @@
       "outcome": "translated"
     },
     {
-      "rank": 5323,
-      "name": "Final Vengeance",
-      "decks": 29513,
-      "line": "As an additional cost to cast this spell, sacrifice a creature or enchantment.",
-      "overlap": false,
-      "xmageClass": "f/FinalVengeance",
-      "outcome": "spell-merge",
-      "detail": "card has other parsed spell effects"
-    },
-    {
       "rank": 5462,
       "name": "Howling Moon",
       "decks": 28723,
@@ -419,16 +389,6 @@
       "outcome": "translated"
     },
     {
-      "rank": 6044,
-      "name": "Abjure",
-      "decks": 25353,
-      "line": "As an additional cost to cast this spell, sacrifice a blue permanent.",
-      "overlap": false,
-      "xmageClass": "a/Abjure",
-      "outcome": "spell-merge",
-      "detail": "card has other parsed spell effects"
-    },
-    {
       "rank": 6103,
       "name": "Rockface Village",
       "decks": 25091,
@@ -448,16 +408,6 @@
       "detail": "override.def.staticEffects[0].affects: event-only selector cannot participate in continuous layers"
     },
     {
-      "rank": 6159,
-      "name": "Magmatic Insight",
-      "decks": 24761,
-      "line": "As an additional cost to cast this spell, discard a land card.",
-      "overlap": false,
-      "xmageClass": "m/MagmaticInsight",
-      "outcome": "spell-merge",
-      "detail": "card has other parsed spell effects"
-    },
-    {
       "rank": 6266,
       "name": "Armor of Shadows",
       "decks": 24298,
@@ -474,16 +424,6 @@
       "overlap": false,
       "xmageClass": "p/PlagueWind",
       "outcome": "translated"
-    },
-    {
-      "rank": 6437,
-      "name": "Disruption Protocol",
-      "decks": 23505,
-      "line": "As an additional cost to cast this spell, tap an untapped artifact you control or pay {1}.",
-      "overlap": false,
-      "xmageClass": "d/DisruptionProtocol",
-      "outcome": "spell-merge",
-      "detail": "card has other parsed spell effects"
     },
     {
       "rank": 6615,
@@ -522,16 +462,6 @@
       "outcome": "translated"
     },
     {
-      "rank": 6957,
-      "name": "Familiar's Ruse",
-      "decks": 21091,
-      "line": "As an additional cost to cast this spell, return a creature you control to its owner's hand.",
-      "overlap": false,
-      "xmageClass": "f/FamiliarsRuse",
-      "outcome": "spell-merge",
-      "detail": "card has other parsed spell effects"
-    },
-    {
       "rank": 7005,
       "name": "Bounty Agent",
       "decks": 20897,
@@ -539,16 +469,6 @@
       "overlap": false,
       "xmageClass": "b/BountyAgent",
       "outcome": "translated"
-    },
-    {
-      "rank": 7175,
-      "name": "Lash of the Balrog",
-      "decks": 20248,
-      "line": "As an additional cost to cast this spell, sacrifice a creature or pay {4}.",
-      "overlap": false,
-      "xmageClass": "l/LashOfTheBalrog",
-      "outcome": "spell-merge",
-      "detail": "card has other parsed spell effects"
     },
     {
       "rank": 7861,
@@ -677,16 +597,6 @@
       "outcome": "translated"
     },
     {
-      "rank": 9687,
-      "name": "Deprive",
-      "decks": 12894,
-      "line": "As an additional cost to cast this spell, return a land you control to its owner's hand.",
-      "overlap": false,
-      "xmageClass": "d/Deprive",
-      "outcome": "spell-merge",
-      "detail": "card has other parsed spell effects"
-    },
-    {
       "rank": 9696,
       "name": "Bosk Banneret",
       "decks": 12877,
@@ -694,26 +604,6 @@
       "overlap": false,
       "xmageClass": "b/BoskBanneret",
       "outcome": "translated"
-    },
-    {
-      "rank": 9739,
-      "name": "Bogslither's Embrace",
-      "decks": 12779,
-      "line": "As an additional cost to cast this spell, blight 1 or pay {3}.",
-      "overlap": false,
-      "xmageClass": "b/BogslithersEmbrace",
-      "outcome": "spell-merge",
-      "detail": "card has other parsed spell effects"
-    },
-    {
-      "rank": 9784,
-      "name": "Explosive Singularity",
-      "decks": 12675,
-      "line": "As an additional cost to cast this spell, you may tap any number of untapped creatures you control. This spell costs {1} less to cast for each creature tapped this way.",
-      "overlap": false,
-      "xmageClass": "e/ExplosiveSingularity",
-      "outcome": "spell-merge",
-      "detail": "card has other parsed spell effects"
     },
     {
       "rank": 9878,
@@ -751,16 +641,6 @@
       "overlap": false,
       "xmageClass": "b/BroodheartEngine",
       "outcome": "translated"
-    },
-    {
-      "rank": 10537,
-      "name": "Deadly Precision",
-      "decks": 11220,
-      "line": "As an additional cost to cast this spell, pay {4} or sacrifice an artifact or creature.",
-      "overlap": false,
-      "xmageClass": "d/DeadlyPrecision",
-      "outcome": "spell-merge",
-      "detail": "card has other parsed spell effects"
     },
     {
       "rank": 11078,
@@ -806,16 +686,6 @@
       "overlap": false,
       "xmageClass": "r/RescueSkiff",
       "outcome": "translated"
-    },
-    {
-      "rank": 11698,
-      "name": "Wild Unraveling",
-      "decks": 9217,
-      "line": "As an additional cost to cast this spell, blight 2 or pay {1}.",
-      "overlap": false,
-      "xmageClass": "w/WildUnraveling",
-      "outcome": "spell-merge",
-      "detail": "card has other parsed spell effects"
     },
     {
       "rank": 11916,

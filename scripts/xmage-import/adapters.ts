@@ -1192,7 +1192,11 @@ export function translateAbility(ab: XAbility, ctx: XmageContext, description: s
     return { targets, effects };
   };
   if (ab.kind === 'spell') {
-    const { targets, effects } = build(collect(calls, {}, '$spell'));
+    const b = collect(calls, {}, '$spell');
+    // An additional spell cost (`getSpellAbility().addCost(...)`) has no adapter yet; refuse it
+    // rather than translate the spell without it.
+    if (b.costs.length) throw new Unmapped('$spell.addCost()', 'additional spell cost');
+    const { targets, effects } = build(b);
     return { spellAbility: { kind: 'spell', targets, effects } };
   }
   if (root.t !== 'new') throw new Unmapped(describe(root), 'ability');
