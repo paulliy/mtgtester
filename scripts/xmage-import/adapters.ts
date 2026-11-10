@@ -407,7 +407,8 @@ function countPermanents(sel: Selector): Value {
   if (scope === null) throw new Unmapped('count', 'controller scope');
   return {
     kind: 'countPermanents',
-    selector: rest.length === 0 ? { kind: 'type', value: 'Permanent' } : allOf(rest),
+    // No card type is named "Permanent", so an empty conjunction is how "every permanent" is written.
+    selector: rest.length === 0 ? { kind: 'allOf', of: [] } : allOf(rest),
     scope,
   };
 }
@@ -1171,6 +1172,10 @@ function rejectAnonymous(e: JExpr): void {
 }
 
 export function translateAbility(ab: XAbility, ctx: XmageContext, description: string): Fragment {
+  // A constructor statement extract.ts could not read may add a cost, condition or restriction to
+  // this ability (e.g. `if (...) { ability.addCost(...); }`). Refuse the card rather than drop it.
+  if (ctx.card.unparsed.length > 0)
+    throw new Unmapped('unparsed constructor statement', ctx.card.unparsed[0]!.slice(0, 80));
   rejectAnonymous(ab.root);
   const { root, calls } = chain(ab.root);
   const build = (b: Built) => {

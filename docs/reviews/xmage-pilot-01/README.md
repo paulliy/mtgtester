@@ -40,8 +40,9 @@ its own mapping.
 The most common missing adapters are in `translation-results.json` (`topUnmapped`). They are
 mostly conditional wrappers (`ConditionalContinuousEffect`, `withInterveningIf`, `DoIfCostPaid`),
 multi-target forms, and less common triggers. An XMage anonymous class body (`new X(...) { ... }`)
-is refused, because it can override behavior the adapter would not see. No translated card used
-one.
+is refused, because it can override behavior the adapter would not see. So is any card whose
+constructor holds a statement the extractor cannot read, since it may add a cost or condition to
+the ability. No translated card was affected by either rule.
 
 ## Parser bugs found
 
@@ -61,10 +62,10 @@ The pilot found two interpreter bugs, both fixed in this PR with regression test
 
 ## Adapter accuracy
 
-`agreement.ts` compares adapter output with the interpreter, token names included, on the 1,241
+`agreement.ts` compares adapter output with the interpreter, token names included, on the 1,235
 lines both can read:
 
-- 1,175 identical.
+- 1,169 identical.
 - 59 differ only because XMage says "Elf creatures" where the interpreter writes "Elves". They
   differ only for a noncreature Kindred permanent.
 - 7 are equivalent: keyword order, a nested `allOf`, a repeated `Creature` leaf, or the probe card
