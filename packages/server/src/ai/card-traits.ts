@@ -70,10 +70,24 @@ function collectOps(node: unknown, out: OpRecord[] = []): OpRecord[] {
   return out;
 }
 
+/** Whether a stat modifier is negative: a negative number, or a `negate` expression. */
+function isNegative(value: unknown): boolean {
+  if (typeof value === 'number') return value < 0;
+  return (
+    typeof value === 'object' && value !== null && (value as { kind?: unknown }).kind === 'negate'
+  );
+}
+
+/** A "pump" whose toughness change is negative (Grasp of Darkness's -4/-4) shrinks or kills. */
+function isShrink(record: OpRecord): boolean {
+  return /^pump/.test(record.op) && isNegative(record.raw['toughness']);
+}
+
 function opPolarity(record: OpRecord): TargetPolarity {
   if (record.op === 'putCounters' && String(record.raw['counter'] ?? '').startsWith('-')) {
     return 'hostile';
   }
+  if (isShrink(record)) return 'hostile';
   if (HOSTILE_OPS.test(record.op)) return 'hostile';
   if (FRIENDLY_OPS.test(record.op)) return 'friendly';
   return 'neutral';
@@ -118,6 +132,8 @@ function rolesOf(nodes: unknown[], ability?: AbilityLike | null): CardRole[] {
       roles.add('protection');
       continue;
     }
+    // A shrink is removal (via the hostile slot below), not a pump.
+    if (isShrink(record)) continue;
     for (const [role, pattern] of ROLE_PATTERNS) {
       if (pattern.test(record.op)) roles.add(role);
     }

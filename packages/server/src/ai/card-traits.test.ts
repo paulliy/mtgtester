@@ -41,6 +41,18 @@ describe('cardTraits', () => {
     expect(traits('Counterspell').spellTargets).toEqual(['hostile']);
   });
 
+  it('treats a negative pump as hostile removal, not a friendly pump', () => {
+    const grasp = {
+      ...cards.find((c) => c.name === 'Lightning Bolt')!,
+      name: 'Grasp of Darkness',
+      oracleText: 'Target creature gets -4/-4 until end of turn.',
+    } as OracleCard;
+    const t = cardTraits(interpretCard(grasp));
+    expect(t.spellTargets).toEqual(['hostile']);
+    expect(t.roles).toContain('removal');
+    expect(t.roles).not.toContain('pump');
+  });
+
   it('does not call a counterspell removal', () => {
     expect(traits('Counterspell').roles).not.toContain('removal');
   });
