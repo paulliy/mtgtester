@@ -1,0 +1,897 @@
+{
+  "measuredCostUsd": 0,
+  "estimatedCost": {
+    "compileUsd": 0.16288496499999974,
+    "compileCalls": 51,
+    "backUsd": 0.0006720249999999998,
+    "backCalls": 20,
+    "judgeUsd": 0.00052816,
+    "judgeCalls": 20,
+    "totalUsd": 0.16408514999999974
+  },
+  "cards": [
+    {
+      "name": "Dualcaster Mage",
+      "rank": 683,
+      "xmageBucket": "xmage-known-classes",
+      "lines": [
+        "When this creature enters, copy target instant or sorcery spell. You may choose new targets for the copy."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "When this enters, target instant or sorcery spell is copied. The copy may have new targets chosen for it.",
+      "differences": []
+    },
+    {
+      "name": "Bitter Triumph",
+      "rank": 811,
+      "xmageBucket": "xmage-new-shared-classes",
+      "lines": ["As an additional cost to cast this spell, discard a card or pay 3 life."],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The additional cost is a choice between discarding a card and paying 3 life, but spellAdditionalCosts lists costs that are all paid together, with no either/or option."
+    },
+    {
+      "name": "Damning Verdict",
+      "rank": 1105,
+      "xmageBucket": "xmage-known-classes",
+      "lines": ["Destroy all creatures with no counters on them."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Destroy each creature that has no counters on it.",
+      "differences": []
+    },
+    {
+      "name": "Bloodforged Battle-Axe",
+      "rank": 1554,
+      "xmageBucket": "xmage-custom-classes",
+      "lines": [
+        "Whenever equipped creature deals combat damage to a player, create a token that's a copy of this Equipment."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Whenever the creature this is attached to deals combat damage to a player, create a token that's a copy of this.",
+      "differences": []
+    },
+    {
+      "name": "Ganax, Astral Hunter",
+      "rank": 1609,
+      "xmageBucket": "xmage-known-classes",
+      "lines": ["Choose a Background"],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The schema has no Choose a Background mechanic (no Background choice or commander-zone second-commander relation), and the line is not reminder text."
+    },
+    {
+      "name": "Grand Arbiter Augustin IV",
+      "rank": 2115,
+      "xmageBucket": "xmage-known-classes",
+      "lines": ["Spells your opponents cast cost {1} more to cast."],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The only opponent-spell cost increase (opponentNonHandSpellCostIncrease) applies just to spells cast from graveyards or exile, and no static taxes every spell opponents cast, so 'Spells your opponents cast cost {1} more to cast' cannot be stated exactly."
+    },
+    {
+      "name": "Starfield of Nyx",
+      "rank": 2334,
+      "xmageBucket": "xmage-custom-classes",
+      "lines": [
+        "As long as you control five or more enchantments, each other non-Aura enchantment you control is a creature in addition to its other types and has base power and base toughness each equal to its mana value."
+      ],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The layer 7b base power and toughness must equal the affected permanent's own mana value, and the schema has no Value that reads the affected object's mana value in a static effect."
+    },
+    {
+      "name": "Transpose",
+      "rank": 2560,
+      "xmageBucket": "xmage-known-classes",
+      "lines": [
+        "Draw a card, then discard a card. You lose 1 life. If this spell was cast from your hand, create a 0/1 black Wizard creature token with \"Whenever you cast a noncreature spell, this token deals 1 damage to each opponent.\""
+      ],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "No Condition can test whether the spell was cast from the hand (only sourceWasCast exists), and a rebound cast from exile would wrongly create the Wizard token if the condition were approximated."
+    },
+    {
+      "name": "Germination Practicum",
+      "rank": 2947,
+      "xmageBucket": "xmage-known-classes",
+      "lines": ["Paradigm"],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "Paradigm needs the resolved spell exiled and then copied from exile for free at each first main phase; the only paradigm op (capstoneParadigm) is hardwired to the Improvisation Capstone's mana-value exile step, so it cannot express this card's behavior exactly."
+    },
+    {
+      "name": "Spawnbed Protector",
+      "rank": 3005,
+      "xmageBucket": "xmage-new-shared-classes",
+      "lines": [
+        "At the beginning of your end step, return up to one target Eldrazi creature card from your graveyard to your hand. Create two 1/1 colorless Eldrazi Scion creature tokens with \"Sacrifice this token: Add {C}.\""
+      ],
+      "outcome": "inexpressible",
+      "compileRounds": 2,
+      "validatorIssues": [
+        [
+          "override.def.triggers[0].effects[0].target: effect target 0 does not reference an ordinary target slot"
+        ]
+      ],
+      "inexpressibleReason": "\"Up to one target\" graveyard card needs a variable-count target slot, but no effect op consumes such a slot to return a card to hand (graveyardToHand only accepts an ordinary single-target slot, which would force a target and skip the token creation when none exists)."
+    },
+    {
+      "name": "Feline Sovereign",
+      "rank": 3365,
+      "xmageBucket": "xmage-known-classes",
+      "lines": ["Other Cats you control get +1/+1 and have protection from Dogs."],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "Protection quality can only be a color, multicolored, or creatures; the schema cannot express protection from the creature type Dogs."
+    },
+    {
+      "name": "Yavimaya Hollow",
+      "rank": 3619,
+      "xmageBucket": "xmage-new-shared-classes",
+      "lines": ["{G}, {T}: Regenerate target creature."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{G}, {T}: Regenerate target creature.",
+      "differences": []
+    },
+    {
+      "name": "Behold the Multiverse",
+      "rank": 3785,
+      "xmageBucket": "xmage-known-classes",
+      "lines": ["Foretell {1}{U}"],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The card's own foretell (paying {2} on your turn to exile it face down from hand, then casting it later for {1}{U}) has no IR form; grantForetell only gives foretell to other cards in hand."
+    },
+    {
+      "name": "Thundering Raiju",
+      "rank": 4155,
+      "xmageBucket": "xmage-known-classes",
+      "lines": [
+        "Whenever this creature attacks, put a +1/+1 counter on target creature you control. Then this creature deals X damage to each opponent, where X is the number of modified creatures you control other than this creature."
+      ],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Whenever this attacks, put a +1/+1 counter on target creature you control.\nWhenever this attacks, each opponent is dealt damage equal to the number of other creatures you control that have a counter on them, are enchanted by an Aura you control, or are equipped.",
+      "differences": [
+        "Text A sequences the counter placement before the damage with Then, so the counter can raise the damage count; Text B uses two independent triggers that may resolve in either order."
+      ]
+    },
+    {
+      "name": "Absolute Virtue",
+      "rank": 4297,
+      "xmageBucket": "xmage-new-shared-classes",
+      "lines": ["You have protection from each of your opponents."],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The schema has no protection quality for a player: protectionFrom only takes colors, 'multicolored' or 'creatures', so 'protection from each of your opponents' cannot be stated."
+    },
+    {
+      "name": "Rat Colony",
+      "rank": 4570,
+      "xmageBucket": "xmage-known-classes",
+      "lines": ["A deck can have any number of cards named ~."],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The line is a deck-construction permission (any number of copies named Rat Colony in one deck), and the IR has no field for deck-building rules; the schema cannot state it."
+    },
+    {
+      "name": "Goblin Chainwhirler",
+      "rank": 4906,
+      "xmageBucket": "xmage-known-classes",
+      "lines": [
+        "When this creature enters, it deals 1 damage to each opponent and each creature and planeswalker they control."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "When this enters, each opponent is dealt 1 damage.\nWhen this enters, 1 damage is dealt to each creature and each planeswalker that opponents control.",
+      "differences": []
+    },
+    {
+      "name": "Valkyrie's Call",
+      "rank": 4937,
+      "xmageBucket": "xmage-custom-classes",
+      "lines": [
+        "Whenever a nontoken, non-Angel creature you control dies, return that card to the battlefield under its owner's control with a +1/+1 counter on it. It has flying and is an Angel in addition to its other types."
+      ],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "There is no effect that returns the triggering creature with a +1/+1 counter on it and gives it flying and the Angel type indefinitely; the return ops cannot place a counter on a trigger object, and no static effect can bind to that one returned object."
+    },
+    {
+      "name": "Smallpox",
+      "rank": 5272,
+      "xmageBucket": "xmage-known-classes",
+      "lines": [
+        "Each player loses 1 life, discards a card, sacrifices a creature of their choice, then sacrifices a land of their choice."
+      ],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "Each-player sacrifice ops take only a creature or any permanent, so the schema cannot say that each player sacrifices a land of their choice."
+    },
+    {
+      "name": "Font of Agonies",
+      "rank": 5546,
+      "xmageBucket": "xmage-custom-classes",
+      "lines": ["Whenever you pay life, put that many blood counters on this enchantment."],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The schema has no trigger for a player paying life, so 'whenever you pay life' cannot be expressed, and the amount paid cannot be carried into the counter placement."
+    },
+    {
+      "name": "Cloudpost",
+      "rank": 5691,
+      "xmageBucket": "xmage-known-classes",
+      "lines": ["{T}: Add {C} for each Locus on the battlefield."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{T}: Add {C} for each Locus permanent on the battlefield, regardless of controller.",
+      "differences": []
+    },
+    {
+      "name": "Blightwing Bandit",
+      "rank": 6114,
+      "xmageBucket": "xmage-new-shared-classes",
+      "lines": [
+        "Whenever you cast your first spell during each opponent's turn, look at the top card of that player's library, then exile it face down. You may play that card for as long as it remains exiled, and mana of any type can be spent to cast it."
+      ],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The card looks at the opponent's library (the active player whose turn it is), but a castsSpell trigger's event player is the caster, and the schema offers no way to name the active opponent as the library owner without an announced target the card does not have."
+    },
+    {
+      "name": "Adept Watershaper",
+      "rank": 6128,
+      "xmageBucket": "xmage-known-classes",
+      "lines": ["Other tapped creatures you control have indestructible."],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The affected set needs 'tapped creatures', but the tapped selector is event-only and a continuous static effect cannot read tapped-ness."
+    },
+    {
+      "name": "Needle Drop",
+      "rank": 6572,
+      "xmageBucket": "xmage-known-classes",
+      "lines": ["~ deals 1 damage to any target that was dealt damage this turn."],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The schema has no target restriction or selector for a permanent or player that was dealt damage this turn, so 'any target that was dealt damage this turn' cannot be stated exactly."
+    },
+    {
+      "name": "Great Arashin City",
+      "rank": 6767,
+      "xmageBucket": "xmage-new-shared-classes",
+      "lines": [
+        "{1}{B}, {T}, Exile a creature card from your graveyard: Create a 1/1 white Spirit creature token."
+      ],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The cost 'Exile a creature card from your graveyard' has no AbilityCost form: exileOtherCardsFromGraveyard counts cards of any type and is the escape cost, so the creature-card restriction cannot be stated exactly."
+    },
+    {
+      "name": "Scale Up",
+      "rank": 6947,
+      "xmageBucket": "xmage-known-classes",
+      "lines": [
+        "Until end of turn, target creature you control becomes a green Wurm with base power and toughness 6/4."
+      ],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The schema cannot make the target's creature types become exactly Wurm while keeping its other card types: becomeCreatureUntilEot only adds subtypes, and its replaceTypes option would drop the creature's other card types (such as Artifact or Enchantment)."
+    },
+    {
+      "name": "Samut, Vizier of Naktamun",
+      "rank": 7367,
+      "xmageBucket": "xmage-known-classes",
+      "lines": [
+        "Whenever a creature you control deals combat damage to a player, if that creature entered this turn, draw a card."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Whenever a creature you control that entered this turn deals combat damage to a player, draw a card.",
+      "differences": []
+    },
+    {
+      "name": "Charmbreaker Devils",
+      "rank": 7376,
+      "xmageBucket": "xmage-new-shared-classes",
+      "lines": [
+        "At the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand."
+      ],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "At the beginning of your upkeep, a random instant or sorcery card in your graveyard becomes the target of this ability, chosen at random as the ability is put on the stack. Put that card into your hand.",
+      "differences": [
+        "Text A returns a random card from the graveyard without targeting; Text B makes the card a target of the ability, which changes what can respond and interact with it."
+      ]
+    },
+    {
+      "name": "Treeguard Duo",
+      "rank": 7787,
+      "xmageBucket": "xmage-known-classes",
+      "lines": [
+        "When this creature enters, until end of turn, target creature you control gains vigilance and gets +X/+X, where X is the number of creatures you control."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "When this enters, target creature you control gains vigilance until end of turn and gets +X/+X until end of turn, where X is the number of creatures you control.",
+      "differences": []
+    },
+    {
+      "name": "Commander Liara Portyr",
+      "rank": 7968,
+      "xmageBucket": "xmage-custom-classes",
+      "lines": [
+        "Whenever you attack, spells you cast from exile this turn cost {X} less to cast, where X is the number of players being attacked. Exile the top X cards of your library. Until end of turn, you may cast spells from among those exiled cards."
+      ],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The reduction is X = the number of players being attacked, which no Value expresses, and the reduction applies only to spells cast from exile this turn, which costReduction cannot restrict by zone."
+    },
+    {
+      "name": "Morbid Curiosity",
+      "rank": 8195,
+      "xmageBucket": "xmage-known-classes",
+      "lines": ["Draw cards equal to the mana value of the sacrificed permanent."],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "No value reads the mana value of the permanent sacrificed as the additional cost, so 'Draw cards equal to the mana value of the sacrificed permanent' cannot be stated exactly."
+    },
+    {
+      "name": "Three Tree Scribe",
+      "rank": 8552,
+      "xmageBucket": "xmage-custom-classes",
+      "lines": [
+        "Whenever this creature or another creature you control leaves the battlefield without dying, put a +1/+1 counter on target creature you control."
+      ],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The schema's leavesBattlefield trigger can only be narrowed to graveyard or exile destinations (leavesTo), so it cannot express 'leaves the battlefield without dying' (any destination other than the graveyard)."
+    },
+    {
+      "name": "Game Over",
+      "rank": 8637,
+      "xmageBucket": "xmage-known-classes",
+      "lines": [
+        "This spell costs {2} less to cast if a player's life total is less than or equal to half their starting life total."
+      ],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The cost reduction condition needs each player's life compared with half their starting life total, and the schema has no reference to starting life total (a 20 or 40 value would be a guess that varies by format)."
+    },
+    {
+      "name": "Diary of Dreams",
+      "rank": 9034,
+      "xmageBucket": "xmage-known-classes",
+      "lines": [
+        "{5}, {T}: Draw a card. This ability costs {1} less to activate for each page counter on this artifact."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{5}, {T}: Draw a card.\nThe cost to activate the ability above is reduced by an amount equal to the number of page counters on this.",
+      "differences": []
+    },
+    {
+      "name": "Release to the Wind",
+      "rank": 9149,
+      "xmageBucket": "xmage-custom-classes",
+      "lines": [
+        "Exile target nonland permanent. For as long as that card remains exiled, its owner may cast it without paying its mana cost."
+      ],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The schema has no way to say that the card's owner (not its controller) may cast the exiled card without paying its mana cost for as long as it remains exiled; the exile half alone would be an incomplete card."
+    },
+    {
+      "name": "On Thin Ice",
+      "rank": 9470,
+      "xmageBucket": "xmage-known-classes",
+      "lines": ["Enchant snow land you control"],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Target land you control that has the supertype Snow.\nThis Aura has no effects.",
+      "differences": [
+        "Text B states the Aura has no effects, but the card's whole-card context has a When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield trigger."
+      ]
+    },
+    {
+      "name": "Wolfcaller's Howl",
+      "rank": 9744,
+      "xmageBucket": "xmage-custom-classes",
+      "lines": [
+        "At the beginning of your upkeep, create X 2/2 green Wolf creature tokens, where X is the number of your opponents with four or more cards in hand."
+      ],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "No Value counts opponents by their hand size, so 'the number of your opponents with four or more cards in hand' cannot be expressed exactly."
+    },
+    {
+      "name": "Hard-Hitting Question",
+      "rank": 9792,
+      "xmageBucket": "xmage-known-classes",
+      "lines": [
+        "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Target creature you control and target permanent an opponent controls that is a creature or planeswalker.\nTarget creature you control deals damage equal to its power to target permanent an opponent controls that is a creature or planeswalker.",
+      "differences": []
+    },
+    {
+      "name": "Archon of the Wild Rose",
+      "rank": 10237,
+      "xmageBucket": "xmage-known-classes",
+      "lines": [
+        "Other creatures you control that are enchanted by Auras you control have base power and toughness 4/4 and have flying."
+      ],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Each other creature you control that is enchanted by an Aura you control gets +4/+4 and has flying.",
+      "differences": [
+        "Text A sets base power and toughness to 4/4; Text B gives +4/+4, which changes the result for any creature whose base is not 0/0."
+      ]
+    },
+    {
+      "name": "Thran Turbine",
+      "rank": 10288,
+      "xmageBucket": "xmage-custom-classes",
+      "lines": [
+        "At the beginning of your upkeep, you may add {C}{C}. This mana can't be spent to cast spells."
+      ],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "At the beginning of your upkeep, you may add {C}{C}. Spend this mana only to activate abilities.",
+      "differences": [
+        "Text A only forbids spending the mana on spells, so it could pay for other things such as special actions; Text B restricts the mana to activating abilities only, which excludes special actions."
+      ]
+    },
+    {
+      "name": "Pulse of Murasa",
+      "rank": 10599,
+      "xmageBucket": "xmage-known-classes",
+      "lines": [
+        "Return target creature or land card from a graveyard to its owner's hand. You gain 6 life."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Target creature card or land card in any graveyard.\nPut that card into hand.\nYou gain 6 life.",
+      "differences": []
+    },
+    {
+      "name": "Surrounded by Orcs",
+      "rank": 10847,
+      "xmageBucket": "xmage-custom-classes",
+      "lines": [
+        "Amass Orcs 3, then target player mills X cards, where X is the amassed Army's power."
+      ],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The schema has no reference to the amassed Army's power (amass returns no object reference), and the targeted mill op takes only a fixed number, so 'mills X cards where X is the Army's power' cannot be said."
+    },
+    {
+      "name": "Horrific Assault",
+      "rank": 10954,
+      "xmageBucket": "xmage-known-classes",
+      "lines": [
+        "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control. If you control an Eldrazi, you gain 3 life."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Target creature you control and target permanent an opponent controls that is a creature or planeswalker.\nTarget creature you control deals damage equal to its power to target permanent an opponent controls that is a creature or planeswalker.\nIf you control one or more permanents with the subtype Eldrazi, you gain 3 life.",
+      "differences": []
+    },
+    {
+      "name": "Tri-Sentinel, Act of Vengeance",
+      "rank": 11339,
+      "xmageBucket": "xmage-known-classes",
+      "lines": [
+        "When ~ enters, for each opponent, ~ deals 3 damage to up to one target creature that player controls."
+      ],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "A perPlayer target slot iterates over every player, and no restriction to opponents is available, so 'for each opponent' with 'up to one target creature that player controls' cannot be stated exactly (it would also allow targeting your own creatures)."
+    },
+    {
+      "name": "Expedited Inheritance",
+      "rank": 11484,
+      "xmageBucket": "xmage-custom-classes",
+      "lines": [
+        "Whenever a creature is dealt damage, its controller may exile that many cards from the top of their library. They may play those cards until the end of their next turn."
+      ],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The schema cannot say that the damaged creature's controller (not this enchantment's controller) exiles and may play the cards until the end of that player's next turn: the only top-of-library exile playable effect is for the ability's controller and lasts until end of turn."
+    },
+    {
+      "name": "Horobi, Death's Wail",
+      "rank": 11816,
+      "xmageBucket": "xmage-known-classes",
+      "lines": [
+        "Whenever a creature becomes the target of a spell or ability, destroy that creature."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Whenever a creature becomes targeted, destroy that creature. This ability doesn't target.",
+      "differences": []
+    },
+    {
+      "name": "Emmara Tandris",
+      "rank": 12052,
+      "xmageBucket": "xmage-new-shared-classes",
+      "lines": ["Prevent all damage that would be dealt to creature tokens you control."],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The schema has no static prevention effect over an arbitrary set of permanents (such as all creature tokens you control); damage shields and preventCombatDamageToSelf cover only one object, a player, or combat damage to the source itself."
+    },
+    {
+      "name": "Wurmwall Sweeper",
+      "rank": 12255,
+      "xmageBucket": "xmage-known-classes",
+      "lines": ["When this Spacecraft enters, surveil 2."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "When this enters, surveil 2.",
+      "differences": []
+    },
+    {
+      "name": "Thor, Asgard's Avenger",
+      "rank": 12570,
+      "xmageBucket": "xmage-custom-classes",
+      "lines": [
+        "If another source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus 1 instead."
+      ],
+      "outcome": "inexpressible",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "inexpressibleReason": "The ruleStatics damage replacements only double, halve or prevent damage; the schema has no replacement that adds a fixed amount (plus 1) to another source's damage to opponents and their permanents."
+    },
+    {
+      "name": "Descend upon the Sinful",
+      "rank": 12608,
+      "xmageBucket": "xmage-known-classes",
+      "lines": [
+        "Create a 4/4 white Angel creature token with flying if there are four or more card types among cards in your graveyard."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Exile each creature.\nIf there are four or more card types among cards in your graveyard, create a 4/4 white Angel creature token with flying.",
+      "differences": []
+    }
+  ]
+}

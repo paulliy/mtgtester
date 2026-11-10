@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"tap"}],"timing":"any","ability":{"kind":"activated","targets":[],"effects":[{"op":"gainLife","amount":{"kind":"countPermanents","selector":{"kind":"subtype","value":"Elf"},"scope":"all"}}],"description":"{T}: You gain 1 life for each Elf on the battlefield."}}]}}

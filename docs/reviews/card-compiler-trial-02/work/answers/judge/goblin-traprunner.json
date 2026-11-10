@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A flips three coins in one trigger and creates one token per win; Text B has three separate triggers that each flip one coin, which is a different count and timing of flips.","Text A creates the Goblin token 'tapped and attacking'; Text B creates it only 'attacking' and omits 'tapped'."]}

@@ -1,0 +1,5 @@
+{T}: Add {W} for each charge counter on this.
+{T}: Add {U} for each charge counter on this.
+{T}: Add {B} for each charge counter on this.
+{T}: Add {R} for each charge counter on this.
+{T}: Add {G} for each charge counter on this.

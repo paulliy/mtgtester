@@ -1,0 +1,40 @@
+{
+  "name": "Tamiyo's Safekeeping",
+  "oracleId": "bb2b324c-970a-4920-884e-c92ba49669f0",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Target permanent you control gains hexproof and indestructible until end of turn. You gain 2 life."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "hexproof"
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "indestructible"
+        },
+        {
+          "op": "gainLife",
+          "amount": {
+            "kind": "const",
+            "n": 2
+          }
+        }
+      ],
+      "description": "Target permanent you control gains hexproof and indestructible until end of turn. You gain 2 life."
+    }
+  }
+}

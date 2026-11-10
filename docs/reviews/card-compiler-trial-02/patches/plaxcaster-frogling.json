@@ -1,0 +1,52 @@
+{
+  "name": "Plaxcaster Frogling",
+  "oracleId": "8c1ea1a5-5966-4d14-8361-ffc6a8d1bd79",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "{2}: Target creature with a +1/+1 counter on it gains shroud until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "filter": {
+                "kind": "hasCounter",
+                "counter": "+1/+1"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": 0,
+              "keyword": "shroud"
+            }
+          ],
+          "description": "{2}: Target creature with a +1/+1 counter on it gains shroud until end of turn. (It can't be the target of spells or abilities.)"
+        }
+      }
+    ]
+  }
+}

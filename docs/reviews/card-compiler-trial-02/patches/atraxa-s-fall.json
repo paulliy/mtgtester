@@ -1,0 +1,54 @@
+{
+  "name": "Atraxa's Fall",
+  "oracleId": "22677153-bd87-4ff8-af92-ced4da2aac6c",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["Destroy target artifact, battle, enchantment, or creature with flying."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Battle"
+              },
+              {
+                "kind": "type",
+                "value": "Enchantment"
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "hasKeyword",
+                    "keyword": "flying"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "destroy",
+          "target": 0
+        }
+      ],
+      "description": "Destroy target artifact, battle, enchantment, or creature with flying."
+    }
+  }
+}

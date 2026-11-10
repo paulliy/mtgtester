@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The check 'an opponent has eight or more cards in their graveyard' pools all opponents' graveyard cards (countCardsInZone with owner opponents) rather than testing each opponent, so it is not exact in multiplayer."}

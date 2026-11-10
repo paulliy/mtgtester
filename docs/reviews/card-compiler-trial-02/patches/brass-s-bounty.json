@@ -1,0 +1,49 @@
+{
+  "name": "Brass's Bounty",
+  "oracleId": "63b0538e-aa94-4e23-adf1-704cbf5bc3e5",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["For each land you control, create a Treasure token."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "createToken",
+          "spec": {
+            "name": "Treasure",
+            "typeLine": "Artifact \u2014 Treasure",
+            "types": ["Artifact"],
+            "subtypes": ["Treasure"],
+            "colors": [],
+            "power": null,
+            "toughness": null,
+            "manaAbilities": [
+              {
+                "units": [["W", "U", "B", "R", "G"]],
+                "costs": [
+                  {
+                    "kind": "tap"
+                  },
+                  {
+                    "kind": "sacrificeSelf"
+                  }
+                ]
+              }
+            ]
+          },
+          "count": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "type",
+              "value": "Land"
+            },
+            "scope": "you"
+          }
+        }
+      ],
+      "description": "For each land you control, create a Treasure token."
+    }
+  }
+}

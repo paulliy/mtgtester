@@ -1,0 +1,1 @@
+Gain control of each creature with mana value 3 or less that isn't a commander. This effect lasts indefinitely.

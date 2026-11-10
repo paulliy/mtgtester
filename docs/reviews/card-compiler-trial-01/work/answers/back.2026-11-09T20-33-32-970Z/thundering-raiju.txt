@@ -1,0 +1,1 @@
+Whenever this creature attacks, put a +1/+1 counter on target creature you control. Then each opponent is dealt damage equal to the number of other creatures you control that have a counter on them, are enchanted by an Aura you control, or are equipped.

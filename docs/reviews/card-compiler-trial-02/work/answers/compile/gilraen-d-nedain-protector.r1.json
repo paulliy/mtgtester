@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No effect lets the controller choose to return an exiled creature immediately, and otherwise return it at the next end step with vigilance and lifelink counters; exileTargetReturnAtNextEndStep returns it unconditionally."}

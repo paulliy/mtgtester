@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"gainControl","selector":{"kind":"allOf","of":[{"kind":"type","value":"Creature"},{"kind":"manaValueAtMost","n":3},{"kind":"not","of":{"kind":"isCommander"}}]},"duration":"permanent"}],"description":"Gain control of each noncommander creature with mana value 3 or less."}}}

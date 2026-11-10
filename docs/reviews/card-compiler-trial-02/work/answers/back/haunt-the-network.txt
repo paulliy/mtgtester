@@ -1,0 +1,2 @@
+Target opponent creates two 1/1 colorless Thopter artifact creature tokens with flying.
+Target opponent loses life equal to the number of artifacts you control. You gain life equal to the number of artifacts you control.

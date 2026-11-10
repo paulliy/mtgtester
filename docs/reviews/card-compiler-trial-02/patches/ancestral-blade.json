@@ -1,0 +1,48 @@
+{
+  "name": "Ancestral Blade",
+  "oracleId": "ab28a801-6ab1-4db2-8ae2-c24bb4c10ebb",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "When this Equipment enters, create a 1/1 white Soldier creature token, then attach this Equipment to it."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Soldier",
+              "typeLine": "Creature \u2014 Soldier",
+              "types": ["Creature"],
+              "subtypes": ["Soldier"],
+              "colors": ["W"],
+              "power": 1,
+              "toughness": 1
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "attach",
+            "what": "source",
+            "to": "createdToken"
+          }
+        ],
+        "description": "When this Equipment enters, create a 1/1 white Soldier creature token, then attach this Equipment to it."
+      }
+    ]
+  }
+}

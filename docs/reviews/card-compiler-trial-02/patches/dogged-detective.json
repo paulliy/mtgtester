@@ -1,0 +1,30 @@
+{
+  "name": "Dogged Detective",
+  "oracleId": "c5a1516a-5e01-48c5-88c7-2178f4b2ad24",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Whenever an opponent draws their second card each turn, you may return this card from your graveyard to your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "drawsCard",
+          "player": "opponent",
+          "ordinalThisTurn": 2
+        },
+        "optional": true,
+        "functionsInGraveyard": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "returnSelfFromGraveyardToHand"
+          }
+        ],
+        "description": "Whenever an opponent draws their second card each turn, you may return this card from your graveyard to your hand."
+      }
+    ]
+  }
+}

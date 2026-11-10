@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The only blocker-restriction selectors that read power (powerAtMost) are event-only, so a static 'can't be blocked by creatures with power 2 or less' cannot be said."}

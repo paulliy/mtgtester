@@ -1,0 +1,29 @@
+{
+  "name": "Wurmwall Sweeper",
+  "oracleId": "320ed2ec-ef06-41fb-ac8a-72579f11544c",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["When this Spacecraft enters, surveil 2."],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "surveil",
+            "count": 2
+          }
+        ],
+        "description": "When this Spacecraft enters, surveil 2."
+      }
+    ]
+  }
+}

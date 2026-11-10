@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot say that only the players who put counters are then barred from attacking you until your next turn; eachPlayerMayPutCountersAndGoad would add an unwanted goad, and no restriction op is conditioned on that choice."}

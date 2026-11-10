@@ -1,0 +1,48 @@
+{
+  "name": "Incremental Blight",
+  "oracleId": "159cd205-6afc-4d8c-a4b9-501911a9c345",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Put a -1/-1 counter on target creature, two -1/-1 counters on another target creature, and three -1/-1 counters on a third target creature."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        },
+        {
+          "kind": "creature",
+          "differentFromSlots": [0]
+        },
+        {
+          "kind": "creature",
+          "differentFromSlots": [0, 1]
+        }
+      ],
+      "effects": [
+        {
+          "op": "putCounters",
+          "target": 0,
+          "counter": "-1/-1",
+          "count": 1
+        },
+        {
+          "op": "putCounters",
+          "target": 1,
+          "counter": "-1/-1",
+          "count": 2
+        },
+        {
+          "op": "putCounters",
+          "target": 2,
+          "counter": "-1/-1",
+          "count": 3
+        }
+      ],
+      "description": "Put a -1/-1 counter on target creature, two -1/-1 counters on another target creature, and three -1/-1 counters on a third target creature."
+    }
+  }
+}
