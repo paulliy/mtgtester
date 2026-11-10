@@ -1,0 +1,34 @@
+{
+  "name": "Reki, the History of Kamigawa",
+  "oracleId": "8a7d68ae-ac43-46a6-9dc8-d6b07cc0333c",
+  "source": "xmage@31ede542",
+  "handledLines": ["Whenever you cast a legendary spell, draw a card."],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "supertype",
+            "value": "Legendary"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever you cast a legendary spell, draw a card."
+      }
+    ]
+  }
+}

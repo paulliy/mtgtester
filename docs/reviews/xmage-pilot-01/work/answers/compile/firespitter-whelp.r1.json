@@ -1,0 +1,25 @@
+{
+  "status": "compiled",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              { "kind": "not", "of": { "kind": "type", "value": "Creature" } },
+              { "kind": "subtype", "value": "Dragon" }
+            ]
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [{ "op": "eachOpponentDamage", "amount": 1 }],
+        "description": "Whenever you cast a noncreature or Dragon spell, this creature deals 1 damage to each opponent."
+      }
+    ]
+  }
+}

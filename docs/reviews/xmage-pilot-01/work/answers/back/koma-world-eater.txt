@@ -1,0 +1,1 @@
+When <text>, create four 3/3 blue Serpent creature tokens named Koma's Coil with type line <text>. This ability is not optional and has no targets.

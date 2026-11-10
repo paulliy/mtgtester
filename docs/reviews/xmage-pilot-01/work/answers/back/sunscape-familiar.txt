@@ -1,0 +1,1 @@
+Spells you cast that are green or blue cost {1} less to cast.

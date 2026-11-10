@@ -242,9 +242,12 @@ const SELF_REFERENCE_RE =
  * "Haven" and not the nonsensical "Haven of". The short form is matched on word boundaries so a
  * name that happens to be a common word cannot rewrite unrelated text.
  */
-function substituteSelfName(text: string, name: string): string {
+function substituteSelfName(text: string, name: string, legendary: boolean): string {
   const escape = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   let out = text.replace(new RegExp(escape(name), 'g'), '~');
+  // Only a legendary card refers to itself by a short name (CR 201.5): "Wall of Mulch" writes
+  // "Sacrifice a Wall", which is any Wall, not this one.
+  if (!legendary) return out.replace(SELF_REFERENCE_RE, '~');
   let shortAt = -1;
   for (const separator of [',', ' of ', ' the ']) {
     const at = name.indexOf(separator);
@@ -1410,6 +1413,29 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
   if (lower === "~ can't be blocked") {
     return [{ affects: SELF, op: { layer: 6, setCantBeBlocked: true } }];
   }
+  // "Equipped creature can't be blocked and has shroud" (Whispersilk Cloak, Protective Bubble).
+  {
+    const m = lower.match(
+      /^(enchanted|equipped) creature can't be blocked(?: and has ([a-z ,]+))?$/,
+    );
+    if (m !== null) {
+      const affects: Selector = { kind: 'attachedToSource' };
+      const out: StaticEffect[] = [{ affects, op: { layer: 6, setCantBeBlocked: true } }];
+      if (m[2] !== undefined) {
+        const kw = parseKeywordLine(m[2] as string);
+        if (
+          kw === null ||
+          kw.keywords.length === 0 ||
+          kw.ward !== undefined ||
+          kw.protectionFrom !== undefined
+        )
+          return null;
+        for (const keyword of kw.keywords)
+          out.push({ affects, op: { layer: 6, addKeyword: keyword } });
+      }
+      return out;
+    }
+  }
   /**
    * The five basic land types (CR 305.6). Wastes is a land type but NOT a basic land type, so it
    * is deliberately absent - `docs/rules/comprehensive-rules.txt` is the authority here, and a
@@ -1602,6 +1628,31 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
             : null;
     if (affects !== null) return [{ affects, op: { layer: 6, setMustAttackEachCombat: true } }];
   }
+  // "Enchanted creature is legendary, gets +1/+1, and has flying, vigilance, and lifelink"
+  // (On Serra's Wings): a layer-4 supertype grant plus the ordinary buff and keywords.
+  {
+    const m = lower.match(
+      /^(enchanted|equipped) creature is legendary, gets ([+-]\d+)\/([+-]\d+),? and has ([a-z ,]+)$/,
+    );
+    const kw = m === null ? null : parseKeywordLine(m[4] as string);
+    if (
+      m !== null &&
+      kw !== null &&
+      kw.keywords.length > 0 &&
+      kw.ward === undefined &&
+      kw.protectionFrom === undefined
+    ) {
+      const affects: Selector = { kind: 'attachedToSource' };
+      return [
+        { affects, op: { layer: 4, addSupertypes: ['Legendary'] } },
+        { affects, op: { layer: 7, sublayer: 'd', power: Number(m[2]), toughness: Number(m[3]) } },
+        ...kw.keywords.map((keyword): StaticEffect => ({
+          affects,
+          op: { layer: 6, addKeyword: keyword },
+        })),
+      ];
+    }
+  }
   // "Enchanted/Equipped creature ... and is goaded" (CR 701.38 - it attacks each combat if able
   // and attacks a player other than the goad's controller if able).
   //
@@ -1749,23 +1800,41 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
   // Dynamic attached buffs: "Equipped creature gets +1/+0 for each land you control"
   {
     const m = lower.match(
-      /^(enchanted|equipped) creature gets ([+-]?\d+|[+-]?[xX])\/([+-]?[xX]|[+-]?\d+)(?: (for each|equal to) (.+))?$/,
+      /^(enchanted|equipped) creature gets ([+-]?\d+|[+-]?[xX])\/([+-]?[xX]|[+-]?\d+)(?: (for each|equal to) (.+?))?(?: and has ([a-z ,]+))?$/,
     );
     if (m) {
       const affects: Selector = { kind: 'attachedToSource' };
       const pStr = m[2] as string;
       const tStr = m[3] as string;
       const countClause = m[5];
-      if (countClause) {
-        const selector = parseSubject(countClause, card);
-        if (selector !== null) {
-          const countVal: Value = { kind: 'countPermanents', selector, scope: 'you' };
-          const power: Value | number = pStr.toLowerCase().includes('x') ? countVal : Number(pStr);
+      // "Enchanted creature gets +1/+1 for each enchantment you control and has first strike"
+      // (Ethereal Armor): the trailing keywords are granted alongside the buff. Ward and
+      // protection take their own ops below in the anthem arm; only plain keywords here.
+      const kw = m[6] === undefined ? null : parseKeywordLine(m[6] as string);
+      const grants: StaticEffect[] | null =
+        m[6] === undefined
+          ? []
+          : kw === null ||
+              kw.keywords.length === 0 ||
+              kw.ward !== undefined ||
+              kw.protectionFrom !== undefined
+            ? null
+            : kw.keywords.map((keyword) => ({ affects, op: { layer: 6, addKeyword: keyword } }));
+      if (countClause && grants !== null) {
+        // "for each <noun>" counts like the general arm above; a non-X amount multiplies it.
+        const countVal: Value | null =
+          m[4] === 'for each' ? parseDynamicCountValue('the number of ' + countClause, card) : null;
+        if (countVal !== null) {
+          const power: Value | number = pStr.toLowerCase().includes('x')
+            ? countVal
+            : { kind: 'times', of: countVal, n: Number(pStr) };
           const toughness: Value | number = tStr.toLowerCase().includes('x')
             ? countVal
-            : Number(tStr);
-          return [{ affects, op: { layer: 7, sublayer: 'd', power, toughness } }];
+            : { kind: 'times', of: countVal, n: Number(tStr) };
+          return [{ affects, op: { layer: 7, sublayer: 'd', power, toughness } }, ...grants];
         }
+      } else if (m[6] !== undefined) {
+        // "gets +2/+2 and has flying" without a count is the anthem arm's job.
       } else {
         const power: number = Number(pStr);
         const toughness: number = Number(tStr);
@@ -3015,7 +3084,11 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
   const isSpell = card.types.includes('Instant') || card.types.includes('Sorcery');
   const frontName =
     card.layout === 'transform' ? (card.name.split(' // ')[0] ?? card.name) : card.name;
-  const text = substituteSelfName(stripReminderText(card.oracleText), frontName);
+  const text = substituteSelfName(
+    stripReminderText(card.oracleText),
+    frontName,
+    /\bLegendary\b/.test(card.typeLine),
+  );
 
   // Whole-card block patterns that only mean something read together: a modal spell's mode
   // choice (CR 601.2b) and Stubborn Denial's Ferocious clause, which shares line 1's target

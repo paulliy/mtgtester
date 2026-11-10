@@ -1,0 +1,1 @@
+Spells you cast that are Goblin or Rogue spells cost {1} less to cast.

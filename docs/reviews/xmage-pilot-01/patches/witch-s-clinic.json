@@ -1,0 +1,52 @@
+{
+  "name": "Witch's Clinic",
+  "oracleId": "05899372-9784-4bdb-9c28-504c71fed906",
+  "source": "xmage@31ede542",
+  "handledLines": ["{2}, {T}: Target commander gains lifelink until end of turn."],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "permanent",
+              "filter": {
+                "kind": "isCommander"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": 0,
+              "keyword": "lifelink"
+            }
+          ],
+          "description": "{2}, {T}: Target commander gains lifelink until end of turn."
+        }
+      }
+    ]
+  }
+}

@@ -118,8 +118,28 @@ function parseSubjectUntraced(phrase: string, card: OracleCard): Selector | null
   let noun = phrase;
 
   // "Equipped creature has haste" / "Enchanted creature gets +2/+2" — the subject is whatever
-  // the source is currently attached to, which is a relation, not a characteristic.
-  if (/^(equipped|enchanted|fortified) /.test(noun)) return { kind: 'attachedToSource' };
+  // the source is currently attached to, which is a relation, not a characteristic. The whole
+  // phrase must be that one noun: a lazy anthem match hands over subjects like "enchanted
+  // creature can't be blocked and" or "enchanted creature gets +1/+1 for each plains you control
+  // and", and reading those as the attached creature silently dropped everything but the trailing
+  // keywords (Whispersilk Cloak, Ethereal Armor, On Serra's Wings).
+  if (
+    /^(equipped|enchanted|fortified) (creature|permanent|land|artifact|enchantment|planeswalker|battle|plains|island|swamp|mountain|forest)$/.test(
+      noun,
+    )
+  )
+    return { kind: 'attachedToSource' };
+  // "Equipped creatures you control get +1/+1" (Kemba), "Enchanted creatures you control have
+  // shroud" (Greater Auramancy): every creature of yours with an Equipment/Aura attached, not
+  // the thing this source is attached to.
+  {
+    const m = noun.match(/^(equipped|enchanted) (creatures you control)$/);
+    if (m !== null) {
+      const rest = parseSubjectUntraced(m[2] as string, card);
+      return rest === null ? null : allOf(m[1] === 'equipped' ? IS_EQUIPPED : IS_ENCHANTED, rest);
+    }
+  }
+  if (/^(equipped|enchanted|fortified) /.test(noun)) return null;
 
   if (noun.startsWith('each ')) noun = noun.slice('each '.length);
   // "All Sliver creatures get +1/+1" (Muscle Sliver): "all" adds nothing to the subject.

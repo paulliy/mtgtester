@@ -1,0 +1,37 @@
+{
+  "name": "Urza's Ruinous Blast",
+  "oracleId": "978e0d87-3ff2-4a73-916c-ff0dc0ab2797",
+  "source": "xmage@31ede542",
+  "handledLines": ["Exile all nonland permanents that aren't legendary."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "exileEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "supertype",
+                  "value": "Legendary"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

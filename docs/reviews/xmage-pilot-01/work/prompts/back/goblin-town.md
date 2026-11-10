@@ -1,0 +1,4 @@
+Type line: Land
+
+Behavior:
+{"activatedAbilities":[{"costs":[{"kind":"mana","cost":{"generic":2,"colored":{"W":0,"U":0,"B":1,"R":1,"G":0},"colorless":0}},{"kind":"tap"},{"kind":"sacrificeSelf"}],"timing":"sorcery","ability":{"kind":"activated","targets":[{"kind":"permanent","controller":"you","filter":{"kind":"anyOf","of":[{"kind":"subtype","value":"Goblin"},{"kind":"subtype","value":"Orc"}]}}],"effects":[{"op":"putCounters","target":0,"counter":"+1/+1","count":2}]}}]}

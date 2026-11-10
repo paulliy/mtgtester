@@ -1,0 +1,460 @@
+[
+  {
+    "name": "Stern Dismissal",
+    "rank": 11305,
+    "lines": ["Return target creature or enchantment an opponent controls to its owner's hand."]
+  },
+  {
+    "name": "Damning Verdict",
+    "rank": 1105,
+    "lines": ["Destroy all creatures with no counters on them."]
+  },
+  {
+    "name": "Ballyrush Banneret",
+    "rank": 8712,
+    "lines": ["Kithkin spells and Soldier spells you cast cost {1} less to cast."]
+  },
+  {
+    "name": "Hanged Executioner",
+    "rank": 6700,
+    "lines": ["{3}{W}, Exile this creature: Exile target creature."]
+  },
+  {
+    "name": "Howling Moon",
+    "rank": 5462,
+    "lines": [
+      "At the beginning of combat on your turn, target Wolf or Werewolf you control gets +2/+2 until end of turn."
+    ]
+  },
+  {
+    "name": "Aether Tunnel",
+    "rank": 4237,
+    "lines": ["Enchanted creature gets +1/+0 and can't be blocked."]
+  },
+  {
+    "name": "Jokulhaups",
+    "rank": 11283,
+    "lines": ["Destroy all artifacts, creatures, and lands. They can't be regenerated."]
+  },
+  {
+    "name": "Rhonas's Monument",
+    "rank": 2094,
+    "lines": ["Green creature spells you cast cost {1} less to cast."]
+  },
+  {
+    "name": "Guttural Response",
+    "rank": 8657,
+    "lines": ["Counter target blue instant spell."]
+  },
+  {
+    "name": "Sunscape Familiar",
+    "rank": 6008,
+    "lines": ["Green spells and blue spells you cast cost {1} less to cast."]
+  },
+  {
+    "name": "Majestic Heliopterus",
+    "rank": 9602,
+    "lines": [
+      "Whenever this creature attacks, another target Dinosaur you control gains flying until end of turn."
+    ]
+  },
+  {
+    "name": "Rosa, Resolute White Mage",
+    "rank": 5737,
+    "lines": [
+      "At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. It gains lifelink until end of turn."
+    ]
+  },
+  {
+    "name": "Otepec Huntmaster",
+    "rank": 3092,
+    "lines": ["{T}: Target Dinosaur gains haste until end of turn."]
+  },
+  {
+    "name": "Atrocious Experiment",
+    "rank": 9878,
+    "lines": ["Target player mills two cards, draws two cards, and loses 2 life."]
+  },
+  {
+    "name": "Goblin Arsonist",
+    "rank": 12518,
+    "lines": ["When this creature dies, you may have it deal 1 damage to any target."]
+  },
+  {
+    "name": "Warden of Evos Isle",
+    "rank": 3661,
+    "lines": ["Creature spells with flying you cast cost {1} less to cast."]
+  },
+  {
+    "name": "Armor of Shadows",
+    "rank": 6266,
+    "lines": ["Until end of turn, target creature gets +1/+0 and gains indestructible."]
+  },
+  {
+    "name": "Rockface Village",
+    "rank": 6103,
+    "lines": [
+      "{R}, {T}: Target Lizard, Mouse, Otter, or Raccoon you control gets +1/+0 and gains haste until end of turn. Activate only as a sorcery."
+    ]
+  },
+  {
+    "name": "Flowering of the White Tree",
+    "rank": 804,
+    "lines": ["Nonlegendary creatures you control get +1/+1."]
+  },
+  {
+    "name": "Danitha Capashen, Paragon",
+    "rank": 799,
+    "lines": ["Aura and Equipment spells you cast cost {1} less to cast."]
+  },
+  {
+    "name": "Repel Calamity",
+    "rank": 6875,
+    "lines": ["Destroy target creature with power or toughness 4 or greater."]
+  },
+  {
+    "name": "Oketra's Monument",
+    "rank": 1042,
+    "lines": ["White creature spells you cast cost {1} less to cast."]
+  },
+  {
+    "name": "Rescue Skiff",
+    "rank": 11568,
+    "lines": [
+      "When this Spacecraft enters, return target creature or enchantment card from your graveyard to the battlefield."
+    ]
+  },
+  {
+    "name": "Frogtosser Banneret",
+    "rank": 6794,
+    "lines": ["Goblin spells and Rogue spells you cast cost {1} less to cast."]
+  },
+  {
+    "name": "Nekrataal",
+    "rank": 11297,
+    "lines": [
+      "When this creature enters, destroy target nonartifact, nonblack creature. That creature can't be regenerated."
+    ]
+  },
+  {
+    "name": "Nyx Weaver",
+    "rank": 1756,
+    "lines": [
+      "{1}{B}{G}, Exile this creature: Return target card from your graveyard to your hand."
+    ]
+  },
+  {
+    "name": "Morcant's Loyalist",
+    "rank": 5162,
+    "lines": [
+      "When this creature dies, return another target Elf card from your graveyard to your hand."
+    ]
+  },
+  {
+    "name": "Bosk Banneret",
+    "rank": 9696,
+    "lines": ["Treefolk spells and Shaman spells you cast cost {1} less to cast."]
+  },
+  {
+    "name": "Beyond the Quiet",
+    "rank": 10303,
+    "lines": ["Exile all creatures and Spacecraft."]
+  },
+  {
+    "name": "Stormscape Familiar",
+    "rank": 6615,
+    "lines": ["White spells and black spells you cast cost {1} less to cast."]
+  },
+  {
+    "name": "Goblin-town",
+    "rank": 12496,
+    "lines": [
+      "{2}{B}{R}, {T}, Sacrifice this land: Put two +1/+1 counters on target Goblin or Orc you control. Activate only as a sorcery."
+    ]
+  },
+  {
+    "name": "Teysa, Orzhov Scion",
+    "rank": 4796,
+    "lines": [
+      "Whenever another black creature you control dies, create a 1/1 white Spirit creature token with flying."
+    ]
+  },
+  {
+    "name": "Sporecrown Thallid",
+    "rank": 5950,
+    "lines": ["Each other creature you control that's a Fungus or Saproling gets +1/+1."]
+  },
+  {
+    "name": "Bastion Protector",
+    "rank": 919,
+    "lines": ["Commander creatures you control get +2/+2 and have indestructible."]
+  },
+  {
+    "name": "Goblin Burrows",
+    "rank": 9580,
+    "lines": ["{1}{R}, {T}: Target Goblin creature gets +2/+0 until end of turn."]
+  },
+  {
+    "name": "Broodheart Engine",
+    "rank": 10368,
+    "lines": [
+      "{2}{B}{G}, {T}, Sacrifice this artifact: Return target creature or Vehicle card from your graveyard to the battlefield. Activate only as a sorcery."
+    ]
+  },
+  {
+    "name": "Scarecrone",
+    "rank": 8444,
+    "lines": [
+      "{4}, {T}: Return target artifact creature card from your graveyard to the battlefield."
+    ]
+  },
+  {
+    "name": "Plague Wind",
+    "rank": 6402,
+    "lines": ["Destroy all creatures you don't control. They can't be regenerated."]
+  },
+  {
+    "name": "Bloodsworn Steward",
+    "rank": 8345,
+    "lines": ["Commander creatures you control get +2/+2 and have haste."]
+  },
+  {
+    "name": "Bontu's Monument",
+    "rank": 653,
+    "lines": ["Black creature spells you cast cost {1} less to cast."]
+  },
+  {
+    "name": "Reki, the History of Kamigawa",
+    "rank": 4352,
+    "lines": ["Whenever you cast a legendary spell, draw a card."]
+  },
+  {
+    "name": "Mudflat Village",
+    "rank": 2949,
+    "lines": [
+      "{1}{B}, {T}, Sacrifice this land: Return target Bat, Lizard, Rat, or Squirrel card from your graveyard to your hand."
+    ]
+  },
+  {
+    "name": "Sliver Legion",
+    "rank": 4727,
+    "lines": ["All Sliver creatures get +1/+1 for each other Sliver on the battlefield."]
+  },
+  {
+    "name": "Mass Calcify",
+    "rank": 4121,
+    "lines": ["Destroy all nonwhite creatures."]
+  },
+  {
+    "name": "Earth Kingdom Protectors",
+    "rank": 9175,
+    "lines": [
+      "Sacrifice this creature: Another target Ally you control gains indestructible until end of turn."
+    ]
+  },
+  {
+    "name": "Extinguish All Hope",
+    "rank": 3922,
+    "lines": ["Destroy all nonenchantment creatures."]
+  },
+  {
+    "name": "Gixian Puppeteer",
+    "rank": 4208,
+    "lines": [
+      "When this creature dies, return another target creature card with mana value 3 or less from your graveyard to the battlefield."
+    ]
+  },
+  {
+    "name": "Deepchannel Mentor",
+    "rank": 9518,
+    "lines": ["Blue creatures you control can't be blocked."]
+  },
+  {
+    "name": "Poison-Blade Mentor",
+    "rank": 12370,
+    "lines": [
+      "Whenever this creature attacks, another target Assassin you control gains deathtouch until end of turn."
+    ]
+  },
+  {
+    "name": "Atraxa's Fall",
+    "rank": 9316,
+    "lines": ["Destroy target artifact, battle, enchantment, or creature with flying."]
+  },
+  {
+    "name": "Obliterate",
+    "rank": 9412,
+    "lines": ["Destroy all artifacts, creatures, and lands. They can't be regenerated."]
+  },
+  {
+    "name": "Bounty Agent",
+    "rank": 7005,
+    "lines": [
+      "{T}, Sacrifice this creature: Destroy target legendary permanent that's an artifact, creature, or enchantment."
+    ]
+  },
+  {
+    "name": "Urza's Ruinous Blast",
+    "rank": 1590,
+    "lines": ["Exile all nonland permanents that aren't legendary."]
+  },
+  {
+    "name": "Ulvenwald Observer",
+    "rank": 11078,
+    "lines": ["Whenever a creature you control with toughness 4 or greater dies, draw a card."]
+  },
+  {
+    "name": "Salvaging Station",
+    "rank": 12269,
+    "lines": [
+      "{T}: Return target noncreature artifact card with mana value 1 or less from your graveyard to the battlefield."
+    ]
+  },
+  {
+    "name": "Revive",
+    "rank": 12492,
+    "lines": ["Return target green card from your graveyard to your hand."]
+  },
+  {
+    "name": "Nevinyrral's Disk",
+    "rank": 2007,
+    "lines": ["{1}, {T}: Destroy all artifacts, creatures, and enchantments."]
+  },
+  {
+    "name": "Thopter Foundry",
+    "rank": 7861,
+    "lines": [
+      "{1}, Sacrifice a nontoken artifact: Create a 1/1 blue Thopter artifact creature token with flying. You gain 1 life."
+    ]
+  },
+  {
+    "name": "Inundate",
+    "rank": 12497,
+    "lines": ["Return all nonblue creatures to their owners' hands."]
+  },
+  {
+    "name": "Animal Sanctuary",
+    "rank": 3734,
+    "lines": ["{2}, {T}: Put a +1/+1 counter on target Bird, Cat, Dog, Goat, Ox, or Snake."]
+  },
+  {
+    "name": "Koma, World-Eater",
+    "rank": 2185,
+    "lines": [
+      "Whenever ~ deals combat damage to a player, create four 3/3 blue Serpent creature tokens named ~'s Coil."
+    ]
+  },
+  {
+    "name": "Overprotect",
+    "rank": 1577,
+    "lines": [
+      "Target creature you control gets +3/+3 and gains trample, hexproof, and indestructible until end of turn."
+    ]
+  },
+  {
+    "name": "Witch's Clinic",
+    "rank": 1043,
+    "lines": ["{2}, {T}: Target commander gains lifelink until end of turn."]
+  },
+  {
+    "name": "Stimulus Package",
+    "rank": 11916,
+    "lines": ["Sacrifice a Treasure: Create a 1/1 green and white Citizen creature token."]
+  },
+  {
+    "name": "Filter Out",
+    "rank": 5102,
+    "lines": ["Return all noncreature, nonland permanents to their owners' hands."]
+  },
+  {
+    "name": "Requiem Angel",
+    "rank": 9255,
+    "lines": [
+      "Whenever another non-Spirit creature you control dies, create a 1/1 white Spirit creature token with flying."
+    ]
+  },
+  {
+    "name": "Firespitter Whelp",
+    "rank": 3750,
+    "lines": [
+      "Whenever you cast a noncreature or Dragon spell, this creature deals 1 damage to each opponent."
+    ]
+  },
+  {
+    "name": "Hidden Hideout",
+    "rank": 3285,
+    "lines": [
+      "{2}, {T}: Target creature you control with a counter on it gains lifelink until end of turn."
+    ]
+  },
+  {
+    "name": "Kher Keep",
+    "rank": 1557,
+    "lines": ["{1}{R}, {T}: Create a 0/1 red Kobold creature token named Kobolds of ~."]
+  },
+  {
+    "name": "Seedship Broodtender",
+    "rank": 7882,
+    "lines": [
+      "{3}{B}{G}, Sacrifice this creature: Return target creature or Spacecraft card from your graveyard to the battlefield. Activate only as a sorcery."
+    ]
+  },
+  {
+    "name": "Ruthless Knave",
+    "rank": 9197,
+    "lines": ["Sacrifice three Treasures: Draw a card."]
+  },
+  {
+    "name": "Disdainful Stroke",
+    "rank": 2327,
+    "lines": ["Counter target spell with mana value 4 or greater."]
+  },
+  {
+    "name": "Acolyte of Aclazotz",
+    "rank": 10966,
+    "lines": [
+      "{T}, Sacrifice another creature or artifact: Each opponent loses 1 life and you gain 1 life."
+    ]
+  },
+  {
+    "name": "Ahriman",
+    "rank": 10735,
+    "lines": ["{3}, Sacrifice another creature or artifact: Draw a card."]
+  },
+  {
+    "name": "Jeskai Barricade",
+    "rank": 7105,
+    "lines": [
+      "When this creature enters, you may return another target creature you control to its owner's hand."
+    ]
+  },
+  {
+    "name": "Oyobi, Who Split the Heavens",
+    "rank": 12804,
+    "lines": [
+      "Whenever you cast a Spirit or Arcane spell, create a 3/3 white Spirit creature token with flying."
+    ]
+  },
+  {
+    "name": "Perilous Vault",
+    "rank": 10000,
+    "lines": ["{5}, {T}, Exile this artifact: Exile all nonland permanents."]
+  },
+  {
+    "name": "Baron Bertram Graywater",
+    "rank": 4424,
+    "lines": ["{1}{B}, Sacrifice another creature or artifact: Draw a card."]
+  },
+  {
+    "name": "Bounce Off",
+    "rank": 9180,
+    "lines": ["Return target creature or Vehicle to its owner's hand."]
+  },
+  {
+    "name": "Rockslide Sorcerer",
+    "rank": 12085,
+    "lines": [
+      "Whenever you cast an instant, sorcery, or Wizard spell, this creature deals 1 damage to any target."
+    ]
+  }
+]

@@ -1,0 +1,1 @@
+Target player mills two cards, draws two cards, and loses 2 life.
