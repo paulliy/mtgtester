@@ -747,18 +747,41 @@ export function textCheck(
   cardName: string,
   oracleText: string,
 ): TextCheck {
-  let rendered: string[];
+  // A spell ability replaces the parsed one, so its text may restate any line of the card. Every
+  // other field is appended to what the parser built from the other lines, so its text must come
+  // from the lines the patch claims to handle; otherwise it would duplicate a parsed ability.
+  const { spellAbility, ...appended } = def;
+  let spellLines: string[];
+  let appendedLines: string[];
   try {
-    rendered = renderBehavior(def);
+    spellLines = spellAbility === undefined ? [] : renderBehavior({ spellAbility });
+    appendedLines = renderBehavior(appended);
   } catch (error) {
     if (error instanceof Unrendered) return { verdict: 'unrendered', node: error.node };
     throw error;
   }
+  const rendered = [...spellLines, ...appendedLines];
+  const counts = (texts: string[]): Map<string, number> => {
+    const out = new Map<string, number>();
+    for (const text of texts) {
+      const line = normalizeLine(text, cardName);
+      out.set(line, (out.get(line) ?? 0) + 1);
+    }
+    return out;
+  };
+  // Each rendered line uses up one printed line, so the same ability twice does not match.
+  const take = (pool: Map<string, number>) => (text: string) => {
+    const line = normalizeLine(text, cardName);
+    const left = pool.get(line) ?? 0;
+    pool.set(line, left - 1);
+    return left > 0;
+  };
   const want = new Set(lines.map((line) => normalizeLine(line, cardName)));
-  const card = new Set(oracleText.split('\n').map((line) => normalizeLine(line, cardName)));
-  const got = rendered.map((line) => normalizeLine(line, cardName));
-  // Every rendered line is a line of the card, and every claimed line was rendered.
-  const ok = got.every((line) => card.has(line)) && [...want].every((line) => got.includes(line));
+  const got = new Set(rendered.map((line) => normalizeLine(line, cardName)));
+  const ok =
+    spellLines.every(take(counts(oracleText.split('\n')))) &&
+    appendedLines.every(take(counts(lines))) &&
+    [...want].every((line) => got.has(line));
   return { verdict: ok ? 'match' : 'mismatch', rendered };
 }
 

@@ -485,7 +485,10 @@ function crossCheck(
 function queue(args: string[]): void {
   const crossIndex = args.indexOf('--cross');
   const crossDir = crossIndex < 0 ? undefined : args[crossIndex + 1];
-  const trials = args.filter((_, index) => index !== crossIndex && index !== crossIndex + 1);
+  const trials =
+    crossIndex < 0
+      ? args
+      : args.filter((_, index) => index !== crossIndex && index !== crossIndex + 1);
   const previous = existsSync(QUEUE_PATH)
     ? (JSON.parse(readFileSync(QUEUE_PATH, 'utf8')) as { cards: QueueEntry[] }).cards
     : [];
