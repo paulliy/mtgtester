@@ -29,6 +29,7 @@ import {
   gameConfig,
   oracle,
   pump,
+  pumpStrict,
   spawn,
 } from './fixtures';
 
@@ -116,29 +117,33 @@ function takeAndResolve(
   option: NonNullable<ReturnType<typeof optionFor>>,
   targetId: string,
 ) {
-  pump(
+  pumpStrict(
     applyPriorityAction(ctx, playerById(ctx, 'P1'), option.payload as PriorityActionPayload, {
       index: 0,
       targets: new Map([[option.targets![0]!.slot, targetId]]),
     }),
   );
-  pump(resolveTopOfStack(ctx));
+  pumpStrict(resolveTopOfStack(ctx));
 }
 
 /** Every P1 creature attacks P2; returns the attackers P2 was offered as blockable. */
 function attackP2(ctx: GameContext): string[] {
   const offered: string[] = [];
-  pump(runCombatAndExtraCombats(ctx), (decision) => {
-    if (decision.presentationAttackDeclaration !== undefined)
-      return declareAttacks(decision, () => 'P2');
-    if (decision.presentationBlockDeclaration !== undefined) {
-      for (const subject of decision.presentationBlockDeclaration.subjects)
-        offered.push(...subject.attackers.map((attacker) => attacker.attackerId));
-      return declareBlocks(decision, () => null);
-    }
-    const pass = decision.options.findIndex((option) => option.type === 'pass');
-    return { index: Math.max(pass, 0), targets: new Map() };
-  });
+  pump(
+    runCombatAndExtraCombats(ctx),
+    (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, () => 'P2');
+      if (decision.presentationBlockDeclaration !== undefined) {
+        for (const subject of decision.presentationBlockDeclaration.subjects)
+          offered.push(...subject.attackers.map((attacker) => attacker.attackerId));
+        return declareBlocks(decision, () => null);
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return pass < 0 ? undefined : { index: pass, targets: new Map() };
+    },
+    { strict: true },
+  );
   return offered;
 }
 
