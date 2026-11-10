@@ -1,0 +1,81 @@
+{
+  "name": "Haunt the Network",
+  "oracleId": "7e074b14-0ec8-439b-9b83-5f7c1a904384",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Choose target opponent. Create two 1/1 colorless Thopter artifact creature tokens with flying. Then the chosen player loses X life and you gain X life, where X is the number of artifacts you control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "player",
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "createToken",
+          "spec": {
+            "name": "Thopter",
+            "typeLine": "Token Artifact Creature \u2014 Thopter",
+            "types": ["Artifact", "Creature"],
+            "subtypes": ["Thopter"],
+            "colors": [],
+            "power": 1,
+            "toughness": 1,
+            "keywords": ["flying"]
+          },
+          "count": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "loseLifeTarget",
+          "target": 0,
+          "amount": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                }
+              ]
+            },
+            "scope": "you"
+          }
+        },
+        {
+          "op": "gainLife",
+          "amount": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                }
+              ]
+            },
+            "scope": "you"
+          }
+        }
+      ],
+      "description": "Choose target opponent. Create two 1/1 colorless Thopter artifact creature tokens with flying. Then the chosen player loses X life and you gain X life, where X is the number of artifacts you control."
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature","controller":"you"},{"kind":"creature","controller":"opponent","count":{"min":0,"max":1}}],"effects":[{"op":"proliferate"},{"op":"fightUpToOneChosen","a":0,"bSlot":1}],"description":"Proliferate. Target creature you control fights up to one target creature you don't control."}}}

@@ -1,0 +1,1 @@
+Whenever an artifact leaves the battlefield and goes to a graveyard, you may pay {R}. If you do, create a 1/1 red Goblin creature token. It gains haste until end of turn.

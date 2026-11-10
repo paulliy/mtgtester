@@ -1,0 +1,82 @@
+{
+  "name": "Bearded Axe",
+  "oracleId": "a231319d-5d72-4aa6-8868-5987694791cd",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Equipped creature gets +1/+1 for each Dwarf, Equipment, and/or Vehicle you control."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Dwarf"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Equipment"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Vehicle"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": "you"
+          },
+          "toughness": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Dwarf"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Equipment"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Vehicle"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": "you"
+          }
+        }
+      }
+    ]
+  }
+}

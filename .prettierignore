@@ -33,3 +33,6 @@ dist-table
 
 # One pinned card per line (bun run coverage:pin), so a diff names the cards that changed
 packages/server/fixtures/edhrec-pinned-oracle.json
+
+# Card compiler trial working files: raw model answers kept exactly as returned
+docs/reviews/card-compiler-trial-*/work

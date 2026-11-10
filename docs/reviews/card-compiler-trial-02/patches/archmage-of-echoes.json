@@ -1,0 +1,69 @@
+{
+  "name": "Archmage of Echoes",
+  "oracleId": "f1ecb3d7-5ea0-45b2-b1b0-d7ae304db2a1",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["Whenever you cast a Faerie or Wizard permanent spell, copy it."],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Faerie"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Wizard"
+                  }
+                ]
+              },
+              {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Enchantment"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Planeswalker"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Battle"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "copyCastSpell"
+          }
+        ],
+        "description": "Whenever you cast a Faerie or Wizard permanent spell, copy it."
+      }
+    ]
+  }
+}

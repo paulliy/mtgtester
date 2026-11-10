@@ -29,15 +29,19 @@ export function castingCheckpoint(ctx: GameContext): () => void {
       return;
     }
     if (Object.isFrozen(value)) return;
-    const entries = Object.entries(value);
+    // Keys and values side by side, as `Object.entries` lists them, without a pair per property:
+    // a cast captures every object in the game.
+    const record = value as Record<string, unknown>;
+    const keys = Object.keys(record);
+    const values = new Array<unknown>(keys.length);
+    for (let i = 0; i < keys.length; i++) values[i] = record[keys[i]!];
     const originalLength = Array.isArray(value) ? value.length : undefined;
     restore.push(() => {
-      const record = value as Record<string, unknown>;
       for (const key of Object.keys(record)) delete record[key];
-      for (const [key, entry] of entries) record[key] = entry;
+      for (let i = 0; i < keys.length; i++) record[keys[i]!] = values[i];
       if (originalLength !== undefined) (value as unknown[]).length = originalLength;
     });
-    for (const [, entry] of entries) capture(entry);
+    for (let i = 0; i < values.length; i++) capture(values[i]);
   }
   capture(ctx.state);
   capture(ctx.rng);

@@ -1,0 +1,43 @@
+{
+  "name": "Sporesower Thallid",
+  "oracleId": "dd840d84-bc4a-4420-b8ac-99093a5aa253",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "At the beginning of your upkeep, put a spore counter on each Fungus you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Fungus"
+                }
+              ]
+            },
+            "counter": "spore",
+            "count": 1
+          }
+        ],
+        "description": "At the beginning of your upkeep, put a spore counter on each Fungus you control."
+      }
+    ]
+  }
+}

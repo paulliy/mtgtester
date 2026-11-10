@@ -1,0 +1,49 @@
+{
+  "name": "Hard-Hitting Question",
+  "oracleId": "05fdefb4-2be7-4d9a-9ab9-14bbbe72aef7",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        },
+        {
+          "kind": "permanent",
+          "controller": "opponent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "type",
+                "value": "Planeswalker"
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "dealDamage",
+          "target": 1,
+          "amount": {
+            "kind": "powerOfTarget",
+            "target": 0
+          },
+          "source": 0
+        }
+      ],
+      "description": "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control."
+    }
+  }
+}

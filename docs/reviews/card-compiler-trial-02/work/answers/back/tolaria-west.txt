@@ -1,0 +1,1 @@
+{1}{U}{U}, Discard this card: Activate only as a sorcery and only from your hand. Search your library for a card with mana value 0 or less, reveal it, put it into your hand, then shuffle.

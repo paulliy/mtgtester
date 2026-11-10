@@ -1,0 +1,39 @@
+{
+  "name": "Smell Fear",
+  "oracleId": "c9739382-9fe0-4d24-b58e-1e45a88491b6",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Target creature you control fights up to one target creature you don't control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        },
+        {
+          "kind": "creature",
+          "controller": "opponent",
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "proliferate"
+        },
+        {
+          "op": "fightUpToOneChosen",
+          "a": 0,
+          "bSlot": 1
+        }
+      ],
+      "description": "Proliferate. Target creature you control fights up to one target creature you don't control."
+    }
+  }
+}

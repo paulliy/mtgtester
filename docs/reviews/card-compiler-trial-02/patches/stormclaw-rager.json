@@ -1,0 +1,82 @@
+{
+  "name": "Stormclaw Rager",
+  "oracleId": "d1a77708-7ddf-4645-bf1e-1d8147a57f23",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "{1}, Sacrifice another creature or artifact: Put a +1/+1 counter on this creature and draw a card. Activate only as a sorcery."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "timing": "sorcery",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "putCountersEach",
+              "selector": {
+                "kind": "self"
+              },
+              "counter": "+1/+1",
+              "count": 1
+            },
+            {
+              "op": "draw",
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "{1}, Sacrifice another creature or artifact: Put a +1/+1 counter on this creature and draw a card. Activate only as a sorcery."
+        }
+      }
+    ]
+  }
+}

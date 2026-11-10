@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No event filter for a permanent entering tapped exists (entersUntapped covers only the untapped case), so the trigger cannot be limited to tapped entries."}

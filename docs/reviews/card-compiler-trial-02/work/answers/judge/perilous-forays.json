@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A searches for any land card with a basic land type; Text B restricts the search to cards named Plains, Island, Swamp, Mountain, or Forest, which excludes nonbasic lands with basic land types."]}

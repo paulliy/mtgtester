@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Paradigm needs the resolved spell exiled and then copied from exile for free at each first main phase; the only paradigm op (capstoneParadigm) is hardwired to the Improvisation Capstone's mana-value exile step, so it cannot express this card's behavior exactly."}

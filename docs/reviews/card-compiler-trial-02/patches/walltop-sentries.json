@@ -1,0 +1,51 @@
+{
+  "name": "Walltop Sentries",
+  "oracleId": "fb3a0910-a582-41ef-b5b9-3cda1f1cd5ce",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "When this creature dies, if there's a Lesson card in your graveyard, you gain 2 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "compareValues",
+            "left": {
+              "kind": "countCardsInZone",
+              "zone": "graveyard",
+              "selector": {
+                "kind": "subtype",
+                "value": "Lesson"
+              },
+              "owner": "you"
+            },
+            "cmp": ">=",
+            "right": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "const",
+              "n": 2
+            }
+          }
+        ],
+        "description": "When this creature dies, if there's a Lesson card in your graveyard, you gain 2 life."
+      }
+    ]
+  }
+}

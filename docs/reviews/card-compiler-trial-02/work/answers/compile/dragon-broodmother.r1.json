@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no way to say devour 2 (the token enters with twice the number of creatures sacrificed as +1/+1 counters, chosen as it enters), and TokenSpec has no counters-on-entry choice."}

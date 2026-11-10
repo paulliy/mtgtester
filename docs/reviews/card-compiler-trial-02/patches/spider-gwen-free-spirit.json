@@ -1,0 +1,29 @@
+{
+  "name": "Spider-Gwen, Free Spirit",
+  "oracleId": "2648559d-1d96-47d2-a769-cfa2cbca2be5",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["Whenever ~ becomes tapped, you may discard a card. If you do, draw a card."],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "becomesTapped",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "mayDiscardThenDraw",
+            "count": 1
+          }
+        ],
+        "description": "Whenever Spider-Gwen becomes tapped, you may discard a card. If you do, draw a card."
+      }
+    ]
+  }
+}

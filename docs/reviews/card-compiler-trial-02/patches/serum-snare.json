@@ -1,0 +1,43 @@
+{
+  "name": "Serum Snare",
+  "oracleId": "fbc7350c-d392-44bf-92f7-8dd4743a73b4",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Return target nonland permanent to its owner's hand. If that permanent had mana value 3 or less, proliferate."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "nonlandPermanent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "returnToHand",
+          "target": 0
+        },
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "triggerObjectMatches",
+            "selector": {
+              "kind": "manaValueAtMost",
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "proliferate"
+            }
+          ],
+          "else": [],
+          "checkTarget": 0
+        }
+      ],
+      "description": "Return target nonland permanent to its owner's hand. If that permanent had mana value 3 or less, proliferate."
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "name": "Ghost-Spider, Gwen Stacy",
+  "oracleId": "1d95b5c0-d193-4a03-9954-23861ac1c762",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Whenever ~ attacks, she deals X damage to defending player, where X is the number of attacking creatures."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          },
+          "defendingPlayerIsEventPlayer": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": "eventPlayer",
+            "amount": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "combatRole",
+                    "role": "attacking"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                ]
+              },
+              "scope": "all"
+            }
+          }
+        ],
+        "description": "Whenever Ghost-Spider attacks, she deals X damage to defending player, where X is the number of attacking creatures."
+      }
+    ]
+  }
+}

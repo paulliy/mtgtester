@@ -1,0 +1,39 @@
+{
+  "name": "Subjugate the Hobbits",
+  "oracleId": "eb56141a-eb43-40e9-8ff1-e0ef5424f6a4",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["Gain control of each noncommander creature with mana value 3 or less."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "gainControl",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "manaValueAtMost",
+                "n": 3
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "isCommander"
+                }
+              }
+            ]
+          },
+          "duration": "permanent"
+        }
+      ],
+      "description": "Gain control of each noncommander creature with mana value 3 or less."
+    }
+  }
+}

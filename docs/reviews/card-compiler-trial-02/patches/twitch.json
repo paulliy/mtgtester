@@ -1,0 +1,71 @@
+{
+  "name": "Twitch",
+  "oracleId": "321fd970-a259-448d-bd98-e85e386174f9",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["You may tap or untap target artifact, creature, or land."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "type",
+                "value": "Land"
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "chooseOne",
+          "options": [
+            {
+              "effects": [
+                {
+                  "op": "tapTarget",
+                  "target": 0
+                }
+              ],
+              "description": "Tap target artifact, creature, or land."
+            },
+            {
+              "effects": [
+                {
+                  "op": "untapTarget",
+                  "target": 0
+                }
+              ],
+              "description": "Untap target artifact, creature, or land."
+            },
+            {
+              "effects": [],
+              "description": "Do neither."
+            }
+          ]
+        },
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "You may tap or untap target artifact, creature, or land. Draw a card."
+    }
+  }
+}

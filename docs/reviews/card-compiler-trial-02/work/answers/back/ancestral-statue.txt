@@ -1,0 +1,1 @@
+When this enters, return one object you control that is not a land to its owner's hand.

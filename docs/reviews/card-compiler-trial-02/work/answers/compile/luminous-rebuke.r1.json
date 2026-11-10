@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The cost reduction depends on the chosen target being tapped, and the schema reads a target's tapped state only through tapState, which would restrict targeting instead of reducing cost."}

@@ -1,0 +1,2 @@
+Target creature gains reach and hexproof until end of turn. Untap that creature.
+Until end of turn, whenever that creature becomes tapped, it deals damage equal to its power to up to one target creature.

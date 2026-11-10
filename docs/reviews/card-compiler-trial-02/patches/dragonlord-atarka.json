@@ -1,0 +1,57 @@
+{
+  "name": "Dragonlord Atarka",
+  "oracleId": "daff70a4-a990-47c9-b6ef-2c379272c8a3",
+  "source": "compiler@sonnet-worker",
+  "handledLines": [
+    "When ~ enters, it deals 5 damage divided as you choose among any number of target creatures and/or planeswalkers your opponents control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "permanent",
+            "controller": "opponent",
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "type",
+                  "value": "Planeswalker"
+                }
+              ]
+            },
+            "count": {
+              "min": 0,
+              "max": 5
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamageDivided",
+            "targetSlot": 0,
+            "total": {
+              "kind": "const",
+              "n": 5
+            }
+          }
+        ],
+        "description": "When Dragonlord Atarka enters, it deals 5 damage divided as you choose among any number of target creatures and/or planeswalkers your opponents control."
+      }
+    ]
+  }
+}

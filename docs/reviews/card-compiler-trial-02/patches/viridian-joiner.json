@@ -1,0 +1,17 @@
+{
+  "name": "Viridian Joiner",
+  "oracleId": "84244aa6-11be-4940-b102-e029f955fc9a",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["{T}: Add an amount of {G} equal to this creature's power."],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [["G"]],
+        "amount": {
+          "kind": "powerOfSource"
+        }
+      }
+    ]
+  }
+}

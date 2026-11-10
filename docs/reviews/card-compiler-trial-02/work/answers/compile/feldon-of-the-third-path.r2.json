@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema's createTokenCopyOf only copies a permanent on the battlefield, and no op creates a token copy of a creature card in a graveyard (with haste and a delayed sacrifice)."}

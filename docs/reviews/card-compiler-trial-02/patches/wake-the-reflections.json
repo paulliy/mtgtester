@@ -1,0 +1,19 @@
+{
+  "name": "Wake the Reflections",
+  "oracleId": "211868ca-662b-4054-bf50-c9e16bb58c49",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["Populate."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "populate"
+        }
+      ],
+      "description": "Populate."
+    }
+  }
+}

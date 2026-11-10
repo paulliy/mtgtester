@@ -1,0 +1,1 @@
+At the beginning of your upkeep, a random instant or sorcery card in your graveyard becomes the target of this ability, chosen at random as the ability is put on the stack. Put that card into your hand.
