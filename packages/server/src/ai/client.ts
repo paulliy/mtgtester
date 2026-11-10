@@ -16,11 +16,43 @@ import {
   ModelUnavailableError,
   NoAvailableModelError,
   RequestCancelledError,
+  RequestTimeoutError,
   RpmLimitError,
 } from './errors';
 import { DEFAULT_AI_CONFIG } from './config';
 import { getNonCachingProviders } from './openrouter-provider-filter';
 import { withRetry } from './retry';
+import {
+  type ChatCompletionBody,
+  type GenerationCost,
+  isEventStream,
+  lookupGenerationCost,
+  newStreamProgress,
+  readChatCompletionStream,
+  StreamedProviderError,
+} from './streaming';
+
+/**
+ * An attempt OpenRouter may have billed whose cost the response did not carry: a call we timed
+ * out, or a stream that ended before its usage chunk. `settleUnknownCosts` looks these up.
+ */
+export interface UnsettledAttempt {
+  generationId: string;
+  logicalRequestId: string;
+  model: string;
+  status: AiAttemptStatus;
+  /** Response tokens seen before the attempt ended, estimated from streamed characters. */
+  estimatedResponseTokens: number;
+}
+
+export interface CostSettlement {
+  /** Attempts looked up, with what OpenRouter says each cost; null when stats never appeared. */
+  attempts: Array<UnsettledAttempt & { billed: GenerationCost | null }>;
+  /** Sum of the costs that were found. */
+  settledUsd: number;
+  /** Attempts whose cost could not be found. */
+  unresolved: number;
+}
 
 export interface CallMeta {
   model: string;
@@ -154,6 +186,7 @@ export class OpenAiCompatibleClient implements AiClient {
   private readonly hardBarrierModels = new Set<string>();
   private readonly attemptCountsByRequest = new Map<string, number>();
   private attemptObserver: AiAttemptObserver | undefined;
+  private unsettled: UnsettledAttempt[] = [];
 
   constructor(
     private readonly config: AiConfig,
@@ -167,6 +200,50 @@ export class OpenAiCompatibleClient implements AiClient {
 
   setAttemptObserver(observer: AiAttemptObserver | undefined): void {
     this.attemptObserver = observer;
+  }
+
+  /** Attempts with a generation id but no reported cost, not yet looked up. */
+  unsettledAttempts(): readonly UnsettledAttempt[] {
+    return this.unsettled;
+  }
+
+  /**
+   * Look up the billed cost of every attempt whose response did not report one (timeouts, cut-off
+   * streams). OpenRouter only. Call it when a game or run ends: the lookups are not free of
+   * latency, and the provider needs a few seconds before the stats exist.
+   */
+  async settleUnknownCosts(
+    options: { sleep?: (ms: number) => Promise<void>; delaysMs?: readonly number[] } = {},
+  ): Promise<CostSettlement> {
+    const pending = this.unsettled;
+    this.unsettled = [];
+    const attempts = await Promise.all(
+      pending.map(async (attempt) => ({
+        ...attempt,
+        billed: await lookupGenerationCost(attempt.generationId, {
+          baseUrl: this.config.baseUrl,
+          apiKey: this.config.apiKey,
+          fetchImpl: this.fetchImpl,
+          ...(options.sleep === undefined ? {} : { sleep: options.sleep }),
+          ...(options.delaysMs === undefined ? {} : { delaysMs: options.delaysMs }),
+        }),
+      })),
+    );
+    const settledUsd = attempts.reduce((sum, a) => sum + (a.billed?.costUsd ?? 0), 0);
+    return {
+      attempts,
+      settledUsd,
+      unresolved: attempts.filter((a) => a.billed === null).length,
+    };
+  }
+
+  private noteUnsettled(
+    attempt: Omit<UnsettledAttempt, 'generationId'> & { generationId: string | undefined },
+  ): void {
+    const { generationId } = attempt;
+    if (generationId === undefined || generationId === '') return;
+    if (this.unsettled.some((a) => a.generationId === generationId)) return;
+    this.unsettled.push({ ...attempt, generationId });
   }
 
   get activeModel(): string {
@@ -253,6 +330,8 @@ export class OpenAiCompatibleClient implements AiClient {
             let attemptBackend: string | undefined;
             let attemptProviderRequestId: string | undefined;
             let attemptFinishReason: string | undefined;
+            const progress = newStreamProgress();
+            const stream = isOpenRouter && this.config.streamResponses !== false;
             let attemptUsage: AiNetworkAttempt['usage'] = {
               promptTokenSource: 'unknown',
               responseTokenSource: 'unknown',
@@ -272,6 +351,7 @@ export class OpenAiCompatibleClient implements AiClient {
                 : answerTokens,
               response_format: { type: 'json_object' },
               ...reasoningParams(this.config, isOpenRouter),
+              ...(stream ? { stream: true, stream_options: { include_usage: true } } : {}),
             };
             if (isOpenRouter) {
               const provider: Record<string, unknown> = {};
@@ -293,6 +373,7 @@ export class OpenAiCompatibleClient implements AiClient {
               reasoning: bodyPayload['reasoning'] ?? bodyPayload['reasoning_effort'] ?? 'omitted',
               provider: bodyPayload['provider'] ?? 'default',
               promptCache: prompt.promptCache ?? 'disabled',
+              stream,
               timeoutMs: this.config.requestTimeoutMs ?? DEFAULT_AI_CONFIG.requestTimeoutMs,
             };
             const recordAttempt = async (
@@ -331,10 +412,10 @@ export class OpenAiCompatibleClient implements AiClient {
               });
             };
 
+            const timeoutSignal = AbortSignal.timeout(
+              this.config.requestTimeoutMs ?? DEFAULT_AI_CONFIG.requestTimeoutMs,
+            );
             try {
-              const timeoutSignal = AbortSignal.timeout(
-                this.config.requestTimeoutMs ?? DEFAULT_AI_CONFIG.requestTimeoutMs,
-              );
               const res = await this.fetchImpl(endpoint, {
                 method: 'POST',
                 headers: {
@@ -381,23 +462,9 @@ export class OpenAiCompatibleClient implements AiClient {
                 throw new HttpError(res.status, errorText);
               }
 
-              const data = (await res.json()) as {
-                id?: string;
-                model?: string;
-                provider?: string;
-                choices?: Array<{
-                  finish_reason?: string;
-                  message?: { content?: string; reasoning?: string; reasoning_content?: string };
-                }>;
-                usage?: {
-                  prompt_tokens?: number;
-                  completion_tokens?: number;
-                  cost?: number;
-                  prompt_tokens_details?: { cached_tokens?: number };
-                  cache_read_input_tokens?: number;
-                  cache_write_input_tokens?: number;
-                };
-              };
+              const data: ChatCompletionBody = isEventStream(res)
+                ? await readChatCompletionStream(res, progress)
+                : ((await res.json()) as ChatCompletionBody);
 
               const choice = data.choices?.[0];
               const message = choice?.message;
@@ -463,6 +530,15 @@ export class OpenAiCompatibleClient implements AiClient {
                   : {}),
                 usage: attemptUsage,
               });
+              if (isOpenRouter && attemptUsage.costUsd === undefined) {
+                this.noteUnsettled({
+                  generationId: data.id,
+                  logicalRequestId: request.requestId,
+                  model: currentModel,
+                  status: 'accepted',
+                  estimatedResponseTokens: attemptUsage.responseTokens ?? 0,
+                });
+              }
 
               const meta: CallMeta = {
                 model: currentModel,
@@ -493,7 +569,42 @@ export class OpenAiCompatibleClient implements AiClient {
               };
 
               return { response: parsed, meta };
-            } catch (error) {
+            } catch (caught) {
+              let error = caught;
+              const timedOut = timeoutSignal.aborted && signal?.aborted !== true;
+              if (timedOut) {
+                error = new RequestTimeoutError(
+                  currentModel,
+                  this.config.requestTimeoutMs ?? DEFAULT_AI_CONFIG.requestTimeoutMs,
+                  this.config.retryOnTimeout === true,
+                );
+              }
+              if (error instanceof StreamedProviderError) {
+                const code = Number(error.code);
+                error = new HttpError(
+                  Number.isFinite(code) && code >= 400 ? code : 502,
+                  error.message,
+                );
+              }
+              // An attempt that ended without a usage report may still have been billed. Keep its
+              // generation id and what it streamed so far, so its real cost can be looked up.
+              if (attemptUsage.costUsd === undefined) {
+                attemptProviderRequestId ??= progress.id;
+                if (progress.chars > 0 && attemptUsage.responseTokens === undefined) {
+                  attemptUsage = {
+                    ...attemptUsage,
+                    responseTokens: Math.ceil(progress.chars / 4),
+                    responseTokenSource: 'estimated',
+                  };
+                }
+                if (attemptUsage.promptTokens === undefined && progress.id !== undefined) {
+                  attemptUsage = {
+                    ...attemptUsage,
+                    promptTokens: prompt.estimatedTokens,
+                    promptTokenSource: 'estimated',
+                  };
+                }
+              }
               const status: AiAttemptStatus =
                 error instanceof HttpError
                   ? 'http_error'
@@ -514,6 +625,15 @@ export class OpenAiCompatibleClient implements AiClient {
                 error: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
                 usage: attemptUsage,
               });
+              if (isOpenRouter && attemptUsage.costUsd === undefined) {
+                this.noteUnsettled({
+                  generationId: attemptProviderRequestId,
+                  logicalRequestId: request.requestId,
+                  model: currentModel,
+                  status,
+                  estimatedResponseTokens: attemptUsage.responseTokens ?? 0,
+                });
+              }
               throw error;
             }
           },

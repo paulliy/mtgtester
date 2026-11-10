@@ -435,6 +435,21 @@ async function playAi(pool: SupportedPool, args: Args): Promise<void> {
     if (aiStats.totalCostUsd > 0) {
       console.log(`    Provider Cost:      $${aiStats.totalCostUsd.toFixed(4)}`);
     }
+    // Timed-out or cut-off attempts report no cost but may still be billed (ADR 0040).
+    const settlements = await Promise.all([
+      strategistClient.settleUnknownCosts(),
+      tacticianClient.settleUnknownCosts(),
+    ]);
+    const unreported = settlements.reduce((n, s) => n + s.attempts.length, 0);
+    if (unreported > 0) {
+      const billed = settlements.reduce((sum, s) => sum + s.settledUsd, 0);
+      const missing = settlements.reduce((n, s) => n + s.unresolved, 0);
+      console.log(
+        `    Unreported Calls:   ${unreported} billed $${billed.toFixed(4)}` +
+          (missing > 0 ? ` (${missing} not found)` : ''),
+      );
+      console.log(`    Billed Total:       $${(aiStats.totalCostUsd + billed).toFixed(4)}`);
+    }
   }
 
   const state = engine.getState();
