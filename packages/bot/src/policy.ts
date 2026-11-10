@@ -464,12 +464,22 @@ function opponentObjectOnStack(view: PlayerView, action: LegalAction): boolean {
   return top !== undefined && top.controller !== view.seat;
 }
 
+/** Whether any target option of `action` is an object on the stack. */
+function targetsStack(view: PlayerView, action: LegalAction): boolean {
+  const onStack = new Set(view.stack.map((s) => s.id));
+  return (action.targets ?? []).some((t) => t.options.some((o) => onStack.has(o)));
+}
+
 function roleValue(roles: readonly CardRole[], action: LegalAction, ctx: PolicyContext): number {
   const { view } = ctx;
   let value = 0;
   for (const role of roles) {
     switch (role) {
       case 'counter':
+        // A modal card's roles are the union of its modes. A mode with no stack target (Mystic
+        // Confluence's draw, Izzet Charm's damage) counters nothing, so it is neither scored nor
+        // penalized as a counterspell.
+        if (action.data?.['modeLabel'] !== undefined && !targetsStack(view, action)) break;
         value += opponentObjectOnStack(view, action) ? P.roles.counterAnswer : P.roles.counterIdle;
         break;
       case 'removal': {
@@ -625,7 +635,13 @@ function attachOrCrewPenalty(action: LegalAction, ctx: PolicyContext): number | 
     const beforeOwnCombat =
       request.activePlayer === view.seat &&
       (request.phase === 'precombatMain' || request.step === 'beginCombat');
-    if (repeats > 0 || crewed || !beforeOwnCombat) return P.pointlessActivation;
+    // Crewing after attackers are declared lets the Vehicle block.
+    const beforeBlocks =
+      request.activePlayer !== view.seat &&
+      request.step === 'declareAttackers' &&
+      vehicle !== undefined &&
+      !vehicle.tapped;
+    if (repeats > 0 || crewed || !(beforeOwnCombat || beforeBlocks)) return P.pointlessActivation;
     return null;
   }
   return null;

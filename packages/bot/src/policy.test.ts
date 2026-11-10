@@ -407,6 +407,26 @@ describe('card-aware priority scoring', () => {
     expect(res.targets!.map((t) => t.choice)).toEqual(['theirs', 'theirs']);
   });
 
+  it("does not score a modal card's non-counter mode as an idle counterspell", () => {
+    const draw: LegalAction = {
+      id: 1,
+      type: 'castSpell',
+      description: 'Cast Mystic Confluence — draw a card',
+      data: {
+        sourceName: 'Mystic Confluence',
+        manaCost: '{3}{U}{U}',
+        instantSpeed: true,
+        modeLabel: 'Draw a card. ×3',
+      },
+    };
+    const k = knowledge({
+      'Mystic Confluence': { manaValue: 5, roles: ['counter', 'draw'], spellTargets: ['hostile'] },
+    });
+    const ranked = evaluate(request([PASS, draw]), view(), { knowledge: k });
+    const score = ranked.find((r) => r.action.id === 1)!.score;
+    expect(score).toBeGreaterThan(-5);
+  });
+
   it('does not float mana by activating a mana ability on its own', () => {
     // The engine's manual mana action shape (packages/engine/src/mana/manual.ts).
     const tap: LegalAction = {
@@ -663,6 +683,8 @@ describe('activations with no effect role', () => {
     expect(go(crewed)).toBe(0);
     expect(go(vehicle, { activePlayer: 'P2' })).toBe(0);
     expect(go(vehicle, { phase: 'postcombatMain' })).toBe(0);
+    // Crewing in response to an opponent's attack lets the Vehicle block.
+    expect(go(vehicle, { activePlayer: 'P2', phase: 'combat', step: 'declareAttackers' })).toBe(1);
   });
 });
 
