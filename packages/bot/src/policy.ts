@@ -559,7 +559,11 @@ export function actionValue(action: LegalAction, ctx: PolicyContext): number | n
   const traits = traitsFor(ctx, name);
   let value: number;
   if (action.type === 'castSpell') {
-    const mv = manaValueOfCost(action.data?.['manaCost']) || (traits?.manaValue ?? 0);
+    const shownCost = action.data?.['manaCost'];
+    // The engine shows the cost actually paid ("{0}" after affinity), so that drives hold-up;
+    // the printed mana value stands in for impact when the shown cost is zero or missing.
+    const paid = typeof shownCost === 'string' ? manaValueOfCost(shownCost) : undefined;
+    const mv = paid || (traits?.manaValue ?? 0);
     const roles = traits?.roles ?? [];
     value = P.castBase + mv * P.castPerManaValue + roleValue(roles, action, ctx);
     if (traits?.types.includes('Creature') === true) {
@@ -572,7 +576,7 @@ export function actionValue(action: LegalAction, ctx: PolicyContext): number | n
       }
     }
     value -= idleReactivePenalty(roles, action, ctx);
-    value -= holdUpPenalty(mv, action, ctx);
+    value -= holdUpPenalty(paid ?? mv, action, ctx);
   } else {
     const index = abilityIndexOf(action);
     const roles = index === undefined ? [] : (traits?.abilityRoles?.[index] ?? []);

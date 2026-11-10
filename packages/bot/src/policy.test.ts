@@ -547,6 +547,18 @@ describe('steering', () => {
     expect(res.actionId).toBe(0);
   });
 
+  it('holds up mana by the cost actually paid, so a free spell keeps it all', () => {
+    // Frogmite reduced to {0} by affinity: its printed value of 4 must not trip hold-up.
+    const actions = [PASS, spell(1, 'Frogmite', '{0}')];
+    const forests = [1, 2].map((n) => ({ name: `Forest ${n}`, symbols: ['G'], count: 1 }));
+    const k = knowledge({ Frogmite: { manaValue: 4, types: ['Artifact', 'Creature'], power: 2 } });
+    const res = decide(request(actions), view({ manaSources: forests }), new Rng('a'), {
+      knowledge: k,
+      steering: { holdUpMana: 2 },
+    });
+    expect(res.actionId).toBe(1);
+  });
+
   function attack(subjects: Array<{ id: string; power: number; toughness: number }>): LegalAction {
     return {
       id: 0,
