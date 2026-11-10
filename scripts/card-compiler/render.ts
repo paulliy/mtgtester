@@ -219,7 +219,8 @@ export function selectorNoun(selector: unknown, options: NounOptions = {}): stri
   else throw new Unrendered('selector:several-types');
   if (subtypes.length > 1) throw new Unrendered('selector:several-subtypes');
   let noun = [subtypes[0], head].filter((word) => word !== undefined && word !== '').join(' ');
-  if (subtypes.length === 1 && head === 'creature') noun = subtypes[0]!;
+  // Creature plus a subtype stays "Elf creature": bare "Elves" also counts a noncreature Kindred
+  // Elf, so dropping the type would render a narrower selector as the wider printed one.
   if (plural) noun = pluralize(noun);
   return [...prefixes, ...adjectives, noun, ...suffixes].join(' ');
 }
