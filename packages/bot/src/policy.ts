@@ -125,8 +125,19 @@ export function handCardValue(card: CardView, ctx: PolicyContext): number {
   return P.spellCardBase + mv * P.spellCardPerManaValue + (traits?.roles.length ?? 0);
 }
 
+/** One decision's pressure map: it is read for every action and slot, so compute it once. */
+const pressureCache = new WeakMap<PolicyContext, Map<PlayerId, number>>();
+
 /** How much this seat wants to hurt each opponent, highest first. */
 function opponentPressure(ctx: PolicyContext): Map<PlayerId, number> {
+  const cached = pressureCache.get(ctx);
+  if (cached !== undefined) return cached;
+  const pressure = computePressure(ctx);
+  pressureCache.set(ctx, pressure);
+  return pressure;
+}
+
+function computePressure(ctx: PolicyContext): Map<PlayerId, number> {
   const { view, steering } = ctx;
   const pressure = new Map<PlayerId, number>();
   for (const o of view.opponents) {
