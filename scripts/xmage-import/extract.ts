@@ -51,7 +51,8 @@ function matchingBrace(src: string, open: number): number {
 }
 
 export function extractCard(src: string): XCard {
-  const clsMatch = /public\s+final\s+class\s+(\w+)\s+extends\s+\w+/.exec(src);
+  // The top-level class; a utility class such as StaticFilters has no `extends` clause.
+  const clsMatch = /public\s+(?:final\s+)?class\s+(\w+)/.exec(src);
   const cls = clsMatch?.[1] ?? '?';
   const customClasses = [
     ...src.matchAll(

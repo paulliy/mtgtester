@@ -1,0 +1,53 @@
+{
+  "name": "Perilous Vault",
+  "oracleId": "7acd7ef5-0e26-436d-962a-1a391f81c2e8",
+  "source": "xmage@31ede542",
+  "handledLines": ["{5}, {T}, Exile this artifact: Exile all nonland permanents."],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 5,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "exileSelf"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "exileEach",
+              "selector": {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              }
+            }
+          ],
+          "description": "{5}, {T}, Exile this artifact: Exile all nonland permanents."
+        }
+      }
+    ]
+  }
+}

@@ -3,16 +3,16 @@
     "source": "xmage@31ede542",
     "population": 5917,
     "outcomes": {
-      "translated": 71,
-      "unmapped": 4399,
-      "no-matching-ability": 642,
+      "translated": 80,
+      "unmapped": 4414,
+      "no-matching-ability": 618,
       "no-xmage-class": 24,
       "spell-merge": 0,
       "invalid": 5,
       "not-pinned": 74,
       "already-modeled": 702
     },
-    "keptPatches": 71,
+    "keptPatches": 80,
     "overlap": {
       "total": 0,
       "translated": 0
@@ -21,43 +21,43 @@
       ["new SimpleStaticAbility(2)", 65],
       ["new ActivateIfConditionActivatedAbility(3)", 32],
       ["new ConditionalContinuousEffect(3)", 32],
-      ["$spell.setTargetAdjuster()", 30],
-      ["new TargetPermanent(3)", 28],
+      ["$spell.setTargetAdjuster()", 31],
+      ["new TargetPermanent(3)", 30],
+      ["$spell.addWatcher()", 28],
       ["$spell.addCost()", 27],
-      ["$spell.addWatcher()", 27],
       ["true", 27],
-      ["new TargetCreaturePermanent(2)", 26],
-      ["new DoIfCostPaid(2)", 24],
+      ["new TargetCreaturePermanent(2)", 27],
+      ["new DoIfCostPaid(2)", 25],
       ["new EntersBattlefieldOrAttacksSourceTriggeredAbility(1)", 24],
       ["new EntersBattlefieldThisOrAnotherTriggeredAbility(4)", 22],
       ["new SearchLibraryPutInHandEffect(2)", 22],
+      ["new GainControlTargetEffect(1)", 22],
+      ["new ConditionalOneShotEffect(4)", 21],
       ["new CreateDelayedTriggeredAbilityEffect(1)", 20],
       ["unparsed constructor statement", 20],
       ["EntersBattlefieldTriggeredAbility.withInterveningIf()", 20],
-      ["new GainControlTargetEffect(1)", 20],
+      ["new TargetCardInYourGraveyard(3)", 20],
       ["new LoyaltyAbility(2)", 19],
       ["new EntersBattlefieldControlledTriggeredAbility(5)", 19],
-      ["new TargetCardInYourGraveyard(3)", 19],
       ["new EntersBattlefieldAllTriggeredAbility(5)", 19],
       ["new EntersBattlefieldAbility(2)", 18],
       ["TargetController.YOU", 18],
-      ["new ConditionalOneShotEffect(4)", 18],
+      ["new DamageTargetEffect(1)", 18],
       ["new SacrificeSourceUnlessPaysEffect(1)", 18],
+      ["new AddCountersSourceEffect(1)", 17],
       ["new EntersBattlefieldAllTriggeredAbility(2)", 16],
       ["new SimpleActivatedAbility(3)", 16],
       ["BeginningOfUpkeepTriggeredAbility.withInterveningIf()", 16],
-      ["new DamageTargetEffect(1)", 16],
+      ["TargetController.YOU.getOwnerPredicate()", 16],
+      ["new DamageAllEffect(2)", 16],
+      ["new AttacksWithCreaturesTriggeredAbility(2)", 16],
       ["new CreateTokenEffect(2)", 15],
-      ["StaticFilters.FILTER_CARD_CREATURE_YOUR_GRAVEYARD", 15],
       ["new TargetCardInGraveyard(1)", 15],
-      ["new DamageAllEffect(2)", 15],
       ["new DealsDamageToAPlayerAllTriggeredAbility(5)", 15],
       ["BeginningOfEndStepTriggeredAbility.withInterveningIf()", 15],
-      ["new BecomesCreatureSourceEffect(3)", 14],
-      ["new TapTargetCost(1)", 14],
-      ["new AttacksWithCreaturesTriggeredAbility(2)", 14],
-      ["new EntersBattlefieldControlledTriggeredAbility(2)", 13],
-      ["new GainAbilityControlledSpellsEffect(2)", 13]
+      ["new ConditionalOneShotEffect(3)", 14],
+      ["new GainAbilityControlledSpellsEffect(2)", 14],
+      ["new BecomesCreatureSourceEffect(3)", 14]
     ]
   },
   "results": [
@@ -188,6 +188,15 @@
       "outcome": "translated"
     },
     {
+      "rank": 2327,
+      "name": "Disdainful Stroke",
+      "decks": 71256,
+      "line": "Counter target spell with mana value 4 or greater.",
+      "overlap": false,
+      "xmageClass": "d/DisdainfulStroke",
+      "outcome": "translated"
+    },
+    {
       "rank": 2949,
       "name": "Mudflat Village",
       "decks": 56356,
@@ -304,6 +313,15 @@
       "line": "Whenever you cast a legendary spell, draw a card.",
       "overlap": false,
       "xmageClass": "r/RekiTheHistoryOfKamigawa",
+      "outcome": "translated"
+    },
+    {
+      "rank": 4424,
+      "name": "Baron Bertram Graywater",
+      "decks": 36448,
+      "line": "{1}{B}, Sacrifice another creature or artifact: Draw a card.",
+      "overlap": false,
+      "xmageClass": "b/BaronBertramGraywater",
       "outcome": "translated"
     },
     {
@@ -471,6 +489,15 @@
       "outcome": "translated"
     },
     {
+      "rank": 7105,
+      "name": "Jeskai Barricade",
+      "decks": 20559,
+      "line": "When this creature enters, you may return another target creature you control to its owner's hand.",
+      "overlap": false,
+      "xmageClass": "j/JeskaiBarricade",
+      "outcome": "translated"
+    },
+    {
       "rank": 7861,
       "name": "Thopter Foundry",
       "decks": 17742,
@@ -531,6 +558,15 @@
       "line": "Sacrifice this creature: Another target Ally you control gains indestructible until end of turn.",
       "overlap": false,
       "xmageClass": "e/EarthKingdomProtectors",
+      "outcome": "translated"
+    },
+    {
+      "rank": 9180,
+      "name": "Bounce Off",
+      "decks": 14029,
+      "line": "Return target creature or Vehicle to its owner's hand.",
+      "overlap": false,
+      "xmageClass": "b/BounceOff",
       "outcome": "translated"
     },
     {
@@ -615,6 +651,15 @@
       "outcome": "translated"
     },
     {
+      "rank": 10000,
+      "name": "Perilous Vault",
+      "decks": 12235,
+      "line": "{5}, {T}, Exile this artifact: Exile all nonland permanents.",
+      "overlap": false,
+      "xmageClass": "p/PerilousVault",
+      "outcome": "translated"
+    },
+    {
       "rank": 10042,
       "name": "Alela, Artful Provocateur",
       "decks": 12149,
@@ -640,6 +685,24 @@
       "line": "{2}{B}{G}, {T}, Sacrifice this artifact: Return target creature or Vehicle card from your graveyard to the battlefield. Activate only as a sorcery.",
       "overlap": false,
       "xmageClass": "b/BroodheartEngine",
+      "outcome": "translated"
+    },
+    {
+      "rank": 10735,
+      "name": "Ahriman",
+      "decks": 10873,
+      "line": "{3}, Sacrifice another creature or artifact: Draw a card.",
+      "overlap": false,
+      "xmageClass": "a/Ahriman",
+      "outcome": "translated"
+    },
+    {
+      "rank": 10966,
+      "name": "Acolyte of Aclazotz",
+      "decks": 10450,
+      "line": "{T}, Sacrifice another creature or artifact: Each opponent loses 1 life and you gain 1 life.",
+      "overlap": false,
+      "xmageClass": "a/AcolyteOfAclazotz",
       "outcome": "translated"
     },
     {
@@ -697,6 +760,15 @@
       "outcome": "translated"
     },
     {
+      "rank": 12085,
+      "name": "Rockslide Sorcerer",
+      "decks": 8646,
+      "line": "Whenever you cast an instant, sorcery, or Wizard spell, this creature deals 1 damage to any target.",
+      "overlap": false,
+      "xmageClass": "r/RockslideSorcerer",
+      "outcome": "translated"
+    },
+    {
       "rank": 12269,
       "name": "Salvaging Station",
       "decks": 8389,
@@ -748,6 +820,15 @@
       "line": "When this creature dies, you may have it deal 1 damage to any target.",
       "overlap": false,
       "xmageClass": "g/GoblinArsonist",
+      "outcome": "translated"
+    },
+    {
+      "rank": 12804,
+      "name": "Oyobi, Who Split the Heavens",
+      "decks": 7730,
+      "line": "Whenever you cast a Spirit or Arcane spell, create a 3/3 white Spirit creature token with flying.",
+      "overlap": false,
+      "xmageClass": "o/OyobiWhoSplitTheHeavens",
       "outcome": "translated"
     }
   ]

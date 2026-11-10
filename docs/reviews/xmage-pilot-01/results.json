@@ -1,11 +1,11 @@
 {
   "measuredCostUsd": 0,
   "estimatedCost": {
-    "backUsd": 0.001986325000000001,
-    "backCalls": 66,
-    "judgeUsd": 0.0013003499999999992,
-    "judgeCalls": 66,
-    "totalUsd": 0.003286675
+    "backUsd": 0.002254795,
+    "backCalls": 75,
+    "judgeUsd": 0.001447789999999999,
+    "judgeCalls": 75,
+    "totalUsd": 0.0037025849999999987
   },
   "cards": [
     {
@@ -1781,6 +1781,234 @@
         }
       ],
       "backTranslation": "Sacrifice three other Treasures you control (this permanent may count as one of them): Draw a card. Activate at any time you have priority.",
+      "differences": []
+    },
+    {
+      "name": "Disdainful Stroke",
+      "rank": 2327,
+      "lines": ["Counter target spell with mana value 4 or greater."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Counter target spell with mana value 4 or greater.",
+      "differences": []
+    },
+    {
+      "name": "Acolyte of Aclazotz",
+      "rank": 10966,
+      "lines": [
+        "{T}, Sacrifice another creature or artifact: Each opponent loses 1 life and you gain 1 life."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{T}, Sacrifice another artifact or creature you control: Each opponent loses 1 life and you gain 1 life.",
+      "differences": []
+    },
+    {
+      "name": "Ahriman",
+      "rank": 10735,
+      "lines": ["{3}, Sacrifice another creature or artifact: Draw a card."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{3}, Sacrifice another artifact or creature you control: Draw a card.",
+      "differences": []
+    },
+    {
+      "name": "Jeskai Barricade",
+      "rank": 7105,
+      "lines": [
+        "When this creature enters, you may return another target creature you control to its owner's hand."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "When this creature enters, you may return another target creature you control to its owner's hand.",
+      "differences": []
+    },
+    {
+      "name": "Oyobi, Who Split the Heavens",
+      "rank": 12804,
+      "lines": [
+        "Whenever you cast a Spirit or Arcane spell, create a 3/3 white Spirit creature token with flying."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Whenever you cast a spell with the Spirit or Arcane subtype, create a 3/3 white Spirit creature token with flying. Its name is \"Spirit,\" its type line is \"<text>,\" its types are Creature, and its subtype is Spirit.",
+      "differences": []
+    },
+    {
+      "name": "Perilous Vault",
+      "rank": 10000,
+      "lines": ["{5}, {T}, Exile this artifact: Exile all nonland permanents."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{5}, {T}, Exile this artifact: Exile each nonland permanent on the battlefield.",
+      "differences": []
+    },
+    {
+      "name": "Baron Bertram Graywater",
+      "rank": 4424,
+      "lines": ["{1}{B}, Sacrifice another creature or artifact: Draw a card."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{1}{B}, Sacrifice another artifact or creature you control: Draw a card.",
+      "differences": []
+    },
+    {
+      "name": "Bounce Off",
+      "rank": 9180,
+      "lines": ["Return target creature or Vehicle to its owner's hand."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Return target permanent that is a creature or has the creature subtype Vehicle to its owner's hand.",
+      "differences": []
+    },
+    {
+      "name": "Rockslide Sorcerer",
+      "rank": 12085,
+      "lines": [
+        "Whenever you cast an instant, sorcery, or Wizard spell, this creature deals 1 damage to any target."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Whenever you cast an instant spell, a sorcery spell, or a spell with the Wizard creature subtype, deal 1 damage to any target.",
       "differences": []
     }
   ]

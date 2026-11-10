@@ -1,0 +1,1 @@
+Whenever you cast a spell with the Spirit or Arcane subtype, create a 3/3 white Spirit creature token with flying. Its name is "Spirit," its type line is "<text>," its types are Creature, and its subtype is Spirit.

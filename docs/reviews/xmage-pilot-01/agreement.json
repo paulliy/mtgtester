@@ -1,10 +1,10 @@
 {
   "summary": {
     "source": "xmage@31ede542",
-    "compared": 1235,
-    "agree": 1169,
+    "compared": 1446,
+    "agree": 1379,
     "subtypeImpliesCreature": 59,
-    "disagree": 7
+    "disagree": 8
   },
   "disagreements": [
     {
@@ -327,6 +327,126 @@
               "addKeyword": "vigilance",
               "layer": 6
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Claws of Gix",
+      "line": "{1}, Sacrifice a permanent: You gain 1 life.",
+      "xmage": {
+        "activatedAbilities": [
+          {
+            "ability": {
+              "effects": [
+                {
+                  "amount": 1,
+                  "op": "gainLife"
+                }
+              ],
+              "kind": "activated",
+              "targets": []
+            },
+            "costs": [
+              {
+                "cost": {
+                  "colored": {
+                    "B": 0,
+                    "G": 0,
+                    "R": 0,
+                    "U": 0,
+                    "W": 0
+                  },
+                  "colorless": 0,
+                  "generic": 1
+                },
+                "kind": "mana"
+              },
+              {
+                "allowSelf": true,
+                "kind": "sacrificeOther",
+                "selector": {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              }
+            ],
+            "timing": "any"
+          }
+        ]
+      },
+      "interpreter": {
+        "activatedAbilities": [
+          {
+            "ability": {
+              "effects": [
+                {
+                  "amount": 1,
+                  "op": "gainLife"
+                }
+              ],
+              "kind": "activated",
+              "targets": []
+            },
+            "costs": [
+              {
+                "cost": {
+                  "colored": {
+                    "B": 0,
+                    "G": 0,
+                    "R": 0,
+                    "U": 0,
+                    "W": 0
+                  },
+                  "colorless": 0,
+                  "generic": 1
+                },
+                "kind": "mana"
+              },
+              {
+                "allowSelf": true,
+                "kind": "sacrificeOther",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "anyOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Artifact"
+                        },
+                        {
+                          "kind": "type",
+                          "value": "Battle"
+                        },
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        },
+                        {
+                          "kind": "type",
+                          "value": "Enchantment"
+                        },
+                        {
+                          "kind": "type",
+                          "value": "Land"
+                        },
+                        {
+                          "kind": "type",
+                          "value": "Planeswalker"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              }
+            ],
+            "timing": "any"
           }
         ]
       }

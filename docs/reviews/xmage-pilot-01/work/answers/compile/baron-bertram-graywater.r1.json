@@ -1,0 +1,42 @@
+{
+  "status": "compiled",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": { "W": 0, "U": 0, "B": 1, "R": 0, "G": 0 },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                { "kind": "controller", "who": "you" },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    { "kind": "type", "value": "Artifact" },
+                    { "kind": "type", "value": "Creature" }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [{ "op": "draw", "count": { "kind": "const", "n": 1 } }],
+          "description": "{1}{B}, Sacrifice another creature or artifact: Draw a card."
+        }
+      }
+    ]
+  }
+}

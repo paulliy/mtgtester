@@ -403,5 +403,58 @@
     "name": "Ruthless Knave",
     "rank": 9197,
     "lines": ["Sacrifice three Treasures: Draw a card."]
+  },
+  {
+    "name": "Disdainful Stroke",
+    "rank": 2327,
+    "lines": ["Counter target spell with mana value 4 or greater."]
+  },
+  {
+    "name": "Acolyte of Aclazotz",
+    "rank": 10966,
+    "lines": [
+      "{T}, Sacrifice another creature or artifact: Each opponent loses 1 life and you gain 1 life."
+    ]
+  },
+  {
+    "name": "Ahriman",
+    "rank": 10735,
+    "lines": ["{3}, Sacrifice another creature or artifact: Draw a card."]
+  },
+  {
+    "name": "Jeskai Barricade",
+    "rank": 7105,
+    "lines": [
+      "When this creature enters, you may return another target creature you control to its owner's hand."
+    ]
+  },
+  {
+    "name": "Oyobi, Who Split the Heavens",
+    "rank": 12804,
+    "lines": [
+      "Whenever you cast a Spirit or Arcane spell, create a 3/3 white Spirit creature token with flying."
+    ]
+  },
+  {
+    "name": "Perilous Vault",
+    "rank": 10000,
+    "lines": ["{5}, {T}, Exile this artifact: Exile all nonland permanents."]
+  },
+  {
+    "name": "Baron Bertram Graywater",
+    "rank": 4424,
+    "lines": ["{1}{B}, Sacrifice another creature or artifact: Draw a card."]
+  },
+  {
+    "name": "Bounce Off",
+    "rank": 9180,
+    "lines": ["Return target creature or Vehicle to its owner's hand."]
+  },
+  {
+    "name": "Rockslide Sorcerer",
+    "rank": 12085,
+    "lines": [
+      "Whenever you cast an instant, sorcery, or Wizard spell, this creature deals 1 damage to any target."
+    ]
   }
 ]

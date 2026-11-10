@@ -11,15 +11,18 @@ Add this directory to that queue once #58 is on main.
 
 ## Result
 
-The final run translates 71 cards (about 0.38% of Commander deck slots). All 71 pass the authoring
-validator and the generated smoke games. The meaning check passes 66 and flags 5. A hand audit of
+The final run translates 80 cards (about 0.40% of Commander deck slots). All 80 pass the authoring
+validator and the generated smoke games. The meaning check passes 75 and flags 5. A hand audit of
 the 5 found no wrong patch (below).
 
 The first run translated 74. Three are gone because this PR's parser fixes made the interpreter
-model them itself: Aqueous Form, Cloak of Mists and Wall of Mulch.
+model them itself: Aqueous Form, Cloak of Mists and Wall of Mulch. Nine were added when review
+found that the extractor read no `StaticFilters` fields, so any ability naming a shared filter
+had been refused: Acolyte of Aclazotz, Ahriman, Baron Bertram Graywater, Bounce Off, Disdainful
+Stroke, Jeskai Barricade, Oyobi, Who Split the Heavens, Perilous Vault and Rockslide Sorcerer.
 
 The scan's estimate did not hold up at this adapter count. That estimate said 2,516 cards use only
-XMage classes already seen in modeled cards. With about 70 adapters, 71 translate. Of the compiler
+XMage classes already seen in modeled cards. With about 70 adapters, 80 translate. Of the compiler
 trial's 30 overlap cards, only Damning Verdict translated. A class name is not enough: the same
 class appears with different overloads, filters, target pointers and conditions, and each needs
 its own mapping.
@@ -28,9 +31,9 @@ its own mapping.
 
 | Outcome                                                      | Cards |
 | ------------------------------------------------------------ | ----: |
-| Translated                                                   |    71 |
-| Uses an XMage class, argument or call with no adapter        | 4,399 |
-| No XMage ability confidently matches the Oracle line         |   642 |
+| Translated                                                   |    80 |
+| Uses an XMage class, argument or call with no adapter        | 4,414 |
+| No XMage ability confidently matches the Oracle line         |   618 |
 | Interpreter now models the card (triage fixture is stale)    |   702 |
 | Not in the pinned Oracle pool                                |    74 |
 | No XMage class for the name                                  |    24 |
@@ -63,14 +66,15 @@ The pilot found two interpreter bugs, both fixed in this PR with regression test
 
 ## Adapter accuracy
 
-`agreement.ts` compares adapter output with the interpreter, token names included, on the 1,235
+`agreement.ts` compares adapter output with the interpreter, token names included, on the 1,446
 lines both can read:
 
-- 1,169 identical.
+- 1,379 identical.
 - 59 differ only because XMage says "Elf creatures" where the interpreter writes "Elves". They
   differ only for a noncreature Kindred permanent.
-- 7 are equivalent: keyword order, a nested `allOf`, a repeated `Creature` leaf, or the probe card
-  carrying a second ability.
+- 8 are equivalent: keyword order, a nested `allOf`, a repeated `Creature` leaf, the probe card
+  carrying a second ability, or the interpreter listing the six permanent types where XMage leaves
+  "a permanent" unrestricted (Claws of Gix).
 
 No disagreement was an adapter error. Review found one adapter gap that this check could not
 catch, because generic tokens are named after their subtypes on both sides. A token named in
@@ -79,7 +83,8 @@ reads the name, and both patches were regenerated.
 
 ## Meaning-check flags
 
-The final run used Haiku workers and #58's conventions at `a62bd703`. It flagged 5 of 71:
+The final run used Haiku workers and #58's conventions at `a62bd703`. It flagged 5 of 80, the
+same 5 as before the nine were added:
 
 - Koma, World-Eater and Stimulus Package. The compiler redacts free-text fields as `<text>`, and
   the back-translator copied the placeholder into its rules text ("When `<text>`", "type line
@@ -101,7 +106,7 @@ key. Estimated at under $0.01 per run. Translation itself is deterministic and f
 
 ## Files
 
-- `patches/`: the 71 patches, `source: "xmage@31ede542"`.
+- `patches/`: the 80 patches, `source: "xmage@31ede542"`.
 - `results.json`, `targets.json`, `work/`: the compiler checks' output from the final run.
 - `translation-results.json`: translation summary and per-card outcome for translated and invalid
   cards.
