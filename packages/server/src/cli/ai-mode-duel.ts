@@ -74,6 +74,25 @@ export interface Budget {
 }
 
 /**
+ * A `fetch` that enforces the duel's caps on every physical POST, so the client's own retries
+ * (a rejected completion, a timeout) cannot spend past them. A capped request throws before it
+ * is sent. GETs (the provider list) are free and pass through.
+ */
+export function budgetedFetch(budget: Budget, inner: typeof fetch = fetch): typeof fetch {
+  return (async (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+    const method = (init?.method ?? 'GET').toUpperCase();
+    if (method === 'POST') {
+      if (budget.spentUsd >= budget.maxUsd || budget.calls >= budget.maxCalls) {
+        budget.capped = true;
+        throw new Error('ai-mode-duel spend cap reached');
+      }
+      budget.calls++;
+    }
+    return inner(input, init);
+  }) as typeof fetch;
+}
+
+/**
  * Wraps a real client so every call is charged to the mode of the seat it was made for. A billed
  * completion the client rejects (malformed JSON, empty content) never reaches the result, so its
  * usage is taken from the client's attempt record instead; accepted attempts are counted from the
@@ -125,11 +144,11 @@ export function counting(
       const mode = modeOf(request.decidingPlayer);
       const tally = tallies[mode];
       if (budget.spentUsd >= budget.maxUsd || budget.calls >= budget.maxCalls) {
-        // Thrown before any request is sent: the provider falls back to the bot, for free.
+        // Thrown before any request is sent: the provider falls back to the bot, for free. Each
+        // physical attempt is also capped (and counted) by `budgetedFetch`.
         budget.capped = true;
         throw new Error('ai-mode-duel spend cap reached');
       }
-      budget.calls++;
       modeByRequest.set(request.requestId, mode);
       let result: Awaited<ReturnType<AiClient['requestDecision']>>;
       try {
@@ -204,14 +223,14 @@ async function main(): Promise<void> {
 
   const tallies: Record<ModeName, Tally> = { bot: emptyTally(), model: emptyTally() };
   const strategistClient = counting(
-    new OpenAiCompatibleClient(configForRole(base, 'strategist')),
+    new OpenAiCompatibleClient(configForRole(base, 'strategist'), budgetedFetch(budget)),
     'strategist',
     modeOf,
     tallies,
     budget,
   );
   const tacticianClient = counting(
-    new OpenAiCompatibleClient(configForRole(base, 'tactician')),
+    new OpenAiCompatibleClient(configForRole(base, 'tactician'), budgetedFetch(budget)),
     'tactician',
     modeOf,
     tallies,
