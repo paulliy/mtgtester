@@ -11,6 +11,7 @@ import {
   ModelUnavailableError,
   RequestCancelledError,
   RpmLimitError,
+  RequestTimeoutError,
 } from './errors';
 
 /** Flattens an unknown error into the status + text we classify against. */
@@ -127,6 +128,8 @@ export function classifyError(
   // A deliberate cancellation (match halted/abandoned), not a transport hiccup — retrying it
   // would just place more billed calls for a game nobody is waiting on any more.
   if (err instanceof RequestCancelledError) return 'fatal';
+  // Our own deadline: retrying pays for the slow answer again (ADR 0040). Fall back instead.
+  if (err instanceof RequestTimeoutError) return err.retryable ? 'retryable' : 'fatal';
 
   /**
    * The call succeeded and the model answered — the answer was just not something we could
