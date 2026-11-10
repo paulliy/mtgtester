@@ -344,6 +344,10 @@
       "patchSha256": "8e195991993fff225d965dc92a79d68ef7eb06dc3a562e1b0ac9c9f3eae3baf1",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "crossCheck": {
+        "source": "xmage@31ede542",
+        "verdict": "identical"
+      },
       "smoke": [
         {
           "scenario": "from-hand",
@@ -610,6 +614,10 @@
       "patchSha256": "7af37d77cb9f6e7467072ea3d9591bbaaa6b699861d7b5d443f05b13b24d8c14",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "crossCheck": {
+        "source": "xmage@31ede542",
+        "verdict": "identical"
+      },
       "smoke": [
         {
           "scenario": "from-hand",
@@ -682,6 +690,10 @@
       "patch": "docs/reviews/card-compiler-trial-01/patches/damning-verdict.json",
       "patchSha256": "766c04cab1c2e71a66457385b6e1a3f846af3d604b610a918ddf00a05c7a5fbf",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "crossCheck": {
+        "source": "xmage@31ede542",
+        "verdict": "identical"
+      },
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1159,6 +1171,10 @@
       "patchSha256": "507270c5364cbbdeded1c43509f2bd0d18219962f33804c06ac7fcff85b03c79",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "renderer",
+      "crossCheck": {
+        "source": "xmage@31ede542",
+        "verdict": "identical"
+      },
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1246,6 +1262,10 @@
       "patchSha256": "28662438c529c768016e126a3a2c170cbd020c36c490ac0ec03f2bec2c3c8c34",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "crossCheck": {
+        "source": "xmage@31ede542",
+        "verdict": "identical"
+      },
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1624,6 +1644,10 @@
       "patchSha256": "9923adc06f5021864913c237dea8c930bf781c17ad25a604885b00f3620d30da",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "crossCheck": {
+        "source": "xmage@31ede542",
+        "verdict": "differs"
+      },
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1781,6 +1805,10 @@
       "patchSha256": "4a8bb9684192e974f3882f27b78c9fb913f10585c09e9628055097b1a0942575",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "crossCheck": {
+        "source": "xmage@31ede542",
+        "verdict": "identical"
+      },
       "smoke": [
         {
           "scenario": "from-hand",
@@ -1837,6 +1865,10 @@
       "patchSha256": "a01930e3b30f3a312af14655896effae50ead189157e71b4e464672fc9629366",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "crossCheck": {
+        "source": "xmage@31ede542",
+        "verdict": "identical"
+      },
       "smoke": [
         {
           "scenario": "from-hand",
@@ -3269,6 +3301,10 @@
       "patchSha256": "628e956f61d55aa69c5aebca8ab1d4038254f65612700a54b793fbe7b0556b15",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "crossCheck": {
+        "source": "xmage@31ede542",
+        "verdict": "identical"
+      },
       "smoke": [
         {
           "scenario": "from-hand",

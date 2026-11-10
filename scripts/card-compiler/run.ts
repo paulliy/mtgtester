@@ -28,6 +28,7 @@ import type { CardDefinition } from '../../packages/engine/src/cards/definition'
 import { textCheck } from './render';
 import {
   applyPatch,
+  behaviorOf,
   compileTarget,
   parseAnswer,
   pinnedPool,
@@ -419,6 +420,12 @@ export interface QueueEntry {
   differences?: string[];
   validatorIssues?: string[];
   smoke?: { scenario: string; ok: boolean; abilityResolved: boolean; detail: string }[];
+  /**
+   * Cross-check against an independent translation of the same card (an XMage patch): whether the
+   * two merged definitions have identical behavior (descriptions ignored, allOf/anyOf unordered).
+   * Identical is strong evidence; a difference tells the reviewer where to look.
+   */
+  crossCheck?: { source: string; verdict: 'identical' | 'differs' | 'other-invalid' };
   /** Filled in by the reviewer: accepted, rejected, or null while waiting. */
   review: { verdict: 'accepted' | 'rejected'; by: string; note?: string } | null;
 }
@@ -430,7 +437,55 @@ const QUEUE_PATH = 'docs/reviews/compiled-card-queue.json';
  * queue are kept for cards whose patch is unchanged. Cards the compiler declined are not queued;
  * they are a primitive backlog, listed in each trial's results.json.
  */
-function queue(trials: string[]): void {
+/** Behavior of a definition as canonical JSON: descriptions dropped, keys sorted. */
+function canonicalBehavior(definition: CardDefinition): string {
+  const sortKeys = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(sortKeys);
+    if (value === null || typeof value !== 'object') return value;
+    const node = Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([key]) => key !== 'description' && key !== 'prompt' && key !== 'label')
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, entry]) => [key, sortKeys(entry)]),
+    );
+    // allOf and anyOf are unordered: "another Elf" and "an Elf that is another" are the same.
+    if ((node['kind'] === 'allOf' || node['kind'] === 'anyOf') && Array.isArray(node['of']))
+      node['of'] = [...(node['of'] as unknown[])].sort((a, b) =>
+        JSON.stringify(a).localeCompare(JSON.stringify(b)),
+      );
+    return node;
+  };
+  return JSON.stringify(sortKeys(behaviorOf(definition)));
+}
+
+/**
+ * Compare a queued patch with an independent patch for the same card from `crossDir` (one JSON
+ * per card, named by slug, in the shared patch format).
+ */
+function crossCheck(
+  target: CompileTarget,
+  ownDef: Partial<CardDefinition>,
+  otherPath: string,
+): NonNullable<QueueEntry['crossCheck']> {
+  const other = JSON.parse(readFileSync(otherPath, 'utf8')) as PatchFile;
+  const mine = applyPatch(target, ownDef);
+  const theirs = applyPatch(target, other.def);
+  if (!theirs.ok || theirs.definition === null)
+    return { source: other.source, verdict: 'other-invalid' };
+  if (!mine.ok || mine.definition === null) return { source: other.source, verdict: 'differs' };
+  return {
+    source: other.source,
+    verdict:
+      canonicalBehavior(mine.definition) === canonicalBehavior(theirs.definition)
+        ? 'identical'
+        : 'differs',
+  };
+}
+
+function queue(args: string[]): void {
+  const crossIndex = args.indexOf('--cross');
+  const crossDir = crossIndex < 0 ? undefined : args[crossIndex + 1];
+  const trials = args.filter((_, index) => index !== crossIndex && index !== crossIndex + 1);
   const previous = existsSync(QUEUE_PATH)
     ? (JSON.parse(readFileSync(QUEUE_PATH, 'utf8')) as { cards: QueueEntry[] }).cards
     : [];
@@ -475,6 +530,15 @@ function queue(trials: string[]): void {
         ...(state.differences !== undefined &&
           state.differences.length > 0 && { differences: state.differences }),
         ...(status === 'invalid' && { validatorIssues: state.validatorIssues.at(-1) ?? [] }),
+        ...(crossDir !== undefined &&
+          patchPath !== null &&
+          existsSync(`${crossDir}/${slug(state.name)}.json`) && {
+            crossCheck: crossCheck(
+              target,
+              (JSON.parse(readFileSync(patchPath, 'utf8')) as PatchFile).def,
+              `${crossDir}/${slug(state.name)}.json`,
+            ),
+          }),
         ...(state.smoke !== undefined && {
           smoke: state.smoke.map((run) => ({
             scenario: run.scenario,

@@ -77,4 +77,10 @@ bun run scripts/card-compiler/run.ts queue <trial> [<trial>...]   # rebuild the 
 A patch file is one JSON per card: `{ name, oracleId, handledLines, compose: "append", def, source }`,
 where `source` names its origin, e.g. `xmage@31ede542` or `compiler@claude-haiku-5-5`. An imported
 patch that fails validation is `invalid` with no retry, since the compile prompt did not produce it.
-`queue` keeps a reviewer's verdict on an entry as long as the patch is unchanged.
+`queue` keeps a reviewer's verdict on an entry only while the patch file's SHA-256 is unchanged.
+
+`queue <trials...> --cross <patch-dir>` cross-checks each queued patch against an independent
+patch for the same card (for example the XMage pilot's `patches/`). It records `identical` when the
+two merged definitions have the same behavior, ignoring descriptions and the order inside
+allOf/anyOf, and `differs` otherwise. On the first 9 overlapping cards, 8 were identical. The one
+difference was Koma's token name, which the XMage adapter leaves generic.
