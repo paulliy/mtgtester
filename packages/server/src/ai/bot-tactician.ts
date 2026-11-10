@@ -6,7 +6,12 @@
 
 import type { Engine } from '@mtg/engine';
 import type { BotSteering, DecisionRequest, DecisionResponse, PlayerId } from '@mtg/shared';
-import { HeuristicDecisionProvider, type CardKnowledge, type ScoredAction } from '@mtg/bot';
+import {
+  HeuristicDecisionProvider,
+  type CardKnowledge,
+  type DiplomacyPlay,
+  type ScoredAction,
+} from '@mtg/bot';
 import { buildCardKnowledge } from './card-traits';
 
 const knowledgeByEngine = new WeakMap<object, CardKnowledge>();
@@ -64,10 +69,13 @@ export class BotTactician {
     gameId: string,
     steering: () => BotSteering | undefined,
     private readonly margin: number,
+    /** The seat's live table deals (ADR 0035), so the bot honors accepted promises. */
+    diplomacy?: DiplomacyPlay,
   ) {
     this.bot = new HeuristicDecisionProvider(`${gameId}-${seat}-bot`, () => engine.view(seat), {
       knowledge: knowledgeFor(engine),
       steering,
+      ...(diplomacy === undefined ? {} : { diplomacy }),
     });
   }
 

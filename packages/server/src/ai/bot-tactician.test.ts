@@ -82,6 +82,37 @@ describe('bot-led tactical mode', () => {
     expect(c.requestDecision).toHaveBeenCalledTimes(1);
   });
 
+  it("consults the seat's table deals when diplomacy is on", async () => {
+    const obligations = vi.fn().mockReturnValue([]);
+    const provider = new OpenAiDecisionProvider(
+      client(),
+      queue,
+      engine,
+      bot({ botEscalation: 'never' }),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      () => ({ obligations, startingOpponents: 3 }),
+    );
+    const targeted: DecisionRequest = {
+      ...closeCall,
+      legalActions: [
+        closeCall.legalActions[0]!,
+        {
+          id: 1,
+          type: 'castSpell',
+          description: 'Cast Shock',
+          data: { manaCost: '{R}' },
+          targets: [{ slot: 0, options: ['P2'] }],
+        },
+      ],
+    };
+    await provider.decide(targeted);
+    expect(obligations).toHaveBeenCalled();
+  });
+
   it('does not treat a clear choice or a non-board decision as uncertain', () => {
     const pass = { action: closeCall.legalActions[0]!, score: 0 };
     const cast = { action: closeCall.legalActions[1]!, score: 5 };

@@ -14,6 +14,7 @@ import {
   HeuristicDecisionProvider,
   withDiplomacy,
   withDiplomacyAsync,
+  type DiplomacyPlay,
   type OfferOutcome,
 } from '@mtg/bot';
 import type {
@@ -2354,7 +2355,10 @@ export class MatchSession {
         ? new AsyncAdapter(heuristic())
         : table === null
           ? this.buildAiProvider()
-          : withDiplomacyAsync(table, this.buildAiProvider());
+          : withDiplomacyAsync(
+              table,
+              this.buildAiProvider(() => table.playFor(playerId)),
+            );
     const pacedProvider = this.pacedBot(inner);
 
     // Bots retain an explicit decline of a sacrifice-style optional activation across turns in
@@ -2365,7 +2369,7 @@ export class MatchSession {
     return provider;
   }
 
-  private buildAiProvider(): AsyncDecisionProvider {
+  private buildAiProvider(diplomacy?: () => DiplomacyPlay): AsyncDecisionProvider {
     const coordinator = this.ensureAiCoordinator();
     const config = this.aiConfig as AiConfig;
     const tactician = this.aiTacticianClient as OpenAiCompatibleClient;
@@ -2379,6 +2383,8 @@ export class MatchSession {
       this.escalation(),
       coordinator,
       this.aiJev ?? undefined,
+      undefined,
+      diplomacy,
     );
   }
 

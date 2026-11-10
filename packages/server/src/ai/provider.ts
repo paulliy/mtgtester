@@ -12,8 +12,8 @@
  */
 
 import type { AsyncDecisionProvider, Engine } from '@mtg/engine';
-import type { DecisionRequest, DecisionResponse, PlayerView } from '@mtg/shared';
-import { decide as heuristicDecide, Rng as HeuristicRng } from '@mtg/bot';
+import type { DecisionRequest, DecisionResponse, PlayerId, PlayerView } from '@mtg/shared';
+import { decide as heuristicDecide, Rng as HeuristicRng, type DiplomacyPlay } from '@mtg/bot';
 import type { AiConfig } from './config';
 import type { AiClient, CallMeta } from './client';
 import { assemblePrompt, type AiPrompt, type OpenAiMessage } from './context';
@@ -83,6 +83,8 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     coordinator?: StrategyCoordinator,
     private readonly jev?: JevPolicyBinding,
     private readonly policyRegistry: PolicyRegistry = DEFAULT_POLICY_REGISTRY,
+    /** Table deals for a seat (ADR 0035); bot-led tactics must honor them, not just log breaches. */
+    private readonly diplomacyFor?: (seat: PlayerId) => DiplomacyPlay | undefined,
   ) {
     this.strategy = coordinator ?? new StrategyCoordinator(null, queue, engine, config, logger);
   }
@@ -221,6 +223,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
         request.gameId,
         () => this.strategy.steeringFor(seat),
         this.config.botEscalationMargin,
+        this.diplomacyFor?.(seat),
       );
     }
     return this.botTactician;
