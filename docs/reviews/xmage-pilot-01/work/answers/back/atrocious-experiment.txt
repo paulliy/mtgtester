@@ -1,3 +1,1 @@
-Target player mills two cards.
-Target player draws two cards.
-Target player loses 2 life.
+Target player mills two cards, draws two cards, and loses 2 life.

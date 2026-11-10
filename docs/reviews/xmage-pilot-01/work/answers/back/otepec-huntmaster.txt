@@ -1,1 +1,1 @@
-{T}: Target Dinosaur creature gains haste until end of turn.
+{T}: Target creature with subtype Dinosaur gains haste until end of turn.

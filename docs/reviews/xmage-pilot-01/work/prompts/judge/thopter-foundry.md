@@ -5,4 +5,4 @@ Whole card, for context:
 {1}, Sacrifice a nontoken artifact: Create a 1/1 blue Thopter artifact creature token with flying. You gain 1 life.
 
 Text B:
-{1}, Sacrifice a nontoken artifact you control: Create a 1/1 blue Thopter artifact creature token with flying. You gain 1 life. (This artifact is a legal choice for the sacrifice.)
+{1}, Sacrifice a nontoken artifact you control (this permanent is allowed to be the one sacrificed): Create a 1/1 blue Thopter artifact creature token with flying, then gain 1 life.

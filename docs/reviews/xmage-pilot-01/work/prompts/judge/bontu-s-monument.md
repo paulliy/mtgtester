@@ -6,4 +6,4 @@ Black creature spells you cast cost {1} less to cast.
 Whenever you cast a creature spell, each opponent loses 1 life and you gain 1 life.
 
 Text B:
-Creature spells that are black cost {1} less to cast.
+Black creature spells you cast cost {1} less to cast.

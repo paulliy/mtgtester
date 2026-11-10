@@ -1,6 +1,6 @@
 {
   "verdict": "different",
   "differences": [
-    "Text A limits the cost reduction to Aura and Equipment spells you cast; Text B applies it to all Aura and Equipment spells regardless of controller"
+    "Text A says Aura and Equipment spells; Text B says Aura or Equipment spells. A spell that is both gets two separate {1} reductions under A but only one under B."
   ]
 }

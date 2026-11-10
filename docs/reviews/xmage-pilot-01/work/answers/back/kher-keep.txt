@@ -1,1 +1,1 @@
-{1}{R}, {T}: Create a 0/1 red Kobold creature token.
+{1}{R}, {T}: Create a 0/1 red Kobold creature token with creature type Kobold.

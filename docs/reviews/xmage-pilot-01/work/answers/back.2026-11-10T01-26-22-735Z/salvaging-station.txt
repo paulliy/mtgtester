@@ -1,0 +1,1 @@
+{T}: Put target noncreature artifact card with mana value 1 or less from your graveyard onto the battlefield.

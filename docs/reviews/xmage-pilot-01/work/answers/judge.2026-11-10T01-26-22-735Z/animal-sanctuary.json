@@ -1,0 +1,6 @@
+{
+  "verdict": "different",
+  "differences": [
+    "Text A targets a creature that is a Bird, Cat, Dog, Goat, Ox, or Snake; Text B targets any permanent with those types"
+  ]
+}

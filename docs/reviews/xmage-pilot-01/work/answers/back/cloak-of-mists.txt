@@ -1,1 +1,1 @@
-Enchanted permanent can't be blocked.
+Enchanted creature can't be blocked.

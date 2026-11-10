@@ -5,4 +5,4 @@ Whole card, for context:
 Each other creature you control that's a Fungus or Saproling gets +1/+1.
 
 Text B:
-Each other creature you control that is a Fungus or a Saproling gets +1/+1. (Layer 7d.)
+Other Fungus and Saproling creatures you control have base power and toughness 1/1.

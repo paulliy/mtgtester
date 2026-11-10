@@ -1,1 +1,1 @@
-Exile each creature and each Spacecraft.
+Exile each creature and each permanent with subtype Spacecraft on the battlefield.

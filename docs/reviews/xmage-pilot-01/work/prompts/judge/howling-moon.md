@@ -6,4 +6,4 @@ At the beginning of combat on your turn, target Wolf or Werewolf you control get
 Whenever an opponent casts their second spell each turn, create a 2/2 green Wolf creature token.
 
 Text B:
-At the beginning of combat on your turn, target Wolf or Werewolf you control gets +2/+2 until end of turn.
+At the beginning of combat on your turn, target permanent you control that has subtype Wolf or Werewolf gets +2/+2 until end of turn.

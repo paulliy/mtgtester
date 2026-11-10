@@ -1,51 +1,12 @@
 {
   "summary": {
     "source": "xmage@31ede542",
-    "compared": 1239,
-    "agree": 1171,
+    "compared": 1241,
+    "agree": 1175,
     "subtypeImpliesCreature": 59,
-    "disagree": 9
+    "disagree": 7
   },
   "disagreements": [
-    {
-      "name": "Whispersilk Cloak",
-      "line": "Equipped creature can't be blocked and has shroud. (It can't be the target of spells or abilities.)",
-      "xmage": {
-        "staticEffects": [
-          {
-            "affects": {
-              "kind": "attachedToSource"
-            },
-            "op": {
-              "layer": 6,
-              "setCantBeBlocked": true
-            }
-          },
-          {
-            "affects": {
-              "kind": "attachedToSource"
-            },
-            "op": {
-              "addKeyword": "shroud",
-              "layer": 6
-            }
-          }
-        ]
-      },
-      "interpreter": {
-        "staticEffects": [
-          {
-            "affects": {
-              "kind": "attachedToSource"
-            },
-            "op": {
-              "addKeyword": "shroud",
-              "layer": 6
-            }
-          }
-        ]
-      }
-    },
     {
       "name": "Ayara, First of Locthwain",
       "line": "{T}, Sacrifice another black creature: Draw a card.",
@@ -574,45 +535,6 @@
             }
           ]
         }
-      }
-    },
-    {
-      "name": "Protective Bubble",
-      "line": "Enchanted creature can't be blocked and has shroud. (It can't be the target of spells or abilities.)",
-      "xmage": {
-        "staticEffects": [
-          {
-            "affects": {
-              "kind": "attachedToSource"
-            },
-            "op": {
-              "layer": 6,
-              "setCantBeBlocked": true
-            }
-          },
-          {
-            "affects": {
-              "kind": "attachedToSource"
-            },
-            "op": {
-              "addKeyword": "shroud",
-              "layer": 6
-            }
-          }
-        ]
-      },
-      "interpreter": {
-        "staticEffects": [
-          {
-            "affects": {
-              "kind": "attachedToSource"
-            },
-            "op": {
-              "addKeyword": "shroud",
-              "layer": 6
-            }
-          }
-        ]
       }
     }
   ]

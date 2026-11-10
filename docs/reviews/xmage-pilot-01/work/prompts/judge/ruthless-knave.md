@@ -6,4 +6,4 @@ Whole card, for context:
 Sacrifice three Treasures: Draw a card.
 
 Text B:
-Sacrifice three Treasures you control: Draw a card. (This ability can be activated at any time. The data allows this permanent to count as one of the sacrificed Treasures if it is a Treasure, which it is not.)
+Sacrifice three Treasures you control (this creature is allowed to be one of the sacrificed permanents): Draw a card. Activate at any time.

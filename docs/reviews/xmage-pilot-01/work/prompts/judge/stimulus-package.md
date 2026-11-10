@@ -6,4 +6,4 @@ When this enchantment enters, create two Treasure tokens. (They're artifacts wit
 Sacrifice a Treasure: Create a 1/1 green and white Citizen creature token.
 
 Text B:
-Sacrifice a Treasure you control: Create a 1/1 green and white Citizen creature token. (The data gives no count, so one Treasure is sacrificed. The sacrifice may include this enchantment only if it is a Treasure, which it is not.)
+Sacrifice a Treasure you control (no count is given; this permanent is allowed to be the one sacrificed): Create a 1/1 green and white Citizen creature token.

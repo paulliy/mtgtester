@@ -6,4 +6,4 @@ Haste
 Goblin spells and Rogue spells you cast cost {1} less to cast.
 
 Text B:
-Spells that are Goblin or Rogue cost {1} less to cast.
+Goblin or Rogue spells you cast cost {1} less to cast.

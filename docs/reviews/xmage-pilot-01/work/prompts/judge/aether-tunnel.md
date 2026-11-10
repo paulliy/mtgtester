@@ -6,5 +6,5 @@ Enchant creature
 Enchanted creature gets +1/+0 and can't be blocked.
 
 Text B:
-Enchanted permanent gets +1/+0.
-Enchanted permanent can't be blocked.
+Enchanted creature gets +1/+0.
+Enchanted creature can't be blocked.

@@ -6,4 +6,4 @@ Whole card, for context:
 {1}{R}, {T}: Create a 0/1 red Kobold creature token named Kobolds of Kher Keep.
 
 Text B:
-{1}{R}, {T}: Create a 0/1 red Kobold creature token.
+{1}{R}, {T}: Create a 0/1 red Kobold creature token with creature type Kobold.

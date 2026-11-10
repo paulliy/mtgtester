@@ -1,1 +1,4 @@
-{ "verdict": "same" }
+{
+  "verdict": "different",
+  "differences": ["Text A says the destroyed creatures can't be regenerated; Text B omits this"]
+}

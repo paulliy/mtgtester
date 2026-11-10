@@ -7,4 +7,4 @@ Whole card, for context:
 {R}, {T}: Target Lizard, Mouse, Otter, or Raccoon you control gets +1/+0 and gains haste until end of turn. Activate only as a sorcery.
 
 Text B:
-{R}, {T}: Target permanent you control that is a Lizard, Mouse, Otter, or Raccoon gets +1/+0 until end of turn and gains haste until end of turn. Activate only as a sorcery.
+{R}, {T}: Activate only as a sorcery. Target permanent you control that is a Lizard, Mouse, Otter, or Raccoon gets +1/+0 until end of turn and gains haste until end of turn.

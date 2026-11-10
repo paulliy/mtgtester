@@ -6,4 +6,4 @@ Defender (This creature can't attack.)
 Green spells and blue spells you cast cost {1} less to cast.
 
 Text B:
-Each green or blue spell costs {1} less to cast. (The data states no controller restriction.)
+Spells you cast that are green or blue cost {1} less to cast.

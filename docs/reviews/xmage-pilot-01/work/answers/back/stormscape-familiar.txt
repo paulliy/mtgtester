@@ -1,1 +1,1 @@
-Each white or black spell costs {1} less to cast. (The data states no controller restriction.)
+Spells you cast that are white or black cost {1} less to cast.

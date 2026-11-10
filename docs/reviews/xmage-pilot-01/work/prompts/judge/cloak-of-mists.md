@@ -6,4 +6,4 @@ Enchant creature
 Enchanted creature can't be blocked.
 
 Text B:
-Enchanted permanent can't be blocked.
+Enchanted creature can't be blocked.

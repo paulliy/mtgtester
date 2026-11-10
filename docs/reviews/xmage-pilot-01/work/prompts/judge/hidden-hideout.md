@@ -7,4 +7,4 @@ This land enters tapped.
 {2}, {T}: Target creature you control with a counter on it gains lifelink until end of turn.
 
 Text B:
-{2}, {T}: Target creature you control with a counter on it gains lifelink until end of turn.
+{2}, {T}: Target creature you control that has one or more counters on it gains lifelink until end of turn.

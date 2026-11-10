@@ -1,1 +1,1 @@
-Creature spells that are black cost {1} less to cast.
+Black creature spells you cast cost {1} less to cast.

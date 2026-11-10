@@ -6,4 +6,4 @@ Whole card, for context:
 Exile all nonland permanents that aren't legendary.
 
 Text B:
-Exile each object that is not a land and not legendary. (The data states no controller restriction.)
+Exile each permanent on the battlefield that is not a land and not legendary.

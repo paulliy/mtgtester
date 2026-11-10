@@ -6,4 +6,4 @@ Whole card, for context:
 Whenever a creature dies, you may untap this artifact.
 
 Text B:
-{T}: Put target noncreature artifact card with mana value 1 or less from your graveyard onto the battlefield.
+{T}: Put target artifact card with mana value 1 or less that is not a creature from your graveyard onto the battlefield.

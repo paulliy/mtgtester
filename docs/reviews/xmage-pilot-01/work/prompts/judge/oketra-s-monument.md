@@ -6,4 +6,4 @@ White creature spells you cast cost {1} less to cast.
 Whenever you cast a creature spell, create a 1/1 white Warrior creature token with vigilance.
 
 Text B:
-Each white creature spell costs {1} less to cast.
+Creature spells you cast that are white cost {1} less to cast.

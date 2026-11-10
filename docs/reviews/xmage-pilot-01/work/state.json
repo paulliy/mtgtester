@@ -88,6 +88,7 @@
       }
     ],
     "textCheck": "renderer",
+    "backTranslation": "Destroy each creature with no counters on it.",
     "verdict": "same",
     "differences": []
   },
@@ -163,10 +164,10 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Spells that are Kithkin or Soldier cost {1} less to cast.",
+    "backTranslation": "Kithkin or Soldier spells you cast cost {1} less to cast.",
     "verdict": "different",
     "differences": [
-      "Text A limits the cost reduction to spells you cast; Text B applies it to all Kithkin or Soldier spells regardless of controller"
+      "Text A says Kithkin spells and Soldier spells; Text B says Kithkin or Soldier spells. A Kithkin Soldier spell gets two separate {1} reductions under A but only one under B."
     ]
   },
   {
@@ -330,7 +331,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "At the beginning of combat on your turn, target Wolf or Werewolf you control gets +2/+2 until end of turn.",
+    "backTranslation": "At the beginning of combat on your turn, target permanent you control that has subtype Wolf or Werewolf gets +2/+2 until end of turn.",
     "verdict": "same",
     "differences": []
   },
@@ -408,11 +409,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Enchanted permanent gets +1/+0.\nEnchanted permanent can't be blocked.",
-    "verdict": "different",
-    "differences": [
-      "Text A enchants a creature (enchanted creature); Text B says enchanted permanent"
-    ]
+    "backTranslation": "Enchanted creature gets +1/+0.\nEnchanted creature can't be blocked.",
+    "verdict": "same",
+    "differences": []
   },
   {
     "name": "Jokulhaups",
@@ -532,11 +531,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Green creature spells cost {1} less to cast. (The data states no controller restriction.)",
-    "verdict": "different",
-    "differences": [
-      "Text A restricts the cost reduction to spells you cast; Text B applies it to green creature spells with no controller restriction, so it would also reduce opponents spells."
-    ]
+    "backTranslation": "Green creature spells you cast cost {1} less to cast.",
+    "verdict": "same",
+    "differences": []
   },
   {
     "name": "Aqueous Form",
@@ -614,9 +611,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Enchanted permanent can't be blocked.",
-    "verdict": "different",
-    "differences": ["Text A says enchanted creature; Text B says enchanted permanent"]
+    "backTranslation": "Enchanted creature can't be blocked.",
+    "verdict": "same",
+    "differences": []
   },
   {
     "name": "Guttural Response",
@@ -659,6 +656,7 @@
       }
     ],
     "textCheck": "renderer",
+    "backTranslation": "Counter target blue instant spell.",
     "verdict": "same",
     "differences": []
   },
@@ -733,11 +731,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Each green or blue spell costs {1} less to cast. (The data states no controller restriction.)",
-    "verdict": "different",
-    "differences": [
-      "Text A applies only to green and blue spells you cast; Text B applies to every green or blue spell with no controller restriction."
-    ]
+    "backTranslation": "Spells you cast that are green or blue cost {1} less to cast.",
+    "verdict": "same",
+    "differences": []
   },
   {
     "name": "Majestic Heliopterus",
@@ -904,7 +900,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. That creature gains lifelink until end of turn.",
+    "backTranslation": "At the beginning of combat on your turn, put a +1/+1 counter on target creature you control, and that creature gains lifelink until end of turn.",
     "verdict": "same",
     "differences": []
   },
@@ -982,7 +978,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "{T}: Target Dinosaur creature gains haste until end of turn.",
+    "backTranslation": "{T}: Target creature with subtype Dinosaur gains haste until end of turn.",
     "verdict": "same",
     "differences": []
   },
@@ -1030,11 +1026,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Target player mills two cards.\nTarget player draws two cards.\nTarget player loses 2 life.",
-    "verdict": "different",
-    "differences": [
-      "Text A has one target player for all three effects; Text B has three separate target player choices"
-    ]
+    "backTranslation": "Target player mills two cards, draws two cards, and loses 2 life.",
+    "verdict": "same",
+    "differences": []
   },
   {
     "name": "Goblin Arsonist",
@@ -1109,7 +1103,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "When this creature dies, you may have it deal 1 damage to any target.",
+    "backTranslation": "When this creature dies, you may deal 1 damage to any target.",
     "verdict": "same",
     "differences": []
   },
@@ -1184,11 +1178,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Each creature spell with flying costs {1} less to cast.",
-    "verdict": "different",
-    "differences": [
-      "Text A applies only to flying creature spells you cast; Text B applies to every creature spell with flying with no controller restriction."
-    ]
+    "backTranslation": "Creature spells you cast that have flying cost {1} less to cast.",
+    "verdict": "same",
+    "differences": []
   },
   {
     "name": "Armor of Shadows",
@@ -1236,7 +1228,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Target creature gets +1/+0 until end of turn and gains indestructible until end of turn.",
+    "backTranslation": "Target creature gets +1/+0 and gains indestructible until end of turn.",
     "verdict": "same",
     "differences": []
   },
@@ -1312,7 +1304,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "{R}, {T}: Target permanent you control that is a Lizard, Mouse, Otter, or Raccoon gets +1/+0 until end of turn and gains haste until end of turn. Activate only as a sorcery.",
+    "backTranslation": "{R}, {T}: Activate only as a sorcery. Target permanent you control that is a Lizard, Mouse, Otter, or Raccoon gets +1/+0 until end of turn and gains haste until end of turn.",
     "verdict": "same",
     "differences": []
   },
@@ -1384,7 +1376,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Each creature you control that is not legendary gets +1/+1.",
+    "backTranslation": "Creatures you control that aren't legendary get +1/+1.",
     "verdict": "same",
     "differences": []
   },
@@ -1463,10 +1455,10 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Aura and Equipment spells cost {1} less to cast.",
+    "backTranslation": "Aura or Equipment spells you cast cost {1} less to cast.",
     "verdict": "different",
     "differences": [
-      "Text A limits the cost reduction to Aura and Equipment spells you cast; Text B applies it to all Aura and Equipment spells regardless of controller"
+      "Text A says Aura and Equipment spells; Text B says Aura or Equipment spells. A spell that is both gets two separate {1} reductions under A but only one under B."
     ]
   },
   {
@@ -1586,11 +1578,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Each white creature spell costs {1} less to cast.",
-    "verdict": "different",
-    "differences": [
-      "Text A restricts the discount to spells you cast; Text B applies it to each white creature spell regardless of who casts it"
-    ]
+    "backTranslation": "Creature spells you cast that are white cost {1} less to cast.",
+    "verdict": "same",
+    "differences": []
   },
   {
     "name": "Rescue Skiff",
@@ -1680,6 +1670,7 @@
       }
     ],
     "textCheck": "renderer",
+    "backTranslation": "When this enters, put target creature or enchantment card from your graveyard onto the battlefield.",
     "verdict": "same",
     "differences": []
   },
@@ -1756,10 +1747,10 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Spells that are Goblin or Rogue cost {1} less to cast.",
+    "backTranslation": "Goblin or Rogue spells you cast cost {1} less to cast.",
     "verdict": "different",
     "differences": [
-      "Text A limits the cost reduction to spells you cast; Text B applies it to all Goblin or Rogue spells regardless of controller"
+      "Text A says Goblin spells and Rogue spells; Text B says Goblin or Rogue spells. A Goblin Rogue spell gets two separate {1} reductions under A but only one under B."
     ]
   },
   {
@@ -1932,7 +1923,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "{1}{B}{G}, Exile this creature: Return target card from your graveyard to your hand.",
+    "backTranslation": "{1}{B}{G}, Exile this creature: Return target card in your graveyard to its owner's hand.",
     "verdict": "same",
     "differences": []
   },
@@ -2012,7 +2003,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "When this creature dies, return target other Elf card from your graveyard to your hand.",
+    "backTranslation": "When this creature dies, return target card that has subtype Elf and is other than this card from your graveyard to its owner's hand.",
     "verdict": "same",
     "differences": []
   },
@@ -2089,10 +2080,10 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Spells that are Treefolk or Shaman cost {1} less to cast.",
+    "backTranslation": "Treefolk or Shaman spells you cast cost {1} less to cast.",
     "verdict": "different",
     "differences": [
-      "Text A limits the cost reduction to spells you cast; Text B applies it to all Treefolk or Shaman spells regardless of controller"
+      "Text A says Treefolk spells and Shaman spells; Text B says Treefolk or Shaman spells. A Treefolk Shaman spell gets two separate {1} reductions under A but only one under B."
     ]
   },
   {
@@ -2134,7 +2125,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Exile each creature and each Spacecraft.",
+    "backTranslation": "Exile each creature and each permanent with subtype Spacecraft on the battlefield.",
     "verdict": "same",
     "differences": []
   },
@@ -2210,11 +2201,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Each white or black spell costs {1} less to cast. (The data states no controller restriction.)",
-    "verdict": "different",
-    "differences": [
-      "Text A applies only to white and black spells you cast; Text B applies to every white or black spell with no controller restriction."
-    ]
+    "backTranslation": "Spells you cast that are white or black cost {1} less to cast.",
+    "verdict": "same",
+    "differences": []
   },
   {
     "name": "Goblin-town",
@@ -2289,7 +2278,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "{2}{B}{R}, {T}, Sacrifice this land: Put two +1/+1 counters on target Goblin or Orc you control. Activate only as a sorcery.",
+    "backTranslation": "{2}{B}{R}, {T}, Sacrifice this land: Activate only as a sorcery.\nPut two +1/+1 counters on target permanent you control that has subtype Goblin or Orc.",
     "verdict": "same",
     "differences": []
   },
@@ -2367,7 +2356,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Whenever another black creature you control dies, create a 1/1 white Spirit creature token with flying. (This trigger is not optional.)",
+    "backTranslation": "Whenever another black creature you control dies, create a 1/1 white Spirit creature token with flying.",
     "verdict": "same",
     "differences": []
   },
@@ -2444,9 +2433,11 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Each other creature you control that is a Fungus or a Saproling gets +1/+1. (Layer 7d.)",
-    "verdict": "same",
-    "differences": []
+    "backTranslation": "Other Fungus and Saproling creatures you control have base power and toughness 1/1.",
+    "verdict": "different",
+    "differences": [
+      "Text A gives each other Fungus or Saproling creature +1/+1 (a modifier on current P/T); Text B sets their base power and toughness to 1/1, which replaces the printed values instead of adding to them."
+    ]
   },
   {
     "name": "Bastion Protector",
@@ -2520,7 +2511,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Each creature you control that is a commander gets +2/+2.\nEach creature you control that is a commander has indestructible.",
+    "backTranslation": "Each creature you control that is a commander gets +2/+2 and has indestructible.",
     "verdict": "same",
     "differences": []
   },
@@ -2595,6 +2586,7 @@
       }
     ],
     "textCheck": "renderer",
+    "backTranslation": "{1}{R}, {T}: Target creature with subtype Goblin gets +2/+0 until end of turn.",
     "verdict": "same",
     "differences": []
   },
@@ -2674,11 +2666,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "{G}, Sacrifice another Wall you control: Draw a card. (The data allows this creature to be the sacrificed Wall.)",
-    "verdict": "different",
-    "differences": [
-      "Text A lets the sacrificed Wall be Wall of Mulch itself (~); Text B requires sacrificing another Wall you control, excluding itself."
-    ]
+    "backTranslation": "{G}, Sacrifice a Wall you control (no count is given; this creature is allowed to be the one sacrificed): Draw a card.",
+    "verdict": "same",
+    "differences": []
   },
   {
     "name": "Broodheart Engine",
@@ -2770,7 +2760,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "{2}{B}{G}, {T}, Sacrifice this artifact: Activate only as a sorcery. Return target creature or Vehicle card from your graveyard to the battlefield.",
+    "backTranslation": "{2}{B}{G}, {T}, Sacrifice this artifact: Return target creature card or card of creature type Vehicle from your graveyard to the battlefield. Activate only as a sorcery.",
     "verdict": "same",
     "differences": []
   },
@@ -2902,9 +2892,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Destroy each creature your opponents control. They can't be regenerated.",
-    "verdict": "same",
-    "differences": []
+    "backTranslation": "Destroy each creature your opponents control.",
+    "verdict": "different",
+    "differences": ["Text A says the destroyed creatures can't be regenerated; Text B omits this"]
   },
   {
     "name": "Bloodsworn Steward",
@@ -2978,7 +2968,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Each creature you control that is a commander gets +2/+2.\nEach creature you control that is a commander has haste.",
+    "backTranslation": "Each creature you control that is a commander gets +2/+2 and has haste.",
     "verdict": "same",
     "differences": []
   },
@@ -3055,11 +3045,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Creature spells that are black cost {1} less to cast.",
-    "verdict": "different",
-    "differences": [
-      "Text A limits the cost reduction to black creature spells you cast; Text B applies it to all black creature spells regardless of controller"
-    ]
+    "backTranslation": "Black creature spells you cast cost {1} less to cast.",
+    "verdict": "same",
+    "differences": []
   },
   {
     "name": "Reki, the History of Kamigawa",
@@ -3209,7 +3197,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "{1}{B}, {T}, Sacrifice this land: Return target Bat, Lizard, Rat, or Squirrel card from your graveyard to your hand.",
+    "backTranslation": "{1}{B}, {T}, Sacrifice this land: Return target card in your graveyard that is a Bat, Lizard, Rat, or Squirrel to its owner's hand.",
     "verdict": "same",
     "differences": []
   },
@@ -3287,10 +3275,10 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Each Sliver creature (regardless of controller) has power and toughness each equal to the number of other Sliver permanents on the battlefield. (Layer 7d. The data does not state what \"other\" is relative to.)",
+    "backTranslation": "All Sliver creatures, including this one, have power and toughness each equal to the number of other Sliver permanents on the battlefield (counted across all controllers).",
     "verdict": "different",
     "differences": [
-      "Text A modifies each Sliver creature by +1/+1 for each other Sliver (a layer 7c modification to existing P/T); Text B sets power and toughness equal to the count (a layer 7b characteristic-setting effect), which gives different results."
+      "Text A adds +1/+1 to each Sliver's printed power and toughness for each other Sliver; Text B sets power and toughness equal to the count, replacing the printed values instead of adding to them."
     ]
   },
   {
@@ -3415,9 +3403,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Sacrifice this creature: Target another permanent you control that is an Ally gains indestructible until end of turn.",
-    "verdict": "different",
-    "differences": ["Text A targets an Ally creature; Text B targets any permanent that is an Ally"]
+    "backTranslation": "Sacrifice this creature: Target other Ally you control gains indestructible until end of turn.",
+    "verdict": "same",
+    "differences": []
   },
   {
     "name": "Extinguish All Hope",
@@ -3459,6 +3447,7 @@
       }
     ],
     "textCheck": "renderer",
+    "backTranslation": "Destroy each creature that isn't an enchantment.",
     "verdict": "same",
     "differences": []
   },
@@ -3619,9 +3608,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Enchanted permanent can't be blocked.",
-    "verdict": "different",
-    "differences": ["Text A says enchanted creature; Text B says enchanted permanent"]
+    "backTranslation": "Enchanted creature can't be blocked.",
+    "verdict": "same",
+    "differences": []
   },
   {
     "name": "Deepchannel Mentor",
@@ -3695,7 +3684,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Each creature you control that is blue can't be blocked.",
+    "backTranslation": "Blue creatures you control can't be blocked.",
     "verdict": "same",
     "differences": []
   },
@@ -3825,7 +3814,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Destroy target permanent that is an artifact, a battle, an enchantment, or a creature with flying.",
+    "backTranslation": "Destroy target artifact, battle, enchantment, or creature with flying.",
     "verdict": "same",
     "differences": []
   },
@@ -3949,7 +3938,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "{T}, Sacrifice this creature: Destroy target permanent that is legendary and is an artifact, a creature, or an enchantment.",
+    "backTranslation": "{T}, Sacrifice this creature: Destroy target legendary artifact, legendary creature, or legendary enchantment.",
     "verdict": "same",
     "differences": []
   },
@@ -3992,11 +3981,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Exile each object that is not a land and not legendary. (The data states no controller restriction.)",
-    "verdict": "different",
-    "differences": [
-      "Text A exiles nonland permanents; Text B exiles each object that is not a land, which is broader (any object, not only permanents)."
-    ]
+    "backTranslation": "Exile each permanent on the battlefield that is not a land and not legendary.",
+    "verdict": "same",
+    "differences": []
   },
   {
     "name": "Ulvenwald Observer",
@@ -4070,7 +4057,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Whenever a creature you control with toughness 4 or greater dies, draw a card. (The selector has no \"other\" restriction, so this creature also qualifies.)",
+    "backTranslation": "Whenever a creature you control with toughness 4 or greater dies, draw a card.",
     "verdict": "same",
     "differences": []
   },
@@ -4155,7 +4142,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "{T}: Put target noncreature artifact card with mana value 1 or less from your graveyard onto the battlefield.",
+    "backTranslation": "{T}: Put target artifact card with mana value 1 or less that is not a creature from your graveyard onto the battlefield.",
     "verdict": "same",
     "differences": []
   },
@@ -4205,7 +4192,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Put target green card from your graveyard into your hand.",
+    "backTranslation": "Return target green card from your graveyard to your hand.",
     "verdict": "same",
     "differences": []
   },
@@ -4378,7 +4365,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "{1}, Sacrifice a nontoken artifact you control: Create a 1/1 blue Thopter artifact creature token with flying. You gain 1 life. (This artifact is a legal choice for the sacrifice.)",
+    "backTranslation": "{1}, Sacrifice a nontoken artifact you control (this permanent is allowed to be the one sacrificed): Create a 1/1 blue Thopter artifact creature token with flying, then gain 1 life.",
     "verdict": "same",
     "differences": []
   },
@@ -4498,10 +4485,8 @@
     ],
     "textCheck": "model",
     "backTranslation": "{2}, {T}: Put a +1/+1 counter on target permanent that is a Bird, Cat, Dog, Goat, Ox, or Snake.",
-    "verdict": "different",
-    "differences": [
-      "Text A targets a creature that is a Bird, Cat, Dog, Goat, Ox, or Snake; Text B targets any permanent with those types"
-    ]
+    "verdict": "same",
+    "differences": []
   },
   {
     "name": "Koma, World-Eater",
@@ -4579,8 +4564,8 @@
     ],
     "textCheck": "model",
     "backTranslation": "Whenever this creature deals combat damage to a player, create four 3/3 blue Serpent creature tokens.",
-    "verdict": "same",
-    "differences": []
+    "verdict": "different",
+    "differences": ["Text A names the Serpent tokens Koma's Coil; Text B gives the tokens no name"]
   },
   {
     "name": "Overprotect",
@@ -4705,8 +4690,10 @@
     ],
     "textCheck": "model",
     "backTranslation": "{2}, {T}: Target commander permanent gains lifelink until end of turn.",
-    "verdict": "same",
-    "differences": []
+    "verdict": "different",
+    "differences": [
+      "Text A targets any commander with no permanent restriction; Text B restricts the target to a commander permanent, which excludes a commander in the command zone."
+    ]
   },
   {
     "name": "Stimulus Package",
@@ -4787,7 +4774,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Sacrifice a Treasure you control: Create a 1/1 green and white Citizen creature token. (The data gives no count, so one Treasure is sacrificed. The sacrifice may include this enchantment only if it is a Treasure, which it is not.)",
+    "backTranslation": "Sacrifice a Treasure you control (no count is given; this permanent is allowed to be the one sacrificed): Create a 1/1 green and white Citizen creature token.",
     "verdict": "same",
     "differences": []
   },
@@ -4830,11 +4817,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Return each object that is not a land and not a creature to its owner's hand.",
-    "verdict": "different",
-    "differences": [
-      "Text A returns noncreature, nonland permanents; Text B returns any object that is not a land and not a creature, which is not limited to permanents"
-    ]
+    "backTranslation": "Return each permanent on the battlefield that is neither a land nor a creature to its owner's hand.",
+    "verdict": "same",
+    "differences": []
   },
   {
     "name": "Requiem Angel",
@@ -4921,7 +4906,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Whenever another creature you control that is not a Spirit dies, create a 1/1 white Spirit creature token with flying. (This trigger is not optional.)",
+    "backTranslation": "Whenever another creature you control that isn't a Spirit dies, create a 1/1 white Spirit creature token with flying.",
     "verdict": "same",
     "differences": []
   },
@@ -4997,10 +4982,10 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Whenever you cast a spell that is not a creature spell or is a Dragon spell, each opponent takes 1 damage.",
+    "backTranslation": "Whenever you cast a noncreature spell or a spell with creature type Dragon, each opponent takes 1 damage.",
     "verdict": "different",
     "differences": [
-      "Text A has this creature as the source of the damage; Text B has no damage source"
+      "Text A has this creature as the source of the 1 damage; Text B has each opponent take 1 damage with no source, which changes how protection, prevention and other source-based effects apply."
     ]
   },
   {
@@ -5073,7 +5058,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "{2}, {T}: Target creature you control with a counter on it gains lifelink until end of turn.",
+    "backTranslation": "{2}, {T}: Target creature you control that has one or more counters on it gains lifelink until end of turn.",
     "verdict": "same",
     "differences": []
   },
@@ -5162,9 +5147,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "{1}{R}, {T}: Create a 0/1 red Kobold creature token.",
-    "verdict": "same",
-    "differences": []
+    "backTranslation": "{1}{R}, {T}: Create a 0/1 red Kobold creature token with creature type Kobold.",
+    "verdict": "different",
+    "differences": ["Text A names the token Kobolds of Kher Keep; Text B gives the token no name"]
   },
   {
     "name": "Seedship Broodtender",
@@ -5258,7 +5243,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "{3}{B}{G}, Sacrifice this creature: Put target creature card or Spacecraft card from your graveyard onto the battlefield. Activate only as a sorcery.",
+    "backTranslation": "{3}{B}{G}, Sacrifice this creature: Sorcery speed. Put target creature card or card with subtype Spacecraft from your graveyard onto the battlefield.",
     "verdict": "same",
     "differences": []
   },
@@ -5346,7 +5331,7 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Sacrifice three Treasures you control: Draw a card. (This ability can be activated at any time. The data allows this permanent to count as one of the sacrificed Treasures if it is a Treasure, which it is not.)",
+    "backTranslation": "Sacrifice three Treasures you control (this creature is allowed to be one of the sacrificed permanents): Draw a card. Activate at any time.",
     "verdict": "same",
     "differences": []
   }

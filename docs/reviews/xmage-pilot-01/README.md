@@ -48,9 +48,29 @@ multi-target forms, and less common triggers.
 
 No disagreement was an adapter error.
 
+The parser bug was wider than the two cards. `parseSubject` read any phrase starting with
+"equipped " or "enchanted " as the attached creature, so 15 pinned EDHREC cards reported modeled
+while dropping a clause (Ethereal Armor's buff, Tenza's conditions, Greater Auramancy pointing at
+nothing, and so on). It is fixed with regression tests in
+`packages/engine/tests/attached-subject-clauses.test.ts`. After the fix the check reads 1,175
+identical, 59 Elf/Elves, and 7 equivalent. A sweep of every grammar slot for accepted phrases that
+still carry a verb or clause found no other case of this kind.
+
 ## Meaning-check false alarms
 
-All 21 flags fall into four groups, each fixable in the back-translation prompt's conventions:
+Rerun with the compiler's updated back-translation conventions (`run.ts recheck`, Haiku workers):
+63 of 74 pass, up from 53. A hand audit of the 11 flags again found no wrong patch:
+
+- The back-translator dropped a field: `cantRegenerate` (Plague Wind), the damage source
+  (Firespitter Whelp), and two read a layer 7d `+1/+1` as setting base power and toughness
+  (Sliver Legion, Sporecrown Thallid).
+- The judge counted "Kithkin spells and Soldier spells" as two reductions against "Kithkin or
+  Soldier spells". One static ability reduces a spell once, so both texts mean the same (four
+  Banneret-style cards).
+- Token names the IR does not carry (Kher Keep, Koma, World-Eater).
+- "Target commander" read as possibly including the command zone (Witch's Clinic).
+
+The first run's 21 flags fell into four groups, each fixed in the conventions since:
 
 - `costReduction` rule statics apply only to spells you cast (10 cards).
 - `attachedToSource` on an Aura or Equipment means the enchanted or equipped creature (4 cards).

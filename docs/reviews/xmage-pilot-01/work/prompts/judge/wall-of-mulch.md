@@ -6,4 +6,4 @@ Defender (This creature can't attack.)
 {G}, Sacrifice a Wall: Draw a card.
 
 Text B:
-{G}, Sacrifice another Wall you control: Draw a card. (The data allows this creature to be the sacrificed Wall.)
+{G}, Sacrifice a Wall you control (no count is given; this creature is allowed to be the one sacrificed): Draw a card.

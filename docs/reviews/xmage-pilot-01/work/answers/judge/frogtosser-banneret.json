@@ -1,6 +1,6 @@
 {
   "verdict": "different",
   "differences": [
-    "Text A limits the cost reduction to spells you cast; Text B applies it to all Goblin or Rogue spells regardless of controller"
+    "Text A says Goblin spells and Rogue spells; Text B says Goblin or Rogue spells. A Goblin Rogue spell gets two separate {1} reductions under A but only one under B."
   ]
 }

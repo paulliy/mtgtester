@@ -1,1 +1,4 @@
-{ "verdict": "same" }
+{
+  "verdict": "different",
+  "differences": ["Text A names the Serpent tokens Koma's Coil; Text B gives the tokens no name"]
+}

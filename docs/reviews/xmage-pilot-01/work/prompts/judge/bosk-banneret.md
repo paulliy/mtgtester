@@ -5,4 +5,4 @@ Whole card, for context:
 Treefolk spells and Shaman spells you cast cost {1} less to cast.
 
 Text B:
-Spells that are Treefolk or Shaman cost {1} less to cast.
+Treefolk or Shaman spells you cast cost {1} less to cast.

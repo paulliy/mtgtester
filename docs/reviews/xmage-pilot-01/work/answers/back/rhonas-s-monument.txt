@@ -1,1 +1,1 @@
-Green creature spells cost {1} less to cast. (The data states no controller restriction.)
+Green creature spells you cast cost {1} less to cast.

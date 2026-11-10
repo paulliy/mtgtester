@@ -1,6 +1,6 @@
 {
   "verdict": "different",
   "differences": [
-    "Text A limits the cost reduction to spells you cast; Text B applies it to all Kithkin or Soldier spells regardless of controller"
+    "Text A says Kithkin spells and Soldier spells; Text B says Kithkin or Soldier spells. A Kithkin Soldier spell gets two separate {1} reductions under A but only one under B."
   ]
 }

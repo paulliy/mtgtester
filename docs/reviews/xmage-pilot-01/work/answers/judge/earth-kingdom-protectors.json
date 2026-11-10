@@ -1,4 +1,1 @@
-{
-  "verdict": "different",
-  "differences": ["Text A targets an Ally creature; Text B targets any permanent that is an Ally"]
-}
+{ "verdict": "same" }

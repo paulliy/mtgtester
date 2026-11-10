@@ -1,6 +1,6 @@
 {
   "verdict": "different",
   "differences": [
-    "Text A has this creature as the source of the damage; Text B has no damage source"
+    "Text A has this creature as the source of the 1 damage; Text B has each opponent take 1 damage with no source, which changes how protection, prevention and other source-based effects apply."
   ]
 }

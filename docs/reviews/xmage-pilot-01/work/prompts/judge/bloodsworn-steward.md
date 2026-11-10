@@ -6,5 +6,4 @@ Flying
 Commander creatures you control get +2/+2 and have haste.
 
 Text B:
-Each creature you control that is a commander gets +2/+2.
-Each creature you control that is a commander has haste.
+Each creature you control that is a commander gets +2/+2 and has haste.
