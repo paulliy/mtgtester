@@ -61,12 +61,12 @@ against bot; the switch should flip after one comparison against the real tactic
 `bun run ai-call-census`, six four-player games per mode, 40-turn cap (bot games end sooner, so
 per-turn numbers are the fair comparison):
 
-| Mode                        | Model calls per turn | Prompt tokens per turn |
-| --------------------------- | -------------------- | ---------------------- |
-| model (today)               | 5.57                 | about 17,300           |
-| bot, re-plan every turn     | 1.22                 | about 3,400            |
-| bot, re-plan on change      | 0.76                 | about 2,200            |
-| bot, escalate close calls   | 1.24 (4 of 6 games)  | about 3,700            |
+| Mode                      | Model calls per turn | Prompt tokens per turn |
+| ------------------------- | -------------------- | ---------------------- |
+| model (today)             | 5.57                 | about 17,300           |
+| bot, re-plan every turn   | 1.22                 | about 3,400            |
+| bot, re-plan on change    | 0.76                 | about 2,200            |
+| bot, escalate close calls | 1.24 (4 of 6 games)  | about 3,700            |
 
 Re-plan on change reused a seat's knobs 95 times in 209 turns. The escalation run is partial (0.53 tactician calls per turn, all priority decisions): two
 of its games halted on engine errors (`casting restriction is not met`, and a runaway past 20,000
