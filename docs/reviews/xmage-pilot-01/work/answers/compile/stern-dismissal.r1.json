@@ -1,0 +1,22 @@
+{
+  "status": "compiled",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "controller": "opponent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              { "kind": "type", "value": "Creature" },
+              { "kind": "type", "value": "Enchantment" }
+            ]
+          }
+        }
+      ],
+      "effects": [{ "op": "returnToHand", "target": 0 }]
+    }
+  }
+}

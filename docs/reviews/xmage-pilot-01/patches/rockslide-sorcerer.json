@@ -1,0 +1,54 @@
+{
+  "name": "Rockslide Sorcerer",
+  "oracleId": "d8b7b78e-91b2-4ad5-aeb8-6ebdca363e71",
+  "source": "xmage@31ede542",
+  "handledLines": [
+    "Whenever you cast an instant, sorcery, or Wizard spell, this creature deals 1 damage to any target."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Instant"
+              },
+              {
+                "kind": "type",
+                "value": "Sorcery"
+              },
+              {
+                "kind": "subtype",
+                "value": "Wizard"
+              }
+            ]
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "anyTarget"
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": 0,
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever you cast an instant, sorcery, or Wizard spell, this creature deals 1 damage to any target."
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "Obliterate",
+  "oracleId": "47496941-8007-45a0-a981-76c683cbddc1",
+  "source": "xmage@31ede542",
+  "handledLines": ["Destroy all artifacts, creatures, and lands. They can't be regenerated."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "destroyEach",
+          "selector": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "type",
+                "value": "Land"
+              }
+            ]
+          },
+          "cantRegenerate": true
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,1 @@
+Creature spells you cast that have flying cost {1} less to cast.

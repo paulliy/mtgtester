@@ -1,0 +1,6 @@
+{
+  "verdict": "different",
+  "differences": [
+    "Token type line: Text B says the type line is the placeholder <text>, while Text A makes it a 1/1 green and white Citizen creature token (Creature - Citizen)"
+  ]
+}

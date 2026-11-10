@@ -1,0 +1,64 @@
+{
+  "name": "Teysa, Orzhov Scion",
+  "oracleId": "8191342b-b25e-4c4d-8f69-aee662148ff4",
+  "source": "xmage@31ede542",
+  "handledLines": [
+    "Whenever another black creature you control dies, create a 1/1 white Spirit creature token with flying."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "color",
+                  "value": "B"
+                },
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Spirit",
+              "typeLine": "Creature — Spirit",
+              "types": ["Creature"],
+              "subtypes": ["Spirit"],
+              "colors": ["W"],
+              "power": 1,
+              "toughness": 1,
+              "keywords": ["flying"]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever another black creature you control dies, create a 1/1 white Spirit creature token with flying."
+      }
+    ]
+  }
+}

@@ -139,7 +139,7 @@ function parseDynamicCountValueUntraced(
     return { kind: 'powerOfTriggerObject' };
   }
   const counters = text.match(
-    /^(?:the number of )?([+-][0-9]+[/][+-][0-9]+|[a-z]+) counters? on (?:~|this (?:creature|artifact|enchantment|land|permanent)|it)$/,
+    /^(?:the number of )?([+-][0-9]+[/][+-][0-9]+|[a-z]+) counters? on (?:~|this (?:creature|artifact|enchantment|land|permanent|equipment|aura)|it)$/,
   );
   if (counters !== null) {
     return opts.triggerObject === true && text.endsWith('on it')

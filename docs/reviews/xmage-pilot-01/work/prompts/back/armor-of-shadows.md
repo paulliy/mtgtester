@@ -1,0 +1,4 @@
+Type line: Instant
+
+Behavior:
+{"spellAbility":{"kind":"spell","targets":[{"kind":"creature"}],"effects":[{"op":"pumpUntilEot","target":0,"power":1,"toughness":0},{"op":"grantKeywordUntilEot","target":0,"keyword":"indestructible"}]}}

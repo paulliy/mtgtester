@@ -1,0 +1,43 @@
+{
+  "name": "Koma, World-Eater",
+  "oracleId": "1ebf2142-f171-40cd-8143-15f50084b707",
+  "source": "xmage@31ede542",
+  "handledLines": [
+    "Whenever ~ deals combat damage to a player, create four 3/3 blue Serpent creature tokens named ~'s Coil."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Koma's Coil",
+              "typeLine": "Creature \u2014 Serpent",
+              "types": ["Creature"],
+              "subtypes": ["Serpent"],
+              "colors": ["U"],
+              "power": 3,
+              "toughness": 3
+            },
+            "count": {
+              "kind": "const",
+              "n": 4
+            }
+          }
+        ],
+        "description": "Whenever ~ deals combat damage to a player, create four 3/3 blue Serpent creature tokens named ~'s Coil."
+      }
+    ]
+  }
+}

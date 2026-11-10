@@ -1,0 +1,48 @@
+{
+  "name": "Hanged Executioner",
+  "oracleId": "6ff4ff67-ad08-447f-a112-1a071c1474a4",
+  "source": "xmage@31ede542",
+  "handledLines": ["{3}{W}, Exile this creature: Exile target creature."],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 3,
+              "colored": {
+                "W": 1,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "exileSelf"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ],
+          "effects": [
+            {
+              "op": "exile",
+              "target": 0
+            }
+          ],
+          "description": "{3}{W}, Exile this creature: Exile target creature."
+        }
+      }
+    ]
+  }
+}

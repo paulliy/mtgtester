@@ -1,0 +1,1 @@
+Whenever you cast an instant spell, a sorcery spell, or a spell with the Wizard creature subtype, deal 1 damage to any target.

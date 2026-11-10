@@ -1,0 +1,26 @@
+{
+  "status": "compiled",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": { "when": "enters", "subject": { "kind": "self" } },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                { "kind": "not", "of": { "kind": "type", "value": "Artifact" } },
+                { "kind": "not", "of": { "kind": "color", "value": "B" } }
+              ]
+            }
+          }
+        ],
+        "effects": [{ "op": "destroy", "target": 0, "cantRegenerate": true }],
+        "description": "When this creature enters, destroy target nonartifact, nonblack creature. That creature can't be regenerated."
+      }
+    ]
+  }
+}

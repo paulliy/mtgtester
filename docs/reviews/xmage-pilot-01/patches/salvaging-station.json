@@ -1,0 +1,56 @@
+{
+  "name": "Salvaging Station",
+  "oracleId": "3501ed98-473c-4a17-8b5f-1e0c00ee75da",
+  "source": "xmage@31ede542",
+  "handledLines": [
+    "{T}: Return target noncreature artifact card with mana value 1 or less from your graveyard to the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "cardInGraveyard",
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "not",
+                    "of": {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  },
+                  {
+                    "kind": "manaValueAtMost",
+                    "n": 1
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "graveyardToBattlefield",
+              "target": 0
+            }
+          ],
+          "description": "{T}: Return target noncreature artifact card with mana value 1 or less from your graveyard to the battlefield."
+        }
+      }
+    ]
+  }
+}

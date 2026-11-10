@@ -1,0 +1,57 @@
+{
+  "name": "Bloodsworn Steward",
+  "oracleId": "a5ec7ccd-d1fe-4ca6-b019-d4616c233771",
+  "source": "xmage@31ede542",
+  "handledLines": ["Commander creatures you control get +2/+2 and have haste."],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "isCommander"
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 2,
+          "toughness": 2
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "isCommander"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "haste"
+        }
+      }
+    ]
+  }
+}

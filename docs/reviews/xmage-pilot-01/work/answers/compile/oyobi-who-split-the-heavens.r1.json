@@ -1,0 +1,40 @@
+{
+  "status": "compiled",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              { "kind": "subtype", "value": "Spirit" },
+              { "kind": "subtype", "value": "Arcane" }
+            ]
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Spirit",
+              "typeLine": "Creature — Spirit",
+              "types": ["Creature"],
+              "subtypes": ["Spirit"],
+              "colors": ["W"],
+              "power": 3,
+              "toughness": 3,
+              "keywords": ["flying"]
+            },
+            "count": { "kind": "const", "n": 1 }
+          }
+        ],
+        "description": "Whenever you cast a Spirit or Arcane spell, create a 3/3 white Spirit creature token with flying."
+      }
+    ]
+  }
+}

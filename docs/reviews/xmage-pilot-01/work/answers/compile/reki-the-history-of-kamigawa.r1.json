@@ -1,0 +1,19 @@
+{
+  "status": "compiled",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": { "kind": "supertype", "value": "Legendary" }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [{ "op": "draw", "count": { "kind": "const", "n": 1 } }],
+        "description": "Whenever you cast a legendary spell, draw a card."
+      }
+    ]
+  }
+}
