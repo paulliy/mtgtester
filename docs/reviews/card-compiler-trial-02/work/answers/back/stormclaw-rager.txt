@@ -1,0 +1,1 @@
+{1}, Sacrifice another creature or artifact you control: Put a +1/+1 counter on this creature and draw a card. Activate only as a sorcery.

@@ -1,0 +1,48 @@
+{
+  "name": "Azorius Keyrune",
+  "oracleId": "7266b491-54e6-4393-a448-d5ae99d965c6",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "{W}{U}: ~ becomes a 2/2 white and blue Bird artifact creature with flying until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 1,
+                "U": 1,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "becomeCreatureUntilEot",
+              "target": "source",
+              "subtypes": ["Bird"],
+              "power": 2,
+              "toughness": 2,
+              "keywords": ["flying"],
+              "colors": ["W", "U"]
+            }
+          ],
+          "description": "{W}{U}: This artifact becomes a 2/2 white and blue Bird artifact creature with flying until end of turn."
+        }
+      }
+    ]
+  }
+}

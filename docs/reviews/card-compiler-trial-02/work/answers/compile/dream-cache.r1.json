@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no way to put two cards from hand both on top or both on the bottom as a single either/or choice; putFromHandOnLibraryTop only puts cards on top, with no bottom destination and no top-or-bottom choice."}

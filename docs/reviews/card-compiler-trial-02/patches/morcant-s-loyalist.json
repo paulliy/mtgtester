@@ -1,0 +1,47 @@
+{
+  "name": "Morcant's Loyalist",
+  "oracleId": "b2c30683-cc7f-4341-add1-b08cb9b93eeb",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "When this creature dies, return another target Elf card from your graveyard to your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "cardInGraveyard",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Elf"
+                }
+              ]
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "graveyardToHand",
+            "target": 0
+          }
+        ],
+        "description": "When this creature dies, return another target Elf card from your graveyard to your hand."
+      }
+    ]
+  }
+}

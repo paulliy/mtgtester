@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No op returns the resolving spell itself to its owner's hand; returnSpellToOwnerHand acts on a targeted spell, and the resolving spell has no target slot."}

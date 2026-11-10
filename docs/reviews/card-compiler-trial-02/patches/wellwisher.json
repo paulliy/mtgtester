@@ -1,0 +1,37 @@
+{
+  "name": "Wellwisher",
+  "oracleId": "c3b1b7bd-cff8-4275-b6d3-868f4e4b2cc0",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["{T}: You gain 1 life for each Elf on the battlefield."],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "gainLife",
+              "amount": {
+                "kind": "countPermanents",
+                "selector": {
+                  "kind": "subtype",
+                  "value": "Elf"
+                },
+                "scope": "all"
+              }
+            }
+          ],
+          "description": "{T}: You gain 1 life for each Elf on the battlefield."
+        }
+      }
+    ]
+  }
+}

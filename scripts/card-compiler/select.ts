@@ -2,7 +2,7 @@
  * Pick a trial set: unmodeled EDHREC cards whose only blockers are unparsed rules lines.
  *
  *   bun run scripts/card-compiler/select.ts --out <dir> [--count 50] [--max-lines 1]
- *        [--xmage <rows.json>] [--xmage-share 0.6]
+ *        [--xmage <rows.json>] [--xmage-share 0.6] [--exclude <targets.json>[,<targets.json>...]]
  *
  * Cards are spread evenly across the EDHREC rank order so the trial is not all staples or all
  * long tail. With `--xmage` (the XMage scan's rows.json), `--xmage-share` of the set is drawn from
@@ -23,10 +23,19 @@ const count = Number(arg('count') ?? 50);
 const maxLines = Number(arg('max-lines') ?? 1);
 const xmagePath = arg('xmage');
 const xmageShare = Number(arg('xmage-share') ?? 0.6);
+/** Cards already used by earlier trials, so a new trial measures fresh cards. */
+const excluded = new Set(
+  (arg('exclude') ?? '')
+    .split(',')
+    .filter((path) => path !== '')
+    .flatMap((path) =>
+      (JSON.parse(readFileSync(path, 'utf8')) as { name: string }[]).map((row) => row.name),
+    ),
+);
 
 const candidates: CompileTarget[] = [];
 for (const row of pinnedPool()) {
-  if (row.card.layout !== 'normal') continue;
+  if (row.card.layout !== 'normal' || excluded.has(row.card.name)) continue;
   const target = compileTarget(row);
   if (target === null || target.lines.length === 0 || target.lines.length > maxLines) continue;
   candidates.push(target);

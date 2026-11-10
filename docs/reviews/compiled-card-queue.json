@@ -2,6 +2,225 @@
   "schemaVersion": 1,
   "cards": [
     {
+      "name": "Acolyte of Aclazotz",
+      "oracleId": "324d2aa8-6dea-4b0d-898d-1e52ed187565",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "{T}, Sacrifice another creature or artifact: Each opponent loses 1 life and you gain 1 life."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/acolyte-of-aclazotz.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A lets the sacrificed creature or artifact be any other creature or artifact, with no control restriction; Text B requires one you control."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Adrix and Nev, Twincasters",
+      "oracleId": "12a6cad9-eb42-43bd-9e68-aaf862cd83db",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "If one or more tokens would be created under your control, twice that many of those tokens are created instead."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/adrix-and-nev-twincasters.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A doubles only tokens created under your control; Text B doubles tokens created under any player's control."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Ahriman",
+      "oracleId": "37d1d507-25dc-4cd0-b51e-2f1e9b24832c",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": ["{3}, Sacrifice another creature or artifact: Draw a card."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/ahriman.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A lets the sacrificed creature or artifact be any other creature or artifact, with no control restriction; Text B requires one you control."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Ancestral Blade",
+      "oracleId": "ab28a801-6ab1-4db2-8ae2-c24bb4c10ebb",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this Equipment enters, create a 1/1 white Soldier creature token, then attach this Equipment to it."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/ancestral-blade.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Ancestral Statue",
+      "oracleId": "da69fbf7-c894-41dd-85ec-217de23a362f",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "When this creature enters, return a nonland permanent you control to its owner's hand."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/ancestral-statue.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A returns a nonland permanent you control; Text B returns any object you control that is not a land, which can include a spell you control on the stack."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Arcane Epiphany",
+      "oracleId": "fe1556cc-32d0-4e51-bb15-f3fce669a5e1",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["This spell costs {1} less to cast if you control a Wizard."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/arcane-epiphany.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Archetype of Endurance",
+      "oracleId": "79254223-3fa6-4b7c-8163-1e48bf5cb708",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Creatures your opponents control lose hexproof and can't have or gain hexproof."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/archetype-of-endurance.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A says opponents' creatures lose hexproof as well as can't have or gain it; Text B only says they can't have hexproof, omitting that they lose it."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Archmage of Echoes",
+      "oracleId": "f1ecb3d7-5ea0-45b2-b1b0-d7ae304db2a1",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["Whenever you cast a Faerie or Wizard permanent spell, copy it."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/archmage-of-echoes.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Archon of the Wild Rose",
       "oracleId": "180efbd4-0f77-41cc-8ae2-2e6ccf853d10",
       "source": "compiler@haiku-worker",
@@ -19,6 +238,182 @@
           "scenario": "from-hand",
           "ok": true,
           "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Ascendant Evincar",
+      "oracleId": "e32c0de7-132d-4a39-85fb-da0ed1132878",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["Nonblack creatures get -1/-1."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/ascendant-evincar.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Assault on Osgiliath",
+      "oracleId": "d2aa50d2-d22d-495e-afc9-23a51c8c8f32",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Amass Orcs X, then Goblins and Orcs you control gain double strike and haste until end of turn."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/assault-on-osgiliath.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Astral Cornucopia",
+      "oracleId": "1bc42024-52da-4d93-8b47-544f0a4a72a1",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{T}: Choose a color. Add one mana of that color for each charge counter on this artifact."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/astral-cornucopia.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Atraxa's Fall",
+      "oracleId": "22677153-bd87-4ff8-af92-ced4da2aac6c",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["Destroy target artifact, battle, enchantment, or creature with flying."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/atraxa-s-fall.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Aurelia, the Warleader",
+      "oracleId": "0f5a3a09-2f07-4774-9e0f-e99d9a444166",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever ~ attacks for the first time each turn, untap all creatures you control. After this phase, there is an additional combat phase."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/aurelia-the-warleader.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Azorius Keyrune",
+      "oracleId": "7266b491-54e6-4393-a448-d5ae99d965c6",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{W}{U}: ~ becomes a 2/2 white and blue Bird artifact creature with flying until end of turn."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/azorius-keyrune.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Bearded Axe",
+      "oracleId": "a231319d-5d72-4aa6-8868-5987694791cd",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Equipped creature gets +1/+1 for each Dwarf, Equipment, and/or Vehicle you control."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/bearded-axe.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A gives the equipped creature +1/+1 for each matching permanent, added to its own power and toughness; Text B sets its power and toughness each equal to the count, replacing them."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
           "detail": "game ended"
         },
         {
@@ -57,6 +452,104 @@
       "review": null
     },
     {
+      "name": "Bramble Wurm",
+      "oracleId": "db4f67a9-6b47-4abe-9367-718da9e0609e",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["{2}{G}, Exile this card from your graveyard: You gain 5 life."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/bramble-wurm.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Brass's Bounty",
+      "oracleId": "63b0538e-aa94-4e23-adf1-704cbf5bc3e5",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["For each land you control, create a Treasure token."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/brass-s-bounty.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Buried in the Garden",
+      "oracleId": "f1f0eab3-681b-4c2d-b590-555951920880",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever enchanted land is tapped for mana, its controller adds an additional one mana of any color."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/buried-in-the-garden.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Captain Sisay",
+      "oracleId": "2e7a9ea9-f76c-4c12-950f-c613fa16cfa8",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{T}: Search your library for a legendary card, reveal that card, put it into your hand, then shuffle."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/captain-sisay.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Charmbreaker Devils",
       "oracleId": "1b9df437-6988-4ddc-80c4-893e11076067",
       "source": "compiler@haiku-worker",
@@ -69,6 +562,31 @@
       "differences": [
         "Text A returns a random card from the graveyard without targeting; Text B makes the card a target of the ability, which changes what can respond and interact with it."
       ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Cloak of Mists",
+      "oracleId": "13358b1d-0a35-48ed-a7fb-70359fa3998f",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["Enchanted creature can't be blocked."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/cloak-of-mists.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
       "smoke": [
         {
           "scenario": "from-hand",
@@ -110,6 +628,27 @@
       "review": null
     },
     {
+      "name": "Crawl from the Cellar",
+      "oracleId": "16c99713-f19e-4b25-9b03-6a8d8203adfe",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Return target creature card from your graveyard to your hand. Put a +1/+1 counter on up to one target Zombie you control."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/crawl-from-the-cellar.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Damning Verdict",
       "oracleId": "355ed7ef-bfa6-4538-99fb-a2d203eb7005",
       "source": "compiler@haiku-worker",
@@ -117,6 +656,54 @@
       "handledLines": ["Destroy all creatures with no counters on them."],
       "patch": "docs/reviews/card-compiler-trial-01/patches/damning-verdict.json",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Death Baron",
+      "oracleId": "99024aa8-5687-4d38-8a4b-feef42d6c1ff",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Skeletons you control and other Zombies you control get +1/+1 and have deathtouch."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/death-baron.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Demonic Counsel",
+      "oracleId": "712e3479-722c-40a1-9b61-d5bdde93042b",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "If there are four or more card types among cards in your graveyard, instead search your library for any card, put it into your hand, then shuffle."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/demonic-counsel.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
       "smoke": [
         {
           "scenario": "from-hand",
@@ -140,6 +727,36 @@
       "smoke": [
         {
           "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Diamond Lion",
+      "oracleId": "7ea9bb3b-76e9-4150-9e4f-1cd3abfe8ad7",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "{T}, Discard your hand, Sacrifice this creature: Add three mana of any one color. Activate only as an instant."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/diamond-lion.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A includes the timing restriction 'Activate only as an instant'; Text B omits it."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
           "ok": true,
           "abilityResolved": false,
           "detail": "game ended"
@@ -174,6 +791,160 @@
       "review": null
     },
     {
+      "name": "Dissipate",
+      "oracleId": "4b2e9aa9-6f91-41de-84b6-e9a89be06a53",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/dissipate.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Dogged Detective",
+      "oracleId": "c5a1516a-5e01-48c5-88c7-2178f4b2ad24",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever an opponent draws their second card each turn, you may return this card from your graveyard to your hand."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/dogged-detective.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Dominus of Fealty",
+      "oracleId": "f5e18b27-c5cc-4f5e-b767-4b1b43e00fd0",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "At the beginning of your upkeep, you may gain control of target permanent until end of turn. If you do, untap it and it gains haste until end of turn."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/dominus-of-fealty.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Dragon's Rage Channeler",
+      "oracleId": "0c016ccc-a341-4b76-87ba-69c639d2746d",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "As long as there are four or more card types among cards in your graveyard, this creature gets +2/+2, has flying, and attacks each combat if able."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/dragon-s-rage-channeler.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Dragonlord Atarka",
+      "oracleId": "daff70a4-a990-47c9-b6ef-2c379272c8a3",
+      "source": "compiler@sonnet-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When ~ enters, it deals 5 damage divided as you choose among any number of target creatures and/or planeswalkers your opponents control."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/dragonlord-atarka.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Dragonwing Glider",
+      "oracleId": "4cd4c6da-a84e-4cba-893b-799a7cb5c411",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["For Mirrodin!"],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/dragonwing-glider.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Dualcaster Mage",
       "oracleId": "8eb7c0a5-6190-40de-b473-2d1daa3bbe28",
       "source": "compiler@haiku-worker",
@@ -183,6 +954,167 @@
       ],
       "patch": "docs/reviews/card-compiler-trial-01/patches/dualcaster-mage.json",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Dusk Rose Reliquary",
+      "oracleId": "dca7102e-c020-4fdc-9b59-f186e3e615a5",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "As an additional cost to cast this spell, sacrifice an artifact or creature."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/dusk-rose-reliquary.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text B requires sacrificing 'another' artifact or creature that you control; Text A has no 'another' or 'you control' restriction on the sacrificed object.",
+        "Text B adds 'This permanent may be sacrificed to pay this cost', a self-sacrifice option that does not appear in Text A."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Exsanguinator Cavalry",
+      "oracleId": "a867be6f-46ce-4a12-a827-9429bd94243f",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever a Knight you control deals combat damage to a player, put a +1/+1 counter on that creature and create a Blood token."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/exsanguinator-cavalry.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Fated Infatuation",
+      "oracleId": "ae771e78-1d29-4b8c-8511-9da196a78dcf",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Create a token that's a copy of target creature you control. If it's your turn, scry 2."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/fated-infatuation.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Ghost-Spider, Gwen Stacy",
+      "oracleId": "1d95b5c0-d193-4a03-9954-23861ac1c762",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Whenever ~ attacks, she deals X damage to defending player, where X is the number of attacking creatures."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/ghost-spider-gwen-stacy.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text B adds an intervening-if condition, 'if the defending player is the event player', that does not appear in Text A; the trigger's firing condition therefore differs."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Glistening Oil",
+      "oracleId": "645a4dee-a4e0-4850-a781-522aa718827f",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "At the beginning of your upkeep, put a -1/-1 counter on enchanted creature."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/glistening-oil.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Goblin Burrows",
+      "oracleId": "ad65bb8e-57de-49f3-ba7c-be62cf3fe3df",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["{1}{R}, {T}: Target Goblin creature gets +2/+0 until end of turn."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/goblin-burrows.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "renderer",
       "smoke": [
         {
           "scenario": "from-hand",
@@ -226,6 +1158,170 @@
       "review": null
     },
     {
+      "name": "Goblin Traprunner",
+      "oracleId": "fbdffef0-9119-4650-9f92-58e8a664db6f",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Whenever this creature attacks, flip three coins. For each flip you win, create a 1/1 red Goblin creature token that's tapped and attacking."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/goblin-traprunner.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A flips three coins in one trigger and creates one token per win; Text B has three separate triggers that each flip one coin, which is a different count and timing of flips.",
+        "Text A creates the Goblin token 'tapped and attacking'; Text B creates it only 'attacking' and omits 'tapped'."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Goblin-town",
+      "oracleId": "98d20908-6d68-4d31-b719-207f93c9b402",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{2}{B}{R}, {T}, Sacrifice this land: Put two +1/+1 counters on target Goblin or Orc you control. Activate only as a sorcery."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/goblin-town.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Goro-Goro, Disciple of Ryusei",
+      "oracleId": "b80df711-af51-4f9a-9a3f-f7a4cddc9c2c",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{3}{R}{R}: Create a 5/5 red Dragon Spirit creature token with flying. Activate only if you control an attacking modified creature."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/goro-goro-disciple-of-ryusei.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Grafted Butcher",
+      "oracleId": "6c4a0e3d-c63c-4acf-8386-b51f1ec37463",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{3}{B}, Sacrifice an artifact or creature: Return this card from your graveyard to the battlefield. Activate only as a sorcery."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/grafted-butcher.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Guardian of Faith",
+      "oracleId": "8e04a5e0-e22c-430b-a39a-c9f38e16ea86",
+      "source": "compiler@sonnet-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this creature enters, any number of other target creatures you control phase out."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/guardian-of-faith.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Harbinger of the Seas",
+      "oracleId": "84910453-e5dc-4bff-8554-86a5f4ab2746",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["Nonbasic lands are Islands."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/harbinger-of-the-seas.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Hard-Hitting Question",
       "oracleId": "05fdefb4-2be7-4d9a-9ab9-14bbbe72aef7",
       "source": "compiler@haiku-worker",
@@ -235,6 +1331,31 @@
       ],
       "patch": "docs/reviews/card-compiler-trial-01/patches/hard-hitting-question.json",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Haunt the Network",
+      "oracleId": "7e074b14-0ec8-439b-9b83-5f7c1a904384",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Choose target opponent. Create two 1/1 colorless Thopter artifact creature tokens with flying. Then the chosen player loses X life and you gain X life, where X is the number of artifacts you control."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/haunt-the-network.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A has the controller create the two Thopter tokens; Text B says the target opponent creates them.",
+        "Text A has the controller choose one target opponent and use the chosen player for life loss; Text B adds a separate targeting of the opponent for the tokens and for life loss."
+      ],
       "smoke": [
         {
           "scenario": "from-hand",
@@ -292,6 +1413,525 @@
       "review": null
     },
     {
+      "name": "Incremental Blight",
+      "oracleId": "159cd205-6afc-4d8c-a4b9-501911a9c345",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Put a -1/-1 counter on target creature, two -1/-1 counters on another target creature, and three -1/-1 counters on a third target creature."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/incremental-blight.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Inner Fire",
+      "oracleId": "27348fe5-21d4-40f7-9feb-bba2c2321008",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["Add {R} for each card in your hand."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/inner-fire.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Into the North",
+      "oracleId": "30aefabc-5fd2-451b-aa93-8e5a972c7691",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Search your library for a snow land card, put it onto the battlefield tapped, then shuffle."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/into-the-north.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Irenicus's Vile Duplication",
+      "oracleId": "a3faf698-1dac-45ef-9c43-c8cead489ffc",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Create a token that's a copy of target creature you control, except the token has flying and it isn't legendary."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/irenicus-s-vile-duplication.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A makes the token not legendary unconditionally; Text B makes it not legendary only if the copied creature is non-legendary, so a legendary copied creature yields a legendary token under Text B."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Kaito, Cunning Infiltrator",
+      "oracleId": "f6d3f145-00e0-47cd-91d8-0381c19a000d",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "+1: Up to one target creature you control can't be blocked this turn. Draw a card, then discard a card."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/kaito-cunning-infiltrator.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Knight of the Reliquary",
+      "oracleId": "393e5331-4456-4ba3-b410-bb630bb053db",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{T}, Sacrifice a Forest or Plains: Search your library for a land card, put it onto the battlefield, then shuffle."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/knight-of-the-reliquary.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Koma, World-Eater",
+      "oracleId": "1ebf2142-f171-40cd-8143-15f50084b707",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever ~ deals combat damage to a player, create four 3/3 blue Serpent creature tokens named ~'s Coil."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/koma-world-eater.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Krenko, Baron of Tin Street",
+      "oracleId": "91b2520e-85b6-4e1f-88cf-a585feeb8e65",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever an artifact is put into a graveyard from the battlefield, you may pay {R}. If you do, create a 1/1 red Goblin creature token. It gains haste until end of turn."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/krenko-baron-of-tin-street.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Lazotep Chancellor",
+      "oracleId": "c3e67b8f-1c91-4a2f-b924-35bbaff4bab9",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["Whenever you discard a card, you may pay {1}. If you do, amass Zombies 2."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/lazotep-chancellor.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Legolas's Quick Reflexes",
+      "oracleId": "59154c04-6bc5-4b95-af1f-6de5fed05649",
+      "source": "compiler@sonnet-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Untap target creature. Until end of turn, it gains reach, hexproof, and \"Whenever this creature becomes tapped, it deals damage equal to its power to up to one target creature.\""
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/legolas-s-quick-reflexes.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Might of Old Krosa",
+      "oracleId": "b50a6db0-16ce-4e98-afbd-ec37e1653e7c",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Target creature gets +2/+2 until end of turn. If you cast this spell during your main phase, that creature gets +4/+4 until end of turn instead."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/might-of-old-krosa.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Moonshadow",
+      "oracleId": "a3635b3f-839c-4fe5-83a5-7c70e8630184",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Whenever one or more permanent cards are put into your graveyard from anywhere while this creature has a -1/-1 counter on it, remove a -1/-1 counter from this creature."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/moonshadow.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A counts all permanent cards, including battle cards; Text B lists only artifact, creature, enchantment, land, and planeswalker, so a battle card going to the graveyard does not trigger under Text B."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Morcant's Loyalist",
+      "oracleId": "b2c30683-cc7f-4341-add1-b08cb9b93eeb",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this creature dies, return another target Elf card from your graveyard to your hand."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/morcant-s-loyalist.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Mossborn Hydra",
+      "oracleId": "84122d81-9634-4d3f-85a5-f6cf4303691a",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever a land you control enters, double the number of +1/+1 counters on this creature."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/mossborn-hydra.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Mudflat Village",
+      "oracleId": "aeeab1df-0b8b-4bc4-a5f9-aac413449bec",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{1}{B}, {T}, Sacrifice this land: Return target Bat, Lizard, Rat, or Squirrel card from your graveyard to your hand."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/mudflat-village.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Necropolis Regent",
+      "oracleId": "33c3a6be-8cae-4de8-9d9b-43216d727e93",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever a creature you control deals combat damage to a player, put that many +1/+1 counters on it."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/necropolis-regent.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Nirkana Revenant",
+      "oracleId": "6dff1def-5b94-40c8-a942-dea8743ab47c",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["Whenever you tap a Swamp for mana, add an additional {B}."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/nirkana-revenant.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Novijen, Heart of Progress",
+      "oracleId": "b3b5137d-0225-4dba-9231-d235ab0f137c",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["{G}{U}, {T}: Put a +1/+1 counter on each creature that entered this turn."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/novijen-heart-of-progress.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Null Rod",
+      "oracleId": "2f83ca86-e23d-40f7-8085-6928d8cfef9b",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["Activated abilities of artifacts can't be activated."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/null-rod.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Okina, Temple to the Grandfathers",
+      "oracleId": "3ad69bfb-2e51-4fe9-8d2f-7d071a4f1c69",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["{G}, {T}: Target legendary creature gets +1/+1 until end of turn."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/okina-temple-to-the-grandfathers.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "renderer",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Olivia's Wrath",
+      "oracleId": "9aebd891-c8c5-4309-a07b-6cab1b204172",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Each non-Vampire creature gets -X/-X until end of turn, where X is the number of Vampires you control."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/olivia-s-wrath.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "On Thin Ice",
       "oracleId": "6736bb96-6718-48bb-9385-789d3349dc20",
       "source": "compiler@haiku-worker",
@@ -319,6 +1959,169 @@
       "review": null
     },
     {
+      "name": "Peer Past the Veil",
+      "oracleId": "8fb7ad08-9bb2-49f1-8ed0-8cc8abca4fe0",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Discard your hand. Then draw X cards, where X is the number of card types among cards in your graveyard."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/peer-past-the-veil.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Perception Bobblehead",
+      "oracleId": "f0bcdc43-c43d-4ce7-a283-b8dcab4fc497",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "{3}, {T}: Look at the top X cards of your library, where X is the number of Bobbleheads you control. You may cast a spell with mana value 3 or less from among them without paying its mana cost. Put the rest on the bottom of your library in a random order."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/perception-bobblehead.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A makes casting optional ('You may cast'); Text B says 'Cast one of them' with no option to decline.",
+        "Text A puts the rest on the bottom of the library in a random order; Text B omits this entirely."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Perilous Forays",
+      "oracleId": "d552f5cb-19b6-4def-90d5-6d2d9570f93d",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "{1}, Sacrifice a creature: Search your library for a land card with a basic land type, put it onto the battlefield tapped, then shuffle."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/perilous-forays.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A searches for any land card with a basic land type; Text B restricts the search to cards named Plains, Island, Swamp, Mountain, or Forest, which excludes nonbasic lands with basic land types."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Pilfer",
+      "oracleId": "d13f0907-de39-4a90-940a-831740d7aa9b",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Target opponent reveals their hand. You choose a nonland card from it. That player discards that card."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/pilfer.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A says 'You choose a nonland card' (the caster chooses); Text B says 'Discard a nonland card from it' with no chooser, which the opponent would make."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Plaxcaster Frogling",
+      "oracleId": "8c1ea1a5-5966-4d14-8361-ffc6a8d1bd79",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{2}: Target creature with a +1/+1 counter on it gains shroud until end of turn."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/plaxcaster-frogling.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Profane Memento",
+      "oracleId": "c81d1890-e741-49ec-a6ce-86c27fd4d502",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Whenever a creature card is put into an opponent's graveyard from anywhere, you gain 1 life."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/profane-memento.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A triggers on creature cards put into an opponent's graveyard (the graveyard's owner is the opponent); Text B triggers on creatures an opponent controls being put into any graveyard. These differ for stolen creatures and for opponent-controlled creatures owned by the caster."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Pulse of Murasa",
       "oracleId": "d5b446a4-a761-42f0-acf0-ea0a1a9538d6",
       "source": "compiler@haiku-worker",
@@ -331,6 +2134,127 @@
       "smoke": [
         {
           "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Rabid Bite",
+      "oracleId": "6d5dc34b-3eea-4b77-8db7-94bc30b14c4c",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Target creature you control deals damage equal to its power to target creature you don't control."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/rabid-bite.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "renderer",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Ring of Valkas",
+      "oracleId": "412f57e8-76af-4636-bab0-e0940300ee2e",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's red."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/ring-of-valkas.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Rite of Flame",
+      "oracleId": "8a2e53f9-8100-488f-8504-b59e9bd1cc29",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["Add {R}{R}, then add {R} for each card named ~ in each graveyard."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/rite-of-flame.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Rite of Passage",
+      "oracleId": "4b8d7d30-a97f-4169-a860-02783ca622ea",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever a creature you control is dealt damage, put a +1/+1 counter on it."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/rite-of-passage.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Rockslide Sorcerer",
+      "oracleId": "d8b7b78e-91b2-4ad5-aeb8-6ebdca363e71",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever you cast an instant, sorcery, or Wizard spell, this creature deals 1 damage to any target."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/rockslide-sorcerer.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
           "ok": true,
           "abilityResolved": false,
           "detail": "game ended"
@@ -359,6 +2283,582 @@
           "scenario": "on-battlefield",
           "ok": true,
           "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Scale the Heights",
+      "oracleId": "13d5b664-db13-406e-9956-3d9fe4177d33",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Put a +1/+1 counter on up to one target creature. You gain 2 life. You may play an additional land this turn."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/scale-the-heights.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Secluded Starforge",
+      "oracleId": "69f55a7c-6ddf-412e-b63b-b395731a1ff2",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{2}, {T}, Tap X untapped artifacts you control: Target creature gets +X/+0 until end of turn. Activate only as a sorcery."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/secluded-starforge.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Sejiri Steppe",
+      "oracleId": "3dfbf95e-a91b-429c-96e2-95ac777e7027",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this land enters, target creature you control gains protection from the color of your choice until end of turn."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/sejiri-steppe.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Serum Snare",
+      "oracleId": "fbc7350c-d392-44bf-92f7-8dd4743a73b4",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Return target nonland permanent to its owner's hand. If that permanent had mana value 3 or less, proliferate."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/serum-snare.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Silumgar, the Drifting Death",
+      "oracleId": "b26c91d9-87de-45f7-a24c-bbe0cef3a35c",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever a Dragon you control attacks, creatures defending player controls get -1/-1 until end of turn."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/silumgar-the-drifting-death.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Sisterhood of Karn",
+      "oracleId": "b32484ee-c7d8-472d-818f-2c37783d028a",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Whenever you cast a spell from anywhere other than your hand, double the number of +1/+1 counters on this creature."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/sisterhood-of-karn.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A doubles only +1/+1 counters; Text B doubles each kind of counter on the creature."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Skyknight Squire",
+      "oracleId": "7e497f6b-69e1-4fab-bb04-f687c99a8310",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "As long as this creature has three or more +1/+1 counters on it, it has flying and is a Knight in addition to its other types."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/skyknight-squire.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Smaug the Magnificent",
+      "oracleId": "c53b7602-5e36-4900-896c-844bf6eac22e",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever ~ attacks, he deals damage equal to the number of Treasures you control to any target."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/smaug-the-magnificent.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Smell Fear",
+      "oracleId": "c9739382-9fe0-4d24-b58e-1e45a88491b6",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Target creature you control fights up to one target creature you don't control."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/smell-fear.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Spider-Gwen, Free Spirit",
+      "oracleId": "2648559d-1d96-47d2-a769-cfa2cbca2be5",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever ~ becomes tapped, you may discard a card. If you do, draw a card."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/spider-gwen-free-spirit.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Spiteful Visions",
+      "oracleId": "922cf963-2b1b-43ad-819e-6e49133e6aae",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "At the beginning of each player's draw step, that player draws an additional card."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/spiteful-visions.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A says the player draws an additional card; Text B says the player draws a card, dropping the extra draw"
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Sporesower Thallid",
+      "oracleId": "dd840d84-bc4a-4420-b8ac-99093a5aa253",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "At the beginning of your upkeep, put a spore counter on each Fungus you control."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/sporesower-thallid.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "renderer",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Springbloom Druid",
+      "oracleId": "788a4896-3414-40bf-b391-d2efea2fb5f9",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "When this creature enters, you may sacrifice a land. If you do, search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/springbloom-druid.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A searches for up to two basic land cards; Text B requires exactly two"
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Stormclaw Rager",
+      "oracleId": "d1a77708-7ddf-4645-bf1e-1d8147a57f23",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "{1}, Sacrifice another creature or artifact: Put a +1/+1 counter on this creature and draw a card. Activate only as a sorcery."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/stormclaw-rager.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A lets the sacrifice be any other creature or artifact; Text B restricts it to one you control"
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Subjugate the Hobbits",
+      "oracleId": "eb56141a-eb43-40e9-8ff1-e0ef5424f6a4",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["Gain control of each noncommander creature with mana value 3 or less."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/subjugate-the-hobbits.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Sunshot Militia",
+      "oracleId": "19afaf35-b420-49e0-bddf-3180bf1dc30f",
+      "source": "compiler@sonnet-worker",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Tap two untapped artifacts and/or creatures you control: ~ deals 1 damage to each opponent. Activate only as a sorcery."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/sunshot-militia.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A requires the two tapped permanents to be untapped (\"Tap two untapped artifacts and/or creatures you control\"); Text B omits \"untapped\", so it does not state that tapped permanents cannot be chosen for the cost."
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Tamiyo's Safekeeping",
+      "oracleId": "bb2b324c-970a-4920-884e-c92ba49669f0",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Target permanent you control gains hexproof and indestructible until end of turn. You gain 2 life."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/tamiyo-s-safekeeping.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Tarmogoyf Nest",
+      "oracleId": "29fede1b-e379-46d4-93e9-a589c896add6",
+      "source": "compiler@haiku-worker",
+      "status": "meaning-differs",
+      "handledLines": ["Enchanted land has \"{1}{G}, {T}: Create a Tarmogoyf token.\""],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/tarmogoyf-nest.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "differences": [
+        "Text A gives the ability to an enchanted land; Text B gives it to an enchanted creature"
+      ],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Tarrian's Soulcleaver",
+      "oracleId": "2ffb38ec-5852-4e91-85a5-cfccd1f23556",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever another artifact or creature is put into a graveyard from the battlefield, put a +1/+1 counter on equipped creature."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/tarrian-s-soulcleaver.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Thalia's Lancers",
+      "oracleId": "58b349ec-9987-4832-a8f3-8e92027ea75b",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this creature enters, you may search your library for a legendary card, reveal it, put it into your hand, then shuffle."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/thalia-s-lancers.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "The Fifth Doctor",
+      "oracleId": "992ddd9f-e0db-4383-909c-6dacca41d188",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Peaceful Coexistence — At the beginning of your end step, put a +1/+1 counter on each creature you control that didn't attack or enter this turn. Untap those creatures."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/the-fifth-doctor.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "The Gold Saucer",
+      "oracleId": "93e38650-ce22-4ab9-b79d-cc7b6477c075",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["{2}, {T}: Flip a coin. If you win the flip, create a Treasure token."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/the-gold-saucer.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
           "detail": "game ended"
         }
       ],
@@ -423,6 +2923,79 @@
       "review": null
     },
     {
+      "name": "Tolaria West",
+      "oracleId": "46eefc72-2d9e-4389-8ae1-26d9ee472b5c",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["Transmute {1}{U}{U}"],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/tolaria-west.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Traitorous Blood",
+      "oracleId": "7f1a9248-8e7b-46a8-942b-ca18c7da8c4a",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Gain control of target creature until end of turn. Untap it. It gains trample and haste until end of turn."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/traitorous-blood.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Treasure Mage",
+      "oracleId": "0848bb49-5758-41d6-a3e8-0c62e1768f52",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this creature enters, you may search your library for an artifact card with mana value 6 or greater, reveal it, put it into your hand, then shuffle."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/treasure-mage.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Treeguard Duo",
       "oracleId": "d7dfb4d5-8510-4904-abb7-834ec65d9bf3",
       "source": "compiler@haiku-worker",
@@ -432,6 +3005,173 @@
       ],
       "patch": "docs/reviews/card-compiler-trial-01/patches/treeguard-duo.json",
       "trial": "docs/reviews/card-compiler-trial-01",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Twitch",
+      "oracleId": "321fd970-a259-448d-bd98-e85e386174f9",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["You may tap or untap target artifact, creature, or land."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/twitch.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Viridian Joiner",
+      "oracleId": "84244aa6-11be-4940-b102-e029f955fc9a",
+      "source": "compiler@haiku-worker",
+      "status": "smoke-failed",
+      "handledLines": ["{T}: Add an amount of {G} equal to this creature's power."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/viridian-joiner.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": false,
+          "abilityResolved": false,
+          "detail": "threw: engine bug: value \"powerOfSource\" needs a resolving ability's scope — use evaluateValueIn"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": false,
+          "abilityResolved": false,
+          "detail": "threw: engine bug: value \"powerOfSource\" needs a resolving ability's scope — use evaluateValueIn"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Wake the Reflections",
+      "oracleId": "211868ca-662b-4054-bf50-c9e16bb58c49",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["Populate."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/wake-the-reflections.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Walltop Sentries",
+      "oracleId": "fb3a0910-a582-41ef-b5b9-3cda1f1cd5ce",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this creature dies, if there's a Lesson card in your graveyard, you gain 2 life."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/walltop-sentries.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Wellwisher",
+      "oracleId": "c3b1b7bd-cff8-4275-b6d3-868f4e4b2cc0",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["{T}: You gain 1 life for each Elf on the battlefield."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/wellwisher.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Witch's Clinic",
+      "oracleId": "05899372-9784-4bdb-9c28-504c71fed906",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": ["{2}, {T}: Target commander gains lifelink until end of turn."],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/witch-s-clinic.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Worldslayer",
+      "oracleId": "31be715f-9ad3-435c-9e52-e108fe96b969",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever equipped creature deals combat damage to a player, destroy all permanents other than this Equipment."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/worldslayer.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
       "smoke": [
         {
           "scenario": "from-hand",
@@ -491,6 +3231,54 @@
           "scenario": "on-battlefield",
           "ok": true,
           "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Zealous Conscripts",
+      "oracleId": "1dae6f39-2cbd-485c-b190-017a26401fd4",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this creature enters, gain control of target permanent until end of turn. Untap that permanent. It gains haste until end of turn."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/zealous-conscripts.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Zuko's Exile",
+      "oracleId": "5cf18398-9552-415e-a61f-2c149e35ec3d",
+      "source": "compiler@haiku-worker",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Exile target artifact, creature, or enchantment. Its controller creates a Clue token."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-02/patches/zuko-s-exile.json",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
           "detail": "game ended"
         }
       ],

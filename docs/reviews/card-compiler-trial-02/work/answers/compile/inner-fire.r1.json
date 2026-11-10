@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"addMana","amount":{"kind":"countCardsInZone","zone":"hand","selector":{"kind":"allOf","of":[]},"owner":"you"},"colors":["R"]}],"description":"Add {R} for each card in your hand."}}}

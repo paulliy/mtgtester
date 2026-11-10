@@ -1,0 +1,1 @@
+Whenever this creature attacks, if the defending player is the event player, this creature deals damage to the defending player equal to the number of attacking creatures (all attacking creatures, not only yours).

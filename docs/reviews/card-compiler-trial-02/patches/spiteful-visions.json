@@ -1,0 +1,33 @@
+{
+  "name": "Spiteful Visions",
+  "oracleId": "922cf963-2b1b-43ad-819e-6e49133e6aae",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "At the beginning of each player's draw step, that player draws an additional card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "drawStep",
+          "player": "each"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "drawTarget",
+            "target": "eventPlayer",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "At the beginning of each player's draw step, that player draws an additional card."
+      }
+    ]
+  }
+}

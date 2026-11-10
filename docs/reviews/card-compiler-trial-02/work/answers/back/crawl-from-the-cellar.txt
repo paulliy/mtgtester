@@ -1,0 +1,2 @@
+Target creature card in your graveyard and up to one target Zombie you control.
+Return the creature card to its owner's hand. Put a +1/+1 counter on each Zombie chosen this way.

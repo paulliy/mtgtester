@@ -1,0 +1,59 @@
+{
+  "name": "Olivia's Wrath",
+  "oracleId": "9aebd891-c8c5-4309-a07b-6cab1b204172",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Each non-Vampire creature gets -X/-X until end of turn, where X is the number of Vampires you control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "pumpEachUntilEot",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "subtype",
+                  "value": "Vampire"
+                }
+              }
+            ]
+          },
+          "power": {
+            "kind": "negate",
+            "of": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "subtype",
+                "value": "Vampire"
+              },
+              "scope": "you"
+            }
+          },
+          "toughness": {
+            "kind": "negate",
+            "of": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "subtype",
+                "value": "Vampire"
+              },
+              "scope": "you"
+            }
+          }
+        }
+      ],
+      "description": "Each non-Vampire creature gets -X/-X until end of turn, where X is the number of Vampires you control."
+    }
+  }
+}

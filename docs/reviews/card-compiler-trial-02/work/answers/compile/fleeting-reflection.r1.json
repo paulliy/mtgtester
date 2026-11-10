@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Until end of turn, it becomes a copy of up to one other target creature' needs an optional second target that is a copy source, and the schema has no copy effect that takes an 'up to one' target slot (becomeCopyOfTarget takes a single ref)."}

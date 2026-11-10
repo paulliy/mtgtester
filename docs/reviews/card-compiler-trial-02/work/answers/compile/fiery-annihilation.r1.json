@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot select an Equipment attached to the chosen target creature (the attachedToSource selector is relative to the source, not another target), and it has no 'if that creature would die this turn, exile it instead' replacement."}

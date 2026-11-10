@@ -1,0 +1,46 @@
+{
+  "name": "Ancestral Statue",
+  "oracleId": "da69fbf7-c894-41dd-85ec-217de23a362f",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "When this creature enters, return a nonland permanent you control to its owner's hand."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "returnOneToHand",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "description": "When this creature enters, return a nonland permanent you control to its owner's hand."
+      }
+    ]
+  }
+}

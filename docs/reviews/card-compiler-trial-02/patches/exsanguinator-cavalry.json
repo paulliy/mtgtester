@@ -1,0 +1,107 @@
+{
+  "name": "Exsanguinator Cavalry",
+  "oracleId": "a867be6f-46ce-4a12-a827-9429bd94243f",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Whenever a Knight you control deals combat damage to a player, put a +1/+1 counter on that creature and create a Blood token."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Knight"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": "triggerObject",
+            "counter": "+1/+1",
+            "count": 1
+          },
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Blood",
+              "typeLine": "Artifact \u2014 Blood",
+              "types": ["Artifact"],
+              "subtypes": ["Blood"],
+              "colors": [],
+              "power": null,
+              "toughness": null,
+              "activatedAbilities": [
+                {
+                  "costs": [
+                    {
+                      "kind": "mana",
+                      "cost": {
+                        "generic": 1,
+                        "colored": {
+                          "W": 0,
+                          "U": 0,
+                          "B": 0,
+                          "R": 0,
+                          "G": 0
+                        },
+                        "colorless": 0
+                      }
+                    },
+                    {
+                      "kind": "tap"
+                    },
+                    {
+                      "kind": "discardCard",
+                      "count": 1
+                    },
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ],
+                  "timing": "any",
+                  "ability": {
+                    "kind": "activated",
+                    "targets": [],
+                    "effects": [
+                      {
+                        "op": "draw",
+                        "count": {
+                          "kind": "const",
+                          "n": 1
+                        }
+                      }
+                    ],
+                    "description": "{1}, {T}, Discard a card, Sacrifice this token: Draw a card."
+                  }
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a Knight you control deals combat damage to a player, put a +1/+1 counter on that creature and create a Blood token."
+      }
+    ]
+  }
+}

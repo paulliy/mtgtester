@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The selector can only compare mana value to a fixed number (manaValueAtMost/AtLeast), so 'mana value X' against the announced X cannot be said exactly."}

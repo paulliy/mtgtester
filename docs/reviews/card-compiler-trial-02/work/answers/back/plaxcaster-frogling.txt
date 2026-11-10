@@ -1,0 +1,1 @@
+{2}: Target creature with a +1/+1 counter on it gains shroud until end of turn.

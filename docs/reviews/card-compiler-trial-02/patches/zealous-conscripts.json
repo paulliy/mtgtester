@@ -1,0 +1,45 @@
+{
+  "name": "Zealous Conscripts",
+  "oracleId": "1dae6f39-2cbd-485c-b190-017a26401fd4",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "When this creature enters, gain control of target permanent until end of turn. Untap that permanent. It gains haste until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "permanent"
+          }
+        ],
+        "effects": [
+          {
+            "op": "gainControlTarget",
+            "target": 0,
+            "duration": "untilEndOfTurn"
+          },
+          {
+            "op": "untapTarget",
+            "target": 0
+          },
+          {
+            "op": "grantKeywordUntilEot",
+            "target": 0,
+            "keyword": "haste"
+          }
+        ],
+        "description": "When this creature enters, gain control of target permanent until end of turn. Untap that permanent. It gains haste until end of turn."
+      }
+    ]
+  }
+}

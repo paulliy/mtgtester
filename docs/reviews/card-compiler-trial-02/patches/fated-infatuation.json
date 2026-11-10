@@ -1,0 +1,44 @@
+{
+  "name": "Fated Infatuation",
+  "oracleId": "ae771e78-1d29-4b8c-8511-9da196a78dcf",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Create a token that's a copy of target creature you control. If it's your turn, scry 2."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "op": "createTokenCopyOf",
+          "ref": 0,
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        },
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "yourTurn"
+          },
+          "then": [
+            {
+              "op": "scry",
+              "count": 2
+            }
+          ],
+          "else": []
+        }
+      ],
+      "description": "Create a token that's a copy of target creature you control. If it's your turn, scry 2."
+    }
+  }
+}
