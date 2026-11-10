@@ -1,0 +1,35 @@
+{
+  "status": "compiled",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [{ "kind": "tap" }, { "kind": "sacrificeSelf" }],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "permanent",
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  { "kind": "supertype", "value": "Legendary" },
+                  {
+                    "kind": "anyOf",
+                    "of": [
+                      { "kind": "type", "value": "Artifact" },
+                      { "kind": "type", "value": "Creature" },
+                      { "kind": "type", "value": "Enchantment" }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [{ "op": "destroy", "target": 0 }],
+          "description": "{T}, Sacrifice this creature: Destroy target legendary permanent that's an artifact, creature, or enchantment."
+        }
+      }
+    ]
+  }
+}

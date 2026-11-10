@@ -1,0 +1,40 @@
+{
+  "name": "Atrocious Experiment",
+  "oracleId": "9f1c5040-ac46-4e8f-a5ff-8205e13a8893",
+  "source": "xmage@31ede542",
+  "handledLines": ["Target player mills two cards, draws two cards, and loses 2 life."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "player"
+        }
+      ],
+      "effects": [
+        {
+          "op": "millTargetPlayer",
+          "target": 0,
+          "count": 2
+        },
+        {
+          "op": "drawTarget",
+          "target": 0,
+          "count": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "loseLifeTarget",
+          "target": 0,
+          "amount": {
+            "kind": "const",
+            "n": 2
+          }
+        }
+      ]
+    }
+  }
+}

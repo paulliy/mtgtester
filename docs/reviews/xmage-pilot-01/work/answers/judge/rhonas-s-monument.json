@@ -1,0 +1,6 @@
+{
+  "verdict": "different",
+  "differences": [
+    "Text A restricts the cost reduction to spells you cast; Text B applies it to green creature spells with no controller restriction, so it would also reduce opponents spells."
+  ]
+}

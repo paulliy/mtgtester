@@ -24,6 +24,7 @@
     "../update-scryfall-bank.ts",
     "../pin-store.ts",
     "../cards/*.ts",
+    "../xmage-import/*.ts",
     "../check-ratchets.ts",
     "../card-test-lab-sample.ts",
     "../card-authoring-metrics.ts",

@@ -1,0 +1,45 @@
+{
+  "name": "Firespitter Whelp",
+  "oracleId": "1cad92ce-55c8-4b78-8d8c-56645ef8e6ee",
+  "source": "xmage@31ede542",
+  "handledLines": [
+    "Whenever you cast a noncreature or Dragon spell, this creature deals 1 damage to each opponent."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              },
+              {
+                "kind": "subtype",
+                "value": "Dragon"
+              }
+            ]
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "eachOpponentDamage",
+            "amount": 1
+          }
+        ],
+        "description": "Whenever you cast a noncreature or Dragon spell, this creature deals 1 damage to each opponent."
+      }
+    ]
+  }
+}

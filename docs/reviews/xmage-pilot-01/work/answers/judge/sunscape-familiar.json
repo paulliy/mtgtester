@@ -1,0 +1,6 @@
+{
+  "verdict": "different",
+  "differences": [
+    "Text A applies only to green and blue spells you cast; Text B applies to every green or blue spell with no controller restriction."
+  ]
+}

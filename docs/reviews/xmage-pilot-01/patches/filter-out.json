@@ -1,0 +1,37 @@
+{
+  "name": "Filter Out",
+  "oracleId": "8c95d823-6bbd-4484-8f38-b1bb20403085",
+  "source": "xmage@31ede542",
+  "handledLines": ["Return all noncreature, nonland permanents to their owners' hands."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "returnToHandEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "verdict": "different",
+  "differences": [
+    "Text A exiles nonland permanents; Text B exiles each object that is not a land, which is broader (any object, not only permanents)."
+  ]
+}

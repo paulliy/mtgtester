@@ -1,0 +1,1 @@
+{2}{B}{G}, {T}, Sacrifice this artifact: Activate only as a sorcery. Return target creature or Vehicle card from your graveyard to the battlefield.

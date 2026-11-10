@@ -1,0 +1,17 @@
+{
+  "status": "compiled",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [{ "kind": "tap" }],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [{ "kind": "creature", "filter": { "kind": "subtype", "value": "Dinosaur" } }],
+          "effects": [{ "op": "grantKeywordUntilEot", "target": 0, "keyword": "haste" }],
+          "description": "{T}: Target Dinosaur gains haste until end of turn."
+        }
+      }
+    ]
+  }
+}

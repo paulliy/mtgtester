@@ -1,0 +1,49 @@
+{
+  "name": "Poison-Blade Mentor",
+  "oracleId": "60a3345c-3234-4f4b-baab-df12dad6b44b",
+  "source": "xmage@31ede542",
+  "handledLines": [
+    "Whenever this creature attacks, another target Assassin you control gains deathtouch until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "permanent",
+            "controller": "you",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Assassin"
+                },
+                {
+                  "kind": "other"
+                }
+              ]
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "grantKeywordUntilEot",
+            "target": 0,
+            "keyword": "deathtouch"
+          }
+        ],
+        "description": "Whenever this creature attacks, another target Assassin you control gains deathtouch until end of turn."
+      }
+    ]
+  }
+}

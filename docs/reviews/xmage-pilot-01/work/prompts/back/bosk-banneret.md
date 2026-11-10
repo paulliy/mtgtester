@@ -1,0 +1,4 @@
+Type line: Creature — Treefolk Shaman
+
+Behavior:
+{"ruleStatics":[{"kind":"costReduction","amount":{"kind":"const","n":1},"filter":{"kind":"anyOf","of":[{"kind":"subtype","value":"Treefolk"},{"kind":"subtype","value":"Shaman"}]}}]}

@@ -1,0 +1,6 @@
+{
+  "verdict": "different",
+  "differences": [
+    "Text A modifies each Sliver creature by +1/+1 for each other Sliver (a layer 7c modification to existing P/T); Text B sets power and toughness equal to the count (a layer 7b characteristic-setting effect), which gives different results."
+  ]
+}

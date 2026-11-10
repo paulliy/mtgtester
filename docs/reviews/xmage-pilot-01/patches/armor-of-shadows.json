@@ -1,0 +1,30 @@
+{
+  "name": "Armor of Shadows",
+  "oracleId": "64de050c-7167-4ebd-8584-f064d8be3302",
+  "source": "xmage@31ede542",
+  "handledLines": ["Until end of turn, target creature gets +1/+0 and gains indestructible."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "pumpUntilEot",
+          "target": 0,
+          "power": 1,
+          "toughness": 0
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "indestructible"
+        }
+      ]
+    }
+  }
+}

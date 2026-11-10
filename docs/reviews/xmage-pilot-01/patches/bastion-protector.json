@@ -1,0 +1,57 @@
+{
+  "name": "Bastion Protector",
+  "oracleId": "858f53ef-3fec-4aa0-867d-b7f040614b3c",
+  "source": "xmage@31ede542",
+  "handledLines": ["Commander creatures you control get +2/+2 and have indestructible."],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "isCommander"
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 2,
+          "toughness": 2
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "isCommander"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "indestructible"
+        }
+      }
+    ]
+  }
+}

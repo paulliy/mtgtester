@@ -1,0 +1,619 @@
+{
+  "summary": {
+    "source": "xmage@31ede542",
+    "compared": 1239,
+    "agree": 1171,
+    "subtypeImpliesCreature": 59,
+    "disagree": 9
+  },
+  "disagreements": [
+    {
+      "name": "Whispersilk Cloak",
+      "line": "Equipped creature can't be blocked and has shroud. (It can't be the target of spells or abilities.)",
+      "xmage": {
+        "staticEffects": [
+          {
+            "affects": {
+              "kind": "attachedToSource"
+            },
+            "op": {
+              "layer": 6,
+              "setCantBeBlocked": true
+            }
+          },
+          {
+            "affects": {
+              "kind": "attachedToSource"
+            },
+            "op": {
+              "addKeyword": "shroud",
+              "layer": 6
+            }
+          }
+        ]
+      },
+      "interpreter": {
+        "staticEffects": [
+          {
+            "affects": {
+              "kind": "attachedToSource"
+            },
+            "op": {
+              "addKeyword": "shroud",
+              "layer": 6
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ayara, First of Locthwain",
+      "line": "{T}, Sacrifice another black creature: Draw a card.",
+      "xmage": {
+        "activatedAbilities": [
+          {
+            "ability": {
+              "effects": [
+                {
+                  "count": 1,
+                  "op": "draw"
+                }
+              ],
+              "kind": "activated",
+              "targets": []
+            },
+            "costs": [
+              {
+                "kind": "tap"
+              },
+              {
+                "kind": "sacrificeOther",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "color",
+                      "value": "B"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                }
+              }
+            ],
+            "timing": "any"
+          }
+        ]
+      },
+      "interpreter": {
+        "activatedAbilities": [
+          {
+            "ability": {
+              "effects": [
+                {
+                  "count": 1,
+                  "op": "draw"
+                }
+              ],
+              "kind": "activated",
+              "targets": []
+            },
+            "costs": [
+              {
+                "kind": "tap"
+              },
+              {
+                "kind": "sacrificeOther",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "color",
+                          "value": "B"
+                        },
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              }
+            ],
+            "timing": "any"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sarkhan, Soul Aflame",
+      "line": "Dragon spells you cast cost {1} less to cast.",
+      "xmage": {
+        "ruleStatics": [
+          {
+            "amount": 1,
+            "filter": {
+              "kind": "subtype",
+              "value": "Dragon"
+            },
+            "kind": "costReduction"
+          }
+        ]
+      },
+      "interpreter": {
+        "ruleStatics": [
+          {
+            "amount": 1,
+            "filter": {
+              "kind": "subtype",
+              "value": "Dragon"
+            },
+            "kind": "costReduction"
+          }
+        ],
+        "triggers": [
+          {
+            "effects": [
+              {
+                "addSupertypes": ["Legendary"],
+                "nameOverride": "Sarkhan, Soul Aflame",
+                "op": "becomeCopyOf",
+                "ref": "triggerObject",
+                "untilEot": true
+              }
+            ],
+            "kind": "triggered",
+            "optional": true,
+            "targets": [],
+            "trigger": {
+              "subject": {
+                "kind": "permanent",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Dragon"
+                    }
+                  ]
+                }
+              },
+              "when": "enters"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Bloodline Necromancer",
+      "line": "When this creature enters, you may return target Vampire or Wizard creature card from your graveyard to the battlefield.",
+      "xmage": {
+        "triggers": [
+          {
+            "effects": [
+              {
+                "op": "graveyardToBattlefield",
+                "target": 0
+              }
+            ],
+            "kind": "triggered",
+            "optional": true,
+            "targets": [
+              {
+                "filter": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "anyOf",
+                      "of": [
+                        {
+                          "kind": "subtype",
+                          "value": "Vampire"
+                        },
+                        {
+                          "kind": "subtype",
+                          "value": "Wizard"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                },
+                "kind": "cardInGraveyard"
+              }
+            ],
+            "trigger": {
+              "subject": {
+                "kind": "self"
+              },
+              "when": "enters"
+            }
+          }
+        ]
+      },
+      "interpreter": {
+        "triggers": [
+          {
+            "effects": [
+              {
+                "op": "graveyardToBattlefield",
+                "target": 0
+              }
+            ],
+            "kind": "triggered",
+            "optional": true,
+            "targets": [
+              {
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "subtype",
+                          "value": "Wizard"
+                        },
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Vampire"
+                    }
+                  ]
+                },
+                "kind": "cardInGraveyard"
+              }
+            ],
+            "trigger": {
+              "subject": {
+                "kind": "self"
+              },
+              "when": "enters"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Short Bow",
+      "line": "Equipped creature gets +1/+1 and has reach and vigilance.",
+      "xmage": {
+        "staticEffects": [
+          {
+            "affects": {
+              "kind": "attachedToSource"
+            },
+            "op": {
+              "layer": 7,
+              "power": 1,
+              "sublayer": "d",
+              "toughness": 1
+            }
+          },
+          {
+            "affects": {
+              "kind": "attachedToSource"
+            },
+            "op": {
+              "addKeyword": "vigilance",
+              "layer": 6
+            }
+          },
+          {
+            "affects": {
+              "kind": "attachedToSource"
+            },
+            "op": {
+              "addKeyword": "reach",
+              "layer": 6
+            }
+          }
+        ]
+      },
+      "interpreter": {
+        "staticEffects": [
+          {
+            "affects": {
+              "kind": "attachedToSource"
+            },
+            "op": {
+              "layer": 7,
+              "power": 1,
+              "sublayer": "d",
+              "toughness": 1
+            }
+          },
+          {
+            "affects": {
+              "kind": "attachedToSource"
+            },
+            "op": {
+              "addKeyword": "reach",
+              "layer": 6
+            }
+          },
+          {
+            "affects": {
+              "kind": "attachedToSource"
+            },
+            "op": {
+              "addKeyword": "vigilance",
+              "layer": 6
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Drider",
+      "line": "Whenever this creature deals combat damage to a player, create a 2/1 black Spider creature token with reach and menace.",
+      "xmage": {
+        "triggers": [
+          {
+            "effects": [
+              {
+                "count": 1,
+                "op": "createToken",
+                "spec": {
+                  "colors": ["B"],
+                  "keywords": ["menace", "reach"],
+                  "power": 2,
+                  "subtypes": ["Spider"],
+                  "toughness": 1,
+                  "types": ["Creature"]
+                }
+              }
+            ],
+            "kind": "triggered",
+            "optional": false,
+            "targets": [],
+            "trigger": {
+              "subject": {
+                "kind": "self"
+              },
+              "when": "dealsCombatDamageToPlayer"
+            }
+          }
+        ]
+      },
+      "interpreter": {
+        "triggers": [
+          {
+            "effects": [
+              {
+                "count": 1,
+                "op": "createToken",
+                "spec": {
+                  "colors": ["B"],
+                  "keywords": ["reach", "menace"],
+                  "power": 2,
+                  "subtypes": ["Spider"],
+                  "toughness": 1,
+                  "types": ["Creature"]
+                }
+              }
+            ],
+            "kind": "triggered",
+            "optional": false,
+            "targets": [],
+            "trigger": {
+              "subject": {
+                "kind": "self"
+              },
+              "when": "dealsCombatDamageToPlayer"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Bishop of Rebirth",
+      "line": "Whenever this creature attacks, you may return target creature card with mana value 3 or less from your graveyard to the battlefield.",
+      "xmage": {
+        "triggers": [
+          {
+            "effects": [
+              {
+                "op": "graveyardToBattlefield",
+                "target": 0
+              }
+            ],
+            "kind": "triggered",
+            "optional": true,
+            "targets": [
+              {
+                "filter": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "manaValueAtMost",
+                      "n": 3
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                },
+                "kind": "cardInGraveyard"
+              }
+            ],
+            "trigger": {
+              "subject": {
+                "kind": "self"
+              },
+              "when": "attacks"
+            }
+          }
+        ]
+      },
+      "interpreter": {
+        "triggers": [
+          {
+            "effects": [
+              {
+                "op": "graveyardToBattlefield",
+                "target": 0
+              }
+            ],
+            "kind": "triggered",
+            "optional": true,
+            "targets": [
+              {
+                "filter": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "manaValueAtMost",
+                      "n": 3
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                },
+                "kind": "cardInGraveyard"
+              }
+            ],
+            "trigger": {
+              "subject": {
+                "kind": "self"
+              },
+              "when": "attacks"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Rush of Vitality",
+      "line": "Target creature gets +1/+0 and gains lifelink and indestructible until end of turn. (Damage dealt by that creature also causes its controller to gain that much life, and it can't be destroyed by damage or effects that say \"destroy.\")",
+      "xmage": {
+        "spellAbility": {
+          "effects": [
+            {
+              "op": "pumpUntilEot",
+              "power": 1,
+              "target": 0,
+              "toughness": 0
+            },
+            {
+              "keyword": "indestructible",
+              "op": "grantKeywordUntilEot",
+              "target": 0
+            },
+            {
+              "keyword": "lifelink",
+              "op": "grantKeywordUntilEot",
+              "target": 0
+            }
+          ],
+          "kind": "spell",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ]
+        }
+      },
+      "interpreter": {
+        "spellAbility": {
+          "effects": [
+            {
+              "op": "pumpUntilEot",
+              "power": 1,
+              "target": 0,
+              "toughness": 0
+            },
+            {
+              "keyword": "lifelink",
+              "op": "grantKeywordUntilEot",
+              "target": 0
+            },
+            {
+              "keyword": "indestructible",
+              "op": "grantKeywordUntilEot",
+              "target": 0
+            }
+          ],
+          "kind": "spell",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Protective Bubble",
+      "line": "Enchanted creature can't be blocked and has shroud. (It can't be the target of spells or abilities.)",
+      "xmage": {
+        "staticEffects": [
+          {
+            "affects": {
+              "kind": "attachedToSource"
+            },
+            "op": {
+              "layer": 6,
+              "setCantBeBlocked": true
+            }
+          },
+          {
+            "affects": {
+              "kind": "attachedToSource"
+            },
+            "op": {
+              "addKeyword": "shroud",
+              "layer": 6
+            }
+          }
+        ]
+      },
+      "interpreter": {
+        "staticEffects": [
+          {
+            "affects": {
+              "kind": "attachedToSource"
+            },
+            "op": {
+              "addKeyword": "shroud",
+              "layer": 6
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "name": "Howling Moon",
+  "oracleId": "a814d4c7-2ec0-4278-8704-23b39dcead4e",
+  "source": "xmage@31ede542",
+  "handledLines": [
+    "At the beginning of combat on your turn, target Wolf or Werewolf you control gets +2/+2 until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "beginningOfCombat",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "permanent",
+            "controller": "you",
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Wolf"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Werewolf"
+                }
+              ]
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "pumpUntilEot",
+            "target": 0,
+            "power": 2,
+            "toughness": 2
+          }
+        ],
+        "description": "At the beginning of combat on your turn, target Wolf or Werewolf you control gets +2/+2 until end of turn."
+      }
+    ]
+  }
+}

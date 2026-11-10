@@ -1,0 +1,1893 @@
+{
+  "measuredCostUsd": 0,
+  "estimatedCost": {
+    "backUsd": 0.0018465749999999996,
+    "backCalls": 69,
+    "judgeUsd": 0.0015601200000000019,
+    "judgeCalls": 69,
+    "totalUsd": 0.0034066950000000012
+  },
+  "cards": [
+    {
+      "name": "Stern Dismissal",
+      "rank": 11305,
+      "lines": ["Return target creature or enchantment an opponent controls to its owner's hand."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Return target creature or enchantment an opponent controls to its owner's hand.",
+      "differences": []
+    },
+    {
+      "name": "Damning Verdict",
+      "rank": 1105,
+      "lines": ["Destroy all creatures with no counters on them."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "differences": []
+    },
+    {
+      "name": "Ballyrush Banneret",
+      "rank": 8712,
+      "lines": ["Kithkin spells and Soldier spells you cast cost {1} less to cast."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Spells that are Kithkin or Soldier cost {1} less to cast.",
+      "differences": [
+        "Text A limits the cost reduction to spells you cast; Text B applies it to all Kithkin or Soldier spells regardless of controller"
+      ]
+    },
+    {
+      "name": "Hanged Executioner",
+      "rank": 6700,
+      "lines": ["{3}{W}, Exile this creature: Exile target creature."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{3}{W}, Exile this creature: Exile target creature.",
+      "differences": []
+    },
+    {
+      "name": "Howling Moon",
+      "rank": 5462,
+      "lines": [
+        "At the beginning of combat on your turn, target Wolf or Werewolf you control gets +2/+2 until end of turn."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "At the beginning of combat on your turn, target Wolf or Werewolf you control gets +2/+2 until end of turn.",
+      "differences": []
+    },
+    {
+      "name": "Aether Tunnel",
+      "rank": 4237,
+      "lines": ["Enchanted creature gets +1/+0 and can't be blocked."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Enchanted permanent gets +1/+0.\nEnchanted permanent can't be blocked.",
+      "differences": [
+        "Text A enchants a creature (enchanted creature); Text B says enchanted permanent"
+      ]
+    },
+    {
+      "name": "Jokulhaups",
+      "rank": 11283,
+      "lines": ["Destroy all artifacts, creatures, and lands. They can't be regenerated."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Destroy each artifact, creature, and land. They can't be regenerated.",
+      "differences": []
+    },
+    {
+      "name": "Rhonas's Monument",
+      "rank": 2094,
+      "lines": ["Green creature spells you cast cost {1} less to cast."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Green creature spells cost {1} less to cast. (The data states no controller restriction.)",
+      "differences": [
+        "Text A restricts the cost reduction to spells you cast; Text B applies it to green creature spells with no controller restriction, so it would also reduce opponents spells."
+      ]
+    },
+    {
+      "name": "Aqueous Form",
+      "rank": 749,
+      "lines": ["Enchanted creature can't be blocked."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Enchanted permanent can't be blocked.",
+      "differences": ["Text A says enchanted creature; Text B says enchanted permanent"]
+    },
+    {
+      "name": "Guttural Response",
+      "rank": 8657,
+      "lines": ["Counter target blue instant spell."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "differences": []
+    },
+    {
+      "name": "Sunscape Familiar",
+      "rank": 6008,
+      "lines": ["Green spells and blue spells you cast cost {1} less to cast."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Each green or blue spell costs {1} less to cast. (The data states no controller restriction.)",
+      "differences": [
+        "Text A applies only to green and blue spells you cast; Text B applies to every green or blue spell with no controller restriction."
+      ]
+    },
+    {
+      "name": "Majestic Heliopterus",
+      "rank": 9602,
+      "lines": [
+        "Whenever this creature attacks, another target Dinosaur you control gains flying until end of turn."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Whenever this creature attacks, target other Dinosaur you control gains flying until end of turn.",
+      "differences": []
+    },
+    {
+      "name": "Rosa, Resolute White Mage",
+      "rank": 5737,
+      "lines": [
+        "At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. It gains lifelink until end of turn."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. That creature gains lifelink until end of turn.",
+      "differences": []
+    },
+    {
+      "name": "Otepec Huntmaster",
+      "rank": 3092,
+      "lines": ["{T}: Target Dinosaur gains haste until end of turn."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{T}: Target Dinosaur creature gains haste until end of turn.",
+      "differences": []
+    },
+    {
+      "name": "Atrocious Experiment",
+      "rank": 9878,
+      "lines": ["Target player mills two cards, draws two cards, and loses 2 life."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Target player mills two cards.\nTarget player draws two cards.\nTarget player loses 2 life.",
+      "differences": [
+        "Text A has one target player for all three effects; Text B has three separate target player choices"
+      ]
+    },
+    {
+      "name": "Goblin Arsonist",
+      "rank": 12518,
+      "lines": ["When this creature dies, you may have it deal 1 damage to any target."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "When this creature dies, you may have it deal 1 damage to any target.",
+      "differences": []
+    },
+    {
+      "name": "Warden of Evos Isle",
+      "rank": 3661,
+      "lines": ["Creature spells with flying you cast cost {1} less to cast."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Each creature spell with flying costs {1} less to cast.",
+      "differences": [
+        "Text A applies only to flying creature spells you cast; Text B applies to every creature spell with flying with no controller restriction."
+      ]
+    },
+    {
+      "name": "Armor of Shadows",
+      "rank": 6266,
+      "lines": ["Until end of turn, target creature gets +1/+0 and gains indestructible."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Target creature gets +1/+0 until end of turn and gains indestructible until end of turn.",
+      "differences": []
+    },
+    {
+      "name": "Rockface Village",
+      "rank": 6103,
+      "lines": [
+        "{R}, {T}: Target Lizard, Mouse, Otter, or Raccoon you control gets +1/+0 and gains haste until end of turn. Activate only as a sorcery."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{R}, {T}: Target permanent you control that is a Lizard, Mouse, Otter, or Raccoon gets +1/+0 until end of turn and gains haste until end of turn. Activate only as a sorcery.",
+      "differences": []
+    },
+    {
+      "name": "Flowering of the White Tree",
+      "rank": 804,
+      "lines": ["Nonlegendary creatures you control get +1/+1."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Each creature you control that is not legendary gets +1/+1.",
+      "differences": []
+    },
+    {
+      "name": "Danitha Capashen, Paragon",
+      "rank": 799,
+      "lines": ["Aura and Equipment spells you cast cost {1} less to cast."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Aura and Equipment spells cost {1} less to cast.",
+      "differences": [
+        "Text A limits the cost reduction to Aura and Equipment spells you cast; Text B applies it to all Aura and Equipment spells regardless of controller"
+      ]
+    },
+    {
+      "name": "Repel Calamity",
+      "rank": 6875,
+      "lines": ["Destroy target creature with power or toughness 4 or greater."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Destroy target creature with power 4 or greater or toughness 4 or greater.",
+      "differences": []
+    },
+    {
+      "name": "Oketra's Monument",
+      "rank": 1042,
+      "lines": ["White creature spells you cast cost {1} less to cast."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Each white creature spell costs {1} less to cast.",
+      "differences": [
+        "Text A restricts the discount to spells you cast; Text B applies it to each white creature spell regardless of who casts it"
+      ]
+    },
+    {
+      "name": "Rescue Skiff",
+      "rank": 11568,
+      "lines": [
+        "When this Spacecraft enters, return target creature or enchantment card from your graveyard to the battlefield."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "differences": []
+    },
+    {
+      "name": "Frogtosser Banneret",
+      "rank": 6794,
+      "lines": ["Goblin spells and Rogue spells you cast cost {1} less to cast."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Spells that are Goblin or Rogue cost {1} less to cast.",
+      "differences": [
+        "Text A limits the cost reduction to spells you cast; Text B applies it to all Goblin or Rogue spells regardless of controller"
+      ]
+    },
+    {
+      "name": "Nekrataal",
+      "rank": 11297,
+      "lines": [
+        "When this creature enters, destroy target nonartifact, nonblack creature. That creature can't be regenerated."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "When this creature enters, destroy target creature that isn't an artifact and isn't black. It can't be regenerated.",
+      "differences": []
+    },
+    {
+      "name": "Nyx Weaver",
+      "rank": 1756,
+      "lines": [
+        "{1}{B}{G}, Exile this creature: Return target card from your graveyard to your hand."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{1}{B}{G}, Exile this creature: Return target card from your graveyard to your hand.",
+      "differences": []
+    },
+    {
+      "name": "Morcant's Loyalist",
+      "rank": 5162,
+      "lines": [
+        "When this creature dies, return another target Elf card from your graveyard to your hand."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "When this creature dies, return target other Elf card from your graveyard to your hand.",
+      "differences": []
+    },
+    {
+      "name": "Bosk Banneret",
+      "rank": 9696,
+      "lines": ["Treefolk spells and Shaman spells you cast cost {1} less to cast."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Spells that are Treefolk or Shaman cost {1} less to cast.",
+      "differences": [
+        "Text A limits the cost reduction to spells you cast; Text B applies it to all Treefolk or Shaman spells regardless of controller"
+      ]
+    },
+    {
+      "name": "Beyond the Quiet",
+      "rank": 10303,
+      "lines": ["Exile all creatures and Spacecraft."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Exile each creature and each Spacecraft.",
+      "differences": []
+    },
+    {
+      "name": "Stormscape Familiar",
+      "rank": 6615,
+      "lines": ["White spells and black spells you cast cost {1} less to cast."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Each white or black spell costs {1} less to cast. (The data states no controller restriction.)",
+      "differences": [
+        "Text A applies only to white and black spells you cast; Text B applies to every white or black spell with no controller restriction."
+      ]
+    },
+    {
+      "name": "Goblin-town",
+      "rank": 12496,
+      "lines": [
+        "{2}{B}{R}, {T}, Sacrifice this land: Put two +1/+1 counters on target Goblin or Orc you control. Activate only as a sorcery."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{2}{B}{R}, {T}, Sacrifice this land: Put two +1/+1 counters on target Goblin or Orc you control. Activate only as a sorcery.",
+      "differences": []
+    },
+    {
+      "name": "Teysa, Orzhov Scion",
+      "rank": 4796,
+      "lines": [
+        "Whenever another black creature you control dies, create a 1/1 white Spirit creature token with flying."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Whenever another black creature you control dies, create a 1/1 white Spirit creature token with flying. (This trigger is not optional.)",
+      "differences": []
+    },
+    {
+      "name": "Sporecrown Thallid",
+      "rank": 5950,
+      "lines": ["Each other creature you control that's a Fungus or Saproling gets +1/+1."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Each other creature you control that is a Fungus or a Saproling gets +1/+1. (Layer 7d.)",
+      "differences": []
+    },
+    {
+      "name": "Bastion Protector",
+      "rank": 919,
+      "lines": ["Commander creatures you control get +2/+2 and have indestructible."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Each creature you control that is a commander gets +2/+2.\nEach creature you control that is a commander has indestructible.",
+      "differences": []
+    },
+    {
+      "name": "Goblin Burrows",
+      "rank": 9580,
+      "lines": ["{1}{R}, {T}: Target Goblin creature gets +2/+0 until end of turn."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "differences": []
+    },
+    {
+      "name": "Wall of Mulch",
+      "rank": 11936,
+      "lines": ["{G}, Sacrifice a ~: Draw a card."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{G}, Sacrifice another Wall you control: Draw a card. (The data allows this creature to be the sacrificed Wall.)",
+      "differences": [
+        "Text A lets the sacrificed Wall be Wall of Mulch itself (~); Text B requires sacrificing another Wall you control, excluding itself."
+      ]
+    },
+    {
+      "name": "Broodheart Engine",
+      "rank": 10368,
+      "lines": [
+        "{2}{B}{G}, {T}, Sacrifice this artifact: Return target creature or Vehicle card from your graveyard to the battlefield. Activate only as a sorcery."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{2}{B}{G}, {T}, Sacrifice this artifact: Activate only as a sorcery. Return target creature or Vehicle card from your graveyard to the battlefield.",
+      "differences": []
+    },
+    {
+      "name": "Scarecrone",
+      "rank": 8444,
+      "lines": [
+        "{4}, {T}: Return target artifact creature card from your graveyard to the battlefield."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{4}, {T}: Put target artifact creature card from your graveyard onto the battlefield.",
+      "differences": []
+    },
+    {
+      "name": "Plague Wind",
+      "rank": 6402,
+      "lines": ["Destroy all creatures you don't control. They can't be regenerated."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Destroy each creature your opponents control. They can't be regenerated.",
+      "differences": []
+    },
+    {
+      "name": "Bloodsworn Steward",
+      "rank": 8345,
+      "lines": ["Commander creatures you control get +2/+2 and have haste."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Each creature you control that is a commander gets +2/+2.\nEach creature you control that is a commander has haste.",
+      "differences": []
+    },
+    {
+      "name": "Bontu's Monument",
+      "rank": 653,
+      "lines": ["Black creature spells you cast cost {1} less to cast."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Creature spells that are black cost {1} less to cast.",
+      "differences": [
+        "Text A limits the cost reduction to black creature spells you cast; Text B applies it to all black creature spells regardless of controller"
+      ]
+    },
+    {
+      "name": "Reki, the History of Kamigawa",
+      "rank": 4352,
+      "lines": ["Whenever you cast a legendary spell, draw a card."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Whenever you cast a legendary spell, draw a card.",
+      "differences": []
+    },
+    {
+      "name": "Mudflat Village",
+      "rank": 2949,
+      "lines": [
+        "{1}{B}, {T}, Sacrifice this land: Return target Bat, Lizard, Rat, or Squirrel card from your graveyard to your hand."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{1}{B}, {T}, Sacrifice this land: Return target Bat, Lizard, Rat, or Squirrel card from your graveyard to your hand.",
+      "differences": []
+    },
+    {
+      "name": "Sliver Legion",
+      "rank": 4727,
+      "lines": ["All Sliver creatures get +1/+1 for each other Sliver on the battlefield."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Each Sliver creature (regardless of controller) has power and toughness each equal to the number of other Sliver permanents on the battlefield. (Layer 7d. The data does not state what \"other\" is relative to.)",
+      "differences": [
+        "Text A modifies each Sliver creature by +1/+1 for each other Sliver (a layer 7c modification to existing P/T); Text B sets power and toughness equal to the count (a layer 7b characteristic-setting effect), which gives different results."
+      ]
+    },
+    {
+      "name": "Mass Calcify",
+      "rank": 4121,
+      "lines": ["Destroy all nonwhite creatures."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Destroy each creature that isn't white.",
+      "differences": []
+    },
+    {
+      "name": "Earth Kingdom Protectors",
+      "rank": 9175,
+      "lines": [
+        "Sacrifice this creature: Another target Ally you control gains indestructible until end of turn."
+      ],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Sacrifice this creature: Target another permanent you control that is an Ally gains indestructible until end of turn.",
+      "differences": [
+        "Text A targets an Ally creature; Text B targets any permanent that is an Ally"
+      ]
+    },
+    {
+      "name": "Extinguish All Hope",
+      "rank": 3922,
+      "lines": ["Destroy all nonenchantment creatures."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "differences": []
+    },
+    {
+      "name": "Gixian Puppeteer",
+      "rank": 4208,
+      "lines": [
+        "When this creature dies, return another target creature card with mana value 3 or less from your graveyard to the battlefield."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "When this creature dies, return target creature card other than this card with mana value 3 or less from your graveyard to the battlefield.",
+      "differences": []
+    },
+    {
+      "name": "Cloak of Mists",
+      "rank": 10920,
+      "lines": ["Enchanted creature can't be blocked."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Enchanted permanent can't be blocked.",
+      "differences": ["Text A says enchanted creature; Text B says enchanted permanent"]
+    },
+    {
+      "name": "Deepchannel Mentor",
+      "rank": 9518,
+      "lines": ["Blue creatures you control can't be blocked."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Each creature you control that is blue can't be blocked.",
+      "differences": []
+    },
+    {
+      "name": "Poison-Blade Mentor",
+      "rank": 12370,
+      "lines": [
+        "Whenever this creature attacks, another target Assassin you control gains deathtouch until end of turn."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Whenever this creature attacks, target other Assassin you control gains deathtouch until end of turn.",
+      "differences": []
+    },
+    {
+      "name": "Atraxa's Fall",
+      "rank": 9316,
+      "lines": ["Destroy target artifact, battle, enchantment, or creature with flying."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Destroy target permanent that is an artifact, a battle, an enchantment, or a creature with flying.",
+      "differences": []
+    },
+    {
+      "name": "Obliterate",
+      "rank": 9412,
+      "lines": ["Destroy all artifacts, creatures, and lands. They can't be regenerated."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Destroy each artifact, creature, and land. They can't be regenerated.",
+      "differences": []
+    },
+    {
+      "name": "Bounty Agent",
+      "rank": 7005,
+      "lines": [
+        "{T}, Sacrifice this creature: Destroy target legendary permanent that's an artifact, creature, or enchantment."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{T}, Sacrifice this creature: Destroy target permanent that is legendary and is an artifact, a creature, or an enchantment.",
+      "differences": []
+    },
+    {
+      "name": "Urza's Ruinous Blast",
+      "rank": 1590,
+      "lines": ["Exile all nonland permanents that aren't legendary."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Exile each object that is not a land and not legendary. (The data states no controller restriction.)",
+      "differences": [
+        "Text A exiles nonland permanents; Text B exiles each object that is not a land, which is broader (any object, not only permanents)."
+      ]
+    },
+    {
+      "name": "Ulvenwald Observer",
+      "rank": 11078,
+      "lines": ["Whenever a creature you control with toughness 4 or greater dies, draw a card."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Whenever a creature you control with toughness 4 or greater dies, draw a card. (The selector has no \"other\" restriction, so this creature also qualifies.)",
+      "differences": []
+    },
+    {
+      "name": "Salvaging Station",
+      "rank": 12269,
+      "lines": [
+        "{T}: Return target noncreature artifact card with mana value 1 or less from your graveyard to the battlefield."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{T}: Put target noncreature artifact card with mana value 1 or less from your graveyard onto the battlefield.",
+      "differences": []
+    },
+    {
+      "name": "Revive",
+      "rank": 12492,
+      "lines": ["Return target green card from your graveyard to your hand."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Put target green card from your graveyard into your hand.",
+      "differences": []
+    },
+    {
+      "name": "Nevinyrral's Disk",
+      "rank": 2007,
+      "lines": ["{1}, {T}: Destroy all artifacts, creatures, and enchantments."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{1}, {T}: Destroy each artifact, creature, and enchantment.",
+      "differences": []
+    },
+    {
+      "name": "Thopter Foundry",
+      "rank": 7861,
+      "lines": [
+        "{1}, Sacrifice a nontoken artifact: Create a 1/1 blue Thopter artifact creature token with flying. You gain 1 life."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{1}, Sacrifice a nontoken artifact you control: Create a 1/1 blue Thopter artifact creature token with flying. You gain 1 life. (This artifact is a legal choice for the sacrifice.)",
+      "differences": []
+    },
+    {
+      "name": "Inundate",
+      "rank": 12497,
+      "lines": ["Return all nonblue creatures to their owners' hands."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Return each creature that isn't blue to its owner's hand.",
+      "differences": []
+    },
+    {
+      "name": "Animal Sanctuary",
+      "rank": 3734,
+      "lines": ["{2}, {T}: Put a +1/+1 counter on target Bird, Cat, Dog, Goat, Ox, or Snake."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{2}, {T}: Put a +1/+1 counter on target permanent that is a Bird, Cat, Dog, Goat, Ox, or Snake.",
+      "differences": [
+        "Text A targets a creature that is a Bird, Cat, Dog, Goat, Ox, or Snake; Text B targets any permanent with those types"
+      ]
+    },
+    {
+      "name": "Koma, World-Eater",
+      "rank": 2185,
+      "lines": [
+        "Whenever ~ deals combat damage to a player, create four 3/3 blue Serpent creature tokens named ~'s Coil."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Whenever this creature deals combat damage to a player, create four 3/3 blue Serpent creature tokens.",
+      "differences": []
+    },
+    {
+      "name": "Overprotect",
+      "rank": 1577,
+      "lines": [
+        "Target creature you control gets +3/+3 and gains trample, hexproof, and indestructible until end of turn."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Target creature you control gets +3/+3 and gains trample, hexproof, and indestructible until end of turn.",
+      "differences": []
+    },
+    {
+      "name": "Witch's Clinic",
+      "rank": 1043,
+      "lines": ["{2}, {T}: Target commander gains lifelink until end of turn."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{2}, {T}: Target commander permanent gains lifelink until end of turn.",
+      "differences": []
+    },
+    {
+      "name": "Stimulus Package",
+      "rank": 11916,
+      "lines": ["Sacrifice a Treasure: Create a 1/1 green and white Citizen creature token."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Sacrifice a Treasure you control: Create a 1/1 green and white Citizen creature token. (The data gives no count, so one Treasure is sacrificed. The sacrifice may include this enchantment only if it is a Treasure, which it is not.)",
+      "differences": []
+    },
+    {
+      "name": "Filter Out",
+      "rank": 5102,
+      "lines": ["Return all noncreature, nonland permanents to their owners' hands."],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Return each object that is not a land and not a creature to its owner's hand.",
+      "differences": [
+        "Text A returns noncreature, nonland permanents; Text B returns any object that is not a land and not a creature, which is not limited to permanents"
+      ]
+    },
+    {
+      "name": "Requiem Angel",
+      "rank": 9255,
+      "lines": [
+        "Whenever another non-Spirit creature you control dies, create a 1/1 white Spirit creature token with flying."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Whenever another creature you control that is not a Spirit dies, create a 1/1 white Spirit creature token with flying. (This trigger is not optional.)",
+      "differences": []
+    },
+    {
+      "name": "Firespitter Whelp",
+      "rank": 3750,
+      "lines": [
+        "Whenever you cast a noncreature or Dragon spell, this creature deals 1 damage to each opponent."
+      ],
+      "outcome": "meaning-differs",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Whenever you cast a spell that is not a creature spell or is a Dragon spell, each opponent takes 1 damage.",
+      "differences": [
+        "Text A has this creature as the source of the damage; Text B has no damage source"
+      ]
+    },
+    {
+      "name": "Hidden Hideout",
+      "rank": 3285,
+      "lines": [
+        "{2}, {T}: Target creature you control with a counter on it gains lifelink until end of turn."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{2}, {T}: Target creature you control with a counter on it gains lifelink until end of turn.",
+      "differences": []
+    },
+    {
+      "name": "Kher Keep",
+      "rank": 1557,
+      "lines": ["{1}{R}, {T}: Create a 0/1 red Kobold creature token named Kobolds of ~."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{1}{R}, {T}: Create a 0/1 red Kobold creature token.",
+      "differences": []
+    },
+    {
+      "name": "Seedship Broodtender",
+      "rank": 7882,
+      "lines": [
+        "{3}{B}{G}, Sacrifice this creature: Return target creature or Spacecraft card from your graveyard to the battlefield. Activate only as a sorcery."
+      ],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "{3}{B}{G}, Sacrifice this creature: Put target creature card or Spacecraft card from your graveyard onto the battlefield. Activate only as a sorcery.",
+      "differences": []
+    },
+    {
+      "name": "Ruthless Knave",
+      "rank": 9197,
+      "lines": ["Sacrifice three Treasures: Draw a card."],
+      "outcome": "compiled-checked",
+      "compileRounds": 1,
+      "validatorIssues": [],
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "backTranslation": "Sacrifice three Treasures you control: Draw a card. (This ability can be activated at any time. The data allows this permanent to count as one of the sacrificed Treasures if it is a Treasure, which it is not.)",
+      "differences": []
+    }
+  ]
+}

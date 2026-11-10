@@ -1,0 +1,36 @@
+{
+  "name": "Jokulhaups",
+  "oracleId": "7bdfe368-353c-4f8d-851f-05b7ea9f905d",
+  "source": "xmage@31ede542",
+  "handledLines": ["Destroy all artifacts, creatures, and lands. They can't be regenerated."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "destroyEach",
+          "selector": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "type",
+                "value": "Land"
+              }
+            ]
+          },
+          "cantRegenerate": true
+        }
+      ]
+    }
+  }
+}

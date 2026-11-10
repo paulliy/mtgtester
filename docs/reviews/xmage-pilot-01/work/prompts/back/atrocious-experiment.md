@@ -1,0 +1,4 @@
+Type line: Sorcery
+
+Behavior:
+{"spellAbility":{"kind":"spell","targets":[{"kind":"player"}],"effects":[{"op":"millTargetPlayer","target":0,"count":2},{"op":"drawTarget","target":0,"count":{"kind":"const","n":2}},{"op":"loseLifeTarget","target":0,"amount":{"kind":"const","n":2}}]}}

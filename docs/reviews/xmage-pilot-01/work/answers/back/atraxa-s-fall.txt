@@ -1,0 +1,1 @@
+Destroy target permanent that is an artifact, a battle, an enchantment, or a creature with flying.

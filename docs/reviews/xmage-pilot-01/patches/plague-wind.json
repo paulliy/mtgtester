@@ -1,0 +1,32 @@
+{
+  "name": "Plague Wind",
+  "oracleId": "18ec721f-c1ac-4581-a61d-2f0b09d6bf92",
+  "source": "xmage@31ede542",
+  "handledLines": ["Destroy all creatures you don't control. They can't be regenerated."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "destroyEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "opponents"
+              }
+            ]
+          },
+          "cantRegenerate": true
+        }
+      ]
+    }
+  }
+}
