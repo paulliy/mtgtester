@@ -134,7 +134,7 @@ describe('jev-duel', () => {
         thresholds: { minConfidence: 0, minTopTwoMargin: 0 },
         offline: true,
         jevKey: '',
-        turnCap: 8,
+        turnCap: 20,
         budget: budget(1, 10_000),
         tallies: Object.fromEntries(
           presets.map((p) => [p, emptyTally()]),
@@ -168,6 +168,11 @@ describe('jev-duel', () => {
       expect(ctx.tallies['bot-jev'].tacticianCalls).toBe(0);
       expect(ctx.jevTallies.jev.accepted).toBeGreaterThan(0);
       expect(ctx.traces.every((t) => t.preset === 'jev' || t.preset === 'bot-jev')).toBe(true);
+      const closeCalls = ctx.traces.filter((t) => t.preset === 'bot-jev');
+      expect(closeCalls.length).toBeGreaterThan(0);
+      // Each close call offers Jev only the bot's two best actions, and its answer is used.
+      expect(closeCalls.every((t) => t.classification.actionCount === 2)).toBe(true);
+      expect(closeCalls.every((t) => t.outcome === 'accepted')).toBe(true);
     }, 120_000);
   });
 });

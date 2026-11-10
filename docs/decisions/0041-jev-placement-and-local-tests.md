@@ -46,7 +46,17 @@ Jev's play quality has never been measured. The tactician benchmark has one Jev 
    missing distribution leaves confidence and margin unknown. Unknown never passes a nonzero
    threshold, so authoritative Jev with thresholds still fails closed. Probabilities may cover
    only some options, but every key must be a real option and the choice must be the top one.
-5. **`bun run jev-duel`.** Four seats, each a preset: `bot`, `bot-shadow`, `bot-jev`, `model`,
+5. **Close calls are a choice between two, and the answer is always used.** A paid Jev call
+   that ends in "not confident enough" costs the same as an answer and then buys nothing. So on a
+   bot close call Jev is offered only the bot's two best options
+   (`AI_JEV_CLOSE_CALL_MENU=top2`, the default), and its answer is used whatever its confidence.
+   Either option is acceptable, since the bot already rated them close. `full` restores the whole
+   menu with thresholds. Unsupported shapes never cost a call: they are classified locally.
+6. **Land against land is not a close call.** About a quarter of close calls in offline games were
+   one basic land against another, which the bot's colour logic already handles. `isUncertain`
+   no longer flags them, for Jev or the chat tactician. In a two-game offline run, a `bot-jev`
+   seat's close calls fell from 15 to 8.
+7. **`bun run jev-duel`.** Four seats, each a preset: `bot`, `bot-shadow`, `bot-jev`, `model`,
    `jev` (Jev with the bot as fallback) and `jev-model`. The lineup rotates a seat per game. One
    spend cap covers chat and Jev calls. `--offline` plays the same games with no network: the
    chat tactician is the bot and Jev is a deterministic stub, which checks the wiring and counts

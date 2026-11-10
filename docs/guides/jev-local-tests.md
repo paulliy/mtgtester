@@ -29,9 +29,10 @@ seat.
 | Does Jev on close calls beat the plain bot?   | `bun run jev-duel --seats bot-jev,bot,bot-jev,bot --games 4 --max-usd 0.40 --out .jev-runs/close` | strategist + about $0.01 of Jev |
 | All four placements at one table              | `bun run jev-duel --seats bot,bot-jev,model,jev --games 4 --max-usd 0.60 --out .jev-runs/four`    | the `model` seat dominates      |
 
-`--games N` rotates the lineup one seat per game, so every preset plays every seat. Add
-`--jev-min-confidence 0.6` (and `--jev-min-margin 0.1`) to make Jev hand low-confidence decisions
-back to the bot.
+`--games N` rotates the lineup one seat per game, so every preset plays every seat. For the `jev`
+and `jev-model` presets, `--jev-min-confidence 0.6` (and `--jev-min-margin 0.1`) make Jev hand
+low-confidence decisions back. `bot-jev` ignores these: on a close call Jev only chooses between
+the bot's two best options, so its answer is always used.
 
 ## 3. Reading the results
 

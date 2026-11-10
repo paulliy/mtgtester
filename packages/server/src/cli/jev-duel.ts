@@ -317,7 +317,7 @@ export async function playGame(
     chatClients,
   } = ctx;
   const say = (line: string): void => {
-    if (ctx.quiet !== true) say(line);
+    if (ctx.quiet !== true) console.log(line);
   };
   const presetOf = (seat: PlayerId): Preset => lineup[SEATS.indexOf(seat)]!;
   const decks = SEATS.map((_, i) => generateCommanderDeck(pool, { seed: `${seed}-seat${i + 1}` }));
@@ -630,7 +630,7 @@ async function main(): Promise<void> {
 const entryPoint = process.argv[1];
 if (entryPoint !== undefined && resolve(entryPoint) === fileURLToPath(import.meta.url)) {
   main().catch((error: unknown) => {
-    console.error((error as Error).message);
+    console.error((error as Error).stack ?? (error as Error).message);
     process.exitCode = 1;
   });
 }

@@ -246,4 +246,11 @@ describe('JevActionPolicy', () => {
       'Close call.',
     );
   });
+
+  it('uses the answer whatever its confidence when asked to ignore thresholds', async () => {
+    const client = { requestAction: vi.fn().mockResolvedValue(result(0.2)) };
+    await expect(
+      policy(client, 0.5).decide(request, view, undefined, { ignoreThresholds: true }),
+    ).resolves.toMatchObject({ kind: 'answered', confidence: 0.2 });
+  });
 });

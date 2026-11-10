@@ -185,6 +185,12 @@ export interface AiConfig {
    */
   jevShadowScope: 'all' | 'uncertain';
   /**
+   * On a bot close call, what Jev chooses from. `top2`: only the bot's two best options, and its
+   * answer is always used, since a paid pass is waste. `full`: the whole menu, with thresholds.
+   * Env: `AI_JEV_CLOSE_CALL_MENU`. Default: `top2`.
+   */
+  jevCloseCallMenu: 'top2' | 'full';
+  /**
    * Offer a targeted action once per legal target, so Jev can answer menus with a target choice
    * (one undecided slot per action, at most `jevMaxActions` options in all). Env:
    * `AI_JEV_EXPAND_TARGETS`. Default: true.
@@ -379,6 +385,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   jevMaxActions: 255,
   jevFallback: 'model',
   jevShadowScope: 'all',
+  jevCloseCallMenu: 'top2',
   jevExpandTargets: true,
   jevMinConfidence: null,
   jevMinTopTwoMargin: null,
@@ -767,6 +774,11 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       env['AI_JEV_SHADOW_SCOPE'],
       ['all', 'uncertain'] as const,
       DEFAULT_AI_CONFIG.jevShadowScope,
+    ),
+    jevCloseCallMenu: parseChoice(
+      env['AI_JEV_CLOSE_CALL_MENU'],
+      ['top2', 'full'] as const,
+      DEFAULT_AI_CONFIG.jevCloseCallMenu,
     ),
     jevExpandTargets: parseBoolean(
       env['AI_JEV_EXPAND_TARGETS'],

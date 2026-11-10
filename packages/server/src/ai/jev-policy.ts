@@ -66,6 +66,11 @@ export interface JevTacticalPolicy {
 export interface JevDecideHints {
   /** Replaces the default Choice instructions for this one decision. */
   instructions?: string;
+  /**
+   * Use Jev's answer whatever its confidence. For a choice between options already judged close,
+   * where a paid answer is better than a pass (ADR 0041).
+   */
+  ignoreThresholds?: boolean;
 }
 
 export interface JevPolicyBinding {
@@ -297,10 +302,13 @@ export class JevActionPolicy implements JevTacticalPolicy {
       };
     }
     // An unreported score passes only a zero threshold: unknown is never treated as confident.
+    const strict = hints?.ignoreThresholds !== true;
     const belowConfidence =
+      strict &&
       this.options.minConfidence > 0 &&
       (adaptation.confidence === null || adaptation.confidence < this.options.minConfidence);
     const belowMargin =
+      strict &&
       this.options.minTopTwoMargin > 0 &&
       (adaptation.topTwoMargin === null || adaptation.topTwoMargin < this.options.minTopTwoMargin);
     if (belowConfidence || belowMargin) {

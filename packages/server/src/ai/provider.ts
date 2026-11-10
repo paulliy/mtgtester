@@ -69,6 +69,10 @@ interface ModelFailure {
 
 type ModelOutcome = { kind: 'answered'; response: DecisionResponse } | ModelFailure;
 
+/** Choice instructions when Jev settles a bot close call between two options. */
+export const JEV_CLOSE_CALL_INSTRUCTIONS =
+  "Both actions are legal and were judged close. Choose the one that better advances this seat's stated strategy and survival. Select exactly one criterion key.";
+
 export class OpenAiDecisionProvider implements AsyncDecisionProvider {
   /** Per-provider (therefore per-seat, per-game) — never shared between games. */
   private readonly cache = new DecisionCache();
@@ -259,7 +263,14 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
           shadow = this.jev.policy.decide(request, view, guidance);
         }
       } else {
-        const jev = await this.jev.policy.decide(request, view, guidance);
+        const pair = this.closeCallPair(request, botAnswer);
+        const jev =
+          pair === null
+            ? await this.jev.policy.decide(request, view, guidance)
+            : await this.jev.policy.decide(pair, view, guidance, {
+                instructions: JEV_CLOSE_CALL_INSTRUCTIONS,
+                ignoreThresholds: true,
+              });
         this.recordJevDebug(request, jev, false);
         if (jev.kind === 'answered') {
           this.logger?.log(
@@ -305,6 +316,21 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
         });
     }
     return response;
+  }
+
+  /**
+   * A bot close call narrowed to the bot's two best options (`jevCloseCallMenu: 'top2'`), or null
+   * to ask Jev about the whole menu. Both options are still the engine's own legal actions.
+   */
+  private closeCallPair(
+    request: DecisionRequest,
+    botAnswer: BotAnswer | undefined,
+  ): DecisionRequest | null {
+    if (this.config.jevCloseCallMenu !== 'top2' || botAnswer?.uncertain !== true) return null;
+    const ids = botAnswer.topActionIds ?? [];
+    if (ids.length !== 2) return null;
+    const legalActions = request.legalActions.filter((action) => ids.includes(action.id));
+    return legalActions.length === 2 ? { ...request, legalActions } : null;
   }
 
   /** The tactician model, then escalation or the fallback bot. */
