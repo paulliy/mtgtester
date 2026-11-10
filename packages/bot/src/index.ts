@@ -6,7 +6,13 @@
 export { evaluate, decide, decideScored } from './evaluate';
 export type { ScoredAction, ScoredDecision, EvaluateOptions } from './evaluate';
 export { CARD_ROLES } from './card-knowledge';
-export type { CardKnowledge, CardRole, CardTraits, TargetPolarity } from './card-knowledge';
+export type {
+  CardKnowledge,
+  CardRole,
+  CardTraits,
+  TargetPolarity,
+  WipeSelector,
+} from './card-knowledge';
 export { manaValueOfCost } from './policy';
 export { passesVeto, totalLifeCost, totalSacrificeCount, totalDiscardCount } from './veto';
 export { WEIGHTS } from './weights';

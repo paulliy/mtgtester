@@ -53,6 +53,23 @@ describe('cardTraits', () => {
     expect(t.roles).not.toContain('pump');
   });
 
+  it('records constant damage per target slot', () => {
+    expect(traits('Lightning Bolt').spellDamage).toEqual([3]);
+  });
+
+  it("carries a selective sweeper's selector and a damage sweeper's amount", () => {
+    const death = traits('Their Name Is Death');
+    expect(death.roles).toContain('wipe');
+    expect(death.wipeSelector).toEqual({
+      kind: 'allOf',
+      of: [
+        { kind: 'type', value: 'Creature' },
+        { kind: 'not', of: { kind: 'type', value: 'Artifact' } },
+      ],
+    });
+    expect(traits('Blasphemous Act').wipeDamage).toBe(13);
+  });
+
   it('does not call a counterspell removal', () => {
     expect(traits('Counterspell').roles).not.toContain('removal');
   });

@@ -273,6 +273,61 @@ describe('card-aware priority scoring', () => {
     expect(res.targets).toEqual([{ slot: 0, choice: 'big' }]);
   });
 
+  it('bolts a creature it can kill over a bigger one it cannot', () => {
+    const board = [creature('small', 'P2', 2, 2), creature('huge', 'P2', 10, 10)];
+    const bolt: LegalAction = {
+      id: 1,
+      type: 'castSpell',
+      description: 'Cast Lightning Bolt',
+      instantSpeed: true,
+      targets: [{ slot: 0, options: ['huge', 'small'] }],
+      data: { sourceName: 'Lightning Bolt', manaCost: '{R}', instantSpeed: true },
+    } as LegalAction;
+    const k = knowledge({
+      'Lightning Bolt': {
+        manaValue: 1,
+        roles: ['removal'],
+        spellTargets: ['hostile'],
+        spellDamage: [3],
+      },
+    });
+    const res = decide(request([PASS, bolt]), view({ battlefield: board }), new Rng('a'), {
+      knowledge: k,
+    });
+    expect(res.targets).toEqual([{ slot: 0, choice: 'small' }]);
+  });
+
+  it('values a selective wipe by the creatures it actually destroys', () => {
+    // Their Name Is Death: "Destroy all nonartifact creatures."
+    const golems = [1, 2, 3, 4, 5].map((n) =>
+      creature(`golem${n}`, 'P1', 4, 4, { typeLine: 'Artifact Creature — Golem' }),
+    );
+    const board = [...golems, creature('theirs', 'P2', 5, 5)];
+    const wipe: LegalAction = {
+      id: 1,
+      type: 'castSpell',
+      description: 'Cast Their Name Is Death',
+      data: { sourceName: 'Their Name Is Death', manaCost: '{4}{B}{B}' },
+    };
+    const selector = {
+      kind: 'allOf',
+      of: [
+        { kind: 'type', value: 'Creature' },
+        { kind: 'not', of: { kind: 'type', value: 'Artifact' } },
+      ],
+    };
+    const traits = { manaValue: 6, roles: ['wipe'] as const, wipeSelector: selector };
+    const res = decide(request([PASS, wipe]), view({ battlefield: board }), new Rng('a'), {
+      knowledge: knowledge({ 'Their Name Is Death': traits }),
+    });
+    expect(res.actionId).toBe(1);
+    // Without the selector the same board reads as a five-for-one loss.
+    const blind = decide(request([PASS, wipe]), view({ battlefield: board }), new Rng('a'), {
+      knowledge: knowledge({ 'Their Name Is Death': { manaValue: 6, roles: ['wipe'] } }),
+    });
+    expect(blind.actionId).toBe(0);
+  });
+
   it('reads polarity by slot number when a mode leaves earlier slots out', () => {
     // Boros Charm's double-strike mode offers only slot 1; slot 0 is the hostile damage mode.
     const board = [creature('mine', 'P1', 3, 3), creature('theirs', 'P2', 5, 5)];

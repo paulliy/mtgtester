@@ -43,6 +43,19 @@ export type CardRole = (typeof CARD_ROLES)[number];
 /** Whether a target slot's effects hurt or help what they target. */
 export type TargetPolarity = 'hostile' | 'friendly' | 'neutral';
 
+/**
+ * A subset of the engine's permanent selector, as plain JSON. The bot evaluates the leaves it
+ * understands against a `PermanentView` and treats any other leaf as unknown.
+ */
+export interface WipeSelector {
+  kind: string;
+  value?: string;
+  who?: string;
+  n?: number;
+  keyword?: string;
+  of?: WipeSelector | readonly WipeSelector[];
+}
+
 export interface CardTraits {
   manaValue: number;
   /** Card types: Creature, Instant, Land, ... */
@@ -57,6 +70,21 @@ export interface CardTraits {
   abilityTargets?: readonly (readonly TargetPolarity[])[];
   /** Whether each activated ability, by ability index, is limited to sorcery timing. */
   abilitySorcery?: readonly boolean[];
+  /**
+   * Fixed damage each spell target slot takes (Lightning Bolt's 3), or null where the slot takes
+   * no damage or the amount is not a constant. Lets the bot tell a kill from a scratch.
+   */
+  spellDamage?: readonly (number | null)[];
+  /** The same, per slot of each activated ability, by ability index. */
+  abilityDamage?: readonly (readonly (number | null)[])[];
+  /**
+   * Which permanents the card's sweeper affects, as the engine's selector JSON ("nonartifact
+   * creatures"). Absent when the card has no sweeper or one of its sweeps has no selector, in
+   * which case every creature is assumed affected.
+   */
+  wipeSelector?: WipeSelector;
+  /** Fixed damage a damage sweeper deals to each affected creature, when it is a constant. */
+  wipeDamage?: number;
   /** Printed power and toughness for creatures. */
   power?: number | null;
   toughness?: number | null;

@@ -182,6 +182,8 @@ export const WEIGHTS = {
     },
     /** Share of the best hostile target's LEP that a removal spell is worth. */
     removalTargetShare: 0.6,
+    /** Share of a creature's worth counted when the targeted damage would leave it alive. */
+    nonlethalDamageShare: 0.1,
     /** A board wipe is worth this share of (their creatures - our creatures x weight). */
     wipeNetShare: 0.4,
     wipeOwnLossWeight: 1.3,
