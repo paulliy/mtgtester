@@ -277,16 +277,16 @@ export function chooseTargets(action: LegalAction, ctx: PolicyContext): TargetCh
   const chosen: TargetChoice[] = new Array<TargetChoice>(slots.length);
   for (const i of order) {
     const slot = slots[i]!;
-    chosen[i] = pickForSlot(slot, i);
+    chosen[i] = pickForSlot(slot);
   }
   return chosen;
 
-  function pickForSlot(slot: (typeof slots)[number], i: number): TargetChoice {
+  function pickForSlot(slot: (typeof slots)[number]): TargetChoice {
     // Some slots must differ from earlier ones ("another target", CR 115.3). The menu cannot say
     // which, so prefer an option no earlier slot took whenever one exists.
     const fresh = slot.options.filter((o) => !taken.has(o));
     const options = fresh.length > 0 ? fresh : slot.options;
-    const polarity = options.length <= 1 ? 'neutral' : slotPolarity(action, i, ctx);
+    const polarity = options.length <= 1 ? 'neutral' : slotPolarity(action, slot.slot, ctx);
     let best = options[0] as string;
     if (polarity !== 'neutral') {
       let bestScore = -Infinity;
@@ -315,8 +315,10 @@ function bestTargetValue(
 ): number | null {
   const pressure = opponentPressure(ctx);
   let best: number | null = null;
-  (action.targets ?? []).forEach((slot, i) => {
-    if (slotPolarity(action, i, ctx) !== polarity) return;
+  // A modal action leaves inactive slots out of the menu, so look polarity up by the slot's own
+  // number, not its position.
+  (action.targets ?? []).forEach((slot) => {
+    if (slotPolarity(action, slot.slot, ctx) !== polarity) return;
     const value = Math.max(...slot.options.map((o) => optionScore(o, polarity, ctx, pressure)));
     best = best === null ? value : Math.max(best, value);
   });
@@ -563,6 +565,8 @@ export function actionValue(action: LegalAction, ctx: PolicyContext): number | n
 }
 
 const EQUIP = /^(Equip|Reconfigure)\b/i;
+/** "Equip {2}" or "Equip—Pay 3 life", not a restricted "Equip commander {3}". */
+const UNRESTRICTED_EQUIP = /^(Equip|Reconfigure)\s*(\{|\d|—|-|:|$)/i;
 const CREW = /^Crew\b/i;
 
 /**
@@ -584,11 +588,15 @@ function attachOrCrewPenalty(action: LegalAction, ctx: PolicyContext): number | 
     );
     const best = (list: PermanentView[]): number =>
       list.reduce((m, p) => Math.max(m, permanentValue(p, ctx)), Number.NEGATIVE_INFINITY);
-    // The view does not show attachments, but the menu leaves out the creature this is already
-    // on. When the best creature is missing from the options, moving the equipment is a downgrade.
+    // The view does not show attachments, but an unrestricted equip menu offers every creature
+    // you control except the one it is already on. When exactly one is missing and it is the
+    // best, moving the equipment is a downgrade. A restricted equip ("Equip commander") leaves
+    // creatures out for other reasons, so nothing can be inferred from its menu.
+    if (!UNRESTRICTED_EQUIP.test(ability) || options.length === 0) return null;
+    const missing = own.filter((p) => !offered.has(p.id));
+    if (missing.length !== 1) return null;
     const bestOffered = best(own.filter((p) => offered.has(p.id)));
-    const bestElsewhere = best(own.filter((p) => !offered.has(p.id)));
-    if (options.length > 0 && bestElsewhere >= bestOffered) return P.pointlessActivation;
+    if (best(missing) >= bestOffered) return P.pointlessActivation;
     return null;
   }
   if (CREW.test(ability)) {

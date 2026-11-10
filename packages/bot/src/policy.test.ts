@@ -273,6 +273,25 @@ describe('card-aware priority scoring', () => {
     expect(res.targets).toEqual([{ slot: 0, choice: 'big' }]);
   });
 
+  it('reads polarity by slot number when a mode leaves earlier slots out', () => {
+    // Boros Charm's double-strike mode offers only slot 1; slot 0 is the hostile damage mode.
+    const board = [creature('mine', 'P1', 3, 3), creature('theirs', 'P2', 5, 5)];
+    const charm: LegalAction = {
+      id: 1,
+      type: 'castSpell',
+      description: 'Cast Boros Charm',
+      targets: [{ slot: 1, options: ['theirs', 'mine'] }],
+      data: { sourceName: 'Boros Charm', manaCost: '{R}{W}', instantSpeed: true },
+    };
+    const k = knowledge({
+      'Boros Charm': { manaValue: 2, roles: [], spellTargets: ['hostile', 'friendly'] },
+    });
+    const res = decide(request([charm]), view({ battlefield: board }), new Rng('a'), {
+      knowledge: k,
+    });
+    expect(res.targets).toEqual([{ slot: 1, choice: 'mine' }]);
+  });
+
   it('does not cast removal whose only targets are its own permanents', () => {
     const removal: LegalAction = {
       id: 1,
@@ -557,6 +576,17 @@ describe('activations with no effect role', () => {
       },
     );
     expect(again.actionId).toBe(0);
+  });
+
+  it('equips a restricted equip target even when a stronger creature is left out', () => {
+    // "Equip commander" offers only the commander; the missing creature is not the host.
+    const suit: LegalAction = {
+      ...equip(['small']),
+      description: 'Suit: Equip commander {3}',
+      data: { sourceName: 'Suit', abilityDescription: 'Equip commander {3}', manaCost: '{3}' },
+    };
+    const res = decide(request([PASS, suit]), view({ battlefield: board }), new Rng('a'));
+    expect(res.actionId).toBe(1);
   });
 
   it('crews only an uncrewed vehicle before its own combat', () => {
