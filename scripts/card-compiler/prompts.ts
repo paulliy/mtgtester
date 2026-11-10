@@ -118,7 +118,8 @@ creature. The selectors of "destroyEach", "exileEach" and "returnToHandEach" onl
 permanents on the battlefield. A "subtype" in a target filter is a creature type unless the filter
 says otherwise. A layer 7 "d" power/toughness change adds to the current values ("gets +1/+1");
 only sublayer "b" sets base power and toughness. Write every flag on an effect, for example
-"cantRegenerate" as "They can't be regenerated."
+"cantRegenerate" as "They can't be regenerated." A value shown as "<text>" was hidden on purpose
+(a name or free text): never quote "<text>"; write around it, e.g. "a token" or "this ability".
 
 Answer with only the rules text.`;
 
@@ -138,6 +139,8 @@ durations, conditions, timing, zones, and anything present in one but missing fr
 Not differences: "X spells and Y spells cost {1} less" is one ability, so a spell that is both is
 reduced once, the same as "spells that are X or Y". A token's name is cosmetic, so a missing or
 different token name is not a difference when the token's types, stats and abilities match.
+A player can only sacrifice permanents they control, so "sacrifice a nontoken artifact" and
+"sacrifice a nontoken artifact you control" are the same.
 
 Answer with ONE JSON object and nothing else:
   {"verdict":"same"} or {"verdict":"different","differences":["<one difference per item>"]}`;
