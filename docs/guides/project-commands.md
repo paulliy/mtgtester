@@ -63,7 +63,7 @@ bun run bot-league [--games N] [--a ARM] [--b ARM] [--turn-cap N] [--jobs N] [--
                                         # ADR 0039 bot vs bot win rate; arms: legacy, policy, knowledge, aggro, control
 bun run ai-call-census [--games N] [--turn-cap N] [--json F]
                                         # ADR 0039 model calls and prompt tokens per turn by tactical mode, offline
-bun run ai-mode-duel [--seed S] [--turn-cap N] [--swap] [--json F]
+bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json F]
                                         # ADR 0039 one PAID game from .env: P1/P3 bot mode, P2/P4 model tactician
 bun run fuzz [--from N] [--games N] [--changed [--base S]] [--card "<name>"] [--json F] [--report F]
                                         # ADR 0034 seeded four-player games, invariants on; prints each failure's replay

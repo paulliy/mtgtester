@@ -4,7 +4,11 @@
  * `AI_TACTICAL_MODE=model` (today's model tactician). Everything else comes from the environment
  * (`.env` is read by Bun), so the endpoint, models and key are the same ones the app uses.
  *
- *   bun run ai-mode-duel [--seed S] [--turn-cap N] [--swap] [--json out.json]
+ *   bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json out.json]
+ *
+ * Spend caps: once the provider-reported cost reaches `--max-usd` (default 2) or the call count
+ * reaches `--max-calls` (default 1500), no further model call is made and every seat plays the
+ * rest of the game on the bot fallback; the report says the cap was hit.
  *
  * `--swap` seats the modes the other way round, for a second game on the same decks. The report
  * counts real model calls, prompt and response tokens and reported cost per mode, and who won.
@@ -58,12 +62,21 @@ function emptyTally(): Tally {
   };
 }
 
+interface Budget {
+  maxUsd: number;
+  maxCalls: number;
+  spentUsd: number;
+  calls: number;
+  capped: boolean;
+}
+
 /** Wraps a real client so every call is charged to the mode of the seat it was made for. */
 function counting(
   inner: AiClient,
   role: 'tactician' | 'strategist',
   modeOf: (seat: PlayerId) => ModeName,
   tallies: Record<ModeName, Tally>,
+  budget: Budget,
 ): AiClient {
   return {
     get activeModel() {
@@ -74,6 +87,12 @@ function counting(
       : { setAttemptObserver: inner.setAttemptObserver.bind(inner) }),
     async requestDecision(prompt: AiPrompt, request: DecisionRequest, signal?: AbortSignal) {
       const tally = tallies[modeOf(request.decidingPlayer)];
+      if (budget.spentUsd >= budget.maxUsd || budget.calls >= budget.maxCalls) {
+        // Thrown before any request is sent: the provider falls back to the bot, for free.
+        budget.capped = true;
+        throw new Error('ai-mode-duel spend cap reached');
+      }
+      budget.calls++;
       let result: Awaited<ReturnType<AiClient['requestDecision']>>;
       try {
         result = await inner.requestDecision(prompt, request, signal);
@@ -85,8 +104,10 @@ function counting(
       else tally.strategistCalls++;
       tally.promptTokens += result.meta.promptTokens;
       tally.responseTokens += result.meta.responseTokens;
-      if (typeof result.meta.costUsd === 'number') tally.costUsd += result.meta.costUsd;
-      else tally.costKnown = false;
+      if (typeof result.meta.costUsd === 'number') {
+        tally.costUsd += result.meta.costUsd;
+        budget.spentUsd += result.meta.costUsd;
+      } else tally.costKnown = false;
       return result;
     },
   };
@@ -103,6 +124,13 @@ async function main(): Promise<void> {
   const turnCap = Number(arg(argv, '--turn-cap') ?? 60);
   const swap = argv.includes('--swap');
   const json = arg(argv, '--json');
+  const budget: Budget = {
+    maxUsd: Number(arg(argv, '--max-usd') ?? 2),
+    maxCalls: Number(arg(argv, '--max-calls') ?? 1500),
+    spentUsd: 0,
+    calls: 0,
+    capped: false,
+  };
 
   const base = loadAiConfig(process.env);
   if (!base.apiKey) {
@@ -145,12 +173,14 @@ async function main(): Promise<void> {
     'strategist',
     modeOf,
     tallies,
+    budget,
   );
   const tacticianClient = counting(
     new OpenAiCompatibleClient(configForRole(base, 'tactician')),
     'tactician',
     modeOf,
     tallies,
+    budget,
   );
   const queue = new RequestQueue(base);
   const logger = new AiCallLogger(null, `mode-duel-${seed}`);
@@ -210,6 +240,12 @@ async function main(): Promise<void> {
   const report = {
     seed,
     swap,
+    spendCap: {
+      maxUsd: budget.maxUsd,
+      maxCalls: budget.maxCalls,
+      reached: budget.capped,
+      spentUsd: Number(budget.spentUsd.toFixed(4)),
+    },
     turns,
     minutes: Number(((performance.now() - started) / 60_000).toFixed(1)),
     winner: result.winnerSeat,
