@@ -124,7 +124,7 @@ function parseSubjectUntraced(phrase: string, card: OracleCard): Selector | null
   // and", and reading those as the attached creature silently dropped everything but the trailing
   // keywords (Whispersilk Cloak, Ethereal Armor, On Serra's Wings).
   if (
-    /^(equipped|enchanted|fortified) (creature|permanent|land|artifact|enchantment|planeswalker)$/.test(
+    /^(equipped|enchanted|fortified) (creature|permanent|land|artifact|enchantment|planeswalker|battle|plains|island|swamp|mountain|forest)$/.test(
       noun,
     )
   )

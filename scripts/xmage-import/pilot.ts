@@ -31,8 +31,8 @@ import { translateAbility, Unmapped, type Fragment, type XmageContext } from './
 const [xmage, outDir] = process.argv.slice(2);
 const limitArg = process.argv.indexOf('--limit');
 const LIMIT = limitArg > 0 ? Number(process.argv[limitArg + 1]) : 100;
-if (!xmage || !outDir) {
-  console.error('usage: pilot.ts <xmage-checkout> <out-dir> [--limit N]');
+if (!xmage || !outDir || !Number.isInteger(LIMIT) || LIMIT < 0) {
+  console.error('usage: pilot.ts <xmage-checkout> <out-dir> [--limit N] (N a whole number)');
   process.exit(2);
 }
 
@@ -201,6 +201,9 @@ for (const row of triage) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
+  // Two names reducing to one slug would overwrite each other's patch file.
+  const clash = patches.find((p) => p.slug === slug);
+  if (clash) throw new Error(`patch slug "${slug}" is shared by ${clash.name} and ${row.name}`);
   patches.push({
     slug,
     name: row.name,
