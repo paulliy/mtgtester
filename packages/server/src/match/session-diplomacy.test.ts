@@ -56,7 +56,9 @@ async function play(options: { diplomacy?: boolean; gameMode?: 'singlePlayer' } 
     seed: SEED,
     seats: seats(),
     providerKind: 'random',
-    turnCap: 14,
+    // 20, not 14: since ADR 0039 the bots attack only where it is safe, and the seeded game
+    // needs a few more turns of pressure before a seat proposes a deal.
+    turnCap: 20,
     playbackMode: 'live',
     livePaceMs: 0,
     ...(options.diplomacy !== undefined && { diplomacy: options.diplomacy }),
@@ -108,7 +110,7 @@ describe('MatchSession — the player at the table (ADR 0035 phase 3)', () => {
       providerKind: 'random',
       gameMode: 'singlePlayer',
       humanSeat: 'P1',
-      turnCap: 14,
+      turnCap: 20,
       livePaceMs: 0,
       diplomacy: true,
       send: (message) => sent.push(message),

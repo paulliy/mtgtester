@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PermanentView, PlayerView } from '@mtg/shared';
-import { cleanSteering, steeringSignature } from './steering';
+import { cleanSteering, tableChanged, tableSnapshot } from './steering';
 
 describe('cleanSteering', () => {
   it('clamps numbers, drops unknown seats and keeps names', () => {
@@ -73,11 +73,13 @@ const bear = (id: string, power = 2): PermanentView => ({
   status: [],
 });
 
-describe('steeringSignature', () => {
+describe('tableChanged', () => {
   it('ignores a small change and notices a big one', () => {
-    const base = steeringSignature(view([bear('a')]));
-    expect(steeringSignature(view([bear('a'), bear('b')]))).toBe(base);
-    expect(steeringSignature(view([bear('a', 12)]))).not.toBe(base);
-    expect(steeringSignature(view([bear('a')], 12))).not.toBe(base);
+    const base = tableSnapshot(view([bear('a')]));
+    expect(tableChanged(base, tableSnapshot(view([bear('a'), bear('b')])))).toBe(false);
+    expect(tableChanged(base, tableSnapshot(view([bear('a')], 35)))).toBe(false);
+    expect(tableChanged(base, tableSnapshot(view([bear('a', 12)])))).toBe(true);
+    expect(tableChanged(base, tableSnapshot(view([bear('a')], 25)))).toBe(true);
+    expect(tableChanged(base, tableSnapshot(view([bear('a')], 0)))).toBe(true);
   });
 });

@@ -164,7 +164,9 @@ describe('mulligan and bottoming', () => {
       id: i,
       type: 'bottomCard',
       description: `Bottom ${c.name}`,
-      interaction: { kind: 'choice', subjectId: c.id } as unknown as LegalAction['interaction'],
+      interaction: { kind: 'choice', subjectId: c.id } as unknown as NonNullable<
+        LegalAction['interaction']
+      >,
     }));
     const req = request(actions, { decisionType: 'bottomCards' });
     const landHeavy = decide(req, view({ hand: cards }), new Rng('a'));
@@ -181,7 +183,9 @@ describe('mulligan and bottoming', () => {
       id: i,
       type: 'bottomCard',
       description: `Bottom ${c.name}`,
-      interaction: { kind: 'choice', subjectId: c.id } as unknown as LegalAction['interaction'],
+      interaction: { kind: 'choice', subjectId: c.id } as unknown as NonNullable<
+        LegalAction['interaction']
+      >,
     }));
     const chosen = decide(
       request(actions2, { decisionType: 'bottomCards' }),

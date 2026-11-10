@@ -47,35 +47,61 @@ export function cleanSteering(raw: unknown, opponents: readonly string[]): BotSt
   return Object.keys(out).length > 0 ? out : null;
 }
 
-/**
- * A coarse fingerprint of the public table, for `strategistReplan: 'onChange'`. Buckets are wide
- * on purpose: a land drop or a 2/2 should not cost a model call, a board wipe, a new big threat,
- * a big life swing, a commander arriving or a player dying should.
- */
-export function steeringSignature(view: PlayerView): string {
-  const seats = [view.seat, ...view.opponents.map((o) => o.seat)];
-  const lifeOf = (seat: string): number =>
-    seat === view.seat ? view.life : (view.opponents.find((o) => o.seat === seat)?.life ?? 0);
+/** One seat's public position, as `tableSnapshot` records it. */
+export interface SeatSnapshot {
+  life: number;
+  power: number;
+  nonland: number;
+  commanderOut: boolean;
+}
+
+export type TableSnapshot = Record<string, SeatSnapshot>;
+
+/** The public numbers `tableChanged` compares, for every seat the view shows. */
+export function tableSnapshot(view: PlayerView): TableSnapshot {
   const commanderNames = new Set([
     ...view.commanders.map((c) => c.name),
     ...view.opponents.flatMap((o) => o.commanders.map((c) => c.name)),
   ]);
-  return seats
-    .map((seat) => {
-      const life = lifeOf(seat);
-      if (life <= 0) return `${seat}:out`;
-      const permanents = view.battlefield.filter((p) => p.controller === seat);
-      const creatures = permanents.filter((p) => p.power !== undefined && p.power !== null);
-      const power = creatures.reduce((sum, p) => sum + Math.max(0, p.power ?? 0), 0);
-      const nonland = permanents.filter((p) => !(p.typeLine ?? '').includes('Land')).length;
-      const commanderOut = permanents.some((p) => commanderNames.has(p.name));
-      return [
-        seat,
-        Math.floor(life / 10),
-        Math.floor(power / 10),
-        Math.floor(nonland / 6),
-        commanderOut ? 'C' : '-',
-      ].join(':');
-    })
-    .join('|');
+  const seats: Array<[string, number]> = [
+    [view.seat, view.life],
+    ...view.opponents.map((o): [string, number] => [o.seat, o.life]),
+  ];
+  const out: TableSnapshot = {};
+  for (const [seat, life] of seats) {
+    const permanents = view.battlefield.filter((p) => p.controller === seat);
+    const creatures = permanents.filter((p) => p.power !== undefined && p.power !== null);
+    out[seat] = {
+      life,
+      power: creatures.reduce((sum, p) => sum + Math.max(0, p.power ?? 0), 0),
+      nonland: permanents.filter((p) => !(p.typeLine ?? '').includes('Land')).length,
+      commanderOut: permanents.some((p) => commanderNames.has(p.name)),
+    };
+  }
+  return out;
+}
+
+/** How far a number must move before the table counts as changed. */
+const LIFE_SWING = 10;
+const POWER_SWING = 8;
+const NONLAND_SWING = 4;
+
+/**
+ * Whether the table has moved enough since `before` to be worth new knobs, for
+ * `strategistReplan: 'onChange'`. Measured as distance from when the knobs were set, not as
+ * bucket boundaries, so a 1-point change never triggers a call by crossing a line: a board wipe,
+ * a big new threat, a large life swing, a commander arriving or leaving, or a player dying does.
+ */
+export function tableChanged(before: TableSnapshot, now: TableSnapshot): boolean {
+  for (const [seat, was] of Object.entries(before)) {
+    const is = now[seat];
+    if (is === undefined) return true;
+    if (was.life > 0 !== is.life > 0) return true;
+    if (is.life <= 0) continue;
+    if (Math.abs(is.life - was.life) >= LIFE_SWING) return true;
+    if (Math.abs(is.power - was.power) >= Math.max(POWER_SWING, was.power / 2)) return true;
+    if (Math.abs(is.nonland - was.nonland) >= NONLAND_SWING) return true;
+    if (is.commanderOut !== was.commanderOut) return true;
+  }
+  return false;
 }

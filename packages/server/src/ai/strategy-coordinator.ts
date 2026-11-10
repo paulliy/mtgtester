@@ -26,7 +26,7 @@ import { TurnPlanManager, type AcceptedPlanAction } from './turn-plan';
 import { AI_VERSIONS } from './versions';
 import type { SeatDiplomacyContext } from './diplomacy-context';
 import { preparePromptForCaching } from './prompt-cache';
-import { cleanSteering, steeringSignature } from './steering';
+import { cleanSteering, tableChanged, tableSnapshot, type TableSnapshot } from './steering';
 
 interface QueueLike {
   enqueue<T>(fn: () => Promise<T>, signal?: AbortSignal): Promise<T>;
@@ -205,11 +205,11 @@ export class StrategyCoordinator {
   private cancelled = false;
   /**
    * Bot-led mode (ADR 0039): each seat's latest strategist knobs, kept across turns, with the
-   * table signature they were set against and how many of the seat's turns have reused them.
+   * public table they were set against and how many of the seat's turns have reused them.
    */
   private readonly steeringBySeat = new Map<
     PlayerId,
-    { steering: BotSteering; signature: string; reusedTurns: number }
+    { steering: BotSteering; table: TableSnapshot; reusedTurns: number }
   >();
   /** Strategist calls made and skipped because the knobs still fit, for measurement. */
   readonly strategistStats = { calls: 0, reused: 0 };
@@ -246,6 +246,8 @@ export class StrategyCoordinator {
   ) {
     this.turnPlan = new TurnPlanManager(config.planLifecycleScopedInvalidationEnabled);
     this.turnPlan.onInvalidated = () => {
+      // Bot-led knobs are not a plan of actions, so nothing they hold can be invalidated.
+      if (this.botLed()) return;
       this.strategy = null;
       if (!this.config.planLifecycleScopedInvalidationEnabled) return;
       this.activeGeneration = 0;
@@ -433,7 +435,7 @@ export class StrategyCoordinator {
         if (steering !== null) {
           this.steeringBySeat.set(activePlayer, {
             steering,
-            signature: steeringSignature(view),
+            table: tableSnapshot(view),
             reusedTurns: 0,
           });
         }
@@ -503,7 +505,7 @@ export class StrategyCoordinator {
 
   /**
    * `strategistReplan: 'onChange'`: skip this turn's strategist call when the seat already has
-   * knobs, the table's coarse signature has not moved since they were set, and they have been
+   * knobs, the public table has not moved much since they were set, and they have been
    * reused fewer than `strategistMaxReuseTurns` turns.
    */
   private reuseSteering(seat: PlayerId): boolean {
@@ -511,7 +513,7 @@ export class StrategyCoordinator {
     const current = this.steeringBySeat.get(seat);
     if (current === undefined) return false;
     if (current.reusedTurns >= this.config.strategistMaxReuseTurns) return false;
-    if (steeringSignature(this.engine.view(seat)) !== current.signature) return false;
+    if (tableChanged(current.table, tableSnapshot(this.engine.view(seat)))) return false;
     current.reusedTurns++;
     this.strategistStats.reused++;
     this.engine.addDebug?.('decision', `strategist knobs reused for ${seat}`, {

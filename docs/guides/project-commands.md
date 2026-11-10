@@ -59,6 +59,10 @@ bun run pilot:draw [--bank F]          # phase 6 pilot: draw 20 unmodeled cards 
 bun run snapshot:oracle
 bun run modelled-cards
 bun run combat-sweep [--games N] [--seed S] [--json out.json]
+bun run bot-league [--games N] [--a ARM] [--b ARM] [--turn-cap N] [--jobs N] [--json F]
+                                        # ADR 0039 bot vs bot win rate; arms: legacy, policy, knowledge, aggro, control
+bun run ai-call-census [--games N] [--turn-cap N] [--json F]
+                                        # ADR 0039 model calls and prompt tokens per turn by tactical mode, offline
 bun run fuzz [--from N] [--games N] [--changed [--base S]] [--card "<name>"] [--json F] [--report F]
                                         # ADR 0034 seeded four-player games, invariants on; prints each failure's replay
 bun run diplomacy-sweep [--games N] [--seed S] [--turn-cap N] [--all] [--talk]   # ADR 0035 self-play
