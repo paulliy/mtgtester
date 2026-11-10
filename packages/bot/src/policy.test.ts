@@ -820,6 +820,74 @@ describe('activations with no effect role', () => {
   });
 });
 
+describe('resolution-time card choices', () => {
+  // The engine's `chooseCard` menus carry no payload, so `interactionFor` yields a bare
+  // `{ kind: 'choice' }`; the card is named only in the decision's presentation.
+  function presentedChoice(
+    type: string,
+    cards: Array<{ id: string; name: string; typeLine: string; zone: string }>,
+  ): DecisionRequest {
+    const legalActions: LegalAction[] = cards.map((c, i) => ({
+      id: i,
+      type,
+      description: `Discard ${c.name}`,
+      interaction: { kind: 'choice' },
+    }));
+    const actions = Object.fromEntries(
+      cards.map((c, i) => [
+        i,
+        {
+          verb: 'Discard',
+          role: 'select' as const,
+          subjects: [
+            {
+              kind: 'card' as const,
+              card: {
+                objectId: c.id,
+                name: c.name,
+                scryfallId: null,
+                typeLine: c.typeLine,
+                zone: c.zone as 'hand',
+              },
+            },
+          ],
+        },
+      ]),
+    );
+    return request(legalActions, {
+      decisionType: 'general',
+      presentation: { layout: 'cards', actions },
+    });
+  }
+
+  it('discards the cheap card and keeps the bomb when the menu has no subject ids', () => {
+    const hand = [
+      card('bomb', 'Expensive Bomb', 'Sorcery', '{6}{B}{B}'),
+      card('cheap', 'Cheap Trick', 'Instant', '{U}'),
+    ];
+    const req = presentedChoice('discard', [
+      { id: 'bomb', name: 'Expensive Bomb', typeLine: 'Sorcery', zone: 'hand' },
+      { id: 'cheap', name: 'Cheap Trick', typeLine: 'Instant', zone: 'hand' },
+    ]);
+    const k = knowledge({ 'Expensive Bomb': { manaValue: 8 }, 'Cheap Trick': { manaValue: 1 } });
+    const ranked = evaluate(req, view({ hand }), { knowledge: k });
+    expect(ranked[0]!.action.id).toBe(1);
+    expect(ranked[0]!.score).toBeGreaterThan(ranked[1]!.score);
+  });
+
+  it('values a card from a hidden zone by its presented name', () => {
+    // A library search: neither card is in the view, only in the presentation.
+    const req = presentedChoice('search', [
+      { id: 'l1', name: 'Cheap Trick', typeLine: 'Instant', zone: 'library' },
+      { id: 'l2', name: 'Expensive Bomb', typeLine: 'Sorcery', zone: 'library' },
+    ]);
+    const k = knowledge({ 'Expensive Bomb': { manaValue: 8 }, 'Cheap Trick': { manaValue: 1 } });
+    const ranked = evaluate(req, view(), { knowledge: k });
+    expect(ranked[0]!.action.id).toBe(1);
+    expect(ranked[0]!.score).toBeGreaterThan(ranked[1]!.score);
+  });
+});
+
 describe('review fixes', () => {
   it('counters a counterspell aimed at its own spell (the top of the stack is the last entry)', () => {
     const counter: LegalAction = {

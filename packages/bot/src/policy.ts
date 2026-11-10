@@ -823,17 +823,33 @@ const DECLINES: ReadonlySet<string> = new Set([
   'declineGift',
 ]);
 
-function subjectOf(action: LegalAction): ObjectId | undefined {
-  const interaction = action.interaction as { subjectId?: unknown } | undefined;
-  return typeof interaction?.subjectId === 'string' ? interaction.subjectId : undefined;
+/**
+ * The card an option is about. A menu built by the engine's `chooseCard` (discard, sacrifice,
+ * return from graveyard) carries no payload, so its interaction has no subject id; the card is
+ * named only in the option's presentation, which the deciding seat is shown anyway.
+ */
+function presentedCardOf(action: LegalAction, ctx: PolicyContext) {
+  const subject = ctx.request.presentation?.actions?.[action.id]?.subjects[0];
+  return subject?.kind === 'card' ? subject.card : undefined;
 }
 
-function subjectValue(id: ObjectId, ctx: PolicyContext): number | null {
+function subjectOf(action: LegalAction, ctx: PolicyContext): ObjectId | undefined {
+  const interaction = action.interaction as { subjectId?: unknown } | undefined;
+  if (typeof interaction?.subjectId === 'string') return interaction.subjectId;
+  return presentedCardOf(action, ctx)?.objectId;
+}
+
+function subjectValue(id: ObjectId, action: LegalAction, ctx: PolicyContext): number | null {
   const permanent = ctx.view.battlefield.find((p) => p.id === id);
   if (permanent !== undefined) return permanentValue(permanent, ctx);
   const card =
     ctx.view.hand.find((c) => c.id === id) ?? ctx.view.graveyard.find((c) => c.id === id);
   if (card !== undefined) return handCardValue(card, ctx);
+  // A card from a hidden zone (a library search, exile) is known only by its presentation.
+  const presented = presentedCardOf(action, ctx);
+  if (presented !== undefined && presented.objectId === id) {
+    return handCardValue({ id, name: presented.name, typeLine: presented.typeLine }, ctx);
+  }
   return null;
 }
 
@@ -843,7 +859,7 @@ export function choiceValue(action: LegalAction, ctx: PolicyContext): number | n
     return mulliganChoice(ctx) === action.type ? 1 : 0;
   }
   if (action.type === 'bottomCard') {
-    const id = subjectOf(action);
+    const id = subjectOf(action, ctx);
     const card = ctx.view.hand.find((c) => c.id === id);
     if (card === undefined) return null;
     const hand = ctx.view.hand;
@@ -856,9 +872,9 @@ export function choiceValue(action: LegalAction, ctx: PolicyContext): number | n
   if (action.type === 'acceptTrigger') return P.acceptOptional;
   if (DECLINES.has(action.type)) return 0;
   if (action.type === 'promiseGift') return -1;
-  const id = subjectOf(action);
+  const id = subjectOf(action, ctx);
   if (id !== undefined) {
-    const value = subjectValue(id, ctx);
+    const value = subjectValue(id, action, ctx);
     if (value !== null && LOSS_CHOICES.has(action.type)) return P.choiceBase - value;
     if (value !== null && GAIN_CHOICES.has(action.type)) return P.choiceBase + value;
   }
