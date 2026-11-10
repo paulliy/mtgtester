@@ -6,4 +6,4 @@ First strike, vigilance, lifelink
 Aura and Equipment spells you cast cost {1} less to cast.
 
 Text B:
-Aura or Equipment spells you cast cost {1} less to cast.
+Spells you cast that are Aura or Equipment spells cost {1} less to cast.

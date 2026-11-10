@@ -1,1 +1,1 @@
-{1}, {T}: Destroy each artifact, creature, and enchantment.
+{1}, {T}: Destroy each artifact, creature, and enchantment on the battlefield. Activate this ability any time you have priority.

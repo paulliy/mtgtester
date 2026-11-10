@@ -1,1 +1,0 @@
-{R}, {T}: Target permanent you control that is a Lizard, Mouse, Otter, or Raccoon gets +1/+0 until end of turn and gains haste until end of turn. Activate only as a sorcery.

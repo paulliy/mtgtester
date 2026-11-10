@@ -242,9 +242,12 @@ const SELF_REFERENCE_RE =
  * "Haven" and not the nonsensical "Haven of". The short form is matched on word boundaries so a
  * name that happens to be a common word cannot rewrite unrelated text.
  */
-function substituteSelfName(text: string, name: string): string {
+function substituteSelfName(text: string, name: string, legendary: boolean): string {
   const escape = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   let out = text.replace(new RegExp(escape(name), 'g'), '~');
+  // Only a legendary card refers to itself by a short name (CR 201.5): "Wall of Mulch" writes
+  // "Sacrifice a Wall", which is any Wall, not this one.
+  if (!legendary) return out.replace(SELF_REFERENCE_RE, '~');
   let shortAt = -1;
   for (const separator of [',', ' of ', ' the ']) {
     const at = name.indexOf(separator);
@@ -3081,7 +3084,11 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
   const isSpell = card.types.includes('Instant') || card.types.includes('Sorcery');
   const frontName =
     card.layout === 'transform' ? (card.name.split(' // ')[0] ?? card.name) : card.name;
-  const text = substituteSelfName(stripReminderText(card.oracleText), frontName);
+  const text = substituteSelfName(
+    stripReminderText(card.oracleText),
+    frontName,
+    /\bLegendary\b/.test(card.typeLine),
+  );
 
   // Whole-card block patterns that only mean something read together: a modal spell's mode
   // choice (CR 601.2b) and Stubborn Denial's Ferocious clause, which shares line 1's target

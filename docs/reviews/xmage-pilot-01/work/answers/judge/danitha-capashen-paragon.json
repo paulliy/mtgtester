@@ -1,6 +1,1 @@
-{
-  "verdict": "different",
-  "differences": [
-    "Text A says Aura and Equipment spells; Text B says Aura or Equipment spells. A spell that is both gets two separate {1} reductions under A but only one under B."
-  ]
-}
+{ "verdict": "same" }

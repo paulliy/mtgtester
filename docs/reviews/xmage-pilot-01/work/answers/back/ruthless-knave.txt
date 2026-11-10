@@ -1,1 +1,1 @@
-Sacrifice three Treasures you control (this creature is allowed to be one of the sacrificed permanents): Draw a card. Activate at any time.
+Sacrifice three other Treasures you control (this permanent may count as one of them): Draw a card. Activate at any time you have priority.

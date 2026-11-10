@@ -1,4 +1,4 @@
 {
   "verdict": "different",
-  "differences": ["Text A says the destroyed creatures can't be regenerated; Text B omits this"]
+  "differences": ["Text B drops the clause \"They can't be regenerated.\""]
 }

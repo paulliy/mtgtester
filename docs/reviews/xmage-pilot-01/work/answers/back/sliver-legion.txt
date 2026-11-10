@@ -1,1 +1,1 @@
-All Sliver creatures, including this one, have power and toughness each equal to the number of other Sliver permanents on the battlefield (counted across all controllers).
+Each Sliver creature gets +X/+X, where X is the number of other Sliver permanents on the battlefield (under any player's control).

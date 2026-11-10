@@ -7,4 +7,4 @@ At the beginning of your upkeep, mill two cards. (Put the top two cards of your 
 {1}{B}{G}, Exile this creature: Return target card from your graveyard to your hand.
 
 Text B:
-{1}{B}{G}, Exile this creature: Return target card in your graveyard to its owner's hand.
+{1}{B}{G}, Exile this creature: Return target card from your graveyard to your hand. Activate this ability any time you have priority.

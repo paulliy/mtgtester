@@ -6,4 +6,4 @@ Whole card, for context:
 Exile all nonland permanents that aren't legendary.
 
 Text B:
-Exile each permanent on the battlefield that is not a land and not legendary.
+Exile each permanent on the battlefield that is neither a land nor legendary.

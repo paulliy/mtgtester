@@ -231,6 +231,8 @@ export interface ResolvedFilter {
 
 function filterFromField(field: XField, ctx: XmageContext, name: string): ResolvedFilter {
   if (!field.init) throw new Unmapped(name, 'filter initializer did not parse');
+  rejectAnonymous(field.init);
+  field.adds.forEach(rejectAnonymous);
   const base = filterFromNew(field.init, ctx);
   const parts = [
     ...flatten([base.selector].filter((s) => !(s.kind === 'allOf' && s.of.length === 0))),
@@ -1143,7 +1145,33 @@ function filteredTrigger(
   return null;
 }
 
+/**
+ * `new X(...) { ... }`: an anonymous subclass overrides behavior or adds restrictions in an
+ * initializer, so translating it as plain `X` would drop rules. Refused wherever it appears.
+ */
+function rejectAnonymous(e: JExpr): void {
+  switch (e.t) {
+    case 'new':
+      if (e.body) throw new Unmapped(`new ${short(e.cls)}() { ... }`, 'anonymous class body');
+      e.args.forEach(rejectAnonymous);
+      return;
+    case 'call':
+      if (e.target) rejectAnonymous(e.target);
+      e.args.forEach(rejectAnonymous);
+      return;
+    case 'array':
+      e.items.forEach(rejectAnonymous);
+      return;
+    case 'op':
+      e.args.forEach(rejectAnonymous);
+      return;
+    default:
+      return;
+  }
+}
+
 export function translateAbility(ab: XAbility, ctx: XmageContext, description: string): Fragment {
+  rejectAnonymous(ab.root);
   const { root, calls } = chain(ab.root);
   const build = (b: Built) => {
     const targets = b.targets.map((t) => target(t, ctx));

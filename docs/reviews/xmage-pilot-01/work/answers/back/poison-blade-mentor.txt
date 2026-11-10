@@ -1,1 +1,1 @@
-Whenever this creature attacks, target other Assassin you control gains deathtouch until end of turn.
+Whenever this creature attacks, target other Assassin you control gains deathtouch until end of turn. This ability is not optional.

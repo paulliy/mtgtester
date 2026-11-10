@@ -1,11 +1,11 @@
 {
   "measuredCostUsd": 0,
   "estimatedCost": {
-    "backUsd": 0.001975299999999997,
-    "backCalls": 74,
-    "judgeUsd": 0.0014488200000000026,
-    "judgeCalls": 74,
-    "totalUsd": 0.0034241199999999997
+    "backUsd": 0.001986325000000001,
+    "backCalls": 66,
+    "judgeUsd": 0.0013003499999999992,
+    "judgeCalls": 66,
+    "totalUsd": 0.003286675
   },
   "cards": [
     {
@@ -43,14 +43,13 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Destroy each creature with no counters on it.",
       "differences": []
     },
     {
       "name": "Ballyrush Banneret",
       "rank": 8712,
       "lines": ["Kithkin spells and Soldier spells you cast cost {1} less to cast."],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -69,10 +68,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Kithkin or Soldier spells you cast cost {1} less to cast.",
-      "differences": [
-        "Text A says Kithkin spells and Soldier spells; Text B says Kithkin or Soldier spells. A Kithkin Soldier spell gets two separate {1} reductions under A but only one under B."
-      ]
+      "backTranslation": "Spells you cast that are Kithkin or Soldier spells cost {1} less to cast.",
+      "differences": []
     },
     {
       "name": "Hanged Executioner",
@@ -97,7 +94,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{3}{W}, Exile this creature: Exile target creature.",
+      "backTranslation": "{3}{W}, Exile this creature: Exile target creature. Activate this ability any time you have priority.",
       "differences": []
     },
     {
@@ -125,7 +122,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "At the beginning of combat on your turn, target permanent you control that has subtype Wolf or Werewolf gets +2/+2 until end of turn.",
+      "backTranslation": "At the beginning of combat on your turn, target permanent you control that is a Wolf or a Werewolf gets +2/+2 until end of turn. This ability is not optional.",
       "differences": []
     },
     {
@@ -170,7 +167,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Destroy each artifact, creature, and land. They can't be regenerated.",
+      "backTranslation": "Destroy each artifact, creature, and land on the battlefield. They can't be regenerated.",
       "differences": []
     },
     {
@@ -200,32 +197,6 @@
       "differences": []
     },
     {
-      "name": "Aqueous Form",
-      "rank": 749,
-      "lines": ["Enchanted creature can't be blocked."],
-      "outcome": "compiled-checked",
-      "compileRounds": 1,
-      "validatorIssues": [],
-      "smoke": [
-        {
-          "scenario": "from-hand",
-          "ok": true,
-          "exercised": true,
-          "abilityResolved": true,
-          "detail": "game ended"
-        },
-        {
-          "scenario": "on-battlefield",
-          "ok": true,
-          "exercised": false,
-          "abilityResolved": false,
-          "detail": "game ended"
-        }
-      ],
-      "backTranslation": "Enchanted creature can't be blocked.",
-      "differences": []
-    },
-    {
       "name": "Guttural Response",
       "rank": 8657,
       "lines": ["Counter target blue instant spell."],
@@ -241,7 +212,6 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Counter target blue instant spell.",
       "differences": []
     },
     {
@@ -295,7 +265,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever this creature attacks, target other Dinosaur you control gains flying until end of turn.",
+      "backTranslation": "Whenever this creature attacks, target other Dinosaur you control gains flying until end of turn. This ability is not optional.",
       "differences": []
     },
     {
@@ -323,7 +293,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "At the beginning of combat on your turn, put a +1/+1 counter on target creature you control, and that creature gains lifelink until end of turn.",
+      "backTranslation": "At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. That creature gains lifelink until end of turn.",
       "differences": []
     },
     {
@@ -349,7 +319,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{T}: Target creature with subtype Dinosaur gains haste until end of turn.",
+      "backTranslation": "{T}: Target Dinosaur creature gains haste until end of turn. Activate this ability any time you have priority.",
       "differences": []
     },
     {
@@ -394,7 +364,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this creature dies, you may deal 1 damage to any target.",
+      "backTranslation": "When this creature dies, you may have it deal 1 damage to any target.",
       "differences": []
     },
     {
@@ -467,7 +437,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{R}, {T}: Activate only as a sorcery. Target permanent you control that is a Lizard, Mouse, Otter, or Raccoon gets +1/+0 until end of turn and gains haste until end of turn.",
+      "backTranslation": "{R}, {T}: Target permanent you control that is a Lizard, Mouse, Otter, or Raccoon gets +1/+0 until end of turn and gains haste until end of turn. Activate only as a sorcery.",
       "differences": []
     },
     {
@@ -493,14 +463,14 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Creatures you control that aren't legendary get +1/+1.",
+      "backTranslation": "Each creature you control that is not legendary gets +1/+1.",
       "differences": []
     },
     {
       "name": "Danitha Capashen, Paragon",
       "rank": 799,
       "lines": ["Aura and Equipment spells you cast cost {1} less to cast."],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -519,10 +489,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Aura or Equipment spells you cast cost {1} less to cast.",
-      "differences": [
-        "Text A says Aura and Equipment spells; Text B says Aura or Equipment spells. A spell that is both gets two separate {1} reductions under A but only one under B."
-      ]
+      "backTranslation": "Spells you cast that are Aura or Equipment spells cost {1} less to cast.",
+      "differences": []
     },
     {
       "name": "Repel Calamity",
@@ -566,7 +534,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Creature spells you cast that are white cost {1} less to cast.",
+      "backTranslation": "Each white creature spell you cast costs {1} less to cast.",
       "differences": []
     },
     {
@@ -594,14 +562,13 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this enters, put target creature or enchantment card from your graveyard onto the battlefield.",
       "differences": []
     },
     {
       "name": "Frogtosser Banneret",
       "rank": 6794,
       "lines": ["Goblin spells and Rogue spells you cast cost {1} less to cast."],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -620,10 +587,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Goblin or Rogue spells you cast cost {1} less to cast.",
-      "differences": [
-        "Text A says Goblin spells and Rogue spells; Text B says Goblin or Rogue spells. A Goblin Rogue spell gets two separate {1} reductions under A but only one under B."
-      ]
+      "backTranslation": "Spells you cast that are Goblin or Rogue spells cost {1} less to cast.",
+      "differences": []
     },
     {
       "name": "Nekrataal",
@@ -650,7 +615,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this creature enters, destroy target creature that isn't an artifact and isn't black. It can't be regenerated.",
+      "backTranslation": "When this creature enters, destroy target creature that isn't an artifact and isn't black. It can't be regenerated. This ability is not optional.",
       "differences": []
     },
     {
@@ -678,7 +643,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{1}{B}{G}, Exile this creature: Return target card in your graveyard to its owner's hand.",
+      "backTranslation": "{1}{B}{G}, Exile this creature: Return target card from your graveyard to your hand. Activate this ability any time you have priority.",
       "differences": []
     },
     {
@@ -706,14 +671,14 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this creature dies, return target card that has subtype Elf and is other than this card from your graveyard to its owner's hand.",
+      "backTranslation": "When this creature dies, return target other Elf card from your graveyard to your hand. This ability is not optional.",
       "differences": []
     },
     {
       "name": "Bosk Banneret",
       "rank": 9696,
       "lines": ["Treefolk spells and Shaman spells you cast cost {1} less to cast."],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -732,10 +697,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Treefolk or Shaman spells you cast cost {1} less to cast.",
-      "differences": [
-        "Text A says Treefolk spells and Shaman spells; Text B says Treefolk or Shaman spells. A Treefolk Shaman spell gets two separate {1} reductions under A but only one under B."
-      ]
+      "backTranslation": "Spells you cast that are Treefolk or Shaman spells cost {1} less to cast.",
+      "differences": []
     },
     {
       "name": "Beyond the Quiet",
@@ -753,7 +716,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Exile each creature and each permanent with subtype Spacecraft on the battlefield.",
+      "backTranslation": "Exile each creature and each permanent on the battlefield with the subtype Spacecraft.",
       "differences": []
     },
     {
@@ -807,7 +770,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{2}{B}{R}, {T}, Sacrifice this land: Activate only as a sorcery.\nPut two +1/+1 counters on target permanent you control that has subtype Goblin or Orc.",
+      "backTranslation": "{2}{B}{R}, {T}, Sacrifice this land: Put two +1/+1 counters on target permanent you control that is a Goblin or an Orc. Activate only as a sorcery.",
       "differences": []
     },
     {
@@ -842,7 +805,7 @@
       "name": "Sporecrown Thallid",
       "rank": 5950,
       "lines": ["Each other creature you control that's a Fungus or Saproling gets +1/+1."],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -861,10 +824,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Other Fungus and Saproling creatures you control have base power and toughness 1/1.",
-      "differences": [
-        "Text A gives each other Fungus or Saproling creature +1/+1 (a modifier on current P/T); Text B sets their base power and toughness to 1/1, which replaces the printed values instead of adding to them."
-      ]
+      "backTranslation": "Each other creature you control that is a Fungus or a Saproling gets +1/+1.",
+      "differences": []
     },
     {
       "name": "Bastion Protector",
@@ -915,33 +876,6 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{1}{R}, {T}: Target creature with subtype Goblin gets +2/+0 until end of turn.",
-      "differences": []
-    },
-    {
-      "name": "Wall of Mulch",
-      "rank": 11936,
-      "lines": ["{G}, Sacrifice a ~: Draw a card."],
-      "outcome": "compiled-checked",
-      "compileRounds": 1,
-      "validatorIssues": [],
-      "smoke": [
-        {
-          "scenario": "from-hand",
-          "ok": true,
-          "exercised": true,
-          "abilityResolved": true,
-          "detail": "game ended"
-        },
-        {
-          "scenario": "on-battlefield",
-          "ok": true,
-          "exercised": true,
-          "abilityResolved": true,
-          "detail": "game ended"
-        }
-      ],
-      "backTranslation": "{G}, Sacrifice a Wall you control (no count is given; this creature is allowed to be the one sacrificed): Draw a card.",
       "differences": []
     },
     {
@@ -969,7 +903,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{2}{B}{G}, {T}, Sacrifice this artifact: Return target creature card or card of creature type Vehicle from your graveyard to the battlefield. Activate only as a sorcery.",
+      "backTranslation": "{2}{B}{G}, {T}, Sacrifice this artifact: Return target creature card or card with the creature type Vehicle in your graveyard to the battlefield. Activate only as a sorcery.",
       "differences": []
     },
     {
@@ -997,7 +931,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{4}, {T}: Put target artifact creature card from your graveyard onto the battlefield.",
+      "backTranslation": "{4}, {T}: Put target artifact creature card from your graveyard onto the battlefield. Activate at any time you have priority.",
       "differences": []
     },
     {
@@ -1017,7 +951,7 @@
         }
       ],
       "backTranslation": "Destroy each creature your opponents control.",
-      "differences": ["Text A says the destroyed creatures can't be regenerated; Text B omits this"]
+      "differences": ["Text B drops the clause \"They can't be regenerated.\""]
     },
     {
       "name": "Bloodsworn Steward",
@@ -1094,7 +1028,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever you cast a legendary spell, draw a card.",
+      "backTranslation": "Whenever you cast a legendary spell, draw a card. This ability is not optional.",
       "differences": []
     },
     {
@@ -1122,14 +1056,14 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{1}{B}, {T}, Sacrifice this land: Return target card in your graveyard that is a Bat, Lizard, Rat, or Squirrel to its owner's hand.",
+      "backTranslation": "{1}{B}, {T}, Sacrifice this land: Return target Bat, Lizard, Rat, or Squirrel card from your graveyard to your hand. Activate this ability any time you have priority.",
       "differences": []
     },
     {
       "name": "Sliver Legion",
       "rank": 4727,
       "lines": ["All Sliver creatures get +1/+1 for each other Sliver on the battlefield."],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -1148,10 +1082,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "All Sliver creatures, including this one, have power and toughness each equal to the number of other Sliver permanents on the battlefield (counted across all controllers).",
-      "differences": [
-        "Text A adds +1/+1 to each Sliver's printed power and toughness for each other Sliver; Text B sets power and toughness equal to the count, replacing the printed values instead of adding to them."
-      ]
+      "backTranslation": "Each Sliver creature gets +X/+X, where X is the number of other Sliver permanents on the battlefield (under any player's control).",
+      "differences": []
     },
     {
       "name": "Mass Calcify",
@@ -1169,7 +1101,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Destroy each creature that isn't white.",
+      "backTranslation": "Destroy each creature on the battlefield that isn't white.",
       "differences": []
     },
     {
@@ -1197,7 +1129,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Sacrifice this creature: Target other Ally you control gains indestructible until end of turn.",
+      "backTranslation": "Sacrifice this creature: Target other permanent you control with the creature type Ally gains indestructible until end of turn.",
       "differences": []
     },
     {
@@ -1216,7 +1148,6 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Destroy each creature that isn't an enchantment.",
       "differences": []
     },
     {
@@ -1244,33 +1175,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this creature dies, return target creature card other than this card with mana value 3 or less from your graveyard to the battlefield.",
-      "differences": []
-    },
-    {
-      "name": "Cloak of Mists",
-      "rank": 10920,
-      "lines": ["Enchanted creature can't be blocked."],
-      "outcome": "compiled-checked",
-      "compileRounds": 1,
-      "validatorIssues": [],
-      "smoke": [
-        {
-          "scenario": "from-hand",
-          "ok": true,
-          "exercised": true,
-          "abilityResolved": false,
-          "detail": "game ended"
-        },
-        {
-          "scenario": "on-battlefield",
-          "ok": true,
-          "exercised": false,
-          "abilityResolved": false,
-          "detail": "game ended"
-        }
-      ],
-      "backTranslation": "Enchanted creature can't be blocked.",
+      "backTranslation": "When this creature dies, return target other creature card with mana value 3 or less from your graveyard to the battlefield.",
       "differences": []
     },
     {
@@ -1324,7 +1229,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever this creature attacks, target other Assassin you control gains deathtouch until end of turn.",
+      "backTranslation": "Whenever this creature attacks, target other Assassin you control gains deathtouch until end of turn. This ability is not optional.",
       "differences": []
     },
     {
@@ -1362,7 +1267,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Destroy each artifact, creature, and land. They can't be regenerated.",
+      "backTranslation": "Destroy each artifact, creature, and land on the battlefield. They can't be regenerated.",
       "differences": []
     },
     {
@@ -1409,7 +1314,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Exile each permanent on the battlefield that is not a land and not legendary.",
+      "backTranslation": "Exile each permanent on the battlefield that is neither a land nor legendary.",
       "differences": []
     },
     {
@@ -1463,7 +1368,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{T}: Put target artifact card with mana value 1 or less that is not a creature from your graveyard onto the battlefield.",
+      "backTranslation": "{T}: Put target noncreature artifact card with mana value 1 or less from your graveyard onto the battlefield. Activate at any time you have priority.",
       "differences": []
     },
     {
@@ -1482,7 +1387,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Return target green card from your graveyard to your hand.",
+      "backTranslation": "Return target green card in your graveyard to your hand.",
       "differences": []
     },
     {
@@ -1508,7 +1413,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{1}, {T}: Destroy each artifact, creature, and enchantment.",
+      "backTranslation": "{1}, {T}: Destroy each artifact, creature, and enchantment on the battlefield. Activate this ability any time you have priority.",
       "differences": []
     },
     {
@@ -1517,7 +1422,7 @@
       "lines": [
         "{1}, Sacrifice a nontoken artifact: Create a 1/1 blue Thopter artifact creature token with flying. You gain 1 life."
       ],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -1536,8 +1441,12 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{1}, Sacrifice a nontoken artifact you control (this permanent is allowed to be the one sacrificed): Create a 1/1 blue Thopter artifact creature token with flying, then gain 1 life.",
-      "differences": []
+      "backTranslation": "{1}, Sacrifice a nontoken artifact you control (this permanent may count as the sacrificed artifact): Create a 1/1 blue Thopter artifact creature token with flying. You gain 1 life. Activate at any time you have priority.",
+      "differences": [
+        "Text B restricts the sacrificed artifact to one you control; Text A says a nontoken artifact with no controller restriction, so opponents' artifacts can be sacrificed under Text A but not Text B.",
+        "Text B adds the parenthetical '(this permanent may count as the sacrificed artifact)', which is absent from Text A.",
+        "Text B adds 'Activate at any time you have priority', which is absent from Text A."
+      ]
     },
     {
       "name": "Inundate",
@@ -1555,7 +1464,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Return each creature that isn't blue to its owner's hand.",
+      "backTranslation": "Return each creature that isn't blue on the battlefield to its owner's hand.",
       "differences": []
     },
     {
@@ -1581,7 +1490,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{2}, {T}: Put a +1/+1 counter on target permanent that is a Bird, Cat, Dog, Goat, Ox, or Snake.",
+      "backTranslation": "{2}, {T}: Put a +1/+1 counter on target permanent that is a Bird, a Cat, a Dog, a Goat, an Ox, or a Snake.",
       "differences": []
     },
     {
@@ -1609,9 +1518,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever this creature deals combat damage to a player, create four 3/3 blue Serpent creature tokens.",
+      "backTranslation": "When <text>, create four 3/3 blue Serpent creature tokens named Koma's Coil with type line <text>. This ability is not optional and has no targets.",
       "differences": [
-        "Text A names the Serpent tokens Koma's Coil; Text B gives the tokens no name"
+        "Text B replaces the trigger condition with the placeholder \"When <text>\", so it does not state that the trigger is combat damage dealt to a player."
       ]
     },
     {
@@ -1632,14 +1541,14 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Target creature you control gets +3/+3 and gains trample, hexproof, and indestructible until end of turn.",
+      "backTranslation": "Target creature you control gets +3/+3 until end of turn and gains trample, hexproof, and indestructible until end of turn.",
       "differences": []
     },
     {
       "name": "Witch's Clinic",
       "rank": 1043,
       "lines": ["{2}, {T}: Target commander gains lifelink until end of turn."],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -1658,16 +1567,14 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{2}, {T}: Target commander permanent gains lifelink until end of turn.",
-      "differences": [
-        "Text A targets any commander with no permanent restriction; Text B restricts the target to a commander permanent, which excludes a commander in the command zone."
-      ]
+      "backTranslation": "{2}, {T}: Target permanent that is a commander gains lifelink until end of turn. Activate at any time you have priority.",
+      "differences": []
     },
     {
       "name": "Stimulus Package",
       "rank": 11916,
       "lines": ["Sacrifice a Treasure: Create a 1/1 green and white Citizen creature token."],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -1686,8 +1593,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Sacrifice a Treasure you control (no count is given; this permanent is allowed to be the one sacrificed): Create a 1/1 green and white Citizen creature token.",
-      "differences": []
+      "backTranslation": "Sacrifice a Treasure you control (this permanent may be sacrificed toward this cost): Create a 1/1 green and white Citizen creature token. Its type line is the placeholder <text>.",
+      "differences": [
+        "Token type line: Text B says the type line is the placeholder <text>, while Text A makes it a 1/1 green and white Citizen creature token (Creature - Citizen)"
+      ]
     },
     {
       "name": "Filter Out",
@@ -1705,7 +1614,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Return each permanent on the battlefield that is neither a land nor a creature to its owner's hand.",
+      "backTranslation": "Return each permanent on the battlefield that is neither a land nor a creature to hand.",
       "differences": []
     },
     {
@@ -1733,7 +1642,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever another creature you control that isn't a Spirit dies, create a 1/1 white Spirit creature token with flying.",
+      "backTranslation": "Whenever a creature you control other than a Spirit dies, create a 1/1 white Spirit creature token with flying. This ability is not optional.",
       "differences": []
     },
     {
@@ -1761,9 +1670,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever you cast a noncreature spell or a spell with creature type Dragon, each opponent takes 1 damage.",
+      "backTranslation": "Whenever you cast a noncreature spell or a spell with the creature type Dragon, each opponent takes 1 damage.",
       "differences": [
-        "Text A has this creature as the source of the 1 damage; Text B has each opponent take 1 damage with no source, which changes how protection, prevention and other source-based effects apply."
+        "Damage source: Text A has this creature dealing the damage, while Text B has each opponent taking damage with no source named."
       ]
     },
     {
@@ -1791,14 +1700,14 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{2}, {T}: Target creature you control that has one or more counters on it gains lifelink until end of turn.",
+      "backTranslation": "{2}, {T}: Target creature you control that has a counter on it gains lifelink until end of turn. Activate this ability any time you have priority.",
       "differences": []
     },
     {
       "name": "Kher Keep",
       "rank": 1557,
       "lines": ["{1}{R}, {T}: Create a 0/1 red Kobold creature token named Kobolds of ~."],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -1817,8 +1726,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{1}{R}, {T}: Create a 0/1 red Kobold creature token with creature type Kobold.",
-      "differences": ["Text A names the token Kobolds of Kher Keep; Text B gives the token no name"]
+      "backTranslation": "{1}{R}, {T}: Create a 0/1 red Kobold creature token named <text> with type line <text>. Activate this ability any time you have priority.",
+      "differences": []
     },
     {
       "name": "Seedship Broodtender",
@@ -1845,7 +1754,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{3}{B}{G}, Sacrifice this creature: Sorcery speed. Put target creature card or card with subtype Spacecraft from your graveyard onto the battlefield.",
+      "backTranslation": "{3}{B}{G}, Sacrifice this creature: Put target creature card or card with creature type Spacecraft from your graveyard onto the battlefield. Activate only as a sorcery.",
       "differences": []
     },
     {
@@ -1871,7 +1780,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Sacrifice three Treasures you control (this creature is allowed to be one of the sacrificed permanents): Draw a card. Activate at any time.",
+      "backTranslation": "Sacrifice three other Treasures you control (this permanent may count as one of them): Draw a card. Activate at any time you have priority.",
       "differences": []
     }
   ]

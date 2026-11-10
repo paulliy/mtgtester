@@ -6,4 +6,4 @@ Deathtouch (Any amount of damage this deals to a creature is enough to destroy i
 Whenever this creature attacks, another target Assassin you control gains deathtouch until end of turn.
 
 Text B:
-Whenever this creature attacks, target other Assassin you control gains deathtouch until end of turn.
+Whenever this creature attacks, target other Assassin you control gains deathtouch until end of turn. This ability is not optional.

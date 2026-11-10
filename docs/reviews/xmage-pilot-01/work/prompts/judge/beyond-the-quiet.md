@@ -5,4 +5,4 @@ Whole card, for context:
 Exile all creatures and Spacecraft.
 
 Text B:
-Exile each creature and each permanent with subtype Spacecraft on the battlefield.
+Exile each creature and each permanent on the battlefield with the subtype Spacecraft.

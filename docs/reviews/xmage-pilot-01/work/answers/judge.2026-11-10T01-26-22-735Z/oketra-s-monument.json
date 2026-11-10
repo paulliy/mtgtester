@@ -1,6 +1,0 @@
-{
-  "verdict": "different",
-  "differences": [
-    "Text A restricts the discount to spells you cast; Text B applies it to each white creature spell regardless of who casts it"
-  ]
-}

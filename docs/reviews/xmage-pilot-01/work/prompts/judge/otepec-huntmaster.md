@@ -6,4 +6,4 @@ Dinosaur spells you cast cost {1} less to cast.
 {T}: Target Dinosaur gains haste until end of turn.
 
 Text B:
-{T}: Target creature with subtype Dinosaur gains haste until end of turn.
+{T}: Target Dinosaur creature gains haste until end of turn. Activate this ability any time you have priority.

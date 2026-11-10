@@ -1,1 +1,1 @@
-Kithkin or Soldier spells you cast cost {1} less to cast.
+Spells you cast that are Kithkin or Soldier spells cost {1} less to cast.

@@ -6,4 +6,4 @@ When this creature enters, mill three cards. (Put the top three cards of your li
 {3}{B}{G}, Sacrifice this creature: Return target creature or Spacecraft card from your graveyard to the battlefield. Activate only as a sorcery.
 
 Text B:
-{3}{B}{G}, Sacrifice this creature: Sorcery speed. Put target creature card or card with subtype Spacecraft from your graveyard onto the battlefield.
+{3}{B}{G}, Sacrifice this creature: Put target creature card or card with creature type Spacecraft from your graveyard onto the battlefield. Activate only as a sorcery.

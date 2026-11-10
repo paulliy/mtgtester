@@ -1,8 +1,0 @@
-{
-  "status": "compiled",
-  "def": {
-    "staticEffects": [
-      { "affects": { "kind": "attachedToSource" }, "op": { "layer": 6, "setCantBeBlocked": true } }
-    ]
-  }
-}

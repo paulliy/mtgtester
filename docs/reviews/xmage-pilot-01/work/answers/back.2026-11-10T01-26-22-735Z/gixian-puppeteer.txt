@@ -1,1 +1,0 @@
-When this creature dies, return target creature card other than this card with mana value 3 or less from your graveyard to the battlefield.

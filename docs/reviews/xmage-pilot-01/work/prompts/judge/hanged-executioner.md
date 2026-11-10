@@ -7,4 +7,4 @@ When this creature enters, create a 1/1 white Spirit creature token with flying.
 {3}{W}, Exile this creature: Exile target creature.
 
 Text B:
-{3}{W}, Exile this creature: Exile target creature.
+{3}{W}, Exile this creature: Exile target creature. Activate this ability any time you have priority.

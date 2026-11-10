@@ -1,1 +1,0 @@
-Aura and Equipment spells cost {1} less to cast.

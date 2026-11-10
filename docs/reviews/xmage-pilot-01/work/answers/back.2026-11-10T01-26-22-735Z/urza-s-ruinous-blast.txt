@@ -1,1 +1,0 @@
-Exile each object that is not a land and not legendary. (The data states no controller restriction.)

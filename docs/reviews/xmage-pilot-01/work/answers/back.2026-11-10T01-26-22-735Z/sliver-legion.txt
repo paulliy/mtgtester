@@ -1,1 +1,0 @@
-Each Sliver creature (regardless of controller) has power and toughness each equal to the number of other Sliver permanents on the battlefield. (Layer 7d. The data does not state what "other" is relative to.)

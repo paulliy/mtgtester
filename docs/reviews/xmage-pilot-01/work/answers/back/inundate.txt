@@ -1,1 +1,1 @@
-Return each creature that isn't blue to its owner's hand.
+Return each creature that isn't blue on the battlefield to its owner's hand.

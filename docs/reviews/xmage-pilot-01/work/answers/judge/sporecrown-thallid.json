@@ -1,6 +1,1 @@
-{
-  "verdict": "different",
-  "differences": [
-    "Text A gives each other Fungus or Saproling creature +1/+1 (a modifier on current P/T); Text B sets their base power and toughness to 1/1, which replaces the printed values instead of adding to them."
-  ]
-}
+{ "verdict": "same" }

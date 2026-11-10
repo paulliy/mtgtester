@@ -1,6 +1,1 @@
-{
-  "verdict": "different",
-  "differences": [
-    "Text A adds +1/+1 to each Sliver's printed power and toughness for each other Sliver; Text B sets power and toughness equal to the count, replacing the printed values instead of adding to them."
-  ]
-}
+{ "verdict": "same" }

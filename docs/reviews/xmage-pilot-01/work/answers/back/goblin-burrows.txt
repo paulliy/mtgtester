@@ -1,1 +1,0 @@
-{1}{R}, {T}: Target creature with subtype Goblin gets +2/+0 until end of turn.

@@ -1,1 +1,0 @@
-Each creature spell with flying costs {1} less to cast.

@@ -1,1 +1,1 @@
-{2}, {T}: Target creature you control that has one or more counters on it gains lifelink until end of turn.
+{2}, {T}: Target creature you control that has a counter on it gains lifelink until end of turn. Activate this ability any time you have priority.

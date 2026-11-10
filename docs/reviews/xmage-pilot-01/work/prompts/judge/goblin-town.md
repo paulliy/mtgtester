@@ -7,5 +7,4 @@ This land enters tapped.
 {2}{B}{R}, {T}, Sacrifice this land: Put two +1/+1 counters on target Goblin or Orc you control. Activate only as a sorcery.
 
 Text B:
-{2}{B}{R}, {T}, Sacrifice this land: Activate only as a sorcery.
-Put two +1/+1 counters on target permanent you control that has subtype Goblin or Orc.
+{2}{B}{R}, {T}, Sacrifice this land: Put two +1/+1 counters on target permanent you control that is a Goblin or an Orc. Activate only as a sorcery.

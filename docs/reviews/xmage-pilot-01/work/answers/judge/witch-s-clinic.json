@@ -1,6 +1,1 @@
-{
-  "verdict": "different",
-  "differences": [
-    "Text A targets any commander with no permanent restriction; Text B restricts the target to a commander permanent, which excludes a commander in the command zone."
-  ]
-}
+{ "verdict": "same" }

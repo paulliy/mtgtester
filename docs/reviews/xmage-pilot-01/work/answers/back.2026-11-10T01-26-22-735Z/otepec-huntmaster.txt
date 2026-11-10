@@ -1,1 +1,0 @@
-{T}: Target Dinosaur creature gains haste until end of turn.

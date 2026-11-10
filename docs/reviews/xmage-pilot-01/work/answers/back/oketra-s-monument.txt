@@ -1,1 +1,1 @@
-Creature spells you cast that are white cost {1} less to cast.
+Each white creature spell you cast costs {1} less to cast.

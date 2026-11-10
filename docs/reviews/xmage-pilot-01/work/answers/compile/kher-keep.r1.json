@@ -22,7 +22,7 @@
             {
               "op": "createToken",
               "spec": {
-                "name": "Kobold",
+                "name": "Kobolds of Kher Keep",
                 "typeLine": "Creature — Kobold",
                 "types": ["Creature"],
                 "subtypes": ["Kobold"],

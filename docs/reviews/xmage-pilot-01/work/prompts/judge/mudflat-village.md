@@ -7,4 +7,4 @@ Whole card, for context:
 {1}{B}, {T}, Sacrifice this land: Return target Bat, Lizard, Rat, or Squirrel card from your graveyard to your hand.
 
 Text B:
-{1}{B}, {T}, Sacrifice this land: Return target card in your graveyard that is a Bat, Lizard, Rat, or Squirrel to its owner's hand.
+{1}{B}, {T}, Sacrifice this land: Return target Bat, Lizard, Rat, or Squirrel card from your graveyard to your hand. Activate this ability any time you have priority.

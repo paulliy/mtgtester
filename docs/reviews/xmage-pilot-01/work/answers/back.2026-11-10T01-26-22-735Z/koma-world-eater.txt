@@ -1,1 +1,0 @@
-Whenever this creature deals combat damage to a player, create four 3/3 blue Serpent creature tokens.

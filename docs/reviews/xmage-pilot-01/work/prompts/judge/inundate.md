@@ -5,4 +5,4 @@ Whole card, for context:
 Return all nonblue creatures to their owners' hands.
 
 Text B:
-Return each creature that isn't blue to its owner's hand.
+Return each creature that isn't blue on the battlefield to its owner's hand.

@@ -11,7 +11,7 @@
           {
             "op": "createToken",
             "spec": {
-              "name": "Serpent",
+              "name": "Koma's Coil",
               "typeLine": "Creature — Serpent",
               "types": ["Creature"],
               "subtypes": ["Serpent"],

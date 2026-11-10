@@ -5,4 +5,4 @@ Whole card, for context:
 Destroy all artifacts, creatures, and lands. They can't be regenerated.
 
 Text B:
-Destroy each artifact, creature, and land. They can't be regenerated.
+Destroy each artifact, creature, and land on the battlefield. They can't be regenerated.

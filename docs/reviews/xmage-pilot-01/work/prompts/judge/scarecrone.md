@@ -6,4 +6,4 @@ Whole card, for context:
 {4}, {T}: Return target artifact creature card from your graveyard to the battlefield.
 
 Text B:
-{4}, {T}: Put target artifact creature card from your graveyard onto the battlefield.
+{4}, {T}: Put target artifact creature card from your graveyard onto the battlefield. Activate at any time you have priority.

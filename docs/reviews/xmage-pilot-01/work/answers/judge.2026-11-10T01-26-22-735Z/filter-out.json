@@ -1,6 +1,0 @@
-{
-  "verdict": "different",
-  "differences": [
-    "Text A returns noncreature, nonland permanents; Text B returns any object that is not a land and not a creature, which is not limited to permanents"
-  ]
-}

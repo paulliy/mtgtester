@@ -1,1 +1,0 @@
-{2}, {T}: Target creature you control with a counter on it gains lifelink until end of turn.

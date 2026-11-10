@@ -1,1 +1,8 @@
-{ "verdict": "same" }
+{
+  "verdict": "different",
+  "differences": [
+    "Text B restricts the sacrificed artifact to one you control; Text A says a nontoken artifact with no controller restriction, so opponents' artifacts can be sacrificed under Text A but not Text B.",
+    "Text B adds the parenthetical '(this permanent may count as the sacrificed artifact)', which is absent from Text A.",
+    "Text B adds 'Activate at any time you have priority', which is absent from Text A."
+  ]
+}

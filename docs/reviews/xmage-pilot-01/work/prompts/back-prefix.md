@@ -13,6 +13,8 @@ as the ability is put on the stack. A "costReduction" rule static applies only t
 controller casts. A selector "attachedToSource" on an Aura or Equipment is the enchanted or equipped
 creature. The selectors of "destroyEach", "exileEach" and "returnToHandEach" only ever match
 permanents on the battlefield. A "subtype" in a target filter is a creature type unless the filter
-says otherwise.
+says otherwise. A layer 7 "d" power/toughness change adds to the current values ("gets +1/+1");
+only sublayer "b" sets base power and toughness. Write every flag on an effect, for example
+"cantRegenerate" as "They can't be regenerated."
 
 Answer with only the rules text.

@@ -5,4 +5,4 @@ Whole card, for context:
 All Sliver creatures get +1/+1 for each other Sliver on the battlefield.
 
 Text B:
-All Sliver creatures, including this one, have power and toughness each equal to the number of other Sliver permanents on the battlefield (counted across all controllers).
+Each Sliver creature gets +X/+X, where X is the number of other Sliver permanents on the battlefield (under any player's control).

@@ -42,11 +42,6 @@
     "lines": ["Green creature spells you cast cost {1} less to cast."]
   },
   {
-    "name": "Aqueous Form",
-    "rank": 749,
-    "lines": ["Enchanted creature can't be blocked."]
-  },
-  {
     "name": "Guttural Response",
     "rank": 8657,
     "lines": ["Counter target blue instant spell."]
@@ -200,11 +195,6 @@
     "lines": ["{1}{R}, {T}: Target Goblin creature gets +2/+0 until end of turn."]
   },
   {
-    "name": "Wall of Mulch",
-    "rank": 11936,
-    "lines": ["{G}, Sacrifice a ~: Draw a card."]
-  },
-  {
     "name": "Broodheart Engine",
     "rank": 10368,
     "lines": [
@@ -273,11 +263,6 @@
     "lines": [
       "When this creature dies, return another target creature card with mana value 3 or less from your graveyard to the battlefield."
     ]
-  },
-  {
-    "name": "Cloak of Mists",
-    "rank": 10920,
-    "lines": ["Enchanted creature can't be blocked."]
   },
   {
     "name": "Deepchannel Mentor",

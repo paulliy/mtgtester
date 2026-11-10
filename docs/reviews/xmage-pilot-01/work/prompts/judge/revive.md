@@ -5,4 +5,4 @@ Whole card, for context:
 Return target green card from your graveyard to your hand.
 
 Text B:
-Return target green card from your graveyard to your hand.
+Return target green card in your graveyard to your hand.

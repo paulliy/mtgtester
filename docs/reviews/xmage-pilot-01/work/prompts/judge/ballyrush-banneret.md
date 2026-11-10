@@ -5,4 +5,4 @@ Whole card, for context:
 Kithkin spells and Soldier spells you cast cost {1} less to cast.
 
 Text B:
-Kithkin or Soldier spells you cast cost {1} less to cast.
+Spells you cast that are Kithkin or Soldier spells cost {1} less to cast.

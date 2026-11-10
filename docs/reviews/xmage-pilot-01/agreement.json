@@ -344,6 +344,7 @@
                 "spec": {
                   "colors": ["B"],
                   "keywords": ["menace", "reach"],
+                  "name": "Spider",
                   "power": 2,
                   "subtypes": ["Spider"],
                   "toughness": 1,
@@ -373,6 +374,7 @@
                 "spec": {
                   "colors": ["B"],
                   "keywords": ["reach", "menace"],
+                  "name": "Spider",
                   "power": 2,
                   "subtypes": ["Spider"],
                   "toughness": 1,

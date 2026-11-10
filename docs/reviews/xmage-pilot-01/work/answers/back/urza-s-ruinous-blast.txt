@@ -1,1 +1,1 @@
-Exile each permanent on the battlefield that is not a land and not legendary.
+Exile each permanent on the battlefield that is neither a land nor legendary.

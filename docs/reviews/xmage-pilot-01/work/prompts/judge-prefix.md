@@ -7,5 +7,9 @@ whole card. Ignore wording, ordering, "this" versus a card name, and reminder te
 that would change what happens in a game: targets, who chooses, optional versus mandatory, amounts,
 durations, conditions, timing, zones, and anything present in one but missing from the other.
 
+Not differences: "X spells and Y spells cost {1} less" is one ability, so a spell that is both is
+reduced once, the same as "spells that are X or Y". A token's name is cosmetic, so a missing or
+different token name is not a difference when the token's types, stats and abilities match.
+
 Answer with ONE JSON object and nothing else:
 {"verdict":"same"} or {"verdict":"different","differences":["<one difference per item>"]}

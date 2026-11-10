@@ -1,1 +1,0 @@
-Return each object that is not a land and not a creature to its owner's hand.

@@ -5,4 +5,4 @@ Whole card, for context:
 Destroy all nonwhite creatures.
 
 Text B:
-Destroy each creature that isn't white.
+Destroy each creature on the battlefield that isn't white.
