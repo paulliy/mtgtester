@@ -135,8 +135,12 @@ function runInChild(
     child.on('close', (code, signal) => {
       clearTimeout(timer);
       if (signal === 'SIGKILL') return done({ kind: 'timeout' });
-      if (code !== 0)
-        return done({ kind: 'error', message: err.trim().split('\n').slice(-3).join(' | ') });
+      if (code !== 0) {
+        // The thrown message, not the tail of the stack, plus the seed to replay the game.
+        const lines = err.trim().split('\n');
+        const thrown = lines.find((l) => /^\s*(\w*Error|error):/.test(l)) ?? lines.at(-1) ?? '';
+        return done({ kind: 'error', message: `${thrown.trim()} (seed ${request.seed})` });
+      }
       try {
         done({ kind: 'played', reply: JSON.parse(out) as LeagueGameReply });
       } catch {
@@ -150,6 +154,8 @@ interface Tally {
   wins: Record<string, number>;
   lifeShare: Record<string, number>;
   draws: number;
+  /** Games the engine stopped (an engine error or a budget halt): neither a win nor a draw. */
+  halted: number;
   timeouts: number;
   errors: string[];
   games: number;
@@ -167,6 +173,7 @@ async function main(): Promise<void> {
     wins: { [armA.name]: 0, [armB.name]: 0 },
     lifeShare: { [armA.name]: 0, [armB.name]: 0 },
     draws: 0,
+    halted: 0,
     timeouts: 0,
     errors: [],
     games: 0,
@@ -209,6 +216,11 @@ async function main(): Promise<void> {
         continue;
       }
       const reply = outcome.reply;
+      if (reply.halted) {
+        tally.halted++;
+        console.log(`game ${n}: HALTED ${reply.haltReason ?? ''} (seed ${request.seed})`);
+        continue;
+      }
       tally.turns += reply.turns;
       tally.ms += reply.ms;
       if (reply.winnerArm === null) tally.draws++;
@@ -229,13 +241,14 @@ async function main(): Promise<void> {
   const decided = tally.wins[armA.name]! + tally.wins[armB.name]!;
   const rate = decided === 0 ? 0 : tally.wins[armA.name]! / decided;
   const ci = decided === 0 ? 0 : 1.96 * Math.sqrt((rate * (1 - rate)) / decided);
-  const played = tally.games - tally.timeouts - tally.errors.length;
+  const played = tally.games - tally.timeouts - tally.errors.length - tally.halted;
   const summary = {
     a: armA.name,
     b: armB.name,
     games: tally.games,
     decided,
     draws: tally.draws,
+    halted: tally.halted,
     timeouts: tally.timeouts,
     errors: tally.errors.length,
     wins: tally.wins,

@@ -36,10 +36,17 @@ export interface LeagueGameReply {
   /** Arm name of the winner, or null for a draw. */
   winnerArm: string | null;
   turns: number;
+  /** The engine stopped the game for a reason other than a winner, a turn cap or a mutual loss. */
   halted: boolean;
+  haltReason?: string;
   /** Life of each seat at the end, 0 for an eliminated seat. */
   life: Record<PlayerId, number>;
   ms: number;
+}
+
+/** The engine reports a turn cap and a simultaneous loss as halts; for the league they are draws. */
+function isDrawReason(reason: string | null | undefined): boolean {
+  return reason == null || /turn cap|lost simultaneously/.test(reason);
 }
 
 export function playLeagueGame(request: LeagueGameRequest): LeagueGameReply {
@@ -83,7 +90,8 @@ export function playLeagueGame(request: LeagueGameRequest): LeagueGameReply {
     winner: result.winnerSeat,
     winnerArm: result.winnerSeat === null ? null : armOf(result.winnerSeat).name,
     turns: result.turnCount,
-    halted: result.halted,
+    halted: result.halted && !isDrawReason(result.haltReason),
+    ...(result.haltReason ? { haltReason: result.haltReason } : {}),
     life,
     ms: Math.round(performance.now() - started),
   };

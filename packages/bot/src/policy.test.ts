@@ -571,3 +571,64 @@ describe('activations with no effect role', () => {
     expect(go(vehicle, { phase: 'postcombatMain' })).toBe(0);
   });
 });
+
+describe('review fixes', () => {
+  it('counters a counterspell aimed at its own spell (the top of the stack is the last entry)', () => {
+    const counter: LegalAction = {
+      id: 1,
+      type: 'castSpell',
+      description: 'Cast Negate',
+      targets: [{ slot: 0, options: ['s1', 's2'] }],
+      data: { sourceName: 'Negate', manaCost: '{1}{U}', instantSpeed: true },
+    };
+    const k = knowledge({
+      Negate: { manaValue: 2, roles: ['counter'], spellTargets: ['hostile'] },
+    });
+    const stack = [
+      { id: 's1', controller: 'P1', description: 'Cast My Bomb', targets: [] },
+      { id: 's2', controller: 'P2', description: 'Cast Counterspell', targets: ['s1'] },
+    ];
+    const res = decide(
+      request([PASS, counter], { activePlayer: 'P1' }),
+      view({ stack } as Partial<PlayerView>),
+      new Rng('a'),
+      { knowledge: k },
+    );
+    expect(res.actionId).toBe(1);
+    expect(res.targets).toEqual([{ slot: 0, choice: 's2' }]);
+  });
+
+  it('sees a crewed Vehicle as a blocker', () => {
+    const attack: LegalAction = {
+      id: 1,
+      type: 'attackDeclaration',
+      description: 'Declare attackers',
+      targets: [{ slot: 0, options: ['P2', NO_ATTACK_TARGET] }],
+      data: {
+        subjects: [
+          { subjectId: 'a1', power: 3, toughness: 1, mustAttack: false, hasTriggers: false },
+        ],
+      },
+    };
+    const vehicle: PermanentView = {
+      id: 'v1',
+      controller: 'P2',
+      name: 'Night Scythe',
+      typeLine: 'Artifact — Vehicle',
+      power: 4,
+      toughness: 4,
+      tapped: false,
+      status: [],
+    };
+    const res = decide(
+      request([attack], {
+        decisionType: 'declareAttackers',
+        phase: 'combat',
+        step: 'declareAttackers',
+      }),
+      view({ battlefield: [creature('a1', 'P1', 3, 1), vehicle] }),
+      new Rng('a'),
+    );
+    expect(res.targets).toEqual([{ slot: 0, choice: NO_ATTACK_TARGET }]);
+  });
+});

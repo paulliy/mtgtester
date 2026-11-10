@@ -375,6 +375,19 @@ function parseNumber(val: string | undefined, fallback: number): number {
   return Number.isNaN(parsed) || parsed <= 0 ? fallback : parsed;
 }
 
+/** A number of at least 0, fractions allowed (`0.5`); anything else keeps the fallback. */
+function parseNonNegative(val: string | undefined, fallback: number): number {
+  if (val === undefined || val.trim() === '') return fallback;
+  const parsed = Number(val);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
+/** A whole number of at least 0 (`0` is meaningful, e.g. "never reuse"). */
+function parseNonNegativeInt(val: string | undefined, fallback: number): number {
+  const parsed = parseNonNegative(val, fallback);
+  return Number.isInteger(parsed) ? parsed : fallback;
+}
+
 function parseOptionalProbability(val: string | undefined, fallback: number | null): number | null {
   if (val === undefined || val.trim() === '') return fallback;
   const parsed = Number(val);
@@ -604,7 +617,7 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       ['never', 'uncertain'] as const,
       DEFAULT_AI_CONFIG.botEscalation,
     ),
-    botEscalationMargin: parseNumber(
+    botEscalationMargin: parseNonNegative(
       env['AI_BOT_ESCALATION_MARGIN'],
       DEFAULT_AI_CONFIG.botEscalationMargin,
     ),
@@ -613,7 +626,7 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       ['everyTurn', 'onChange'] as const,
       DEFAULT_AI_CONFIG.strategistReplan,
     ),
-    strategistMaxReuseTurns: parseNumber(
+    strategistMaxReuseTurns: parseNonNegativeInt(
       env['AI_STRATEGIST_MAX_REUSE_TURNS'],
       DEFAULT_AI_CONFIG.strategistMaxReuseTurns,
     ),

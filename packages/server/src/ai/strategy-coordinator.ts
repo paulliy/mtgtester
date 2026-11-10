@@ -76,12 +76,20 @@ function thinDigest(list: RecentSeatDecision[]): RecentSeatDecision[] {
   return list.filter((_, index) => index >= half || index % 2 === 0);
 }
 
-function cleanPlan(raw: TurnStrategy | undefined): TurnStrategy | null {
+function cleanPlan(
+  raw: TurnStrategy | undefined,
+  steeringRules: { opponents: readonly PlayerId[]; botLed: boolean },
+): TurnStrategy | null {
   if (raw === undefined || typeof raw.intent !== 'string') return null;
+  // Model-written knobs are cleaned here, once, so nothing unbounded rides along on the plan
+  // into later tactician prompts.
+  const steering = steeringRules.botLed
+    ? cleanSteering(raw.steering, steeringRules.opponents)
+    : null;
   // A knobs-only answer (bot-led mode, ADR 0039) has no action list; anything else must.
   const rawActions = Array.isArray(raw.plannedActions)
     ? raw.plannedActions
-    : raw.steering !== undefined
+    : steering !== null
       ? []
       : null;
   if (rawActions === null) return null;
@@ -161,8 +169,7 @@ function cleanPlan(raw: TurnStrategy | undefined): TurnStrategy | null {
         }
       : {}),
     ...(typeof raw.manaPlan === 'string' ? { manaPlan: raw.manaPlan.slice(0, 500) } : {}),
-    // Validated against the live table where it is installed (`cleanSteering`).
-    ...(raw.steering !== undefined ? { steering: raw.steering } : {}),
+    ...(steering !== null ? { steering } : {}),
   };
 }
 
@@ -411,10 +418,23 @@ export class StrategyCoordinator {
         () => this.strategistClient!.requestDecision(prompt, strategyRequest, signal),
         signal,
       );
-      const strategy = cleanPlan(result.response.turnStrategy);
+      const strategy = cleanPlan(result.response.turnStrategy, {
+        opponents: view.opponents.filter((o) => o.life > 0).map((o) => o.seat),
+        botLed: this.botLed(),
+      });
       if (result.response.actionId !== 0 || strategy === null) {
         this.engine.addDebug('decision', `strategist returned no usable plan for ${activePlayer}`);
         return;
+      }
+      // Knobs outlive the turn they were asked for, unlike a planned action list. In bot mode a
+      // seat's turn usually ends before the strategist answers, so install them even when the
+      // staleness check below drops the plan; otherwise every answer is paid for and thrown away.
+      if (this.botLed() && strategy.steering !== undefined && !this.cancelled) {
+        this.steeringBySeat.set(activePlayer, {
+          steering: strategy.steering,
+          table: tableSnapshot(view),
+          reusedTurns: 0,
+        });
       }
       // A turn/player change (or a fresh re-plan) may have superseded this call while it was
       // in flight; don't install a stale plan over what the board now needs.
@@ -427,19 +447,6 @@ export class StrategyCoordinator {
       }
       this.strategy = strategy;
       this.planDealsKey = dealsKey;
-      if (this.botLed()) {
-        const steering = cleanSteering(
-          strategy.steering,
-          view.opponents.filter((o) => o.life > 0).map((o) => o.seat),
-        );
-        if (steering !== null) {
-          this.steeringBySeat.set(activePlayer, {
-            steering,
-            table: tableSnapshot(view),
-            reusedTurns: 0,
-          });
-        }
-      }
       const metadata: PlanArtifactMetadata = {
         planId: `${strategyRequest.requestId}:g${generation}`,
         generationId: generation,

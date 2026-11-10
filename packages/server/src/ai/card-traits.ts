@@ -192,8 +192,10 @@ export function buildCardKnowledge(defs: Iterable<CardDefinition>): CardKnowledg
       // A malformed definition costs the bot one card's knowledge, never the game.
     }
     // Split and modal cards are shown by face name as well.
+    const traits = byName.get(key);
+    if (traits === undefined) continue;
     for (const face of def.name.split(' // ')) {
-      if (!byName.has(face.toLowerCase())) byName.set(face.toLowerCase(), byName.get(key)!);
+      if (!byName.has(face.toLowerCase())) byName.set(face.toLowerCase(), traits);
     }
   }
   return (name) => byName.get(name.toLowerCase());

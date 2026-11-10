@@ -77,8 +77,12 @@ function abilityIndexOf(action: LegalAction): number | undefined {
   return action.interaction?.kind === 'source' ? action.interaction.abilityIndex : undefined;
 }
 
+/**
+ * The view sets `power` only on permanents that are creatures right now, which covers crewed
+ * Vehicles, animated lands and face-down creatures whose printed type line says otherwise.
+ */
 function isCreaturePermanent(p: PermanentView): boolean {
-  return p.power !== undefined && p.power !== null && (p.typeLine ?? '').includes('Creature');
+  return p.power !== undefined && p.power !== null;
 }
 
 function isLandType(typeLine: string | undefined): boolean {
@@ -422,8 +426,16 @@ function clamp01(x: number): number {
 
 const PROTECTIVE_OR_PUMP: ReadonlySet<CardRole> = new Set(['pump', 'protection']);
 
-function opponentObjectOnStack(view: PlayerView): boolean {
-  const top = view.stack[0];
+/**
+ * Whether a counter has an opponent's spell or ability to hit. With target slots, any option that
+ * is an opponent's stack object counts (so a counter war over our own spell, or a spell below the
+ * top, is seen); without them, the top of the stack, which is the LAST element of `view.stack`.
+ */
+function opponentObjectOnStack(view: PlayerView, action: LegalAction): boolean {
+  const theirs = new Set(view.stack.filter((s) => s.controller !== view.seat).map((s) => s.id));
+  const options = (action.targets ?? []).flatMap((t) => t.options);
+  if (options.length > 0) return options.some((o) => theirs.has(o));
+  const top = view.stack.at(-1);
   return top !== undefined && top.controller !== view.seat;
 }
 
@@ -433,7 +445,7 @@ function roleValue(roles: readonly CardRole[], action: LegalAction, ctx: PolicyC
   for (const role of roles) {
     switch (role) {
       case 'counter':
-        value += opponentObjectOnStack(view) ? P.roles.counterAnswer : P.roles.counterIdle;
+        value += opponentObjectOnStack(view, action) ? P.roles.counterAnswer : P.roles.counterIdle;
         break;
       case 'removal': {
         const best = bestHostileTargetValue(action, ctx);
