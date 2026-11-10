@@ -572,7 +572,9 @@ export function actionValue(action: LegalAction, ctx: PolicyContext): number | n
     const index = abilityIndexOf(action);
     const roles = index === undefined ? [] : (traits?.abilityRoles?.[index] ?? []);
     value = WEIGHTS.tempo.activateAbility + roleValue(roles, action, ctx);
-    value -= idleReactivePenalty(roles, action, ctx);
+    // A sorcery-speed ability (a planeswalker's pump) cannot be held for combat either.
+    const sorcery = index !== undefined && traits?.abilitySorcery?.[index] === true;
+    if (!sorcery) value -= idleReactivePenalty(roles, action, ctx);
     const misuse = attachOrCrewPenalty(action, ctx);
     if (misuse !== null) return misuse;
   }

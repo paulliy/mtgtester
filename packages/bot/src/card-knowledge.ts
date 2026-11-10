@@ -55,6 +55,8 @@ export interface CardTraits {
   spellTargets?: readonly TargetPolarity[];
   /** Polarity of each target slot of each activated ability, by ability index. */
   abilityTargets?: readonly (readonly TargetPolarity[])[];
+  /** Whether each activated ability, by ability index, is limited to sorcery timing. */
+  abilitySorcery?: readonly boolean[];
   /** Printed power and toughness for creatures. */
   power?: number | null;
   toughness?: number | null;

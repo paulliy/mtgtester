@@ -177,6 +177,7 @@ export function cardTraits(def: CardDefinition): CardTraits {
     abilityRoles: abilities.map((a) => rolesOf([a.effects, a.modes], a)),
     spellTargets: targetPolarities(main),
     abilityTargets: abilities.map((a) => targetPolarities(a)),
+    abilitySorcery: def.activatedAbilities.map((a) => a.timing === 'sorcery'),
     power: def.power,
     toughness: def.toughness,
   };

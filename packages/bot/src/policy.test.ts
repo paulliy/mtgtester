@@ -446,6 +446,34 @@ describe('card-aware priority scoring', () => {
     expect(score).toBeGreaterThan(-5);
   });
 
+  it('uses a sorcery-speed pump ability in its main phase', () => {
+    const minus: LegalAction = {
+      id: 1,
+      type: 'activateAbility',
+      description: 'Ajani: −3: creatures gain flying and double strike',
+      data: {
+        sourceName: 'Ajani',
+        abilityDescription: '−3: creatures gain flying and double strike',
+      },
+      interaction: { kind: 'source', sourceId: 'ajani', sourceCardId: 'c-a', abilityIndex: 0 },
+    };
+    const k = knowledge({
+      Ajani: {
+        manaValue: 3,
+        roles: [],
+        abilityRoles: [['pump']],
+        abilitySorcery: [true],
+      },
+    });
+    const res = decide(
+      request([PASS, minus]),
+      view({ battlefield: [creature('mine', 'P1', 2, 2)] }),
+      new Rng('a'),
+      { knowledge: k },
+    );
+    expect(res.actionId).toBe(1);
+  });
+
   it('does not float mana by activating a mana ability on its own', () => {
     // The engine's manual mana action shape (packages/engine/src/mana/manual.ts).
     const tap: LegalAction = {
@@ -542,6 +570,12 @@ describe('steering', () => {
       steering: { aggression: 0 },
     });
     expect(home.targets).toEqual([{ slot: 0, choice: NO_ATTACK_TARGET }]);
+    // Diplomacy with no deals in force leaves the steered attack policy in charge.
+    const homeAtTable = decide(req, view({ battlefield: board }), new Rng('a'), {
+      steering: { aggression: 0 },
+      diplomacy: { obligations: () => [], startingOpponents: 2 },
+    });
+    expect(homeAtTable.targets).toEqual([{ slot: 0, choice: NO_ATTACK_TARGET }]);
   });
 
   it('only swings into a bad block when aggression is high', () => {

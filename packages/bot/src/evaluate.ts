@@ -185,7 +185,14 @@ function targetsFor(
   policy?: PolicyContext,
 ): TargetChoice[] {
   if (action.type === 'attackDeclaration') {
-    if (diplomacy !== undefined && action.data?.['chooseAttackers'] !== true) {
+    // With deals in force the diplomacy planner decides who may be attacked. With none, the
+    // card-aware policy (and the strategist's aggression and target order) decides as usual;
+    // the plain bot keeps the planner's threat-aware targets.
+    if (
+      diplomacy !== undefined &&
+      action.data?.['chooseAttackers'] !== true &&
+      (policy === undefined || diplomacy.obligations().length > 0)
+    ) {
       const plan = planAttackDeclaration(action, view, diplomacy);
       if (plan.breach !== undefined) {
         diplomacy.reportBreach?.(plan.breach.dealId, plan.breach.reason);
