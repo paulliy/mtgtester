@@ -495,8 +495,10 @@ function idleReactivePenalty(roles: readonly CardRole[], ctx: PolicyContext): nu
 function holdUpPenalty(mv: number, action: LegalAction, ctx: PolicyContext): number {
   const want = ctx.steering?.holdUpMana ?? 0;
   if (want <= 0 || action.data?.['instantSpeed'] === true) return 0;
-  const untapped = ctx.view.manaSources.length;
-  return untapped - mv < want ? P.holdUpPenalty : 0;
+  // Each source row is one permanent group; `count` says how many, and floating mana counts too.
+  const sources = ctx.view.manaSources.reduce((sum, m) => sum + m.count, 0);
+  const floating = Object.values(ctx.view.availableMana).reduce((sum, n) => sum + n, 0);
+  return sources + floating - mv < want ? P.holdUpPenalty : 0;
 }
 
 /**
@@ -507,7 +509,10 @@ export function actionValue(action: LegalAction, ctx: PolicyContext): number | n
   const { view, steering } = ctx;
   if (action.type === 'playLand') return P.playLand;
 
-  if (action.type === 'activateAbility' && action.data?.['producesMana'] === true) {
+  if (
+    action.type === 'activateManaAbility' ||
+    (action.type === 'activateAbility' && action.data?.['producesMana'] === true)
+  ) {
     // Auto-pay taps sources when a cost needs them; floating mana on purpose wastes it.
     return P.floatManaPenalty;
   }

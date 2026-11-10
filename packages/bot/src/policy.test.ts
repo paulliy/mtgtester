@@ -350,11 +350,12 @@ describe('card-aware priority scoring', () => {
   });
 
   it('does not float mana by activating a mana ability on its own', () => {
+    // The engine's manual mana action shape (packages/engine/src/mana/manual.ts).
     const tap: LegalAction = {
       id: 1,
-      type: 'activateAbility',
+      type: 'activateManaAbility',
       description: 'Tap Forest for G',
-      data: { producesMana: true },
+      data: { symbols: ['G'] },
     };
     expect(decide(request([PASS, tap]), view(), new Rng('a')).actionId).toBe(0);
   });
@@ -383,6 +384,19 @@ describe('steering', () => {
       steering: { holdUpMana: 2 },
     });
     expect(res.actionId).toBe(0);
+  });
+
+  it('counts grouped sources and floating mana toward held mana', () => {
+    // One row of five Forests plus one floating G: casting {3} still leaves 3 up.
+    const actions = [PASS, spell(1, 'Sorcery', '{3}')];
+    const sources = [{ name: 'Forest', symbols: ['G'], count: 5 }];
+    const res = decide(
+      request(actions),
+      view({ manaSources: sources, availableMana: { G: 1 } }),
+      new Rng('a'),
+      { steering: { holdUpMana: 2 } },
+    );
+    expect(res.actionId).toBe(1);
   });
 
   function attack(subjects: Array<{ id: string; power: number; toughness: number }>): LegalAction {
