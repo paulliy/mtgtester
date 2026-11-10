@@ -1,3 +1,4 @@
+import { withReadScope } from '../effects/layer-cache';
 import { copyData } from './copy-data';
 import { EngineBudgetError } from '../errors';
 import { CLUE, FOOD, THOPTER_1_1_FLYING, TREASURE } from '../cards/tokens';
@@ -2524,6 +2525,15 @@ function queueCardZoneTriggers(
  * still applied to it, and that is what decides whether it had the trigger at all.
  */
 export function queueTriggersForEvent(
+  ctx: GameContext,
+  when: ObjectTriggerWhen,
+  subjects: TriggerEventSubject[],
+): void {
+  // Queueing changes only the pending triggers, which no layer reads (`withReadScope`).
+  withReadScope(ctx, () => queueObjectEventTriggers(ctx, when, subjects));
+}
+
+function queueObjectEventTriggers(
   ctx: GameContext,
   when: ObjectTriggerWhen,
   subjects: TriggerEventSubject[],
