@@ -5,6 +5,7 @@ export const JEV_MAX_CHOICE_OPTIONS = 255;
 export type TacticalDecisionShape =
   | 'action_only'
   | 'action_with_forced_targets'
+  | 'expanded_targets'
   | 'ambiguous_targets'
   | 'coupled_assignment'
   | 'distribution'
@@ -16,6 +17,7 @@ export type TacticalDecisionShape =
 export type JevSupportReason =
   | 'supported_action_only'
   | 'supported_forced_targets'
+  | 'supported_expanded_targets'
   | 'requires_ambiguous_target_choice'
   | 'requires_coupled_assignment'
   | 'requires_distribution'
@@ -30,6 +32,36 @@ export interface TacticalDecisionClassification {
   reason: JevSupportReason;
   actionCount: number;
   targetSlotCount: number;
+  /** Choice options Jev is offered: one per action, or one per action and target if expanded. */
+  optionCount?: number;
+}
+
+export interface ClassifyOptions {
+  /**
+   * Offer each targeted action once per legal target when exactly one of its slots is undecided.
+   * Off by default, which keeps the fail-closed V1 contract.
+   */
+  expandTargets?: boolean;
+}
+
+/**
+ * Choice options for one action when targets are expanded: 1 when every slot is forced, the
+ * undecided slot's option count when exactly one slot is undecided, and null when the action
+ * cannot be expanded faithfully (two undecided slots, or an undecided slot that could repeat a
+ * forced slot's object, which may need distinct targets).
+ */
+export function expandedOptionCount(action: {
+  targets?: ReadonlyArray<{ slot: number; options: readonly string[] }>;
+}): number | null {
+  const slots = action.targets ?? [];
+  const open = slots.filter((slot) => slot.options.length > 1);
+  if (open.length === 0) return 1;
+  if (open.length > 1) return null;
+  const forced = new Set(
+    slots.filter((slot) => slot.options.length === 1).map((s) => s.options[0]),
+  );
+  if (open[0]!.options.some((option) => forced.has(option))) return null;
+  return open[0]!.options.length;
 }
 
 const JEV_V1_DECISION_TYPES = new Set<DecisionType>([
@@ -48,6 +80,7 @@ const JEV_V1_DECISION_TYPES = new Set<DecisionType>([
 export function classifyTacticalDecision(
   request: DecisionRequest,
   maxActions = JEV_MAX_CHOICE_OPTIONS,
+  options: ClassifyOptions = {},
 ): TacticalDecisionClassification {
   const actionCount = request.legalActions.length;
   const targetSlotCount = request.legalActions.reduce(
@@ -125,6 +158,22 @@ export function classifyTacticalDecision(
     };
   }
   if (slots.some((slot) => slot.options.length > 1)) {
+    if (options.expandTargets === true) {
+      const counts = request.legalActions.map(expandedOptionCount);
+      const optionCount = counts.reduce<number | null>(
+        (sum, count) => (sum === null || count === null ? null : sum + count),
+        0,
+      );
+      if (optionCount !== null && optionCount <= effectiveMaxActions) {
+        return {
+          ...base,
+          optionCount,
+          shape: 'expanded_targets',
+          jevSupported: true,
+          reason: 'supported_expanded_targets',
+        };
+      }
+    }
     return {
       ...base,
       shape: 'ambiguous_targets',
@@ -135,6 +184,7 @@ export function classifyTacticalDecision(
   if (slots.length > 0) {
     return {
       ...base,
+      optionCount: actionCount,
       shape: 'action_with_forced_targets',
       jevSupported: true,
       reason: 'supported_forced_targets',
@@ -142,6 +192,7 @@ export function classifyTacticalDecision(
   }
   return {
     ...base,
+    optionCount: actionCount,
     shape: 'action_only',
     jevSupported: true,
     reason: 'supported_action_only',

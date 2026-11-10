@@ -74,17 +74,24 @@ function parseResponse(value: unknown): {
     return fail('answers.action must be a choice answer');
   }
   if (typeof action['choice'] !== 'string') return fail('action choice must be a string');
-  if (!finiteNonNegative(action['confidence']) || action['confidence'] > 1) {
+  // The Decisions API marks confidence and probabilities optional; absent is not malformed.
+  const confidence = action['confidence'];
+  if (confidence !== undefined && (!finiteNonNegative(confidence) || confidence > 1)) {
     return fail('action confidence must be a finite value from 0 to 1');
   }
   const rawProbabilities = action['probabilities'];
-  if (!record(rawProbabilities)) return fail('action probabilities must be an object');
-  const probabilities: Record<string, number> = {};
-  for (const [key, probability] of Object.entries(rawProbabilities)) {
-    if (!finiteNonNegative(probability) || probability > 1) {
-      return fail(`probability for ${key} must be a finite value from 0 to 1`);
+  if (rawProbabilities !== undefined && !record(rawProbabilities)) {
+    return fail('action probabilities must be an object');
+  }
+  let probabilities: Record<string, number> | undefined;
+  if (rawProbabilities !== undefined) {
+    probabilities = {};
+    for (const [key, probability] of Object.entries(rawProbabilities)) {
+      if (!finiteNonNegative(probability) || probability > 1) {
+        return fail(`probability for ${key} must be a finite value from 0 to 1`);
+      }
+      probabilities[key] = probability;
     }
-    probabilities[key] = probability;
   }
   const usage = value['usage'];
   if (!record(usage)) return fail('usage must be an object');
@@ -99,8 +106,8 @@ function parseResponse(value: unknown): {
     answer: {
       type: 'choice',
       choice: action['choice'],
-      confidence: action['confidence'],
-      probabilities,
+      ...(confidence === undefined ? {} : { confidence }),
+      ...(probabilities === undefined ? {} : { probabilities }),
     },
     responseModel: value['model'],
     ...(typeof value['provider'] === 'string' ? { provider: value['provider'] } : {}),

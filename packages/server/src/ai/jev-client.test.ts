@@ -120,7 +120,7 @@ describe('JevClient', () => {
       {
         create: async () => ({
           model: 'typesafe/jev-1.13',
-          answers: { action: { type: 'choice', choice: 'action_0' } },
+          answers: { action: { type: 'choice', choice: 'action_0', confidence: 2 } },
           usage: { inputTokens: 10, outputTokens: 1 },
         }),
       },
@@ -134,11 +134,25 @@ describe('JevClient', () => {
     expect(attempts[1]).toMatchObject({ kind: 'decision', status: 'rejected' });
   });
 
-  it('fails closed when confidence or probabilities are missing', async () => {
+  it('accepts an answer without confidence or probabilities, which the API marks optional', async () => {
     const transport: JevDecisionsTransport = {
       create: async () => ({
         model: 'typesafe/jev-1.13',
         answers: { action: { type: 'choice', choice: 'action_1' } },
+        usage: { inputTokens: 10, outputTokens: 1 },
+      }),
+    };
+    const client = new JevClient({ apiKey: 'secret', requestTimeoutMs: 2_000 }, transport);
+
+    const result = await client.requestAction(built());
+    expect(result.answer).toEqual({ type: 'choice', choice: 'action_1' });
+  });
+
+  it('rejects malformed probabilities', async () => {
+    const transport: JevDecisionsTransport = {
+      create: async () => ({
+        model: 'typesafe/jev-1.13',
+        answers: { action: { type: 'choice', choice: 'action_1', probabilities: { action_1: 3 } } },
         usage: { inputTokens: 10, outputTokens: 1 },
       }),
     };

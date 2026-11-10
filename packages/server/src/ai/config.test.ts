@@ -224,6 +224,22 @@ describe('AI Config', () => {
     expect(config.jevMinConfidence).toBeNull();
     expect(config.jevMinTopTwoMargin).toBeNull();
   });
+
+  it('loads Jev placement settings and ignores unknown values (ADR 0041)', () => {
+    expect(loadAiConfig({})).toMatchObject({
+      jevFallback: 'model',
+      jevShadowScope: 'all',
+      jevExpandTargets: true,
+    });
+    expect(
+      loadAiConfig({
+        AI_JEV_FALLBACK: 'bot',
+        AI_JEV_SHADOW_SCOPE: 'uncertain',
+        AI_JEV_EXPAND_TARGETS: '0',
+      }),
+    ).toMatchObject({ jevFallback: 'bot', jevShadowScope: 'uncertain', jevExpandTargets: false });
+    expect(loadAiConfig({ AI_JEV_FALLBACK: 'human' }).jevFallback).toBe('model');
+  });
 });
 
 describe('bot-led tactics settings (ADR 0039)', () => {

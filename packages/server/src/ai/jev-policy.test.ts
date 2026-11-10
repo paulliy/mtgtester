@@ -180,4 +180,70 @@ describe('JevActionPolicy', () => {
     });
     expect(client.requestAction).not.toHaveBeenCalled();
   });
+
+  it('treats unreported scores as below any nonzero threshold', async () => {
+    const unscored: JevActionResult = {
+      ...result(),
+      answer: { type: 'choice', choice: 'action_2' },
+    };
+    const client = { requestAction: vi.fn().mockResolvedValue(unscored) };
+    await expect(policy(client, 0.5).decide(request, view)).resolves.toMatchObject({
+      kind: 'fallthrough',
+      reason: 'low_confidence',
+    });
+    const permissive = new JevActionPolicy(
+      client,
+      { enqueue: (fn) => fn() },
+      { model: 'typesafe/jev-1.13', minConfidence: 0, minTopTwoMargin: 0 },
+    );
+    await expect(permissive.decide(request, view)).resolves.toMatchObject({
+      kind: 'answered',
+      confidence: null,
+      response: { actionId: 2 },
+    });
+  });
+
+  it('answers a targeted menu when expansion is on and passes custom instructions', async () => {
+    const client = {
+      requestAction: vi.fn().mockResolvedValue({
+        ...result(),
+        answer: {
+          type: 'choice',
+          choice: 'action_2_t1',
+          confidence: 0.9,
+          probabilities: { action_2_t1: 0.9, action_2_t0: 0.1 },
+        },
+      }),
+    };
+    const targeted: DecisionRequest = {
+      ...request,
+      legalActions: [
+        {
+          id: 2,
+          type: 'castSpell',
+          description: 'Cast spell',
+          targets: [{ slot: 0, options: ['a', 'b'] }],
+        },
+      ],
+    };
+    const expanding = new JevActionPolicy(
+      client,
+      { enqueue: (fn) => fn() },
+      {
+        model: 'typesafe/jev-1.13',
+        minConfidence: 0.5,
+        minTopTwoMargin: 0.1,
+        expandTargets: true,
+      },
+    );
+    await expect(
+      expanding.decide(targeted, view, undefined, { instructions: 'Close call.' }),
+    ).resolves.toMatchObject({
+      kind: 'answered',
+      response: { actionId: 2, targets: [{ slot: 0, choice: 'b' }] },
+    });
+    expect(client.requestAction.mock.calls[0]![0].request.questions.action.instructions).toBe(
+      'Close call.',
+    );
+  });
 });

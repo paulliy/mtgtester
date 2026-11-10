@@ -38,6 +38,7 @@
     "bot-league": "bun run packages/server/src/cli/bot-league.ts",
     "ai-mode-duel": "bun run packages/server/src/cli/ai-mode-duel.ts",
     "ai-call-census": "bun run packages/server/src/cli/ai-call-census.ts",
+    "jev-duel": "bun run packages/server/src/cli/jev-duel.ts",
     "fuzz": "bun run packages/server/src/cli/fuzz.ts",
     "diplomacy-sweep": "bun run packages/server/src/cli/diplomacy-sweep.ts",
     "ai-bench": "bun run packages/server/src/cli/ai-bench.ts",

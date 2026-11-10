@@ -292,8 +292,13 @@ async function playAi(pool: SupportedPool, args: Args): Promise<void> {
   strategistClient.setAttemptObserver(logger.attemptObserver());
   tacticianClient.setAttemptObserver(logger.attemptObserver());
   const jev =
-    createConfiguredJevPolicy(config, env, logger.attemptObserver(), logger.jevTraceObserver()) ??
-    undefined;
+    createConfiguredJevPolicy(
+      config,
+      env,
+      logger.attemptObserver(),
+      logger.jevTraceObserver(),
+      logger.jevComparisonObserver(),
+    ) ?? undefined;
   const coordinator = new StrategyCoordinator(strategistClient, queue, engine, config, logger);
 
   const providers = new Map<string, OpenAiDecisionProvider>();

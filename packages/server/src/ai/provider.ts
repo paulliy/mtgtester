@@ -26,8 +26,13 @@ import { StrategyCoordinator } from './strategy-coordinator';
 import { preparePromptForCaching } from './prompt-cache';
 import { routeStrategy } from './strategy-router';
 import { DEFAULT_POLICY_REGISTRY, type PolicyRegistry } from './policy-registry';
-import type { JevPolicyBinding, JevPolicyOutcome } from './jev-policy';
-import { BotTactician } from './bot-tactician';
+import {
+  sameResponse,
+  type JevComparison,
+  type JevPolicyBinding,
+  type JevPolicyOutcome,
+} from './jev-policy';
+import { BotTactician, type BotAnswer } from './bot-tactician';
 
 /**
  * Errors where falling back per-decision would be dishonest: the budget or the credentials
@@ -140,12 +145,13 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
         bot.record(request, answer.response);
         this.logLocal(request, answer.response, 'bot');
         this.strategy.recordDecision(request, answer.response, 'bot');
+        this.shadowJev(request, view, answer.response, 'bot', answer.uncertain);
         return answer.response;
       }
       this.engine.addDebug?.('decision', `bot unsure for ${request.requestId}; asking the model`, {
         source: 'bot',
       });
-      const response = await this.decideViaModelOrFallback(request, view);
+      const response = await this.decideViaModelOrFallback(request, view, answer);
       bot.record(request, response);
       return response;
     }
@@ -153,28 +159,107 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     return await this.decideViaModelOrFallback(request, view);
   }
 
-  /** Jev (when bound), then the tactician model, then escalation or the fallback bot. */
+  /**
+   * Shadow Jev (ADR 0041): ask Jev about a decision another answerer already settled, without
+   * waiting, and record whether it would have agreed. Never changes play.
+   */
+  private shadowJev(
+    request: DecisionRequest,
+    view: PlayerView,
+    played: DecisionResponse,
+    playedBy: JevComparison['playedBy'],
+    botUncertain?: boolean,
+  ): void {
+    const jev = this.jev;
+    if (jev === undefined || jev.mode !== 'shadow') return;
+    if (this.config.jevShadowScope === 'uncertain' && botUncertain !== true) return;
+    void jev.policy
+      .decide(request, view, this.strategy.guidanceFor(request.decidingPlayer, request, view))
+      .then((outcome) => {
+        this.recordJevDebug(request, outcome, true);
+        this.compareJev(request, outcome, played, playedBy, botUncertain);
+      })
+      .catch((error: unknown) => {
+        this.engine.addDebug?.('decision', `Jev shadow failed for ${request.requestId}`, {
+          mode: 'shadow',
+          detail: error instanceof Error ? error.message : String(error),
+        });
+      });
+  }
+
+  private compareJev(
+    request: DecisionRequest,
+    outcome: JevPolicyOutcome,
+    played: DecisionResponse,
+    playedBy: JevComparison['playedBy'],
+    botUncertain?: boolean,
+  ): void {
+    const observer = this.jev?.onComparison;
+    if (observer === undefined) return;
+    const jevResponse =
+      outcome.kind === 'answered'
+        ? outcome.response
+        : outcome.adaptation?.kind === 'accepted'
+          ? outcome.adaptation.response
+          : undefined;
+    const confidence =
+      outcome.kind === 'answered'
+        ? outcome.confidence
+        : outcome.adaptation?.kind === 'accepted'
+          ? outcome.adaptation.confidence
+          : null;
+    const margin =
+      outcome.kind === 'answered'
+        ? outcome.topTwoMargin
+        : outcome.adaptation?.kind === 'accepted'
+          ? outcome.adaptation.topTwoMargin
+          : null;
+    try {
+      observer({
+        schemaVersion: 1,
+        logicalRequestId: request.requestId,
+        seat: request.decidingPlayer,
+        turn: request.turn,
+        decisionType: request.decisionType,
+        playedBy,
+        playedActionId: played.actionId,
+        ...(botUncertain === undefined ? {} : { botUncertain }),
+        jevOutcome: outcome.kind === 'answered' ? 'answered' : outcome.reason,
+        ...(jevResponse === undefined
+          ? {}
+          : {
+              jevActionId: jevResponse.actionId,
+              agreed: sameResponse(jevResponse, played),
+              sameAction: jevResponse.actionId === played.actionId,
+            }),
+        ...(confidence === null ? {} : { confidence }),
+        ...(margin === null ? {} : { topTwoMargin: margin }),
+      });
+    } catch {
+      // Evidence collection must never stop a game.
+    }
+  }
+
+  /**
+   * Jev (when bound), then the tactician model, then escalation or the fallback bot. With
+   * `jevFallback: 'bot'`, a decision Jev was asked but did not settle goes to the bot instead of
+   * the model; `botAnswer` is the bot's answer when the caller already has it.
+   */
   private async decideViaModelOrFallback(
     request: DecisionRequest,
     view: PlayerView,
+    botAnswer?: BotAnswer,
   ): Promise<DecisionResponse> {
+    let shadow: Promise<JevPolicyOutcome> | undefined;
+    let fellThrough: JevPolicyOutcome | undefined;
     if (this.jev !== undefined) {
-      const decision = this.jev.policy.decide(
-        request,
-        view,
-        this.strategy.guidanceFor(request.decidingPlayer, request, view),
-      );
+      const guidance = this.strategy.guidanceFor(request.decidingPlayer, request, view);
       if (this.jev.mode === 'shadow') {
-        void decision
-          .then((outcome) => this.recordJevDebug(request, outcome, true))
-          .catch((error: unknown) => {
-            this.engine.addDebug?.('decision', `Jev shadow failed for ${request.requestId}`, {
-              mode: 'shadow',
-              detail: error instanceof Error ? error.message : String(error),
-            });
-          });
+        if (this.config.jevShadowScope === 'all' || botAnswer?.uncertain === true) {
+          shadow = this.jev.policy.decide(request, view, guidance);
+        }
       } else {
-        const jev = await decision;
+        const jev = await this.jev.policy.decide(request, view, guidance);
         this.recordJevDebug(request, jev, false);
         if (jev.kind === 'answered') {
           this.logger?.log(
@@ -189,13 +274,48 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
           return jev.response;
         }
         if (jev.reason === 'cancelled') throw new Error('Jev request cancelled');
+        fellThrough = jev;
+        if (this.config.jevFallback === 'bot') {
+          const answer = botAnswer ?? this.botFor(request).decide(request);
+          // In bot mode the caller records the final answer; in model mode nobody else will.
+          if (botAnswer === undefined) this.botFor(request).record(request, answer.response);
+          this.logLocal(request, answer.response, 'bot');
+          this.strategy.recordDecision(request, answer.response, 'bot');
+          this.compareJev(request, jev, answer.response, 'bot', botAnswer?.uncertain);
+          return answer.response;
+        }
       }
     }
 
+    const { response, playedBy } = await this.decideViaModelChain(request, view);
+    if (fellThrough !== undefined) {
+      this.compareJev(request, fellThrough, response, playedBy, botAnswer?.uncertain);
+    }
+    if (shadow !== undefined) {
+      void shadow
+        .then((outcome) => {
+          this.recordJevDebug(request, outcome, true);
+          this.compareJev(request, outcome, response, playedBy, botAnswer?.uncertain);
+        })
+        .catch((error: unknown) => {
+          this.engine.addDebug?.('decision', `Jev shadow failed for ${request.requestId}`, {
+            mode: 'shadow',
+            detail: error instanceof Error ? error.message : String(error),
+          });
+        });
+    }
+    return response;
+  }
+
+  /** The tactician model, then escalation or the fallback bot. */
+  private async decideViaModelChain(
+    request: DecisionRequest,
+    view: PlayerView,
+  ): Promise<{ response: DecisionResponse; playedBy: 'model' | 'fallback' }> {
     let failure: ModelFailure;
     try {
       const outcome = await this.decideViaModel(request, view);
-      if (outcome.kind === 'answered') return outcome.response;
+      if (outcome.kind === 'answered') return { response: outcome.response, playedBy: 'model' };
       failure = outcome;
     } catch (err) {
       console.warn(
@@ -211,7 +331,10 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     // Escalation is invoked here, OUTSIDE the try, on purpose: the runner signals "this is
     // compute-ahead, halt the match" by throwing, and that throw must reach the caller rather
     // than be caught above and quietly downgraded into the fallback it exists to prevent.
-    return await this.escalateOrFallback(request, view, failure);
+    return {
+      response: await this.escalateOrFallback(request, view, failure),
+      playedBy: 'fallback',
+    };
   }
 
   private botFor(request: DecisionRequest): BotTactician {

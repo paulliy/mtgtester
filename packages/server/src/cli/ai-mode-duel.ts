@@ -79,14 +79,14 @@ export interface Budget {
  * usage is taken from the client's attempt record instead; accepted attempts are counted from the
  * result, so nothing is charged twice.
  */
-export function counting(
-  inner: OpenAiCompatibleClient,
+export function counting<M extends string = ModeName>(
+  inner: Pick<OpenAiCompatibleClient, 'activeModel' | 'requestDecision' | 'setAttemptObserver'>,
   role: 'tactician' | 'strategist',
-  modeOf: (seat: PlayerId) => ModeName,
-  tallies: Record<ModeName, Tally>,
+  modeOf: (seat: PlayerId) => M,
+  tallies: Record<M, Tally>,
   budget: Budget,
 ): AiClient {
-  const modeByRequest = new Map<string, ModeName>();
+  const modeByRequest = new Map<string, M>();
   let outer: AiAttemptObserver | undefined;
   const charge = (tally: Tally, promptTokens = 0, responseTokens = 0, costUsd?: number): void => {
     tally.promptTokens += promptTokens;
