@@ -1,0 +1,1 @@
+Whenever one or more artifact, creature, enchantment, land, or planeswalker permanents you own are put into a graveyard from anywhere, if this creature has one or more -1/-1 counters on it, remove a -1/-1 counter from it. (Trigger is aggregate.)

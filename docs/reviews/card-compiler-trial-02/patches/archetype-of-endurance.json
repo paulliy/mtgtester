@@ -1,0 +1,32 @@
+{
+  "name": "Archetype of Endurance",
+  "oracleId": "79254223-3fa6-4b7c-8163-1e48bf5cb708",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Creatures your opponents control lose hexproof and can't have or gain hexproof."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "opponents"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "denyKeywords": ["hexproof"]
+        }
+      }
+    ]
+  }
+}

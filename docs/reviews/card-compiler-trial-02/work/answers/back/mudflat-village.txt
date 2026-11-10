@@ -1,0 +1,1 @@
+{1}{B}, {T}, Sacrifice this land: Return target card from your graveyard that is a Bat, Lizard, Rat, or Squirrel card to your hand.

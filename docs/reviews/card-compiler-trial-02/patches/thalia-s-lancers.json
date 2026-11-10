@@ -1,0 +1,43 @@
+{
+  "name": "Thalia's Lancers",
+  "oracleId": "58b349ec-9987-4832-a8f3-8e92027ea75b",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "When this creature enters, you may search your library for a legendary card, reveal it, put it into your hand, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "searchLibrary",
+            "filter": {
+              "kind": "supertype",
+              "value": "Legendary"
+            },
+            "destinations": [
+              {
+                "zone": "hand"
+              }
+            ],
+            "reveal": true
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "description": "When this creature enters, you may search your library for a legendary card, reveal it, put it into your hand, then shuffle."
+      }
+    ]
+  }
+}

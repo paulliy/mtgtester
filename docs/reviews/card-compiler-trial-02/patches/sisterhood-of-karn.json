@@ -1,0 +1,32 @@
+{
+  "name": "Sisterhood of Karn",
+  "oracleId": "b32484ee-c7d8-472d-818f-2c37783d028a",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Whenever you cast a spell from anywhere other than your hand, double the number of +1/+1 counters on this creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "castFrom": "notHand"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "doubleCountersEach",
+            "selector": {
+              "kind": "self"
+            }
+          }
+        ],
+        "description": "Whenever you cast a spell from anywhere other than your hand, double the number of +1/+1 counters on this creature."
+      }
+    ]
+  }
+}

@@ -8,9 +8,8 @@ Nothing here registers cards with the engine. Patches go through the batch card 
 (`scripts/card-compiler/run.ts import` and `check`) and then wait in its review queue
 (`run.ts queue`); a card becomes playable only after review.
 
-`scripts/card-compiler/` comes from PR #58. Until #58 is on main, run the last two commands below
-from a checkout of that branch. The pilot's patches are not in the review queue until `run.ts
-queue` reads `docs/reviews/xmage-pilot-01/`.
+The pilot's patches are queued by passing `docs/reviews/xmage-pilot-01` to `run.ts queue` with
+the compiler's own trial directories (see that directory's README).
 
 ## Pieces
 

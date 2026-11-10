@@ -1,0 +1,44 @@
+{
+  "name": "Captain Sisay",
+  "oracleId": "2e7a9ea9-f76c-4c12-950f-c613fa16cfa8",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "{T}: Search your library for a legendary card, reveal that card, put it into your hand, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "searchLibrary",
+              "filter": {
+                "kind": "supertype",
+                "value": "Legendary"
+              },
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "reveal": true
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "description": "{T}: Search your library for a legendary card, reveal that card, put it into your hand, then shuffle."
+        }
+      }
+    ]
+  }
+}

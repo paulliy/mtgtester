@@ -2,12 +2,18 @@
 
 Translates XMage card code (MIT, commit `31ede542`) into card IR patches for EDHREC cards blocked
 by one unparsed rules line, then runs them through the batch card compiler's checks
-(`scripts/card-compiler/run.ts import` and `check`). Tooling: `scripts/xmage-import/`. The checks
-come from PR #58 and are not on this branch until it merges; this run used #58 at `a62bd703`.
+(`scripts/card-compiler/run.ts import` and `check`). Tooling: `scripts/xmage-import/`. This run
+used the compiler as of PR #58 at `a62bd703`.
 
-Nothing here is registered with the engine, so none of these cards is playable. They are not yet
-in the compiler's review queue (`docs/reviews/compiled-card-queue.json`, built by `run.ts queue`).
-Add this directory to that queue once #58 is on main.
+Nothing here is registered with the engine, so none of these cards is playable. All 80 are in the
+compiler's review queue (`docs/reviews/compiled-card-queue.json`), rebuilt with:
+
+```bash
+bun run scripts/card-compiler/run.ts queue docs/reviews/card-compiler-trial-01 \
+  docs/reviews/card-compiler-trial-02 docs/reviews/xmage-pilot-01
+```
+
+11 of the cards also have a compiler-made patch in the queue. Each source is reviewed separately.
 
 ## Result
 

@@ -1,0 +1,2 @@
++1: Up to one target creature you control can't be blocked this turn. Draw a card, then discard a card.
+Activate only as a sorcery and only once each turn.

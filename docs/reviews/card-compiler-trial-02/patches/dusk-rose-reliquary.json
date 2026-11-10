@@ -1,0 +1,37 @@
+{
+  "name": "Dusk Rose Reliquary",
+  "oracleId": "dca7102e-c020-4fdc-9b59-f186e3e615a5",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["As an additional cost to cast this spell, sacrifice an artifact or creature."],
+  "compose": "append",
+  "def": {
+    "spellAdditionalCosts": [
+      {
+        "kind": "sacrificeOther",
+        "selector": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          ]
+        },
+        "allowSelf": true
+      }
+    ]
+  }
+}

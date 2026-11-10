@@ -1,0 +1,1 @@
+Whenever equipped creature deals combat damage to a player, destroy each other permanent on the battlefield.

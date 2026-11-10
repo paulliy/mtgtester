@@ -1,0 +1,75 @@
+{
+  "name": "Thundering Raiju",
+  "oracleId": "3d713c11-36a7-4b19-8c42-a9b61ef5902c",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Whenever this creature attacks, put a +1/+1 counter on target creature you control. Then this creature deals X damage to each opponent, where X is the number of modified creatures you control other than this creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "you"
+          }
+        ],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": 0,
+            "counter": "+1/+1",
+            "count": 1
+          },
+          {
+            "op": "eachOpponentDamage",
+            "amount": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "other"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "anyOf",
+                    "of": [
+                      {
+                        "kind": "hasAnyCounter"
+                      },
+                      {
+                        "kind": "enchantedByAuraYouControl"
+                      },
+                      {
+                        "kind": "isEquipped"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "scope": "you"
+            }
+          }
+        ],
+        "description": "Whenever this creature attacks, put a +1/+1 counter on target creature you control. Then this creature deals X damage to each opponent, where X is the number of modified creatures you control other than this creature."
+      }
+    ]
+  }
+}

@@ -1,0 +1,366 @@
+[
+  {
+    "name": "Dualcaster Mage",
+    "rank": 683,
+    "lines": [
+      "When this creature enters, copy target instant or sorcery spell. You may choose new targets for the copy."
+    ],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Bitter Triumph",
+    "rank": 811,
+    "lines": ["As an additional cost to cast this spell, discard a card or pay 3 life."],
+    "xmageBucket": "xmage-new-shared-classes"
+  },
+  {
+    "name": "Damning Verdict",
+    "rank": 1105,
+    "lines": ["Destroy all creatures with no counters on them."],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Bloodforged Battle-Axe",
+    "rank": 1554,
+    "lines": [
+      "Whenever equipped creature deals combat damage to a player, create a token that's a copy of this Equipment."
+    ],
+    "xmageBucket": "xmage-custom-classes"
+  },
+  {
+    "name": "Ganax, Astral Hunter",
+    "rank": 1609,
+    "lines": ["Choose a Background"],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Grand Arbiter Augustin IV",
+    "rank": 2115,
+    "lines": ["Spells your opponents cast cost {1} more to cast."],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Starfield of Nyx",
+    "rank": 2334,
+    "lines": [
+      "As long as you control five or more enchantments, each other non-Aura enchantment you control is a creature in addition to its other types and has base power and base toughness each equal to its mana value."
+    ],
+    "xmageBucket": "xmage-custom-classes"
+  },
+  {
+    "name": "Transpose",
+    "rank": 2560,
+    "lines": [
+      "Draw a card, then discard a card. You lose 1 life. If this spell was cast from your hand, create a 0/1 black Wizard creature token with \"Whenever you cast a noncreature spell, this token deals 1 damage to each opponent.\""
+    ],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Germination Practicum",
+    "rank": 2947,
+    "lines": ["Paradigm"],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Spawnbed Protector",
+    "rank": 3005,
+    "lines": [
+      "At the beginning of your end step, return up to one target Eldrazi creature card from your graveyard to your hand. Create two 1/1 colorless Eldrazi Scion creature tokens with \"Sacrifice this token: Add {C}.\""
+    ],
+    "xmageBucket": "xmage-new-shared-classes"
+  },
+  {
+    "name": "Feline Sovereign",
+    "rank": 3365,
+    "lines": ["Other Cats you control get +1/+1 and have protection from Dogs."],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Yavimaya Hollow",
+    "rank": 3619,
+    "lines": ["{G}, {T}: Regenerate target creature."],
+    "xmageBucket": "xmage-new-shared-classes"
+  },
+  {
+    "name": "Behold the Multiverse",
+    "rank": 3785,
+    "lines": ["Foretell {1}{U}"],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Thundering Raiju",
+    "rank": 4155,
+    "lines": [
+      "Whenever this creature attacks, put a +1/+1 counter on target creature you control. Then this creature deals X damage to each opponent, where X is the number of modified creatures you control other than this creature."
+    ],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Absolute Virtue",
+    "rank": 4297,
+    "lines": ["You have protection from each of your opponents."],
+    "xmageBucket": "xmage-new-shared-classes"
+  },
+  {
+    "name": "Rat Colony",
+    "rank": 4570,
+    "lines": ["A deck can have any number of cards named ~."],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Goblin Chainwhirler",
+    "rank": 4906,
+    "lines": [
+      "When this creature enters, it deals 1 damage to each opponent and each creature and planeswalker they control."
+    ],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Valkyrie's Call",
+    "rank": 4937,
+    "lines": [
+      "Whenever a nontoken, non-Angel creature you control dies, return that card to the battlefield under its owner's control with a +1/+1 counter on it. It has flying and is an Angel in addition to its other types."
+    ],
+    "xmageBucket": "xmage-custom-classes"
+  },
+  {
+    "name": "Smallpox",
+    "rank": 5272,
+    "lines": [
+      "Each player loses 1 life, discards a card, sacrifices a creature of their choice, then sacrifices a land of their choice."
+    ],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Font of Agonies",
+    "rank": 5546,
+    "lines": ["Whenever you pay life, put that many blood counters on this enchantment."],
+    "xmageBucket": "xmage-custom-classes"
+  },
+  {
+    "name": "Cloudpost",
+    "rank": 5691,
+    "lines": ["{T}: Add {C} for each Locus on the battlefield."],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Blightwing Bandit",
+    "rank": 6114,
+    "lines": [
+      "Whenever you cast your first spell during each opponent's turn, look at the top card of that player's library, then exile it face down. You may play that card for as long as it remains exiled, and mana of any type can be spent to cast it."
+    ],
+    "xmageBucket": "xmage-new-shared-classes"
+  },
+  {
+    "name": "Adept Watershaper",
+    "rank": 6128,
+    "lines": ["Other tapped creatures you control have indestructible."],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Needle Drop",
+    "rank": 6572,
+    "lines": ["~ deals 1 damage to any target that was dealt damage this turn."],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Great Arashin City",
+    "rank": 6767,
+    "lines": [
+      "{1}{B}, {T}, Exile a creature card from your graveyard: Create a 1/1 white Spirit creature token."
+    ],
+    "xmageBucket": "xmage-new-shared-classes"
+  },
+  {
+    "name": "Scale Up",
+    "rank": 6947,
+    "lines": [
+      "Until end of turn, target creature you control becomes a green Wurm with base power and toughness 6/4."
+    ],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Samut, Vizier of Naktamun",
+    "rank": 7367,
+    "lines": [
+      "Whenever a creature you control deals combat damage to a player, if that creature entered this turn, draw a card."
+    ],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Charmbreaker Devils",
+    "rank": 7376,
+    "lines": [
+      "At the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand."
+    ],
+    "xmageBucket": "xmage-new-shared-classes"
+  },
+  {
+    "name": "Treeguard Duo",
+    "rank": 7787,
+    "lines": [
+      "When this creature enters, until end of turn, target creature you control gains vigilance and gets +X/+X, where X is the number of creatures you control."
+    ],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Commander Liara Portyr",
+    "rank": 7968,
+    "lines": [
+      "Whenever you attack, spells you cast from exile this turn cost {X} less to cast, where X is the number of players being attacked. Exile the top X cards of your library. Until end of turn, you may cast spells from among those exiled cards."
+    ],
+    "xmageBucket": "xmage-custom-classes"
+  },
+  {
+    "name": "Morbid Curiosity",
+    "rank": 8195,
+    "lines": ["Draw cards equal to the mana value of the sacrificed permanent."],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Three Tree Scribe",
+    "rank": 8552,
+    "lines": [
+      "Whenever this creature or another creature you control leaves the battlefield without dying, put a +1/+1 counter on target creature you control."
+    ],
+    "xmageBucket": "xmage-custom-classes"
+  },
+  {
+    "name": "Game Over",
+    "rank": 8637,
+    "lines": [
+      "This spell costs {2} less to cast if a player's life total is less than or equal to half their starting life total."
+    ],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Diary of Dreams",
+    "rank": 9034,
+    "lines": [
+      "{5}, {T}: Draw a card. This ability costs {1} less to activate for each page counter on this artifact."
+    ],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Release to the Wind",
+    "rank": 9149,
+    "lines": [
+      "Exile target nonland permanent. For as long as that card remains exiled, its owner may cast it without paying its mana cost."
+    ],
+    "xmageBucket": "xmage-custom-classes"
+  },
+  {
+    "name": "On Thin Ice",
+    "rank": 9470,
+    "lines": ["Enchant snow land you control"],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Wolfcaller's Howl",
+    "rank": 9744,
+    "lines": [
+      "At the beginning of your upkeep, create X 2/2 green Wolf creature tokens, where X is the number of your opponents with four or more cards in hand."
+    ],
+    "xmageBucket": "xmage-custom-classes"
+  },
+  {
+    "name": "Hard-Hitting Question",
+    "rank": 9792,
+    "lines": [
+      "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control."
+    ],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Archon of the Wild Rose",
+    "rank": 10237,
+    "lines": [
+      "Other creatures you control that are enchanted by Auras you control have base power and toughness 4/4 and have flying."
+    ],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Thran Turbine",
+    "rank": 10288,
+    "lines": [
+      "At the beginning of your upkeep, you may add {C}{C}. This mana can't be spent to cast spells."
+    ],
+    "xmageBucket": "xmage-custom-classes"
+  },
+  {
+    "name": "Pulse of Murasa",
+    "rank": 10599,
+    "lines": [
+      "Return target creature or land card from a graveyard to its owner's hand. You gain 6 life."
+    ],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Surrounded by Orcs",
+    "rank": 10847,
+    "lines": [
+      "Amass Orcs 3, then target player mills X cards, where X is the amassed Army's power."
+    ],
+    "xmageBucket": "xmage-custom-classes"
+  },
+  {
+    "name": "Horrific Assault",
+    "rank": 10954,
+    "lines": [
+      "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control. If you control an Eldrazi, you gain 3 life."
+    ],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Tri-Sentinel, Act of Vengeance",
+    "rank": 11339,
+    "lines": [
+      "When ~ enters, for each opponent, ~ deals 3 damage to up to one target creature that player controls."
+    ],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Expedited Inheritance",
+    "rank": 11484,
+    "lines": [
+      "Whenever a creature is dealt damage, its controller may exile that many cards from the top of their library. They may play those cards until the end of their next turn."
+    ],
+    "xmageBucket": "xmage-custom-classes"
+  },
+  {
+    "name": "Horobi, Death's Wail",
+    "rank": 11816,
+    "lines": [
+      "Whenever a creature becomes the target of a spell or ability, destroy that creature."
+    ],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Emmara Tandris",
+    "rank": 12052,
+    "lines": ["Prevent all damage that would be dealt to creature tokens you control."],
+    "xmageBucket": "xmage-new-shared-classes"
+  },
+  {
+    "name": "Wurmwall Sweeper",
+    "rank": 12255,
+    "lines": ["When this Spacecraft enters, surveil 2."],
+    "xmageBucket": "xmage-known-classes"
+  },
+  {
+    "name": "Thor, Asgard's Avenger",
+    "rank": 12570,
+    "lines": [
+      "If another source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus 1 instead."
+    ],
+    "xmageBucket": "xmage-custom-classes"
+  },
+  {
+    "name": "Descend upon the Sinful",
+    "rank": 12608,
+    "lines": [
+      "Create a 4/4 white Angel creature token with flying if there are four or more card types among cards in your graveyard."
+    ],
+    "xmageBucket": "xmage-known-classes"
+  }
+]

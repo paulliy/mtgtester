@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The mana is added to the active player's pool, but addMana has no recipient field and always credits the ability's controller."}

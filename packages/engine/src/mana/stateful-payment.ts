@@ -13,7 +13,7 @@ import type {
 import { emptyCost, planPayment } from './cost';
 import { payManaCost } from '../effects/resolve';
 import { UnmodeledCardError } from '../errors';
-import { computeCharacteristics } from '../effects/continuous';
+import { battlefieldCharacteristics } from '../effects/continuous';
 import type { ManaAbilitySpec } from '../cards/ability';
 import { activationInvariantProduction } from '../cards/mana-production';
 import { totalPips } from './cost';
@@ -71,9 +71,10 @@ export function needsStatefulManaPayment(
   cost: ParsedManaCost,
   lifeReserved: number,
 ): boolean {
+  const charsOf = battlefieldCharacteristics(ctx);
   const abilities = ctx.state.battlefield
     .filter((p) => p.controllerId === player.id)
-    .flatMap((p) => computeCharacteristics(ctx, p).manaAbilities);
+    .flatMap((p) => charsOf(p).manaAbilities);
   return (
     abilities.some((a) => !activationInvariantProduction(a)) ||
     (abilities.some((a) => (a.onActivate?.length ?? 0) > 0) &&
@@ -113,9 +114,10 @@ export function planStatefulManaPayment(
   // capacity, so it can only prune an impossible payment. Phyrexian pips may use life instead.
   // A dynamic source (Exotic Orchard) changes which symbols it makes, not how many: it counts at
   // its kind's most (`ceilingUnits`).
+  const charsOf = battlefieldCharacteristics(ctx);
   const ownCharacteristics = ctx.state.battlefield
     .filter((permanent) => permanent.controllerId === player.id)
-    .map((permanent) => computeCharacteristics(ctx, permanent));
+    .map(charsOf);
   const ownAbilities = ownCharacteristics.flatMap((chars) => chars.manaAbilities);
   const fixedCapacity = ownAbilities.every(
     (ability) =>
@@ -263,57 +265,77 @@ export function planStatefulManaPayment(
         continue;
       }
       const source = { ...candidate, activation: sources.length };
-      let currentProduction: Pick<ManaAbilitySpec, 'units' | 'linked'> | undefined;
-      const probeComplete = {};
-      const probe = clone(snapshot);
-      const probing = payManaCost(
-        probe,
-        probe.state.players.find((p) => p.id === player.id)!,
-        emptyCost(),
-        { kind: 'other' },
-        [],
-        reservedObjectIds,
-        {
-          tapSources: [source],
-          tapCardIds: [source.cardId],
-          produced: [],
-          fromPool: { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 },
-        },
-        (production) => {
-          currentProduction = production;
-          throw probeComplete;
-        },
-      );
-      try {
-        if (!probing.next().done) {
-          outsideScope = true;
-          probing.return(undefined as never);
-          continue;
+      const { linked: _linked, ...sourceWithoutLink } = source;
+      const choicesFor = (production: Pick<ManaAbilitySpec, 'units' | 'linked'>) =>
+        productions(
+          {
+            ...sourceWithoutLink,
+            units: production.units,
+            ...(production.linked === true ? { linked: true as const } : {}),
+          },
+          source.activation,
+        );
+      // A source without a production spec makes exactly its own units: `payManaCost` hands the
+      // probe the source itself. The probe's other outcomes (a decision, an unpayable cost, an
+      // error) come from paying the costs, which the activation below repeats on its own copy
+      // with the same result, so the probe and its copy of the game are skipped. If the symbol
+      // choices overflow their budget, the probe still runs first, keeping the original order.
+      let knownChoices: ProducedMana[][] | undefined;
+      if (source.productionSpec === undefined) {
+        try {
+          knownChoices = choicesFor(source);
+        } catch {
+          knownChoices = undefined;
         }
-      } catch (error) {
-        if (error !== probeComplete) {
-          if (
-            error instanceof Error &&
-            (error.message === 'life cost became unpayable' ||
-              error.message.endsWith("'s own mana cost became unpayable") ||
-              error.message === 'engine bug: counter cost became unpayable' ||
-              error.message === 'engine bug: energy cost became unpayable')
-          )
+        // With no choice the activation never runs, so only the probe could see a decision.
+        if (knownChoices?.length === 0) knownChoices = undefined;
+      }
+      let currentProduction: Pick<ManaAbilitySpec, 'units' | 'linked'> | undefined =
+        knownChoices === undefined ? undefined : source;
+      const probeComplete = {};
+      if (knownChoices === undefined) {
+        const probe = clone(snapshot);
+        const probing = payManaCost(
+          probe,
+          probe.state.players.find((p) => p.id === player.id)!,
+          emptyCost(),
+          { kind: 'other' },
+          [],
+          reservedObjectIds,
+          {
+            tapSources: [source],
+            tapCardIds: [source.cardId],
+            produced: [],
+            fromPool: { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 },
+          },
+          (production) => {
+            currentProduction = production;
+            throw probeComplete;
+          },
+        );
+        try {
+          if (!probing.next().done) {
+            outsideScope = true;
+            probing.return(undefined as never);
             continue;
-          throw error;
+          }
+        } catch (error) {
+          if (error !== probeComplete) {
+            if (
+              error instanceof Error &&
+              (error.message === 'life cost became unpayable' ||
+                error.message.endsWith("'s own mana cost became unpayable") ||
+                error.message === 'engine bug: counter cost became unpayable' ||
+                error.message === 'engine bug: energy cost became unpayable')
+            )
+              continue;
+            throw error;
+          }
         }
       }
       if (currentProduction === undefined)
         throw new Error('mana production probe did not reach production');
-      const { linked: _linked, ...sourceWithoutLink } = source;
-      for (const units of productions(
-        {
-          ...sourceWithoutLink,
-          units: currentProduction.units,
-          ...(currentProduction.linked === true ? { linked: true as const } : {}),
-        },
-        source.activation,
-      )) {
+      for (const units of knownChoices ?? choicesFor(currentProduction)) {
         const next = clone(snapshot);
         const nextPlayer = next.state.players.find((p) => p.id === player.id)!;
         const single: PaymentPlan = {

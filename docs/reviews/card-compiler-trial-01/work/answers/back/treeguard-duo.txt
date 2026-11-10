@@ -1,0 +1,1 @@
+When this enters, target creature you control gains vigilance until end of turn and gets +X/+X until end of turn, where X is the number of creatures you control.

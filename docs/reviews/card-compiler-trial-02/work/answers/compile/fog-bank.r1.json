@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has a static for combat damage dealt to this creature (preventCombatDamageToSelf) but no permanent static that prevents combat damage this creature deals, so the 'dealt by' half cannot be said."}

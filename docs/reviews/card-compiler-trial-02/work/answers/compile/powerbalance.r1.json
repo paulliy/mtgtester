@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot say 'reveal the top card and cast it free only if its mana value equals the opponent's spell's', leaving it on top otherwise: lookAtTopNCastOneFree compares mana value as 'or less' and bottoms the rest."}

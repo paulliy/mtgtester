@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target's mana value bound is the dynamic count of permanent cards in your graveyard, but manaValueAtMost takes only a fixed number and no graveyard return effect accepts a dynamic bound."}

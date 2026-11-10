@@ -1,0 +1,72 @@
+{
+  "name": "Ahriman",
+  "oracleId": "37d1d507-25dc-4cd0-b51e-2f1e9b24832c",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["{3}, Sacrifice another creature or artifact: Draw a card."],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 3,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "draw",
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "{3}, Sacrifice another creature or artifact: Draw a card."
+        }
+      }
+    ]
+  }
+}

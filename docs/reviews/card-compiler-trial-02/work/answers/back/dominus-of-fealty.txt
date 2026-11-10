@@ -1,0 +1,1 @@
+At the beginning of your upkeep, you may target a permanent. If you do, gain control of that permanent until end of turn, untap it, and it gains haste until end of turn.

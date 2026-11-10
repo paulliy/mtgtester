@@ -1,0 +1,37 @@
+{
+  "name": "Thran Turbine",
+  "oracleId": "6c31f06d-bf02-48a7-9c17-be2a226b8eae",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "At the beginning of your upkeep, you may add {C}{C}. This mana can't be spent to cast spells."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "addMana",
+            "amount": {
+              "kind": "const",
+              "n": 2
+            },
+            "colors": ["C"],
+            "restriction": {
+              "purposes": ["activateAbility"],
+              "description": "This mana can't be spent to cast spells."
+            }
+          }
+        ],
+        "description": "At the beginning of your upkeep, you may add {C}{C}. This mana can't be spent to cast spells."
+      }
+    ]
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "name": "Goblin Traprunner",
+  "oracleId": "fbdffef0-9119-4650-9f92-58e8a664db6f",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Whenever this creature attacks, flip three coins. For each flip you win, create a 1/1 red Goblin creature token that's tapped and attacking."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "flipCoin",
+            "onWin": [
+              {
+                "op": "createTokenAttacking",
+                "spec": {
+                  "name": "Goblin",
+                  "typeLine": "Token Creature \u2014 Goblin",
+                  "types": ["Creature"],
+                  "subtypes": ["Goblin"],
+                  "colors": ["R"],
+                  "power": 1,
+                  "toughness": 1
+                },
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "onLose": []
+          },
+          {
+            "op": "flipCoin",
+            "onWin": [
+              {
+                "op": "createTokenAttacking",
+                "spec": {
+                  "name": "Goblin",
+                  "typeLine": "Token Creature \u2014 Goblin",
+                  "types": ["Creature"],
+                  "subtypes": ["Goblin"],
+                  "colors": ["R"],
+                  "power": 1,
+                  "toughness": 1
+                },
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "onLose": []
+          },
+          {
+            "op": "flipCoin",
+            "onWin": [
+              {
+                "op": "createTokenAttacking",
+                "spec": {
+                  "name": "Goblin",
+                  "typeLine": "Token Creature \u2014 Goblin",
+                  "types": ["Creature"],
+                  "subtypes": ["Goblin"],
+                  "colors": ["R"],
+                  "power": 1,
+                  "toughness": 1
+                },
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "onLose": []
+          }
+        ],
+        "description": "Whenever this creature attacks, flip three coins. For each flip you win, create a 1/1 red Goblin creature token that's tapped and attacking."
+      }
+    ]
+  }
+}

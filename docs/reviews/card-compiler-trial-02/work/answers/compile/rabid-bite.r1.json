@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature","controller":"you"},{"kind":"creature","controller":"opponent"}],"effects":[{"op":"dealDamage","target":1,"amount":{"kind":"powerOfTarget","target":0},"source":0}],"description":"Target creature you control deals damage equal to its power to target creature you don't control."}}}
