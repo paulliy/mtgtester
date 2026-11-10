@@ -291,7 +291,12 @@ function targetPhrase(spec: unknown): string {
   else if (controller === 'opponent') noun += " you don't control";
   else if (controller !== undefined)
     throw new Unrendered(`target.controller:${String(controller)}`);
-  if (kind === 'anyTarget') return 'any target';
+  if (kind === 'anyTarget') {
+    // "any target" has no wording for a filter or controller, so a restricted slot is unrendered.
+    if (spec['filter'] !== undefined || controller !== undefined)
+      throw new Unrendered('target.anyTarget:restricted');
+    return 'any target';
+  }
   if (kind === 'cardInGraveyard') {
     const scope = spec['graveyardOwnerScope'];
     if (scope === 'any') return `target ${noun} from a graveyard`;
@@ -776,7 +781,11 @@ export function textCheck(
     pool.set(line, left - 1);
     return left > 0;
   };
-  const want = new Set(lines.map((line) => normalizeLine(line, cardName)));
+  // A replacement spell ability must restate every line of the card, not only the claimed ones,
+  // or parsed spell effects could silently disappear. Lines it cannot restate (a keyword, say)
+  // send the card to the model check, which is the safe direction.
+  const required = spellAbility === undefined ? lines : oracleText.split('\n');
+  const want = new Set(required.map((line) => normalizeLine(line, cardName)));
   const got = new Set(rendered.map((line) => normalizeLine(line, cardName)));
   const ok =
     spellLines.every(take(counts(oracleText.split('\n')))) &&
