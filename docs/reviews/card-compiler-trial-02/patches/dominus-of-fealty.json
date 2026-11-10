@@ -1,0 +1,43 @@
+{
+  "name": "Dominus of Fealty",
+  "oracleId": "f5e18b27-c5cc-4f5e-b767-4b1b43e00fd0",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "At the beginning of your upkeep, you may gain control of target permanent until end of turn. If you do, untap it and it gains haste until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": true,
+        "targets": [
+          {
+            "kind": "permanent"
+          }
+        ],
+        "effects": [
+          {
+            "op": "gainControlTarget",
+            "target": 0,
+            "duration": "untilEndOfTurn"
+          },
+          {
+            "op": "untapTarget",
+            "target": 0
+          },
+          {
+            "op": "grantKeywordUntilEot",
+            "target": 0,
+            "keyword": "haste"
+          }
+        ],
+        "description": "At the beginning of your upkeep, you may gain control of target permanent until end of turn. If you do, untap it and it gains haste until end of turn."
+      }
+    ]
+  }
+}

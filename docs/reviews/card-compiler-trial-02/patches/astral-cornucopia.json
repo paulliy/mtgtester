@@ -1,0 +1,48 @@
+{
+  "name": "Astral Cornucopia",
+  "oracleId": "1bc42024-52da-4d93-8b47-544f0a4a72a1",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "{T}: Choose a color. Add one mana of that color for each charge counter on this artifact."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [["W"]],
+        "amount": {
+          "kind": "countersOnSelf",
+          "counter": "charge"
+        }
+      },
+      {
+        "units": [["U"]],
+        "amount": {
+          "kind": "countersOnSelf",
+          "counter": "charge"
+        }
+      },
+      {
+        "units": [["B"]],
+        "amount": {
+          "kind": "countersOnSelf",
+          "counter": "charge"
+        }
+      },
+      {
+        "units": [["R"]],
+        "amount": {
+          "kind": "countersOnSelf",
+          "counter": "charge"
+        }
+      },
+      {
+        "units": [["G"]],
+        "amount": {
+          "kind": "countersOnSelf",
+          "counter": "charge"
+        }
+      }
+    ]
+  }
+}

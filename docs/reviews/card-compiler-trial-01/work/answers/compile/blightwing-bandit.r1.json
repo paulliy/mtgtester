@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The card looks at the opponent's library (the active player whose turn it is), but a castsSpell trigger's event player is the caster, and the schema offers no way to name the active opponent as the library owner without an announced target the card does not have."}

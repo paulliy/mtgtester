@@ -1,0 +1,1 @@
+{T}: You gain life equal to the number of Elves on the battlefield.

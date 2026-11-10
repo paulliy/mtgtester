@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"allOf","of":[{"kind":"type","value":"Creature"},{"kind":"not","of":{"kind":"color","value":"B"}}]},"op":{"layer":7,"sublayer":"d","power":-1,"toughness":-1}}]}}

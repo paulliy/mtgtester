@@ -1,0 +1,1 @@
+{3}, {T}: Look at the top X cards of your library, where X is the number of Bobbleheads you control. Cast one of them without paying its mana cost, if it has mana value 3 or less.

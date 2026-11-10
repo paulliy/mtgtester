@@ -1,0 +1,1 @@
+{1}, Sacrifice a creature you control (this permanent may be the creature sacrificed): Search your library for a Plains, Island, Swamp, Mountain, or Forest card, put it onto the battlefield tapped, then shuffle.

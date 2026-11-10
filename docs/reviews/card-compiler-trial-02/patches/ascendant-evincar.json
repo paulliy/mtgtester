@@ -1,0 +1,35 @@
+{
+  "name": "Ascendant Evincar",
+  "oracleId": "e32c0de7-132d-4a39-85fb-da0ed1132878",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["Nonblack creatures get -1/-1."],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "not",
+              "of": {
+                "kind": "color",
+                "value": "B"
+              }
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": -1,
+          "toughness": -1
+        }
+      }
+    ]
+  }
+}

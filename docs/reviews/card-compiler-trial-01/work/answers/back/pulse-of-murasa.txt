@@ -1,0 +1,3 @@
+Target creature card or land card in any graveyard.
+Put that card into hand.
+You gain 6 life.

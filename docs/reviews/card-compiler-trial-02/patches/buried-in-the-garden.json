@@ -1,0 +1,23 @@
+{
+  "name": "Buried in the Garden",
+  "oracleId": "f1f0eab3-681b-4c2d-b590-555951920880",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Whenever enchanted land is tapped for mana, its controller adds an additional one mana of any color."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "manaActivationRider",
+        "source": {
+          "kind": "attachedToSource"
+        },
+        "add": {
+          "kind": "fixed",
+          "units": [["W", "U", "B", "R", "G"]]
+        }
+      }
+    ]
+  }
+}

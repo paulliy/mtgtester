@@ -1,0 +1,50 @@
+{
+  "name": "Samut, Vizier of Naktamun",
+  "oracleId": "178b3fdf-dbee-4245-a811-b21ff8a24f66",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Whenever a creature you control deals combat damage to a player, if that creature entered this turn, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "enteredThisTurn"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a creature you control deals combat damage to a player, if that creature entered this turn, draw a card."
+      }
+    ]
+  }
+}

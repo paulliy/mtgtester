@@ -1,0 +1,36 @@
+{
+  "name": "Worldslayer",
+  "oracleId": "31be715f-9ad3-435c-9e52-e108fe96b969",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Whenever equipped creature deals combat damage to a player, destroy all permanents other than this Equipment."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "attachedToSource"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "destroyEach",
+            "selector": {
+              "kind": "other"
+            }
+          }
+        ],
+        "description": "Whenever equipped creature deals combat damage to a player, destroy all permanents other than this Equipment."
+      }
+    ]
+  }
+}

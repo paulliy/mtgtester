@@ -1,0 +1,1 @@
+Destroy each creature that has no counters on it.

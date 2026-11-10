@@ -1,0 +1,69 @@
+{
+  "name": "Knight of the Reliquary",
+  "oracleId": "393e5331-4456-4ba3-b410-bb630bb053db",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "{T}, Sacrifice a Forest or Plains: Search your library for a land card, put it onto the battlefield, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Forest"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Plains"
+                    }
+                  ]
+                }
+              ]
+            },
+            "count": 1
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "searchLibrary",
+              "filter": {
+                "kind": "type",
+                "value": "Land"
+              },
+              "destinations": [
+                {
+                  "zone": "battlefield"
+                }
+              ]
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "description": "{T}, Sacrifice a Forest or Plains: Search your library for a land card, put it onto the battlefield, then shuffle."
+        }
+      }
+    ]
+  }
+}

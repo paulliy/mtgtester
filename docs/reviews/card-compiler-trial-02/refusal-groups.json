@@ -1,0 +1,345 @@
+[
+  {
+    "feature": "Temporary or permanent characteristic-setting effects",
+    "description": "Add set-base-P/T, add/lose types and abilities, set color, and become-copy effects with durations (EOT, until next turn, permanent) and X-valued P/T.",
+    "cards": [
+      "Mirror Entity",
+      "Ride the Shoopuf",
+      "Lizard, Connors's Curse",
+      "Niveous Wisps",
+      "Sylvan Awakening",
+      "Vraska, the Silencer",
+      "Fleeting Reflection"
+    ]
+  },
+  {
+    "feature": "Trigger events and filters that do not exist yet",
+    "description": "Add trigger events/filters for combat damage to a planeswalker or creature, playing a land, a permanent entering tapped, cycling a card, and a land-entering filter on trigger doubling.",
+    "cards": [
+      "The Reaver Cleaver",
+      "Toxin Sliver",
+      "City of Traitors",
+      "Amulet of Vigor",
+      "Splendor Mare",
+      "Ancient Greenwarden"
+    ]
+  },
+  {
+    "feature": "Dynamic mana-value comparand in selectors",
+    "description": "Let manaValueAtMost/AtLeast/equals take a Value (announced X, count of Shrines, graveyard permanent count, dead target's mana value) instead of a fixed number.",
+    "cards": [
+      "Blue Sun's Twilight",
+      "Go-Shintai of Hidden Cruelty",
+      "Squirming Emergence",
+      "Gorilla Shaman",
+      "Rushed Rebirth",
+      "Immortal Servitude"
+    ]
+  },
+  {
+    "feature": "Turn-history conditions",
+    "description": "Add conditions for this-turn history: attacked, descended, any player (incl. you) lost N life, nonland permanent left battlefield / spell warped, Pirates dealt combat damage, creatures died under your control.",
+    "cards": [
+      "Chart a Course",
+      "Enterprising Scallywag",
+      "Knight of the Ebon Legion",
+      "Tragic Trajectory",
+      "Admiral Beckett Brass",
+      "Gorma, the Gullet"
+    ]
+  },
+  {
+    "feature": "Per-player scope and chooser on effects",
+    "description": "Add player-scope/chooser fields so each player (or the event player/chosen opponent) performs hand-shuffle, sacrifice choice, return-to-hand, draw, mana and graveyard returns.",
+    "cards": [
+      "Echo of Eons",
+      "Skullwinder",
+      "Cataclysmic Gearhulk",
+      "Mana Breach",
+      "Synapse Sliver",
+      "Belbe, Corrupted Observer"
+    ]
+  },
+  {
+    "feature": "Conditions on the triggering object or event player",
+    "description": "Add conditions on the trigger object/event player: power equals toughness, 'other than the entering permanent', event player's own turn, defending player poisoned, cast from hand.",
+    "cards": [
+      "Price of Glory",
+      "Symmetry Matrix",
+      "Roiling Canopy",
+      "Septic Rats",
+      "Breaching Leviathan"
+    ]
+  },
+  {
+    "feature": "Alternative-cost keyword mechanics",
+    "description": "Model evoke (sacrifice on entry), ninjutsu-style return, mayhem, buyback, encore and paradigm as alternative casts with their rider ops.",
+    "cards": [
+      "Mulldrifter",
+      "Lab Rats",
+      "Swarm, Being of Bees",
+      "Mist Dancer",
+      "Decorum Dissertation"
+    ]
+  },
+  {
+    "feature": "Grant landwalk, horsemanship and afflict keywords",
+    "description": "Add landwalk (forestwalk, mountainwalk), horsemanship and afflict to IMPLEMENTED_KEYWORDS so addKeyword/static grants work.",
+    "cards": [
+      "Cyberman Patrol",
+      "Elvish Champion",
+      "Dwarven Grunt",
+      "Sun Quan, Lord of Wu",
+      "Eladamri, Lord of Leaves"
+    ]
+  },
+  {
+    "feature": "Reveal/exile/mill-until loops with leftovers handling",
+    "description": "Add a repeat-until-predicate reveal/exile/mill op (until creature/land/instant card or N cards) with rest to bottom/graveyard and optional cast or hand.",
+    "cards": [
+      "Spinner of Souls",
+      "Dazzling Sphinx",
+      "The Infamous Cruelclaw",
+      "Mind Funeral",
+      "Helm of Obedience"
+    ]
+  },
+  {
+    "feature": "Mana spend restrictions by spell/cost predicate",
+    "description": "Extend ManaRestriction with predicates: costs containing X, colored spells without X, nonartifact spells only (abilities/artifact spells allowed).",
+    "cards": ["Nexos", "Titans' Nest", "The Great Mound", "Vibranium Mining Mech"]
+  },
+  {
+    "feature": "Enter-with-counters rider on blink, reanimation and copy",
+    "description": "Let blink/graveyardToBattlefield/copy-as-enters ops place (variable) +1/+1 counters on the returned object.",
+    "cards": ["Planar Incision", "Lilysplash Mentor", "Recommission", "Altered Ego"]
+  },
+  {
+    "feature": "Another player's optional choice on resolution",
+    "description": "Add an effect where another player decides on resolution (opponent may sacrifice, each player may discard, defending player may let you draw) with a fallback branch.",
+    "cards": ["Rakdos, Patron of Chaos", "Orzhov Advokist", "Ruin Grinder", "Shakedown Heavy"]
+  },
+  {
+    "feature": "Random selection of permanent, player or card",
+    "description": "Add random-choice ops: random one of chosen permanents, random player per permanent with control change, random card from hand to reveal/cast.",
+    "cards": ["Chaos Defiler", "Scrambleverse", "Last One Standing", "Wild Evocation"]
+  },
+  {
+    "feature": "Announced X where a fixed number is required",
+    "description": "Allow announced X (or a Value) for look-at-top counts, target counts and repeat counts (populate X times).",
+    "cards": ["Stargaze", "Mass Manipulation", "Candelabra of Tawnos", "Full Flowering"]
+  },
+  {
+    "feature": "Variable-count target slots and chosen-count value",
+    "description": "Support 'any number of target' slots, distributing counters among them, and a Value counting the cards/targets chosen.",
+    "cards": ["Forever Young", "Vengeful Regrowth", "Wheel and Deal", "Invoke Justice"]
+  },
+  {
+    "feature": "Conditional spell cost modification",
+    "description": "Extend costReduction/tax with conditions: spell cast from graveyard, target is tapped, spells targeting this creature, spells the drawing player casts.",
+    "cards": ["Gravebreaker Lamia", "Luminous Rebuke", "Jubilant Skybonder", "Academy Loremaster"]
+  },
+  {
+    "feature": "Modern keyword actions (venture, ring tempts, suspect, crime)",
+    "description": "Add venture, the Ring tempts you, suspect state and commit-a-crime trigger.",
+    "cards": [
+      "Fates' Reversal",
+      "Breaking of the Fellowship",
+      "Agrus Kos, Spirit of Justice",
+      "Hardbristle Bandit"
+    ]
+  },
+  {
+    "feature": "Sacrificed cost object's power/mana value",
+    "description": "Add a Value reading the power or mana value of the permanent sacrificed as a cost or additional cost.",
+    "cards": ["Broadside Bombardiers", "Thud", "Dina, Essence Brewer"]
+  },
+  {
+    "feature": "Grant retrace and umbra armor",
+    "description": "Add static grants of retrace (cast from graveyard by discarding a land) and umbra armor to cards/Auras.",
+    "cards": ["Umbra Mystic", "Wrenn and Six", "Deeproot Historian"]
+  },
+  {
+    "feature": "Token creation replacement generalization",
+    "description": "Generalize tokenCreationReplacement to any token type (Food, Treasure, Clue), add-extra-token and choose-between-token-specs variants.",
+    "cards": ["Jinnie Fay, Jetmir's Second", "Quina, Qu Gourmet", "Bilbo, Fellow Conspirator"]
+  },
+  {
+    "feature": "Incubate",
+    "description": "Add an incubate effect creating an Incubator token with X +1/+1 counters and its {2} transform into a 0/0 artifact creature.",
+    "cards": ["Essence of Orthodoxy", "Blight Titan", "Bloated Processor"]
+  },
+  {
+    "feature": "Ability cost forms",
+    "description": "Add AbilityCost forms: exert this permanent, return a land you control to hand, exile a creature card from graveyard.",
+    "cards": ["Arena of Glory", "Meloku the Clouded Mirror", "Graf Harvest"]
+  },
+  {
+    "feature": "Select-by-target-player scope",
+    "description": "Let selectors/ops scope to a targeted player's permanents (tap all, destroy all, return each commander).",
+    "cards": ["Tempest Caller", "Overwhelming Forces", "Leadership Vacuum"]
+  },
+  {
+    "feature": "Cross-player hand and graveyard comparison values",
+    "description": "Add Values for hand-size difference vs a chosen opponent, opponents with more cards in hand, and a single opponent's graveyard count.",
+    "cards": ["Sandstone Oracle", "Wojek Investigator", "Anticognition"]
+  },
+  {
+    "feature": "Put onto battlefield tapped and attacking or attached",
+    "description": "Add ops to put a card onto the battlefield tapped and attacking, or attached to a chosen creature.",
+    "cards": ["Ninja of the Deep Hours", "Winota, Joiner of Forces", "Gryff's Boon"]
+  },
+  {
+    "feature": "Exile-and-return with delayed riders",
+    "description": "Add exile with a delayed return including optional immediate return, attached Auras and returning all cards exiled by the source.",
+    "cards": ["Gilraen, D\u00fanedain Protector", "Flickerform", "Worldgorger Dragon"]
+  },
+  {
+    "feature": "Counterspell riders",
+    "description": "Add counter variants: counter then put on battlefield under your control, counter unless pay X with tap-lands penalty, lose life per creature for countered object's controller.",
+    "cards": ["Desertion", "Power Sink", "Deny the Witch"]
+  },
+  {
+    "feature": "Count of objects affected by the previous effect",
+    "description": "Add a Value for 'for each creature destroyed/sacrificed this way' counting results of the preceding effect.",
+    "cards": ["Voracious Fell Beast", "Death Begets Life"]
+  },
+  {
+    "feature": "Ability and spell copying with source filters",
+    "description": "Allow copying activated and triggered abilities filtered by source (enchantment, other legendary non-commander) and a copied permanent spell rider.",
+    "cards": ["Weaver of Harmony", "The Peregrine Dynamo"]
+  },
+  {
+    "feature": "Static permission to cast spells with flash",
+    "description": "Add static rule letting players cast (matching) spells as though they had flash, optionally only during a given step.",
+    "cards": ["Quick Sliver", "Final-Word Phantom"]
+  },
+  {
+    "feature": "Global alternative cost for spells",
+    "description": "Add a static alternative cost for all/some spells (pay WUBRG, pay {0} once per turn for colorless from hand).",
+    "cards": ["Darksteel Monolith", "Fist of Suns"]
+  },
+  {
+    "feature": "Unless-you-do non-mana payments",
+    "description": "Support 'unless you return a land / tap two creatures' as a choice with sacrifice-or-draw fallback.",
+    "cards": ["Crosis's Catacombs", "Rent Is Due"]
+  },
+  {
+    "feature": "Blocker restriction by creature selector",
+    "description": "Add can't-be-blocked-except-by / by-creatures-matching restrictions (Walls only, power 2 or less).",
+    "cards": ["Prowler's Helm", "Greater Sandwurm"]
+  },
+  {
+    "feature": "Selector predicates in targets and statics",
+    "description": "Make powerAtMost and hasKeyword predicates usable in target filters and continuous statics (layer-aware).",
+    "cards": ["Break Through the Line", "Thunderclap Wyvern"]
+  },
+  {
+    "feature": "Division/halving Value",
+    "description": "Add Value division with round-down (half the Zombies, half the non-God creatures).",
+    "cards": ["Endless Ranks of the Dead", "Zodiark, Umbral God"]
+  },
+  {
+    "feature": "Counters read from events and other permanents",
+    "description": "Add Values for number/kind of counters placed in the triggering event and counters on another permanent (token P/T).",
+    "cards": ["Gutter Grime", "Captain Marvel, Apex Avenger"]
+  },
+  {
+    "feature": "Count of distinct names/powers",
+    "description": "Add Values counting differently named lands and different powers among creatures.",
+    "cards": ["Survey Mechan", "Stalwart Pathlighter"]
+  },
+  {
+    "feature": "Hand-size rule changes",
+    "description": "Add maximum-hand-size reduction and time-limited no-maximum-hand-size.",
+    "cards": ["Jin-Gitaxias, Core Augur", "Enter the Infinite"]
+  },
+  {
+    "feature": "Win/lose-game effects and static",
+    "description": "Add 'you win the game' effect and can't-lose/can't-win static.",
+    "cards": ["Triskaidekaphile", "Platinum Angel"]
+  },
+  {
+    "feature": "Devour",
+    "description": "Add devour N: choose creatures to sacrifice on entry and count them for counters.",
+    "cards": ["Mycoloth", "Dragon Broodmother"]
+  },
+  {
+    "feature": "Damage-would-kill replacement: exile instead",
+    "description": "Add a this-turn replacement exiling creatures damaged by the effect that would die.",
+    "cards": ["Anger of the Gods", "Fiery Annihilation"]
+  },
+  {
+    "feature": "Damage prevention variants",
+    "description": "Add permanent prevent combat damage dealt by self and colored-source damage shields.",
+    "cards": ["Fog Bank", "Surge of Salvation"]
+  },
+  {
+    "feature": "Cast a card from other zones with a rider",
+    "description": "Add cast-from-opponent-graveyard and reveal-top-then-cast-if-equal-mana-value ops.",
+    "cards": ["Powerbalance", "Tinybones, the Pickpocket"]
+  },
+  {
+    "feature": "Mana production variants",
+    "description": "Add single-shared-color X mana and optional addMana.",
+    "cards": ["The Eternity Elevator", "Soulbright Flamekin"]
+  },
+  {
+    "feature": "Voting generalization",
+    "description": "Add per-vote effects for council's dilemma and a players-finish-voting trigger.",
+    "cards": ["Expropriate", "Grudge Keeper"]
+  },
+  {
+    "feature": "Face-down pile split with opponent choice",
+    "description": "Add two-pile split where an opponent chooses which pile goes to hand.",
+    "cards": ["Hostile Negotiations", "Curator of Destinies"]
+  },
+  {
+    "feature": "Shares-a-creature-type selector",
+    "description": "Add a selector for cards sharing a creature type with the source or dying creature.",
+    "cards": ["Heirloom Blade", "Leaf-Crowned Elder"]
+  },
+  {
+    "feature": "one-off",
+    "description": "Lines needing a bespoke mechanic found on a single card.",
+    "cards": [
+      "Breach the Multiverse",
+      "City on Fire",
+      "Auton Soldier",
+      "Scurry Oak",
+      "Spectacular Showdown",
+      "Abyssal Harvester",
+      "Dalkovan Encampment",
+      "Detection Tower",
+      "Maelstrom Pulse",
+      "Bucknard's Everfull Purse",
+      "Deadly Brew",
+      "Contest of Claws",
+      "Golbez, Crystal Collector",
+      "Vexing Shusher",
+      "Sword Coast Sailor",
+      "Waltz of Rage",
+      "Knight of New Alara",
+      "Town Greeter",
+      "Congregation at Dawn",
+      "Wall of Shards",
+      "Super Intelligence",
+      "Bill the Pony",
+      "Dream Cache",
+      "Twisted Sewer-Witch",
+      "Swooping Pteranodon",
+      "The Dominion Bracelet",
+      "Technodrome",
+      "Plunge into Winter",
+      "Hazardous Blast",
+      "Molten Birth",
+      "Island Sanctuary",
+      "Mizzix, Replica Rider",
+      "Apple of Eden, Isu Relic",
+      "Mister Negative",
+      "Starlight Spectacular",
+      "Elsewhere Flask",
+      "Ambitious Dragonborn"
+    ]
+  }
+]

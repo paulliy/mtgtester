@@ -1,0 +1,51 @@
+{
+  "name": "Lazotep Chancellor",
+  "oracleId": "c3e67b8f-1c91-4a2f-b924-35bbaff4bab9",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["Whenever you discard a card, you may pay {1}. If you do, amass Zombies 2."],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "discardsCard",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "mayPayMana",
+              "cost": {
+                "generic": 1,
+                "colored": {
+                  "W": 0,
+                  "U": 0,
+                  "B": 0,
+                  "R": 0,
+                  "G": 0
+                },
+                "colorless": 0
+              }
+            },
+            "then": [
+              {
+                "op": "amass",
+                "subtype": "Zombie",
+                "count": {
+                  "kind": "const",
+                  "n": 2
+                }
+              }
+            ],
+            "else": []
+          }
+        ],
+        "description": "Whenever you discard a card, you may pay {1}. If you do, amass Zombies 2."
+      }
+    ]
+  }
+}

@@ -1,3 +1,4 @@
+import { withReadScope } from '../effects/layer-cache';
 /**
  * The spectator projection (brief §10.2) and the minimal action log derived from the event
  * stream. This lives in the engine, next to `buildPlayerView`, for one reason: the UI must
@@ -253,6 +254,11 @@ function seatView(ctx: GameContext, player: EnginePlayerState): SpectatorSeat {
 
 /** Build everything the spectator UI needs to draw the current moment of the game. */
 export function buildSpectatorState(ctx: GameContext): SpectatorState {
+  // Reads only: one layer digest serves every permanent's view (`withReadScope`).
+  return withReadScope(ctx, () => spectatorState(ctx));
+}
+
+function spectatorState(ctx: GameContext): SpectatorState {
   const s = ctx.state;
   const priorityPlayer =
     s.priorityPlayerIndex === null ? null : (s.turnOrder[s.priorityPlayerIndex] ?? null);

@@ -48,7 +48,7 @@ import type { ManaUnit } from '../mana/cost';
 import { manaValueOf, parseManaCost, type ParsedManaCost } from '../mana/cost';
 import type { EnginePermanent, GameContext } from '../state/types';
 import { cardZoneCandidate } from '../state/queries';
-import { digestOf, getCached, sampleCacheHit, setCached } from './layer-cache';
+import { getCached, sampleCacheHit, scopedDigestOf, setCached } from './layer-cache';
 
 /** Basic-land subtype → intrinsic mana ability (CR 305.6), for Blood Moon's mana override. */
 const BASIC_LAND_MANA: Record<string, ManaUnit> = {
@@ -1197,7 +1197,7 @@ export function computeAllCharacteristics(
   // On the first pass nothing is known, so include graveyards; thereafter follow what the
   // last pass actually read.
   const includeGraveyards = cached?.usedGraveyards ?? true;
-  const digest = digestOf(ctx, extra, includeGraveyards);
+  const digest = scopedDigestOf(ctx, extra, includeGraveyards);
 
   if (cached !== undefined && cached.digest === digest && cached.extraCardId === extraCardId) {
     if (!VERIFY_CACHE && !sampleCacheHit(ctx)) return cached.map;
@@ -1215,7 +1215,8 @@ export function computeAllCharacteristics(
   const { map, usedGraveyards } = runLayers(ctx, permsFor(ctx, extra));
   setCached(ctx, {
     // Re-digest with the flag this pass actually established, so the next comparison matches.
-    digest: usedGraveyards === includeGraveyards ? digest : digestOf(ctx, extra, usedGraveyards),
+    digest:
+      usedGraveyards === includeGraveyards ? digest : scopedDigestOf(ctx, extra, usedGraveyards),
     usedGraveyards,
     extraCardId,
     map,
@@ -1255,6 +1256,22 @@ const FACE_DOWN_WARD: WardCost = {
   kind: 'mana',
   cost: parseManaCost('{2}').cost as ParsedManaCost,
 };
+
+/**
+ * Characteristics of the permanents on the battlefield now, from one layer pass: what
+ * `computeCharacteristics` returns for each, without a digest per query. Valid only until the
+ * state next changes, so a loop that changes the state must take a fresh one.
+ */
+export function battlefieldCharacteristics(
+  ctx: GameContext,
+): (perm: EnginePermanent) => Characteristics {
+  const all = computeAllCharacteristics(ctx);
+  return (perm) => {
+    const chars = all.get(perm.cardId);
+    if (chars === undefined) throw new Error(`engine bug: no characteristics for ${perm.name}`);
+    return chars;
+  };
+}
 
 /** Compute one permanent's current characteristics through the layer system. */
 export function computeCharacteristics(ctx: GameContext, perm: EnginePermanent): Characteristics {

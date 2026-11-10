@@ -1,3 +1,4 @@
+import { withReadScope } from '../effects/layer-cache';
 /**
  * `PlayerView` projection (brief §7.1) — the anti-cheat boundary. Everything the AI will
  * ever see about the game goes through this function; it is built ONLY from information
@@ -206,6 +207,11 @@ function visibleEvent(e: GameEvent, viewer: PlayerId): GameEvent | null {
  * structurally (brief §12).
  */
 export function buildPlayerView(ctx: GameContext, playerId: PlayerId): PlayerView {
+  // Reads only: one layer digest serves every permanent's view (`withReadScope`).
+  return withReadScope(ctx, () => playerView(ctx, playerId));
+}
+
+function playerView(ctx: GameContext, playerId: PlayerId): PlayerView {
   const s = ctx.state;
   const viewer = playerById(ctx, playerId);
 

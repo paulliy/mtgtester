@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The only hand-and-graveyard shuffle op, shuffleHandGraveyardIntoLibrary, has no player scope, so the schema cannot say that each player (not only the controller) shuffles their hand and graveyard into their library."}

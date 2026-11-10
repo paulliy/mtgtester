@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A makes the token not legendary unconditionally; Text B makes it not legendary only if the copied creature is non-legendary, so a legendary copied creature yields a legendary token under Text B."]}

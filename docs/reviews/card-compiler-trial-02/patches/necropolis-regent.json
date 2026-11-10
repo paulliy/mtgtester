@@ -1,0 +1,48 @@
+{
+  "name": "Necropolis Regent",
+  "oracleId": "33c3a6be-8cae-4de8-9d9b-43216d727e93",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Whenever a creature you control deals combat damage to a player, put that many +1/+1 counters on it."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": "triggerObject",
+            "counter": "+1/+1",
+            "count": {
+              "kind": "damageDealt"
+            }
+          }
+        ],
+        "description": "Whenever a creature you control deals combat damage to a player, put that many +1/+1 counters on it."
+      }
+    ]
+  }
+}
