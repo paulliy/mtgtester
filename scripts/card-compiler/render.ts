@@ -469,6 +469,10 @@ function effectText(effect: unknown, ctx: EffectContext, used: Set<number>): str
       only(effect, op, ['op', 'condition', 'then', 'else']);
       if (Array.isArray(effect['else']) && effect['else'].length > 0)
         throw new Unrendered('conditionalEffect.else');
+      // A printed "if" covers only its own sentence, but a false condition skips every effect in
+      // the branch, so a multi-effect branch cannot be compared by text.
+      if (!Array.isArray(effect['then']) || effect['then'].length !== 1)
+        throw new Unrendered('conditionalEffect:multi-effect');
       const body = joinEffects(effect['then'] as unknown[], ctx, used);
       return `if ${conditionText(effect['condition'])}, ${body}`;
     }
