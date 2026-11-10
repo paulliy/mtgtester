@@ -36,6 +36,7 @@
     "play-decks": "bun run packages/server/src/cli/play-decks.ts",
     "combat-sweep": "bun run packages/server/src/cli/combat-sweep.ts",
     "bot-league": "bun run packages/server/src/cli/bot-league.ts",
+    "ai-mode-duel": "bun run packages/server/src/cli/ai-mode-duel.ts",
     "ai-call-census": "bun run packages/server/src/cli/ai-call-census.ts",
     "fuzz": "bun run packages/server/src/cli/fuzz.ts",
     "diplomacy-sweep": "bun run packages/server/src/cli/diplomacy-sweep.ts",
