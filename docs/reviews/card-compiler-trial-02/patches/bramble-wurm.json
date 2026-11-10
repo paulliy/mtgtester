@@ -1,0 +1,48 @@
+{
+  "name": "Bramble Wurm",
+  "oracleId": "db4f67a9-6b47-4abe-9367-718da9e0609e",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["{2}{G}, Exile this card from your graveyard: You gain 5 life."],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "exileSelfFromGraveyard"
+          }
+        ],
+        "timing": "any",
+        "zone": "graveyard",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "gainLife",
+              "amount": {
+                "kind": "const",
+                "n": 5
+              }
+            }
+          ],
+          "description": "{2}{G}, Exile this card from your graveyard: You gain 5 life."
+        }
+      }
+    ]
+  }
+}

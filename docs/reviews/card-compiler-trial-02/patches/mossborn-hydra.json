@@ -1,0 +1,49 @@
+{
+  "name": "Mossborn Hydra",
+  "oracleId": "84122d81-9634-4d3f-85a5-f6cf4303691a",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Whenever a land you control enters, double the number of +1/+1 counters on this creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": "source",
+            "counter": "+1/+1",
+            "count": {
+              "kind": "countersOnSelf",
+              "counter": "+1/+1"
+            }
+          }
+        ],
+        "description": "Whenever a land you control enters, double the number of +1/+1 counters on this creature."
+      }
+    ]
+  }
+}

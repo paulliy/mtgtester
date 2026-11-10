@@ -1,0 +1,47 @@
+{
+  "name": "Pulse of Murasa",
+  "oracleId": "d5b446a4-a761-42f0-acf0-ea0a1a9538d6",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Return target creature or land card from a graveyard to its owner's hand. You gain 6 life."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "cardInGraveyard",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "type",
+                "value": "Land"
+              }
+            ]
+          },
+          "graveyardOwnerScope": "any"
+        }
+      ],
+      "effects": [
+        {
+          "op": "graveyardToHand",
+          "target": 0
+        },
+        {
+          "op": "gainLife",
+          "amount": {
+            "kind": "const",
+            "n": 6
+          }
+        }
+      ],
+      "description": "Return target creature or land card from a graveyard to its owner's hand. You gain 6 life."
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "name": "Aurelia, the Warleader",
+  "oracleId": "0f5a3a09-2f07-4774-9e0f-e99d9a444166",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Whenever ~ attacks for the first time each turn, untap all creatures you control. After this phase, there is an additional combat phase."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          },
+          "oncePerTurn": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "untapEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          {
+            "op": "extraCombatPhase"
+          }
+        ],
+        "description": "Whenever Aurelia attacks for the first time each turn, untap all creatures you control. After this phase, there is an additional combat phase."
+      }
+    ]
+  }
+}

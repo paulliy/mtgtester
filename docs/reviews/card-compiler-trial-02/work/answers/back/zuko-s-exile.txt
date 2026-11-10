@@ -1,0 +1,2 @@
+The controller of target artifact, creature, or enchantment creates a Clue token. Exile that permanent.
+(The Clue token is an artifact with "{2}, Sacrifice this artifact: Draw a card.")

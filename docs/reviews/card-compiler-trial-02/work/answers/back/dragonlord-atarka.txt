@@ -1,0 +1,1 @@
+When this enters, it deals 5 damage divided as you choose among up to five target permanents your opponents control that are creatures or planeswalkers. The number of targets is 0 to 5.

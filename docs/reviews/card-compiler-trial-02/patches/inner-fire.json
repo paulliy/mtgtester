@@ -1,0 +1,29 @@
+{
+  "name": "Inner Fire",
+  "oracleId": "27348fe5-21d4-40f7-9feb-bba2c2321008",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["Add {R} for each card in your hand."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "addMana",
+          "amount": {
+            "kind": "countCardsInZone",
+            "zone": "hand",
+            "selector": {
+              "kind": "allOf",
+              "of": []
+            },
+            "owner": "you"
+          },
+          "colors": ["R"]
+        }
+      ],
+      "description": "Add {R} for each card in your hand."
+    }
+  }
+}

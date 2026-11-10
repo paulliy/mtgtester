@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot make the target's creature types become exactly Wurm while keeping its other card types: becomeCreatureUntilEot only adds subtypes, and its replaceTypes option would drop the creature's other card types (such as Artifact or Enchantment)."}

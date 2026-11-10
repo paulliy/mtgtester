@@ -69,6 +69,9 @@ bun run jev-duel [--seats bot,bot-jev,model,jev] [--games N] [--offline] [--max-
                                         # ADR 0041 Jev seat presets at one table; --offline is free, otherwise PAID
 bun run fuzz [--from N] [--games N] [--changed [--base S]] [--card "<name>"] [--json F] [--report F]
                                         # ADR 0034 seeded four-player games, invariants on; prints each failure's replay
+bun run engine-bench [--games N] [--turn-cap N] [--json F] [--compare F]
+                                        # engine CPU over the heuristic fuzz pods; --compare fails if any game's
+                                        # fingerprint (every menu, response and event) differs from a saved run
 bun run diplomacy-sweep [--games N] [--seed S] [--turn-cap N] [--all] [--talk]   # ADR 0035 self-play
 bun run ai-bench                        # AI benchmark harness (ADR 0026)
 bun run agent-client [--seat P1] [--seed S] [--port N] [--provider random|ai]

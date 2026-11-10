@@ -1,0 +1,1 @@
+Each land that isn't a basic land has the land type Island and loses all abilities.

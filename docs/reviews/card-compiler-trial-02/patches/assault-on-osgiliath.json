@@ -1,0 +1,77 @@
+{
+  "name": "Assault on Osgiliath",
+  "oracleId": "d2aa50d2-d22d-495e-afc9-23a51c8c8f32",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Amass Orcs X, then Goblins and Orcs you control gain double strike and haste until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "amass",
+          "subtype": "Orc",
+          "count": {
+            "kind": "xValue"
+          }
+        },
+        {
+          "op": "grantKeywordEachUntilEot",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Goblin"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Orc"
+                  }
+                ]
+              }
+            ]
+          },
+          "keyword": "double strike"
+        },
+        {
+          "op": "grantKeywordEachUntilEot",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Goblin"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Orc"
+                  }
+                ]
+              }
+            ]
+          },
+          "keyword": "haste"
+        }
+      ],
+      "description": "Amass Orcs X, then Goblins and Orcs you control gain double strike and haste until end of turn."
+    }
+  }
+}

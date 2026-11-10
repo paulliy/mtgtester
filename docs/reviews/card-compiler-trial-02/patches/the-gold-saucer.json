@@ -1,0 +1,75 @@
+{
+  "name": "The Gold Saucer",
+  "oracleId": "93e38650-ce22-4ab9-b79d-cc7b6477c075",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["{2}, {T}: Flip a coin. If you win the flip, create a Treasure token."],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "flipCoin",
+              "onWin": [
+                {
+                  "op": "createToken",
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "spec": {
+                    "name": "Treasure",
+                    "typeLine": "Artifact \u2014 Treasure",
+                    "types": ["Artifact"],
+                    "subtypes": ["Treasure"],
+                    "colors": [],
+                    "power": null,
+                    "toughness": null,
+                    "manaAbilities": [
+                      {
+                        "units": [["W", "U", "B", "R", "G"]],
+                        "costs": [
+                          {
+                            "kind": "tap"
+                          },
+                          {
+                            "kind": "sacrificeSelf"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ],
+              "onLose": []
+            }
+          ],
+          "description": "{2}, {T}: Flip a coin. If you win the flip, create a Treasure token."
+        }
+      }
+    ]
+  }
+}

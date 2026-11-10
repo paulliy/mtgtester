@@ -1,0 +1,1 @@
+Whenever enchanted permanent is tapped for mana, its controller adds one mana of any color.

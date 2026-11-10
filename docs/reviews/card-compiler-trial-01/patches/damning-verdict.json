@@ -1,0 +1,34 @@
+{
+  "name": "Damning Verdict",
+  "oracleId": "355ed7ef-bfa6-4538-99fb-a2d203eb7005",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["Destroy all creatures with no counters on them."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "destroyEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "hasAnyCounter"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "description": "Destroy all creatures with no counters on them."
+    }
+  }
+}

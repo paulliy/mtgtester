@@ -1,0 +1,1 @@
+Whenever a Swamp you control is tapped for mana, it produces an additional {B}.

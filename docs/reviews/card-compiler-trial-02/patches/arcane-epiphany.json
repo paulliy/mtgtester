@@ -1,0 +1,29 @@
+{
+  "name": "Arcane Epiphany",
+  "oracleId": "fe1556cc-32d0-4e51-bb15-f3fce669a5e1",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["This spell costs {1} less to cast if you control a Wizard."],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "selfOnly": true,
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "subtype",
+            "value": "Wizard"
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 1
+        }
+      }
+    ]
+  }
+}

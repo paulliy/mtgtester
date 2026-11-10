@@ -1,0 +1,48 @@
+{
+  "name": "Profane Memento",
+  "oracleId": "c81d1890-e741-49ec-a6ce-86c27fd4d502",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Whenever a creature card is put into an opponent's graveyard from anywhere, you gain 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "putIntoGraveyardFromAnywhere",
+          "fromAnyOrigin": true,
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a creature card is put into an opponent's graveyard from anywhere, you gain 1 life."
+      }
+    ]
+  }
+}

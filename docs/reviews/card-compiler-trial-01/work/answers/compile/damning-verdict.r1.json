@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"destroyEach","selector":{"kind":"allOf","of":[{"kind":"type","value":"Creature"},{"kind":"not","of":{"kind":"hasAnyCounter"}}]}}],"description":"Destroy all creatures with no counters on them."}}}

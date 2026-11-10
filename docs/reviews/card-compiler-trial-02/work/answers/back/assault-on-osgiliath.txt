@@ -1,0 +1,3 @@
+Amass Orc X.
+Each permanent you control that is a Goblin or an Orc gains double strike until end of turn.
+Each permanent you control that is a Goblin or an Orc gains haste until end of turn.

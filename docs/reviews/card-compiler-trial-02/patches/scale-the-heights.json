@@ -1,0 +1,53 @@
+{
+  "name": "Scale the Heights",
+  "oracleId": "13d5b664-db13-406e-9956-3d9fe4177d33",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Put a +1/+1 counter on up to one target creature. You gain 2 life. You may play an additional land this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "putCountersEachChosen",
+          "targetSlot": 0,
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "op": "gainLife",
+          "amount": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "additionalLandPlaysThisTurn",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        },
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Put a +1/+1 counter on up to one target creature. You gain 2 life. You may play an additional land this turn. Draw a card."
+    }
+  }
+}

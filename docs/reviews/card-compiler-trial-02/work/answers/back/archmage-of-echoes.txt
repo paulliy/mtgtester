@@ -1,0 +1,1 @@
+Whenever you cast a spell that is a Faerie or Wizard and is an artifact, creature, enchantment, planeswalker, or battle, copy that spell.

@@ -1,0 +1,37 @@
+{
+  "name": "Rite of Flame",
+  "oracleId": "8a2e53f9-8100-488f-8504-b59e9bd1cc29",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["Add {R}{R}, then add {R} for each card named ~ in each graveyard."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "addMana",
+          "amount": {
+            "kind": "const",
+            "n": 2
+          },
+          "colors": ["R"]
+        },
+        {
+          "op": "addMana",
+          "amount": {
+            "kind": "countCardsInZone",
+            "zone": "graveyard",
+            "selector": {
+              "kind": "name",
+              "value": "Rite of Flame"
+            },
+            "owner": "all"
+          },
+          "colors": ["R"]
+        }
+      ],
+      "description": "Add {R}{R}, then add {R} for each card named Rite of Flame in each graveyard."
+    }
+  }
+}

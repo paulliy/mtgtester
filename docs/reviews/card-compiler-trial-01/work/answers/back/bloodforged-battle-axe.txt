@@ -1,0 +1,1 @@
+Whenever the creature this is attached to deals combat damage to a player, create a token that's a copy of this.

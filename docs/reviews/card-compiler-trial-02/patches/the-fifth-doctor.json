@@ -1,0 +1,83 @@
+{
+  "name": "The Fifth Doctor",
+  "oracleId": "992ddd9f-e0db-4383-909c-6dacca41d188",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Peaceful Coexistence \u2014 At the beginning of your end step, put a +1/+1 counter on each creature you control that didn't attack or enter this turn. Untap those creatures."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "endStep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "attackedThisTurn"
+                  }
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "enteredThisTurn"
+                  }
+                }
+              ]
+            },
+            "counter": "+1/+1",
+            "count": 1
+          },
+          {
+            "op": "untapEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "attackedThisTurn"
+                  }
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "enteredThisTurn"
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "description": "Peaceful Coexistence \u2014 At the beginning of your end step, put a +1/+1 counter on each creature you control that didn't attack or enter this turn. Untap those creatures."
+      }
+    ]
+  }
+}

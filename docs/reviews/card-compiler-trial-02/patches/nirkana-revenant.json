@@ -1,0 +1,31 @@
+{
+  "name": "Nirkana Revenant",
+  "oracleId": "6dff1def-5b94-40c8-a942-dea8743ab47c",
+  "source": "compiler@haiku-worker",
+  "handledLines": ["Whenever you tap a Swamp for mana, add an additional {B}."],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "manaActivationRider",
+        "source": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "subtype",
+              "value": "Swamp"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            }
+          ]
+        },
+        "add": {
+          "kind": "fixed",
+          "units": [["B"]]
+        }
+      }
+    ]
+  }
+}

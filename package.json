@@ -40,6 +40,7 @@
     "ai-call-census": "bun run packages/server/src/cli/ai-call-census.ts",
     "jev-duel": "bun run packages/server/src/cli/jev-duel.ts",
     "fuzz": "bun run packages/server/src/cli/fuzz.ts",
+    "engine-bench": "bun run packages/server/src/cli/engine-bench.ts",
     "diplomacy-sweep": "bun run packages/server/src/cli/diplomacy-sweep.ts",
     "ai-bench": "bun run packages/server/src/cli/ai-bench.ts",
     "agent-client": "bun run packages/server/src/cli/agent-client.ts",
@@ -80,6 +81,7 @@
     "test:pr08-verification": "bun run scripts/run-pr08-verification.ts"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^1.7.0",
     "@eslint/js": "^9.17.0",
     "@playwright/test": "^1.49.0",
     "@types/bun": "^1.3.14",

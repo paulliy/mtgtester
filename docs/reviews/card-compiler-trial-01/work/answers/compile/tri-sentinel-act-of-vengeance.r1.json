@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A perPlayer target slot iterates over every player, and no restriction to opponents is available, so 'for each opponent' with 'up to one target creature that player controls' cannot be stated exactly (it would also allow targeting your own creatures)."}

@@ -1,0 +1,5 @@
+Choose one —
+• Tap target artifact, creature, or land.
+• Untap target artifact, creature, or land.
+• Do nothing.
+Draw a card.

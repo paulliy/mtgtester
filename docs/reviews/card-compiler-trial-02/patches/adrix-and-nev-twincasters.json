@@ -1,0 +1,17 @@
+{
+  "name": "Adrix and Nev, Twincasters",
+  "oracleId": "12a6cad9-eb42-43bd-9e68-aaf862cd83db",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "If one or more tokens would be created under your control, twice that many of those tokens are created instead."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "tokenCountMultiplier",
+        "multiplier": 2
+      }
+    ]
+  }
+}
