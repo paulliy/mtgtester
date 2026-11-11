@@ -1,0 +1,93 @@
+{
+  "name": "Goro-Goro, Disciple of Ryusei",
+  "oracleId": "b80df711-af51-4f9a-9a3f-f7a4cddc9c2c",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "{3}{R}{R}: Create a 5/5 red Dragon Spirit creature token with flying. Activate only if you control an attacking modified creature."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 3,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 2,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "combatRole",
+                "role": "attacking"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "hasAnyCounter"
+                  },
+                  {
+                    "kind": "isEquipped"
+                  },
+                  {
+                    "kind": "enchantedByAuraYouControl"
+                  }
+                ]
+              }
+            ]
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 1
+        },
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "createToken",
+              "spec": {
+                "name": "Dragon Spirit",
+                "typeLine": "Token Creature \u2014 Dragon Spirit",
+                "types": ["Creature"],
+                "subtypes": ["Dragon", "Spirit"],
+                "colors": ["R"],
+                "power": 5,
+                "toughness": 5,
+                "keywords": ["flying"]
+              },
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "{3}{R}{R}: Create a 5/5 red Dragon Spirit creature token with flying. Activate only if you control an attacking modified creature."
+        }
+      }
+    ]
+  }
+}

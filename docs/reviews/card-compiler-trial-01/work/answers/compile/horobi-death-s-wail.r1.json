@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"becomesTargeted","subject":{"kind":"permanent","selector":{"kind":"type","value":"Creature"}}},"optional":false,"targets":[],"effects":[{"op":"destroy","target":"triggerObject"}],"description":"Whenever a creature becomes the target of a spell or ability, destroy that creature."}]}}

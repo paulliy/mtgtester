@@ -1,0 +1,34 @@
+{
+  "name": "Pilfer",
+  "oracleId": "d13f0907-de39-4a90-940a-831740d7aa9b",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Target opponent reveals their hand. You choose a nonland card from it. That player discards that card."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "player",
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "revealHandAndDiscard",
+          "target": 0,
+          "filter": {
+            "kind": "not",
+            "of": {
+              "kind": "type",
+              "value": "Land"
+            }
+          }
+        }
+      ],
+      "description": "Target opponent reveals their hand. You choose a nonland card from it. That player discards that card."
+    }
+  }
+}

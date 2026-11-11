@@ -1,0 +1,24 @@
+{
+  "status": "compiled",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": { "when": "attacks", "subject": { "kind": "self" } },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "permanent",
+            "controller": "you",
+            "filter": {
+              "kind": "allOf",
+              "of": [{ "kind": "subtype", "value": "Dinosaur" }, { "kind": "other" }]
+            }
+          }
+        ],
+        "effects": [{ "op": "grantKeywordUntilEot", "target": 0, "keyword": "flying" }],
+        "description": "Whenever this creature attacks, another target Dinosaur you control gains flying until end of turn."
+      }
+    ]
+  }
+}

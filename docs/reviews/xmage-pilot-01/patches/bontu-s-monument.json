@@ -1,0 +1,31 @@
+{
+  "name": "Bontu's Monument",
+  "oracleId": "940ba435-7abc-40f8-a5af-c1c653b3284e",
+  "source": "xmage@31ede542",
+  "handledLines": ["Black creature spells you cast cost {1} less to cast."],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "color",
+              "value": "B"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

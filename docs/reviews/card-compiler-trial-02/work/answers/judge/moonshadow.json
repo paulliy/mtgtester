@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A counts all permanent cards, including battle cards; Text B lists only artifact, creature, enchantment, land, and planeswalker, so a battle card going to the graveyard does not trigger under Text B."]}

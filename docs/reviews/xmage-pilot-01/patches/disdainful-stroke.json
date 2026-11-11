@@ -1,0 +1,27 @@
+{
+  "name": "Disdainful Stroke",
+  "oracleId": "11e02134-7b1a-46a4-a89e-7539dd1efada",
+  "source": "xmage@31ede542",
+  "handledLines": ["Counter target spell with mana value 4 or greater."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "spell",
+          "filter": {
+            "kind": "manaValueAtLeast",
+            "n": 4
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "counter",
+          "target": 0
+        }
+      ]
+    }
+  }
+}

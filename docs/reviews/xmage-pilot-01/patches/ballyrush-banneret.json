@@ -1,0 +1,31 @@
+{
+  "name": "Ballyrush Banneret",
+  "oracleId": "0ad27d0e-b6c3-4c3f-a389-285d889b6a65",
+  "source": "xmage@31ede542",
+  "handledLines": ["Kithkin spells and Soldier spells you cast cost {1} less to cast."],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "filter": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "subtype",
+              "value": "Kithkin"
+            },
+            {
+              "kind": "subtype",
+              "value": "Soldier"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

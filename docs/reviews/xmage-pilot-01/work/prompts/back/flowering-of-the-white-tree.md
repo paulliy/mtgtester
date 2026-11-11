@@ -1,0 +1,4 @@
+Type line: Legendary Enchantment
+
+Behavior:
+{"staticEffects":[{"affects":{"kind":"allOf","of":[{"kind":"controller","who":"you"},{"kind":"type","value":"Creature"},{"kind":"not","of":{"kind":"supertype","value":"Legendary"}}]},"op":{"layer":7,"sublayer":"d","power":1,"toughness":1}}]}

@@ -1,0 +1,34 @@
+{
+  "name": "Inundate",
+  "oracleId": "0390a3dc-386c-402f-a89c-b94867bfb0a2",
+  "source": "xmage@31ede542",
+  "handledLines": ["Return all nonblue creatures to their owners' hands."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "returnToHandEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "color",
+                  "value": "U"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

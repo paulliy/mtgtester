@@ -1,0 +1,2 @@
+{5}, {T}: Draw a card.
+The cost to activate the ability above is reduced by an amount equal to the number of page counters on this.

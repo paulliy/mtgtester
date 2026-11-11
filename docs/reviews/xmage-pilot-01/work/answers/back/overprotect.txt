@@ -1,0 +1,1 @@
+Target creature you control gets +3/+3 until end of turn and gains trample, hexproof, and indestructible until end of turn.

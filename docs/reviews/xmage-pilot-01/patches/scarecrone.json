@@ -1,0 +1,63 @@
+{
+  "name": "Scarecrone",
+  "oracleId": "f45716dc-c613-4b14-865d-419395fb02f6",
+  "source": "xmage@31ede542",
+  "handledLines": [
+    "{4}, {T}: Return target artifact creature card from your graveyard to the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 4,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "cardInGraveyard",
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "graveyardToBattlefield",
+              "target": 0
+            }
+          ],
+          "description": "{4}, {T}: Return target artifact creature card from your graveyard to the battlefield."
+        }
+      }
+    ]
+  }
+}

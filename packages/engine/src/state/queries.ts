@@ -1,3 +1,4 @@
+import { withReadScope } from '../effects/layer-cache';
 import { playerLifeLocked } from './phasing';
 import { offBattlefieldTypes } from './off-battlefield-types';
 import { counterCount } from './counters';
@@ -1037,6 +1038,16 @@ export function manaSourcesFor(
   playerId: PlayerId,
   includeZeroProduction = false,
   order: 'payment' | 'board' = 'payment',
+): ManaSource[] {
+  // Reads only: one layer digest serves every source's queries (`withReadScope`).
+  return withReadScope(ctx, () => manaSources(ctx, playerId, includeZeroProduction, order));
+}
+
+function manaSources(
+  ctx: GameContext,
+  playerId: PlayerId,
+  includeZeroProduction: boolean,
+  order: 'payment' | 'board',
 ): ManaSource[] {
   const sources: ManaSource[] = [];
   // Preserve creatures for combat whenever a land or noncreature source can do the job.

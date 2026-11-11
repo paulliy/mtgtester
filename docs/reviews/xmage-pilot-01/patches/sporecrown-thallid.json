@@ -1,0 +1,48 @@
+{
+  "name": "Sporecrown Thallid",
+  "oracleId": "d0c2ca8a-c5d4-4684-bacb-46c04f47c276",
+  "source": "xmage@31ede542",
+  "handledLines": ["Each other creature you control that's a Fungus or Saproling gets +1/+1."],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Fungus"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Saproling"
+                }
+              ]
+            },
+            {
+              "kind": "other"
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 1,
+          "toughness": 1
+        }
+      }
+    ]
+  }
+}

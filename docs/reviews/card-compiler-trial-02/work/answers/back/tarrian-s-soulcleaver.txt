@@ -1,0 +1,1 @@
+Whenever another artifact or creature leaves the battlefield and goes to the graveyard, put a +1/+1 counter on the equipped creature.

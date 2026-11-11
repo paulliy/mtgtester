@@ -1,0 +1,31 @@
+{
+  "name": "Sunscape Familiar",
+  "oracleId": "615603bb-3899-4419-9444-e4b64c94a438",
+  "source": "xmage@31ede542",
+  "handledLines": ["Green spells and blue spells you cast cost {1} less to cast."],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "filter": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "color",
+              "value": "G"
+            },
+            {
+              "kind": "color",
+              "value": "U"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

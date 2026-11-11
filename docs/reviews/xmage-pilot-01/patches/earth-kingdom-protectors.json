@@ -1,0 +1,50 @@
+{
+  "name": "Earth Kingdom Protectors",
+  "oracleId": "3bfb3913-808d-444b-97c3-a90af3bc585b",
+  "source": "xmage@31ede542",
+  "handledLines": [
+    "Sacrifice this creature: Another target Ally you control gains indestructible until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "permanent",
+              "controller": "you",
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Ally"
+                  },
+                  {
+                    "kind": "other"
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": 0,
+              "keyword": "indestructible"
+            }
+          ],
+          "description": "Sacrifice this creature: Another target Ally you control gains indestructible until end of turn."
+        }
+      }
+    ]
+  }
+}

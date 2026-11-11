@@ -12,6 +12,7 @@ import {
 } from '../cards/spell-faces';
 import type { RoomDoor } from '../cards/spell-faces';
 import { assertNever } from '../utils/assert-never';
+import { withReadScope } from '../effects/layer-cache';
 import { castingPreviewContext } from '../casting/preview';
 import { mayCastCommanderFromCommand } from '../casting/permissions';
 import { legalTargetMenus, type TargetMenu } from '../targets/announcement';
@@ -727,6 +728,11 @@ export function computePriorityOptions(
   ctx: GameContext,
   player: EnginePlayerState,
 ): EngineActionOption[] {
+  // Building the menu only reads the state, so the layer digest is computed once for it.
+  return withReadScope(ctx, () => priorityOptions(ctx, player));
+}
+
+function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineActionOption[] {
   const s = ctx.state;
   const options: EngineActionOption[] = [
     { type: 'pass', description: 'Pass priority', payload: { kind: 'pass' } },
@@ -1034,13 +1040,12 @@ export function computePriorityOptions(
       return;
     const castCtx = castingPreviewContext(ctx, obj, player.id);
     const castPlayer = castCtx.state.players.find((entry) => entry.id === player.id)!;
-    // Convoke (CR 702.51): untapped creatures help pay for this spell, in every way it is cast.
-    const castSources = spellHasConvoke(def)
-      ? [...manaSourcesFor(castCtx, player.id), ...convokeSourcesFor(castCtx, player.id)]
-      : manaSourcesFor(castCtx, player.id);
     paymentCtx = castCtx;
     paymentPlayer = castPlayer;
-    paymentSources = castSources;
+    // Every payment check runs inside `offerCast`, which first passes the timing check and then
+    // sets the payment context and sources for the face being cast. Computing this preview's
+    // sources here as well cost a full mana-source pass for every card at every priority stop,
+    // including the sorcery-speed cards that the timing check then rules out.
 
     // One configuration/target/payment loop for each permitted mana-cost alternative.
     // Alternative costs replace only the printed mana cost, never modes or additional costs.

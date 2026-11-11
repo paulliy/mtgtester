@@ -1,0 +1,4 @@
+Type line: Land
+
+Behavior:
+{"activatedAbilities":[{"costs":[{"kind":"mana","cost":{"generic":1,"colored":{"W":0,"U":0,"B":1,"R":0,"G":0},"colorless":0}},{"kind":"tap"},{"kind":"sacrificeSelf"}],"timing":"any","ability":{"kind":"activated","targets":[{"kind":"cardInGraveyard","filter":{"kind":"anyOf","of":[{"kind":"subtype","value":"Bat"},{"kind":"subtype","value":"Lizard"},{"kind":"subtype","value":"Rat"},{"kind":"subtype","value":"Squirrel"}]}}],"effects":[{"op":"graveyardToHand","target":0}]}}]}

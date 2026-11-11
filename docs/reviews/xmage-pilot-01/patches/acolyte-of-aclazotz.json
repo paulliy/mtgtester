@@ -1,0 +1,64 @@
+{
+  "name": "Acolyte of Aclazotz",
+  "oracleId": "324d2aa8-6dea-4b0d-898d-1e52ed187565",
+  "source": "xmage@31ede542",
+  "handledLines": [
+    "{T}, Sacrifice another creature or artifact: Each opponent loses 1 life and you gain 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "eachOpponentLosesLife",
+              "amount": 1
+            },
+            {
+              "op": "gainLife",
+              "amount": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "{T}, Sacrifice another creature or artifact: Each opponent loses 1 life and you gain 1 life."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "Smaug the Magnificent",
+  "oracleId": "c53b7602-5e36-4900-896c-844bf6eac22e",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Whenever ~ attacks, he deals damage equal to the number of Treasures you control to any target."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "anyTarget"
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": 0,
+            "amount": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "subtype",
+                "value": "Treasure"
+              },
+              "scope": "you"
+            }
+          }
+        ],
+        "description": "Whenever Smaug attacks, he deals damage equal to the number of Treasures you control to any target."
+      }
+    ]
+  }
+}

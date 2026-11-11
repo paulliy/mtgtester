@@ -24,7 +24,7 @@ import { computeTargetOptions, withinTotalManaValue } from '../actions/legal';
 import type { Ability, Effect } from '../cards/ability';
 import type { GameGen } from '../decisions';
 import { optionAt } from '../decisions';
-import { computeCharacteristics, matchesSelector } from '../effects/continuous';
+import { battlefieldCharacteristics, matchesSelector } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
 import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
@@ -306,8 +306,10 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
   // the first creature early loses dying watchers and can remove an anthem before
   // deciding whether another creature belongs to this event (CR 704.3/603.10).
   const dying: EnginePermanent[] = [];
+  // One layer pass for the whole board, retaken after a regeneration changes it.
+  let charsOf = battlefieldCharacteristics(ctx);
   for (const perm of s.battlefield) {
-    const chars = computeCharacteristics(ctx, perm);
+    const chars = charsOf(perm);
     let reason: string | undefined;
     if (chars.types.includes('Creature')) {
       if (chars.toughness <= 0) reason = 'zeroToughness';
@@ -318,6 +320,7 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
       ) {
         if (consumeRegenerationShield(ctx, perm)) {
           acted = true;
+          charsOf = battlefieldCharacteristics(ctx);
           continue;
         }
         reason = 'lethalDamage';
@@ -341,9 +344,11 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
   if (acted) return true;
 
   // --- Other battlefield checks ---
+  // Every check below that changes the state returns, so one layer pass serves the loop.
+  const otherCharsOf = battlefieldCharacteristics(ctx);
   for (const perm of [...s.battlefield]) {
     if (!s.battlefield.includes(perm)) continue;
-    const chars = computeCharacteristics(ctx, perm);
+    const chars = otherCharsOf(perm);
 
     // A bestowed Aura that is unattached or attached to an illegal object, by its enchant
     // restriction or protection, becomes unattached and ceases to be bestowed, staying on the
@@ -458,11 +463,12 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
   const legendRuleExemptions = gatherRuleStatics(ctx).filter(
     (entry) => entry.static.kind === 'legendRuleDoesntApply',
   );
+  const legendCharsOf = battlefieldCharacteristics(ctx);
   for (const player of playersInApnapOrder(ctx)) {
     const byName = new Map<string, EnginePermanent[]>();
     for (const perm of s.battlefield) {
       if (perm.controllerId !== player.id) continue;
-      if (!computeCharacteristics(ctx, perm).supertypes.includes('Legendary')) continue;
+      if (!legendCharsOf(perm).supertypes.includes('Legendary')) continue;
       if (
         legendRuleExemptions.some(
           (entry) =>

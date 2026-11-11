@@ -1,0 +1,27 @@
+{
+  "name": "Revive",
+  "oracleId": "51991d28-137e-4690-a674-d852b904bd1a",
+  "source": "xmage@31ede542",
+  "handledLines": ["Return target green card from your graveyard to your hand."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "cardInGraveyard",
+          "filter": {
+            "kind": "color",
+            "value": "G"
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "graveyardToHand",
+          "target": 0
+        }
+      ]
+    }
+  }
+}

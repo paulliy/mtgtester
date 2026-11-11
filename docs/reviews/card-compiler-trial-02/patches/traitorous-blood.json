@@ -1,0 +1,41 @@
+{
+  "name": "Traitorous Blood",
+  "oracleId": "7f1a9248-8e7b-46a8-942b-ca18c7da8c4a",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Gain control of target creature until end of turn. Untap it. It gains trample and haste until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "gainControlTarget",
+          "target": 0,
+          "duration": "untilEndOfTurn"
+        },
+        {
+          "op": "untapTarget",
+          "target": 0
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "trample"
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "haste"
+        }
+      ],
+      "description": "Gain control of target creature until end of turn. Untap it. It gains trample and haste until end of turn."
+    }
+  }
+}

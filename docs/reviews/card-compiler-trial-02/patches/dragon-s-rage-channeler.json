@@ -1,0 +1,75 @@
+{
+  "name": "Dragon's Rage Channeler",
+  "oracleId": "0c016ccc-a341-4b76-87ba-69c639d2746d",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "As long as there are four or more card types among cards in your graveyard, this creature gets +2/+2, has flying, and attacks each combat if able."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 2,
+          "toughness": 2
+        },
+        "condition": {
+          "kind": "compareValues",
+          "left": {
+            "kind": "cardTypesInYourGraveyard"
+          },
+          "cmp": ">=",
+          "right": {
+            "kind": "const",
+            "n": 4
+          }
+        }
+      },
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "flying"
+        },
+        "condition": {
+          "kind": "compareValues",
+          "left": {
+            "kind": "cardTypesInYourGraveyard"
+          },
+          "cmp": ">=",
+          "right": {
+            "kind": "const",
+            "n": 4
+          }
+        }
+      },
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "setMustAttackEachCombat": true
+        },
+        "condition": {
+          "kind": "compareValues",
+          "left": {
+            "kind": "cardTypesInYourGraveyard"
+          },
+          "cmp": ">=",
+          "right": {
+            "kind": "const",
+            "n": 4
+          }
+        }
+      }
+    ]
+  }
+}

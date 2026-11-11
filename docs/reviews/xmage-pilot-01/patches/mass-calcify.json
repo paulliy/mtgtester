@@ -1,0 +1,34 @@
+{
+  "name": "Mass Calcify",
+  "oracleId": "3ab3996f-aa3f-4041-8634-8e197d51f108",
+  "source": "xmage@31ede542",
+  "handledLines": ["Destroy all nonwhite creatures."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "destroyEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "color",
+                  "value": "W"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

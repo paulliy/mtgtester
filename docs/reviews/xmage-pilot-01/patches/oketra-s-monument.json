@@ -1,0 +1,31 @@
+{
+  "name": "Oketra's Monument",
+  "oracleId": "0370afa0-07d3-4787-8a5b-10272cb3a486",
+  "source": "xmage@31ede542",
+  "handledLines": ["White creature spells you cast cost {1} less to cast."],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "color",
+              "value": "W"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

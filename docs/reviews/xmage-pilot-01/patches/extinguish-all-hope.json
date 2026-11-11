@@ -1,0 +1,34 @@
+{
+  "name": "Extinguish All Hope",
+  "oracleId": "c7ca25f3-7a22-477b-8546-4c2597d5d1ff",
+  "source": "xmage@31ede542",
+  "handledLines": ["Destroy all nonenchantment creatures."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "destroyEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Enchantment"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

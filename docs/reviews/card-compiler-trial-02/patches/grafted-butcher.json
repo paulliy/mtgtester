@@ -1,0 +1,69 @@
+{
+  "name": "Grafted Butcher",
+  "oracleId": "6c4a0e3d-c63c-4acf-8386-b51f1ec37463",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "{3}{B}, Sacrifice an artifact or creature: Return this card from your graveyard to the battlefield. Activate only as a sorcery."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 3,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 1,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "timing": "sorcery",
+        "zone": "graveyard",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "returnDepartedSourceToBattlefield",
+              "fromYourGraveyard": true
+            }
+          ],
+          "description": "{3}{B}, Sacrifice an artifact or creature: Return this card from your graveyard to the battlefield. Activate only as a sorcery."
+        }
+      }
+    ]
+  }
+}

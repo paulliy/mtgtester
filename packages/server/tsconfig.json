@@ -17,7 +17,8 @@
     "src/cli/test-cards-l7-coverage.ts",
     "src/cli/fuzz.ts",
     "src/cli/fuzz-game.ts",
-    "src/cli/fuzz-plan.ts"
+    "src/cli/fuzz-plan.ts",
+    "src/cli/engine-bench.ts"
   ],
   "references": [{ "path": "../shared" }, { "path": "../engine" }, { "path": "../bot" }]
 }

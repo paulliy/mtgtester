@@ -1,0 +1,6 @@
+{
+  "verdict": "different",
+  "differences": [
+    "Text B replaces the trigger condition with the placeholder \"When <text>\", so it does not state that the trigger is combat damage dealt to a player."
+  ]
+}

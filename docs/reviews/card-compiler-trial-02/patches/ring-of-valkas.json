@@ -1,0 +1,42 @@
+{
+  "name": "Ring of Valkas",
+  "oracleId": "412f57e8-76af-4636-bab0-e0940300ee2e",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's red."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "attachedToSource"
+                },
+                {
+                  "kind": "color",
+                  "value": "R"
+                }
+              ]
+            },
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "description": "At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's red."
+      }
+    ]
+  }
+}

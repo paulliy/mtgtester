@@ -1,0 +1,59 @@
+{
+  "name": "Silumgar, the Drifting Death",
+  "oracleId": "b26c91d9-87de-45f7-a24c-bbe0cef3a35c",
+  "source": "compiler@haiku-worker",
+  "handledLines": [
+    "Whenever a Dragon you control attacks, creatures defending player controls get -1/-1 until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
+                }
+              ]
+            }
+          },
+          "defendingPlayerIsEventPlayer": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "pumpEachUntilEot",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "eventPlayer"
+                }
+              ]
+            },
+            "power": -1,
+            "toughness": -1
+          }
+        ],
+        "description": "Whenever a Dragon you control attacks, creatures defending player controls get -1/-1 until end of turn."
+      }
+    ]
+  }
+}

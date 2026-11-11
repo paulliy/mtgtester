@@ -1,0 +1,41 @@
+{
+  "name": "Rosa, Resolute White Mage",
+  "oracleId": "9c4fdd20-0396-40b7-8687-43b1035b6956",
+  "source": "xmage@31ede542",
+  "handledLines": [
+    "At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. It gains lifelink until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "beginningOfCombat",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "you"
+          }
+        ],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": 0,
+            "counter": "+1/+1",
+            "count": 1
+          },
+          {
+            "op": "grantKeywordUntilEot",
+            "target": 0,
+            "keyword": "lifelink"
+          }
+        ],
+        "description": "At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. It gains lifelink until end of turn."
+      }
+    ]
+  }
+}
