@@ -299,7 +299,7 @@ async function playAi(pool: SupportedPool, args: Args): Promise<void> {
   // it and wait for it to end, so its attempt is in the summary and in the cost settlement.
   const drainStrategist = async (): Promise<void> => {
     coordinator.cancel();
-    await coordinator.settled().catch(() => undefined);
+    await coordinator.drained();
   };
 
   const providers = new Map<string, OpenAiDecisionProvider>();
