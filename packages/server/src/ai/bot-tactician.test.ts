@@ -121,6 +121,14 @@ describe('bot-led tactical mode', () => {
     expect(isUncertain(closeCall, tied, 1)).toBe(true);
     expect(isUncertain({ ...closeCall, decisionType: 'general' }, tied, 1)).toBe(false);
   });
+
+  it('does not call one land against another a close call', () => {
+    const land = (id: number, name: string) => ({
+      action: { id, type: 'playLand', description: `Play ${name}` },
+      score: 12,
+    });
+    expect(isUncertain(closeCall, [land(7, 'Swamp'), land(8, 'Plains')], 1)).toBe(false);
+  });
 });
 
 describe('model-call census', () => {

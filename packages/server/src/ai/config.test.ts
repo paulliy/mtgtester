@@ -172,7 +172,7 @@ describe('AI Config', () => {
 
   it('keeps role-specific capacity fallbacks in the default OpenRouter chains', () => {
     const config = loadAiConfig({ OPENROUTER_API_KEY: 'sk-or-123' });
-    expect(config.strategist.models).toEqual(['deepseek/deepseek-v4-flash', 'tencent/hy3']);
+    expect(config.strategist.models).toEqual(['z-ai/glm-5.3-flash', 'deepseek/deepseek-v4-flash']);
     expect(config.tactician.models).toEqual([
       'qwen/qwen3.7-flash',
       'sao10k/l3-lunaris-8b:nitro',
@@ -223,6 +223,22 @@ describe('AI Config', () => {
     expect(config.jevMaxActions).toBe(255);
     expect(config.jevMinConfidence).toBeNull();
     expect(config.jevMinTopTwoMargin).toBeNull();
+  });
+
+  it('loads Jev placement settings and ignores unknown values (ADR 0041)', () => {
+    expect(loadAiConfig({})).toMatchObject({
+      jevFallback: 'model',
+      jevShadowScope: 'all',
+      jevExpandTargets: true,
+    });
+    expect(
+      loadAiConfig({
+        AI_JEV_FALLBACK: 'bot',
+        AI_JEV_SHADOW_SCOPE: 'uncertain',
+        AI_JEV_EXPAND_TARGETS: '0',
+      }),
+    ).toMatchObject({ jevFallback: 'bot', jevShadowScope: 'uncertain', jevExpandTargets: false });
+    expect(loadAiConfig({ AI_JEV_FALLBACK: 'human' }).jevFallback).toBe('model');
   });
 });
 

@@ -82,3 +82,19 @@ export class RequestCancelledError extends Error {
     this.name = 'RequestCancelledError';
   }
 }
+
+/**
+ * Our own per-call deadline passed. With a non-streamed request the provider keeps generating and
+ * bills the whole answer anyway; with a streamed one, generation stops. Not retried unless
+ * `retryOnTimeout` is set: the bot answers the decision instead, which is free.
+ */
+export class RequestTimeoutError extends Error {
+  constructor(
+    readonly model: string,
+    readonly timeoutMs: number,
+    readonly retryable: boolean,
+  ) {
+    super(`Request to ${model} timed out after ${timeoutMs} ms`);
+    this.name = 'RequestTimeoutError';
+  }
+}

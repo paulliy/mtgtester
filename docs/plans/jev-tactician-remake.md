@@ -1,6 +1,7 @@
 # Jev tactician remake
 
 Status: implementation complete; production rollout disabled pending measured promotion evidence.
+ADR 0041 adds bot-led placement, agreement records, target expansion and `bun run jev-duel`.
 
 ## Review outcome
 

@@ -52,12 +52,19 @@ export function isUncertain(
   if (first.score - second.score >= margin) return false;
   if (PASS_TYPES.has(first.action.type) && PASS_TYPES.has(second.action.type)) return false;
   if (first.action.description === second.action.description) return false;
+  // Which land to play is rarely worth a call: about a quarter of close calls in offline games
+  // were one basic against another, and the bot's color logic already handles it (ADR 0041).
+  if (first.action.type === 'playLand' && second.action.type === 'playLand') return false;
   return true;
 }
 
 export interface BotAnswer {
   response: DecisionResponse;
   uncertain: boolean;
+  /** Action ids of the bot's two best options, best first (fewer when the menu is smaller). */
+  topActionIds?: number[];
+  /** The bot's score for its best option, in LEP: how much the decision is worth. */
+  topScore?: number;
 }
 
 export class BotTactician {
@@ -85,6 +92,8 @@ export class BotTactician {
     return {
       response: scored.response,
       uncertain: isUncertain(request, scored.ranked, this.margin),
+      topActionIds: scored.ranked.slice(0, 2).map((entry) => entry.action.id),
+      ...(scored.ranked[0] === undefined ? {} : { topScore: scored.ranked[0].score }),
     };
   }
 

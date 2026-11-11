@@ -24,6 +24,8 @@ export interface JevActionPolicyOptions {
   minConfidence: number;
   minTopTwoMargin: number;
   maxActions?: number;
+  /** Offer a targeted action once per legal target (see `AiConfig.jevExpandTargets`). */
+  expandTargets?: boolean;
   contextOptions?: ContextOptions;
   mode?: 'active' | 'shadow';
   onTrace?: JevTraceObserver;
@@ -39,8 +41,9 @@ export type JevPolicyOutcome =
       response: DecisionResponse;
       meta: CallMeta;
       classification: TacticalDecisionClassification;
-      confidence: number;
-      topTwoMargin: number;
+      /** Null when Jev reported neither confidence nor probabilities. */
+      confidence: number | null;
+      topTwoMargin: number | null;
       probabilities: Record<string, number>;
     }
   | {
@@ -56,13 +59,26 @@ export interface JevTacticalPolicy {
     request: DecisionRequest,
     view: PlayerView,
     guidance?: TacticalGuidance,
+    hints?: JevDecideHints,
   ): Promise<JevPolicyOutcome>;
+}
+
+export interface JevDecideHints {
+  /** Replaces the default Choice instructions for this one decision. */
+  instructions?: string;
+  /**
+   * Use Jev's answer whatever its confidence. For a choice between options already judged close,
+   * where a paid answer is better than a pass (ADR 0041).
+   */
+  ignoreThresholds?: boolean;
 }
 
 export interface JevPolicyBinding {
   policy: JevTacticalPolicy;
   mode: 'active' | 'shadow';
   cancel?: () => void;
+  /** Receives shadow and fallthrough comparisons against the answer actually played. */
+  onComparison?: JevComparisonObserver;
 }
 
 export interface JevDecisionTrace {
@@ -80,10 +96,53 @@ export interface JevDecisionTrace {
   topTwoMargin?: number;
   probabilities?: Record<string, number>;
   selectedActionId?: number;
+  /** The option key Jev chose; differs from `action_<id>` when targets were expanded. */
+  selectedOption?: string;
+  costUsd?: number;
+  latencyMs?: number;
   engineAcceptance: 'accepted' | 'not_checked' | 'not_applicable';
 }
 
 export type JevTraceObserver = (trace: JevDecisionTrace) => void;
+
+/**
+ * Jev's answer set beside the answer the seat actually played (shadow mode, or a Jev fallthrough
+ * that another answerer settled). This is the evidence for "would Jev have agreed?".
+ */
+export interface JevComparison {
+  schemaVersion: 1;
+  logicalRequestId: string;
+  seat: string;
+  turn: number;
+  decisionType: string;
+  /** Who produced the played answer. */
+  playedBy: 'bot' | 'model' | 'fallback';
+  playedActionId: number;
+  /** Whether the bot called this decision close (bot mode only). */
+  botUncertain?: boolean;
+  jevOutcome: 'answered' | JevFallthroughReason;
+  jevActionId?: number;
+  /** Same action and same targets as the played answer. */
+  agreed?: boolean;
+  /** Same action, any targets. */
+  sameAction?: boolean;
+  confidence?: number;
+  topTwoMargin?: number;
+}
+
+export type JevComparisonObserver = (comparison: JevComparison) => void;
+
+/** Same action, and the same object in every target slot. */
+export function sameResponse(left: DecisionResponse, right: DecisionResponse): boolean {
+  if (left.actionId !== right.actionId) return false;
+  const key = (response: DecisionResponse): string =>
+    JSON.stringify(
+      [...(response.targets ?? [])]
+        .sort((a, b) => a.slot - b.slot)
+        .map((target) => [target.slot, target.choice]),
+    );
+  return key(left) === key(right);
+}
 
 function callMeta(result: JevActionResult): CallMeta {
   return {
@@ -104,6 +163,21 @@ function callMeta(result: JevActionResult): CallMeta {
     rawResponse: result.meta.rawResponse,
     ...(result.meta.costUsd === undefined ? {} : { costUsd: result.meta.costUsd }),
     costSource: result.meta.costUsd === undefined ? 'unknown' : 'reported',
+  };
+}
+
+function scores(
+  adaptation: Extract<JevDecisionAdaptation, { kind: 'accepted' }>,
+  result: JevActionResult,
+): Partial<JevDecisionTrace> {
+  return {
+    ...(adaptation.confidence === null ? {} : { confidence: adaptation.confidence }),
+    ...(adaptation.topTwoMargin === null ? {} : { topTwoMargin: adaptation.topTwoMargin }),
+    probabilities: adaptation.probabilities,
+    selectedActionId: adaptation.response.actionId,
+    selectedOption: result.answer.choice,
+    ...(result.meta.costUsd === undefined ? {} : { costUsd: result.meta.costUsd }),
+    latencyMs: result.meta.latencyMs,
   };
 }
 
@@ -137,6 +211,7 @@ export class JevActionPolicy implements JevTacticalPolicy {
     request: DecisionRequest,
     view: PlayerView,
     guidance?: TacticalGuidance,
+    hints?: JevDecideHints,
   ): Promise<JevPolicyOutcome> {
     const built = buildJevActionRequest(
       this.options.model,
@@ -145,6 +220,10 @@ export class JevActionPolicy implements JevTacticalPolicy {
       guidance,
       this.options.contextOptions,
       this.options.maxActions,
+      {
+        expandTargets: this.options.expandTargets === true,
+        ...(hints?.instructions === undefined ? {} : { instructions: hints.instructions }),
+      },
     );
     if (built.kind === 'unsupported') {
       this.trace(request, built.classification, {
@@ -211,10 +290,7 @@ export class JevActionPolicy implements JevTacticalPolicy {
         validationResult: 'invalid',
         networkAttempted: true,
         model: result.meta.responseModel,
-        confidence: adaptation.confidence,
-        topTwoMargin: adaptation.topTwoMargin,
-        probabilities: adaptation.probabilities,
-        selectedActionId: adaptation.response.actionId,
+        ...scores(adaptation, result),
         engineAcceptance: 'not_applicable',
       });
       return {
@@ -225,20 +301,24 @@ export class JevActionPolicy implements JevTacticalPolicy {
         adaptation,
       };
     }
-    if (
-      adaptation.confidence < this.options.minConfidence ||
-      adaptation.topTwoMargin < this.options.minTopTwoMargin
-    ) {
+    // An unreported score passes only a zero threshold: unknown is never treated as confident.
+    const strict = hints?.ignoreThresholds !== true;
+    const belowConfidence =
+      strict &&
+      this.options.minConfidence > 0 &&
+      (adaptation.confidence === null || adaptation.confidence < this.options.minConfidence);
+    const belowMargin =
+      strict &&
+      this.options.minTopTwoMargin > 0 &&
+      (adaptation.topTwoMargin === null || adaptation.topTwoMargin < this.options.minTopTwoMargin);
+    if (belowConfidence || belowMargin) {
       this.trace(request, built.classification, {
         outcome: 'fallthrough',
         fallbackReason: 'low_confidence',
         validationResult: 'valid',
         networkAttempted: true,
         model: result.meta.responseModel,
-        confidence: adaptation.confidence,
-        topTwoMargin: adaptation.topTwoMargin,
-        probabilities: adaptation.probabilities,
-        selectedActionId: adaptation.response.actionId,
+        ...scores(adaptation, result),
         engineAcceptance: 'not_applicable',
       });
       return {
@@ -255,10 +335,7 @@ export class JevActionPolicy implements JevTacticalPolicy {
       validationResult: 'valid',
       networkAttempted: true,
       model: result.meta.responseModel,
-      confidence: adaptation.confidence,
-      topTwoMargin: adaptation.topTwoMargin,
-      probabilities: adaptation.probabilities,
-      selectedActionId: adaptation.response.actionId,
+      ...scores(adaptation, result),
       engineAcceptance:
         (this.options.mode ?? 'active') === 'shadow' ? 'not_applicable' : 'not_checked',
     });

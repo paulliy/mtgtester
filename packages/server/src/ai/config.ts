@@ -94,6 +94,16 @@ export interface AiConfig {
   /** Most own turns a seat's knobs are reused before the strategist is asked again. Default 3. */
   strategistMaxReuseTurns: number;
   /**
+   * Stream OpenRouter responses (ADR 0040). An aborted stream stops generation and billing at
+   * supported providers; an aborted plain request is billed in full. Default: true.
+   */
+  streamResponses: boolean;
+  /**
+   * Retry a call that hit our own deadline. Default: false, because the provider may have billed
+   * the slow attempt and the bot can answer the decision for free.
+   */
+  retryOnTimeout: boolean;
+  /**
    * Filter out OpenRouter providers that do not support prompt caching.
    * Default: true.
    */
@@ -162,6 +172,30 @@ export interface AiConfig {
   jevRequestTimeoutMs: number;
   /** Maximum menu size admitted to Jev, capped by the model's Choice limit. */
   jevMaxActions: number;
+  /**
+   * What answers a decision Jev was asked but did not settle (unsupported shape, low confidence,
+   * transport failure). `model`: the chat tactician, as before. `bot`: the card-aware bot's own
+   * answer, which costs nothing. Env: `AI_JEV_FALLBACK`. Default: `model`.
+   */
+  jevFallback: 'model' | 'bot';
+  /**
+   * In shadow mode, which decisions Jev is asked about beside the seat's real answerer. `all`:
+   * every decision the bot or chat tactician answers. `uncertain`: only the bot's close calls.
+   * Env: `AI_JEV_SHADOW_SCOPE`. Default: `all`.
+   */
+  jevShadowScope: 'all' | 'uncertain';
+  /**
+   * On a bot close call, what Jev chooses from. `top2`: only the bot's two best options, and its
+   * answer is always used, since a paid pass is waste. `full`: the whole menu, with thresholds.
+   * Env: `AI_JEV_CLOSE_CALL_MENU`. Default: `top2`.
+   */
+  jevCloseCallMenu: 'top2' | 'full';
+  /**
+   * Offer a targeted action once per legal target, so Jev can answer menus with a target choice
+   * (one undecided slot per action, at most `jevMaxActions` options in all). Env:
+   * `AI_JEV_EXPAND_TARGETS`. Default: true.
+   */
+  jevExpandTargets: boolean;
   /** Calibrated acceptance thresholds. Required before authoritative Jev is enabled. */
   jevMinConfidence: number | null;
   jevMinTopTwoMargin: number | null;
@@ -271,15 +305,19 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   strategistReplan: 'onChange',
   strategistMaxReuseTurns: 3,
   filterNonCachingProviders: true,
+  streamResponses: true,
+  retryOnTimeout: false,
   reasoningEnabled: false,
   reasoningEffort: 'low',
   reasoningTokenHeadroom: 4000,
   preferredMaxLatencySeconds: 0,
   preferredMinThroughput: 0,
   strategist: {
-    models: ['deepseek/deepseek-v4-flash', 'tencent/hy3'],
+    // Paul's pick (2026-11-10): GLM 5.3 Flash at low effort. The strategist is most of the
+    // per-game bill, and its thinking tokens are most of each call (ADR 0040).
+    models: ['z-ai/glm-5.3-flash', 'deepseek/deepseek-v4-flash'],
     reasoningEnabled: true,
-    reasoningEffort: 'medium',
+    reasoningEffort: 'low',
     maxOutputTokens: 1000,
     reasoningTokenHeadroom: 4000,
     requestTimeoutMs: 45000,
@@ -345,6 +383,10 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   jevModel: 'typesafe/jev-1.13',
   jevRequestTimeoutMs: 2_000,
   jevMaxActions: 255,
+  jevFallback: 'model',
+  jevShadowScope: 'all',
+  jevCloseCallMenu: 'top2',
+  jevExpandTargets: true,
   jevMinConfidence: null,
   jevMinTopTwoMargin: null,
 };
@@ -634,6 +676,8 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       env['AI_FILTER_NON_CACHING_PROVIDERS'] || env['OPENROUTER_FILTER_NON_CACHING'],
       DEFAULT_AI_CONFIG.filterNonCachingProviders,
     ),
+    streamResponses: parseBoolean(env['AI_STREAM_RESPONSES'], DEFAULT_AI_CONFIG.streamResponses),
+    retryOnTimeout: parseBoolean(env['AI_RETRY_ON_TIMEOUT'], DEFAULT_AI_CONFIG.retryOnTimeout),
     reasoningEnabled: parseBoolean(
       env['AI_REASONING_ENABLED'] || env[`${preset.envPrefix}_REASONING_ENABLED`],
       DEFAULT_AI_CONFIG.reasoningEnabled,
@@ -720,6 +764,25 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
     jevMaxActions: Math.min(
       255,
       parseNumber(env['AI_JEV_MAX_ACTIONS'], DEFAULT_AI_CONFIG.jevMaxActions),
+    ),
+    jevFallback: parseChoice(
+      env['AI_JEV_FALLBACK'],
+      ['model', 'bot'] as const,
+      DEFAULT_AI_CONFIG.jevFallback,
+    ),
+    jevShadowScope: parseChoice(
+      env['AI_JEV_SHADOW_SCOPE'],
+      ['all', 'uncertain'] as const,
+      DEFAULT_AI_CONFIG.jevShadowScope,
+    ),
+    jevCloseCallMenu: parseChoice(
+      env['AI_JEV_CLOSE_CALL_MENU'],
+      ['top2', 'full'] as const,
+      DEFAULT_AI_CONFIG.jevCloseCallMenu,
+    ),
+    jevExpandTargets: parseBoolean(
+      env['AI_JEV_EXPAND_TARGETS'],
+      DEFAULT_AI_CONFIG.jevExpandTargets,
     ),
     jevMinConfidence: parseOptionalProbability(
       env['AI_JEV_MIN_CONFIDENCE'],
