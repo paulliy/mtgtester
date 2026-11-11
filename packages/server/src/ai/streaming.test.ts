@@ -97,6 +97,13 @@ describe('readChatCompletionStream', () => {
     const res = sse([{ error: { code: 429, message: 'slow down' } }]);
     await expect(readChatCompletionStream(res, newStreamProgress())).rejects.toThrow(/slow down/);
   });
+
+  it('keeps the generation id of an error chunk, so the failed generation can be billed', async () => {
+    const progress = newStreamProgress();
+    const res = sse([{ id: 'gen-failed', error: { code: 502, message: 'provider failed' } }]);
+    await expect(readChatCompletionStream(res, progress)).rejects.toThrow(/provider failed/);
+    expect(progress.id).toBe('gen-failed');
+  });
 });
 
 describe('OpenAiCompatibleClient streaming', () => {

@@ -106,14 +106,16 @@ export async function readChatCompletionStream(
     } catch {
       return; // A partial or non-JSON line carries nothing we can use.
     }
-    if (chunk.error !== undefined) {
-      throw new StreamedProviderError(chunk.error.code, chunk.error.message ?? 'unknown error');
-    }
+    // Take the generation id before acting on an error, so a failed generation can still be
+    // looked up and billed.
     if (progress.id === undefined && typeof chunk.id === 'string') progress.id = chunk.id;
     if (progress.model === undefined && typeof chunk.model === 'string')
       progress.model = chunk.model;
     if (progress.provider === undefined && typeof chunk.provider === 'string')
       progress.provider = chunk.provider;
+    if (chunk.error !== undefined) {
+      throw new StreamedProviderError(chunk.error.code, chunk.error.message ?? 'unknown error');
+    }
     const choice = chunk.choices?.[0];
     const delta = choice?.delta;
     if (typeof delta?.content === 'string') {
