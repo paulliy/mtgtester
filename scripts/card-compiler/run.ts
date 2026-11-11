@@ -3,6 +3,7 @@
  *
  *   bun run scripts/card-compiler/run.ts prepare <trial-dir>       # first-round compile prompts
  *   bun run scripts/card-compiler/run.ts exec <trial-dir> <stage>  # answer pending prompts via the API
+ *       [--executor api|claude|codex|antigravity]                 # ...or via a coding-agent CLI
  *   bun run scripts/card-compiler/run.ts check <trial-dir>         # validate, smoke, next prompts
  *   bun run scripts/card-compiler/run.ts report <trial-dir>        # results.json and summary.md
  *
@@ -593,9 +594,22 @@ export function pendingPrompts(trial: string, stage: string): { prompt: string; 
     .filter((entry) => !existsSync(entry.answer));
 }
 
-async function exec(trial: string, stage: string): Promise<void> {
-  const { answerPrompts } = await import('./provider');
+async function exec(trial: string, stage: string, executor: string): Promise<void> {
   const p = paths(trial);
+  if (executor !== 'api') {
+    const { answerPromptsWithAgent, isAgentKind, AGENT_KINDS } = await import('./agent-cli');
+    if (!isAgentKind(executor))
+      throw new Error(`unknown executor ${executor}; use api, ${AGENT_KINDS.join(', ')}`);
+    await answerPromptsWithAgent(
+      executor,
+      stage,
+      p.prefix(stage),
+      pendingPrompts(trial, stage),
+      `${p.work}/usage.jsonl`,
+    );
+    return;
+  }
+  const { answerPrompts } = await import('./provider');
   const prefix = readFileSync(p.prefix(stage), 'utf8');
   const pending = pendingPrompts(trial, stage);
   await answerPrompts(stage, prefix, pending, `${p.work}/usage.jsonl`);
@@ -720,10 +734,20 @@ function report(trial: string): void {
   console.log('estimate from prompt and answer sizes:', estimate);
 }
 
-const [command, trial, stage] = process.argv.slice(2);
+const argv = process.argv.slice(2);
+const executorFlag = argv.indexOf('--executor');
+let executor = process.env['CARD_COMPILER_EXECUTOR'] ?? 'api';
+if (executorFlag >= 0) {
+  const value = argv[executorFlag + 1];
+  if (value === undefined)
+    throw new Error('--executor needs a value: api, claude, codex or antigravity');
+  executor = value;
+  argv.splice(executorFlag, 2);
+}
+const [command, trial, stage] = argv;
 if (trial === undefined)
   throw new Error(
-    'usage: run.ts <prepare|exec|check|report|recheck|import|queue> <trial-dir> [stage|patch-dir]',
+    'usage: run.ts <prepare|exec|check|report|recheck|import|queue> <trial-dir> [stage|patch-dir] [--executor api|claude|codex|antigravity]',
   );
 if (command === 'queue') queue(process.argv.slice(3));
 else if (command === 'import') {
@@ -733,5 +757,5 @@ else if (command === 'import') {
 else if (command === 'check') check(trial);
 else if (command === 'report') report(trial);
 else if (command === 'recheck') recheck(trial);
-else if (command === 'exec') await exec(trial, stage ?? 'compile');
+else if (command === 'exec') await exec(trial, stage ?? 'compile', executor);
 else throw new Error(`unknown command ${command}`);

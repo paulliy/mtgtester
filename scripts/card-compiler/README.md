@@ -48,7 +48,7 @@ thread, under the card coverage workflow) reviews it.
 ```bash
 bun run scripts/card-compiler/select.ts --out <trial> --count 50 [--xmage rows.json]
 bun run scripts/card-compiler/run.ts prepare <trial>
-bun run scripts/card-compiler/run.ts exec <trial> compile   # needs ANTHROPIC_API_KEY
+bun run scripts/card-compiler/run.ts exec <trial> compile   # needs ANTHROPIC_API_KEY, or --executor (below)
 bun run scripts/card-compiler/run.ts check <trial>          # validate, smoke, write next prompts
 bun run scripts/card-compiler/run.ts exec <trial> compile   # retry rounds, if any
 bun run scripts/card-compiler/run.ts exec <trial> back
@@ -68,6 +68,33 @@ Accepted patches are written to `<trial>/patches/`. Nothing here registers them 
 
 Without an API key, Haiku and Sonnet worker agents answer the prompt files instead of `exec`; cost
 is then estimated from text size in `report`.
+
+### Answering through a coding-agent CLI
+
+`exec` can run each prompt through a coding-agent CLI on your own login instead of the API:
+
+```bash
+bun run scripts/card-compiler/run.ts exec <trial> compile --executor claude       # Claude Code: claude -p
+bun run scripts/card-compiler/run.ts exec <trial> compile --executor codex        # Codex: codex exec
+bun run scripts/card-compiler/run.ts exec <trial> compile --executor antigravity  # Antigravity: agy -p
+```
+
+`--executor api` (the default) is the Claude API path above; `CARD_COMPILER_EXECUTOR` sets the
+default. Each prompt is one headless run, started in a fresh temporary directory so no project
+instructions (CLAUDE.md, AGENTS.md) reach it. Claude Code runs with every tool off and the stage
+prefix as its system prompt. Codex runs `--ephemeral` in a read-only sandbox, and Antigravity in
+print mode, with the prefix placed before the card's prompt. Failures, timeouts and empty answers
+leave the prompt pending, as on the API path, so `exec` can be run again.
+
+Settings (`agent-cli.ts`): `CARD_COMPILER_MODEL` and `CARD_COMPILER_RETRY_MODEL` (Claude Code keeps
+the Haiku and Sonnet defaults; Codex and Antigravity use the CLI's own default unless set),
+`CARD_COMPILER_CONCURRENCY`, `CARD_COMPILER_AGENT_BIN` (the CLI's path when it is not `claude`,
+`codex` or `agy` on PATH) and `CARD_COMPILER_AGENT_TIMEOUT_MS` (default 10 minutes per prompt).
+Claude Code reports its cost, so those runs are priced in `usage.jsonl`. Codex and Antigravity runs
+are logged unpriced, and `report` shows its size-based estimate beside them.
+
+Keep the judge independent. Running `judge` on a different executor or model from `compile` gives a
+second opinion, not the same model checking its own work.
 
 ### Patches from other sources
 
