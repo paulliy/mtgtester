@@ -200,6 +200,19 @@ describe('a model in the tested seat, through the production pipeline', () => {
     expect(result!.cases.length).toBeLessThan(cases.length);
   });
 
+  it("never credits the fallback bot's play to the model on a whole turn", async () => {
+    // Every answer is prose: the pipeline's fallback bot would find the Overrun kill.
+    const fetchImpl = fakeProvider(() => ({ content: 'I would cast Overrun and attack.' }));
+    const [result] = await runLineup(only('overrun-for-the-kill'), lineup, options(fetchImpl));
+    const entry = result!.cases[0]!;
+    expect(entry.run.decisions.every((decision) => decision.source === 'fallback')).toBe(true);
+    expect(entry.run.log.join('\n')).not.toMatch(/Overrun/);
+    // Only what holding still achieves on its own is met: keeping every creature (2 of 10).
+    const met = (entry.score.objectives ?? []).filter((objective) => objective.met);
+    expect(met.map((objective) => objective.label)).toEqual(['P1 loses no creature']);
+    expect(entry.score.score).toBeCloseTo(0.2);
+  }, 60_000);
+
   it('stops a failing provider mid-turn, even if a later request would succeed', async () => {
     const calls: FakeTurn[] = [];
     // The first three requests fail at the provider; from the fourth on it would answer.

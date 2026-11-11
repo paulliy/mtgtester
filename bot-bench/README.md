@@ -99,7 +99,9 @@ How a case is scored:
 - **Whole turn.** The reference lists objectives with points, checked against the engine's final
   state (a seat eliminated, a life total, a card in a zone, an action taken). The score is the
   share of points met. Reference lines (the best line and typical mistakes) are replayed by the
-  engine and shown to judges next to each model's own sequence.
+  engine and shown to judges next to each model's own sequence. A decision the model did not make
+  (the pipeline fell back to its bot, the engine refused the answer, or the turn passed its
+  decision cap) holds the seat still, so nothing the fallback would have achieved is credited.
 
 The reference is investigated with the engine, not asserted. For a one-decision case every legal
 answer is played to the end of the arranged window and its consequences are recorded; for a

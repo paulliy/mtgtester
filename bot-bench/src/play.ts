@@ -323,15 +323,24 @@ export async function playCase(benchCase: BenchCase, makeActor: ActorFactory): P
         const names = namesOf(engine.getState());
         const answer = await actor.decide(request, engine.view(benchCase.actor));
         let played = answer.response;
-        let invalid = validateResponse(answer.response, request) ?? undefined;
-        if (invalid === undefined) {
-          try {
-            engine.submit(answer.response);
-          } catch (cause) {
-            invalid = cause instanceof Error ? cause.message : String(cause);
+        let invalid: string | undefined;
+        if (answer.source === 'fallback') {
+          // The model did not make this decision; the pipeline's fallback bot did. The benchmark
+          // holds the seat still instead, so nothing the fallback would have achieved (an
+          // Overrun, a lethal attack) is credited to the model.
+          played = playTable(request, true);
+        } else {
+          invalid = validateResponse(answer.response, request) ?? undefined;
+          if (invalid === undefined) {
+            try {
+              engine.submit(answer.response);
+            } catch (cause) {
+              invalid = cause instanceof Error ? cause.message : String(cause);
+            }
           }
+          // Likewise for an answer the engine refused: the seat holds still.
+          if (invalid !== undefined) played = playTable(request, true);
         }
-        if (invalid !== undefined) played = playTable(request);
         const described = describeAnswer(request, played, names);
         const record: DecisionRecord = {
           index: decisions.length,
