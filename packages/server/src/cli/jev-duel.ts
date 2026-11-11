@@ -450,7 +450,10 @@ export async function playGame(
       },
     },
   );
-  await Promise.all([...coordinators.values()].map((c) => c.settled()));
+  // Every strategist call, not only the newest: an older one could otherwise keep spending
+  // against the next game's budget or land after the report (as in pool.ts and ai-mode-duel).
+  for (const coordinator of coordinators.values()) coordinator.cancel();
+  await Promise.all([...coordinators.values()].map((c) => c.drained()));
   if (ctx.quiet !== true) process.stderr.write('\n');
   // Let queued and in-flight shadow answers land (and record their comparisons) before cancelling,
   // so a fast game does not drop its last evidence or change it while the report is written.
