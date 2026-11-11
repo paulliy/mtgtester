@@ -14,6 +14,7 @@ import {
   emptyJevTally,
   lineupFor,
   parseSeats,
+  offlineJevTransport,
   playGame,
   presetSetup,
   PRESETS,
@@ -159,6 +160,35 @@ describe('jev-duel', () => {
       expect(JSON.stringify(shadow.engine.getState().eventLog)).toBe(
         JSON.stringify(plain.engine.getState().eventLog),
       );
+    }, 120_000);
+
+    it('collects every shadow answer before the game report, even slow ones', async () => {
+      const stub = offlineJevTransport();
+      let sent = 0;
+      const ctx: GameContext = {
+        ...context(),
+        turnCap: 12,
+        jevTransport: {
+          // Slow, and honours cancellation like the real endpoint does.
+          create: (request, options) =>
+            new Promise((resolve, reject) => {
+              sent++;
+              const timer = setTimeout(() => resolve(stub.create(request, options)), 100);
+              options.signal?.addEventListener('abort', () => {
+                clearTimeout(timer);
+                reject(new Error('aborted'));
+              });
+            }),
+        },
+      };
+      await playGame(ctx, 'shadow-drain', lineup('bot-shadow'), 0);
+      const answered = ctx.traces.filter((t) => t.outcome === 'accepted').length;
+      expect(answered).toBeGreaterThan(0);
+      // Every request sent got its answer recorded before playGame returned.
+      expect(answered).toBe(sent);
+      expect(ctx.jevTallies['bot-shadow'].asked).toBe(ctx.traces.length);
+      expect(ctx.comparisons.filter((c) => c.jevOutcome === 'answered')).toHaveLength(answered);
+      expect(ctx.traces.some((t) => t.fallbackReason === 'cancelled')).toBe(false);
     }, 120_000);
 
     it('lets Jev decide without the chat tactician when the bot is its fallback', async () => {

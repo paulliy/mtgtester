@@ -300,6 +300,8 @@ export interface GameContext {
   /** Every game's counting chat clients, so unpriced attempts can be settled at the end. */
   chatClients: CountingClient[];
   quiet?: boolean;
+  /** Replaces the Jev transport (tests). Defaults to the offline stub offline, else OpenRouter. */
+  jevTransport?: JevDecisionsTransport;
 }
 
 /** Play one game with `lineup` (one preset per seat) and charge every call to its preset. */
@@ -354,8 +356,9 @@ export async function playGame(
   const queue = new RequestQueue(base);
   const logger = new AiCallLogger(null, `jev-duel-${seed}`);
 
-  const jevTransport = offline ? offlineJevTransport() : undefined;
+  const jevTransport = ctx.jevTransport ?? (offline ? offlineJevTransport() : undefined);
   const jevBindings = new Map<Preset, JevPolicyBinding | undefined>();
+  const pendingJev = new Set<Promise<unknown>>();
   const coordinators = new Map<Preset, StrategyCoordinator>();
   for (const preset of new Set(lineup)) {
     const setup = presetSetup(preset, base, thresholds);
@@ -382,28 +385,37 @@ export async function playGame(
       budget,
     );
     const controller = new AbortController();
+    const policy = new JevActionPolicy(client, new RequestQueue({ ...base, concurrency: 2 }), {
+      model: base.jevModel,
+      minConfidence: setup.jev.minConfidence,
+      minTopTwoMargin: setup.jev.minTopTwoMargin,
+      maxActions: base.jevMaxActions,
+      expandTargets: base.jevExpandTargets,
+      mode: setup.jev.mode,
+      signal: controller.signal,
+      onTrace: (trace) => {
+        tally.asked++;
+        if (trace.outcome === 'accepted') tally.accepted++;
+        else {
+          const reason = trace.fallbackReason ?? 'unknown';
+          tally.fallthrough[reason] = (tally.fallthrough[reason] ?? 0) + 1;
+        }
+        traces.push({ ...trace, preset, game });
+      },
+    });
     jevBindings.set(preset, {
       mode: setup.jev.mode,
       cancel: () => controller.abort(),
       onComparison: (comparison) => comparisons.push({ ...comparison, preset, game }),
-      policy: new JevActionPolicy(client, new RequestQueue({ ...base, concurrency: 2 }), {
-        model: base.jevModel,
-        minConfidence: setup.jev.minConfidence,
-        minTopTwoMargin: setup.jev.minTopTwoMargin,
-        maxActions: base.jevMaxActions,
-        expandTargets: base.jevExpandTargets,
-        mode: setup.jev.mode,
-        signal: controller.signal,
-        onTrace: (trace) => {
-          tally.asked++;
-          if (trace.outcome === 'accepted') tally.accepted++;
-          else {
-            const reason = trace.fallbackReason ?? 'unknown';
-            tally.fallthrough[reason] = (tally.fallthrough[reason] ?? 0) + 1;
-          }
-          traces.push({ ...trace, preset, game });
+      // Shadow answers are not awaited by play, so each one is tracked and drained after the game.
+      policy: {
+        decide(...args) {
+          const decision = policy.decide(...args);
+          pendingJev.add(decision);
+          void decision.finally(() => pendingJev.delete(decision)).catch(() => {});
+          return decision;
         },
-      }),
+      },
     });
   }
 
@@ -440,6 +452,10 @@ export async function playGame(
   );
   await Promise.all([...coordinators.values()].map((c) => c.settled()));
   if (ctx.quiet !== true) process.stderr.write('\n');
+  // Let queued and in-flight shadow answers land (and record their comparisons) before cancelling,
+  // so a fast game does not drop its last evidence or change it while the report is written.
+  while (pendingJev.size > 0) await Promise.allSettled([...pendingJev]);
+  await new Promise((resolve) => setTimeout(resolve, 0));
   for (const binding of jevBindings.values()) binding?.cancel?.();
 
   const life: Record<string, number> = {};
