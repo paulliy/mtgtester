@@ -5,8 +5,8 @@ import type { OracleCard } from '@mtg/shared';
 import { buildSupportedPool } from '../cards/pool';
 import { DEFAULT_AI_CONFIG } from '../ai/config';
 import type { JevActionRequest } from '../ai/jev-context';
-import type { JevActionResult } from '../ai/jev-client';
-import type { JevActionClient, JevComparison } from '../ai/jev-policy';
+import { JevResponseValidationError, type JevActionResult } from '../ai/jev-client';
+import type { JevComparison } from '../ai/jev-policy';
 import { emptyTally, type Budget } from './ai-mode-duel';
 import {
   agreementStats,
@@ -14,6 +14,7 @@ import {
   emptyJevTally,
   lineupFor,
   parseSeats,
+  offlineJevTransport,
   playGame,
   presetSetup,
   PRESETS,
@@ -93,14 +94,34 @@ describe('jev-duel', () => {
     expect(b.spentUsd).toBeCloseTo(0.8);
   });
 
-  it('counts a Jev call that failed after it was sent as unpriced, not free', async () => {
-    const inner: JevActionClient = {
-      requestAction: () => Promise.reject(new Error('Jev request timed out')),
-    };
+  it('charges a billed Jev answer the parser rejected, and counts a silent failure as unknown', async () => {
     const tally = emptyJevTally();
-    const client = countingJev(inner, tally, budget(1));
-    await expect(client.requestAction({} as JevActionRequest)).rejects.toThrow('timed out');
-    expect(tally).toMatchObject({ calls: 1, unpricedCalls: 1, costUsd: 0 });
+    const b = budget(1, 10);
+    const rejecting = countingJev(
+      {
+        requestAction: () =>
+          Promise.reject(
+            new JevResponseValidationError('bad confidence', '{}', {
+              promptTokens: 50,
+              responseTokens: 1,
+              costUsd: 0.25,
+            }),
+          ),
+      },
+      tally,
+      b,
+    );
+    await expect(rejecting.requestAction({} as JevActionRequest)).rejects.toThrow('bad confidence');
+    expect(tally).toMatchObject({ calls: 1, promptTokens: 50, costUsd: 0.25 });
+    expect(b.spentUsd).toBeCloseTo(0.25);
+
+    const failing = countingJev(
+      { requestAction: () => Promise.reject(new Error('socket hang up')) },
+      tally,
+      b,
+    );
+    await expect(failing.requestAction({} as JevActionRequest)).rejects.toThrow('socket');
+    expect(tally.unknownCostCalls).toBe(1);
   });
 
   it('summarizes agreement, including on the bot close calls', () => {
@@ -169,6 +190,35 @@ describe('jev-duel', () => {
       expect(JSON.stringify(shadow.engine.getState().eventLog)).toBe(
         JSON.stringify(plain.engine.getState().eventLog),
       );
+    }, 120_000);
+
+    it('collects every shadow answer before the game report, even slow ones', async () => {
+      const stub = offlineJevTransport();
+      let sent = 0;
+      const ctx: GameContext = {
+        ...context(),
+        turnCap: 12,
+        jevTransport: {
+          // Slow, and honours cancellation like the real endpoint does.
+          create: (request, options) =>
+            new Promise((resolve, reject) => {
+              sent++;
+              const timer = setTimeout(() => resolve(stub.create(request, options)), 100);
+              options.signal?.addEventListener('abort', () => {
+                clearTimeout(timer);
+                reject(new Error('aborted'));
+              });
+            }),
+        },
+      };
+      await playGame(ctx, 'shadow-drain', lineup('bot-shadow'), 0);
+      const answered = ctx.traces.filter((t) => t.outcome === 'accepted').length;
+      expect(answered).toBeGreaterThan(0);
+      // Every request sent got its answer recorded before playGame returned.
+      expect(answered).toBe(sent);
+      expect(ctx.jevTallies['bot-shadow'].asked).toBe(ctx.traces.length);
+      expect(ctx.comparisons.filter((c) => c.jevOutcome === 'answered')).toHaveLength(answered);
+      expect(ctx.traces.some((t) => t.fallbackReason === 'cancelled')).toBe(false);
     }, 120_000);
 
     it('lets Jev decide without the chat tactician when the bot is its fallback', async () => {

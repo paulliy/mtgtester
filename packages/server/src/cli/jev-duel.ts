@@ -48,7 +48,13 @@ import {
 import type { AiAttemptObserver } from '../ai/client';
 import { knowledgeFor } from '../ai/bot-tactician';
 import { localCallMeta } from '../ai/logger';
-import { JevClient, type JevActionResult, type JevDecisionsTransport } from '../ai/jev-client';
+import {
+  JevClient,
+  JevResponseValidationError,
+  type JevActionResult,
+  type JevDecisionsTransport,
+  type JevReportedUsage,
+} from '../ai/jev-client';
 import type { JevActionRequest } from '../ai/jev-context';
 import {
   JevActionPolicy,
@@ -63,6 +69,7 @@ import {
   counting,
   emptyTally,
   type Budget,
+  type CountableClient,
   type CountingClient,
   type Tally,
 } from './ai-mode-duel';
@@ -83,8 +90,10 @@ export interface JevTally {
   promptTokens: number;
   responseTokens: number;
   costUsd: number;
-  /** Calls whose response carried no price, and calls that failed after being sent. */
+  /** Calls whose response carried no price. */
   unpricedCalls: number;
+  /** Calls that failed after they were sent and reported no usage: they may have been billed. */
+  unknownCostCalls: number;
   /** Calls refused because the spend cap was reached. */
   cappedCalls: number;
 }
@@ -99,6 +108,7 @@ export function emptyJevTally(): JevTally {
     responseTokens: 0,
     costUsd: 0,
     unpricedCalls: 0,
+    unknownCostCalls: 0,
     cappedCalls: 0,
   };
 }
@@ -185,22 +195,27 @@ export function countingJev(
       }
       budget.calls++;
       tally.calls++;
+      const charge = (usage: JevReportedUsage): void => {
+        tally.promptTokens += usage.promptTokens;
+        tally.responseTokens += usage.responseTokens;
+        if (usage.costUsd === undefined) tally.unpricedCalls++;
+        else {
+          tally.costUsd += usage.costUsd;
+          budget.spentUsd += usage.costUsd;
+        }
+      };
       let result: JevActionResult;
       try {
         result = await inner.requestAction(request, signal);
       } catch (error) {
-        // A timeout or an unreadable answer may still have been billed, and nothing reports what
-        // it cost: count it as unpriced so the comparison does not read it as free.
-        tally.unpricedCalls++;
+        // A rejected answer may still have been billed: charge what it reported, and count a
+        // failure with no usage as cost unknown rather than free.
+        if (error instanceof JevResponseValidationError && error.usage !== undefined) {
+          charge(error.usage);
+        } else tally.unknownCostCalls++;
         throw error;
       }
-      tally.promptTokens += result.meta.promptTokens;
-      tally.responseTokens += result.meta.responseTokens;
-      if (result.meta.costUsd === undefined) tally.unpricedCalls++;
-      else {
-        tally.costUsd += result.meta.costUsd;
-        budget.spentUsd += result.meta.costUsd;
-      }
+      charge(result.meta);
       return result;
     },
   };
@@ -232,18 +247,11 @@ export function offlineJevTransport(): JevDecisionsTransport {
 }
 
 /** Offline chat clients: the tactician is the bot, the strategist returns fixed knobs. */
-function offlineChatClient(
-  engine: Engine,
-  role: 'tactician' | 'strategist',
-): Pick<
-  OpenAiCompatibleClient,
-  'activeModel' | 'requestDecision' | 'setAttemptObserver' | 'settleUnknownCosts'
-> {
+function offlineChatClient(engine: Engine, role: 'tactician' | 'strategist'): CountableClient {
   const knowledge = knowledgeFor(engine);
   return {
     activeModel: `offline-${role}`,
     setAttemptObserver(_observer: AiAttemptObserver | undefined) {},
-    // Offline calls cost nothing, so there is never a bill to look up.
     settleUnknownCosts: () => Promise.resolve({ attempts: [], settledUsd: 0, unresolved: 0 }),
     requestDecision(_prompt, request: DecisionRequest) {
       if (role === 'strategist') {
@@ -260,10 +268,7 @@ function offlineChatClient(
       const response = botDecide(request, view, new Rng(request.requestId), { knowledge });
       return Promise.resolve({ response, meta: { ...localCallMeta(), costUsd: 0 } });
     },
-  } as Pick<
-    OpenAiCompatibleClient,
-    'activeModel' | 'requestDecision' | 'setAttemptObserver' | 'settleUnknownCosts'
-  >;
+  } as CountableClient;
 }
 
 export interface AgreementStats {
@@ -314,12 +319,11 @@ export interface GameContext {
   jevTallies: Record<Preset, JevTally>;
   traces: Array<JevDecisionTrace & { preset: Preset; game: number }>;
   comparisons: Array<JevComparison & { preset: Preset; game: number }>;
-  /**
-   * The counting wrappers, not the raw clients: settling through them credits recovered costs to
-   * each preset's tally and to the shared budget.
-   */
+  /** Every game's counting chat clients, so unpriced attempts can be settled at the end. */
   chatClients: CountingClient[];
   quiet?: boolean;
+  /** Replaces the Jev transport (tests). Defaults to the offline stub offline, else OpenRouter. */
+  jevTransport?: JevDecisionsTransport;
 }
 
 /** Play one game with `lineup` (one preset per seat) and charge every call to its preset. */
@@ -370,13 +374,13 @@ export async function playGame(
     : new OpenAiCompatibleClient(configForRole(base, 'tactician'), budgetedFetch(budget));
   const strategistClient = counting<Preset>(rawStrategist, 'strategist', presetOf, tallies, budget);
   const tacticianClient = counting<Preset>(rawTactician, 'tactician', presetOf, tallies, budget);
-  // Offline clients are free and have nothing to settle.
-  if (!offline) chatClients.push(strategistClient, tacticianClient);
+  chatClients.push(strategistClient, tacticianClient);
   const queue = new RequestQueue(base);
   const logger = new AiCallLogger(null, `jev-duel-${seed}`);
 
-  const jevTransport = offline ? offlineJevTransport() : undefined;
+  const jevTransport = ctx.jevTransport ?? (offline ? offlineJevTransport() : undefined);
   const jevBindings = new Map<Preset, JevPolicyBinding | undefined>();
+  const pendingJev = new Set<Promise<unknown>>();
   const coordinators = new Map<Preset, StrategyCoordinator>();
   for (const preset of new Set(lineup)) {
     const setup = presetSetup(preset, base, thresholds);
@@ -403,28 +407,37 @@ export async function playGame(
       budget,
     );
     const controller = new AbortController();
+    const policy = new JevActionPolicy(client, new RequestQueue({ ...base, concurrency: 2 }), {
+      model: base.jevModel,
+      minConfidence: setup.jev.minConfidence,
+      minTopTwoMargin: setup.jev.minTopTwoMargin,
+      maxActions: base.jevMaxActions,
+      expandTargets: base.jevExpandTargets,
+      mode: setup.jev.mode,
+      signal: controller.signal,
+      onTrace: (trace) => {
+        tally.asked++;
+        if (trace.outcome === 'accepted') tally.accepted++;
+        else {
+          const reason = trace.fallbackReason ?? 'unknown';
+          tally.fallthrough[reason] = (tally.fallthrough[reason] ?? 0) + 1;
+        }
+        traces.push({ ...trace, preset, game });
+      },
+    });
     jevBindings.set(preset, {
       mode: setup.jev.mode,
       cancel: () => controller.abort(),
       onComparison: (comparison) => comparisons.push({ ...comparison, preset, game }),
-      policy: new JevActionPolicy(client, new RequestQueue({ ...base, concurrency: 2 }), {
-        model: base.jevModel,
-        minConfidence: setup.jev.minConfidence,
-        minTopTwoMargin: setup.jev.minTopTwoMargin,
-        maxActions: base.jevMaxActions,
-        expandTargets: base.jevExpandTargets,
-        mode: setup.jev.mode,
-        signal: controller.signal,
-        onTrace: (trace) => {
-          tally.asked++;
-          if (trace.outcome === 'accepted') tally.accepted++;
-          else {
-            const reason = trace.fallbackReason ?? 'unknown';
-            tally.fallthrough[reason] = (tally.fallthrough[reason] ?? 0) + 1;
-          }
-          traces.push({ ...trace, preset, game });
+      // Shadow answers are not awaited by play, so each one is tracked and drained after the game.
+      policy: {
+        decide(...args) {
+          const decision = policy.decide(...args);
+          pendingJev.add(decision);
+          void decision.finally(() => pendingJev.delete(decision)).catch(() => {});
+          return decision;
         },
-      }),
+      },
     });
   }
 
@@ -459,8 +472,15 @@ export async function playGame(
       },
     },
   );
-  await Promise.all([...coordinators.values()].map((c) => c.settled()));
+  // Every strategist call, not only the newest: an older one could otherwise keep spending
+  // against the next game's budget or land after the report (as in pool.ts and ai-mode-duel).
+  for (const coordinator of coordinators.values()) coordinator.cancel();
+  await Promise.all([...coordinators.values()].map((c) => c.drained()));
   if (ctx.quiet !== true) process.stderr.write('\n');
+  // Let queued and in-flight shadow answers land (and record their comparisons) before cancelling,
+  // so a fast game does not drop its last evidence or change it while the report is written.
+  while (pendingJev.size > 0) await Promise.allSettled([...pendingJev]);
+  await new Promise((resolve) => setTimeout(resolve, 0));
   for (const binding of jevBindings.values()) binding?.cancel?.();
 
   const life: Record<string, number> = {};
@@ -585,6 +605,7 @@ async function main(): Promise<void> {
   // Calls we timed out report no cost; ask OpenRouter what they cost (ADR 0040).
   let settledUsd = 0;
   let unsettled = 0;
+  // `settle` also adds each billed cost to its preset's tally.
   for (const client of chatClients) {
     const settlement = await client.settle();
     settledUsd += settlement.settledUsd;

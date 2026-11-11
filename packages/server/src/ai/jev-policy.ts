@@ -133,9 +133,8 @@ export interface JevComparison {
 export type JevComparisonObserver = (comparison: JevComparison) => void;
 
 /**
- * Same action, and the same object in every target slot. With the request, a slot that has a
- * single legal option counts as filled with it when a response leaves it out: the validator
- * accepts the omission and the engine resolves it the same way.
+ * Same action, and the same object in every target slot. With `request`, a slot the response
+ * leaves out but that has exactly one legal option counts as that option, as the engine fills it.
  */
 export function sameResponse(
   left: DecisionResponse,
@@ -143,14 +142,15 @@ export function sameResponse(
   request?: DecisionRequest,
 ): boolean {
   if (left.actionId !== right.actionId) return false;
-  const slots = request?.legalActions.find((action) => action.id === left.actionId)?.targets ?? [];
+  const forced = new Map<number, string>();
+  const action = request?.legalActions.find((candidate) => candidate.id === left.actionId);
+  for (const slot of action?.targets ?? []) {
+    if (slot.options.length === 1) forced.set(slot.slot, slot.options[0]!);
+  }
   const key = (response: DecisionResponse): string => {
-    const chosen = new Map((response.targets ?? []).map((target) => [target.slot, target.choice]));
-    for (const slot of slots) {
-      const only = slot.options.length === 1 ? slot.options[0] : undefined;
-      if (!chosen.has(slot.slot) && only !== undefined) chosen.set(slot.slot, only);
-    }
-    return JSON.stringify([...chosen].sort(([a], [b]) => a - b));
+    const bySlot = new Map(forced);
+    for (const target of response.targets ?? []) bySlot.set(target.slot, target.choice);
+    return JSON.stringify([...bySlot.entries()].sort((a, b) => a[0] - b[0]));
   };
   return key(left) === key(right);
 }

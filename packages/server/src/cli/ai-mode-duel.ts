@@ -108,10 +108,7 @@ export function budgetedFetch(budget: Budget, inner: typeof fetch = fetch): type
  * result, so nothing is charged twice.
  */
 export function counting<M extends string = ModeName>(
-  inner: Pick<
-    OpenAiCompatibleClient,
-    'activeModel' | 'requestDecision' | 'setAttemptObserver' | 'settleUnknownCosts'
-  >,
+  inner: CountableClient,
   role: 'tactician' | 'strategist',
   modeOf: (seat: PlayerId) => M,
   tallies: Record<M, Tally>,
@@ -207,6 +204,12 @@ export function counting<M extends string = ModeName>(
     },
   };
 }
+
+/** The parts of `OpenAiCompatibleClient` that `counting` uses, so tests and offline runs can stub it. */
+export type CountableClient = Pick<
+  OpenAiCompatibleClient,
+  'activeModel' | 'requestDecision' | 'setAttemptObserver' | 'settleUnknownCosts'
+>;
 
 export interface CountingClient extends AiClient {
   /** Look up what OpenRouter billed for unpriced attempts and add it to each mode's tally. */

@@ -32,10 +32,32 @@ export interface JevActionResult {
   meta: JevCallMeta;
 }
 
+/** Usage a response reported, kept even when the rest of it is rejected (it may be billed). */
+export interface JevReportedUsage {
+  promptTokens: number;
+  responseTokens: number;
+  costUsd?: number;
+}
+
+function reportedUsage(value: unknown): JevReportedUsage | undefined {
+  if (!record(value) || !record(value['usage'])) return undefined;
+  const usage = value['usage'];
+  if (!finiteNonNegative(usage['inputTokens']) || !finiteNonNegative(usage['outputTokens'])) {
+    return undefined;
+  }
+  return {
+    promptTokens: usage['inputTokens'],
+    responseTokens: usage['outputTokens'],
+    ...(finiteNonNegative(usage['cost']) ? { costUsd: usage['cost'] } : {}),
+  };
+}
+
 export class JevResponseValidationError extends Error {
   constructor(
     readonly details: string,
     readonly rawResponse: string,
+    /** What the rejected response reported it used, when it said. */
+    readonly usage?: JevReportedUsage,
   ) {
     super(`Invalid Jev response: ${details}`);
     this.name = 'JevResponseValidationError';
@@ -61,7 +83,8 @@ function parseResponse(value: unknown): {
 } {
   const rawResponse = JSON.stringify(value);
   const fail = (details: string): never => {
-    throw new JevResponseValidationError(details, rawResponse);
+    const usage = reportedUsage(value);
+    throw new JevResponseValidationError(details, rawResponse, usage);
   };
   if (!record(value)) return fail('response must be an object');
   if (typeof value['model'] !== 'string' || value['model'].length === 0) {
@@ -246,12 +269,23 @@ export class JevClient {
         status: error instanceof JevResponseValidationError ? 'rejected' : 'transport_error',
         ...(raw === undefined ? {} : { rawResponse: JSON.stringify(raw) }),
         error: error instanceof Error ? error.message : String(error),
-        usage: {
-          promptTokenSource: 'unknown',
-          responseTokenSource: 'unknown',
-          costSource: 'unknown',
-          cacheStatus: 'unknown',
-        },
+        usage:
+          error instanceof JevResponseValidationError && error.usage !== undefined
+            ? {
+                promptTokens: error.usage.promptTokens,
+                responseTokens: error.usage.responseTokens,
+                ...(error.usage.costUsd === undefined ? {} : { costUsd: error.usage.costUsd }),
+                promptTokenSource: 'reported',
+                responseTokenSource: 'reported',
+                costSource: error.usage.costUsd === undefined ? 'unknown' : 'reported',
+                cacheStatus: 'unknown',
+              }
+            : {
+                promptTokenSource: 'unknown',
+                responseTokenSource: 'unknown',
+                costSource: 'unknown',
+                cacheStatus: 'unknown',
+              },
       });
       throw error;
     }

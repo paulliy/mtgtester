@@ -258,45 +258,35 @@ describe('JevActionPolicy', () => {
       policy(client, 0.5).decide(request, view, undefined, { ignoreThresholds: true }),
     ).resolves.toMatchObject({ kind: 'answered', confidence: 0.2 });
   });
-});
 
-describe('sameResponse', () => {
-  const targeted: DecisionRequest = {
-    ...request,
-    legalActions: [
-      { id: 0, type: 'pass', description: 'Pass' },
-      {
-        id: 3,
-        type: 'castSpell',
-        description: 'Cast Bolt',
-        targets: [
-          { slot: 0, options: ['P2'] },
-          { slot: 1, options: ['c1', 'c2'] },
-        ],
-      },
-    ],
-  };
-  const r = (targets: Array<{ slot: number; choice: string }>) => ({
-    requestId: 'r1',
-    actionId: 3,
-    targets,
-  });
-
-  it('counts an omitted forced slot as its only option', () => {
-    const chat = r([{ slot: 1, choice: 'c1' }]);
-    const jev = r([
-      { slot: 0, choice: 'P2' },
-      { slot: 1, choice: 'c1' },
-    ]);
+  it('treats an omitted forced target as the one the engine would fill', () => {
+    const targeted: DecisionRequest = {
+      ...request,
+      legalActions: [
+        {
+          id: 2,
+          type: 'castSpell',
+          description: 'Cast spell',
+          targets: [
+            { slot: 0, options: ['p2'] },
+            { slot: 1, options: ['a', 'b'] },
+          ],
+        },
+      ],
+    };
+    const jev = {
+      requestId: 'r1',
+      actionId: 2,
+      targets: [
+        { slot: 0, choice: 'p2' },
+        { slot: 1, choice: 'a' },
+      ],
+    };
+    const chat = { requestId: 'r1', actionId: 2, targets: [{ slot: 1, choice: 'a' }] };
     expect(sameResponse(jev, chat, targeted)).toBe(true);
-    // Without the request the forced slot cannot be known, so the strict comparison stands.
     expect(sameResponse(jev, chat)).toBe(false);
-  });
-
-  it('still tells different choices apart', () => {
-    expect(
-      sameResponse(r([{ slot: 1, choice: 'c1' }]), r([{ slot: 1, choice: 'c2' }]), targeted),
-    ).toBe(false);
-    expect(sameResponse({ ...r([]), actionId: 0 }, r([]), targeted)).toBe(false);
+    expect(sameResponse(jev, { ...chat, targets: [{ slot: 1, choice: 'b' }] }, targeted)).toBe(
+      false,
+    );
   });
 });
