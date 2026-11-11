@@ -1,7 +1,12 @@
 import type { DecisionRequest, PlayerView } from '@mtg/shared';
 import { describe, expect, it, vi } from 'vitest';
 import type { JevActionResult } from './jev-client';
-import { JevActionPolicy, type JevActionClient, type JevDecisionTrace } from './jev-policy';
+import {
+  JevActionPolicy,
+  sameResponse,
+  type JevActionClient,
+  type JevDecisionTrace,
+} from './jev-policy';
 
 const request: DecisionRequest = {
   requestId: 'r1',
@@ -252,5 +257,36 @@ describe('JevActionPolicy', () => {
     await expect(
       policy(client, 0.5).decide(request, view, undefined, { ignoreThresholds: true }),
     ).resolves.toMatchObject({ kind: 'answered', confidence: 0.2 });
+  });
+
+  it('treats an omitted forced target as the one the engine would fill', () => {
+    const targeted: DecisionRequest = {
+      ...request,
+      legalActions: [
+        {
+          id: 2,
+          type: 'castSpell',
+          description: 'Cast spell',
+          targets: [
+            { slot: 0, options: ['p2'] },
+            { slot: 1, options: ['a', 'b'] },
+          ],
+        },
+      ],
+    };
+    const jev = {
+      requestId: 'r1',
+      actionId: 2,
+      targets: [
+        { slot: 0, choice: 'p2' },
+        { slot: 1, choice: 'a' },
+      ],
+    };
+    const chat = { requestId: 'r1', actionId: 2, targets: [{ slot: 1, choice: 'a' }] };
+    expect(sameResponse(jev, chat, targeted)).toBe(true);
+    expect(sameResponse(jev, chat)).toBe(false);
+    expect(sameResponse(jev, { ...chat, targets: [{ slot: 1, choice: 'b' }] }, targeted)).toBe(
+      false,
+    );
   });
 });

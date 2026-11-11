@@ -132,15 +132,26 @@ export interface JevComparison {
 
 export type JevComparisonObserver = (comparison: JevComparison) => void;
 
-/** Same action, and the same object in every target slot. */
-export function sameResponse(left: DecisionResponse, right: DecisionResponse): boolean {
+/**
+ * Same action, and the same object in every target slot. With `request`, a slot the response
+ * leaves out but that has exactly one legal option counts as that option, as the engine fills it.
+ */
+export function sameResponse(
+  left: DecisionResponse,
+  right: DecisionResponse,
+  request?: DecisionRequest,
+): boolean {
   if (left.actionId !== right.actionId) return false;
-  const key = (response: DecisionResponse): string =>
-    JSON.stringify(
-      [...(response.targets ?? [])]
-        .sort((a, b) => a.slot - b.slot)
-        .map((target) => [target.slot, target.choice]),
-    );
+  const forced = new Map<number, string>();
+  const action = request?.legalActions.find((candidate) => candidate.id === left.actionId);
+  for (const slot of action?.targets ?? []) {
+    if (slot.options.length === 1) forced.set(slot.slot, slot.options[0]!);
+  }
+  const key = (response: DecisionResponse): string => {
+    const bySlot = new Map(forced);
+    for (const target of response.targets ?? []) bySlot.set(target.slot, target.choice);
+    return JSON.stringify([...bySlot.entries()].sort((a, b) => a[0] - b[0]));
+  };
   return key(left) === key(right);
 }
 
