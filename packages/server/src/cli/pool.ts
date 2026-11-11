@@ -295,6 +295,12 @@ async function playAi(pool: SupportedPool, args: Args): Promise<void> {
     createConfiguredJevPolicy(config, env, logger.attemptObserver(), logger.jevTraceObserver()) ??
     undefined;
   const coordinator = new StrategyCoordinator(strategistClient, queue, engine, config, logger);
+  // A strategist call started ahead of a turn can still be running when the game stops. Abort
+  // it and wait for it to end, so its attempt is in the summary and in the cost settlement.
+  const drainStrategist = async (): Promise<void> => {
+    coordinator.cancel();
+    await coordinator.settled().catch(() => undefined);
+  };
 
   const providers = new Map<string, OpenAiDecisionProvider>();
   const providerFor = (playerId: string): OpenAiDecisionProvider => {
@@ -392,6 +398,7 @@ async function playAi(pool: SupportedPool, args: Args): Promise<void> {
     });
   } catch (err) {
     if (err instanceof DailyQuotaExhaustedError || err instanceof NoAvailableModelError) {
+      await drainStrategist();
       const stats = logger.summary();
       console.error(`\n✗ Game abandoned on turn ${engine.getState().turnNumber} — ${err.message}`);
       console.error(
@@ -407,6 +414,7 @@ async function playAi(pool: SupportedPool, args: Args): Promise<void> {
     throw err;
   }
 
+  await drainStrategist();
   console.log('\nGame Result Summary');
   console.log('─'.repeat(19));
   const intentionalCutoff =

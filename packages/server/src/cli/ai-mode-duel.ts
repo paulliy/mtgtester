@@ -328,6 +328,8 @@ async function main(): Promise<void> {
       },
     },
   );
+  // The game is over: abort any strategist call still running instead of paying for it.
+  for (const c of Object.values(coordinators)) c.cancel();
   await Promise.all(Object.values(coordinators).map((c) => c.settled()));
   process.stderr.write('\n');
   // Timed-out and unpriced calls are billed too (ADR 0040); read their cost before reporting.
