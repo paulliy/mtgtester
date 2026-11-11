@@ -6,7 +6,7 @@ import { buildSupportedPool } from '../cards/pool';
 import { DEFAULT_AI_CONFIG } from '../ai/config';
 import type { JevActionRequest } from '../ai/jev-context';
 import type { JevActionResult } from '../ai/jev-client';
-import type { JevComparison } from '../ai/jev-policy';
+import type { JevActionClient, JevComparison } from '../ai/jev-policy';
 import { emptyTally, type Budget } from './ai-mode-duel';
 import {
   agreementStats,
@@ -91,6 +91,16 @@ describe('jev-duel', () => {
     expect(tally).toMatchObject({ calls: 2, promptTokens: 200, cappedCalls: 1 });
     expect(b.capped).toBe(true);
     expect(b.spentUsd).toBeCloseTo(0.8);
+  });
+
+  it('counts a Jev call that failed after it was sent as unpriced, not free', async () => {
+    const inner: JevActionClient = {
+      requestAction: () => Promise.reject(new Error('Jev request timed out')),
+    };
+    const tally = emptyJevTally();
+    const client = countingJev(inner, tally, budget(1));
+    await expect(client.requestAction({} as JevActionRequest)).rejects.toThrow('timed out');
+    expect(tally).toMatchObject({ calls: 1, unpricedCalls: 1, costUsd: 0 });
   });
 
   it('summarizes agreement, including on the bot close calls', () => {

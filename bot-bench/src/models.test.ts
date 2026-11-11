@@ -265,6 +265,30 @@ describe('a model in the tested seat, through the production pipeline', () => {
     expect(cost.perGameUsd).toBeCloseTo((0.01 / priced.length) * 300);
   });
 
+  it('keeps reported charges and estimates only the unpriced attempts', async () => {
+    // The first attempt is billed $0.60 but returns prose; the retry answers with no price.
+    const fetchImpl = fakeProvider((turn) =>
+      turn.attempt === 1
+        ? { content: 'I would pass here.', cost: 0.6, promptTokens: 1000, completionTokens: 10 }
+        : { content: pick(turn, 'Pass priority'), promptTokens: 1000, completionTokens: 10 },
+    );
+    const priced = parseLineup([
+      {
+        id: 'priced',
+        kind: 'llm',
+        provider: 'openrouter',
+        model: 'fake/priced',
+        pricing: { inputPerMTok: 1, outputPerMTok: 1 },
+      },
+    ]);
+    const [result] = await runLineup(only('hold-the-counter'), priced, options(fetchImpl));
+    const decision = result!.cases[0]!.run.decisions[0]!;
+    expect(decision.requests).toBe(2);
+    expect(decision.costSource).toBe('estimated');
+    // $0.60 reported, plus 1,010 tokens at $1 per million for the retry.
+    expect(decision.costUsd).toBeCloseTo(0.60101, 6);
+  });
+
   it('keeps a cost unknown when an earlier attempt may have been billed', async () => {
     // Each request's first attempt starts a generation (it streams an id and some text), then
     // the stream breaks; the retry succeeds and reports its charge. The broken attempt may have

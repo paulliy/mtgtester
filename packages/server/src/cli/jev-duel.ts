@@ -83,7 +83,7 @@ export interface JevTally {
   promptTokens: number;
   responseTokens: number;
   costUsd: number;
-  /** Calls whose response carried no price. */
+  /** Calls whose response carried no price, and calls that failed after being sent. */
   unpricedCalls: number;
   /** Calls refused because the spend cap was reached. */
   cappedCalls: number;
@@ -185,7 +185,15 @@ export function countingJev(
       }
       budget.calls++;
       tally.calls++;
-      const result: JevActionResult = await inner.requestAction(request, signal);
+      let result: JevActionResult;
+      try {
+        result = await inner.requestAction(request, signal);
+      } catch (error) {
+        // A timeout or an unreadable answer may still have been billed, and nothing reports what
+        // it cost: count it as unpriced so the comparison does not read it as free.
+        tally.unpricedCalls++;
+        throw error;
+      }
       tally.promptTokens += result.meta.promptTokens;
       tally.responseTokens += result.meta.responseTokens;
       if (result.meta.costUsd === undefined) tally.unpricedCalls++;

@@ -337,23 +337,31 @@ export function llmActorFactory(entry: LlmEntry, runtime: LlmRuntime): ActorFact
             attempt.usage.responseTokens !== undefined,
         );
         const reported = billed.filter((attempt) => attempt.usage.costUsd !== undefined);
+        // Reported charges are always kept. Only attempts with no reported charge are estimated
+        // from the lineup's price list; without one, the decision's cost stays unknown.
+        const reportedUsd = reported.reduce((sum, a) => sum + (a.usage.costUsd ?? 0), 0);
+        const unpriced = billed.filter((attempt) => attempt.usage.costUsd === undefined);
         let costUsd: number | undefined;
         let costSource: ActorAnswer['costSource'] = 'unknown';
-        if (attempts.length === 0) {
+        if (billed.length === 0) {
+          // No request, or every attempt failed before any generation started: unbilled.
           costUsd = 0;
           costSource = 'not_applicable';
-        } else if (billed.length > 0 && reported.length === billed.length) {
-          costUsd = reported.reduce((sum, attempt) => sum + (attempt.usage.costUsd ?? 0), 0);
+        } else if (unpriced.length === 0) {
+          costUsd = reportedUsd;
           costSource = 'reported';
-        } else if (billed.length === 0) {
-          // Every attempt failed before any generation started (refused, unreachable): unbilled.
-          costUsd = 0;
-          costSource = 'not_applicable';
         } else if (entry.pricing !== undefined) {
+          const pricing = entry.pricing;
           costUsd =
-            (promptTokens * entry.pricing.inputPerMTok +
-              responseTokens * entry.pricing.outputPerMTok) /
-            1_000_000;
+            reportedUsd +
+            unpriced.reduce(
+              (sum, a) =>
+                sum +
+                ((a.usage.promptTokens ?? 0) * pricing.inputPerMTok +
+                  (a.usage.responseTokens ?? 0) * pricing.outputPerMTok) /
+                  1_000_000,
+              0,
+            );
           costSource = 'estimated';
         }
 
