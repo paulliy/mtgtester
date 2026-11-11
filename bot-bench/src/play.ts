@@ -316,9 +316,11 @@ export async function playCase(benchCase: BenchCase, makeActor: ActorFactory): P
         playTable(request);
       } else if (decisions.length >= cap) {
         if (benchCase.scope === 'turn') termination = 'decision_cap';
-        // Past the cap the tested seat holds still: letting the table's bot play it would credit
-        // the bot's moves (an Overrun, a lethal attack) to the model's score.
-        playTable(request, true);
+        // Past a whole turn's cap the tested seat holds still: letting the table's bot play it
+        // would credit the bot's moves (an Overrun, a lethal attack) to the model's score. A
+        // one-decision case is always past its cap after the focus, and keeps the case's own
+        // post-focus policy (`table.actorAfterFocus`), so its consequences play out as reviewed.
+        playTable(request, benchCase.scope === 'turn');
       } else {
         const names = namesOf(engine.getState());
         const answer = await actor.decide(request, engine.view(benchCase.actor));

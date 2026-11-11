@@ -87,6 +87,19 @@ describe('parseBenchCase', () => {
 });
 
 describe('the decision cap', () => {
+  it("keeps a one-decision case's own post-focus policy", async () => {
+    const keep = loadCases().find((benchCase) => benchCase.id === 'keep-blockers-home')!;
+    // The best answer keeps the blockers home; with actorAfterFocus 'heuristic' P1 then blocks
+    // P2's attack next turn and survives, as the reference says.
+    const best = {
+      choose: 'Declare attackers',
+      assign: { 'Serra Angel': 'P4', 'Colossal Dreadmaw': '-', 'Kalonian Tusker': '-' },
+    };
+    const played = await playCase(keep, scriptedActor([best]).factory);
+    const p1 = played.after.find((seat) => seat.seat === 'P1')!;
+    expect(p1.alive).toBe(true);
+  });
+
   it('holds the tested seat still past the cap instead of letting the table play it', async () => {
     const overrun = loadCases().find((benchCase) => benchCase.id === 'overrun-for-the-kill')!;
     const capped = { ...overrun, maxActorDecisions: 1 };
