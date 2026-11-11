@@ -96,6 +96,7 @@ export type {
   PlannedSourceReference,
   PlanPrecondition,
   TurnStrategy,
+  BotSteering,
   LegalAction,
   ActionInteraction,
   TargetSlot,

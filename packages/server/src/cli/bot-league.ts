@@ -1,0 +1,274 @@
+/**
+ * Bot league (ADR 0039): two bot configurations play seeded four-player games against each other,
+ * two seats each, and the run reports wins, draws and end-of-game life share per arm.
+ *
+ * Each seed is played twice with the arms swapped between seat pairs, so deck and seat luck cancel
+ * within a pair. Games run in child processes (`bot-league-game.ts`) under a wall-clock kill, a
+ * few at a time.
+ *
+ *   bun run bot-league [--games N] [--seed S] [--a ARM] [--b ARM] [--turn-cap N] [--jobs N]
+ *                      [--timeout-ms N] [--json out.json]
+ *
+ * ARM is one of the presets in `ARMS` below.
+ */
+
+import { spawn } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import type { OracleCard } from '@mtg/shared';
+import { buildSupportedPool, type SupportedPool } from '../cards/pool';
+import { generateCommanderDeck } from '../decks/generate';
+// Type-only: the game module runs a game when it is the entry point.
+import type { LeagueArm, LeagueGameReply, LeagueGameRequest } from './bot-league-game';
+
+const FIXTURE = 'packages/server/fixtures/coverage-oracle.json';
+
+export const ARMS: Record<string, LeagueArm> = {
+  legacy: { name: 'legacy', legacy: true },
+  policy: { name: 'policy' },
+  knowledge: { name: 'knowledge', knowledge: true },
+  aggro: { name: 'aggro', knowledge: true, steering: { aggression: 0.85 } },
+  control: {
+    name: 'control',
+    knowledge: true,
+    steering: { aggression: 0.3, holdUpMana: 2, avoidOverextending: true },
+  },
+};
+
+interface Args {
+  games: number;
+  seed: string;
+  a: string;
+  b: string;
+  turnCap: number;
+  jobs: number;
+  timeoutMs: number;
+  json?: string;
+}
+
+function parseArgs(argv: string[]): Args {
+  const args: Args = {
+    games: 20,
+    seed: 'league',
+    a: 'knowledge',
+    b: 'legacy',
+    turnCap: 120,
+    jobs: 4,
+    timeoutMs: 180_000,
+  };
+  for (let i = 0; i < argv.length; i++) {
+    const next = argv[i + 1];
+    switch (argv[i]) {
+      case '--games':
+        args.games = Number(next);
+        i++;
+        break;
+      case '--seed':
+        args.seed = next ?? args.seed;
+        i++;
+        break;
+      case '--a':
+        args.a = next ?? args.a;
+        i++;
+        break;
+      case '--b':
+        args.b = next ?? args.b;
+        i++;
+        break;
+      case '--turn-cap':
+        args.turnCap = Number(next);
+        i++;
+        break;
+      case '--jobs':
+        args.jobs = Number(next);
+        i++;
+        break;
+      case '--timeout-ms':
+        args.timeoutMs = Number(next);
+        i++;
+        break;
+      case '--json':
+        if (next !== undefined) args.json = next;
+        i++;
+        break;
+      default:
+        throw new Error(`unknown argument ${argv[i]}`);
+    }
+  }
+  for (const arm of [args.a, args.b]) {
+    if (ARMS[arm] === undefined) {
+      throw new Error(`unknown arm ${arm}; choose from ${Object.keys(ARMS).join(', ')}`);
+    }
+  }
+  return args;
+}
+
+function loadPool(): SupportedPool {
+  const cards = JSON.parse(readFileSync(resolve(FIXTURE), 'utf8')) as OracleCard[];
+  return buildSupportedPool(cards);
+}
+
+const GAME_RUNNER = fileURLToPath(new URL('./bot-league-game.ts', import.meta.url));
+
+type Outcome =
+  | { kind: 'played'; reply: LeagueGameReply }
+  | { kind: 'timeout' }
+  | { kind: 'error'; message: string };
+
+function runInChild(
+  request: LeagueGameRequest,
+  timeoutMs: number,
+  dir: string,
+  n: number,
+): Promise<Outcome> {
+  const payload = join(dir, `game-${n}.json`);
+  writeFileSync(payload, JSON.stringify(request));
+  return new Promise((done) => {
+    const child = spawn('bun', [GAME_RUNNER, payload], { stdio: ['ignore', 'pipe', 'pipe'] });
+    let out = '';
+    let err = '';
+    child.stdout.on('data', (chunk: Buffer) => (out += chunk.toString()));
+    child.stderr.on('data', (chunk: Buffer) => (err += chunk.toString()));
+    const timer = setTimeout(() => child.kill('SIGKILL'), timeoutMs);
+    child.on('close', (code, signal) => {
+      clearTimeout(timer);
+      if (signal === 'SIGKILL') return done({ kind: 'timeout' });
+      if (code !== 0) {
+        // The thrown message, not the tail of the stack, plus the seed to replay the game.
+        const lines = err.trim().split('\n');
+        const thrown = lines.find((l) => /^\s*(\w*Error|error):/.test(l)) ?? lines.at(-1) ?? '';
+        return done({ kind: 'error', message: `${thrown.trim()} (seed ${request.seed})` });
+      }
+      try {
+        done({ kind: 'played', reply: JSON.parse(out) as LeagueGameReply });
+      } catch {
+        done({ kind: 'error', message: `unreadable reply: ${out.slice(0, 200)}` });
+      }
+    });
+  });
+}
+
+interface Tally {
+  wins: Record<string, number>;
+  lifeShare: Record<string, number>;
+  draws: number;
+  /** Games the engine stopped (an engine error or a budget halt): neither a win nor a draw. */
+  halted: number;
+  timeouts: number;
+  errors: string[];
+  games: number;
+  turns: number;
+  ms: number;
+}
+
+async function main(): Promise<void> {
+  const args = parseArgs(process.argv.slice(2));
+  const pool = loadPool();
+  const armA = ARMS[args.a]!;
+  const armB = ARMS[args.b]!;
+  const dir = mkdtempSync(join(tmpdir(), 'bot-league-'));
+  const tally: Tally = {
+    wins: { [armA.name]: 0, [armB.name]: 0 },
+    lifeShare: { [armA.name]: 0, [armB.name]: 0 },
+    draws: 0,
+    halted: 0,
+    timeouts: 0,
+    errors: [],
+    games: 0,
+    turns: 0,
+    ms: 0,
+  };
+
+  const requests: LeagueGameRequest[] = [];
+  for (let g = 0; g < args.games; g++) {
+    const seed = `${args.seed}-${Math.floor(g / 2)}`;
+    const decks = Array.from({ length: 4 }, (_, i) =>
+      generateCommanderDeck(pool, { seed: `${seed}-seat${i + 1}` }),
+    );
+    const swap = g % 2 === 1;
+    const first = swap ? armB : armA;
+    const second = swap ? armA : armB;
+    requests.push({
+      seed,
+      turnCap: args.turnCap,
+      seats: [first, second, first, second],
+      decks: decks.map((d) => ({ commander: d.commander, cards: d.cards })),
+    });
+  }
+
+  let next = 0;
+  const worker = async (): Promise<void> => {
+    while (next < requests.length) {
+      const n = next++;
+      const request = requests[n]!;
+      const outcome = await runInChild(request, args.timeoutMs, dir, n);
+      tally.games++;
+      if (outcome.kind === 'timeout') {
+        tally.timeouts++;
+        console.log(`game ${n}: TIMEOUT`);
+        continue;
+      }
+      if (outcome.kind === 'error') {
+        tally.errors.push(outcome.message);
+        console.log(`game ${n}: ERROR ${outcome.message}`);
+        continue;
+      }
+      const reply = outcome.reply;
+      if (reply.halted) {
+        tally.halted++;
+        console.log(`game ${n}: HALTED ${reply.haltReason ?? ''} (seed ${request.seed})`);
+        continue;
+      }
+      tally.turns += reply.turns;
+      tally.ms += reply.ms;
+      if (reply.winnerArm === null) tally.draws++;
+      else tally.wins[reply.winnerArm]!++;
+      const total = Object.values(reply.life).reduce((s, l) => s + Math.max(0, l), 0);
+      request.seats.forEach((arm, i) => {
+        const life = Math.max(0, reply.life[`P${i + 1}`] ?? 0);
+        tally.lifeShare[arm.name]! += total > 0 ? life / total : 0;
+      });
+      console.log(
+        `game ${n}: ${reply.winnerArm ?? 'draw'} (${reply.turns} turns, ${(reply.ms / 1000).toFixed(1)}s)`,
+      );
+    }
+  };
+  await Promise.all(Array.from({ length: Math.max(1, args.jobs) }, worker));
+  if (tally.errors.length === 0) rmSync(dir, { recursive: true, force: true });
+
+  const decided = tally.wins[armA.name]! + tally.wins[armB.name]!;
+  const rate = decided === 0 ? 0 : tally.wins[armA.name]! / decided;
+  const ci = decided === 0 ? 0 : 1.96 * Math.sqrt((rate * (1 - rate)) / decided);
+  const played = tally.games - tally.timeouts - tally.errors.length - tally.halted;
+  const summary = {
+    a: armA.name,
+    b: armB.name,
+    games: tally.games,
+    decided,
+    draws: tally.draws,
+    halted: tally.halted,
+    timeouts: tally.timeouts,
+    errors: tally.errors.length,
+    wins: tally.wins,
+    aWinRate: Number(rate.toFixed(3)),
+    aWinRate95: [
+      Number(Math.max(0, rate - ci).toFixed(3)),
+      Number(Math.min(1, rate + ci).toFixed(3)),
+    ],
+    lifeShare: Object.fromEntries(
+      Object.entries(tally.lifeShare).map(([k, v]) => [
+        k,
+        Number((v / Math.max(1, played)).toFixed(3)),
+      ]),
+    ),
+    meanTurns: Number((tally.turns / Math.max(1, played)).toFixed(1)),
+    meanGameSeconds: Number((tally.ms / Math.max(1, played) / 1000).toFixed(1)),
+  };
+  console.log(JSON.stringify(summary, null, 2));
+  if (args.json !== undefined)
+    writeFileSync(args.json, JSON.stringify({ args, summary, errors: tally.errors }, null, 2));
+}
+
+void main();

@@ -833,3 +833,106 @@ describe('StrategyCoordinator — plans and deals made after them (ADR 0035)', (
     expect(coordinator.tryExecutePlan(req)?.actionId).toBe(1);
   });
 });
+
+describe('StrategyCoordinator — bot-led knobs (ADR 0039)', () => {
+  const opponentView: PlayerView = {
+    ...view,
+    opponents: [
+      {
+        seat: 'P2',
+        life: 40,
+        handSize: 7,
+        librarySize: 90,
+        graveyard: [],
+        commanders: [],
+        poisonCounters: 0,
+        commanderDamageDealtToYou: 0,
+      },
+    ],
+  };
+  function knobsClient(
+    steering: unknown,
+    plannedActions?: unknown[],
+  ): {
+    client: AiClient;
+    resolve: () => void;
+  } {
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    const client: AiClient = {
+      activeModel: 'm',
+      requestDecision: vi.fn().mockImplementation(async () => {
+        await gate;
+        return {
+          response: {
+            requestId: 'strategy',
+            actionId: 0,
+            turnStrategy: {
+              intent: 'Pressure P2.',
+              ...(plannedActions === undefined ? {} : { plannedActions }),
+              steering,
+            },
+          },
+          meta: {
+            model: 'm',
+            promptTokens: 1,
+            responseTokens: 1,
+            latencyMs: 1,
+            wasRetry: false,
+            wasFallback: false,
+            rawResponse: '{}',
+          },
+        } as AiCallResult;
+      }),
+    };
+    return { client, resolve: release };
+  }
+  const engine = {
+    view: vi.fn().mockReturnValue(opponentView),
+    addDebug: vi.fn(),
+  } as unknown as Engine;
+  const queue = { enqueue: <T>(fn: () => Promise<T>) => fn() };
+  const botConfig = { ...DEFAULT_AI_CONFIG, tacticalMode: 'bot' as const };
+
+  it('keeps knobs that arrive after the turn has moved on', async () => {
+    const { client, resolve } = knobsClient({ aggression: 0.9, targetOrder: ['P2'] });
+    const coordinator = new StrategyCoordinator(client, queue, engine, botConfig);
+    coordinator.prepare(request({ turn: 1, activePlayer: 'P1' }));
+    // P1's turn ends and P2's begins before the strategist answers.
+    coordinator.prepare(request({ turn: 2, activePlayer: 'P2', decidingPlayer: 'P2' }));
+    resolve();
+    await coordinator.settled();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(coordinator.steeringFor('P1')).toEqual({ aggression: 0.9, targetOrder: ['P2'] });
+  });
+
+  it('cleans knobs before they reach the plan, and drops junk', async () => {
+    const { client, resolve } = knobsClient({
+      aggression: 7,
+      targetOrder: ['P2', 'P9'],
+      hold: 'x'.repeat(10_000),
+    });
+    const coordinator = new StrategyCoordinator(client, queue, engine, botConfig);
+    coordinator.prepare(request());
+    resolve();
+    await coordinator.settled();
+    expect(coordinator.guidanceFor('P1').strategy?.steering).toEqual({
+      aggression: 1,
+      targetOrder: ['P2'],
+    });
+  });
+
+  it('accepts a knobs-only answer in bot mode but not in model mode', async () => {
+    for (const [config, expected] of [
+      [botConfig, 'Pressure P2.'],
+      [DEFAULT_AI_CONFIG, undefined],
+    ] as const) {
+      const { client, resolve } = knobsClient({ aggression: 0.5 });
+      const coordinator = new StrategyCoordinator(client, queue, engine, config);
+      coordinator.prepare(request());
+      resolve();
+      await coordinator.settled();
+      expect(coordinator.guidanceFor('P1').strategy?.intent).toBe(expected);
+    }
+  });
+});

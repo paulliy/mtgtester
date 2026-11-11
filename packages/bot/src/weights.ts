@@ -146,6 +146,100 @@ export const WEIGHTS = {
   },
 
   /**
+   * Card-aware scoring (ADR 0039, `policy.ts`). Starting values chosen by hand and then checked
+   * by the bot league (`bun run bot-league`); every one is a candidate for self-play tuning.
+   */
+  policy: {
+    /** A land drop beats every spell: it is free mana for the rest of the game. */
+    playLand: 12,
+    /** Activating a mana ability on its own just floats mana that empties at the next step. */
+    floatManaPenalty: -1,
+    /** A cast is worth this plus its mana value times `castPerManaValue`, plus its roles. */
+    castBase: 1.5,
+    castPerManaValue: 1,
+    /** Per point of printed power on a creature spell. */
+    creaturePowerOnCast: 0.3,
+    /** Extra value per role; context-dependent roles are computed in `policy.ts`. */
+    roles: {
+      removal: 3,
+      wipe: 0,
+      counter: 0,
+      draw: 2,
+      ramp: 2.5,
+      tokens: 1.5,
+      pump: 0.5,
+      protection: 0.5,
+      recursion: 1.5,
+      tutor: 2,
+      burn: 1.5,
+      lifegain: 0.5,
+      discard: 1,
+      extraTurn: 6,
+      /** A counterspell with an opponent's spell on top of the stack. */
+      counterAnswer: 8,
+      /** A counterspell with nothing to counter: never cast it into an empty stack. */
+      counterIdle: -20,
+    },
+    /** Share of the best hostile target's LEP that a removal spell is worth. */
+    removalTargetShare: 0.6,
+    /** Share of a creature's worth counted when the targeted damage would leave it alive. */
+    nonlethalDamageShare: 0.1,
+    /** A board wipe is worth this share of (their creatures - our creatures x weight). */
+    wipeNetShare: 0.4,
+    wipeOwnLossWeight: 1.3,
+    /** A pump or protection instant cast with nothing on the stack and no combat. */
+    idleTrickPenalty: 8,
+    /** A sorcery-speed cast that drops untapped mana below the strategist's `holdUpMana`. */
+    holdUpPenalty: 10,
+    /** Strategist steering by card name. */
+    prioritizeBonus: 6,
+    holdPenalty: 12,
+    /** `avoidOverextending`: creature spells past this many creatures lose this much. */
+    overextendCreatures: 3,
+    overextendPenalty: 4,
+
+    /** Opponent threat: board value share plus life lost share, plus the steering order bonus. */
+    threatBoardWeight: 0.1,
+    threatLowLifeWeight: 0.15,
+    steeringTargetBonus: 3,
+    /** How much opponent threat counts when choosing among hostile targets. */
+    targetPressureWeight: 0.3,
+
+    /** Attacks: aggression thresholds for safe and risky swings, and target bonuses. */
+    defaultAggression: 0.5,
+    safeAttackAggression: 0.2,
+    riskyAttackAggression: 0.75,
+    safeAttackBonus: 2,
+    lethalAttackBonus: 50,
+    planeswalkerAttackDiscount: 1,
+
+    /** Mulligan: keep 7 with this many lands, inclusive. */
+    mulliganMinLands: 2,
+    mulliganMaxLands: 5,
+    /** Bottom a land when lands are more than this share of the hand. */
+    bottomLandShare: 0.45,
+
+    /** Equip that only moves equipment to a worse creature, or crew with nothing to attack. */
+    pointlessActivation: -2,
+
+    /** Values for things in hand and on the battlefield. */
+    landPermanentValue: 2,
+    otherPermanentBase: 2,
+    otherPermanentPerManaValue: 0.8,
+    enoughLands: 6,
+    excessLandCardValue: 0.5,
+    neededLandCardValue: 3,
+    spellCardBase: 1,
+    spellCardPerManaValue: 0.6,
+
+    /** Resolution choices: accepting a may-trigger beats declining it. */
+    acceptOptional: 1,
+    choiceBase: 20,
+    /** An "another target" action whose slots cannot all get different objects. */
+    impossibleTargets: -100,
+  },
+
+  /**
    * Table diplomacy (ADR 0035). Off unless a game enables it, and every number here is a starting
    * value for the self-play comparison the ADR asks for, not a measured one.
    */

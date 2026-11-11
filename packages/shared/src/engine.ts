@@ -362,6 +362,28 @@ export interface TurnStrategy {
   threatOrder?: PlayerId[];
   manaPlan?: string;
   plannedActions: PlannedAction[];
+  /** Knobs for the heuristic bot when it plays the turn instead of the tactician (ADR 0039). */
+  steering?: BotSteering;
+}
+
+/**
+ * How a strategist steers the heuristic bot (ADR 0039). Every field is optional and advisory:
+ * the bot still scores only engine-legal actions, and an absent field keeps the bot's default.
+ * Card names are matched case-insensitively against visible cards; unknown names are ignored.
+ */
+export interface BotSteering {
+  /** 0 keeps creatures home, 0.5 is the default, 1 attacks with everything that can deal damage. */
+  aggression?: number;
+  /** Opponent seats in the order to pressure them, first is the main target of attacks and removal. */
+  targetOrder?: PlayerId[];
+  /** Cards to cast or activate ahead of others when they are on the menu. */
+  prioritize?: string[];
+  /** Cards to keep in hand for now. */
+  hold?: string[];
+  /** Mana to leave untapped through opponents' turns for instant-speed answers. */
+  holdUpMana?: number;
+  /** Keep creatures in hand beyond what the plan needs, because a board wipe is likely. */
+  avoidOverextending?: boolean;
 }
 
 /**
