@@ -45,7 +45,7 @@ import {
   StrategyCoordinator,
   type AiConfig,
 } from '../ai';
-import type { AiAttemptObserver, AiClient } from '../ai/client';
+import type { AiAttemptObserver } from '../ai/client';
 import { knowledgeFor } from '../ai/bot-tactician';
 import { localCallMeta } from '../ai/logger';
 import { JevClient, type JevActionResult, type JevDecisionsTransport } from '../ai/jev-client';
@@ -58,7 +58,14 @@ import {
   type JevPolicyBinding,
 } from '../ai/jev-policy';
 import { OPENROUTER_BASE_URL } from '../ai/jev-runtime';
-import { budgetedFetch, counting, emptyTally, type Budget, type Tally } from './ai-mode-duel';
+import {
+  budgetedFetch,
+  counting,
+  emptyTally,
+  type Budget,
+  type CountingClient,
+  type Tally,
+} from './ai-mode-duel';
 
 const FIXTURE = 'packages/server/fixtures/coverage-oracle.json';
 const SEATS: PlayerId[] = ['P1', 'P2', 'P3', 'P4'];
@@ -299,7 +306,11 @@ export interface GameContext {
   jevTallies: Record<Preset, JevTally>;
   traces: Array<JevDecisionTrace & { preset: Preset; game: number }>;
   comparisons: Array<JevComparison & { preset: Preset; game: number }>;
-  chatClients: OpenAiCompatibleClient[];
+  /**
+   * The counting wrappers, not the raw clients: settling through them credits recovered costs to
+   * each preset's tally and to the shared budget.
+   */
+  chatClients: CountingClient[];
   quiet?: boolean;
 }
 
@@ -349,16 +360,10 @@ export async function playGame(
   const rawTactician = offline
     ? offlineChatClient(engine, 'tactician')
     : new OpenAiCompatibleClient(configForRole(base, 'tactician'), budgetedFetch(budget));
-  if (rawStrategist instanceof OpenAiCompatibleClient) chatClients.push(rawStrategist);
-  if (rawTactician instanceof OpenAiCompatibleClient) chatClients.push(rawTactician);
   const strategistClient = counting<Preset>(rawStrategist, 'strategist', presetOf, tallies, budget);
-  const tacticianClient: AiClient = counting<Preset>(
-    rawTactician,
-    'tactician',
-    presetOf,
-    tallies,
-    budget,
-  );
+  const tacticianClient = counting<Preset>(rawTactician, 'tactician', presetOf, tallies, budget);
+  // Offline clients are free and have nothing to settle.
+  if (!offline) chatClients.push(strategistClient, tacticianClient);
   const queue = new RequestQueue(base);
   const logger = new AiCallLogger(null, `jev-duel-${seed}`);
 
@@ -539,7 +544,7 @@ async function main(): Promise<void> {
   const traces: Array<JevDecisionTrace & { preset: Preset; game: number }> = [];
   const comparisons: Array<JevComparison & { preset: Preset; game: number }> = [];
   const records: GameRecord[] = [];
-  const chatClients: OpenAiCompatibleClient[] = [];
+  const chatClients: CountingClient[] = [];
 
   console.log(
     `${offline ? 'OFFLINE (no network, numbers are a wiring check) — ' : ''}${games} game(s), turn cap ${turnCap}`,
@@ -573,7 +578,7 @@ async function main(): Promise<void> {
   let settledUsd = 0;
   let unsettled = 0;
   for (const client of chatClients) {
-    const settlement = await client.settleUnknownCosts();
+    const settlement = await client.settle();
     settledUsd += settlement.settledUsd;
     unsettled += settlement.unresolved;
   }
