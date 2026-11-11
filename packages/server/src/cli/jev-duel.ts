@@ -220,11 +220,16 @@ export function offlineJevTransport(): JevDecisionsTransport {
 function offlineChatClient(
   engine: Engine,
   role: 'tactician' | 'strategist',
-): Pick<OpenAiCompatibleClient, 'activeModel' | 'requestDecision' | 'setAttemptObserver'> {
+): Pick<
+  OpenAiCompatibleClient,
+  'activeModel' | 'requestDecision' | 'setAttemptObserver' | 'settleUnknownCosts'
+> {
   const knowledge = knowledgeFor(engine);
   return {
     activeModel: `offline-${role}`,
     setAttemptObserver(_observer: AiAttemptObserver | undefined) {},
+    // Offline calls cost nothing, so there is never a bill to look up.
+    settleUnknownCosts: () => Promise.resolve({ attempts: [], settledUsd: 0, unresolved: 0 }),
     requestDecision(_prompt, request: DecisionRequest) {
       if (role === 'strategist') {
         return Promise.resolve({
@@ -240,7 +245,10 @@ function offlineChatClient(
       const response = botDecide(request, view, new Rng(request.requestId), { knowledge });
       return Promise.resolve({ response, meta: { ...localCallMeta(), costUsd: 0 } });
     },
-  } as Pick<OpenAiCompatibleClient, 'activeModel' | 'requestDecision' | 'setAttemptObserver'>;
+  } as Pick<
+    OpenAiCompatibleClient,
+    'activeModel' | 'requestDecision' | 'setAttemptObserver' | 'settleUnknownCosts'
+  >;
 }
 
 export interface AgreementStats {

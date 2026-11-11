@@ -32,7 +32,7 @@ import {
   StrategyCoordinator,
   type AiConfig,
 } from '../ai';
-import type { AiAttemptObserver, AiClient } from '../ai/client';
+import type { AiAttemptObserver, AiClient, CostSettlement } from '../ai/client';
 import type { AiPrompt } from '../ai/context';
 
 const FIXTURE = 'packages/server/fixtures/coverage-oracle.json';
@@ -50,6 +50,12 @@ export interface Tally {
   failedCalls: number;
   /** Rejected or timed-out attempts that reported tokens but no price; their cost is not in costUsd. */
   unpricedAttempts: number;
+  /** Accepted calls that came back with no price; the cost stays unknown until settled. */
+  unknownCostCalls: number;
+  /** Billed cost of unpriced attempts, read from OpenRouter's generation stats after the game. */
+  settledUsd: number;
+  /** Unpriced attempts whose billed cost could not be found after the game. */
+  unsettledAttempts: number;
 }
 
 export function emptyTally(): Tally {
@@ -62,6 +68,9 @@ export function emptyTally(): Tally {
     costKnown: true,
     failedCalls: 0,
     unpricedAttempts: 0,
+    unknownCostCalls: 0,
+    settledUsd: 0,
+    unsettledAttempts: 0,
   };
 }
 
@@ -99,13 +108,18 @@ export function budgetedFetch(budget: Budget, inner: typeof fetch = fetch): type
  * result, so nothing is charged twice.
  */
 export function counting<M extends string = ModeName>(
-  inner: Pick<OpenAiCompatibleClient, 'activeModel' | 'requestDecision' | 'setAttemptObserver'>,
+  inner: Pick<
+    OpenAiCompatibleClient,
+    'activeModel' | 'requestDecision' | 'setAttemptObserver' | 'settleUnknownCosts'
+  >,
   role: 'tactician' | 'strategist',
   modeOf: (seat: PlayerId) => M,
   tallies: Record<M, Tally>,
   budget: Budget,
-): AiClient {
+): CountingClient {
   const modeByRequest = new Map<string, M>();
+  // Kept after a call ends, so a cost settled after the game still finds its seat's mode.
+  const settledModeByRequest = new Map<string, M>();
   let outer: AiAttemptObserver | undefined;
   const charge = (tally: Tally, promptTokens = 0, responseTokens = 0, costUsd?: number): void => {
     tally.promptTokens += promptTokens;
@@ -113,7 +127,10 @@ export function counting<M extends string = ModeName>(
     if (typeof costUsd === 'number') {
       tally.costUsd += costUsd;
       budget.spentUsd += costUsd;
-    } else tally.costKnown = false;
+    } else {
+      tally.unknownCostCalls++;
+      tally.costKnown = false;
+    }
   };
   inner.setAttemptObserver(async (attempt) => {
     const mode = modeByRequest.get(attempt.logicalRequestId);
@@ -150,6 +167,7 @@ export function counting<M extends string = ModeName>(
         throw new Error('ai-mode-duel spend cap reached');
       }
       modeByRequest.set(request.requestId, mode);
+      settledModeByRequest.set(request.requestId, mode);
       let result: Awaited<ReturnType<AiClient['requestDecision']>>;
       try {
         result = await inner.requestDecision(prompt, request, signal);
@@ -164,7 +182,37 @@ export function counting<M extends string = ModeName>(
       charge(tally, result.meta.promptTokens, result.meta.responseTokens, result.meta.costUsd);
       return result;
     },
+    async settle(options) {
+      const settlement = await inner.settleUnknownCosts(options);
+      for (const attempt of settlement.attempts) {
+        const mode = settledModeByRequest.get(attempt.logicalRequestId);
+        if (mode === undefined) continue;
+        const tally = tallies[mode];
+        const billed = attempt.billed?.costUsd;
+        if (typeof billed !== 'number') {
+          tally.unsettledAttempts++;
+          continue;
+        }
+        tally.settledUsd += billed;
+        tally.costUsd += billed;
+        budget.spentUsd += billed;
+        // An accepted call charged with no price is now priced; when every such call is, the
+        // mode's cost is known again. A failed attempt was already charged at 0.
+        if (attempt.status === 'accepted' && tally.unknownCostCalls > 0) {
+          tally.unknownCostCalls--;
+          if (tally.unknownCostCalls === 0) tally.costKnown = true;
+        }
+      }
+      return settlement;
+    },
   };
+}
+
+export interface CountingClient extends AiClient {
+  /** Look up what OpenRouter billed for unpriced attempts and add it to each mode's tally. */
+  settle(
+    options?: Parameters<OpenAiCompatibleClient['settleUnknownCosts']>[0],
+  ): Promise<CostSettlement>;
 }
 
 function arg(argv: string[], name: string): string | undefined {
@@ -283,8 +331,12 @@ async function main(): Promise<void> {
       },
     },
   );
-  await Promise.all(Object.values(coordinators).map((c) => c.settled()));
+  // The game is over: abort any strategist call still running instead of paying for it.
+  for (const c of Object.values(coordinators)) c.cancel();
+  await Promise.all(Object.values(coordinators).map((c) => c.drained()));
   process.stderr.write('\n');
+  // Timed-out and unpriced calls are billed too (ADR 0040); read their cost before reporting.
+  await Promise.all([strategistClient.settle(), tacticianClient.settle()]);
 
   const life: Record<string, number> = {};
   for (const player of engine.getState().players) {
