@@ -56,9 +56,9 @@ async function play(options: { diplomacy?: boolean; gameMode?: 'singlePlayer' } 
     seed: SEED,
     seats: seats(),
     providerKind: 'random',
-    // 20, not 14: since ADR 0039 the bots attack only where it is safe, and the seeded game
-    // needs a few more turns of pressure before a seat proposes a deal.
-    turnCap: 20,
+    // 24, not 14: since ADR 0039 the bots attack only where it is safe and discard their weakest
+    // cards, and the seeded game needs a few more turns of pressure before a seat proposes a deal.
+    turnCap: 24,
     playbackMode: 'live',
     livePaceMs: 0,
     ...(options.diplomacy !== undefined && { diplomacy: options.diplomacy }),
