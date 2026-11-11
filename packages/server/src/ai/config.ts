@@ -71,6 +71,16 @@ export interface AiConfig {
    */
   decisionCacheEnabled: boolean;
   /**
+   * Stream OpenRouter responses (ADR 0040). An aborted stream stops generation and billing at
+   * supported providers; an aborted plain request is billed in full. Default: true.
+   */
+  streamResponses: boolean;
+  /**
+   * Retry a call that hit our own deadline. Default: false, because the provider may have billed
+   * the slow attempt and the bot can answer the decision for free.
+   */
+  retryOnTimeout: boolean;
+  /**
    * Who answers tactical decisions the local plan, heuristics and cache leave (ADR 0039).
    * `model`: the tactician LLM, as before. `bot`: the card-aware heuristic bot, steered by the
    * strategist's knobs, with the model asked only as `botEscalation` allows.
@@ -271,15 +281,19 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   strategistReplan: 'onChange',
   strategistMaxReuseTurns: 3,
   filterNonCachingProviders: true,
+  streamResponses: true,
+  retryOnTimeout: false,
   reasoningEnabled: false,
   reasoningEffort: 'low',
   reasoningTokenHeadroom: 4000,
   preferredMaxLatencySeconds: 0,
   preferredMinThroughput: 0,
   strategist: {
-    models: ['deepseek/deepseek-v4-flash', 'tencent/hy3'],
+    // Paul's pick (2026-11-10): GLM 5.3 Flash at low effort. The strategist is most of the
+    // per-game bill, and its thinking tokens are most of each call (ADR 0040).
+    models: ['z-ai/glm-5.3-flash', 'deepseek/deepseek-v4-flash'],
     reasoningEnabled: true,
-    reasoningEffort: 'medium',
+    reasoningEffort: 'low',
     maxOutputTokens: 1000,
     reasoningTokenHeadroom: 4000,
     requestTimeoutMs: 45000,
@@ -634,6 +648,8 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       env['AI_FILTER_NON_CACHING_PROVIDERS'] || env['OPENROUTER_FILTER_NON_CACHING'],
       DEFAULT_AI_CONFIG.filterNonCachingProviders,
     ),
+    streamResponses: parseBoolean(env['AI_STREAM_RESPONSES'], DEFAULT_AI_CONFIG.streamResponses),
+    retryOnTimeout: parseBoolean(env['AI_RETRY_ON_TIMEOUT'], DEFAULT_AI_CONFIG.retryOnTimeout),
     reasoningEnabled: parseBoolean(
       env['AI_REASONING_ENABLED'] || env[`${preset.envPrefix}_REASONING_ENABLED`],
       DEFAULT_AI_CONFIG.reasoningEnabled,

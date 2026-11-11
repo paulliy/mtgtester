@@ -227,6 +227,27 @@ function playHeuristic(pool: SupportedPool, seed: string, verbose: boolean): voi
   console.log(`    Final Life Totals:  ${formatPlayerLives(engine)}`);
 }
 
+/**
+ * Timed-out or cut-off attempts report no cost but may still have been billed (ADR 0040). Ask
+ * OpenRouter what they cost and print the billed total. Runs on every exit, including halts and
+ * abandoned games, because those are the runs most likely to have lost calls.
+ */
+async function reportUnreportedCosts(
+  clients: readonly OpenAiCompatibleClient[],
+  reportedUsd: number,
+): Promise<void> {
+  const settlements = await Promise.all(clients.map((client) => client.settleUnknownCosts()));
+  const unreported = settlements.reduce((n, s) => n + s.attempts.length, 0);
+  if (unreported === 0) return;
+  const billed = settlements.reduce((sum, s) => sum + s.settledUsd, 0);
+  const missing = settlements.reduce((n, s) => n + s.unresolved, 0);
+  console.log(
+    `    Unreported Calls:   ${unreported} billed $${billed.toFixed(4)}` +
+      (missing > 0 ? ` (${missing} not found)` : ''),
+  );
+  console.log(`    Billed Total:       $${(reportedUsd + billed).toFixed(4)}`);
+}
+
 async function playAi(pool: SupportedPool, args: Args): Promise<void> {
   const env: Record<string, string | undefined> = { ...process.env };
   if (args.providerUrl !== undefined) env['AI_BASE_URL'] = args.providerUrl;
@@ -274,6 +295,12 @@ async function playAi(pool: SupportedPool, args: Args): Promise<void> {
     createConfiguredJevPolicy(config, env, logger.attemptObserver(), logger.jevTraceObserver()) ??
     undefined;
   const coordinator = new StrategyCoordinator(strategistClient, queue, engine, config, logger);
+  // A strategist call started ahead of a turn can still be running when the game stops. Abort
+  // it and wait for it to end, so its attempt is in the summary and in the cost settlement.
+  const drainStrategist = async (): Promise<void> => {
+    coordinator.cancel();
+    await coordinator.drained();
+  };
 
   const providers = new Map<string, OpenAiDecisionProvider>();
   const providerFor = (playerId: string): OpenAiDecisionProvider => {
@@ -371,6 +398,7 @@ async function playAi(pool: SupportedPool, args: Args): Promise<void> {
     });
   } catch (err) {
     if (err instanceof DailyQuotaExhaustedError || err instanceof NoAvailableModelError) {
+      await drainStrategist();
       const stats = logger.summary();
       console.error(`\n✗ Game abandoned on turn ${engine.getState().turnNumber} — ${err.message}`);
       console.error(
@@ -379,12 +407,14 @@ async function playAi(pool: SupportedPool, args: Args): Promise<void> {
       console.error(
         '  Retry tomorrow, add another key/provider (AI_BASE_URL + AI_API_KEY), or run without --ai.',
       );
+      await reportUnreportedCosts([strategistClient, tacticianClient], stats.totalCostUsd);
       process.exitCode = 1;
       return;
     }
     throw err;
   }
 
+  await drainStrategist();
   console.log('\nGame Result Summary');
   console.log('─'.repeat(19));
   const intentionalCutoff =
@@ -394,6 +424,7 @@ async function playAi(pool: SupportedPool, args: Args): Promise<void> {
     /turn cap/i.test(result.haltReason ?? '');
   if (result.halted && !intentionalCutoff) {
     console.log(`  ✗ HALTED — ${result.haltReason ?? 'unknown reason'}`);
+    await reportUnreportedCosts([strategistClient, tacticianClient], logger.summary().totalCostUsd);
     process.exitCode = 1;
     return;
   }
@@ -436,6 +467,7 @@ async function playAi(pool: SupportedPool, args: Args): Promise<void> {
       console.log(`    Provider Cost:      $${aiStats.totalCostUsd.toFixed(4)}`);
     }
   }
+  await reportUnreportedCosts([strategistClient, tacticianClient], aiStats.totalCostUsd);
 
   const state = engine.getState();
   const firstElimination = state.eventLog.find((event) => event.type === 'playerEliminated');

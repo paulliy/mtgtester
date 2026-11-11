@@ -172,7 +172,7 @@ describe('AI Config', () => {
 
   it('keeps role-specific capacity fallbacks in the default OpenRouter chains', () => {
     const config = loadAiConfig({ OPENROUTER_API_KEY: 'sk-or-123' });
-    expect(config.strategist.models).toEqual(['deepseek/deepseek-v4-flash', 'tencent/hy3']);
+    expect(config.strategist.models).toEqual(['z-ai/glm-5.3-flash', 'deepseek/deepseek-v4-flash']);
     expect(config.tactician.models).toEqual([
       'qwen/qwen3.7-flash',
       'sao10k/l3-lunaris-8b:nitro',
