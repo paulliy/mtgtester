@@ -54,12 +54,19 @@ export interface SpeedMetrics {
 }
 
 export interface CostMetrics {
-  /** Null when the provider reported nothing and the lineup gave no price. */
+  /**
+   * Null when the provider reported nothing and the lineup gave no price. With `source:
+   * 'partial'` it is a lower bound: the sum of the priced decisions only.
+   */
   totalUsd: number | null;
-  source: 'reported' | 'estimated' | 'mixed' | 'unknown' | 'free';
+  /** `partial`: some billed decisions have a price and some do not. */
+  source: 'reported' | 'estimated' | 'mixed' | 'partial' | 'unknown' | 'free';
+  /** Mean over the priced decisions; an unpriced decision is never counted as free. */
   perDecisionUsd: number | null;
   /** `perDecisionUsd` times `DECISIONS_PER_GAME`. */
   perGameUsd: number | null;
+  /** Decisions that made a provider request but have no price, reported or estimated. */
+  unpricedDecisions: number;
   promptTokens: number;
   responseTokens: number;
   promptTokensPerDecision: number | null;
@@ -121,7 +128,6 @@ export function modelMetrics(
   const repeated = [...byCase.values()].filter((keys) => keys.length > 1);
 
   const billable = decisions.filter((decision) => decision.requests > 0);
-  const sources = new Set(billable.map((decision) => decision.costSource));
   const known = billable.filter((decision) => decision.costUsd !== undefined);
   const totalUsd =
     billable.length === 0
@@ -129,18 +135,24 @@ export function modelMetrics(
       : known.length === 0
         ? null
         : known.reduce((sum, decision) => sum + (decision.costUsd ?? 0), 0);
+  const unpricedDecisions = billable.length - known.length;
+  const pricedSources = new Set(known.map((decision) => decision.costSource));
   const costSource: CostMetrics['source'] =
     billable.length === 0
       ? 'free'
       : known.length === 0
         ? 'unknown'
-        : sources.size === 1
-          ? (sources.values().next().value as 'reported' | 'estimated')
-          : 'mixed';
+        : unpricedDecisions > 0
+          ? 'partial'
+          : pricedSources.size === 1
+            ? (pricedSources.values().next().value as 'reported' | 'estimated')
+            : 'mixed';
   const promptTokens = decisions.reduce((sum, decision) => sum + (decision.promptTokens ?? 0), 0);
   const responseTokens = decisions.reduce((sum, d) => sum + (d.responseTokens ?? 0), 0);
+  // Averaged over the priced decisions only: dividing by every billed decision would count the
+  // unpriced ones as free and make a model with incomplete billing look cheaper.
   const perDecisionUsd =
-    totalUsd === null ? null : billable.length === 0 ? 0 : totalUsd / billable.length;
+    totalUsd === null ? null : billable.length === 0 ? 0 : totalUsd / known.length;
 
   return {
     modelId: result.model.id,
@@ -197,6 +209,7 @@ export function modelMetrics(
       source: costSource,
       perDecisionUsd,
       perGameUsd: perDecisionUsd === null ? null : perDecisionUsd * DECISIONS_PER_GAME,
+      unpricedDecisions,
       promptTokens,
       responseTokens,
       promptTokensPerDecision: billable.length === 0 ? null : promptTokens / billable.length,

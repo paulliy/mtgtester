@@ -212,6 +212,25 @@ describe('a model in the tested seat, through the production pipeline', () => {
     expect(result!.cases).toHaveLength(2);
   });
 
+  it('never counts an unpriced decision as free', async () => {
+    let sent = 0;
+    const fetchImpl = fakeProvider((turn) =>
+      // Only the first request reports a charge; the rest come back with no price at all.
+      sent++ === 0
+        ? { content: pick(turn, 'Pass priority'), cost: 0.01 }
+        : { content: pick(turn, 'Pass priority') },
+    );
+    const [result] = await runLineup(only('wrath-then-rebuild'), lineup, options(fetchImpl));
+    const { cost } = modelMetrics(result!, only('wrath-then-rebuild'), 1);
+    expect(sent).toBeGreaterThan(1);
+    expect(cost.source).toBe('partial');
+    expect(cost.unpricedDecisions).toBe(sent - 1);
+    // A lower bound, and an average over the one priced decision, not $0.01 spread over all.
+    expect(cost.totalUsd).toBeCloseTo(0.01);
+    expect(cost.perDecisionUsd).toBeCloseTo(0.01);
+    expect(cost.perGameUsd).toBeCloseTo(3);
+  });
+
   it('stops in the middle of a whole-turn case once the cap is passed', async () => {
     const calls: FakeTurn[] = [];
     const fetchImpl = fakeProvider(

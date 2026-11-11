@@ -204,7 +204,13 @@ export async function writeBundle(
     ['scorecard.schema.json', json(scorecardSchema(input))],
     [
       'data/run.json',
-      json({ ...run.manifest, blind: options.blind, models: shown.models.map((m) => m.model) }),
+      json({
+        ...run.manifest,
+        // The manifest's own ids are the real model ids; a blind bundle lists the aliases instead.
+        modelIds: shown.models.map((m) => m.model.id),
+        blind: options.blind,
+        models: shown.models.map((m) => m.model),
+      }),
     ],
     [
       'data/cases.json',

@@ -104,8 +104,11 @@ within this bundle, and treat small differences as noise.
 
 Use the cost tables: total spend, cost per decision, and the projection to a
 {{DECISIONS_PER_GAME}}-decision game. Each figure carries its source: `reported` (the provider
-returned the charge), `estimated` (tokens times the price list given to the harness) or `unknown`.
-When the cost is unknown, compare token counts instead and say that your confidence is lower.
+returned the charge), `estimated` (tokens times the price list given to the harness), `mixed`
+(some of each), `partial` or `unknown`. `partial` means some billed decisions have no price: the
+total is then a lower bound ("at least"), and the per-decision and per-game figures are averaged
+over the priced decisions only. When the cost is unknown or partial, check the token counts too
+and say that your confidence is lower.
 
 | Score | Anchor (projected cost per {{DECISIONS_PER_GAME}} decisions) |
 | ----: | ------------------------------------------------------------ |

@@ -16,8 +16,20 @@ const cases = loadCases().filter((benchCase) =>
 );
 const lineup = parseLineup([
   { id: 'local-heuristic', kind: 'local', policy: 'heuristic' },
-  { id: 'secret', label: 'Secret Model 9000', kind: 'llm', provider: 'openrouter', model: SECRET },
-  { id: 'other', kind: 'llm', provider: 'openrouter', model: 'fake/other', reasoning: 'low' },
+  {
+    id: 'secret-model-id',
+    label: 'Secret Model 9000',
+    kind: 'llm',
+    provider: 'openrouter',
+    model: SECRET,
+  },
+  {
+    id: 'other-model-id',
+    kind: 'llm',
+    provider: 'openrouter',
+    model: 'fake/other',
+    reasoning: 'low',
+  },
 ]);
 
 /** Model one finds the Bolt; model two always passes or holds back. */
@@ -120,6 +132,9 @@ describe('the judge bundle', () => {
       expect(content, name).not.toContain('Secret Model 9000');
       expect(content, name).not.toContain('FakeBackend');
       expect(content, name).not.toContain('fake/other');
+      // The ids the run was given, which `--models` derives from the model names.
+      expect(content, name).not.toContain('secret-model-id');
+      expect(content, name).not.toContain('other-model-id');
     }
     expect(built.keyPath).not.toBeNull();
     const key = JSON.parse(readFileSync(built.keyPath!, 'utf8')) as {

@@ -12,7 +12,7 @@ import type { CaseAnalysis, OptionRow, TurnAnalysis } from './analysis';
 import { describeChanges } from './analysis';
 import { GRADE_POINTS, type BenchCase, type SingleReference, type TurnReference } from './case';
 import { cell, foldRepeats, meaningfulActions, renderPosition } from './describe';
-import { DECISIONS_PER_GAME, type ModelMetrics } from './metrics';
+import { DECISIONS_PER_GAME, type CostMetrics, type ModelMetrics } from './metrics';
 import type { CaseResult, ModelResult } from './run';
 
 const JUDGE_DIRECTORY = new URL('../judge/', import.meta.url);
@@ -45,6 +45,18 @@ export function dollars(value: number | null): string {
   if (value === null) return 'unknown';
   if (value === 0) return '$0';
   return value < 0.01 ? `$${value.toFixed(5)}` : `$${value.toFixed(3)}`;
+}
+
+/** A total that is only a lower bound when some billed decisions have no price. */
+function totalCost(cost: CostMetrics): string {
+  return cost.source === 'partial' ? `at least ${dollars(cost.totalUsd)}` : dollars(cost.totalUsd);
+}
+
+/** The cost source, with how many billed decisions had no price when that is the case. */
+function costSourceText(cost: CostMetrics): string {
+  return cost.source === 'partial'
+    ? `partial (${cost.unpricedDecisions} decision${cost.unpricedDecisions === 1 ? '' : 's'} unpriced; averages from priced ones)`
+    : cost.source;
 }
 
 function count(value: number | null): string {
@@ -277,8 +289,8 @@ function metricTables(input: ReportInput): string[] {
       ],
       metrics.map((m) => [
         label(m),
-        dollars(m.cost.totalUsd),
-        m.cost.source,
+        totalCost(m.cost),
+        costSourceText(m.cost),
         dollars(m.cost.perDecisionUsd),
         dollars(m.cost.perGameUsd),
         count(m.cost.promptTokensPerDecision),
@@ -675,7 +687,7 @@ export function renderModel(input: ReportInput, model: ModelResult): string {
       `- Accuracy: overall ${percent(metrics.accuracy.overall)}, one-decision ${percent(metrics.accuracy.single)}, whole-turn ${percent(metrics.accuracy.turn)}.`,
       `- Reliability: ${metrics.reliability.firstTryLegal} of ${metrics.reliability.decisions} decisions legal on the first try, ${metrics.reliability.correctiveRetries} corrective retries, ${metrics.reliability.fallbacks} fallbacks.`,
       `- Speed: median ${milliseconds(metrics.speed.p50Ms)}, 90th percentile ${milliseconds(metrics.speed.p90Ms)}, slowest ${milliseconds(metrics.speed.maxMs)}.`,
-      `- Cost: ${dollars(metrics.cost.totalUsd)} total (${metrics.cost.source}), ${dollars(metrics.cost.perDecisionUsd)} per decision, ${dollars(metrics.cost.perGameUsd)} per ${DECISIONS_PER_GAME} decisions.`,
+      `- Cost: ${totalCost(metrics.cost)} total (${costSourceText(metrics.cost)}), ${dollars(metrics.cost.perDecisionUsd)} per decision, ${dollars(metrics.cost.perGameUsd)} per ${DECISIONS_PER_GAME} decisions.`,
       '',
     );
   out.push('## Every decision', '');
