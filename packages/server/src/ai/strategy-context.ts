@@ -8,7 +8,7 @@ import {
   type RecentSeatDecision,
 } from './context';
 import type { SeatDiplomacyContext } from './diplomacy-context';
-import { RULES_PRIMER, STRATEGIST_PRIMER } from './primer';
+import { BOT_STRATEGIST_PRIMER, RULES_PRIMER, STRATEGIST_PRIMER } from './primer';
 
 export type StrategyContextVersion = 'v1' | 'v2';
 
@@ -21,6 +21,21 @@ export interface StrategyContextOptions {
   context?: ContextOptions;
   /** Deals at the table and how to propose one (ADR 0035 phase 4); only in a game with deals. */
   diplomacy?: SeatDiplomacyContext;
+  /** Bot-led mode (ADR 0039): ask for the bot's knobs instead of a planned action list. */
+  botSteering?: boolean;
+}
+
+function botSteeringTask(hasProfile: boolean): Record<string, unknown> {
+  return {
+    horizon: 'this turn and the next few, until the public table changes',
+    requirements: [
+      ...(hasProfile ? ['steer toward yourStrategyProfile'] : []),
+      'rank opponents by public threat and opportunity',
+      'set aggression from life totals, board and the deck plan',
+      'name cards to prioritize or hold only when it matters',
+      'reserve mana only when holding real instant-speed interaction',
+    ],
+  };
 }
 
 function strategyTask(hasProfile: boolean): Record<string, unknown> {
@@ -97,7 +112,9 @@ Use only information in this PlayerView. Other players' hidden cards, decklists,
   else if (archetype !== undefined && archetype.length > 0) {
     payload['yourStrategyProfile'] = { archetype, provenance: 'legacy-archetype-tag' };
   }
-  payload['strategyTask'] = strategyTask(payload['yourStrategyProfile'] !== undefined);
+  const hasProfile = payload['yourStrategyProfile'] !== undefined;
+  payload['strategyTask'] =
+    options.botSteering === true ? botSteeringTask(hasProfile) : strategyTask(hasProfile);
   if (options.diplomacy !== undefined) payload['tableDiplomacy'] = options.diplomacy;
   const budgeted =
     options.context?.useBudgeter === true
@@ -113,12 +130,13 @@ Use only information in this PlayerView. Other players' hidden cards, decklists,
     };
   }
   const userJson = JSON.stringify(finalPayload);
+  const primer = options.botSteering === true ? BOT_STRATEGIST_PRIMER : STRATEGIST_PRIMER;
   return {
     messages: [
-      { role: 'system', content: STRATEGIST_PRIMER },
+      { role: 'system', content: primer },
       { role: 'user', content: userJson },
     ],
-    estimatedTokens: Math.ceil((STRATEGIST_PRIMER.length + userJson.length) / 4),
+    estimatedTokens: Math.ceil((primer.length + userJson.length) / 4),
     ...(budgeted === null ? {} : { contextReport: budgeted.report }),
   };
 }

@@ -275,7 +275,10 @@ export function resolveLlmConfig(entry: LlmEntry, runtime: LlmRuntime): AiConfig
         : Math.max(role.reasoningTokenHeadroom, 4000),
     ...(entry.maxOutputTokens !== undefined && { maxOutputTokens: entry.maxOutputTokens }),
     ...(entry.requestTimeoutMs !== undefined && { requestTimeoutMs: entry.requestTimeoutMs }),
-    // The benchmark measures the tactician alone, and one model at a time.
+    // The benchmark measures the tactician alone, and one model at a time. The model plays every
+    // tactical decision itself: AI_TACTICAL_MODE=bot (ADR 0039) would hand them to the bot and
+    // quietly benchmark the bot instead.
+    tacticalMode: 'model',
     strategistEnabled: false,
     heuristicsEnabled: runtime.mode === 'production',
     decisionCacheEnabled: false,

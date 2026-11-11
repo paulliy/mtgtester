@@ -3,8 +3,17 @@
  * `packages/server/src/ai/` (the LLM path) and not `ai/heuristics.ts` (a cost-skipping shortcut
  * for dominated decisions, a different job). Depends only on `@mtg/shared`.
  */
-export { evaluate, decide } from './evaluate';
-export type { ScoredAction, EvaluateOptions } from './evaluate';
+export { evaluate, decide, decideScored } from './evaluate';
+export type { ScoredAction, ScoredDecision, EvaluateOptions } from './evaluate';
+export { CARD_ROLES } from './card-knowledge';
+export type {
+  CardKnowledge,
+  CardRole,
+  CardTraits,
+  TargetPolarity,
+  WipeSelector,
+} from './card-knowledge';
+export { manaValueOfCost } from './policy';
 export { passesVeto, totalLifeCost, totalSacrificeCount, totalDiscardCount } from './veto';
 export { WEIGHTS } from './weights';
 export { Rng } from './rng';

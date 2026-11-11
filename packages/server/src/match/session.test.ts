@@ -886,7 +886,9 @@ describe('MatchSession — presentation survives a gap in turn numbering', () =>
     // that was never snapshotted.
     expect(lastPresented?.turn).toBe(gameOver?.payload.result.turnCount);
     expect(lastPresented?.atFrontier).toBe(true);
-  });
+    // A whole bot game to deck-out takes about 4-5 s of engine time; the hang this guards
+    // against never ends, so a roomier timeout still catches it.
+  }, 20_000);
 });
 
 /**

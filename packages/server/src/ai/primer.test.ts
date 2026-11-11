@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  BOT_STRATEGIST_PRIMER,
   RULES_PRIMER,
   STRATEGIST_PRIMER,
   TACTICIAN_COMMON_PRIMER,
@@ -110,7 +111,7 @@ describe('Rules Primer', () => {
     expect(tacticianPrimerFor(blocking)).not.toContain('__attacks__');
   });
 
-  it('exposes a catalog with unique ids and one strategist section', () => {
+  it('exposes a catalog with unique ids and both strategist primers', () => {
     const catalog = primerCatalog();
     const ids = catalog.map((section) => section.id);
     expect(new Set(ids).size).toBe(ids.length);
@@ -120,8 +121,13 @@ describe('Rules Primer', () => {
       expect(section.appliesWhen.length).toBeGreaterThan(0);
       expect(section.text).not.toContain('```');
     }
-    expect(catalog.filter((section) => section.role === 'strategist')).toHaveLength(1);
+    expect(
+      catalog.filter((section) => section.role === 'strategist').map((section) => section.id),
+    ).toEqual(['strategist', 'strategist-bot-led']);
     expect(catalog.find((section) => section.id === 'strategist')?.text).toBe(STRATEGIST_PRIMER);
+    expect(catalog.find((section) => section.id === 'strategist-bot-led')?.text).toBe(
+      BOT_STRATEGIST_PRIMER,
+    );
     expect(catalog.find((section) => section.id === 'tactician-common')?.text).toBe(
       TACTICIAN_COMMON_PRIMER,
     );

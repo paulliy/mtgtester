@@ -48,12 +48,12 @@ export const ACTION_DATA_KEYS: Readonly<Record<string, ActionDataKeyInfo>> = {
   instantSpeed: {
     meaning: 'The spell can be cast at instant speed (instant or flash).',
     types: ['boolean'],
-    consumers: ['ai'],
+    consumers: ['ai', 'bot'],
   },
   sourceName: {
     meaning: 'Name of the card or permanent the action comes from.',
     types: ['string'],
-    consumers: ['presentation'],
+    consumers: ['bot', 'presentation'],
   },
   sourceZone: {
     meaning: 'Zone the source is in: hand, command, library, graveyard, exile or battlefield.',
@@ -63,7 +63,7 @@ export const ACTION_DATA_KEYS: Readonly<Record<string, ActionDataKeyInfo>> = {
   manaCost: {
     meaning: 'Mana cost to pay as displayed, after reductions; "free" for a free alternative cast.',
     types: ['string'],
-    consumers: ['presentation'],
+    consumers: ['bot', 'presentation'],
   },
   paymentSourceIds: {
     meaning: "Object ids of the permanents the engine's auto-pay plan would tap.",
@@ -83,7 +83,7 @@ export const ACTION_DATA_KEYS: Readonly<Record<string, ActionDataKeyInfo>> = {
   abilityDescription: {
     meaning: 'Rules text of the ability being activated, or a special-action name.',
     types: ['string'],
-    consumers: ['presentation'],
+    consumers: ['bot', 'presentation'],
   },
   abilityEffectOps: {
     meaning: 'Effect op names of the ability, every mode included, for the smart-yield policy.',
@@ -147,7 +147,7 @@ export const ACTION_DATA_KEYS: Readonly<Record<string, ActionDataKeyInfo>> = {
   producesMana: {
     meaning: 'Colors the land can make, one per tap.',
     types: ['array'],
-    consumers: ['ai', 'engine'],
+    consumers: ['ai', 'bot', 'engine'],
   },
   entersTapped: {
     meaning: 'The land always enters tapped.',
