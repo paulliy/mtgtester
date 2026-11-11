@@ -45,7 +45,7 @@ import {
   StrategyCoordinator,
   type AiConfig,
 } from '../ai';
-import type { AiAttemptObserver, AiClient } from '../ai/client';
+import type { AiAttemptObserver } from '../ai/client';
 import { knowledgeFor } from '../ai/bot-tactician';
 import { localCallMeta } from '../ai/logger';
 import { JevClient, type JevActionResult, type JevDecisionsTransport } from '../ai/jev-client';
@@ -58,7 +58,15 @@ import {
   type JevPolicyBinding,
 } from '../ai/jev-policy';
 import { OPENROUTER_BASE_URL } from '../ai/jev-runtime';
-import { counting, emptyTally, type Budget, type Tally } from './ai-mode-duel';
+import {
+  budgetedFetch,
+  counting,
+  emptyTally,
+  type Budget,
+  type CountableClient,
+  type CountingClient,
+  type Tally,
+} from './ai-mode-duel';
 
 const FIXTURE = 'packages/server/fixtures/coverage-oracle.json';
 const SEATS: PlayerId[] = ['P1', 'P2', 'P3', 'P4'];
@@ -217,14 +225,12 @@ export function offlineJevTransport(): JevDecisionsTransport {
 }
 
 /** Offline chat clients: the tactician is the bot, the strategist returns fixed knobs. */
-function offlineChatClient(
-  engine: Engine,
-  role: 'tactician' | 'strategist',
-): Pick<OpenAiCompatibleClient, 'activeModel' | 'requestDecision' | 'setAttemptObserver'> {
+function offlineChatClient(engine: Engine, role: 'tactician' | 'strategist'): CountableClient {
   const knowledge = knowledgeFor(engine);
   return {
     activeModel: `offline-${role}`,
     setAttemptObserver(_observer: AiAttemptObserver | undefined) {},
+    settleUnknownCosts: () => Promise.resolve({ attempts: [], settledUsd: 0, unresolved: 0 }),
     requestDecision(_prompt, request: DecisionRequest) {
       if (role === 'strategist') {
         return Promise.resolve({
@@ -240,7 +246,7 @@ function offlineChatClient(
       const response = botDecide(request, view, new Rng(request.requestId), { knowledge });
       return Promise.resolve({ response, meta: { ...localCallMeta(), costUsd: 0 } });
     },
-  } as Pick<OpenAiCompatibleClient, 'activeModel' | 'requestDecision' | 'setAttemptObserver'>;
+  } as CountableClient;
 }
 
 export interface AgreementStats {
@@ -291,7 +297,8 @@ export interface GameContext {
   jevTallies: Record<Preset, JevTally>;
   traces: Array<JevDecisionTrace & { preset: Preset; game: number }>;
   comparisons: Array<JevComparison & { preset: Preset; game: number }>;
-  chatClients: OpenAiCompatibleClient[];
+  /** Every game's counting chat clients, so unpriced attempts can be settled at the end. */
+  chatClients: CountingClient[];
   quiet?: boolean;
 }
 
@@ -337,20 +344,13 @@ export async function playGame(
 
   const rawStrategist = offline
     ? offlineChatClient(engine, 'strategist')
-    : new OpenAiCompatibleClient(configForRole(base, 'strategist'));
+    : new OpenAiCompatibleClient(configForRole(base, 'strategist'), budgetedFetch(budget));
   const rawTactician = offline
     ? offlineChatClient(engine, 'tactician')
-    : new OpenAiCompatibleClient(configForRole(base, 'tactician'));
-  if (rawStrategist instanceof OpenAiCompatibleClient) chatClients.push(rawStrategist);
-  if (rawTactician instanceof OpenAiCompatibleClient) chatClients.push(rawTactician);
+    : new OpenAiCompatibleClient(configForRole(base, 'tactician'), budgetedFetch(budget));
   const strategistClient = counting<Preset>(rawStrategist, 'strategist', presetOf, tallies, budget);
-  const tacticianClient: AiClient = counting<Preset>(
-    rawTactician,
-    'tactician',
-    presetOf,
-    tallies,
-    budget,
-  );
+  const tacticianClient = counting<Preset>(rawTactician, 'tactician', presetOf, tallies, budget);
+  chatClients.push(strategistClient, tacticianClient);
   const queue = new RequestQueue(base);
   const logger = new AiCallLogger(null, `jev-duel-${seed}`);
 
@@ -531,7 +531,7 @@ async function main(): Promise<void> {
   const traces: Array<JevDecisionTrace & { preset: Preset; game: number }> = [];
   const comparisons: Array<JevComparison & { preset: Preset; game: number }> = [];
   const records: GameRecord[] = [];
-  const chatClients: OpenAiCompatibleClient[] = [];
+  const chatClients: CountingClient[] = [];
 
   console.log(
     `${offline ? 'OFFLINE (no network, numbers are a wiring check) — ' : ''}${games} game(s), turn cap ${turnCap}`,
@@ -564,8 +564,9 @@ async function main(): Promise<void> {
   // Calls we timed out report no cost; ask OpenRouter what they cost (ADR 0040).
   let settledUsd = 0;
   let unsettled = 0;
+  // `settle` also adds each billed cost to its preset's tally.
   for (const client of chatClients) {
-    const settlement = await client.settleUnknownCosts();
+    const settlement = await client.settle();
     settledUsd += settlement.settledUsd;
     unsettled += settlement.unresolved;
   }

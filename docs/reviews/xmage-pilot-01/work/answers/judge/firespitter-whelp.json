@@ -1,0 +1,6 @@
+{
+  "verdict": "different",
+  "differences": [
+    "Damage source: Text A has this creature dealing the damage, while Text B has each opponent taking damage with no source named."
+  ]
+}

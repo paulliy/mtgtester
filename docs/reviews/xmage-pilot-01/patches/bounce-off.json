@@ -1,0 +1,36 @@
+{
+  "name": "Bounce Off",
+  "oracleId": "d9c29e6e-5949-4599-bf74-b9539e753f76",
+  "source": "xmage@31ede542",
+  "handledLines": ["Return target creature or Vehicle to its owner's hand."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "subtype",
+                "value": "Vehicle"
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "returnToHand",
+          "target": 0
+        }
+      ]
+    }
+  }
+}

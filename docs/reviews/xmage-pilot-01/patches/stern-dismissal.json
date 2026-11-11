@@ -1,0 +1,39 @@
+{
+  "name": "Stern Dismissal",
+  "oracleId": "319d5cf8-ab72-401e-b04e-c13a7a6c1aac",
+  "source": "xmage@31ede542",
+  "handledLines": [
+    "Return target creature or enchantment an opponent controls to its owner's hand."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "controller": "opponent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "type",
+                "value": "Enchantment"
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "returnToHand",
+          "target": 0
+        }
+      ]
+    }
+  }
+}

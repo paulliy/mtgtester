@@ -1,0 +1,39 @@
+{
+  "name": "Otepec Huntmaster",
+  "oracleId": "41623eab-38b5-4058-8de2-e6b8706de7a2",
+  "source": "xmage@31ede542",
+  "handledLines": ["{T}: Target Dinosaur gains haste until end of turn."],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "filter": {
+                "kind": "subtype",
+                "value": "Dinosaur"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": 0,
+              "keyword": "haste"
+            }
+          ],
+          "description": "{T}: Target Dinosaur gains haste until end of turn."
+        }
+      }
+    ]
+  }
+}

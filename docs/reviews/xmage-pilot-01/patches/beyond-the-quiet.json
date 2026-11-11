@@ -1,0 +1,31 @@
+{
+  "name": "Beyond the Quiet",
+  "oracleId": "c96424e7-63c4-4f07-959f-6ad09f91279a",
+  "source": "xmage@31ede542",
+  "handledLines": ["Exile all creatures and Spacecraft."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "exileEach",
+          "selector": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "subtype",
+                "value": "Spacecraft"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

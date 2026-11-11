@@ -1,0 +1,1 @@
+Spells you cast that are white or black cost {1} less to cast.

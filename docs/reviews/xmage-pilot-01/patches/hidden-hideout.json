@@ -1,0 +1,55 @@
+{
+  "name": "Hidden Hideout",
+  "oracleId": "b639e1fe-d099-4cab-a0d0-a1b33c7f31dd",
+  "source": "xmage@31ede542",
+  "handledLines": [
+    "{2}, {T}: Target creature you control with a counter on it gains lifelink until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "controller": "you",
+              "filter": {
+                "kind": "hasAnyCounter"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": 0,
+              "keyword": "lifelink"
+            }
+          ],
+          "description": "{2}, {T}: Target creature you control with a counter on it gains lifelink until end of turn."
+        }
+      }
+    ]
+  }
+}

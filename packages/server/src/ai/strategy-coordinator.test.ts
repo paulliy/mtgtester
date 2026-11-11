@@ -588,6 +588,33 @@ describe('StrategyCoordinator', () => {
     expect(client.requestDecision).toHaveBeenCalledTimes(1);
   });
 
+  it('cancel() and drained() reach every outstanding call, not only the newest', async () => {
+    const signals: AbortSignal[] = [];
+    const client: AiClient = {
+      activeModel: 'test-model',
+      requestDecision: vi.fn().mockImplementation((_prompt, _request, signal?: AbortSignal) => {
+        if (signal !== undefined) signals.push(signal);
+        return new Promise((_resolve, reject) => {
+          signal?.addEventListener('abort', () => reject(new Error('aborted')));
+        });
+      }),
+    };
+    const engine = {
+      view: vi.fn().mockReturnValue(view),
+      addDebug: vi.fn(),
+    } as unknown as Engine;
+    const queue = { enqueue: <T>(fn: () => Promise<T>) => fn() };
+    const coordinator = new StrategyCoordinator(client, queue, engine, DEFAULT_AI_CONFIG);
+
+    coordinator.prefetch('g1', 1, 'P1');
+    coordinator.prefetch('g1', 2, 'P2');
+    expect(signals).toHaveLength(2);
+
+    coordinator.cancel();
+    await coordinator.drained();
+    expect(signals.map((s) => s.aborted)).toEqual([true, true]);
+  });
+
   it('truncates past decision history at maximum limit configured by strategyRecentDecisionLimit', () => {
     const client = strategist();
     const engine = {

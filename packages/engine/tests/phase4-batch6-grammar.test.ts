@@ -167,7 +167,12 @@ describe('Phase 4 batch 6: keywords', () => {
     const ctx = createGame(gameConfig(forestsPod(), { seed: 'p6-gadwick-x' }));
     const gadwick = creature(
       'When Gadwick enters, draw X cards.\nWhenever you cast a blue spell, tap target nonland permanent an opponent controls.',
-      { name: 'Gadwick, the Wizened', manaCost: '{X}{U}{U}{U}' },
+      {
+        name: 'Gadwick, the Wizened',
+        manaCost: '{X}{U}{U}{U}',
+        // Gadwick calls itself "Gadwick"; only a legendary card uses a short name (CR 201.5).
+        typeLine: 'Legendary Creature — Human Wizard',
+      },
     );
     const entered = spawn(ctx, 'P1', gadwick);
     entered.announcedX = 3;

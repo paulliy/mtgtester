@@ -1,0 +1,4 @@
+Type line: Land
+
+Behavior:
+{"activatedAbilities":[{"costs":[{"kind":"mana","cost":{"generic":2,"colored":{"W":0,"U":0,"B":0,"R":0,"G":0},"colorless":0}},{"kind":"tap"}],"timing":"any","ability":{"kind":"activated","targets":[{"kind":"permanent","filter":{"kind":"anyOf","of":[{"kind":"subtype","value":"Bird"},{"kind":"subtype","value":"Cat"},{"kind":"subtype","value":"Dog"},{"kind":"subtype","value":"Goat"},{"kind":"subtype","value":"Ox"},{"kind":"subtype","value":"Snake"}]}}],"effects":[{"op":"putCounters","target":0,"counter":"+1/+1","count":1}]}}]}

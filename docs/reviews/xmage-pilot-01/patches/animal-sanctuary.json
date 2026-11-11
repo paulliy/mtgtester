@@ -1,0 +1,79 @@
+{
+  "name": "Animal Sanctuary",
+  "oracleId": "f3c40943-1d7c-4ea2-b34f-8df8b6775701",
+  "source": "xmage@31ede542",
+  "handledLines": ["{2}, {T}: Put a +1/+1 counter on target Bird, Cat, Dog, Goat, Ox, or Snake."],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "permanent",
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Bird"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Cat"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Dog"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Goat"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Ox"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Snake"
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "putCounters",
+              "target": 0,
+              "counter": "+1/+1",
+              "count": 1
+            }
+          ],
+          "description": "{2}, {T}: Put a +1/+1 counter on target Bird, Cat, Dog, Goat, Ox, or Snake."
+        }
+      }
+    ]
+  }
+}

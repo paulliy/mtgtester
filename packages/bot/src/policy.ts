@@ -18,7 +18,13 @@ import type {
   TargetChoice,
 } from '@mtg/shared';
 import { NO_ATTACK_TARGET } from '@mtg/shared';
-import type { CardKnowledge, CardRole, CardTraits, TargetPolarity } from './card-knowledge';
+import type {
+  CardKnowledge,
+  CardRole,
+  CardTraits,
+  TargetPolarity,
+  WipeSelector,
+} from './card-knowledge';
 import { WEIGHTS } from './weights';
 
 const P = WEIGHTS.policy;
@@ -191,6 +197,24 @@ function slotPolarity(action: LegalAction, slot: number, ctx: PolicyContext): Ta
   return fromIr ?? 'neutral';
 }
 
+/** Fixed damage the IR says this slot deals, or null when unknown or not a damage slot. */
+function slotDamage(action: LegalAction, slot: number, ctx: PolicyContext): number | null {
+  const traits = traitsFor(ctx, sourceNameOf(action, ctx.view));
+  const index = abilityIndexOf(action);
+  const damage =
+    action.type === 'activateAbility' && index !== undefined
+      ? traits?.abilityDamage?.[index]?.[slot]
+      : traits?.spellDamage?.[slot];
+  return damage ?? null;
+}
+
+/** Whether `damage` destroys this permanent: enough to meet its toughness, and not indestructible. */
+function damageKills(p: PermanentView, damage: number): boolean {
+  if (p.keywords?.some((k) => /^indestructible$/i.test(k)) === true) return false;
+  if (p.toughness === undefined || p.toughness === null) return true;
+  return damage >= p.toughness;
+}
+
 interface Candidate {
   /** Who controls or is the option: a seat id, or undefined for an unknown object. */
   owner: PlayerId | undefined;
@@ -227,13 +251,21 @@ function optionScore(
   polarity: TargetPolarity,
   ctx: PolicyContext,
   pressure: Map<PlayerId, number>,
+  damage: number | null = null,
 ): number {
   const c = describeOption(option, ctx);
   const mine = c.owner === ctx.view.seat;
   if (polarity === 'hostile') {
     if (mine) return -c.value - 100;
     if (c.owner === undefined) return 0;
-    return c.value + (pressure.get(c.owner) ?? 0) * P.targetPressureWeight;
+    // Damage that leaves a creature alive takes only a sliver of its worth (Bolt on a 10/10).
+    const creature =
+      damage === null ? undefined : ctx.view.battlefield.find((p) => p.id === option);
+    const share =
+      creature !== undefined && isCreaturePermanent(creature) && !damageKills(creature, damage!)
+        ? P.nonlethalDamageShare
+        : 1;
+    return c.value * share + (pressure.get(c.owner) ?? 0) * P.targetPressureWeight;
   }
   if (polarity === 'friendly') {
     if (mine) return c.value;
@@ -289,12 +321,13 @@ export function chooseTargets(action: LegalAction, ctx: PolicyContext): TargetCh
     // hostile slot onto our own permanent or a friendly one onto an opponent's.
     const fresh = slot.options.filter((o) => !taken.has(o));
     const polarity = slot.options.length <= 1 ? 'neutral' : slotPolarity(action, slot.slot, ctx);
+    const damage = slotDamage(action, slot.slot, ctx);
     const pick = (options: readonly string[]): { option: string; score: number } => {
       let option = options[0] as string;
       let score = polarity === 'neutral' ? 0 : -Infinity;
       if (polarity !== 'neutral') {
         for (const o of options) {
-          const value = optionScore(o, polarity, ctx, pressure);
+          const value = optionScore(o, polarity, ctx, pressure, damage);
           if (value > score) {
             score = value;
             option = o;
@@ -331,7 +364,10 @@ function bestTargetValue(
   // number, not its position.
   (action.targets ?? []).forEach((slot) => {
     if (slotPolarity(action, slot.slot, ctx) !== polarity) return;
-    const value = Math.max(...slot.options.map((o) => optionScore(o, polarity, ctx, pressure)));
+    const damage = slotDamage(action, slot.slot, ctx);
+    const value = Math.max(
+      ...slot.options.map((o) => optionScore(o, polarity, ctx, pressure, damage)),
+    );
     best = best === null ? value : Math.max(best, value);
   });
   return best;
@@ -470,6 +506,90 @@ function targetsStack(view: PlayerView, action: LegalAction): boolean {
   return (action.targets ?? []).some((t) => t.options.some((o) => onStack.has(o)));
 }
 
+/** The printed type line split into its types and supertypes, and its subtypes. */
+function typeLineParts(p: PermanentView): { types: string[]; subtypes: string[] } | undefined {
+  if (p.typeLine === undefined) return undefined;
+  const [left, right] = p.typeLine.split(/\s+[—-]\s+/);
+  const words = (text: string | undefined): string[] =>
+    (text ?? '')
+      .split(/\s+/)
+      .filter((w) => w.length > 0)
+      .map((w) => w.toLowerCase());
+  return { types: words(left), subtypes: words(right) };
+}
+
+/**
+ * Evaluate a sweeper's selector against a permanent: true or false where every leaf it needs is
+ * one the view can answer, undefined otherwise (an unknown leaf, a face-down permanent). Callers
+ * treat undefined as "affected", which is how the bot valued every sweeper before.
+ */
+export function matchesSelector(
+  selector: WipeSelector | undefined,
+  p: PermanentView,
+  seat: PlayerId,
+): boolean | undefined {
+  if (selector === undefined) return undefined;
+  const children = (): readonly WipeSelector[] =>
+    selector.of === undefined
+      ? []
+      : Array.isArray(selector.of)
+        ? selector.of
+        : [selector.of as WipeSelector];
+  const value = (selector.value ?? '').toLowerCase();
+  switch (selector.kind) {
+    case 'type':
+      // The type line is the printed one; a crewed Vehicle or an animated land is a creature now.
+      if (value === 'creature') return isCreaturePermanent(p);
+      return typeLineParts(p)?.types.includes(value);
+    case 'supertype':
+      return typeLineParts(p)?.types.includes(value);
+    case 'subtype':
+      return typeLineParts(p)?.subtypes.includes(value);
+    case 'name':
+      return p.name.toLowerCase() === value;
+    case 'controller':
+      if (selector.who === 'you') return p.controller === seat;
+      if (selector.who === 'opponents') return p.controller !== seat;
+      return undefined;
+    case 'tapped':
+      return p.tapped;
+    case 'hasKeyword':
+      return p.keywords?.some((k) => k.toLowerCase() === (selector.keyword ?? '').toLowerCase());
+    case 'powerAtLeast':
+      return p.power == null || selector.n === undefined ? undefined : p.power >= selector.n;
+    case 'powerAtMost':
+      return p.power == null || selector.n === undefined ? undefined : p.power <= selector.n;
+    case 'toughnessAtLeast':
+      return p.toughness == null || selector.n === undefined
+        ? undefined
+        : p.toughness >= selector.n;
+    case 'not': {
+      const inner = matchesSelector(children()[0], p, seat);
+      return inner === undefined ? undefined : !inner;
+    }
+    case 'allOf': {
+      let unknown = false;
+      for (const child of children()) {
+        const r = matchesSelector(child, p, seat);
+        if (r === false) return false;
+        if (r === undefined) unknown = true;
+      }
+      return unknown ? undefined : true;
+    }
+    case 'anyOf': {
+      let unknown = false;
+      for (const child of children()) {
+        const r = matchesSelector(child, p, seat);
+        if (r === true) return true;
+        if (r === undefined) unknown = true;
+      }
+      return unknown ? undefined : false;
+    }
+    default:
+      return undefined;
+  }
+}
+
 function roleValue(roles: readonly CardRole[], action: LegalAction, ctx: PolicyContext): number {
   const { view } = ctx;
   let value = 0;
@@ -488,11 +608,17 @@ function roleValue(roles: readonly CardRole[], action: LegalAction, ctx: PolicyC
         break;
       }
       case 'wipe': {
+        // Only the creatures the sweep would actually remove count, on either side.
+        const traits = traitsFor(ctx, sourceNameOf(action, view));
+        const lost = (p: PermanentView): boolean =>
+          isCreaturePermanent(p) &&
+          matchesSelector(traits?.wipeSelector, p, view.seat) !== false &&
+          (traits?.wipeDamage === undefined || damageKills(p, traits.wipeDamage));
         const mine = view.battlefield
-          .filter((p) => p.controller === view.seat && isCreaturePermanent(p))
+          .filter((p) => p.controller === view.seat && lost(p))
           .reduce((s, p) => s + permanentValue(p, ctx), 0);
         const theirs = view.battlefield
-          .filter((p) => p.controller !== view.seat && isCreaturePermanent(p))
+          .filter((p) => p.controller !== view.seat && lost(p))
           .reduce((s, p) => s + permanentValue(p, ctx), 0);
         value += (theirs - mine * P.wipeOwnLossWeight) * P.wipeNetShare;
         break;
@@ -697,17 +823,33 @@ const DECLINES: ReadonlySet<string> = new Set([
   'declineGift',
 ]);
 
-function subjectOf(action: LegalAction): ObjectId | undefined {
-  const interaction = action.interaction as { subjectId?: unknown } | undefined;
-  return typeof interaction?.subjectId === 'string' ? interaction.subjectId : undefined;
+/**
+ * The card an option is about. A menu built by the engine's `chooseCard` (discard, sacrifice,
+ * return from graveyard) carries no payload, so its interaction has no subject id; the card is
+ * named only in the option's presentation, which the deciding seat is shown anyway.
+ */
+function presentedCardOf(action: LegalAction, ctx: PolicyContext) {
+  const subject = ctx.request.presentation?.actions?.[action.id]?.subjects[0];
+  return subject?.kind === 'card' ? subject.card : undefined;
 }
 
-function subjectValue(id: ObjectId, ctx: PolicyContext): number | null {
+function subjectOf(action: LegalAction, ctx: PolicyContext): ObjectId | undefined {
+  const interaction = action.interaction as { subjectId?: unknown } | undefined;
+  if (typeof interaction?.subjectId === 'string') return interaction.subjectId;
+  return presentedCardOf(action, ctx)?.objectId;
+}
+
+function subjectValue(id: ObjectId, action: LegalAction, ctx: PolicyContext): number | null {
   const permanent = ctx.view.battlefield.find((p) => p.id === id);
   if (permanent !== undefined) return permanentValue(permanent, ctx);
   const card =
     ctx.view.hand.find((c) => c.id === id) ?? ctx.view.graveyard.find((c) => c.id === id);
   if (card !== undefined) return handCardValue(card, ctx);
+  // A card from a hidden zone (a library search, exile) is known only by its presentation.
+  const presented = presentedCardOf(action, ctx);
+  if (presented !== undefined && presented.objectId === id) {
+    return handCardValue({ id, name: presented.name, typeLine: presented.typeLine }, ctx);
+  }
   return null;
 }
 
@@ -717,7 +859,7 @@ export function choiceValue(action: LegalAction, ctx: PolicyContext): number | n
     return mulliganChoice(ctx) === action.type ? 1 : 0;
   }
   if (action.type === 'bottomCard') {
-    const id = subjectOf(action);
+    const id = subjectOf(action, ctx);
     const card = ctx.view.hand.find((c) => c.id === id);
     if (card === undefined) return null;
     const hand = ctx.view.hand;
@@ -730,9 +872,9 @@ export function choiceValue(action: LegalAction, ctx: PolicyContext): number | n
   if (action.type === 'acceptTrigger') return P.acceptOptional;
   if (DECLINES.has(action.type)) return 0;
   if (action.type === 'promiseGift') return -1;
-  const id = subjectOf(action);
+  const id = subjectOf(action, ctx);
   if (id !== undefined) {
-    const value = subjectValue(id, ctx);
+    const value = subjectValue(id, action, ctx);
     if (value !== null && LOSS_CHOICES.has(action.type)) return P.choiceBase - value;
     if (value !== null && GAIN_CHOICES.has(action.type)) return P.choiceBase + value;
   }

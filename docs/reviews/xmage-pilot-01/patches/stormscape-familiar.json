@@ -1,0 +1,31 @@
+{
+  "name": "Stormscape Familiar",
+  "oracleId": "a8f5a11f-3291-4ee9-a96d-4fa38af14932",
+  "source": "xmage@31ede542",
+  "handledLines": ["White spells and black spells you cast cost {1} less to cast."],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "filter": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "color",
+              "value": "W"
+            },
+            {
+              "kind": "color",
+              "value": "B"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

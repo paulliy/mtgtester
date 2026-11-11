@@ -34,6 +34,35 @@
       "review": null
     },
     {
+      "name": "Acolyte of Aclazotz",
+      "oracleId": "324d2aa8-6dea-4b0d-898d-1e52ed187565",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{T}, Sacrifice another creature or artifact: Each opponent loses 1 life and you gain 1 life."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/acolyte-of-aclazotz.json",
+      "patchSha256": "5684f06e0e9fa6a1f4acd82e0bcc2df966dbb61fe5f9e6b28ef5e4430f1e408c",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Adrix and Nev, Twincasters",
       "oracleId": "12a6cad9-eb42-43bd-9e68-aaf862cd83db",
       "source": "compiler@haiku-worker",
@@ -66,6 +95,33 @@
       "review": null
     },
     {
+      "name": "Aether Tunnel",
+      "oracleId": "0a90d1fb-7a76-4b62-b001-4a539a8e5df1",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Enchanted creature gets +1/+0 and can't be blocked."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/aether-tunnel.json",
+      "patchSha256": "647d0c0e0df105c6ba5559cd7ccb7f8e9913d4f111bcac833f35442e423ba41f",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Ahriman",
       "oracleId": "37d1d507-25dc-4cd0-b51e-2f1e9b24832c",
       "source": "compiler@haiku-worker",
@@ -78,6 +134,33 @@
       "differences": [
         "Text A lets the sacrificed creature or artifact be any other creature or artifact, with no control restriction; Text B requires one you control."
       ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Ahriman",
+      "oracleId": "37d1d507-25dc-4cd0-b51e-2f1e9b24832c",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["{3}, Sacrifice another creature or artifact: Draw a card."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/ahriman.json",
+      "patchSha256": "595bfb462bff69b4ff8197f786d2947055bfe2fefb19a691f730ab8a3191628f",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
       "smokeExercised": true,
       "smoke": [
         {
@@ -145,6 +228,35 @@
           "scenario": "from-hand",
           "ok": true,
           "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Animal Sanctuary",
+      "oracleId": "f3c40943-1d7c-4ea2-b34f-8df8b6775701",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{2}, {T}: Put a +1/+1 counter on target Bird, Cat, Dog, Goat, Ox, or Snake."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/animal-sanctuary.json",
+      "patchSha256": "f10f3000efe201bb99c08b67e32cf7ad041a306bd1134b3b86de308922cc16a8",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
           "detail": "game ended"
         },
         {
@@ -268,6 +380,27 @@
       "review": null
     },
     {
+      "name": "Armor of Shadows",
+      "oracleId": "64de050c-7167-4ebd-8584-f064d8be3302",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Until end of turn, target creature gets +1/+0 and gains indestructible."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/armor-of-shadows.json",
+      "patchSha256": "618660fa159e70f86dcb12014342726f7c6020e47ba8e127c33bbb2e71e96ae7",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Ascendant Evincar",
       "oracleId": "e32c0de7-132d-4a39-85fb-da0ed1132878",
       "source": "compiler@haiku-worker",
@@ -356,10 +489,48 @@
       "patchSha256": "8e195991993fff225d965dc92a79d68ef7eb06dc3a562e1b0ac9c9f3eae3baf1",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
-      "crossCheck": {
-        "source": "xmage@31ede542",
-        "verdict": "identical"
-      },
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Atraxa's Fall",
+      "oracleId": "22677153-bd87-4ff8-af92-ced4da2aac6c",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Destroy target artifact, battle, enchantment, or creature with flying."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/atraxa-s-fall.json",
+      "patchSha256": "b25e7860c02cf6829281ccde29770753c980d4e4e21179ab51fc9bab11bafc94",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Atrocious Experiment",
+      "oracleId": "9f1c5040-ac46-4e8f-a5ff-8205e13a8893",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Target player mills two cards, draws two cards, and loses 2 life."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/atrocious-experiment.json",
+      "patchSha256": "5ccc33d3beaf28bccfd6df6e43ff5699385fa296c6cedfade34e29e982f62cb7",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
       "smokeExercised": false,
       "smoke": [
         {
@@ -430,6 +601,87 @@
       "review": null
     },
     {
+      "name": "Ballyrush Banneret",
+      "oracleId": "0ad27d0e-b6c3-4c3f-a389-285d889b6a65",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Kithkin spells and Soldier spells you cast cost {1} less to cast."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/ballyrush-banneret.json",
+      "patchSha256": "a56b399655f86ccbbe0923dba024c7d3448500ce9eb345478822184b5f7a5670",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Baron Bertram Graywater",
+      "oracleId": "e25b516c-bf95-42bc-8b1e-04617a3d28df",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["{1}{B}, Sacrifice another creature or artifact: Draw a card."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/baron-bertram-graywater.json",
+      "patchSha256": "609ed69fd0c4724e0e5f6f8eed33f01e7c8b7e0dd5dd407f818ccb098e8580c7",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Bastion Protector",
+      "oracleId": "858f53ef-3fec-4aa0-867d-b7f040614b3c",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Commander creatures you control get +2/+2 and have indestructible."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/bastion-protector.json",
+      "patchSha256": "3ae2cbac3e573d3b7b24201e0016acbc268505a5ffbcf6cceea5e71b172fb2b7",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Bearded Axe",
       "oracleId": "a231319d-5d72-4aa6-8868-5987694791cd",
       "source": "compiler@haiku-worker",
@@ -462,6 +714,27 @@
       "review": null
     },
     {
+      "name": "Beyond the Quiet",
+      "oracleId": "c96424e7-63c4-4f07-959f-6ad09f91279a",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Exile all creatures and Spacecraft."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/beyond-the-quiet.json",
+      "patchSha256": "370f6d1dc36155833e90e8c810dfb299bd8b5d629db2f47c47f921fb7c387aa2",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Bloodforged Battle-Axe",
       "oracleId": "81a7f559-5edd-47ec-91f7-51e5ee998ed0",
       "source": "compiler@haiku-worker",
@@ -478,6 +751,137 @@
           "scenario": "from-hand",
           "ok": true,
           "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Bloodsworn Steward",
+      "oracleId": "a5ec7ccd-d1fe-4ca6-b019-d4616c233771",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Commander creatures you control get +2/+2 and have haste."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/bloodsworn-steward.json",
+      "patchSha256": "36f2d168eb7786769e4ef0d7dca06eab26c2550bbc37540f96a87bd037cfcb5c",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Bontu's Monument",
+      "oracleId": "940ba435-7abc-40f8-a5af-c1c653b3284e",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Black creature spells you cast cost {1} less to cast."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/bontu-s-monument.json",
+      "patchSha256": "90262ffae766c2ec7f14bd990847841f14aad905b2c5d5402e5ebb6bbcef9480",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Bosk Banneret",
+      "oracleId": "b84dedfd-4020-444f-ac5a-54c65c0d0378",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Treefolk spells and Shaman spells you cast cost {1} less to cast."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/bosk-banneret.json",
+      "patchSha256": "2db48e72a41c50acdc0070455c09b63d9ff7b8571759cd786a4ae77043f30069",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Bounce Off",
+      "oracleId": "d9c29e6e-5949-4599-bf74-b9539e753f76",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Return target creature or Vehicle to its owner's hand."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/bounce-off.json",
+      "patchSha256": "9da2882b89bccea9b7208eee687bcd63a2949849b84191ae0b48e55fddd78c39",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Bounty Agent",
+      "oracleId": "056b5d53-f2fd-4e83-9fd3-d8f0d0be64b9",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{T}, Sacrifice this creature: Destroy target legendary permanent that's an artifact, creature, or enchantment."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/bounty-agent.json",
+      "patchSha256": "1959aefbd9f170d1043109da2dcaa84ab0a4e337e2302805907aad6348dfacea",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
           "detail": "game ended"
         },
         {
@@ -532,6 +936,35 @@
           "scenario": "from-hand",
           "ok": true,
           "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Broodheart Engine",
+      "oracleId": "1b759831-abe8-4996-a897-3c6d6d30a1c7",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{2}{B}{G}, {T}, Sacrifice this artifact: Return target creature or Vehicle card from your graveyard to the battlefield. Activate only as a sorcery."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/broodheart-engine.json",
+      "patchSha256": "9df3646a243ed5ca2e789095b14836ee57f9ef3dc3683e136f66866d50cac6ba",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
           "detail": "game ended"
         }
       ],
@@ -627,37 +1060,6 @@
       "review": null
     },
     {
-      "name": "Cloak of Mists",
-      "oracleId": "13358b1d-0a35-48ed-a7fb-70359fa3998f",
-      "source": "compiler@haiku-worker",
-      "status": "compiled-checked",
-      "handledLines": ["Enchanted creature can't be blocked."],
-      "patch": "docs/reviews/card-compiler-trial-02/patches/cloak-of-mists.json",
-      "patchSha256": "7af37d77cb9f6e7467072ea3d9591bbaaa6b699861d7b5d443f05b13b24d8c14",
-      "trial": "docs/reviews/card-compiler-trial-02",
-      "textCheck": "model",
-      "crossCheck": {
-        "source": "xmage@31ede542",
-        "verdict": "identical"
-      },
-      "smokeExercised": false,
-      "smoke": [
-        {
-          "scenario": "from-hand",
-          "ok": true,
-          "abilityResolved": false,
-          "detail": "game ended"
-        },
-        {
-          "scenario": "on-battlefield",
-          "ok": true,
-          "abilityResolved": false,
-          "detail": "game ended"
-        }
-      ],
-      "review": null
-    },
-    {
       "name": "Cloudpost",
       "oracleId": "f705c0eb-9c6c-4315-a860-208ed0c5d93e",
       "source": "compiler@haiku-worker",
@@ -715,14 +1117,58 @@
       "patch": "docs/reviews/card-compiler-trial-01/patches/damning-verdict.json",
       "patchSha256": "766c04cab1c2e71a66457385b6e1a3f846af3d604b610a918ddf00a05c7a5fbf",
       "trial": "docs/reviews/card-compiler-trial-01",
-      "crossCheck": {
-        "source": "xmage@31ede542",
-        "verdict": "identical"
-      },
       "smokeExercised": false,
       "smoke": [
         {
           "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Damning Verdict",
+      "oracleId": "355ed7ef-bfa6-4538-99fb-a2d203eb7005",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Destroy all creatures with no counters on them."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/damning-verdict.json",
+      "patchSha256": "e7eff640e1174b337e18873e1c2e66f00ec567020e69a70370d2ee1fd2d836c2",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "renderer",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Danitha Capashen, Paragon",
+      "oracleId": "4b6377da-83e7-4519-9582-16a9c16b8faa",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Aura and Equipment spells you cast cost {1} less to cast."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/danitha-capashen-paragon.json",
+      "patchSha256": "f13f1b1dd55a20d1b96076f31b4c86c7a99029bec85583d49ccfe1a3630502c8",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
           "ok": true,
           "abilityResolved": false,
           "detail": "game ended"
@@ -741,6 +1187,33 @@
       "patch": "docs/reviews/card-compiler-trial-02/patches/death-baron.json",
       "patchSha256": "4d564937051b838da1eefaad6e30b572a894c89757933f1eeb7e581449e75f6d",
       "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Deepchannel Mentor",
+      "oracleId": "53b121df-3040-4ad0-a25d-587a299b4f8b",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Blue creatures you control can't be blocked."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/deepchannel-mentor.json",
+      "patchSha256": "cdbffe21b4065542112ac9ba6f73f94ef1aba6982b46cdfaeeded2bb0ac3a10d",
+      "trial": "docs/reviews/xmage-pilot-01",
       "textCheck": "model",
       "smokeExercised": false,
       "smoke": [
@@ -859,6 +1332,27 @@
           "scenario": "on-battlefield",
           "ok": true,
           "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Disdainful Stroke",
+      "oracleId": "11e02134-7b1a-46a4-a89e-7539dd1efada",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Counter target spell with mana value 4 or greater."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/disdainful-stroke.json",
+      "patchSha256": "2a785ce7c968ffe88b985ed493686553e6dcfbd1850222764b99a00b67b1c975",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
           "detail": "game ended"
         }
       ],
@@ -1092,6 +1586,35 @@
       "review": null
     },
     {
+      "name": "Earth Kingdom Protectors",
+      "oracleId": "3bfb3913-808d-444b-97c3-a90af3bc585b",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Sacrifice this creature: Another target Ally you control gains indestructible until end of turn."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/earth-kingdom-protectors.json",
+      "patchSha256": "967c5c98b91ff4db124fedeaa8a67d12b005f2240fb30fdb75938a33daff5036",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Exsanguinator Cavalry",
       "oracleId": "a867be6f-46ce-4a12-a827-9429bd94243f",
       "source": "compiler@haiku-worker",
@@ -1113,6 +1636,27 @@
         },
         {
           "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Extinguish All Hope",
+      "oracleId": "c7ca25f3-7a22-477b-8546-4c2597d5d1ff",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Destroy all nonenchantment creatures."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/extinguish-all-hope.json",
+      "patchSha256": "2bb14b2fbaee0bf7ccf8a09ee1e1ea3e999829ef8ca0f0bafe9c4429d47f1076",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "renderer",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
           "ok": true,
           "abilityResolved": false,
           "detail": "game ended"
@@ -1144,6 +1688,113 @@
       "review": null
     },
     {
+      "name": "Filter Out",
+      "oracleId": "8c95d823-6bbd-4484-8f38-b1bb20403085",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Return all noncreature, nonland permanents to their owners' hands."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/filter-out.json",
+      "patchSha256": "c7e6b04587c48fa536830c1aa334a864681848ee58eab9d8d830d69dea39cfb8",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Firespitter Whelp",
+      "oracleId": "1cad92ce-55c8-4b78-8d8c-56645ef8e6ee",
+      "source": "xmage@31ede542",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Whenever you cast a noncreature or Dragon spell, this creature deals 1 damage to each opponent."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/firespitter-whelp.json",
+      "patchSha256": "36129fb3c34a9218a1e978164a1109172ba373efda4804440edcbd3d7e7d58e6",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "differences": [
+        "Damage source: Text A has this creature dealing the damage, while Text B has each opponent taking damage with no source named."
+      ],
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Flowering of the White Tree",
+      "oracleId": "3cda958a-f777-433d-850e-a6c8f581db4e",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Nonlegendary creatures you control get +1/+1."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/flowering-of-the-white-tree.json",
+      "patchSha256": "3234321a778388d241d28ec6acc70d42e6e3b51ed43354468ddd37812bd87219",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Frogtosser Banneret",
+      "oracleId": "91ebedb5-cb5f-4c58-ad30-6c6b0a106aa0",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Goblin spells and Rogue spells you cast cost {1} less to cast."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/frogtosser-banneret.json",
+      "patchSha256": "e2d100393de0814436a444e75a17ae8082b3efe2849b4b5073ad8b8c31e50b4a",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Ghost-Spider, Gwen Stacy",
       "oracleId": "1d95b5c0-d193-4a03-9954-23861ac1c762",
       "source": "compiler@haiku-worker",
@@ -1158,6 +1809,35 @@
       "differences": [
         "Text B adds an intervening-if condition, 'if the defending player is the event player', that does not appear in Text A; the trigger's firing condition therefore differs."
       ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Gixian Puppeteer",
+      "oracleId": "9d6a9a37-a245-4503-baeb-9488553798ab",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this creature dies, return another target creature card with mana value 3 or less from your graveyard to the battlefield."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/gixian-puppeteer.json",
+      "patchSha256": "a1d1bebdae9e62370237658407fbf8d817fc7452053334a29508eb6ac2be02d9",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
       "smokeExercised": true,
       "smoke": [
         {
@@ -1205,6 +1885,33 @@
       "review": null
     },
     {
+      "name": "Goblin Arsonist",
+      "oracleId": "c1177f22-a1cf-4da3-a68d-ff954e878403",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["When this creature dies, you may have it deal 1 damage to any target."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/goblin-arsonist.json",
+      "patchSha256": "76c91ba8d0ad0e6914c4588d660072fb6ee46e6be751e82fb4977a58b1a38397",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Goblin Burrows",
       "oracleId": "ad65bb8e-57de-49f3-ba7c-be62cf3fe3df",
       "source": "compiler@haiku-worker",
@@ -1214,10 +1921,33 @@
       "patchSha256": "507270c5364cbbdeded1c43509f2bd0d18219962f33804c06ac7fcff85b03c79",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "renderer",
-      "crossCheck": {
-        "source": "xmage@31ede542",
-        "verdict": "identical"
-      },
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Goblin Burrows",
+      "oracleId": "ad65bb8e-57de-49f3-ba7c-be62cf3fe3df",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["{1}{R}, {T}: Target Goblin creature gets +2/+0 until end of turn."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/goblin-burrows.json",
+      "patchSha256": "fa088f05889ad832328e20c1cc42c9fe9ff324a2622b9e9c7c69eda0a57a1b70",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "renderer",
       "smokeExercised": false,
       "smoke": [
         {
@@ -1308,10 +2038,35 @@
       "patchSha256": "28662438c529c768016e126a3a2c170cbd020c36c490ac0ec03f2bec2c3c8c34",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
-      "crossCheck": {
-        "source": "xmage@31ede542",
-        "verdict": "identical"
-      },
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Goblin-town",
+      "oracleId": "98d20908-6d68-4d31-b719-207f93c9b402",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{2}{B}{R}, {T}, Sacrifice this land: Put two +1/+1 counters on target Goblin or Orc you control. Activate only as a sorcery."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/goblin-town.json",
+      "patchSha256": "bba423dbfe517f41e0542bba9b3df99c33dd5caeb18646291e3cee1e9c509298",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
       "smokeExercised": false,
       "smoke": [
         {
@@ -1417,6 +2172,54 @@
       "review": null
     },
     {
+      "name": "Guttural Response",
+      "oracleId": "9fb80575-9c8e-4745-9a8f-d48cdcbbb868",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Counter target blue instant spell."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/guttural-response.json",
+      "patchSha256": "34c4038c1a07828c089dcce1824b55abebbbe0c6e531121ccd9a732b5cf2dfb1",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "renderer",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Hanged Executioner",
+      "oracleId": "6ff4ff67-ad08-447f-a112-1a071c1474a4",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["{3}{W}, Exile this creature: Exile target creature."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/hanged-executioner.json",
+      "patchSha256": "736bb693ed818c47b780fca7b98ce745c5eff8eac071f6cf505e41ef6aee1e57",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Harbinger of the Seas",
       "oracleId": "84910453-e5dc-4bff-8554-86a5f4ab2746",
       "source": "compiler@haiku-worker",
@@ -1493,6 +2296,35 @@
       "review": null
     },
     {
+      "name": "Hidden Hideout",
+      "oracleId": "b639e1fe-d099-4cab-a0d0-a1b33c7f31dd",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{2}, {T}: Target creature you control with a counter on it gains lifelink until end of turn."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/hidden-hideout.json",
+      "patchSha256": "87337efa06cc7b6019bd7a4a01f04a69955748ec9cc562ba56c2818f175c9840",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Horobi, Death's Wail",
       "oracleId": "44e8d51e-0885-49df-a77c-cf4a88e41bc1",
       "source": "compiler@haiku-worker",
@@ -1535,6 +2367,35 @@
       "smoke": [
         {
           "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Howling Moon",
+      "oracleId": "a814d4c7-2ec0-4278-8704-23b39dcead4e",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "At the beginning of combat on your turn, target Wolf or Werewolf you control gets +2/+2 until end of turn."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/howling-moon.json",
+      "patchSha256": "e906607bbec8c7200e4ae7e9187b5fb9be4039e38635fd5076d33ee811e2c6a3",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
           "ok": true,
           "abilityResolved": false,
           "detail": "game ended"
@@ -1610,6 +2471,27 @@
       "review": null
     },
     {
+      "name": "Inundate",
+      "oracleId": "0390a3dc-386c-402f-a89c-b94867bfb0a2",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Return all nonblue creatures to their owners' hands."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/inundate.json",
+      "patchSha256": "28b246c9923ceeb7e0371fa7b19f0e7c29a030dd71ef0312e8e36c5f9390e2e5",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Irenicus's Vile Duplication",
       "oracleId": "a3faf698-1dac-45ef-9c43-c8cead489ffc",
       "source": "compiler@haiku-worker",
@@ -1636,6 +2518,56 @@
       "review": null
     },
     {
+      "name": "Jeskai Barricade",
+      "oracleId": "7a2fa0a6-1324-4714-8896-6bb97640578a",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this creature enters, you may return another target creature you control to its owner's hand."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/jeskai-barricade.json",
+      "patchSha256": "dd6de07d58a9f227759c7707c8a18420bca5b4e628f4d5bbc3f57ee2cad67528",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Jokulhaups",
+      "oracleId": "7bdfe368-353c-4f8d-851f-05b7ea9f905d",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Destroy all artifacts, creatures, and lands. They can't be regenerated."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/jokulhaups.json",
+      "patchSha256": "83aec1ab75e08ca77d6286c9b25b74749dcbd0eb5ca9c287b7966ba53c9ee98c",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Kaito, Cunning Infiltrator",
       "oracleId": "f6d3f145-00e0-47cd-91d8-0381c19a000d",
       "source": "compiler@haiku-worker",
@@ -1646,6 +2578,33 @@
       "patch": "docs/reviews/card-compiler-trial-02/patches/kaito-cunning-infiltrator.json",
       "patchSha256": "b1935bead33f4f1fb53388df27cc434f1ce414295025788b28ebbb8195c95100",
       "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Kher Keep",
+      "oracleId": "79638767-fbc7-451a-b29f-d93f2ac6f102",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["{1}{R}, {T}: Create a 0/1 red Kobold creature token named Kobolds of ~."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/kher-keep.json",
+      "patchSha256": "d083af5cd8cc3c5f016106d0a2063f9b597b7387d111390f20ae14647666968d",
+      "trial": "docs/reviews/xmage-pilot-01",
       "textCheck": "model",
       "smokeExercised": true,
       "smoke": [
@@ -1705,10 +2664,38 @@
       "patchSha256": "9923adc06f5021864913c237dea8c930bf781c17ad25a604885b00f3620d30da",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
-      "crossCheck": {
-        "source": "xmage@31ede542",
-        "verdict": "differs"
-      },
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Koma, World-Eater",
+      "oracleId": "1ebf2142-f171-40cd-8143-15f50084b707",
+      "source": "xmage@31ede542",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Whenever ~ deals combat damage to a player, create four 3/3 blue Serpent creature tokens named ~'s Coil."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/koma-world-eater.json",
+      "patchSha256": "5fe0d20f61082b42c4a72c71f2939dd5ef4df8cb6abee0a57432ea45c186d18f",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "differences": [
+        "Text B replaces the trigger condition with the placeholder \"When <text>\", so it does not state that the trigger is combat damage dealt to a player."
+      ],
       "smokeExercised": false,
       "smoke": [
         {
@@ -1806,6 +2793,56 @@
       "review": null
     },
     {
+      "name": "Majestic Heliopterus",
+      "oracleId": "d3b49970-46b7-441b-bff8-8403d982b8a7",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever this creature attacks, another target Dinosaur you control gains flying until end of turn."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/majestic-heliopterus.json",
+      "patchSha256": "e4f920f1d2847f759eeef68250a572062ec858bdae83f3c0aceb85c7e80df450",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Mass Calcify",
+      "oracleId": "3ab3996f-aa3f-4041-8634-8e197d51f108",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Destroy all nonwhite creatures."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/mass-calcify.json",
+      "patchSha256": "24ec564e00f7aa9e4bff0e72c149c7d279996236f6e7dc371631adcd5c42e610",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Might of Old Krosa",
       "oracleId": "b50a6db0-16ce-4e98-afbd-ec37e1653e7c",
       "source": "compiler@haiku-worker",
@@ -1872,10 +2909,35 @@
       "patchSha256": "4a8bb9684192e974f3882f27b78c9fb913f10585c09e9628055097b1a0942575",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
-      "crossCheck": {
-        "source": "xmage@31ede542",
-        "verdict": "identical"
-      },
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Morcant's Loyalist",
+      "oracleId": "b2c30683-cc7f-4341-add1-b08cb9b93eeb",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this creature dies, return another target Elf card from your graveyard to your hand."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/morcant-s-loyalist.json",
+      "patchSha256": "7e5d8a54c61e2bf801da76f307adcb389a72c3751be3c5086b5cefc34e418af6",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
       "smokeExercised": false,
       "smoke": [
         {
@@ -1934,10 +2996,35 @@
       "patchSha256": "a01930e3b30f3a312af14655896effae50ead189157e71b4e464672fc9629366",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
-      "crossCheck": {
-        "source": "xmage@31ede542",
-        "verdict": "identical"
-      },
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Mudflat Village",
+      "oracleId": "aeeab1df-0b8b-4bc4-a5f9-aac413449bec",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{1}{B}, {T}, Sacrifice this land: Return target Bat, Lizard, Rat, or Squirrel card from your graveyard to your hand."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/mudflat-village.json",
+      "patchSha256": "1cdd6513db2ddd7ea1c29c25983a594e6f8e912cd69ce1245399d7891ff814cc",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
       "smokeExercised": false,
       "smoke": [
         {
@@ -1966,6 +3053,62 @@
       "patch": "docs/reviews/card-compiler-trial-02/patches/necropolis-regent.json",
       "patchSha256": "c5829bf08b773789abfe09e18eb31e911e5017b4fe0c2dc0b1682d1f7e154b7c",
       "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Nekrataal",
+      "oracleId": "d40adf5d-5edf-48a0-98f3-fcdbf1b5f25c",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this creature enters, destroy target nonartifact, nonblack creature. That creature can't be regenerated."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/nekrataal.json",
+      "patchSha256": "f076d84b9d88b2d3db2da0a0d889e7fc537cbf0234978a1bd3aa794ba7dc167a",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Nevinyrral's Disk",
+      "oracleId": "96230edf-568a-47dd-b877-9d92aa58fac8",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["{1}, {T}: Destroy all artifacts, creatures, and enchantments."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/nevinyrral-s-disk.json",
+      "patchSha256": "9987c7987d997078c79ab5d80f9c5d887ff2efa2ac7fe4a86ce53d56816cc60f",
+      "trial": "docs/reviews/xmage-pilot-01",
       "textCheck": "model",
       "smokeExercised": true,
       "smoke": [
@@ -2066,6 +3209,83 @@
       "review": null
     },
     {
+      "name": "Nyx Weaver",
+      "oracleId": "6f8bf968-0571-4582-8c04-9791e44d5df0",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{1}{B}{G}, Exile this creature: Return target card from your graveyard to your hand."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/nyx-weaver.json",
+      "patchSha256": "a9f4df0aa8dfcc94c843c5457b6646b6d329f58c18ad599a5be2176fa0d8bb2c",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Obliterate",
+      "oracleId": "47496941-8007-45a0-a981-76c683cbddc1",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Destroy all artifacts, creatures, and lands. They can't be regenerated."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/obliterate.json",
+      "patchSha256": "a9d3b5f67e4a8e835e42f095b4ef46f018985abb99a19e12138bfbceb6624938",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Oketra's Monument",
+      "oracleId": "0370afa0-07d3-4787-8a5b-10272cb3a486",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["White creature spells you cast cost {1} less to cast."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/oketra-s-monument.json",
+      "patchSha256": "a681e028d8f279aee96fff3e5285338067ecc5bc424c91424bee978cba5f711f",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Okina, Temple to the Grandfathers",
       "oracleId": "3ad69bfb-2e51-4fe9-8d2f-7d071a4f1c69",
       "source": "compiler@haiku-worker",
@@ -2127,6 +3347,85 @@
       "differences": [
         "Text B states the Aura has no effects, but the card's whole-card context has a When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield trigger."
       ],
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Otepec Huntmaster",
+      "oracleId": "41623eab-38b5-4058-8de2-e6b8706de7a2",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["{T}: Target Dinosaur gains haste until end of turn."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/otepec-huntmaster.json",
+      "patchSha256": "ea69421538699ace9f6cb05743b630b04d9f1f3a3964a13e063ec4e7b276bce1",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Overprotect",
+      "oracleId": "c8c3a293-ae6d-4c52-be2d-2d4b6a8edb66",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Target creature you control gets +3/+3 and gains trample, hexproof, and indestructible until end of turn."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/overprotect.json",
+      "patchSha256": "fd9b0cc4548e2099fd8e661c86d3a1a6c9893bd6d998a7a19ef054ed977ec2ea",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Oyobi, Who Split the Heavens",
+      "oracleId": "df5c1f34-94e4-4f89-b1af-943c430862d0",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever you cast a Spirit or Arcane spell, create a 3/3 white Spirit creature token with flying."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/oyobi-who-split-the-heavens.json",
+      "patchSha256": "aa50002c35f93f6979f4981eb3af84d1e95b6274264786106811dd99f3517e5b",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
       "smokeExercised": false,
       "smoke": [
         {
@@ -2233,6 +3532,33 @@
       "review": null
     },
     {
+      "name": "Perilous Vault",
+      "oracleId": "7acd7ef5-0e26-436d-962a-1a391f81c2e8",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["{5}, {T}, Exile this artifact: Exile all nonland permanents."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/perilous-vault.json",
+      "patchSha256": "67fb868d1b80ff6f66155e965687a7ec319e12a16009d98961c355c47ae15e6f",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Pilfer",
       "oracleId": "d13f0907-de39-4a90-940a-831740d7aa9b",
       "source": "compiler@haiku-worker",
@@ -2247,6 +3573,28 @@
       "differences": [
         "Text A says 'You choose a nonland card' (the caster chooses); Text B says 'Discard a nonland card from it' with no chooser, which the opponent would make."
       ],
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Plague Wind",
+      "oracleId": "18ec721f-c1ac-4581-a61d-2f0b09d6bf92",
+      "source": "xmage@31ede542",
+      "status": "meaning-differs",
+      "handledLines": ["Destroy all creatures you don't control. They can't be regenerated."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/plague-wind.json",
+      "patchSha256": "46c8c44670890840ce00c68927696cefba983b58daca9c8fc6863b10e4111f3d",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "differences": ["Text B drops the clause \"They can't be regenerated.\""],
       "smokeExercised": false,
       "smoke": [
         {
@@ -2282,6 +3630,35 @@
           "scenario": "on-battlefield",
           "ok": true,
           "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Poison-Blade Mentor",
+      "oracleId": "60a3345c-3234-4f4b-baab-df12dad6b44b",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever this creature attacks, another target Assassin you control gains deathtouch until end of turn."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/poison-blade-mentor.json",
+      "patchSha256": "1f5410dfe882e85bb87d5f23068c6a7cd83f168bc67044e0a1862b3b8c2e74b4",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
           "detail": "game ended"
         }
       ],
@@ -2357,6 +3734,160 @@
       "smoke": [
         {
           "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Reki, the History of Kamigawa",
+      "oracleId": "8a7d68ae-ac43-46a6-9dc8-d6b07cc0333c",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Whenever you cast a legendary spell, draw a card."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/reki-the-history-of-kamigawa.json",
+      "patchSha256": "4b7184eb390cbfbccb9ba2e953a0fa8e3067db6414e0b30f0c865f3a092dafed",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Repel Calamity",
+      "oracleId": "ba58f508-8036-496c-8a2f-c1e410165e93",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Destroy target creature with power or toughness 4 or greater."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/repel-calamity.json",
+      "patchSha256": "496f405795dafe1724a23dd5290a4f2e52743293d849a59463614a2a17bcb362",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Requiem Angel",
+      "oracleId": "59f10ddb-8287-4d2c-8c60-1080b108fa78",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever another non-Spirit creature you control dies, create a 1/1 white Spirit creature token with flying."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/requiem-angel.json",
+      "patchSha256": "059648c428ce1afa635cb2b4f415d3d2f9814456d4e2b52694909e111cda81b0",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Rescue Skiff",
+      "oracleId": "112aaaf0-3301-4f79-9640-d36c75a0fb30",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this Spacecraft enters, return target creature or enchantment card from your graveyard to the battlefield."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/rescue-skiff.json",
+      "patchSha256": "025b8e2e0c90fd3a2cc69ea023260973b5cfffb2a94fe9e4c3ad4e7869e9ea0d",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "renderer",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Revive",
+      "oracleId": "51991d28-137e-4690-a674-d852b904bd1a",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Return target green card from your graveyard to your hand."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/revive.json",
+      "patchSha256": "8b1398ae368328005889376c925295aa53f1bc431e4f1e6956ad5a407bd526de",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Rhonas's Monument",
+      "oracleId": "b9a7c722-6b24-4383-ac6e-2a30f7834269",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Green creature spells you cast cost {1} less to cast."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/rhonas-s-monument.json",
+      "patchSha256": "78b6a1ded40a13b45b727cee540081393392d715df9ee65a89587216ef777dc7",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
           "ok": true,
           "abilityResolved": false,
           "detail": "game ended"
@@ -2444,6 +3975,35 @@
       "review": null
     },
     {
+      "name": "Rockface Village",
+      "oracleId": "7e103748-3f76-42ce-a063-d0256b2dce2b",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{R}, {T}: Target Lizard, Mouse, Otter, or Raccoon you control gets +1/+0 and gains haste until end of turn. Activate only as a sorcery."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/rockface-village.json",
+      "patchSha256": "edc81460e07c5785b295b99a2b64da2e18653230e9311d629e8433b188d4f09e",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Rockslide Sorcerer",
       "oracleId": "d8b7b78e-91b2-4ad5-aeb8-6ebdca363e71",
       "source": "compiler@haiku-worker",
@@ -2461,6 +4021,120 @@
           "scenario": "from-hand",
           "ok": true,
           "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Rockslide Sorcerer",
+      "oracleId": "d8b7b78e-91b2-4ad5-aeb8-6ebdca363e71",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever you cast an instant, sorcery, or Wizard spell, this creature deals 1 damage to any target."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/rockslide-sorcerer.json",
+      "patchSha256": "8ba7fd4f82a9b1fc54452420ff56e708548d722e9b93a13eb1336ce64c26cdea",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Rosa, Resolute White Mage",
+      "oracleId": "9c4fdd20-0396-40b7-8687-43b1035b6956",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. It gains lifelink until end of turn."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/rosa-resolute-white-mage.json",
+      "patchSha256": "7b3b3b43f8ec522c2ec7d0d78bf5ca6f56880c97b900fe0b27fa08f64baa7702",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Ruthless Knave",
+      "oracleId": "00225c40-27ff-410f-a591-5c788c6a2bd6",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Sacrifice three Treasures: Draw a card."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/ruthless-knave.json",
+      "patchSha256": "c800882accc07e5cac79cd5c91d7ab8588e892f8d61b6ea25c900348355bf4a2",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Salvaging Station",
+      "oracleId": "3501ed98-473c-4a17-8b5f-1e0c00ee75da",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{T}: Return target noncreature artifact card with mana value 1 or less from your graveyard to the battlefield."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/salvaging-station.json",
+      "patchSha256": "e062627f807c20cc67c92a9c7b29a25a9daf33eabfd77cb7f95b59573efdb1fd",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
           "detail": "game ended"
         },
         {
@@ -2524,6 +4198,35 @@
       "review": null
     },
     {
+      "name": "Scarecrone",
+      "oracleId": "f45716dc-c613-4b14-865d-419395fb02f6",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{4}, {T}: Return target artifact creature card from your graveyard to the battlefield."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/scarecrone.json",
+      "patchSha256": "f98235ddabb96d3857f9d15df039d0176c4ee04c60b2669ab0dc1eefe60dcd2c",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Secluded Starforge",
       "oracleId": "69f55a7c-6ddf-412e-b63b-b395731a1ff2",
       "source": "compiler@haiku-worker",
@@ -2534,6 +4237,35 @@
       "patch": "docs/reviews/card-compiler-trial-02/patches/secluded-starforge.json",
       "patchSha256": "b66810fc7921f29ec5b2f8641f49ecf61d9ecd8548966ae83247d2603c0c9dfb",
       "trial": "docs/reviews/card-compiler-trial-02",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Seedship Broodtender",
+      "oracleId": "15c994b9-901a-46d6-804b-24560a14a481",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{3}{B}{G}, Sacrifice this creature: Return target creature or Spacecraft card from your graveyard to the battlefield. Activate only as a sorcery."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/seedship-broodtender.json",
+      "patchSha256": "1b3ce2cac2b13ec07f70aa0a862e86b3efcca9fb328752fdf8c1fbe1e88447b3",
+      "trial": "docs/reviews/xmage-pilot-01",
       "textCheck": "model",
       "smokeExercised": true,
       "smoke": [
@@ -2695,6 +4427,33 @@
       "review": null
     },
     {
+      "name": "Sliver Legion",
+      "oracleId": "47657df2-0e58-46c8-87e2-cc752708a612",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["All Sliver creatures get +1/+1 for each other Sliver on the battlefield."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/sliver-legion.json",
+      "patchSha256": "ce2a5b95edf45502fe58dadf37a4230573bc28531c7bb521c67ac78cdae12909",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Smaug the Magnificent",
       "oracleId": "c53b7602-5e36-4900-896c-844bf6eac22e",
       "source": "compiler@haiku-worker",
@@ -2808,6 +4567,33 @@
       "review": null
     },
     {
+      "name": "Sporecrown Thallid",
+      "oracleId": "d0c2ca8a-c5d4-4684-bacb-46c04f47c276",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Each other creature you control that's a Fungus or Saproling gets +1/+1."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/sporecrown-thallid.json",
+      "patchSha256": "2b029d97fa202de873f4a1827418de8e3a767a8f9e3a2d1fe7b8acbdac164282",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Sporesower Thallid",
       "oracleId": "dd840d84-bc4a-4420-b8ac-99093a5aa253",
       "source": "compiler@haiku-worker",
@@ -2869,6 +4655,61 @@
       "review": null
     },
     {
+      "name": "Stern Dismissal",
+      "oracleId": "319d5cf8-ab72-401e-b04e-c13a7a6c1aac",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Return target creature or enchantment an opponent controls to its owner's hand."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/stern-dismissal.json",
+      "patchSha256": "270104983747e3f6ce17c290d2749a45e857a10353ad139238f82f77c3b46c46",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Stimulus Package",
+      "oracleId": "ce76d17e-d536-46f0-98e2-3e1b1b4f61a4",
+      "source": "xmage@31ede542",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Sacrifice a Treasure: Create a 1/1 green and white Citizen creature token."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/stimulus-package.json",
+      "patchSha256": "8b479a06ed8da42ac3d185f11877f6037f0d9b1072788b534f3222ec5292d008",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "differences": [
+        "Token type line: Text B says the type line is the placeholder <text>, while Text A makes it a 1/1 green and white Citizen creature token (Creature - Citizen)"
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Stormclaw Rager",
       "oracleId": "d1a77708-7ddf-4645-bf1e-1d8147a57f23",
       "source": "compiler@haiku-worker",
@@ -2901,6 +4742,33 @@
       "review": null
     },
     {
+      "name": "Stormscape Familiar",
+      "oracleId": "a8f5a11f-3291-4ee9-a96d-4fa38af14932",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["White spells and black spells you cast cost {1} less to cast."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/stormscape-familiar.json",
+      "patchSha256": "91222f489de4a9bdcd19cb95035397167def9c71833ddb223f8ea17575f4fed7",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Subjugate the Hobbits",
       "oracleId": "eb56141a-eb43-40e9-8ff1-e0ef5424f6a4",
       "source": "compiler@haiku-worker",
@@ -2914,6 +4782,33 @@
       "smoke": [
         {
           "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Sunscape Familiar",
+      "oracleId": "615603bb-3899-4419-9444-e4b64c94a438",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Green spells and blue spells you cast cost {1} less to cast."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/sunscape-familiar.json",
+      "patchSha256": "b30eb07831fb9e7119cdc74356b81b2efa368586a49e98cefd8a9f2fe7765a3f",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
           "ok": true,
           "abilityResolved": false,
           "detail": "game ended"
@@ -3036,6 +4931,35 @@
       "review": null
     },
     {
+      "name": "Teysa, Orzhov Scion",
+      "oracleId": "8191342b-b25e-4c4d-8f69-aee662148ff4",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever another black creature you control dies, create a 1/1 white Spirit creature token with flying."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/teysa-orzhov-scion.json",
+      "patchSha256": "c75d98ae70a13c857c1ad9fa914c7f3f3d72d8b157217e9d3814beb766592f09",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Thalia's Lancers",
       "oracleId": "58b349ec-9987-4832-a8f3-8e92027ea75b",
       "source": "compiler@haiku-worker",
@@ -3103,6 +5027,40 @@
       "patchSha256": "c8b57a216b14e1a05c3aa36a832bf199873f537680119569bc3c296ae95a5610",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Thopter Foundry",
+      "oracleId": "88bef744-550e-4f33-b1ff-a8ee990ec754",
+      "source": "xmage@31ede542",
+      "status": "meaning-differs",
+      "handledLines": [
+        "{1}, Sacrifice a nontoken artifact: Create a 1/1 blue Thopter artifact creature token with flying. You gain 1 life."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/thopter-foundry.json",
+      "patchSha256": "e87b410842a759391f3fda4d11832659ade27d4a77048110b2d19c3813e5ad12",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "differences": [
+        "Text B restricts the sacrificed artifact to one you control; Text A says a nontoken artifact with no controller restriction, so opponents' artifacts can be sacrificed under Text A but not Text B.",
+        "Text B adds the parenthetical '(this permanent may count as the sacrificed artifact)', which is absent from Text A.",
+        "Text B adds 'Activate at any time you have priority', which is absent from Text A."
+      ],
       "smokeExercised": true,
       "smoke": [
         {
@@ -3311,6 +5269,56 @@
       "review": null
     },
     {
+      "name": "Ulvenwald Observer",
+      "oracleId": "dff3cfff-69f9-4afd-af28-b75504d30ffa",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever a creature you control with toughness 4 or greater dies, draw a card."
+      ],
+      "patch": "docs/reviews/xmage-pilot-01/patches/ulvenwald-observer.json",
+      "patchSha256": "b9137235b2d321160f592a78cd9fa3a1b8a76530acf124aa150722f1e5561f60",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Urza's Ruinous Blast",
+      "oracleId": "978e0d87-3ff2-4a73-916c-ff0dc0ab2797",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Exile all nonland permanents that aren't legendary."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/urza-s-ruinous-blast.json",
+      "patchSha256": "49fd76e85ce2afcbd976baf1ce75b450bb74b806874787d9476ab4e8f79a9985",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Viridian Joiner",
       "oracleId": "84244aa6-11be-4940-b102-e029f955fc9a",
       "source": "compiler@haiku-worker",
@@ -3388,6 +5396,33 @@
       "review": null
     },
     {
+      "name": "Warden of Evos Isle",
+      "oracleId": "f424b5e9-8f02-4491-a7d8-c7e088611c6a",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["Creature spells with flying you cast cost {1} less to cast."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/warden-of-evos-isle.json",
+      "patchSha256": "aaa4888e958009f6f05d2cec12cd49704660fad24acb4ae5bf6eaf9f72be3f24",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Wellwisher",
       "oracleId": "c3b1b7bd-cff8-4275-b6d3-868f4e4b2cc0",
       "source": "compiler@haiku-worker",
@@ -3424,10 +5459,33 @@
       "patchSha256": "628e956f61d55aa69c5aebca8ab1d4038254f65612700a54b793fbe7b0556b15",
       "trial": "docs/reviews/card-compiler-trial-02",
       "textCheck": "model",
-      "crossCheck": {
-        "source": "xmage@31ede542",
-        "verdict": "identical"
-      },
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Witch's Clinic",
+      "oracleId": "05899372-9784-4bdb-9c28-504c71fed906",
+      "source": "xmage@31ede542",
+      "status": "compiled-checked",
+      "handledLines": ["{2}, {T}: Target commander gains lifelink until end of turn."],
+      "patch": "docs/reviews/xmage-pilot-01/patches/witch-s-clinic.json",
+      "patchSha256": "691a8de171d1fa0c2e1dd9237bf1810383ceff5eb0245fa69389e65f1a65a345",
+      "trial": "docs/reviews/xmage-pilot-01",
+      "textCheck": "model",
       "smokeExercised": false,
       "smoke": [
         {

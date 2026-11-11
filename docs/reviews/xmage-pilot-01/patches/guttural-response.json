@@ -1,0 +1,36 @@
+{
+  "name": "Guttural Response",
+  "oracleId": "9fb80575-9c8e-4745-9a8f-d48cdcbbb868",
+  "source": "xmage@31ede542",
+  "handledLines": ["Counter target blue instant spell."],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "spell",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Instant"
+              },
+              {
+                "kind": "color",
+                "value": "U"
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "counter",
+          "target": 0
+        }
+      ]
+    }
+  }
+}

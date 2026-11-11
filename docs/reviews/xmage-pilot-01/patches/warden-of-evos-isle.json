@@ -1,0 +1,31 @@
+{
+  "name": "Warden of Evos Isle",
+  "oracleId": "f424b5e9-8f02-4491-a7d8-c7e088611c6a",
+  "source": "xmage@31ede542",
+  "handledLines": ["Creature spells with flying you cast cost {1} less to cast."],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "hasKeyword",
+              "keyword": "flying"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

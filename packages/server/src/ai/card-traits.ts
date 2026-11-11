@@ -13,7 +13,7 @@
  */
 
 import type { CardDefinition } from '@mtg/engine';
-import type { CardKnowledge, CardRole, CardTraits, TargetPolarity } from '@mtg/bot';
+import type { CardKnowledge, CardRole, CardTraits, TargetPolarity, WipeSelector } from '@mtg/bot';
 
 interface OpRecord {
   op: string;
@@ -121,6 +121,60 @@ function targetPolarities(ability: AbilityLike | null | undefined): TargetPolari
   return polarity;
 }
 
+/** A constant amount (`3` or `{kind:'const', n: 3}`), or null for anything computed. */
+function constantAmount(value: unknown): number | null {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'object' && value !== null) {
+    const v = value as { kind?: unknown; n?: unknown };
+    if (v.kind === 'const' && typeof v.n === 'number') return v.n;
+  }
+  return null;
+}
+
+/** Fixed damage per target slot: the sum of the constant `dealDamage` ops aimed at it. */
+function targetDamage(ability: AbilityLike | null | undefined): (number | null)[] {
+  const damage: (number | null)[] = (ability?.targets ?? []).map(() => null);
+  for (const record of collectOps([ability?.effects, ability?.modes])) {
+    if (record.op !== 'dealDamage') continue;
+    const slot = record.raw['target'];
+    if (typeof slot !== 'number' || slot < 0 || slot >= damage.length) continue;
+    const amount = constantAmount(record.raw['amount']);
+    // A computed amount makes the slot's total unknown.
+    damage[slot] = amount === null ? null : (damage[slot] ?? 0) + amount;
+  }
+  return damage;
+}
+
+const WIPE_OP = ROLE_PATTERNS.find(([role]) => role === 'wipe')![1];
+
+/**
+ * What the card's sweepers hit: their selectors joined with `anyOf`, plus a damage sweeper's
+ * constant amount. A sweep with no selector (a sacrifice-each, Living Death) leaves the selector
+ * undefined, so the bot assumes every creature is lost.
+ */
+function wipeShape(nodes: unknown[]): { selector?: WipeSelector; damage?: number } {
+  const wipes = collectOps(nodes).filter((r) => WIPE_OP.test(r.op));
+  if (wipes.length === 0) return {};
+  const selectors: WipeSelector[] = [];
+  for (const record of wipes) {
+    const selector = record.raw['selector'];
+    if (typeof selector !== 'object' || selector === null) return {};
+    // "each creature target player controls" narrows further than the selector says.
+    if (record.raw['controlledBy'] !== undefined) return {};
+    selectors.push(selector as WipeSelector);
+  }
+  const damageOps = wipes.filter((r) => r.op === 'damageEach');
+  const amounts = damageOps.map((r) => constantAmount(r.raw['amount']));
+  const damage =
+    damageOps.length === wipes.length && amounts.every((a) => a !== null)
+      ? Math.min(...(amounts as number[]))
+      : undefined;
+  return {
+    selector: selectors.length === 1 ? selectors[0]! : { kind: 'anyOf', of: selectors },
+    ...(damage !== undefined ? { damage } : {}),
+  };
+}
+
 function rolesOf(nodes: unknown[], ability?: AbilityLike | null): CardRole[] {
   const roles = new Set<CardRole>();
   const ops = collectOps(nodes);
@@ -170,6 +224,7 @@ export function cardTraits(def: CardDefinition): CardTraits {
   );
   if (!def.types.includes('Land') && def.manaAbilities.length > 0) roles.add('ramp');
   const abilities = def.activatedAbilities.map((a) => a.ability as AbilityLike);
+  const wipe = roles.has('wipe') ? wipeShape([def.spellAbility, def.triggers]) : {};
   return {
     manaValue,
     types: def.types,
@@ -178,6 +233,10 @@ export function cardTraits(def: CardDefinition): CardTraits {
     spellTargets: targetPolarities(main),
     abilityTargets: abilities.map((a) => targetPolarities(a)),
     abilitySorcery: def.activatedAbilities.map((a) => a.timing === 'sorcery'),
+    spellDamage: targetDamage(main),
+    abilityDamage: abilities.map((a) => targetDamage(a)),
+    ...(wipe.selector !== undefined ? { wipeSelector: wipe.selector } : {}),
+    ...(wipe.damage !== undefined ? { wipeDamage: wipe.damage } : {}),
     power: def.power,
     toughness: def.toughness,
   };

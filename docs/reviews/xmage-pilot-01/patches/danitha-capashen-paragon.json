@@ -1,0 +1,31 @@
+{
+  "name": "Danitha Capashen, Paragon",
+  "oracleId": "4b6377da-83e7-4519-9582-16a9c16b8faa",
+  "source": "xmage@31ede542",
+  "handledLines": ["Aura and Equipment spells you cast cost {1} less to cast."],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "filter": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "subtype",
+              "value": "Aura"
+            },
+            {
+              "kind": "subtype",
+              "value": "Equipment"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

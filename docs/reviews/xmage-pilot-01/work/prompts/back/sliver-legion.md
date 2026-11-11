@@ -1,0 +1,4 @@
+Type line: Legendary Creature — Sliver
+
+Behavior:
+{"staticEffects":[{"affects":{"kind":"allOf","of":[{"kind":"type","value":"Creature"},{"kind":"subtype","value":"Sliver"}]},"op":{"layer":7,"sublayer":"d","power":{"kind":"countPermanents","selector":{"kind":"allOf","of":[{"kind":"subtype","value":"Sliver"},{"kind":"other"}]},"scope":"all"},"toughness":{"kind":"countPermanents","selector":{"kind":"allOf","of":[{"kind":"subtype","value":"Sliver"},{"kind":"other"}]},"scope":"all"}}}]}

@@ -1,0 +1,65 @@
+{
+  "name": "Bounty Agent",
+  "oracleId": "056b5d53-f2fd-4e83-9fd3-d8f0d0be64b9",
+  "source": "xmage@31ede542",
+  "handledLines": [
+    "{T}, Sacrifice this creature: Destroy target legendary permanent that's an artifact, creature, or enchantment."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "permanent",
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "supertype",
+                    "value": "Legendary"
+                  },
+                  {
+                    "kind": "anyOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Artifact"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Enchantment"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "destroy",
+              "target": 0
+            }
+          ],
+          "description": "{T}, Sacrifice this creature: Destroy target legendary permanent that's an artifact, creature, or enchantment."
+        }
+      }
+    ]
+  }
+}

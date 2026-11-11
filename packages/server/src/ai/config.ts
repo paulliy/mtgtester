@@ -71,6 +71,16 @@ export interface AiConfig {
    */
   decisionCacheEnabled: boolean;
   /**
+   * Stream OpenRouter responses (ADR 0040). An aborted stream stops generation and billing at
+   * supported providers; an aborted plain request is billed in full. Default: true.
+   */
+  streamResponses: boolean;
+  /**
+   * Retry a call that hit our own deadline. Default: false, because the provider may have billed
+   * the slow attempt and the bot can answer the decision for free.
+   */
+  retryOnTimeout: boolean;
+  /**
    * Who answers tactical decisions the local plan, heuristics and cache leave (ADR 0039).
    * `model`: the tactician LLM, as before. `bot`: the card-aware heuristic bot, steered by the
    * strategist's knobs, with the model asked only as `botEscalation` allows.
@@ -93,16 +103,6 @@ export interface AiConfig {
   strategistReplan: 'everyTurn' | 'onChange';
   /** Most own turns a seat's knobs are reused before the strategist is asked again. Default 3. */
   strategistMaxReuseTurns: number;
-  /**
-   * Stream OpenRouter responses (ADR 0040). An aborted stream stops generation and billing at
-   * supported providers; an aborted plain request is billed in full. Default: true.
-   */
-  streamResponses: boolean;
-  /**
-   * Retry a call that hit our own deadline. Default: false, because the provider may have billed
-   * the slow attempt and the bot can answer the decision for free.
-   */
-  retryOnTimeout: boolean;
   /**
    * Filter out OpenRouter providers that do not support prompt caching.
    * Default: true.

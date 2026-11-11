@@ -208,6 +208,11 @@ export class StrategyCoordinator {
   private inFlight: Promise<void> | null = null;
   /** Aborts whatever strategist call is currently in flight (or queued, unstarted). */
   private abortController: AbortController | null = null;
+  /**
+   * Every strategist call not yet settled. A later turn can start a call before an earlier one
+   * ends, so `cancel()` and `settled()` must reach all of them, not only the newest.
+   */
+  private readonly outstanding = new Map<Promise<void>, AbortController>();
   /** Set by `cancel()` when the match halts/is abandoned — no further strategist call starts. */
   private cancelled = false;
   /**
@@ -295,6 +300,16 @@ export class StrategyCoordinator {
     await this.inFlight;
   }
 
+  /**
+   * Resolves once every strategist call started so far has settled, including older calls a
+   * later turn overtook. Used at game end, after `cancel()`, before costs are reported.
+   */
+  async drained(): Promise<void> {
+    while (this.outstanding.size > 0) {
+      await Promise.allSettled([...this.outstanding.keys()]);
+    }
+  }
+
   private resetIfNewTurn(turn: number, activePlayer: PlayerId): void {
     if (this.plannedTurn !== turn || this.plannedPlayer !== activePlayer) {
       this.plannedTurn = turn;
@@ -346,7 +361,13 @@ export class StrategyCoordinator {
     };
     const controller = new AbortController();
     this.abortController = controller;
-    this.inFlight = this.runStrategist(strategyRequest, generation, controller.signal);
+    const call = this.runStrategist(strategyRequest, generation, controller.signal);
+    this.inFlight = call;
+    this.outstanding.set(call, controller);
+    const forget = (): void => {
+      this.outstanding.delete(call);
+    };
+    call.then(forget, forget);
   }
 
   /**
@@ -360,6 +381,7 @@ export class StrategyCoordinator {
   cancel(): void {
     this.cancelled = true;
     this.abortController?.abort();
+    for (const controller of this.outstanding.values()) controller.abort();
   }
 
   private async runStrategist(
