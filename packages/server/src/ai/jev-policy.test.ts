@@ -1,7 +1,12 @@
 import type { DecisionRequest, PlayerView } from '@mtg/shared';
 import { describe, expect, it, vi } from 'vitest';
 import type { JevActionResult } from './jev-client';
-import { JevActionPolicy, type JevActionClient, type JevDecisionTrace } from './jev-policy';
+import {
+  JevActionPolicy,
+  sameResponse,
+  type JevActionClient,
+  type JevDecisionTrace,
+} from './jev-policy';
 
 const request: DecisionRequest = {
   requestId: 'r1',
@@ -252,5 +257,46 @@ describe('JevActionPolicy', () => {
     await expect(
       policy(client, 0.5).decide(request, view, undefined, { ignoreThresholds: true }),
     ).resolves.toMatchObject({ kind: 'answered', confidence: 0.2 });
+  });
+});
+
+describe('sameResponse', () => {
+  const targeted: DecisionRequest = {
+    ...request,
+    legalActions: [
+      { id: 0, type: 'pass', description: 'Pass' },
+      {
+        id: 3,
+        type: 'castSpell',
+        description: 'Cast Bolt',
+        targets: [
+          { slot: 0, options: ['P2'] },
+          { slot: 1, options: ['c1', 'c2'] },
+        ],
+      },
+    ],
+  };
+  const r = (targets: Array<{ slot: number; choice: string }>) => ({
+    requestId: 'r1',
+    actionId: 3,
+    targets,
+  });
+
+  it('counts an omitted forced slot as its only option', () => {
+    const chat = r([{ slot: 1, choice: 'c1' }]);
+    const jev = r([
+      { slot: 0, choice: 'P2' },
+      { slot: 1, choice: 'c1' },
+    ]);
+    expect(sameResponse(jev, chat, targeted)).toBe(true);
+    // Without the request the forced slot cannot be known, so the strict comparison stands.
+    expect(sameResponse(jev, chat)).toBe(false);
+  });
+
+  it('still tells different choices apart', () => {
+    expect(
+      sameResponse(r([{ slot: 1, choice: 'c1' }]), r([{ slot: 1, choice: 'c2' }]), targeted),
+    ).toBe(false);
+    expect(sameResponse({ ...r([]), actionId: 0 }, r([]), targeted)).toBe(false);
   });
 });

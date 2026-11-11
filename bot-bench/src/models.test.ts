@@ -212,6 +212,36 @@ describe('a model in the tested seat, through the production pipeline', () => {
     expect(result!.cases).toHaveLength(2);
   });
 
+  it('counts price-list estimates against the spend cap', async () => {
+    const calls: FakeTurn[] = [];
+    // The provider reports no charge; the lineup's price list makes each request $0.60.
+    const fetchImpl = fakeProvider(
+      (turn) => ({
+        content: pick(turn, 'Pass priority'),
+        promptTokens: 600_000,
+        completionTokens: 0,
+      }),
+      calls,
+    );
+    const priced = parseLineup([
+      {
+        id: 'priced',
+        kind: 'llm',
+        provider: 'openrouter',
+        model: 'fake/priced',
+        pricing: { inputPerMTok: 1, outputPerMTok: 1 },
+      },
+    ]);
+    const [result] = await runLineup(
+      only('wrath-then-rebuild'),
+      priced,
+      options(fetchImpl, { spendCapUsd: 0.5 }),
+    );
+    expect(calls).toHaveLength(1);
+    expect(result!.status).toBe('aborted');
+    expect(result!.abortReason).toMatch(/spend cap of \$0\.50 reached during wrath-then-rebuild/);
+  });
+
   it('never counts an unpriced decision as free', async () => {
     let sent = 0;
     const fetchImpl = fakeProvider((turn) =>

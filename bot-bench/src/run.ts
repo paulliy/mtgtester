@@ -88,13 +88,19 @@ export async function runLineup(
 
   const runModel = async (entry: LineupEntry): Promise<ModelResult> => {
     let trial = 1;
+    // Charges the provider reported during the current decision; a model's decisions run one at
+    // a time, so this is never shared between two of them.
+    let reportedThisDecision = 0;
     const runtime: LlmRuntime = {
       env: options.env,
       mode: options.mode,
       ...(options.fetchImpl !== undefined && { fetchImpl: options.fetchImpl }),
       ...(options.sleepImpl !== undefined && { sleepImpl: options.sleepImpl }),
       onAttempt: (attempt, context) => {
-        if (attempt.usage.costUsd !== undefined) knownSpend += attempt.usage.costUsd;
+        if (attempt.usage.costUsd !== undefined) {
+          knownSpend += attempt.usage.costUsd;
+          reportedThisDecision += attempt.usage.costUsd;
+        }
         options.onTranscript?.({
           modelId: entry.id,
           caseId: context.caseId,
@@ -128,12 +134,18 @@ export async function runLineup(
       const makeActor: ActorFactory = (engine, benchCase) => {
         const actor = baseFactory(engine, benchCase);
         return {
-          decide(request, view) {
+          async decide(request, view) {
             if (overBudget()) {
               capReachedInCase = true;
               throw new SpendCapReached(options.spendCapUsd ?? 0);
             }
-            return actor.decide(request, view);
+            reportedThisDecision = 0;
+            const answer = await actor.decide(request, view);
+            // A decision priced from the lineup's price list counts against the cap too, less
+            // whatever its attempts already reported, so nothing is counted twice.
+            if (answer.costSource === 'estimated' && answer.costUsd !== undefined)
+              knownSpend += Math.max(0, answer.costUsd - reportedThisDecision);
+            return answer;
           },
         };
       };

@@ -233,7 +233,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
           ? {}
           : {
               jevActionId: jevResponse.actionId,
-              agreed: sameResponse(jevResponse, played),
+              agreed: sameResponse(jevResponse, played, request),
               sameAction: jevResponse.actionId === played.actionId,
             }),
         ...(confidence === null ? {} : { confidence }),

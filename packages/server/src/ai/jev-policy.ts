@@ -132,15 +132,26 @@ export interface JevComparison {
 
 export type JevComparisonObserver = (comparison: JevComparison) => void;
 
-/** Same action, and the same object in every target slot. */
-export function sameResponse(left: DecisionResponse, right: DecisionResponse): boolean {
+/**
+ * Same action, and the same object in every target slot. With the request, a slot that has a
+ * single legal option counts as filled with it when a response leaves it out: the validator
+ * accepts the omission and the engine resolves it the same way.
+ */
+export function sameResponse(
+  left: DecisionResponse,
+  right: DecisionResponse,
+  request?: DecisionRequest,
+): boolean {
   if (left.actionId !== right.actionId) return false;
-  const key = (response: DecisionResponse): string =>
-    JSON.stringify(
-      [...(response.targets ?? [])]
-        .sort((a, b) => a.slot - b.slot)
-        .map((target) => [target.slot, target.choice]),
-    );
+  const slots = request?.legalActions.find((action) => action.id === left.actionId)?.targets ?? [];
+  const key = (response: DecisionResponse): string => {
+    const chosen = new Map((response.targets ?? []).map((target) => [target.slot, target.choice]));
+    for (const slot of slots) {
+      const only = slot.options.length === 1 ? slot.options[0] : undefined;
+      if (!chosen.has(slot.slot) && only !== undefined) chosen.set(slot.slot, only);
+    }
+    return JSON.stringify([...chosen].sort(([a], [b]) => a - b));
+  };
   return key(left) === key(right);
 }
 
