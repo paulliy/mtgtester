@@ -107,16 +107,16 @@ export function budgetedFetch(budget: Budget, inner: typeof fetch = fetch): type
  * usage is taken from the client's attempt record instead; accepted attempts are counted from the
  * result, so nothing is charged twice.
  */
-export function counting(
-  inner: OpenAiCompatibleClient,
+export function counting<M extends string = ModeName>(
+  inner: CountableClient,
   role: 'tactician' | 'strategist',
-  modeOf: (seat: PlayerId) => ModeName,
-  tallies: Record<ModeName, Tally>,
+  modeOf: (seat: PlayerId) => M,
+  tallies: Record<M, Tally>,
   budget: Budget,
 ): CountingClient {
-  const modeByRequest = new Map<string, ModeName>();
+  const modeByRequest = new Map<string, M>();
   // Kept after a call ends, so a cost settled after the game still finds its seat's mode.
-  const settledModeByRequest = new Map<string, ModeName>();
+  const settledModeByRequest = new Map<string, M>();
   let outer: AiAttemptObserver | undefined;
   const charge = (tally: Tally, promptTokens = 0, responseTokens = 0, costUsd?: number): void => {
     tally.promptTokens += promptTokens;
@@ -204,6 +204,12 @@ export function counting(
     },
   };
 }
+
+/** The parts of `OpenAiCompatibleClient` that `counting` uses, so tests and offline runs can stub it. */
+export type CountableClient = Pick<
+  OpenAiCompatibleClient,
+  'activeModel' | 'requestDecision' | 'setAttemptObserver' | 'settleUnknownCosts'
+>;
 
 export interface CountingClient extends AiClient {
   /** Look up what OpenRouter billed for unpriced attempts and add it to each mode's tally. */

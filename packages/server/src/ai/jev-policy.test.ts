@@ -1,7 +1,12 @@
 import type { DecisionRequest, PlayerView } from '@mtg/shared';
 import { describe, expect, it, vi } from 'vitest';
 import type { JevActionResult } from './jev-client';
-import { JevActionPolicy, type JevActionClient, type JevDecisionTrace } from './jev-policy';
+import {
+  JevActionPolicy,
+  sameResponse,
+  type JevActionClient,
+  type JevDecisionTrace,
+} from './jev-policy';
 
 const request: DecisionRequest = {
   requestId: 'r1',
@@ -179,5 +184,109 @@ describe('JevActionPolicy', () => {
       reason: 'cancelled',
     });
     expect(client.requestAction).not.toHaveBeenCalled();
+  });
+
+  it('treats unreported scores as below any nonzero threshold', async () => {
+    const unscored: JevActionResult = {
+      ...result(),
+      answer: { type: 'choice', choice: 'action_2' },
+    };
+    const client = { requestAction: vi.fn().mockResolvedValue(unscored) };
+    await expect(policy(client, 0.5).decide(request, view)).resolves.toMatchObject({
+      kind: 'fallthrough',
+      reason: 'low_confidence',
+    });
+    const permissive = new JevActionPolicy(
+      client,
+      { enqueue: (fn) => fn() },
+      { model: 'typesafe/jev-1.13', minConfidence: 0, minTopTwoMargin: 0 },
+    );
+    await expect(permissive.decide(request, view)).resolves.toMatchObject({
+      kind: 'answered',
+      confidence: null,
+      response: { actionId: 2 },
+    });
+  });
+
+  it('answers a targeted menu when expansion is on and passes custom instructions', async () => {
+    const client = {
+      requestAction: vi.fn().mockResolvedValue({
+        ...result(),
+        answer: {
+          type: 'choice',
+          choice: 'action_2_t1',
+          confidence: 0.9,
+          probabilities: { action_2_t1: 0.9, action_2_t0: 0.1 },
+        },
+      }),
+    };
+    const targeted: DecisionRequest = {
+      ...request,
+      legalActions: [
+        {
+          id: 2,
+          type: 'castSpell',
+          description: 'Cast spell',
+          targets: [{ slot: 0, options: ['a', 'b'] }],
+        },
+      ],
+    };
+    const expanding = new JevActionPolicy(
+      client,
+      { enqueue: (fn) => fn() },
+      {
+        model: 'typesafe/jev-1.13',
+        minConfidence: 0.5,
+        minTopTwoMargin: 0.1,
+        expandTargets: true,
+      },
+    );
+    await expect(
+      expanding.decide(targeted, view, undefined, { instructions: 'Close call.' }),
+    ).resolves.toMatchObject({
+      kind: 'answered',
+      response: { actionId: 2, targets: [{ slot: 0, choice: 'b' }] },
+    });
+    expect(client.requestAction.mock.calls[0]![0].request.questions.action.instructions).toBe(
+      'Close call.',
+    );
+  });
+
+  it('uses the answer whatever its confidence when asked to ignore thresholds', async () => {
+    const client = { requestAction: vi.fn().mockResolvedValue(result(0.2)) };
+    await expect(
+      policy(client, 0.5).decide(request, view, undefined, { ignoreThresholds: true }),
+    ).resolves.toMatchObject({ kind: 'answered', confidence: 0.2 });
+  });
+
+  it('treats an omitted forced target as the one the engine would fill', () => {
+    const targeted: DecisionRequest = {
+      ...request,
+      legalActions: [
+        {
+          id: 2,
+          type: 'castSpell',
+          description: 'Cast spell',
+          targets: [
+            { slot: 0, options: ['p2'] },
+            { slot: 1, options: ['a', 'b'] },
+          ],
+        },
+      ],
+    };
+    const jev = {
+      requestId: 'r1',
+      actionId: 2,
+      targets: [
+        { slot: 0, choice: 'p2' },
+        { slot: 1, choice: 'a' },
+      ],
+    };
+    const chat = { requestId: 'r1', actionId: 2, targets: [{ slot: 1, choice: 'a' }] };
+    expect(sameResponse(jev, chat, targeted)).toBe(true);
+    expect(sameResponse(jev, chat)).toBe(false);
+    expect(sameResponse(jev, { ...chat, targets: [{ slot: 1, choice: 'b' }] }, targeted)).toBe(
+      false,
+    );
   });
 });

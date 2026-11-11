@@ -167,4 +167,127 @@ describe('Jev tactician decision contract', () => {
       }),
     ).toEqual({ kind: 'invalid', reason: 'probabilities must sum to 1' });
   });
+
+  describe('target expansion', () => {
+    const removal = (targets: Array<{ slot: number; options: string[] }>): DecisionRequest =>
+      request({
+        legalActions: [
+          { id: 3, type: 'pass', description: 'Pass priority' },
+          { id: 9, type: 'castSpell', description: 'Cast removal', targets },
+        ],
+      });
+
+    it('offers one option per legal target and submits the chosen target', () => {
+      const original = removal([{ slot: 0, options: ['c1', 'c2'] }]);
+      const withNames: PlayerView = {
+        ...view(),
+        battlefield: [
+          {
+            id: 'c1',
+            name: 'Grizzly Bears',
+            controller: 'P2',
+            status: [],
+          } as unknown as PlayerView['battlefield'][0],
+        ],
+      };
+      const built = buildJevActionRequest(
+        'typesafe/jev-1.13',
+        original,
+        withNames,
+        undefined,
+        {},
+        undefined,
+        { expandTargets: true },
+      );
+      expect(built.kind).toBe('ready');
+      if (built.kind !== 'ready') return;
+      expect(built.classification).toMatchObject({ shape: 'expanded_targets', optionCount: 3 });
+      expect(Object.keys(built.request.questions.action.criteria)).toEqual([
+        'action_3',
+        'action_9_t0',
+        'action_9_t1',
+      ]);
+      expect(built.request.questions.action.criteria['action_9_t0']?.target).toMatchObject({
+        id: 'c1',
+        name: 'Grizzly Bears',
+        controller: 'P2',
+      });
+      expect(
+        adaptJevActionAnswer(built, original, {
+          type: 'choice',
+          choice: 'action_9_t1',
+          probabilities: { action_9_t1: 0.7, action_9_t0: 0.2, action_3: 0.1 },
+        }),
+      ).toMatchObject({
+        kind: 'accepted',
+        response: { actionId: 9, targets: [{ slot: 0, choice: 'c2' }] },
+        confidence: 0.7,
+      });
+    });
+
+    it('keeps forced slots and refuses two undecided slots or a possible repeat', () => {
+      const forcedPlusOpen = removal([
+        { slot: 0, options: ['me'] },
+        { slot: 1, options: ['c1', 'c2'] },
+      ]);
+      expect(
+        classifyTacticalDecision(forcedPlusOpen, undefined, { expandTargets: true }),
+      ).toMatchObject({ shape: 'expanded_targets', optionCount: 3 });
+      expect(
+        classifyTacticalDecision(
+          removal([
+            { slot: 0, options: ['c1', 'c2'] },
+            { slot: 1, options: ['c3', 'c4'] },
+          ]),
+          undefined,
+          { expandTargets: true },
+        ),
+      ).toMatchObject({ shape: 'ambiguous_targets', jevSupported: false });
+      expect(
+        classifyTacticalDecision(
+          removal([
+            { slot: 0, options: ['c1'] },
+            { slot: 1, options: ['c1', 'c2'] },
+          ]),
+          undefined,
+          { expandTargets: true },
+        ),
+      ).toMatchObject({ shape: 'ambiguous_targets', jevSupported: false });
+    });
+
+    it('stays within the option limit after expansion', () => {
+      expect(
+        classifyTacticalDecision(removal([{ slot: 0, options: ['a', 'b', 'c'] }]), 3, {
+          expandTargets: true,
+        }),
+      ).toMatchObject({ shape: 'ambiguous_targets', jevSupported: false });
+    });
+  });
+
+  it('accepts unscored answers and partial probabilities', () => {
+    const original = request();
+    const built = buildJevActionRequest('typesafe/jev-1.13', original, view());
+    if (built.kind !== 'ready') throw new Error('expected ready');
+    expect(adaptJevActionAnswer(built, original, { type: 'choice', choice: 'action_9' })).toEqual({
+      kind: 'accepted',
+      response: { requestId: 'request-1', actionId: 9 },
+      confidence: null,
+      probabilities: {},
+      topTwoMargin: null,
+    });
+    expect(
+      adaptJevActionAnswer(built, original, {
+        type: 'choice',
+        choice: 'action_9',
+        probabilities: { action_9: 0.6 },
+      }),
+    ).toMatchObject({ kind: 'accepted', confidence: 0.6, topTwoMargin: 0.6 });
+    expect(
+      adaptJevActionAnswer(built, original, {
+        type: 'choice',
+        choice: 'action_9',
+        probabilities: { action_9: 0.6, action_77: 0.1 },
+      }),
+    ).toEqual({ kind: 'invalid', reason: 'probability options do not match the legal action map' });
+  });
 });

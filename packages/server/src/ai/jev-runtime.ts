@@ -1,10 +1,15 @@
 import type { AiAttemptObserver } from './client';
 import type { AiConfig } from './config';
 import { JevClient } from './jev-client';
-import { JevActionPolicy, type JevPolicyBinding, type JevTraceObserver } from './jev-policy';
+import {
+  JevActionPolicy,
+  type JevComparisonObserver,
+  type JevPolicyBinding,
+  type JevTraceObserver,
+} from './jev-policy';
 import { RequestQueue } from './queue';
 
-const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+export const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 
 /**
  * Build the independently configured Jev lane. Secrets stay in the process environment and are
@@ -15,6 +20,7 @@ export function createConfiguredJevPolicy(
   env: Record<string, string | undefined> = process.env,
   observer?: AiAttemptObserver,
   traceObserver?: JevTraceObserver,
+  comparisonObserver?: JevComparisonObserver,
 ): JevPolicyBinding | null {
   if (!config.jevEnabled && !config.jevShadowEnabled) return null;
 
@@ -45,11 +51,13 @@ export function createConfiguredJevPolicy(
   return {
     mode: config.jevEnabled ? 'active' : 'shadow',
     cancel: () => controller.abort(),
+    ...(comparisonObserver === undefined ? {} : { onComparison: comparisonObserver }),
     policy: new JevActionPolicy(client, queue, {
       model: config.jevModel,
       minConfidence: config.jevMinConfidence ?? 0,
       minTopTwoMargin: config.jevMinTopTwoMargin ?? 0,
       maxActions: config.jevMaxActions,
+      expandTargets: config.jevExpandTargets,
       mode: config.jevEnabled ? 'active' : 'shadow',
       ...(traceObserver === undefined ? {} : { onTrace: traceObserver }),
       signal: controller.signal,

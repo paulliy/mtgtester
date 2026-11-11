@@ -172,6 +172,30 @@ export interface AiConfig {
   jevRequestTimeoutMs: number;
   /** Maximum menu size admitted to Jev, capped by the model's Choice limit. */
   jevMaxActions: number;
+  /**
+   * What answers a decision Jev was asked but did not settle (unsupported shape, low confidence,
+   * transport failure). `model`: the chat tactician, as before. `bot`: the card-aware bot's own
+   * answer, which costs nothing. Env: `AI_JEV_FALLBACK`. Default: `model`.
+   */
+  jevFallback: 'model' | 'bot';
+  /**
+   * In shadow mode, which decisions Jev is asked about beside the seat's real answerer. `all`:
+   * every decision the bot or chat tactician answers. `uncertain`: only the bot's close calls.
+   * Env: `AI_JEV_SHADOW_SCOPE`. Default: `all`.
+   */
+  jevShadowScope: 'all' | 'uncertain';
+  /**
+   * On a bot close call, what Jev chooses from. `top2`: only the bot's two best options, and its
+   * answer is always used, since a paid pass is waste. `full`: the whole menu, with thresholds.
+   * Env: `AI_JEV_CLOSE_CALL_MENU`. Default: `top2`.
+   */
+  jevCloseCallMenu: 'top2' | 'full';
+  /**
+   * Offer a targeted action once per legal target, so Jev can answer menus with a target choice
+   * (one undecided slot per action, at most `jevMaxActions` options in all). Env:
+   * `AI_JEV_EXPAND_TARGETS`. Default: true.
+   */
+  jevExpandTargets: boolean;
   /** Calibrated acceptance thresholds. Required before authoritative Jev is enabled. */
   jevMinConfidence: number | null;
   jevMinTopTwoMargin: number | null;
@@ -359,6 +383,10 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   jevModel: 'typesafe/jev-1.13',
   jevRequestTimeoutMs: 2_000,
   jevMaxActions: 255,
+  jevFallback: 'model',
+  jevShadowScope: 'all',
+  jevCloseCallMenu: 'top2',
+  jevExpandTargets: true,
   jevMinConfidence: null,
   jevMinTopTwoMargin: null,
 };
@@ -736,6 +764,25 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
     jevMaxActions: Math.min(
       255,
       parseNumber(env['AI_JEV_MAX_ACTIONS'], DEFAULT_AI_CONFIG.jevMaxActions),
+    ),
+    jevFallback: parseChoice(
+      env['AI_JEV_FALLBACK'],
+      ['model', 'bot'] as const,
+      DEFAULT_AI_CONFIG.jevFallback,
+    ),
+    jevShadowScope: parseChoice(
+      env['AI_JEV_SHADOW_SCOPE'],
+      ['all', 'uncertain'] as const,
+      DEFAULT_AI_CONFIG.jevShadowScope,
+    ),
+    jevCloseCallMenu: parseChoice(
+      env['AI_JEV_CLOSE_CALL_MENU'],
+      ['top2', 'full'] as const,
+      DEFAULT_AI_CONFIG.jevCloseCallMenu,
+    ),
+    jevExpandTargets: parseBoolean(
+      env['AI_JEV_EXPAND_TARGETS'],
+      DEFAULT_AI_CONFIG.jevExpandTargets,
     ),
     jevMinConfidence: parseOptionalProbability(
       env['AI_JEV_MIN_CONFIDENCE'],

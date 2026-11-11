@@ -6,7 +6,12 @@
 
 import type { DecisionRequest, DecisionResponse } from '@mtg/shared';
 import type { AiAttemptObserver, AiNetworkAttempt, CallMeta } from './client';
-import type { JevDecisionTrace, JevTraceObserver } from './jev-policy';
+import type {
+  JevComparison,
+  JevComparisonObserver,
+  JevDecisionTrace,
+  JevTraceObserver,
+} from './jev-policy';
 
 export interface CallResult {
   response: DecisionResponse;
@@ -93,6 +98,7 @@ export class AiCallLogger {
   private readonly networkAttempts: AiNetworkAttempt[] = [];
   private attemptKnownCostUsd = 0;
   private readonly jevDecisionTraces: JevDecisionTrace[] = [];
+  private readonly jevComparisons: JevComparison[] = [];
 
   constructor(
     private readonly db: SqliteDb | null,
@@ -234,6 +240,17 @@ export class AiCallLogger {
 
   capturedJevTraces(): readonly JevDecisionTrace[] {
     return this.jevDecisionTraces;
+  }
+
+  jevComparisonObserver(): JevComparisonObserver {
+    return (comparison) => {
+      this.jevComparisons.push({ ...comparison });
+    };
+  }
+
+  /** Jev's answers beside the answers actually played (shadow and fallthrough), this process. */
+  capturedJevComparisons(): readonly JevComparison[] {
+    return this.jevComparisons;
   }
 
   /** Resolution source for a surfaced decision, if it was recorded by this logger. */

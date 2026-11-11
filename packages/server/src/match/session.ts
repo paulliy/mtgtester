@@ -2419,6 +2419,7 @@ export class MatchSession {
           process.env,
           this.logger?.attemptObserver(),
           this.logger?.jevTraceObserver(),
+          this.logger?.jevComparisonObserver(),
         ) ?? null;
     }
     this.aiQueue ??= new RequestQueue(config);

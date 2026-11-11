@@ -12,7 +12,7 @@ import { DEFAULT_AI_CONFIG } from './config';
 import { StrategyCoordinator } from './strategy-coordinator';
 import { AiCallLogger } from './logger';
 import type { Engine } from '@mtg/engine';
-import type { JevTacticalPolicy } from './jev-policy';
+import type { JevComparison, JevTacticalPolicy } from './jev-policy';
 
 describe('OpenAiDecisionProvider', () => {
   const mockEngine = {
@@ -237,6 +237,71 @@ describe('OpenAiDecisionProvider', () => {
     await expect(provider.decide(fixtureReq)).resolves.toMatchObject({ actionId: 0 });
     expect(jevPolicy.decide).toHaveBeenCalledTimes(1);
     expect(mockClient.requestDecision).toHaveBeenCalledTimes(1);
+  });
+
+  it('records whether shadow Jev agreed with the chat tactician', async () => {
+    const mockClient: AiClient = {
+      activeModel: 'chat-model',
+      requestDecision: vi.fn().mockResolvedValue({
+        response: { requestId: 'req-1', actionId: 0 },
+        meta: {
+          model: 'chat-model',
+          promptTokens: 10,
+          responseTokens: 5,
+          latencyMs: 100,
+          wasRetry: false,
+          wasFallback: false,
+          rawResponse: '{"actionId":0}',
+        },
+      }),
+    };
+    const jevPolicy: JevTacticalPolicy = {
+      decide: vi.fn().mockResolvedValue({
+        kind: 'answered',
+        response: { requestId: 'req-1', actionId: 1 },
+        meta: {
+          model: 'typesafe/jev-1.13',
+          promptTokens: 10,
+          responseTokens: 1,
+          latencyMs: 10,
+          wasRetry: false,
+          wasFallback: false,
+          rawResponse: '{}',
+        },
+        classification: {
+          shape: 'action_only',
+          jevSupported: true,
+          reason: 'supported_action_only',
+          actionCount: 2,
+          targetSlotCount: 0,
+        },
+        confidence: 0.7,
+        topTwoMargin: 0.4,
+        probabilities: { action_0: 0.3, action_1: 0.7 },
+      }),
+    };
+    const comparisons: JevComparison[] = [];
+    const provider = new OpenAiDecisionProvider(
+      mockClient,
+      mockQueue,
+      mockEngine,
+      DEFAULT_AI_CONFIG,
+      undefined,
+      undefined,
+      undefined,
+      { policy: jevPolicy, mode: 'shadow', onComparison: (c) => comparisons.push(c) },
+    );
+
+    await expect(provider.decide(fixtureReq)).resolves.toMatchObject({ actionId: 0 });
+    await vi.waitFor(() => expect(comparisons).toHaveLength(1));
+    expect(comparisons[0]).toMatchObject({
+      playedBy: 'model',
+      playedActionId: 0,
+      jevOutcome: 'answered',
+      jevActionId: 1,
+      agreed: false,
+      confidence: 0.7,
+    });
   });
 
   it('retries once with corrective error message when primary is invalid', async () => {
