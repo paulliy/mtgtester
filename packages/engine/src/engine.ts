@@ -24,6 +24,7 @@ import type {
   PlayerView,
   SpectatorState,
 } from '@mtg/shared';
+import type { CardDefinition } from './cards/definition';
 import { describeDamageSplit } from './combat/combat';
 import type { DecisionOutcome, GameGen, PendingDecision } from './decisions';
 import { forcedOutcome, isForced } from './decisions';
@@ -355,6 +356,15 @@ export class Engine implements EngineDriver {
   /** The authoritative game state. NEVER hand this to an AI — use `view()` (brief §7.1). */
   getState(): GameState {
     return this.ctx.state;
+  }
+
+  /**
+   * The game's interpreted card definitions, one per oracle id. Public card data, not game state:
+   * the server derives the heuristic bot's card traits from it (ADR 0039) instead of interpreting
+   * every card a second time.
+   */
+  cardDefinitions(): Iterable<CardDefinition> {
+    return this.ctx.defs.values();
   }
 
   /**

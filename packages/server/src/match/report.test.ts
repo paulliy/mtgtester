@@ -270,7 +270,8 @@ describe('MatchSession.gameReport', () => {
     expect(report.seats[2]?.source).toEqual({ kind: 'url', url: 'https://example.test/decks/p3' });
     expect(report.recentLog.length).toBeLessThanOrEqual(REPORT_LOG_LINES);
     expect(report.recentLog.at(-1)).toMatch(/^T\d+/);
-  });
+    // The loop above allows the game 10 s; the test's own timeout has to cover that.
+  }, 20_000);
 
   it('reads the seed, tags and decklists from the policy, not from the mode', async () => {
     const sent: ServerToClientMessage[] = [];

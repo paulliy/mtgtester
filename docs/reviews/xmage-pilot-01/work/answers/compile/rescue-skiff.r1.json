@@ -1,0 +1,26 @@
+{
+  "status": "compiled",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": { "when": "enters", "subject": { "kind": "self" } },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "cardInGraveyard",
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                { "kind": "type", "value": "Creature" },
+                { "kind": "type", "value": "Enchantment" }
+              ]
+            }
+          }
+        ],
+        "effects": [{ "op": "graveyardToBattlefield", "target": 0 }],
+        "description": "When this Spacecraft enters, return target creature or enchantment card from your graveyard to the battlefield."
+      }
+    ]
+  }
+}

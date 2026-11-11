@@ -1,0 +1,37 @@
+{
+  "name": "Goblin Arsonist",
+  "oracleId": "c1177f22-a1cf-4da3-a68d-ff954e878403",
+  "source": "xmage@31ede542",
+  "handledLines": ["When this creature dies, you may have it deal 1 damage to any target."],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [
+          {
+            "kind": "anyTarget"
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": 0,
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "When this creature dies, you may have it deal 1 damage to any target."
+      }
+    ]
+  }
+}

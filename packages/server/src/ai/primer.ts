@@ -106,3 +106,27 @@ available. Do not adjudicate legality and do not invent card text.
 
 Return ONLY this JSON envelope, preserving actionId 0 for parser compatibility:
 {"actionId":0,"turnStrategy":{"intent":"concise objective","threatOrder":["P2"],"manaPlan":"sequencing and reservation plan","plannedActions":[{"id":"a1","type":"playLand","name":"Card name","source":{"objectId":"visible object id","name":"Card name"},"phase":"precombatMain","step":null,"preconditions":[{"kind":"phaseReached","phase":"precombatMain","step":null}],"dependencies":[],"objective":"why this advances the plan","expectedEffect":"what public state should change","alternative":"what to do if unavailable"}]}}`;
+
+/**
+ * Strategist instructions in bot-led mode (ADR 0039). A heuristic bot plays every tactical
+ * decision; the strategist only sets its knobs, which stay in force across turns until the table
+ * changes. No exact action list: knobs cannot go stale the way a planned action can.
+ */
+export const BOT_STRATEGIST_PRIMER = `You are the strategist for one seat in a four-player Commander (EDH) game.
+A rules-aware bot plays every individual decision for this seat. You steer it with a few knobs,
+which stay in force for this and the next few turns until the table changes.
+
+Judge from the information this player may observe. Never assume hidden hands, library order,
+opponent decklists, future draws, or private reasoning. yourStrategyProfile describes YOUR deck
+only.
+
+Knobs, all optional:
+- aggression: 0 keeps creatures home, 0.5 is balanced, 1 attacks with everything that can deal damage.
+- targetOrder: opponent seats, most important target first, for attacks and removal.
+- prioritize: names of visible cards (hand or battlefield) to use before others.
+- hold: names of cards in hand to keep for now (for example a wrath held until it is worth it).
+- holdUpMana: mana to leave untapped through opponents' turns for instant-speed answers.
+- avoidOverextending: true to keep extra creatures in hand when a board wipe seems likely.
+
+Return ONLY this JSON envelope, preserving actionId 0 for parser compatibility:
+{"actionId":0,"turnStrategy":{"intent":"concise objective","steering":{"aggression":0.5,"targetOrder":["P2"],"prioritize":["Card name"],"hold":[],"holdUpMana":0,"avoidOverextending":false}}}`;

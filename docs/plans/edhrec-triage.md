@@ -7,8 +7,8 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 | Failing slot | Cards | Share of slots |
 | ------------ | ----: | -------------: |
 | effect | 2507 | 11.57% |
-| subject | 1152 | 5.69% |
-| line | 1105 | 6.12% |
+| subject | 1162 | 5.72% |
+| line | 1095 | 6.10% |
 | trigger event | 391 | 1.55% |
 | cost | 298 | 1.26% |
 | condition | 154 | 0.69% |
@@ -37,7 +37,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 8 × `discover n` (Hit the Mother Lode, Hidden Nursery, Hidden Volcano)
 - 8 × `populate` (Nesting Dovehawk, Determined Iteration, Growing Ranks)
 
-## subject (1152)
+## subject (1162)
 
 - 27 × `you may` (Mockingbird, Vesuva, Phantasmal Image)
 - 25 × `~` (Yahenni, Undying Partisan, Marvin, Murderous Mimic, Paradise Druid)
@@ -55,7 +55,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 6 × `this artifact enters or` (Ichor Wellspring, Prized Statue, Mycosynth Wellspring)
 - 6 × `cards in your hand` (Castle Locthwain, Alandra, Sky Dreamer, Jolrael, Mwonvuli Recluse)
 
-## line (1105)
+## line (1095)
 
 - 11 × `modular n` (Arcbound Ravager, Arcbound Crusher, Scrapyard Recombiner)
 - 10 × `when this land enters, it deals n damage to target opponent` (Abraded Bluffs, Bristling Backwoods, Jagged Barrens)

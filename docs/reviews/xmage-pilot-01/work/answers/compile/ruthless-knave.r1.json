@@ -1,0 +1,30 @@
+{
+  "status": "compiled",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                { "kind": "controller", "who": "you" },
+                { "kind": "subtype", "value": "Treasure" }
+              ]
+            },
+            "count": 3,
+            "allowSelf": true
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [{ "op": "draw", "count": { "kind": "const", "n": 1 } }],
+          "description": "Sacrifice three Treasures: Draw a card."
+        }
+      }
+    ]
+  }
+}

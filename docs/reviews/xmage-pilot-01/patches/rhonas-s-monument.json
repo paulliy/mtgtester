@@ -1,0 +1,31 @@
+{
+  "name": "Rhonas's Monument",
+  "oracleId": "b9a7c722-6b24-4383-ac6e-2a30f7834269",
+  "source": "xmage@31ede542",
+  "handledLines": ["Green creature spells you cast cost {1} less to cast."],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "color",
+              "value": "G"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

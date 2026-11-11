@@ -1,7 +1,14 @@
-import type { DecisionRequest, DecisionResponse, LegalAction, PlayerView } from '@mtg/shared';
+import type {
+  BotSteering,
+  DecisionRequest,
+  DecisionResponse,
+  LegalAction,
+  PlayerView,
+} from '@mtg/shared';
+import type { CardKnowledge } from './card-knowledge';
 import type { CombatSearchOptions } from './combat-search';
 import type { DiplomacyPlay } from './diplomacy/play';
-import { decide } from './evaluate';
+import { decideScored, type EvaluateOptions, type ScoredDecision } from './evaluate';
 import { Rng, type RandomSource } from './rng';
 
 /**
@@ -43,6 +50,12 @@ export interface HeuristicProviderOptions {
   combatSearch?: CombatSearchOptions;
   /** Table diplomacy for this seat (ADR 0035). Omitted, the bot plays exactly as before. */
   diplomacy?: DiplomacyPlay;
+  /** Card traits from the IR, by name (ADR 0039). */
+  knowledge?: CardKnowledge;
+  /** The strategist's current knobs for this seat, read at every decision (ADR 0039). */
+  steering?: () => BotSteering | undefined;
+  /** Score with the pre-ADR 0039 policy, for league comparisons only. */
+  legacy?: boolean;
 }
 
 export class HeuristicDecisionProvider implements DecisionProviderLike {
@@ -51,6 +64,7 @@ export class HeuristicDecisionProvider implements DecisionProviderLike {
   private readonly opts: HeuristicProviderOptions;
   private turnSeen = -1;
   private readonly activationsThisTurn = new Map<string, number>();
+  private mulligansTaken = 0;
 
   /**
    * Constructed with a view accessor rather than a fixed `PlayerView`: scoring needs the
@@ -71,25 +85,52 @@ export class HeuristicDecisionProvider implements DecisionProviderLike {
   }
 
   decide(request: DecisionRequest): DecisionResponse {
-    if (request.turn !== this.turnSeen) {
-      this.turnSeen = request.turn;
-      this.activationsThisTurn.clear();
-    }
+    return this.decideScored(request).response;
+  }
 
-    const response = decide(request, this.viewOf(), this.rng, {
+  /**
+   * `decide`, also returning the ranking, for the escalate-when-unsure check (ADR 0039). With
+   * `record` false the answer is not noted, for a caller that may still hand the decision to
+   * someone else and will `record` whatever is finally chosen.
+   */
+  decideScored(request: DecisionRequest, record = true): ScoredDecision {
+    this.syncTurn(request);
+    const steering = this.opts.steering?.();
+    const options: EvaluateOptions = {
       repeatCount: (action) => {
         const key = activationKey(action);
         return key === null ? 0 : (this.activationsThisTurn.get(key) ?? 0);
       },
+      mulligansTaken: this.mulligansTaken,
       ...(this.opts.combatSearch !== undefined ? { combatSearch: this.opts.combatSearch } : {}),
       ...(this.opts.diplomacy !== undefined ? { diplomacy: this.opts.diplomacy } : {}),
-    });
+      ...(this.opts.knowledge !== undefined ? { knowledge: this.opts.knowledge } : {}),
+      ...(steering !== undefined ? { steering } : {}),
+      ...(this.opts.legacy === true ? { legacy: true } : {}),
+    };
+    const scored = decideScored(request, this.viewOf(), this.rng, options);
+    if (record) this.record(request, scored.response);
+    return scored;
+  }
 
+  private syncTurn(request: DecisionRequest): void {
+    if (request.turn !== this.turnSeen) {
+      this.turnSeen = request.turn;
+      this.activationsThisTurn.clear();
+    }
+  }
+
+  /**
+   * Note a decision this seat made, whoever made it: the repeat damper and the mulligan count
+   * must see the model's answers too when the bot shares a seat with an escalating tactician.
+   */
+  record(request: DecisionRequest, response: DecisionResponse): void {
+    this.syncTurn(request);
     const chosen = request.legalActions.find((a) => a.id === response.actionId);
+    if (chosen?.type === 'mulligan') this.mulligansTaken++;
     const key = chosen === undefined ? null : activationKey(chosen);
     if (key !== null) {
       this.activationsThisTurn.set(key, (this.activationsThisTurn.get(key) ?? 0) + 1);
     }
-    return response;
   }
 }

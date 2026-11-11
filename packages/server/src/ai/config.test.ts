@@ -225,3 +225,23 @@ describe('AI Config', () => {
     expect(config.jevMinTopTwoMargin).toBeNull();
   });
 });
+
+describe('bot-led tactics settings (ADR 0039)', () => {
+  it('takes a fractional escalation margin and a reuse cap of 0', () => {
+    const config = loadAiConfig({
+      AI_BOT_ESCALATION_MARGIN: '0.5',
+      AI_STRATEGIST_MAX_REUSE_TURNS: '0',
+    });
+    expect(config.botEscalationMargin).toBe(0.5);
+    expect(config.strategistMaxReuseTurns).toBe(0);
+  });
+
+  it('keeps the defaults for negative or malformed values', () => {
+    const config = loadAiConfig({
+      AI_BOT_ESCALATION_MARGIN: '-1',
+      AI_STRATEGIST_MAX_REUSE_TURNS: '1.5',
+    });
+    expect(config.botEscalationMargin).toBe(1);
+    expect(config.strategistMaxReuseTurns).toBe(3);
+  });
+});

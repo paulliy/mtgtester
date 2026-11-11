@@ -1,0 +1,31 @@
+{
+  "name": "Bosk Banneret",
+  "oracleId": "b84dedfd-4020-444f-ac5a-54c65c0d0378",
+  "source": "xmage@31ede542",
+  "handledLines": ["Treefolk spells and Shaman spells you cast cost {1} less to cast."],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "filter": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "subtype",
+              "value": "Treefolk"
+            },
+            {
+              "kind": "subtype",
+              "value": "Shaman"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

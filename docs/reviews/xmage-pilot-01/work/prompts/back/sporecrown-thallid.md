@@ -1,0 +1,4 @@
+Type line: Creature — Fungus
+
+Behavior:
+{"staticEffects":[{"affects":{"kind":"allOf","of":[{"kind":"controller","who":"you"},{"kind":"type","value":"Creature"},{"kind":"anyOf","of":[{"kind":"subtype","value":"Fungus"},{"kind":"subtype","value":"Saproling"}]},{"kind":"other"}]},"op":{"layer":7,"sublayer":"d","power":1,"toughness":1}}]}

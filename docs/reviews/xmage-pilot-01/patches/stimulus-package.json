@@ -1,0 +1,56 @@
+{
+  "name": "Stimulus Package",
+  "oracleId": "ce76d17e-d536-46f0-98e2-3e1b1b4f61a4",
+  "source": "xmage@31ede542",
+  "handledLines": ["Sacrifice a Treasure: Create a 1/1 green and white Citizen creature token."],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Treasure"
+                }
+              ]
+            },
+            "allowSelf": true
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "createToken",
+              "spec": {
+                "name": "Citizen",
+                "typeLine": "Creature — Citizen",
+                "types": ["Creature"],
+                "subtypes": ["Citizen"],
+                "colors": ["G", "W"],
+                "power": 1,
+                "toughness": 1
+              },
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "Sacrifice a Treasure: Create a 1/1 green and white Citizen creature token."
+        }
+      }
+    ]
+  }
+}

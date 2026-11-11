@@ -1,0 +1,55 @@
+{
+  "name": "Nekrataal",
+  "oracleId": "d40adf5d-5edf-48a0-98f3-fcdbf1b5f25c",
+  "source": "xmage@31ede542",
+  "handledLines": [
+    "When this creature enters, destroy target nonartifact, nonblack creature. That creature can't be regenerated."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Artifact"
+                  }
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "color",
+                    "value": "B"
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "destroy",
+            "target": 0,
+            "cantRegenerate": true
+          }
+        ],
+        "description": "When this creature enters, destroy target nonartifact, nonblack creature. That creature can't be regenerated."
+      }
+    ]
+  }
+}

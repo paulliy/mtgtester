@@ -1,0 +1,4 @@
+Type line: Creature — Spirit
+
+Behavior:
+{"activatedAbilities":[{"costs":[{"kind":"mana","cost":{"generic":3,"colored":{"W":1,"U":0,"B":0,"R":0,"G":0},"colorless":0}},{"kind":"exileSelf"}],"timing":"any","ability":{"kind":"activated","targets":[{"kind":"creature"}],"effects":[{"op":"exile","target":0}]}}]}

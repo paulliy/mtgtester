@@ -1,0 +1,51 @@
+{
+  "name": "Ulvenwald Observer",
+  "oracleId": "dff3cfff-69f9-4afd-af28-b75504d30ffa",
+  "source": "xmage@31ede542",
+  "handledLines": [
+    "Whenever a creature you control with toughness 4 or greater dies, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "toughnessAtLeast",
+                  "n": 4
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a creature you control with toughness 4 or greater dies, draw a card."
+      }
+    ]
+  }
+}

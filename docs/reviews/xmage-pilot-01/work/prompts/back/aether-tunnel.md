@@ -1,0 +1,4 @@
+Type line: Enchantment — Aura
+
+Behavior:
+{"staticEffects":[{"affects":{"kind":"attachedToSource"},"op":{"layer":7,"sublayer":"d","power":1,"toughness":0}},{"affects":{"kind":"attachedToSource"},"op":{"layer":6,"setCantBeBlocked":true}}]}

@@ -1,0 +1,39 @@
+{
+  "name": "Flowering of the White Tree",
+  "oracleId": "3cda958a-f777-433d-850e-a6c8f581db4e",
+  "source": "xmage@31ede542",
+  "handledLines": ["Nonlegendary creatures you control get +1/+1."],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "not",
+              "of": {
+                "kind": "supertype",
+                "value": "Legendary"
+              }
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 1,
+          "toughness": 1
+        }
+      }
+    ]
+  }
+}

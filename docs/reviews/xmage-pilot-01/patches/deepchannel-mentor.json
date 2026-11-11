@@ -1,0 +1,34 @@
+{
+  "name": "Deepchannel Mentor",
+  "oracleId": "53b121df-3040-4ad0-a25d-587a299b4f8b",
+  "source": "xmage@31ede542",
+  "handledLines": ["Blue creatures you control can't be blocked."],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "color",
+              "value": "U"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "setCantBeBlocked": true
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "name": "Gixian Puppeteer",
+  "oracleId": "9d6a9a37-a245-4503-baeb-9488553798ab",
+  "source": "xmage@31ede542",
+  "handledLines": [
+    "When this creature dies, return another target creature card with mana value 3 or less from your graveyard to the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "cardInGraveyard",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "manaValueAtMost",
+                  "n": 3
+                }
+              ]
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "graveyardToBattlefield",
+            "target": 0
+          }
+        ],
+        "description": "When this creature dies, return another target creature card with mana value 3 or less from your graveyard to the battlefield."
+      }
+    ]
+  }
+}

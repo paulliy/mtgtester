@@ -1,0 +1,1 @@
+Whenever a creature you control with toughness 4 or greater dies, draw a card.

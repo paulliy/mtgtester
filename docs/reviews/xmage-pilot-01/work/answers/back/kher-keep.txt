@@ -1,0 +1,1 @@
+{1}{R}, {T}: Create a 0/1 red Kobold creature token named <text> with type line <text>. Activate this ability any time you have priority.
