@@ -127,7 +127,10 @@ export function modelMetrics(
   }
   const repeated = [...byCase.values()].filter((keys) => keys.length > 1);
 
-  const billable = decisions.filter((decision) => decision.requests > 0);
+  // Spending counts every decision that was paid for, including a case the spend cap cut off,
+  // which is not scored.
+  const paid = [...decisions, ...(result.unscored ?? []).flatMap((entry) => entry.decisions)];
+  const billable = paid.filter((decision) => decision.requests > 0);
   const known = billable.filter((decision) => decision.costUsd !== undefined);
   const totalUsd =
     billable.length === 0
@@ -147,8 +150,8 @@ export function modelMetrics(
           : pricedSources.size === 1
             ? (pricedSources.values().next().value as 'reported' | 'estimated')
             : 'mixed';
-  const promptTokens = decisions.reduce((sum, decision) => sum + (decision.promptTokens ?? 0), 0);
-  const responseTokens = decisions.reduce((sum, d) => sum + (d.responseTokens ?? 0), 0);
+  const promptTokens = paid.reduce((sum, decision) => sum + (decision.promptTokens ?? 0), 0);
+  const responseTokens = paid.reduce((sum, d) => sum + (d.responseTokens ?? 0), 0);
   // Averaged over the priced decisions only: dividing by every billed decision would count the
   // unpriced ones as free and make a model with incomplete billing look cheaper.
   const perDecisionUsd =
@@ -214,7 +217,7 @@ export function modelMetrics(
       responseTokens,
       promptTokensPerDecision: billable.length === 0 ? null : promptTokens / billable.length,
       responseTokensPerDecision: billable.length === 0 ? null : responseTokens / billable.length,
-      providerRequests: decisions.reduce((sum, decision) => sum + decision.requests, 0),
+      providerRequests: paid.reduce((sum, decision) => sum + decision.requests, 0),
     },
   };
 }

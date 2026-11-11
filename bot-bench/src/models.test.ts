@@ -254,11 +254,42 @@ describe('a model in the tested seat, through the production pipeline', () => {
     const { cost } = modelMetrics(result!, only('wrath-then-rebuild'), 1);
     expect(sent).toBeGreaterThan(1);
     expect(cost.source).toBe('partial');
-    expect(cost.unpricedDecisions).toBe(sent - 1);
-    // A lower bound, and an average over the one priced decision, not $0.01 spread over all.
+    const unpriced = result!.cases[0]!.run.decisions.filter((d) => d.costUsd === undefined);
+    expect(unpriced.length).toBeGreaterThan(0);
+    expect(cost.unpricedDecisions).toBe(unpriced.length);
+    // A lower bound, and an average over the priced decisions only (one paid $0.01; a request
+    // that failed before any generation is a known $0), never spread over the unpriced ones.
+    const priced = result!.cases[0]!.run.decisions.filter((d) => d.costUsd !== undefined);
     expect(cost.totalUsd).toBeCloseTo(0.01);
-    expect(cost.perDecisionUsd).toBeCloseTo(0.01);
-    expect(cost.perGameUsd).toBeCloseTo(3);
+    expect(cost.perDecisionUsd).toBeCloseTo(0.01 / priced.length);
+    expect(cost.perGameUsd).toBeCloseTo((0.01 / priced.length) * 300);
+  });
+
+  it('keeps a cost unknown when an earlier attempt may have been billed', async () => {
+    // Each request's first attempt starts a generation (it streams an id and some text), then
+    // the stream breaks; the retry succeeds and reports its charge. The broken attempt may have
+    // been billed too, and nothing reported what it cost.
+    const answer = fakeProvider((turn) => ({ content: pick(turn, 'Pass priority'), cost: 0.01 }));
+    const seen = new Set<string>();
+    const fetchImpl = (async (url: unknown, init?: { body?: unknown }) => {
+      const body = JSON.parse(String(init?.body)) as { messages: Array<{ content: string }> };
+      const requestId = (JSON.parse(body.messages[1]!.content) as { ctx: { reqId: string } }).ctx
+        .reqId;
+      if (seen.has(requestId)) return answer(url as string, init as RequestInit);
+      seen.add(requestId);
+      const chunks = [
+        { id: 'gen-1', choices: [{ delta: { content: '{"requestId":' } }] },
+        { id: 'gen-1', error: { code: 502, message: 'upstream stream broke' } },
+      ];
+      return new Response(chunks.map((chunk) => `data: ${JSON.stringify(chunk)}\n\n`).join(''), {
+        headers: { 'content-type': 'text/event-stream' },
+      });
+    }) as typeof fetch;
+    const [result] = await runLineup(only('hold-the-counter'), lineup, options(fetchImpl));
+    const decision = result!.cases[0]!.run.decisions[0]!;
+    expect(decision.requests).toBe(2);
+    expect(decision.costUsd).toBeUndefined();
+    expect(decision.costSource).toBe('unknown');
   });
 
   it('stops in the middle of a whole-turn case once the cap is passed', async () => {
@@ -278,5 +309,12 @@ describe('a model in the tested seat, through the production pipeline', () => {
     expect(result!.status).toBe('aborted');
     expect(result!.abortReason).toMatch(/spend cap of \$0\.50 reached during wrath-then-rebuild/);
     expect(result!.cases).toHaveLength(0);
+    // What the cut-off case already spent still counts, though it is not scored.
+    expect(result!.unscored?.map((entry) => entry.caseId)).toEqual(['wrath-then-rebuild']);
+    const { cost, accuracy } = modelMetrics(result!, only('wrath-then-rebuild'), 1);
+    expect(cost.providerRequests).toBe(1);
+    expect(cost.totalUsd).toBeCloseTo(0.6);
+    expect(cost.source).toBe('reported');
+    expect(accuracy.casesPlayed).toBe(0);
   });
 });

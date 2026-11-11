@@ -323,19 +323,32 @@ export function llmActorFactory(entry: LlmEntry, runtime: LlmRuntime): ActorFact
 
         const promptTokens = attempts.reduce((sum, a) => sum + (a.usage.promptTokens ?? 0), 0);
         const responseTokens = attempts.reduce((sum, a) => sum + (a.usage.responseTokens ?? 0), 0);
-        const reported = attempts.filter((attempt) => attempt.usage.costUsd !== undefined);
+        // An attempt may have been billed once a generation started: it was answered, or it got a
+        // generation id or token counts before failing (a timeout or a broken stream, which the
+        // client records for later settlement). Only when every such attempt reports its charge
+        // is the decision's cost known; otherwise it stays unknown rather than looking cheaper.
+        const billed = attempts.filter(
+          (attempt) =>
+            attempt.usage.costUsd !== undefined ||
+            attempt.status === 'accepted' ||
+            attempt.status === 'rejected' ||
+            attempt.providerRequestId !== undefined ||
+            attempt.usage.promptTokens !== undefined ||
+            attempt.usage.responseTokens !== undefined,
+        );
+        const reported = billed.filter((attempt) => attempt.usage.costUsd !== undefined);
         let costUsd: number | undefined;
         let costSource: ActorAnswer['costSource'] = 'unknown';
         if (attempts.length === 0) {
           costUsd = 0;
           costSource = 'not_applicable';
-        } else if (
-          reported.length ===
-            attempts.filter((a) => a.status === 'accepted' || a.status === 'rejected').length &&
-          reported.length > 0
-        ) {
+        } else if (billed.length > 0 && reported.length === billed.length) {
           costUsd = reported.reduce((sum, attempt) => sum + (attempt.usage.costUsd ?? 0), 0);
           costSource = 'reported';
+        } else if (billed.length === 0) {
+          // Every attempt failed before any generation started (refused, unreachable): unbilled.
+          costUsd = 0;
+          costSource = 'not_applicable';
         } else if (entry.pricing !== undefined) {
           costUsd =
             (promptTokens * entry.pricing.inputPerMTok +

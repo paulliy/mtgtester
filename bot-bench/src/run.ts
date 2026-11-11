@@ -44,6 +44,11 @@ export interface ModelResult {
   status: 'complete' | 'aborted';
   /** Why the model stopped early: provider failures, or the run's spend cap. */
   abortReason?: string;
+  /**
+   * Decisions from a case the spend cap cut off. They were paid for, so they count towards cost,
+   * but the case is not scored: the rest of it was never asked.
+   */
+  unscored?: Array<{ caseId: string; trial: number; decisions: CaseRun['decisions'] }>;
   startedAt: string;
   endedAt: string;
   wallClockMs: number;
@@ -120,6 +125,7 @@ export async function runLineup(
     };
     const startedMs = Date.now();
     const results: CaseResult[] = [];
+    const unscored: NonNullable<ModelResult['unscored']> = [];
     let abortReason: string | undefined;
     let providerFailures = 0;
 
@@ -158,7 +164,9 @@ export async function runLineup(
           capReachedInCase = false;
           const played = await playCase(benchCase, makeActor);
           if (capReachedInCase) {
-            // A case cut off by the cap is not scored: the rest of it was never asked.
+            // A case cut off by the cap is not scored: the rest of it was never asked. What it
+            // already spent still counts.
+            unscored.push({ caseId: benchCase.id, trial, decisions: played.decisions });
             abortReason = `${new SpendCapReached(options.spendCapUsd ?? 0).message} during ${benchCase.id}`;
             break outer;
           }
@@ -189,6 +197,7 @@ export async function runLineup(
       model: publicEntry(entry) as ModelResult['model'],
       status: abortReason === undefined ? 'complete' : 'aborted',
       ...(abortReason !== undefined && { abortReason }),
+      ...(unscored.length > 0 && { unscored }),
       startedAt: new Date(startedMs).toISOString(),
       endedAt: new Date(endedMs).toISOString(),
       wallClockMs: endedMs - startedMs,
