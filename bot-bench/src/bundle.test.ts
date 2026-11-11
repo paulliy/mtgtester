@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
+  anonymise,
   benchFingerprint,
   newManifest,
   writeBundle,
@@ -315,5 +316,41 @@ describe('the run fingerprint', () => {
     );
     expect(benchFingerprint(edited)).not.toBe(before);
     expect(newManifest('r', 'raw', 1, cases, null).fingerprint).toBe(before);
+  });
+});
+
+describe('blind redaction', () => {
+  it('redacts names from free text but never rewrites a case id that contains one', () => {
+    const result = {
+      model: { id: 'turn', label: 'turn', kind: 'llm', model: 'vendor/turn' },
+      status: 'aborted',
+      abortReason: 'RequestTimeoutError: vendor/turn timed out',
+      startedAt: '',
+      endedAt: '',
+      wallClockMs: 0,
+      cases: [
+        {
+          caseId: 'land-for-the-turn',
+          trial: 1,
+          run: { decisions: [{ actionKey: 'turn', failure: 'provider error: vendor/turn' }] },
+          score: { score: 0, flags: [] },
+        },
+      ],
+    } as unknown as Parameters<typeof anonymise>[0][number];
+    const transcript = {
+      modelId: 'turn',
+      caseId: 'land-for-the-turn',
+      error: 'vendor/turn timed out',
+    } as unknown as Parameters<typeof anonymise>[1][number];
+    const { models, transcripts } = anonymise([result], [transcript]);
+    const shown = models[0]!;
+    expect(shown.cases[0]!.caseId).toBe('land-for-the-turn');
+    expect(transcripts[0]!.caseId).toBe('land-for-the-turn');
+    expect(shown.cases[0]!.run.decisions[0]!.actionKey).toBe('turn');
+    expect(
+      JSON.stringify([shown.abortReason, shown.cases[0]!.run.decisions[0]!.failure]),
+    ).not.toContain('vendor/turn');
+    expect(transcripts[0]!.error).not.toContain('vendor/turn');
+    expect(transcripts[0]!.modelId).toBe('model-a');
   });
 });

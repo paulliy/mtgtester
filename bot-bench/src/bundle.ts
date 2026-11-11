@@ -141,14 +141,27 @@ export interface JudgeKey {
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 /** Rename every model run through a provider; local baselines keep their names. */
-/** Replaces every occurrence of each name with its alias, in every string inside `value`. */
+/**
+ * Fields that hold free text a provider or the pipeline wrote, where a model's name can appear
+ * (a timeout message names the model; a raw answer may introduce itself). Only these are redacted:
+ * identifiers such as a case id or an action key are left alone, so a model id that happens to
+ * appear in one (`turn` in `land-for-the-turn`) cannot corrupt it.
+ */
+const FREE_TEXT = new Set(['error', 'failure', 'raw', 'rawResponse', 'note', 'abortReason']);
+
+/** Replaces each name with its alias in the free-text fields anywhere inside `value`. */
 function redact<T>(value: T, names: ReadonlyArray<readonly [string, string]>): T {
+  const scrub = (text: string): string =>
+    names.reduce((out, [name, alias]) => out.split(name).join(alias), text);
   const walk = (item: unknown): unknown => {
-    if (typeof item === 'string')
-      return names.reduce((text, [name, alias]) => text.split(name).join(alias), item);
     if (Array.isArray(item)) return item.map(walk);
     if (item !== null && typeof item === 'object')
-      return Object.fromEntries(Object.entries(item).map(([k, v]) => [k, walk(v)]));
+      return Object.fromEntries(
+        Object.entries(item).map(([key, field]) => [
+          key,
+          FREE_TEXT.has(key) && typeof field === 'string' ? scrub(field) : walk(field),
+        ]),
+      );
     return item;
   };
   return walk(value) as T;
