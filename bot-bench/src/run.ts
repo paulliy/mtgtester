@@ -12,7 +12,7 @@ import {
   type LlmRuntime,
   type RunMode,
 } from './models';
-import { playCase, type CaseRun } from './play';
+import { playCase, type ActorFactory, type CaseRun } from './play';
 import { scoreRun, type CaseScore } from './score';
 
 /** One model's attempt at one case. The focus prompt is the same for every model, so it is not repeated here. */
@@ -69,6 +69,14 @@ export interface RunOptions {
 /** Consecutive decisions lost to provider errors before a model is declared unavailable. */
 const PROVIDER_FAILURE_LIMIT = 3;
 
+/** Thrown in place of a decision once the spend cap is passed, so a case stops mid-turn. */
+class SpendCapReached extends Error {
+  constructor(capUsd: number) {
+    super(`spend cap of $${capUsd.toFixed(2)} reached`);
+    this.name = 'SpendCapReached';
+  }
+}
+
 export async function runLineup(
   cases: readonly BenchCase[],
   lineup: readonly LineupEntry[],
@@ -111,14 +119,37 @@ export async function runLineup(
 
     try {
       // Built once per model: its request queue and rate limit are shared by all its cases.
-      const makeActor = actorFactory(entry, runtime);
+      const baseFactory = actorFactory(entry, runtime);
+      // The cap is checked before every decision, not only between cases: a whole-turn case
+      // makes many paid requests, and other models spend from the same budget meanwhile. A
+      // decision already sent still finishes its own retries, so the overshoot is at most one
+      // decision per running model.
+      let capReachedInCase = false;
+      const makeActor: ActorFactory = (engine, benchCase) => {
+        const actor = baseFactory(engine, benchCase);
+        return {
+          decide(request, view) {
+            if (overBudget()) {
+              capReachedInCase = true;
+              throw new SpendCapReached(options.spendCapUsd ?? 0);
+            }
+            return actor.decide(request, view);
+          },
+        };
+      };
       outer: for (const benchCase of cases) {
         for (trial = 1; trial <= options.trials; trial++) {
           if (overBudget()) {
-            abortReason = `spend cap of $${options.spendCapUsd?.toFixed(2)} reached`;
+            abortReason = new SpendCapReached(options.spendCapUsd ?? 0).message;
             break outer;
           }
+          capReachedInCase = false;
           const played = await playCase(benchCase, makeActor);
+          if (capReachedInCase) {
+            // A case cut off by the cap is not scored: the rest of it was never asked.
+            abortReason = `${new SpendCapReached(options.spendCapUsd ?? 0).message} during ${benchCase.id}`;
+            break outer;
+          }
           const score = scoreRun(benchCase, played);
           const { focus: _sameForEveryModel, ...run } = played;
           results.push({ caseId: benchCase.id, trial, run, score });

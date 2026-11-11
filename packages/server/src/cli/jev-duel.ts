@@ -58,7 +58,7 @@ import {
   type JevPolicyBinding,
 } from '../ai/jev-policy';
 import { OPENROUTER_BASE_URL } from '../ai/jev-runtime';
-import { counting, emptyTally, type Budget, type Tally } from './ai-mode-duel';
+import { budgetedFetch, counting, emptyTally, type Budget, type Tally } from './ai-mode-duel';
 
 const FIXTURE = 'packages/server/fixtures/coverage-oracle.json';
 const SEATS: PlayerId[] = ['P1', 'P2', 'P3', 'P4'];
@@ -345,10 +345,10 @@ export async function playGame(
 
   const rawStrategist = offline
     ? offlineChatClient(engine, 'strategist')
-    : new OpenAiCompatibleClient(configForRole(base, 'strategist'));
+    : new OpenAiCompatibleClient(configForRole(base, 'strategist'), budgetedFetch(budget));
   const rawTactician = offline
     ? offlineChatClient(engine, 'tactician')
-    : new OpenAiCompatibleClient(configForRole(base, 'tactician'));
+    : new OpenAiCompatibleClient(configForRole(base, 'tactician'), budgetedFetch(budget));
   if (rawStrategist instanceof OpenAiCompatibleClient) chatClients.push(rawStrategist);
   if (rawTactician instanceof OpenAiCompatibleClient) chatClients.push(rawTactician);
   const strategistClient = counting<Preset>(rawStrategist, 'strategist', presetOf, tallies, budget);

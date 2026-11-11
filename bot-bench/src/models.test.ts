@@ -211,4 +211,23 @@ describe('a model in the tested seat, through the production pipeline', () => {
     expect(result!.abortReason).toMatch(/spend cap/);
     expect(result!.cases).toHaveLength(2);
   });
+
+  it('stops in the middle of a whole-turn case once the cap is passed', async () => {
+    const calls: FakeTurn[] = [];
+    const fetchImpl = fakeProvider(
+      (turn) => ({ content: pick(turn, 'Pass priority'), cost: 0.6 }),
+      calls,
+    );
+    const [result] = await runLineup(
+      only('wrath-then-rebuild'),
+      lineup,
+      options(fetchImpl, { spendCapUsd: 0.5 }),
+    );
+    // The first request takes spend past the cap; nothing more is sent, and the cut-off case
+    // is not scored on the play the model was never asked for.
+    expect(calls).toHaveLength(1);
+    expect(result!.status).toBe('aborted');
+    expect(result!.abortReason).toMatch(/spend cap of \$0\.50 reached during wrath-then-rebuild/);
+    expect(result!.cases).toHaveLength(0);
+  });
 });
