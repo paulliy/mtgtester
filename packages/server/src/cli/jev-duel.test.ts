@@ -5,7 +5,7 @@ import type { OracleCard } from '@mtg/shared';
 import { buildSupportedPool } from '../cards/pool';
 import { DEFAULT_AI_CONFIG } from '../ai/config';
 import type { JevActionRequest } from '../ai/jev-context';
-import type { JevActionResult } from '../ai/jev-client';
+import { JevResponseValidationError, type JevActionResult } from '../ai/jev-client';
 import type { JevComparison } from '../ai/jev-policy';
 import { emptyTally, type Budget } from './ai-mode-duel';
 import {
@@ -92,6 +92,36 @@ describe('jev-duel', () => {
     expect(tally).toMatchObject({ calls: 2, promptTokens: 200, cappedCalls: 1 });
     expect(b.capped).toBe(true);
     expect(b.spentUsd).toBeCloseTo(0.8);
+  });
+
+  it('charges a billed Jev answer the parser rejected, and counts a silent failure as unknown', async () => {
+    const tally = emptyJevTally();
+    const b = budget(1, 10);
+    const rejecting = countingJev(
+      {
+        requestAction: () =>
+          Promise.reject(
+            new JevResponseValidationError('bad confidence', '{}', {
+              promptTokens: 50,
+              responseTokens: 1,
+              costUsd: 0.25,
+            }),
+          ),
+      },
+      tally,
+      b,
+    );
+    await expect(rejecting.requestAction({} as JevActionRequest)).rejects.toThrow('bad confidence');
+    expect(tally).toMatchObject({ calls: 1, promptTokens: 50, costUsd: 0.25 });
+    expect(b.spentUsd).toBeCloseTo(0.25);
+
+    const failing = countingJev(
+      { requestAction: () => Promise.reject(new Error('socket hang up')) },
+      tally,
+      b,
+    );
+    await expect(failing.requestAction({} as JevActionRequest)).rejects.toThrow('socket');
+    expect(tally.unknownCostCalls).toBe(1);
   });
 
   it('summarizes agreement, including on the bot close calls', () => {

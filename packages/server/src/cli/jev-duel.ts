@@ -48,7 +48,13 @@ import {
 import type { AiAttemptObserver } from '../ai/client';
 import { knowledgeFor } from '../ai/bot-tactician';
 import { localCallMeta } from '../ai/logger';
-import { JevClient, type JevActionResult, type JevDecisionsTransport } from '../ai/jev-client';
+import {
+  JevClient,
+  JevResponseValidationError,
+  type JevActionResult,
+  type JevDecisionsTransport,
+  type JevReportedUsage,
+} from '../ai/jev-client';
 import type { JevActionRequest } from '../ai/jev-context';
 import {
   JevActionPolicy,
@@ -86,6 +92,8 @@ export interface JevTally {
   costUsd: number;
   /** Calls whose response carried no price. */
   unpricedCalls: number;
+  /** Calls that failed after they were sent and reported no usage: they may have been billed. */
+  unknownCostCalls: number;
   /** Calls refused because the spend cap was reached. */
   cappedCalls: number;
 }
@@ -100,6 +108,7 @@ export function emptyJevTally(): JevTally {
     responseTokens: 0,
     costUsd: 0,
     unpricedCalls: 0,
+    unknownCostCalls: 0,
     cappedCalls: 0,
   };
 }
@@ -186,14 +195,27 @@ export function countingJev(
       }
       budget.calls++;
       tally.calls++;
-      const result: JevActionResult = await inner.requestAction(request, signal);
-      tally.promptTokens += result.meta.promptTokens;
-      tally.responseTokens += result.meta.responseTokens;
-      if (result.meta.costUsd === undefined) tally.unpricedCalls++;
-      else {
-        tally.costUsd += result.meta.costUsd;
-        budget.spentUsd += result.meta.costUsd;
+      const charge = (usage: JevReportedUsage): void => {
+        tally.promptTokens += usage.promptTokens;
+        tally.responseTokens += usage.responseTokens;
+        if (usage.costUsd === undefined) tally.unpricedCalls++;
+        else {
+          tally.costUsd += usage.costUsd;
+          budget.spentUsd += usage.costUsd;
+        }
+      };
+      let result: JevActionResult;
+      try {
+        result = await inner.requestAction(request, signal);
+      } catch (error) {
+        // A rejected answer may still have been billed: charge what it reported, and count a
+        // failure with no usage as cost unknown rather than free.
+        if (error instanceof JevResponseValidationError && error.usage !== undefined) {
+          charge(error.usage);
+        } else tally.unknownCostCalls++;
+        throw error;
       }
+      charge(result.meta);
       return result;
     },
   };

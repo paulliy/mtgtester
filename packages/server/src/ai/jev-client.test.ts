@@ -131,7 +131,11 @@ describe('JevClient', () => {
     await expect(rejected.requestAction(built())).rejects.toBeInstanceOf(
       JevResponseValidationError,
     );
-    expect(attempts[1]).toMatchObject({ kind: 'decision', status: 'rejected' });
+    expect(attempts[1]).toMatchObject({
+      kind: 'decision',
+      status: 'rejected',
+      usage: { promptTokens: 10, responseTokens: 1, promptTokenSource: 'reported' },
+    });
   });
 
   it('accepts an answer without confidence or probabilities, which the API marks optional', async () => {
