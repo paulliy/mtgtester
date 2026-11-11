@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "id": "ramp-with-every-mana",
+  "role": "tactician",
+  "scope": "turn",
+  "title": "Turn-four development: Sol Ring first, then spend all six mana",
+  "skills": ["sequencing", "mana-efficiency", "development"],
+  "briefing": "A quiet development turn with no combat. P1 has three Forests and holds Forest, Sol Ring, Llanowar Elves, Harmonize and Cultivate. Land plus Sol Ring first turns four mana into six, which pays for Sol Ring, Harmonize and the Elves in one turn. Casting a four-mana spell before Sol Ring strands the rest of the hand. The case measures ordering and mana efficiency when nothing is attacking anybody.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 4
+    },
+    "seats": {
+      "P1": {
+        "life": 40,
+        "hand": ["Forest", "Sol Ring", "Llanowar Elves", "Harmonize", "Cultivate"],
+        "battlefield": ["Forest", "Forest", "Forest"],
+        "libraryTop": ["Kalonian Tusker", "Island", "Beast Within", "Island"]
+      },
+      "P2": {
+        "life": 40,
+        "battlefield": ["Mountain", "Mountain", "Mountain"]
+      },
+      "P3": {
+        "life": 40,
+        "battlefield": ["Swamp", "Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 40,
+        "battlefield": ["Plains", "Plains", "Plains"]
+      }
+    },
+    "continue": {
+      "throughCombat": true,
+      "toPostcombatMain": true,
+      "toEndStep": true
+    }
+  },
+  "table": {
+    "policy": "passive"
+  },
+  "reference": {
+    "analysis": "After the land drop P1 has four Forests. Sol Ring costs 1 and immediately taps for two colorless, so the turn's budget is 4 - 1 + 2 = 5 further mana: Harmonize ({2}{G}{G}, paid with the Ring's two colorless plus two Forests) and Llanowar Elves ({G}) use all of it. That is three spells, three new cards and two extra mana sources for next turn. Cultivate instead of Harmonize is an equally full turn (one mana floats, P1 gains two lands), but the order matters more: the engine pays costs automatically and may spend Forests on Cultivate's generic mana, so the Elves should be cast before it while green is certainly available. Casting Harmonize before Sol Ring is impossible to recover from: all four lands are spent and the Ring and the Elves stay in hand. Not playing the land or the Ring at all is the real failure.",
+    "lines": [
+      {
+        "id": "ring-harmonize-elves",
+        "label": "Forest, Sol Ring, Harmonize, Llanowar Elves",
+        "grade": "best",
+        "why": "Uses all six available mana: three spells, three cards drawn.",
+        "steps": [
+          {
+            "choose": "Play Forest"
+          },
+          {
+            "choose": "Cast Sol Ring"
+          },
+          {
+            "choose": "Cast Harmonize"
+          },
+          {
+            "choose": "Cast Llanowar Elves"
+          }
+        ]
+      },
+      {
+        "id": "ring-elves-cultivate",
+        "label": "Forest, Sol Ring, Llanowar Elves, Cultivate",
+        "grade": "best",
+        "why": "Also three spells with the Ring out first; trades Harmonize's three cards for two lands.",
+        "steps": [
+          {
+            "choose": "Play Forest"
+          },
+          {
+            "choose": "Cast Sol Ring"
+          },
+          {
+            "choose": "Cast Llanowar Elves"
+          },
+          {
+            "choose": "Cast Cultivate"
+          }
+        ]
+      },
+      {
+        "id": "harmonize-first",
+        "label": "Forest, Harmonize with all four lands, nothing else castable",
+        "grade": "weak",
+        "why": "Spends the whole turn on one spell; Sol Ring and the Elves stay in hand.",
+        "steps": [
+          {
+            "choose": "Play Forest"
+          },
+          {
+            "choose": "Cast Harmonize"
+          }
+        ]
+      },
+      {
+        "id": "no-land-elves-only",
+        "label": "Llanowar Elves and pass, no land",
+        "grade": "blunder",
+        "why": "Misses the land drop and leaves two mana and Sol Ring unused.",
+        "steps": [
+          {
+            "choose": "Cast Llanowar Elves"
+          }
+        ]
+      }
+    ],
+    "objectives": [
+      {
+        "id": "land-drop",
+        "label": "The land drop is made",
+        "points": 2,
+        "check": {
+          "action": {
+            "took": "Play Forest"
+          }
+        }
+      },
+      {
+        "id": "sol-ring",
+        "label": "Sol Ring is on the battlefield",
+        "points": 3,
+        "check": {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Sol Ring"]
+          }
+        }
+      },
+      {
+        "id": "big-spell",
+        "label": "Harmonize or Cultivate is cast",
+        "points": 3,
+        "check": {
+          "action": {
+            "took": "/Cast (Harmonize|Cultivate)/"
+          }
+        }
+      },
+      {
+        "id": "elves",
+        "label": "Llanowar Elves is on the battlefield",
+        "points": 2,
+        "check": {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Llanowar Elves"]
+          }
+        }
+      }
+    ]
+  }
+}

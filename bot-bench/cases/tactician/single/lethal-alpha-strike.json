@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "id": "lethal-alpha-strike",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Spot the kill: every attacker at the 9-life player",
+  "skills": ["lethal", "attack-targeting", "trample-math"],
+  "briefing": "P1 declares attackers with 12 power on board. P3 is at 9 life with one untapped 2/2 that cannot block a flyer. Sending all three creatures at P3 is lethal through any block the 2/2 can make; anything less is not. P4 is wide open at 40 life (the tempting free damage) and P2 holds two large untapped blockers (the trap).",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 9
+    },
+    "seats": {
+      "P1": {
+        "life": 28,
+        "battlefield": [
+          "Forest",
+          "Forest",
+          "Plains",
+          "Plains",
+          "Colossal Dreadmaw",
+          "Serra Angel",
+          "Kalonian Tusker"
+        ]
+      },
+      "P2": {
+        "life": 31,
+        "battlefield": ["Forest", "Forest", "Forest", "Gigantosaurus", "Leatherback Baloth"]
+      },
+      "P3": {
+        "life": 9,
+        "battlefield": ["Swamp", "Swamp", "Mountain", "Grizzly Bears"]
+      },
+      "P4": {
+        "life": 40,
+        "battlefield": ["Island", "Island", "Sol Ring"]
+      }
+    },
+    "continue": {
+      "throughCombat": true
+    }
+  },
+  "focus": {
+    "decisionType": "declareAttackers"
+  },
+  "reference": {
+    "analysis": "Colossal Dreadmaw (6/6 trample), Serra Angel (4/4 flying, vigilance) and Kalonian Tusker (3/3) total 13 power. P3 has 9 life and one Grizzly Bears. If the Bears block the Dreadmaw, 4 tramples over and 4 + 4 + 3 = 11. If they block the Tusker, 6 + 4 = 10. They cannot block the Angel. Every block leaves at least 10 damage, so the three-creature attack on P3 always removes a player. Two attackers at P3 are not enough against the right block (Dreadmaw + Angel is 8 after a Dreadmaw block). Attacking P4 is 13 free damage but kills nobody. Attacking P2 runs into a 10/10 and a 4/5.",
+    "options": [
+      {
+        "label": "All three attack P3 (lethal)",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Colossal Dreadmaw": "P3",
+            "Serra Angel": "P3",
+            "Kalonian Tusker": "P3"
+          }
+        },
+        "grade": "best",
+        "why": "Guaranteed elimination of P3 through any block."
+      },
+      {
+        "label": "Attacks into P2's blockers",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Kalonian Tusker": "P2"
+          }
+        },
+        "grade": "blunder",
+        "why": "The Tusker dies to a 10/10 or a 4/5 for nothing."
+      },
+      {
+        "label": "Dreadmaw into P2's blockers",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Colossal Dreadmaw": "P2"
+          }
+        },
+        "grade": "blunder",
+        "why": "The Dreadmaw dies to Gigantosaurus for nothing."
+      },
+      {
+        "label": "Dreadmaw and Angel at P3, Tusker elsewhere",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Colossal Dreadmaw": "P3",
+            "Serra Angel": "P3"
+          }
+        },
+        "grade": "good",
+        "why": "Ten power at P3 kills only if the Bears do not block the Dreadmaw; against the correct block P3 survives at 1. Right target, one attacker short."
+      },
+      {
+        "label": "No attack",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Colossal Dreadmaw": "-",
+            "Serra Angel": "-",
+            "Kalonian Tusker": "-"
+          }
+        },
+        "grade": "blunder",
+        "why": "Passes up a guaranteed kill and deals no damage at all."
+      }
+    ],
+    "otherwise": {
+      "grade": "weak",
+      "why": "Deals damage safely but misses the guaranteed elimination of P3."
+    }
+  },
+  "table": {
+    "policy": "heuristic",
+    "script": [
+      {
+        "player": "P3",
+        "choose": "Declare blockers",
+        "assign": {
+          "Grizzly Bears": "Colossal Dreadmaw"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "id": "keep-blockers-home",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Free damage now, dead on the crack-back: who can afford to attack?",
+  "skills": ["attack-restraint", "crack-back", "vigilance"],
+  "briefing": "P1 is at 4 life with Serra Angel (flying, vigilance), Colossal Dreadmaw and Kalonian Tusker. P3 and P4 have no blockers, so every attack connects. But P2 moves next with Leatherback Baloth (4/5), Grizzly Bears (2/2) and Savannah Lions (2/1): 8 power against 4 life. The Angel attacks for free because vigilance leaves it untapped. Each ground attacker that taps is one fewer blocker; tap both and P1 dies on P2's turn. The run continues through P2's full turn so the punishment is visible.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 9
+    },
+    "seats": {
+      "P1": {
+        "life": 4,
+        "battlefield": [
+          "Plains",
+          "Plains",
+          "Forest",
+          "Forest",
+          "Serra Angel",
+          "Colossal Dreadmaw",
+          "Kalonian Tusker"
+        ]
+      },
+      "P2": {
+        "life": 30,
+        "battlefield": [
+          "Forest",
+          "Forest",
+          "Plains",
+          "Leatherback Baloth",
+          "Grizzly Bears",
+          "Savannah Lions"
+        ],
+        "libraryTop": ["Forest"]
+      },
+      "P3": {
+        "life": 26,
+        "battlefield": ["Island", "Island", "Island"]
+      },
+      "P4": {
+        "life": 12,
+        "battlefield": ["Swamp", "Swamp", "Mountain"]
+      }
+    },
+    "continue": {
+      "throughCombat": true,
+      "toPostcombatMain": true,
+      "toEndStep": true,
+      "throughNextTurn": true
+    }
+  },
+  "focus": {
+    "decisionType": "declareAttackers"
+  },
+  "table": {
+    "policy": "heuristic",
+    "actorAfterFocus": "heuristic",
+    "script": [
+      {
+        "player": "P2",
+        "choose": "Declare attackers",
+        "assign": {
+          "Leatherback Baloth": "P1",
+          "Grizzly Bears": "P1",
+          "Savannah Lions": "P1"
+        }
+      }
+    ]
+  },
+  "reference": {
+    "analysis": "P2 untaps next with 4 + 2 + 2 = 8 power and P1 has 4 life, so P1 must be able to block all three attackers, or at least leave no more than 3 unblocked damage. Serra Angel has vigilance: it attacks and still blocks, so swinging it at an open player is free damage (P4 at 12 is the better target; P3 is fine). With all three creatures available P1 blocks everything and takes 0. If one ground creature attacks, two blockers remain and the smallest attacker (2 power) connects: P1 survives at 2, having traded half its life for 3 or 6 damage to a player nowhere near dead. If both ground creatures attack, only the Angel can block; at least 4 damage connects and P1 is eliminated. Attacking P2 with a ground creature runs into untapped blockers as well.",
+    "options": [
+      {
+        "label": "Both ground creatures attack",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Colossal Dreadmaw": "+",
+            "Kalonian Tusker": "+"
+          }
+        },
+        "grade": "blunder",
+        "why": "Leaves one blocker against three attackers at 4 life: P1 is dead on P2's turn."
+      },
+      {
+        "label": "Angel only, at P4",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Serra Angel": "P4",
+            "Colossal Dreadmaw": "-",
+            "Kalonian Tusker": "-"
+          }
+        },
+        "grade": "best",
+        "why": "Vigilance makes the 4 damage free; all three blockers stay up. P4 at 12 is the closest to dead."
+      },
+      {
+        "label": "Angel only, at P3",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Serra Angel": "P3",
+            "Colossal Dreadmaw": "-",
+            "Kalonian Tusker": "-"
+          }
+        },
+        "grade": "best",
+        "why": "Same free vigilance damage with all blockers kept; the target is slightly less urgent."
+      },
+      {
+        "label": "Angel only, at P2",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Serra Angel": "P2",
+            "Colossal Dreadmaw": "-",
+            "Kalonian Tusker": "-"
+          }
+        },
+        "grade": "good",
+        "why": "Free flying damage with all blockers kept, at the least valuable target."
+      },
+      {
+        "label": "No attack",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Serra Angel": "-",
+            "Colossal Dreadmaw": "-",
+            "Kalonian Tusker": "-"
+          }
+        },
+        "grade": "good",
+        "why": "Safe, but gives up 4 free damage from a vigilant flyer."
+      }
+    ],
+    "otherwise": {
+      "grade": "weak",
+      "why": "One ground creature attacks: P1 survives P2's turn at 2 life instead of 4, a poor trade for damage that kills nobody."
+    }
+  }
+}

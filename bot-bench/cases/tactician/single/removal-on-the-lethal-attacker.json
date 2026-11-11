@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "id": "removal-on-the-lethal-attacker",
+  "role": "tactician",
+  "scope": "single",
+  "title": "One removal spell, four creatures: exile the one that kills you",
+  "skills": ["removal-targeting", "lethal-defense", "threat-assessment"],
+  "briefing": "P2 attacks P1 (5 life) with Shivan Dragon (5/5 flying) and Grizzly Bears (2/2). P1 has already blocked the Bears with Kalonian Tusker and now has the last priority window before damage, holding Swords to Plowshares with one Plains open. The biggest creature on the table (P3's 10/10 Gigantosaurus) is not attacking. The only answer that takes no damage is exiling the Dragon; the test is whether the model targets the lethal attacker rather than the largest creature, the creature it has already blocked, or nothing.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P2",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 9
+    },
+    "seats": {
+      "P1": {
+        "life": 5,
+        "hand": ["Swords to Plowshares"],
+        "battlefield": [
+          "Plains",
+          {
+            "card": "Forest",
+            "tapped": true
+          },
+          {
+            "card": "Forest",
+            "tapped": true
+          },
+          "Kalonian Tusker"
+        ]
+      },
+      "P2": {
+        "life": 33,
+        "battlefield": [
+          {
+            "card": "Mountain",
+            "tapped": true
+          },
+          {
+            "card": "Mountain",
+            "tapped": true
+          },
+          {
+            "card": "Mountain",
+            "tapped": true
+          },
+          {
+            "card": "Mountain",
+            "tapped": true
+          },
+          "Shivan Dragon",
+          "Grizzly Bears"
+        ]
+      },
+      "P3": {
+        "life": 38,
+        "battlefield": ["Forest", "Forest", "Forest", "Gigantosaurus"]
+      },
+      "P4": {
+        "life": 26,
+        "battlefield": ["Island", "Island"]
+      }
+    },
+    "continue": {
+      "throughCombat": true
+    }
+  },
+  "setup": [
+    {
+      "player": "P2",
+      "choose": "Declare attackers",
+      "assign": {
+        "Shivan Dragon": "P1",
+        "Grizzly Bears": "P1"
+      }
+    },
+    {
+      "player": "P1",
+      "choose": "Declare blockers",
+      "assign": {
+        "Kalonian Tusker": "Grizzly Bears"
+      }
+    }
+  ],
+  "focus": {
+    "prompt": "declareBlockers"
+  },
+  "reference": {
+    "analysis": "P1 is at 5 and this is the last chance to act before combat damage. The Dragon flies and is unblocked: its 5 damage is lethal by itself. The Bears are already blocked by the 3/3 Tusker and will die. Swords on the Dragon means P1 takes nothing. Swords on the blocked Bears, on P3's Gigantosaurus, or passing all leave 5 unblocked flying damage arriving at 5 life. Swords on P1's own Tusker gains 3 (to 8) and P1 survives the Dragon at 3, but it spends the removal and the blocker to do it and leaves both attackers alive.",
+    "options": [
+      {
+        "label": "Exile the attacking Shivan Dragon",
+        "when": {
+          "choose": "Cast Swords to Plowshares",
+          "targets": ["Shivan Dragon"]
+        },
+        "grade": "best",
+        "why": "Removes the only unblocked damage; P1 takes 0 and the Tusker kills the Bears."
+      },
+      {
+        "label": "Exile own Kalonian Tusker for 3 life",
+        "when": {
+          "choose": "Cast Swords to Plowshares",
+          "targets": ["Kalonian Tusker"]
+        },
+        "grade": "weak",
+        "why": "Survives at 3 life by gaining 3, but spends the removal and the only blocker and kills nothing."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "The Dragon's 5 unblockable damage arrives at 5 life: P1 is eliminated."
+    }
+  }
+}

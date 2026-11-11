@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "counter-the-finisher",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Now is the time: counter the Overrun that kills you",
+  "skills": ["interaction-timing", "lethal-defense", "mana-discipline"],
+  "briefing": "The mirror of hold-the-counter. P2 casts Overrun with four creatures on board and P1 is at 14 life with one wall. P1 has exactly two Islands open, Counterspell and Opt. Countering Overrun is the only line that survives the turn; casting Opt first taps an Island and makes Counterspell uncastable. A model that always passes on other players' spells fails here, and one that always counters fails hold-the-counter.",
+  "actor": "P1",
+  "position": {
+    "turn": { "player": "P2", "phase": "precombatMain", "step": null, "number": 8 },
+    "seats": {
+      "P1": {
+        "life": 14,
+        "hand": ["Counterspell", "Opt"],
+        "battlefield": [
+          "Island",
+          "Island",
+          { "card": "Plains", "tapped": true },
+          { "card": "Plains", "tapped": true },
+          "Wall of Omens"
+        ]
+      },
+      "P2": {
+        "life": 35,
+        "hand": ["Overrun"],
+        "battlefield": [
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Kalonian Tusker",
+          "Grizzly Bears",
+          "Llanowar Elves",
+          "Elvish Mystic"
+        ]
+      },
+      "P3": { "life": 37, "battlefield": ["Swamp", "Swamp", "Typhoid Rats"] },
+      "P4": { "life": 33, "battlefield": ["Mountain", "Mountain", "Leatherback Baloth"] }
+    },
+    "continue": { "throughCombat": true }
+  },
+  "setup": [{ "player": "P2", "choose": "Cast Overrun" }],
+  "table": {
+    "policy": "heuristic",
+    "script": [
+      {
+        "player": "P2",
+        "choose": "Declare attackers",
+        "assign": {
+          "Kalonian Tusker": "P1",
+          "Grizzly Bears": "P1",
+          "Llanowar Elves": "P1",
+          "Elvish Mystic": "P1"
+        }
+      },
+      {
+        "player": "P1",
+        "choose": "Declare blockers",
+        "assign": { "Wall of Omens": "Kalonian Tusker" }
+      }
+    ]
+  },
+  "reference": {
+    "analysis": "P2's creatures have 3 + 2 + 1 + 1 = 7 power. Overrun makes them 6/6, 5/5, 4/4 and 4/4 with trample: 19 power into a player at 14 with a single 0/4 blocker. The wall on the Tusker stops 4 of its 6, so 15 arrives and P1 is dead. With Overrun countered the same attack is 7 power; the wall stops the Tusker and P1 takes 4. Opt costs one of the two Islands and leaves Counterspell uncastable, so it is the same as passing. Passing or yielding lets Overrun resolve.",
+    "options": [
+      {
+        "label": "Counter Overrun",
+        "when": { "choose": "Cast Counterspell", "targets": ["Overrun"] },
+        "grade": "best",
+        "why": "Stops the only thing that makes this attack lethal."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "Overrun resolves and 15 trample damage reaches a player at 14."
+    }
+  }
+}

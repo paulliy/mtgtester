@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "id": "block-the-trampler",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Survive a lethal swing: the wall has to stand in front of the trampler",
+  "skills": ["blocking", "lethal-defense", "trample-math"],
+  "briefing": "P1 is at 5 life and P2 attacks with Colossal Dreadmaw (6/6 trample) and Kalonian Tusker (3/3). P1 has Wall of Omens (0/4) and Llanowar Elves (1/1) to block with. Only two block assignments survive. The intuitive blocks (wall on the smaller creature, or chumping the Dreadmaw with the Elves) are lethal because of trample.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P2",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 8
+    },
+    "seats": {
+      "P1": {
+        "life": 5,
+        "battlefield": ["Plains", "Forest", "Forest", "Wall of Omens", "Llanowar Elves"]
+      },
+      "P2": {
+        "life": 34,
+        "battlefield": [
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Colossal Dreadmaw",
+          "Kalonian Tusker"
+        ]
+      },
+      "P3": {
+        "life": 37,
+        "battlefield": ["Island", "Island"]
+      },
+      "P4": {
+        "life": 22,
+        "battlefield": ["Mountain", "Mountain"]
+      }
+    },
+    "continue": {
+      "throughCombat": true
+    }
+  },
+  "setup": [
+    {
+      "player": "P2",
+      "choose": "Declare attackers",
+      "assign": {
+        "Colossal Dreadmaw": "P1",
+        "Kalonian Tusker": "P1"
+      }
+    }
+  ],
+  "focus": {
+    "decisionType": "declareBlockers"
+  },
+  "reference": {
+    "analysis": "Unblocked, the attack deals 9 to a player at 5. The Dreadmaw tramples: blocked by the 0/4 wall it still pushes 2 through, blocked by the 1/1 Elves it pushes 5 through. Wall on Dreadmaw and Elves on Tusker takes 2 (P1 ends at 3; both blockers die). Both blockers on the Dreadmaw takes 1 trample plus 3 from the unblocked Tusker (P1 ends at 1; both blockers die). Every other assignment takes at least 5 and P1 is dead: wall on Tusker with Elves on Dreadmaw takes 5, wall on Dreadmaw alone takes 2 + 3 = 5.",
+    "options": [
+      {
+        "label": "Wall blocks Dreadmaw, Elves chump the Tusker",
+        "when": {
+          "choose": "Declare blockers",
+          "assign": {
+            "Wall of Omens": "Colossal Dreadmaw",
+            "Llanowar Elves": "Kalonian Tusker"
+          }
+        },
+        "grade": "best",
+        "why": "Takes only the 2 trample damage and ends at 3 life. Both blockers die either way; this keeps the most life."
+      },
+      {
+        "label": "Double-block the Dreadmaw",
+        "when": {
+          "choose": "Declare blockers",
+          "assign": {
+            "Wall of Omens": "Colossal Dreadmaw",
+            "Llanowar Elves": "Colossal Dreadmaw"
+          }
+        },
+        "grade": "good",
+        "why": "Survives at 1 life, but takes 2 more damage than necessary for the same two dead blockers."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "P1 takes at least 5 damage at 5 life and is eliminated."
+    }
+  }
+}

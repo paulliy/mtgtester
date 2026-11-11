@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "id": "burn-out-the-low-player",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Lightning Bolt: three damage is a whole player",
+  "skills": ["lethal", "burn-targeting", "threat-assessment"],
+  "briefing": "P1 has priority in its own main phase with one Mountain and Lightning Bolt. P4 is at exactly 3 life. The other legal targets are an annoying creature (Baleful Strix), two mana creatures, P1 itself and two healthy opponents. Eliminating a player outright is worth far more than any of them.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 10
+    },
+    "seats": {
+      "P1": {
+        "life": 21,
+        "hand": ["Lightning Bolt"],
+        "battlefield": [
+          "Mountain",
+          {
+            "card": "Mountain",
+            "tapped": true
+          },
+          {
+            "card": "Mountain",
+            "tapped": true
+          },
+          "Savannah Lions"
+        ]
+      },
+      "P2": {
+        "life": 36,
+        "battlefield": ["Forest", "Forest", "Birds of Paradise", "Llanowar Elves"]
+      },
+      "P3": {
+        "life": 29,
+        "battlefield": ["Island", "Swamp", "Baleful Strix"]
+      },
+      "P4": {
+        "life": 3,
+        "battlefield": ["Plains", "Plains", "Plains", "Serra Angel"]
+      }
+    }
+  },
+  "reference": {
+    "analysis": "Lightning Bolt deals 3 to any target and P4 has exactly 3 life: one mana removes a whole opponent, their Serra Angel and their future turns. No creature kill compares. Bolting the Strix or a mana creature is ordinary value; bolting P2 or P3 is 3 irrelevant damage; holding the Bolt gives P4 another turn with a 4/4 flyer.",
+    "options": [
+      {
+        "label": "Bolt P4 for exactly lethal",
+        "when": {
+          "choose": "Cast Lightning Bolt",
+          "targets": ["P4"]
+        },
+        "grade": "best",
+        "why": "Eliminates a player for one mana."
+      },
+      {
+        "label": "Bolt yourself",
+        "when": {
+          "choose": "Cast Lightning Bolt",
+          "targets": ["P1"]
+        },
+        "grade": "blunder",
+        "why": "Three damage to your own face."
+      },
+      {
+        "label": "Bolt your own creature",
+        "when": {
+          "choose": "Cast Lightning Bolt",
+          "targets": ["Savannah Lions"]
+        },
+        "grade": "blunder",
+        "why": "Kills your own creature."
+      },
+      {
+        "label": "Bolt P2's face",
+        "when": {
+          "choose": "Cast Lightning Bolt",
+          "targets": ["P2"]
+        },
+        "grade": "blunder",
+        "why": "Three damage to a player at 36 life changes nothing and wastes the kill."
+      },
+      {
+        "label": "Bolt P3's face",
+        "when": {
+          "choose": "Cast Lightning Bolt",
+          "targets": ["P3"]
+        },
+        "grade": "blunder",
+        "why": "Three damage to a player at 29 life changes nothing and wastes the kill."
+      },
+      {
+        "label": "Bolt the 4/4 Serra Angel",
+        "when": {
+          "choose": "Cast Lightning Bolt",
+          "targets": ["Serra Angel"]
+        },
+        "grade": "blunder",
+        "why": "Three damage does not kill a 4/4; the card is wasted while its controller sits at 3 life."
+      },
+      {
+        "label": "Bolt a creature",
+        "when": {
+          "choose": "Cast Lightning Bolt"
+        },
+        "grade": "weak",
+        "why": "A fair one-for-one, but the same card eliminates P4."
+      }
+    ],
+    "otherwise": {
+      "grade": "weak",
+      "why": "Holding the Bolt is safe but leaves a 3-life opponent alive when the kill is free."
+    }
+  }
+}

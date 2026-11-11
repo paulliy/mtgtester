@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "typecheck": "tsc --build && vue-tsc --noEmit -p apps/web/tsconfig.json",
-    "typecheck:tests": "tsc -p packages/engine/tsconfig.test.json --noEmit && tsc -p packages/server/tsconfig.test.json --noEmit && tsc -p scripts/contracts/tsconfig.json --noEmit",
+    "typecheck:tests": "tsc -p packages/engine/tsconfig.test.json --noEmit && tsc -p packages/server/tsconfig.test.json --noEmit && tsc -p scripts/contracts/tsconfig.json --noEmit && tsc -p bot-bench/tsconfig.json --noEmit",
     "typecheck:clean": "tsc --build --clean",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -43,6 +43,7 @@
     "engine-bench": "bun run packages/server/src/cli/engine-bench.ts",
     "diplomacy-sweep": "bun run packages/server/src/cli/diplomacy-sweep.ts",
     "ai-bench": "bun run packages/server/src/cli/ai-bench.ts",
+    "bot-bench": "bun run bot-bench/src/cli.ts",
     "agent-client": "bun run packages/server/src/cli/agent-client.ts",
     "coverage": "bun run packages/server/src/cli/coverage.ts",
     "staples": "bun run packages/server/src/cli/staple-coverage.ts",

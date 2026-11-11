@@ -1,5 +1,9 @@
 # AI benchmark assets
 
+These are the frozen snapshot fixtures of ADR 0026. The engine-backed tactician benchmark that
+plays models' answers through the engine and writes a bundle for judge models is separate: see
+[bot-bench/README.md](../bot-bench/README.md) (ADR 0042).
+
 Snapshot cases and suites are immutable inputs. Generated outputs belong under the gitignored
 `benchmark-output/` directory.
 

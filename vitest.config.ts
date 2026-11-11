@@ -3,7 +3,11 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     // Unit tests live beside source (brief §12 — engine coverage is the bulk of these).
-    include: ['packages/**/*.{test,spec}.ts', 'apps/**/*.{test,spec}.ts'],
+    include: [
+      'packages/**/*.{test,spec}.ts',
+      'apps/**/*.{test,spec}.ts',
+      'bot-bench/**/*.{test,spec}.ts',
+    ],
     exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**'],
     // A test that runs no `expect` fails (ADR 0034 decision 9).
     expect: { requireAssertions: true },

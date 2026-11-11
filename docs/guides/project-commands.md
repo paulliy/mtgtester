@@ -74,6 +74,10 @@ bun run engine-bench [--games N] [--turn-cap N] [--json F] [--compare F]
                                         # fingerprint (every menu, response and event) differs from a saved run
 bun run diplomacy-sweep [--games N] [--seed S] [--turn-cap N] [--all] [--talk]   # ADR 0035 self-play
 bun run ai-bench                        # AI benchmark harness (ADR 0026)
+bun run bot-bench list|inspect|verify   # engine-backed tactician cases (ADR 0042); see bot-bench/README.md
+bun run bot-bench run --models local:heuristic,openrouter:<vendor/model> [--trials N] [--spend-cap USD]
+                                        # play a lineup of models and write the judge bundle ZIP
+bun run bot-bench collate --run <dir> <scorecard.json>...   # lay returned judge scorecards side by side
 bun run agent-client [--seat P1] [--seed S] [--port N] [--provider random|ai]
 bun run agent-client --table <invite link> --name <n> --deck <file> [--seat P1] [--policy first-legal]
 bun run packages/server/src/cli/table-scripted-run.ts [--turn-cap 6] [--scenario disconnect]

@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    "types": ["node", "bun"],
+    // The harness imports engine, bot and server sources directly, as `scripts/` does.
+    "rootDir": ".."
+  },
+  "include": ["src"]
+}

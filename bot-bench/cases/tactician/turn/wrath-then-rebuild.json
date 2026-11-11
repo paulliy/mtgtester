@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "id": "wrath-then-rebuild",
+  "role": "tactician",
+  "scope": "turn",
+  "title": "Board wipe first, threat second: nine mana, two spells, one order",
+  "skills": ["sequencing", "board-wipe", "mana-efficiency", "attack-restraint"],
+  "briefing": "P1 is far behind on board against three opponents and holds Wrath of God (4 mana) and Serra Angel (5 mana) with exactly nine Plains (one in hand). Played in the right order the turn ends with every opposing creature dead and a 4/4 flyer alone on the battlefield. Angel first and Wrath second kills P1's own Angel; casting only one of them wastes mana; attacking with the lone Savannah Lions before the Wrath throws it away for nothing (it dies to the Wrath either way, so that part costs little).",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 9
+    },
+    "seats": {
+      "P1": {
+        "life": 17,
+        "hand": ["Plains", "Wrath of God", "Serra Angel"],
+        "battlefield": [
+          "Plains",
+          "Plains",
+          "Plains",
+          "Plains",
+          "Plains",
+          "Plains",
+          "Plains",
+          "Plains",
+          "Savannah Lions"
+        ]
+      },
+      "P2": {
+        "life": 36,
+        "battlefield": [
+          "Forest",
+          "Forest",
+          "Forest",
+          "Gigantosaurus",
+          "Leatherback Baloth",
+          "Kalonian Tusker"
+        ]
+      },
+      "P3": {
+        "life": 34,
+        "battlefield": ["Mountain", "Mountain", "Mountain", "Shivan Dragon", "Grizzly Bears"]
+      },
+      "P4": {
+        "life": 38,
+        "battlefield": [
+          "Swamp",
+          "Swamp",
+          "Island",
+          "Baleful Strix",
+          "Vampire Nighthawk",
+          "Typhoid Rats"
+        ]
+      }
+    },
+    "continue": {
+      "throughCombat": true,
+      "toPostcombatMain": true,
+      "toEndStep": true
+    }
+  },
+  "table": {
+    "policy": "heuristic"
+  },
+  "reference": {
+    "analysis": "Opponents control eight creatures with 31 power between them; P1 has a 2/1. Nine Plains pay for Wrath of God ({2}{W}{W}) and Serra Angel ({3}{W}{W}) in the same turn, but only with the land drop. Wrath must resolve before the Angel is cast or the Angel dies with everything else. The correct turn is Plains, Wrath of God, Serra Angel: the board is empty except for P1's 4/4 flying vigilant Angel. The Angel has summoning sickness, so there is no attack to make afterwards; attacking with Savannah Lions before the Wrath is pointless but nearly free.",
+    "lines": [
+      {
+        "id": "land-wrath-angel",
+        "label": "Plains, Wrath of God, then Serra Angel",
+        "grade": "best",
+        "why": "Clears eight opposing creatures and ends the turn with the only creature on the table.",
+        "steps": [
+          {
+            "choose": "Play Plains"
+          },
+          {
+            "choose": "Cast Wrath of God"
+          },
+          {
+            "choose": "Cast Serra Angel"
+          }
+        ]
+      },
+      {
+        "id": "angel-then-wrath",
+        "label": "Plains, Serra Angel, then Wrath of God",
+        "grade": "weak",
+        "why": "Same cards in the wrong order: the Wrath destroys P1's own Angel. The board is still cleared, which is the larger half of the turn.",
+        "steps": [
+          {
+            "choose": "Play Plains"
+          },
+          {
+            "choose": "Cast Serra Angel"
+          },
+          {
+            "choose": "Cast Wrath of God"
+          }
+        ]
+      },
+      {
+        "id": "wrath-only",
+        "label": "Wrath of God without the land drop, nothing else",
+        "grade": "good",
+        "why": "The wipe is the important half, but five mana and the Angel are left unused.",
+        "steps": [
+          {
+            "choose": "Cast Wrath of God"
+          }
+        ]
+      },
+      {
+        "id": "angel-only",
+        "label": "Plains and Serra Angel, keeping Wrath in hand",
+        "grade": "blunder",
+        "why": "Adds one blocker to a board facing 31 power and leaves the wipe uncast.",
+        "steps": [
+          {
+            "choose": "Play Plains"
+          },
+          {
+            "choose": "Cast Serra Angel"
+          }
+        ]
+      }
+    ],
+    "objectives": [
+      {
+        "id": "wrath-cast",
+        "label": "Wrath of God is cast",
+        "points": 6,
+        "check": {
+          "action": {
+            "took": "Cast Wrath of God"
+          }
+        }
+      },
+      {
+        "id": "angel-not-wasted",
+        "label": "Serra Angel is not in P1's graveyard",
+        "points": 2,
+        "check": {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Serra Angel"]
+          }
+        }
+      },
+      {
+        "id": "angel-on-board",
+        "label": "Serra Angel is on P1's battlefield at end of turn",
+        "points": 1,
+        "check": {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Serra Angel"]
+          }
+        }
+      },
+      {
+        "id": "land-drop",
+        "label": "The land drop is made",
+        "points": 1,
+        "check": {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "lacks": ["Plains"]
+          }
+        }
+      }
+    ]
+  }
+}
