@@ -308,4 +308,19 @@ describe('lookupGenerationCost', () => {
     expect(result).toBeNull();
     expect(calls).toBe(3);
   });
+
+  it('finds the stats endpoint when the base URL names the completions endpoint', async () => {
+    const urls: string[] = [];
+    const fetchImpl = (async (url: string) => {
+      urls.push(url);
+      return new Response(JSON.stringify({ data: { id: 'gen-y', total_cost: 0.001 } }));
+    }) as unknown as typeof fetch;
+    const result = await lookupGenerationCost('gen-y', {
+      baseUrl: 'https://openrouter.ai/api/v1/chat/completions/',
+      apiKey: 'k',
+      fetchImpl,
+    });
+    expect(result?.costUsd).toBe(0.001);
+    expect(urls).toEqual(['https://openrouter.ai/api/v1/generation?id=gen-y']);
+  });
 });

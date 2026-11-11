@@ -199,7 +199,8 @@ export async function lookupGenerationCost(
   const fetchImpl = options.fetchImpl ?? fetch;
   const sleep = options.sleep ?? ((ms: number) => new Promise((r) => setTimeout(r, ms)));
   const delays = options.delaysMs ?? [500, 2000, 5000];
-  const base = options.baseUrl.replace(/\/+$/, '');
+  // The base URL may name the completions endpoint itself; the stats live beside it.
+  const base = options.baseUrl.replace(/\/+$/, '').replace(/\/chat\/completions$/, '');
   const url = `${base}/generation?id=${encodeURIComponent(generationId)}`;
 
   for (let i = 0; i <= delays.length; i++) {
