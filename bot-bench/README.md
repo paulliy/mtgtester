@@ -47,7 +47,8 @@ judge bundle: 26 files, 1035 KB
   a key.
 - `--out <run directory>` pointing at an earlier run **adds** the new models to it and rebuilds
   the bundle, so you can try one more model without paying for the others again. The cases, mode
-  and trial count have to match.
+  and trial count have to match, and so does the run's fingerprint (the case files, the live
+  primer, the engine and the AI versions): after any of those change, start a new run.
 - `--trials N` plays every case N times per model and reports how often it chose the same thing.
 - `--spend-cap <USD>` stops every model once the known spend passes it. It is checked before
   every decision, so a whole-turn case stops mid-turn; a case cut off that way is not scored.

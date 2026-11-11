@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { loadCases, parseBenchCase } from './case';
 import { localActorFactory } from './models';
-import { openCase, playCase } from './play';
+import { openCase, playCase, scriptedActor } from './play';
+import { scoreRun } from './score';
 import { verifyCase } from './verify';
 
 const cases = loadCases();
@@ -82,5 +83,18 @@ describe('parseBenchCase', () => {
     };
     const parsed = parseBenchCase(json);
     expect(() => openCase(parsed)).toThrow(/does not model/);
+  });
+});
+
+describe('the decision cap', () => {
+  it('holds the tested seat still past the cap instead of letting the table play it', async () => {
+    const overrun = loadCases().find((benchCase) => benchCase.id === 'overrun-for-the-kill')!;
+    const capped = { ...overrun, maxActorDecisions: 1 };
+    // The seat plays its land, then is cut off: the table must not cast Overrun and attack for it.
+    const played = await playCase(capped, scriptedActor([{ choose: 'Play Forest' }]).factory);
+    expect(played.termination).toBe('decision_cap');
+    expect(played.decisions).toHaveLength(1);
+    expect(played.log.join('\n')).not.toMatch(/Overrun/);
+    expect(scoreRun(capped, played).score).toBeLessThan(0.5);
   });
 });

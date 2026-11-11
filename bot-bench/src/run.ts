@@ -45,8 +45,8 @@ export interface ModelResult {
   /** Why the model stopped early: provider failures, or the run's spend cap. */
   abortReason?: string;
   /**
-   * Decisions from a case the spend cap cut off. They were paid for, so they count towards cost,
-   * but the case is not scored: the rest of it was never asked.
+   * Decisions from a case cut off by the spend cap or by a provider that kept failing. They were
+   * paid for, so they count towards cost, but the case is not scored.
    */
   unscored?: Array<{ caseId: string; trial: number; decisions: CaseRun['decisions'] }>;
   startedAt: string;
@@ -127,23 +127,31 @@ export async function runLineup(
     const results: CaseResult[] = [];
     const unscored: NonNullable<ModelResult['unscored']> = [];
     let abortReason: string | undefined;
-    let providerFailures = 0;
 
     try {
       // Built once per model: its request queue and rate limit are shared by all its cases.
       const baseFactory = actorFactory(entry, runtime);
-      // The cap is checked before every decision, not only between cases: a whole-turn case
-      // makes many paid requests, and other models spend from the same budget meanwhile. A
-      // decision already sent still finishes its own retries, so the overshoot is at most one
+      // Both stop conditions are checked before every decision, not only between cases: a
+      // whole-turn case makes many paid requests, other models spend from the same budget
+      // meanwhile, and a dead provider should not be asked for the rest of a turn. A decision
+      // already sent still finishes its own retries, so the spend overshoot is at most one
       // decision per running model.
-      let capReachedInCase = false;
+      let providerFailures = 0;
+      let lastFailure = 'provider error';
+      let stopReason: string | undefined;
+      const providerStop = (): string =>
+        `${PROVIDER_FAILURE_LIMIT} decisions in a row failed at the provider (${lastFailure})`;
       const makeActor: ActorFactory = (engine, benchCase) => {
         const actor = baseFactory(engine, benchCase);
         return {
           async decide(request, view) {
             if (overBudget()) {
-              capReachedInCase = true;
+              stopReason = `${new SpendCapReached(options.spendCapUsd ?? 0).message} during ${benchCase.id}`;
               throw new SpendCapReached(options.spendCapUsd ?? 0);
+            }
+            if (providerFailures >= PROVIDER_FAILURE_LIMIT) {
+              stopReason = providerStop();
+              throw new Error(stopReason);
             }
             reportedThisDecision = 0;
             const answer = await actor.decide(request, view);
@@ -151,6 +159,10 @@ export async function runLineup(
             // whatever its attempts already reported, so nothing is counted twice.
             if (answer.costSource === 'estimated' && answer.costUsd !== undefined)
               knownSpend += Math.max(0, answer.costUsd - reportedThisDecision);
+            if (answer.failure?.startsWith('provider error') === true) {
+              providerFailures += 1;
+              lastFailure = answer.failure;
+            } else providerFailures = 0;
             return answer;
           },
         };
@@ -161,30 +173,23 @@ export async function runLineup(
             abortReason = new SpendCapReached(options.spendCapUsd ?? 0).message;
             break outer;
           }
-          capReachedInCase = false;
+          stopReason = undefined;
           const played = await playCase(benchCase, makeActor);
-          if (capReachedInCase) {
-            // A case cut off by the cap is not scored: the rest of it was never asked. What it
-            // already spent still counts.
+          if (stopReason === undefined && providerFailures >= PROVIDER_FAILURE_LIMIT)
+            stopReason = providerStop();
+          if (stopReason !== undefined) {
+            // A case stopped by the cap or by a dead provider is not scored: the rest of it was
+            // never asked, or was played by the fallback. What it already spent still counts.
             unscored.push({ caseId: benchCase.id, trial, decisions: played.decisions });
-            abortReason = `${new SpendCapReached(options.spendCapUsd ?? 0).message} during ${benchCase.id}`;
+            abortReason = stopReason;
             break outer;
           }
           const score = scoreRun(benchCase, played);
           const { focus: _sameForEveryModel, ...run } = played;
           results.push({ caseId: benchCase.id, trial, run, score });
-          for (const decision of run.decisions) {
-            if (decision.failure?.startsWith('provider error') === true) providerFailures += 1;
-            else providerFailures = 0;
-          }
           options.onProgress?.(
             `${entry.id}  ${benchCase.id}${options.trials > 1 ? ` #${trial}` : ''}  ${(score.score * 100).toFixed(0)}%  ${run.decisions.map((decision) => decision.action).join(' | ')}`,
           );
-          if (providerFailures >= PROVIDER_FAILURE_LIMIT) {
-            const last = run.decisions.at(-1)?.failure ?? 'provider error';
-            abortReason = `${PROVIDER_FAILURE_LIMIT} decisions in a row failed at the provider (${last})`;
-            break outer;
-          }
         }
       }
     } catch (cause) {

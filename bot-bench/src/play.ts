@@ -297,11 +297,12 @@ export async function playCase(benchCase: BenchCase, makeActor: ActorFactory): P
 
   // After the one decision a `single` case tests, the tested seat holds still (unless the case
   // scripts it or hands it to the bot), so the run shows that decision's consequence and no more.
-  const playTable = (request: DecisionRequest): DecisionResponse => {
+  const playTable = (request: DecisionRequest, forceStill = false): DecisionResponse => {
     const still =
-      benchCase.scope === 'single' &&
-      request.decidingPlayer === benchCase.actor &&
-      (benchCase.table?.actorAfterFocus ?? 'still') === 'still';
+      forceStill ||
+      (benchCase.scope === 'single' &&
+        request.decidingPlayer === benchCase.actor &&
+        (benchCase.table?.actorAfterFocus ?? 'still') === 'still');
     const response = table.answer(request, still);
     engine.submit(response);
     return response;
@@ -315,7 +316,9 @@ export async function playCase(benchCase: BenchCase, makeActor: ActorFactory): P
         playTable(request);
       } else if (decisions.length >= cap) {
         if (benchCase.scope === 'turn') termination = 'decision_cap';
-        playTable(request);
+        // Past the cap the tested seat holds still: letting the table's bot play it would credit
+        // the bot's moves (an Overrun, a lethal attack) to the model's score.
+        playTable(request, true);
       } else {
         const names = namesOf(engine.getState());
         const answer = await actor.decide(request, engine.view(benchCase.actor));

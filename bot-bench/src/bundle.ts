@@ -4,9 +4,11 @@
  * and the raw data. With `blind` on, candidate models are renamed "Model A", "Model B", ... inside
  * the bundle and the key that maps them back is written beside the ZIP, never inside it.
  */
+import { createHash } from 'node:crypto';
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { ENGINE_VERSION } from '../../packages/engine/src';
+import { primerCatalog } from '../../packages/server/src/ai/primer';
 import { AI_VERSIONS } from '../../packages/server/src/ai/versions';
 import { analyzeCase, type CaseAnalysis } from './analysis';
 import type { BenchCase } from './case';
@@ -38,6 +40,25 @@ export interface RunManifest {
   engineVersion: string;
   aiVersions: Record<string, string>;
   gitCommit: string | null;
+  /**
+   * What the run measured against: the cases as written, the live primer, the engine and the AI
+   * versions. Models are only added to a run whose fingerprint still matches.
+   */
+  fingerprint: string;
+}
+
+/** A hash of everything a measurement depends on besides the model, for `run --out`. */
+export function benchFingerprint(cases: readonly BenchCase[]): string {
+  return createHash('sha256')
+    .update(
+      JSON.stringify({
+        cases,
+        primer: primerCatalog(),
+        engineVersion: ENGINE_VERSION,
+        aiVersions: AI_VERSIONS,
+      }),
+    )
+    .digest('hex');
 }
 
 export function newManifest(
@@ -59,6 +80,7 @@ export function newManifest(
     engineVersion: ENGINE_VERSION,
     aiVersions: { ...AI_VERSIONS },
     gitCommit,
+    fingerprint: benchFingerprint(cases),
   };
 }
 
@@ -119,12 +141,31 @@ export interface JudgeKey {
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 /** Rename every model run through a provider; local baselines keep their names. */
+/** Replaces every occurrence of each name with its alias, in every string inside `value`. */
+function redact<T>(value: T, names: ReadonlyArray<readonly [string, string]>): T {
+  const walk = (item: unknown): unknown => {
+    if (typeof item === 'string')
+      return names.reduce((text, [name, alias]) => text.split(name).join(alias), item);
+    if (Array.isArray(item)) return item.map(walk);
+    if (item !== null && typeof item === 'object')
+      return Object.fromEntries(Object.entries(item).map(([k, v]) => [k, walk(v)]));
+    return item;
+  };
+  return walk(value) as T;
+}
+
 export function anonymise(
   models: readonly ModelResult[],
   transcripts: readonly TranscriptEntry[],
 ): { models: ModelResult[]; transcripts: TranscriptEntry[]; key: JudgeKey['aliases'] } {
   const key: JudgeKey['aliases'] = [];
   const ids = new Map<string, string>();
+  // Every way a model can be named (its model string, id, label, and what the provider reported
+  // it as), so an error message such as a timeout that names the model cannot give it away.
+  const names: Array<[string, string]> = [];
+  const nameAs = (name: unknown, alias: string): void => {
+    if (typeof name === 'string' && name.length >= 3) names.push([name, alias]);
+  };
   const renamed = models.map((result) => {
     if (result.model.kind !== 'llm') return result;
     const letter = LETTERS[key.length] ?? `N${key.length + 1}`;
@@ -132,6 +173,14 @@ export function anonymise(
     const aliasId = `model-${letter.toLowerCase()}`;
     key.push({ alias, aliasId, model: result.model });
     ids.set(result.model.id, aliasId);
+    nameAs(result.model['model'], alias);
+    nameAs(result.model.label, alias);
+    nameAs(result.model.id, aliasId);
+    for (const entry of transcripts)
+      if (entry.modelId === result.model.id) {
+        nameAs(entry.responseModel, alias);
+        nameAs(entry.backend, 'the provider');
+      }
     return {
       ...result,
       // Only what does not identify the model: its thinking setting and output budget.
@@ -146,12 +195,13 @@ export function anonymise(
       },
     };
   });
+  // Longest first, so a name that contains another is replaced whole.
+  names.sort((a, b) => b[0].length - a[0].length);
   return {
-    models: renamed,
-    transcripts: transcripts.map(({ responseModel: _model, backend: _backend, ...entry }) => ({
-      ...entry,
-      modelId: ids.get(entry.modelId) ?? entry.modelId,
-    })),
+    models: renamed.map(({ model, ...rest }) => ({ model, ...redact(rest, names) })),
+    transcripts: transcripts.map(({ responseModel: _model, backend: _backend, ...entry }) =>
+      redact({ ...entry, modelId: ids.get(entry.modelId) ?? entry.modelId }, names),
+    ),
     key,
   };
 }

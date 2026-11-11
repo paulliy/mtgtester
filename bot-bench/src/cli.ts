@@ -7,7 +7,14 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describeScenarioRequest } from '../../packages/engine/src';
 import { analyzeCase } from './analysis';
-import { newManifest, readRun, writeBundle, writeModelResult, type RunManifest } from './bundle';
+import {
+  benchFingerprint,
+  newManifest,
+  readRun,
+  writeBundle,
+  writeModelResult,
+  type RunManifest,
+} from './bundle';
 import { loadCases, type BenchCase } from './case';
 import { collate, parseScorecard } from './collate';
 import { modelMetrics } from './metrics';
@@ -162,6 +169,13 @@ async function run(flags: Flags): Promise<void> {
     throw new Error(
       'name the models: --models local:heuristic,openrouter:vendor/model or --lineup file.json',
     );
+  // Two entries with one id would write to the same result file, and one would be lost.
+  const ids = lineup.map((entry) => entry.id);
+  const repeated = ids.filter((id, index) => ids.indexOf(id) !== index);
+  if (repeated.length > 0)
+    throw new Error(
+      `model id ${[...new Set(repeated)].join(', ')} appears more than once across --lineup and --models; give each model its own id`,
+    );
   const mode = (text(flags, 'mode') ?? 'raw') as RunMode;
   if (mode !== 'raw' && mode !== 'production') throw new Error('--mode must be raw or production');
   const trials = Math.floor(positive(flags, 'trials', 1));
@@ -189,6 +203,12 @@ async function run(flags: Flags): Promise<void> {
     if (!same)
       throw new Error(
         `${runDirectory} holds a run with mode ${manifest.mode}, ${manifest.trials} trial(s) and ${manifest.caseIds.length} cases; use the same settings to add models, or another --out`,
+      );
+    // The same ids are not the same test: a case, its reference, the primer, the engine or the
+    // prompt version may have changed since, and results from both would be judged as one run.
+    if (manifest.fingerprint !== benchFingerprint(cases))
+      throw new Error(
+        `${runDirectory} was measured against different cases, primer, engine or AI versions than this checkout; start a new run (another --out) so the results stay comparable`,
       );
   } else {
     manifest = newManifest(stamp, mode, trials, cases, gitCommit());

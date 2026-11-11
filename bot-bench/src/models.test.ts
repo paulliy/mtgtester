@@ -200,6 +200,29 @@ describe('a model in the tested seat, through the production pipeline', () => {
     expect(result!.cases.length).toBeLessThan(cases.length);
   });
 
+  it('stops a failing provider mid-turn, even if a later request would succeed', async () => {
+    const calls: FakeTurn[] = [];
+    // The first three requests fail at the provider; from the fourth on it would answer.
+    const fetchImpl = fakeProvider(
+      (turn) =>
+        calls.length <= 3
+          ? { status: 401, body: 'invalid_api_key' }
+          : { content: pick(turn, 'Pass priority') },
+      calls,
+    );
+    const [result] = await runLineup(
+      only('clear-the-blocker-and-pump'),
+      lineup,
+      options(fetchImpl),
+    );
+    // The fourth decision is never sent, and the turn played by the fallback is not scored.
+    expect(calls).toHaveLength(3);
+    expect(result!.status).toBe('aborted');
+    expect(result!.abortReason).toMatch(/3 decisions in a row failed at the provider/);
+    expect(result!.cases).toHaveLength(0);
+    expect(result!.unscored?.[0]?.decisions).toHaveLength(3);
+  });
+
   it('stops spending once the cap is passed', async () => {
     const fetchImpl = fakeProvider((turn) => ({ content: pick(turn, 'Pass priority'), cost: 0.6 }));
     const [result] = await runLineup(

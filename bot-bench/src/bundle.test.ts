@@ -2,7 +2,13 @@ import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSy
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { newManifest, writeBundle, writeModelResult, type BundleResult } from './bundle';
+import {
+  benchFingerprint,
+  newManifest,
+  writeBundle,
+  writeModelResult,
+  type BundleResult,
+} from './bundle';
 import { loadCases } from './case';
 import { collate, parseScorecard } from './collate';
 import { fakeProvider, pick } from './fake-provider';
@@ -35,6 +41,9 @@ const lineup = parseLineup([
 /** Model one finds the Bolt; model two always passes or holds back. */
 const fetchImpl = fakeProvider((turn) => {
   const has = (text: string) => turn.legalActions.some((a) => a.description.includes(text));
+  // The secret model's first try fails with an error that names it, as a timeout does.
+  if (turn.model === SECRET && turn.attempt === 1)
+    return { status: 500, body: `upstream error from ${SECRET} (Secret Model 9000)` };
   if (has('Cast Lightning Bolt') && turn.model === SECRET)
     return { content: pick(turn, 'Cast Lightning Bolt', ['P4'], 'lethal on P4'), cost: 0.0001 };
   if (has('Declare attackers'))
@@ -292,5 +301,19 @@ describe('collating returned scorecards', () => {
       /x.json: is for run other/,
     );
     expect(() => parseScorecard(card('j', 14), 'x.json', 'test-run')).toThrow(/must be 0 to 10/);
+  });
+});
+
+describe('the run fingerprint', () => {
+  it('changes when a case changes under the same id, so --out cannot mix two tests', () => {
+    const before = benchFingerprint(cases);
+    expect(benchFingerprint(loadCases().filter((c) => cases.some((d) => d.id === c.id)))).toBe(
+      before,
+    );
+    const edited = cases.map((benchCase, index) =>
+      index === 0 ? { ...benchCase, briefing: `${benchCase.briefing} (revised)` } : benchCase,
+    );
+    expect(benchFingerprint(edited)).not.toBe(before);
+    expect(newManifest('r', 'raw', 1, cases, null).fingerprint).toBe(before);
   });
 });
