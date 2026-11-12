@@ -57,7 +57,7 @@ export interface PendingDecision {
   /** Optional one-call mana distribution metadata. */
   manaSplit?: { amount: number; colors: string[] };
   /** Optional one-call combat-damage-division metadata (ADR 0023 Phase 4). */
-  combatDamageSplit?: { amount: number; targets: ObjectId[] };
+  combatDamageSplit?: { amount: number; targets: ObjectId[]; lethal?: Record<ObjectId, number> };
 }
 
 /** The resolved choice fed back into the generator. */

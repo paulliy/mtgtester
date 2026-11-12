@@ -235,6 +235,30 @@ describe('combat (brief §5.4 worked example and CR 506–511)', () => {
     expect(ctx.state.players.find((p) => p.id === 'P2')?.life).toBe(37);
   });
 
+  it('tells the divider what counts as lethal to each blocker: toughness, or 1 with deathtouch', () => {
+    const lethalSeen = (keywords: string): Record<string, number> | undefined => {
+      const ctx = combatContext();
+      const crusher = spawn(ctx, 'P1', keywordCreature('Test Crusher', keywords, '{3}{G}', '6/6'));
+      const blocker = spawn(ctx, 'P2', keywordCreature('Test Wall', '', '{2}', '1/3'));
+      let seen: Record<string, number> | undefined;
+      pump(runCombatPhase(ctx), (d) => {
+        const attack = attackWith('Test Crusher', 'P2')(d);
+        if (attack !== null) return attack;
+        const block = blockWith('Test Wall', crusher.id)(d);
+        if (block !== null) return block;
+        if (d.decisionType === 'assignCombatDamage') {
+          seen = d.combatDamageSplit?.lethal;
+          expect(d.combatDamageSplit?.targets).toEqual([blocker.id, 'P2']);
+          return splitDamage({ [blocker.id]: 3, P2: 3 });
+        }
+        return pick(d, /Pass|does not/);
+      });
+      return seen === undefined ? undefined : { wall: Object.values(seen)[0] as number };
+    };
+    expect(lethalSeen('Trample')).toEqual({ wall: 3 });
+    expect(lethalSeen('Trample, deathtouch')).toEqual({ wall: 1 });
+  });
+
   it('vigilance attacks untapped; lifelink heals its controller', () => {
     const ctx = combatContext();
     const paladin = spawn(

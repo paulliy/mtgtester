@@ -80,5 +80,41 @@ export function validateResponse(
     }
   }
 
-  return null;
+  return validateDamageSplit(response, request);
+}
+
+/**
+ * A combat-damage division is answered by its `combatDamageSplit`, not by the option the
+ * `actionId` names. The engine never refuses one: a split it cannot use is replaced by all the
+ * damage on the first blocker, which silently turns a lethal trample attack into no damage to the
+ * player. Checking it here sends the model a corrective retry instead (§7.7 step 1).
+ */
+function validateDamageSplit(response: DecisionResponse, request: DecisionRequest): string | null {
+  const offered = request.combatDamageSplit;
+  if (offered === undefined) return null;
+  const { amount, targets, lethal } = offered;
+  const example = `{${targets.map((id) => `"${id}": <whole number>`).join(', ')}}`;
+  const split = response.combatDamageSplit;
+  if (split === undefined)
+    return `this decision is answered with "combatDamageSplit", not by actionId alone: divide ${amount} damage as ${example}`;
+  for (const [id, value] of Object.entries(split)) {
+    if (!targets.includes(id))
+      return `combatDamageSplit names "${id}", which is not one of the targets: [${targets.join(', ')}]`;
+    if (!Number.isInteger(value) || value < 0)
+      return `combatDamageSplit["${id}"] must be a whole number of 0 or more`;
+  }
+  const total = targets.reduce((sum, id) => sum + (split[id] ?? 0), 0);
+  if (total !== amount)
+    return `combatDamageSplit sums to ${total} but must sum to exactly ${amount}`;
+  if (lethal === undefined) return null;
+  // Trample (CR 702.19b): the last target is the defending player or planeswalker, and it may
+  // take damage only once every blocker has been assigned lethal.
+  const recipients = targets.filter((id) => !(id in lethal));
+  const beyond = recipients.reduce((sum, id) => sum + (split[id] ?? 0), 0);
+  if (beyond === 0) return null;
+  const short = targets.filter((id) => id in lethal && (split[id] ?? 0) < (lethal[id] ?? 0));
+  if (short.length === 0) return null;
+  const need = short.map((id) => `"${id}" needs at least ${lethal[id]}`).join(', ');
+  const most = amount - targets.reduce((sum, id) => sum + (lethal[id] ?? 0), 0);
+  return `combatDamageSplit gives ${beyond} to ${recipients.map((id) => `"${id}"`).join(', ')} before every blocker has lethal damage (${need}); assign each blocker its lethal amount first, which leaves at most ${Math.max(0, most)} for ${recipients.map((id) => `"${id}"`).join(', ')}`;
 }

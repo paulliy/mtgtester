@@ -309,8 +309,11 @@ export interface DecisionRequest {
    * chooses, rather than picking an order (the pre-2018 mechanic; see the ADR's Context section).
    * `targets` is blocker ids, plus the defending player's id appended last when the source has
    * trample — CR 702.19b only allows assigning to the player once every blocker already has
-   * lethal, which `DecisionResponse.combatDamageSplit` is validated against. */
-  combatDamageSplit?: { amount: number; targets: ObjectId[] };
+   * lethal, which `DecisionResponse.combatDamageSplit` is validated against. `lethal` is that
+   * amount per blocker id as the engine computes it when it asks (toughness less damage already
+   * marked; 1 for a deathtouch source, CR 702.2c), so a provider can check a split before
+   * submitting it instead of having the engine replace an illegal one. */
+  combatDamageSplit?: { amount: number; targets: ObjectId[]; lethal?: Record<ObjectId, number> };
   /** UI-only; see `DecisionPresentation`. Never sent to the AI (brief — Workstream 3). */
   presentation?: DecisionPresentation;
 }
