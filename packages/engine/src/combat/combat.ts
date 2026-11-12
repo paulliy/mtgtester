@@ -1734,6 +1734,21 @@ function recipientKey(recipient: CombatRecipient): ObjectId {
 type DamageDivisions = ReadonlyMap<ObjectId, ReadonlyMap<ObjectId, number>>;
 
 /**
+ * The damage from `attacker` that counts as lethal to `blocker` right now (CR 702.19b): its
+ * toughness less the damage already marked on it, 1 at most from a deathtouch source (CR 702.2c),
+ * and nothing more once a deathtouch source has already damaged it.
+ */
+function lethalDamageFor(
+  ctx: GameContext,
+  attacker: EnginePermanent,
+  blocker: EnginePermanent,
+): number {
+  if (blocker.damagedByDeathtouch) return 0;
+  const remaining = Math.max(0, effectivePT(ctx, blocker).toughness - blocker.damageMarked);
+  return hasKeyword(ctx, attacker, 'deathtouch') ? Math.min(1, remaining) : remaining;
+}
+
+/**
  * Validate a proposed division and fall back to a safe default if it isn't well-formed: integers,
  * non-negative, summing to exactly `power`, over exactly the offered `targets` (CR 510.1a) — and,
  * when a trampler's division names the defending player, CR 702.19b's real constraint: nothing
@@ -1752,12 +1767,7 @@ function resolveDamageDivision(
   outcome: DecisionOutcome,
 ): Map<ObjectId, number> {
   const raw = outcome.combatDamageSplit ?? {};
-  const deathtouch = hasKeyword(ctx, attacker, 'deathtouch');
-  const lethalFor = (b: EnginePermanent): number => {
-    const bpt = effectivePT(ctx, b);
-    const remaining = Math.max(0, bpt.toughness - b.damageMarked);
-    return b.damagedByDeathtouch ? 0 : deathtouch ? Math.min(1, remaining) : remaining;
-  };
+  const lethalFor = (b: EnginePermanent): number => lethalDamageFor(ctx, attacker, b);
   const wellFormed =
     Object.keys(raw).every((id) => targets.includes(id)) &&
     targets.every((id) => Number.isInteger(raw[id] ?? 0) && (raw[id] ?? 0) >= 0) &&
@@ -1805,13 +1815,7 @@ function* assignDamageDivisions(
     const recipient = combatRecipientOf(ctx, attacker);
     if (liveBlockers.length === 0) continue;
     if (liveBlockers.length === 1) {
-      const blocker = liveBlockers[0]!;
-      const remaining = Math.max(0, effectivePT(ctx, blocker).toughness - blocker.damageMarked);
-      const lethal = blocker.damagedByDeathtouch
-        ? 0
-        : hasKeyword(ctx, attacker, 'deathtouch')
-          ? Math.min(1, remaining)
-          : remaining;
+      const lethal = lethalDamageFor(ctx, attacker, liveBlockers[0]!);
       if (!trample || recipient === null || power <= lethal) continue;
     }
     const targets: ObjectId[] = liveBlockers.map((b) => b.id);
@@ -1828,7 +1832,13 @@ function* assignDamageDivisions(
         description: `All ${power} damage to ${damageTargetName(ctx, id)}`,
         interaction: { kind: 'choice' as const },
       })),
-      combatDamageSplit: { amount: power, targets },
+      combatDamageSplit: {
+        amount: power,
+        targets,
+        lethal: Object.fromEntries(
+          liveBlockers.map((b) => [b.id, lethalDamageFor(ctx, attacker, b)]),
+        ),
+      },
     };
     const division = resolveDamageDivision(
       ctx,

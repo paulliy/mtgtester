@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "role": "tactician",
+  "id": "land-for-the-angel",
+  "scope": "single",
+  "title": "The land that gives the second white source for the Angel",
+  "skills": ["land-choice", "mana-colors", "tempo"],
+  "briefing": "P1 has Plains, Island, Island and Island and holds Island, Plains and Serra Angel ({3}{W}{W}). Only the second Plains gives two white sources, so only it casts the Angel this turn. The Island is first in hand, which is where a model that plays the first legal land goes wrong.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 5
+    },
+    "seats": {
+      "P1": {
+        "life": 40,
+        "hand": ["Island", "Plains", "Serra Angel"],
+        "battlefield": ["Plains", "Island", "Island", "Island"]
+      },
+      "P2": {
+        "life": 40,
+        "battlefield": ["Mountain", "Mountain", "Mountain"]
+      },
+      "P3": {
+        "life": 40,
+        "battlefield": ["Swamp", "Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 40,
+        "battlefield": ["Forest", "Forest", "Forest"]
+      }
+    }
+  },
+  "table": {
+    "policy": "passive",
+    "script": [
+      {
+        "player": "P1",
+        "choose": "Cast Serra Angel"
+      }
+    ]
+  },
+  "reference": {
+    "analysis": "Serra Angel needs {3}{W}{W}. With one Plains on the battlefield, only the Plains from hand makes WW and five lands. The Island makes five lands but one white source, so the Angel stays in hand.",
+    "options": [
+      {
+        "label": "Play Plains (casts Serra Angel this turn)",
+        "when": {
+          "choose": "Play Plains"
+        },
+        "grade": "best",
+        "why": "The only land that makes the Angel castable now."
+      },
+      {
+        "label": "Play Island",
+        "when": {
+          "choose": "Play Island"
+        },
+        "grade": "weak",
+        "why": "Uses the land drop but leaves one white source: the Angel cannot be cast."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "Skips the land drop with the Angel in hand."
+    }
+  }
+}

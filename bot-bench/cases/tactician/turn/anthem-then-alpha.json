@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "id": "anthem-then-alpha",
+  "role": "tactician",
+  "scope": "turn",
+  "title": "Anthem first, then every Bear at the player who is out of blockers",
+  "skills": ["sequencing", "lethal", "anthem-effects"],
+  "briefing": "P2 is at 9 with no creatures. P1 has three Grizzly Bears (6 power) and Glorious Anthem in hand with three Plains. Attacking alone leaves P2 on 3; the Anthem makes each Bear a 3/3 for exactly 9. The cheap enchantment is cast before combat, not after.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 8
+    },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Glorious Anthem"],
+        "battlefield": [
+          "Plains",
+          "Plains",
+          "Plains",
+          "Grizzly Bears",
+          "Grizzly Bears",
+          "Grizzly Bears"
+        ]
+      },
+      "P2": {
+        "life": 9,
+        "battlefield": ["Island", "Island"]
+      },
+      "P3": {
+        "life": 38,
+        "battlefield": ["Swamp", "Swamp", "Typhoid Rats"]
+      },
+      "P4": {
+        "life": 35,
+        "battlefield": ["Forest", "Forest"]
+      }
+    },
+    "continue": {
+      "throughCombat": true,
+      "toPostcombatMain": true,
+      "toEndStep": true
+    }
+  },
+  "table": {
+    "policy": "passive"
+  },
+  "reference": {
+    "analysis": "Glorious Anthem gives creatures P1 controls +1/+1. Three 3/3 Bears deal 9 at a player on 9 with no blockers. Without it the same attack deals 6.",
+    "lines": [
+      {
+        "id": "anthem-alpha",
+        "label": "Cast Glorious Anthem, attack P2 with all three Bears",
+        "grade": "best",
+        "why": "3 x 3 = 9 is exactly lethal.",
+        "steps": [
+          {
+            "choose": "Cast Glorious Anthem"
+          },
+          {
+            "choose": "Declare attackers",
+            "assign": {
+              "Grizzly Bears": "P2"
+            }
+          }
+        ]
+      },
+      {
+        "id": "alpha-no-anthem",
+        "label": "Attack without the Anthem",
+        "grade": "blunder",
+        "why": "6 damage leaves P2 at 3 with the Anthem castable in hand: a kill on the board thrown away.",
+        "steps": [
+          {
+            "choose": "Declare attackers",
+            "assign": {
+              "Grizzly Bears": "P2"
+            }
+          }
+        ]
+      }
+    ],
+    "objectives": [
+      {
+        "id": "kill-p2",
+        "label": "P2 is eliminated this turn",
+        "points": 8,
+        "check": {
+          "eliminated": "P2"
+        }
+      }
+    ]
+  }
+}

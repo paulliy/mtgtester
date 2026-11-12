@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "id": "haste-for-lethal",
+  "role": "tactician",
+  "scope": "turn",
+  "title": "Greaves gives a ten-power creature haste for the exact kill",
+  "skills": ["sequencing", "haste", "lethal", "equipment"],
+  "briefing": "P2 is at 10 with no creatures. P1 has eight Forests, Gigantosaurus (10/10, five green mana here) and Lightning Greaves (cast {2}, equip {0}, haste and shroud). Cast alone the giant is summoning sick. Greaves, the giant, an equip and an attack is 7 of 8 mana and exactly 10 damage.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 9
+    },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Lightning Greaves", "Gigantosaurus"],
+        "battlefield": [
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest"
+        ]
+      },
+      "P2": {
+        "life": 10,
+        "battlefield": ["Island", "Island"]
+      },
+      "P3": {
+        "life": 38,
+        "battlefield": ["Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 35,
+        "battlefield": ["Mountain", "Mountain"]
+      }
+    },
+    "continue": {
+      "throughCombat": true,
+      "toPostcombatMain": true,
+      "toEndStep": true
+    }
+  },
+  "table": {
+    "policy": "passive"
+  },
+  "reference": {
+    "analysis": "Greaves gives haste, so the giant can attack the turn it is cast. Cost: 2 for Greaves, 5 for the giant, equip is free: 7 of 8 mana. 10 damage at a player on 10 is lethal; without Greaves the giant cannot attack.",
+    "lines": [
+      {
+        "id": "greaves-giant-attack",
+        "label": "Greaves, Gigantosaurus, equip, attack P2",
+        "grade": "best",
+        "why": "10 hasty trample-free damage at a player on 10.",
+        "steps": [
+          {
+            "choose": "Cast Lightning Greaves"
+          },
+          {
+            "choose": "Cast Gigantosaurus"
+          },
+          {
+            "choose": "/Equip/",
+            "targets": ["Gigantosaurus"]
+          },
+          {
+            "choose": "Declare attackers",
+            "assign": {
+              "Gigantosaurus": "P2"
+            }
+          }
+        ]
+      },
+      {
+        "id": "giant-only",
+        "label": "Cast Gigantosaurus without Greaves",
+        "grade": "blunder",
+        "why": "The giant is summoning sick and cannot attack; the Greaves in hand would have made it lethal.",
+        "steps": [
+          {
+            "choose": "Cast Gigantosaurus"
+          }
+        ]
+      }
+    ],
+    "objectives": [
+      {
+        "id": "kill-p2",
+        "label": "P2 is eliminated this turn",
+        "points": 8,
+        "check": {
+          "eliminated": "P2"
+        }
+      }
+    ]
+  }
+}

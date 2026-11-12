@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "id": "counter-the-sweeper",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Counter the Wrath of God that kills three of your creatures",
+  "skills": ["interaction-timing", "board-evaluation"],
+  "briefing": "P2 casts Wrath of God with P1 controlling Serra Angel, Kalonian Tusker and Grizzly Bears and P2 only a Wall of Omens. P1 has two Islands open, Negate and Essence Scatter; only Negate can answer a noncreature spell.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P2",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 9
+    },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Negate", "Essence Scatter"],
+        "battlefield": ["Island", "Island", "Serra Angel", "Kalonian Tusker", "Grizzly Bears"]
+      },
+      "P2": {
+        "life": 30,
+        "hand": ["Wrath of God"],
+        "battlefield": ["Plains", "Plains", "Plains", "Plains", "Wall of Omens"]
+      },
+      "P3": {
+        "life": 38,
+        "battlefield": ["Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 35,
+        "battlefield": ["Mountain", "Mountain"]
+      }
+    }
+  },
+  "setup": [
+    {
+      "player": "P2",
+      "choose": "Cast Wrath of God"
+    }
+  ],
+  "table": {
+    "policy": "passive"
+  },
+  "reference": {
+    "analysis": "Wrath kills three of P1's creatures to one of P2's. Negate counters it; Essence Scatter cannot target a noncreature spell, so it is not offered.",
+    "options": [
+      {
+        "label": "Negate Wrath of God",
+        "when": {
+          "choose": "Cast Negate",
+          "targets": ["Wrath of God"]
+        },
+        "grade": "best",
+        "why": "Saves three creatures for one card."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "Wrath resolves and P1 loses its board."
+    }
+  }
+}

@@ -8,7 +8,12 @@
   "briefing": "P1 has Serra Angel and Shivan Dragon (9 flying power) against P2 at 9 life, whose only flying blocker is Baleful Strix (1/1 flying, deathtouch). Swords to Plowshares removes the Strix but gives P2 1 life, so the attack is then 1 short: the Dragon's firebreathing ({R}: +1/+0) must be used with the two open Mountains. The full line is three different kinds of decision in the right order: removal before combat, both flyers at P2, pump during combat. Skipping the removal loses the Dragon to deathtouch.",
   "actor": "P1",
   "position": {
-    "turn": { "player": "P1", "phase": "precombatMain", "step": null, "number": 10 },
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 10
+    },
     "seats": {
       "P1": {
         "life": 18,
@@ -17,9 +22,18 @@
           "Plains",
           "Mountain",
           "Mountain",
-          { "card": "Plains", "tapped": true },
-          { "card": "Plains", "tapped": true },
-          { "card": "Mountain", "tapped": true },
+          {
+            "card": "Plains",
+            "tapped": true
+          },
+          {
+            "card": "Plains",
+            "tapped": true
+          },
+          {
+            "card": "Mountain",
+            "tapped": true
+          },
           "Serra Angel",
           "Shivan Dragon"
         ]
@@ -28,10 +42,20 @@
         "life": 9,
         "battlefield": ["Island", "Swamp", "Swamp", "Baleful Strix", "Kalonian Tusker"]
       },
-      "P3": { "life": 33, "battlefield": ["Forest", "Forest", "Forest", "Gigantosaurus"] },
-      "P4": { "life": 27, "battlefield": ["Plains", "Plains", "Wall of Omens"] }
+      "P3": {
+        "life": 33,
+        "battlefield": ["Forest", "Forest", "Forest", "Gigantosaurus"]
+      },
+      "P4": {
+        "life": 27,
+        "battlefield": ["Plains", "Plains", "Wall of Omens"]
+      }
     },
-    "continue": { "throughCombat": true, "toPostcombatMain": true, "toEndStep": true }
+    "continue": {
+      "throughCombat": true,
+      "toPostcombatMain": true,
+      "toEndStep": true
+    }
   },
   "table": {
     "policy": "heuristic",
@@ -39,7 +63,9 @@
       {
         "player": "P2",
         "choose": "Declare blockers",
-        "assign": { "Baleful Strix": "Shivan Dragon" }
+        "assign": {
+          "Baleful Strix": "Shivan Dragon"
+        }
       }
     ]
   },
@@ -52,25 +78,41 @@
         "grade": "best",
         "why": "Eliminates P2 this turn and loses nothing.",
         "steps": [
-          { "choose": "Cast Swords to Plowshares", "targets": ["Baleful Strix"] },
+          {
+            "choose": "Cast Swords to Plowshares",
+            "targets": ["Baleful Strix"]
+          },
           {
             "choose": "Declare attackers",
-            "assign": { "Serra Angel": "P2", "Shivan Dragon": "P2" }
+            "assign": {
+              "Serra Angel": "P2",
+              "Shivan Dragon": "P2"
+            }
           },
-          { "choose": "/Shivan Dragon/" },
-          { "choose": "/Shivan Dragon/" }
+          {
+            "choose": "/Shivan Dragon/"
+          },
+          {
+            "choose": "/Shivan Dragon/"
+          }
         ]
       },
       {
         "id": "swords-attack-no-pump",
         "label": "Swords the Strix, attack P2, forget the pump",
-        "grade": "weak",
-        "why": "P2 gained 1 from Swords and survives at 1 life with two Mountains unused.",
+        "grade": "blunder",
+        "why": "P2 gained 1 from Swords and survives at 1 life with two Mountains unused: a kill on the board thrown away.",
         "steps": [
-          { "choose": "Cast Swords to Plowshares", "targets": ["Baleful Strix"] },
+          {
+            "choose": "Cast Swords to Plowshares",
+            "targets": ["Baleful Strix"]
+          },
           {
             "choose": "Declare attackers",
-            "assign": { "Serra Angel": "P2", "Shivan Dragon": "P2" }
+            "assign": {
+              "Serra Angel": "P2",
+              "Shivan Dragon": "P2"
+            }
           }
         ]
       },
@@ -82,7 +124,10 @@
         "steps": [
           {
             "choose": "Declare attackers",
-            "assign": { "Serra Angel": "P2", "Shivan Dragon": "P2" }
+            "assign": {
+              "Serra Angel": "P2",
+              "Shivan Dragon": "P2"
+            }
           }
         ]
       },
@@ -92,10 +137,16 @@
         "grade": "blunder",
         "why": "Removes the largest creature, which was no threat this turn, and still loses the Dragon.",
         "steps": [
-          { "choose": "Cast Swords to Plowshares", "targets": ["Gigantosaurus"] },
+          {
+            "choose": "Cast Swords to Plowshares",
+            "targets": ["Gigantosaurus"]
+          },
           {
             "choose": "Declare attackers",
-            "assign": { "Serra Angel": "P2", "Shivan Dragon": "P2" }
+            "assign": {
+              "Serra Angel": "P2",
+              "Shivan Dragon": "P2"
+            }
           }
         ]
       }
@@ -105,21 +156,31 @@
         "id": "kill-p2",
         "label": "P2 is eliminated this turn",
         "points": 6,
-        "check": { "eliminated": "P2" }
+        "check": {
+          "eliminated": "P2"
+        }
       },
       {
         "id": "keep-the-dragon",
         "label": "Shivan Dragon and Serra Angel both survive",
         "points": 2,
         "check": {
-          "zone": { "player": "P1", "zone": "battlefield", "has": ["Shivan Dragon", "Serra Angel"] }
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Shivan Dragon", "Serra Angel"]
+          }
         }
       },
       {
         "id": "strix-answered",
         "label": "Baleful Strix is removed before it can block",
         "points": 2,
-        "check": { "action": { "took": "/Swords to Plowshares.*Baleful Strix/" } }
+        "check": {
+          "action": {
+            "took": "/Swords to Plowshares.*Baleful Strix/"
+          }
+        }
       }
     ]
   }

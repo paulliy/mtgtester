@@ -8,6 +8,7 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { ENGINE_VERSION } from '../../packages/engine/src';
+import { PROVIDERS } from '../../packages/server/src/ai/config';
 import { primerCatalog } from '../../packages/server/src/ai/primer';
 import { AI_VERSIONS } from '../../packages/server/src/ai/versions';
 import { analyzeCase, type CaseAnalysis } from './analysis';
@@ -45,6 +46,8 @@ export interface RunManifest {
    * versions. Models are only added to a run whose fingerprint still matches.
    */
   fingerprint: string;
+  /** Set when the saved play was graded again against later references (`bot-bench rescore`). */
+  rescoredAt?: string;
 }
 
 /** A hash of everything a measurement depends on besides the model, for `run --out`. */
@@ -149,10 +152,22 @@ const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
  */
 const FREE_TEXT = new Set(['error', 'failure', 'raw', 'rawResponse', 'note', 'abortReason']);
 
+/** Regex special characters, escaped so a model name can be matched literally. */
+const escapeRegex = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * Matches a name however it is punctuated and capitalised: `claude-haiku-5.5` also matches
+ * `Claude Haiku 5.5`, so a model that spells its own name differently still cannot give itself away.
+ */
+function nameRegex(name: string): RegExp {
+  const parts = name.split(/[-_./ ]+/).filter((part) => part.length > 0);
+  return new RegExp(parts.map(escapeRegex).join('[-_./ ]?'), 'gi');
+}
+
 /** Replaces each name with its alias in the free-text fields anywhere inside `value`. */
-function redact<T>(value: T, names: ReadonlyArray<readonly [string, string]>): T {
+function redact<T>(value: T, names: ReadonlyArray<readonly [RegExp, string]>): T {
   const scrub = (text: string): string =>
-    names.reduce((out, [name, alias]) => out.split(name).join(alias), text);
+    names.reduce((out, [pattern, alias]) => out.replace(pattern, alias), text);
   const walk = (item: unknown): unknown => {
     if (Array.isArray(item)) return item.map(walk);
     if (item !== null && typeof item === 'object')
@@ -167,34 +182,90 @@ function redact<T>(value: T, names: ReadonlyArray<readonly [string, string]>): T
   return walk(value) as T;
 }
 
+/** The base URL of a provider preset, for naming its host in a blind bundle. */
+function providerUrl(provider: unknown): string | undefined {
+  return typeof provider === 'string' ? PROVIDERS[provider]?.baseUrl : undefined;
+}
+
+/** Every way a provider URL names its host: `https://openrouter.ai/api/v1` gives openrouter.ai and openrouter. */
+function hostNames(baseUrl: unknown): string[] {
+  if (typeof baseUrl !== 'string') return [];
+  try {
+    const labels = new URL(baseUrl).hostname.split('.');
+    return [labels.join('.'), labels.slice(-2).join('.'), labels.at(-2) ?? ''];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Rename every model run through a provider; local baselines keep their names. With a `seed`
+ * (the run id) the letters are handed out in a fixed shuffled order, so "Model A" is not simply
+ * the first model in the lineup and two settings of one model are not neighbours.
+ */
 export function anonymise(
   models: readonly ModelResult[],
   transcripts: readonly TranscriptEntry[],
+  seed?: string,
+  /**
+   * The run's earlier key. A model it already names keeps its alias, and its letters are never
+   * handed to another model: scorecards judges returned for an earlier bundle must still resolve
+   * to the same models after `run --out` adds more (`collate` reads the latest key).
+   */
+  previous: JudgeKey['aliases'] = [],
 ): { models: ModelResult[]; transcripts: TranscriptEntry[]; key: JudgeKey['aliases'] } {
   const key: JudgeKey['aliases'] = [];
-  const ids = new Map<string, string>();
-  // Every way a model can be named (its model string, id, label, and what the provider reported
-  // it as), so an error message such as a timeout that names the model cannot give it away.
-  const names: Array<[string, string]> = [];
-  const nameAs = (name: unknown, alias: string): void => {
-    if (typeof name === 'string' && name.length >= 3) names.push([name, alias]);
+  const kept = new Map(previous.map((entry) => [entry.model.id, entry]));
+  const taken = new Set(previous.map((entry) => entry.aliasId));
+  const freshLetter = (): string => {
+    for (let index = 0; ; index++) {
+      const letter = LETTERS[index] ?? `N${index + 1}`;
+      if (!taken.has(`model-${letter.toLowerCase()}`)) {
+        taken.add(`model-${letter.toLowerCase()}`);
+        return letter;
+      }
+    }
   };
-  const renamed = models.map((result) => {
-    if (result.model.kind !== 'llm') return result;
-    const letter = LETTERS[key.length] ?? `N${key.length + 1}`;
-    const alias = `Model ${letter}`;
-    const aliasId = `model-${letter.toLowerCase()}`;
+  const ids = new Map<string, string>();
+  // Every way a model or its provider can be named: the model string and each half of it
+  // (vendor and short name), its id and label, what the provider reported it as, and the
+  // provider's own name and host. An error message that names any of them cannot give it away.
+  const names: Array<[string, string]> = [];
+  const nameAs = (name: unknown, alias: string, minimum = 3): void => {
+    if (typeof name === 'string' && name.length >= minimum) names.push([name, alias]);
+  };
+  const llm = models.filter((result) => result.model.kind === 'llm');
+  const rank = (id: string): string => createHash('sha256').update(`${seed}:${id}`).digest('hex');
+  const turn =
+    seed === undefined
+      ? llm
+      : [...llm].sort((left, right) => (rank(left.model.id) < rank(right.model.id) ? -1 : 1));
+  const renamedBy = new Map<string, ModelResult>();
+  for (const result of turn) {
+    const earlier = kept.get(result.model.id);
+    const letter = earlier === undefined ? freshLetter() : null;
+    const alias = earlier?.alias ?? `Model ${letter}`;
+    const aliasId = earlier?.aliasId ?? `model-${String(letter).toLowerCase()}`;
     key.push({ alias, aliasId, model: result.model });
     ids.set(result.model.id, aliasId);
-    nameAs(result.model['model'], alias);
+    const modelName = result.model['model'];
+    nameAs(modelName, alias);
+    if (typeof modelName === 'string' && modelName.includes('/')) {
+      const [vendor = '', ...rest] = modelName.split('/');
+      nameAs(vendor, alias, 4);
+      nameAs(rest.join('/'), alias, 4);
+    }
     nameAs(result.model.label, alias);
     nameAs(result.model.id, aliasId);
+    nameAs(result.model['provider'], 'the provider', 4);
+    for (const host of hostNames(result.model['baseUrl'] ?? providerUrl(result.model['provider'])))
+      nameAs(host, 'the provider', 4);
     for (const entry of transcripts)
       if (entry.modelId === result.model.id) {
         nameAs(entry.responseModel, alias);
         nameAs(entry.backend, 'the provider');
       }
-    return {
+    renamedBy.set(result.model.id, {
       ...result,
       // Only what does not identify the model: its thinking setting and output budget.
       model: {
@@ -206,17 +277,47 @@ export function anonymise(
           maxOutputTokens: result.model['maxOutputTokens'],
         }),
       },
-    };
-  });
+    });
+  }
+  // A model the earlier key named that has since left the run keeps its entry, so its alias still
+  // resolves for scorecards already returned and its letter is never handed to another model.
+  const present = new Set(llm.map((result) => result.model.id));
+  for (const entry of previous) if (!present.has(entry.model.id)) key.push(entry);
   // Longest first, so a name that contains another is replaced whole.
   names.sort((a, b) => b[0].length - a[0].length);
+  const patterns = names.map(([name, alias]) => [nameRegex(name), alias] as const);
+  const renamed = models.map((result) => renamedBy.get(result.model.id) ?? result);
+  // Shuffled letters are listed in letter order, with the baselines ahead of the candidates.
+  const ordered =
+    seed === undefined
+      ? renamed
+      : [
+          ...renamed.filter((result) => result.model.kind !== 'llm'),
+          ...renamed
+            .filter((result) => result.model.kind === 'llm')
+            .sort((left, right) => (left.model.id < right.model.id ? -1 : 1)),
+        ];
   return {
-    models: renamed.map(({ model, ...rest }) => ({ model, ...redact(rest, names) })),
+    models: ordered.map(({ model, ...rest }) => ({ model, ...redact(rest, patterns) })),
     transcripts: transcripts.map(({ responseModel: _model, backend: _backend, ...entry }) =>
-      redact({ ...entry, modelId: ids.get(entry.modelId) ?? entry.modelId }, names),
+      redact({ ...entry, modelId: ids.get(entry.modelId) ?? entry.modelId }, patterns),
     ),
     key,
   };
+}
+
+/**
+ * The aliases a run's earlier key assigned, with any model that has since left the run kept too,
+ * so its letter is never reused. A key from another run (a copied directory) is ignored.
+ */
+function previousAliases(keyPath: string, run: ReturnType<typeof readRun>): JudgeKey['aliases'] {
+  let key: JudgeKey;
+  try {
+    key = JSON.parse(readFileSync(keyPath, 'utf8')) as JudgeKey;
+  } catch {
+    return [];
+  }
+  return key.runId === run.manifest.runId && Array.isArray(key.aliases) ? key.aliases : [];
 }
 
 export interface BundleResult {
@@ -225,6 +326,17 @@ export interface BundleResult {
   keyPath: string | null;
   files: number;
   bytes: number;
+  /** Blind bundles only: a model's name found anywhere in the bundle after redaction. Should be empty. */
+  leaks: Array<{ file: string; name: string }>;
+}
+
+/** Names that identify a model: its model string, each half of it, and its provider's host. */
+export function identifyingNames(model: ModelResult['model']): string[] {
+  const modelName = model['model'];
+  const parts = typeof modelName === 'string' ? [modelName, ...modelName.split('/')] : [];
+  const provider = typeof model['provider'] === 'string' ? [model['provider']] : [];
+  const hosts = hostNames(model['baseUrl'] ?? providerUrl(model['provider']));
+  return [...new Set([...parts, ...hosts, ...provider])].filter((name) => name.length >= 4);
 }
 
 /** Build the judge bundle for everything a run directory holds. */
@@ -239,8 +351,9 @@ export async function writeBundle(
     if (benchCase === undefined) throw new Error(`run names case ${id}, which no longer exists`);
     return benchCase;
   });
+  const keyPath = join(runDirectory, 'judge-key.json');
   const shown = options.blind
-    ? anonymise(run.models, run.transcripts)
+    ? anonymise(run.models, run.transcripts, run.manifest.runId, previousAliases(keyPath, run))
     : { models: run.models, transcripts: run.transcripts, key: [] };
 
   const analyses = new Map<string, CaseAnalysis>();
@@ -307,15 +420,21 @@ export async function writeBundle(
     bytes += data.length;
     entries.push({ path: `${root}/${path}`, data });
   }
+  // A blind bundle is checked, not trusted: every identifying name is searched for in every file.
+  const leaks: BundleResult['leaks'] = [];
+  if (options.blind)
+    for (const entry of shown.key)
+      for (const name of identifyingNames(entry.model))
+        for (const [path, text] of files)
+          if (new RegExp(nameRegex(name)).test(text)) leaks.push({ file: path, name });
   const zipPath = join(runDirectory, `${root}.zip`);
   writeFileSync(zipPath, zipArchive(entries));
 
-  const keyPath = join(runDirectory, 'judge-key.json');
+  // A bundle with real names needs no key, but an existing one is kept: it maps the aliases in
+  // bundles already sent to judges, and a later blind rebuild must reuse them.
   if (options.blind && shown.key.length > 0) {
     const key: JudgeKey = { runId: run.manifest.runId, aliases: shown.key };
     writeFileSync(keyPath, json(key));
-  } else {
-    rmSync(keyPath, { force: true });
   }
   return {
     directory,
@@ -323,5 +442,6 @@ export async function writeBundle(
     keyPath: options.blind && shown.key.length > 0 ? keyPath : null,
     files: files.size,
     bytes,
+    leaks,
   };
 }

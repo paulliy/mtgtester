@@ -213,6 +213,59 @@ describe('a model in the tested seat, through the production pipeline', () => {
     expect(entry.score.score).toBeCloseTo(0.2);
   }, 60_000);
 
+  it('sends an illegal trample split back to the model instead of letting the engine replace it', async () => {
+    type SplitContext = {
+      ctx: {
+        combatDamageSplit?: { amount: number; targets: string[]; lethal?: Record<string, number> };
+      };
+    };
+    const calls: FakeTurn[] = [];
+    const fetchImpl = fakeProvider((turn) => {
+      const offered = (JSON.parse(turn.messages[1]!.content) as SplitContext).ctx.combatDamageSplit;
+      if (offered !== undefined) {
+        const { amount, targets, lethal = {} } = offered;
+        const player = targets.at(-1)!;
+        const toBlockers = Object.values(lethal).reduce((sum, value) => sum + value, 0);
+        // First what a model sent in a live run (everything at the player), then a legal split.
+        const combatDamageSplit =
+          turn.attempt === 1 ? { [player]: amount } : { ...lethal, [player]: amount - toBlockers };
+        return {
+          content: JSON.stringify({
+            requestId: turn.requestId,
+            actionId: turn.legalActions[0]!.id,
+            combatDamageSplit,
+          }),
+        };
+      }
+      const offers = (text: string) =>
+        turn.legalActions.find((action) => action.description.includes(text));
+      for (const text of ['Play Forest', 'Cast Overrun'])
+        if (offers(text) !== undefined) return { content: pick(turn, text) };
+      const attack = offers('Declare attackers');
+      if (attack !== undefined)
+        return {
+          content: JSON.stringify({
+            requestId: turn.requestId,
+            actionId: attack.id,
+            targets: (attack.targets ?? []).map((slot) => ({
+              slot: slot.slot,
+              choice: slot.options.includes('P3') ? 'P3' : slot.options[0],
+            })),
+          }),
+        };
+      return { content: pick(turn, 'Pass priority') };
+    }, calls);
+    const [result] = await runLineup(only('overrun-for-the-kill'), lineup, options(fetchImpl));
+    const entry = result!.cases[0]!;
+    // The model was shown why its split was refused and what each blocker needs.
+    const corrective = calls.find((call) => call.attempt === 2);
+    expect(corrective?.messages.at(-1)?.content).toMatch(/needs at least 1/);
+    expect(entry.run.decisions.map((decision) => decision.source)).toContain('model-retry');
+    expect(entry.run.decisions.every((decision) => decision.source !== 'fallback')).toBe(true);
+    // The corrected split tramples over: the kill the silent replacement used to lose.
+    expect(entry.score.score).toBe(1);
+  }, 60_000);
+
   it('stops a failing provider mid-turn, even if a later request would succeed', async () => {
     const calls: FakeTurn[] = [];
     // The first three requests fail at the provider; from the fourth on it would answer.

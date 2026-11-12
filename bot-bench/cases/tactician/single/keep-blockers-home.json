@@ -74,8 +74,20 @@
     ]
   },
   "reference": {
-    "analysis": "P2 untaps next with 4 + 2 + 2 = 8 power and P1 has 4 life, so P1 must be able to block all three attackers, or at least leave no more than 3 unblocked damage. Serra Angel has vigilance: it attacks and still blocks, so swinging it at an open player is free damage (P4 at 12 is the better target; P3 is fine). With all three creatures available P1 blocks everything and takes 0. If one ground creature attacks, two blockers remain and the smallest attacker (2 power) connects: P1 survives at 2, having traded half its life for 3 or 6 damage to a player nowhere near dead. If both ground creatures attack, only the Angel can block; at least 4 damage connects and P1 is eliminated. Attacking P2 with a ground creature runs into untapped blockers as well.",
+    "analysis": "P2 untaps next with 4 + 2 + 2 = 8 power and P1 has 4 life, so P1 must be able to block all three attackers, or at least leave no more than 3 unblocked damage. Serra Angel has vigilance: it attacks and still blocks, so swinging it at an open player is free damage (P4 at 12 is the better target; P3 is fine). With all three creatures available P1 blocks everything and takes 0. If one ground creature attacks, two blockers remain and the smallest attacker (2 power) connects: P1 survives at 2, having traded half its life for 3 or 6 damage to a player nowhere near dead. If both ground creatures attack, only the Angel can block; at least 4 damage connects and P1 is eliminated. That holds even for the one attack that kills somebody: all three at P4 is 13 damage at 12 life and eliminates P4, and P1 is then eliminated on P2's turn, which is not a trade worth making with two other opponents still in the game. The exception is sending the Dreadmaw into P2: P2 blocks it with Baloth and Bears, both die, and the Lions alone leave P1 alive at 2, a poor trade but not a fatal one.",
     "options": [
+      {
+        "label": "Both ground creatures attack, the Dreadmaw into P2",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Colossal Dreadmaw": "P2",
+            "Kalonian Tusker": "+"
+          }
+        },
+        "grade": "weak",
+        "why": "P2 blocks the Dreadmaw with Baloth and Bears and loses both, so the Lions alone leave P1 alive at 2: a poor trade of the Dreadmaw and half its life, but not a fatal one."
+      },
       {
         "label": "Both ground creatures attack",
         "when": {
@@ -86,7 +98,7 @@
           }
         },
         "grade": "blunder",
-        "why": "Leaves one blocker against three attackers at 4 life: P1 is dead on P2's turn."
+        "why": "Leaves one blocker against three attackers at 4 life: P1 is dead on P2's turn, even when the attack eliminates P4 first."
       },
       {
         "label": "Angel only, at P4",

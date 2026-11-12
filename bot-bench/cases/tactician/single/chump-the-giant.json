@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "id": "chump-the-giant",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Chump the 10/10 and trade up the other block to stay alive at 3",
+  "skills": ["blocking", "lethal-defense", "chump-blocks"],
+  "briefing": "P2 attacks P1 (3 life) with Gigantosaurus (10/10) and Grizzly Bears (2/2). P1 has Wall of Omens (0/4) and Kalonian Tusker (3/3). The giant is lethal on its own and nothing P1 has can kill it, so something must chump it; the Tusker can block and kill the Bears. Blocking the Bears with the Wall, or leaving either attacker unblocked, loses or bleeds.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P2",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 9
+    },
+    "seats": {
+      "P1": {
+        "life": 3,
+        "battlefield": ["Plains", "Plains", "Wall of Omens", "Kalonian Tusker"]
+      },
+      "P2": {
+        "life": 31,
+        "battlefield": ["Forest", "Forest", "Forest", "Forest", "Gigantosaurus", "Grizzly Bears"]
+      },
+      "P3": {
+        "life": 38,
+        "battlefield": ["Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 35,
+        "battlefield": ["Island", "Island"]
+      }
+    },
+    "continue": {
+      "throughCombat": true
+    }
+  },
+  "setup": [
+    {
+      "player": "P2",
+      "choose": "Declare attackers",
+      "assign": {
+        "Gigantosaurus": "P1",
+        "Grizzly Bears": "P1"
+      }
+    }
+  ],
+  "table": {
+    "policy": "heuristic"
+  },
+  "reference": {
+    "analysis": "The giant kills whatever blocks it, so give it the cheapest creature (Wall of Omens, which already replaced itself) and put the Tusker on the Bears, which it kills and survives. Giving the giant the Tusker and the Bears the Wall also survives with no damage but loses the better creature and kills nothing. Chumping the giant alone leaves the Bears unblocked: P1 drops to 1. Anything that leaves the giant unblocked is lethal.",
+    "options": [
+      {
+        "label": "Wall of Omens chumps the giant, Tusker blocks the Bears",
+        "when": {
+          "choose": "Declare blockers",
+          "assign": {
+            "Wall of Omens": "Gigantosaurus",
+            "Kalonian Tusker": "Grizzly Bears"
+          }
+        },
+        "grade": "best",
+        "why": "No damage, kills the Bears, loses only the Wall."
+      },
+      {
+        "label": "Tusker chumps the giant, Wall blocks the Bears",
+        "when": {
+          "choose": "Declare blockers",
+          "assign": {
+            "Kalonian Tusker": "Gigantosaurus",
+            "Wall of Omens": "Grizzly Bears"
+          }
+        },
+        "grade": "good",
+        "why": "No damage, but loses the better creature and kills nothing."
+      },
+      {
+        "label": "Wall of Omens chumps the giant, Tusker holds back",
+        "when": {
+          "choose": "Declare blockers",
+          "assign": {
+            "Wall of Omens": "Gigantosaurus",
+            "Kalonian Tusker": "-"
+          }
+        },
+        "grade": "weak",
+        "why": "Survives at 1 life and kills nothing."
+      },
+      {
+        "label": "Tusker chumps the giant, Wall holds back",
+        "when": {
+          "choose": "Declare blockers",
+          "assign": {
+            "Kalonian Tusker": "Gigantosaurus",
+            "Wall of Omens": "-"
+          }
+        },
+        "grade": "weak",
+        "why": "Survives at 1 life and loses the better creature."
+      },
+      {
+        "label": "Both creatures block the giant, Bears unblocked",
+        "when": {
+          "choose": "Declare blockers",
+          "assign": {
+            "Wall of Omens": "Gigantosaurus",
+            "Kalonian Tusker": "Gigantosaurus"
+          }
+        },
+        "grade": "weak",
+        "why": "Survives at 1 life, but loses both creatures to a giant that one chump stops."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "Either P1 is eliminated or it gives up more than it had to."
+    }
+  }
+}
