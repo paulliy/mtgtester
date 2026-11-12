@@ -261,3 +261,27 @@ describe('bot-led tactics settings (ADR 0039)', () => {
     expect(config.strategistMaxReuseTurns).toBe(3);
   });
 });
+
+describe('escalation triggers (ADR 0044)', () => {
+  it('reads a trigger list, and never or nothing as none', () => {
+    expect(loadAiConfig({}).botEscalation).toEqual([]);
+    expect(loadAiConfig({ AI_BOT_ESCALATION: 'never' }).botEscalation).toEqual([]);
+    expect(loadAiConfig({ AI_BOT_ESCALATION: 'uncertain' }).botEscalation).toEqual(['uncertain']);
+    expect(
+      loadAiConfig({ AI_BOT_ESCALATION: 'scarce-answer, unknown-card,scarce-answer' })
+        .botEscalation,
+    ).toEqual(['scarce-answer', 'unknown-card']);
+    expect(
+      loadAiConfig({ AI_BOT_ESCALATION_SHADOW: 'lethal,uncertain' }).botEscalationShadow,
+    ).toEqual(['lethal', 'uncertain']);
+  });
+
+  it('refuses an unknown trigger instead of silently meaning never', () => {
+    expect(() => loadAiConfig({ AI_BOT_ESCALATION: 'uncertian' })).toThrow(/uncertian/);
+    expect(() => loadAiConfig({ AI_BOT_ESCALATION_SHADOW: 'telepathy' })).toThrow(/telepathy/);
+  });
+
+  it('keeps lethal in shadow', () => {
+    expect(() => loadAiConfig({ AI_BOT_ESCALATION: 'lethal' })).toThrow(/shadow-only/);
+  });
+});

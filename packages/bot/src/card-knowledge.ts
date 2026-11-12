@@ -112,6 +112,17 @@ export interface CardTraits {
    * with another cost, a condition, a restriction or state-dependent symbols.
    */
   manaUnits?: readonly (readonly string[])[];
+  /**
+   * The card's removal destroys or exiles its target (Swords to Plowshares, Murder), rather than
+   * damaging, bouncing or shrinking it. ADR 0044's `scarce-answer` counts only this removal.
+   */
+  hardRemoval?: boolean;
+  /**
+   * The classifier cannot account for the card: at least one effect op matches no role and no
+   * hostile or friendly pattern, or the engine does not model the card. Distinct from a card with
+   * nothing notable (a vanilla creature, a basic land), which has no effect ops (ADR 0044).
+   */
+  unclassified?: boolean;
   /** Printed power and toughness for creatures. */
   power?: number | null;
   toughness?: number | null;

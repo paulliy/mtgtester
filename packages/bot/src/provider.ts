@@ -9,7 +9,13 @@ import type { CardKnowledge } from './card-knowledge';
 import type { CombatSearchOptions } from './combat-search';
 import type { DiplomacyPlay } from './diplomacy/play';
 import type { PolicyFix } from './fixes';
-import { decideScored, type EvaluateOptions, type ScoredDecision } from './evaluate';
+import {
+  decideScored,
+  evaluate,
+  type EvaluateOptions,
+  type ScoredAction,
+  type ScoredDecision,
+} from './evaluate';
 import { Rng, type RandomSource } from './rng';
 
 /**
@@ -101,11 +107,27 @@ export class HeuristicDecisionProvider implements DecisionProviderLike {
    */
   decideScored(request: DecisionRequest, record = true): ScoredDecision {
     this.syncTurn(request);
+    const scored = decideScored(request, this.viewOf(), this.rng, this.evaluateOptions(request));
+    if (record) this.record(request, scored.response);
+    return scored;
+  }
+
+  /**
+   * The bot's ranking for `request` with no side effects: no tie-break draw from the seeded RNG
+   * and nothing recorded. For callers that only read the bot's view of a decision someone else
+   * answered (ADR 0044's shadow triggers), so the game plays exactly as it would without them.
+   */
+  rank(request: DecisionRequest): ScoredAction[] {
+    return evaluate(request, this.viewOf(), this.evaluateOptions(request));
+  }
+
+  private evaluateOptions(request: DecisionRequest): EvaluateOptions {
     const steering = this.opts.steering?.();
-    const options: EvaluateOptions = {
+    const sameTurn = request.turn === this.turnSeen;
+    return {
       repeatCount: (action) => {
         const key = activationKey(action);
-        return key === null ? 0 : (this.activationsThisTurn.get(key) ?? 0);
+        return key === null || !sameTurn ? 0 : (this.activationsThisTurn.get(key) ?? 0);
       },
       mulligansTaken: this.mulligansTaken,
       ...(this.opts.combatSearch !== undefined ? { combatSearch: this.opts.combatSearch } : {}),
@@ -115,9 +137,6 @@ export class HeuristicDecisionProvider implements DecisionProviderLike {
       ...(this.opts.legacy === true ? { legacy: true } : {}),
       ...(this.opts.fixes !== undefined ? { fixes: this.opts.fixes } : {}),
     };
-    const scored = decideScored(request, this.viewOf(), this.rng, options);
-    if (record) this.record(request, scored.response);
-    return scored;
   }
 
   private syncTurn(request: DecisionRequest): void {

@@ -252,6 +252,79 @@ function manaUnits(def: CardDefinition): string[][] | undefined {
   return best;
 }
 
+/**
+ * Ops that are bookkeeping or card selection, not effects worth a role: shuffling after a search,
+ * looking at or ordering the library (Brainstorm's put-back), attaching equipment, crewing,
+ * transforming. A card made
+ * only of these and role ops is classified (ADR 0044's "nothing notable"), not unknown.
+ */
+const NEUTRAL_OPS =
+  /^(shuffle|scry|surveil|lookAtTopN$|putFromHandOnLibraryTop|attachSelfTo|crewVehicle|transformSelf)/;
+
+/** Ops that wrap a whole ability or token definition: their inner ops are not the card's. */
+const OPAQUE_WRAPPERS = /^(createToken|grantAbility|createEmblem|createAttachedToken)/;
+
+/** Whether one effect op is accounted for by a role, a slot polarity, or the neutral list. */
+function recognisedOp(op: string): boolean {
+  if (ROLE_PATTERNS.some(([, pattern]) => pattern.test(op))) return true;
+  if (HOSTILE_OPS.test(op) || FRIENDLY_OPS.test(op) || NEUTRAL_OPS.test(op)) return true;
+  return (
+    op === 'searchLibrary' || op === 'searchLibraryGroup' || /^pumpEach|^grantKeywordEach/.test(op)
+  );
+}
+
+/**
+ * Whether some leaf effect op in the tree is one the classifier cannot account for. A wrapper op
+ * (a conditional, a modal choice, a payment) is looked through; a token or granted ability is
+ * opaque, since its inner ops describe the token, not what the card does.
+ */
+function hasUnrecognisedOp(node: unknown): boolean {
+  if (Array.isArray(node)) return node.some(hasUnrecognisedOp);
+  if (typeof node !== 'object' || node === null) return false;
+  const record = node as Record<string, unknown>;
+  if (typeof record['op'] === 'string') {
+    const op = record['op'];
+    if (OPAQUE_WRAPPERS.test(op)) return false;
+    const children = Object.entries(record).filter(([key]) => key !== 'op');
+    const nested = children.some(([, value]) => containsOp(value));
+    if (!nested) return !recognisedOp(op);
+    return children.some(([, value]) => hasUnrecognisedOp(value));
+  }
+  return Object.values(record).some(hasUnrecognisedOp);
+}
+
+function containsOp(node: unknown): boolean {
+  if (Array.isArray(node)) return node.some(containsOp);
+  if (typeof node !== 'object' || node === null) return false;
+  const record = node as Record<string, unknown>;
+  return typeof record['op'] === 'string' || Object.values(record).some(containsOp);
+}
+
+/**
+ * Whether a hostile op aimed at a permanent slot destroys or exiles it for good: `destroy*` and
+ * `exile*` ops, and the `removeTarget*` family when its action is destroy or exile (Path to
+ * Exile). Exiling a library, a graveyard or a card is not removal, and an exile that returns the
+ * object (a blink) is not either; an exile that lasts while the source stays (Banishing Light)
+ * is.
+ */
+function destroysOrExiles(ability: AbilityLike | null | undefined): boolean {
+  const specs = ability?.targets ?? [];
+  return collectOps([ability?.effects, ability?.modes]).some((record) => {
+    const removeAction = record.raw['action'];
+    const permanent = /^removeTarget/.test(record.op)
+      ? removeAction === 'exile' || removeAction === 'destroy'
+      : /^(destroy|exile)/.test(record.op) &&
+        !/^exile(Top|Library|Card|Each|All|Graveyard|TargetPlayerGraveyard|FromHand)/.test(
+          record.op,
+        ) &&
+        !/Return/.test(record.op);
+    if (!permanent) return false;
+    const slot = record.raw['target'] ?? record.raw['targetSlot'];
+    const kind = typeof slot === 'number' ? (specs[slot]?.kind ?? '') : '';
+    return kind !== 'player' && kind !== 'spell' && kind !== 'stackObject';
+  });
+}
+
 const WIPE_OP = ROLE_PATTERNS.find(([role]) => role === 'wipe')![1];
 
 /**
@@ -333,6 +406,9 @@ export function cardTraits(def: CardDefinition): CardTraits {
   const abilities = def.activatedAbilities.map((a) => a.ability as AbilityLike);
   const wipe = roles.has('wipe') ? wipeShape([def.spellAbility, def.triggers]) : {};
   const team = isPermanentSpell ? undefined : massPump(def.spellAbility as AbilityLike);
+  const unclassified =
+    def.modeled === false ||
+    hasUnrecognisedOp([def.spellAbility, def.triggers, def.staticEffects, abilities]);
   const mana = manaUnits(def);
   return {
     manaValue,
@@ -350,6 +426,8 @@ export function cardTraits(def: CardDefinition): CardTraits {
     abilitySelfPump: abilities.map((a) => selfPump(a)),
     ...(team !== undefined ? { massPump: team } : {}),
     ...(mana !== undefined ? { manaUnits: mana } : {}),
+    ...(roles.has('removal') && destroysOrExiles(main) ? { hardRemoval: true } : {}),
+    ...(unclassified ? { unclassified: true } : {}),
     power: def.power,
     toughness: def.toughness,
   };

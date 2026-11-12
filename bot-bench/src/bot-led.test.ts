@@ -93,7 +93,7 @@ describe('ADR 0043 lineups', () => {
     if (entry?.kind !== 'bot-led') throw new Error('expected a bot-led entry');
     expect(resolveBotLedConfig(entry, { env: {}, mode: 'raw' })).toMatchObject({
       tacticalMode: 'bot',
-      botEscalation: 'never',
+      botEscalation: [],
       strategistEnabled: false,
     });
   });

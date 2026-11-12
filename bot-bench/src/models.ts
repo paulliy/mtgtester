@@ -14,10 +14,12 @@ import {
   type CallMeta,
 } from '../../packages/server/src/ai/client';
 import {
+  LIVE_ESCALATION_TRIGGERS,
   PROVIDERS,
   configForRole,
   loadAiConfig,
   type AiConfig,
+  type LiveEscalationTrigger,
 } from '../../packages/server/src/ai/config';
 import {
   AiCallLogger,
@@ -50,8 +52,11 @@ export const LOCAL_POLICIES: readonly LocalPolicy[] = [
 ];
 export type ReasoningEffort = 'none' | 'low' | 'medium' | 'high';
 
-/** Escalation triggers a `bot-led` entry may name (ADR 0044). An empty list is `never`. */
-export const BOT_LED_TRIGGERS = ['uncertain'] as const;
+/**
+ * Escalation triggers a `bot-led` entry may make live (ADR 0044). An empty list is `never`;
+ * `lethal` is shadow-only. Every decision records all triggers that fired, live or not.
+ */
+export const BOT_LED_TRIGGERS = LIVE_ESCALATION_TRIGGERS;
 
 export interface LocalEntry {
   id: string;
@@ -450,7 +455,7 @@ export function resolveBotLedConfig(entry: BotLedEntry, runtime: LlmRuntime): Ai
     jevShadowEnabled: false,
     strategyRouterShadowEnabled: false,
     tacticalMode: 'bot',
-    botEscalation: entry.escalation.includes('uncertain') ? 'uncertain' : 'never',
+    botEscalation: entry.escalation as LiveEscalationTrigger[],
     ...(entry.margin !== undefined && { botEscalationMargin: entry.margin }),
   };
 }

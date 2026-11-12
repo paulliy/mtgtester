@@ -11,7 +11,7 @@ It benchmarks the **tactician** only. Strategist cases are reserved
 ## Quick start
 
 ```powershell
-bun run bot-bench list                      # the 41 cases
+bun run bot-bench list                      # the 49 cases
 bun run bot-bench inspect lethal-alpha-strike   # every legal answer, played out by the engine
 bun run bot-bench verify                    # every reference still agrees with the engine
 
@@ -89,6 +89,10 @@ was escalated and which triggers fired; each case sums them under `escalations`.
 }
 ```
 
+Escalation triggers (ADR 0044) are `uncertain`, `scarce-answer` and `unknown-card`; `lethal` is
+shadow-only. Every bot-led decision records each trigger that fired, live or not, in `reasons`;
+`escalation` makes the named ones live, one at a time when a trigger is being judged.
+
 The bot breaks ties with a seeded RNG, so one run can be lucky. A lineup file's top-level `seeds`
 list plays every heuristic and `bot-led` entry once per seed (`<id>.s1`, `<id>.s2`, ...).
 [lineups/bot-gate.json](lineups/bot-gate.json) holds the gate's eight seeds, so every run of the
@@ -115,11 +119,12 @@ Three groups, never blended into one number:
 
 ## The cases
 
-Twenty-seven one-decision cases and fourteen whole-turn cases under
+Thirty-five one-decision cases and fourteen whole-turn cases under
 [cases/tactician/](cases/tactician/). Each is a JSON file: a position in the engine's own scenario
 format, the seat under test, and a reviewed reference. The first twelve (the table below) were the
 original set; the next eighteen (listed after it) double it and were written to include positions
-the heuristic bot gets wrong; the last eleven came with ADR 0043's bot fixes.
+the heuristic bot gets wrong; eleven came with ADR 0043's bot fixes and eight with ADR 0044's
+escalation triggers.
 
 | Kind         | Case                             | What it tests                                                          |
 | ------------ | -------------------------------- | ---------------------------------------------------------------------- |
@@ -180,6 +185,23 @@ position per bot fix, written after the fixes were tuned and never tuned against
 | whole turn   | `rock-before-the-draw`                     | `castOrder`     | The mana rock first, then the draw spell                        |
 | one decision | `temple-for-next-turn`                     | `landColors`    | The tapped dual that fixes next turn over a land nobody needs   |
 | one decision | `hold-the-ground-at-five`                  | `attackReserve` | At five life, every creature stays home to block                |
+
+### Added with ADR 0044
+
+Four positions per escalation trigger. For `scarce-answer`, two where the last answer should be
+held and two no-harm controls where it should still be cast; for `unknown-card`, four cards the
+classifier has no role for, one of them an opponent's spell to answer.
+
+| Kind         | Case                           | Trigger         | What it tests                                                    |
+| ------------ | ------------------------------ | --------------- | ---------------------------------------------------------------- |
+| one decision | `hold-the-swords-for-a-threat` | `scarce-answer` | Develop instead of spending the only removal on a mana elf       |
+| one decision | `hold-negate-for-a-threat`     | `scarce-answer` | Do not Negate a mana rock with the only counterspell             |
+| one decision | `negate-the-blasphemous-act`   | `scarce-answer` | Control: the last counterspell is for the one-sided sweeper      |
+| one decision | `wrath-the-crowded-table`      | `scarce-answer` | Control: the only wipe into five opposing creatures and none own |
+| one decision | `darkness-the-alpha-strike`    | `unknown-card`  | Darkness prevents the combat damage that would kill              |
+| one decision | `crackling-doom-for-two-kills` | `unknown-card`  | Two damage to each opponent kills two players                    |
+| one decision | `angels-grace-at-three`        | `unknown-card`  | Angel's Grace keeps the seat alive through a lethal attack       |
+| one decision | `protect-from-feed-the-swarm`  | `unknown-card`  | A protection trick answers an opponent's unfamiliar removal      |
 
 `hold-the-counter` and `counter-the-finisher` are a pair on purpose: a model that always passes
 fails one and a model that always acts fails the other.

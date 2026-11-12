@@ -62,9 +62,12 @@ bun run combat-sweep [--games N] [--seed S] [--json out.json]
 bun run bot-league [--games N] [--a ARM] [--b ARM] [--turn-cap N] [--jobs N] [--json F]
                                         # ADR 0039 bot vs bot win rate; arms: legacy, policy, knowledge, aggro, control
 bun run ai-call-census [--games N] [--turn-cap N] [--json F]
-                                        # ADR 0039 model calls and prompt tokens per turn by tactical mode, offline
+                                        # ADR 0039 model calls and prompt tokens per turn by tactical mode, offline;
+                                        # ADR 0044 would-fire counts per escalation trigger and one mode per live trigger
 bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json F]
-                                        # ADR 0039 one PAID game from .env: P1/P3 bot mode, P2/P4 model tactician
+                     [--escalation T,..] [--shadow T,..] [--opponents model|bot-never]
+                                        # ADR 0039 one PAID game from .env: P1/P3 bot mode, P2/P4 model tactician;
+                                        # ADR 0044: live triggers for P1/P3, and bot-led `never` opponents
 bun run jev-duel [--seats bot,bot-jev,model,jev] [--games N] [--offline] [--max-usd N] [--out DIR]
                                         # ADR 0041 Jev seat presets at one table; --offline is free, otherwise PAID
 bun run fuzz [--from N] [--games N] [--changed [--base S]] [--card "<name>"] [--json F] [--report F]

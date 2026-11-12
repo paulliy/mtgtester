@@ -24,6 +24,7 @@ import {
 } from '../state/queries';
 import type { EngineCardObject, GameContext } from '../state/types';
 import { castSpell } from './cast';
+import { evaluateCondition } from '../cards/condition';
 import { selectedSpellDefinition } from '../cards/spell-faces';
 import type { CardDefinition } from '../cards/definition';
 import { requireModeled } from '../state/queries';
@@ -98,6 +99,13 @@ function legalFreeCastSelections(
   for (const { definition, ...variant } of variants) {
     if (!spellAllowed(definition)) continue;
     if (castingSpellsBlockedFor(ctx, controllerId, definition)) continue;
+    // "Cast this spell only during an opponent's turn" holds however it is cast (CR 601.3), so a
+    // free cast the restriction forbids is never offered: `castSpell` would refuse it.
+    if (
+      definition.castRestriction !== undefined &&
+      !evaluateCondition(ctx, definition.castRestriction, { cardId: card.cardId, controllerId })
+    )
+      continue;
     if (spellManaValue(definition, 0) >= manaValueLessThan) continue;
     const preview = castingPreviewContext(ctx, card, controllerId, definition);
     const previewPlayer = preview.state.players.find((candidate) => candidate.id === controllerId)!;

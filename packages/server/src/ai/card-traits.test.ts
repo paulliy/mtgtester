@@ -90,6 +90,24 @@ describe('cardTraits', () => {
     expect(traits('Command Tower').manaUnits).toBeUndefined();
   });
 
+  it('marks destroy and exile removal as hard, but not a blink, damage or a bounce (ADR 0044)', () => {
+    expect(traits('Swords to Plowshares').hardRemoval).toBe(true);
+    expect(traits('Path to Exile').hardRemoval).toBe(true);
+    expect(traits('Banishing Light').hardRemoval).toBe(true);
+    expect(traits('Flickerwisp').hardRemoval).toBeUndefined();
+    expect(traits('Lightning Bolt').hardRemoval).toBeUndefined();
+  });
+
+  it('tells an unclassified card from one with nothing notable (ADR 0044)', () => {
+    // Fog-like prevention has no role pattern; Brainstorm is draw plus card selection.
+    expect(traits('Darkness').unclassified).toBe(true);
+    expect(traits('Brainstorm').unclassified).toBeUndefined();
+    expect(traits('Swords to Plowshares').unclassified).toBeUndefined();
+    // A vanilla creature and a basic land have no effect ops at all.
+    expect(traits('Grizzly Bears').unclassified).toBeUndefined();
+    expect(traits('Forest').unclassified).toBeUndefined();
+  });
+
   it('does not call a counterspell removal', () => {
     expect(traits('Counterspell').roles).not.toContain('removal');
   });
