@@ -207,8 +207,25 @@ export function anonymise(
   models: readonly ModelResult[],
   transcripts: readonly TranscriptEntry[],
   seed?: string,
+  /**
+   * The run's earlier key. A model it already names keeps its alias, and its letters are never
+   * handed to another model: scorecards judges returned for an earlier bundle must still resolve
+   * to the same models after `run --out` adds more (`collate` reads the latest key).
+   */
+  previous: JudgeKey['aliases'] = [],
 ): { models: ModelResult[]; transcripts: TranscriptEntry[]; key: JudgeKey['aliases'] } {
   const key: JudgeKey['aliases'] = [];
+  const kept = new Map(previous.map((entry) => [entry.model.id, entry]));
+  const taken = new Set(previous.map((entry) => entry.aliasId));
+  const freshLetter = (): string => {
+    for (let index = 0; ; index++) {
+      const letter = LETTERS[index] ?? `N${index + 1}`;
+      if (!taken.has(`model-${letter.toLowerCase()}`)) {
+        taken.add(`model-${letter.toLowerCase()}`);
+        return letter;
+      }
+    }
+  };
   const ids = new Map<string, string>();
   // Every way a model or its provider can be named: the model string and each half of it
   // (vendor and short name), its id and label, what the provider reported it as, and the
@@ -225,9 +242,10 @@ export function anonymise(
       : [...llm].sort((left, right) => (rank(left.model.id) < rank(right.model.id) ? -1 : 1));
   const renamedBy = new Map<string, ModelResult>();
   for (const result of turn) {
-    const letter = LETTERS[key.length] ?? `N${key.length + 1}`;
-    const alias = `Model ${letter}`;
-    const aliasId = `model-${letter.toLowerCase()}`;
+    const earlier = kept.get(result.model.id);
+    const letter = earlier === undefined ? freshLetter() : null;
+    const alias = earlier?.alias ?? `Model ${letter}`;
+    const aliasId = earlier?.aliasId ?? `model-${String(letter).toLowerCase()}`;
     key.push({ alias, aliasId, model: result.model });
     ids.set(result.model.id, aliasId);
     const modelName = result.model['model'];
@@ -261,6 +279,10 @@ export function anonymise(
       },
     });
   }
+  // A model the earlier key named that has since left the run keeps its entry, so its alias still
+  // resolves for scorecards already returned and its letter is never handed to another model.
+  const present = new Set(llm.map((result) => result.model.id));
+  for (const entry of previous) if (!present.has(entry.model.id)) key.push(entry);
   // Longest first, so a name that contains another is replaced whole.
   names.sort((a, b) => b[0].length - a[0].length);
   const patterns = names.map(([name, alias]) => [nameRegex(name), alias] as const);
@@ -282,6 +304,20 @@ export function anonymise(
     ),
     key,
   };
+}
+
+/**
+ * The aliases a run's earlier key assigned, with any model that has since left the run kept too,
+ * so its letter is never reused. A key from another run (a copied directory) is ignored.
+ */
+function previousAliases(keyPath: string, run: ReturnType<typeof readRun>): JudgeKey['aliases'] {
+  let key: JudgeKey;
+  try {
+    key = JSON.parse(readFileSync(keyPath, 'utf8')) as JudgeKey;
+  } catch {
+    return [];
+  }
+  return key.runId === run.manifest.runId && Array.isArray(key.aliases) ? key.aliases : [];
 }
 
 export interface BundleResult {
@@ -315,8 +351,9 @@ export async function writeBundle(
     if (benchCase === undefined) throw new Error(`run names case ${id}, which no longer exists`);
     return benchCase;
   });
+  const keyPath = join(runDirectory, 'judge-key.json');
   const shown = options.blind
-    ? anonymise(run.models, run.transcripts, run.manifest.runId)
+    ? anonymise(run.models, run.transcripts, run.manifest.runId, previousAliases(keyPath, run))
     : { models: run.models, transcripts: run.transcripts, key: [] };
 
   const analyses = new Map<string, CaseAnalysis>();
@@ -393,12 +430,11 @@ export async function writeBundle(
   const zipPath = join(runDirectory, `${root}.zip`);
   writeFileSync(zipPath, zipArchive(entries));
 
-  const keyPath = join(runDirectory, 'judge-key.json');
+  // A bundle with real names needs no key, but an existing one is kept: it maps the aliases in
+  // bundles already sent to judges, and a later blind rebuild must reuse them.
   if (options.blind && shown.key.length > 0) {
     const key: JudgeKey = { runId: run.manifest.runId, aliases: shown.key };
     writeFileSync(keyPath, json(key));
-  } else {
-    rmSync(keyPath, { force: true });
   }
   return {
     directory,

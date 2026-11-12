@@ -168,13 +168,16 @@ reason, a `blurb`, a ranking, and any reference grade it disagrees with.
 
 Candidate models are anonymised by default ("Model A", "Model B"), so a judge scores the play and
 not the brand. The letters are handed out in a fixed shuffled order seeded by the run id, so the
-lineup order does not leak and the two settings of one model are not neighbours. Every name a
+lineup order does not leak and the two settings of one model are not neighbours. Once assigned, an
+alias never changes: adding models with `--out` gives only the new ones a free letter, so
+scorecards returned for an earlier bundle still resolve to the right models. Every name a
 model could be recognised by is removed from the free text a provider or the model wrote: the model
 string, its vendor, its short name (however punctuated or capitalised), the provider and its host.
 After the bundle is built it is searched for those names again and the run prints a warning, and
 exits non-zero, if any survive. A model's thinking setting (`none`, `low`) is the one setting a
 judge still sees. `judge-key.json`, written beside the ZIP and never inside it, maps the aliases
-back. Pass `--reveal-models` to `run` or `bundle` to use real names. Local baselines keep their
+back; a `--reveal-models` rebuild leaves it in place. Pass `--reveal-models` to `run` or `bundle`
+to use real names. Local baselines keep their
 names and are marked as calibration, not candidates.
 
 When the scorecards come back:

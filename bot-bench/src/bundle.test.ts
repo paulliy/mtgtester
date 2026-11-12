@@ -250,10 +250,13 @@ describe('the judge bundle', () => {
     );
   });
 
-  it('rebuilds with real names when asked, and then writes no key', async () => {
+  it('rebuilds with real names when asked, writing no key but keeping the earlier one', async () => {
+    const keyPath = join(directory, 'judge-key.json');
+    const before = readFileSync(keyPath, 'utf8');
     const revealed = await writeBundle(directory, loadCases(), { blind: false });
     expect(revealed.keyPath).toBeNull();
-    expect(existsSync(join(directory, 'judge-key.json'))).toBe(false);
+    // Bundles already sent to judges use these aliases; a later blind rebuild must reuse them.
+    expect(readFileSync(keyPath, 'utf8')).toBe(before);
     expect(readFileSync(join(revealed.directory, 'SUMMARY.md'), 'utf8')).toContain(
       'Secret Model 9000',
     );
@@ -373,6 +376,22 @@ describe('blind redaction of vendor, short name and provider', () => {
     );
     expect(orders.size).toBeGreaterThan(1);
     expect(first.models.map((m) => m.model.id)).toEqual(['model-a', 'model-b', 'model-c']);
+  });
+
+  it('keeps every alias already handed to judges when a run gains or loses models', () => {
+    const aliasOf = (key: ReturnType<typeof anonymise>['key']): Record<string, string> =>
+      Object.fromEntries(key.map((entry) => [entry.model.id, entry.aliasId]));
+    for (const seed of ['seed', 'a', 'b', 'c', 'd', 'e', 'f']) {
+      // `run --out` adds a model: the earlier ones keep their letters, the new one gets a free one.
+      const first = anonymise(results.slice(0, 2), [], seed);
+      const extended = anonymise(results, [], seed, first.key);
+      for (const [id, aliasId] of Object.entries(aliasOf(first.key)))
+        expect(aliasOf(extended.key)[id]).toBe(aliasId);
+      expect(new Set(extended.key.map((entry) => entry.aliasId)).size).toBe(3);
+      // A model that left the run keeps its entry, so its letter is never reused.
+      const shrunk = anonymise(results.slice(1), [], seed, extended.key);
+      expect(aliasOf(shrunk.key)).toEqual(aliasOf(extended.key));
+    }
   });
 });
 
