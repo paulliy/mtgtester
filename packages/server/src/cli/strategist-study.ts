@@ -121,6 +121,8 @@ export interface StudyOptions {
    * are always kept. For a focused follow-up on the knob a line names, or a cheap smoke run.
    */
   gridArms?: readonly string[];
+  /** Decisions a rollout may take before it is cut off as incomplete (the counterfactual's default otherwise). */
+  maxDecisions?: number;
 }
 
 /** Which turns to examine: swings first, then the seeded sample, without repeats. */
@@ -194,6 +196,7 @@ export async function runStudy(options: StudyOptions): Promise<StudyReport> {
   for (const line of Object.values(options.lines))
     if (line.evaluator !== undefined) resolveEvaluator(line.evaluator);
   const reports: MarkedTurnReport[] = [];
+  const limit = options.maxDecisions === undefined ? {} : { maxDecisions: options.maxDecisions };
   const marked = capTurns(
     markTurns(capture, options.sampleRate, options.captureName),
     options.maxTurns,
@@ -241,7 +244,7 @@ export async function runStudy(options: StudyOptions): Promise<StudyReport> {
               steering: arm.steering,
               ...(arm.knob === undefined ? {} : { knob: arm.knob }),
             },
-            { rolloutSeed: seed, evaluators },
+            { rolloutSeed: seed, evaluators, ...limit },
           ),
         );
     const botIds = new Set(grid.map((arm) => arm.id));
@@ -290,7 +293,7 @@ export async function runStudy(options: StudyOptions): Promise<StudyReport> {
               policyFor: options.tactician.arm(armContext),
               withContext: armContext !== null,
             },
-            { rolloutSeed: options.seeds[trial % options.seeds.length]!, evaluators },
+            { rolloutSeed: options.seeds[trial % options.seeds.length]!, evaluators, ...limit },
           );
           arms.push(run);
           // ADR 0045 decision 1.4: a trial where the fallback bot played any of the model's
@@ -312,7 +315,7 @@ export async function runStudy(options: StudyOptions): Promise<StudyReport> {
         const run = await runArm(
           fork,
           { kind: 'reference', id: 'reference', policyFor: referenceArm(line.steps) },
-          { rolloutSeed: seed, evaluators },
+          { rolloutSeed: seed, evaluators, ...limit },
         );
         arms.push(run);
         if (completed(run)) reference.push(run.values[evaluator] ?? 0);
@@ -328,7 +331,7 @@ export async function runStudy(options: StudyOptions): Promise<StudyReport> {
         gridMeans[arm.id] = mean(runs.map((run) => run.values[evaluator] ?? 0));
         gridHashes[arm.id] = runs[0]!.finalStateHash;
       }
-      if (referenceIncomplete > 0 || Object.keys(gridMeans).length === 0) {
+      if (referenceIncomplete > 0 || gridMeans['strategist'] === undefined) {
         // A reference line the engine refused (or that never reached the horizon) is not a
         // target; neither is a grid with no completed arm.
         verdict = {
@@ -340,7 +343,7 @@ export async function runStudy(options: StudyOptions): Promise<StudyReport> {
           reason:
             referenceIncomplete > 0
               ? `the reference line did not reach the horizon on ${referenceIncomplete} seed(s)`
-              : 'no grid arm reached the horizon',
+              : "the strategist's own knobs never reached the horizon, so no arm has a baseline",
         };
       } else {
         // ADR 0045 decision 3: before a "knob missing" or "needs the tactician" verdict, try the
@@ -348,7 +351,7 @@ export async function runStudy(options: StudyOptions): Promise<StudyReport> {
         const referenceMean = mean(reference);
         const bestSingle = Math.max(...Object.values(gridMeans));
         if (referenceMean > bestSingle + options.margin) {
-          const baseline = gridMeans['strategist'] ?? 0;
+          const baseline = gridMeans['strategist'];
           const moved = new Set(
             grid
               .filter(
@@ -371,7 +374,7 @@ export async function runStudy(options: StudyOptions): Promise<StudyReport> {
                     steering: pair.steering,
                     ...(pair.knob === undefined ? {} : { knob: pair.knob }),
                   },
-                  { rolloutSeed: seed, evaluators },
+                  { rolloutSeed: seed, evaluators, ...limit },
                 ),
               );
             arms.push(...runs);

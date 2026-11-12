@@ -95,6 +95,30 @@ describe('a study turn with a reviewer line', () => {
   }, 120_000);
 });
 
+describe('a study turn whose rollouts are cut off', () => {
+  it('gives no verdict, and keeps the cut-off runs out of every comparison', async () => {
+    const turn = markTurns(capture, 1, 'study-test').find((t) => t.turn >= 2)!;
+    const report = await runStudy({
+      capture,
+      captureName: 'study-test',
+      seeds: ['r1'],
+      sampleRate: 1,
+      margin: 2,
+      evaluator: 'own-position-v1',
+      maxTurns: 50,
+      gridArms: ['defaults'],
+      // One decision per rollout: no arm, and no reference, reaches the horizon.
+      maxDecisions: 1,
+      lines: { [String(turn.forkDecisionIndex)]: { steps: [{ choose: 'Pass priority' }] } },
+    });
+    const studied = report.markedTurns.find((t) => t.forkDecisionIndex === turn.forkDecisionIndex)!;
+    expect(studied.arms.every((arm) => arm.termination === 'decision_limit')).toBe(true);
+    expect(studied.incompleteRuns).toBe(studied.arms.length);
+    expect(studied.disagree).toBe(false);
+    expect(studied.verdict).toMatchObject({ verdict: null, needs: 'completedRuns' });
+  }, 60_000);
+});
+
 describe('deals in the forks', () => {
   it("records every seat's binding obligations at each turn of a capture with diplomacy", () => {
     const withTurns = capture.turns.filter((t) => t.turn >= 1);

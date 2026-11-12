@@ -109,6 +109,21 @@ Known fidelity gaps, accepted for the study:
   own `dealProposal` is not offered at the table as a live session would offer it.
 - Under `everyTurn`, the `wake` recorded with each tactician request comes from a simulated
   `onChange` (its table snapshot and reuse count), not from a real one.
+- Deals: a capture records each seat's binding obligations at every turn start. Every rollout bot
+  holds its seat's obligations to the horizon, and the tactician arm with context sees its own
+  seat's deals. Obligations are frozen at the fork, so a deal that would have run out inside the
+  horizon is held a little long, and no new deal is made inside a rollout.
+
+How results are kept honest:
+
+- A rollout that hits the decision limit, or ends on an answer the engine refused, is incomplete.
+  It is counted in `incompleteRuns` and kept out of the filter, the grid means, the reference and
+  the tactician values.
+- A turn whose reference line, or whose strategist arm, never reached the horizon gets no verdict
+  (`needs: completedRuns`).
+- A line's evaluator is resolved by name before any arm runs, so an unknown name stops the study
+  instead of scoring 0.
+- `--arms` narrows the grid to named arms, for a follow-up on the knob a line names.
 
 ## Exit (decision 7)
 
