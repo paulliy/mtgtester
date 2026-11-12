@@ -62,7 +62,16 @@ export interface TurnFork {
 export interface ArmRun {
   arm: string;
   rolloutSeed: string;
-  termination: 'horizon' | 'game_over' | 'seat_eliminated' | 'decision_limit' | 'illegal_response';
+  termination:
+    | 'horizon'
+    | 'game_over'
+    | 'seat_eliminated'
+    | 'decision_limit'
+    | 'illegal_response'
+    /** The engine stopped the game (unsupported behaviour, a budget, an invariant), not a result. */
+    | 'halted'
+    /** A reference line could not be played as written. */
+    | 'invalid_line';
   finalStateHash: string;
   /** Evaluator id → value at the horizon, from the seat's point of view. */
   values: Record<string, number>;
@@ -153,8 +162,13 @@ export async function runArm(
       try {
         response = await turnPolicy(request, view);
       } catch (cause) {
-        response = null;
         error = cause instanceof Error ? cause.message : String(cause);
+        // A reviewer's line that cannot be played is not a line at all: stop, and say why.
+        if (arm.kind === 'reference') {
+          termination = 'invalid_line';
+          break;
+        }
+        response = null;
       }
       if (response === null) handedToBot++;
     }
@@ -179,7 +193,10 @@ export async function runArm(
       if (step.kind === 'continue') continue;
       if (step.kind === 'gameOver') {
         result = step.result;
-        termination = 'game_over';
+        if (step.result.halted) {
+          termination = 'halted';
+          error = step.result.haltReason ?? 'the engine halted';
+        } else termination = 'game_over';
         break outer;
       }
       request = step.request;

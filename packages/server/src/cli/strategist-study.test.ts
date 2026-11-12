@@ -4,11 +4,12 @@
  */
 import { readFileSync } from 'node:fs';
 import { beforeAll, describe, expect, it } from 'vitest';
-import type { OracleCard } from '@mtg/shared';
+import type { DecisionRequest, OracleCard, PlayerView } from '@mtg/shared';
 import { buildSupportedPool } from '../cards/pool';
 import { generateCommanderDeck } from '../decks/generate';
 import { DEFAULT_AI_CONFIG } from '../ai/config';
 import type { ArmRun } from '../benchmark/turn-counterfactual';
+import { ReferenceLineError, referenceArm } from '../benchmark/turn-arms';
 import { captureStrategistGame, type StrategistCapture } from './strategist-capture';
 import { completed, markTurns, resolveEvaluator, runStudy } from './strategist-study';
 
@@ -128,5 +129,70 @@ describe('deals in the forks', () => {
       for (const list of Object.values(t.obligations))
         for (const o of list ?? []) expect(o.obligation.by).toBeDefined();
     }
+  });
+});
+
+describe('reference line targets', () => {
+  const view = {
+    seat: 'P1',
+    life: 30,
+    hand: [],
+    deck: [],
+    graveyard: [],
+    exile: [],
+    commanders: [],
+    availableMana: {},
+    manaSources: [],
+    opponents: [],
+    battlefield: [
+      { id: 'o-1', controller: 'P2', name: 'Grizzly Bears', tapped: false, status: [] },
+      { id: 'o-2', controller: 'P3', name: 'Twin', tapped: false, status: [] },
+      { id: 'o-3', controller: 'P4', name: 'Twin', tapped: false, status: [] },
+    ],
+    stack: [],
+    recentLog: [],
+  } as unknown as PlayerView;
+  const request = {
+    requestId: 'r',
+    gameId: 'g',
+    turn: 3,
+    activePlayer: 'P1',
+    decidingPlayer: 'P1',
+    phase: 'combat',
+    step: 'declareAttackers',
+    decisionType: 'declareAttackers',
+    prompt: '',
+    legalActions: [
+      {
+        id: 0,
+        type: 'attackDeclaration',
+        description: 'Declare attackers',
+        targets: [{ slot: 0, options: ['P2', 'o-1', 'o-2', 'o-3', '__no_attack__'] }],
+      },
+    ],
+  } as unknown as DecisionRequest;
+  const play = (target: string) =>
+    referenceArm([{ choose: 'Declare attackers', targets: [target] }])(undefined as never, 'P1')(
+      request,
+      view,
+    );
+
+  it('takes a literal option, a seat, or a uniquely named object', () => {
+    expect(play('__no_attack__')).toMatchObject({
+      targets: [{ slot: 0, choice: '__no_attack__' }],
+    });
+    expect(play('P2')).toMatchObject({ targets: [{ slot: 0, choice: 'P2' }] });
+    expect(play('Grizzly Bears')).toMatchObject({ targets: [{ slot: 0, choice: 'o-1' }] });
+  });
+
+  it('refuses a target it cannot find, or one the name leaves ambiguous', () => {
+    expect(() => play('Ghost')).toThrow(ReferenceLineError);
+    expect(() => play('Twin')).toThrow(ReferenceLineError);
+  });
+
+  it('counts a halt or an unplayable line as incomplete', () => {
+    const run = (termination: ArmRun['termination']) => ({ termination }) as ArmRun;
+    expect(completed(run('halted'))).toBe(false);
+    expect(completed(run('invalid_line'))).toBe(false);
   });
 });

@@ -151,13 +151,32 @@ export interface LineStep {
   targets?: string[];
 }
 
-function objectIdByName(view: PlayerView, name: string): string | undefined {
-  if (view.seat === name || view.opponents.some((o) => o.seat === name)) return name;
-  return (
-    view.battlefield.find((p) => p.name === name)?.id ??
-    view.hand.find((c) => c.name === name)?.id ??
-    view.stack.find((s) => s.description === name)?.id
-  );
+/**
+ * The slot option a line names: the option itself when the line gives it literally (a seat, an
+ * object id, `__no_attack__`, `__no_block__`), else the one option whose object has that name.
+ * Undefined when nothing on the menu matches, or the name is ambiguous among the options.
+ */
+function slotOption(
+  view: PlayerView,
+  options: readonly string[],
+  wanted: string,
+): string | undefined {
+  if (options.includes(wanted)) return wanted;
+  const named = (id: string): string | undefined =>
+    view.battlefield.find((p) => p.id === id)?.name ??
+    view.hand.find((c) => c.id === id)?.name ??
+    view.graveyard.find((c) => c.id === id)?.name ??
+    view.stack.find((s) => s.id === id)?.description;
+  const matches = options.filter((option) => named(option) === wanted);
+  return matches.length === 1 ? matches[0] : undefined;
+}
+
+/** A reviewer's line that cannot be played as written: it is not a reference to compare with. */
+export class ReferenceLineError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ReferenceLineError';
+  }
 }
 
 /**
@@ -175,11 +194,14 @@ export function referenceArm(steps: readonly LineStep[]): TurnPolicyFactory {
         if (action !== undefined) {
           const targets: TargetChoice[] = (action.targets ?? []).map((slot, i) => {
             const wanted = step.targets?.[i];
-            const id = wanted === undefined ? undefined : objectIdByName(view, wanted);
-            return {
-              slot: slot.slot,
-              choice: id !== undefined && slot.options.includes(id) ? id : slot.options[0]!,
-            };
+            // A slot the line leaves open takes its first option; a slot it names must match.
+            if (wanted === undefined) return { slot: slot.slot, choice: slot.options[0]! };
+            const choice = slotOption(view, slot.options, wanted);
+            if (choice === undefined)
+              throw new ReferenceLineError(
+                `step "${step.choose}": "${wanted}" is not one of slot ${slot.slot}'s options`,
+              );
+            return { slot: slot.slot, choice };
           });
           next++;
           return {

@@ -178,11 +178,16 @@ export function resolveEvaluator(name: string): CounterfactualEvaluator {
 
 /**
  * A run that reached the horizon or ended the game legitimately. A rollout cut off by the
- * decision limit, or ended by an answer the engine refused, stopped at an arbitrary point and its
- * values are not comparable with completed ones.
+ * decision limit, ended by an answer the engine refused, stopped by an engine halt, or a reviewer
+ * line that could not be played as written, stopped at an arbitrary point: its values are not
+ * comparable with completed ones.
  */
 export function completed(run: ArmRun): boolean {
-  return run.termination !== 'decision_limit' && run.termination !== 'illegal_response';
+  return (
+    run.termination === 'horizon' ||
+    run.termination === 'game_over' ||
+    run.termination === 'seat_eliminated'
+  );
 }
 
 function mean(values: readonly number[]): number {
