@@ -859,6 +859,8 @@ function keepEnoughBlockers(
       if (pick === -1) break;
       recall(pick);
     }
+    // The current plan carries the lethal-swing penalty, so this is in effect a survival gate: a
+    // plan that lives is kept, even at the cost of a kill the attack would have made.
     const after = worth();
     if (assess().swing < view.life && after > current) {
       current = after;
