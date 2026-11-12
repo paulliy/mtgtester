@@ -335,7 +335,7 @@ export interface VerdictResult {
    * Set when something the rules need is missing and the verdict waits for it: a main-thread
    * judgement, or tactician trials that were never run (or were all discarded).
    */
-  needs?: keyof VerdictJudgement | 'tacticianTrials';
+  needs?: keyof VerdictJudgement | 'tacticianTrials' | 'completedRuns';
   tacticianReaches: boolean;
   bestGrid: { arm: string; value: number };
   reason: string;

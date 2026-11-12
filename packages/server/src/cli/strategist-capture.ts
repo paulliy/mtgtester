@@ -27,7 +27,7 @@ import type {
   OracleCard,
   PlayerId,
 } from '@mtg/shared';
-import { DiplomacyTable, withDiplomacyAsync } from '@mtg/bot';
+import { DiplomacyTable, withDiplomacyAsync, type ActiveObligation } from '@mtg/bot';
 import type { Engine, GameConfig } from '@mtg/engine';
 import { buildSupportedPool } from '../cards/pool';
 import { generateCommanderDeck } from '../decks/generate';
@@ -52,6 +52,11 @@ export interface SeatTurnContext {
   knobs: Partial<Record<PlayerId, BotSteering>>;
   /** Active deals by seat, as each seat's own diplomacy state shows them. */
   deals: Partial<Record<PlayerId, ReturnType<DiplomacyTable['seatState']>['deals']>>;
+  /**
+   * Each seat's deal obligations still binding, exactly as its bot enforced them
+   * (`DiplomacyTable.playFor(seat).obligations()`), so a study fork can hold the same promises.
+   */
+  obligations: Partial<Record<PlayerId, ActiveObligation[]>>;
 }
 
 export interface StrategistCapture {
@@ -168,6 +173,12 @@ export async function captureStrategistGame(options: CaptureOptions): Promise<St
               return knobs === undefined ? [] : [[s, structuredClone(knobs)]];
             }),
           ),
+          obligations:
+            table === null
+              ? {}
+              : Object.fromEntries(
+                  SEATS.map((s) => [s, structuredClone([...table!.playFor(s).obligations()])]),
+                ),
           deals:
             table === null
               ? {}

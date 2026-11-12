@@ -6,7 +6,7 @@
  *   bun run strategist-study --capture F --mark-only [--sample-rate 0.1] [--max-turns 10] [--out F]
  *   bun run strategist-study --capture F [--seeds 3] [--sample-rate 0.1] [--margin 2]
  *        [--evaluator own-position-v1] [--max-turns 10] [--lines lines.json]
- *        [--disagree hash-or-gap|gap] [--disagree-margin 4] [--tactician] [--trials 3] [--max-usd 2] [--out report.json]
+ *        [--arms id,id] [--disagree hash-or-gap|gap] [--disagree-margin 4] [--tactician] [--trials 3] [--max-usd 2] [--out report.json]
  *
  * Bot arms cost nothing. `--tactician` is PAID: it uses the tactician from `.env` on turns that
  * pass the disagreement filter, K trials each, and stops at `--max-usd`. `--lines` holds the
@@ -43,6 +43,7 @@ import {
   GAME_RESULT,
   knobGrid,
   OWN_POSITION,
+  pressureOn,
   sampledTurns,
   SURVIVAL,
   seatTurns,
@@ -54,6 +55,7 @@ import {
 } from '../benchmark/turn-study';
 import { budgetedFetch, counting, emptyTally, type Budget } from './ai-mode-duel';
 import type { StrategistCapture } from './strategist-capture';
+import { seatDiplomacyContext } from '../ai/diplomacy-context';
 
 export const STUDY_EVALUATORS: readonly CounterfactualEvaluator[] = [
   OWN_POSITION,
@@ -71,6 +73,8 @@ export interface MarkedTurnReport {
   disagree: boolean;
   /** Tactician trials not credited: the fallback bot played a decision, or the cap was hit. */
   discardedTrials: number;
+  /** Runs cut off by the decision limit or an illegal answer, kept out of every comparison. */
+  incompleteRuns: number;
   verdict?: VerdictResult & { evaluator: string };
 }
 
@@ -112,6 +116,11 @@ export interface StudyOptions {
   /** The filter's evaluator margin; defaults to `margin`, the verdicts' margin. */
   disagreeMargin?: number;
   share?: number;
+  /**
+   * Only these grid arms, by id (`aggression-1`, `hold-Negate`, ...); the strategist's own knobs
+   * are always kept. For a focused follow-up on the knob a line names, or a cheap smoke run.
+   */
+  gridArms?: readonly string[];
 }
 
 /** Which turns to examine: swings first, then the seeded sample, without repeats. */
@@ -151,8 +160,39 @@ export function capTurns<T extends { forkDecisionIndex: number }>(
   return pool.slice(0, max).sort((a, b) => a.forkDecisionIndex - b.forkDecisionIndex);
 }
 
+/**
+ * The evaluator a name stands for: one of the fixed evaluators, or `pressure-on-<seat>-v1` for a
+ * seat. An unknown name throws rather than scoring every arm 0 (which reads as "no gap").
+ */
+export function resolveEvaluator(name: string): CounterfactualEvaluator {
+  const fixed = STUDY_EVALUATORS.find((evaluator) => evaluator.version === name);
+  if (fixed !== undefined) return fixed;
+  const pressure = /^pressure-on-(P[1-4])-v1$/.exec(name);
+  if (pressure !== null) return pressureOn(pressure[1]!);
+  throw new Error(
+    `unknown evaluator "${name}"; use ${STUDY_EVALUATORS.map((e) => e.version).join(', ')} or pressure-on-<seat>-v1`,
+  );
+}
+
+/**
+ * A run that reached the horizon or ended the game legitimately. A rollout cut off by the
+ * decision limit, or ended by an answer the engine refused, stopped at an arbitrary point and its
+ * values are not comparable with completed ones.
+ */
+export function completed(run: ArmRun): boolean {
+  return run.termination !== 'decision_limit' && run.termination !== 'illegal_response';
+}
+
+function mean(values: readonly number[]): number {
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
 export async function runStudy(options: StudyOptions): Promise<StudyReport> {
   const { capture } = options;
+  // Every evaluator a line may name is checked before any arm runs.
+  resolveEvaluator(options.evaluator);
+  for (const line of Object.values(options.lines))
+    if (line.evaluator !== undefined) resolveEvaluator(line.evaluator);
   const reports: MarkedTurnReport[] = [];
   const marked = capTurns(
     markTurns(capture, options.sampleRate, options.captureName),
@@ -163,11 +203,19 @@ export async function runStudy(options: StudyOptions): Promise<StudyReport> {
   const botArmIds = new Set<string>();
   for (const turn of marked) {
     const context = capture.turns.find((t) => t.decisionIndex === turn.forkDecisionIndex);
+    // The reviewer's line names the turn's class and so its evaluator; the filter uses it too.
+    const line = options.lines[String(turn.forkDecisionIndex)];
+    const evaluator = line?.evaluator ?? options.evaluator;
+    const evaluators = STUDY_EVALUATORS.some((e) => e.version === evaluator)
+      ? STUDY_EVALUATORS
+      : [...STUDY_EVALUATORS, resolveEvaluator(evaluator)];
     const fork: TurnFork = {
       transcript: capture.transcript,
       forkDecisionIndex: turn.forkDecisionIndex,
       seat: turn.seat,
       knobsBySeat: context?.knobs ?? {},
+      // The deals the captured bots enforced, held the same way in every rollout.
+      ...(context?.obligations === undefined ? {} : { obligationsBySeat: context.obligations }),
     };
     const view = capture.transcript.decisions[turn.forkDecisionIndex]!.observerView;
     const opponents = view.opponents.filter((o) => o.life > 0).map((o) => o.seat);
@@ -175,6 +223,11 @@ export async function runStudy(options: StudyOptions): Promise<StudyReport> {
       context?.knobs[turn.seat],
       opponents,
       view.hand.map((card) => card.name),
+    ).filter(
+      (arm) =>
+        options.gridArms === undefined ||
+        arm.id === 'strategist' ||
+        options.gridArms.includes(arm.id),
     );
     const arms: ArmRun[] = [];
     for (const arm of grid)
@@ -188,39 +241,45 @@ export async function runStudy(options: StudyOptions): Promise<StudyReport> {
               steering: arm.steering,
               ...(arm.knob === undefined ? {} : { knob: arm.knob }),
             },
-            {
-              rolloutSeed: seed,
-              evaluators: STUDY_EVALUATORS,
-            },
+            { rolloutSeed: seed, evaluators },
           ),
         );
     const botIds = new Set(grid.map((arm) => arm.id));
     for (const id of botIds) botArmIds.add(id);
-    botRuns.push([...arms]);
-    // The reviewer's line names the turn's class and so its evaluator; the filter uses it too.
-    const line = options.lines[String(turn.forkDecisionIndex)];
-    const evaluator = line?.evaluator ?? options.evaluator;
+    const complete = arms.filter(completed);
+    botRuns.push([...complete]);
     const disagree = botArmsDisagree(
-      arms,
+      complete,
       botIds,
       evaluator,
       options.disagreeMargin ?? options.margin,
       options.disagree ?? 'hash-or-gap',
     );
-    let tacticianValues: number[] = [];
+    const deals =
+      context?.deals?.[turn.seat] === undefined || context.deals[turn.seat]!.length === 0
+        ? undefined
+        : (seatDiplomacyContext(
+            turn.seat,
+            {
+              deals: context.deals[turn.seat]!,
+              records: [],
+              canPropose: false,
+              maxRounds: 2,
+              maxObligationsPerSide: 2,
+            },
+            'tactician',
+          ) ?? undefined);
+    const tacticianValues: number[] = [];
     let discarded = 0;
+    let incomplete = arms.length - complete.length;
     if (disagree && options.tactician !== undefined) {
-      for (const [id, studyContext] of [
+      const studyContext: StudyContext = line?.context ?? {
+        intent: 'from the capture',
+        ...(context?.knobs[turn.seat] === undefined ? {} : { steering: context.knobs[turn.seat]! }),
+      };
+      for (const [id, armContext] of [
         ['tactician', null],
-        [
-          'tactician-context',
-          line?.context ?? {
-            intent: 'from the capture',
-            ...(context?.knobs[turn.seat] === undefined
-              ? {}
-              : { steering: context.knobs[turn.seat]! }),
-          },
-        ],
+        ['tactician-context', { ...studyContext, ...(deals === undefined ? {} : { deals }) }],
       ] as const) {
         for (let trial = 0; trial < options.tactician.trials; trial++) {
           const run = await runArm(
@@ -228,18 +287,18 @@ export async function runStudy(options: StudyOptions): Promise<StudyReport> {
             {
               kind: 'tactician',
               id,
-              policyFor: options.tactician.arm(studyContext),
-              withContext: studyContext !== null,
+              policyFor: options.tactician.arm(armContext),
+              withContext: armContext !== null,
             },
-            {
-              rolloutSeed: options.seeds[trial % options.seeds.length]!,
-              evaluators: STUDY_EVALUATORS,
-            },
+            { rolloutSeed: options.seeds[trial % options.seeds.length]!, evaluators },
           );
           arms.push(run);
           // ADR 0045 decision 1.4: a trial where the fallback bot played any of the model's
-          // decisions (a failed answer, or the spend cap) is not credited to the model.
-          const credited = run.handedToBot === 0 && options.tactician.capped?.() !== true;
+          // decisions (a failed answer, or the spend cap) is not credited to the model, and a
+          // trial that never reached the horizon is not compared at all.
+          const credited =
+            completed(run) && run.handedToBot === 0 && options.tactician.capped?.() !== true;
+          if (!completed(run)) incomplete++;
           if (!credited) discarded++;
           else if (id === 'tactician-context') tacticianValues.push(run.values[evaluator] ?? 0);
         }
@@ -248,72 +307,95 @@ export async function runStudy(options: StudyOptions): Promise<StudyReport> {
     let verdict: MarkedTurnReport['verdict'];
     if (line !== undefined) {
       const reference: number[] = [];
+      let referenceIncomplete = 0;
       for (const seed of options.seeds) {
         const run = await runArm(
           fork,
           { kind: 'reference', id: 'reference', policyFor: referenceArm(line.steps) },
-          { rolloutSeed: seed, evaluators: STUDY_EVALUATORS },
+          { rolloutSeed: seed, evaluators },
         );
         arms.push(run);
-        reference.push(run.values[evaluator] ?? 0);
+        if (completed(run)) reference.push(run.values[evaluator] ?? 0);
+        else referenceIncomplete++;
       }
+      incomplete += referenceIncomplete;
       const gridMeans: Record<string, number> = {};
       const gridHashes: Record<string, string> = {};
       for (const arm of grid) {
-        const runs = arms.filter((run) => run.arm === arm.id);
-        gridMeans[arm.id] =
-          runs.reduce((sum, run) => sum + (run.values[evaluator] ?? 0), 0) / runs.length;
+        const runs = complete.filter((run) => run.arm === arm.id);
+        // An arm none of whose runs reached the horizon is left out of the comparison.
+        if (runs.length === 0) continue;
+        gridMeans[arm.id] = mean(runs.map((run) => run.values[evaluator] ?? 0));
         gridHashes[arm.id] = runs[0]!.finalStateHash;
       }
-      // ADR 0045 decision 3: before a "knob missing" or "needs the tactician" verdict, try the
-      // pairs of the single knobs that moved the evaluator. Bot arms only, so it costs nothing.
-      const referenceMean = reference.reduce((sum, value) => sum + value, 0) / reference.length;
-      const bestSingle = Math.max(...Object.values(gridMeans));
-      if (referenceMean > bestSingle + options.margin) {
-        const baseline = gridMeans['strategist'] ?? 0;
-        const moved = new Set(
-          grid
-            .filter(
-              (arm) =>
-                arm.knob !== undefined &&
-                Math.abs((gridMeans[arm.id] ?? 0) - baseline) > options.margin,
-            )
-            .map((arm) => arm.id),
-        );
-        for (const pair of pairwiseArms(grid, moved)) {
-          const runs: ArmRun[] = [];
-          for (const seed of options.seeds)
-            runs.push(
-              await runArm(
-                fork,
-                {
-                  kind: 'bot',
-                  id: pair.id,
-                  steering: pair.steering,
-                  ...(pair.knob === undefined ? {} : { knob: pair.knob }),
-                },
-                { rolloutSeed: seed, evaluators: STUDY_EVALUATORS },
-              ),
-            );
-          arms.push(...runs);
-          gridMeans[pair.id] =
-            runs.reduce((sum, run) => sum + (run.values[evaluator] ?? 0), 0) / runs.length;
-          gridHashes[pair.id] = runs[0]!.finalStateHash;
-        }
-      }
-      verdict = {
-        evaluator,
-        ...verdictFor({
+      if (referenceIncomplete > 0 || Object.keys(gridMeans).length === 0) {
+        // A reference line the engine refused (or that never reached the horizon) is not a
+        // target; neither is a grid with no completed arm.
+        verdict = {
           evaluator,
-          margin: options.margin,
-          share: options.share ?? 2 / 3,
-          grid: gridMeans,
-          gridHashes,
-          reference: referenceMean,
-          tactician: tacticianValues,
-          judgement: line.judgement ?? {},
-        }),
-      };
+          verdict: null,
+          needs: 'completedRuns',
+          tacticianReaches: false,
+          bestGrid: { arm: '', value: 0 },
+          reason:
+            referenceIncomplete > 0
+              ? `the reference line did not reach the horizon on ${referenceIncomplete} seed(s)`
+              : 'no grid arm reached the horizon',
+        };
+      } else {
+        // ADR 0045 decision 3: before a "knob missing" or "needs the tactician" verdict, try the
+        // pairs of the single knobs that moved the evaluator. Bot arms only, so it costs nothing.
+        const referenceMean = mean(reference);
+        const bestSingle = Math.max(...Object.values(gridMeans));
+        if (referenceMean > bestSingle + options.margin) {
+          const baseline = gridMeans['strategist'] ?? 0;
+          const moved = new Set(
+            grid
+              .filter(
+                (arm) =>
+                  arm.knob !== undefined &&
+                  gridMeans[arm.id] !== undefined &&
+                  Math.abs(gridMeans[arm.id]! - baseline) > options.margin,
+              )
+              .map((arm) => arm.id),
+          );
+          for (const pair of pairwiseArms(grid, moved)) {
+            const runs: ArmRun[] = [];
+            for (const seed of options.seeds)
+              runs.push(
+                await runArm(
+                  fork,
+                  {
+                    kind: 'bot',
+                    id: pair.id,
+                    steering: pair.steering,
+                    ...(pair.knob === undefined ? {} : { knob: pair.knob }),
+                  },
+                  { rolloutSeed: seed, evaluators },
+                ),
+              );
+            arms.push(...runs);
+            const done = runs.filter(completed);
+            incomplete += runs.length - done.length;
+            if (done.length === 0) continue;
+            gridMeans[pair.id] = mean(done.map((run) => run.values[evaluator] ?? 0));
+            gridHashes[pair.id] = done[0]!.finalStateHash;
+          }
+        }
+        verdict = {
+          evaluator,
+          ...verdictFor({
+            evaluator,
+            margin: options.margin,
+            share: options.share ?? 2 / 3,
+            grid: gridMeans,
+            gridHashes,
+            reference: referenceMean,
+            tactician: tacticianValues,
+            judgement: line.judgement ?? {},
+          }),
+        };
+      }
     }
     reports.push({
       forkDecisionIndex: turn.forkDecisionIndex,
@@ -323,9 +405,9 @@ export async function runStudy(options: StudyOptions): Promise<StudyReport> {
       arms,
       disagree,
       discardedTrials: discarded,
+      incompleteRuns: incomplete,
       ...(verdict === undefined ? {} : { verdict }),
     });
-    tacticianValues = [];
   }
   return {
     schemaVersion: 1,
@@ -421,6 +503,13 @@ async function main(): Promise<void> {
     margin: Number(arg(argv, '--margin') ?? 2),
     evaluator: arg(argv, '--evaluator') ?? OWN_POSITION.version,
     maxTurns: Number(arg(argv, '--max-turns') ?? 10),
+    ...(arg(argv, '--arms') === undefined
+      ? {}
+      : {
+          gridArms: arg(argv, '--arms')!
+            .split(',')
+            .map((id) => id.trim()),
+        }),
     disagree: arg(argv, '--disagree') === 'gap' ? 'gap' : 'hash-or-gap',
     ...(arg(argv, '--disagree-margin') === undefined
       ? {}

@@ -25,7 +25,7 @@ import type {
   PlayerId,
   PlayerView,
 } from '@mtg/shared';
-import { HeuristicDecisionProvider } from '@mtg/bot';
+import { HeuristicDecisionProvider, type ActiveObligation } from '@mtg/bot';
 import { knowledgeFor } from '../ai/bot-tactician';
 import type { CounterfactualEvaluator } from './counterfactual';
 import { canonicalEngineStateHash, reconstructAtDecision, type ReplayTranscript } from './replay';
@@ -51,6 +51,12 @@ export interface TurnFork {
   forkDecisionIndex: number;
   seat: PlayerId;
   knobsBySeat: Partial<Record<PlayerId, BotSteering>>;
+  /**
+   * Deal obligations each seat's bot enforced at the fork, from a capture made with diplomacy.
+   * Every rollout bot holds them to the horizon, as the captured game's bots did (a deal that
+   * would have run out inside the horizon is held a little long; no new deals are made).
+   */
+  obligationsBySeat?: Partial<Record<PlayerId, readonly ActiveObligation[]>>;
 }
 
 export interface ArmRun {
@@ -103,6 +109,14 @@ export async function runArm(
         {
           knowledge,
           steering: () => steering,
+          ...(fork.obligationsBySeat?.[seat] === undefined
+            ? {}
+            : {
+                diplomacy: {
+                  obligations: () => fork.obligationsBySeat![seat]!,
+                  startingOpponents: Math.max(0, engine.getState().players.length - 1),
+                },
+              }),
         },
       );
       bots.set(key, bot);

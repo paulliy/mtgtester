@@ -31,6 +31,8 @@ export interface StudyContext {
   threatOrder?: PlayerId[];
   steering?: BotSteering;
   flagReason?: string;
+  /** The seat's deals at the fork, as a live table would summarise them for its tactician. */
+  deals?: SeatDiplomacyContext;
 }
 
 export function contextStrategy(context: StudyContext): TurnStrategy {
@@ -133,6 +135,7 @@ export function tacticianArm(
         armConfig,
         seat,
         context === null ? null : contextStrategy(context),
+        context?.deals ?? null,
       ),
     );
     return async (request) => {
