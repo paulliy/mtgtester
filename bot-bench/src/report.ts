@@ -714,12 +714,14 @@ export function renderCase(input: ReportInput, benchCase: BenchCase, index: numb
       '',
     ]),
   );
-  if (hasDecisionModels(input)) out.push(...decisionRequestSection(benchCase, request, view));
+  if (hasDecisionModels(input))
+    out.push(...decisionRequestSection(input, benchCase, request, view));
   return out.join('\n');
 }
 
 /** The typed request a decision model got for the case's first decision, or why it got none. */
 function decisionRequestSection(
+  input: ReportInput,
   benchCase: BenchCase,
   request: Parameters<typeof buildJevActionRequest>[1],
   view: Parameters<typeof buildJevActionRequest>[2],
@@ -728,37 +730,54 @@ function decisionRequestSection(
     benchCase.scope === 'single'
       ? '## The exact decision-model request for this decision'
       : '## The exact decision-model request for the first decision of the turn';
-  // The model name is left out: the bundle may be blind, and every decision model got the same.
-  const built = buildJevActionRequest(
-    '(the decision model)',
-    request,
-    view,
-    undefined,
-    decisionContextOptions(),
-    undefined,
-    { expandTargets: true },
-  );
-  if (built.kind === 'unsupported')
-    return [
-      heading,
-      '',
-      `None. This decision cannot be expressed as one choice (\`${built.classification.reason}\`), so it was not sent to any decision model; see the model's \`unsupported\` setting for what played it.`,
-      '',
-    ];
-  return [
+  // One request per target-expansion setting the run's decision models used; entries that share a
+  // setting got the same request. The model name is left out: the bundle may be blind.
+  const settings = [
+    ...new Set(
+      input.models
+        .filter((model) => model.model.kind === 'decision')
+        .map((model) => model.model['expandTargets'] !== false),
+    ),
+  ].sort((a, b) => Number(b) - Number(a));
+  const out = [
     heading,
     '',
-    `Built by the production decision lane (\`${built.classification.shape}\`, ${Object.keys(built.optionToActionId).length} options). Entries with \`expandTargets: false\` get one option per action instead.`,
-    '',
-    '**state**',
-    '',
-    fence(JSON.stringify(built.request.state)),
-    '',
-    '**questions**',
-    '',
-    fence(JSON.stringify(built.request.questions, null, 2)),
+    'Rebuilt by the production decision lane from the position and the context settings in effect when this bundle was built, as the chat prompt below is.',
     '',
   ];
+  for (const expandTargets of settings) {
+    if (settings.length > 1)
+      out.push(`### Entries with \`expandTargets: ${String(expandTargets)}\``, '');
+    const built = buildJevActionRequest(
+      '(the decision model)',
+      request,
+      view,
+      undefined,
+      decisionContextOptions(),
+      undefined,
+      { expandTargets },
+    );
+    if (built.kind === 'unsupported') {
+      out.push(
+        `None. This decision cannot be expressed as one choice (\`${built.classification.reason}\`), so it was not sent; the entry's \`unsupported\` setting decided what played it.`,
+        '',
+      );
+      continue;
+    }
+    out.push(
+      `\`${built.classification.shape}\`, ${Object.keys(built.optionToActionId).length} options.`,
+      '',
+      '**state**',
+      '',
+      fence(JSON.stringify(built.request.state)),
+      '',
+      '**questions**',
+      '',
+      fence(JSON.stringify(built.request.questions, null, 2)),
+      '',
+    );
+  }
+  return out;
 }
 
 // ── models/*.md ────────────────────────────────────────────────────────────────────────────────

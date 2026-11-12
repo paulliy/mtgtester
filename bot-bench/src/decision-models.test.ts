@@ -316,6 +316,12 @@ describe('a judge bundle with decision models', () => {
     const lineup = parseLineup([
       { id: 'local-heuristic', kind: 'local', policy: 'heuristic' },
       { id: 'zorblax-decider', kind: 'decision', model: SECRET },
+      {
+        id: 'plain-decider',
+        kind: 'decision',
+        model: 'othervendor/plain-decide-2',
+        expandTargets: false,
+      },
     ]);
     const selected = only('burn-out-the-low-player', 'lethal-alpha-strike');
     const transcripts: TranscriptEntry[] = [];
@@ -345,13 +351,18 @@ describe('a judge bundle with decision models', () => {
       const built = await writeBundle(directory, cases, { blind: true });
       const files = readZipArchive(readFileSync(built.zipPath));
       const all = [...files.values()].map((data) => data.toString('utf8')).join('\n');
-      for (const name of ['zorblax', 'secretvendor', 'zorblax-decider', 'openrouter'])
+      for (const name of ['zorblax', 'secretvendor', 'othervendor', 'plain-decide', 'openrouter'])
         expect(all.toLowerCase()).not.toContain(name);
       const file = (suffix: string): string =>
         [...files].find(([name]) => name.endsWith(suffix))![1].toString('utf8');
       expect(file('/PRIMER.md')).toContain('What the decision models were given');
-      expect(file('/cases/01-burn-out-the-low-player.md')).toContain(
-        'The exact decision-model request for this decision',
+      const burn = file('/cases/01-burn-out-the-low-player.md');
+      expect(burn).toContain('The exact decision-model request for this decision');
+      // Each target-expansion setting shows what it was sent: the Bolt has an open target, so an
+      // entry without expansion was sent nothing.
+      expect(burn).toContain('### Entries with `expandTargets: true`');
+      expect(burn).toMatch(
+        /### Entries with `expandTargets: false`\s+None\. This decision cannot be expressed as one choice \(`requires_ambiguous_target_choice`\)/,
       );
       expect(file('/cases/02-lethal-alpha-strike.md')).toMatch(
         /None\. This decision cannot be expressed as one choice/,
@@ -361,12 +372,12 @@ describe('a judge bundle with decision models', () => {
       const key = JSON.parse(readFileSync(built.keyPath!, 'utf8')) as {
         aliases: Array<{ alias: string; model: { model: string; kind: string } }>;
       };
-      expect(key.aliases).toEqual([
+      expect(key.aliases).toContainEqual(
         expect.objectContaining({
-          alias: 'Model A',
           model: expect.objectContaining({ model: SECRET, kind: 'decision' }),
         }),
-      ]);
+      );
+      expect(key.aliases).toHaveLength(2);
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
