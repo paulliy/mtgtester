@@ -21,6 +21,7 @@ import { modelMetrics } from './metrics';
 import {
   loadLineupFile,
   parseModelList,
+  resolveDecisionKey,
   resolveLlmConfig,
   type LineupEntry,
   type RunMode,
@@ -191,6 +192,7 @@ async function run(flags: Flags): Promise<void> {
   // A missing key is found now, not after the other models have been paid for.
   for (const entry of lineup)
     if (entry.kind === 'llm') resolveLlmConfig(entry, { env: process.env, mode });
+    else if (entry.kind === 'decision') resolveDecisionKey(entry, { env: process.env, mode });
 
   const stamp = new Date()
     .toISOString()
@@ -354,7 +356,9 @@ const USAGE = `bot-bench: tactician benchmark with a judge bundle
 
   --models   comma separated: local:heuristic, local:first-legal, local:random,
              openrouter:<vendor/model>, groq:<model>, gemini:<model>, deepseek:<model>, openai:<model>;
-             add @low, @medium or @high to turn reasoning on
+             add @low, @medium or @high to turn reasoning on;
+             decision:<vendor/model> for a Decisions API model (decision:typesafe/jev-1.14),
+             add @hold to hold still on attacks and blocks instead of letting the bot play them
   --out      an existing run directory adds models to that run and rebuilds its bundle
 `;
 

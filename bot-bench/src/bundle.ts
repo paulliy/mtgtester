@@ -14,6 +14,7 @@ import { AI_VERSIONS } from '../../packages/server/src/ai/versions';
 import { analyzeCase, type CaseAnalysis } from './analysis';
 import type { BenchCase } from './case';
 import { modelMetrics } from './metrics';
+import { isRemoteKind } from './models';
 import {
   caseFileName,
   renderBrief,
@@ -234,7 +235,7 @@ export function anonymise(
   const nameAs = (name: unknown, alias: string, minimum = 3): void => {
     if (typeof name === 'string' && name.length >= minimum) names.push([name, alias]);
   };
-  const llm = models.filter((result) => result.model.kind === 'llm');
+  const llm = models.filter((result) => isRemoteKind(result.model.kind));
   const rank = (id: string): string => createHash('sha256').update(`${seed}:${id}`).digest('hex');
   const turn =
     seed === undefined
@@ -271,8 +272,15 @@ export function anonymise(
       model: {
         id: aliasId,
         label: alias,
-        kind: 'llm',
+        kind: result.model.kind,
         ...(result.model['reasoning'] !== undefined && { reasoning: result.model['reasoning'] }),
+        // A decision model's settings change what it was asked, not who it is.
+        ...(result.model['unsupported'] !== undefined && {
+          unsupported: result.model['unsupported'],
+        }),
+        ...(result.model['expandTargets'] !== undefined && {
+          expandTargets: result.model['expandTargets'],
+        }),
         ...(result.model['maxOutputTokens'] !== undefined && {
           maxOutputTokens: result.model['maxOutputTokens'],
         }),
@@ -292,9 +300,9 @@ export function anonymise(
     seed === undefined
       ? renamed
       : [
-          ...renamed.filter((result) => result.model.kind !== 'llm'),
+          ...renamed.filter((result) => !isRemoteKind(result.model.kind)),
           ...renamed
-            .filter((result) => result.model.kind === 'llm')
+            .filter((result) => isRemoteKind(result.model.kind))
             .sort((left, right) => (left.model.id < right.model.id ? -1 : 1)),
         ];
   return {
@@ -374,7 +382,7 @@ export async function writeBundle(
   const files = new Map<string, string>([
     ['README.md', renderReadme(input)],
     ['JUDGE_BRIEF.md', renderBrief(input)],
-    ['PRIMER.md', renderPrimer()],
+    ['PRIMER.md', renderPrimer(input)],
     ['SUMMARY.md', renderSummary(input)],
     ['scorecard.template.json', json(scorecardTemplate(input))],
     ['scorecard.schema.json', json(scorecardSchema(input))],

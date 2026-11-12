@@ -32,9 +32,21 @@ import {
   type Seat,
 } from './case';
 
-/** How an answer was produced, in the production pipeline's own vocabulary where it has one. */
+/**
+ * How an answer was produced, in the production pipeline's own vocabulary where it has one.
+ * `bot`: a decision model's seat handed a decision it cannot express (an attack, a block) to the
+ * heuristic bot, as a live decision-model seat does.
+ */
 export type AnswerSource =
-  'model' | 'model-retry' | 'fallback' | 'heuristic' | 'cache' | 'plan' | 'local' | 'script';
+  | 'model'
+  | 'model-retry'
+  | 'fallback'
+  | 'heuristic'
+  | 'cache'
+  | 'plan'
+  | 'local'
+  | 'script'
+  | 'bot';
 
 export type CostSource = 'reported' | 'estimated' | 'unknown' | 'not_applicable';
 
