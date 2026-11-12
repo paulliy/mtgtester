@@ -15,6 +15,12 @@ import { cell, foldRepeats, meaningfulActions, renderPosition } from './describe
 import { DECISIONS_PER_GAME, type CostMetrics, type ModelMetrics } from './metrics';
 import type { CaseResult, ModelResult } from './run';
 
+/** How a case's scope reads to judges: one decision, a whole turn, or N turns (ADR 0045). */
+function scopeLabel(benchCase: BenchCase): string {
+  if (benchCase.scope === 'single') return 'one decision';
+  return (benchCase.turns ?? 1) > 1 ? `${benchCase.turns} turns` : 'whole turn';
+}
+
 const JUDGE_DIRECTORY = new URL('../judge/', import.meta.url);
 
 export interface ReportInput {
@@ -356,7 +362,7 @@ export function renderSummary(input: ReportInput): string {
       ['Case', 'Kind', ...input.models.map((model) => model.model.label)],
       input.cases.map((benchCase, index) => [
         `[${benchCase.id}](cases/${caseFileName(benchCase, index)})`,
-        benchCase.scope === 'single' ? 'one decision' : 'whole turn',
+        scopeLabel(benchCase),
         ...input.models.map((model) => gradeWord(firstTrial(model, benchCase.id), benchCase)),
       ]),
     ),
@@ -594,7 +600,7 @@ export function renderCase(input: ReportInput, benchCase: BenchCase, index: numb
   const out: string[] = [
     `# Case ${index + 1}: ${benchCase.title}`,
     '',
-    `\`${benchCase.id}\` · ${benchCase.scope === 'single' ? 'one decision' : 'whole turn'} · skills: ${benchCase.skills.join(', ')}`,
+    `\`${benchCase.id}\` · ${scopeLabel(benchCase)} · skills: ${benchCase.skills.join(', ')}`,
     '',
     '## What this case tests',
     '',
@@ -772,7 +778,7 @@ export function renderReadme(input: ReportInput): string {
     '',
     ...input.cases.map(
       (benchCase, index) =>
-        `${index + 1}. [${benchCase.title}](cases/${caseFileName(benchCase, index)}) (\`${benchCase.id}\`, ${benchCase.scope === 'single' ? 'one decision' : 'whole turn'})`,
+        `${index + 1}. [${benchCase.title}](cases/${caseFileName(benchCase, index)}) (\`${benchCase.id}\`, ${scopeLabel(benchCase)})`,
     ),
     '',
     '## Models',

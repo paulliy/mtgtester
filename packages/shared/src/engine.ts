@@ -367,6 +367,17 @@ export interface TurnStrategy {
   plannedActions: PlannedAction[];
   /** Knobs for the heuristic bot when it plays the turn instead of the tactician (ADR 0039). */
   steering?: BotSteering;
+  /**
+   * The strategist asking for the tactician on this turn (ADR 0045), in shadow: logged and
+   * studied, never acted on. Its reason may name cards in the seat's hand, so it goes to the
+   * debug log only and never into another seat's context.
+   */
+  tacticianRequest?: TacticianRequest;
+}
+
+/** A strategist's request that the tactician play this turn, with a short private reason. */
+export interface TacticianRequest {
+  reason: string;
 }
 
 /**

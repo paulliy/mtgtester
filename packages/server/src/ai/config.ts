@@ -112,6 +112,13 @@ export interface AiConfig {
   /** Most own turns a seat's knobs are reused before the strategist is asked again. Default 3. */
   strategistMaxReuseTurns: number;
   /**
+   * ADR 0045 decision 5: whether the bot-led strategist's primer offers the typed
+   * `tacticianRequest` field. `shadow` adds it and logs every request (it is never acted on);
+   * `off` keeps the primer as it was, so knob quality can be compared with and without it.
+   * Env: `AI_STRATEGIST_TACTICIAN_FLAG`. Default: `off`.
+   */
+  strategistTacticianFlag: 'off' | 'shadow';
+  /**
    * Filter out OpenRouter providers that do not support prompt caching.
    * Default: true.
    */
@@ -313,6 +320,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   botEscalationMargin: 1,
   strategistReplan: 'onChange',
   strategistMaxReuseTurns: 3,
+  strategistTacticianFlag: 'off',
   filterNonCachingProviders: true,
   streamResponses: true,
   retryOnTimeout: false,
@@ -716,6 +724,11 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       env['AI_STRATEGIST_REPLAN'],
       ['everyTurn', 'onChange'] as const,
       DEFAULT_AI_CONFIG.strategistReplan,
+    ),
+    strategistTacticianFlag: parseChoice(
+      env['AI_STRATEGIST_TACTICIAN_FLAG'],
+      ['off', 'shadow'] as const,
+      DEFAULT_AI_CONFIG.strategistTacticianFlag,
     ),
     strategistMaxReuseTurns: parseNonNegativeInt(
       env['AI_STRATEGIST_MAX_REUSE_TURNS'],

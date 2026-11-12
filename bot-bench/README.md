@@ -225,6 +225,25 @@ to judges, and `verify` (also in the test suite) fails when a reference stops ag
 engine: a reviewed option no legal answer matches, a best line that no longer meets every
 objective, a line whose grade and score disagree.
 
+### Context and longer scopes (ADR 0045)
+
+A case may carry what the seat's strategist and table would have told the tactician:
+
+```json
+"context": {
+  "strategy": { "intent": "Keep Negate for P4's Wrath", "threatOrder": ["P4"], "steering": { "hold": ["Negate"] } },
+  "deals": [{ "parties": ["P1", "P3"], "rounds": 1,
+              "obligations": [{ "kind": "noAttack", "by": "P3", "against": "P1" }] }]
+}
+```
+
+A model receives it through the production guidance (`turnStrategy` and `tableDeals` in its
+prompt), and a `bot-led` entry's bot reads the strategy's knobs. The local bots ignore it. A turn
+case may set `"turns": 2` or more when its `position.continue` reaches past the first turn
+(`throughNextTurn`, or a count of upkeeps or main phases above 1). The count is checked against
+that window and shown to judges; what the run covers comes from the window itself and
+`maxActorDecisions`, under which the seat answers every decision of those turns.
+
 ### Adding a case
 
 1. Copy the nearest case in `cases/tactician/single/` or `turn/` and rename it to `<id>.json`.

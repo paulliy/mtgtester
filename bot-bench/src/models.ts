@@ -27,6 +27,12 @@ import {
   type DecisionSource,
 } from '../../packages/server/src/ai/logger';
 import { OpenAiDecisionProvider } from '../../packages/server/src/ai/provider';
+import {
+  seatDiplomacyContext,
+  type DiplomacySource,
+} from '../../packages/server/src/ai/diplomacy-context';
+import type { StrategyCoordinator } from '../../packages/server/src/ai/strategy-coordinator';
+import { FixedGuidance } from '../../packages/server/src/benchmark/turn-arms';
 import { RequestQueue } from '../../packages/server/src/ai/queue';
 import type { DecisionRequest } from '../../packages/shared/src';
 import type { BenchCase } from './case';
@@ -501,6 +507,56 @@ function modelConfig(entry: LlmEntry | BotLedEntry, model: string, runtime: LlmR
   };
 }
 
+/**
+ * A case's `context` block (ADR 0045 decision 6) as the tactician's guidance: the strategist's
+ * view as a knobs-only strategy, and its deals through the same summary a live table gives.
+ * Undefined without a context, so the provider builds its usual coordinator.
+ */
+export function caseGuidance(
+  engine: Engine,
+  config: AiConfig,
+  benchCase: BenchCase,
+): StrategyCoordinator | undefined {
+  const context = benchCase.context;
+  if (context === undefined) return undefined;
+  const strategy = context.strategy;
+  const deals = context.deals ?? [];
+  const summary =
+    deals.length === 0
+      ? null
+      : seatDiplomacyContext(
+          benchCase.actor,
+          {
+            deals: deals.map((deal, i) => ({
+              id: `case-deal-${i + 1}`,
+              parties: [...deal.parties],
+              obligations: deal.obligations.map((o) => ({ ...o })),
+              rounds: deal.rounds,
+              status: 'active',
+            })) as unknown as DiplomacySource['deals'],
+            records: [],
+            canPropose: false,
+            maxRounds: 2,
+            maxObligationsPerSide: 2,
+          },
+          'tactician',
+        );
+  return new FixedGuidance(
+    engine,
+    config,
+    benchCase.actor,
+    strategy === undefined
+      ? null
+      : {
+          intent: strategy.intent,
+          plannedActions: [],
+          ...(strategy.threatOrder === undefined ? {} : { threatOrder: [...strategy.threatOrder] }),
+          ...(strategy.steering === undefined ? {} : { steering: { ...strategy.steering } }),
+        },
+    summary,
+  );
+}
+
 function round(value: number, digits: number): number {
   const scale = 10 ** digits;
   return Math.round(value * scale) / scale;
@@ -564,7 +620,7 @@ function pipelineActorFactory(
       config,
       logger,
       undefined,
-      undefined,
+      caseGuidance(engine, config, benchCase),
       undefined,
       undefined,
       undefined,

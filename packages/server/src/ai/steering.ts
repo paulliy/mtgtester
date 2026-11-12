@@ -93,15 +93,31 @@ const NONLAND_SWING = 4;
  * a big new threat, a large life swing, a commander arriving or leaving, or a player dying does.
  */
 export function tableChanged(before: TableSnapshot, now: TableSnapshot): boolean {
+  return tableChangeReasons(before, now).length > 0;
+}
+
+/**
+ * What moved since `before`, in words (`P2 life`, `P3 power`, `P4 eliminated`): the changes that
+ * would wake the strategist under `onChange`. ADR 0045 records them beside each tactician request.
+ */
+export function tableChangeReasons(before: TableSnapshot, now: TableSnapshot): string[] {
+  const reasons: string[] = [];
   for (const [seat, was] of Object.entries(before)) {
     const is = now[seat];
-    if (is === undefined) return true;
-    if (was.life > 0 !== is.life > 0) return true;
+    if (is === undefined) {
+      reasons.push(`${seat} gone`);
+      continue;
+    }
+    if (was.life > 0 !== is.life > 0) {
+      reasons.push(`${seat} ${is.life > 0 ? 'back' : 'eliminated'}`);
+      continue;
+    }
     if (is.life <= 0) continue;
-    if (Math.abs(is.life - was.life) >= LIFE_SWING) return true;
-    if (Math.abs(is.power - was.power) >= Math.max(POWER_SWING, was.power / 2)) return true;
-    if (Math.abs(is.nonland - was.nonland) >= NONLAND_SWING) return true;
-    if (is.commanderOut !== was.commanderOut) return true;
+    if (Math.abs(is.life - was.life) >= LIFE_SWING) reasons.push(`${seat} life`);
+    if (Math.abs(is.power - was.power) >= Math.max(POWER_SWING, was.power / 2))
+      reasons.push(`${seat} power`);
+    if (Math.abs(is.nonland - was.nonland) >= NONLAND_SWING) reasons.push(`${seat} permanents`);
+    if (is.commanderOut !== was.commanderOut) reasons.push(`${seat} commander`);
   }
-  return false;
+  return reasons;
 }

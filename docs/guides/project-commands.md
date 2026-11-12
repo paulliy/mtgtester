@@ -68,6 +68,12 @@ bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--
                      [--escalation T,..] [--shadow T,..] [--opponents model|bot-never]
                                         # ADR 0039 one PAID game from .env: P1/P3 bot mode, P2/P4 model tactician;
                                         # ADR 0044: live triggers for P1/P3, and bot-led `never` opponents
+bun run strategist-capture [--seed S] [--turn-cap N] [--decks F] [--max-usd N] [--no-diplomacy] [--no-flag] [--offline] [--out F]
+                                        # ADR 0045 one bot-led game with a strategist every turn, written as a replay
+                                        # transcript plus every seat's knobs and deals per turn; PAID unless --offline
+bun run strategist-study --capture F [--seeds N] [--sample-rate R] [--margin M] [--lines F] [--tactician] [--trials K] [--max-usd N]
+                                        # ADR 0045 mark turns, run the knob grid as bot arms (free), the tactician on
+                                        # turns where they disagree (PAID with --tactician), and verdicts from --lines
 bun run jev-duel [--seats bot,bot-jev,model,jev] [--games N] [--offline] [--max-usd N] [--out DIR]
                                         # ADR 0041 Jev seat presets at one table; --offline is free, otherwise PAID
 bun run fuzz [--from N] [--games N] [--changed [--base S]] [--card "<name>"] [--json F] [--report F]
