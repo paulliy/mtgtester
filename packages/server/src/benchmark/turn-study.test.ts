@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import type { BotSteering } from '@mtg/shared';
+import type { Engine } from '@mtg/engine';
+import type { BotSteering, PermanentView } from '@mtg/shared';
 import {
   botArmsDisagree,
+  creaturePower,
+  OWN_POSITION,
   HOLD_ALL_MANA,
   knobGrid,
   pairwiseArms,
@@ -16,6 +19,35 @@ import { seedVariationTooNarrow, type ArmRun } from './turn-counterfactual';
 
 const OPPONENTS = ['P2', 'P3', 'P4'];
 const STRATEGIST: BotSteering = { aggression: 0.3, targetOrder: ['P3', 'P2', 'P4'] };
+
+describe('own-position evaluator', () => {
+  const view = (permanents: Partial<PermanentView>[]) => permanents as PermanentView[];
+
+  it("sums the view's computed power over what is a creature now, never below zero", () => {
+    const battlefield = view([
+      { controller: 'P1', typeLine: 'Creature — Bear', power: 4 },
+      // An animated land: printed as a land, a creature right now.
+      { controller: 'P1', typeLine: 'Land', power: 3 },
+      { controller: 'P1', typeLine: 'Artifact' },
+      { controller: 'P1', typeLine: 'Creature — Ooze', power: -2 },
+      { controller: 'P2', typeLine: 'Creature — Giant', power: 7 },
+    ]);
+    expect(creaturePower(battlefield, 'P1')).toBe(7);
+  });
+
+  it("scores the view's power, not the raw state's printed power", () => {
+    // Raw state: a 2/2 printed; the view computes it as a 5/5 (counters, an anthem).
+    const engine = {
+      getState: () => ({
+        players: [{ id: 'P1', life: 30, hand: [{}, {}], hasLost: false }],
+        battlefield: [{ controllerId: 'P1', typeLine: 'Creature — Bear', power: 2 }],
+      }),
+      view: () => ({ battlefield: [{ controller: 'P1', typeLine: 'Creature — Bear', power: 5 }] }),
+    } as unknown as Engine;
+    expect(OWN_POSITION.version).toBe('own-position-v2');
+    expect(OWN_POSITION.evaluate(engine, 'P1')).toBe(30 + 5 + 2);
+  });
+});
 
 describe('knobGrid', () => {
   const grid = knobGrid(STRATEGIST, OPPONENTS, ['Bolt', 'Ponder', 'Bolt']);

@@ -5,7 +5,7 @@
  *
  *   bun run strategist-study --capture F --mark-only [--sample-rate 0.1] [--max-turns 10] [--out F]
  *   bun run strategist-study --capture F [--seeds 3] [--sample-rate 0.1] [--margin 2]
- *        [--evaluator own-position-v1] [--max-turns 10] [--lines lines.json]
+ *        [--evaluator own-position-v2] [--max-turns 10] [--lines lines.json]
  *        [--arms id,id] [--disagree hash-or-gap|gap] [--disagree-margin 4] [--tactician] [--trials 3] [--max-usd 2] [--out report.json]
  *
  * Bot arms cost nothing. `--tactician` is PAID: it uses the tactician from `.env` on turns that

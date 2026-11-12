@@ -48,7 +48,7 @@ describe('evaluators by name', () => {
         seeds: ['r1'],
         sampleRate: 1,
         margin: 2,
-        evaluator: 'own-position-v1',
+        evaluator: 'own-position-v2',
         maxTurns: 1,
         lines: { '0': { steps: [], evaluator: 'nonsense-v1' } },
       }),
@@ -77,7 +77,7 @@ describe('a study turn with a reviewer line', () => {
       seeds: ['r1'],
       sampleRate: 1,
       margin: 2,
-      evaluator: 'own-position-v1',
+      evaluator: 'own-position-v2',
       maxTurns: 50,
       // Two arms keep the test quick; the evaluator plumbing is the same for the full grid.
       gridArms: ['defaults'],
@@ -105,7 +105,7 @@ describe('a study turn whose rollouts are cut off', () => {
       seeds: ['r1'],
       sampleRate: 1,
       margin: 2,
-      evaluator: 'own-position-v1',
+      evaluator: 'own-position-v2',
       maxTurns: 50,
       gridArms: ['defaults'],
       // One decision per rollout: no arm, and no reference, reaches the horizon.
@@ -129,7 +129,7 @@ describe('a reference line with a step that is never played', () => {
       seeds: ['r1'],
       sampleRate: 1,
       margin: 2,
-      evaluator: 'own-position-v1',
+      evaluator: 'own-position-v2',
       maxTurns: 50,
       gridArms: ['defaults'],
       lines: {

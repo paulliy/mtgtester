@@ -6,7 +6,7 @@
  */
 
 import type { Engine } from '@mtg/engine';
-import type { BotSteering, GameResult, PlayerId } from '@mtg/shared';
+import type { BotSteering, GameResult, PermanentView, PlayerId } from '@mtg/shared';
 import { Rng } from '@mtg/bot';
 import type { CounterfactualEvaluator } from './counterfactual';
 import type { ReplayTranscript } from './replay';
@@ -236,20 +236,28 @@ function seatOf(engine: Engine, seat: PlayerId) {
   return engine.getState().players.find((player) => player.id === seat);
 }
 
-/** Own life and board, without the average over opponents that penalises holding back. */
+/**
+ * Own life and board, without the average over opponents that penalises holding back. Creature
+ * power is read from the seat's view, which carries layer-computed power (counters, anthems,
+ * equipment) and sets it only on what is a creature right now (an animated land, a crewed
+ * Vehicle). v1 read the raw state, which counted printed power and missed both.
+ */
 export const OWN_POSITION: CounterfactualEvaluator = {
-  version: 'own-position-v1',
+  version: 'own-position-v2',
   limitations: ['ignores opponents entirely', 'counts creature power, not card quality'],
   evaluate(engine, actor) {
-    const state = engine.getState();
     const player = seatOf(engine, actor);
     if (player === undefined || player.hasLost) return -100;
-    const power = state.battlefield
-      .filter((p) => p.controllerId === actor && p.typeLine.includes('Creature'))
-      .reduce((sum, p) => sum + Math.max(0, p.power ?? 0), 0);
-    return player.life + power + player.hand.length;
+    return player.life + creaturePower(engine.view(actor).battlefield, actor) + player.hand.length;
   },
 };
+
+/** The total power of a seat's creatures as its view computes them (never negative per creature). */
+export function creaturePower(battlefield: readonly PermanentView[], seat: PlayerId): number {
+  return battlefield
+    .filter((p) => p.controller === seat && p.power !== undefined && p.power !== null)
+    .reduce((sum, p) => sum + Math.max(0, p.power ?? 0), 0);
+}
 
 /** Damage done to one named opponent (a political or targeted-pressure class), eliminations weigh. */
 export function pressureOn(target: PlayerId): CounterfactualEvaluator {

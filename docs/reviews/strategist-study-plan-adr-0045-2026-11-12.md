@@ -59,7 +59,8 @@ count below is re-checked against it before more are run (decision 1.1).
 - Every marked turn passed the ADR's disagreement filter: on the same seed, two bot arms reached
   different final states. Almost any knob change alters the final state, so as written the filter
   sends nearly every marked turn to the paid tactician arm.
-- With the evaluator gap alone (`own-position-v1`, a gap strictly above the margin), a margin of 4
+- With the evaluator gap alone (`own-position-v1`, a gap strictly above the margin; v1 read
+  printed creature power, v2 reads the view's computed power), a margin of 4
   would have passed 3 of the 10 turns (gaps 10, 9 and 6; the others were 4, 4, 3.3, 2.3, 1.3, 1
   and 1). That margin was read off this data, from offline captures whose stub strategist always
   set `aggression 0.5`, so it is weak evidence. `strategist-study --disagree gap
@@ -90,7 +91,7 @@ Evaluators, named before any run, by situation class:
 | --------------------------------------- | ------------------------------------------------ |
 | A kill, or a missed kill                | `eliminations-v1`                                |
 | Defence, or holding an answer           | `survival-v1`                                    |
-| Development, mana, card advantage       | `own-position-v1`                                |
+| Development, mana, card advantage       | `own-position-v2`                                |
 | Political: sparing or pressing one seat | `pressure-on-<seat>-v1` for the seat in question |
 | Anything decided past the horizon       | `game-result-v1`, or game result only            |
 
