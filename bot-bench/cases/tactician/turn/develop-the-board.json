@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "id": "develop-the-board",
+  "role": "tactician",
+  "scope": "turn",
+  "title": "Six mana: the five-drop and a mana source, not one without the other",
+  "skills": ["sequencing", "mana-efficiency", "development"],
+  "briefing": "P1 has six lands and holds Mind Stone ({2}, taps for {1}), Serra Angel ({3}{W}{W}) and Llanowar Elves ({G}). Two lines use every mana and leave the Angel plus a mana source on the table: Mind Stone first, tapped at once to help pay for the Angel, or the Angel and the Elves. Casting the Angel and stopping wastes a mana and a card; casting the two small spells leaves the Angel in hand. Mind Stone after the Angel is impossible: one land is left and it costs two.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 6
+    },
+    "seats": {
+      "P1": {
+        "life": 40,
+        "hand": ["Mind Stone", "Serra Angel", "Llanowar Elves"],
+        "battlefield": ["Plains", "Plains", "Plains", "Forest", "Forest", "Forest"]
+      },
+      "P2": {
+        "life": 40,
+        "battlefield": ["Mountain", "Mountain", "Mountain"]
+      },
+      "P3": {
+        "life": 40,
+        "battlefield": ["Swamp", "Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 40,
+        "battlefield": ["Island", "Island", "Island"]
+      }
+    },
+    "continue": {
+      "throughCombat": true,
+      "toPostcombatMain": true,
+      "toEndStep": true
+    }
+  },
+  "table": {
+    "policy": "passive"
+  },
+  "reference": {
+    "analysis": "Six lands. Mind Stone (2) leaves four lands and taps for one more: five mana, exactly Serra Angel. Or Serra Angel (five lands) and Llanowar Elves (the sixth, a Forest): six mana, exactly. Either way P1 ends with the Angel and a mana source and has seven mana next turn; the only difference is whether the one-mana or the two-mana card stays in hand. All three cannot be cast (eight mana needed, seven available). The Angel alone leaves a mana unused, and the Elves plus Mind Stone leave the Angel in hand.",
+    "lines": [
+      {
+        "id": "stone-angel",
+        "label": "Mind Stone, then Serra Angel",
+        "grade": "best",
+        "why": "The Angel and a mana rock, with every mana spent.",
+        "steps": [
+          {
+            "choose": "Cast Mind Stone"
+          },
+          {
+            "choose": "Cast Serra Angel"
+          }
+        ]
+      },
+      {
+        "id": "angel-elves",
+        "label": "Serra Angel and Llanowar Elves",
+        "grade": "best",
+        "why": "The Angel and a mana creature, with every mana spent.",
+        "steps": [
+          {
+            "choose": "Cast Llanowar Elves"
+          },
+          {
+            "choose": "Cast Serra Angel"
+          }
+        ]
+      },
+      {
+        "id": "angel-only",
+        "label": "Serra Angel and nothing else",
+        "grade": "good",
+        "why": "The Angel resolves but a mana and a castable card go unused.",
+        "steps": [
+          {
+            "choose": "Cast Serra Angel"
+          }
+        ]
+      },
+      {
+        "id": "elves-stone",
+        "label": "Llanowar Elves and Mind Stone",
+        "grade": "weak",
+        "why": "Two mana sources, no threat on the table.",
+        "steps": [
+          {
+            "choose": "Cast Llanowar Elves"
+          },
+          {
+            "choose": "Cast Mind Stone"
+          }
+        ]
+      }
+    ],
+    "objectives": [
+      {
+        "id": "angel",
+        "label": "Serra Angel is on the battlefield",
+        "points": 5,
+        "check": {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Serra Angel"]
+          }
+        }
+      },
+      {
+        "id": "mana-source",
+        "label": "Mind Stone or Llanowar Elves is cast as well",
+        "points": 3,
+        "check": {
+          "action": {
+            "took": "/Cast (Mind Stone|Llanowar Elves)/"
+          }
+        }
+      }
+    ]
+  }
+}

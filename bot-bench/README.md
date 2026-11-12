@@ -11,7 +11,7 @@ It benchmarks the **tactician** only. Strategist cases are reserved
 ## Quick start
 
 ```powershell
-bun run bot-bench list                      # the 12 cases
+bun run bot-bench list                      # the 30 cases
 bun run bot-bench inspect lethal-alpha-strike   # every legal answer, played out by the engine
 bun run bot-bench verify                    # every reference still agrees with the engine
 
@@ -21,6 +21,9 @@ bun run bot-bench run --lineup bot-bench/lineups/baselines.json
 # Real models. Needs a provider key in .env (see .env.example).
 bun run bot-bench run --models local:heuristic,openrouter:qwen/qwen3.7-flash,openrouter:deepseek/deepseek-v4-flash
 bun run bot-bench run --lineup bot-bench/lineups/example.json --trials 3 --spend-cap 2
+
+# The wide sweep: the models that finished the first sweep, with thinking off and on low where that worked (19 entries) plus the heuristic bot.
+bun run bot-bench run --lineup bot-bench/lineups/tactician-sweep.json --spend-cap 5
 ```
 
 A run prints a line per case as it goes, then a small leaderboard, then where the bundle is:
@@ -40,6 +43,7 @@ judge bundle: 26 files, 1035 KB
   `openrouter:<vendor/model>`, `groq:<model>`, `gemini:<model>`, `deepseek:<model>`,
   `openai:<model>`. Add `@low`, `@medium` or `@high` to turn reasoning on:
   `openrouter:deepseek/deepseek-v4-flash@low`.
+- [lineups/tactician-sweep.json](lineups/tactician-sweep.json) runs OpenRouter models with reasoning off (`-none`) and on low (`-low`). Entries that played 10 or fewer of the 30 cases in the first sweep (both Qwen models, `ling-3.1-flash`, and the `none` or `low` runs that were rejected or timed out) were removed. A model that cannot turn thinking off will reject the `none` entry; after three failed decisions in a row it is stopped and marked as such, and its `-low` entry still runs.
 - `--lineup <file.json>` for anything more: a label, any OpenAI-compatible `baseUrl`, the name of
   the environment variable that holds the key (`apiKeyEnv`), `maxOutputTokens`,
   `requestTimeoutMs`, and `pricing` (USD per million tokens, used only when the provider does not
@@ -69,9 +73,10 @@ Three groups, never blended into one number:
 
 ## The cases
 
-Eight one-decision cases and four whole-turn cases under [cases/tactician/](cases/tactician/).
+Nineteen one-decision cases and eleven whole-turn cases under [cases/tactician/](cases/tactician/).
 Each is a JSON file: a position in the engine's own scenario format, the seat under test, and a
-reviewed reference.
+reviewed reference. The first twelve (the table below) were the original set; the other eighteen
+(listed after it) double it and were written to include positions the heuristic bot gets wrong.
 
 | Kind         | Case                             | What it tests                                                          |
 | ------------ | -------------------------------- | ---------------------------------------------------------------------- |
@@ -87,6 +92,32 @@ reviewed reference.
 | whole turn   | `clear-the-blocker-and-pump`     | Removal before combat, attack, activated ability for exact lethal      |
 | whole turn   | `wrath-then-rebuild`             | Board wipe before the creature, with all nine mana                     |
 | whole turn   | `ramp-with-every-mana`           | A development turn: mana rock first, then spend everything             |
+
+### Added in the second set
+
+`heuristic` is the local heuristic bot's score, measured with the engine; `calibration` cases are
+ones it also solves, kept so a model that does worse than the bot shows up.
+
+| Kind         | Case                            | Heuristic bot | What it tests                                                   |
+| ------------ | ------------------------------- | ------------- | --------------------------------------------------------------- |
+| one decision | `stoke-the-flames-lethal`       | fails         | Burn to the face of the player on four, not at a creature       |
+| one decision | `hold-the-wrath`                | fails         | Not casting a board wipe on a board you are winning             |
+| one decision | `land-for-the-angel`            | fails         | The land that gives the second white source                     |
+| one decision | `pyroclasm-not-wrath`           | fails         | The one-sided sweeper over the symmetrical one                  |
+| one decision | `pump-the-unblocked-attacker`   | calibration   | Giant Growth on the attacker nobody blocked                     |
+| one decision | `chump-the-giant`               | calibration   | Chumping a 10/10 and trading up the other block at 3 life       |
+| one decision | `fog-the-lethal-swing`          | calibration   | Fog against an exactly lethal swing                             |
+| one decision | `leak-or-cancel`                | calibration   | Mana Leak is useless against spare mana; Cancel is not          |
+| one decision | `protect-the-angel-in-response` | calibration   | A hexproof trick in response to Swords to Plowshares            |
+| one decision | `counter-the-sweeper`           | calibration   | Negate on the Wrath of God that costs three creatures           |
+| one decision | `tapped-land-when-idle`         | calibration   | Playing the tapped land when there is nothing to cast           |
+| whole turn   | `burn-to-finish`                | fails         | Dragon in the air plus a Bolt to the face for exactly eight     |
+| whole turn   | `two-bolts-two-kills`           | fails         | Two Bolts eliminating two players on three life                 |
+| whole turn   | `develop-the-board`             | calibration   | The five-drop plus a mana source, using all six mana            |
+| whole turn   | `firebreathing-for-exact`       | calibration   | Two flyers and three firebreathing pumps for exactly twelve     |
+| whole turn   | `sweep-then-swing`              | calibration   | Pyroclasm clears the chump blockers before the lethal attack    |
+| whole turn   | `anthem-then-alpha`             | calibration   | Glorious Anthem before the all-in attack for exactly nine       |
+| whole turn   | `haste-for-lethal`              | calibration   | Lightning Greaves gives a ten-power creature haste for the kill |
 
 `hold-the-counter` and `counter-the-finisher` are a pair on purpose: a model that always passes
 fails one and a model that always acts fails the other.
@@ -136,7 +167,13 @@ for each model an `accuracy`, `speed`, `cost` and `overall` score from 0 to 10, 
 reason, a `blurb`, a ranking, and any reference grade it disagrees with.
 
 Candidate models are anonymised by default ("Model A", "Model B"), so a judge scores the play and
-not the brand. `judge-key.json`, written beside the ZIP and never inside it, maps the aliases
+not the brand. The letters are handed out in a fixed shuffled order seeded by the run id, so the
+lineup order does not leak and the two settings of one model are not neighbours. Every name a
+model could be recognised by is removed from the free text a provider or the model wrote: the model
+string, its vendor, its short name (however punctuated or capitalised), the provider and its host.
+After the bundle is built it is searched for those names again and the run prints a warning, and
+exits non-zero, if any survive. A model's thinking setting (`none`, `low`) is the one setting a
+judge still sees. `judge-key.json`, written beside the ZIP and never inside it, maps the aliases
 back. Pass `--reveal-models` to `run` or `bundle` to use real names. Local baselines keep their
 names and are marked as calibration, not candidates.
 
@@ -151,6 +188,12 @@ blurb and reasons per model under its real name, and the reference grades the ju
 
 `bun run bot-bench bundle --run <run directory>` rebuilds the bundle from a run's saved results
 without calling any model.
+
+`bun run bot-bench rescore --run <run directory>` grades the saved play again against the
+references as they are now, prints every case score that changed and rebuilds the bundle. Use it
+after correcting a grade or an objective that judges disputed: the play was already paid for, and
+a score depends only on the case and the recorded run. Copy the run directory first if you want
+to keep the scores the judges saw. A rescored run takes no further models.
 
 ## What it reuses from the main code
 
@@ -172,7 +215,7 @@ edit here. Changing the engine, a card or the heuristic bot can change what a po
 
 ## Limits
 
-- Twelve positions are a screen, not a statistic. They separate a model that reads the board from
+- Thirty positions are a screen, not a statistic. They separate a model that reads the board from
   one that does not; they do not rank two good models with confidence. Use `--trials` and add
   cases from real games where a model misplayed.
 - Positions have no commanders: the scenario format arranges none. Commander damage and the

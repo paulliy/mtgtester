@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "role": "tactician",
+  "id": "stoke-the-flames-lethal",
+  "scope": "single",
+  "title": "Four damage to the face of the player on four",
+  "skills": ["burn", "lethal", "target-choice"],
+  "briefing": "P1 has four Mountains and Stoke the Flames (4 damage to any target). P2 is at 4 life, no creature is threatening anyone, and the table has several creatures to shoot instead. The only winning play is Stoke to P2's face; a player that only aims burn at creatures never takes it.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 9
+    },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Stoke the Flames"],
+        "battlefield": ["Mountain", "Mountain", "Mountain", "Mountain"]
+      },
+      "P2": {
+        "life": 4,
+        "battlefield": ["Island", "Island", "Wall of Omens", "Baleful Strix"]
+      },
+      "P3": {
+        "life": 38,
+        "battlefield": ["Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 35,
+        "battlefield": ["Forest", "Forest"]
+      }
+    }
+  },
+  "table": {
+    "policy": "passive"
+  },
+  "reference": {
+    "analysis": "Stoke the Flames deals 4 to any target. P2 is at exactly 4, so it is a kill. Aimed at the Strix or the Wall it only removes a creature.",
+    "options": [
+      {
+        "label": "Stoke the Flames at P2",
+        "when": {
+          "choose": "Cast Stoke the Flames",
+          "targets": ["P2"]
+        },
+        "grade": "best",
+        "why": "Four damage at a player on four: P2 is eliminated."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "P2 survives; the burn is wasted or spent on a creature."
+    }
+  }
+}

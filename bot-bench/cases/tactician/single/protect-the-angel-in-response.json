@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "id": "protect-the-angel-in-response",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Answer Swords with a hexproof trick",
+  "skills": ["interaction-timing", "protection", "instants"],
+  "briefing": "P2 casts Swords to Plowshares on P1's Serra Angel. P1 has one Forest open and Blossoming Defense (+2/+2 and hexproof until end of turn) in hand. Responding makes the Swords fizzle on an illegal target; passing exiles the Angel.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P2",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 8
+    },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Blossoming Defense"],
+        "battlefield": ["Forest", "Plains", "Plains", "Serra Angel"]
+      },
+      "P2": {
+        "life": 30,
+        "hand": ["Swords to Plowshares"],
+        "battlefield": ["Plains", "Plains", "Plains"]
+      },
+      "P3": {
+        "life": 38,
+        "battlefield": ["Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 35,
+        "battlefield": ["Island", "Island"]
+      }
+    }
+  },
+  "setup": [
+    {
+      "player": "P2",
+      "choose": "Cast Swords to Plowshares",
+      "targets": ["Serra Angel"]
+    }
+  ],
+  "table": {
+    "policy": "passive"
+  },
+  "reference": {
+    "analysis": "Blossoming Defense gives hexproof, so Swords to Plowshares has an illegal target and fizzles. Passing exiles the Angel.",
+    "options": [
+      {
+        "label": "Blossoming Defense on Serra Angel",
+        "when": {
+          "choose": "Cast Blossoming Defense",
+          "targets": ["Serra Angel"]
+        },
+        "grade": "best",
+        "why": "Swords fizzles; the Angel stays."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "Swords resolves and the Angel is exiled."
+    }
+  }
+}

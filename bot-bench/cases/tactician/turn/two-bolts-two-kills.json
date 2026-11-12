@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "role": "tactician",
+  "id": "two-bolts-two-kills",
+  "scope": "turn",
+  "title": "Two Bolts, two players on three life",
+  "skills": ["burn", "lethal", "target-choice"],
+  "briefing": "P2 and P3 are both at 3 life. P1 has two Mountains and two Lightning Bolts, no creatures. Each Bolt is a kill; the case measures whether the model sees that burn is a way to eliminate players and spends both.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 10
+    },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Lightning Bolt", "Lightning Bolt"],
+        "battlefield": ["Mountain", "Mountain"]
+      },
+      "P2": {
+        "life": 3,
+        "battlefield": ["Island", "Island"]
+      },
+      "P3": {
+        "life": 3,
+        "battlefield": ["Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 35,
+        "battlefield": ["Forest", "Forest", "Gigantosaurus"]
+      }
+    },
+    "continue": {
+      "throughCombat": true,
+      "toPostcombatMain": true,
+      "toEndStep": true
+    }
+  },
+  "table": {
+    "policy": "passive"
+  },
+  "reference": {
+    "analysis": "Lightning Bolt deals 3. P2 and P3 are on exactly 3 each, so one Bolt each eliminates both for two mana.",
+    "lines": [
+      {
+        "id": "bolt-both",
+        "label": "Bolt P2, Bolt P3",
+        "grade": "best",
+        "why": "Two eliminations for two mana.",
+        "steps": [
+          {
+            "choose": "Cast Lightning Bolt",
+            "targets": ["P2"]
+          },
+          {
+            "choose": "Cast Lightning Bolt",
+            "targets": ["P3"]
+          }
+        ]
+      },
+      {
+        "id": "bolt-one",
+        "label": "Bolt P2 only",
+        "grade": "weak",
+        "why": "One kill; P3 survives and a Bolt is wasted.",
+        "steps": [
+          {
+            "choose": "Cast Lightning Bolt",
+            "targets": ["P2"]
+          }
+        ]
+      },
+      {
+        "id": "bolt-the-giant",
+        "label": "Bolt the Gigantosaurus",
+        "grade": "blunder",
+        "why": "Three damage does nothing to a 10/10.",
+        "steps": [
+          {
+            "choose": "Cast Lightning Bolt",
+            "targets": ["Gigantosaurus"]
+          }
+        ]
+      }
+    ],
+    "objectives": [
+      {
+        "id": "kill-p2",
+        "label": "P2 is eliminated",
+        "points": 4,
+        "check": {
+          "eliminated": "P2"
+        }
+      },
+      {
+        "id": "kill-p3",
+        "label": "P3 is eliminated",
+        "points": 4,
+        "check": {
+          "eliminated": "P3"
+        }
+      }
+    ]
+  }
+}

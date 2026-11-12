@@ -15,7 +15,7 @@ import {
   writeModelResult,
   type RunManifest,
 } from './bundle';
-import { loadCases, type BenchCase } from './case';
+import { loadCases, parseBenchCase, type BenchCase } from './case';
 import { collate, parseScorecard } from './collate';
 import { modelMetrics } from './metrics';
 import {
@@ -25,8 +25,10 @@ import {
   type LineupEntry,
   type RunMode,
 } from './models';
+import { openCase, type CaseRun } from './play';
 import { dollars, milliseconds, percent } from './report';
 import { runLineup, type TranscriptEntry } from './run';
+import { scoreRun } from './score';
 import { verifyCase } from './verify';
 
 type Flags = Record<string, string | true>;
@@ -99,8 +101,14 @@ function listCases(): void {
 }
 
 async function inspect(id: string | undefined, flags: Flags): Promise<void> {
-  const benchCase = loadCases().find((candidate) => candidate.id === id);
-  if (benchCase === undefined) throw new Error(`inspect needs a case id; see "bot-bench list"`);
+  // `--file` reads a draft from anywhere, so a case can be worked on before it joins the set.
+  const file = text(flags, 'file');
+  const benchCase =
+    file === undefined
+      ? loadCases().find((candidate) => candidate.id === id)
+      : parseBenchCase(JSON.parse(readFileSync(file, 'utf8')), file);
+  if (benchCase === undefined)
+    throw new Error(`inspect needs a case id (see "bot-bench list") or --file <case.json>`);
   const analysis = await analyzeCase(benchCase);
   console.log(`${benchCase.id}: ${benchCase.title}\n`);
   console.log(describeScenarioRequest(analysis.focus.request));
@@ -251,10 +259,69 @@ async function bundle(flags: Flags): Promise<void> {
   console.log(`\njudge bundle: ${built.files} files, ${Math.round(built.bytes / 1024)} KB`);
   console.log(`  folder  ${built.directory}`);
   console.log(`  zip     ${built.zipPath}   <- send this to the judges`);
+  if (built.leaks.length > 0) {
+    console.log('\nWARNING: a model name is still visible in the blind bundle; do not send it:');
+    for (const leak of built.leaks.slice(0, 20)) console.log(`  "${leak.name}" in ${leak.file}`);
+    process.exitCode = 1;
+  }
   if (built.keyPath !== null)
     console.log(
       `  key     ${built.keyPath}   <- which alias is which model; keep it, do not send it`,
     );
+}
+
+/**
+ * Grade a run's saved play again against the references as they are now. No model is called: a
+ * score is a function of the case and the recorded run, so a corrected grade or objective can be
+ * applied to play that was already paid for. The run's fingerprint is left as it was, so no model
+ * can be added to a rescored run: its play was recorded against the earlier cases.
+ */
+async function rescore(flags: Flags): Promise<void> {
+  const runDirectory = text(flags, 'run');
+  if (runDirectory === undefined) throw new Error('rescore needs --run <run directory>');
+  const directory = resolve(runDirectory);
+  const { manifest, models } = readRun(directory);
+  const cases = loadCases();
+  // The decision under test is the same for every model, so a saved run does not repeat it.
+  const focuses = new Map<string, CaseRun['focus']>();
+  const focusOf = (benchCase: BenchCase): CaseRun['focus'] => {
+    let focus = focuses.get(benchCase.id);
+    if (focus === undefined) {
+      const { request, view, names } = openCase(benchCase);
+      focus = { request, view, names };
+      focuses.set(benchCase.id, focus);
+    }
+    return focus;
+  };
+  let changed = 0;
+  for (const model of models) {
+    for (const entry of model.cases) {
+      const benchCase = cases.find((candidate) => candidate.id === entry.caseId);
+      if (benchCase === undefined)
+        throw new Error(`run names case ${entry.caseId}, which no longer exists`);
+      const score = scoreRun(benchCase, { ...entry.run, focus: focusOf(benchCase) });
+      if (score.score !== entry.score.score) {
+        changed += 1;
+        console.log(
+          `  ${model.model.id}  ${entry.caseId}  ${percent(entry.score.score)} -> ${percent(score.score)}`,
+        );
+      }
+      entry.score = score;
+    }
+    writeFileSync(
+      join(directory, 'results', `${model.model.id}.json`),
+      `${JSON.stringify(model, null, 2)}
+`,
+    );
+  }
+  writeFileSync(
+    join(directory, 'run.json'),
+    `${JSON.stringify({ ...manifest, rescoredAt: new Date().toISOString() }, null, 2)}
+`,
+  );
+  console.log(`rescored ${models.length} model(s): ${changed} case score(s) changed`);
+  printLeaderboard(directory, cases);
+  await bundle({ ...flags, run: directory });
 }
 
 function collateCommand(positional: readonly string[], flags: Flags): void {
@@ -275,12 +342,14 @@ function collateCommand(positional: readonly string[], flags: Flags): void {
 const USAGE = `bot-bench: tactician benchmark with a judge bundle
 
   bun run bot-bench list
-  bun run bot-bench inspect <case-id> [--log]       every legal answer or reference line, played by the engine
+  bun run bot-bench inspect <case-id> | --file <case.json> [--log]
+                                                     every legal answer or reference line, played by the engine
   bun run bot-bench verify [--scope single|turn]     check every reference against the engine
   bun run bot-bench run --models <list> | --lineup <file.json>
         [--cases id,id] [--scope single|turn] [--trials N] [--mode raw|production]
         [--out <run directory>] [--concurrency N] [--spend-cap <USD>] [--reveal-models]
   bun run bot-bench bundle --run <run directory> [--reveal-models]
+  bun run bot-bench rescore --run <run directory>    grade saved play again against the current references
   bun run bot-bench collate --run <run directory> <scorecard.json> [...]
 
   --models   comma separated: local:heuristic, local:first-legal, local:random,
@@ -297,6 +366,7 @@ async function main(): Promise<void> {
   else if (command === 'verify') await verify(flags);
   else if (command === 'run') await run(flags);
   else if (command === 'bundle') await bundle(flags);
+  else if (command === 'rescore') await rescore(flags);
   else if (command === 'collate') collateCommand(positional, flags);
   else console.log(USAGE);
 }

@@ -34,7 +34,7 @@ const lineup = parseLineup([
     id: 'other-model-id',
     kind: 'llm',
     provider: 'openrouter',
-    model: 'fake/other',
+    model: 'fake/zorblax-9',
     reasoning: 'low',
   },
 ]);
@@ -135,13 +135,17 @@ describe('the judge bundle', () => {
     expect(readdirSync(join(built.directory, 'cases'))).toHaveLength(3);
   });
 
+  it('finds no model name, vendor or provider anywhere in a blind bundle', () => {
+    expect(built.leaks).toEqual([]);
+  });
+
   it('hides which model is which, and keeps the key outside the bundle', () => {
     for (const [name, data] of files) {
       const content = data.toString('utf8');
       expect(content, name).not.toContain(SECRET);
       expect(content, name).not.toContain('Secret Model 9000');
       expect(content, name).not.toContain('FakeBackend');
-      expect(content, name).not.toContain('fake/other');
+      expect(content, name).not.toContain('fake/zorblax-9');
       // The ids the run was given, which `--models` derives from the model names.
       expect(content, name).not.toContain('secret-model-id');
       expect(content, name).not.toContain('other-model-id');
@@ -152,7 +156,7 @@ describe('the judge bundle', () => {
     };
     expect(key.aliases.map((entry) => [entry.alias, entry.aliasId, entry.model.model])).toEqual([
       ['Model A', 'model-a', SECRET],
-      ['Model B', 'model-b', 'fake/other'],
+      ['Model B', 'model-b', 'fake/zorblax-9'],
     ]);
     expect([...files.keys()].some((name) => name.includes('judge-key'))).toBe(false);
   });
@@ -316,6 +320,59 @@ describe('the run fingerprint', () => {
     );
     expect(benchFingerprint(edited)).not.toBe(before);
     expect(newManifest('r', 'raw', 1, cases, null).fingerprint).toBe(before);
+  });
+});
+
+describe('blind redaction of vendor, short name and provider', () => {
+  const entry = (id: string, model: string) =>
+    ({
+      model: { id, label: model, kind: 'llm', provider: 'openrouter', model },
+      status: 'aborted',
+      abortReason: `${model.split('/')[1]} failed; see https://openrouter.ai/settings/privacy (OpenRouter)`,
+      startedAt: '',
+      endedAt: '',
+      wallClockMs: 0,
+      cases: [],
+    }) as unknown as Parameters<typeof anonymise>[0][number];
+  const results = ['openai/gpt-6-luna', 'anthropic/claude-haiku-5.5', 'z-ai/glm-5.3-flash'].map(
+    (model, index) => entry(`m${index}`, model),
+  );
+
+  it('removes the short name, the vendor and the provider, however they are spelled', () => {
+    const transcript = {
+      modelId: 'm1',
+      caseId: 'x',
+      error: 'I am Claude Haiku 5.5 from Anthropic, served by OpenRouter (openrouter.ai)',
+    } as unknown as Parameters<typeof anonymise>[1][number];
+    const { models, transcripts } = anonymise(results, [transcript], 'seed');
+    const shown = JSON.stringify([models, transcripts]).toLowerCase();
+    for (const name of [
+      'gpt-6',
+      'luna',
+      'openai',
+      'claude',
+      'haiku',
+      'anthropic',
+      'glm',
+      'openrouter',
+    ])
+      expect(shown).not.toContain(name);
+  });
+
+  it('hands out letters in a fixed shuffled order that depends on the seed, not the lineup', () => {
+    const first = anonymise(results, [], 'seed-1');
+    expect(anonymise(results, [], 'seed-1').key.map((k) => k.model.id)).toEqual(
+      first.key.map((k) => k.model.id),
+    );
+    const orders = new Set(
+      ['a', 'b', 'c', 'd', 'e', 'f'].map((seed) =>
+        anonymise(results, [], seed)
+          .key.map((k) => k.model.id)
+          .join(),
+      ),
+    );
+    expect(orders.size).toBeGreaterThan(1);
+    expect(first.models.map((m) => m.model.id)).toEqual(['model-a', 'model-b', 'model-c']);
   });
 });
 

@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "id": "leak-or-cancel",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Mana Leak is useless against a player with spare mana; Cancel is not",
+  "skills": ["interaction-timing", "mana-awareness", "lethal-defense"],
+  "briefing": "P2 casts Overrun with seven Forests (two still untapped after paying) and a board of four creatures; P1 is at 14 with one Wall. P1 has three Islands open, Mana Leak and Cancel. Mana Leak only counters if P2 cannot pay {3}; P2 can, so Overrun resolves and P1 dies. Cancel counters it outright.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P2",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 8
+    },
+    "seats": {
+      "P1": {
+        "life": 14,
+        "hand": ["Mana Leak", "Cancel"],
+        "battlefield": [
+          "Island",
+          "Island",
+          "Island",
+          {
+            "card": "Plains",
+            "tapped": true
+          },
+          "Wall of Omens"
+        ]
+      },
+      "P2": {
+        "life": 35,
+        "hand": ["Overrun"],
+        "battlefield": [
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Kalonian Tusker",
+          "Grizzly Bears",
+          "Llanowar Elves",
+          "Elvish Mystic"
+        ]
+      },
+      "P3": {
+        "life": 37,
+        "battlefield": ["Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 33,
+        "battlefield": ["Mountain", "Mountain"]
+      }
+    },
+    "continue": {
+      "throughCombat": true
+    }
+  },
+  "setup": [
+    {
+      "player": "P2",
+      "choose": "Cast Overrun"
+    }
+  ],
+  "table": {
+    "policy": "heuristic",
+    "script": [
+      {
+        "player": "P2",
+        "choose": "Declare attackers",
+        "assign": {
+          "Kalonian Tusker": "P1",
+          "Grizzly Bears": "P1",
+          "Llanowar Elves": "P1",
+          "Elvish Mystic": "P1"
+        }
+      }
+    ]
+  },
+  "reference": {
+    "analysis": "Overrun costs {3}{G}{G}; P2 has spare mana to pay for Mana Leak, and the engine confirms Mana Leak ends with P1 eliminated while Cancel leaves P1 at 7. Cancel is the answer.",
+    "options": [
+      {
+        "label": "Cancel Overrun",
+        "when": {
+          "choose": "Cast Cancel",
+          "targets": ["Overrun"]
+        },
+        "grade": "best",
+        "why": "Unconditionally counters the lethal Overrun."
+      },
+      {
+        "label": "Mana Leak Overrun",
+        "when": {
+          "choose": "Cast Mana Leak",
+          "targets": ["Overrun"]
+        },
+        "grade": "blunder",
+        "why": "P2 has spare mana and pays; Overrun resolves and P1 is eliminated."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "Overrun resolves and P1 is eliminated."
+    }
+  }
+}

@@ -125,6 +125,14 @@
         "assign": {
           "Grizzly Bears": "Colossal Dreadmaw"
         }
+      },
+      {
+        "player": "P1",
+        "choose": "damage",
+        "split": {
+          "Grizzly Bears": 2,
+          "P3": 4
+        }
       }
     ]
   }

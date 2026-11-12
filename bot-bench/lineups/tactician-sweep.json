@@ -1,0 +1,218 @@
+{
+  "models": [
+    {
+      "id": "local-heuristic",
+      "kind": "local",
+      "policy": "heuristic"
+    },
+    {
+      "id": "deepseek-v4-flash-none",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "deepseek/deepseek-v4-flash",
+      "reasoning": "none",
+      "pricing": {
+        "inputPerMTok": 0.09,
+        "outputPerMTok": 0.18
+      }
+    },
+    {
+      "id": "deepseek-v4-flash-low",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "deepseek/deepseek-v4-flash",
+      "reasoning": "low",
+      "pricing": {
+        "inputPerMTok": 0.09,
+        "outputPerMTok": 0.18
+      }
+    },
+    {
+      "id": "particle-1-none",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "particle-ai/particle-1",
+      "reasoning": "none",
+      "pricing": {
+        "inputPerMTok": 0.05,
+        "outputPerMTok": 0.5
+      }
+    },
+    {
+      "id": "particle-1-low",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "particle-ai/particle-1",
+      "reasoning": "low",
+      "pricing": {
+        "inputPerMTok": 0.05,
+        "outputPerMTok": 0.5
+      }
+    },
+    {
+      "id": "minimax-m3.1-flash-low",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "minimax/minimax-m3.1-flash",
+      "reasoning": "low",
+      "pricing": {
+        "inputPerMTok": 0.15,
+        "outputPerMTok": 0.6
+      }
+    },
+    {
+      "id": "deepseek-v4.1-flash-1017-none",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "deepseek/deepseek-v4.1-flash-1017",
+      "reasoning": "none",
+      "pricing": {
+        "inputPerMTok": 0.098,
+        "outputPerMTok": 0.294
+      }
+    },
+    {
+      "id": "deepseek-v4.1-flash-1017-low",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "deepseek/deepseek-v4.1-flash-1017",
+      "reasoning": "low",
+      "pricing": {
+        "inputPerMTok": 0.098,
+        "outputPerMTok": 0.294
+      }
+    },
+    {
+      "id": "nemotron-3.5-super-vl-none",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "nvidia/nemotron-3.5-super-vl",
+      "reasoning": "none",
+      "pricing": {
+        "inputPerMTok": 0.15,
+        "outputPerMTok": 0.47
+      }
+    },
+    {
+      "id": "nemotron-3.5-super-vl-low",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "nvidia/nemotron-3.5-super-vl",
+      "reasoning": "low",
+      "pricing": {
+        "inputPerMTok": 0.15,
+        "outputPerMTok": 0.47
+      }
+    },
+    {
+      "id": "claude-haiku-5.5-none",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "anthropic/claude-haiku-5.5",
+      "reasoning": "none",
+      "pricing": {
+        "inputPerMTok": 0.1,
+        "outputPerMTok": 0.5
+      }
+    },
+    {
+      "id": "claude-haiku-5.5-low",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "anthropic/claude-haiku-5.5",
+      "reasoning": "low",
+      "pricing": {
+        "inputPerMTok": 0.1,
+        "outputPerMTok": 0.5
+      }
+    },
+    {
+      "id": "solar-mini4-none",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "upstage/solar-mini4",
+      "reasoning": "none",
+      "pricing": {
+        "inputPerMTok": 0.05,
+        "outputPerMTok": 0.2
+      }
+    },
+    {
+      "id": "gpt-6-luna-none",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "openai/gpt-6-luna",
+      "reasoning": "none",
+      "pricing": {
+        "inputPerMTok": 0.1,
+        "outputPerMTok": 0.5
+      }
+    },
+    {
+      "id": "gpt-6-luna-low",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "openai/gpt-6-luna",
+      "reasoning": "low",
+      "pricing": {
+        "inputPerMTok": 0.1,
+        "outputPerMTok": 0.5
+      }
+    },
+    {
+      "id": "mimo-v2.6-flash-none",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "xiaomi/mimo-v2.6-flash",
+      "reasoning": "none",
+      "pricing": {
+        "inputPerMTok": 0.14,
+        "outputPerMTok": 0.28
+      }
+    },
+    {
+      "id": "mimo-v2.6-flash-low",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "xiaomi/mimo-v2.6-flash",
+      "reasoning": "low",
+      "pricing": {
+        "inputPerMTok": 0.14,
+        "outputPerMTok": 0.28
+      }
+    },
+    {
+      "id": "ling-3.0-flash-vl-none",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "inclusionai/ling-3.0-flash-vl",
+      "reasoning": "none",
+      "pricing": {
+        "inputPerMTok": 0.06,
+        "outputPerMTok": 0.18
+      }
+    },
+    {
+      "id": "ling-3.0-flash-vl-low",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "inclusionai/ling-3.0-flash-vl",
+      "reasoning": "low",
+      "pricing": {
+        "inputPerMTok": 0.06,
+        "outputPerMTok": 0.18
+      }
+    },
+    {
+      "id": "glm-5.3-flash-low",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "z-ai/glm-5.3-flash",
+      "reasoning": "low",
+      "pricing": {
+        "inputPerMTok": 0.0399,
+        "outputPerMTok": 0.0784
+      }
+    }
+  ]
+}

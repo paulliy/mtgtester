@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "id": "tapped-land-when-idle",
+  "role": "tactician",
+  "scope": "single",
+  "title": "With nothing to cast, play the tapped land",
+  "skills": ["land-choice", "tempo"],
+  "briefing": "P1 holds Temple of Mystery (enters tapped, scries 1) and an Island and has nothing else to cast this turn. Playing the tapped land now costs nothing; saving it for a turn with a spell to cast would cost tempo later.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 5
+    },
+    "seats": {
+      "P1": {
+        "life": 40,
+        "hand": ["Temple of Mystery", "Island"],
+        "battlefield": ["Forest", "Island", "Island", "Forest"],
+        "libraryTop": ["Kalonian Tusker", "Forest", "Island", "Island"]
+      },
+      "P2": {
+        "life": 40,
+        "battlefield": ["Mountain", "Mountain", "Mountain"]
+      },
+      "P3": {
+        "life": 40,
+        "battlefield": ["Swamp", "Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 40,
+        "battlefield": ["Plains", "Plains", "Plains"]
+      }
+    }
+  },
+  "setup": [],
+  "table": {
+    "policy": "passive"
+  },
+  "reference": {
+    "analysis": "No spell in hand, so this turn's mana is unused either way. Temple enters tapped at no cost and scries 1; the Island is untapped but pointless now, and the Temple would cost a tapped land on a later turn that has a spell.",
+    "options": [
+      {
+        "label": "Play Temple of Mystery",
+        "when": {
+          "choose": "Play Temple of Mystery"
+        },
+        "grade": "best",
+        "why": "The tapped land costs nothing now and scries."
+      },
+      {
+        "label": "Play Island",
+        "when": {
+          "choose": "Play Island"
+        },
+        "grade": "good",
+        "why": "Legal and harmless, but pushes the tapped land to a turn where it will cost tempo."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "Skips the land drop for no reason."
+    }
+  }
+}

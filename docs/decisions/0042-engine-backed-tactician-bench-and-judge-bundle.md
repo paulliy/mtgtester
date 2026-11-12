@@ -71,7 +71,8 @@ without copying text.
 - The rewritten common primer is about 60 tokens longer than the one it replaces, and the attack
   and block sections about 75 each. The change is not yet measured against live models: no
   provider key is available to CI, and the first lineup run is the measurement.
-- Twelve positions screen for board-reading failures; they do not rank two strong models with
+- Thirty positions (twelve at first, eighteen added later, six of the added ones failed by the
+  heuristic bot) screen for board-reading failures; they do not rank two strong models with
   confidence. The set grows from real misplays.
 - Positions have no commanders, because the scenario format arranges none.
 - The fast CI lane runs `bot-bench/src` and `primer.test.ts` (about 25 seconds, no network).

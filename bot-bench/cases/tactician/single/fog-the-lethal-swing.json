@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "id": "fog-the-lethal-swing",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Fog the swing that kills you",
+  "skills": ["interaction-timing", "lethal-defense", "instants"],
+  "briefing": "P2 attacks P1 (8 life) with Shivan Dragon (5) and Kalonian Tusker (3): exactly 8, and P1 has no creatures. P1 has one Forest open and Fog in hand. Passing is lethal; Fog prevents all of the damage. A player that only reacts to blocks and counters tends to pass here.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P2",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 8
+    },
+    "seats": {
+      "P1": {
+        "life": 8,
+        "hand": ["Fog"],
+        "battlefield": [
+          "Forest",
+          "Forest",
+          {
+            "card": "Plains",
+            "tapped": true
+          }
+        ]
+      },
+      "P2": {
+        "life": 36,
+        "battlefield": ["Mountain", "Mountain", "Mountain", "Shivan Dragon", "Kalonian Tusker"]
+      },
+      "P3": {
+        "life": 38,
+        "battlefield": ["Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 35,
+        "battlefield": ["Island", "Island"]
+      }
+    },
+    "continue": {
+      "throughCombat": true
+    }
+  },
+  "setup": [
+    {
+      "player": "P2",
+      "choose": "Declare attackers",
+      "assign": {
+        "Shivan Dragon": "P1",
+        "Kalonian Tusker": "P1"
+      }
+    }
+  ],
+  "table": {
+    "policy": "heuristic"
+  },
+  "reference": {
+    "analysis": "The attack is exactly lethal and P1 has no blockers. Fog costs {G} and the Forest is open: the only line that survives.",
+    "options": [
+      {
+        "label": "Cast Fog",
+        "when": {
+          "choose": "Cast Fog"
+        },
+        "grade": "best",
+        "why": "Prevents all 8 damage; P1 survives."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "P1 takes 8 at 8 life and is eliminated."
+    }
+  }
+}

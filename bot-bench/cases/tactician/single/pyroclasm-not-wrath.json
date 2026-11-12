@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "id": "pyroclasm-not-wrath",
+  "role": "tactician",
+  "scope": "single",
+  "title": "A one-sided sweeper beats the symmetrical one",
+  "skills": ["sweepers", "board-evaluation"],
+  "briefing": "P1 has Wall of Omens and Kalonian Tusker; P2 has Grizzly Bears, Llanowar Elves and Elvish Mystic. P1 holds Pyroclasm (2 damage to each creature) and Wrath of God with mana for either. Pyroclasm kills all three of P2's small creatures and neither of P1's; Wrath kills everything including P1's two.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 8
+    },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Pyroclasm", "Wrath of God"],
+        "battlefield": [
+          "Mountain",
+          "Mountain",
+          "Plains",
+          "Plains",
+          "Plains",
+          "Wall of Omens",
+          "Kalonian Tusker"
+        ]
+      },
+      "P2": {
+        "life": 30,
+        "battlefield": ["Forest", "Forest", "Grizzly Bears", "Llanowar Elves", "Elvish Mystic"]
+      },
+      "P3": {
+        "life": 38,
+        "battlefield": ["Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 35,
+        "battlefield": ["Island", "Island"]
+      }
+    }
+  },
+  "setup": [],
+  "table": {
+    "policy": "passive"
+  },
+  "reference": {
+    "analysis": "Pyroclasm deals 2 to each creature: P2's Bears, Elves and Mystic die; the 0/4 Wall and 3/3 Tusker live. Wrath of God kills those three as well as P1's own two. Passing keeps the status quo.",
+    "options": [
+      {
+        "label": "Cast Pyroclasm",
+        "when": {
+          "choose": "Cast Pyroclasm"
+        },
+        "grade": "best",
+        "why": "Kills three enemy creatures and none of its own."
+      },
+      {
+        "label": "Cast Wrath of God",
+        "when": {
+          "choose": "Cast Wrath of God"
+        },
+        "grade": "weak",
+        "why": "Same three, but P1 also loses the Wall and the Tusker."
+      }
+    ],
+    "otherwise": {
+      "grade": "weak",
+      "why": "Does not use the sweeper that clears P2's board for free."
+    }
+  }
+}

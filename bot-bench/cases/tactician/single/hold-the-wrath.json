@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "role": "tactician",
+  "id": "hold-the-wrath",
+  "scope": "single",
+  "title": "Do not wrath a board you are winning",
+  "skills": ["sweepers", "restraint", "board-evaluation"],
+  "briefing": "P1 has Serra Angel, Kalonian Tusker and Grizzly Bears against P2's lone Wall of Omens and holds Wrath of God with four lands. Casting it kills three creatures to one and hands the table back. The right play is to keep the Wrath and develop or attack; the case measures whether the model sees that a castable board wipe is not a good one.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 8
+    },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Wrath of God"],
+        "battlefield": [
+          "Plains",
+          "Plains",
+          "Plains",
+          "Plains",
+          "Serra Angel",
+          "Kalonian Tusker",
+          "Grizzly Bears"
+        ]
+      },
+      "P2": {
+        "life": 30,
+        "battlefield": ["Island", "Island", "Wall of Omens"]
+      },
+      "P3": {
+        "life": 38,
+        "battlefield": ["Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 35,
+        "battlefield": ["Forest", "Forest"]
+      }
+    }
+  },
+  "table": {
+    "policy": "passive"
+  },
+  "reference": {
+    "analysis": "Wrath of God would kill Serra Angel, Kalonian Tusker and Grizzly Bears for P2's single Wall of Omens. Passing keeps the three creatures and the Wrath for a turn it is needed.",
+    "options": [
+      {
+        "label": "Pass priority",
+        "when": {
+          "choose": "Pass priority"
+        },
+        "grade": "best",
+        "why": "Keeps a winning board and the sweeper."
+      },
+      {
+        "label": "Pass and yield until end of turn",
+        "when": {
+          "choose": "Pass and yield until end of turn"
+        },
+        "grade": "best",
+        "why": "Same as passing."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "Wrath kills three of P1's own creatures for one of P2's."
+    }
+  }
+}

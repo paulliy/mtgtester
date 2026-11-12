@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "role": "tactician",
+  "id": "sweep-then-swing",
+  "scope": "turn",
+  "title": "Pyroclasm clears the chump blockers, then the Tusker is lethal",
+  "skills": ["sequencing", "removal-timing", "lethal"],
+  "briefing": "P2 is at 3 with three small untapped blockers (Grizzly Bears, Llanowar Elves, Elvish Mystic). P1 has Kalonian Tusker (3/3) and Pyroclasm. Attacking first just feeds the Tusker a chump block. Pyroclasm first kills all three blockers and spares the Tusker, whose three damage is exactly lethal.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 8
+    },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Pyroclasm"],
+        "battlefield": ["Mountain", "Mountain", "Kalonian Tusker"]
+      },
+      "P2": {
+        "life": 3,
+        "battlefield": ["Forest", "Forest", "Grizzly Bears", "Llanowar Elves", "Elvish Mystic"]
+      },
+      "P3": {
+        "life": 38,
+        "battlefield": ["Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 35,
+        "battlefield": ["Forest", "Forest"]
+      }
+    },
+    "continue": {
+      "throughCombat": true,
+      "toPostcombatMain": true,
+      "toEndStep": true
+    }
+  },
+  "table": {
+    "policy": "heuristic"
+  },
+  "reference": {
+    "analysis": "Pyroclasm deals 2 to each creature: the Bears, Elves and Mystic die; the 3/3 Tusker survives. With no blockers the Tusker deals 3 at a player on 3. Attacking first lets any of the three blockers chump it.",
+    "lines": [
+      {
+        "id": "sweep-then-attack",
+        "label": "Cast Pyroclasm, then attack P2 with the Tusker",
+        "grade": "best",
+        "why": "No blockers left: 3 damage is lethal.",
+        "steps": [
+          {
+            "choose": "Cast Pyroclasm"
+          },
+          {
+            "choose": "Declare attackers",
+            "assign": {
+              "Kalonian Tusker": "P2"
+            }
+          }
+        ]
+      },
+      {
+        "id": "attack-first",
+        "label": "Attack with the Tusker, hold Pyroclasm",
+        "grade": "blunder",
+        "why": "A chump block stops the damage and P2 survives.",
+        "steps": [
+          {
+            "choose": "Declare attackers",
+            "assign": {
+              "Kalonian Tusker": "P2"
+            }
+          }
+        ]
+      }
+    ],
+    "objectives": [
+      {
+        "id": "kill-p2",
+        "label": "P2 is eliminated this turn",
+        "points": 8,
+        "check": {
+          "eliminated": "P2"
+        }
+      }
+    ]
+  }
+}
