@@ -316,6 +316,7 @@ export async function runStudy(options: StudyOptions): Promise<StudyReport> {
     if (line !== undefined) {
       const reference: number[] = [];
       let referenceIncomplete = 0;
+      let referenceError: string | undefined;
       for (const seed of options.seeds) {
         const run = await runArm(
           fork,
@@ -324,7 +325,10 @@ export async function runStudy(options: StudyOptions): Promise<StudyReport> {
         );
         arms.push(run);
         if (completed(run)) reference.push(run.values[evaluator] ?? 0);
-        else referenceIncomplete++;
+        else {
+          referenceIncomplete++;
+          referenceError ??= `${run.termination}${run.error === undefined ? '' : `: ${run.error}`}`;
+        }
       }
       incomplete += referenceIncomplete;
       const gridMeans: Record<string, number> = {};
@@ -347,7 +351,7 @@ export async function runStudy(options: StudyOptions): Promise<StudyReport> {
           bestGrid: { arm: '', value: 0 },
           reason:
             referenceIncomplete > 0
-              ? `the reference line did not reach the horizon on ${referenceIncomplete} seed(s)`
+              ? `the reference line did not complete on ${referenceIncomplete} seed(s) (${referenceError})`
               : "the strategist's own knobs never reached the horizon, so no arm has a baseline",
         };
       } else {

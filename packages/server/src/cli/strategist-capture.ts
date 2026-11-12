@@ -151,6 +151,10 @@ export async function captureStrategistGame(options: CaptureOptions): Promise<St
     (seat) => async (request) => {
       const engine = engineRef!;
       const key = `${request.turn}:${request.activePlayer}`;
+      // Open the turn's deal window first, as the seat's provider is about to: it expires,
+      // releases and negotiates deals, so the strategist's prompt and the obligations noted below
+      // are the ones this decision is played under. A second call for the same request is a no-op.
+      table?.beforeDecision(request);
       // A live strategist answers in seconds while the bot decides in milliseconds: started on its
       // own, a turn's knobs would land turns later. So the first decision of each turn waits for
       // that turn's strategist answer, and the knobs noted below are the ones the turn played with.

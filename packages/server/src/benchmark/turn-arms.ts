@@ -166,6 +166,7 @@ function slotOption(
     view.battlefield.find((p) => p.id === id)?.name ??
     view.hand.find((c) => c.id === id)?.name ??
     view.graveyard.find((c) => c.id === id)?.name ??
+    view.opponents.flatMap((o) => o.graveyard).find((c) => c.id === id)?.name ??
     view.stack.find((s) => s.id === id)?.description;
   const matches = options.filter((option) => named(option) === wanted);
   return matches.length === 1 ? matches[0] : undefined;
@@ -181,8 +182,10 @@ export class ReferenceLineError extends Error {
 
 /**
  * The scripted reference arm (ADR 0045 decision 1.5), written from the seat's view at the fork.
- * Each decision the next step names takes it; a priority window no step names is passed; any
- * other decision (an attack the line does not script) is left to the bot.
+ * Each decision the next step names takes it, with one named target per slot; a priority window
+ * no step names is passed; any other decision (an attack the line does not script) is left to the
+ * bot. A target that is not on the menu, or a step never played by the end of the forked turn,
+ * makes the line invalid rather than a different line.
  */
 export function referenceArm(steps: readonly LineStep[]): TurnPolicyFactory {
   return () => {
@@ -192,10 +195,15 @@ export function referenceArm(steps: readonly LineStep[]): TurnPolicyFactory {
       if (step !== undefined) {
         const action = request.legalActions.find((a) => a.description.includes(step.choose));
         if (action !== undefined) {
-          const targets: TargetChoice[] = (action.targets ?? []).map((slot, i) => {
-            const wanted = step.targets?.[i];
-            // A slot the line leaves open takes its first option; a slot it names must match.
-            if (wanted === undefined) return { slot: slot.slot, choice: slot.options[0]! };
+          const slots = action.targets ?? [];
+          // The line names every slot, and nothing more: a slot's first option is arbitrary (the
+          // first creature, the first player), so it is never the line's choice by default.
+          if ((step.targets?.length ?? 0) !== slots.length)
+            throw new ReferenceLineError(
+              `step "${step.choose}" names ${step.targets?.length ?? 0} target(s) for ${slots.length} slot(s)`,
+            );
+          const targets: TargetChoice[] = slots.map((slot, i) => {
+            const wanted = step.targets![i]!;
             const choice = slotOption(view, slot.options, wanted);
             if (choice === undefined)
               throw new ReferenceLineError(
@@ -214,6 +222,12 @@ export function referenceArm(steps: readonly LineStep[]): TurnPolicyFactory {
       if (request.decisionType !== 'priority') return null;
       const pass = request.legalActions.find((a) => a.type === 'pass');
       return pass === undefined ? null : { requestId: request.requestId, actionId: pass.id };
+    };
+    // A step the menu never offered (a misspelt action, a spell the line could not afford) means
+    // the line was not played: the arm reports it once the forked turn is over.
+    policy.unfinished = () => {
+      const step = steps[next];
+      return step === undefined ? null : `the line's step "${step.choose}" was never played`;
     };
     return policy;
   };

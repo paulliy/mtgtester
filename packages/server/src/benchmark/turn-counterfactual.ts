@@ -31,10 +31,16 @@ import type { CounterfactualEvaluator } from './counterfactual';
 import { canonicalEngineStateHash, reconstructAtDecision, type ReplayTranscript } from './replay';
 
 /** A policy that plays the forked turn and returns null to hand a decision to the bot. */
-export type TurnPolicy = (
+export type TurnPolicy = ((
   request: DecisionRequest,
   view: PlayerView,
-) => DecisionResponse | null | Promise<DecisionResponse | null>;
+) => DecisionResponse | null | Promise<DecisionResponse | null>) & {
+  /**
+   * Asked once the forked turn is over: why the policy did not finish what it set out to play (a
+   * reviewer's line with steps never reached), or null when it did.
+   */
+  unfinished?: () => string | null;
+};
 
 /** Builds an arm's turn policy on the forked engine (a provider needs the engine it plays). */
 export type TurnPolicyFactory = (engine: Engine, seat: PlayerId) => TurnPolicy;
@@ -138,6 +144,7 @@ export async function runArm(
   let handedToBot = 0;
   let horizonTurn: number | null = null;
   let request: DecisionRequest | null = first;
+  let forkedTurnOver = false;
   let decisions = 0;
   const maxDecisions = options.maxDecisions ?? 5_000;
   let termination: ArmRun['termination'] = 'horizon';
@@ -153,6 +160,16 @@ export async function runArm(
     if (request.activePlayer === fork.seat && request.turn > forkTurn.turn && horizonTurn === null)
       horizonTurn = request.turn;
     if (horizonTurn !== null && request.turn > horizonTurn) break;
+    // The forked turn is over: a reference line must have played every step by now.
+    if (!forkedTurnOver && request.turn !== forkTurn.turn) {
+      forkedTurnOver = true;
+      const unfinished = arm.kind === 'reference' ? (turnPolicy?.unfinished?.() ?? null) : null;
+      if (unfinished !== null) {
+        termination = 'invalid_line';
+        error = unfinished;
+        break;
+      }
+    }
 
     const seat = request.decidingPlayer;
     const view = engine.view(seat);

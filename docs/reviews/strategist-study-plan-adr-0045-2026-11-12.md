@@ -119,8 +119,15 @@ How results are kept honest:
 - A rollout that hits the decision limit, or ends on an answer the engine refused, is incomplete.
   It is counted in `incompleteRuns` and kept out of the filter, the grid means, the reference and
   the tactician values.
-- A turn whose reference line, or whose strategist arm, never reached the horizon gets no verdict
-  (`needs: completedRuns`).
+- A reference line must be playable as written. Each step names one target per slot, by id, seat
+  or a unique object name (a card in any graveyard included). A target that is not on the menu, or
+  a step not played by the end of the forked turn, ends the reference as `invalid_line`, and a
+  game the engine halts ends as `halted`. Neither is a completed run.
+- A turn whose reference line, or whose strategist arm, never completed gets no verdict
+  (`needs: completedRuns`), and the reason names the first failure.
+- Captures open each turn's deal window before the strategist runs and before the turn's deals
+  are recorded, so the knobs, the deals and the obligations in a fork are the ones the turn was
+  played under.
 - A line's evaluator is resolved by name before any arm runs, so an unknown name stops the study
   instead of scoring 0.
 - `--arms` narrows the grid to named arms, for a follow-up on the knob a line names.

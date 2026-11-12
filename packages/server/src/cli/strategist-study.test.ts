@@ -120,6 +120,31 @@ describe('a study turn whose rollouts are cut off', () => {
   }, 60_000);
 });
 
+describe('a reference line with a step that is never played', () => {
+  it('ends the reference as an invalid line once the forked turn is over, with no verdict', async () => {
+    const turn = markTurns(capture, 1, 'study-test').find((t) => t.turn >= 2)!;
+    const report = await runStudy({
+      capture,
+      captureName: 'study-test',
+      seeds: ['r1'],
+      sampleRate: 1,
+      margin: 2,
+      evaluator: 'own-position-v1',
+      maxTurns: 50,
+      gridArms: ['defaults'],
+      lines: {
+        [String(turn.forkDecisionIndex)]: { steps: [{ choose: 'Cast Nothing That Exists' }] },
+      },
+    });
+    const studied = report.markedTurns.find((t) => t.forkDecisionIndex === turn.forkDecisionIndex)!;
+    const reference = studied.arms.find((arm) => arm.arm === 'reference')!;
+    expect(reference.termination).toBe('invalid_line');
+    expect(reference.error).toMatch(/never played/);
+    expect(studied.verdict).toMatchObject({ verdict: null, needs: 'completedRuns' });
+    expect(studied.verdict?.reason).toMatch(/invalid_line: .*never played/);
+  }, 120_000);
+});
+
 describe('deals in the forks', () => {
   it("records every seat's binding obligations at each turn of a capture with diplomacy", () => {
     const withTurns = capture.turns.filter((t) => t.turn >= 1);
@@ -143,7 +168,7 @@ describe('reference line targets', () => {
     commanders: [],
     availableMana: {},
     manaSources: [],
-    opponents: [],
+    opponents: [{ seat: 'P2', graveyard: [{ id: 'g-1', name: 'Grave Titan' }] }],
     battlefield: [
       { id: 'o-1', controller: 'P2', name: 'Grizzly Bears', tapped: false, status: [] },
       { id: 'o-2', controller: 'P3', name: 'Twin', tapped: false, status: [] },
@@ -167,7 +192,7 @@ describe('reference line targets', () => {
         id: 0,
         type: 'attackDeclaration',
         description: 'Declare attackers',
-        targets: [{ slot: 0, options: ['P2', 'o-1', 'o-2', 'o-3', '__no_attack__'] }],
+        targets: [{ slot: 0, options: ['P2', 'o-1', 'o-2', 'o-3', 'g-1', '__no_attack__'] }],
       },
     ],
   } as unknown as DecisionRequest;
@@ -183,6 +208,18 @@ describe('reference line targets', () => {
     });
     expect(play('P2')).toMatchObject({ targets: [{ slot: 0, choice: 'P2' }] });
     expect(play('Grizzly Bears')).toMatchObject({ targets: [{ slot: 0, choice: 'o-1' }] });
+    // A card in an opponent's graveyard, as a reanimation or graveyard-hate line names it.
+    expect(play('Grave Titan')).toMatchObject({ targets: [{ slot: 0, choice: 'g-1' }] });
+  });
+
+  it('refuses a step that names fewer or more targets than the action has slots', () => {
+    const steps = (targets?: string[]) =>
+      referenceArm([{ choose: 'Declare attackers', ...(targets && { targets }) }])(
+        undefined as never,
+        'P1',
+      )(request, view);
+    expect(() => steps()).toThrow(/names 0 target\(s\) for 1 slot/);
+    expect(() => steps(['P2', 'P2'])).toThrow(/names 2 target\(s\) for 1 slot/);
   });
 
   it('refuses a target it cannot find, or one the name leaves ambiguous', () => {
