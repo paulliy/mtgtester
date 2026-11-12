@@ -32,7 +32,7 @@ import {
   type JevPolicyBinding,
   type JevPolicyOutcome,
 } from './jev-policy';
-import { BotTactician, type BotAnswer } from './bot-tactician';
+import { BotTactician, knowledgeFor, type BotAnswer } from './bot-tactician';
 
 /**
  * Errors where falling back per-decision would be dishonest: the budget or the credentials
@@ -73,6 +73,20 @@ type ModelOutcome = { kind: 'answered'; response: DecisionResponse } | ModelFail
 export const JEV_CLOSE_CALL_INSTRUCTIONS =
   "Both actions are legal and were judged close. Choose the one that better advances this seat's stated strategy and survival. Select exactly one criterion key.";
 
+/** Optional seams for bot-led tactics, used by bot-bench's `bot-led` kind (ADR 0043). */
+export interface BotLedHooks {
+  /** Tie-break seed label for this seat's bot; defaults to `<gameId>-<seat>-bot`. */
+  botSeed?: string;
+  /**
+   * Called once per decision the bot-led tactician was consulted on, with whether the model was
+   * asked and the escalation reasons that fired.
+   */
+  onBotDecision?: (
+    request: DecisionRequest,
+    outcome: { escalated: boolean; reasons: readonly string[] },
+  ) => void;
+}
+
 export class OpenAiDecisionProvider implements AsyncDecisionProvider {
   /** Per-provider (therefore per-seat, per-game) — never shared between games. */
   private readonly cache = new DecisionCache();
@@ -94,6 +108,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     private readonly policyRegistry: PolicyRegistry = DEFAULT_POLICY_REGISTRY,
     /** Table deals for a seat (ADR 0035); bot-led tactics must honor them, not just log breaches. */
     private readonly diplomacyFor?: (seat: PlayerId) => DiplomacyPlay | undefined,
+    private readonly botHooks: BotLedHooks = {},
   ) {
     this.strategy = coordinator ?? new StrategyCoordinator(null, queue, engine, config, logger);
   }
@@ -145,6 +160,10 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
       const bot = this.botFor(request);
       const answer = bot.decide(request);
       const escalate = this.config.botEscalation === 'uncertain' && answer.uncertain;
+      this.botHooks.onBotDecision?.(request, {
+        escalated: escalate,
+        reasons: answer.uncertain ? ['uncertain'] : [],
+      });
       if (!escalate) {
         bot.record(request, answer.response);
         this.logLocal(request, answer.response, 'bot');
@@ -373,6 +392,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
         () => this.strategy.steeringFor(seat),
         this.config.botEscalationMargin,
         this.diplomacyFor?.(seat),
+        this.botHooks.botSeed,
       );
     }
     return this.botTactician;
@@ -428,7 +448,10 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     }
 
     // Seeded from the public request id, so it reveals nothing about a table game's keyed streams.
-    const fallback = heuristicDecide(request, view, new HeuristicRng(request.requestId));
+    // Card-aware, like bot-led mode and a table's bot seats: one bot wherever it plays (ADR 0043).
+    const fallback = heuristicDecide(request, view, new HeuristicRng(request.requestId), {
+      knowledge: knowledgeFor(this.engine),
+    });
     console.warn(
       `  ⚠ ${request.decidingPlayer} decision ${request.requestId} — using heuristic bot fallback`,
     );

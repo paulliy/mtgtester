@@ -78,8 +78,10 @@ export class BotTactician {
     private readonly margin: number,
     /** The seat's live table deals (ADR 0035), so the bot honors accepted promises. */
     diplomacy?: DiplomacyPlay,
+    /** The tie-break seed label; bot-bench varies it across its gate seeds (ADR 0043). */
+    seed = `${gameId}-${seat}-bot`,
   ) {
-    this.bot = new HeuristicDecisionProvider(`${gameId}-${seat}-bot`, () => engine.view(seat), {
+    this.bot = new HeuristicDecisionProvider(seed, () => engine.view(seat), {
       knowledge: knowledgeFor(engine),
       steering,
       ...(diplomacy === undefined ? {} : { diplomacy }),

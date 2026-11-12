@@ -78,6 +78,8 @@ bun run bot-bench list|inspect|verify   # engine-backed tactician cases (ADR 004
 bun run bot-bench run --models local:heuristic,openrouter:<vendor/model> [--trials N] [--spend-cap USD]
                                         # play a lineup of models and write the judge bundle ZIP
 bun run bot-bench collate --run <dir> <scorecard.json>...   # lay returned judge scorecards side by side
+bun run bot-bench run --lineup bot-bench/lineups/bot-gate.json --out <dir>   # the bot over the gate's 8 seeds (free)
+bun run bot-bench seeds --run <dir> [--baseline <id> --candidate <id>]       # ADR 0043 seed gate: per-case means
 bun run agent-client [--seat P1] [--seed S] [--port N] [--provider random|ai]
 bun run agent-client --table <invite link> --name <n> --deck <file> [--seat P1] [--policy first-legal]
 bun run packages/server/src/cli/table-scripted-run.ts [--turn-cap 6] [--scenario disconnect]

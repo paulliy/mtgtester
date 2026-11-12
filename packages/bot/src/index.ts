@@ -14,6 +14,7 @@ export type {
   WipeSelector,
 } from './card-knowledge';
 export { manaValueOfCost } from './policy';
+export { BOT_POLICY_VERSION } from './version';
 export { passesVeto, totalLifeCost, totalSacrificeCount, totalDiscardCount } from './veto';
 export { WEIGHTS } from './weights';
 export { Rng } from './rng';

@@ -34,7 +34,17 @@ import {
 
 /** How an answer was produced, in the production pipeline's own vocabulary where it has one. */
 export type AnswerSource =
-  'model' | 'model-retry' | 'fallback' | 'heuristic' | 'cache' | 'plan' | 'local' | 'script';
+  | 'model'
+  | 'model-retry'
+  | 'fallback'
+  | 'heuristic'
+  | 'cache'
+  | 'plan'
+  | 'local'
+  | 'script'
+  /** The card-aware bot in bot-led mode (ADR 0043), answering without the model. */
+  | 'bot'
+  | 'jev';
 
 export type CostSource = 'reported' | 'estimated' | 'unknown' | 'not_applicable';
 
@@ -53,6 +63,10 @@ export interface ActorAnswer {
   failure?: string;
   /** The model's raw text for this decision, when there was one. */
   raw?: string;
+  /** Bot-led entries only: whether the bot handed this decision to the model. */
+  escalated?: boolean;
+  /** Bot-led entries only: the escalation triggers that fired, live or not. */
+  reasons?: string[];
 }
 
 /** One seat's player for one game. */
@@ -87,6 +101,18 @@ export interface DecisionRecord {
   /** Set when the seat's own answer was refused; `action` is then what the table played instead. */
   invalid?: string;
   failure?: string;
+  escalated?: boolean;
+  reasons?: string[];
+}
+
+/** How often a bot-led entry handed the case's decisions to the model, and why (ADR 0043). */
+export interface EscalationSummary {
+  /** Decisions the bot was consulted on. */
+  consulted: number;
+  /** Of those, how many went to the model. */
+  escalated: number;
+  /** Times each trigger fired, whether or not it escalated. */
+  byReason: Record<string, number>;
 }
 
 export interface SeatSnapshot {
@@ -118,6 +144,8 @@ export interface CaseRun {
   after: Snapshot;
   termination: Termination;
   error?: string;
+  /** Bot-led entries only. */
+  escalations?: EscalationSummary;
 }
 
 const HARD_DECISION_LIMIT = 600;
@@ -367,6 +395,8 @@ export async function playCase(benchCase: BenchCase, makeActor: ActorFactory): P
           ...(answer.raw !== undefined && { raw: answer.raw }),
           ...(invalid !== undefined && { invalid }),
           ...(answer.failure !== undefined && { failure: answer.failure }),
+          ...(answer.escalated !== undefined && { escalated: answer.escalated }),
+          ...(answer.reasons !== undefined && { reasons: answer.reasons }),
         };
         decisions.push(record);
       }
@@ -391,6 +421,7 @@ export async function playCase(benchCase: BenchCase, makeActor: ActorFactory): P
   }
 
   const state = engine.getState();
+  const escalations = summarizeEscalations(decisions);
   return {
     caseId: benchCase.id,
     scope: benchCase.scope,
@@ -404,6 +435,23 @@ export async function playCase(benchCase: BenchCase, makeActor: ActorFactory): P
     after: snapshot(state),
     termination,
     ...(error !== undefined && { error }),
+    ...(escalations !== undefined && { escalations }),
+  };
+}
+
+/** Escalation counts over a run's decisions, or undefined when no decision came from a bot-led seat. */
+export function summarizeEscalations(
+  decisions: readonly DecisionRecord[],
+): EscalationSummary | undefined {
+  const consulted = decisions.filter((decision) => decision.escalated !== undefined);
+  if (consulted.length === 0) return undefined;
+  const byReason: Record<string, number> = {};
+  for (const decision of consulted)
+    for (const reason of decision.reasons ?? []) byReason[reason] = (byReason[reason] ?? 0) + 1;
+  return {
+    consulted: consulted.length,
+    escalated: consulted.filter((decision) => decision.escalated === true).length,
+    byReason,
   };
 }
 

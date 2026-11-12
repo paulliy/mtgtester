@@ -1,0 +1,9 @@
+{
+  "description": "ADR 0043 decision 3.1: the bot's regression gate. Every heuristic and bot-led entry plays once per seed; compare with `bun run bot-bench seeds --run <dir> --baseline <id> --candidate <id>`.",
+  "seeds": ["gate-1", "gate-2", "gate-3", "gate-4", "gate-5", "gate-6", "gate-7", "gate-8"],
+  "models": [
+    { "id": "local-heuristic", "kind": "local", "policy": "heuristic" },
+    { "id": "local-heuristic-plain", "kind": "local", "policy": "heuristic-plain" },
+    { "id": "bot-led-never", "kind": "bot-led", "escalation": [] }
+  ]
+}

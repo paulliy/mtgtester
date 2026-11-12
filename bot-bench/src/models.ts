@@ -6,6 +6,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { HeuristicDecisionProvider } from '../../packages/bot/src';
+import { knowledgeFor } from '../../packages/server/src/ai/bot-tactician';
 import { RandomDecisionProvider, chooseFirst, type Engine } from '../../packages/engine/src';
 import {
   OpenAiCompatibleClient,
@@ -35,14 +36,67 @@ import {
   type AnswerSource,
 } from './play';
 
-export type LocalPolicy = 'heuristic' | 'first-legal' | 'random';
+/**
+ * `heuristic` is the production bot: card-aware, as it plays in bot-led mode, as a model's fallback
+ * and in a table's bot seats (ADR 0043). `heuristic-plain` is the same bot without card knowledge,
+ * the baseline the first tactician sweep measured against.
+ */
+export type LocalPolicy = 'heuristic' | 'heuristic-plain' | 'first-legal' | 'random';
+export const LOCAL_POLICIES: readonly LocalPolicy[] = [
+  'heuristic',
+  'heuristic-plain',
+  'first-legal',
+  'random',
+];
 export type ReasoningEffort = 'none' | 'low' | 'medium' | 'high';
+
+/** Escalation triggers a `bot-led` entry may name (ADR 0044). An empty list is `never`. */
+export const BOT_LED_TRIGGERS = ['uncertain'] as const;
 
 export interface LocalEntry {
   id: string;
   label?: string;
   kind: 'local';
   policy: LocalPolicy;
+  /** Tie-break seed label for the bot (ADR 0043); omitted keeps `bot-bench-actor:<case>`. */
+  seed?: string;
+  /** The entry a lineup's `seeds` list expanded this one from. */
+  seedOf?: string;
+}
+
+/** Fields that name a model and how to reach it, shared by `llm` and `bot-led` entries. */
+interface ModelFields {
+  /** A provider preset from `ai/config.ts` (openrouter, groq, gemini, deepseek, openai). */
+  provider?: string;
+  /** Any OpenAI-compatible endpoint; overrides the preset's. */
+  baseUrl?: string;
+  /** The environment variable that holds the key; overrides the preset's. Never the key itself. */
+  apiKeyEnv?: string;
+  /** Thinking effort; `none` (the tactician default) turns reasoning off. */
+  reasoning?: ReasoningEffort;
+  maxOutputTokens?: number;
+  requestTimeoutMs?: number;
+  /** USD per million tokens, used only when the provider does not report a cost. */
+  pricing?: { inputPerMTok: number; outputPerMTok: number };
+}
+
+/**
+ * The production pipeline in bot-led mode (ADR 0039, ADR 0043 decision 1.3): the card-aware bot
+ * answers, and the named escalation triggers decide when `model` is asked. With no triggers the
+ * entry needs no model and costs nothing.
+ */
+export interface BotLedEntry extends ModelFields {
+  id: string;
+  label?: string;
+  kind: 'bot-led';
+  /** Trigger names; empty is `never`. */
+  escalation: string[];
+  /** LEP margin for `uncertain`; defaults to the production margin. */
+  margin?: number;
+  /** The model asked on escalation. Required when `escalation` is not empty. */
+  model?: string;
+  seed?: string;
+  seedOf?: string;
 }
 
 export interface LlmEntry {
@@ -64,7 +118,7 @@ export interface LlmEntry {
   pricing?: { inputPerMTok: number; outputPerMTok: number };
 }
 
-export type LineupEntry = LocalEntry | LlmEntry;
+export type LineupEntry = LocalEntry | LlmEntry | BotLedEntry;
 
 /** `raw`: every decision goes to the model. `production`: dominated decisions are answered locally first. */
 export type RunMode = 'raw' | 'production';
@@ -82,78 +136,160 @@ function entryError(index: number, message: string): never {
   throw new Error(`lineup entry ${index + 1}: ${message}`);
 }
 
-/** Validate a lineup file's entries. Unknown fields are refused so a typo cannot change a run. */
+const MODEL_FIELDS = [
+  'provider',
+  'baseUrl',
+  'apiKeyEnv',
+  'model',
+  'reasoning',
+  'maxOutputTokens',
+  'requestTimeoutMs',
+  'pricing',
+];
+
+function checkModelFields(entry: Record<string, unknown>, index: number): void {
+  if (entry['provider'] !== undefined && PROVIDERS[entry['provider'] as string] === undefined)
+    entryError(index, `provider must be one of ${Object.keys(PROVIDERS).join(', ')}`);
+  if (
+    entry['reasoning'] !== undefined &&
+    !['none', 'low', 'medium', 'high'].includes(entry['reasoning'] as string)
+  )
+    entryError(index, 'reasoning must be none, low, medium or high');
+  for (const key of ['maxOutputTokens', 'requestTimeoutMs'])
+    if (
+      entry[key] !== undefined &&
+      !(Number.isSafeInteger(entry[key]) && (entry[key] as number) > 0)
+    )
+      entryError(index, `${key} must be a positive whole number`);
+  const pricing = entry['pricing'] as Record<string, unknown> | undefined;
+  if (
+    pricing !== undefined &&
+    !(
+      typeof pricing === 'object' &&
+      pricing !== null &&
+      typeof pricing['inputPerMTok'] === 'number' &&
+      typeof pricing['outputPerMTok'] === 'number' &&
+      pricing['inputPerMTok'] >= 0 &&
+      pricing['outputPerMTok'] >= 0
+    )
+  )
+    entryError(index, 'pricing needs inputPerMTok and outputPerMTok in USD');
+}
+
+function checkSeed(value: unknown, where: string): void {
+  if (typeof value !== 'string' || value.trim() === '' || value.length > 64)
+    throw new Error(`${where}: a seed is a non-empty label of at most 64 characters`);
+}
+
+/** Entries whose play a tie-break seed can change, so a lineup's `seeds` expands them. */
+function seeded(entry: LineupEntry): entry is LocalEntry | BotLedEntry {
+  return (
+    entry.kind === 'bot-led' ||
+    (entry.kind === 'local' && (entry.policy === 'heuristic' || entry.policy === 'heuristic-plain'))
+  );
+}
+
+/**
+ * Validate a lineup file's entries. Unknown fields are refused so a typo cannot change a run.
+ *
+ * A file may carry a top-level `seeds` list (ADR 0043 decision 1.4): every heuristic and
+ * `bot-led` entry without its own `seed` then plays once per seed, as `<id>.s1`, `<id>.s2`, ...,
+ * each recording its seed and the entry it came from. Checked in, the list makes every run of the
+ * gate use the same seeds.
+ */
 export function parseLineup(json: unknown): LineupEntry[] {
-  const list =
-    typeof json === 'object' && json !== null && 'models' in json
-      ? (json as { models: unknown }).models
-      : json;
+  const file = typeof json === 'object' && json !== null && !Array.isArray(json) ? json : null;
+  if (file !== null)
+    for (const key of Object.keys(file))
+      if (!['models', 'seeds', 'description'].includes(key))
+        throw new Error(`lineup: unknown top-level field "${key}"`);
+  const list = file !== null ? (file as { models?: unknown }).models : json;
+  const seedsRaw = file !== null ? (file as { seeds?: unknown }).seeds : undefined;
   if (!Array.isArray(list) || list.length === 0)
     throw new Error('a lineup is a non-empty list of models');
+  let seeds: string[] = [];
+  if (seedsRaw !== undefined) {
+    if (!Array.isArray(seedsRaw) || seedsRaw.length === 0 || seedsRaw.length > 32)
+      throw new Error('lineup: seeds is a list of 1 to 32 labels');
+    seedsRaw.forEach((seed: unknown, i) => checkSeed(seed, `lineup seed ${i + 1}`));
+    seeds = seedsRaw as string[];
+    if (new Set(seeds).size !== seeds.length) throw new Error('lineup: seeds repeat');
+  }
   const entries: LineupEntry[] = [];
   list.forEach((raw: unknown, index) => {
     if (typeof raw !== 'object' || raw === null) entryError(index, 'must be an object');
     const entry = raw as Record<string, unknown>;
     const allowed =
       entry['kind'] === 'local'
-        ? ['id', 'label', 'kind', 'policy']
-        : [
-            'id',
-            'label',
-            'kind',
-            'provider',
-            'baseUrl',
-            'apiKeyEnv',
-            'model',
-            'reasoning',
-            'maxOutputTokens',
-            'requestTimeoutMs',
-            'pricing',
-          ];
+        ? ['id', 'label', 'kind', 'policy', 'seed']
+        : entry['kind'] === 'bot-led'
+          ? ['id', 'label', 'kind', 'escalation', 'margin', 'seed', ...MODEL_FIELDS]
+          : ['id', 'label', 'kind', ...MODEL_FIELDS];
     for (const key of Object.keys(entry))
       if (!allowed.includes(key)) entryError(index, `unknown field "${key}"`);
     if (typeof entry['id'] !== 'string' || !ID_PATTERN.test(entry['id']))
       entryError(index, 'id must be lowercase letters, digits, dots and hyphens');
     if (entries.some((existing) => existing.id === entry['id']))
       entryError(index, `repeats id ${entry['id']}`);
+    if (entry['seed'] !== undefined) checkSeed(entry['seed'], `lineup entry ${index + 1}`);
     if (entry['kind'] === 'local') {
-      if (!['heuristic', 'first-legal', 'random'].includes(entry['policy'] as string))
-        entryError(index, 'policy must be heuristic, first-legal or random');
+      if (!(LOCAL_POLICIES as readonly string[]).includes(entry['policy'] as string))
+        entryError(index, `policy must be ${LOCAL_POLICIES.join(', ')}`);
     } else if (entry['kind'] === 'llm') {
       if (typeof entry['model'] !== 'string' || entry['model'] === '')
         entryError(index, 'model must be a non-empty string');
-      if (entry['provider'] !== undefined && PROVIDERS[entry['provider'] as string] === undefined)
-        entryError(index, `provider must be one of ${Object.keys(PROVIDERS).join(', ')}`);
+      checkModelFields(entry, index);
+    } else if (entry['kind'] === 'bot-led') {
+      const escalation = entry['escalation'];
       if (
-        entry['reasoning'] !== undefined &&
-        !['none', 'low', 'medium', 'high'].includes(entry['reasoning'] as string)
+        !Array.isArray(escalation) ||
+        escalation.some(
+          (name) => !(BOT_LED_TRIGGERS as readonly string[]).includes(name as string),
+        ) ||
+        new Set(escalation).size !== escalation.length
       )
-        entryError(index, 'reasoning must be none, low, medium or high');
-      for (const key of ['maxOutputTokens', 'requestTimeoutMs'])
-        if (
-          entry[key] !== undefined &&
-          !(Number.isSafeInteger(entry[key]) && (entry[key] as number) > 0)
-        )
-          entryError(index, `${key} must be a positive whole number`);
-      const pricing = entry['pricing'] as Record<string, unknown> | undefined;
+        entryError(
+          index,
+          `escalation must list distinct triggers from ${BOT_LED_TRIGGERS.join(', ')} ([] is never)`,
+        );
       if (
-        pricing !== undefined &&
+        entry['margin'] !== undefined &&
         !(
-          typeof pricing === 'object' &&
-          pricing !== null &&
-          typeof pricing['inputPerMTok'] === 'number' &&
-          typeof pricing['outputPerMTok'] === 'number' &&
-          pricing['inputPerMTok'] >= 0 &&
-          pricing['outputPerMTok'] >= 0
+          typeof entry['margin'] === 'number' &&
+          Number.isFinite(entry['margin']) &&
+          entry['margin'] >= 0
         )
       )
-        entryError(index, 'pricing needs inputPerMTok and outputPerMTok in USD');
+        entryError(index, 'margin must be a non-negative number of LEP');
+      if (escalation.length > 0 && (typeof entry['model'] !== 'string' || entry['model'] === ''))
+        entryError(index, 'a bot-led entry that escalates needs a model');
+      if (
+        entry['model'] !== undefined &&
+        (typeof entry['model'] !== 'string' || entry['model'] === '')
+      )
+        entryError(index, 'model must be a non-empty string');
+      checkModelFields(entry, index);
     } else {
-      entryError(index, 'kind must be local or llm');
+      entryError(index, 'kind must be local, llm or bot-led');
     }
     entries.push(entry as unknown as LineupEntry);
   });
-  return entries;
+  if (seeds.length === 0) return entries;
+  const expanded = entries.flatMap((entry): LineupEntry[] =>
+    seeded(entry) && entry.seed === undefined
+      ? seeds.map((seed, i) => ({
+          ...entry,
+          id: `${entry.id}.s${i + 1}`,
+          ...(entry.label !== undefined && { label: `${entry.label} (seed ${i + 1})` }),
+          seed,
+          seedOf: entry.id,
+        }))
+      : [entry],
+  );
+  const ids = expanded.map((entry) => entry.id);
+  const clash = ids.find((id, i) => ids.indexOf(id) !== i);
+  if (clash !== undefined) throw new Error(`lineup: seed expansion repeats id ${clash}`);
+  return expanded;
 }
 
 export function loadLineupFile(path: string): LineupEntry[] {
@@ -175,6 +311,27 @@ export function parseModelList(text: string): LineupEntry[] {
       const provider = part.slice(0, colon);
       const [model = '', effort] = part.slice(colon + 1).split('@');
       if (provider === 'local') return { id: `local-${model}`, kind: 'local', policy: model };
+      // `bot-led:never` costs nothing; `bot-led:uncertain=openrouter/vendor/model@low` escalates.
+      if (provider === 'bot-led') {
+        const [triggers = '', target] = part.slice(colon + 1).split('=');
+        const escalation = triggers === 'never' ? [] : triggers.split('+');
+        if (target === undefined)
+          return { id: slug(`bot-led-${triggers}`), kind: 'bot-led', escalation };
+        const slash = target.indexOf('/');
+        if (slash <= 0)
+          throw new Error(
+            `"${part}": the model after "=" must be provider/model, e.g. openrouter/vendor/model`,
+          );
+        const [targetModel = '', targetEffort] = target.slice(slash + 1).split('@');
+        return {
+          id: slug(`bot-led-${triggers}-${target.replace('@', '-')}`),
+          kind: 'bot-led',
+          escalation,
+          provider: target.slice(0, slash),
+          model: targetModel,
+          ...(targetEffort !== undefined && { reasoning: targetEffort }),
+        };
+      }
       return {
         id: slug(effort === undefined ? model : `${model}-${effort}`),
         kind: 'llm',
@@ -188,7 +345,12 @@ export function parseModelList(text: string): LineupEntry[] {
 
 export function entryLabel(entry: LineupEntry): string {
   if (entry.label !== undefined) return entry.label;
-  if (entry.kind === 'local') return `${entry.policy} (local, no model)`;
+  const seed = entry.kind !== 'llm' && entry.seed !== undefined ? `, seed ${entry.seed}` : '';
+  if (entry.kind === 'local') return `${entry.policy} (local, no model${seed})`;
+  if (entry.kind === 'bot-led')
+    return entry.escalation.length === 0
+      ? `card-aware bot (bot-led, never escalates${seed})`
+      : `card-aware bot escalating ${entry.escalation.join('+')} to ${entry.model ?? '?'}${seed}`;
   return entry.reasoning !== undefined && entry.reasoning !== 'none'
     ? `${entry.model} (reasoning ${entry.reasoning})`
     : entry.model;
@@ -197,7 +359,7 @@ export function entryLabel(entry: LineupEntry): string {
 /** What is safe to print about an entry: everything but where its key comes from. */
 export function publicEntry(entry: LineupEntry): Record<string, unknown> {
   if (entry.kind === 'local') return { ...entry, label: entryLabel(entry) };
-  const { apiKeyEnv: _apiKeyEnv, ...rest } = entry;
+  const { apiKeyEnv: _apiKeyEnv, ...rest } = entry as LlmEntry | BotLedEntry;
   return { ...rest, label: entryLabel(entry) };
 }
 
@@ -234,6 +396,8 @@ const SOURCE: Partial<Record<DecisionSource, AnswerSource>> = {
   heuristic: 'heuristic',
   cache: 'cache',
   plan: 'plan',
+  bot: 'bot',
+  jev: 'jev',
 };
 
 export interface LlmRuntime {
@@ -249,6 +413,34 @@ export interface LlmRuntime {
 
 /** The effective tactician configuration for one model, with the key resolved but never logged. */
 export function resolveLlmConfig(entry: LlmEntry, runtime: LlmRuntime): AiConfig {
+  return modelConfig(entry, entry.model, runtime);
+}
+
+/**
+ * The pipeline for a `bot-led` entry: tactical mode `bot`, the entry's triggers live. An entry
+ * that never escalates names no model and needs no key; its client is never called.
+ */
+export function resolveBotLedConfig(entry: BotLedEntry, runtime: LlmRuntime): AiConfig {
+  const config =
+    entry.model === undefined
+      ? { ...configForRole(loadAiConfig(runtime.env), 'tactician'), models: ['none'], apiKey: '' }
+      : modelConfig(entry, entry.model, runtime);
+  return {
+    ...config,
+    strategistEnabled: false,
+    heuristicsEnabled: runtime.mode === 'production',
+    decisionCacheEnabled: false,
+    filterNonCachingProviders: false,
+    jevEnabled: false,
+    jevShadowEnabled: false,
+    strategyRouterShadowEnabled: false,
+    tacticalMode: 'bot',
+    botEscalation: entry.escalation.includes('uncertain') ? 'uncertain' : 'never',
+    ...(entry.margin !== undefined && { botEscalationMargin: entry.margin }),
+  };
+}
+
+function modelConfig(entry: LlmEntry | BotLedEntry, model: string, runtime: LlmRuntime): AiConfig {
   const base = loadAiConfig(runtime.env);
   const role = configForRole(base, 'tactician');
   const preset = entry.provider === undefined ? undefined : PROVIDERS[entry.provider];
@@ -265,7 +457,7 @@ export function resolveLlmConfig(entry: LlmEntry, runtime: LlmRuntime): AiConfig
     ...role,
     baseUrl,
     apiKey,
-    models: [entry.model],
+    models: [model],
     reasoningEnabled: reasoning !== 'none',
     reasoningEffort: reasoning === 'max' ? 'high' : reasoning,
     // A thinking model needs room to think before its answer (the client adds this on top).
@@ -296,27 +488,80 @@ function round(value: number, digits: number): number {
 
 /** A model in the tested seat, played through the production provider. */
 export function llmActorFactory(entry: LlmEntry, runtime: LlmRuntime): ActorFactory {
-  const config = resolveLlmConfig(entry, runtime);
+  return pipelineActorFactory(entry, resolveLlmConfig(entry, runtime), runtime);
+}
+
+/**
+ * The card-aware bot in the tested seat, played through the production pipeline in bot-led mode
+ * (ADR 0043 decision 1.3). Each decision records the escalation reasons that fired and whether
+ * the model was asked.
+ */
+export function botLedActorFactory(entry: BotLedEntry, runtime: LlmRuntime): ActorFactory {
+  return pipelineActorFactory(entry, resolveBotLedConfig(entry, runtime), runtime);
+}
+
+function pipelineActorFactory(
+  entry: LlmEntry | BotLedEntry,
+  config: AiConfig,
+  runtime: LlmRuntime,
+): ActorFactory {
+  const neverEscalates = entry.kind === 'bot-led' && entry.model === undefined;
   // One queue per model, shared by its cases: the client-side rate limit is per model.
   const queue = new RequestQueue({ rpmLimit: config.rpmLimit, concurrency: 1 });
   return (engine: Engine, benchCase: BenchCase): Actor => {
     let attempts: AiNetworkAttempt[] = [];
-    const client = new OpenAiCompatibleClient(
+    // Set by the provider's hook during `decide`; a holder, since TypeScript cannot see the write.
+    const bot: { outcome?: { escalated: boolean; reasons: readonly string[] } } = {};
+    const takeOutcome = (): typeof bot.outcome => {
+      const outcome = bot.outcome;
+      delete bot.outcome;
+      return outcome;
+    };
+    // A bot-led entry with no model must never reach a network: its client refuses outright.
+    const fetchImpl: typeof fetch | undefined = neverEscalates
+      ? ((() =>
+          Promise.reject(
+            new Error(`${entry.id} has no model to escalate to`),
+          )) as unknown as typeof fetch)
+      : runtime.fetchImpl;
+    const client = new OpenAiCompatibleClient(config, fetchImpl, runtime.sleepImpl, (attempt) => {
+      attempts.push(attempt);
+      runtime.onAttempt?.(attempt, { caseId: benchCase.id });
+    });
+    const logger = new CapturingLogger(`bot-bench-${benchCase.id}`);
+    // The same tie-break seed as `local:heuristic` on the same `seed`, so `bot-led:never` and the
+    // local bot play identically (and escalation is the only difference with triggers on).
+    const botSeed =
+      entry.kind !== 'bot-led'
+        ? undefined
+        : entry.seed === undefined
+          ? `bot-bench-actor:${benchCase.id}`
+          : `bot-bench-actor:${entry.seed}:${benchCase.id}`;
+    const provider = new OpenAiDecisionProvider(
+      client,
+      queue,
+      engine,
       config,
-      runtime.fetchImpl,
-      runtime.sleepImpl,
-      (attempt) => {
-        attempts.push(attempt);
-        runtime.onAttempt?.(attempt, { caseId: benchCase.id });
+      logger,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      {
+        ...(botSeed !== undefined && { botSeed }),
+        onBotDecision: (_request, outcome) => {
+          bot.outcome = outcome;
+        },
       },
     );
-    const logger = new CapturingLogger(`bot-bench-${benchCase.id}`);
-    const provider = new OpenAiDecisionProvider(client, queue, engine, config, logger);
     return {
       async decide(request): Promise<ActorAnswer> {
         attempts = [];
+        takeOutcome();
         const started = performance.now();
         const response = await provider.decide(request);
+        const outcome = takeOutcome();
         const latencyMs = round(performance.now() - started, 1);
         const logged = logger.take(request.requestId);
         const source = (logged && SOURCE[logged.source]) ?? 'model';
@@ -383,18 +628,31 @@ export function llmActorFactory(entry: LlmEntry, runtime: LlmRuntime): ActorFact
           ...(costUsd !== undefined && { costUsd: round(costUsd, 8) }),
           ...(last?.rawResponse !== undefined && { raw: last.rawResponse }),
           ...(failure !== undefined && { failure }),
+          ...(outcome !== undefined && {
+            escalated: outcome.escalated,
+            ...(outcome.reasons.length > 0 && { reasons: [...outcome.reasons] }),
+          }),
         };
       },
     };
   };
 }
 
-/** A free local player: the heuristic bot (the production fallback), first legal option, or random. */
+/**
+ * A free local player: the heuristic bot (card-aware, as the production fallback plays; or plain,
+ * the first sweep's baseline), the first legal option, or random.
+ */
 export function localActorFactory(entry: LocalEntry): ActorFactory {
   return (engine, benchCase) => {
-    if (entry.policy === 'heuristic') {
-      const bot = new HeuristicDecisionProvider(`bot-bench-actor:${benchCase.id}`, () =>
-        engine.view(benchCase.actor),
+    if (entry.policy === 'heuristic' || entry.policy === 'heuristic-plain') {
+      const seed =
+        entry.seed === undefined
+          ? `bot-bench-actor:${benchCase.id}`
+          : `bot-bench-actor:${entry.seed}:${benchCase.id}`;
+      const bot = new HeuristicDecisionProvider(
+        seed,
+        () => engine.view(benchCase.actor),
+        entry.policy === 'heuristic' ? { knowledge: knowledgeFor(engine) } : {},
       );
       return localActor('local', (request) => bot.decide(request));
     }
@@ -408,5 +666,7 @@ export function localActorFactory(entry: LocalEntry): ActorFactory {
 }
 
 export function actorFactory(entry: LineupEntry, runtime: LlmRuntime): ActorFactory {
-  return entry.kind === 'local' ? localActorFactory(entry) : llmActorFactory(entry, runtime);
+  if (entry.kind === 'local') return localActorFactory(entry);
+  if (entry.kind === 'bot-led') return botLedActorFactory(entry, runtime);
+  return llmActorFactory(entry, runtime);
 }

@@ -61,6 +61,48 @@ judge bundle: 26 files, 1035 KB
 - A model whose provider fails three decisions in a row (bad key, unknown model) is stopped and
   marked as such instead of being scored on the fallback bot's play.
 
+## The bot as a regression suite (ADR 0043)
+
+`local:heuristic` is the production bot: card-aware, as it plays in bot-led mode, as a model's
+fallback and in a table's bot seats. `local:heuristic-plain` is the same bot without card
+knowledge, the baseline the first tactician sweep (ADR 0042) measured against; results stored
+under `local:heuristic` before ADR 0043 are the plain bot's. A run's `run.json` records the bot's
+`botPolicyVersion` (`packages/bot/src/version.ts`, bumped by any change to what the bot chooses),
+which is part of the run fingerprint, so a run measured against one bot is never extended with
+another's play.
+
+A `bot-led` entry plays a case through the production pipeline in bot-led mode (ADR 0039): the
+card-aware bot answers and its escalation triggers decide when the entry's `model` is asked.
+`bot-led:never` names no model, needs no key and costs nothing; on the command line,
+`--models bot-led:uncertain=openrouter/<vendor/model>[@low]` escalates close calls to a model. With
+the same `seed` (or none), `bot-led:never` and `local:heuristic` play identically. Each decision records whether it
+was escalated and which triggers fired; each case sums them under `escalations`.
+
+```json
+{
+  "id": "bot-led-uncertain",
+  "kind": "bot-led",
+  "escalation": ["uncertain"],
+  "margin": 1,
+  "provider": "openrouter",
+  "model": "deepseek/deepseek-v4-flash"
+}
+```
+
+The bot breaks ties with a seeded RNG, so one run can be lucky. A lineup file's top-level `seeds`
+list plays every heuristic and `bot-led` entry once per seed (`<id>.s1`, `<id>.s2`, ...).
+[lineups/bot-gate.json](lineups/bot-gate.json) holds the gate's eight seeds, so every run of the
+gate uses the same ones:
+
+```powershell
+bun run bot-bench run --lineup bot-bench/lineups/bot-gate.json --out benchmark-output/bot-bench/gate
+bun run bot-bench seeds --run benchmark-output/bot-bench/gate --baseline local-heuristic-plain --candidate local-heuristic
+```
+
+`seeds` prints each case's mean score across seeds per entry. With `--baseline` and
+`--candidate` it applies ADR 0043's seed gate: the candidate must raise the overall score and must
+not lower any case's mean, and the command exits 1 when it fails.
+
 ## What is measured
 
 Three groups, never blended into one number:

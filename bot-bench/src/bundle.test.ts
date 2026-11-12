@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -240,7 +240,10 @@ describe('the judge bundle', () => {
     expect(page).toContain('Check for lethal first');
 
     const summary = text('SUMMARY.md');
-    expect(summary).toContain('- `BEST` Cast Lightning Bolt ({R}) → P4: Model A');
+    // The card-aware heuristic bot (ADR 0043) finds the lethal Bolt too.
+    expect(summary).toContain(
+      '- `BEST` Cast Lightning Bolt ({R}) → P4: heuristic (local, no model), Model A',
+    );
     expect(summary).toContain('- `weak` Pass priority: Model B');
 
     const turn = text('cases/03-wrath-then-rebuild.md');
