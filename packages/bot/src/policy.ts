@@ -729,6 +729,9 @@ function sendEverythingAtAKill(
  * that do not attack, and attackers with vigilance. A lethal swing outweighs any attack, even one
  * that kills a player; at low life, life given away also counts against the damage an attack
  * deals. Attackers are called back one at a time, best first, while that improves the count.
+ * When the swing is still lethal and no single recall helps (it takes two blockers to survive),
+ * attackers are called back, the biggest cut in the swing first, until it is not, and that plan
+ * is kept if it beats attacking.
  */
 function keepEnoughBlockers(
   action: LegalAction,
@@ -757,7 +760,8 @@ function keepEnoughBlockers(
     view.life <= WEIGHTS.dangerousLifeThreshold ? WEIGHTS.deals.lowLifeMultiplier : 1;
   const bodyOf = new Map(view.battlefield.map((p) => [p.id, p]));
 
-  const worth = (): number => {
+  /** The attack's value, and the swing this seat would face after it. */
+  const assess = (): { gain: number; swing: number } => {
     const bySeat = new Map<PlayerId, CombatBody[]>();
     const attacking = new Set<string>();
     choices.forEach((choice, i) => {
@@ -792,34 +796,76 @@ function keepEnoughBlockers(
           (!attacking.has(p.id) || hasKeyword(p, 'vigilance')),
       )
       .map((p) => combatBody(p));
-    const swing = damageThrough(threatsFor(dead), kept);
+    return { gain, swing: damageThrough(threatsFor(dead), kept) };
+  };
+  const worth = (): number => {
+    const { gain, swing } = assess();
     if (swing >= view.life) return gain - WEIGHTS.combat.lethalSwingValue * 10;
     return lowLife ? gain - swing * lifeWeight : gain;
+  };
+  /** The attack slots that could stay home instead: not forced, not vigilant, still attacking. */
+  const recallable = (): number[] =>
+    slots.flatMap((slot, i) => {
+      const subject = subjects[i];
+      if (subject === undefined || subject.mustAttack || !slot.options.includes(NO_ATTACK_TARGET))
+        return [];
+      if (choices[i]!.choice === NO_ATTACK_TARGET) return [];
+      const p = bodyOf.get(subject.subjectId);
+      return p === undefined || hasKeyword(p, 'vigilance') ? [] : [i];
+    });
+  const recall = (i: number): void => {
+    choices[i] = { slot: slots[i]!.slot, choice: NO_ATTACK_TARGET };
   };
 
   let current = worth();
   for (;;) {
     let bestIndex = -1;
     let bestWorth = current;
-    slots.forEach((slot, i) => {
-      const subject = subjects[i];
+    for (const i of recallable()) {
       const choice = choices[i]!;
-      if (subject === undefined || subject.mustAttack || !slot.options.includes(NO_ATTACK_TARGET))
-        return;
-      if (choice.choice === NO_ATTACK_TARGET) return;
-      const p = bodyOf.get(subject.subjectId);
-      if (p === undefined || hasKeyword(p, 'vigilance')) return;
-      choices[i] = { slot: slot.slot, choice: NO_ATTACK_TARGET };
+      recall(i);
       const after = worth();
       choices[i] = choice;
       if (after > bestWorth) {
         bestWorth = after;
         bestIndex = i;
       }
-    });
-    if (bestIndex === -1) return;
-    choices[bestIndex] = { slot: slots[bestIndex]!.slot, choice: NO_ATTACK_TARGET };
-    current = bestWorth;
+    }
+    if (bestIndex !== -1) {
+      recall(bestIndex);
+      current = bestWorth;
+      continue;
+    }
+    // No one recall helps. If the swing is still lethal, it may take several blockers to live:
+    // call attackers back until it is not, and keep that plan only if it is worth more.
+    if (assess().swing < view.life) return;
+    const before = choices.slice();
+    while (assess().swing >= view.life) {
+      let pick = -1;
+      let pickSwing = Infinity;
+      let pickWorth = -Infinity;
+      for (const i of recallable()) {
+        const choice = choices[i]!;
+        recall(i);
+        const { swing } = assess();
+        const after = worth();
+        choices[i] = choice;
+        if (swing < pickSwing || (swing === pickSwing && after > pickWorth)) {
+          pick = i;
+          pickSwing = swing;
+          pickWorth = after;
+        }
+      }
+      if (pick === -1) break;
+      recall(pick);
+    }
+    const after = worth();
+    if (assess().swing < view.life && after > current) {
+      current = after;
+      continue;
+    }
+    before.forEach((choice, i) => (choices[i] = choice));
+    return;
   }
 }
 

@@ -185,6 +185,7 @@ position per bot fix, written after the fixes were tuned and never tuned against
 | whole turn   | `rock-before-the-draw`                     | `castOrder`     | The mana rock first, then the draw spell                        |
 | one decision | `temple-for-next-turn`                     | `landColors`    | The tapped dual that fixes next turn over a land nobody needs   |
 | one decision | `hold-the-ground-at-five`                  | `attackReserve` | At five life, every creature stays home to block                |
+| one decision | `two-home-to-live`                         | `attackReserve` | Surviving takes two blockers home, so no single recall helps    |
 
 ### Added with ADR 0044
 

@@ -39,7 +39,7 @@ const FIXED_BY: Record<PolicyFix, string[]> = {
     'land-for-the-turn-reordered',
     'temple-for-next-turn',
   ],
-  attackReserve: ['keep-blockers-home', 'hold-the-ground-at-five'],
+  attackReserve: ['keep-blockers-home', 'hold-the-ground-at-five', 'two-home-to-live'],
 };
 
 const SEEDS = ['gate-1', 'gate-2'];

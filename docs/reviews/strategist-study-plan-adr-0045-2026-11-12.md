@@ -122,7 +122,10 @@ How results are kept honest:
 - A reference line must be playable as written. Each step names one target per slot, by id, seat
   or a unique object name (a card in any graveyard included). A target that is not on the menu, or
   a step not played by the end of the forked turn, ends the reference as `invalid_line`, and a
-  game the engine halts ends as `halted`. Neither is a completed run.
+  game the engine halts ends as `halted`. Neither is a completed run. An attack declaration has a
+  slot per creature, so its step names every creature's choice, `__no_attack__` included. Exile is
+  not in the seat's view, so an exiled target is named by id. A game that ends inside the forked
+  turn ends the line too: steps left after the game is over are not counted against it.
 - A turn whose reference line, or whose strategist arm, never completed gets no verdict
   (`needs: completedRuns`), and the reason names the first failure.
 - Captures open each turn's deal window before the strategist runs and before the turn's deals
