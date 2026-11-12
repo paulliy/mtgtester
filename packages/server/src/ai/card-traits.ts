@@ -13,7 +13,14 @@
  */
 
 import type { CardDefinition } from '@mtg/engine';
-import type { CardKnowledge, CardRole, CardTraits, TargetPolarity, WipeSelector } from '@mtg/bot';
+import type {
+  CardKnowledge,
+  CardRole,
+  CardTraits,
+  StatBoost,
+  TargetPolarity,
+  WipeSelector,
+} from '@mtg/bot';
 
 interface OpRecord {
   op: string;
@@ -145,6 +152,106 @@ function targetDamage(ability: AbilityLike | null | undefined): (number | null)[
   return damage;
 }
 
+/** A constant, non-negative boost from a pump op's `power` and `toughness`, or null. */
+function constantBoost(record: OpRecord): StatBoost | null {
+  const power = constantAmount(record.raw['power'] ?? 0);
+  const toughness = constantAmount(record.raw['toughness'] ?? 0);
+  if (power === null || toughness === null || power < 0 || toughness < 0) return null;
+  if (power === 0 && toughness === 0) return null;
+  return { power, toughness };
+}
+
+function addBoost(a: StatBoost | null, b: StatBoost): StatBoost {
+  return a === null ? b : { power: a.power + b.power, toughness: a.toughness + b.toughness };
+}
+
+/** Constant boost per target slot from the `pump*` ops aimed at it (Giant Growth's +3/+3). */
+function targetPump(ability: AbilityLike | null | undefined): (StatBoost | null)[] {
+  const pump: (StatBoost | null)[] = (ability?.targets ?? []).map(() => null);
+  for (const record of collectOps([ability?.effects, ability?.modes])) {
+    if (!/^pump/.test(record.op) || /Each/.test(record.op)) continue;
+    const slot = record.raw['target'];
+    if (typeof slot !== 'number' || slot < 0 || slot >= pump.length) continue;
+    const boost = constantBoost(record);
+    if (boost !== null) pump[slot] = addBoost(pump[slot] ?? null, boost);
+  }
+  return pump;
+}
+
+/** A selector that means exactly "this permanent". */
+function isSelf(selector: unknown): boolean {
+  return (
+    typeof selector === 'object' &&
+    selector !== null &&
+    (selector as { kind?: unknown }).kind === 'self'
+  );
+}
+
+/** "Creatures you control": allOf(controller you, type Creature), in either order. */
+function isOwnCreatures(selector: unknown): boolean {
+  if (typeof selector !== 'object' || selector === null) return false;
+  const s = selector as { kind?: unknown; of?: unknown };
+  if (s.kind !== 'allOf' || !Array.isArray(s.of) || s.of.length !== 2) return false;
+  const leaves = s.of as Array<{ kind?: unknown; who?: unknown; value?: unknown }>;
+  return (
+    leaves.some((l) => l.kind === 'controller' && l.who === 'you') &&
+    leaves.some((l) => l.kind === 'type' && l.value === 'Creature')
+  );
+}
+
+/** The constant boost an ability's effects give its own source (firebreathing), or null. */
+function selfPump(ability: AbilityLike | null | undefined): StatBoost | null {
+  let boost: StatBoost | null = null;
+  for (const record of collectOps([ability?.effects, ability?.modes])) {
+    if (record.op !== 'pumpEachUntilEot' || !isSelf(record.raw['selector'])) continue;
+    const b = constantBoost(record);
+    if (b === null) return null;
+    boost = addBoost(boost, b);
+  }
+  return boost;
+}
+
+/** A constant team pump with the keywords it grants (Overrun), or undefined. */
+function massPump(ability: AbilityLike | null | undefined): CardTraits['massPump'] {
+  let boost: StatBoost | null = null;
+  const keywords: string[] = [];
+  for (const record of collectOps([ability?.effects, ability?.modes])) {
+    if (!isOwnCreatures(record.raw['selector'])) continue;
+    if (record.op === 'pumpEachUntilEot') {
+      const b = constantBoost(record);
+      if (b === null) return undefined;
+      boost = addBoost(boost, b);
+    } else if (
+      record.op === 'grantKeywordEachUntilEot' &&
+      typeof record.raw['keyword'] === 'string'
+    ) {
+      keywords.push(record.raw['keyword']);
+    }
+  }
+  return boost === null ? undefined : { ...boost, keywords };
+}
+
+/** What one plain `{T}` of the card's best fixed mana ability makes. */
+function manaUnits(def: CardDefinition): string[][] | undefined {
+  let best: string[][] | undefined;
+  for (const ability of def.manaAbilities) {
+    const spec = ability as {
+      units?: string[][];
+      costs?: unknown[];
+      dynamic?: unknown;
+      condition?: unknown;
+      restriction?: unknown;
+    };
+    if (spec.dynamic !== undefined || spec.condition !== undefined) continue;
+    if (spec.restriction !== undefined || (spec.costs !== undefined && spec.costs.length > 0))
+      continue;
+    const units = spec.units ?? [];
+    if (units.length > 0 && (best === undefined || units.length > best.length))
+      best = units.map((unit) => [...unit]);
+  }
+  return best;
+}
+
 const WIPE_OP = ROLE_PATTERNS.find(([role]) => role === 'wipe')![1];
 
 /**
@@ -225,6 +332,8 @@ export function cardTraits(def: CardDefinition): CardTraits {
   if (!def.types.includes('Land') && def.manaAbilities.length > 0) roles.add('ramp');
   const abilities = def.activatedAbilities.map((a) => a.ability as AbilityLike);
   const wipe = roles.has('wipe') ? wipeShape([def.spellAbility, def.triggers]) : {};
+  const team = isPermanentSpell ? undefined : massPump(def.spellAbility as AbilityLike);
+  const mana = manaUnits(def);
   return {
     manaValue,
     types: def.types,
@@ -237,6 +346,10 @@ export function cardTraits(def: CardDefinition): CardTraits {
     abilityDamage: abilities.map((a) => targetDamage(a)),
     ...(wipe.selector !== undefined ? { wipeSelector: wipe.selector } : {}),
     ...(wipe.damage !== undefined ? { wipeDamage: wipe.damage } : {}),
+    spellPump: targetPump(main),
+    abilitySelfPump: abilities.map((a) => selfPump(a)),
+    ...(team !== undefined ? { massPump: team } : {}),
+    ...(mana !== undefined ? { manaUnits: mana } : {}),
     power: def.power,
     toughness: def.toughness,
   };

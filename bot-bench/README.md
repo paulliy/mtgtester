@@ -11,7 +11,7 @@ It benchmarks the **tactician** only. Strategist cases are reserved
 ## Quick start
 
 ```powershell
-bun run bot-bench list                      # the 30 cases
+bun run bot-bench list                      # the 41 cases
 bun run bot-bench inspect lethal-alpha-strike   # every legal answer, played out by the engine
 bun run bot-bench verify                    # every reference still agrees with the engine
 
@@ -115,10 +115,11 @@ Three groups, never blended into one number:
 
 ## The cases
 
-Nineteen one-decision cases and eleven whole-turn cases under [cases/tactician/](cases/tactician/).
-Each is a JSON file: a position in the engine's own scenario format, the seat under test, and a
-reviewed reference. The first twelve (the table below) were the original set; the other eighteen
-(listed after it) double it and were written to include positions the heuristic bot gets wrong.
+Twenty-seven one-decision cases and fourteen whole-turn cases under
+[cases/tactician/](cases/tactician/). Each is a JSON file: a position in the engine's own scenario
+format, the seat under test, and a reviewed reference. The first twelve (the table below) were the
+original set; the next eighteen (listed after it) double it and were written to include positions
+the heuristic bot gets wrong; the last eleven came with ADR 0043's bot fixes.
 
 | Kind         | Case                             | What it tests                                                          |
 | ------------ | -------------------------------- | ---------------------------------------------------------------------- |
@@ -160,6 +161,25 @@ ones it also solves, kept so a model that does worse than the bot shows up.
 | whole turn   | `sweep-then-swing`              | calibration   | Pyroclasm clears the chump blockers before the lethal attack    |
 | whole turn   | `anthem-then-alpha`             | calibration   | Glorious Anthem before the all-in attack for exactly nine       |
 | whole turn   | `haste-for-lethal`              | calibration   | Lightning Greaves gives a ten-power creature haste for the kill |
+
+### Added with ADR 0043
+
+Four reordered variants, so a tie or option order cannot pass a position by luck, and one held-out
+position per bot fix, written after the fixes were tuned and never tuned against.
+
+| Kind         | Case                                       | For             | What it tests                                                   |
+| ------------ | ------------------------------------------ | --------------- | --------------------------------------------------------------- |
+| one decision | `pump-the-unblocked-attacker-reordered`    | variant         | The blocked attacker listed first                               |
+| one decision | `removal-on-the-lethal-attacker-reordered` | variant         | The Bears listed before the lethal Dragon                       |
+| one decision | `land-for-the-angel-reordered`             | variant         | The right land first in hand                                    |
+| one decision | `land-for-the-turn-reordered`              | variant         | The right land first in hand                                    |
+| one decision | `shock-the-other-threat`                   | `ownStack`      | A second burn spell not aimed where the first already kills     |
+| whole turn   | `growth-after-attacks`                     | `neverYield`    | Keep priority for the combat trick instead of yielding the turn |
+| one decision | `bolt-the-unblocked-lions`                 | `lethalTargets` | Burn the small attacker that kills you, not the bigger creature |
+| whole turn   | `proportions-for-the-kill`                 | `lethalValue`   | The team pump that kills beats the bigger creature              |
+| whole turn   | `rock-before-the-draw`                     | `castOrder`     | The mana rock first, then the draw spell                        |
+| one decision | `temple-for-next-turn`                     | `landColors`    | The tapped dual that fixes next turn over a land nobody needs   |
+| one decision | `hold-the-ground-at-five`                  | `attackReserve` | At five life, every creature stays home to block                |
 
 `hold-the-counter` and `counter-the-finisher` are a pair on purpose: a model that always passes
 fails one and a model that always acts fails the other.

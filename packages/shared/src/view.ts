@@ -62,6 +62,14 @@ export interface PermanentView {
   tapped: boolean;
   status: string[];
   blockedBy?: ObjectId[];
+  /**
+   * For an attacking creature, the defending player: the player it attacks, or the controller of
+   * the planeswalker it attacks (CR 508.1b). Combat is public. Lets a seat count which attackers
+   * can kill it (ADR 0043).
+   */
+  attacking?: PlayerId;
+  /** The planeswalker this creature attacks, when it attacks one. */
+  attackingPlaneswalker?: ObjectId;
 }
 
 export interface StackObjectView {

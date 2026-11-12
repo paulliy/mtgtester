@@ -53,7 +53,8 @@ export function isUncertain(
   if (PASS_TYPES.has(first.action.type) && PASS_TYPES.has(second.action.type)) return false;
   if (first.action.description === second.action.description) return false;
   // Which land to play is rarely worth a call: about a quarter of close calls in offline games
-  // were one basic against another, and the bot's color logic already handles it (ADR 0041).
+  // were one basic against another (ADR 0041). Since ADR 0043 the bot counts coloured sources and
+  // the lands each one unlocks (`landColors`), so a land tie no longer falls to the seed.
   if (first.action.type === 'playLand' && second.action.type === 'playLand') return false;
   return true;
 }

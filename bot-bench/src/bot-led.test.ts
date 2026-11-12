@@ -178,7 +178,8 @@ describe('the card-aware bot in the tested seat', () => {
         seeds: ['p', 'q'],
         models: [
           { id: 'plain', kind: 'local', policy: 'heuristic-plain' },
-          { id: 'aware', kind: 'local', policy: 'heuristic' },
+          // The card-aware bot before ADR 0043's fixes, which still lost the pump case.
+          { id: 'aware', kind: 'local', policy: 'heuristic', fixes: [] },
         ],
       }),
       options,
@@ -190,7 +191,7 @@ describe('the card-aware bot in the tested seat', () => {
     expect(folded[0]!.caseRuns['stoke-the-flames-lethal']).toBe(2);
     const gate = seedGate(folded[0]!, folded[1]!);
     expect(gate.improvements.map((r) => r.caseId)).toContain('stoke-the-flames-lethal');
-    // Without the reorder-proof fixes the card-aware bot still loses the pump case (ADR 0043).
+    // Without ADR 0043's fixes the card-aware bot still loses the pump case.
     expect(gate.regressions.map((r) => r.caseId)).toContain('pump-the-unblocked-attacker');
     expect(gate.pass).toBe(false);
   });

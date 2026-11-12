@@ -210,8 +210,11 @@ class Table {
   private bot(seat: string): HeuristicDecisionProvider {
     let bot = this.bots.get(seat);
     if (bot === undefined) {
-      bot = new HeuristicDecisionProvider(`bot-bench:${this.benchCase.id}:${seat}`, () =>
-        this.engine.view(seat),
+      // The table stays the plain, pre-ADR 0043 bot so recorded reference lines keep holding.
+      bot = new HeuristicDecisionProvider(
+        `bot-bench:${this.benchCase.id}:${seat}`,
+        () => this.engine.view(seat),
+        { fixes: [] },
       );
       this.bots.set(seat, bot);
     }

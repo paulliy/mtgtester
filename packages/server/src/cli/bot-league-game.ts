@@ -9,7 +9,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { BotSteering, DecisionRequest, OracleCard, PlayerId } from '@mtg/shared';
 import { Engine, runToCompletion, type EnginePlayerConfig } from '@mtg/engine';
-import { HeuristicDecisionProvider } from '@mtg/bot';
+import { HeuristicDecisionProvider, type PolicyFix } from '@mtg/bot';
 import { buildCardKnowledge } from '../ai/card-traits';
 
 /** How one seat's bot is configured. */
@@ -21,6 +21,8 @@ export interface LeagueArm {
   knowledge?: boolean;
   /** Fixed strategist knobs for the whole game. */
   steering?: BotSteering;
+  /** ADR 0043's policy fixes. Omitted is none: the bot as it was before them. */
+  fixes?: PolicyFix[];
 }
 
 export interface LeagueGameRequest {
@@ -76,6 +78,7 @@ export function playLeagueGame(request: LeagueGameRequest): LeagueGameReply {
         ...(arm.legacy === true ? { legacy: true } : {}),
         ...(arm.knowledge === true ? { knowledge } : {}),
         ...(arm.steering === undefined ? {} : { steering: () => arm.steering }),
+        fixes: arm.fixes ?? [],
       });
       providers.set(seat, provider);
     }

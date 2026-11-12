@@ -5,7 +5,7 @@
  * follows that code when it changes. Local entries cost nothing and give a floor and a reference.
  */
 import { readFileSync } from 'node:fs';
-import { HeuristicDecisionProvider } from '../../packages/bot/src';
+import { HeuristicDecisionProvider, parsePolicyFixes } from '../../packages/bot/src';
 import { knowledgeFor } from '../../packages/server/src/ai/bot-tactician';
 import { RandomDecisionProvider, chooseFirst, type Engine } from '../../packages/engine/src';
 import {
@@ -62,6 +62,11 @@ export interface LocalEntry {
   seed?: string;
   /** The entry a lineup's `seeds` list expanded this one from. */
   seedOf?: string;
+  /**
+   * `heuristic` only: ADR 0043's policy fixes to play with. Omitted is the production default;
+   * `[]` is the card-aware bot before them. `heuristic-plain` always plays with none.
+   */
+  fixes?: string[];
 }
 
 /** Fields that name a model and how to reach it, shared by `llm` and `bot-led` entries. */
@@ -221,7 +226,7 @@ export function parseLineup(json: unknown): LineupEntry[] {
     const entry = raw as Record<string, unknown>;
     const allowed =
       entry['kind'] === 'local'
-        ? ['id', 'label', 'kind', 'policy', 'seed']
+        ? ['id', 'label', 'kind', 'policy', 'seed', 'fixes']
         : entry['kind'] === 'bot-led'
           ? ['id', 'label', 'kind', 'escalation', 'margin', 'seed', ...MODEL_FIELDS]
           : ['id', 'label', 'kind', ...MODEL_FIELDS];
@@ -235,6 +240,16 @@ export function parseLineup(json: unknown): LineupEntry[] {
     if (entry['kind'] === 'local') {
       if (!(LOCAL_POLICIES as readonly string[]).includes(entry['policy'] as string))
         entryError(index, `policy must be ${LOCAL_POLICIES.join(', ')}`);
+      if (entry['fixes'] !== undefined) {
+        if (entry['policy'] !== 'heuristic')
+          entryError(index, 'only a heuristic entry takes fixes');
+        if (!Array.isArray(entry['fixes'])) entryError(index, 'fixes must be a list of fix names');
+        try {
+          parsePolicyFixes(entry['fixes'] as string[]);
+        } catch (cause) {
+          entryError(index, (cause as Error).message);
+        }
+      }
     } else if (entry['kind'] === 'llm') {
       if (typeof entry['model'] !== 'string' || entry['model'] === '')
         entryError(index, 'model must be a non-empty string');
@@ -652,7 +667,12 @@ export function localActorFactory(entry: LocalEntry): ActorFactory {
       const bot = new HeuristicDecisionProvider(
         seed,
         () => engine.view(benchCase.actor),
-        entry.policy === 'heuristic' ? { knowledge: knowledgeFor(engine) } : {},
+        entry.policy === 'heuristic'
+          ? {
+              knowledge: knowledgeFor(engine),
+              ...(entry.fixes !== undefined && { fixes: parsePolicyFixes(entry.fixes) }),
+            }
+          : { fixes: [] },
       );
       return localActor('local', (request) => bot.decide(request));
     }

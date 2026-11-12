@@ -18,6 +18,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { OracleCard } from '@mtg/shared';
+import { DEFAULT_POLICY_FIXES, POLICY_FIXES } from '@mtg/bot';
 import { buildSupportedPool, type SupportedPool } from '../cards/pool';
 import { generateCommanderDeck } from '../decks/generate';
 // Type-only: the game module runs a game when it is the entry point.
@@ -25,10 +26,21 @@ import type { LeagueArm, LeagueGameReply, LeagueGameRequest } from './bot-league
 
 const FIXTURE = 'packages/server/fixtures/coverage-oracle.json';
 
+/** One arm per ADR 0043 fix: the card-aware bot plus that fix alone. */
+const FIX_ARMS: Record<string, LeagueArm> = Object.fromEntries(
+  POLICY_FIXES.map((fix) => [`fix-${fix}`, { name: `fix-${fix}`, knowledge: true, fixes: [fix] }]),
+);
+
+/**
+ * Arms without `fixes` play the bot as it was before ADR 0043, so the numbers recorded against
+ * them keep holding. `fixed` is the production bot: card-aware with every default fix.
+ */
 export const ARMS: Record<string, LeagueArm> = {
   legacy: { name: 'legacy', legacy: true },
   policy: { name: 'policy' },
   knowledge: { name: 'knowledge', knowledge: true },
+  fixed: { name: 'fixed', knowledge: true, fixes: [...DEFAULT_POLICY_FIXES] },
+  ...FIX_ARMS,
   aggro: { name: 'aggro', knowledge: true, steering: { aggression: 0.85 } },
   control: {
     name: 'control',

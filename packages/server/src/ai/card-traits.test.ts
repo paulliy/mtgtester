@@ -8,8 +8,20 @@ const cards = JSON.parse(
   readFileSync(new URL('../../fixtures/coverage-oracle.json', import.meta.url), 'utf8'),
 ) as OracleCard[];
 
+// Giant Growth and Shivan Dragon live only in the ranked fixture; loaded lazily so the
+// whole-fixture test below still iterates the coverage cards alone.
+let ranked: OracleCard[] | undefined;
+function rankedCards(): OracleCard[] {
+  ranked ??= (
+    JSON.parse(
+      readFileSync(new URL('../../fixtures/edhrec-pinned-oracle.json', import.meta.url), 'utf8'),
+    ) as Array<{ card: OracleCard }>
+  ).map((entry) => entry.card);
+  return ranked;
+}
+
 function traits(name: string): ReturnType<typeof cardTraits> {
-  const card = cards.find((c) => c.name === name);
+  const card = cards.find((c) => c.name === name) ?? rankedCards().find((c) => c.name === name);
   if (card === undefined) throw new Error(`${name} is not in the fixture`);
   return cardTraits(interpretCard(card));
 }
@@ -68,6 +80,14 @@ describe('cardTraits', () => {
       ],
     });
     expect(traits('Blasphemous Act').wipeDamage).toBe(13);
+  });
+
+  it('records pump and mana facts for ADR 0043', () => {
+    expect(traits('Giant Growth').spellPump).toEqual([{ power: 3, toughness: 3 }]);
+    expect(traits('Overrun').massPump).toEqual({ power: 3, toughness: 3, keywords: ['trample'] });
+    expect(traits('Shivan Dragon').abilitySelfPump).toEqual([{ power: 1, toughness: 0 }]);
+    expect(traits('Sol Ring').manaUnits).toEqual([['C'], ['C']]);
+    expect(traits('Command Tower').manaUnits).toBeUndefined();
   });
 
   it('does not call a counterspell removal', () => {

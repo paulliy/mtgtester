@@ -8,6 +8,7 @@ import type {
 import type { CardKnowledge } from './card-knowledge';
 import type { CombatSearchOptions } from './combat-search';
 import type { DiplomacyPlay } from './diplomacy/play';
+import type { PolicyFix } from './fixes';
 import { decideScored, type EvaluateOptions, type ScoredDecision } from './evaluate';
 import { Rng, type RandomSource } from './rng';
 
@@ -56,6 +57,11 @@ export interface HeuristicProviderOptions {
   steering?: () => BotSteering | undefined;
   /** Score with the pre-ADR 0039 policy, for league comparisons only. */
   legacy?: boolean;
+  /**
+   * ADR 0043's policy fixes to play with. Omitted is `DEFAULT_POLICY_FIXES`, the production bot;
+   * `[]` is the bot as it was before them (bot-bench's table and `heuristic-plain`).
+   */
+  fixes?: readonly PolicyFix[];
 }
 
 export class HeuristicDecisionProvider implements DecisionProviderLike {
@@ -107,6 +113,7 @@ export class HeuristicDecisionProvider implements DecisionProviderLike {
       ...(this.opts.knowledge !== undefined ? { knowledge: this.opts.knowledge } : {}),
       ...(steering !== undefined ? { steering } : {}),
       ...(this.opts.legacy === true ? { legacy: true } : {}),
+      ...(this.opts.fixes !== undefined ? { fixes: this.opts.fixes } : {}),
     };
     const scored = decideScored(request, this.viewOf(), this.rng, options);
     if (record) this.record(request, scored.response);

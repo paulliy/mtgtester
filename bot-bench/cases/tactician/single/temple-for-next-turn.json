@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "id": "temple-for-next-turn",
+  "role": "tactician",
+  "scope": "single",
+  "title": "The tapped dual that fixes next turn over the land nobody needs",
+  "skills": ["land-choice", "mana"],
+  "briefing": "Held out for ADR 0043 (written after the fixes were tuned, never tuned against): count coloured sources. P1 has Island, Island and Forest and holds Temple of Mystery, Plains and Kalonian Tusker ({G}{G}). No land casts the Tusker this turn (the Temple enters tapped), but the Temple is the second green source for next turn; the Plains adds a colour nothing in hand uses.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 4
+    },
+    "seats": {
+      "P1": {
+        "life": 40,
+        "hand": ["Plains", "Temple of Mystery", "Kalonian Tusker"],
+        "battlefield": ["Island", "Island", "Forest"],
+        "libraryTop": ["Island", "Island", "Island"]
+      },
+      "P2": {
+        "life": 40,
+        "battlefield": ["Mountain", "Mountain", "Mountain"]
+      },
+      "P3": {
+        "life": 40,
+        "battlefield": ["Swamp", "Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 40,
+        "battlefield": ["Plains", "Plains", "Plains"]
+      }
+    }
+  },
+  "reference": {
+    "analysis": "The Tusker needs two green sources and P1 has one. Neither land casts it now. The Temple of Mystery (enters tapped, makes G or U) gives the second green source next turn; the Plains does not help any card in hand.",
+    "options": [
+      {
+        "label": "Play Temple of Mystery",
+        "when": {
+          "choose": "Play Temple of Mystery"
+        },
+        "grade": "best",
+        "why": "Nothing is lost this turn and the Tusker is castable next turn."
+      },
+      {
+        "label": "Play Plains",
+        "when": {
+          "choose": "Play Plains"
+        },
+        "grade": "weak",
+        "why": "Uses the land drop on a colour the hand does not need; the Tusker waits for another green source."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "Skips the land drop."
+    }
+  }
+}

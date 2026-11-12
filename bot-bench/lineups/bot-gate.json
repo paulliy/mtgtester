@@ -1,9 +1,27 @@
 {
-  "description": "ADR 0043 decision 3.1: the bot's regression gate. Every heuristic and bot-led entry plays once per seed; compare with `bun run bot-bench seeds --run <dir> --baseline <id> --candidate <id>`.",
+  "description": "ADR 0043 decision 3.1: the bot's regression gate. Every heuristic and bot-led entry plays once per seed; compare with `bun run bot-bench seeds --run <dir> --baseline <id> --candidate <id>`. `local-heuristic-nofix` is the card-aware bot before ADR 0043's fixes; each `fix-*` entry adds one fix to it.",
   "seeds": ["gate-1", "gate-2", "gate-3", "gate-4", "gate-5", "gate-6", "gate-7", "gate-8"],
   "models": [
     { "id": "local-heuristic", "kind": "local", "policy": "heuristic" },
+    { "id": "local-heuristic-nofix", "kind": "local", "policy": "heuristic", "fixes": [] },
     { "id": "local-heuristic-plain", "kind": "local", "policy": "heuristic-plain" },
+    { "id": "fix-own-stack", "kind": "local", "policy": "heuristic", "fixes": ["ownStack"] },
+    { "id": "fix-never-yield", "kind": "local", "policy": "heuristic", "fixes": ["neverYield"] },
+    {
+      "id": "fix-lethal-targets",
+      "kind": "local",
+      "policy": "heuristic",
+      "fixes": ["lethalTargets"]
+    },
+    { "id": "fix-lethal-value", "kind": "local", "policy": "heuristic", "fixes": ["lethalValue"] },
+    { "id": "fix-cast-order", "kind": "local", "policy": "heuristic", "fixes": ["castOrder"] },
+    { "id": "fix-land-colors", "kind": "local", "policy": "heuristic", "fixes": ["landColors"] },
+    {
+      "id": "fix-attack-reserve",
+      "kind": "local",
+      "policy": "heuristic",
+      "fixes": ["attackReserve"]
+    },
     { "id": "bot-led-never", "kind": "bot-led", "escalation": [] }
   ]
 }

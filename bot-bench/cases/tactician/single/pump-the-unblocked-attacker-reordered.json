@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "id": "pump-the-unblocked-attacker-reordered",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Giant Growth goes on the attacker nobody blocked (reordered)",
+  "skills": ["combat-tricks", "lethal", "target-choice"],
+  "briefing": "ADR 0043 variant of pump-the-unblocked-attacker with the blocked Kalonian Tusker listed before the unblocked Grizzly Bears, so the first target option is the wrong one. P1 attacks P2 (4 life) with Grizzly Bears and Kalonian Tusker. P2 blocked the Tusker with Wall of Omens and left the Bears unblocked. P1 has Giant Growth and a Forest open. The Bears deal 2, which leaves P2 at 2; Giant Growth on the Bears makes it 5 damage and a kill. Putting it on the blocked Tusker only wins a fight that was already safe.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 7
+    },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Giant Growth"],
+        "battlefield": [
+          "Forest",
+          {
+            "card": "Forest",
+            "tapped": true
+          },
+          "Kalonian Tusker",
+          "Grizzly Bears"
+        ]
+      },
+      "P2": {
+        "life": 4,
+        "battlefield": ["Plains", "Plains", "Wall of Omens"]
+      },
+      "P3": {
+        "life": 38,
+        "battlefield": ["Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 35,
+        "battlefield": ["Island", "Island"]
+      }
+    },
+    "continue": {
+      "throughCombat": true
+    }
+  },
+  "setup": [
+    {
+      "player": "P1",
+      "choose": "Declare attackers",
+      "assign": {
+        "Grizzly Bears": "P2",
+        "Kalonian Tusker": "P2"
+      }
+    },
+    {
+      "player": "P2",
+      "choose": "Declare blockers",
+      "assign": {
+        "Wall of Omens": "Kalonian Tusker"
+      }
+    }
+  ],
+  "reference": {
+    "analysis": "P2 is at 4. The Bears are unblocked and deal 2; Giant Growth on them makes 5, which is lethal. On the Tusker (blocked by the Wall of Omens) it kills the Wall but P2 survives at 2. On the Wall it kills P1's own Tusker. Passing leaves P2 at 2.",
+    "options": [
+      {
+        "label": "Giant Growth on the unblocked Grizzly Bears",
+        "when": {
+          "choose": "Cast Giant Growth",
+          "targets": ["Grizzly Bears"]
+        },
+        "grade": "best",
+        "why": "Five unblocked damage at a player on 4: P2 is eliminated."
+      },
+      {
+        "label": "Giant Growth on the blocked Kalonian Tusker",
+        "when": {
+          "choose": "Cast Giant Growth",
+          "targets": ["Kalonian Tusker"]
+        },
+        "grade": "blunder",
+        "why": "Kills the Wall of Omens but throws away the kill: the unblocked Bears only take P2 to 2 and the trick is spent."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "P2 survives at 2 and the trick is wasted or aimed at P1's own creature."
+    }
+  }
+}
