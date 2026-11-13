@@ -18,5 +18,6 @@ The canonical completion standard is [Modeling a Card and Testing It](card-model
 - [EDHREC triage](../plans/edhrec-triage.md): the grammar slot that fails in each one-line card, grouped by phrase; the work queue for the coverage plan. Regenerate with `bun run edhrec:triage` after a parser change (`snapshots:check` fails until you do).
 - [EDHREC ready list](../plans/edhrec-ready-list.md): the cards filling 95% of real Commander deck slots that are modeled or one unparsed line away. Regenerate with `bun run edhrec:ready-list` after a parser change; refreeze the ranking with `bun run edhrec:fetch`.
 - [Post-Tier-3 residue](../plans/post-tier3-card-coverage.md)
+- [Batch card compile campaign](../plans/batch-card-compile-campaign.md) (proposed): the remaining 5,254 pinned EDHREC cards through the batch card compiler in guarded chunks, with the improvements it needs first.
 
 Precon coverage is strongest. Community fixtures and the EDH-staples report expose the significant remaining gaps. Use `bun run coverage`, `bun run staples`, and `bun run test:implemented`.
