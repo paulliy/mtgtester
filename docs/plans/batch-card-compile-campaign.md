@@ -155,10 +155,11 @@ cannot be skipped. The main thread designs each; Sonnet implements from the writ
    and list order). `coverage:pin --check` then fails when any modeled card's behavior changes, not
    only when it stops modeling. Re-recording prints the per-card diff.
    Exit: a deliberately changed production fails the check and names the affected cards.
-2. **The promotion path.** `run.ts promote <trial>` writes the accepted queue entries to one
-   generated TypeScript data module per chunk under `packages/engine/src/cards/overrides/compiled/`,
+2. **The promotion path.** `run.ts promote <batch>` writes the accepted queue entries as a batch
+   into one generated TypeScript data module, `packages/engine/src/cards/overrides/compiled/index.ts`,
    registered from `overrides/index.ts`. A `.ts` module keeps the engine free of I/O and inside the
-   benchmark source hash. Each entry carries its source, trial and patch SHA-256. The command
+   benchmark source hash, and one module rather than one per chunk keeps a promotion from touching
+   the evidence generators' source lists. Each entry carries its source, trial and patch SHA-256. The command
    refuses a card that has an authored override, a card the interpreter now models alone, and a
    patch whose bytes differ from the reviewed ones. `run.ts retire <name>` removes one card, and
    reports whether the interpreter's own reading now matches the patch when a grammar change
@@ -262,8 +263,7 @@ Worker rules:
 
 `promote --verify` fails the pull request unless all of these hold:
 
-- the only engine source files changed are the generated module for this chunk and its
-  registration line;
+- the only engine source file changed is the generated module;
 - the override snapshot, the fingerprints and the modeled ratchet gain entries for exactly the
   promoted names and change no existing entry;
 - the interpretation snapshots and the one-line corpus outcomes are unchanged.
@@ -290,8 +290,8 @@ The loop halts and the main thread investigates when any of these happens:
    which is the project's rule over playing it wrong.
 2. Add the wrong patch to the calibration set.
 3. Use the ledger to list every promoted card with the same op or shape, and audit those.
-4. A whole chunk is one generated module and one registration line, so reverting its pull request
-   removes it cleanly.
+4. A whole chunk is one batch in the generated module, so reverting its pull request removes it
+   cleanly.
 
 ### When grammar work strands a compiled card
 

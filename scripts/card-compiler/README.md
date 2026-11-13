@@ -164,14 +164,14 @@ bun run scripts/card-compiler/run.ts retire "<name>"
 ```
 
 - `review` records a verdict against the exact patch bytes. `queue` drops it if the patch changes.
-- `promote` (`promote.ts`) writes the accepted entries to one generated module,
-  `packages/engine/src/cards/overrides/compiled/batch-<id>.ts`, which registers them as `'append'`
+- `promote` (`promote.ts`) writes the accepted entries as a batch of their own into the generated
+  module `packages/engine/src/cards/overrides/compiled/index.ts`, which registers them as `'append'`
   overrides with their source, trial and patch hash. It says why it leaves a card out: its checks
   failed, no smoke game exercised it, the patch changed after review, an authored override or a
   second accepted patch claims the card, the interpreter already models it, or the patch no longer
-  validates. The generated modules are never edited by hand.
+  validates. The generated module is never edited by hand.
 - `verify` is the regression guard. It fails unless the working tree only adds the promoted cards
-  to the base commit: no engine source outside the generated modules, no changed entry in the
+  to the base commit: no engine source outside the generated module, no changed entry in the
   override or interpretation snapshots, no changed definition fingerprint, and no newly modeled
   card that was not promoted. Engine, grammar and validator changes therefore go in their own
   pull requests.

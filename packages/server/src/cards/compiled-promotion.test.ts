@@ -10,8 +10,7 @@ import { interpretCard } from '@mtg/engine';
 import { pinnedPool, type PinnedRow } from '../../../../scripts/card-compiler/lib';
 import {
   additiveViolations,
-  renderBatchModule,
-  renderIndexModule,
+  renderCompiledModule,
   selectForPromotion,
   strandedReading,
   type PromotionContext,
@@ -187,16 +186,24 @@ describe('a stranded compiled card', () => {
   });
 });
 
-describe('the generated modules', () => {
-  it('render an empty registry and a batch in name order', () => {
-    expect(renderIndexModule([])).toContain('COMPILED_BATCHES: readonly CompiledBatch[] = [];');
-    const index = renderIndexModule(['chunk-02', 'chunk-01']);
-    expect(index.indexOf('chunk-01')).toBeLessThan(index.indexOf('chunk-02'));
-    expect(index).toContain("import { BATCH_CHUNK_01 } from './batch-chunk-01';");
+describe('the generated module', () => {
+  it('renders an empty registry, and batches and their cards in a fixed order', () => {
+    const empty = renderCompiledModule([]);
+    expect(empty).toContain('COMPILED_BATCHES: readonly CompiledBatch[] = [];');
+    expect(empty).toContain("import type { CompiledBatch } from './types';");
     const card = selectForPromotion([accepted()], context()).cards[0]!;
-    const batch = renderBatchModule('chunk-01', [{ ...card, name: 'Zebra' }, card]);
-    expect(batch.indexOf('Yavimaya Hollow')).toBeLessThan(batch.indexOf('Zebra'));
-    expect(() => renderBatchModule('Chunk 01', [])).toThrow(/batch id/);
+    const module = renderCompiledModule([
+      { id: 'chunk-02', cards: [{ ...card, name: 'Zebra' }, card] },
+      { id: 'chunk-01', cards: [card] },
+      { id: 'chunk-00', cards: [] },
+    ]);
+    expect(module.indexOf('BATCH_CHUNK_01:')).toBeLessThan(module.indexOf('BATCH_CHUNK_02:'));
+    expect(module).toContain("{ id: 'chunk-01', cards: BATCH_CHUNK_01 },");
+    // A batch left empty by `retire` is dropped, so retiring a whole batch restores the file.
+    expect(module).not.toContain('CHUNK_00');
+    const second = module.slice(module.indexOf('BATCH_CHUNK_02:'));
+    expect(second.indexOf('Yavimaya Hollow')).toBeLessThan(second.indexOf('Zebra'));
+    expect(() => renderCompiledModule([{ id: 'Chunk 01', cards: [card] }])).toThrow(/batch id/);
   });
 });
 
@@ -224,7 +231,7 @@ describe('a promotion may only add cards', () => {
     interpretDefsPinned: JSON.stringify([entry('i-one', 'One'), entry('o-new', 'New Card', 'b')]),
     modeled: ratchet(['One', 'New Card'], { One: 'aaaa', 'New Card': 'bbbb' }),
   };
-  const sources = ['packages/engine/src/cards/overrides/compiled/batch-chunk-01.ts'];
+  const sources = ['packages/engine/src/cards/overrides/compiled/index.ts'];
   const check = (over: Partial<VerifiedTexts>, changedEngineSources = sources) =>
     additiveViolations({ base, head: { ...head, ...over }, changedEngineSources, compiled })
       .violations;
@@ -236,7 +243,7 @@ describe('a promotion may only add cards', () => {
 
   it('fails when engine source outside the generated modules changed', () => {
     expect(check({}, [...sources, 'packages/engine/src/cards/interpret.ts'])).toEqual([
-      'engine source changed outside the generated compiled modules: packages/engine/src/cards/interpret.ts',
+      'engine source changed outside the generated compiled module: packages/engine/src/cards/interpret.ts',
     ]);
     expect(check({}, ['packages/engine/src/cards/overrides/compiled/register.ts'])).toHaveLength(1);
   });

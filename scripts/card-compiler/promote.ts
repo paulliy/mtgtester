@@ -7,8 +7,9 @@
  *   bun run scripts/card-compiler/run.ts retire <name>    # take one promoted card back out
  *   bun run scripts/card-compiler/run.ts verify [--base <sha>]   # the promotion added cards only
  *
- * `promote` writes the accepted queue entries to one generated module under
- * `packages/engine/src/cards/overrides/compiled/`, which registers them as overrides. It takes a
+ * `promote` writes the accepted queue entries into the generated module
+ * `packages/engine/src/cards/overrides/compiled/index.ts`, as a batch of its own, which registers
+ * them as overrides. It takes a
  * card only when every one of these holds, and says why for each card it leaves out:
  *
  * - the queue entry is accepted, and the patch file still has the bytes that were reviewed;
@@ -20,12 +21,12 @@
  *
  * `verify` is the regression guard for a promotion: the change may add the promoted cards and
  * nothing else. It compares the working tree with a base commit and fails when any engine source
- * outside the generated modules changed, when any existing snapshot entry or definition
+ * outside the generated module changed, when any existing snapshot entry or definition
  * fingerprint changed, or when the set of newly modeled cards is not exactly the promoted set.
  */
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { CardDefinition } from '../../packages/engine/src/cards/definition';
 import { interpretCard } from '../../packages/engine/src/cards/interpret';
 import {
@@ -61,61 +62,49 @@ export function behaviorSha256(definition: CardDefinition): string {
   return sha256(canonicalBehavior(definition, { unorderedAbilities: true }));
 }
 
-// ── Generated modules ─────────────────────────────────────────────────────────────────────────
+// ── The generated module ──────────────────────────────────────────────────────────────────────
 
 const BATCH_ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
-export function batchFile(id: string): string {
+/** A batch id as a TypeScript identifier: `trial-01` becomes `BATCH_TRIAL_01`. */
+function batchConst(id: string): string {
   if (!BATCH_ID.test(id))
     throw new Error(`batch id "${id}" must be lowercase letters, digits and single hyphens`);
-  return `batch-${id}.ts`;
+  return `BATCH_${id.toUpperCase().replace(/-/g, '_')}`;
 }
 
-/** A batch id as a TypeScript identifier: `trial-01` becomes `BATCH_TRIAL_01`. */
-const batchConst = (id: string): string => `BATCH_${id.toUpperCase().replace(/-/g, '_')}`;
-
-export function renderBatchModule(id: string, cards: readonly CompiledCard[]): string {
-  batchFile(id);
-  const sorted = [...cards].sort((a, b) => a.name.localeCompare(b.name));
-  return `${GENERATED}
-import type { CompiledCard } from './types';
-
-export const ${batchConst(id)}: readonly CompiledCard[] = ${JSON.stringify(sorted, null, 2)};
-`;
-}
-
-export function renderIndexModule(ids: readonly string[]): string {
-  const sorted = [...ids].sort();
-  const imports = sorted
-    .map((id) => `import { ${batchConst(id)} } from './${batchFile(id).replace(/\.ts$/, '')}';\n`)
+/**
+ * The whole compiled registry as one module: a constant per batch, in batch-id order, each with
+ * its cards in name order. It is one file on purpose. The viewer-evidence generators list every
+ * engine source they depend on (`SOURCE_FILES`), so a module per batch would mean editing those
+ * lists at every promotion; one module is listed once, and a promotion changes only its content.
+ */
+export function renderCompiledModule(batches: readonly CompiledBatch[]): string {
+  const kept = batches
+    .filter((batch) => batch.cards.length > 0)
+    .sort((a, b) => a.id.localeCompare(b.id));
+  const constants = kept
+    .map((batch) => {
+      const cards = [...batch.cards].sort((a, b) => a.name.localeCompare(b.name));
+      return `const ${batchConst(batch.id)}: readonly CompiledCard[] = ${JSON.stringify(cards, null, 2)};\n\n`;
+    })
     .join('');
-  const entries = sorted.map((id) => `  { id: '${id}', cards: ${batchConst(id)} },\n`).join('');
+  const entries = kept
+    .map((batch) => `  { id: '${batch.id}', cards: ${batchConst(batch.id)} },\n`)
+    .join('');
+  const types = kept.length === 0 ? 'CompiledBatch' : 'CompiledBatch, CompiledCard';
   return `${GENERATED}
-import type { CompiledBatch } from './types';
-${imports}
-/** Every promoted batch of compiled cards, in batch-id order. */
+import type { ${types} } from './types';
+
+${constants}/** Every promoted batch of compiled cards, in batch-id order. */
 export const COMPILED_BATCHES: readonly CompiledBatch[] = [${entries === '' ? '' : `\n${entries}`}];
 `;
 }
 
-/** Write the batches to `dir`, removing the module of any batch left empty, and format them. */
-export function writeBatches(
-  dir: string,
-  before: readonly CompiledBatch[],
-  after: readonly CompiledBatch[],
-): void {
-  const kept = after.filter((batch) => batch.cards.length > 0);
-  for (const batch of before)
-    if (!kept.some((other) => other.id === batch.id))
-      rmSync(`${dir}/${batchFile(batch.id)}`, { force: true });
-  const written: string[] = [];
-  for (const batch of kept) {
-    const path = `${dir}/${batchFile(batch.id)}`;
-    writeFileSync(path, renderBatchModule(batch.id, batch.cards));
-    written.push(path);
-  }
-  writeFileSync(`${dir}/index.ts`, renderIndexModule(kept.map((batch) => batch.id)));
-  runPrettier([...written, `${dir}/index.ts`]);
+/** Write the registry to `dir/index.ts` and format it. */
+export function writeBatches(dir: string, batches: readonly CompiledBatch[]): void {
+  writeFileSync(`${dir}/index.ts`, renderCompiledModule(batches));
+  runPrettier([`${dir}/index.ts`]);
 }
 
 // ── Choosing what to promote ──────────────────────────────────────────────────────────────────
@@ -276,12 +265,8 @@ export function additiveViolations(input: VerifyInput): {
   const promotedNames = new Set(promoted.map((card) => card.name));
 
   for (const path of input.changedEngineSources)
-    if (
-      !/^packages\/engine\/src\/cards\/overrides\/compiled\/(index|batch-[a-z0-9-]+)\.ts$/.test(
-        path,
-      )
-    )
-      violations.push(`engine source changed outside the generated compiled modules: ${path}`);
+    if (path !== `${COMPILED_DIR}/index.ts`)
+      violations.push(`engine source changed outside the generated compiled module: ${path}`);
 
   for (const [id, entry] of baseOverrides) {
     const now = headOverrides.get(id);
@@ -400,7 +385,7 @@ export function promoteCommand(args: readonly string[]): void {
   const id = args[0];
   if (id === undefined || id.startsWith('--'))
     throw new Error('usage: run.ts promote <batch-id> [--trial <dir>] [--dry-run]');
-  batchFile(id);
+  batchConst(id);
   const trial = flag(args, 'trial');
   const compiled = allCompiled(COMPILED_BATCHES);
   const byName = new Map(pinnedPool().map((row) => [row.card.name, row]));
@@ -432,9 +417,9 @@ export function promoteCommand(args: readonly string[]): void {
     ...COMPILED_BATCHES.filter((batch) => batch.id !== id),
     { id, cards: [...(existing?.cards ?? []), ...cards] },
   ];
-  writeBatches(COMPILED_DIR, COMPILED_BATCHES, after);
+  writeBatches(COMPILED_DIR, after);
   console.log(
-    `${cards.length} cards promoted into ${COMPILED_DIR}/${batchFile(id)}. Next, in this order:\n` +
+    `${cards.length} cards promoted into batch ${id} of ${COMPILED_DIR}/index.ts. Next, in this order:\n` +
       '  bun run snapshots:write\n' +
       '  bun run coverage:pin --ratchet\n' +
       '  bun run modelled-cards\n' +
@@ -455,7 +440,7 @@ export function retireCommand(args: readonly string[]): void {
       ? { id: entry.id, cards: entry.cards.filter((other) => other.name !== name) }
       : entry,
   );
-  writeBatches(COMPILED_DIR, COMPILED_BATCHES, after);
+  writeBatches(COMPILED_DIR, after);
   console.log(`retired ${name} from batch ${batch.id}`);
 
   const row = pinnedPool().find((entry) => entry.card.name === name);

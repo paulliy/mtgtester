@@ -29,8 +29,10 @@ that were run on that one patch.
 ## Decision
 
 1. **A compiled card may enter the card pool as `implemented-unreviewed`.** It is registered as an
-   `'append'` override from a generated module under
-   `packages/engine/src/cards/overrides/compiled/`, with its source, trial and reviewed patch hash.
+   `'append'` override from the generated module
+   `packages/engine/src/cards/overrides/compiled/index.ts`, with its batch, source, trial and
+   reviewed patch hash. It is one module, not one per batch, because the viewer-evidence
+   generators list every engine source they depend on.
    It is never reported as reviewed or as meeting the completion standard, and nothing in this ADR
    changes what `implemented-reviewed` requires.
 2. **It gets there only through `run.ts promote`**, which takes a patch only when all of these
@@ -50,7 +52,7 @@ that were run on that one patch.
 4. **A patch the meaning check flagged is never promoted on a subagent's word.** A Sonnet
    `reviewer` recommends, and the main thread accepts or rejects.
 5. **A promotion changes nothing but the promoted cards.** `run.ts verify` fails a promotion that
-   changes engine source outside the generated modules, any existing snapshot entry or definition
+   changes engine source outside the generated module, any existing snapshot entry or definition
    fingerprint, or the set of modeled cards beyond the promoted ones. Engine, grammar and validator
    changes go in their own pull requests.
 6. **A wrong compiled card is retired first.** `run.ts retire` returns it to unmodeled, where the
@@ -72,7 +74,7 @@ that were run on that one patch.
 - A grammar change that starts parsing a line a compiled patch claims turns the card unmodeled
   through the drift guard, and the modeled ratchet fails until the patch is retired. `retire`
   reports whether the interpreter's reading matches the patch.
-- The benchmark source hash covers the generated modules, so each promotion re-seals the
+- The benchmark source hash covers the generated module, so each promotion re-seals the
   benchmark pins once.
 
 ## Alternatives considered

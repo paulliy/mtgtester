@@ -9,8 +9,8 @@
  * here is a claim that the card met the completion standard
  * (`docs/guides/card-modeling-and-testing.md`).
  *
- * The batch modules and `index.ts` are generated. Change them with `promote` and `retire`, never
- * by hand: a hand edit breaks the link between the reviewed patch bytes and what the engine runs.
+ * `index.ts` is generated and holds every batch. Change it with `promote` and `retire`, never by
+ * hand: a hand edit breaks the link between the reviewed patch bytes and what the engine runs.
  */
 import type { CardDefinition } from '../../definition';
 
