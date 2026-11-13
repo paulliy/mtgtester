@@ -8,14 +8,17 @@
  * abilities for the lines it claims. Every check here works on a patch regardless of who wrote it
  * (a model from Oracle text, a translator from another engine, or a person).
  */
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import type { CardDefinition } from '../../packages/engine/src/cards/definition';
 import type {
   DecisionRequest,
   DecisionResponse,
   OracleCard,
+  PlayerView,
   TargetChoice,
 } from '../../packages/shared/src';
+import { CREATURE_TYPE_BY_LOWER } from '../../packages/engine/src/cards/creature-types';
 import { interpretCard } from '../../packages/engine/src/cards/interpret';
 import {
   registerOverride,
@@ -319,7 +322,59 @@ const SUPPORT: SupportCardSpec[] = [
     oracleText: 'Smoke Bolt deals 1 damage to any target.',
   },
   { name: 'Smoke Study', typeLine: 'Sorcery', manaCost: '{1}{U}', oracleText: 'Draw a card.' },
+  // The busy board's extra stimulus: a death, a life gain, a small creature that can die.
+  {
+    name: 'Smoke Edict',
+    typeLine: 'Sorcery',
+    manaCost: '{1}{B}',
+    oracleText: 'Destroy target creature.',
+  },
+  { name: 'Smoke Feast', typeLine: 'Sorcery', manaCost: '{W}', oracleText: 'You gain 3 life.' },
+  {
+    name: 'Smoke Wisp',
+    typeLine: 'Creature — Spirit',
+    manaCost: '{W}',
+    power: '1',
+    toughness: '1',
+  },
+  {
+    name: 'Smoke Muster',
+    typeLine: 'Sorcery',
+    manaCost: '{W}',
+    oracleText: 'Create a 1/1 white Soldier creature token.',
+  },
+  {
+    name: 'Smoke Growth',
+    typeLine: 'Sorcery',
+    manaCost: '{G}',
+    oracleText: 'Put a +1/+1 counter on target creature.',
+  },
 ];
+
+/**
+ * Two creatures cut to the card under test: legendary, black, 4/4, and of every creature type
+ * its unparsed lines name. A line that cares about Zombies, a legendary spell, a black creature
+ * dying or a creature with toughness 4 then has something to act on. One starts on the
+ * battlefield and one in hand, under different names so the legend rule leaves both alone.
+ */
+function kinCards(target: CompileTarget): SupportCardSpec[] {
+  const types = new Set<string>();
+  for (const word of target.lines.join(' ').match(/[A-Za-z]+/g) ?? []) {
+    const lower = word.toLowerCase();
+    const type =
+      CREATURE_TYPE_BY_LOWER.get(lower) ??
+      (lower.endsWith('s') ? CREATURE_TYPE_BY_LOWER.get(lower.slice(0, -1)) : undefined);
+    if (type !== undefined && types.size < 4) types.add(type);
+  }
+  const subtypes = types.size === 0 ? ['Shade'] : [...types];
+  return ['Smoke Kin', 'Smoke Kindred'].map((name) => ({
+    name,
+    typeLine: `Legendary Creature — ${subtypes.join(' ')}`,
+    manaCost: '{2}{B}',
+    power: '4',
+    toughness: '4',
+  }));
+}
 const LANDS = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'];
 
 export interface SmokeResult {
@@ -336,6 +391,28 @@ export interface SmokeResult {
   detail: string;
   decisions: number;
   eventTypes: string[];
+  /**
+   * Whether the game differed from the same game played with the card's patched lines removed:
+   * a different event, legal action, life total, or computed characteristic of any permanent.
+   * This is how a static ability, a replacement effect or a keyword shows it did something,
+   * since none of them ever resolves. Absent when no baseline could be built for the card.
+   */
+  changedGame?: boolean;
+  /** Hash of everything the game showed, compared with the baseline's and then dropped. */
+  digest?: string;
+}
+
+/**
+ * A smoke run exercised the patch when it visibly changed the game. A run that did not only
+ * shows that the card does not crash the engine.
+ */
+export function smokeExercised(runs: readonly SmokeResult[]): boolean {
+  return runs.some((run) =>
+    // With a baseline, only a visible difference counts: an ability resolving may belong to a
+    // line the interpreter already read. Without one (a spell whose whole text is the patch),
+    // the spell or one of its abilities resolving is the evidence there is.
+    run.changedGame === undefined ? run.exercised : run.changedGame,
+  );
 }
 
 function smokeScenarios(target: CompileTarget): CardScenario[] {
@@ -404,8 +481,88 @@ function smokeScenarios(target: CompileTarget): CardScenario[] {
         throughNextTurn: true,
       },
     });
+  // The busy board: every seat plays what it can, so the events most triggers and statics wait
+  // for actually happen (a creature enters, one dies, a spell is cast, life is gained, a card is
+  // drawn, creatures attack and deal damage, each player takes a turn).
+  const busyOpponent = {
+    battlefield: [...LANDS, 'Smoke Bear', 'Smoke Knight', 'Smoke Relic', 'Smoke Charm'],
+    hand: ['Smoke Bear', 'Smoke Bolt'],
+    graveyard: ['Smoke Bear'],
+  };
+  const busySeats = {
+    P1: {
+      hand: [
+        ...(isPermanent ? [] : [target.name]),
+        'Smoke Kindred',
+        'Smoke Muster',
+        'Smoke Growth',
+        'Smoke Edict',
+        'Smoke Feast',
+        'Smoke Study',
+        'Smoke Wisp',
+        'Smoke Relic',
+        'Smoke Bolt',
+        'Forest',
+      ],
+      battlefield: [
+        ...lands,
+        ...(isPermanent ? [target.name] : []),
+        'Smoke Kin',
+        'Smoke Bear',
+        'Smoke Knight',
+        'Smoke Wisp',
+        'Smoke Relic',
+      ],
+      // One card of each type, for the cards that count types or cards in a graveyard.
+      graveyard: [
+        'Smoke Bear',
+        'Smoke Bolt',
+        'Smoke Knight',
+        'Smoke Relic',
+        'Smoke Charm',
+        'Smoke Study',
+        'Forest',
+      ],
+      libraryTop: ['Smoke Bear', 'Smoke Knight', 'Smoke Relic', 'Smoke Study'],
+    },
+    P2: busyOpponent,
+    P3: busyOpponent,
+    P4: busyOpponent,
+  };
+  const busyContinue = {
+    throughCombat: true,
+    toPostcombatMain: true,
+    toEndStep: true,
+    throughNextTurn: true,
+  } as const;
+  scenarios.push(
+    // P1's turn from its upkeep window on, then the next player's whole turn.
+    {
+      ...base,
+      id: 'busy-board',
+      title: `${target.name} on a busy board`,
+      turn: { player: 'P1', phase: 'beginning', step: 'upkeep', number: 4 },
+      seats: busySeats,
+      continue: busyContinue,
+    },
+    // The end of the previous player's turn, then P1's whole turn from its untap step: the only
+    // scenario in which P1's own upkeep, draw step and end step begin, and their triggers fire.
+    {
+      ...base,
+      id: 'busy-own-turn',
+      title: `${target.name} through its controller's whole turn`,
+      turn: { player: 'P4', phase: 'postcombatMain', step: null, number: 4 },
+      seats: busySeats,
+      continue: busyContinue,
+    },
+  );
   return scenarios;
 }
+
+/** The scenarios in which every seat plays, not only the seat holding the card under test. */
+const BUSY_SCENARIOS = new Set(['busy-board', 'busy-own-turn']);
+/** Ways of passing priority: a busy seat takes every other action first. */
+const PASSING = new Set(['pass', 'passAndYieldTurn', 'yieldToAbility']);
 
 const MAX_DECISIONS = 600;
 
@@ -415,11 +572,15 @@ const MAX_DECISIONS = 600;
  * every other decision is answered by a seeded random choice. Pass = the game never halts, throws
  * or breaks an invariant. `exercised` says whether the card's behavior actually ran.
  */
-function runSmoke(target: CompileTarget, scenario: CardScenario): SmokeResult {
+function runSmoke(
+  target: CompileTarget,
+  scenario: CardScenario,
+  resolveCard: (name: string) => OracleCard = cardByName,
+): SmokeResult {
   const file: CardScenarioFile = {
     schemaVersion: 1,
     card: target.name,
-    supportCards: SUPPORT,
+    supportCards: [...SUPPORT, ...kinCards(target)],
     scenarios: [scenario],
   };
   const result: SmokeResult = {
@@ -434,7 +595,7 @@ function runSmoke(target: CompileTarget, scenario: CardScenario): SmokeResult {
   };
   let engine;
   try {
-    ({ engine } = buildCardScenario(file, scenario, cardByName, {
+    ({ engine } = buildCardScenario(file, scenario, resolveCard, {
       gameId: `smoke-${scenario.id}`,
       strictInvariants: true,
     }));
@@ -444,6 +605,8 @@ function runSmoke(target: CompileTarget, scenario: CardScenario): SmokeResult {
   }
   const rng = new Prng(`smoke-${target.oracleId}-${scenario.id}`);
   const tried = new Set<string>();
+  const busy = BUSY_SCENARIOS.has(scenario.id);
+  const digest = createHash('sha256');
   const firstSequence = engine.getState().eventLog.length;
   const nameLower = target.name.split(' // ')[0]!.toLowerCase();
   try {
@@ -453,18 +616,19 @@ function runSmoke(target: CompileTarget, scenario: CardScenario): SmokeResult {
       if (step.kind === 'gameOver') {
         if (step.result.halted) {
           result.detail = `halted${step.result.haltSite === undefined ? '' : ` at ${step.result.haltSite}`}: ${step.result.haltReason ?? ''}`;
-          return finish(result, engine, firstSequence, target);
+          return finish(result, engine, firstSequence, target, digest);
         }
         result.ok = true;
         result.detail = 'game ended';
-        return finish(result, engine, firstSequence, target);
+        return finish(result, engine, firstSequence, target, digest);
       }
       const request = step.request;
-      const response = chooseSmokeAction(request, rng, tried, nameLower);
+      digest.update(observed(engine.view('P1'), request));
+      const response = chooseSmokeAction(request, rng, tried, nameLower, busy);
       if (response === null) {
         result.ok = true;
         result.detail = 'scenario finished';
-        return finish(result, engine, firstSequence, target);
+        return finish(result, engine, firstSequence, target, digest);
       }
       engine.submit(response);
     }
@@ -474,7 +638,50 @@ function runSmoke(target: CompileTarget, scenario: CardScenario): SmokeResult {
   } catch (error) {
     result.detail = `threw: ${error instanceof Error ? error.message.split('\n')[0] : String(error)}`;
   }
-  return finish(result, engine, firstSequence, target);
+  return finish(result, engine, firstSequence, target, digest);
+}
+
+/**
+ * What a decision point shows that a card's behavior could have changed: every seat's life and
+ * zone sizes, each permanent's computed power, toughness, keywords and status, the stack, and
+ * the actions offered. Printed text is left out, so a baseline card that only lacks a line of
+ * text does not differ until that line does something.
+ */
+function observed(view: PlayerView, request: DecisionRequest): string {
+  const names = (cards: readonly { name: string }[]): string[] => cards.map((card) => card.name);
+  return JSON.stringify({
+    deciding: request.decidingPlayer,
+    type: request.decisionType,
+    step: [request.turn, request.phase, request.step],
+    actions: request.legalActions.map((action) => [
+      action.type,
+      action.description,
+      (action.targets ?? []).map((slot) => slot.options.length),
+    ]),
+    life: view.life,
+    hand: names(view.hand),
+    graveyard: names(view.graveyard),
+    exile: names(view.exile),
+    mana: view.availableMana,
+    energy: view.energy,
+    poison: view.poisonCounters,
+    opponents: view.opponents,
+    stack: view.stack.map((object) => [
+      object.controller,
+      object.description,
+      object.targets.length,
+    ]),
+    battlefield: view.battlefield.map((permanent) => [
+      permanent.id,
+      permanent.controller,
+      permanent.name,
+      permanent.power,
+      permanent.toughness,
+      permanent.keywords,
+      permanent.tapped,
+      permanent.status,
+    ]),
+  });
 }
 
 function finish(
@@ -482,9 +689,13 @@ function finish(
   engine: { getState(): { eventLog: { type: string; payload: Record<string, unknown> }[] } },
   firstSequence: number,
   target: CompileTarget,
+  digest: ReturnType<typeof createHash>,
 ): SmokeResult {
   const events = engine.getState().eventLog.slice(firstSequence);
   result.eventTypes = [...new Set(events.map((event) => event.type))].sort();
+  digest.update(JSON.stringify(events.map((event) => [event.type, event.payload])));
+  digest.update(`${result.ok}|${result.detail}`);
+  result.digest = digest.digest('hex');
   const name = target.name.split(' // ')[0]!;
   result.resolved = events
     .filter((event) => event.type === 'resolved')
@@ -509,6 +720,7 @@ function chooseSmokeAction(
   rng: Prng,
   tried: Set<string>,
   nameLower: string,
+  busy: boolean,
 ): DecisionResponse | null {
   const respond = (action: DecisionRequest['legalActions'][number]): DecisionResponse => {
     const response: DecisionResponse = { requestId: request.requestId, actionId: action.id };
@@ -529,6 +741,18 @@ function chooseSmokeAction(
         return respond(fresh);
       }
     }
+    if (busy) {
+      // Every seat takes each action it is offered once, the card's own first (above).
+      const key = (action: DecisionRequest['legalActions'][number]): string =>
+        `${request.decidingPlayer}|${action.description}`;
+      const other = request.legalActions.find(
+        (action) => !PASSING.has(action.type) && !tried.has(key(action)),
+      );
+      if (other !== undefined) {
+        tried.add(key(other));
+        return respond(other);
+      }
+    }
     const pass = request.legalActions.find((action) => action.type === 'pass');
     if (pass !== undefined) return respond(pass);
   }
@@ -537,11 +761,65 @@ function chooseSmokeAction(
   return respond(action);
 }
 
-/** Every smoke scenario for the card, with the patch registered (or none, for a baseline). */
+/**
+ * The card with its unparsed lines taken out of the Oracle text, which the interpreter models on
+ * its own: the same card minus what the patch adds. Null when no such card can be built (removing
+ * the lines one at a time never yields a modeled card).
+ */
+export function baselineCard(target: CompileTarget): OracleCard | null {
+  const id = target.oracleId as CardOverride['oracleId'];
+  const registered = getOverride(id);
+  if (registered !== undefined) unregisterOverride(id);
+  try {
+    let lines = (target.card.oracleText ?? '').split('\n');
+    // One pass per unparsed line: drop the first printed line whose removal clears a reason.
+    for (let pass = 0; pass < target.lines.length; pass++) {
+      const reasons = interpretCard({ ...target.card, oracleText: lines.join('\n') })
+        .unmodeledReasons.length;
+      const drop = lines.findIndex((_, index) => {
+        const without = lines.filter((__, other) => other !== index).join('\n');
+        return (
+          interpretCard({ ...target.card, oracleText: without }).unmodeledReasons.length < reasons
+        );
+      });
+      if (drop < 0) return null;
+      lines = lines.filter((_, index) => index !== drop);
+    }
+    const card = { ...target.card, oracleText: lines.join('\n') };
+    return interpretCard(card).modeled ? card : null;
+  } finally {
+    if (registered !== undefined) registerOverride(registered);
+  }
+}
+
+/**
+ * Every smoke scenario for the card, with the patch registered (or none, for an unpatched run).
+ * With a patch, each scenario is also played with the baseline card, and `changedGame` says
+ * whether the two games differed.
+ */
 export function smokeTest(
   target: CompileTarget,
   def: Partial<CardDefinition> | null,
 ): SmokeResult[] {
-  const run = () => smokeScenarios(target).map((scenario) => runSmoke(target, scenario));
-  return def === null ? run() : withPatch(target, def, run);
+  const scenarios = smokeScenarios(target);
+  const stored = ({ digest: _digest, ...run }: SmokeResult): SmokeResult => run;
+  if (def === null) return scenarios.map((scenario) => stored(runSmoke(target, scenario)));
+  const runs = withPatch(target, def, () =>
+    scenarios.map((scenario) => runSmoke(target, scenario)),
+  );
+  const baseline = baselineCard(target);
+  if (baseline === null) return runs.map(stored);
+  const id = target.oracleId as CardOverride['oracleId'];
+  const registered = getOverride(id);
+  if (registered !== undefined) unregisterOverride(id);
+  try {
+    const resolveCard = (name: string): OracleCard =>
+      name === target.name ? baseline : cardByName(name);
+    return runs.map((run, index) => {
+      const plain = runSmoke(target, scenarios[index]!, resolveCard);
+      return { ...stored(run), changedGame: plain.digest !== run.digest };
+    });
+  } finally {
+    if (registered !== undefined) registerOverride(registered);
+  }
 }

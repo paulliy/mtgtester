@@ -8,6 +8,7 @@
  *   bun run scripts/card-compiler/run.ts report <trial-dir>        # results.json and summary.md
  *
  *   bun run scripts/card-compiler/run.ts recheck <trial-dir>       # redo back-translation and judge
+ *   bun run scripts/card-compiler/run.ts resmoke <trial-dir>       # validate again, replay smoke
  *   bun run scripts/card-compiler/run.ts import <trial-dir> <dir>  # check patches made elsewhere
  *   bun run scripts/card-compiler/run.ts queue <trial-dir>...      # rebuild the review queue
  *
@@ -32,6 +33,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import type { CardDefinition } from '../../packages/engine/src/cards/definition';
+import { runPrettier } from '../cards/prettier';
 import { textCheck } from './render';
 import {
   QUEUE_PATH,
@@ -40,6 +42,7 @@ import {
   compileTarget,
   parseAnswer,
   pinnedPool,
+  smokeExercised,
   smokeTest,
   type CompileTarget,
   type SmokeResult,
@@ -350,6 +353,42 @@ function recheck(trial: string): void {
 }
 
 /**
+ * Validate every valid patch again and replay its smoke games, after a change to the validator,
+ * the smoke harness or the engine. A patch the validator now rejects becomes `invalid`, with no
+ * retry. The meaning check's verdicts are kept: neither step reads them.
+ */
+function resmoke(trial: string): void {
+  const p = paths(trial);
+  const targets = loadTargets(trial);
+  const states = loadState(trial);
+  const all: CardState[] = [];
+  let rejected = 0;
+  for (const state of states.values()) {
+    const target = targets.get(state.name);
+    if (target === undefined || state.valid !== true || !existsSync(p.patch(state.name))) continue;
+    const patch = JSON.parse(readFileSync(p.patch(state.name), 'utf8')) as PatchFile;
+    const result = applyPatch(target, patch.def);
+    if (!result.ok) {
+      state.valid = false;
+      state.stage = 'invalid';
+      state.validatorIssues.push(result.issues);
+      delete state.smoke;
+      rejected++;
+      continue;
+    }
+    state.smoke = smokeTest(target, patch.def);
+    all.push(state);
+  }
+  saveState(trial, states);
+  runPrettier([p.state]);
+  console.log(
+    `replayed smoke for ${all.length} patches: ${all.filter((state) => smokeOk(state)).length} pass, ` +
+      `${all.filter((state) => smokeExercised(state.smoke!)).length} exercised; ` +
+      `${rejected} no longer validate`,
+  );
+}
+
+/**
  * Take patches produced elsewhere (an XMage translator, a person) into a trial, so they go
  * through exactly the checks compiled patches do. Each file in `patchDir` is a `PatchFile`. The
  * patch becomes the card's first and only compile answer: a patch that fails validation is
@@ -439,10 +478,20 @@ export interface QueueEntry {
   textCheck?: 'renderer' | 'model';
   differences?: string[];
   validatorIssues?: string[];
-  smoke?: { scenario: string; ok: boolean; abilityResolved: boolean; detail: string }[];
+  smoke?: {
+    scenario: string;
+    ok: boolean;
+    /** The card resolved as a spell, or one of its abilities did. Absent in older queue entries. */
+    exercised?: boolean;
+    abilityResolved: boolean;
+    /** The game differed from the same game without the patched lines (see `SmokeResult`). */
+    changedGame?: boolean;
+    detail: string;
+  }[];
   /**
-   * Whether any smoke game resolved one of the card's own abilities or the spell. When false the
-   * smoke run only shows the card does not crash the engine; it says nothing about the behavior.
+   * Whether any smoke game differed from the same game played without the patched lines (or,
+   * for a spell with no such baseline, resolved). When false the smoke run only shows the card
+   * does not crash the engine; it says nothing about the behavior.
    */
   smokeExercised?: boolean;
   /**
@@ -545,11 +594,13 @@ function queue(args: string[]): void {
             ),
           }),
         ...(state.smoke !== undefined && {
-          smokeExercised: state.smoke.some((run) => run.abilityResolved),
+          smokeExercised: smokeExercised(state.smoke),
           smoke: state.smoke.map((run) => ({
             scenario: run.scenario,
             ok: run.ok,
+            exercised: run.exercised,
             abilityResolved: run.abilityResolved,
+            ...(run.changedGame !== undefined && { changedGame: run.changedGame }),
             detail: run.detail,
           })),
         }),
@@ -559,6 +610,8 @@ function queue(args: string[]): void {
   }
   entries.sort((a, b) => a.name.localeCompare(b.name) || a.source.localeCompare(b.source));
   write(QUEUE_PATH, `${JSON.stringify({ schemaVersion: 1, cards: entries }, null, 2)}\n`);
+  // Committed, so it has to pass `format:check` as written.
+  runPrettier([QUEUE_PATH]);
   const counts = new Map<string, number>();
   for (const entry of entries) counts.set(entry.status, (counts.get(entry.status) ?? 0) + 1);
   console.log(`${entries.length} cards queued for review:`, Object.fromEntries(counts));
@@ -742,7 +795,7 @@ if (command === 'promote' || command === 'retire' || command === 'review' || com
 }
 if (trial === undefined)
   throw new Error(
-    'usage: run.ts <prepare|exec|check|report|recheck|import|queue> <trial-dir> [stage|patch-dir] [--executor api|claude|codex|antigravity]',
+    'usage: run.ts <prepare|exec|check|report|recheck|resmoke|import|queue> <trial-dir> [stage|patch-dir] [--executor api|claude|codex|antigravity]',
   );
 if (command === 'queue') queue(process.argv.slice(3));
 else if (command === 'import') {
@@ -752,5 +805,6 @@ else if (command === 'import') {
 else if (command === 'check') check(trial);
 else if (command === 'report') report(trial);
 else if (command === 'recheck') recheck(trial);
+else if (command === 'resmoke') resmoke(trial);
 else if (command === 'exec') await exec(trial, stage ?? 'compile', executor);
 else throw new Error(`unknown command ${command}`);
