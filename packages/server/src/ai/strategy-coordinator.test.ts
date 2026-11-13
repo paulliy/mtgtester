@@ -5,7 +5,12 @@ import type { AiClient } from './client';
 
 type AiCallResult = Awaited<ReturnType<AiClient['requestDecision']>>;
 import { DEFAULT_AI_CONFIG } from './config';
-import { StrategyCoordinator } from './strategy-coordinator';
+import {
+  readTacticianRequest,
+  StrategyCoordinator,
+  TACTICIAN_REQUEST_REASON_LIMIT,
+} from './strategy-coordinator';
+import { assembleStrategistPrompt } from './strategy-context';
 
 const view: PlayerView = {
   seat: 'P1',
@@ -961,5 +966,136 @@ describe('StrategyCoordinator — bot-led knobs (ADR 0039)', () => {
       await coordinator.settled();
       expect(coordinator.guidanceFor('P1').strategy?.intent).toBe(expected);
     }
+  });
+});
+
+describe('StrategyCoordinator — the tactician request, in shadow (ADR 0045)', () => {
+  const queue = { enqueue: <T>(fn: () => Promise<T>) => fn() };
+  function flagClient(turnStrategy: unknown): AiClient {
+    return {
+      activeModel: 'm',
+      requestDecision: vi.fn().mockResolvedValue({
+        response: { requestId: 'strategy', actionId: 0, turnStrategy },
+        meta: {
+          model: 'm',
+          promptTokens: 1,
+          responseTokens: 1,
+          latencyMs: 1,
+          wasRetry: false,
+          wasFallback: false,
+          rawResponse: '{}',
+        },
+      }),
+    };
+  }
+  const engine = (): Engine =>
+    ({ view: vi.fn().mockReturnValue(view), addDebug: vi.fn() }) as unknown as Engine;
+  const shadowConfig = {
+    ...DEFAULT_AI_CONFIG,
+    tacticalMode: 'bot' as const,
+    strategistTacticianFlag: 'shadow' as const,
+  };
+
+  it('reads the request apart from the knobs, caps the reason and keeps it out of the plan', async () => {
+    const e = engine();
+    const coordinator = new StrategyCoordinator(
+      flagClient({
+        intent: 'Kill P2.',
+        // Every knob is junk, so no steering is stored; the request still counts.
+        steering: { aggression: 'max' },
+        tacticianRequest: { reason: `Exact lethal needs ordering. ${'x'.repeat(400)}` },
+      }),
+      queue,
+      e,
+      shadowConfig,
+    );
+    coordinator.prepare(request());
+    await coordinator.settled();
+    expect(coordinator.tacticianRequests).toHaveLength(1);
+    const [record] = coordinator.tacticianRequests;
+    expect(record).toMatchObject({ turn: 1, seat: 'P1', wake: ['first knobs'], knobs: false });
+    expect(record!.reason.length).toBe(TACTICIAN_REQUEST_REASON_LIMIT);
+    expect(JSON.stringify(coordinator.guidanceFor('P1').strategy ?? {})).not.toContain(
+      'Exact lethal',
+    );
+    expect(e.addDebug).toHaveBeenCalledWith(
+      'decision',
+      expect.stringContaining('asked for the tactician'),
+      expect.objectContaining({ wake: ['first knobs'] }),
+    );
+  });
+
+  it('ignores a malformed request and never acts on one', () => {
+    expect(readTacticianRequest({ tacticianRequest: { reason: '  ' } })).toBeNull();
+    expect(readTacticianRequest({ tacticianRequest: 'please' })).toBeNull();
+    expect(readTacticianRequest(undefined)).toBeNull();
+    expect(readTacticianRequest({ tacticianRequest: { reason: ' Go. ' } })).toEqual({
+      reason: 'Go.',
+    });
+  });
+
+  it('offers the field in the primer only when the flag is in shadow', () => {
+    const on = assembleStrategistPrompt(request(), view, [], undefined, {
+      botSteering: true,
+      tacticianFlag: true,
+    });
+    const off = assembleStrategistPrompt(request(), view, [], undefined, { botSteering: true });
+    expect(on.messages[0]!.content).toContain('tacticianRequest');
+    expect(off.messages[0]!.content).not.toContain('tacticianRequest');
+  });
+});
+
+describe('StrategyCoordinator — wake reasons under everyTurn (ADR 0045)', () => {
+  it("simulates onChange's reuse limit on a quiet table", async () => {
+    const e = { view: vi.fn().mockReturnValue(view), addDebug: vi.fn() } as unknown as Engine;
+    const client: AiClient = {
+      activeModel: 'm',
+      requestDecision: vi.fn().mockImplementation((_p, r: DecisionRequest) =>
+        Promise.resolve({
+          response: {
+            requestId: r.requestId,
+            actionId: 0,
+            turnStrategy: {
+              intent: 'x',
+              steering: { aggression: 0.5 },
+              tacticianRequest: { reason: 'every turn' },
+            },
+          },
+          meta: {
+            model: 'm',
+            promptTokens: 1,
+            responseTokens: 1,
+            latencyMs: 1,
+            wasRetry: false,
+            wasFallback: false,
+            rawResponse: '{}',
+          },
+        }),
+      ),
+    };
+    const coordinator = new StrategyCoordinator(
+      client,
+      { enqueue: <T>(fn: () => Promise<T>) => fn() },
+      e,
+      {
+        ...DEFAULT_AI_CONFIG,
+        tacticalMode: 'bot',
+        strategistReplan: 'everyTurn',
+        strategistMaxReuseTurns: 2,
+        strategistTacticianFlag: 'shadow',
+      },
+    );
+    for (let turn = 1; turn <= 5; turn++) {
+      coordinator.prepare(request({ turn, requestId: `r${turn}` }));
+      await coordinator.drained();
+    }
+    // First knobs, then two quiet turns onChange would reuse, then the reuse limit, then quiet.
+    expect(coordinator.tacticianRequests.map((r) => r.wake)).toEqual([
+      ['first knobs'],
+      [],
+      [],
+      ['reuse limit'],
+      [],
+    ]);
   });
 });

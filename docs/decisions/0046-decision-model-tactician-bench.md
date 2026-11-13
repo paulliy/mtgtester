@@ -26,8 +26,8 @@ takes any model id. Only the bench was chat-only.
 
 A decision model cannot express every tactician decision. One Choice answer cannot declare
 several attackers or blockers, divide combat damage, pick X or modes, order triggers or split
-mana (`classifyTacticalDecision`). In the 30 cases, 4 of the 19 one-decision cases are attack or
-block declarations, and 7 of the 11 whole-turn cases end in an attack declaration.
+mana (`classifyTacticalDecision`). Of the 50 cases, 6 of the 36 one-decision cases are attack or
+block declarations, and 9 of the 14 whole-turn cases include one.
 
 ## Decision
 
@@ -40,8 +40,10 @@ block declarations, and 7 of the 11 whole-turn cases end in an attack declaratio
    `apiKeyEnv`, else `AI_JEV_API_KEY`, else `OPENROUTER_API_KEY`.
 2. **Unsupported shapes are never sent.** The entry's `unsupported` setting decides what plays
    them:
-   - `bot` (the default) hands them to the heuristic bot, as a live decision-model seat does
-     (ADR 0041's `jev` preset), and records the answer with the new source `bot`.
+   - `bot` (the default) hands them to the production fallback bot (card-aware, ADR 0043), as a
+     live decision-model seat does (ADR 0041's `jev` preset), and records the answer with the new
+     source `bot-handoff`. It is distinct from `bot`, which marks the bot answering a `bot-led`
+     entry: there the bot is under test, here it is not.
    - `hold` (`decision:<model>@hold`) holds the seat still, so only the model's own answers count.
 
    A `bot` answer is left out of "legal on first try" and of speed. It is counted on its own

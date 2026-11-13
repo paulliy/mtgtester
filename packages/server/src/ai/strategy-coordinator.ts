@@ -26,7 +26,13 @@ import { TurnPlanManager, type AcceptedPlanAction } from './turn-plan';
 import { AI_VERSIONS } from './versions';
 import type { SeatDiplomacyContext } from './diplomacy-context';
 import { preparePromptForCaching } from './prompt-cache';
-import { cleanSteering, tableChanged, tableSnapshot, type TableSnapshot } from './steering';
+import {
+  cleanSteering,
+  tableChangeReasons,
+  tableChanged,
+  tableSnapshot,
+  type TableSnapshot,
+} from './steering';
 
 interface QueueLike {
   enqueue<T>(fn: () => Promise<T>, signal?: AbortSignal): Promise<T>;
@@ -74,6 +80,38 @@ function thinDigest(list: RecentSeatDecision[]): RecentSeatDecision[] {
   if (list.length <= DIGEST_LIMIT) return list;
   const half = Math.floor(list.length / 2);
   return list.filter((_, index) => index >= half || index % 2 === 0);
+}
+
+/** Longest tactician-request reason kept: it may name cards in hand, so it stays short. */
+export const TACTICIAN_REQUEST_REASON_LIMIT = 160;
+
+/**
+ * The strategist's typed tactician request (ADR 0045 decision 5.1), read from the raw answer on
+ * its own: an answer whose knobs are all invalid stores no steering, but its request still counts.
+ */
+export function readTacticianRequest(raw: unknown): { reason: string } | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const request = (raw as { tacticianRequest?: unknown }).tacticianRequest;
+  if (typeof request !== 'object' || request === null) return null;
+  const reason = (request as { reason?: unknown }).reason;
+  if (typeof reason !== 'string' || reason.trim() === '') return null;
+  return { reason: reason.trim().slice(0, TACTICIAN_REQUEST_REASON_LIMIT) };
+}
+
+/** One shadow tactician request, for the study (ADR 0045 decision 5.3). */
+export interface TacticianRequestRecord {
+  turn: number;
+  seat: PlayerId;
+  /** Private: the debug log and the study only. */
+  reason: string;
+  /**
+   * What would have woken the strategist under `onChange` since the seat's previous knobs: `first
+   * knobs`, `reuse limit`, or the table changes (`P2 life`, ...). Empty means `onChange` would
+   * have reused the old knobs and made no call, so production would never have seen this request.
+   */
+  wake: string[];
+  /** Whether the same answer also carried usable knobs. */
+  knobs: boolean;
 }
 
 function cleanPlan(
@@ -225,6 +263,8 @@ export class StrategyCoordinator {
   >();
   /** Strategist calls made and skipped because the knobs still fit, for measurement. */
   readonly strategistStats = { calls: 0, reused: 0 };
+  /** Every shadow tactician request this game, in order (ADR 0045). */
+  readonly tacticianRequests: TacticianRequestRecord[] = [];
   /**
    * Fires when a strategist plan installs, carrying its standing intent (ADR 0022). The session
    * turns this into a log annotation; nothing here depends on it being set.
@@ -343,6 +383,7 @@ export class StrategyCoordinator {
 
     this.strategyAttempted = true;
     if (this.reuseSteering(activePlayer)) return;
+    const wake = this.wakeReasons(activePlayer);
     this.strategistStats.calls++;
     this.strategistGeneration++;
     const generation = this.strategistGeneration;
@@ -361,7 +402,7 @@ export class StrategyCoordinator {
     };
     const controller = new AbortController();
     this.abortController = controller;
-    const call = this.runStrategist(strategyRequest, generation, controller.signal);
+    const call = this.runStrategist(strategyRequest, generation, controller.signal, wake);
     this.inFlight = call;
     this.outstanding.set(call, controller);
     const forget = (): void => {
@@ -388,6 +429,7 @@ export class StrategyCoordinator {
     strategyRequest: DecisionRequest,
     generation: number,
     signal: AbortSignal,
+    wake: string[] = [],
   ): Promise<void> {
     const activePlayer = strategyRequest.activePlayer;
     const acceptedActions: AcceptedPlanAction[] = [];
@@ -411,6 +453,9 @@ export class StrategyCoordinator {
           : { profile: this.deckProfiles.get(activePlayer)! }),
         ...(diplomacy === null ? {} : { diplomacy }),
         ...(this.botLed() ? { botSteering: true } : {}),
+        ...(this.botLed() && this.config.strategistTacticianFlag === 'shadow'
+          ? { tacticianFlag: true }
+          : {}),
         context: {
           includeMemory: this.config.contextMemoryEnabled,
           includeFeatures: this.config.contextFeaturesEnabled,
@@ -444,6 +489,30 @@ export class StrategyCoordinator {
         opponents: view.opponents.filter((o) => o.life > 0).map((o) => o.seat),
         botLed: this.botLed(),
       });
+      // ADR 0045 decision 5: logged, never acted on, and parsed apart from the knobs.
+      const tacticianRequest = this.botLed()
+        ? readTacticianRequest(result.response.turnStrategy)
+        : null;
+      if (tacticianRequest !== null && !this.cancelled) {
+        const record: TacticianRequestRecord = {
+          turn: strategyRequest.turn,
+          seat: activePlayer,
+          reason: tacticianRequest.reason,
+          wake,
+          knobs: strategy?.steering !== undefined,
+        };
+        this.tacticianRequests.push(record);
+        this.engine.addDebug(
+          'decision',
+          `strategist asked for the tactician for ${activePlayer} (shadow)`,
+          {
+            turn: record.turn,
+            reason: record.reason,
+            wake: record.wake,
+            knobs: record.knobs,
+          },
+        );
+      }
       if (result.response.actionId !== 0 || strategy === null) {
         this.engine.addDebug('decision', `strategist returned no usable plan for ${activePlayer}`);
         return;
@@ -531,6 +600,43 @@ export class StrategyCoordinator {
   private botLed(): boolean {
     return this.config.tacticalMode === 'bot';
   }
+
+  /**
+   * Why `onChange` would call the strategist for `seat` now: it has no knobs yet, its knobs hit
+   * the reuse limit, or the table moved. Empty means `onChange` would have reused the knobs.
+   *
+   * Under `everyTurn` every turn is a call, so the knobs' table snapshot and reuse count never age
+   * the way `onChange` would age them. The answer then comes from a simulated `onChange`: the table
+   * when it would last have called, and how many turns it would have reused since (ADR 0045).
+   */
+  private wakeReasons(seat: PlayerId): string[] {
+    const now = tableSnapshot(this.engine.view(seat));
+    const max = this.config.strategistMaxReuseTurns;
+    if (this.config.strategistReplan === 'onChange') {
+      const current = this.steeringBySeat.get(seat);
+      if (current === undefined) return ['first knobs'];
+      if (current.reusedTurns >= max) return ['reuse limit'];
+      return tableChangeReasons(current.table, now);
+    }
+    const simulated = this.simulatedOnChange.get(seat);
+    let reasons: string[];
+    if (simulated === undefined) reasons = ['first knobs'];
+    else if (simulated.reused >= max) reasons = ['reuse limit'];
+    else reasons = tableChangeReasons(simulated.table, now);
+    this.simulatedOnChange.set(
+      seat,
+      reasons.length === 0 && simulated !== undefined
+        ? { table: simulated.table, reused: simulated.reused + 1 }
+        : { table: now, reused: 0 },
+    );
+    return reasons;
+  }
+
+  /** `onChange`'s state as it would have been, for `wakeReasons` under `everyTurn`. */
+  private readonly simulatedOnChange = new Map<
+    PlayerId,
+    { table: TableSnapshot; reused: number }
+  >();
 
   /**
    * `strategistReplan: 'onChange'`: skip this turn's strategist call when the seat already has

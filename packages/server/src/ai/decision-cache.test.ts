@@ -234,3 +234,21 @@ describe("digestDecision — deals and the viewer's own poison (ADR 0035)", () =
     expect(cache.get(makeRequest(), makeView())?.actionId).toBe(1);
   });
 });
+
+describe('escalation reasons on cached answers (ADR 0044 decision 5.5)', () => {
+  it('stores the trigger that escalated an answer and returns it on replay', () => {
+    const cache = new DecisionCache();
+    cache.set(makeRequest(), makeView(), ANSWER, undefined, 'scarce-answer');
+    const hit = cache.lookup(makeRequest({ requestId: 'req-2' }), makeView());
+    expect(hit).toMatchObject({ escalation: 'scarce-answer', response: { actionId: 1 } });
+    expect(hit?.response.requestId).toBe('req-2');
+    // `get` keeps its old shape.
+    expect(cache.get(makeRequest(), makeView())?.actionId).toBe(1);
+  });
+
+  it('an answer nobody escalated has no reason', () => {
+    const cache = new DecisionCache();
+    cache.set(makeRequest(), makeView(), ANSWER);
+    expect(cache.lookup(makeRequest(), makeView())).not.toHaveProperty('escalation');
+  });
+});

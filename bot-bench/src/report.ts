@@ -20,6 +20,12 @@ import { DECISIONS_PER_GAME, type CostMetrics, type ModelMetrics } from './metri
 import { isRemoteKind } from './models';
 import type { CaseResult, ModelResult } from './run';
 
+/** How a case's scope reads to judges: one decision, a whole turn, or N turns (ADR 0045). */
+function scopeLabel(benchCase: BenchCase): string {
+  if (benchCase.scope === 'single') return 'one decision';
+  return (benchCase.turns ?? 1) > 1 ? `${benchCase.turns} turns` : 'whole turn';
+}
+
 const JUDGE_DIRECTORY = new URL('../judge/', import.meta.url);
 
 export interface ReportInput {
@@ -114,7 +120,7 @@ function gradeWord(result: CaseResult | undefined, benchCase: BenchCase): string
   const grade = result.score.graded.grade;
   const word = grade === 'best' || grade === 'blunder' ? grade.toUpperCase() : grade;
   // A decision model's seat handed this one to the bot: the grade is the bot's, not the model's.
-  return decision.source === 'bot' ? `${word} (the bot's answer)` : word;
+  return decision.source === 'bot-handoff' ? `${word} (the bot's answer)` : word;
 }
 
 function sequenceOf(result: CaseResult): string[] {
@@ -151,7 +157,7 @@ const DECISION_PRIMER = [
   '',
   'The model answers with one option key and, usually, a probability per option and a confidence. The option is mapped back to the engine action without asking the model anything else, then checked by the same validator and the engine. The model page shows the confidence beside each answer.',
   '',
-  "A decision that one choice cannot express is **never sent** to a decision model: declaring attackers or blockers, assigning combat damage, choosing X or modes, ordering triggers, splitting mana. What happened instead is the entry's `unsupported` setting: `bot` (the heuristic bot answers it, as in a live decision-model seat; the record says *Answered by: bot*) or `hold` (the seat holds still). Score a decision model on what it chose, and treat a `bot` answer as the bot's play, not the model's. Compare it with the heuristic baseline, which plays every decision itself: the difference is what the model added.",
+  "A decision that one choice cannot express is **never sent** to a decision model: declaring attackers or blockers, assigning combat damage, choosing X or modes, ordering triggers, splitting mana. What happened instead is the entry's `unsupported` setting: `bot` (the heuristic bot answers it, as in a live decision-model seat; the record says *Answered by: bot-handoff*) or `hold` (the seat holds still). Score a decision model on what it chose, and treat a `bot` answer as the bot's play, not the model's. Compare it with the heuristic baseline, which plays every decision itself: the difference is what the model added.",
   '',
 ];
 
@@ -406,7 +412,7 @@ export function renderSummary(input: ReportInput): string {
       ['Case', 'Kind', ...input.models.map((model) => model.model.label)],
       input.cases.map((benchCase, index) => [
         `[${benchCase.id}](cases/${caseFileName(benchCase, index)})`,
-        benchCase.scope === 'single' ? 'one decision' : 'whole turn',
+        scopeLabel(benchCase),
         ...input.models.map((model) => gradeWord(firstTrial(model, benchCase.id), benchCase)),
       ]),
     ),
@@ -644,7 +650,7 @@ export function renderCase(input: ReportInput, benchCase: BenchCase, index: numb
   const out: string[] = [
     `# Case ${index + 1}: ${benchCase.title}`,
     '',
-    `\`${benchCase.id}\` · ${benchCase.scope === 'single' ? 'one decision' : 'whole turn'} · skills: ${benchCase.skills.join(', ')}`,
+    `\`${benchCase.id}\` · ${scopeLabel(benchCase)} · skills: ${benchCase.skills.join(', ')}`,
     '',
     '## What this case tests',
     '',
@@ -885,7 +891,7 @@ export function renderReadme(input: ReportInput): string {
     '',
     ...input.cases.map(
       (benchCase, index) =>
-        `${index + 1}. [${benchCase.title}](cases/${caseFileName(benchCase, index)}) (\`${benchCase.id}\`, ${benchCase.scope === 'single' ? 'one decision' : 'whole turn'})`,
+        `${index + 1}. [${benchCase.title}](cases/${caseFileName(benchCase, index)}) (\`${benchCase.id}\`, ${scopeLabel(benchCase)})`,
     ),
     '',
     '## Models',

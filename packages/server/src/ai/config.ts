@@ -88,11 +88,19 @@ export interface AiConfig {
    */
   tacticalMode: 'model' | 'bot';
   /**
-   * In `bot` mode, when the tactician model is still asked. `never`: not at all. `uncertain`:
-   * when the bot's top two options score within `botEscalationMargin` LEP of each other on a
-   * decision that changes the board. Env: `AI_BOT_ESCALATION`. Default: `never`.
+   * In `bot` mode, the named triggers that ask the tactician model (ADR 0044); empty is never.
+   * `uncertain`: the bot's top two options score within `botEscalationMargin` LEP on a decision
+   * that changes the board. `scarce-answer`: the bot would cast its last counterspell, wipe or
+   * hard removal with no public lethal at stake. `unknown-card`: a noncreature, nonland spell or
+   * ability the bot would use, or must respond to, is unclassified. `lethal` is shadow-only.
+   * Env: `AI_BOT_ESCALATION`, `never` or a comma-separated list. Default: none.
    */
-  botEscalation: 'never' | 'uncertain';
+  botEscalation: readonly LiveEscalationTrigger[];
+  /**
+   * Triggers that are evaluated and logged but ask nothing (ADR 0044 step 1). Env:
+   * `AI_BOT_ESCALATION_SHADOW`, a comma-separated list. Default: none.
+   */
+  botEscalationShadow: readonly EscalationTrigger[];
   /** Score margin, in LEP, under which `uncertain` escalation asks the model. Default 1. */
   botEscalationMargin: number;
   /**
@@ -103,6 +111,13 @@ export interface AiConfig {
   strategistReplan: 'everyTurn' | 'onChange';
   /** Most own turns a seat's knobs are reused before the strategist is asked again. Default 3. */
   strategistMaxReuseTurns: number;
+  /**
+   * ADR 0045 decision 5: whether the bot-led strategist's primer offers the typed
+   * `tacticianRequest` field. `shadow` adds it and logs every request (it is never acted on);
+   * `off` keeps the primer as it was, so knob quality can be compared with and without it.
+   * Env: `AI_STRATEGIST_TACTICIAN_FLAG`. Default: `off`.
+   */
+  strategistTacticianFlag: 'off' | 'shadow';
   /**
    * Filter out OpenRouter providers that do not support prompt caching.
    * Default: true.
@@ -300,10 +315,12 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   heuristicsEnabled: true,
   decisionCacheEnabled: true,
   tacticalMode: 'model',
-  botEscalation: 'never',
+  botEscalation: [],
+  botEscalationShadow: [],
   botEscalationMargin: 1,
   strategistReplan: 'onChange',
   strategistMaxReuseTurns: 3,
+  strategistTacticianFlag: 'off',
   filterNonCachingProviders: true,
   streamResponses: true,
   retryOnTimeout: false,
@@ -398,6 +415,46 @@ function parseBoolean(val: string | undefined, fallback: boolean): boolean {
   if (normalized === '0' || normalized === 'false' || normalized === 'no') return false;
   if (normalized === '1' || normalized === 'true' || normalized === 'yes') return true;
   return fallback;
+}
+
+/** Every ADR 0044 escalation trigger, in the order a live call is attributed. */
+export const ESCALATION_TRIGGERS = [
+  'scarce-answer',
+  'unknown-card',
+  'uncertain',
+  'lethal',
+] as const;
+export type EscalationTrigger = (typeof ESCALATION_TRIGGERS)[number];
+/** Triggers that may go live; `lethal` starts in shadow only (ADR 0044 decision 1). */
+export const LIVE_ESCALATION_TRIGGERS = ['scarce-answer', 'unknown-card', 'uncertain'] as const;
+export type LiveEscalationTrigger = (typeof LIVE_ESCALATION_TRIGGERS)[number];
+
+/**
+ * A comma-separated trigger list; empty or `never` is none. An unknown name throws: before ADR
+ * 0044 an unknown value silently meant `never`, which hid typos.
+ */
+export function parseTriggerList(raw: string | undefined, name: string): EscalationTrigger[] {
+  const value = raw?.trim() ?? '';
+  if (value === '' || value === 'never') return [];
+  const names = value
+    .split(',')
+    .map((part) => part.trim())
+    .filter((part) => part !== '');
+  for (const trigger of names)
+    if (!(ESCALATION_TRIGGERS as readonly string[]).includes(trigger))
+      throw new Error(
+        `Unknown escalation trigger "${trigger}" in ${name}. Supported: ${ESCALATION_TRIGGERS.join(', ')} (or never).`,
+      );
+  return [...new Set(names)] as EscalationTrigger[];
+}
+
+function parseLiveTriggers(raw: string | undefined): LiveEscalationTrigger[] {
+  const triggers = parseTriggerList(raw, 'AI_BOT_ESCALATION');
+  if (triggers.includes('lethal'))
+    throw new Error(
+      'AI_BOT_ESCALATION: lethal is shadow-only until its shadow logs justify it (ADR 0044); put it in AI_BOT_ESCALATION_SHADOW',
+    );
+  return triggers as LiveEscalationTrigger[];
 }
 
 function parseChoice<T extends string>(
@@ -654,10 +711,10 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       ['model', 'bot'] as const,
       DEFAULT_AI_CONFIG.tacticalMode,
     ),
-    botEscalation: parseChoice(
-      env['AI_BOT_ESCALATION'],
-      ['never', 'uncertain'] as const,
-      DEFAULT_AI_CONFIG.botEscalation,
+    botEscalation: parseLiveTriggers(env['AI_BOT_ESCALATION']),
+    botEscalationShadow: parseTriggerList(
+      env['AI_BOT_ESCALATION_SHADOW'],
+      'AI_BOT_ESCALATION_SHADOW',
     ),
     botEscalationMargin: parseNonNegative(
       env['AI_BOT_ESCALATION_MARGIN'],
@@ -667,6 +724,11 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       env['AI_STRATEGIST_REPLAN'],
       ['everyTurn', 'onChange'] as const,
       DEFAULT_AI_CONFIG.strategistReplan,
+    ),
+    strategistTacticianFlag: parseChoice(
+      env['AI_STRATEGIST_TACTICIAN_FLAG'],
+      ['off', 'shadow'] as const,
+      DEFAULT_AI_CONFIG.strategistTacticianFlag,
     ),
     strategistMaxReuseTurns: parseNonNegativeInt(
       env['AI_STRATEGIST_MAX_REUSE_TURNS'],

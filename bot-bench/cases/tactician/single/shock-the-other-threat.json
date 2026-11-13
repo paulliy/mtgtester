@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "id": "shock-the-other-threat",
+  "role": "tactician",
+  "scope": "single",
+  "title": "A second burn spell goes where the first is not already going",
+  "skills": ["stack", "removal-targeting"],
+  "briefing": "Held out for ADR 0043 (written after the fixes were tuned, never tuned against): own spell on the stack. P1 has just cast Lightning Bolt at P2's Grizzly Bears and still has priority with Shock and a Mountain open. P3's Savannah Lions is the other creature Shock kills. Shocking the Bears again kills a creature that is already dead; the Lions are the target.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 6
+    },
+    "seats": {
+      "P1": {
+        "life": 32,
+        "hand": ["Lightning Bolt", "Shock"],
+        "battlefield": ["Mountain", "Mountain", "Island"]
+      },
+      "P2": {
+        "life": 30,
+        "battlefield": ["Forest", "Forest", "Grizzly Bears"]
+      },
+      "P3": {
+        "life": 31,
+        "battlefield": ["Plains", "Plains", "Savannah Lions"]
+      },
+      "P4": {
+        "life": 35,
+        "battlefield": ["Swamp", "Swamp"]
+      }
+    }
+  },
+  "setup": [
+    {
+      "player": "P1",
+      "choose": "Cast Lightning Bolt",
+      "targets": ["Grizzly Bears"]
+    }
+  ],
+  "focus": {
+    "decisionType": "priority"
+  },
+  "reference": {
+    "analysis": "Lightning Bolt on the stack already kills the Grizzly Bears. Shock (2 damage) also kills P3's Savannah Lions; on the Bears it is wasted. Holding Shock for later is fine.",
+    "options": [
+      {
+        "label": "Shock the Savannah Lions",
+        "when": {
+          "choose": "Cast Shock",
+          "targets": ["Savannah Lions"]
+        },
+        "grade": "best",
+        "why": "Two creatures die for two cards."
+      },
+      {
+        "label": "Shock the Grizzly Bears",
+        "when": {
+          "choose": "Cast Shock",
+          "targets": ["Grizzly Bears"]
+        },
+        "grade": "blunder",
+        "why": "The Bolt already kills the Bears: the Shock is thrown away."
+      },
+      {
+        "label": "Pass and keep Shock",
+        "when": {
+          "choose": "Pass priority"
+        },
+        "grade": "good",
+        "why": "Lets the Bolt resolve and keeps Shock for a later target."
+      }
+    ],
+    "otherwise": {
+      "grade": "weak",
+      "why": "Shock at a player's face or another use that kills nothing."
+    }
+  }
+}

@@ -48,11 +48,11 @@ describe('jev-duel', () => {
     expect(presetSetup('bot', DEFAULT_AI_CONFIG, t).jev).toBeNull();
     expect(presetSetup('model', DEFAULT_AI_CONFIG, t).jev).toBeNull();
     expect(presetSetup('bot-shadow', DEFAULT_AI_CONFIG, t)).toMatchObject({
-      config: { tacticalMode: 'bot', botEscalation: 'never', jevShadowScope: 'all' },
+      config: { tacticalMode: 'bot', botEscalation: [], jevShadowScope: 'all' },
       jev: { mode: 'shadow' },
     });
     expect(presetSetup('bot-jev', DEFAULT_AI_CONFIG, t)).toMatchObject({
-      config: { tacticalMode: 'bot', botEscalation: 'uncertain', jevFallback: 'bot' },
+      config: { tacticalMode: 'bot', botEscalation: ['uncertain'], jevFallback: 'bot' },
       jev: { mode: 'active', minConfidence: 0.3 },
     });
     expect(presetSetup('jev', DEFAULT_AI_CONFIG, t).config).toMatchObject({

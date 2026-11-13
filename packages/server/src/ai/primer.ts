@@ -108,6 +108,16 @@ Knobs, all optional:
 Return ONLY this JSON envelope, preserving actionId 0 for parser compatibility:
 {"actionId":0,"turnStrategy":{"intent":"concise objective","steering":{"aggression":0.5,"targetOrder":["P2"],"prioritize":["Card name"],"hold":[],"holdUpMana":0,"avoidOverextending":false}}}`;
 
+/**
+ * ADR 0045 decision 5, appended to the bot-led strategist primer only when
+ * `strategistTacticianFlag` is `shadow`: the request is studied, never acted on.
+ */
+export const BOT_STRATEGIST_TACTICIAN_FLAG_TEXT = `
+
+Optional: if this turn needs whole-turn reasoning the knobs cannot express (a kill that needs a
+precise sequence, a hold that matters more than any knob says), add to turnStrategy
+"tacticianRequest":{"reason":"one short sentence"}. Leave it out on ordinary turns.`;
+
 export const TACTICIAN_COMMON_PRIMER = COMMON_TEXT;
 
 /** Strategist-only instructions; tactical serialization stays in `TACTICIAN_PRIMER`. */

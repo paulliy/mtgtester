@@ -10,10 +10,22 @@ export type {
   CardKnowledge,
   CardRole,
   CardTraits,
+  StatBoost,
   TargetPolarity,
   WipeSelector,
 } from './card-knowledge';
 export { manaValueOfCost } from './policy';
+export { BOT_POLICY_VERSION } from './version';
+export { DEFAULT_POLICY_FIXES, POLICY_FIXES, parsePolicyFixes } from './fixes';
+export type { PolicyFix } from './fixes';
+export {
+  combatBody,
+  damageThrough,
+  incomingDamage,
+  readyAttackers,
+  untappedCreatures,
+} from './tactics';
+export type { CombatBody } from './tactics';
 export { passesVeto, totalLifeCost, totalSacrificeCount, totalDiscardCount } from './veto';
 export { WEIGHTS } from './weights';
 export { Rng } from './rng';

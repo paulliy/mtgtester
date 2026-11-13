@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "id": "two-home-to-live",
+  "role": "tactician",
+  "scope": "single",
+  "title": "At five life, one blocker home is not enough",
+  "skills": ["defence", "attacking", "threat-assessment"],
+  "briefing": "Held out for ADR 0043 (written after the fixes were tuned, from a PR review finding): it takes two blockers home to survive, so no single creature held back changes the outcome. P1 is at 5 with Leatherback Baloth, Alpine Grizzly and Watchwolf. P2 is at 40 with Kalonian Tusker, Watchwolf and Shepherd of the Flock, all tapped from attacking: 9 power that untaps for P2's next turn. P3 and P4 have no creatures.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 9
+    },
+    "seats": {
+      "P1": {
+        "life": 5,
+        "battlefield": [
+          "Forest",
+          "Forest",
+          "Forest",
+          "Plains",
+          "Leatherback Baloth",
+          "Alpine Grizzly",
+          "Watchwolf"
+        ]
+      },
+      "P2": {
+        "life": 40,
+        "battlefield": [
+          "Forest",
+          "Forest",
+          "Plains",
+          "Plains",
+          { "card": "Kalonian Tusker", "tapped": true },
+          { "card": "Watchwolf", "tapped": true },
+          { "card": "Shepherd of the Flock // Usher to Safety", "tapped": true }
+        ],
+        "libraryTop": ["Forest"]
+      },
+      "P3": {
+        "life": 24,
+        "battlefield": ["Island", "Island", "Island"]
+      },
+      "P4": {
+        "life": 18,
+        "battlefield": ["Swamp", "Swamp", "Mountain"]
+      }
+    },
+    "continue": {
+      "throughCombat": true
+    }
+  },
+  "focus": {
+    "decisionType": "declareAttackers"
+  },
+  "reference": {
+    "analysis": "P2 untaps with three 3-power creatures: 9 against 5 life. Each P1 creature can block one of them. All three home: P1 takes nothing. One attacker away: two blockers, 3 through, P1 to 2, for 4 or 3 damage on a player at 40, P3 at 24 or P4 at 18, none of them near dead. Two away: 6 through, lethal; all three away: 9, lethal. Holding back a single creature does not survive, so a search that recalls one attacker at a time sees no gain until the second.",
+    "options": [
+      {
+        "label": "No attack",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Leatherback Baloth": "-",
+            "Alpine Grizzly": "-",
+            "Watchwolf": "-"
+          }
+        },
+        "grade": "best",
+        "why": "Every P2 attacker can be blocked next turn."
+      },
+      {
+        "label": "Only the Grizzly attacks",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Leatherback Baloth": "-",
+            "Alpine Grizzly": "+",
+            "Watchwolf": "-"
+          }
+        },
+        "grade": "weak",
+        "why": "Four damage on a healthy player for three taken next turn, at 5 life."
+      },
+      {
+        "label": "Only the Baloth attacks",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Leatherback Baloth": "+",
+            "Alpine Grizzly": "-",
+            "Watchwolf": "-"
+          }
+        },
+        "grade": "weak",
+        "why": "Four damage dealt, three taken next turn, and P1's best blocker is tapped."
+      },
+      {
+        "label": "Only the Watchwolf attacks",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Leatherback Baloth": "-",
+            "Alpine Grizzly": "-",
+            "Watchwolf": "+"
+          }
+        },
+        "grade": "weak",
+        "why": "Three damage dealt for three taken next turn, at 5 life."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "Two or more attackers leave one blocker against three 3-power attackers: 6 or more through, P1 dies."
+    }
+  }
+}

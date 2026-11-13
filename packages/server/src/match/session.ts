@@ -71,6 +71,7 @@ import {
   type JevPolicyBinding,
   type ReflectionContext,
 } from '../ai';
+import { knowledgeFor } from '../ai/bot-tactician';
 import type { GameStore } from '../db';
 import { finishingPositions, type DecisionSource, type GameRecorder } from '../db/games';
 import { releaseAnchored, releaseAnnotations } from './annotations';
@@ -664,6 +665,8 @@ export class MatchSession {
           ? `${this.opts.seed}-fallback-${seat}`
           : fallbackBotRandomSource(this.rngKey, seatIndex(seat)),
         () => this.engine.view(seat),
+        // The same card-aware bot as bot-led mode and a model's fallback (ADR 0043 decision 1).
+        { knowledge: knowledgeFor(this.engine) },
       );
       this.fallbackBots.set(seat, bot);
     }
@@ -2346,7 +2349,11 @@ export class MatchSession {
           ? `${this.opts.seed}-${playerId}`
           : botRandomSource(this.rngKey, seatIndex(playerId)),
         () => this.engine.view(playerId),
-        table === null ? {} : { diplomacy: table.playFor(playerId) },
+        // Card knowledge: a table's bot seats are the bot that plays in bot-led mode (ADR 0043).
+        {
+          knowledge: knowledgeFor(this.engine),
+          ...(table === null ? {} : { diplomacy: table.playFor(playerId) }),
+        },
       );
       return table === null ? bot : withDiplomacy(table, bot);
     };

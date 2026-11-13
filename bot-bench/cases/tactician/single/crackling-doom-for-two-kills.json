@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "id": "crackling-doom-for-two-kills",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Crackling Doom's two damage to each opponent kills two players",
+  "skills": ["burn", "lethal", "unknown-card"],
+  "briefing": "ADR 0044 position for `unknown-card`: the card has no role the classifier knows. P2 and P3 are at 2 life. P1 holds Crackling Doom (2 damage to each opponent, and each opponent sacrifices its greatest-power creature) with Mountain, Plains and Swamp open. Casting it eliminates both.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 9
+    },
+    "seats": {
+      "P1": {
+        "life": 27,
+        "hand": ["Crackling Doom"],
+        "battlefield": ["Mountain", "Plains", "Swamp"]
+      },
+      "P2": {
+        "life": 2,
+        "battlefield": ["Forest", "Forest", "Grizzly Bears"]
+      },
+      "P3": {
+        "life": 2,
+        "battlefield": ["Island", "Island", "Wall of Omens"]
+      },
+      "P4": {
+        "life": 30,
+        "battlefield": ["Forest", "Forest", "Gigantosaurus"]
+      }
+    }
+  },
+  "reference": {
+    "analysis": "Crackling Doom deals 2 to each opponent: P2 and P3 (2 life each) are eliminated, and P4 sacrifices Gigantosaurus.",
+    "options": [
+      {
+        "label": "Cast Crackling Doom",
+        "when": {
+          "choose": "Cast Crackling Doom"
+        },
+        "grade": "best",
+        "why": "Two players eliminated and P4 loses its 10/10."
+      },
+      {
+        "label": "Pass",
+        "when": {
+          "choose": "Pass priority"
+        },
+        "grade": "blunder",
+        "why": "Two kills left on the table."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "Two kills left on the table."
+    }
+  }
+}

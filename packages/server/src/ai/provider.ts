@@ -32,7 +32,9 @@ import {
   type JevPolicyBinding,
   type JevPolicyOutcome,
 } from './jev-policy';
-import { BotTactician, type BotAnswer } from './bot-tactician';
+import { BotTactician, knowledgeFor, type BotAnswer } from './bot-tactician';
+import { ESCALATION_TRIGGERS, type EscalationTrigger, type LiveEscalationTrigger } from './config';
+import { attribute } from './escalation';
 
 /**
  * Errors where falling back per-decision would be dishonest: the budget or the credentials
@@ -73,6 +75,43 @@ type ModelOutcome = { kind: 'answered'; response: DecisionResponse } | ModelFail
 export const JEV_CLOSE_CALL_INSTRUCTIONS =
   "Both actions are legal and were judged close. Choose the one that better advances this seat's stated strategy and survival. Select exactly one criterion key.";
 
+/** Optional seams for bot-led tactics, used by bot-bench's `bot-led` kind (ADR 0043). */
+export interface BotLedHooks {
+  /** Tie-break seed label for this seat's bot; defaults to `<gameId>-<seat>-bot`. */
+  botSeed?: string;
+  /**
+   * Called once per decision the bot-led tactician was consulted on, with whether the model was
+   * asked and the escalation reasons that fired.
+   */
+  onBotDecision?: (
+    request: DecisionRequest,
+    outcome: { escalated: boolean; reasons: readonly string[]; escalatedBy?: string },
+  ) => void;
+}
+
+/**
+ * Per-trigger counts (ADR 0044 decision 5.2) for the call census: how often each trigger fired
+ * (live or shadow), how many calls each live trigger was credited with, and on which decision
+ * types and answer sources the shadow fired.
+ */
+export interface EscalationStats {
+  fired: Record<EscalationTrigger, number>;
+  escalated: Record<LiveEscalationTrigger, number>;
+  /** `<trigger>:<decisionType>` → count. */
+  byDecisionType: Record<string, number>;
+  /** `<trigger>:<source>` → count; the source is `bot`, `plan`, `heuristic` or `cache`. */
+  bySource: Record<string, number>;
+}
+
+function emptyStats(): EscalationStats {
+  return {
+    fired: Object.fromEntries(ESCALATION_TRIGGERS.map((t) => [t, 0])) as EscalationStats['fired'],
+    escalated: { 'scarce-answer': 0, 'unknown-card': 0, uncertain: 0 },
+    byDecisionType: {},
+    bySource: {},
+  };
+}
+
 export class OpenAiDecisionProvider implements AsyncDecisionProvider {
   /** Per-provider (therefore per-seat, per-game) — never shared between games. */
   private readonly cache = new DecisionCache();
@@ -81,6 +120,11 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
   private decisionContext: { requestId: string; context: string | undefined } | null = null;
   /** Bot-led tactics (ADR 0039), created on this seat's first decision in `bot` mode. */
   private botTactician: BotTactician | null = null;
+  private readonly stats: EscalationStats = emptyStats();
+  /** Which local path answered the current request: plan, heuristic or cache. */
+  private lastLocalSource: 'plan' | 'heuristic' | 'cache' | null = null;
+  /** The live trigger behind the current model call, stored with its cached answer. */
+  private escalationReason: { requestId: string; reason: LiveEscalationTrigger } | null = null;
 
   constructor(
     private readonly client: AiClient,
@@ -94,6 +138,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     private readonly policyRegistry: PolicyRegistry = DEFAULT_POLICY_REGISTRY,
     /** Table deals for a seat (ADR 0035); bot-led tactics must honor them, not just log breaches. */
     private readonly diplomacyFor?: (seat: PlayerId) => DiplomacyPlay | undefined,
+    private readonly botHooks: BotLedHooks = {},
   ) {
     this.strategy = coordinator ?? new StrategyCoordinator(null, queue, engine, config, logger);
   }
@@ -137,14 +182,29 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
 
     const local = this.tryLocalAnswer(request, view);
     if (local !== null) {
-      if (this.config.tacticalMode === 'bot') this.botFor(request).record(request, local);
+      if (this.config.tacticalMode === 'bot') {
+        const bot = this.botFor(request);
+        // ADR 0044 decision 3.1: the shadow also sees answers the bot was never asked about.
+        if (this.watchedTriggers().size > 0) {
+          const source = this.lastLocalSource ?? 'plan';
+          this.noteTriggers(request, bot.shadowTriggers(request, local), null, source);
+        }
+        bot.record(request, local);
+      }
       return local;
     }
 
     if (this.config.tacticalMode === 'bot') {
       const bot = this.botFor(request);
       const answer = bot.decide(request);
-      const escalate = this.config.botEscalation === 'uncertain' && answer.uncertain;
+      const escalatedBy = attribute(answer.reasons, this.config.botEscalation);
+      const escalate = escalatedBy !== null;
+      this.noteTriggers(request, answer.reasons, escalatedBy, 'bot');
+      this.botHooks.onBotDecision?.(request, {
+        escalated: escalate,
+        reasons: answer.reasons,
+        ...(escalatedBy !== null && { escalatedBy }),
+      });
       if (!escalate) {
         bot.record(request, answer.response);
         this.logLocal(request, answer.response, 'bot');
@@ -152,15 +212,69 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
         this.shadowJev(request, view, answer.response, 'bot', answer.uncertain);
         return answer.response;
       }
-      this.engine.addDebug?.('decision', `bot unsure for ${request.requestId}; asking the model`, {
-        source: 'bot',
-      });
-      const response = await this.decideViaModelOrFallback(request, view, answer);
+      this.engine.addDebug?.(
+        'decision',
+        `bot escalates ${request.requestId} (${escalatedBy}); asking the model`,
+        { source: 'bot', escalatedBy, reasons: answer.reasons },
+      );
+      this.escalationReason = { requestId: request.requestId, reason: escalatedBy };
+      const response = await this.decideViaModelOrFallback(request, view, answer, escalatedBy);
       bot.record(request, response);
       return response;
     }
 
     return await this.decideViaModelOrFallback(request, view);
+  }
+
+  /** Live and shadow triggers this seat evaluates; empty means the trigger code never runs. */
+  private watchedTriggers(): Set<EscalationTrigger> {
+    return new Set<EscalationTrigger>([
+      ...this.config.botEscalation,
+      ...this.config.botEscalationShadow,
+    ]);
+  }
+
+  /**
+   * Log the watched triggers that fired (ADR 0044 decision 5.2): a debug entry beside the strategy
+   * router's shadow, and the per-reason counters the call census reads. A shadow trigger never
+   * claims a live trigger's call; it is logged beside it.
+   */
+  private noteTriggers(
+    request: DecisionRequest,
+    reasons: readonly EscalationTrigger[],
+    escalatedBy: LiveEscalationTrigger | null,
+    source: string,
+  ): void {
+    const watched = this.watchedTriggers();
+    const fired = reasons.filter((reason) => watched.has(reason));
+    if (escalatedBy !== null) this.stats.escalated[escalatedBy]++;
+    if (fired.length === 0) return;
+    for (const reason of fired) {
+      this.stats.fired[reason]++;
+      const byType = `${reason}:${request.decisionType}`;
+      this.stats.byDecisionType[byType] = (this.stats.byDecisionType[byType] ?? 0) + 1;
+      const bySource = `${reason}:${source}`;
+      this.stats.bySource[bySource] = (this.stats.bySource[bySource] ?? 0) + 1;
+    }
+    const shadow = fired.filter(
+      (reason) => !(this.config.botEscalation as readonly string[]).includes(reason),
+    );
+    this.engine.addDebug?.(
+      'decision',
+      `escalation triggers for ${request.requestId}: ${fired.join(', ')}`,
+      {
+        source,
+        decisionType: request.decisionType,
+        fired,
+        shadow,
+        escalatedBy,
+      },
+    );
+  }
+
+  /** A copy of this seat's trigger counts (ADR 0044's call census). */
+  escalationStats(): EscalationStats {
+    return structuredClone(this.stats);
   }
 
   /**
@@ -253,10 +367,16 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     request: DecisionRequest,
     view: PlayerView,
     botAnswer?: BotAnswer,
+    escalatedBy?: LiveEscalationTrigger,
   ): Promise<DecisionResponse> {
     let shadow: Promise<JevPolicyOutcome> | undefined;
     let fellThrough: JevPolicyOutcome | undefined;
-    if (this.jev !== undefined) {
+    // ADR 0044 decision 5.4: Jev settles close calls from the bot's top two options. For
+    // `scarce-answer` and `unknown-card` the option that matters (usually pass) need not be in the
+    // top two, so they go to the model until a pair is defined for each.
+    const skipJev =
+      escalatedBy !== undefined && escalatedBy !== 'uncertain' && this.jev?.mode !== 'shadow';
+    if (this.jev !== undefined && !skipJev) {
       const guidance = this.strategy.guidanceFor(request.decidingPlayer, request, view);
       if (this.jev.mode === 'shadow') {
         if (this.config.jevShadowScope === 'all' || botAnswer?.uncertain === true) {
@@ -373,6 +493,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
         () => this.strategy.steeringFor(seat),
         this.config.botEscalationMargin,
         this.diplomacyFor?.(seat),
+        this.botHooks.botSeed,
       );
     }
     return this.botTactician;
@@ -428,7 +549,10 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     }
 
     // Seeded from the public request id, so it reveals nothing about a table game's keyed streams.
-    const fallback = heuristicDecide(request, view, new HeuristicRng(request.requestId));
+    // Card-aware, like bot-led mode and a table's bot seats: one bot wherever it plays (ADR 0043).
+    const fallback = heuristicDecide(request, view, new HeuristicRng(request.requestId), {
+      knowledge: knowledgeFor(this.engine),
+    });
     console.warn(
       `  ⚠ ${request.decidingPlayer} decision ${request.requestId} — using heuristic bot fallback`,
     );
@@ -570,9 +694,11 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
    * Returns `null` when the decision is a real one and must be sent to the model.
    */
   private tryLocalAnswer(request: DecisionRequest, view: PlayerView): DecisionResponse | null {
+    this.lastLocalSource = null;
     // Check pre-planned turn actions first
     const planned = this.strategy.tryExecutePlan(request);
     if (planned !== null) {
+      this.lastLocalSource = 'plan';
       this.logLocal(request, planned, 'plan');
       this.strategy.recordDecision(request, planned, 'plan');
       return planned;
@@ -581,6 +707,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     if (this.config.heuristicsEnabled) {
       const heuristic = tryHeuristic(request, view);
       if (heuristic !== null) {
+        this.lastLocalSource = 'heuristic';
         this.engine.addDebug?.(
           'decision',
           `decision answered locally for ${request.decidingPlayer} via heuristic: ${heuristic.note ?? ''}`,
@@ -593,12 +720,22 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     }
 
     if (this.config.decisionCacheEnabled) {
-      const cached = this.cache.get(request, view, this.cacheContext(request));
-      if (cached !== null) {
+      const entry = this.cache.lookup(request, view, this.cacheContext(request));
+      if (entry !== null) {
+        const cached = entry.response;
+        this.lastLocalSource = 'cache';
+        // ADR 0044 decision 5.5: a replayed escalated answer says why it was first escalated, so
+        // it is not mistaken for the bot's own.
         this.engine.addDebug?.(
           'decision',
-          `decision answered locally for ${request.decidingPlayer} via cache: ${cached.note ?? ''}`,
-          { source: 'cache' },
+          `decision answered locally for ${request.decidingPlayer} via cache: ${cached.note ?? ''}` +
+            (entry.escalation === undefined
+              ? ''
+              : ` (replaying an answer escalated by ${entry.escalation})`),
+          {
+            source: 'cache',
+            ...(entry.escalation !== undefined && { escalation: entry.escalation }),
+          },
         );
         this.logLocal(request, cached, 'cache');
         this.strategy.recordDecision(request, cached, 'cache');
@@ -620,7 +757,11 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     // A deal made while the model was thinking: the answer never saw it, so it is not cached
     // under either key.
     if (asked?.requestId === request.requestId && asked.context !== context) return;
-    this.cache.set(request, view, response, context);
+    const escalation =
+      this.escalationReason?.requestId === request.requestId
+        ? this.escalationReason.reason
+        : undefined;
+    this.cache.set(request, view, response, context, escalation);
   }
 
   /**

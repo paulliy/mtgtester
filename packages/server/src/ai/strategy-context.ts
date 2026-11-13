@@ -8,7 +8,12 @@ import {
   type RecentSeatDecision,
 } from './context';
 import type { SeatDiplomacyContext } from './diplomacy-context';
-import { BOT_STRATEGIST_PRIMER, RULES_PRIMER, STRATEGIST_PRIMER } from './primer';
+import {
+  BOT_STRATEGIST_PRIMER,
+  BOT_STRATEGIST_TACTICIAN_FLAG_TEXT,
+  RULES_PRIMER,
+  STRATEGIST_PRIMER,
+} from './primer';
 
 export type StrategyContextVersion = 'v1' | 'v2';
 
@@ -23,6 +28,8 @@ export interface StrategyContextOptions {
   diplomacy?: SeatDiplomacyContext;
   /** Bot-led mode (ADR 0039): ask for the bot's knobs instead of a planned action list. */
   botSteering?: boolean;
+  /** Bot-led mode only: offer the strategist's typed tactician request (ADR 0045, shadow). */
+  tacticianFlag?: boolean;
 }
 
 function botSteeringTask(hasProfile: boolean): Record<string, unknown> {
@@ -130,7 +137,11 @@ Use only information in this PlayerView. Other players' hidden cards, decklists,
     };
   }
   const userJson = JSON.stringify(finalPayload);
-  const primer = options.botSteering === true ? BOT_STRATEGIST_PRIMER : STRATEGIST_PRIMER;
+  const primer =
+    options.botSteering === true
+      ? BOT_STRATEGIST_PRIMER +
+        (options.tacticianFlag === true ? BOT_STRATEGIST_TACTICIAN_FLAG_TEXT : '')
+      : STRATEGIST_PRIMER;
   return {
     messages: [
       { role: 'system', content: primer },

@@ -194,7 +194,7 @@ describe('a decision model in the tested seat, through the production decision l
       options(fakeDecisions(pass, calls)),
     );
     const decision = result!.cases[0]!.run.decisions[0]!;
-    expect(decision).toMatchObject({ source: 'bot', requests: 0, costUsd: 0 });
+    expect(decision).toMatchObject({ source: 'bot-handoff', requests: 0, costUsd: 0 });
     expect(decision.note).toMatch(/cannot express this \(requires_coupled_assignment\)/);
     expect(calls).toHaveLength(0);
     expect(result!.status).toBe('complete');

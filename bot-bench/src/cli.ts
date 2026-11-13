@@ -22,6 +22,7 @@ import {
   loadLineupFile,
   parseModelList,
   resolveDecisionKey,
+  resolveBotLedConfig,
   resolveLlmConfig,
   type LineupEntry,
   type RunMode,
@@ -30,6 +31,7 @@ import { openCase, type CaseRun } from './play';
 import { dollars, milliseconds, percent } from './report';
 import { runLineup, type TranscriptEntry } from './run';
 import { scoreRun } from './score';
+import { foldSeeds, seedGate } from './seeds';
 import { verifyCase } from './verify';
 
 type Flags = Record<string, string | true>;
@@ -190,9 +192,11 @@ async function run(flags: Flags): Promise<void> {
   const trials = Math.floor(positive(flags, 'trials', 1));
   const cases = selectCases(flags);
   // A missing key is found now, not after the other models have been paid for.
-  for (const entry of lineup)
+  for (const entry of lineup) {
     if (entry.kind === 'llm') resolveLlmConfig(entry, { env: process.env, mode });
     else if (entry.kind === 'decision') resolveDecisionKey(entry, { env: process.env, mode });
+    else if (entry.kind === 'bot-led') resolveBotLedConfig(entry, { env: process.env, mode });
+  }
 
   const stamp = new Date()
     .toISOString()
@@ -326,6 +330,62 @@ async function rescore(flags: Flags): Promise<void> {
   await bundle({ ...flags, run: directory });
 }
 
+/**
+ * Fold a seeded run by entry and print each case's mean across seeds (ADR 0043 decision 3.1).
+ * With `--baseline` and `--candidate`, apply the gate: the candidate must raise the overall score
+ * and lower no case's mean. Exits 1 when the gate fails.
+ */
+function seedsCommand(flags: Flags): void {
+  const runDirectory = text(flags, 'run');
+  if (runDirectory === undefined) throw new Error('seeds needs --run <run directory>');
+  const { models } = readRun(resolve(runDirectory));
+  const entries = foldSeeds(models);
+  const caseIds = [...new Set(entries.flatMap((entry) => Object.keys(entry.caseMeans)))].sort();
+  console.log(
+    `${'case'.padEnd(34)} ${entries.map((entry) => entry.id.slice(0, 16).padEnd(16)).join(' ')}`,
+  );
+  for (const caseId of caseIds)
+    console.log(
+      `${caseId.padEnd(34)} ${entries
+        .map((entry) => {
+          const value = entry.caseMeans[caseId];
+          const escalated = entry.escalated?.[caseId];
+          const cell = value === undefined ? '-' : percent(value);
+          return (escalated === undefined ? cell : `${cell} (${escalated} esc)`).padEnd(16);
+        })
+        .join(' ')}`,
+    );
+  console.log(
+    `${'overall'.padEnd(34)} ${entries.map((entry) => percent(entry.overall).padEnd(16)).join(' ')}`,
+  );
+  console.log(
+    `${'seeds'.padEnd(34)} ${entries.map((entry) => String(entry.seeds.length).padEnd(16)).join(' ')}`,
+  );
+  const baselineId = text(flags, 'baseline');
+  const candidateId = text(flags, 'candidate');
+  if (baselineId === undefined && candidateId === undefined) return;
+  if (baselineId === undefined || candidateId === undefined)
+    throw new Error('the seed gate needs both --baseline <id> and --candidate <id>');
+  const find = (id: string | undefined): (typeof entries)[number] => {
+    const entry = entries.find((candidate) => candidate.id === id);
+    if (entry === undefined)
+      throw new Error(
+        `no entry "${id ?? ''}" in the run (have: ${entries.map((e) => e.id).join(', ')})`,
+      );
+    return entry;
+  };
+  const gate = seedGate(find(baselineId), find(candidateId));
+  console.log(
+    `\ngate ${candidateId} against ${baselineId}: ${gate.pass ? 'PASS' : 'FAIL'} (overall ${gate.overallDelta >= 0 ? '+' : ''}${(gate.overallDelta * 100).toFixed(1)} points)`,
+  );
+  for (const problem of gate.problems) console.log(`  problem: ${problem}`);
+  for (const r of gate.regressions)
+    console.log(`  lower   ${r.caseId}: ${percent(r.baseline)} -> ${percent(r.candidate)}`);
+  for (const r of gate.improvements)
+    console.log(`  higher  ${r.caseId}: ${percent(r.baseline)} -> ${percent(r.candidate)}`);
+  if (!gate.pass) process.exitCode = 1;
+}
+
 function collateCommand(positional: readonly string[], flags: Flags): void {
   const runDirectory = text(flags, 'run');
   if (runDirectory === undefined || positional.length === 0)
@@ -353,12 +413,18 @@ const USAGE = `bot-bench: tactician benchmark with a judge bundle
   bun run bot-bench bundle --run <run directory> [--reveal-models]
   bun run bot-bench rescore --run <run directory>    grade saved play again against the current references
   bun run bot-bench collate --run <run directory> <scorecard.json> [...]
+  bun run bot-bench seeds --run <run directory> [--baseline <id> --candidate <id>]
+                                                     mean per case across seeds; the ADR 0043 seed gate
 
-  --models   comma separated: local:heuristic, local:first-legal, local:random,
+  --models   comma separated: local:heuristic (card-aware, the production bot),
+             local:heuristic-plain (no card knowledge), local:first-legal, local:random,
+             bot-led:never, bot-led:uncertain=openrouter/<vendor/model>,
              openrouter:<vendor/model>, groq:<model>, gemini:<model>, deepseek:<model>, openai:<model>;
              add @low, @medium or @high to turn reasoning on;
              decision:<vendor/model> for a Decisions API model (decision:typesafe/jev-1.14),
              add @hold to hold still on attacks and blocks instead of letting the bot play them
+  --lineup   a JSON file; a top-level "seeds" list plays every heuristic and bot-led entry once
+             per seed (see bot-bench/lineups/bot-gate.json)
   --out      an existing run directory adds models to that run and rebuilds its bundle
 `;
 
@@ -372,6 +438,7 @@ async function main(): Promise<void> {
   else if (command === 'bundle') await bundle(flags);
   else if (command === 'rescore') await rescore(flags);
   else if (command === 'collate') collateCommand(positional, flags);
+  else if (command === 'seeds') seedsCommand(flags);
   else console.log(USAGE);
 }
 

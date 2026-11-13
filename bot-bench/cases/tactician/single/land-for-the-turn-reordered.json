@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "land-for-the-turn-reordered",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Three lands in hand, one of them casts the spell this turn (reordered)",
+  "skills": ["land-choice", "mana-colors", "tempo"],
+  "briefing": "ADR 0043 variant of land-for-the-turn with the Forest first in hand. P1 has Forest, Island and Island on the battlefield and holds Harmonize ({2}{G}{G}) with a Forest, an Island and a Temple of Mystery to choose from for the land drop. Only the Forest gives a second green source untapped, which is what Harmonize needs this turn. The engine marks which hand cards each land unlocks; the case measures whether the model reads colors and tapped-ness instead of playing the first or the fanciest land.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 4
+    },
+    "seats": {
+      "P1": {
+        "life": 40,
+        "hand": ["Forest", "Temple of Mystery", "Island", "Harmonize"],
+        "battlefield": ["Forest", "Island", "Island"],
+        "libraryTop": ["Kalonian Tusker", "Forest", "Counterspell", "Island"]
+      },
+      "P2": {
+        "life": 40,
+        "battlefield": ["Mountain", "Mountain", "Mountain"]
+      },
+      "P3": {
+        "life": 40,
+        "battlefield": ["Swamp", "Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 40,
+        "battlefield": ["Plains", "Plains", "Plains"]
+      }
+    }
+  },
+  "table": {
+    "policy": "passive",
+    "script": [
+      {
+        "player": "P1",
+        "choose": "Cast Harmonize"
+      }
+    ]
+  },
+  "reference": {
+    "analysis": "Harmonize costs {2}{G}{G}. The battlefield has one green source (Forest) and two Islands. Playing the Forest gives G G U U untapped: Harmonize is castable now and draws three cards on turn 4. Playing the Island gives G U U U: four mana but only one green, so Harmonize stays in hand. Temple of Mystery could tap for green but enters tapped, so there are only three usable mana this turn. Not playing a land at all wastes the land drop. The run shows the follow-up: after each land the seat tries to cast Harmonize, which only works behind the Forest.",
+    "options": [
+      {
+        "label": "Play Forest (casts Harmonize this turn)",
+        "when": {
+          "choose": "Play Forest"
+        },
+        "grade": "best",
+        "why": "The only land that makes Harmonize castable this turn."
+      },
+      {
+        "label": "Play Temple of Mystery",
+        "when": {
+          "choose": "Play Temple of Mystery"
+        },
+        "grade": "weak",
+        "why": "Fixes colors for later and scries, but enters tapped: the turn's mana and Harmonize are wasted."
+      },
+      {
+        "label": "Play Island",
+        "when": {
+          "choose": "Play Island"
+        },
+        "grade": "weak",
+        "why": "Uses the land drop but leaves only one green source; Harmonize is uncastable."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "Skips the land drop with three lands in hand and a spell that needs it."
+    }
+  }
+}

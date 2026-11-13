@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "id": "hold-the-swords-for-a-threat",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Develop instead of spending the only removal on a mana elf",
+  "skills": ["removal", "card-economy", "scarce-answer"],
+  "briefing": "ADR 0044 position for `scarce-answer`: the trigger should fire and the right answer is not the removal. P1 holds Swords to Plowshares, its only removal, and Kalonian Tusker, with Plains, Forest and Forest open. The only opposing creatures are a Llanowar Elves and a Savannah Lions; three opponents hold full hands. Casting the Tusker develops the board; exiling a 1/1 or 2/1 spends the one answer to whatever comes next.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 5
+    },
+    "seats": {
+      "P1": {
+        "life": 36,
+        "hand": ["Swords to Plowshares", "Kalonian Tusker"],
+        "battlefield": ["Plains", "Forest", "Forest"]
+      },
+      "P2": {
+        "life": 38,
+        "hand": ["Island", "Island", "Island", "Island", "Island"],
+        "battlefield": ["Forest", "Forest", "Forest", "Llanowar Elves"]
+      },
+      "P3": {
+        "life": 37,
+        "hand": ["Island", "Island", "Island", "Island", "Island"],
+        "battlefield": ["Plains", "Plains", "Plains", "Savannah Lions"]
+      },
+      "P4": {
+        "life": 40,
+        "hand": ["Island", "Island", "Island", "Island", "Island", "Island"],
+        "battlefield": ["Swamp", "Swamp", "Swamp", "Swamp"]
+      }
+    }
+  },
+  "reference": {
+    "analysis": "Nothing on the board threatens P1 at 36. Swords to Plowshares is P1's only removal; the Tusker uses the turn's mana.",
+    "options": [
+      {
+        "label": "Cast Kalonian Tusker",
+        "when": {
+          "choose": "Cast Kalonian Tusker"
+        },
+        "grade": "best",
+        "why": "Develops and keeps the only removal for a real threat."
+      },
+      {
+        "label": "Pass",
+        "when": {
+          "choose": "Pass priority"
+        },
+        "grade": "good",
+        "why": "Keeps the removal, but wastes the mana."
+      },
+      {
+        "label": "Swords to Plowshares on a small creature",
+        "when": {
+          "choose": "Cast Swords to Plowshares"
+        },
+        "grade": "weak",
+        "why": "Spends the only answer on a 1/1 or 2/1."
+      }
+    ],
+    "otherwise": {
+      "grade": "weak",
+      "why": "Another line that spends the turn worse."
+    }
+  }
+}

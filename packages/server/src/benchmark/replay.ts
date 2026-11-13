@@ -42,6 +42,13 @@ export type ObservationPolicy = (
 export interface ReplayCaptureOptions {
   maxDecisions?: number;
   maxTransitions?: number;
+  /**
+   * Called once with the capture's engine before its first step, so policies that need the engine
+   * itself (a production provider, a strategy coordinator) can be built on it (ADR 0045).
+   */
+  onEngine?: (engine: Engine) => void;
+  /** Called after every captured decision, with its record, e.g. to note the knobs in force. */
+  onDecision?: (record: ReplayDecisionRecord, engine: Engine) => void;
 }
 
 export interface ReplayParityResult {
@@ -143,6 +150,7 @@ export async function captureReplayTranscript(
   options: ReplayCaptureOptions = {},
 ): Promise<ReplayTranscript> {
   const engine = new Engine(config);
+  options.onEngine?.(engine);
   const decisions: ReplayDecisionRecord[] = [];
   const maxDecisions = options.maxDecisions ?? 100_000;
   const maxTransitions = options.maxTransitions ?? 1_000_000;
@@ -177,7 +185,7 @@ export async function captureReplayTranscript(
     const before = canonicalEngineStateHash(engine);
     const response = clone(await policyFor(request.decidingPlayer)(request, view));
     engine.submit(response);
-    decisions.push({
+    const record: ReplayDecisionRecord = {
       index: decisions.length,
       request,
       response,
@@ -188,7 +196,9 @@ export async function captureReplayTranscript(
       stateHashBefore: before,
       stateHashAfterSubmit: canonicalEngineStateHash(engine),
       submittedEventSequence: latestEventSequence(engine),
-    });
+    };
+    decisions.push(record);
+    options.onDecision?.(record, engine);
   }
 
   return {

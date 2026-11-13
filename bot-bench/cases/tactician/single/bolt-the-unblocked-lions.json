@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "id": "bolt-the-unblocked-lions",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Burn the small attacker that kills you, not the bigger creature",
+  "skills": ["removal-targeting", "lethal", "defence"],
+  "briefing": "Held out for ADR 0043 (written after the fixes were tuned, never tuned against): count lethal before aiming. P1 is at 2. P2 attacks with Savannah Lions (2/1) and Leatherback Baloth (4/5); P1's Wall of Omens blocks the Baloth. P1 holds Lightning Bolt with a Mountain open. P3's Kalonian Tusker (3/3), not attacking, is the most valuable creature Bolt kills. Only Bolting the Lions keeps P1 alive.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P2",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 8
+    },
+    "seats": {
+      "P1": {
+        "life": 2,
+        "hand": ["Lightning Bolt"],
+        "battlefield": [
+          "Mountain",
+          {
+            "card": "Island",
+            "tapped": true
+          },
+          "Wall of Omens"
+        ]
+      },
+      "P2": {
+        "life": 27,
+        "battlefield": [
+          {
+            "card": "Forest",
+            "tapped": true
+          },
+          {
+            "card": "Forest",
+            "tapped": true
+          },
+          "Savannah Lions",
+          "Leatherback Baloth"
+        ]
+      },
+      "P3": {
+        "life": 30,
+        "battlefield": ["Forest", "Forest", "Kalonian Tusker"]
+      },
+      "P4": {
+        "life": 33,
+        "battlefield": ["Island", "Island"]
+      }
+    },
+    "continue": {
+      "throughCombat": true
+    }
+  },
+  "setup": [
+    {
+      "player": "P2",
+      "choose": "Declare attackers",
+      "assign": {
+        "Savannah Lions": "P1",
+        "Leatherback Baloth": "P1"
+      }
+    },
+    {
+      "player": "P1",
+      "choose": "Declare blockers",
+      "assign": {
+        "Wall of Omens": "Leatherback Baloth"
+      }
+    }
+  ],
+  "focus": {
+    "prompt": "declareBlockers"
+  },
+  "reference": {
+    "analysis": "The Wall stops the Baloth. The unblocked Lions deal 2 to P1 at 2: lethal. Bolt kills the Lions; on the Baloth (toughness 5) it kills nothing, and on P3's Tusker it kills a creature that is not attacking while P1 dies.",
+    "options": [
+      {
+        "label": "Bolt the attacking Savannah Lions",
+        "when": {
+          "choose": "Cast Lightning Bolt",
+          "targets": ["Savannah Lions"]
+        },
+        "grade": "best",
+        "why": "Removes the only unblocked damage: P1 survives."
+      },
+      {
+        "label": "Bolt P3's Kalonian Tusker",
+        "when": {
+          "choose": "Cast Lightning Bolt",
+          "targets": ["Kalonian Tusker"]
+        },
+        "grade": "blunder",
+        "why": "Kills a creature that is not attacking; the Lions kill P1."
+      },
+      {
+        "label": "Bolt the blocked Leatherback Baloth",
+        "when": {
+          "choose": "Cast Lightning Bolt",
+          "targets": ["Leatherback Baloth"]
+        },
+        "grade": "blunder",
+        "why": "Three damage does not kill a 4/5, and the Lions kill P1."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "The Lions connect and P1 is eliminated."
+    }
+  }
+}

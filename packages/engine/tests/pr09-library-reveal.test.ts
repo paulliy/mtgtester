@@ -390,6 +390,59 @@ describe('PR09 library reveal and casting cards', () => {
     expect(cards).toHaveLength(4);
   });
 
+  it('sunbird-cast-restriction — never offers a revealed card whose own cast restriction forbids it (CR 601.3)', () => {
+    // Found by the ADR 0044 call census: Sunbird's Invocation revealed a "cast only during an
+    // opponent's turn" spell on its controller's turn, offered it, then refused the cast.
+    const ctx = pod('sunbird-cast-restriction');
+    spawn(ctx, 'P1', SUNBIRD);
+    settle(ctx);
+    // Delirium: "Cast this spell only during an opponent's turn", pinned in the coverage fixture.
+    const restricted = (
+      JSON.parse(
+        readFileSync(
+          new URL('../../server/fixtures/coverage-oracle.json', import.meta.url),
+          'utf8',
+        ),
+      ) as OracleCard[]
+    ).find((card) => card.name === 'Delirium')!;
+    expect(interpretCard(restricted).castRestriction).toEqual({ kind: 'notYourTurn' });
+    // A creature for its target, so only the restriction can keep it off the menu.
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Sunbird Target',
+        manaCost: '{1}',
+        cmc: 1,
+        typeLine: 'Creature — Bear',
+        oracleText: '',
+        power: '2',
+        toughness: '2',
+      }),
+    );
+    library(ctx, 'P1', [
+      restricted,
+      labCard('Sunbird Open', '{1}', 'Sorcery', 'Draw a card.'),
+      ...copies(4, forest),
+    ]);
+    let offered: string[] = [];
+    castNormally(
+      ctx,
+      'P1',
+      labCard('Sunbird Restriction Trigger', '{3}', 'Sorcery', 'Draw a card.'),
+      new Map(),
+      (decision) => {
+        if (decision.options.some((option) => /Sunbird Open/.test(option.description))) {
+          offered = decision.options.map((option) => option.description);
+          return choose(decision, /Sunbird Open/);
+        }
+        return pass(decision);
+      },
+    );
+    expect(offered.some((text) => /Sunbird Open/.test(text))).toBe(true);
+    expect(offered.some((text) => /Delirium/.test(text))).toBe(false);
+  });
+
   it("pr09-minds-dilation-first-opponent-spell — exiles and offers only the first opposing spell's top card each turn", () => {
     const ctx = pod('pr09-dilation-first-only');
     spawn(ctx, 'P1', DILATION);

@@ -237,6 +237,30 @@ export const WEIGHTS = {
     choiceBase: 20,
     /** An "another target" action whose slots cannot all get different objects. */
     impossibleTargets: -100,
+
+    // --- ADR 0043 fixes (`fixes.ts`); starting values, gated by bot-bench seeds and the league ---
+    /** Removal on the attacker whose damage makes the incoming total lethal, when that saves us. */
+    saveFromLethalBonus: 60,
+    /** Otherwise, per point of damage an attacker in a lethal attack would deal. */
+    lethalThreatPerDamage: 2,
+    /** Removal on the blocker that stands between this turn's attack and a kill. */
+    clearBlockerBonus: 40,
+    /** A pump that carries an attack over the defending player's life. */
+    lethalPumpBonus: 60,
+    /** Per point of damage a pump adds to an attack that does not kill. */
+    pumpDamageValue: 0.5,
+    /** A spell that turns this turn's attack into a kill. */
+    lethalSpellBonus: 25,
+    /** Yielding the turn while an instant-speed action is on the menu: just below `pass`. */
+    yieldWhileHolding: 0.25,
+    /** The spell that begins the casting order spending the most mana this turn. */
+    castOrderBonus: 4,
+    /** A land that enters untapped and lets a spell in hand be cast this turn. */
+    landUnlockBonus: 1,
+    /** Per colour a land adds that the hand needs more sources of. */
+    landColorNeedBonus: 0.5,
+    /** On a turn no land unlocks anything, the tapped land is free to play. */
+    idleTappedLandBonus: 0.25,
   },
 
   /**

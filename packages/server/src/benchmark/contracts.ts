@@ -313,13 +313,22 @@ function validateViewPrivacy(view: Record<string, unknown>, observerSeat: unknow
         item,
         label,
         ['id', 'controller', 'name', 'tapped', 'status'],
-        ['typeLine', 'oracleText', 'power', 'toughness', 'keywords', 'blockedBy'],
+        [
+          'typeLine',
+          'oracleText',
+          'power',
+          'toughness',
+          'keywords',
+          'blockedBy',
+          'attacking',
+          'attackingPlaneswalker',
+        ],
       );
       for (const key of ['id', 'controller', 'name'] as const) stringField(permanent, key, label);
       if (typeof permanent['tapped'] !== 'boolean')
         throw new Error(`${label}.tapped must be boolean`);
       stringArrayField(permanent, 'status', label);
-      for (const key of ['typeLine', 'oracleText'] as const) {
+      for (const key of ['typeLine', 'oracleText', 'attacking', 'attackingPlaneswalker'] as const) {
         if (permanent[key] !== undefined && typeof permanent[key] !== 'string')
           throw new Error(`${label}.${key} must be a string`);
       }

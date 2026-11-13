@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "id": "darkness-the-alpha-strike",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Darkness prevents the combat damage that would kill",
+  "skills": ["fog", "defence", "unknown-card"],
+  "briefing": "ADR 0044 position for `unknown-card`: the card has no role the classifier knows. P2 attacks P1 (6 life) with Colossal Dreadmaw and Grizzly Bears; P1 has no creatures and holds Darkness with a Swamp open. Darkness prevents all combat damage this turn.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P2",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 9
+    },
+    "seats": {
+      "P1": {
+        "life": 6,
+        "hand": ["Darkness"],
+        "battlefield": [
+          "Swamp",
+          {
+            "card": "Island",
+            "tapped": true
+          }
+        ]
+      },
+      "P2": {
+        "life": 31,
+        "battlefield": [
+          {
+            "card": "Forest",
+            "tapped": true
+          },
+          "Forest",
+          "Colossal Dreadmaw",
+          "Grizzly Bears"
+        ]
+      },
+      "P3": {
+        "life": 30,
+        "battlefield": ["Island", "Island"]
+      },
+      "P4": {
+        "life": 28,
+        "battlefield": ["Plains", "Plains"]
+      }
+    },
+    "continue": {
+      "throughCombat": true
+    }
+  },
+  "setup": [
+    {
+      "player": "P2",
+      "choose": "Declare attackers",
+      "assign": {
+        "Colossal Dreadmaw": "P1",
+        "Grizzly Bears": "P1"
+      }
+    }
+  ],
+  "focus": {
+    "decisionType": "priority"
+  },
+  "reference": {
+    "analysis": "8 damage at 6 life with no blockers. Darkness prevents all combat damage this turn: P1 takes none.",
+    "options": [
+      {
+        "label": "Cast Darkness",
+        "when": {
+          "choose": "Cast Darkness"
+        },
+        "grade": "best",
+        "why": "Prevents the lethal combat damage."
+      },
+      {
+        "label": "Pass",
+        "when": {
+          "choose": "Pass priority"
+        },
+        "grade": "blunder",
+        "why": "P1 takes 8 and is eliminated."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "P1 is eliminated."
+    }
+  }
+}

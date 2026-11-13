@@ -12,7 +12,7 @@ It benchmarks the **tactician** only. Strategist cases are reserved
 ## Quick start
 
 ```powershell
-bun run bot-bench list                      # the 30 cases
+bun run bot-bench list                      # the 49 cases
 bun run bot-bench inspect lethal-alpha-strike   # every legal answer, played out by the engine
 bun run bot-bench verify                    # every reference still agrees with the engine
 
@@ -67,6 +67,52 @@ judge bundle: 26 files, 1035 KB
 - A model whose provider fails three decisions in a row (bad key, unknown model) is stopped and
   marked as such instead of being scored on the fallback bot's play.
 
+## The bot as a regression suite (ADR 0043)
+
+`local:heuristic` is the production bot: card-aware, as it plays in bot-led mode, as a model's
+fallback and in a table's bot seats. `local:heuristic-plain` is the same bot without card
+knowledge, the baseline the first tactician sweep (ADR 0042) measured against; results stored
+under `local:heuristic` before ADR 0043 are the plain bot's. A run's `run.json` records the bot's
+`botPolicyVersion` (`packages/bot/src/version.ts`, bumped by any change to what the bot chooses),
+which is part of the run fingerprint, so a run measured against one bot is never extended with
+another's play.
+
+A `bot-led` entry plays a case through the production pipeline in bot-led mode (ADR 0039): the
+card-aware bot answers and its escalation triggers decide when the entry's `model` is asked.
+`bot-led:never` names no model, needs no key and costs nothing; on the command line,
+`--models bot-led:uncertain=openrouter/<vendor/model>[@low]` escalates close calls to a model. With
+the same `seed` (or none), `bot-led:never` and `local:heuristic` play identically. Each decision records whether it
+was escalated and which triggers fired; each case sums them under `escalations`.
+
+```json
+{
+  "id": "bot-led-uncertain",
+  "kind": "bot-led",
+  "escalation": ["uncertain"],
+  "margin": 1,
+  "provider": "openrouter",
+  "model": "deepseek/deepseek-v4-flash"
+}
+```
+
+Escalation triggers (ADR 0044) are `uncertain`, `scarce-answer` and `unknown-card`; `lethal` is
+shadow-only. Every bot-led decision records each trigger that fired, live or not, in `reasons`;
+`escalation` makes the named ones live, one at a time when a trigger is being judged.
+
+The bot breaks ties with a seeded RNG, so one run can be lucky. A lineup file's top-level `seeds`
+list plays every heuristic and `bot-led` entry once per seed (`<id>.s1`, `<id>.s2`, ...).
+[lineups/bot-gate.json](lineups/bot-gate.json) holds the gate's eight seeds, so every run of the
+gate uses the same ones:
+
+```powershell
+bun run bot-bench run --lineup bot-bench/lineups/bot-gate.json --out benchmark-output/bot-bench/gate
+bun run bot-bench seeds --run benchmark-output/bot-bench/gate --baseline local-heuristic-plain --candidate local-heuristic
+```
+
+`seeds` prints each case's mean score across seeds per entry. With `--baseline` and
+`--candidate` it applies ADR 0043's seed gate: the candidate must raise the overall score and must
+not lower any case's mean, and the command exits 1 when it fails.
+
 ## Decision models
 
 A decision model is not a chat model. It gets the position as state plus one typed question, and
@@ -95,14 +141,15 @@ then `OPENROUTER_API_KEY`), `requestTimeoutMs` (default 10 s), `pricing`, `expan
 combat damage, pick X or modes, order triggers or split mana. Those decisions are never sent.
 `unsupported` decides what plays them:
 
-| `unsupported`   | What happens                                                                                                                                             | Read the score as                                                                                               |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `bot` (default) | The heuristic bot answers, as in a live decision-model seat. The decision is recorded as answered by `bot`, flagged on the case and marked on the grade. | The hybrid you would deploy. Compare it with the `local-heuristic` row: the difference is what the model added. |
-| `hold`          | The seat holds still: no attack, no block. Scored as no answer.                                                                                          | The model alone. Combat-only cases score 0 for every decision model.                                            |
+| `unsupported`   | What happens                                                                                                                                                                            | Read the score as                                                                                               |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `bot` (default) | The production fallback bot (card-aware) answers, as in a live decision-model seat. The decision is recorded as answered by `bot-handoff`, flagged on the case and marked on the grade. | The hybrid you would deploy. Compare it with the `local-heuristic` row: the difference is what the model added. |
+| `hold`          | The seat holds still: no attack, no block. Scored as no answer.                                                                                                                         | The model alone. Combat-only cases score 0 for every decision model.                                            |
 
-In the 30 cases, the 4 one-decision cases that are attacks or blocks (`lethal-alpha-strike`,
-`keep-blockers-home`, `block-the-trampler`, `chump-the-giant`) and the attack step of 7 whole-turn
-cases are the bot's under `bot`. The summary adds a one-decision accuracy over the model's own
+Of the 50 cases, the 6 one-decision cases that are attacks or blocks (`lethal-alpha-strike`,
+`keep-blockers-home`, `block-the-trampler`, `chump-the-giant`, `hold-the-ground-at-five`,
+`two-home-to-live`) and the attack or block steps of 9 of the 14 whole-turn cases are the bot's
+under `bot`. The summary adds a one-decision accuracy over the model's own
 answers only, and counts the bot's answers separately. Bot answers are left out of "legal on first
 try" and of speed.
 
@@ -148,10 +195,12 @@ Three groups, never blended into one number:
 
 ## The cases
 
-Nineteen one-decision cases and eleven whole-turn cases under [cases/tactician/](cases/tactician/).
-Each is a JSON file: a position in the engine's own scenario format, the seat under test, and a
-reviewed reference. The first twelve (the table below) were the original set; the other eighteen
-(listed after it) double it and were written to include positions the heuristic bot gets wrong.
+Thirty-five one-decision cases and fourteen whole-turn cases under
+[cases/tactician/](cases/tactician/). Each is a JSON file: a position in the engine's own scenario
+format, the seat under test, and a reviewed reference. The first twelve (the table below) were the
+original set; the next eighteen (listed after it) double it and were written to include positions
+the heuristic bot gets wrong; eleven came with ADR 0043's bot fixes and eight with ADR 0044's
+escalation triggers.
 
 | Kind         | Case                             | What it tests                                                          |
 | ------------ | -------------------------------- | ---------------------------------------------------------------------- |
@@ -194,6 +243,43 @@ ones it also solves, kept so a model that does worse than the bot shows up.
 | whole turn   | `anthem-then-alpha`             | calibration   | Glorious Anthem before the all-in attack for exactly nine       |
 | whole turn   | `haste-for-lethal`              | calibration   | Lightning Greaves gives a ten-power creature haste for the kill |
 
+### Added with ADR 0043
+
+Four reordered variants, so a tie or option order cannot pass a position by luck, and one held-out
+position per bot fix, written after the fixes were tuned and never tuned against.
+
+| Kind         | Case                                       | For             | What it tests                                                   |
+| ------------ | ------------------------------------------ | --------------- | --------------------------------------------------------------- |
+| one decision | `pump-the-unblocked-attacker-reordered`    | variant         | The blocked attacker listed first                               |
+| one decision | `removal-on-the-lethal-attacker-reordered` | variant         | The Bears listed before the lethal Dragon                       |
+| one decision | `land-for-the-angel-reordered`             | variant         | The right land first in hand                                    |
+| one decision | `land-for-the-turn-reordered`              | variant         | The right land first in hand                                    |
+| one decision | `shock-the-other-threat`                   | `ownStack`      | A second burn spell not aimed where the first already kills     |
+| whole turn   | `growth-after-attacks`                     | `neverYield`    | Keep priority for the combat trick instead of yielding the turn |
+| one decision | `bolt-the-unblocked-lions`                 | `lethalTargets` | Burn the small attacker that kills you, not the bigger creature |
+| whole turn   | `proportions-for-the-kill`                 | `lethalValue`   | The team pump that kills beats the bigger creature              |
+| whole turn   | `rock-before-the-draw`                     | `castOrder`     | The mana rock first, then the draw spell                        |
+| one decision | `temple-for-next-turn`                     | `landColors`    | The tapped dual that fixes next turn over a land nobody needs   |
+| one decision | `hold-the-ground-at-five`                  | `attackReserve` | At five life, every creature stays home to block                |
+| one decision | `two-home-to-live`                         | `attackReserve` | Surviving takes two blockers home, so no single recall helps    |
+
+### Added with ADR 0044
+
+Four positions per escalation trigger. For `scarce-answer`, two where the last answer should be
+held and two no-harm controls where it should still be cast; for `unknown-card`, four cards the
+classifier has no role for, one of them an opponent's spell to answer.
+
+| Kind         | Case                           | Trigger         | What it tests                                                    |
+| ------------ | ------------------------------ | --------------- | ---------------------------------------------------------------- |
+| one decision | `hold-the-swords-for-a-threat` | `scarce-answer` | Develop instead of spending the only removal on a mana elf       |
+| one decision | `hold-negate-for-a-threat`     | `scarce-answer` | Do not Negate a mana rock with the only counterspell             |
+| one decision | `negate-the-blasphemous-act`   | `scarce-answer` | Control: the last counterspell is for the one-sided sweeper      |
+| one decision | `wrath-the-crowded-table`      | `scarce-answer` | Control: the only wipe into five opposing creatures and none own |
+| one decision | `darkness-the-alpha-strike`    | `unknown-card`  | Darkness prevents the combat damage that would kill              |
+| one decision | `crackling-doom-for-two-kills` | `unknown-card`  | Two damage to each opponent kills two players                    |
+| one decision | `angels-grace-at-three`        | `unknown-card`  | Angel's Grace keeps the seat alive through a lethal attack       |
+| one decision | `protect-from-feed-the-swarm`  | `unknown-card`  | A protection trick answers an opponent's unfamiliar removal      |
+
 `hold-the-counter` and `counter-the-finisher` are a pair on purpose: a model that always passes
 fails one and a model that always acts fails the other.
 
@@ -215,6 +301,25 @@ whole-turn case every reference line is replayed. `inspect` prints that, the cas
 to judges, and `verify` (also in the test suite) fails when a reference stops agreeing with the
 engine: a reviewed option no legal answer matches, a best line that no longer meets every
 objective, a line whose grade and score disagree.
+
+### Context and longer scopes (ADR 0045)
+
+A case may carry what the seat's strategist and table would have told the tactician:
+
+```json
+"context": {
+  "strategy": { "intent": "Keep Negate for P4's Wrath", "threatOrder": ["P4"], "steering": { "hold": ["Negate"] } },
+  "deals": [{ "parties": ["P1", "P3"], "rounds": 1,
+              "obligations": [{ "kind": "noAttack", "by": "P3", "against": "P1" }] }]
+}
+```
+
+A model receives it through the production guidance (`turnStrategy` and `tableDeals` in its
+prompt), and a `bot-led` entry's bot reads the strategy's knobs. The local bots ignore it. A turn
+case may set `"turns": 2` or more when its `position.continue` reaches past the first turn
+(`throughNextTurn`, or a count of upkeeps or main phases above 1). The count is checked against
+that window and shown to judges; what the run covers comes from the window itself and
+`maxActorDecisions`, under which the seat answers every decision of those turns.
 
 ### Adding a case
 

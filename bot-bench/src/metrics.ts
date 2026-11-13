@@ -129,7 +129,7 @@ export function modelMetrics(
   const objectives = turn.flatMap((entry) => entry.score.objectives ?? []);
 
   const asked = decisions.filter(
-    (decision) => decision.source !== 'script' && decision.source !== 'bot',
+    (decision) => decision.source !== 'script' && decision.source !== 'bot-handoff',
   );
   const latencies = asked.map((decision) => decision.latencyMs);
   const byCase = new Map<string, string[]>();
@@ -180,7 +180,7 @@ export function modelMetrics(
       single: mean(single.map((entry) => entry.score.score)),
       singleOwn: mean(
         single
-          .filter((entry) => entry.run.decisions[0]?.source !== 'bot')
+          .filter((entry) => entry.run.decisions[0]?.source !== 'bot-handoff')
           .map((entry) => entry.score.score),
       ),
       turn: mean(turn.map((entry) => entry.score.score)),
@@ -197,9 +197,9 @@ export function modelMetrics(
           decision.invalid === undefined &&
           decision.source !== 'fallback' &&
           decision.source !== 'model-retry' &&
-          decision.source !== 'bot',
+          decision.source !== 'bot-handoff',
       ).length,
-      botAnswered: decisions.filter((decision) => decision.source === 'bot').length,
+      botAnswered: decisions.filter((decision) => decision.source === 'bot-handoff').length,
       correctiveRetries: decisions.filter((decision) => decision.source === 'model-retry').length,
       fallbacks: decisions.filter((decision) => decision.source === 'fallback').length,
       refused: decisions.filter((decision) => decision.invalid !== undefined).length,
