@@ -2,8 +2,12 @@
  * The batch card compiler's pipeline (see README.md in this folder).
  *
  *   bun run scripts/card-compiler/run.ts prepare <trial-dir>       # first-round compile prompts
+ *       [--calibration 10]                                         # and that many calibration cases
+ *   bun run scripts/card-compiler/run.ts calibrate <trial-dir>     # calibration cases for a trial
+ *       that was not prepared here (imported patches)
  *   bun run scripts/card-compiler/run.ts exec <trial-dir> <stage>  # answer pending prompts via the API
  *       [--executor api|claude|codex|antigravity]                 # ...or via a coding-agent CLI
+ *   bun run scripts/card-compiler/run.ts batches <trial-dir> <stage> [--size 25]  # worker batch lists
  *   bun run scripts/card-compiler/run.ts check <trial-dir>         # validate, smoke, next prompts
  *   bun run scripts/card-compiler/run.ts report <trial-dir>        # results.json and summary.md
  *
@@ -30,10 +34,17 @@ import {
   readFileSync,
   readdirSync,
   renameSync,
+  rmSync,
   writeFileSync,
 } from 'node:fs';
 import type { CardDefinition } from '../../packages/engine/src/cards/definition';
 import { runPrettier } from '../cards/prettier';
+import {
+  loadCalibrationSet,
+  pickCases,
+  scoreCalibration,
+  type CalibrationCase,
+} from './calibration';
 import { textCheck } from './render';
 import {
   QUEUE_PATH,
@@ -107,6 +118,12 @@ export interface CardState {
   validatorIssues: string[][];
   inexpressibleReason?: string;
   smoke?: SmokeResult[];
+  /**
+   * A calibration case (calibration.ts): a patch with a known answer, mixed into the meaning
+   * check to test it. It is not one of the trial's cards: it has no compile round, no patch file
+   * and no smoke run, and it is never queued or reported as a result.
+   */
+  calibration?: { id: string; expected: 'same' | 'different' };
   /** The merged definition passed validation. */
   valid?: boolean;
   backTranslation?: string;
@@ -143,12 +160,75 @@ function loadTargets(trial: string): Map<string, CompileTarget> {
   const rows = JSON.parse(readFileSync(`${trial}/targets.json`, 'utf8')) as TargetRow[];
   const byName = new Map(pinnedPool().map((row) => [row.card.name, row]));
   const out = new Map<string, CompileTarget>();
-  for (const row of rows) {
+  // A calibration case travels under its card's name, and that card is not in targets.json.
+  const calibration = [...loadState(trial).values()].filter(
+    (state) => state.calibration !== undefined,
+  );
+  for (const row of [...rows, ...calibration]) {
     const pinned = byName.get(row.name);
     const target = pinned === undefined ? null : compileTarget(pinned);
     if (target !== null) out.set(row.name, target);
   }
   return out;
+}
+
+const DEFAULT_CALIBRATION_CASES = 10;
+
+/**
+ * Mix calibration cases into the trial's meaning check: each enters at the back-translation
+ * stage under its card's name, with a prompt file like any other. The cases are chosen by the
+ * trial's name, so running this again adds nothing.
+ */
+function calibrate(trial: string, count: number): void {
+  const p = paths(trial);
+  const states = loadState(trial);
+  if ([...states.values()].some((state) => state.calibration !== undefined)) {
+    console.log('calibration cases are already in this trial');
+    return;
+  }
+  const targetNames = new Set(
+    existsSync(`${trial}/targets.json`)
+      ? (JSON.parse(readFileSync(`${trial}/targets.json`, 'utf8')) as TargetRow[]).map(
+          (row) => row.name,
+        )
+      : [],
+  );
+  for (const name of states.keys()) targetNames.add(name);
+  const byName = new Map(pinnedPool().map((row) => [row.card.name, row]));
+  const cases = pickCases(
+    loadCalibrationSet().filter((item) => {
+      const row = byName.get(item.name);
+      return row !== undefined && compileTarget(row) !== null;
+    }),
+    trial.replace(/\/+$/, '').split('/').at(-1)!,
+    count,
+    targetNames,
+  );
+  write(p.prefix('back'), BACK_PREFIX);
+  write(p.prefix('judge'), JUDGE_PREFIX);
+  for (const item of cases) {
+    const target = compileTarget(byName.get(item.name)!)!;
+    states.set(item.name, {
+      name: item.name,
+      rank: target.rank,
+      lines: target.lines,
+      rounds: 0,
+      stage: 'back',
+      validatorIssues: [],
+      calibration: { id: item.id, expected: item.expected },
+    });
+    write(p.prompt('back', item.name), backSuffix(target, item.def));
+  }
+  saveState(trial, states);
+  console.log(`added ${cases.length} calibration cases to the meaning check`);
+}
+
+/** The calibration case a state carries, with its patch. */
+function calibrationCase(state: CardState): CalibrationCase {
+  const found = loadCalibrationSet().find((item) => item.id === state.calibration?.id);
+  if (found === undefined)
+    throw new Error(`calibration case ${state.calibration?.id} is not in the calibration set`);
+  return found;
 }
 
 function loadState(trial: string): Map<string, CardState> {
@@ -162,7 +242,7 @@ function saveState(trial: string, states: Map<string, CardState>): void {
   write(paths(trial).state, `${JSON.stringify([...states.values()], null, 2)}\n`);
 }
 
-function prepare(trial: string): void {
+function prepare(trial: string, calibrationCount: number): void {
   const p = paths(trial);
   const rows = JSON.parse(readFileSync(`${trial}/targets.json`, 'utf8')) as TargetRow[];
   const targets = loadTargets(trial);
@@ -188,6 +268,7 @@ function prepare(trial: string): void {
   }
   saveState(trial, states);
   console.log(`prepared ${states.size} cards`);
+  calibrate(trial, calibrationCount);
 }
 
 function check(trial: string): void {
@@ -338,10 +419,14 @@ function recheck(trial: string): void {
   write(p.prefix('judge'), JUDGE_PREFIX);
   for (const state of states.values()) {
     const target = targets.get(state.name);
-    if (target === undefined || state.valid !== true) continue;
-    const patch = JSON.parse(readFileSync(p.patch(state.name), 'utf8')) as {
-      def: Partial<CardDefinition>;
-    };
+    if (target === undefined) continue;
+    if (state.calibration === undefined && state.valid !== true) continue;
+    const patch =
+      state.calibration !== undefined
+        ? calibrationCase(state)
+        : (JSON.parse(readFileSync(p.patch(state.name), 'utf8')) as {
+            def: Partial<CardDefinition>;
+          });
     delete state.backTranslation;
     delete state.verdict;
     delete state.differences;
@@ -533,7 +618,10 @@ function crossCheck(
   };
 }
 
-function queue(args: string[]): void {
+function queue(allArgs: string[]): void {
+  // Only for looking at a trial whose check failed calibration; never before a promotion.
+  const allowMissed = allArgs.includes('--allow-calibration-miss');
+  const args = allArgs.filter((arg) => arg !== '--allow-calibration-miss');
   const crossIndex = args.indexOf('--cross');
   const crossDir = crossIndex < 0 ? undefined : args[crossIndex + 1];
   const trials =
@@ -548,7 +636,15 @@ function queue(args: string[]): void {
   for (const trial of trials) {
     const p = paths(trial);
     const targets = loadTargets(trial);
+    const calibration = scoreCalibration(loadState(trial).values());
+    if (calibration.missed.length > 0 && !allowMissed)
+      throw new Error(
+        `${trial}: the meaning check called ${calibration.missed.length} known-wrong calibration ` +
+          `patch(es) "same" (${calibration.missed.join(', ')}). Its verdicts cannot be trusted: ` +
+          'run `recheck`, have fresh workers answer, and `check` again.',
+      );
     for (const state of loadState(trial).values()) {
+      if (state.calibration !== undefined) continue;
       const target = targets.get(state.name);
       if (target === undefined) continue;
       let status: QueueStatus | null = null;
@@ -631,6 +727,37 @@ export function pendingPrompts(trial: string, stage: string): { prompt: string; 
     .filter((entry) => !existsSync(entry.answer));
 }
 
+/**
+ * Split a stage's unanswered prompts into worker batches: `<trial>/work/batches/<stage>-NN.txt`,
+ * one `prompt<TAB>answer` pair per line. A worker is given one batch file and the stage's prefix
+ * file, and writes each answer to the path beside its prompt. Batches are rebuilt from what is
+ * still unanswered, so running this again after a worker stops early loses nothing.
+ */
+function batches(trial: string, stage: string, size: number): void {
+  if (!['compile', 'back', 'judge'].includes(stage))
+    throw new Error('usage: run.ts batches <trial-dir> <compile|back|judge> [--size 25]');
+  if (size < 1) throw new Error('--size must be at least 1');
+  const p = paths(trial);
+  const pending = pendingPrompts(trial, stage);
+  const dir = `${p.work}/batches`;
+  if (existsSync(dir))
+    for (const file of readdirSync(dir)) if (file.startsWith(`${stage}-`)) rmSync(`${dir}/${file}`);
+  for (let start = 0; start < pending.length; start += size) {
+    const number = String(start / size).padStart(2, '0');
+    write(
+      `${dir}/${stage}-${number}.txt`,
+      `${pending
+        .slice(start, start + size)
+        .map((entry) => `${entry.prompt}\t${entry.answer}`)
+        .join('\n')}\n`,
+    );
+  }
+  console.log(
+    `${pending.length} ${stage} prompts in ${Math.ceil(pending.length / size)} batches under ${dir}; ` +
+      `the stage's instructions are in ${p.prefix(stage)}`,
+  );
+}
+
 async function exec(trial: string, stage: string, executor: string): Promise<void> {
   const p = paths(trial);
   if (executor !== 'api') {
@@ -700,7 +827,9 @@ function smokeOk(state: CardState): boolean {
 }
 
 function report(trial: string): void {
-  const states = [...loadState(trial).values()];
+  const everyState = [...loadState(trial).values()];
+  const calibration = scoreCalibration(everyState);
+  const states = everyState.filter((state) => state.calibration === undefined);
   const p = paths(trial);
   const usage = existsSync(`${p.work}/usage.jsonl`)
     ? readFileSync(`${p.work}/usage.jsonl`, 'utf8')
@@ -761,12 +890,23 @@ function report(trial: string): void {
   }));
   write(
     `${trial}/results.json`,
-    `${JSON.stringify({ measuredCostUsd: totalCost, estimatedCost: estimate, cards: results }, null, 2)}\n`,
+    `${JSON.stringify({ measuredCostUsd: totalCost, estimatedCost: estimate, calibration, cards: results }, null, 2)}\n`,
   );
   const tally = new Map<string, number>();
   for (const row of results) tally.set(row.outcome, (tally.get(row.outcome) ?? 0) + 1);
   console.log(Object.fromEntries(tally));
   console.log('by XMage bucket:', Object.fromEntries(byBucket));
+  if (calibration.cases > 0) {
+    console.log(
+      `calibration: ${calibration.cases} cases, ${calibration.pending.length} pending, ` +
+        `${calibration.falseAlarms.length} false alarms, ${calibration.missed.length} missed`,
+    );
+    if (calibration.missed.length > 0)
+      console.error(
+        `CALIBRATION FAILED: the meaning check called these known-wrong patches "same": ` +
+          `${calibration.missed.join(', ')}. This trial's verdicts cannot be trusted.`,
+      );
+  }
   console.log(`API cost recorded: $${totalCost.toFixed(4)} over ${usage.length} calls`);
   console.log('estimate from prompt and answer sizes:', estimate);
 }
@@ -781,6 +921,17 @@ if (executorFlag >= 0) {
   executor = value;
   argv.splice(executorFlag, 2);
 }
+/** Take `--name <n>` out of the arguments and return its number, or the default. */
+function numberFlag(name: string, fallback: number): number {
+  const index = argv.indexOf(`--${name}`);
+  if (index < 0) return fallback;
+  const value = Number(argv[index + 1]);
+  if (!Number.isSafeInteger(value) || value < 0) throw new Error(`--${name} needs a whole number`);
+  argv.splice(index, 2);
+  return value;
+}
+const calibrationCases = numberFlag('calibration', DEFAULT_CALIBRATION_CASES);
+const batchSize = numberFlag('size', 25);
 const [command, trial, stage] = argv;
 if (command === 'promote' || command === 'retire' || command === 'review' || command === 'verify') {
   // Loaded on demand: these read the engine's compiled-card registry, which the pipeline
@@ -795,13 +946,15 @@ if (command === 'promote' || command === 'retire' || command === 'review' || com
 }
 if (trial === undefined)
   throw new Error(
-    'usage: run.ts <prepare|exec|check|report|recheck|resmoke|import|queue> <trial-dir> [stage|patch-dir] [--executor api|claude|codex|antigravity]',
+    'usage: run.ts <prepare|calibrate|batches|exec|check|report|recheck|resmoke|import|queue|review|promote|retire|verify> <trial-dir> [stage|patch-dir] [--executor api|claude|codex|antigravity]',
   );
 if (command === 'queue') queue(process.argv.slice(3));
 else if (command === 'import') {
   if (stage === undefined) throw new Error('usage: run.ts import <trial-dir> <patch-dir>');
   importPatches(trial, stage);
-} else if (command === 'prepare') prepare(trial);
+} else if (command === 'prepare') prepare(trial, calibrationCases);
+else if (command === 'calibrate') calibrate(trial, calibrationCases);
+else if (command === 'batches') batches(trial, stage ?? 'compile', batchSize);
 else if (command === 'check') check(trial);
 else if (command === 'report') report(trial);
 else if (command === 'recheck') recheck(trial);

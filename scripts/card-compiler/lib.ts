@@ -287,10 +287,18 @@ export function stripDescriptions(value: unknown): unknown {
   const out: Record<string, unknown> = {};
   for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
     if (key === 'description' || key === 'prompt' || key === 'label') continue;
-    out[key] = stripDescriptions(entry);
+    // A discriminant is a schema name the validator already checked against the engine's own
+    // list, so it cannot carry card text, however long it is (`enchantedByAuraYouControl`).
+    out[key] =
+      DISCRIMINANTS.has(key) && typeof entry === 'string' && SCHEMA_NAME.test(entry)
+        ? entry
+        : stripDescriptions(entry);
   }
   return out;
 }
+
+const DISCRIMINANTS = new Set(['kind', 'op', 'when']);
+const SCHEMA_NAME = /^[A-Za-z][A-Za-z0-9]*$/;
 
 /** At most three words of letters, digits and symbol characters: "first strike", "+1/+1", "Treasure". */
 const ENUM_LIKE = /^[A-Za-z0-9+/'{}-]{1,24}( [A-Za-z0-9+/'{}-]{1,24}){0,2}$/;

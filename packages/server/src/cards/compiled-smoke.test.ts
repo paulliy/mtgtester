@@ -95,3 +95,26 @@ describe('smoke games for a patch', () => {
     expect(runs.every((result) => result.ok)).toBe(true);
   }, 60_000);
 });
+
+describe('what the back-translator is shown', () => {
+  it('keeps schema names of any length and hides free text', async () => {
+    const { stripDescriptions } = await import('../../../../scripts/card-compiler/lib');
+    expect(
+      stripDescriptions({
+        kind: 'enchantedByAuraYouControlOrSomethingLonger',
+        op: 'createTokenCopyOf',
+        description: 'Whenever this creature attacks, draw a card.',
+        name: 'A token name that is long enough to be a sentence of rules text',
+        counter: '+1/+1',
+        // A discriminant that is not a schema name is free text like any other.
+        when: 'whenever you feel like it',
+      }),
+    ).toEqual({
+      kind: 'enchantedByAuraYouControlOrSomethingLonger',
+      op: 'createTokenCopyOf',
+      name: '<text>',
+      counter: '+1/+1',
+      when: '<text>',
+    });
+  });
+});

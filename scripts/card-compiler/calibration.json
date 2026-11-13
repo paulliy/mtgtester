@@ -1,0 +1,2716 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "archon-of-the-wild-rose",
+      "name": "Archon of the Wild Rose",
+      "expected": "same",
+      "origin": "trial 01 audit: correct",
+      "def": {
+        "staticEffects": [
+          {
+            "affects": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "enchantedByAuraYouControl"
+                }
+              ]
+            },
+            "op": {
+              "layer": 7,
+              "sublayer": "b",
+              "power": {
+                "kind": "const",
+                "n": 4
+              },
+              "toughness": {
+                "kind": "const",
+                "n": 4
+              }
+            }
+          },
+          {
+            "affects": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "enchantedByAuraYouControl"
+                }
+              ]
+            },
+            "op": {
+              "layer": 6,
+              "addKeyword": "flying"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "archon-of-the-wild-rose~const-n-n",
+      "name": "Archon of the Wild Rose",
+      "expected": "different",
+      "origin": "broken variant of the trial 01 audit's correct patch: staticEffects[0].op.power: const 4 + 1",
+      "def": {
+        "staticEffects": [
+          {
+            "affects": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "enchantedByAuraYouControl"
+                }
+              ]
+            },
+            "op": {
+              "layer": 7,
+              "sublayer": "b",
+              "power": {
+                "kind": "const",
+                "n": 5
+              },
+              "toughness": {
+                "kind": "const",
+                "n": 4
+              }
+            }
+          },
+          {
+            "affects": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "enchantedByAuraYouControl"
+                }
+              ]
+            },
+            "op": {
+              "layer": 6,
+              "addKeyword": "flying"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "bloodforged-battle-axe",
+      "name": "Bloodforged Battle-Axe",
+      "expected": "same",
+      "origin": "trial 01 audit: correct",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "dealsCombatDamageToPlayer",
+              "subject": {
+                "kind": "permanent",
+                "selector": {
+                  "kind": "attachedToSource"
+                }
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "createTokenCopyOf",
+                "ref": "source",
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "description": "Whenever equipped creature deals combat damage to a player, create a token that's a copy of this Equipment."
+          }
+        ]
+      }
+    },
+    {
+      "id": "bloodforged-battle-axe~drop-effect-n",
+      "name": "Bloodforged Battle-Axe",
+      "expected": "different",
+      "origin": "broken variant of the trial 01 audit's correct patch: triggers[0]: drop effect 0",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "dealsCombatDamageToPlayer",
+              "subject": {
+                "kind": "permanent",
+                "selector": {
+                  "kind": "attachedToSource"
+                }
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [],
+            "description": "Whenever equipped creature deals combat damage to a player, create a token that's a copy of this Equipment."
+          }
+        ]
+      }
+    },
+    {
+      "id": "charmbreaker-devils",
+      "name": "Charmbreaker Devils",
+      "expected": "different",
+      "origin": "trial 01 audit: the random graveyard card is made a target; the real card does not target",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "upkeep",
+              "player": "you"
+            },
+            "optional": false,
+            "targets": [
+              {
+                "kind": "cardInGraveyard",
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Instant"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Sorcery"
+                    }
+                  ]
+                },
+                "random": true
+              }
+            ],
+            "effects": [
+              {
+                "op": "graveyardToHand",
+                "target": 0
+              }
+            ],
+            "description": "At the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand."
+          }
+        ]
+      }
+    },
+    {
+      "id": "cloudpost",
+      "name": "Cloudpost",
+      "expected": "same",
+      "origin": "trial 01 audit: correct",
+      "def": {
+        "manaAbilities": [
+          {
+            "units": [["C"]],
+            "amount": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "subtype",
+                "value": "Locus"
+              },
+              "scope": "all"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "damning-verdict",
+      "name": "Damning Verdict",
+      "expected": "same",
+      "origin": "trial 01 audit: correct",
+      "def": {
+        "spellAbility": {
+          "kind": "spell",
+          "targets": [],
+          "effects": [
+            {
+              "op": "destroyEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "not",
+                    "of": {
+                      "kind": "hasAnyCounter"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "description": "Destroy all creatures with no counters on them."
+        }
+      }
+    },
+    {
+      "id": "damning-verdict~drop-effect-n",
+      "name": "Damning Verdict",
+      "expected": "different",
+      "origin": "broken variant of the trial 01 audit's correct patch: spellAbility: drop effect 0",
+      "def": {
+        "spellAbility": {
+          "kind": "spell",
+          "targets": [],
+          "effects": [],
+          "description": "Destroy all creatures with no counters on them."
+        }
+      }
+    },
+    {
+      "id": "descend-upon-the-sinful",
+      "name": "Descend upon the Sinful",
+      "expected": "same",
+      "origin": "trial 01 audit: correct",
+      "def": {
+        "spellAbility": {
+          "kind": "spell",
+          "targets": [],
+          "effects": [
+            {
+              "op": "exileEach",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            {
+              "op": "conditionalEffect",
+              "condition": {
+                "kind": "compareValues",
+                "left": {
+                  "kind": "cardTypesInYourGraveyard"
+                },
+                "cmp": ">=",
+                "right": {
+                  "kind": "const",
+                  "n": 4
+                }
+              },
+              "then": [
+                {
+                  "op": "createToken",
+                  "spec": {
+                    "name": "Angel",
+                    "typeLine": "Token Creature — Angel",
+                    "types": ["Creature"],
+                    "subtypes": ["Angel"],
+                    "colors": ["W"],
+                    "power": 4,
+                    "toughness": 4,
+                    "keywords": ["flying"]
+                  },
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  }
+                }
+              ],
+              "else": []
+            }
+          ],
+          "description": "Delirium — Create a 4/4 white Angel creature token with flying if there are four or more card types among cards in your graveyard."
+        }
+      }
+    },
+    {
+      "id": "descend-upon-the-sinful~const-n-n",
+      "name": "Descend upon the Sinful",
+      "expected": "different",
+      "origin": "broken variant of the trial 01 audit's correct patch: spellAbility.effects[1].condition.right: const 4 - 1",
+      "def": {
+        "spellAbility": {
+          "kind": "spell",
+          "targets": [],
+          "effects": [
+            {
+              "op": "exileEach",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            {
+              "op": "conditionalEffect",
+              "condition": {
+                "kind": "compareValues",
+                "left": {
+                  "kind": "cardTypesInYourGraveyard"
+                },
+                "cmp": ">=",
+                "right": {
+                  "kind": "const",
+                  "n": 3
+                }
+              },
+              "then": [
+                {
+                  "op": "createToken",
+                  "spec": {
+                    "name": "Angel",
+                    "typeLine": "Token Creature — Angel",
+                    "types": ["Creature"],
+                    "subtypes": ["Angel"],
+                    "colors": ["W"],
+                    "power": 4,
+                    "toughness": 4,
+                    "keywords": ["flying"]
+                  },
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  }
+                }
+              ],
+              "else": []
+            }
+          ],
+          "description": "Delirium — Create a 4/4 white Angel creature token with flying if there are four or more card types among cards in your graveyard."
+        }
+      }
+    },
+    {
+      "id": "diary-of-dreams",
+      "name": "Diary of Dreams",
+      "expected": "same",
+      "origin": "trial 01 audit: correct",
+      "def": {
+        "activatedAbilities": [
+          {
+            "costs": [
+              {
+                "kind": "mana",
+                "cost": {
+                  "generic": 5,
+                  "colored": {
+                    "W": 0,
+                    "U": 0,
+                    "B": 0,
+                    "R": 0,
+                    "G": 0
+                  },
+                  "colorless": 0
+                }
+              },
+              {
+                "kind": "tap"
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "draw",
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  }
+                }
+              ],
+              "description": "{5}, {T}: Draw a card"
+            }
+          }
+        ],
+        "ruleStatics": [
+          {
+            "kind": "costReduction",
+            "appliesTo": "activate",
+            "selfOnly": true,
+            "amount": {
+              "kind": "countersOnSelf",
+              "counter": "page"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "diary-of-dreams~const-n-n",
+      "name": "Diary of Dreams",
+      "expected": "different",
+      "origin": "broken variant of the trial 01 audit's correct patch: activatedAbilities[0].ability.effects[0].count: const 1 + 1",
+      "def": {
+        "activatedAbilities": [
+          {
+            "costs": [
+              {
+                "kind": "mana",
+                "cost": {
+                  "generic": 5,
+                  "colored": {
+                    "W": 0,
+                    "U": 0,
+                    "B": 0,
+                    "R": 0,
+                    "G": 0
+                  },
+                  "colorless": 0
+                }
+              },
+              {
+                "kind": "tap"
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "draw",
+                  "count": {
+                    "kind": "const",
+                    "n": 2
+                  }
+                }
+              ],
+              "description": "{5}, {T}: Draw a card"
+            }
+          }
+        ],
+        "ruleStatics": [
+          {
+            "kind": "costReduction",
+            "appliesTo": "activate",
+            "selfOnly": true,
+            "amount": {
+              "kind": "countersOnSelf",
+              "counter": "page"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "dualcaster-mage",
+      "name": "Dualcaster Mage",
+      "expected": "same",
+      "origin": "trial 01 audit: correct",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "enters",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [
+              {
+                "kind": "spell",
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Instant"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Sorcery"
+                    }
+                  ]
+                }
+              }
+            ],
+            "effects": [
+              {
+                "op": "copyTargetSpell",
+                "target": 0,
+                "newTargets": true
+              }
+            ],
+            "description": "When this creature enters, copy target instant or sorcery spell. You may choose new targets for the copy."
+          }
+        ]
+      }
+    },
+    {
+      "id": "dualcaster-mage~widen-target-n-to-its-kind-drop-filter-",
+      "name": "Dualcaster Mage",
+      "expected": "different",
+      "origin": "broken variant of the trial 01 audit's correct patch: triggers[0]: widen target 0 to its kind (drop filter)",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "enters",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [
+              {
+                "kind": "spell"
+              }
+            ],
+            "effects": [
+              {
+                "op": "copyTargetSpell",
+                "target": 0,
+                "newTargets": true
+              }
+            ],
+            "description": "When this creature enters, copy target instant or sorcery spell. You may choose new targets for the copy."
+          }
+        ]
+      }
+    },
+    {
+      "id": "goblin-chainwhirler",
+      "name": "Goblin Chainwhirler",
+      "expected": "same",
+      "origin": "trial 01 audit: correct",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "enters",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "eachOpponentDamage",
+                "amount": {
+                  "kind": "const",
+                  "n": 1
+                }
+              },
+              {
+                "op": "damageEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "opponents"
+                    },
+                    {
+                      "kind": "anyOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        },
+                        {
+                          "kind": "type",
+                          "value": "Planeswalker"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "amount": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "description": "When this creature enters, it deals 1 damage to each opponent and each creature and planeswalker they control."
+          }
+        ]
+      }
+    },
+    {
+      "id": "goblin-chainwhirler~flip-optional-to-true",
+      "name": "Goblin Chainwhirler",
+      "expected": "different",
+      "origin": "broken variant of the trial 01 audit's correct patch: triggers[0]: flip optional to true",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "enters",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": true,
+            "targets": [],
+            "effects": [
+              {
+                "op": "eachOpponentDamage",
+                "amount": {
+                  "kind": "const",
+                  "n": 1
+                }
+              },
+              {
+                "op": "damageEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "opponents"
+                    },
+                    {
+                      "kind": "anyOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        },
+                        {
+                          "kind": "type",
+                          "value": "Planeswalker"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "amount": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "description": "When this creature enters, it deals 1 damage to each opponent and each creature and planeswalker they control."
+          }
+        ]
+      }
+    },
+    {
+      "id": "hard-hitting-question",
+      "name": "Hard-Hitting Question",
+      "expected": "same",
+      "origin": "trial 01 audit: correct",
+      "def": {
+        "spellAbility": {
+          "kind": "spell",
+          "targets": [
+            {
+              "kind": "creature",
+              "controller": "you"
+            },
+            {
+              "kind": "permanent",
+              "controller": "opponent",
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Planeswalker"
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "dealDamage",
+              "target": 1,
+              "amount": {
+                "kind": "powerOfTarget",
+                "target": 0
+              },
+              "source": 0
+            }
+          ],
+          "description": "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control."
+        }
+      }
+    },
+    {
+      "id": "hard-hitting-question~widen-target-n-to-its-kind-drop-controller-",
+      "name": "Hard-Hitting Question",
+      "expected": "different",
+      "origin": "broken variant of the trial 01 audit's correct patch: spellAbility: widen target 0 to its kind (drop controller)",
+      "def": {
+        "spellAbility": {
+          "kind": "spell",
+          "targets": [
+            {
+              "kind": "creature"
+            },
+            {
+              "kind": "permanent",
+              "controller": "opponent",
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Planeswalker"
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "dealDamage",
+              "target": 1,
+              "amount": {
+                "kind": "powerOfTarget",
+                "target": 0
+              },
+              "source": 0
+            }
+          ],
+          "description": "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control."
+        }
+      }
+    },
+    {
+      "id": "horobi-death-s-wail",
+      "name": "Horobi, Death's Wail",
+      "expected": "same",
+      "origin": "trial 01 audit: correct",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "becomesTargeted",
+              "subject": {
+                "kind": "permanent",
+                "selector": {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "destroy",
+                "target": "triggerObject"
+              }
+            ],
+            "description": "Whenever a creature becomes the target of a spell or ability, destroy that creature."
+          }
+        ]
+      }
+    },
+    {
+      "id": "horobi-death-s-wail~flip-optional-to-true",
+      "name": "Horobi, Death's Wail",
+      "expected": "different",
+      "origin": "broken variant of the trial 01 audit's correct patch: triggers[0]: flip optional to true",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "becomesTargeted",
+              "subject": {
+                "kind": "permanent",
+                "selector": {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              }
+            },
+            "optional": true,
+            "targets": [],
+            "effects": [
+              {
+                "op": "destroy",
+                "target": "triggerObject"
+              }
+            ],
+            "description": "Whenever a creature becomes the target of a spell or ability, destroy that creature."
+          }
+        ]
+      }
+    },
+    {
+      "id": "horrific-assault",
+      "name": "Horrific Assault",
+      "expected": "same",
+      "origin": "trial 01 audit: correct",
+      "def": {
+        "spellAbility": {
+          "kind": "spell",
+          "targets": [
+            {
+              "kind": "creature",
+              "controller": "you"
+            },
+            {
+              "kind": "permanent",
+              "controller": "opponent",
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Planeswalker"
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "dealDamage",
+              "target": 1,
+              "amount": {
+                "kind": "powerOfTarget",
+                "target": 0
+              },
+              "source": 0
+            },
+            {
+              "op": "conditionalEffect",
+              "condition": {
+                "kind": "countPermanents",
+                "selector": {
+                  "kind": "subtype",
+                  "value": "Eldrazi"
+                },
+                "scope": "you",
+                "cmp": ">=",
+                "n": 1
+              },
+              "then": [
+                {
+                  "op": "gainLife",
+                  "amount": {
+                    "kind": "const",
+                    "n": 3
+                  }
+                }
+              ],
+              "else": []
+            }
+          ],
+          "description": "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control. If you control an Eldrazi, you gain 3 life."
+        }
+      }
+    },
+    {
+      "id": "horrific-assault~widen-target-n-to-its-kind-drop-filter-controller-",
+      "name": "Horrific Assault",
+      "expected": "different",
+      "origin": "broken variant of the trial 01 audit's correct patch: spellAbility: widen target 1 to its kind (drop filter, controller)",
+      "def": {
+        "spellAbility": {
+          "kind": "spell",
+          "targets": [
+            {
+              "kind": "creature",
+              "controller": "you"
+            },
+            {
+              "kind": "permanent"
+            }
+          ],
+          "effects": [
+            {
+              "op": "dealDamage",
+              "target": 1,
+              "amount": {
+                "kind": "powerOfTarget",
+                "target": 0
+              },
+              "source": 0
+            },
+            {
+              "op": "conditionalEffect",
+              "condition": {
+                "kind": "countPermanents",
+                "selector": {
+                  "kind": "subtype",
+                  "value": "Eldrazi"
+                },
+                "scope": "you",
+                "cmp": ">=",
+                "n": 1
+              },
+              "then": [
+                {
+                  "op": "gainLife",
+                  "amount": {
+                    "kind": "const",
+                    "n": 3
+                  }
+                }
+              ],
+              "else": []
+            }
+          ],
+          "description": "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control. If you control an Eldrazi, you gain 3 life."
+        }
+      }
+    },
+    {
+      "id": "on-thin-ice",
+      "name": "On Thin Ice",
+      "expected": "same",
+      "origin": "trial 01 audit: correct",
+      "def": {
+        "spellAbility": {
+          "kind": "spell",
+          "targets": [
+            {
+              "kind": "land",
+              "controller": "you",
+              "filter": {
+                "kind": "supertype",
+                "value": "Snow"
+              }
+            }
+          ],
+          "effects": [],
+          "description": "Enchant snow land you control"
+        }
+      }
+    },
+    {
+      "id": "on-thin-ice~widen-target-n-to-its-kind-drop-filter-controller-",
+      "name": "On Thin Ice",
+      "expected": "different",
+      "origin": "broken variant of the trial 01 audit's correct patch: spellAbility: widen target 0 to its kind (drop filter, controller)",
+      "def": {
+        "spellAbility": {
+          "kind": "spell",
+          "targets": [
+            {
+              "kind": "land"
+            }
+          ],
+          "effects": [],
+          "description": "Enchant snow land you control"
+        }
+      }
+    },
+    {
+      "id": "pulse-of-murasa",
+      "name": "Pulse of Murasa",
+      "expected": "same",
+      "origin": "trial 01 audit: correct",
+      "def": {
+        "spellAbility": {
+          "kind": "spell",
+          "targets": [
+            {
+              "kind": "cardInGraveyard",
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                ]
+              },
+              "graveyardOwnerScope": "any"
+            }
+          ],
+          "effects": [
+            {
+              "op": "graveyardToHand",
+              "target": 0
+            },
+            {
+              "op": "gainLife",
+              "amount": {
+                "kind": "const",
+                "n": 6
+              }
+            }
+          ],
+          "description": "Return target creature or land card from a graveyard to its owner's hand. You gain 6 life."
+        }
+      }
+    },
+    {
+      "id": "pulse-of-murasa~widen-target-n-to-its-kind-drop-filter-",
+      "name": "Pulse of Murasa",
+      "expected": "different",
+      "origin": "broken variant of the trial 01 audit's correct patch: spellAbility: widen target 0 to its kind (drop filter)",
+      "def": {
+        "spellAbility": {
+          "kind": "spell",
+          "targets": [
+            {
+              "kind": "cardInGraveyard",
+              "graveyardOwnerScope": "any"
+            }
+          ],
+          "effects": [
+            {
+              "op": "graveyardToHand",
+              "target": 0
+            },
+            {
+              "op": "gainLife",
+              "amount": {
+                "kind": "const",
+                "n": 6
+              }
+            }
+          ],
+          "description": "Return target creature or land card from a graveyard to its owner's hand. You gain 6 life."
+        }
+      }
+    },
+    {
+      "id": "samut-vizier-of-naktamun",
+      "name": "Samut, Vizier of Naktamun",
+      "expected": "same",
+      "origin": "trial 01 audit: correct",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "dealsCombatDamageToPlayer",
+              "subject": {
+                "kind": "permanent",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "enteredThisTurn"
+                    }
+                  ]
+                }
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "draw",
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "description": "Whenever a creature you control deals combat damage to a player, if that creature entered this turn, draw a card."
+          }
+        ]
+      }
+    },
+    {
+      "id": "samut-vizier-of-naktamun~widen-trigger-subject-drop-condition-n-",
+      "name": "Samut, Vizier of Naktamun",
+      "expected": "different",
+      "origin": "broken variant of the trial 01 audit's correct patch: triggers[0]: widen trigger subject (drop condition 0)",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "dealsCombatDamageToPlayer",
+              "subject": {
+                "kind": "permanent",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "enteredThisTurn"
+                    }
+                  ]
+                }
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "draw",
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "description": "Whenever a creature you control deals combat damage to a player, if that creature entered this turn, draw a card."
+          }
+        ]
+      }
+    },
+    {
+      "id": "thran-turbine",
+      "name": "Thran Turbine",
+      "expected": "different",
+      "origin": "trial 01 audit: the mana is restricted to activating abilities; the real card only forbids casting spells",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "upkeep",
+              "player": "you"
+            },
+            "optional": true,
+            "targets": [],
+            "effects": [
+              {
+                "op": "addMana",
+                "amount": {
+                  "kind": "const",
+                  "n": 2
+                },
+                "colors": ["C"],
+                "restriction": {
+                  "purposes": ["activateAbility"],
+                  "description": "This mana can't be spent to cast spells."
+                }
+              }
+            ],
+            "description": "At the beginning of your upkeep, you may add {C}{C}. This mana can't be spent to cast spells."
+          }
+        ]
+      }
+    },
+    {
+      "id": "thundering-raiju",
+      "name": "Thundering Raiju",
+      "expected": "same",
+      "origin": "trial 01 audit: correct",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "attacks",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [
+              {
+                "kind": "creature",
+                "controller": "you"
+              }
+            ],
+            "effects": [
+              {
+                "op": "putCounters",
+                "target": 0,
+                "counter": "+1/+1",
+                "count": 1
+              },
+              {
+                "op": "eachOpponentDamage",
+                "amount": {
+                  "kind": "countPermanents",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "other"
+                      },
+                      {
+                        "kind": "controller",
+                        "who": "you"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "anyOf",
+                        "of": [
+                          {
+                            "kind": "hasAnyCounter"
+                          },
+                          {
+                            "kind": "enchantedByAuraYouControl"
+                          },
+                          {
+                            "kind": "isEquipped"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "scope": "you"
+                }
+              }
+            ],
+            "description": "Whenever this creature attacks, put a +1/+1 counter on target creature you control. Then this creature deals X damage to each opponent, where X is the number of modified creatures you control other than this creature."
+          }
+        ]
+      }
+    },
+    {
+      "id": "thundering-raiju~widen-target-n-to-its-kind-drop-controller-",
+      "name": "Thundering Raiju",
+      "expected": "different",
+      "origin": "broken variant of the trial 01 audit's correct patch: triggers[0]: widen target 0 to its kind (drop controller)",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "attacks",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [
+              {
+                "kind": "creature"
+              }
+            ],
+            "effects": [
+              {
+                "op": "putCounters",
+                "target": 0,
+                "counter": "+1/+1",
+                "count": 1
+              },
+              {
+                "op": "eachOpponentDamage",
+                "amount": {
+                  "kind": "countPermanents",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "other"
+                      },
+                      {
+                        "kind": "controller",
+                        "who": "you"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "anyOf",
+                        "of": [
+                          {
+                            "kind": "hasAnyCounter"
+                          },
+                          {
+                            "kind": "enchantedByAuraYouControl"
+                          },
+                          {
+                            "kind": "isEquipped"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "scope": "you"
+                }
+              }
+            ],
+            "description": "Whenever this creature attacks, put a +1/+1 counter on target creature you control. Then this creature deals X damage to each opponent, where X is the number of modified creatures you control other than this creature."
+          }
+        ]
+      }
+    },
+    {
+      "id": "treeguard-duo",
+      "name": "Treeguard Duo",
+      "expected": "same",
+      "origin": "trial 01 audit: correct",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "enters",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [
+              {
+                "kind": "creature",
+                "controller": "you"
+              }
+            ],
+            "effects": [
+              {
+                "op": "grantKeywordUntilEot",
+                "target": 0,
+                "keyword": "vigilance"
+              },
+              {
+                "op": "pumpUntilEot",
+                "target": 0,
+                "power": {
+                  "kind": "countPermanents",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "controller",
+                        "who": "you"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      }
+                    ]
+                  },
+                  "scope": "you"
+                },
+                "toughness": {
+                  "kind": "countPermanents",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "controller",
+                        "who": "you"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      }
+                    ]
+                  },
+                  "scope": "you"
+                }
+              }
+            ],
+            "description": "When this creature enters, until end of turn, target creature you control gains vigilance and gets +X/+X, where X is the number of creatures you control."
+          }
+        ]
+      }
+    },
+    {
+      "id": "treeguard-duo~drop-effect-n",
+      "name": "Treeguard Duo",
+      "expected": "different",
+      "origin": "broken variant of the trial 01 audit's correct patch: triggers[0]: drop effect 0",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "enters",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [
+              {
+                "kind": "creature",
+                "controller": "you"
+              }
+            ],
+            "effects": [
+              {
+                "op": "pumpUntilEot",
+                "target": 0,
+                "power": {
+                  "kind": "countPermanents",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "controller",
+                        "who": "you"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      }
+                    ]
+                  },
+                  "scope": "you"
+                },
+                "toughness": {
+                  "kind": "countPermanents",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "controller",
+                        "who": "you"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      }
+                    ]
+                  },
+                  "scope": "you"
+                }
+              }
+            ],
+            "description": "When this creature enters, until end of turn, target creature you control gains vigilance and gets +X/+X, where X is the number of creatures you control."
+          }
+        ]
+      }
+    },
+    {
+      "id": "wurmwall-sweeper",
+      "name": "Wurmwall Sweeper",
+      "expected": "same",
+      "origin": "trial 01 audit: correct",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "enters",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "surveil",
+                "count": 2
+              }
+            ],
+            "description": "When this Spacecraft enters, surveil 2."
+          }
+        ]
+      }
+    },
+    {
+      "id": "wurmwall-sweeper~flip-optional-to-true",
+      "name": "Wurmwall Sweeper",
+      "expected": "different",
+      "origin": "broken variant of the trial 01 audit's correct patch: triggers[0]: flip optional to true",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "enters",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": true,
+            "targets": [],
+            "effects": [
+              {
+                "op": "surveil",
+                "count": 2
+              }
+            ],
+            "description": "When this Spacecraft enters, surveil 2."
+          }
+        ]
+      }
+    },
+    {
+      "id": "yavimaya-hollow",
+      "name": "Yavimaya Hollow",
+      "expected": "same",
+      "origin": "trial 01 audit: correct",
+      "def": {
+        "activatedAbilities": [
+          {
+            "costs": [
+              {
+                "kind": "mana",
+                "cost": {
+                  "generic": 0,
+                  "colored": {
+                    "W": 0,
+                    "U": 0,
+                    "B": 0,
+                    "R": 0,
+                    "G": 1
+                  },
+                  "colorless": 0
+                }
+              },
+              {
+                "kind": "tap"
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [
+                {
+                  "kind": "creature"
+                }
+              ],
+              "effects": [
+                {
+                  "op": "regenerate",
+                  "target": 0
+                }
+              ],
+              "description": "{G}, {T}: Regenerate target creature."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "yavimaya-hollow~drop-effect-n",
+      "name": "Yavimaya Hollow",
+      "expected": "different",
+      "origin": "broken variant of the trial 01 audit's correct patch: activatedAbilities[0].ability: drop effect 0",
+      "def": {
+        "activatedAbilities": [
+          {
+            "costs": [
+              {
+                "kind": "mana",
+                "cost": {
+                  "generic": 0,
+                  "colored": {
+                    "W": 0,
+                    "U": 0,
+                    "B": 0,
+                    "R": 0,
+                    "G": 1
+                  },
+                  "colorless": 0
+                }
+              },
+              {
+                "kind": "tap"
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [
+                {
+                  "kind": "creature"
+                }
+              ],
+              "effects": [],
+              "description": "{G}, {T}: Regenerate target creature."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "scale-the-heights",
+      "name": "Scale the Heights",
+      "expected": "same",
+      "origin": "trial 02 audit: correct",
+      "def": {
+        "spellAbility": {
+          "kind": "spell",
+          "targets": [
+            {
+              "kind": "creature",
+              "count": {
+                "min": 0,
+                "max": 1
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "putCountersEachChosen",
+              "targetSlot": 0,
+              "counter": "+1/+1",
+              "count": 1
+            },
+            {
+              "op": "gainLife",
+              "amount": {
+                "kind": "const",
+                "n": 2
+              }
+            },
+            {
+              "op": "additionalLandPlaysThisTurn",
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            },
+            {
+              "op": "draw",
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "Put a +1/+1 counter on up to one target creature. You gain 2 life. You may play an additional land this turn. Draw a card."
+        }
+      }
+    },
+    {
+      "id": "scale-the-heights~const-n-n",
+      "name": "Scale the Heights",
+      "expected": "different",
+      "origin": "broken variant of the trial 02 audit's correct patch: spellAbility.effects[1].amount: const 2 - 1",
+      "def": {
+        "spellAbility": {
+          "kind": "spell",
+          "targets": [
+            {
+              "kind": "creature",
+              "count": {
+                "min": 0,
+                "max": 1
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "putCountersEachChosen",
+              "targetSlot": 0,
+              "counter": "+1/+1",
+              "count": 1
+            },
+            {
+              "op": "gainLife",
+              "amount": {
+                "kind": "const",
+                "n": 1
+              }
+            },
+            {
+              "op": "additionalLandPlaysThisTurn",
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            },
+            {
+              "op": "draw",
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "Put a +1/+1 counter on up to one target creature. You gain 2 life. You may play an additional land this turn. Draw a card."
+        }
+      }
+    },
+    {
+      "id": "the-gold-saucer",
+      "name": "The Gold Saucer",
+      "expected": "same",
+      "origin": "trial 02 audit: correct",
+      "def": {
+        "activatedAbilities": [
+          {
+            "costs": [
+              {
+                "kind": "mana",
+                "cost": {
+                  "generic": 2,
+                  "colored": {
+                    "W": 0,
+                    "U": 0,
+                    "B": 0,
+                    "R": 0,
+                    "G": 0
+                  },
+                  "colorless": 0
+                }
+              },
+              {
+                "kind": "tap"
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "flipCoin",
+                  "onWin": [
+                    {
+                      "op": "createToken",
+                      "count": {
+                        "kind": "const",
+                        "n": 1
+                      },
+                      "spec": {
+                        "name": "Treasure",
+                        "typeLine": "Artifact — Treasure",
+                        "types": ["Artifact"],
+                        "subtypes": ["Treasure"],
+                        "colors": [],
+                        "power": null,
+                        "toughness": null,
+                        "manaAbilities": [
+                          {
+                            "units": [["W", "U", "B", "R", "G"]],
+                            "costs": [
+                              {
+                                "kind": "tap"
+                              },
+                              {
+                                "kind": "sacrificeSelf"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "onLose": []
+                }
+              ],
+              "description": "{2}, {T}: Flip a coin. If you win the flip, create a Treasure token."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "the-gold-saucer~const-n-n",
+      "name": "The Gold Saucer",
+      "expected": "different",
+      "origin": "broken variant of the trial 02 audit's correct patch: activatedAbilities[0].ability.effects[0].onWin[0].count: const 1 + 1",
+      "def": {
+        "activatedAbilities": [
+          {
+            "costs": [
+              {
+                "kind": "mana",
+                "cost": {
+                  "generic": 2,
+                  "colored": {
+                    "W": 0,
+                    "U": 0,
+                    "B": 0,
+                    "R": 0,
+                    "G": 0
+                  },
+                  "colorless": 0
+                }
+              },
+              {
+                "kind": "tap"
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "flipCoin",
+                  "onWin": [
+                    {
+                      "op": "createToken",
+                      "count": {
+                        "kind": "const",
+                        "n": 2
+                      },
+                      "spec": {
+                        "name": "Treasure",
+                        "typeLine": "Artifact — Treasure",
+                        "types": ["Artifact"],
+                        "subtypes": ["Treasure"],
+                        "colors": [],
+                        "power": null,
+                        "toughness": null,
+                        "manaAbilities": [
+                          {
+                            "units": [["W", "U", "B", "R", "G"]],
+                            "costs": [
+                              {
+                                "kind": "tap"
+                              },
+                              {
+                                "kind": "sacrificeSelf"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "onLose": []
+                }
+              ],
+              "description": "{2}, {T}: Flip a coin. If you win the flip, create a Treasure token."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "dogged-detective",
+      "name": "Dogged Detective",
+      "expected": "same",
+      "origin": "trial 02 audit: correct",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "drawsCard",
+              "player": "opponent",
+              "ordinalThisTurn": 2
+            },
+            "optional": true,
+            "functionsInGraveyard": true,
+            "targets": [],
+            "effects": [
+              {
+                "op": "returnSelfFromGraveyardToHand"
+              }
+            ],
+            "description": "Whenever an opponent draws their second card each turn, you may return this card from your graveyard to your hand."
+          }
+        ]
+      }
+    },
+    {
+      "id": "dogged-detective~flip-optional-to-false",
+      "name": "Dogged Detective",
+      "expected": "different",
+      "origin": "broken variant of the trial 02 audit's correct patch: triggers[0]: flip optional to false",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "drawsCard",
+              "player": "opponent",
+              "ordinalThisTurn": 2
+            },
+            "functionsInGraveyard": true,
+            "targets": [],
+            "effects": [
+              {
+                "op": "returnSelfFromGraveyardToHand"
+              }
+            ],
+            "description": "Whenever an opponent draws their second card each turn, you may return this card from your graveyard to your hand."
+          }
+        ]
+      }
+    },
+    {
+      "id": "bramble-wurm",
+      "name": "Bramble Wurm",
+      "expected": "same",
+      "origin": "trial 02 audit: correct",
+      "def": {
+        "activatedAbilities": [
+          {
+            "costs": [
+              {
+                "kind": "mana",
+                "cost": {
+                  "generic": 2,
+                  "colored": {
+                    "W": 0,
+                    "U": 0,
+                    "B": 0,
+                    "R": 0,
+                    "G": 1
+                  },
+                  "colorless": 0
+                }
+              },
+              {
+                "kind": "exileSelfFromGraveyard"
+              }
+            ],
+            "timing": "any",
+            "zone": "graveyard",
+            "ability": {
+              "kind": "activated",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "gainLife",
+                  "amount": {
+                    "kind": "const",
+                    "n": 5
+                  }
+                }
+              ],
+              "description": "{2}{G}, Exile this card from your graveyard: You gain 5 life."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "bramble-wurm~const-n-n",
+      "name": "Bramble Wurm",
+      "expected": "different",
+      "origin": "broken variant of the trial 02 audit's correct patch: activatedAbilities[0].ability.effects[0].amount: const 5 - 1",
+      "def": {
+        "activatedAbilities": [
+          {
+            "costs": [
+              {
+                "kind": "mana",
+                "cost": {
+                  "generic": 2,
+                  "colored": {
+                    "W": 0,
+                    "U": 0,
+                    "B": 0,
+                    "R": 0,
+                    "G": 1
+                  },
+                  "colorless": 0
+                }
+              },
+              {
+                "kind": "exileSelfFromGraveyard"
+              }
+            ],
+            "timing": "any",
+            "zone": "graveyard",
+            "ability": {
+              "kind": "activated",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "gainLife",
+                  "amount": {
+                    "kind": "const",
+                    "n": 4
+                  }
+                }
+              ],
+              "description": "{2}{G}, Exile this card from your graveyard: You gain 5 life."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "astral-cornucopia",
+      "name": "Astral Cornucopia",
+      "expected": "same",
+      "origin": "trial 02 audit: correct",
+      "def": {
+        "manaAbilities": [
+          {
+            "units": [["W"]],
+            "amount": {
+              "kind": "countersOnSelf",
+              "counter": "charge"
+            }
+          },
+          {
+            "units": [["U"]],
+            "amount": {
+              "kind": "countersOnSelf",
+              "counter": "charge"
+            }
+          },
+          {
+            "units": [["B"]],
+            "amount": {
+              "kind": "countersOnSelf",
+              "counter": "charge"
+            }
+          },
+          {
+            "units": [["R"]],
+            "amount": {
+              "kind": "countersOnSelf",
+              "counter": "charge"
+            }
+          },
+          {
+            "units": [["G"]],
+            "amount": {
+              "kind": "countersOnSelf",
+              "counter": "charge"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "death-baron",
+      "name": "Death Baron",
+      "expected": "same",
+      "origin": "trial 02 audit: correct",
+      "def": {
+        "staticEffects": [
+          {
+            "affects": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Skeleton"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "other"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Zombie"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              ]
+            },
+            "op": {
+              "layer": 7,
+              "sublayer": "d",
+              "power": 1,
+              "toughness": 1
+            }
+          },
+          {
+            "affects": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Skeleton"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "other"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Zombie"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              ]
+            },
+            "op": {
+              "layer": 6,
+              "addKeyword": "deathtouch"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "might-of-old-krosa",
+      "name": "Might of Old Krosa",
+      "expected": "same",
+      "origin": "trial 02 audit: correct",
+      "def": {
+        "spellAbility": {
+          "kind": "spell",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ],
+          "effects": [
+            {
+              "op": "conditionalEffect",
+              "condition": {
+                "kind": "castDuringYourMainPhase"
+              },
+              "then": [
+                {
+                  "op": "pumpUntilEot",
+                  "target": 0,
+                  "power": 4,
+                  "toughness": 4
+                }
+              ],
+              "else": [
+                {
+                  "op": "pumpUntilEot",
+                  "target": 0,
+                  "power": 2,
+                  "toughness": 2
+                }
+              ]
+            }
+          ],
+          "description": "Target creature gets +2/+2 until end of turn. If you cast this spell during your main phase, that creature gets +4/+4 until end of turn instead."
+        }
+      }
+    },
+    {
+      "id": "might-of-old-krosa~drop-effect-n",
+      "name": "Might of Old Krosa",
+      "expected": "different",
+      "origin": "broken variant of the trial 02 audit's correct patch: spellAbility: drop effect 0",
+      "def": {
+        "spellAbility": {
+          "kind": "spell",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ],
+          "effects": [],
+          "description": "Target creature gets +2/+2 until end of turn. If you cast this spell during your main phase, that creature gets +4/+4 until end of turn instead."
+        }
+      }
+    },
+    {
+      "id": "guardian-of-faith",
+      "name": "Guardian of Faith",
+      "expected": "same",
+      "origin": "trial 02 audit: correct",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "enters",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [
+              {
+                "kind": "creature",
+                "controller": "you",
+                "filter": {
+                  "kind": "other"
+                },
+                "count": {
+                  "min": 0,
+                  "max": 1000
+                }
+              }
+            ],
+            "effects": [
+              {
+                "op": "phaseOutEachChosen",
+                "targetSlot": 0
+              }
+            ],
+            "description": "When this creature enters, any number of other target creatures you control phase out."
+          }
+        ]
+      }
+    },
+    {
+      "id": "guardian-of-faith~widen-target-n-to-its-kind-drop-filter-controller-",
+      "name": "Guardian of Faith",
+      "expected": "different",
+      "origin": "broken variant of the trial 02 audit's correct patch: triggers[0]: widen target 0 to its kind (drop filter, controller)",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "enters",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [
+              {
+                "kind": "creature",
+                "count": {
+                  "min": 0,
+                  "max": 1000
+                }
+              }
+            ],
+            "effects": [
+              {
+                "op": "phaseOutEachChosen",
+                "targetSlot": 0
+              }
+            ],
+            "description": "When this creature enters, any number of other target creatures you control phase out."
+          }
+        ]
+      }
+    },
+    {
+      "id": "exsanguinator-cavalry",
+      "name": "Exsanguinator Cavalry",
+      "expected": "same",
+      "origin": "trial 02 audit: correct",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "dealsCombatDamageToPlayer",
+              "subject": {
+                "kind": "permanent",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Knight"
+                    }
+                  ]
+                }
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "putCounters",
+                "target": "triggerObject",
+                "counter": "+1/+1",
+                "count": 1
+              },
+              {
+                "op": "createToken",
+                "spec": {
+                  "name": "Blood",
+                  "typeLine": "Artifact — Blood",
+                  "types": ["Artifact"],
+                  "subtypes": ["Blood"],
+                  "colors": [],
+                  "power": null,
+                  "toughness": null,
+                  "activatedAbilities": [
+                    {
+                      "costs": [
+                        {
+                          "kind": "mana",
+                          "cost": {
+                            "generic": 1,
+                            "colored": {
+                              "W": 0,
+                              "U": 0,
+                              "B": 0,
+                              "R": 0,
+                              "G": 0
+                            },
+                            "colorless": 0
+                          }
+                        },
+                        {
+                          "kind": "tap"
+                        },
+                        {
+                          "kind": "discardCard",
+                          "count": 1
+                        },
+                        {
+                          "kind": "sacrificeSelf"
+                        }
+                      ],
+                      "timing": "any",
+                      "ability": {
+                        "kind": "activated",
+                        "targets": [],
+                        "effects": [
+                          {
+                            "op": "draw",
+                            "count": {
+                              "kind": "const",
+                              "n": 1
+                            }
+                          }
+                        ],
+                        "description": "{1}, {T}, Discard a card, Sacrifice this token: Draw a card."
+                      }
+                    }
+                  ]
+                },
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "description": "Whenever a Knight you control deals combat damage to a player, put a +1/+1 counter on that creature and create a Blood token."
+          }
+        ]
+      }
+    },
+    {
+      "id": "exsanguinator-cavalry~widen-trigger-subject-drop-condition-n-",
+      "name": "Exsanguinator Cavalry",
+      "expected": "different",
+      "origin": "broken variant of the trial 02 audit's correct patch: triggers[0]: widen trigger subject (drop condition 0)",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "dealsCombatDamageToPlayer",
+              "subject": {
+                "kind": "permanent",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Knight"
+                    }
+                  ]
+                }
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "putCounters",
+                "target": "triggerObject",
+                "counter": "+1/+1",
+                "count": 1
+              },
+              {
+                "op": "createToken",
+                "spec": {
+                  "name": "Blood",
+                  "typeLine": "Artifact — Blood",
+                  "types": ["Artifact"],
+                  "subtypes": ["Blood"],
+                  "colors": [],
+                  "power": null,
+                  "toughness": null,
+                  "activatedAbilities": [
+                    {
+                      "costs": [
+                        {
+                          "kind": "mana",
+                          "cost": {
+                            "generic": 1,
+                            "colored": {
+                              "W": 0,
+                              "U": 0,
+                              "B": 0,
+                              "R": 0,
+                              "G": 0
+                            },
+                            "colorless": 0
+                          }
+                        },
+                        {
+                          "kind": "tap"
+                        },
+                        {
+                          "kind": "discardCard",
+                          "count": 1
+                        },
+                        {
+                          "kind": "sacrificeSelf"
+                        }
+                      ],
+                      "timing": "any",
+                      "ability": {
+                        "kind": "activated",
+                        "targets": [],
+                        "effects": [
+                          {
+                            "op": "draw",
+                            "count": {
+                              "kind": "const",
+                              "n": 1
+                            }
+                          }
+                        ],
+                        "description": "{1}, {T}, Discard a card, Sacrifice this token: Draw a card."
+                      }
+                    }
+                  ]
+                },
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "description": "Whenever a Knight you control deals combat damage to a player, put a +1/+1 counter on that creature and create a Blood token."
+          }
+        ]
+      }
+    },
+    {
+      "id": "the-fifth-doctor",
+      "name": "The Fifth Doctor",
+      "expected": "same",
+      "origin": "trial 02 audit: correct",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "endStep",
+              "player": "you"
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "putCountersEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "not",
+                      "of": {
+                        "kind": "attackedThisTurn"
+                      }
+                    },
+                    {
+                      "kind": "not",
+                      "of": {
+                        "kind": "enteredThisTurn"
+                      }
+                    }
+                  ]
+                },
+                "counter": "+1/+1",
+                "count": 1
+              },
+              {
+                "op": "untapEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "not",
+                      "of": {
+                        "kind": "attackedThisTurn"
+                      }
+                    },
+                    {
+                      "kind": "not",
+                      "of": {
+                        "kind": "enteredThisTurn"
+                      }
+                    }
+                  ]
+                }
+              }
+            ],
+            "description": "Peaceful Coexistence — At the beginning of your end step, put a +1/+1 counter on each creature you control that didn't attack or enter this turn. Untap those creatures."
+          }
+        ]
+      }
+    },
+    {
+      "id": "the-fifth-doctor~flip-optional-to-true",
+      "name": "The Fifth Doctor",
+      "expected": "different",
+      "origin": "broken variant of the trial 02 audit's correct patch: triggers[0]: flip optional to true",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "endStep",
+              "player": "you"
+            },
+            "optional": true,
+            "targets": [],
+            "effects": [
+              {
+                "op": "putCountersEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "not",
+                      "of": {
+                        "kind": "attackedThisTurn"
+                      }
+                    },
+                    {
+                      "kind": "not",
+                      "of": {
+                        "kind": "enteredThisTurn"
+                      }
+                    }
+                  ]
+                },
+                "counter": "+1/+1",
+                "count": 1
+              },
+              {
+                "op": "untapEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "not",
+                      "of": {
+                        "kind": "attackedThisTurn"
+                      }
+                    },
+                    {
+                      "kind": "not",
+                      "of": {
+                        "kind": "enteredThisTurn"
+                      }
+                    }
+                  ]
+                }
+              }
+            ],
+            "description": "Peaceful Coexistence — At the beginning of your end step, put a +1/+1 counter on each creature you control that didn't attack or enter this turn. Untap those creatures."
+          }
+        ]
+      }
+    }
+  ]
+}
