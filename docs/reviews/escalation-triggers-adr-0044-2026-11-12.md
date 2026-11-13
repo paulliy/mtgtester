@@ -50,28 +50,35 @@ call and games against `never`) have not been run and need a spend cap.
 
 `bun run ai-call-census --games 6` (seeds `census-0` to `census-5`, turn cap 40, a stub client: no
 money spent). Counts are per game turn summed over the four AI seats, which is the unit of ADR
-0044's 1.0 call budget.
+0044's 1.0 call budget. Rerun on 2026-11-13 at commit 7350f15, after the review fixes to
+`attackReserve` and to the `lethal` trigger's block count (trample past the proposed blocks); the
+first run's figures are kept below the table.
 
 | Mode                         | Calls per turn | Tactician per turn | Calls credited to the live trigger |
 | ---------------------------- | -------------- | ------------------ | ---------------------------------- |
 | model (today)                | 6.83           | 5.67               |                                    |
 | bot, replan on change        | 0.79           | 0                  |                                    |
 | bot + escalate scarce-answer | 0.83           | 0.05               | 11                                 |
-| bot + escalate unknown-card  | 1.17           | 0.38               | 90                                 |
-| bot + escalate uncertain     | 1.06           | 0.29               | 69                                 |
+| bot + escalate unknown-card  | 1.19           | 0.41               | 95                                 |
+| bot + escalate uncertain     | 1.08           | 0.31               | 72                                 |
 
-How often each trigger would fire, in shadow, per game turn (234 turns): `unknown-card` 0.385,
-`uncertain` 0.303, `lethal` 0.051, `scarce-answer` 0.047. Every `scarce-answer` and `unknown-card`
+How often each trigger would fire, in shadow, per game turn (234 turns): `unknown-card` 0.406,
+`uncertain` 0.308, `lethal` 0.064, `scarce-answer` 0.047. Every `scarce-answer` and `unknown-card`
 firing came from a decision the bot answered. The plan, cache and heuristics answered nothing that
-fired, except two `uncertain` firings answered by the heuristics. `lethal` fired 12 times: 5 at
-`priority`, 5 on attacks and 2 on blocks. Before the engine fix above, one model-mode game
-(`census-3`) halted; in the rerun after it, all 36 games (six per mode) completed.
+fired, except two `uncertain` and three `lethal` firings answered by the heuristics. `lethal` fired
+15 times: 8 at `priority`, 5 on attacks and 2 on blocks.
+
+The first run (2026-11-12, before those fixes) had `unknown-card` live at 1.17 calls per turn (90
+credited), `uncertain` at 1.06 (69), and would-fire rates of 0.385, 0.303 and, for `lethal`, 0.051
+(12 firings). `scarce-answer` and the model and plain-bot rows did not change. Before the engine
+fix above, one model-mode game (`census-3`) halted; in both runs after it, all 36 games (six per
+mode) completed.
 
 What this says before any paid run:
 
 - `scarce-answer` is cheap: about one call per 20 game turns, inside the budget.
-- `unknown-card` and `uncertain` each go over the provisional 1.0 calls per game turn (1.17 and
-  1.06). The ADR's call-budget criterion would fail them as configured. The `unknown-card` count
+- `unknown-card` and `uncertain` each go over the provisional 1.0 calls per game turn (1.19 and
+  1.08). The ADR's call-budget criterion would fail them as configured. The `unknown-card` count
   comes from 123 of the coverage fixture's 472 modeled noncreature, nonland cards being unclassified.
   Narrowing that set, or the uncertainty margin, is a lever to pull before paying for their bench
   runs.
