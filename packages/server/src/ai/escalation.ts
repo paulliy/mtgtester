@@ -8,7 +8,13 @@
  * game's log identical with shadow on or off (ADR 0044 decision 3.1).
  */
 
-import type { DecisionRequest, DecisionResponse, LegalAction, PlayerView } from '@mtg/shared';
+import type {
+  DecisionRequest,
+  DecisionResponse,
+  LegalAction,
+  PermanentView,
+  PlayerView,
+} from '@mtg/shared';
 import { NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
 import {
   combatBody,
@@ -287,6 +293,43 @@ function attackKeepsSafe(
  * its lethal; passing while the attack on this seat is lethal as blocks stand; and blocks that
  * leave lethal unblocked.
  */
+/**
+ * Combat damage to this seat once the proposed blocks are applied. Each slot is one blocker
+ * (`data.subjects[i]`) and its choice the attacker it blocks. An unblocked attacker deals its
+ * power; a blocked one deals nothing unless it has trample, which assigns lethal damage to its
+ * blockers and the rest to this seat (CR 702.19b). Lethal damage is each blocker's toughness, or
+ * 1 from a deathtouch attacker (CR 702.2c). First strike and tricks are not modelled.
+ */
+function damageThroughBlocks(view: PlayerView, action: LegalAction, response: DecisionResponse) {
+  const subjects = (action.data?.['subjects'] as Array<{ subjectId?: string }> | undefined) ?? [];
+  const byId = new Map(view.battlefield.map((p) => [p.id, p]));
+  const blockersOf = new Map<string, PermanentView[]>();
+  (response.targets ?? []).forEach((choice) => {
+    if (choice.choice === NO_BLOCK_TARGET) return;
+    const blocker = byId.get(subjects[choice.slot]?.subjectId ?? '');
+    if (blocker === undefined) return;
+    blockersOf.set(choice.choice, [...(blockersOf.get(choice.choice) ?? []), blocker]);
+  });
+  let through = 0;
+  for (const attacker of view.battlefield) {
+    if (attacker.attacking !== view.seat || attacker.attackingPlaneswalker !== undefined) continue;
+    const power = Math.max(0, attacker.power ?? 0);
+    const blockers = blockersOf.get(attacker.id) ?? [];
+    if (blockers.length === 0) {
+      through += power;
+      continue;
+    }
+    const keywords = new Set((attacker.keywords ?? []).map((k) => k.toLowerCase()));
+    if (!keywords.has('trample')) continue;
+    const lethal = blockers.reduce(
+      (sum, b) => sum + (keywords.has('deathtouch') ? 1 : Math.max(0, b.toughness ?? 0)),
+      0,
+    );
+    through += Math.max(0, power - lethal);
+  }
+  return through;
+}
+
 function lethalNeglected(input: TriggerInput): boolean {
   const { request, view, response, knowledge } = input;
   const action = chosenAction(input);
@@ -324,12 +367,7 @@ function lethalNeglected(input: TriggerInput): boolean {
     const incoming = incomingDamage(view);
     const total = [...incoming.values()].reduce((sum, d) => sum + d, 0);
     if (total < view.life) return false;
-    const blocked = new Set(
-      (response.targets ?? []).map((t) => t.choice).filter((c) => c !== NO_BLOCK_TARGET),
-    );
-    let through = 0;
-    for (const [id, damage] of incoming) if (!blocked.has(id)) through += damage;
-    return through >= view.life;
+    return damageThroughBlocks(view, action, response) >= view.life;
   }
   return false;
 }

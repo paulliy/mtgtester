@@ -127,6 +127,7 @@ describe('lethal (shadow)', () => {
       id: 0,
       type: 'blockDeclaration',
       description: 'Declare blockers',
+      data: { subjects: [{ subjectId: 'b' }] },
       targets: [{ slot: 0, options: ['x', '__no_block__'] }],
     };
     const r = request({
@@ -140,6 +141,78 @@ describe('lethal (shadow)', () => {
     const blocked = { requestId: 'r', actionId: 0, targets: [{ slot: 0, choice: 'x' }] };
     expect(fire({ request: r, view: v, response: none })).toContain('lethal');
     expect(fire({ request: r, view: v, response: blocked })).not.toContain('lethal');
+  });
+
+  describe('trample through the proposed blocks', () => {
+    const blockRequest = (blockers: string[]) =>
+      request({
+        activePlayer: 'P3',
+        phase: 'combat',
+        step: 'declareBlockers',
+        decisionType: 'declareBlockers',
+        legalActions: [
+          {
+            id: 0,
+            type: 'blockDeclaration',
+            description: 'Declare blockers',
+            data: { subjects: blockers.map((subjectId) => ({ subjectId })) },
+            targets: blockers.map((_, slot) => ({ slot, options: ['t', '__no_block__'] })),
+          },
+        ],
+      });
+    const blockWith = (count: number) => ({
+      requestId: 'r',
+      actionId: 0,
+      targets: Array.from({ length: count }, (_, slot) => ({ slot, choice: 't' })),
+    });
+
+    it('counts the damage a trampler assigns past its blockers', () => {
+      // At 3 life an 8/8 trampler blocked by a 2/2 still assigns 6 to the seat.
+      const v = view({
+        life: 3,
+        battlefield: [
+          creature('t', 'P3', 8, { attacking: 'P1', tapped: true, keywords: ['Trample'] }),
+          creature('b', 'P1', 2),
+        ],
+      });
+      expect(fire({ request: blockRequest(['b']), view: v, response: blockWith(1) })).toContain(
+        'lethal',
+      );
+    });
+
+    it('does not fire when the blockers absorb enough of the trample', () => {
+      // 8 power into 3 + 3 toughness leaves 2 against 3 life.
+      const v = view({
+        life: 3,
+        battlefield: [
+          creature('t', 'P3', 8, { attacking: 'P1', tapped: true, keywords: ['Trample'] }),
+          creature('b', 'P1', 3),
+          creature('c', 'P1', 3),
+        ],
+      });
+      expect(
+        fire({ request: blockRequest(['b', 'c']), view: v, response: blockWith(2) }),
+      ).not.toContain('lethal');
+    });
+
+    it('counts 1 lethal damage per blocker from a deathtouch trampler', () => {
+      // Deathtouch makes 1 lethal for each 3/3, so 6 of the 8 tramples over.
+      const v = view({
+        life: 3,
+        battlefield: [
+          creature('t', 'P3', 8, {
+            attacking: 'P1',
+            tapped: true,
+            keywords: ['Trample', 'Deathtouch'],
+          }),
+          creature('b', 'P1', 3),
+          creature('c', 'P1', 3),
+        ],
+      });
+      expect(
+        fire({ request: blockRequest(['b', 'c']), view: v, response: blockWith(2) }),
+      ).toContain('lethal');
+    });
   });
 });
 
