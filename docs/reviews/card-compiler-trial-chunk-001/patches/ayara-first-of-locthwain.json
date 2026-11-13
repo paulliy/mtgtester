@@ -1,0 +1,71 @@
+{
+  "name": "Ayara, First of Locthwain",
+  "oracleId": "388168b3-ec68-4af2-b88c-6a5ec88c15f6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ or another black creature you control enters, each opponent loses 1 life and you gain 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "self"
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "other"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        },
+                        {
+                          "kind": "color",
+                          "value": "B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "eachOpponentLosesLife",
+            "amount": 1
+          },
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever Ayara or another black creature you control enters, each opponent loses 1 life and you gain 1 life."
+      }
+    ]
+  }
+}
