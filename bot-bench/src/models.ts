@@ -917,18 +917,27 @@ export function decisionActorFactory(entry: DecisionEntry, runtime: LlmRuntime):
         attempts = [];
         const started = performance.now();
         const elapsed = (): number => round(performance.now() - started, 1);
+        // Every answer goes into the seat's history, as the chat provider records it, so later
+        // requests in a whole turn carry the seat's recent decisions.
+        const played = (answer: ActorAnswer, as: DecisionSource): ActorAnswer => {
+          coordinator.recordDecision(request, answer.response, as);
+          return answer;
+        };
         if (runtime.mode === 'production') {
           // As in a live seat, a decision with one sensible answer is settled before any call.
           const local = tryHeuristic(request, view);
           if (local !== null)
-            return {
-              response: local,
-              source: 'heuristic',
-              latencyMs: elapsed(),
-              requests: 0,
-              costSource: 'not_applicable',
-              costUsd: 0,
-            };
+            return played(
+              {
+                response: local,
+                source: 'heuristic',
+                latencyMs: elapsed(),
+                requests: 0,
+                costSource: 'not_applicable',
+                costUsd: 0,
+              },
+              'heuristic',
+            );
         }
         const outcome = await policy.decide(
           request,
@@ -950,26 +959,40 @@ export function decisionActorFactory(entry: DecisionEntry, runtime: LlmRuntime):
           ...(last?.rawResponse !== undefined && { raw: last.rawResponse }),
         };
         if (outcome.kind === 'answered')
-          return {
-            ...paid,
-            response: {
-              ...outcome.response,
-              note: decisionNote(outcome.confidence, outcome.topTwoMargin),
+          return played(
+            {
+              ...paid,
+              response: {
+                ...outcome.response,
+                note: decisionNote(outcome.confidence, outcome.topTwoMargin),
+              },
+              source: 'model',
             },
-            source: 'model',
-          };
+            'jev',
+          );
 
         const botAnswer = await bot.decide(request);
         if (outcome.reason === 'unsupported_shape') {
           // Nothing was sent: the shape is one no Choice can express.
           const why = `a decision model cannot express this (${outcome.detail})`;
           return unsupported === 'bot'
-            ? {
-                ...paid,
-                response: { ...botAnswer, note: `bot: ${why}` },
-                source: 'bot-handoff',
-              }
-            : { ...paid, response: botAnswer, source: 'fallback', failure: `unsupported: ${why}` };
+            ? played(
+                {
+                  ...paid,
+                  response: { ...botAnswer, note: `bot: ${why}` },
+                  source: 'bot-handoff',
+                },
+                'bot',
+              )
+            : played(
+                {
+                  ...paid,
+                  response: botAnswer,
+                  source: 'fallback',
+                  failure: `unsupported: ${why}`,
+                },
+                'fallback',
+              );
         }
         // The provider answered but the answer was unusable (a refusal, an unknown option, a
         // malformed distribution), or the provider never answered. Only the second counts
@@ -982,7 +1005,7 @@ export function decisionActorFactory(entry: DecisionEntry, runtime: LlmRuntime):
           outcome.reason === 'invalid_response' || rejected
             ? `no legal answer: ${refused ? 'the model refused to answer; ' : ''}${outcome.detail}`
             : `provider error: ${last?.error ?? outcome.detail}`;
-        return { ...paid, response: botAnswer, source: 'fallback', failure };
+        return played({ ...paid, response: botAnswer, source: 'fallback', failure }, 'fallback');
       },
     };
   };

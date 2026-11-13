@@ -347,6 +347,31 @@ describe("a case's context reaches a decision model", () => {
   });
 });
 
+describe("a decision model sees the seat's recent decisions", () => {
+  it('carries what the seat already played this turn into the next request', async () => {
+    const calls: JevDecisionsRequest[] = [];
+    const transport = fakeDecisions((request) => {
+      const has = (text: string) =>
+        Object.values(request.questions.action.criteria).some((c) => c.description.includes(text));
+      if (has('Play Plains')) return { choice: option(request, 'Play Plains') };
+      if (has('Cast Wrath of God')) return { choice: option(request, 'Cast Wrath of God') };
+      return pass(request);
+    }, calls);
+    await runLineup(
+      only('wrath-then-rebuild'),
+      parseLineup([{ id: 'decider', kind: 'decision', model: 'vendor/decider-1' }]),
+      options(transport),
+    );
+    const recent = (request: JevDecisionsRequest): string =>
+      JSON.stringify(
+        (request.state as { yourRecentDecisions?: unknown }).yourRecentDecisions ?? [],
+      );
+    expect(recent(calls[0]!)).not.toContain('Play Plains');
+    expect(recent(calls[1]!)).toContain('Play Plains');
+    expect(recent(calls[2]!)).toContain('Cast Wrath of God');
+  });
+});
+
 describe('a judge bundle with decision models', () => {
   it('anonymises them as candidates and shows judges what they were sent', async () => {
     const SECRET = 'secretvendor/zorblax-decide-7';
