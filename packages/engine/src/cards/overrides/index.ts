@@ -26,7 +26,9 @@
  * 2. `handledLines` entries must be copied from the actual `unmodeledReasons` output, not typed
  *    from the card face — the interpreter rewrites text before reporting it (reminder text
  *    stripped, the card's own name replaced by `~`).
- * 3. Every override gets a *behavioral* test, never a `modeled === true` test.
+ * 3. Every override gets a *behavioral* test, never a `modeled === true` test. The one exception
+ *    is a compiled card (`compiled/`, ADR 0047): it has no test of its own, and stands on the
+ *    per-patch checks and audit that `scripts/card-compiler/run.ts promote` requires instead.
  * 4. `def` merges over the interpreted definition with a shallow spread (`applyOverride` below) —
  *    it does not know which ability arrays are "the same line, read differently." If the override
  *    changes how a line is modeled (e.g. forcing a true mana ability where the generic grammar

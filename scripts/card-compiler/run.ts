@@ -16,6 +16,8 @@
  *   bun run scripts/card-compiler/run.ts import <trial-dir> <dir>  # check patches made elsewhere
  *   bun run scripts/card-compiler/run.ts queue <trial-dir>...      # rebuild the review queue
  *
+ *   bun run scripts/card-compiler/run.ts ledger [<trial-dir>...]   # every card any trial has taken
+ *
  *   bun run scripts/card-compiler/run.ts review <name> --verdict accepted|rejected --by <who>
  *   bun run scripts/card-compiler/run.ts promote <batch-id>        # accepted patches into the engine
  *   bun run scripts/card-compiler/run.ts retire <name>             # take a promoted card back out
@@ -47,7 +49,9 @@ import {
 } from './calibration';
 import { textCheck } from './render';
 import {
+  LEDGER_PATH,
   QUEUE_PATH,
+  REVIEWS_DIR,
   applyPatch,
   canonicalBehavior,
   compileTarget,
@@ -826,6 +830,58 @@ function smokeOk(state: CardState): boolean {
   return (state.smoke ?? []).every((run) => run.ok);
 }
 
+/** Where a card ended up in its trial. */
+function outcomeOf(state: CardState): string {
+  if (state.stage === 'stale' || state.stage === 'inexpressible' || state.stage === 'invalid')
+    return state.stage;
+  if (state.valid !== true) return 'pending';
+  if (!smokeOk(state)) return 'smoke-failed';
+  if (state.verdict === 'same') return 'compiled-checked';
+  return state.verdict === 'different' ? 'meaning-differs' : 'pending';
+}
+
+/**
+ * The campaign ledger: one row for every card any trial has taken, with where it ended up. It is
+ * derived from the trial directories, never written by hand, so it cannot disagree with them.
+ * One card per line (the file is in `.prettierignore`), so a chunk's diff is its own rows.
+ * `select.ts --exclude-ledger` reads it to pick cards no trial has seen, and a new session reads
+ * it to find the chunk to resume.
+ */
+function ledger(trials: string[]): void {
+  const dirs =
+    trials.length > 0
+      ? trials
+      : readdirSync(REVIEWS_DIR)
+          .map((name) => `${REVIEWS_DIR}/${name}`)
+          .filter((dir) => existsSync(`${dir}/work/state.json`))
+          .sort();
+  const rows: { name: string; rank: number; trial: string; source: string; outcome: string }[] = [];
+  const tally = new Map<string, number>();
+  for (const trial of dirs) {
+    for (const state of loadState(trial).values()) {
+      if (state.calibration !== undefined) continue;
+      const outcome = outcomeOf(state);
+      rows.push({
+        name: state.name,
+        rank: state.rank,
+        trial,
+        source: state.source ?? 'compiler',
+        outcome,
+      });
+      tally.set(outcome, (tally.get(outcome) ?? 0) + 1);
+    }
+  }
+  rows.sort((a, b) => a.rank - b.rank || a.trial.localeCompare(b.trial));
+  write(
+    LEDGER_PATH,
+    `{\n"schemaVersion": 1,\n"cards": [\n${rows.map((row) => JSON.stringify(row)).join(',\n')}\n]\n}\n`,
+  );
+  console.log(
+    `${rows.length} rows for ${new Set(rows.map((row) => row.name)).size} cards from ${dirs.length} trials:`,
+    Object.fromEntries(tally),
+  );
+}
+
 function report(trial: string): void {
   const everyState = [...loadState(trial).values()];
   const calibration = scoreCalibration(everyState);
@@ -859,22 +915,7 @@ function report(trial: string): void {
     rank: state.rank,
     xmageBucket: state.xmageBucket,
     lines: state.lines,
-    outcome:
-      state.stage === 'stale'
-        ? 'stale'
-        : state.stage === 'inexpressible'
-          ? 'inexpressible'
-          : state.stage === 'invalid'
-            ? 'invalid'
-            : state.valid !== true
-              ? 'pending'
-              : !smokeOk(state)
-                ? 'smoke-failed'
-                : state.verdict === 'same'
-                  ? 'compiled-checked'
-                  : state.verdict === 'different'
-                    ? 'meaning-differs'
-                    : 'pending',
+    outcome: outcomeOf(state),
     compileRounds: state.rounds,
     validatorIssues: state.validatorIssues,
     inexpressibleReason: state.inexpressibleReason,
@@ -933,6 +974,10 @@ function numberFlag(name: string, fallback: number): number {
 const calibrationCases = numberFlag('calibration', DEFAULT_CALIBRATION_CASES);
 const batchSize = numberFlag('size', 25);
 const [command, trial, stage] = argv;
+if (command === 'ledger') {
+  ledger(argv.slice(1));
+  process.exit(0);
+}
 if (command === 'promote' || command === 'retire' || command === 'review' || command === 'verify') {
   // Loaded on demand: these read the engine's compiled-card registry, which the pipeline
   // commands never need.

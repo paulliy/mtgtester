@@ -8,7 +8,7 @@ The canonical completion standard is [Modeling a Card and Testing It](card-model
 
 - Use the template layer in `packages/engine/src/cards/` first: reusable grammar, selectors, values, effects, conditions, and rule statics before bespoke overrides.
 - Overrides live in `packages/engine/src/cards/overrides/`; update their handled-lines deliberately.
-- Interpretation and override snapshot fixtures change only on purpose. Regenerate with `bun run scripts/snapshot-interpret-defs.ts` or `bun run scripts/snapshot-override-defs.ts`, review the diff, then confirm with `bun run snapshots:check`. The interpretation script writes three nets (ADR 0038): the Ur-Dragon fixture, the full pinned fixture, and the outcomes of the one-line probe corpus, whose diff is a coverage change's measured yield. A new or changed Card Test Lab scenario also needs `bun run lab:index --write` (ADR 0037).
+- Interpretation and override snapshot fixtures change only on purpose. Regenerate with `bun run scripts/snapshot-interpret-defs.ts` or `bun run scripts/snapshot-override-defs.ts`, review the diff, then confirm with `bun run snapshots:check`. `snapshots:check` also holds every modeled pinned EDHREC card to its recorded definition fingerprint: after an intended change, `bun run coverage:pin --dump <file>` at the base commit and at the head shows what changed, and `bun run coverage:pin --ratchet` records it. The interpretation script writes three nets (ADR 0038): the Ur-Dragon fixture, the full pinned fixture, and the outcomes of the one-line probe corpus, whose diff is a coverage change's measured yield. A new or changed Card Test Lab scenario also needs `bun run lab:index --write` (ADR 0037).
 - A change that adds a `LegalAction.data` key registers it in `packages/shared/src/action-data-keys.ts`; `packages/server/src/cards/action-data-keys.test.ts` fails on an unregistered key or value type.
 
 ## Backlog
@@ -18,6 +18,6 @@ The canonical completion standard is [Modeling a Card and Testing It](card-model
 - [EDHREC triage](../plans/edhrec-triage.md): the grammar slot that fails in each one-line card, grouped by phrase; the work queue for the coverage plan. Regenerate with `bun run edhrec:triage` after a parser change (`snapshots:check` fails until you do).
 - [EDHREC ready list](../plans/edhrec-ready-list.md): the cards filling 95% of real Commander deck slots that are modeled or one unparsed line away. Regenerate with `bun run edhrec:ready-list` after a parser change; refreeze the ranking with `bun run edhrec:fetch`.
 - [Post-Tier-3 residue](../plans/post-tier3-card-coverage.md)
-- [Batch card compile campaign](../plans/batch-card-compile-campaign.md) (proposed): the remaining 5,254 pinned EDHREC cards through the batch card compiler in guarded chunks, with the improvements it needs first.
+- [Batch card compile campaign](../plans/batch-card-compile-campaign.md): the remaining 5,254 pinned EDHREC cards through the [batch card compiler](../../scripts/card-compiler/README.md) in guarded chunks. A compiled card enters the pool only through `run.ts promote` ([ADR 0047](../decisions/0047-compiled-cards-as-unreviewed-overrides.md)).
 
 Precon coverage is strongest. Community fixtures and the EDH-staples report expose the significant remaining gaps. Use `bun run coverage`, `bun run staples`, and `bun run test:implemented`.

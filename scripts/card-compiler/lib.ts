@@ -40,6 +40,9 @@ import { Prng } from '../../packages/engine/src/rng/prng';
 
 export const SCRATCH_DEFAULT = 'scripts/card-compiler/.work';
 
+export const REVIEWS_DIR = 'docs/reviews';
+/** Every card any trial has taken and where it ended up (`run.ts ledger`). */
+export const LEDGER_PATH = 'docs/reviews/compiled-card-ledger.json';
 /** The review queue: every checked patch, with the reviewer's verdict once it has one. */
 export const QUEUE_PATH = 'docs/reviews/compiled-card-queue.json';
 

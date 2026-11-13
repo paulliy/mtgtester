@@ -1,6 +1,8 @@
 # Plan: batch-compiling the remaining EDHREC cards with Haiku workers
 
-Status: proposed (2026-11-13). Baseline: `fae4d11`. Nothing in this plan has been built yet.
+Status: in progress (2026-11-13). Baseline: `fae4d11`. Stage 0 steps 1 to 6 are built and
+measured (see [Stage 0 status](#stage-0-status)). Still to do before the campaign: step 7
+(optional) and the two fully audited pilot chunks. No card has been promoted.
 
 Scope: the 5,254 cards in the pinned EDHREC pool that do not model today. The plan runs them
 through the existing [batch card compiler](../../scripts/card-compiler/README.md) in chunks of 300,
@@ -24,7 +26,7 @@ batch), [card coverage workflow](../guides/card-coverage-workflow.md), trial rep
   command registers a patch with the engine.
 - **Haiku alone will not finish the pool.** At the trial 02 rates, the compiler produces a checked
   patch for 28% of cards and a flagged one for 8%. It declines 64% because the IR cannot say the
-  line. Over the 4,826 cards no trial has seen, that is about 1,350 checked cards and 370 flagged
+  line. Over the 4,758 cards no trial has seen, that is about 1,350 checked cards and 370 flagged
   ones. The other 3,100 need engine features first, and those are a long tail.
 - **So the plan has two tracks.** Track A is the Haiku batch loop, which lands what the IR can
   already say. Track B turns the refusals into a ranked primitive backlog that the main thread and
@@ -48,8 +50,8 @@ Measured at the baseline with `interpretCard` over
 | Unmodeled                                   | 5,254 |
 | Of those: one unparsed line, normal layout  | 5,176 |
 | Of those: adventure, modal DFC, transform   |    77 |
-| Already compiled in trials 01 and 02        |   350 |
-| Never compiled                              | 4,826 |
+| Already through a trial (see the ledger)    |   419 |
+| Not yet seen by any trial                   | 4,758 |
 
 Every unmodeled pinned card is blocked by exactly one line, because that is how the pool was
 chosen. By rank, the one-line normal-layout cards are 539 in ranks 1 to 2,000, 813 in 2,001 to
@@ -88,9 +90,11 @@ has proved the loop.
    but the repository has no `.claude/agents/` directory, and trial 02's batch lists were made by
    hand.
 
-## Decisions to confirm before Stage 0
+## Decisions
 
-Each has a recommendation. The first one changes what "modeled" promises, so it needs an ADR.
+Decided 2026-11-13: the owner asked for best judgement, so each recommendation below stands. The
+first changes what "modeled" promises and is recorded as
+[ADR 0047](../decisions/0047-compiled-cards-as-unreviewed-overrides.md).
 
 - **D1. What bar makes a compiled card playable?** Today the compiler README says a person or the
   main thread reviews each card, override rule 3 asks for a behavioral test per override, and the
@@ -113,6 +117,33 @@ Each has a recommendation. The first one changes what "modeled" promises, so it 
   files.
 - **D5. Order.** **Recommended:** rank order, so the most-played cards land first and the audit
   effort goes where the deck slots are.
+
+## Stage 0 status
+
+Built on 2026-11-13, each with tests:
+
+| Step | Result                                                                                                                                                                                                                                                                                                                                      |
+| ---: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|    1 | `edhrec-modeled.json` holds a definition fingerprint for each of the 3,718 modeled cards. `coverage:pin --check` fails on a changed one, and `coverage:pin --dump` shows the change.                                                                                                                                                        |
+|    2 | `run.ts review`, `promote`, `retire` and `verify`. Promoting and retiring six audited trial 01 patches left the tree as it was, and the generated module typechecks against `CardDefinition`. `fuzz` reads a promoted card from its EDHREC pin.                                                                                             |
+|    3 | `calibration.json`: 28 audited-correct patches, the 2 known-wrong ones and 25 broken variants. In [calibration run 01](../reviews/card-compiler-trial-calibration-01/README.md) Haiku workers caught all 27 wrong cases and passed the 3 correct ones. `prepare` adds ten cases to every trial and `queue` refuses a trial that misses one. |
+|    4 | Smoke compares each game with the same card minus its patched lines, on two added busy boards. 177 of the 207 valid queued patches are exercised (86%), up from 72 of 208 under a looser rule, and every game still passes.                                                                                                                 |
+|    5 | The validator rejects a mana amount a mana ability cannot evaluate. Viridian Joiner's patch is now `invalid`. The wider sweep of every value and condition kind against every ability context is not done.                                                                                                                                  |
+|    6 | `.claude/agents/` defines the two compiler workers and `explorer`, `implementer`, `reviewer`. `run.ts batches` and `ledger`, and `select.ts --order rank --exclude-ledger`.                                                                                                                                                                 |
+|    7 | Not started.                                                                                                                                                                                                                                                                                                                                |
+
+Found on the way and fixed: the old smoke rule credited abilities from lines the interpreter had
+already read; the back-translator was shown long schema names as hidden text, a cause of false
+alarms; and the free text check threw on an ability with no effects.
+
+Not done yet:
+
+- The two pilot chunks with a full main-thread audit, which gate sampling under D2.
+- The value-and-condition sweep in step 5.
+- Step 7, renderer coverage.
+- The 208 queued patches have no review verdicts, so none is promoted.
+- CI has not run on this branch: every recent run in the repository fails before its first step
+  (see the pull request). The checks listed there were run locally.
 
 ## Stage 0: improvements before the campaign
 
@@ -173,7 +204,7 @@ repeats on the next 300.
 
 ## Track A: the chunk loop
 
-One chunk is 300 cards, one trial directory and one pull request. The 4,826 unseen cards are 17
+One chunk is 300 cards, one trial directory and one pull request. The 4,758 unseen cards are 16
 chunks; cards that Track B unblocks come back as later chunks.
 
 | Step | Who                | What                                                                                                            |
@@ -206,7 +237,7 @@ Worker rules:
   answered.
 - **Resuming.** A new session reads `run.ts ledger`, finds the first chunk that is not merged, and
   continues from its last committed stage.
-- **Repository growth.** Trial 02 is 3.2 MB for 300 cards. Seventeen chunks would add about 55 MB
+- **Repository growth.** Trial 02 is 3.2 MB for 300 cards. Sixteen chunks would add about 50 MB
   of prompts and answers, so the campaign commits patches, results and state, and keeps raw
   answers only for the pilot chunks and for any chunk that trips a stop rule.
 - **Pace.** A chunk is about 23 subagent runs. One chunk per session is the unit, and Track B
@@ -307,7 +338,7 @@ Estimates from the trial 02 rates, to be replaced by each chunk's measured numbe
 | Source                                           |            Cards |
 | ------------------------------------------------ | ---------------: |
 | The 208 patches already queued, once reviewed    |        about 170 |
-| Track A over 4,826 unseen cards, checked         |      about 1,350 |
+| Track A over 4,758 unseen cards, checked         |      about 1,350 |
 | Track A, flagged cards that survive adjudication | about 200 to 300 |
 | Track B, per top feature                         |        70 to 120 |
 
