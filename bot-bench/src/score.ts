@@ -120,6 +120,11 @@ export function scoreRun(benchCase: BenchCase, run: CaseRun): CaseScore {
   if (invalid > 0) flags.push(`${invalid} answer(s) refused; the table played instead`);
   if (fallbacks > 0) flags.push(`${fallbacks} decision(s) fell back to the heuristic bot`);
   if (retries > 0) flags.push(`${retries} decision(s) needed a corrective retry`);
+  const bot = run.decisions.filter((decision) => decision.source === 'bot-handoff').length;
+  if (bot > 0)
+    flags.push(
+      `${bot} decision(s) answered by the heuristic bot: a shape a decision model cannot express`,
+    );
 
   if (benchCase.scope === 'single') {
     const decision = run.decisions[0];

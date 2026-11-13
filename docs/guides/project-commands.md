@@ -85,6 +85,7 @@ bun run diplomacy-sweep [--games N] [--seed S] [--turn-cap N] [--all] [--talk]  
 bun run ai-bench                        # AI benchmark harness (ADR 0026)
 bun run bot-bench list|inspect|verify   # engine-backed tactician cases (ADR 0042); see bot-bench/README.md
 bun run bot-bench run --models local:heuristic,openrouter:<vendor/model> [--trials N] [--spend-cap USD]
+bun run bot-bench run --lineup bot-bench/lineups/decision-sweep.json   # decision models (Jev, OpenAI, Gemini, ...) as the tactician (ADR 0046)
                                         # play a lineup of models and write the judge bundle ZIP
 bun run bot-bench collate --run <dir> <scorecard.json>...   # lay returned judge scorecards side by side
 bun run bot-bench run --lineup bot-bench/lineups/bot-gate.json --out <dir>   # the bot over the gate's 8 seeds (free)

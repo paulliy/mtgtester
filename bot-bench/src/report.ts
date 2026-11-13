@@ -4,8 +4,12 @@
  * what the models were actually sent.
  */
 import { readFileSync } from 'node:fs';
-import { DEFAULT_AI_CONFIG } from '../../packages/server/src/ai/config';
+import { DEFAULT_AI_CONFIG, loadAiConfig } from '../../packages/server/src/ai/config';
 import { assemblePrompt } from '../../packages/server/src/ai/context';
+import {
+  JEV_DEFAULT_INSTRUCTIONS,
+  buildJevActionRequest,
+} from '../../packages/server/src/ai/jev-context';
 import { primerCatalog, tacticianPrimerSectionIds } from '../../packages/server/src/ai/primer';
 import { AI_VERSIONS } from '../../packages/server/src/ai/versions';
 import type { CaseAnalysis, OptionRow, TurnAnalysis } from './analysis';
@@ -13,6 +17,7 @@ import { describeChanges } from './analysis';
 import { GRADE_POINTS, type BenchCase, type SingleReference, type TurnReference } from './case';
 import { cell, foldRepeats, meaningfulActions, renderPosition } from './describe';
 import { DECISIONS_PER_GAME, type CostMetrics, type ModelMetrics } from './metrics';
+import { isRemoteKind } from './models';
 import type { CaseResult, ModelResult } from './run';
 
 /** How a case's scope reads to judges: one decision, a whole turn, or N turns (ADR 0045). */
@@ -90,7 +95,7 @@ export function caseFileName(benchCase: BenchCase, index: number): string {
 
 /** Candidates are the models being chosen between; local policies are calibration only. */
 export function isCandidate(model: ModelResult['model'], models: readonly ModelResult[]): boolean {
-  return model.kind === 'llm' || models.every((other) => other.model.kind !== 'llm');
+  return isRemoteKind(model.kind) || models.every((other) => !isRemoteKind(other.model.kind));
 }
 
 function firstTrial(model: ModelResult, caseId: string): CaseResult | undefined {
@@ -113,7 +118,9 @@ function gradeWord(result: CaseResult | undefined, benchCase: BenchCase): string
   )
     return 'NO LEGAL ANSWER';
   const grade = result.score.graded.grade;
-  return grade === 'best' || grade === 'blunder' ? grade.toUpperCase() : grade;
+  const word = grade === 'best' || grade === 'blunder' ? grade.toUpperCase() : grade;
+  // A decision model's seat handed this one to the bot: the grade is the bot's, not the model's.
+  return decision.source === 'bot-handoff' ? `${word} (the bot's answer)` : word;
 }
 
 function sequenceOf(result: CaseResult): string[] {
@@ -122,7 +129,39 @@ function sequenceOf(result: CaseResult): string[] {
 
 // ── PRIMER.md ──────────────────────────────────────────────────────────────────────────────────
 
-export function renderPrimer(): string {
+/** Whether any model in the run is a Decisions API model rather than a chat model. */
+export function hasDecisionModels(input: Pick<ReportInput, 'models'>): boolean {
+  return input.models.some((model) => model.model.kind === 'decision');
+}
+
+/** The context options the decision lane builds its state with, as the bench's actor does. */
+function decisionContextOptions(): Parameters<typeof buildJevActionRequest>[4] {
+  const config = loadAiConfig(process.env);
+  return {
+    includeMemory: config.contextMemoryEnabled,
+    includeFeatures: config.contextFeaturesEnabled,
+    useBudgeter: config.contextBudgeterEnabled,
+    useCardSummaries: config.contextCardSummariesEnabled,
+    inputTokenBudget: config.contextInputTokenBudget,
+  };
+}
+
+const DECISION_PRIMER = [
+  '## What the decision models were given',
+  '',
+  'Some candidates are **decision models**: they are not chat models and write no text. Each decision is sent to them as one typed request through the Decisions API, built by the production decision lane, the same code that runs a decision model in a live seat:',
+  '',
+  '- `state`: the same position JSON the chat models get (described below), without the menu and without any primer.',
+  `- one \`choice\` question, \`action\`, with the instruction: "${JEV_DEFAULT_INSTRUCTIONS}"`,
+  '- one option (criterion) per legal action, keyed `action_<id>`, with its type and description. When an action needs a target and exactly one target slot is open, it is offered once per legal target (`action_<id>_t<n>`), each naming the target.',
+  '',
+  'The model answers with one option key and, usually, a probability per option and a confidence. The option is mapped back to the engine action without asking the model anything else, then checked by the same validator and the engine. The model page shows the confidence beside each answer.',
+  '',
+  "A decision that one choice cannot express is **never sent** to a decision model: declaring attackers or blockers, assigning combat damage, choosing X or modes, ordering triggers, splitting mana. What happened instead is the entry's `unsupported` setting: `bot` (the heuristic bot answers it, as in a live decision-model seat; the record says *Answered by: bot-handoff*) or `hold` (the seat holds still). Score a decision model on what it chose, and treat a `bot` answer as the bot's play, not the model's. Compare it with the heuristic baseline, which plays every decision itself: the difference is what the model added.",
+  '',
+];
+
+export function renderPrimer(input?: Pick<ReportInput, 'models'>): string {
   const sections = primerCatalog().filter((section) => section.role === 'tactician');
   return [
     '# Primer',
@@ -150,6 +189,7 @@ export function renderPrimer(): string {
     '- `stack`, `recentLog`: what is waiting to resolve and what just happened.',
     '- `legalActions`: the menu. The reply must name one `id` from it.',
     '',
+    ...(input !== undefined && hasDecisionModels(input) ? DECISION_PRIMER : []),
   ].join('\n');
 }
 
@@ -176,7 +216,7 @@ export function renderBrief(input: ReportInput): string {
             .join(
               ', ',
             )}. The heuristic baseline is the non-model bot the product falls back to when a model fails; a candidate that does not play better than it adds nothing.`,
-    BLIND_NOTE: !input.models.some((model) => model.model.kind === 'llm')
+    BLIND_NOTE: !input.models.some((model) => isRemoteKind(model.model.kind))
       ? 'This run holds only local policies, which are not language models; they are named as they are.'
       : input.blind
         ? 'The candidates are anonymised. An alias such as "Model A" is all you should know about a model.'
@@ -203,11 +243,18 @@ function metricTables(input: ReportInput): string[] {
     '',
     'Mean harness score per case, 0 to 100%. One-decision grades count `best` / `good` / `weak` / `blunder` / no legal answer.',
     '',
+    ...(hasDecisionModels(input)
+      ? [
+          "A decision model's seat hands attacks and blocks to the heuristic bot, so its one-decision score includes the bot's answers on those cases. *Own answers only* leaves those cases out; whole-turn scores mix the model's choices with the bot's attacks, which the heuristic baseline plays the same way.",
+          '',
+        ]
+      : []),
     table(
       [
         'Model',
         'Overall',
         'One-decision',
+        ...(hasDecisionModels(input) ? ['One-decision, own answers only'] : []),
         'Whole-turn',
         'best / good / weak / blunder / none',
         'Turn objectives met',
@@ -217,6 +264,7 @@ function metricTables(input: ReportInput): string[] {
         label(m),
         percent(m.accuracy.overall),
         percent(m.accuracy.single),
+        ...(hasDecisionModels(input) ? [percent(m.accuracy.singleOwn)] : []),
         percent(m.accuracy.turn),
         `${m.accuracy.grades.best} / ${m.accuracy.grades.good} / ${m.accuracy.grades.weak} / ${m.accuracy.grades.blunder} / ${m.accuracy.grades.noAnswer}`,
         `${m.accuracy.objectivesMet} of ${m.accuracy.objectivesTotal}`,
@@ -226,13 +274,14 @@ function metricTables(input: ReportInput): string[] {
     '',
     '### Reliability (part of accuracy)',
     '',
-    'How often the model produced a usable answer by itself. A corrective retry is a second request after an illegal or unreadable answer; a fallback means the heuristic bot had to play the decision.',
+    'How often the model produced a usable answer by itself. A corrective retry is a second request after an illegal or unreadable answer; a fallback means the heuristic bot had to play the decision. *Answered by the bot* applies to decision models only: decisions (attacks, blocks) that no single choice can express, which the heuristic bot played and which are left out of "legal on first try" and of speed.',
     '',
     table(
       [
         'Model',
         'Decisions',
         'Legal on first try',
+        'Answered by the bot (no Choice for it)',
         'Corrective retries',
         'Fallbacks',
         'Refused answers',
@@ -243,7 +292,8 @@ function metricTables(input: ReportInput): string[] {
       metrics.map((m) => [
         label(m),
         String(m.reliability.decisions),
-        `${m.reliability.firstTryLegal} (${percent(m.reliability.decisions === 0 ? null : m.reliability.firstTryLegal / m.reliability.decisions)})`,
+        `${m.reliability.firstTryLegal} (${percent(m.reliability.decisions - m.reliability.botAnswered === 0 ? null : m.reliability.firstTryLegal / (m.reliability.decisions - m.reliability.botAnswered))})`,
+        String(m.reliability.botAnswered),
         String(m.reliability.correctiveRetries),
         String(m.reliability.fallbacks),
         String(m.reliability.refused),
@@ -670,7 +720,70 @@ export function renderCase(input: ReportInput, benchCase: BenchCase, index: numb
       '',
     ]),
   );
+  if (hasDecisionModels(input))
+    out.push(...decisionRequestSection(input, benchCase, request, view));
   return out.join('\n');
+}
+
+/** The typed request a decision model got for the case's first decision, or why it got none. */
+function decisionRequestSection(
+  input: ReportInput,
+  benchCase: BenchCase,
+  request: Parameters<typeof buildJevActionRequest>[1],
+  view: Parameters<typeof buildJevActionRequest>[2],
+): string[] {
+  const heading =
+    benchCase.scope === 'single'
+      ? '## The exact decision-model request for this decision'
+      : '## The exact decision-model request for the first decision of the turn';
+  // One request per target-expansion setting the run's decision models used; entries that share a
+  // setting got the same request. The model name is left out: the bundle may be blind.
+  const settings = [
+    ...new Set(
+      input.models
+        .filter((model) => model.model.kind === 'decision')
+        .map((model) => model.model['expandTargets'] !== false),
+    ),
+  ].sort((a, b) => Number(b) - Number(a));
+  const out = [
+    heading,
+    '',
+    'Rebuilt by the production decision lane from the position and the context settings in effect when this bundle was built, as the chat prompt below is.',
+    '',
+  ];
+  for (const expandTargets of settings) {
+    if (settings.length > 1)
+      out.push(`### Entries with \`expandTargets: ${String(expandTargets)}\``, '');
+    const built = buildJevActionRequest(
+      '(the decision model)',
+      request,
+      view,
+      undefined,
+      decisionContextOptions(),
+      undefined,
+      { expandTargets },
+    );
+    if (built.kind === 'unsupported') {
+      out.push(
+        `None. This decision cannot be expressed as one choice (\`${built.classification.reason}\`), so it was not sent; the entry's \`unsupported\` setting decided what played it.`,
+        '',
+      );
+      continue;
+    }
+    out.push(
+      `\`${built.classification.shape}\`, ${Object.keys(built.optionToActionId).length} options.`,
+      '',
+      '**state**',
+      '',
+      fence(JSON.stringify(built.request.state)),
+      '',
+      '**questions**',
+      '',
+      fence(JSON.stringify(built.request.questions, null, 2)),
+      '',
+    );
+  }
+  return out;
 }
 
 // ── models/*.md ────────────────────────────────────────────────────────────────────────────────

@@ -84,7 +84,11 @@ describe('ADR 0043 lineups', () => {
   it('the checked-in gate lineup has eight seeds', async () => {
     const { loadLineupFile } = await import('./models');
     const entries = loadLineupFile('bot-bench/lineups/bot-gate.json');
-    const seeds = new Set(entries.flatMap((entry) => (entry.kind === 'llm' ? [] : [entry.seed])));
+    const seeds = new Set(
+      entries.flatMap((entry) =>
+        entry.kind === 'local' || entry.kind === 'bot-led' ? [entry.seed] : [],
+      ),
+    );
     expect(seeds.size).toBe(8);
   });
 

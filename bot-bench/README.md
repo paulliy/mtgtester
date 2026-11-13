@@ -1,6 +1,7 @@
 # bot-bench: tactician benchmark with a judge bundle
 
-Puts several models in the same Commander positions, plays their answers through the real rules
+Puts several models (chat models, or typed decision models such as Jev, GPT-6 Luna Decisions and
+Gemini Decision 1) in the same Commander positions, plays their answers through the real rules
 engine, and writes one ZIP you can hand to judge models. The ZIP holds the judging instructions,
 the rubric (accuracy, speed and cost scored separately, plus a blurb), the primer the models were
 given, every position, every model's answers side by side, and the scorecard to send back.
@@ -24,6 +25,11 @@ bun run bot-bench run --lineup bot-bench/lineups/example.json --trials 3 --spend
 
 # The wide sweep: the models that finished the first sweep, with thinking off and on low where that worked (19 entries) plus the heuristic bot.
 bun run bot-bench run --lineup bot-bench/lineups/tactician-sweep.json --spend-cap 5
+
+# Decision models instead of chat models: Jev 1.14 and 1.13, OpenAI, Gemini and every other
+# decision model we know of, plus the heuristic bot. Needs OPENROUTER_API_KEY.
+bun run bot-bench run --lineup bot-bench/lineups/decision-sweep.json --spend-cap 1
+bun run bot-bench run --models local:heuristic,decision:typesafe/jev-1.14,decision:google/gemini-decision-1
 ```
 
 A run prints a line per case as it goes, then a small leaderboard, then where the bundle is:
@@ -106,6 +112,76 @@ bun run bot-bench seeds --run benchmark-output/bot-bench/gate --baseline local-h
 `seeds` prints each case's mean score across seeds per entry. With `--baseline` and
 `--candidate` it applies ADR 0043's seed gate: the candidate must raise the overall score and must
 not lower any case's mean, and the command exits 1 when it fails.
+
+## Decision models
+
+A decision model is not a chat model. It gets the position as state plus one typed question, and
+returns one choice with probabilities. It writes no text. [ADR 0046](../docs/decisions/0046-decision-model-tactician-bench.md)
+has the reasoning. A `decision` entry runs through the production decision lane, the code that
+puts Jev in a live seat (`buildJevActionRequest`, `JevActionPolicy`, `JevClient` in
+`packages/server/src/ai/`):
+
+- each legal action is one Choice option, and a targeted action with one open slot is offered once
+  per legal target (`expandTargets`, default on);
+- the chosen option is mapped back to the engine's action and checked by the same validator and
+  engine as a chat model's answer;
+- the model's answer is always played: there is no confidence threshold. Its confidence and its
+  margin over the runner-up are shown as the "reason" beside each answer.
+
+```json
+{ "id": "jev-1.14", "kind": "decision", "model": "typesafe/jev-1.14" }
+```
+
+Optional fields: `label`, `baseUrl` (default OpenRouter), `apiKeyEnv` (default `AI_JEV_API_KEY`,
+then `OPENROUTER_API_KEY`), `requestTimeoutMs` (default 10 s), `pricing`, `expandTargets`, and
+`unsupported`. On the command line: `decision:<vendor/model>`, plus `@hold` for
+`unsupported: "hold"`.
+
+**What a decision model cannot answer.** One choice cannot declare attackers or blockers, divide
+combat damage, pick X or modes, order triggers or split mana. Those decisions are never sent.
+`unsupported` decides what plays them:
+
+| `unsupported`   | What happens                                                                                                                                                                            | Read the score as                                                                                               |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `bot` (default) | The production fallback bot (card-aware) answers, as in a live decision-model seat. The decision is recorded as answered by `bot-handoff`, flagged on the case and marked on the grade. | The hybrid you would deploy. Compare it with the `local-heuristic` row: the difference is what the model added. |
+| `hold`          | The seat holds still: no attack, no block. Scored as no answer.                                                                                                                         | The model alone. Combat-only cases score 0 for every decision model.                                            |
+
+Of the 50 cases, the 6 one-decision cases that are attacks or blocks (`lethal-alpha-strike`,
+`keep-blockers-home`, `block-the-trampler`, `chump-the-giant`, `hold-the-ground-at-five`,
+`two-home-to-live`) and the attack or block steps of 9 of the 14 whole-turn cases are the bot's
+under `bot`. The summary adds a one-decision accuracy over the model's own
+answers only, and counts the bot's answers separately. Bot answers are left out of "legal on first
+try" and of speed.
+
+A refusal or an option the menu never offered is a `no legal answer` (billed, scored as no
+answer). A provider that never answers (unknown model, bad key, a `:free` model your OpenRouter
+privacy settings exclude) is a `provider error`, and three in a row stop the model.
+
+[lineups/decision-sweep.json](lineups/decision-sweep.json) holds the heuristic baseline and these
+decision models, ids pinned so a run can be repeated (`~typesafe/jev-latest` follows new releases
+and is avoided for that reason):
+
+| Entry                     | Model                                | Notes                                                   |
+| ------------------------- | ------------------------------------ | ------------------------------------------------------- |
+| `jev-1.14`                | `typesafe/jev-1.14`                  | Latest Jev release                                      |
+| `jev-1.13`                | `typesafe/jev-1.13`                  | The version the product pins today                      |
+| `gpt-6-luna-decisions`    | `openai/gpt-6-luna-decisions`        | OpenAI                                                  |
+| `gemini-decision-1`       | `google/gemini-decision-1`           | Google, released 2026-11-11; $0.10/M input, output free |
+| `microsoft-decision-1`    | `microsoft/microsoft-decision-1`     | $0.042/M input, output free                             |
+| `pplx-decider-v1.2`       | `perplexity/pplx-decider-v1.2`       |                                                         |
+| `pplx-decider-flash-v1.2` | `perplexity/pplx-decider-flash-v1.2` |                                                         |
+| `clef`, `clef-flash`      | `cloudflare/clef`, `.../clef-flash`  |                                                         |
+| `d1.1`                    | `liquid/d1.1`                        |                                                         |
+| `drex-v1.5`, `drex-max`   | `nace-ai/drex-v1.5`, `.../drex-max`  |                                                         |
+| `mercury-decide`          | `inception/mercury-decide`           |                                                         |
+| `elephant-1`              | `baseten/elephant-1`                 |                                                         |
+| `decisions-fast-free`     | `parallel/decisions-fast:free`       | Free; 404 unless your privacy settings allow training   |
+
+Prices are listed only where OpenRouter's model page gave one; every decision response reports its
+own cost, so the price list is a fallback. A model that rejects the request shape (a smaller option
+limit than Jev's 255, a vendor-specific state format) fails as a provider error and is stopped.
+Check the live list with `GET https://openrouter.ai/api/v1/models?output_modalities=decisions`
+before a sweep and add new models the same way.
 
 ## What is measured
 
@@ -312,6 +388,7 @@ The harness holds no copy of game or prompt logic, so it changes when the produc
 | Legality, results, the public log       | the engine (`Engine.advance`/`submit`, `formatSpectatorLog`)                                                                                                                               |
 | What the model sees                     | `Engine.view(seat)`, the anti-cheat `PlayerView`                                                                                                                                           |
 | The model's whole pipeline              | `OpenAiDecisionProvider` in `packages/server/src/ai/provider.ts`: `assemblePrompt`, the primer, the client and parser, `validateResponse`, the corrective retry and the heuristic fallback |
+| A decision model's whole pipeline       | `JevActionPolicy` and `JevClient` in `packages/server/src/ai/`: `buildJevActionRequest`, target expansion, `adaptJevActionAnswer`, `validateResponse`                                      |
 | The primer shown to judges              | `primerCatalog()` in `packages/server/src/ai/primer.ts`, read when the bundle is built                                                                                                     |
 | Provider presets and tactician settings | `PROVIDERS`, `loadAiConfig`, `configForRole` in `packages/server/src/ai/config.ts`                                                                                                         |
 | Opponents and the `heuristic` baseline  | `HeuristicDecisionProvider` in `packages/bot`                                                                                                                                              |

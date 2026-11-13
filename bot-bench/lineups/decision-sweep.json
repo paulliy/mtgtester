@@ -1,0 +1,92 @@
+{
+  "models": [
+    {
+      "id": "local-heuristic",
+      "kind": "local",
+      "policy": "heuristic"
+    },
+    {
+      "id": "jev-1.14",
+      "kind": "decision",
+      "model": "typesafe/jev-1.14"
+    },
+    {
+      "id": "jev-1.13",
+      "kind": "decision",
+      "model": "typesafe/jev-1.13"
+    },
+    {
+      "id": "gpt-6-luna-decisions",
+      "kind": "decision",
+      "model": "openai/gpt-6-luna-decisions"
+    },
+    {
+      "id": "gemini-decision-1",
+      "kind": "decision",
+      "model": "google/gemini-decision-1",
+      "pricing": {
+        "inputPerMTok": 0.1,
+        "outputPerMTok": 0
+      }
+    },
+    {
+      "id": "microsoft-decision-1",
+      "kind": "decision",
+      "model": "microsoft/microsoft-decision-1",
+      "pricing": {
+        "inputPerMTok": 0.042,
+        "outputPerMTok": 0
+      }
+    },
+    {
+      "id": "pplx-decider-v1.2",
+      "kind": "decision",
+      "model": "perplexity/pplx-decider-v1.2"
+    },
+    {
+      "id": "pplx-decider-flash-v1.2",
+      "kind": "decision",
+      "model": "perplexity/pplx-decider-flash-v1.2"
+    },
+    {
+      "id": "clef",
+      "kind": "decision",
+      "model": "cloudflare/clef"
+    },
+    {
+      "id": "clef-flash",
+      "kind": "decision",
+      "model": "cloudflare/clef-flash"
+    },
+    {
+      "id": "d1.1",
+      "kind": "decision",
+      "model": "liquid/d1.1"
+    },
+    {
+      "id": "drex-v1.5",
+      "kind": "decision",
+      "model": "nace-ai/drex-v1.5"
+    },
+    {
+      "id": "drex-max",
+      "kind": "decision",
+      "model": "nace-ai/drex-max"
+    },
+    {
+      "id": "mercury-decide",
+      "kind": "decision",
+      "model": "inception/mercury-decide"
+    },
+    {
+      "id": "elephant-1",
+      "kind": "decision",
+      "model": "baseten/elephant-1"
+    },
+    {
+      "id": "decisions-fast-free",
+      "kind": "decision",
+      "model": "parallel/decisions-fast:free"
+    }
+  ]
+}

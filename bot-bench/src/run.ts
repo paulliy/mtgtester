@@ -65,6 +65,8 @@ export interface RunOptions {
   env: Record<string, string | undefined>;
   fetchImpl?: typeof fetch;
   sleepImpl?: (ms: number) => Promise<void>;
+  /** Test seam for decision models: every Decisions API request goes through this. */
+  decisionTransport?: LlmRuntime['decisionTransport'];
   onTranscript?: (entry: TranscriptEntry) => void;
   onProgress?: (line: string) => void;
   /** Called as each model finishes, so a long run can be saved model by model. */
@@ -101,6 +103,9 @@ export async function runLineup(
       mode: options.mode,
       ...(options.fetchImpl !== undefined && { fetchImpl: options.fetchImpl }),
       ...(options.sleepImpl !== undefined && { sleepImpl: options.sleepImpl }),
+      ...(options.decisionTransport !== undefined && {
+        decisionTransport: options.decisionTransport,
+      }),
       onAttempt: (attempt, context) => {
         if (attempt.usage.costUsd !== undefined) {
           knownSpend += attempt.usage.costUsd;
@@ -162,7 +167,10 @@ export async function runLineup(
             if (answer.failure?.startsWith('provider error') === true) {
               providerFailures += 1;
               lastFailure = answer.failure;
-            } else providerFailures = 0;
+              // Only an answer the provider gave proves it is alive. A decision answered without
+              // a request (a decision model's seat handing an attack to the bot, a local
+              // shortcut) says nothing about it, so it neither counts nor resets the streak.
+            } else if (answer.requests > 0) providerFailures = 0;
             return answer;
           },
         };

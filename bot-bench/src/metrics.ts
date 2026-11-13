@@ -16,6 +16,11 @@ export interface AccuracyMetrics {
   /** Mean case score, 0 to 1, over every case and trial the model played. */
   overall: number | null;
   single: number | null;
+  /**
+   * One-decision cases without those a decision model's seat handed to the bot (attacks,
+   * blocks): the model's own choices only. Equal to `single` for every other kind of entry.
+   */
+  singleOwn: number | null;
   turn: number | null;
   casesPlayed: number;
   casesExpected: number;
@@ -29,6 +34,11 @@ export interface ReliabilityMetrics {
   decisions: number;
   /** Decisions the model answered legally on its first response. */
   firstTryLegal: number;
+  /**
+   * Decisions a decision model's seat handed to the heuristic bot because no Choice can express
+   * them (attacks, blocks). Not the model's answers: left out of `firstTryLegal` and of speed.
+   */
+  botAnswered: number;
   correctiveRetries: number;
   /** Decisions the heuristic bot answered because the model never produced a legal answer. */
   fallbacks: number;
@@ -118,7 +128,9 @@ export function modelMetrics(
   }
   const objectives = turn.flatMap((entry) => entry.score.objectives ?? []);
 
-  const asked = decisions.filter((decision) => decision.source !== 'script');
+  const asked = decisions.filter(
+    (decision) => decision.source !== 'script' && decision.source !== 'bot-handoff',
+  );
   const latencies = asked.map((decision) => decision.latencyMs);
   const byCase = new Map<string, string[]>();
   for (const entry of played) {
@@ -166,6 +178,11 @@ export function modelMetrics(
     accuracy: {
       overall: mean(played.map((entry) => entry.score.score)),
       single: mean(single.map((entry) => entry.score.score)),
+      singleOwn: mean(
+        single
+          .filter((entry) => entry.run.decisions[0]?.source !== 'bot-handoff')
+          .map((entry) => entry.score.score),
+      ),
       turn: mean(turn.map((entry) => entry.score.score)),
       casesPlayed: played.length,
       casesExpected: cases.length * trials,
@@ -179,8 +196,10 @@ export function modelMetrics(
         (decision) =>
           decision.invalid === undefined &&
           decision.source !== 'fallback' &&
-          decision.source !== 'model-retry',
+          decision.source !== 'model-retry' &&
+          decision.source !== 'bot-handoff',
       ).length,
+      botAnswered: decisions.filter((decision) => decision.source === 'bot-handoff').length,
       correctiveRetries: decisions.filter((decision) => decision.source === 'model-retry').length,
       fallbacks: decisions.filter((decision) => decision.source === 'fallback').length,
       refused: decisions.filter((decision) => decision.invalid !== undefined).length,

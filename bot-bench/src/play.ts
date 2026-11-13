@@ -32,7 +32,9 @@ import {
   type Seat,
 } from './case';
 
-/** How an answer was produced, in the production pipeline's own vocabulary where it has one. */
+/**
+ * How an answer was produced, in the production pipeline's own vocabulary where it has one.
+ */
 export type AnswerSource =
   | 'model'
   | 'model-retry'
@@ -44,7 +46,12 @@ export type AnswerSource =
   | 'script'
   /** The card-aware bot in bot-led mode (ADR 0043), answering without the model. */
   | 'bot'
-  | 'jev';
+  | 'jev'
+  /**
+   * A decision model's seat handed a decision it cannot express (an attack, a block) to the
+   * production fallback bot (ADR 0046). Not the model's answer.
+   */
+  | 'bot-handoff';
 
 export type CostSource = 'reported' | 'estimated' | 'unknown' | 'not_applicable';
 
