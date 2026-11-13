@@ -39,7 +39,7 @@ import {
   seatDiplomacyContext,
   type DiplomacySource,
 } from '../../packages/server/src/ai/diplomacy-context';
-import type { StrategyCoordinator } from '../../packages/server/src/ai/strategy-coordinator';
+import { StrategyCoordinator } from '../../packages/server/src/ai/strategy-coordinator';
 import { FixedGuidance } from '../../packages/server/src/benchmark/turn-arms';
 import { RequestQueue } from '../../packages/server/src/ai/queue';
 import { JEV_MAX_CHOICE_OPTIONS } from '../../packages/server/src/ai/tactical-decision-shape';
@@ -869,6 +869,8 @@ function decisionNote(confidence: number | null, margin: number | null): string 
 export function decisionActorFactory(entry: DecisionEntry, runtime: LlmRuntime): ActorFactory {
   const apiKey = resolveDecisionKey(entry, runtime);
   const base = loadAiConfig(runtime.env);
+  // The tactician's settings with no strategist: what the chat lane's coordinator is built from.
+  const config: AiConfig = { ...configForRole(base, 'tactician'), strategistEnabled: false };
   const unsupported = entry.unsupported ?? 'bot';
   const requestTimeoutMs = entry.requestTimeoutMs ?? DEFAULT_DECISION_TIMEOUT_MS;
   // One queue per model, shared by its cases: the client-side rate limit is per model.
@@ -898,6 +900,12 @@ export function decisionActorFactory(entry: DecisionEntry, runtime: LlmRuntime):
         inputTokenBudget: base.contextInputTokenBudget,
       },
     });
+    // The guidance a chat model gets: a case's `context` (strategy and deals, ADR 0045) when it
+    // has one, else the default coordinator's (recent decisions, public memory, features). The
+    // production Jev lane passes the same `guidanceFor` result to the policy.
+    const coordinator =
+      caseGuidance(engine, config, benchCase) ??
+      new StrategyCoordinator(null, queue, engine, config);
     // The production fallback bot: card-aware, with its default fixes (ADR 0043).
     const bot = new HeuristicDecisionProvider(
       `bot-bench-decision:${benchCase.id}`,
@@ -922,7 +930,11 @@ export function decisionActorFactory(entry: DecisionEntry, runtime: LlmRuntime):
               costUsd: 0,
             };
         }
-        const outcome = await policy.decide(request, view);
+        const outcome = await policy.decide(
+          request,
+          view,
+          coordinator.guidanceFor(request.decidingPlayer, request, view),
+        );
         const latencyMs = elapsed();
         const { promptTokens, responseTokens, costUsd, costSource } = settleAttempts(
           attempts,

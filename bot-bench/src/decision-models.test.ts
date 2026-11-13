@@ -8,7 +8,7 @@ import type {
 } from '../../packages/server/src/ai/jev-context';
 import type { JevDecisionsTransport } from '../../packages/server/src/ai/jev-client';
 import { newManifest, writeBundle, writeModelResult } from './bundle';
-import { loadCases } from './case';
+import { loadCases, parseBenchCase, type BenchCase } from './case';
 import { modelMetrics } from './metrics';
 import { parseLineup, parseModelList, publicEntry, resolveDecisionKey } from './models';
 import { runLineup, type RunOptions, type TranscriptEntry } from './run';
@@ -307,6 +307,43 @@ describe('a decision model in the tested seat, through the production decision l
     const sources = result!.cases[0]!.run.decisions.map((decision) => decision.source);
     expect(sources.every((source) => source === 'heuristic' || source === 'model')).toBe(true);
     expect(calls.length).toBe(sources.filter((source) => source === 'model').length);
+  });
+});
+
+describe("a case's context reaches a decision model", () => {
+  it('sends the strategy and the deals in the state, as a chat model gets them', async () => {
+    const base = JSON.parse(
+      JSON.stringify(cases.find((benchCase) => benchCase.id === 'hold-negate-for-a-threat')!),
+    ) as Record<string, unknown>;
+    const withContext = parseBenchCase({
+      ...base,
+      context: {
+        strategy: { intent: 'Keep Negate for the Wrath P4 is holding up.', threatOrder: ['P4'] },
+        deals: [
+          {
+            parties: ['P1', 'P3'],
+            rounds: 1,
+            obligations: [
+              { kind: 'noCounter', by: 'P1', against: 'P3' },
+              { kind: 'noAttack', by: 'P3', against: 'P1' },
+            ],
+          },
+        ],
+      },
+    }) as BenchCase;
+    const calls: JevDecisionsRequest[] = [];
+    await runLineup(
+      [withContext],
+      parseLineup([{ id: 'decider', kind: 'decision', model: 'vendor/decider-1' }]),
+      options(fakeDecisions(pass, calls)),
+    );
+    const state = calls[0]!.state as {
+      turnStrategy?: { intent?: string };
+      tableDeals?: { yourPromises: string[]; promisesToYou: string[] };
+    };
+    expect(state.turnStrategy?.intent).toMatch(/Keep Negate/);
+    expect(state.tableDeals?.yourPromises.join(' ')).toMatch(/P3/);
+    expect(state.tableDeals?.promisesToYou.length).toBe(1);
   });
 });
 
