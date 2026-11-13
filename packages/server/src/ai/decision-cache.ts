@@ -135,11 +135,17 @@ export function digestDecision(
 /** What the cache stores — the answer stripped of its (per-request) identity. */
 type CachedAnswer = Omit<DecisionResponse, 'requestId' | 'note'>;
 
+interface CacheEntry {
+  answer: CachedAnswer;
+  /** The ADR 0044 trigger that sent this decision to the model, when one did. */
+  escalation?: string;
+}
+
 const DEFAULT_MAX_ENTRIES = 200;
 
 /** Bounded LRU of answers, scoped to a single game. */
 export class DecisionCache {
-  private readonly entries = new Map<number, CachedAnswer>();
+  private readonly entries = new Map<number, CacheEntry>();
 
   constructor(private readonly maxEntries: number = DEFAULT_MAX_ENTRIES) {}
 
@@ -149,6 +155,15 @@ export class DecisionCache {
 
   /** The previous answer to this exact decision, re-stamped with the current request id. */
   get(request: DecisionRequest, view: PlayerView, context?: string): DecisionResponse | null {
+    return this.lookup(request, view, context)?.response ?? null;
+  }
+
+  /** `get`, also returning the trigger that escalated the cached answer, if one did. */
+  lookup(
+    request: DecisionRequest,
+    view: PlayerView,
+    context?: string,
+  ): { response: DecisionResponse; escalation?: string } | null {
     const key = digestDecision(request, view, context);
     const hit = this.entries.get(key);
     if (hit === undefined) return null;
@@ -158,11 +173,11 @@ export class DecisionCache {
     this.entries.set(key, hit);
 
     const response: DecisionResponse = {
-      ...structuredClone(hit),
+      ...structuredClone(hit.answer),
       requestId: request.requestId,
       note: 'Cache: identical game state and menu already decided',
     };
-    return response;
+    return { response, ...(hit.escalation !== undefined && { escalation: hit.escalation }) };
   }
 
   set(
@@ -170,12 +185,13 @@ export class DecisionCache {
     view: PlayerView,
     response: DecisionResponse,
     context?: string,
+    escalation?: string,
   ): void {
     const key = digestDecision(request, view, context);
     const { requestId: _requestId, note: _note, ...answer } = structuredClone(response);
 
     this.entries.delete(key);
-    this.entries.set(key, answer);
+    this.entries.set(key, { answer, ...(escalation !== undefined && { escalation }) });
 
     while (this.entries.size > this.maxEntries) {
       const oldest = this.entries.keys().next();

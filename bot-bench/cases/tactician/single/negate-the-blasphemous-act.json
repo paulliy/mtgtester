@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "id": "negate-the-blasphemous-act",
+  "role": "tactician",
+  "scope": "single",
+  "title": "The last counterspell is for the sweeper that costs three creatures",
+  "skills": ["counterspell", "sweeper", "scarce-answer"],
+  "briefing": "ADR 0044 position for `scarce-answer`: a no-harm control: the trigger fires and the right answer is still to cast. P4, with no creatures, casts Blasphemous Act. P1 has Serra Angel, Colossal Dreadmaw and Kalonian Tusker and holds Negate, its only counterspell, with two Islands open. Negate saves three creatures.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P4",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 8
+    },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Negate"],
+        "battlefield": [
+          "Island",
+          "Island",
+          "Plains",
+          "Forest",
+          "Serra Angel",
+          "Colossal Dreadmaw",
+          "Kalonian Tusker"
+        ]
+      },
+      "P2": {
+        "life": 33,
+        "battlefield": ["Mountain", "Mountain", "Grizzly Bears"]
+      },
+      "P3": {
+        "life": 35,
+        "battlefield": ["Swamp", "Swamp", "Savannah Lions"]
+      },
+      "P4": {
+        "life": 29,
+        "hand": ["Blasphemous Act"],
+        "battlefield": [
+          "Mountain",
+          "Mountain",
+          "Mountain",
+          "Mountain",
+          "Mountain",
+          "Mountain",
+          "Mountain",
+          "Mountain",
+          "Mountain"
+        ]
+      }
+    }
+  },
+  "setup": [
+    {
+      "player": "P4",
+      "choose": "Cast Blasphemous Act"
+    }
+  ],
+  "focus": {
+    "decisionType": "priority"
+  },
+  "reference": {
+    "analysis": "Blasphemous Act deals 13 damage to each creature: P1 loses three creatures and P4 loses none. Negate counters it.",
+    "options": [
+      {
+        "label": "Negate the Blasphemous Act",
+        "when": {
+          "choose": "Cast Negate"
+        },
+        "grade": "best",
+        "why": "Saves P1's three creatures; this is what the answer was for."
+      },
+      {
+        "label": "Pass",
+        "when": {
+          "choose": "Pass priority"
+        },
+        "grade": "blunder",
+        "why": "P1 loses its whole board to a one-sided sweeper."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "The sweeper resolves."
+    }
+  }
+}

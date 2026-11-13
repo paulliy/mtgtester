@@ -22,6 +22,7 @@ import {
   type DiplomacyPlay,
 } from './diplomacy/play';
 import type { CardKnowledge } from './card-knowledge';
+import { DEFAULT_POLICY_FIXES, type PolicyFix } from './fixes';
 import {
   actionValue,
   chooseAttacks,
@@ -63,6 +64,8 @@ export interface EvaluateOptions {
    * bot league can measure the new policy against the old one inside one build.
    */
   legacy?: boolean;
+  /** ADR 0043's policy fixes; omitted is `DEFAULT_POLICY_FIXES`. */
+  fixes?: readonly PolicyFix[];
 }
 
 function policyContext(
@@ -77,6 +80,7 @@ function policyContext(
     ...(opts.steering === undefined ? {} : { steering: opts.steering }),
     ...(opts.mulligansTaken === undefined ? {} : { mulligansTaken: opts.mulligansTaken }),
     ...(opts.repeatCount === undefined ? {} : { repeatCount: opts.repeatCount }),
+    fixes: new Set(opts.fixes ?? DEFAULT_POLICY_FIXES),
   };
 }
 

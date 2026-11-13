@@ -7,6 +7,7 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { BOT_POLICY_VERSION } from '../../packages/bot/src';
 import { ENGINE_VERSION } from '../../packages/engine/src';
 import { PROVIDERS } from '../../packages/server/src/ai/config';
 import { primerCatalog } from '../../packages/server/src/ai/primer';
@@ -48,6 +49,12 @@ export interface RunManifest {
   fingerprint: string;
   /** Set when the saved play was graded again against later references (`bot-bench rescore`). */
   rescoredAt?: string;
+  /**
+   * The heuristic bot's policy version. From ADR 0043 on, `local:heuristic` is the card-aware bot
+   * (`local:heuristic-plain` is the old baseline); a run without this field predates that, and its
+   * `local:heuristic` results are the plain bot's and not comparable with newer runs.
+   */
+  botPolicyVersion?: string;
 }
 
 /** A hash of everything a measurement depends on besides the model, for `run --out`. */
@@ -59,6 +66,7 @@ export function benchFingerprint(cases: readonly BenchCase[]): string {
         primer: primerCatalog(),
         engineVersion: ENGINE_VERSION,
         aiVersions: AI_VERSIONS,
+        botPolicyVersion: BOT_POLICY_VERSION,
       }),
     )
     .digest('hex');
@@ -84,6 +92,7 @@ export function newManifest(
     aiVersions: { ...AI_VERSIONS },
     gitCommit,
     fingerprint: benchFingerprint(cases),
+    botPolicyVersion: BOT_POLICY_VERSION,
   };
 }
 

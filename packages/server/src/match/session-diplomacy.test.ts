@@ -180,9 +180,13 @@ describe('MatchSession — the player at the table (ADR 0035 phase 3)', () => {
     // The player's own proposals are in the talk, under its own seat.
     expect(talk.some((l) => l.message.kind === 'proposal' && l.message.from === 'P1')).toBe(true);
     // The table never speaks for the player: everything P1 "said" is its own proposal or answer.
+    // A breach is the table's record of the player's own play (the random chooser may break a
+    // deal it accepted, which the card-aware bot seats of ADR 0043 now give it the chance to),
+    // not words put in its mouth.
     for (const line of talk) {
       const m = line.message;
-      if ('from' in m && m.from === 'P1') expect(['proposal', 'response']).toContain(m.kind);
+      if ('from' in m && m.from === 'P1' && m.kind !== 'breach')
+        expect(['proposal', 'response']).toContain(m.kind);
     }
     const outcomes = sent.flatMap((m) =>
       m.type === 'diplomacyState' && m.payload.outcome !== undefined ? [m.payload.outcome] : [],

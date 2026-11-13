@@ -62,9 +62,18 @@ bun run combat-sweep [--games N] [--seed S] [--json out.json]
 bun run bot-league [--games N] [--a ARM] [--b ARM] [--turn-cap N] [--jobs N] [--json F]
                                         # ADR 0039 bot vs bot win rate; arms: legacy, policy, knowledge, aggro, control
 bun run ai-call-census [--games N] [--turn-cap N] [--json F]
-                                        # ADR 0039 model calls and prompt tokens per turn by tactical mode, offline
+                                        # ADR 0039 model calls and prompt tokens per turn by tactical mode, offline;
+                                        # ADR 0044 would-fire counts per escalation trigger and one mode per live trigger
 bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json F]
-                                        # ADR 0039 one PAID game from .env: P1/P3 bot mode, P2/P4 model tactician
+                     [--escalation T,..] [--shadow T,..] [--opponents model|bot-never]
+                                        # ADR 0039 one PAID game from .env: P1/P3 bot mode, P2/P4 model tactician;
+                                        # ADR 0044: live triggers for P1/P3, and bot-led `never` opponents
+bun run strategist-capture [--seed S] [--turn-cap N] [--decks F] [--max-usd N] [--no-diplomacy] [--no-flag] [--offline] [--out F]
+                                        # ADR 0045 one bot-led game with a strategist every turn, written as a replay
+                                        # transcript plus every seat's knobs and deals per turn; PAID unless --offline
+bun run strategist-study --capture F [--seeds N] [--sample-rate R] [--margin M] [--lines F] [--tactician] [--trials K] [--max-usd N]
+                                        # ADR 0045 mark turns, run the knob grid as bot arms (free), the tactician on
+                                        # turns where they disagree (PAID with --tactician), and verdicts from --lines
 bun run jev-duel [--seats bot,bot-jev,model,jev] [--games N] [--offline] [--max-usd N] [--out DIR]
                                         # ADR 0041 Jev seat presets at one table; --offline is free, otherwise PAID
 bun run fuzz [--from N] [--games N] [--changed [--base S]] [--card "<name>"] [--json F] [--report F]
@@ -78,6 +87,8 @@ bun run bot-bench list|inspect|verify   # engine-backed tactician cases (ADR 004
 bun run bot-bench run --models local:heuristic,openrouter:<vendor/model> [--trials N] [--spend-cap USD]
                                         # play a lineup of models and write the judge bundle ZIP
 bun run bot-bench collate --run <dir> <scorecard.json>...   # lay returned judge scorecards side by side
+bun run bot-bench run --lineup bot-bench/lineups/bot-gate.json --out <dir>   # the bot over the gate's 8 seeds (free)
+bun run bot-bench seeds --run <dir> [--baseline <id> --candidate <id>]       # ADR 0043 seed gate: per-case means
 bun run agent-client [--seat P1] [--seed S] [--port N] [--provider random|ai]
 bun run agent-client --table <invite link> --name <n> --deck <file> [--seat P1] [--policy first-legal]
 bun run packages/server/src/cli/table-scripted-run.ts [--turn-cap 6] [--scenario disconnect]

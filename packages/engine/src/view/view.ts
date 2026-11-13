@@ -135,6 +135,9 @@ function permanentViews(ctx: GameContext): PermanentView[] {
       view.toughness = pt.toughness;
     }
     if (perm.blockedByOrdered.length > 0) view.blockedBy = [...perm.blockedByOrdered];
+    if (perm.attacking !== null) view.attacking = perm.attacking;
+    if (perm.attackingPlaneswalker !== null)
+      view.attackingPlaneswalker = perm.attackingPlaneswalker;
     return view;
   });
 }

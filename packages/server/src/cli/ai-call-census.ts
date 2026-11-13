@@ -6,6 +6,9 @@
  * tokens the real client would have sent.
  *
  *   bun run ai-call-census [--games N] [--seed S] [--turn-cap N] [--json out.json]
+ *
+ * Every bot mode evaluates ADR 0044's escalation triggers in shadow and reports how often each
+ * would fire, by decision type and by answer source; `bot + escalate <trigger>` makes one live.
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -16,7 +19,12 @@ import { Engine, runToCompletionAsync } from '@mtg/engine';
 import { decide, Rng } from '@mtg/bot';
 import { buildSupportedPool, type SupportedPool } from '../cards/pool';
 import { generateCommanderDeck } from '../decks/generate';
-import { DEFAULT_AI_CONFIG, type AiConfig } from '../ai/config';
+import {
+  DEFAULT_AI_CONFIG,
+  ESCALATION_TRIGGERS,
+  LIVE_ESCALATION_TRIGGERS,
+  type AiConfig,
+} from '../ai/config';
 import { OpenAiDecisionProvider } from '../ai/provider';
 import { StrategyCoordinator } from '../ai/strategy-coordinator';
 import type { AiClient } from '../ai/client';
@@ -30,20 +38,36 @@ interface Mode {
   config: Partial<AiConfig>;
 }
 
+/**
+ * Every bot mode watches every trigger in shadow, so each mode reports how often each would
+ * fire; a trigger mode makes that one trigger live (ADR 0044 decision 6).
+ */
+const ALL_SHADOW = { botEscalationShadow: [...ESCALATION_TRIGGERS] };
+
 export const MODES: Mode[] = [
   { name: 'model (today)', config: { tacticalMode: 'model' } },
   {
     name: 'bot, replan every turn',
-    config: { tacticalMode: 'bot', botEscalation: 'never', strategistReplan: 'everyTurn' },
+    config: {
+      tacticalMode: 'bot',
+      botEscalation: [],
+      strategistReplan: 'everyTurn',
+      ...ALL_SHADOW,
+    },
   },
   {
     name: 'bot, replan on change',
-    config: { tacticalMode: 'bot', botEscalation: 'never', strategistReplan: 'onChange' },
+    config: { tacticalMode: 'bot', botEscalation: [], strategistReplan: 'onChange', ...ALL_SHADOW },
   },
-  {
-    name: 'bot + escalate close calls',
-    config: { tacticalMode: 'bot', botEscalation: 'uncertain', strategistReplan: 'onChange' },
-  },
+  ...LIVE_ESCALATION_TRIGGERS.map((trigger): Mode => ({
+    name: `bot + escalate ${trigger}`,
+    config: {
+      tacticalMode: 'bot',
+      botEscalation: [trigger],
+      strategistReplan: 'onChange',
+      ...ALL_SHADOW,
+    },
+  })),
 ];
 
 export interface CensusCounts {
@@ -54,6 +78,31 @@ export interface CensusCounts {
   tacticianPromptTokens: number;
   strategistPromptTokens: number;
   byDecisionType: Record<string, number>;
+  /** Times each trigger fired (live or shadow), summed over seats. */
+  triggerFired: Record<string, number>;
+  /** Model calls credited to each live trigger. */
+  triggerEscalated: Record<string, number>;
+  /** `<trigger>:<decisionType>` and `<trigger>:<source>` would-fire counts. */
+  triggerBreakdown: Record<string, number>;
+}
+
+function addInto(target: Record<string, number>, source: Record<string, number>): void {
+  for (const [key, value] of Object.entries(source)) target[key] = (target[key] ?? 0) + value;
+}
+
+function emptyCounts(): CensusCounts {
+  return {
+    turns: 0,
+    tactician: 0,
+    strategist: 0,
+    strategistReused: 0,
+    tacticianPromptTokens: 0,
+    strategistPromptTokens: 0,
+    byDecisionType: {},
+    triggerFired: {},
+    triggerEscalated: {},
+    triggerBreakdown: {},
+  };
 }
 
 export async function censusGame(
@@ -61,6 +110,8 @@ export async function censusGame(
   seed: string,
   turnCap: number,
   mode: Mode,
+  /** Test seam: sees the finished engine, e.g. to compare event logs across modes. */
+  observe?: (engine: Engine) => void,
 ): Promise<CensusCounts> {
   const decks = Array.from({ length: 4 }, (_, i) =>
     generateCommanderDeck(pool, { seed: `${seed}-seat${i + 1}` }),
@@ -76,15 +127,7 @@ export async function censusGame(
     })),
     turnCap,
   });
-  const counts: CensusCounts = {
-    turns: 0,
-    tactician: 0,
-    strategist: 0,
-    strategistReused: 0,
-    tacticianPromptTokens: 0,
-    strategistPromptTokens: 0,
-    byDecisionType: {},
-  };
+  const counts: CensusCounts = emptyCounts();
   const knowledge = knowledgeFor(engine);
   const tactician: AiClient = {
     activeModel: 'census-stub',
@@ -138,6 +181,14 @@ export async function censusGame(
   );
   await coordinator.settled();
   counts.turns = result.turnCount;
+  for (const provider of providers.values()) {
+    const stats = provider.escalationStats();
+    addInto(counts.triggerFired, stats.fired);
+    addInto(counts.triggerEscalated, stats.escalated);
+    addInto(counts.triggerBreakdown, stats.byDecisionType);
+    addInto(counts.triggerBreakdown, stats.bySource);
+  }
+  observe?.(engine);
   counts.strategist = coordinator.strategistStats.calls;
   counts.strategistReused = coordinator.strategistStats.reused;
   return counts;
@@ -159,15 +210,7 @@ async function main(): Promise<void> {
   );
   const rows: Array<Record<string, unknown>> = [];
   for (const mode of MODES) {
-    const total: CensusCounts = {
-      turns: 0,
-      tactician: 0,
-      strategist: 0,
-      strategistReused: 0,
-      tacticianPromptTokens: 0,
-      strategistPromptTokens: 0,
-      byDecisionType: {},
-    };
+    const total = emptyCounts();
     for (let g = 0; g < games; g++) {
       const started = performance.now();
       let c: CensusCounts;
@@ -187,9 +230,10 @@ async function main(): Promise<void> {
       total.strategistReused += c.strategistReused;
       total.tacticianPromptTokens += c.tacticianPromptTokens;
       total.strategistPromptTokens += c.strategistPromptTokens;
-      for (const [k, v] of Object.entries(c.byDecisionType)) {
-        total.byDecisionType[k] = (total.byDecisionType[k] ?? 0) + v;
-      }
+      addInto(total.byDecisionType, c.byDecisionType);
+      addInto(total.triggerFired, c.triggerFired);
+      addInto(total.triggerEscalated, c.triggerEscalated);
+      addInto(total.triggerBreakdown, c.triggerBreakdown);
     }
     const calls = total.tactician + total.strategist;
     const row = {
@@ -203,6 +247,15 @@ async function main(): Promise<void> {
       ),
       strategistReused: total.strategistReused,
       tacticianByDecisionType: total.byDecisionType,
+      // ADR 0044: would-fire counts per trigger (shadow), and model calls each live one made.
+      triggerFiredPerTurn: Object.fromEntries(
+        Object.entries(total.triggerFired).map(([k, v]) => [
+          k,
+          Number((v / total.turns).toFixed(3)),
+        ]),
+      ),
+      triggerEscalated: total.triggerEscalated,
+      triggerBreakdown: total.triggerBreakdown,
     };
     rows.push(row);
     console.log(JSON.stringify(row));

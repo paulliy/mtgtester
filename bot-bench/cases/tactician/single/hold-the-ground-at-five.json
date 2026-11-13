@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "id": "hold-the-ground-at-five",
+  "role": "tactician",
+  "scope": "single",
+  "title": "At five life, every creature stays home to block",
+  "skills": ["defence", "attacking", "threat-assessment"],
+  "briefing": "Held out for ADR 0043 (written after the fixes were tuned, never tuned against): price next turn's swing before attacking. P1 is at 5 with Leatherback Baloth, Grizzly Bears and Llanowar Elves. P3 and P4 have no blockers, so any attack connects. P2 untaps next with Kalonian Tusker, Grizzly Bears and Savannah Lions: 7 power against 5 life, and P1's three creatures can block all three. Each attacker sent leaves one P2 creature unblocked.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 9
+    },
+    "seats": {
+      "P1": {
+        "life": 5,
+        "battlefield": [
+          "Forest",
+          "Forest",
+          "Forest",
+          "Leatherback Baloth",
+          "Grizzly Bears",
+          "Llanowar Elves"
+        ]
+      },
+      "P2": {
+        "life": 31,
+        "battlefield": [
+          "Forest",
+          "Forest",
+          "Plains",
+          "Kalonian Tusker",
+          "Grizzly Bears",
+          "Savannah Lions"
+        ],
+        "libraryTop": ["Forest"]
+      },
+      "P3": {
+        "life": 24,
+        "battlefield": ["Island", "Island", "Island"]
+      },
+      "P4": {
+        "life": 18,
+        "battlefield": ["Swamp", "Swamp", "Mountain"]
+      }
+    },
+    "continue": {
+      "throughCombat": true
+    }
+  },
+  "focus": {
+    "decisionType": "declareAttackers"
+  },
+  "reference": {
+    "analysis": "P2's next swing is 3 + 2 + 2 = 7 against 5 life. With all three creatures home P1 blocks everything and takes nothing. One attacker away leaves a 2-power creature unblocked (P1 to 3) for a few points on a player nowhere near dead; two away lets at least 4 through, and all three away is lethal.",
+    "options": [
+      {
+        "label": "No attack",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Leatherback Baloth": "-",
+            "Grizzly Bears": "-",
+            "Llanowar Elves": "-"
+          }
+        },
+        "grade": "best",
+        "why": "Every P2 attacker can be blocked next turn."
+      },
+      {
+        "label": "Only the Elves attack",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Leatherback Baloth": "-",
+            "Grizzly Bears": "-",
+            "Llanowar Elves": "+"
+          }
+        },
+        "grade": "weak",
+        "why": "One damage dealt for two taken next turn."
+      },
+      {
+        "label": "Only the Bears attack",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Leatherback Baloth": "-",
+            "Grizzly Bears": "+",
+            "Llanowar Elves": "-"
+          }
+        },
+        "grade": "weak",
+        "why": "Two damage dealt, two taken next turn, at 5 life."
+      },
+      {
+        "label": "Only the Baloth attacks",
+        "when": {
+          "choose": "Declare attackers",
+          "assign": {
+            "Leatherback Baloth": "+",
+            "Grizzly Bears": "-",
+            "Llanowar Elves": "-"
+          }
+        },
+        "grade": "weak",
+        "why": "Four damage dealt, and P1 drops to 3 next turn behind its two smallest blockers."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "Two or more attackers leave at most one blocker against three attackers: P1 drops to 1 or dies."
+    }
+  }
+}

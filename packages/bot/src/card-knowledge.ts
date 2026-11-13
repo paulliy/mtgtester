@@ -56,6 +56,12 @@ export interface WipeSelector {
   of?: WipeSelector | readonly WipeSelector[];
 }
 
+/** A power and toughness change. */
+export interface StatBoost {
+  power: number;
+  toughness: number;
+}
+
 export interface CardTraits {
   manaValue: number;
   /** Card types: Creature, Instant, Land, ... */
@@ -85,6 +91,38 @@ export interface CardTraits {
   wipeSelector?: WipeSelector;
   /** Fixed damage a damage sweeper deals to each affected creature, when it is a constant. */
   wipeDamage?: number;
+  /**
+   * Fixed boost each spell target slot gets (Giant Growth's +3/+3), or null where the slot gets no
+   * constant boost. Lets the bot count what a pump adds to an attack (ADR 0043).
+   */
+  spellPump?: readonly (StatBoost | null)[];
+  /**
+   * A constant boost an activated ability gives its own source (firebreathing's +1/+0), by ability
+   * index, or null for an ability that does not pump its source.
+   */
+  abilitySelfPump?: readonly (StatBoost | null)[];
+  /**
+   * A boost the spell gives every creature its controller controls (Overrun: +3/+3 and trample),
+   * when it is constant. Absent otherwise.
+   */
+  massPump?: StatBoost & { keywords: readonly string[] };
+  /**
+   * Mana one plain `{T}` activation of the card's best mana ability makes: one entry per mana,
+   * each listing the symbols it may be. Absent when the card has no such ability, or only one
+   * with another cost, a condition, a restriction or state-dependent symbols.
+   */
+  manaUnits?: readonly (readonly string[])[];
+  /**
+   * The card's removal destroys or exiles its target (Swords to Plowshares, Murder), rather than
+   * damaging, bouncing or shrinking it. ADR 0044's `scarce-answer` counts only this removal.
+   */
+  hardRemoval?: boolean;
+  /**
+   * The classifier cannot account for the card: at least one effect op matches no role and no
+   * hostile or friendly pattern, or the engine does not model the card. Distinct from a card with
+   * nothing notable (a vanilla creature, a basic land), which has no effect ops (ADR 0044).
+   */
+  unclassified?: boolean;
   /** Printed power and toughness for creatures. */
   power?: number | null;
   toughness?: number | null;

@@ -128,7 +128,7 @@ export function presetSetup(
   const bot: AiConfig = {
     ...base,
     tacticalMode: 'bot',
-    botEscalation: 'never',
+    botEscalation: [],
     strategistReplan: 'onChange',
   };
   const model: AiConfig = { ...base, tacticalMode: 'model' };
@@ -142,7 +142,7 @@ export function presetSetup(
       };
     case 'bot-jev':
       return {
-        config: { ...bot, botEscalation: 'uncertain', jevEnabled: true, jevFallback: 'bot' },
+        config: { ...bot, botEscalation: ['uncertain'], jevEnabled: true, jevFallback: 'bot' },
         jev: { mode: 'active', ...thresholds },
       };
     case 'model':

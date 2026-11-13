@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "id": "rock-before-the-draw",
+  "role": "tactician",
+  "scope": "turn",
+  "title": "The mana rock first, then the draw spell",
+  "skills": ["sequencing", "mana-efficiency"],
+  "briefing": "Held out for ADR 0043 (written after the fixes were tuned, never tuned against): try the casting orders. P1 has five Forests and holds Mind Stone, Harmonize and Kalonian Tusker. Mind Stone first leaves three Forests and the Stone: exactly Harmonize. Harmonize first leaves one mana and nothing else castable; the Tusker first leaves three, enough for the Stone but not Harmonize. Only the rock-first order casts six mana of spells. The library holds only Gigantosaurus, so the cards Harmonize draws cannot rescue a stranded Mind Stone with a land drop.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 6
+    },
+    "seats": {
+      "P1": {
+        "life": 38,
+        "hand": ["Mind Stone", "Harmonize", "Kalonian Tusker"],
+        "battlefield": ["Forest", "Forest", "Forest", "Forest", "Forest"],
+        "libraryTop": ["Gigantosaurus", "Gigantosaurus", "Gigantosaurus", "Gigantosaurus"]
+      },
+      "P2": {
+        "life": 40,
+        "battlefield": ["Mountain", "Mountain", "Mountain"]
+      },
+      "P3": {
+        "life": 40,
+        "battlefield": ["Swamp", "Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 40,
+        "battlefield": ["Plains", "Plains", "Plains"]
+      }
+    },
+    "continue": {
+      "toPostcombatMain": true,
+      "toEndStep": true
+    }
+  },
+  "table": {
+    "policy": "passive"
+  },
+  "reference": {
+    "analysis": "Five Forests. Mind Stone ({2}) then Harmonize ({2}{G}{G}) from three Forests and the Stone spends everything: six mana of spells. Any other first spell strands mana.",
+    "lines": [
+      {
+        "id": "stone-then-harmonize",
+        "label": "Mind Stone, then Harmonize",
+        "grade": "best",
+        "why": "All five Forests and the Stone are used.",
+        "steps": [
+          {
+            "choose": "Cast Mind Stone"
+          },
+          {
+            "choose": "Cast Harmonize"
+          }
+        ]
+      },
+      {
+        "id": "harmonize-first",
+        "label": "Harmonize first",
+        "grade": "weak",
+        "why": "One Forest left over and the Stone stays in hand.",
+        "steps": [
+          {
+            "choose": "Cast Harmonize"
+          }
+        ]
+      }
+    ],
+    "objectives": [
+      {
+        "id": "stone-down",
+        "label": "Mind Stone is on the battlefield",
+        "points": 3,
+        "check": {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Mind Stone"]
+          }
+        }
+      },
+      {
+        "id": "harmonize-cast",
+        "label": "Harmonize was cast",
+        "points": 5,
+        "check": {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Harmonize"]
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PermanentView, PlayerView } from '@mtg/shared';
-import { cleanSteering, tableChanged, tableSnapshot } from './steering';
+import { cleanSteering, tableChangeReasons, tableChanged, tableSnapshot } from './steering';
 
 describe('cleanSteering', () => {
   it('clamps numbers, drops unknown seats and keeps names', () => {
@@ -81,5 +81,15 @@ describe('tableChanged', () => {
     expect(tableChanged(base, tableSnapshot(view([bear('a', 12)])))).toBe(true);
     expect(tableChanged(base, tableSnapshot(view([bear('a')], 25)))).toBe(true);
     expect(tableChanged(base, tableSnapshot(view([bear('a')], 0)))).toBe(true);
+  });
+});
+
+describe('tableChangeReasons (ADR 0045)', () => {
+  it('names what moved, and nothing when the table is quiet', () => {
+    const base = tableSnapshot(view([bear('a')]));
+    expect(tableChangeReasons(base, base)).toEqual([]);
+    const after = { ...base, P1: { ...base['P1']!, life: base['P1']!.life - 15 } };
+    expect(tableChangeReasons(base, after)).toEqual(['P1 life']);
+    expect(tableChanged(base, after)).toBe(true);
   });
 });

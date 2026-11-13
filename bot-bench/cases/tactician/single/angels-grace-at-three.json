@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "id": "angels-grace-at-three",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Angel's Grace keeps P1 in the game through a lethal attack",
+  "skills": ["defence", "unknown-card"],
+  "briefing": "ADR 0044 position for `unknown-card`: the card has no role the classifier knows. P2 attacks P1 (3 life) with Shivan Dragon; P1 has no flyer and holds Angel's Grace (you can't lose this turn; damage that would take you below 1 leaves you at 1) with a Plains open.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P2",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 10
+    },
+    "seats": {
+      "P1": {
+        "life": 3,
+        "hand": ["Angel's Grace"],
+        "battlefield": [
+          "Plains",
+          {
+            "card": "Island",
+            "tapped": true
+          }
+        ]
+      },
+      "P2": {
+        "life": 30,
+        "battlefield": [
+          {
+            "card": "Mountain",
+            "tapped": true
+          },
+          "Mountain",
+          "Shivan Dragon"
+        ]
+      },
+      "P3": {
+        "life": 31,
+        "battlefield": ["Swamp", "Swamp"]
+      },
+      "P4": {
+        "life": 29,
+        "battlefield": ["Island", "Island"]
+      }
+    },
+    "continue": {
+      "throughCombat": true
+    }
+  },
+  "setup": [
+    {
+      "player": "P2",
+      "choose": "Declare attackers",
+      "assign": {
+        "Shivan Dragon": "P1"
+      }
+    }
+  ],
+  "focus": {
+    "decisionType": "priority"
+  },
+  "reference": {
+    "analysis": "The Dragon deals 5 to P1 at 3. With Angel's Grace P1 cannot lose this turn and ends at 1.",
+    "options": [
+      {
+        "label": "Cast Angel's Grace",
+        "when": {
+          "choose": "Cast Angel's Grace"
+        },
+        "grade": "best",
+        "why": "P1 survives at 1."
+      },
+      {
+        "label": "Pass",
+        "when": {
+          "choose": "Pass priority"
+        },
+        "grade": "blunder",
+        "why": "P1 is eliminated."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "P1 is eliminated."
+    }
+  }
+}

@@ -13,6 +13,8 @@ import {
   type ScoredAction,
 } from '@mtg/bot';
 import { buildCardKnowledge } from './card-traits';
+import type { EscalationTrigger } from './config';
+import { firedTriggers } from './escalation';
 
 const knowledgeByEngine = new WeakMap<object, CardKnowledge>();
 
@@ -53,13 +55,17 @@ export function isUncertain(
   if (PASS_TYPES.has(first.action.type) && PASS_TYPES.has(second.action.type)) return false;
   if (first.action.description === second.action.description) return false;
   // Which land to play is rarely worth a call: about a quarter of close calls in offline games
-  // were one basic against another, and the bot's color logic already handles it (ADR 0041).
+  // were one basic against another (ADR 0041). Since ADR 0043 the bot counts coloured sources and
+  // the lands each one unlocks (`landColors`), so a land tie no longer falls to the seed.
   if (first.action.type === 'playLand' && second.action.type === 'playLand') return false;
   return true;
 }
 
 export interface BotAnswer {
   response: DecisionResponse;
+  /** Every ADR 0044 trigger that fired on this decision, live or not, in attribution order. */
+  reasons: EscalationTrigger[];
+  /** `reasons` includes `uncertain`: kept for Jev's close-call pair and shadow scope. */
   uncertain: boolean;
   /** Action ids of the bot's two best options, best first (fewer when the menu is smaller). */
   topActionIds?: number[];
@@ -69,18 +75,24 @@ export interface BotAnswer {
 
 export class BotTactician {
   private readonly bot: HeuristicDecisionProvider;
+  private readonly knowledge: CardKnowledge;
+  /** Opposing stack objects `unknown-card` has already fired on for this seat. */
+  private readonly seenStackObjects = new Set<string>();
 
   constructor(
-    engine: Engine,
-    seat: PlayerId,
+    private readonly engine: Engine,
+    private readonly seat: PlayerId,
     gameId: string,
     steering: () => BotSteering | undefined,
     private readonly margin: number,
     /** The seat's live table deals (ADR 0035), so the bot honors accepted promises. */
     diplomacy?: DiplomacyPlay,
+    /** The tie-break seed label; bot-bench varies it across its gate seeds (ADR 0043). */
+    seed = `${gameId}-${seat}-bot`,
   ) {
-    this.bot = new HeuristicDecisionProvider(`${gameId}-${seat}-bot`, () => engine.view(seat), {
-      knowledge: knowledgeFor(engine),
+    this.knowledge = knowledgeFor(engine);
+    this.bot = new HeuristicDecisionProvider(seed, () => engine.view(seat), {
+      knowledge: this.knowledge,
       steering,
       ...(diplomacy === undefined ? {} : { diplomacy }),
     });
@@ -89,9 +101,11 @@ export class BotTactician {
   /** The bot's answer, not yet recorded: call `record` with whatever is finally chosen. */
   decide(request: DecisionRequest): BotAnswer {
     const scored = this.bot.decideScored(request, false);
+    const reasons = this.triggers(request, scored.response, scored.ranked);
     return {
       response: scored.response,
-      uncertain: isUncertain(request, scored.ranked, this.margin),
+      reasons,
+      uncertain: reasons.includes('uncertain'),
       topActionIds: scored.ranked.slice(0, 2).map((entry) => entry.action.id),
       ...(scored.ranked[0] === undefined ? {} : { topScore: scored.ranked[0].score }),
     };
@@ -99,5 +113,35 @@ export class BotTactician {
 
   record(request: DecisionRequest, response: DecisionResponse): void {
     this.bot.record(request, response);
+  }
+
+  /**
+   * The triggers that would fire on an answer the plan, cache or local heuristics gave before the
+   * bot was asked (ADR 0044 decision 3.1). The bot's ranking comes from its pure scoring path, so
+   * no tie-break is drawn from its seeded RNG and the game plays as it would without this.
+   */
+  shadowTriggers(request: DecisionRequest, response: DecisionResponse): EscalationTrigger[] {
+    return this.triggers(request, response, this.bot.rank(request));
+  }
+
+  private triggers(
+    request: DecisionRequest,
+    response: DecisionResponse,
+    ranked: readonly ScoredAction[],
+  ): EscalationTrigger[] {
+    return firedTriggers({
+      request,
+      view: this.engine.view(this.seat),
+      response,
+      ranked,
+      knowledge: this.knowledge,
+      margin: this.margin,
+      isUncertain,
+      firstSightOf: (id) => {
+        if (this.seenStackObjects.has(id)) return false;
+        this.seenStackObjects.add(id);
+        return true;
+      },
+    });
   }
 }

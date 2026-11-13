@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "id": "wrath-the-crowded-table",
+  "role": "tactician",
+  "scope": "single",
+  "title": "The only wipe, cast into five opposing creatures and none of P1's",
+  "skills": ["sweeper", "scarce-answer"],
+  "briefing": "ADR 0044 position for `scarce-answer`: a no-harm control: the trigger fires and the right answer is still to cast. P1 has no creatures and holds Wrath of God, its only sweeper, with four Plains. Opponents control five creatures between them (22 power against P1's 30). Wrath trades one card for five and costs P1 nothing.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 8
+    },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Wrath of God"],
+        "battlefield": ["Plains", "Plains", "Plains", "Plains"]
+      },
+      "P2": {
+        "life": 33,
+        "battlefield": ["Forest", "Forest", "Forest", "Leatherback Baloth", "Grizzly Bears"]
+      },
+      "P3": {
+        "life": 35,
+        "battlefield": ["Forest", "Forest", "Forest", "Forest", "Forest", "Gigantosaurus"]
+      },
+      "P4": {
+        "life": 31,
+        "battlefield": [
+          "Plains",
+          "Plains",
+          "Plains",
+          "Plains",
+          "Plains",
+          "Serra Angel",
+          "Savannah Lions"
+        ]
+      }
+    }
+  },
+  "reference": {
+    "analysis": "Wrath of God destroys five opposing creatures and none of P1's. Nothing threatens lethal yet, but no later Wrath is better than this one.",
+    "options": [
+      {
+        "label": "Cast Wrath of God",
+        "when": {
+          "choose": "Cast Wrath of God"
+        },
+        "grade": "best",
+        "why": "One card for five creatures, at no cost to P1."
+      },
+      {
+        "label": "Pass",
+        "when": {
+          "choose": "Pass priority"
+        },
+        "grade": "weak",
+        "why": "Keeps the Wrath while the boards grow."
+      }
+    ],
+    "otherwise": {
+      "grade": "weak",
+      "why": "Another line."
+    }
+  }
+}

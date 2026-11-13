@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "id": "hold-negate-for-a-threat",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Do not Negate a mana rock with the only counterspell",
+  "skills": ["counterspell", "card-economy", "scarce-answer"],
+  "briefing": "ADR 0044 position for `scarce-answer`: the trigger should fire and the right answer is to pass. P3 casts Mind Stone on its own turn. P1 holds Negate, its only counterspell, with two Islands open. Three opponents have mana up and full hands; a two-mana rock is not worth the one answer.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P3",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 6
+    },
+    "seats": {
+      "P1": {
+        "life": 34,
+        "hand": ["Negate", "Divination"],
+        "battlefield": [
+          "Island",
+          "Island",
+          {
+            "card": "Island",
+            "tapped": true
+          },
+          "Wall of Omens"
+        ]
+      },
+      "P2": {
+        "life": 38,
+        "hand": ["Overrun", "Harmonize", "Beast Within"],
+        "battlefield": ["Forest", "Forest", "Forest", "Forest", "Forest", "Kalonian Tusker"]
+      },
+      "P3": {
+        "life": 36,
+        "hand": ["Mind Stone", "Forest", "Grizzly Bears"],
+        "battlefield": ["Forest", "Forest", "Mountain", "Grizzly Bears"]
+      },
+      "P4": {
+        "life": 31,
+        "hand": ["Wrath of God", "Swords to Plowshares", "Serra Angel"],
+        "battlefield": ["Plains", "Plains", "Plains", "Plains", "Plains"]
+      }
+    }
+  },
+  "setup": [
+    {
+      "player": "P3",
+      "choose": "Cast Mind Stone"
+    }
+  ],
+  "focus": {
+    "decisionType": "priority"
+  },
+  "reference": {
+    "analysis": "Mind Stone is a two-mana rock. Negate is P1's only counterspell; P2 and P4 hold mana up and cards. Countering the rock spends the answer for nothing.",
+    "options": [
+      {
+        "label": "Pass",
+        "when": {
+          "choose": "Pass priority"
+        },
+        "grade": "best",
+        "why": "Keeps Negate for a spell that matters."
+      },
+      {
+        "label": "Negate the Mind Stone",
+        "when": {
+          "choose": "Cast Negate"
+        },
+        "grade": "blunder",
+        "why": "The only counterspell for a mana rock."
+      }
+    ],
+    "otherwise": {
+      "grade": "weak",
+      "why": "Another use of the turn's window."
+    }
+  }
+}

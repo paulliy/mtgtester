@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "id": "protect-from-feed-the-swarm",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Answer an opponent's unfamiliar removal with a protection trick",
+  "skills": ["protection", "stack", "unknown-card"],
+  "briefing": "ADR 0044 position for `unknown-card`: the opponent's spell is one the classifier has no role for. P2 casts Feed the Swarm at P1's Serra Angel. P1 holds Blossoming Defense (+2/+2 and hexproof) with a Forest open: in response it makes the Angel an illegal target.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P2",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 8
+    },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Blossoming Defense"],
+        "battlefield": ["Forest", "Plains", "Serra Angel"]
+      },
+      "P2": {
+        "life": 31,
+        "hand": ["Feed the Swarm"],
+        "battlefield": ["Swamp", "Swamp", "Swamp"]
+      },
+      "P3": {
+        "life": 33,
+        "battlefield": ["Island", "Island"]
+      },
+      "P4": {
+        "life": 29,
+        "battlefield": ["Mountain", "Mountain"]
+      }
+    }
+  },
+  "setup": [
+    {
+      "player": "P2",
+      "choose": "Cast Feed the Swarm",
+      "targets": ["Serra Angel"]
+    }
+  ],
+  "focus": {
+    "decisionType": "priority"
+  },
+  "reference": {
+    "analysis": "Feed the Swarm destroys the Angel. Blossoming Defense in response gives it hexproof, so the spell has no legal target and does nothing.",
+    "options": [
+      {
+        "label": "Blossoming Defense on Serra Angel",
+        "when": {
+          "choose": "Cast Blossoming Defense",
+          "targets": ["Serra Angel"]
+        },
+        "grade": "best",
+        "why": "The removal fizzles and the Angel survives."
+      },
+      {
+        "label": "Pass",
+        "when": {
+          "choose": "Pass priority"
+        },
+        "grade": "blunder",
+        "why": "The Angel is destroyed."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "The Angel is destroyed."
+    }
+  }
+}

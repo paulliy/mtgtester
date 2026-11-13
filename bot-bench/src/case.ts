@@ -101,6 +101,33 @@ export interface TurnReference {
   objectives: Objective[];
 }
 
+/** A deal in force at the position, as the engine's diplomacy table states one. */
+export interface BenchDeal {
+  parties: [Seat, Seat];
+  /** Rounds the deal still has to run. */
+  rounds: number;
+  obligations: Array<
+    | { kind: 'noAttack' | 'noTarget' | 'noCounter'; by: Seat; against: Seat }
+    | { kind: 'attackPlayer'; by: Seat; target: Seat }
+  >;
+}
+
+export interface BenchContext {
+  strategy?: {
+    intent: string;
+    threatOrder?: Seat[];
+    steering?: {
+      aggression?: number;
+      targetOrder?: Seat[];
+      prioritize?: string[];
+      hold?: string[];
+      holdUpMana?: number;
+      avoidOverextending?: boolean;
+    };
+  };
+  deals?: BenchDeal[];
+}
+
 /** How every seat the benchmark is not testing plays: the heuristic bot, or holding still. */
 export type TablePolicy = 'heuristic' | 'passive';
 
@@ -143,6 +170,18 @@ export interface BenchCase {
   };
   /** A turn case stops asking the seat after this many decisions (default 24). */
   maxActorDecisions?: number;
+  /**
+   * Turn cases only: how many of the seat's own turns the case spans (ADR 0045 decision 6). Above
+   * 1, `position.continue` must reach past the first turn (`throughNextTurn` or a count), and the
+   * seat answers every decision of those turns under `maxActorDecisions`.
+   */
+  turns?: number;
+  /**
+   * What the seat's strategist and table would have told the tactician (ADR 0045 decision 6): the
+   * strategist's view, and deals in force. Handed to a model through the production
+   * `TacticalGuidance`; the local and bot-led bots do not read it.
+   */
+  context?: BenchContext;
   reference: SingleReference | TurnReference;
 }
 
@@ -246,6 +285,45 @@ const objectiveCheck: Check = (value, path) => {
   );
   if (Object.keys(value).length !== 1) fail(path, 'must state exactly one check');
 };
+
+const fraction: Check = (value, path) => {
+  if (typeof value !== 'number' || !(value >= 0 && value <= 1)) fail(path, 'must be from 0 to 1');
+};
+const flag: Check = (value, path) => {
+  if (typeof value !== 'boolean') fail(path, 'must be true or false');
+};
+const obligation: Check = (value, path) => {
+  const kind = (value as { kind?: unknown } | null)?.kind;
+  if (kind === 'attackPlayer')
+    object(value, path, { kind: str, by: seat, target: seat }, ['kind', 'by', 'target']);
+  else if (kind === 'noAttack' || kind === 'noTarget' || kind === 'noCounter')
+    object(value, path, { kind: str, by: seat, against: seat }, ['kind', 'by', 'against']);
+  else fail(`${path}.kind`, 'must be noAttack, noTarget, noCounter or attackPlayer');
+};
+const benchContext = shaped({
+  strategy: shaped(
+    {
+      intent: str,
+      threatOrder: list(seat),
+      steering: shaped({
+        aggression: fraction,
+        targetOrder: list(seat),
+        prioritize: list(str),
+        hold: list(str),
+        holdUpMana: int,
+        avoidOverextending: flag,
+      }),
+    },
+    ['intent'],
+  ),
+  deals: list(
+    shaped({ parties: list(seat, 2), rounds: int, obligations: list(obligation, 1) }, [
+      'parties',
+      'rounds',
+      'obligations',
+    ]),
+  ),
+});
 
 const singleReference = shaped(
   {
@@ -353,6 +431,8 @@ export function parseBenchCase(json: unknown, path = 'case'): BenchCase {
         actorAfterFocus: oneOf('still', 'heuristic'),
       }),
       maxActorDecisions: int,
+      turns: int,
+      context: benchContext,
       reference: () => undefined,
     },
     [
@@ -384,6 +464,25 @@ export function parseBenchCase(json: unknown, path = 'case'): BenchCase {
       fail(`${path}.reference.objectives`, 'must be worth points');
   } else if (!(benchCase.reference as SingleReference).options.some((o) => o.grade === 'best')) {
     fail(`${path}.reference.options`, 'needs an option graded best');
+  }
+  if (benchCase.turns !== undefined) {
+    if (benchCase.scope !== 'turn') fail(`${path}.turns`, 'is for turn cases');
+    if (benchCase.turns < 1) fail(`${path}.turns`, 'must be at least 1');
+    const reach = benchCase.position.continue;
+    if (
+      benchCase.turns > 1 &&
+      reach?.throughNextTurn !== true &&
+      (reach?.throughPrecombatMains ?? 0) < 2 &&
+      (reach?.throughUpkeeps ?? 0) < 2
+    )
+      fail(`${path}.position.continue`, 'must reach past the first turn of a multi-turn case');
+  }
+  for (const [index, deal] of (benchCase.context?.deals ?? []).entries()) {
+    if (deal.parties.length !== 2 || deal.parties[0] === deal.parties[1])
+      fail(`${path}.context.deals[${index}].parties`, 'must name two different seats');
+    for (const o of deal.obligations)
+      if (!deal.parties.includes(o.by))
+        fail(`${path}.context.deals[${index}]`, `an obligation is owed by ${o.by}, not a party`);
   }
   // The engine's parser owns the position's shape (seats, turn, continuation, support cards).
   parseCardScenarioFile(caseScenario(benchCase).file, `${path}.position`);

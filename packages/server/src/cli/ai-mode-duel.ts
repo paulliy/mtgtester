@@ -5,6 +5,11 @@
  * (`.env` is read by Bun), so the endpoint, models and key are the same ones the app uses.
  *
  *   bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json out.json]
+ *                        [--escalation T1,T2] [--shadow T1,T2] [--opponents model|bot-never]
+ *
+ * ADR 0044's game step: `--escalation` makes triggers live for the bot seats (default `never`),
+ * `--shadow` logs others, and `--opponents bot-never` seats the bot-led bot with no escalation in
+ * P2 and P4 instead of the model tactician, so a trigger is played against `never`.
  *
  * Spend caps: once the provider-reported cost reaches `--max-usd` (default 2) or the call count
  * reaches `--max-calls` (default 1500), no further model call is made and every seat plays the
@@ -22,6 +27,7 @@ import type { DecisionRequest, OracleCard, PlayerId } from '@mtg/shared';
 import { Engine, runToCompletionAsync } from '@mtg/engine';
 import { buildSupportedPool } from '../cards/pool';
 import { generateCommanderDeck } from '../decks/generate';
+import { parseTriggerList, type LiveEscalationTrigger } from '../ai/config';
 import {
   AiCallLogger,
   configForRole,
@@ -245,9 +251,31 @@ async function main(): Promise<void> {
   }
   const modeOf = (seat: PlayerId): ModeName =>
     (SEATS.indexOf(seat) % 2 === 0) !== swap ? 'bot' : 'model';
+  const escalation = parseTriggerList(arg(argv, '--escalation'), '--escalation');
+  if (escalation.includes('lethal'))
+    throw new Error('--escalation: lethal is shadow-only (ADR 0044)');
+  const shadow = parseTriggerList(arg(argv, '--shadow'), '--shadow');
+  const opponents = arg(argv, '--opponents') ?? 'model';
+  if (opponents !== 'model' && opponents !== 'bot-never')
+    throw new Error('--opponents must be model or bot-never');
   const configs: Record<ModeName, AiConfig> = {
-    bot: { ...base, tacticalMode: 'bot', botEscalation: 'never', strategistReplan: 'onChange' },
-    model: { ...base, tacticalMode: 'model' },
+    bot: {
+      ...base,
+      tacticalMode: 'bot',
+      botEscalation: escalation as LiveEscalationTrigger[],
+      botEscalationShadow: shadow,
+      strategistReplan: 'onChange',
+    },
+    model:
+      opponents === 'model'
+        ? { ...base, tacticalMode: 'model' }
+        : {
+            ...base,
+            tacticalMode: 'bot',
+            botEscalation: [],
+            botEscalationShadow: shadow,
+            strategistReplan: 'onChange',
+          },
   };
 
   const pool = buildSupportedPool(
@@ -267,7 +295,12 @@ async function main(): Promise<void> {
   });
 
   console.log(`Seed ${seed}, turn cap ${turnCap}`);
-  decks.forEach((d, i) => console.log(`  ${SEATS[i]} [${modeOf(SEATS[i]!)}]  ${d.commander.name}`));
+  // With `--opponents bot-never` the "model" seats play the bot-led bot that never escalates.
+  const label = (mode: ModeName): string =>
+    mode === 'model' && opponents === 'bot-never' ? 'bot-never' : mode;
+  decks.forEach((d, i) =>
+    console.log(`  ${SEATS[i]} [${label(modeOf(SEATS[i]!))}]  ${d.commander.name}`),
+  );
   console.log(`  Endpoint: ${base.baseUrl}`);
   console.log(`  Strategist: ${base.strategist.models.join(' → ')}`);
   console.log(`  Tactician: ${base.tactician.models.join(' → ')}`);
@@ -362,6 +395,10 @@ async function main(): Promise<void> {
     finishingOrder: result.finishingOrder,
     life,
     seats: Object.fromEntries(SEATS.map((s) => [s, modeOf(s)])),
+    /** What the `model` seats played: the model tactician, or the bot-led bot with no escalation. */
+    opponents,
+    escalation,
+    shadow,
     perMode: Object.fromEntries(
       (['bot', 'model'] as const).map((mode) => {
         const t = tallies[mode];

@@ -63,7 +63,7 @@ function bot(overrides: Partial<AiConfig>): AiConfig {
 describe('bot-led tactical mode', () => {
   it('answers without the model when escalation is off', async () => {
     const c = client();
-    const provider = new OpenAiDecisionProvider(c, queue, engine, bot({ botEscalation: 'never' }));
+    const provider = new OpenAiDecisionProvider(c, queue, engine, bot({ botEscalation: [] }));
     const res = await provider.decide(closeCall);
     expect([1, 2]).toContain(res.actionId);
     expect(c.requestDecision).not.toHaveBeenCalled();
@@ -75,7 +75,7 @@ describe('bot-led tactical mode', () => {
       c,
       queue,
       engine,
-      bot({ botEscalation: 'uncertain' }),
+      bot({ botEscalation: ['uncertain'] }),
     );
     const res = await provider.decide(closeCall);
     expect(res.actionId).toBe(2);
@@ -88,7 +88,7 @@ describe('bot-led tactical mode', () => {
       client(),
       queue,
       engine,
-      bot({ botEscalation: 'never' }),
+      bot({ botEscalation: [] }),
       undefined,
       undefined,
       undefined,
@@ -152,4 +152,29 @@ describe('model-call census', () => {
       today.tactician + today.strategist,
     );
   }, 60_000);
+});
+
+describe('ADR 0044 shadow triggers', () => {
+  it('leave the game unchanged: the same event log with every trigger in shadow or none', async () => {
+    const pool = buildSupportedPool(
+      JSON.parse(
+        readFileSync('packages/server/fixtures/coverage-oracle.json', 'utf8'),
+      ) as OracleCard[],
+    );
+    const base = MODES.find((mode) => mode.name === 'bot, replan on change')!;
+    const logs: string[] = [];
+    for (const shadow of [[], ['scarce-answer', 'unknown-card', 'uncertain', 'lethal']] as const) {
+      const counts = await censusGame(
+        pool,
+        'shadow-parity',
+        12,
+        { name: 'parity', config: { ...base.config, botEscalationShadow: [...shadow] } },
+        (finished) => logs.push(JSON.stringify(finished.getState().eventLog)),
+      );
+      if (shadow.length > 0)
+        expect(Object.values(counts.triggerFired).some((n) => n > 0)).toBe(true);
+    }
+    expect(logs).toHaveLength(2);
+    expect(logs[1]).toBe(logs[0]);
+  }, 120_000);
 });
