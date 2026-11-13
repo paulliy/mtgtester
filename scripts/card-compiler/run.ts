@@ -11,6 +11,12 @@
  *   bun run scripts/card-compiler/run.ts import <trial-dir> <dir>  # check patches made elsewhere
  *   bun run scripts/card-compiler/run.ts queue <trial-dir>...      # rebuild the review queue
  *
+ *   bun run scripts/card-compiler/run.ts review <name> --verdict accepted|rejected --by <who>
+ *   bun run scripts/card-compiler/run.ts promote <batch-id>        # accepted patches into the engine
+ *   bun run scripts/card-compiler/run.ts retire <name>             # take a promoted card back out
+ *   bun run scripts/card-compiler/run.ts verify [--base <sha>]     # a promotion only added cards
+ *       (see promote.ts)
+ *
  * Stages are `compile`, `back` and `judge`. Every prompt is a file under <trial-dir>/work/prompts
  * and every answer a file under <trial-dir>/work/answers, so any executor can answer them: the
  * `exec` command (Anthropic API), a batch job, or an agent. `check` is idempotent: run it after
@@ -28,8 +34,9 @@ import {
 import type { CardDefinition } from '../../packages/engine/src/cards/definition';
 import { textCheck } from './render';
 import {
+  QUEUE_PATH,
   applyPatch,
-  behaviorOf,
+  canonicalBehavior,
   compileTarget,
   parseAnswer,
   pinnedPool,
@@ -448,34 +455,11 @@ export interface QueueEntry {
   review: { verdict: 'accepted' | 'rejected'; by: string; note?: string } | null;
 }
 
-const QUEUE_PATH = 'docs/reviews/compiled-card-queue.json';
-
 /**
  * Rebuild the review queue from every trial directory given. Reviews already recorded in the
  * queue are kept for cards whose patch is unchanged. Cards the compiler declined are not queued;
  * they are a primitive backlog, listed in each trial's results.json.
  */
-/** Behavior of a definition as canonical JSON: descriptions dropped, keys sorted. */
-function canonicalBehavior(definition: CardDefinition): string {
-  const sortKeys = (value: unknown): unknown => {
-    if (Array.isArray(value)) return value.map(sortKeys);
-    if (value === null || typeof value !== 'object') return value;
-    const node = Object.fromEntries(
-      Object.entries(value as Record<string, unknown>)
-        .filter(([key]) => key !== 'description' && key !== 'prompt' && key !== 'label')
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([key, entry]) => [key, sortKeys(entry)]),
-    );
-    // allOf and anyOf are unordered: "another Elf" and "an Elf that is another" are the same.
-    if ((node['kind'] === 'allOf' || node['kind'] === 'anyOf') && Array.isArray(node['of']))
-      node['of'] = [...(node['of'] as unknown[])].sort((a, b) =>
-        JSON.stringify(a).localeCompare(JSON.stringify(b)),
-      );
-    return node;
-  };
-  return JSON.stringify(sortKeys(behaviorOf(definition)));
-}
-
 /**
  * Compare a queued patch with an independent patch for the same card from `crossDir` (one JSON
  * per card, named by slug, in the shared patch format).
@@ -745,6 +729,17 @@ if (executorFlag >= 0) {
   argv.splice(executorFlag, 2);
 }
 const [command, trial, stage] = argv;
+if (command === 'promote' || command === 'retire' || command === 'review' || command === 'verify') {
+  // Loaded on demand: these read the engine's compiled-card registry, which the pipeline
+  // commands never need.
+  const promotion = await import('./promote');
+  const rest = argv.slice(1);
+  if (command === 'promote') promotion.promoteCommand(rest);
+  else if (command === 'retire') promotion.retireCommand(rest);
+  else if (command === 'review') promotion.reviewCommand(rest);
+  else promotion.verifyCommand(rest);
+  process.exit(0);
+}
 if (trial === undefined)
   throw new Error(
     'usage: run.ts <prepare|exec|check|report|recheck|import|queue> <trial-dir> [stage|patch-dir] [--executor api|claude|codex|antigravity]',

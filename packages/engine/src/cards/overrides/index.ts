@@ -111,6 +111,7 @@ import { registerMiniPilotOverrides } from './mini-pilot';
 import { registerPilotCurrentOverrides } from './pilot-current';
 import { registerPilotNewOverrides } from './pilot-new';
 import { registerEdhrecStapleOverrides } from './edhrec-staples';
+import { registerCompiledOverrides } from './compiled/register';
 
 export interface CardOverride {
   oracleId: OracleId;
@@ -263,6 +264,9 @@ registerDeck('mini-pilot', registerMiniPilotOverrides);
 registerDeck('pilot-new', registerPilotNewOverrides);
 registerDeck('pilot-current', registerPilotCurrentOverrides);
 registerDeck('edhrec-staples', registerEdhrecStapleOverrides);
+// Compiled cards register last, so a card that also has an authored override shows up as a
+// conflicting registration instead of being replaced quietly by the authored one.
+registerDeck('compiled', registerCompiledOverrides);
 
 /** Register an override. Exported for the per-card modules and for tests. */
 export function registerOverride(override: CardOverride): void {

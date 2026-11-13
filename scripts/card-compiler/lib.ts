@@ -37,6 +37,9 @@ import { Prng } from '../../packages/engine/src/rng/prng';
 
 export const SCRATCH_DEFAULT = 'scripts/card-compiler/.work';
 
+/** The review queue: every checked patch, with the reviewer's verdict once it has one. */
+export const QUEUE_PATH = 'docs/reviews/compiled-card-queue.json';
+
 export interface PinnedRow {
   rank: number;
   card: OracleCard;
@@ -130,6 +133,51 @@ export function behaviorOf(definition: CardDefinition): Record<string, unknown> 
     out[key] = value;
   }
   return out;
+}
+
+/** The per-line ability lists a patch appends to (`APPENDABLE_LISTS` in the override registry). */
+const ABILITY_LISTS = new Set([
+  'manaAbilities',
+  'activatedAbilities',
+  'triggers',
+  'staticEffects',
+  'ruleStatics',
+  'keywords',
+]);
+
+/**
+ * Behavior of a definition as canonical JSON: descriptions dropped, keys sorted. allOf and anyOf
+ * are unordered, so "another Elf" and "an Elf that is another" are the same.
+ *
+ * With `unorderedAbilities`, the order of the card's ability lists is ignored too. A patch
+ * appends its abilities after the parsed ones, while the interpreter emits them in line order,
+ * so the same card read two ways differs only in that order.
+ */
+export function canonicalBehavior(
+  definition: CardDefinition,
+  options: { unorderedAbilities?: boolean } = {},
+): string {
+  const byJson = (a: unknown, b: unknown): number =>
+    JSON.stringify(a).localeCompare(JSON.stringify(b));
+  const sortKeys = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(sortKeys);
+    if (value === null || typeof value !== 'object') return value;
+    const node = Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([key]) => key !== 'description' && key !== 'prompt' && key !== 'label')
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, entry]) => [key, sortKeys(entry)]),
+    );
+    if ((node['kind'] === 'allOf' || node['kind'] === 'anyOf') && Array.isArray(node['of']))
+      node['of'] = [...(node['of'] as unknown[])].sort(byJson);
+    return node;
+  };
+  const behavior = sortKeys(behaviorOf(definition)) as Record<string, unknown>;
+  if (options.unorderedAbilities === true)
+    for (const [key, value] of Object.entries(behavior))
+      if (ABILITY_LISTS.has(key) && Array.isArray(value))
+        behavior[key] = [...(value as unknown[])].sort(byJson);
+  return JSON.stringify(behavior);
 }
 
 /** The model's answer for one card. */
