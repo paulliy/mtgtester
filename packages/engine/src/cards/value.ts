@@ -410,6 +410,35 @@ export function layerEvaluable(value: Value): boolean {
   }
 }
 
+/**
+ * True when a mana ability can use this value as its amount ("Add {G} for each creature you
+ * control"). A mana ability has no resolving ability's scope: `resolveDynamicAmount` answers the
+ * amount from the board, the source's controller and the source's counters, and nothing else.
+ * Any other value would throw when the engine lists the player's mana sources.
+ */
+export function manaAmountEvaluable(value: Value): boolean {
+  switch (value.kind) {
+    case 'plus':
+    case 'negate':
+    case 'times':
+      return manaAmountEvaluable(value.of);
+    case 'lifeTotal':
+      return value.scope !== 'eventPlayer';
+    case 'const':
+    case 'cardTypesInAllGraveyards':
+    case 'cardTypesInYourGraveyard':
+    case 'cardTypesInOpponentsGraveyards':
+    case 'countersOnSelf':
+    case 'countPermanents':
+    case 'devotionTo':
+    case 'commanderCastCount':
+    case 'commanderIdentityColorCount':
+      return true;
+    default:
+      return false;
+  }
+}
+
 /** True when this value needs a resolving ability's scope, so the layer engine cannot answer it. */
 export function needsScope(value: Value): boolean {
   switch (value.kind) {

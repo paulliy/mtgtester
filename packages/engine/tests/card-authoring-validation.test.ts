@@ -90,6 +90,43 @@ describe('card authoring validation', () => {
     expect(registrationsConflict({ ...base, def: {} }, base)).toBe(false);
   });
 
+  it('rejects a mana amount that a mana ability has no scope to evaluate', () => {
+    // Viridian Joiner, "{T}: Add an amount of {G} equal to this creature's power", compiled as a
+    // mana ability with `powerOfSource`. It validated, then threw as the engine listed mana
+    // sources: a mana ability is not a resolving ability, so nothing answers that value.
+    const withAmount = (amount: unknown): CardOverride =>
+      ({
+        oracleId: 'oracle-mana-amount-probe',
+        name: 'Mana Amount Probe',
+        handledLines: [],
+        def: { manaAbilities: [{ units: [['G']], amount }] },
+      }) as unknown as CardOverride;
+    const issue = {
+      path: 'override.def.manaAbilities[0].amount',
+      message: 'mana amount a mana ability cannot evaluate',
+    };
+    for (const amount of [
+      { kind: 'powerOfSource' },
+      { kind: 'xValue' },
+      { kind: 'plus', of: { kind: 'powerOfSource' }, n: 1 },
+      { kind: 'lifeTotal', scope: 'eventPlayer' },
+    ])
+      expect(validateOverrideDefinition(withAmount(amount)), JSON.stringify(amount)).toContainEqual(
+        issue,
+      );
+    // The amounts modeled cards use: Gaea's Cradle, Nykthos, Everflowing Chalice.
+    for (const amount of [
+      { kind: 'countPermanents', selector: { kind: 'creature' }, scope: 'you' },
+      { kind: 'devotionTo', color: 'G' },
+      { kind: 'countersOnSelf', counter: 'charge' },
+      { kind: 'times', of: { kind: 'countersOnSelf', counter: 'charge' }, n: 2 },
+    ])
+      expect(
+        validateOverrideDefinition(withAmount(amount)),
+        JSON.stringify(amount),
+      ).not.toContainEqual(issue);
+  });
+
   it('has no silent executable conflicts and documents every intentional replacement', () => {
     expect(conflictingRegistrations).toEqual([]);
     expect(explicitReplacements.length).toBeGreaterThan(0);
