@@ -195,6 +195,20 @@ describe('lethal (shadow)', () => {
       ).not.toContain('lethal');
     });
 
+    it("does not judge blocks another player chooses for this seat's creatures", () => {
+      // Master Warcraft: the chooser answers from its own view, not the defender's.
+      const v = view({
+        life: 3,
+        battlefield: [
+          creature('t', 'P3', 8, { attacking: 'P1', tapped: true, keywords: ['Trample'] }),
+          creature('b', 'P1', 2),
+        ],
+      });
+      const r = blockRequest(['b']);
+      r.legalActions[0]!.data = { ...r.legalActions[0]!.data, blockingPlayer: 'P2' };
+      expect(fire({ request: r, view: v, response: blockWith(1) })).not.toContain('lethal');
+    });
+
     it('counts 1 lethal damage per blocker from a deathtouch trampler', () => {
       // Deathtouch makes 1 lethal for each 3/3, so 6 of the 8 tramples over.
       const v = view({

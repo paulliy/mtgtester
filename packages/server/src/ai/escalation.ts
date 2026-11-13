@@ -287,13 +287,6 @@ function attackKeepsSafe(
 }
 
 /**
- * `lethal` (shadow only): public lethal exists and the bot's line neither takes nor prevents it.
- * Counted where the line can be read from one decision: passing (or yielding) on this seat's turn
- * before combat damage while an opponent is killable; an attack that sends no killable opponent
- * its lethal; passing while the attack on this seat is lethal as blocks stand; and blocks that
- * leave lethal unblocked.
- */
-/**
  * Combat damage to this seat once the proposed blocks are applied. Each slot is one blocker
  * (`data.subjects[i]`) and its choice the attacker it blocks. An unblocked attacker deals its
  * power; a blocked one deals nothing unless it has trample, which assigns lethal damage to its
@@ -330,6 +323,13 @@ function damageThroughBlocks(view: PlayerView, action: LegalAction, response: De
   return through;
 }
 
+/**
+ * `lethal` (shadow only): public lethal exists and the bot's line neither takes nor prevents it.
+ * Counted where the line can be read from one decision: passing (or yielding) on this seat's turn
+ * before combat damage while an opponent is killable; an attack that sends no killable opponent
+ * its lethal; passing while the attack on this seat is lethal as blocks stand; and blocks that
+ * leave lethal unblocked.
+ */
 function lethalNeglected(input: TriggerInput): boolean {
   const { request, view, response, knowledge } = input;
   const action = chosenAction(input);
@@ -364,6 +364,9 @@ function lethalNeglected(input: TriggerInput): boolean {
     });
   }
   if (action.type === 'blockDeclaration') {
+    // Someone else choosing this seat's blocks (Master Warcraft) answers from their own view, so
+    // the life and attackers here are not the defender's: nothing to judge.
+    if (action.data?.['blockingPlayer'] !== undefined) return false;
     const incoming = incomingDamage(view);
     const total = [...incoming.values()].reduce((sum, d) => sum + d, 0);
     if (total < view.life) return false;
