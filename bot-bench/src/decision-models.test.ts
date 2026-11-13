@@ -370,6 +370,24 @@ describe("a decision model sees the seat's recent decisions", () => {
     expect(recent(calls[1]!)).toContain('Play Plains');
     expect(recent(calls[2]!)).toContain('Cast Wrath of God');
   });
+
+  it('leaves a discarded fallback out of the history', async () => {
+    // The first decision is refused, so the harness holds the seat still and the bot's proposal
+    // (playing a land) never happens; the next request must not claim it did.
+    const calls: JevDecisionsRequest[] = [];
+    const transport = fakeDecisions(
+      (request) => (calls.length === 1 ? { refusal: true } : pass(request)),
+      calls,
+    );
+    await runLineup(
+      only('wrath-then-rebuild'),
+      parseLineup([{ id: 'decider', kind: 'decision', model: 'vendor/decider-1' }]),
+      options(transport),
+    );
+    expect(calls.length).toBeGreaterThan(1);
+    const history = (calls[1]!.state as { yourRecentDecisions?: unknown[] }).yourRecentDecisions;
+    expect(history ?? []).toEqual([]);
+  });
 });
 
 describe('a judge bundle with decision models', () => {

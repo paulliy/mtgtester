@@ -917,8 +917,8 @@ export function decisionActorFactory(entry: DecisionEntry, runtime: LlmRuntime):
         attempts = [];
         const started = performance.now();
         const elapsed = (): number => round(performance.now() - started, 1);
-        // Every answer goes into the seat's history, as the chat provider records it, so later
-        // requests in a whole turn carry the seat's recent decisions.
+        // Every answer the harness plays goes into the seat's history, as the chat provider records
+        // it, so later requests in a whole turn carry the seat's recent decisions.
         const played = (answer: ActorAnswer, as: DecisionSource): ActorAnswer => {
           coordinator.recordDecision(request, answer.response, as);
           return answer;
@@ -984,15 +984,7 @@ export function decisionActorFactory(entry: DecisionEntry, runtime: LlmRuntime):
                 },
                 'bot',
               )
-            : played(
-                {
-                  ...paid,
-                  response: botAnswer,
-                  source: 'fallback',
-                  failure: `unsupported: ${why}`,
-                },
-                'fallback',
-              );
+            : { ...paid, response: botAnswer, source: 'fallback', failure: `unsupported: ${why}` };
         }
         // The provider answered but the answer was unusable (a refusal, an unknown option, a
         // malformed distribution), or the provider never answered. Only the second counts
@@ -1005,7 +997,9 @@ export function decisionActorFactory(entry: DecisionEntry, runtime: LlmRuntime):
           outcome.reason === 'invalid_response' || rejected
             ? `no legal answer: ${refused ? 'the model refused to answer; ' : ''}${outcome.detail}`
             : `provider error: ${last?.error ?? outcome.detail}`;
-        return played({ ...paid, response: botAnswer, source: 'fallback', failure }, 'fallback');
+        // A fallback is not recorded: the harness discards it and holds the seat still, so the
+        // bot's proposal never happened and must not appear in the seat's recent decisions.
+        return { ...paid, response: botAnswer, source: 'fallback', failure };
       },
     };
   };
