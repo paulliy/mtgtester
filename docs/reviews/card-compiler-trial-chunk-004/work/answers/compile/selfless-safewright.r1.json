@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The creature type is chosen when the triggered ability resolves, but the only type chooser in the schema (entersChoosingOption) is an as-enters replacement, not a resolution-time choice."}
