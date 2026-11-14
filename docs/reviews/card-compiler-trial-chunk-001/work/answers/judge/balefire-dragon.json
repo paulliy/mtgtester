@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A deals the damage only to each creature that the player it hit controls; Text B deals it to each creature, including the source's controller's own creatures.","Text B says the damage is treated as controlled by the player it dealt combat damage to, which Text A does not state."]}
