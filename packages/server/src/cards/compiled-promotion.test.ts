@@ -331,6 +331,21 @@ describe('tokens in a compiled card', () => {
     expect(tokenDrift(effect(free))).toEqual(['Treasure']);
     // A token the catalog does not name is not checked here.
     expect(tokenDrift(effect({ ...TREASURE, name: 'Gold' }))).toEqual([]);
+    // Nor is a creature token: the name of a Soldier does not fix its color or abilities.
+    expect(
+      tokenDrift(
+        effect({
+          name: 'Soldier',
+          typeLine: 'Token Creature — Soldier',
+          types: ['Creature'],
+          subtypes: ['Soldier'],
+          colors: ['R', 'W'],
+          power: 1,
+          toughness: 1,
+          keywords: ['haste'],
+        }),
+      ),
+    ).toEqual([]);
   });
 
   it('holds for every promoted card', async () => {

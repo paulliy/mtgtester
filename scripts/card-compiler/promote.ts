@@ -126,6 +126,23 @@ export interface Refusal {
   reason: string;
 }
 
+/** Predefined tokens (CR 111.10), whose name alone fixes what they are. */
+const PREDEFINED_TOKENS = new Set([
+  'Treasure',
+  'Food',
+  'Clue',
+  'Blood',
+  'Gold',
+  'Map',
+  'Powerstone',
+  'Incubator',
+  'Shard',
+  'Junk',
+  'Walker',
+  'Lander',
+  'Mutagen',
+]);
+
 const sortedJson = (value: unknown): string =>
   JSON.stringify(value, (_key, entry: unknown) =>
     entry !== null && typeof entry === 'object' && !Array.isArray(entry)
@@ -135,16 +152,21 @@ const sortedJson = (value: unknown): string =>
       : entry,
   );
 
-/** The catalog's token of each name (`cards/tokens.ts`), as key-sorted JSON. */
+/**
+ * The catalog's token of each predefined name (`cards/tokens.ts`), as key-sorted JSON. Only a
+ * predefined token (CR 111.10: Treasure, Food, Clue, ...) is fully determined by its name; a
+ * "1/1 red and white Soldier with haste" is a different token from the catalog's white Soldier.
+ */
 const CATALOG_TOKENS = new Map<string, string>(
   Object.values(TOKEN_CATALOG)
     .filter(
-      (entry): entry is { name: string } =>
+      (entry): entry is { name: string; power?: unknown } =>
         entry !== null &&
         typeof entry === 'object' &&
         typeof (entry as { name?: unknown }).name === 'string' &&
         Array.isArray((entry as { types?: unknown }).types),
     )
+    .filter((entry) => PREDEFINED_TOKENS.has(entry.name))
     .map((entry) => [entry.name, sortedJson(entry)]),
 );
 
