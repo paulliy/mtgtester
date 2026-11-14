@@ -30,9 +30,7 @@
   {
     "name": "Sedgemoor Witch",
     "rank": 2333,
-    "lines": [
-      "Ward—Pay 3 life."
-    ]
+    "lines": ["Ward—Pay 3 life."]
   },
   {
     "name": "Kwain, Itinerant Meddler",
@@ -58,9 +56,7 @@
   {
     "name": "Manglehorn",
     "rank": 2344,
-    "lines": [
-      "Artifacts your opponents control enter tapped."
-    ]
+    "lines": ["Artifacts your opponents control enter tapped."]
   },
   {
     "name": "Arcane Bombardment",
@@ -86,16 +82,12 @@
   {
     "name": "Korvold, Fae-Cursed King",
     "rank": 2357,
-    "lines": [
-      "Whenever ~ enters or attacks, sacrifice another permanent."
-    ]
+    "lines": ["Whenever ~ enters or attacks, sacrifice another permanent."]
   },
   {
     "name": "Conclave Mentor",
     "rank": 2363,
-    "lines": [
-      "When this creature dies, you gain life equal to its power."
-    ]
+    "lines": ["When this creature dies, you gain life equal to its power."]
   },
   {
     "name": "Dictate of the Twin Gods",
@@ -107,9 +99,7 @@
   {
     "name": "Endbringer",
     "rank": 2367,
-    "lines": [
-      "{C}, {T}: Target creature can't attack or block this turn."
-    ]
+    "lines": ["{C}, {T}: Target creature can't attack or block this turn."]
   },
   {
     "name": "Niv-Mizzet, Visionary",
@@ -149,9 +139,7 @@
   {
     "name": "Brilliant Restoration",
     "rank": 2382,
-    "lines": [
-      "Return all artifact and enchantment cards from your graveyard to the battlefield."
-    ]
+    "lines": ["Return all artifact and enchantment cards from your graveyard to the battlefield."]
   },
   {
     "name": "The Regalia",
@@ -170,44 +158,32 @@
   {
     "name": "Thalia, Guardian of Thraben",
     "rank": 2393,
-    "lines": [
-      "Noncreature spells cost {1} more to cast."
-    ]
+    "lines": ["Noncreature spells cost {1} more to cast."]
   },
   {
     "name": "Worldspine Wurm",
     "rank": 2396,
-    "lines": [
-      "When ~ is put into a graveyard from anywhere, shuffle it into its owner's library."
-    ]
+    "lines": ["When ~ is put into a graveyard from anywhere, shuffle it into its owner's library."]
   },
   {
     "name": "Sol Talisman",
     "rank": 2397,
-    "lines": [
-      "Suspend 3—{1}"
-    ]
+    "lines": ["Suspend 3—{1}"]
   },
   {
     "name": "Wavebreak Hippocamp",
     "rank": 2401,
-    "lines": [
-      "Whenever you cast your first spell during each opponent's turn, draw a card."
-    ]
+    "lines": ["Whenever you cast your first spell during each opponent's turn, draw a card."]
   },
   {
     "name": "Ezuri, Renegade Leader",
     "rank": 2402,
-    "lines": [
-      "{G}: Regenerate another target Elf."
-    ]
+    "lines": ["{G}: Regenerate another target Elf."]
   },
   {
     "name": "Abundant Growth",
     "rank": 2403,
-    "lines": [
-      "Enchanted land has \"{T}: Add one mana of any color.\""
-    ]
+    "lines": ["Enchanted land has \"{T}: Add one mana of any color.\""]
   },
   {
     "name": "Lim-Dûl's Vault",
@@ -226,37 +202,27 @@
   {
     "name": "Envoy of the Ancestors",
     "rank": 2408,
-    "lines": [
-      "Modified creatures you control have lifelink."
-    ]
+    "lines": ["Modified creatures you control have lifelink."]
   },
   {
     "name": "Sandwurm Convergence",
     "rank": 2410,
-    "lines": [
-      "Creatures with flying can't attack you or planeswalkers you control."
-    ]
+    "lines": ["Creatures with flying can't attack you or planeswalkers you control."]
   },
   {
     "name": "Force of Despair",
     "rank": 2412,
-    "lines": [
-      "Destroy all creatures that entered this turn."
-    ]
+    "lines": ["Destroy all creatures that entered this turn."]
   },
   {
     "name": "God-Pharaoh's Statue",
     "rank": 2415,
-    "lines": [
-      "Spells your opponents cast cost {2} more to cast."
-    ]
+    "lines": ["Spells your opponents cast cost {2} more to cast."]
   },
   {
     "name": "Tinder Wall",
     "rank": 2416,
-    "lines": [
-      "{R}, Sacrifice this creature: It deals 2 damage to target creature it's blocking."
-    ]
+    "lines": ["{R}, Sacrifice this creature: It deals 2 damage to target creature it's blocking."]
   },
   {
     "name": "Alibou, Ancient Witness",
@@ -275,16 +241,12 @@
   {
     "name": "Urban Evolution",
     "rank": 2424,
-    "lines": [
-      "Draw three cards. You may play an additional land this turn."
-    ]
+    "lines": ["Draw three cards. You may play an additional land this turn."]
   },
   {
     "name": "Crimson Wisps",
     "rank": 2427,
-    "lines": [
-      "Target creature becomes red and gains haste until end of turn."
-    ]
+    "lines": ["Target creature becomes red and gains haste until end of turn."]
   },
   {
     "name": "Blade of the Bloodchief",
@@ -303,9 +265,7 @@
   {
     "name": "Harmonized Crescendo",
     "rank": 2444,
-    "lines": [
-      "Choose a creature type. Draw a card for each permanent you control of that type."
-    ]
+    "lines": ["Choose a creature type. Draw a card for each permanent you control of that type."]
   },
   {
     "name": "Captivating Vampire",
@@ -359,9 +319,7 @@
   {
     "name": "Collector Ouphe",
     "rank": 2462,
-    "lines": [
-      "Activated abilities of artifacts can't be activated."
-    ]
+    "lines": ["Activated abilities of artifacts can't be activated."]
   },
   {
     "name": "Samwise Gamgee",
@@ -380,9 +338,7 @@
   {
     "name": "Brightstone Ritual",
     "rank": 2470,
-    "lines": [
-      "Add {R} for each Goblin on the battlefield."
-    ]
+    "lines": ["Add {R} for each Goblin on the battlefield."]
   },
   {
     "name": "Voldaren Estate",
@@ -394,9 +350,7 @@
   {
     "name": "Sundering Growth",
     "rank": 2481,
-    "lines": [
-      "Destroy target artifact or enchantment, then populate."
-    ]
+    "lines": ["Destroy target artifact or enchantment, then populate."]
   },
   {
     "name": "Gogo, Mysterious Mime",
@@ -443,9 +397,7 @@
   {
     "name": "Ancient Stone Idol",
     "rank": 2498,
-    "lines": [
-      "This spell costs {1} less to cast for each attacking creature."
-    ]
+    "lines": ["This spell costs {1} less to cast for each attacking creature."]
   },
   {
     "name": "Valley Rotcaller",
@@ -464,9 +416,7 @@
   {
     "name": "Life's Legacy",
     "rank": 2511,
-    "lines": [
-      "Draw cards equal to the sacrificed creature's power."
-    ]
+    "lines": ["Draw cards equal to the sacrificed creature's power."]
   },
   {
     "name": "Merchant Scroll",
@@ -639,16 +589,12 @@
   {
     "name": "Planar Nexus",
     "rank": 2581,
-    "lines": [
-      "~ is every nonbasic land type."
-    ]
+    "lines": ["~ is every nonbasic land type."]
   },
   {
     "name": "Gold-Forged Thopteryx",
     "rank": 2582,
-    "lines": [
-      "Each legendary permanent you control has ward {2}."
-    ]
+    "lines": ["Each legendary permanent you control has ward {2}."]
   },
   {
     "name": "Ghoulcaller Gisa",
@@ -660,16 +606,12 @@
   {
     "name": "Linvala, Keeper of Silence",
     "rank": 2592,
-    "lines": [
-      "Activated abilities of creatures your opponents control can't be activated."
-    ]
+    "lines": ["Activated abilities of creatures your opponents control can't be activated."]
   },
   {
     "name": "Brass Squire",
     "rank": 2594,
-    "lines": [
-      "{T}: Attach target Equipment you control to target creature you control."
-    ]
+    "lines": ["{T}: Attach target Equipment you control to target creature you control."]
   },
   {
     "name": "Scholar of New Horizons",
@@ -681,9 +623,7 @@
   {
     "name": "Soul's Fire",
     "rank": 2601,
-    "lines": [
-      "Target creature you control deals damage equal to its power to any target."
-    ]
+    "lines": ["Target creature you control deals damage equal to its power to any target."]
   },
   {
     "name": "Wrathful Raptors",
@@ -695,9 +635,7 @@
   {
     "name": "Great Divide Guide",
     "rank": 2606,
-    "lines": [
-      "Each land and Ally you control has \"{T}: Add one mana of any color.\""
-    ]
+    "lines": ["Each land and Ally you control has \"{T}: Add one mana of any color.\""]
   },
   {
     "name": "Ascend from Avernus",
@@ -709,9 +647,7 @@
   {
     "name": "Gateway Plaza",
     "rank": 2608,
-    "lines": [
-      "When this land enters, sacrifice it unless you pay {1}."
-    ]
+    "lines": ["When this land enters, sacrifice it unless you pay {1}."]
   },
   {
     "name": "Final Parting",
@@ -744,16 +680,12 @@
   {
     "name": "Aettir and Priwen",
     "rank": 2628,
-    "lines": [
-      "Equipped creature has base power and toughness X/X, where X is your life total."
-    ]
+    "lines": ["Equipped creature has base power and toughness X/X, where X is your life total."]
   },
   {
     "name": "Temporal Mastery",
     "rank": 2636,
-    "lines": [
-      "Miracle {1}{U}"
-    ]
+    "lines": ["Miracle {1}{U}"]
   },
   {
     "name": "Cunning Rhetoric",
@@ -779,9 +711,7 @@
   {
     "name": "Cursed Totem",
     "rank": 2644,
-    "lines": [
-      "Activated abilities of creatures can't be activated."
-    ]
+    "lines": ["Activated abilities of creatures can't be activated."]
   },
   {
     "name": "Zenith Chronicler",
@@ -807,16 +737,12 @@
   {
     "name": "Step Through",
     "rank": 2661,
-    "lines": [
-      "Return two target creatures to their owners' hands."
-    ]
+    "lines": ["Return two target creatures to their owners' hands."]
   },
   {
     "name": "Fire Covenant",
     "rank": 2662,
-    "lines": [
-      "~ deals X damage divided as you choose among any number of target creatures."
-    ]
+    "lines": ["~ deals X damage divided as you choose among any number of target creatures."]
   },
   {
     "name": "Murkfiend Liege",
@@ -863,9 +789,7 @@
   {
     "name": "Tectonic Hazard",
     "rank": 2680,
-    "lines": [
-      "~ deals 1 damage to each opponent and each creature they control."
-    ]
+    "lines": ["~ deals 1 damage to each opponent and each creature they control."]
   },
   {
     "name": "Blood Seeker",
@@ -933,16 +857,12 @@
   {
     "name": "Shimmer Dragon",
     "rank": 2700,
-    "lines": [
-      "As long as you control four or more artifacts, this creature has hexproof."
-    ]
+    "lines": ["As long as you control four or more artifacts, this creature has hexproof."]
   },
   {
     "name": "Traumatize",
     "rank": 2703,
-    "lines": [
-      "Target player mills half their library, rounded down."
-    ]
+    "lines": ["Target player mills half their library, rounded down."]
   },
   {
     "name": "Khalni Heart Expedition",
@@ -961,16 +881,12 @@
   {
     "name": "Domri, Anarch of Bolas",
     "rank": 2709,
-    "lines": [
-      "+1: Add {R} or {G}. Creature spells you cast this turn can't be countered."
-    ]
+    "lines": ["+1: Add {R} or {G}. Creature spells you cast this turn can't be countered."]
   },
   {
     "name": "Hyena Umbra",
     "rank": 2710,
-    "lines": [
-      "Umbra armor"
-    ]
+    "lines": ["Umbra armor"]
   },
   {
     "name": "Cloudstone Curio",
@@ -1024,23 +940,17 @@
   {
     "name": "River of Tears",
     "rank": 2730,
-    "lines": [
-      "{T}: Add {U}. If you played a land this turn, add {B} instead."
-    ]
+    "lines": ["{T}: Add {U}. If you played a land this turn, add {B} instead."]
   },
   {
     "name": "Troll of Khazad-dûm",
     "rank": 2733,
-    "lines": [
-      "~ can't be blocked except by three or more creatures."
-    ]
+    "lines": ["~ can't be blocked except by three or more creatures."]
   },
   {
     "name": "Bone Shards",
     "rank": 2737,
-    "lines": [
-      "As an additional cost to cast this spell, sacrifice a creature or discard a card."
-    ]
+    "lines": ["As an additional cost to cast this spell, sacrifice a creature or discard a card."]
   },
   {
     "name": "Scythecat Cub",
@@ -1059,23 +969,17 @@
   {
     "name": "Vein Ripper",
     "rank": 2743,
-    "lines": [
-      "Ward—Sacrifice a creature."
-    ]
+    "lines": ["Ward—Sacrifice a creature."]
   },
   {
     "name": "Inquisitive Glimmer",
     "rank": 2746,
-    "lines": [
-      "Unlock costs you pay cost {1} less."
-    ]
+    "lines": ["Unlock costs you pay cost {1} less."]
   },
   {
     "name": "Sundial of the Infinite",
     "rank": 2747,
-    "lines": [
-      "{1}, {T}: End the turn. Activate only during your turn."
-    ]
+    "lines": ["{1}, {T}: End the turn. Activate only during your turn."]
   },
   {
     "name": "Ethersworn Canonist",
@@ -1129,9 +1033,7 @@
   {
     "name": "The Unagi of Kyoshi Island",
     "rank": 2768,
-    "lines": [
-      "Ward—Waterbend {4}."
-    ]
+    "lines": ["Ward—Waterbend {4}."]
   },
   {
     "name": "Persistent Constrictor",
@@ -1143,16 +1045,12 @@
   {
     "name": "Volrath's Stronghold",
     "rank": 2772,
-    "lines": [
-      "{1}{B}, {T}: Put target creature card from your graveyard on top of your library."
-    ]
+    "lines": ["{1}{B}, {T}: Put target creature card from your graveyard on top of your library."]
   },
   {
     "name": "Overgrown Battlement",
     "rank": 2777,
-    "lines": [
-      "{T}: Add {G} for each creature you control with defender."
-    ]
+    "lines": ["{T}: Add {G} for each creature you control with defender."]
   },
   {
     "name": "Meekstone",
@@ -1171,16 +1069,12 @@
   {
     "name": "Keen Sense",
     "rank": 2785,
-    "lines": [
-      "Whenever enchanted creature deals damage to an opponent, you may draw a card."
-    ]
+    "lines": ["Whenever enchanted creature deals damage to an opponent, you may draw a card."]
   },
   {
     "name": "Unholy Grotto",
     "rank": 2788,
-    "lines": [
-      "{B}, {T}: Put target Zombie card from your graveyard on top of your library."
-    ]
+    "lines": ["{B}, {T}: Put target Zombie card from your graveyard on top of your library."]
   },
   {
     "name": "Thalisse, Reverent Medium",
@@ -1199,9 +1093,7 @@
   {
     "name": "Sacrifice",
     "rank": 2792,
-    "lines": [
-      "Add an amount of {B} equal to the sacrificed creature's mana value."
-    ]
+    "lines": ["Add an amount of {B} equal to the sacrificed creature's mana value."]
   },
   {
     "name": "Genesis Chamber",
@@ -1234,9 +1126,7 @@
   {
     "name": "Drift of Phantasms",
     "rank": 2804,
-    "lines": [
-      "Transmute {1}{U}{U}"
-    ]
+    "lines": ["Transmute {1}{U}{U}"]
   },
   {
     "name": "Pyromancer's Goggles",
@@ -1255,9 +1145,7 @@
   {
     "name": "Archetype of Aggression",
     "rank": 2810,
-    "lines": [
-      "Creatures your opponents control lose trample and can't have or gain trample."
-    ]
+    "lines": ["Creatures your opponents control lose trample and can't have or gain trample."]
   },
   {
     "name": "Alseid of Life's Bounty",
@@ -1283,23 +1171,17 @@
   {
     "name": "Sulfuric Vortex",
     "rank": 2826,
-    "lines": [
-      "If a player would gain life, that player gains no life instead."
-    ]
+    "lines": ["If a player would gain life, that player gains no life instead."]
   },
   {
     "name": "Sylvan Anthem",
     "rank": 2832,
-    "lines": [
-      "Whenever a green creature you control enters, scry 1."
-    ]
+    "lines": ["Whenever a green creature you control enters, scry 1."]
   },
   {
     "name": "Resurgent Belief",
     "rank": 2833,
-    "lines": [
-      "Suspend 2—{1}{W}"
-    ]
+    "lines": ["Suspend 2—{1}{W}"]
   },
   {
     "name": "Dance of the Manse",
@@ -1325,23 +1207,17 @@
   {
     "name": "Pariah",
     "rank": 2845,
-    "lines": [
-      "All damage that would be dealt to you is dealt to enchanted creature instead."
-    ]
+    "lines": ["All damage that would be dealt to you is dealt to enchanted creature instead."]
   },
   {
     "name": "The Queen of Dale",
     "rank": 2848,
-    "lines": [
-      "Whenever an opponent casts their first noncreature spell each turn, you recruit."
-    ]
+    "lines": ["Whenever an opponent casts their first noncreature spell each turn, you recruit."]
   },
   {
     "name": "Beacon of Immortality",
     "rank": 2851,
-    "lines": [
-      "Double target player's life total. Shuffle ~ into its owner's library."
-    ]
+    "lines": ["Double target player's life total. Shuffle ~ into its owner's library."]
   },
   {
     "name": "Gwenom, Remorseless",
@@ -1360,9 +1236,7 @@
   {
     "name": "Bitter Reunion",
     "rank": 2858,
-    "lines": [
-      "When this enchantment enters, you may discard a card. If you do, draw two cards."
-    ]
+    "lines": ["When this enchantment enters, you may discard a card. If you do, draw two cards."]
   },
   {
     "name": "Hell to Pay",
@@ -1374,9 +1248,7 @@
   {
     "name": "Shadow Rift",
     "rank": 2864,
-    "lines": [
-      "Target creature gains shadow until end of turn."
-    ]
+    "lines": ["Target creature gains shadow until end of turn."]
   },
   {
     "name": "Finale of Glory",
@@ -1388,16 +1260,12 @@
   {
     "name": "Imoti, Celebrant of Bounty",
     "rank": 2870,
-    "lines": [
-      "Spells you cast with mana value 6 or greater have cascade."
-    ]
+    "lines": ["Spells you cast with mana value 6 or greater have cascade."]
   },
   {
     "name": "Geode Rager",
     "rank": 2873,
-    "lines": [
-      "Whenever a land you control enters, goad each creature target player controls."
-    ]
+    "lines": ["Whenever a land you control enters, goad each creature target player controls."]
   },
   {
     "name": "Basilisk Gate",
@@ -1409,9 +1277,7 @@
   {
     "name": "Cackling Counterpart",
     "rank": 2879,
-    "lines": [
-      "Create a token that's a copy of target creature you control."
-    ]
+    "lines": ["Create a token that's a copy of target creature you control."]
   },
   {
     "name": "Revenge of Ravens",
@@ -1444,65 +1310,47 @@
   {
     "name": "Collective Inferno",
     "rank": 2890,
-    "lines": [
-      "Double all damage that sources you control of the chosen type would deal."
-    ]
+    "lines": ["Double all damage that sources you control of the chosen type would deal."]
   },
   {
     "name": "Inspiring Leader",
     "rank": 2892,
-    "lines": [
-      "Commander creatures you own have \"Creature tokens you control get +2/+2.\""
-    ]
+    "lines": ["Commander creatures you own have \"Creature tokens you control get +2/+2.\""]
   },
   {
     "name": "Magewright's Stone",
     "rank": 2894,
-    "lines": [
-      "{1}, {T}: Untap target creature that has an activated ability with {T} in its cost."
-    ]
+    "lines": ["{1}, {T}: Untap target creature that has an activated ability with {T} in its cost."]
   },
   {
     "name": "Wolverine Riders",
     "rank": 2899,
-    "lines": [
-      "Whenever another Elf you control enters, you gain life equal to its toughness."
-    ]
+    "lines": ["Whenever another Elf you control enters, you gain life equal to its toughness."]
   },
   {
     "name": "Foundation Breaker",
     "rank": 2900,
-    "lines": [
-      "Evoke {1}{G}"
-    ]
+    "lines": ["Evoke {1}{G}"]
   },
   {
     "name": "Cornered by Black Mages",
     "rank": 2901,
-    "lines": [
-      "Target opponent sacrifices a creature of their choice."
-    ]
+    "lines": ["Target opponent sacrifices a creature of their choice."]
   },
   {
     "name": "Umezawa's Jitte",
     "rank": 2902,
-    "lines": [
-      "Whenever equipped creature deals combat damage, put two charge counters on ~."
-    ]
+    "lines": ["Whenever equipped creature deals combat damage, put two charge counters on ~."]
   },
   {
     "name": "Summer Bloom",
     "rank": 2904,
-    "lines": [
-      "You may play up to three additional lands this turn."
-    ]
+    "lines": ["You may play up to three additional lands this turn."]
   },
   {
     "name": "Greensleeves, Maro-Sorcerer",
     "rank": 2905,
-    "lines": [
-      "Protection from planeswalkers and from Wizards"
-    ]
+    "lines": ["Protection from planeswalkers and from Wizards"]
   },
   {
     "name": "Celestine, the Living Saint",
@@ -1521,9 +1369,7 @@
   {
     "name": "Ancestral Vision",
     "rank": 2915,
-    "lines": [
-      "Suspend 4—{U}"
-    ]
+    "lines": ["Suspend 4—{U}"]
   },
   {
     "name": "Machine God's Effigy",
@@ -1549,9 +1395,7 @@
   {
     "name": "Legion Loyalty",
     "rank": 2921,
-    "lines": [
-      "Creatures you control have myriad."
-    ]
+    "lines": ["Creatures you control have myriad."]
   },
   {
     "name": "Maze's End",
@@ -1570,9 +1414,7 @@
   {
     "name": "Winter Moon",
     "rank": 2925,
-    "lines": [
-      "Players can't untap more than one nonbasic land during their untap steps."
-    ]
+    "lines": ["Players can't untap more than one nonbasic land during their untap steps."]
   },
   {
     "name": "Planar Engineering",
@@ -1598,9 +1440,7 @@
   {
     "name": "Ulvenwald Tracker",
     "rank": 2934,
-    "lines": [
-      "{1}{G}, {T}: Target creature you control fights another target creature."
-    ]
+    "lines": ["{1}{G}, {T}: Target creature you control fights another target creature."]
   },
   {
     "name": "Malevolent Rumble",
@@ -1612,9 +1452,7 @@
   {
     "name": "Doppelgang",
     "rank": 2938,
-    "lines": [
-      "For each of X target permanents, create X tokens that are copies of that permanent."
-    ]
+    "lines": ["For each of X target permanents, create X tokens that are copies of that permanent."]
   },
   {
     "name": "Repercussion",
@@ -1654,16 +1492,12 @@
   {
     "name": "Overlord of the Floodpits",
     "rank": 2965,
-    "lines": [
-      "Impending 4—{1}{U}{U}"
-    ]
+    "lines": ["Impending 4—{1}{U}{U}"]
   },
   {
     "name": "Lifeblood Hydra",
     "rank": 2967,
-    "lines": [
-      "When this creature dies, you gain life and draw cards equal to its power."
-    ]
+    "lines": ["When this creature dies, you gain life and draw cards equal to its power."]
   },
   {
     "name": "Hall of the Bandit Lord",
@@ -1689,9 +1523,7 @@
   {
     "name": "Spectacular Spider-Man",
     "rank": 2980,
-    "lines": [
-      "{1}: ~ gains flying until end of turn."
-    ]
+    "lines": ["{1}: ~ gains flying until end of turn."]
   },
   {
     "name": "Yarok, the Desecrated",
@@ -1703,9 +1535,7 @@
   {
     "name": "Cauldron Familiar",
     "rank": 2983,
-    "lines": [
-      "Sacrifice a Food: Return this card from your graveyard to the battlefield."
-    ]
+    "lines": ["Sacrifice a Food: Return this card from your graveyard to the battlefield."]
   },
   {
     "name": "Blowfly Infestation",
@@ -1752,9 +1582,7 @@
   {
     "name": "Time Stretch",
     "rank": 3003,
-    "lines": [
-      "Target player takes two extra turns after this one."
-    ]
+    "lines": ["Target player takes two extra turns after this one."]
   },
   {
     "name": "Marauding Raptor",
@@ -1773,16 +1601,12 @@
   {
     "name": "Karametra's Acolyte",
     "rank": 3011,
-    "lines": [
-      "{T}: Add an amount of {G} equal to your devotion to green."
-    ]
+    "lines": ["{T}: Add an amount of {G} equal to your devotion to green."]
   },
   {
     "name": "Robe of Stars",
     "rank": 3013,
-    "lines": [
-      "Astral Projection — {1}{W}: Equipped creature phases out."
-    ]
+    "lines": ["Astral Projection — {1}{W}: Equipped creature phases out."]
   },
   {
     "name": "Impostor Syndrome",
@@ -1801,16 +1625,12 @@
   {
     "name": "Spirit Link",
     "rank": 3021,
-    "lines": [
-      "Whenever enchanted creature deals damage, you gain that much life."
-    ]
+    "lines": ["Whenever enchanted creature deals damage, you gain that much life."]
   },
   {
     "name": "Chivalric Alliance",
     "rank": 3026,
-    "lines": [
-      "Whenever you attack with two or more creatures, draw a card."
-    ]
+    "lines": ["Whenever you attack with two or more creatures, draw a card."]
   },
   {
     "name": "Flameshadow Conjuring",
@@ -1829,30 +1649,22 @@
   {
     "name": "Tolarian Winds",
     "rank": 3034,
-    "lines": [
-      "Discard all the cards in your hand, then draw that many cards."
-    ]
+    "lines": ["Discard all the cards in your hand, then draw that many cards."]
   },
   {
     "name": "Gimli of the Glittering Caves",
     "rank": 3035,
-    "lines": [
-      "Whenever another legendary creature you control enters, put a +1/+1 counter on ~."
-    ]
+    "lines": ["Whenever another legendary creature you control enters, put a +1/+1 counter on ~."]
   },
   {
     "name": "Esika's Chariot",
     "rank": 3040,
-    "lines": [
-      "Whenever ~ attacks, create a token that's a copy of target token you control."
-    ]
+    "lines": ["Whenever ~ attacks, create a token that's a copy of target token you control."]
   },
   {
     "name": "Empyrean Eagle",
     "rank": 3041,
-    "lines": [
-      "Other creatures you control with flying get +1/+1."
-    ]
+    "lines": ["Other creatures you control with flying get +1/+1."]
   },
   {
     "name": "Stonespeaker Crystal",
@@ -1871,9 +1683,7 @@
   {
     "name": "Eaten Alive",
     "rank": 3054,
-    "lines": [
-      "As an additional cost to cast this spell, sacrifice a creature or pay {3}{B}."
-    ]
+    "lines": ["As an additional cost to cast this spell, sacrifice a creature or pay {3}{B}."]
   },
   {
     "name": "Burnt Offering",
@@ -1885,9 +1695,7 @@
   {
     "name": "Temporal Trespass",
     "rank": 3058,
-    "lines": [
-      "Delve"
-    ]
+    "lines": ["Delve"]
   },
   {
     "name": "Carmen, Cruel Skymarcher",
@@ -1899,9 +1707,7 @@
   {
     "name": "Render Silent",
     "rank": 3062,
-    "lines": [
-      "Counter target spell. Its controller can't cast spells this turn."
-    ]
+    "lines": ["Counter target spell. Its controller can't cast spells this turn."]
   },
   {
     "name": "Creeping Tar Pit",
@@ -1913,9 +1719,7 @@
   {
     "name": "Welding Jar",
     "rank": 3069,
-    "lines": [
-      "Sacrifice this artifact: Regenerate target artifact."
-    ]
+    "lines": ["Sacrifice this artifact: Regenerate target artifact."]
   },
   {
     "name": "Mirrorworks",
@@ -1934,16 +1738,12 @@
   {
     "name": "Nuclear Fallout",
     "rank": 3076,
-    "lines": [
-      "Each creature gets twice -X/-X until end of turn. Each player gets X rad counters."
-    ]
+    "lines": ["Each creature gets twice -X/-X until end of turn. Each player gets X rad counters."]
   },
   {
     "name": "Piper of the Swarm",
     "rank": 3079,
-    "lines": [
-      "{2}{B}{B}, {T}, Sacrifice three Rats: Gain control of target creature."
-    ]
+    "lines": ["{2}{B}{B}, {T}, Sacrifice three Rats: Gain control of target creature."]
   },
   {
     "name": "Peter Parker's Camera",
@@ -1976,16 +1776,12 @@
   {
     "name": "Saw It Coming",
     "rank": 3089,
-    "lines": [
-      "Foretell {1}{U}"
-    ]
+    "lines": ["Foretell {1}{U}"]
   },
   {
     "name": "Angel of Indemnity",
     "rank": 3090,
-    "lines": [
-      "Encore {6}{W}{W}"
-    ]
+    "lines": ["Encore {6}{W}{W}"]
   },
   {
     "name": "Double Major",
@@ -2011,9 +1807,7 @@
   {
     "name": "Alpha Authority",
     "rank": 3100,
-    "lines": [
-      "Enchanted creature has hexproof and can't be blocked by more than one creature."
-    ]
+    "lines": ["Enchanted creature has hexproof and can't be blocked by more than one creature."]
   },
   {
     "name": "Witch's Oven",
@@ -2039,9 +1833,7 @@
   {
     "name": "River's Rebuke",
     "rank": 3108,
-    "lines": [
-      "Return all nonland permanents target player controls to their owner's hand."
-    ]
+    "lines": ["Return all nonland permanents target player controls to their owner's hand."]
   },
   {
     "name": "Fertilid",
@@ -2060,16 +1852,12 @@
   {
     "name": "Nesting Dovehawk",
     "rank": 3114,
-    "lines": [
-      "At the beginning of combat on your turn, populate."
-    ]
+    "lines": ["At the beginning of combat on your turn, populate."]
   },
   {
     "name": "Infantry Shield",
     "rank": 3115,
-    "lines": [
-      "Equipped creature has menace and mobilize X, where X is its power."
-    ]
+    "lines": ["Equipped creature has menace and mobilize X, where X is its power."]
   },
   {
     "name": "Chitterspitter",
@@ -2088,15 +1876,11 @@
   {
     "name": "Heap Gate",
     "rank": 3122,
-    "lines": [
-      "{1}, {T}, Tap an untapped Gate you control: Create a Treasure token."
-    ]
+    "lines": ["{1}, {T}, Tap an untapped Gate you control: Create a Treasure token."]
   },
   {
     "name": "Overmaster",
     "rank": 3123,
-    "lines": [
-      "The next instant or sorcery spell you cast this turn can't be countered."
-    ]
+    "lines": ["The next instant or sorcery spell you cast this turn can't be countered."]
   }
 ]
