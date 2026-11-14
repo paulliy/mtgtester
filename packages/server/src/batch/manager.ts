@@ -186,7 +186,8 @@ export class BatchManager {
               providerKind: scenario.providerKind,
               disclosure: testerPolicy('spectator'),
               store: this.deps.store,
-              ...(this.deps.pool.provisional !== undefined && {
+              // Optional chaining: test seams build a manager without a pool.
+              ...(this.deps.pool?.provisional !== undefined && {
                 provisional: this.deps.pool.provisional,
               }),
               playbackMode: 'live',

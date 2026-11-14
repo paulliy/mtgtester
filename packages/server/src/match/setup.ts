@@ -255,7 +255,7 @@ async function setupImportedSeat(
 
   // Pre-flight (ADR 0009 / ADR 0012 §3). A deck with even one unmodeled card cannot be played,
   // so it is rejected here with the full list rather than halting mid-game.
-  const unmodeled = unmodeledCardNames([...commanders, ...cards], deps.pool.provisional);
+  const unmodeled = unmodeledCardNames([...commanders, ...cards], deps.pool?.provisional);
   if (unmodeled.length > 0) {
     return problem(
       seat,

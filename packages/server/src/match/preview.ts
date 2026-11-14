@@ -118,7 +118,7 @@ export function resolveSavedSeat(
     Array.from({ length: quantity }, () => card),
   );
   const unmodeled = [...resolved.commanders, ...(companion ? [companion] : []), ...cards].filter(
-    (card) => !interpretCard(card).modeled && !isProvisional(deps.pool.provisional, card),
+    (card) => !interpretCard(card).modeled && !isProvisional(deps.pool?.provisional, card),
   );
   if (unmodeled.length > 0)
     return {
@@ -216,7 +216,7 @@ export async function previewMatchup(
             ...resolved.cards.map((entry) => entry.card),
           ];
           summary.modeled = cards.every(
-            (card) => interpretCard(card).modeled || isProvisional(deps.pool.provisional, card),
+            (card) => interpretCard(card).modeled || isProvisional(deps.pool?.provisional, card),
           );
           if (!summary.modeled) blockers.push(`${seat}: Deck is not fully modeled.`);
         }
