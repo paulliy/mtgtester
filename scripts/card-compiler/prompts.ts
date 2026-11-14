@@ -121,6 +121,10 @@ only sublayer "b" sets base power and toughness. Write every flag on an effect, 
 "cantRegenerate" as "They can't be regenerated." A value shown as "<text>" was hidden on purpose
 (a name or free text): never quote "<text>"; write around it, e.g. "a token" or "this ability".
 
+The data is usually only part of a card. Write only what it contains. Never remark that an
+ability, cost, type or line is absent ("this has no equip ability"), and add no notes or
+explanations.
+
 Answer with only the rules text.`;
 
 export function backSuffix(target: CompileTarget, def: Partial<CardDefinition>): string {
@@ -132,9 +136,15 @@ export const JUDGE_PREFIX = `You compare two versions of Magic: The Gathering ru
 Text A is the real card's rules text: the lines under test, then the whole card for context. Text B
 was written by someone reading a program's data for the lines under test. B may also restate other
 lines of the same card (a spell's data covers the whole spell); that is fine when it matches the
-whole card. Ignore wording, ordering, "this" versus a card name, and reminder text. Look for any difference
+whole card. An ability of the whole card that B does not mention is not a difference when it is
+outside the lines under test, and a remark in B that something is absent counts only when the
+lines under test include that thing. The one exception: when B gives the effect of an instant or
+sorcery, it must give every effect the whole card's spell has. Ignore wording, ordering, "this" versus a card name, and reminder text. Look for any difference
 that would change what happens in a game: targets, who chooses, optional versus mandatory, amounts,
 durations, conditions, timing, zones, and anything present in one but missing from the other.
+
+A restriction is the same only when it allows exactly the same things: "can be spent only on X"
+and "can't be spent on Y" differ whenever something is neither X nor Y.
 
 Not differences: "X spells and Y spells cost {1} less" is one ability, so a spell that is both is
 reduced once, the same as "spells that are X or Y". A token's name is cosmetic, so a missing or
