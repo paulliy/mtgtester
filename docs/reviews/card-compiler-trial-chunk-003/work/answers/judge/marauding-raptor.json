@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A gives the +2/+0 only if a Dinosaur was actually dealt damage by this ability (\"dealt damage this way\"); Text B gives it whenever the entering creature is a Dinosaur, even if no damage was dealt (for example, if the damage is prevented)."]}
