@@ -17,6 +17,7 @@ import { battlefieldCharacteristics } from '../effects/continuous';
 import type { ManaAbilitySpec } from '../cards/ability';
 import { activationInvariantProduction } from '../cards/mana-production';
 import { totalPips } from './cost';
+import { gateCannotOpenDuringPayment } from './payment-stability';
 
 const bounds = { states: 2048, activations: 32, productions: 256 };
 /**
@@ -86,6 +87,32 @@ export function needsStatefulManaPayment(
   );
 }
 
+/**
+ * Set `MTG_VERIFY_MANA_PLAN=1` to run every stateful payment twice, once with the capacity bound
+ * as it stood before gated sources could join it, and throw if the two disagree on the plan or on
+ * the error. In the style of `MTG_VERIFY_LAYER_CACHE`; fuzz runs with it on.
+ */
+const VERIFY_MANA_PLAN =
+  (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.[
+    'MTG_VERIFY_MANA_PLAN'
+  ] === '1';
+
+type Outcome = { plan: PaymentPlan | null } | { error: unknown };
+
+function outcomeOf(run: () => PaymentPlan | null): Outcome {
+  try {
+    return { plan: run() };
+  } catch (error) {
+    return { error };
+  }
+}
+
+function describeOutcome(outcome: Outcome): string {
+  if ('plan' in outcome) return JSON.stringify(outcome.plan);
+  const { error } = outcome;
+  return error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+}
+
 /** Actual activation replay, including post-cost production, with no strategic cost decisions. */
 export function planStatefulManaPayment(
   ctx: GameContext,
@@ -96,6 +123,41 @@ export function planStatefulManaPayment(
   reservedObjectIds: ReadonlySet<string>,
   lifeReserved: number,
   energyReserved: number,
+): PaymentPlan | null {
+  const run = (gatedBound: boolean) =>
+    searchPayment(
+      ctx,
+      player,
+      cost,
+      allows,
+      sourcesFor,
+      reservedObjectIds,
+      lifeReserved,
+      energyReserved,
+      gatedBound,
+    );
+  if (!VERIFY_MANA_PLAN) return run(true);
+  const legacy = outcomeOf(() => run(false));
+  const current = outcomeOf(() => run(true));
+  const [was, now] = [describeOutcome(legacy), describeOutcome(current)];
+  if (was !== now)
+    throw new Error(
+      `engine bug: mana plan verification failed for ${player.id}: before ${was}, now ${now}`,
+    );
+  if ('error' in current) throw current.error;
+  return current.plan;
+}
+
+function searchPayment(
+  ctx: GameContext,
+  player: EnginePlayerState,
+  cost: ParsedManaCost,
+  allows: ManaAllowance,
+  sourcesFor: (ctx: GameContext, player: EnginePlayerState) => readonly ManaSource[],
+  reservedObjectIds: ReadonlySet<string>,
+  lifeReserved: number,
+  energyReserved: number,
+  gatedBound: boolean,
 ): PaymentPlan | null {
   let states = 0;
   let outsideScope = false;
@@ -113,7 +175,9 @@ export function planStatefulManaPayment(
   // production. Ignore colors, restrictions, and activation mana costs: that overestimates
   // capacity, so it can only prune an impossible payment. Phyrexian pips may use life instead.
   // A dynamic source (Exotic Orchard) changes which symbols it makes, not how many: it counts at
-  // its kind's most (`ceilingUnits`).
+  // its kind's most (`ceilingUnits`). A gated source ("activate only if you control a Dragon")
+  // joins the bound when its gate cannot open during the payment: open now, it is already among
+  // the sources and counts at its ceiling; shut now, it stays shut and adds nothing.
   const charsOf = battlefieldCharacteristics(ctx);
   const ownCharacteristics = ctx.state.battlefield
     .filter((permanent) => permanent.controllerId === player.id)
@@ -123,7 +187,8 @@ export function planStatefulManaPayment(
     (ability) =>
       ability.amount === undefined &&
       ability.conditionalUnits === undefined &&
-      ability.condition === undefined &&
+      (ability.condition === undefined ||
+        (gatedBound && gateCannotOpenDuringPayment(ability.condition))) &&
       (ability.costs === undefined ||
         (ability.costs.some((cost) => cost.kind === 'tap') &&
           ability.costs.every((cost) => cost.kind === 'tap' || cost.kind === 'mana'))) &&
