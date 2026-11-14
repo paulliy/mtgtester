@@ -3,18 +3,16 @@
   "estimatedCost": {
     "compileUsd": 0.36105506500000156,
     "compileCalls": 305,
-    "backUsd": 0.004571380000000007,
+    "backUsd": 0.003948600000000008,
     "backCalls": 113,
-    "judgeUsd": 0.0037965050000000043,
+    "judgeUsd": 0.0033231299999999975,
     "judgeCalls": 113,
-    "totalUsd": 0.3694229500000016
+    "totalUsd": 0.3683267950000016
   },
   "calibration": {
     "cases": 10,
     "pending": [],
-    "missed": [
-      "thran-turbine"
-    ],
+    "missed": [],
     "falseAlarms": []
   },
   "cards": [
@@ -68,7 +66,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever a creature you control of the chosen creature type enters, draw a card. This trigger is mandatory and targets nothing.\nWhenever a creature you control of the chosen creature type attacks, draw a card. This trigger is mandatory and targets nothing.",
+      "backTranslation": "Whenever a creature you control with the chosen subtype enters, draw a card.\nWhenever a creature you control with the chosen subtype attacks, draw a card.",
       "differences": []
     },
     {
@@ -99,7 +97,7 @@
       "lines": [
         "Equip legendary creature {3}"
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -132,11 +130,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{3}: Attach this Equipment to target legendary creature you control. Activate only as a sorcery.\nThis Equipment has no other abilities.",
-      "differences": [
-        "Text B says the Equipment has no other abilities, but the whole card also gives the equipped creature +1/+1 for each land you control and has Equip {7}; Text B omits both.",
-        "Text B's statement that the Equipment has no other abilities contradicts the whole card."
-      ]
+      "backTranslation": "{3}: Attach this to target legendary creature you control. Activate only as a sorcery.",
+      "differences": []
     },
     {
       "name": "Shifting Woodland",
@@ -194,7 +189,7 @@
       ],
       "backTranslation": "Whenever you cast a spell, you gain life equal to the number of spells cast this turn.",
       "differences": [
-        "Text A counts only spells you have cast this turn ('each spell you've cast this turn'); Text B counts spells cast this turn with no controller limit, so spells cast by opponents would also raise the life gain."
+        "Text A counts only spells you have cast this turn (\"spell you've cast this turn\"), but Text B counts all spells cast this turn by any player (\"the number of spells cast this turn\"), so B gains life for opponents' spells too."
       ]
     },
     {
@@ -300,7 +295,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "At the beginning of combat on your turn, create a token that is a copy of the equipped creature, with the exceptNonLegendary flag set to true. The token gains haste. This trigger is mandatory, targets nothing, and creates one token.",
+      "backTranslation": "At the beginning of combat on your turn, create a token that is a copy of equipped creature, except it is nonlegendary and has haste. Create one such token.",
       "differences": []
     },
     {
@@ -342,10 +337,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{2}, {T}, Sacrifice this land: Destroy target land an opponent controls that isn't a basic land. The controller of that land may search their library for a basic land card and put it onto the battlefield untapped. Then search a library for a basic land card, put it onto the battlefield untapped, and shuffle. The data does not say whose library the second search uses.",
+      "backTranslation": "{2}, {T}, Sacrifice this land: Destroy target nonbasic land an opponent controls. That land's controller may search their library for a basic land card and put it onto the battlefield untapped. Then search your library for a basic land card and put it onto the battlefield untapped. Then shuffle.",
       "differences": [
-        "Text A makes the second search (for a basic land) optional ('you may search your library'); Text B makes it mandatory ('Then search a library... and put it onto the battlefield untapped').",
-        "Text A's second search is from your library; Text B says 'a library' without saying whose, so the library searched is not the same."
+        "Text A makes your search optional ('You may search your library'); Text B makes your search mandatory ('Then search your library ... and put it onto the battlefield untapped')."
       ]
     },
     {
@@ -376,7 +370,7 @@
       "lines": [
         "Whenever a player casts their second spell each turn, you lose 1 life and create a Treasure token."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -409,10 +403,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever a player casts their second spell each turn, lose 1 life (the data does not say which player loses it), then create a Treasure artifact token.\nEach Treasure token is a colorless artifact with the ability: {T}, Sacrifice this artifact: Add one mana of any one color (white, blue, black, red, or green).",
-      "differences": [
-        "Text A says 'you lose 1 life', so the controller of the ability loses the life; Text B says 'lose 1 life' without saying which player loses it."
-      ]
+      "backTranslation": "Whenever a player casts their second spell each turn, lose 1 life and create a Treasure artifact token with \"{T}, Sacrifice this artifact: Add one mana of any color.\"",
+      "differences": []
     },
     {
       "name": "Demand Answers",
@@ -563,7 +555,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "If there are seven or more cards in your graveyard, add {B}{B}{B}{B}{B}. Otherwise, add {B}{B}{B}.",
+      "backTranslation": "Add {B}{B}{B}. If there are seven or more cards in your graveyard, add {B}{B}{B}{B}{B} instead.",
       "differences": []
     },
     {
@@ -658,7 +650,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{1}{U}, {T}: Each creature your opponents control attacks this turn if able. Activate at any time. The data gives no duration beyond this turn and no other restriction on the creatures.",
+      "backTranslation": "{1}{U}, {T}: Each creature your opponents control attacks if able.",
       "differences": []
     },
     {
@@ -704,9 +696,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Sacrifice a land you control.\nThen if the greatest power among creatures you control is 4 or greater, search your library for three basic land cards, put them onto the battlefield tapped, then shuffle. Otherwise, search your library for two basic land cards, put them onto the battlefield tapped, then shuffle.",
+      "backTranslation": "Sacrifice a land you control.\nIf the greatest power among creatures you control is 4 or greater, search your library for three basic land cards, put them onto the battlefield tapped, then shuffle.\nOtherwise, search your library for two basic land cards, put them onto the battlefield tapped, then shuffle.",
       "differences": [
-        "Text A searches for up to two (or up to three) basic lands; Text B says search for exactly two or three, dropping 'up to', so the search count is no longer optional."
+        "Text A searches for up to two (resp. up to three) basic lands, so the player may find fewer; Text B says search for exactly two (resp. three) basic land cards with no 'up to' option."
       ]
     },
     {
@@ -809,9 +801,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Put all creature cards from all graveyards onto the battlefield. No controller is specified for the returned creatures. This spell targets nothing.",
+      "backTranslation": "Put each creature card from all graveyards onto the battlefield.",
       "differences": [
-        "Text A puts the creature cards under your control; Text B specifies no controller for the returned creatures, so control is not given to you."
+        "Text A puts the creature cards under your control; Text B does not say who controls them, so the owners would get them."
       ]
     },
     {
@@ -901,7 +893,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Until end of turn, each creature you control gets +X/+X, where X is the greatest power among creatures you control. Then, until end of turn, each creature you control gains trample. This spell targets nothing.",
+      "backTranslation": "Each creature you control gets +N/+N until end of turn, where N is the greatest power among creatures you control.\nEach creature you control gains trample until end of turn.",
       "differences": []
     },
     {
@@ -965,7 +957,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater. This ability has no targets.",
+      "backTranslation": "{3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater.",
       "differences": []
     },
     {
@@ -1007,7 +999,7 @@
       "lines": [
         "Whenever equipped creature deals combat damage to a player, that player discards a card and you untap all lands you control."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -1040,11 +1032,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever equipped creature deals combat damage to a player, that player discards a card. Then untap each land you control. This trigger is mandatory and targets nothing. This Equipment has no other abilities.",
-      "differences": [
-        "Text B says the Equipment has no other abilities, but the whole card gives the equipped creature +2/+2 and protection from black and from green, and has Equip {2}; Text B omits all three.",
-        "Text B's statement that the Equipment has no other abilities contradicts the whole card."
-      ]
+      "backTranslation": "Whenever equipped creature deals combat damage to a player, that player discards a card. Untap each land you control.",
+      "differences": []
     },
     {
       "name": "Laboratory Maniac",
@@ -1107,9 +1096,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{T}: Choose target attacking creature. Untap that creature. Create a damage shield on that creature that covers combat damage dealt to it and combat damage dealt by it.",
+      "backTranslation": "{T}: Untap target attacking creature. Create a combat-only damage shield on that creature that applies to damage dealt to it and damage dealt by it.",
       "differences": [
-        "Text A prevents all combat damage that would be dealt to and dealt by the creature for the rest of the turn. Text B creates a damage shield that covers only the next instance of combat damage dealt to and by the creature."
+        "Text A prevents all combat damage dealt to and dealt by the creature for the rest of the turn; Text B creates a damage shield with no stated duration, which is a different prevention scope and duration than preventing all damage this turn."
       ]
     },
     {
@@ -1285,7 +1274,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{2}, {T}: Target triggered ability you control on the stack. Copy that ability. The copy may have new targets chosen. This ability is not limited by timing.",
+      "backTranslation": "{2}, {T}: Copy target triggered ability you control on the stack. The copy may have new targets chosen for it.",
       "differences": []
     },
     {
@@ -1327,7 +1316,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "You may cast creature spells of the chosen creature type from the top of your library.",
+      "backTranslation": "You may cast creature spells of the chosen subtype from the top of your library.",
       "differences": []
     },
     {
@@ -1369,7 +1358,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "As this artifact enters, choose a creature type. This artifact enters with a fellowship counter on it for each creature you control of the chosen type.",
+      "backTranslation": "As this artifact enters, choose a creature type.\nThis artifact enters with a fellowship counter on it for each creature you control of the chosen type.",
       "differences": []
     },
     {
@@ -1422,7 +1411,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever a creature you control enters, do the following. If that creature's power is 3 or greater, draw a card. Otherwise, put two +1/+1 counters on that creature. This trigger is mandatory and has no targets.",
+      "backTranslation": "Whenever a creature you control enters, if that creature's power is 3 or greater, draw a card. Otherwise, put two +1/+1 counters on that creature.",
       "differences": []
     },
     {
@@ -1512,7 +1501,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Target card in any graveyard. Put that card on top of its owner's library.",
+      "backTranslation": "Put target card from a graveyard on top of its owner's library.",
       "differences": []
     },
     {
@@ -1532,7 +1521,7 @@
       "lines": [
         "Search your library for an Aura or Equipment card, reveal it, put it into your hand, then shuffle."
       ],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -1558,8 +1547,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Search your library for an Aura card or an Equipment card, reveal it, and put it into your hand. Then shuffle. The search has no stated count, so it finds one card. It targets nothing.",
-      "differences": []
+      "backTranslation": "Search a library for a card that is an Aura enchantment or an Equipment artifact. Reveal that card and put it into hand. Then shuffle.",
+      "differences": [
+        "Text A searches your library; Text B searches a library, which allows searching any player's library."
+      ]
     },
     {
       "name": "All That Glitters",
@@ -1600,7 +1591,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Enchanted creature gets +X/+X, where X is the number of artifacts and enchantments you control.",
+      "backTranslation": "Enchanted creature gets +1/+1 for each artifact or enchantment you control.",
       "differences": []
     },
     {
@@ -1664,7 +1655,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "If one or more +1/+1 counters would be put on an artifact or creature you control, that many plus one +1/+1 counters are put on it instead.",
+      "backTranslation": "If one or more +1/+1 counters would be put on an artifact or creature you control, that many plus one +1/+1 counters are put on that permanent instead.",
       "differences": []
     },
     {
@@ -1856,7 +1847,7 @@
       "lines": [
         "Whenever enchanted player is attacked, create a Gold token. Each opponent attacking that player does the same."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -1889,10 +1880,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Enchant player.\nWhenever enchanted player is attacked, create a Gold artifact token. Then the event player (the player whose attack caused this trigger) creates a Gold artifact token, but only if that player is an opponent of this Aura's controller.\nEach Gold token is a colorless artifact with no power or toughness and has the ability: Sacrifice this artifact: Add one mana of any one color (white, blue, black, red, or green).",
-      "differences": [
-        "Text A has each opponent attacking the enchanted player create a Gold token, so every attacking opponent gets one; Text B creates a token only for the single event player whose attack caused the trigger, so other attacking opponents get none."
-      ]
+      "backTranslation": "Whenever enchanted player is attacked, create a Gold artifact token. Then create a Gold artifact token for the event player, but only if that player is an opponent of you.\nEach Gold token has \"Sacrifice this artifact: Add one mana of any color.\"",
+      "differences": []
     },
     {
       "name": "Reflections of Littjara",
@@ -1933,7 +1922,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever you cast a spell with the chosen subtype, copy that spell. This trigger is mandatory and targets nothing.",
+      "backTranslation": "Whenever you cast a spell with the chosen subtype, copy that spell.",
       "differences": []
     },
     {
@@ -2019,7 +2008,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this land enters, you may target a creature card in your graveyard. If you do, put that card on top of its owner's library. This trigger is optional.",
+      "backTranslation": "When this land enters, you may put target creature card from your graveyard on top of your library.",
       "differences": []
     },
     {
@@ -2054,10 +2043,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "This card has no spell ability, so casting it does nothing on resolution. Its type line is Instant.\n{1}{U}{U}, Discard this card: Search your library for a card with mana value exactly 2, reveal it, put it into your hand, then shuffle. Activate this ability only as a sorcery and only from your hand.",
+      "backTranslation": "{1}{U}{U}, Discard this card: Search your library for a card with mana value 2, reveal it, put it into your hand, then shuffle. Activate only as a sorcery and only from your hand.",
       "differences": [
-        "Text A's spell is 'Counter target instant or sorcery spell' and Text B says the card has no spell ability, so casting it does nothing on resolution.",
-        "Text A's transmute searches for a card with the same mana value as this card (3); Text B searches for a card with mana value exactly 2."
+        "Transmute in Text A searches for a card with the same mana value as this card ({1}{U}{U}, mana value 3); Text B searches for a card with mana value 2."
       ]
     },
     {
@@ -2077,7 +2065,7 @@
       "lines": [
         "Copy target instant or sorcery spell, then return it to its owner's hand. You may choose new targets for the copy."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -2103,10 +2091,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Choose target spell that is an instant or sorcery spell. Copy that spell. The copy gets new targets. Then return the target spell to its owner's hand.",
-      "differences": [
-        "Text A says 'You may choose new targets for the copy' (optional). Text B says 'The copy gets new targets' (mandatory, no choice to keep the original targets)."
-      ]
+      "backTranslation": "Copy target instant or sorcery spell. The copy may have new targets chosen. Then return the original spell to its owner's hand.",
+      "differences": []
     },
     {
       "name": "Whip of Erebos",
@@ -2162,7 +2148,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Target creature you control gets +X/+X until end of turn, where X is the value of X paid for this spell. That creature gains hexproof and indestructible until end of turn.",
+      "backTranslation": "Target creature you control gets +X/+X until end of turn, where X is the value chosen for X. That creature gains hexproof until end of turn. That creature gains indestructible until end of turn.",
       "differences": []
     },
     {
@@ -2204,10 +2190,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "As long as devotion to red is four or less, this permanent loses all creature types.",
+      "backTranslation": "As long as your devotion to red is 4 or less, this loses all creature types.",
       "differences": [
-        "Text A says the permanent isn't a creature while devotion to red is less than five. Text B says it loses all creature types, which leaves it a creature (the creature card type is not removed), so the effect on being a creature is different.",
-        "Text B omits the whole card's other lines: indestructible, the trigger that deals 2 damage to each opponent when another creature you control enters, and the {2}{R} pump ability."
+        "Text A makes the permanent stop being a creature (it 'isn't a creature'); Text B says it loses all creature types, which removes subtypes but leaves it a creature."
       ]
     },
     {
@@ -2216,7 +2201,7 @@
       "lines": [
         "When this land enters, sacrifice it. When you do, search your library for a basic Swamp, Mountain, or Forest card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
       ],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -2249,8 +2234,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this land enters, sacrifice it. When you do, search your library for a basic Swamp, Mountain, or Forest card (you may find none), put that card onto the battlefield tapped, then shuffle. Then you gain 1 life.\nThis land has no mana ability.",
-      "differences": []
+      "backTranslation": "When this land enters, sacrifice it. When you do, search your library for a basic Swamp, Mountain, or Forest card (you may find none), put it onto the battlefield tapped, then shuffle and you gain 1 life.",
+      "differences": [
+        "Text B adds '(you may find none)', making the search optional; Text A's search is mandatory and the player must find a matching card if one exists."
+      ]
     },
     {
       "name": "Hammer of Nazahn",
@@ -2302,7 +2289,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "At the beginning of each player's draw step, if this artifact is untapped, that player draws a card. This trigger is mandatory and targets nothing. The data names the condition only as \"isUntapped\" with no further subject.",
+      "backTranslation": "At the beginning of each player's draw step, if this is untapped, that player draws a card.",
       "differences": []
     },
     {
@@ -2355,7 +2342,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Equipped creature has hexproof as long as it is legendary.",
+      "backTranslation": "Equipped creature that is legendary has hexproof.",
       "differences": []
     },
     {
@@ -2408,9 +2395,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Discard your hand, Sacrifice this artifact: Add three mana. Each mana is of any color, and the three mana are linked.",
+      "backTranslation": "Discard your hand, Sacrifice this artifact: Add three mana, linked so that all three are the same color, chosen from white, blue, black, red, or green.",
       "differences": [
-        "Text A says the artifact's ability can be activated only as an instant. Text B has no activation timing restriction."
+        "Text A says the mana ability can be activated only as an instant; Text B omits this timing restriction."
       ]
     },
     {
@@ -2452,9 +2439,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever this land is tapped for mana, target opponent creates a colorless 1/1 Spirit creature token.",
+      "backTranslation": "Whenever this land is tapped for mana, target opponent creates a 1/1 colorless Spirit creature token.",
       "differences": [
-        "Text A triggers only when you (the land's controller) tap this land for mana. Text B triggers whenever this land is tapped for mana by anyone."
+        "Text A triggers only when the controller of the land (you) taps it for mana; Text B triggers whenever this land is tapped for mana by anyone."
       ]
     },
     {
@@ -2463,7 +2450,7 @@
       "lines": [
         "{T}: Put a +1/+1 counter on each green creature that entered this turn."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -2496,11 +2483,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{T}: Put a +1/+1 counter on each creature that is green and entered the battlefield this turn. No controller restriction is given for the creatures. This land has no mana ability.",
-      "differences": [
-        "Text B states the land has no mana ability, but the whole card gives it {T}: Add {G}.",
-        "Text B omits that the land enters tapped, which is on the whole card."
-      ]
+      "backTranslation": "{T}: Put a +1/+1 counter on each green creature that entered this turn.",
+      "differences": []
     },
     {
       "name": "Elvish Spirit Guide",
@@ -2563,7 +2547,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Enchanted permanent's card types are set to Creature, and its subtypes are set to Elk. Enchanted permanent is the color green, loses all abilities, and has base power and toughness 3/3.",
+      "backTranslation": "Enchanted creature is a green Creature — Elk with base power and toughness 3/3 and loses all abilities.",
       "differences": []
     },
     {
@@ -2660,7 +2644,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{T}: Add {G} for each permanent with the Elf subtype on the battlefield, regardless of controller.",
+      "backTranslation": "{T}: Add {G} for each Elf on the battlefield.",
       "differences": []
     },
     {
@@ -2669,7 +2653,7 @@
       "lines": [
         "This spell costs {1} less to cast for each creature on the battlefield."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -2695,10 +2679,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "This spell costs {1} less to cast for each creature on the battlefield, counting creatures of all controllers. This reduction applies only to this spell.\nThis spell has no spell effect, so it does nothing on resolution.",
-      "differences": [
-        "Text A's spell effect is 'Destroy all creatures.'; Text B says the spell has no spell effect and does nothing on resolution."
-      ]
+      "backTranslation": "This spell costs less to cast by an amount equal to the number of creatures on the battlefield.",
+      "differences": []
     },
     {
       "name": "Steel Overseer",
@@ -2814,7 +2796,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever one or more creatures you control with mana value 3 or less enter the battlefield, draw a card. This ability triggers no more than once each turn.",
+      "backTranslation": "Whenever one or more creatures you control with mana value 3 or less enter, draw a card. This ability triggers no more than once each turn.",
       "differences": []
     },
     {
@@ -2856,7 +2838,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Offspring {2} (As you cast this spell, you may pay an additional {2}.)\nWhen this creature enters, create a number of tokens that are copies of this creature equal to the number of times the offspring cost was paid. If the offspring cost was not paid, create none. Each of those tokens has base power 1 and base toughness 1.",
+      "backTranslation": "As you cast this spell, you may pay an additional {2}. (Offspring)\nWhen this creature enters, create a token that is a copy of this creature, except its base power and toughness are 1/1. Create one such token for each time the offspring cost was paid.",
       "differences": []
     },
     {
@@ -2907,7 +2889,7 @@
       "lines": [
         "Equipped creature gets +10/+10 and loses flying."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -2940,10 +2922,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Equipped creature gets +10/+10 and loses flying.\nThis Equipment has no equip ability.",
-      "differences": [
-        "Text A's whole card includes the equip ability 'Equip {8}' (attach to target creature you control, sorcery speed). Text B states that this Equipment has no equip ability, so the equip ability is missing from B."
-      ]
+      "backTranslation": "Equipped creature gets +10/+10 and loses flying.",
+      "differences": []
     },
     {
       "name": "Mizzix's Mastery",
@@ -2962,7 +2942,7 @@
       "lines": [
         "{4}{R}{R}, {T}: Create a token that's a copy of target creature you control. Sacrifice it at the beginning of the next end step."
       ],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -2995,8 +2975,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{4}{R}{R}, {T}: Create a token that is a copy of target creature you control. Sacrifice that token at the end step.",
-      "differences": []
+      "backTranslation": "{4}{R}{R}, {T}: Create a token that's a copy of target creature you control. Sacrifice that token at the beginning of the end step.",
+      "differences": [
+        "Text A sacrifices the token at the beginning of the next end step; Text B sacrifices it at the beginning of 'the end step', which does not specify the next one, so the timing can differ (for example, when activated during an end step)."
+      ]
     },
     {
       "name": "Enduring Curiosity",
@@ -3070,7 +3052,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{T}: Add {C}. If you control a permanent with the subtype Urza's and a permanent with the subtype Mine, and you control a permanent with the subtype Urza's and a permanent with the subtype Power-Plant, add {C}{C}{C} instead.",
+      "backTranslation": "{T}: Add {C}. If you control at least one permanent with the subtype Urza's and the subtype Mine, and at least one permanent with the subtype Urza's and the subtype Power-Plant, add {C}{C}{C} instead.",
       "differences": []
     },
     {
@@ -3165,7 +3147,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever a player casts their second spell each turn, connive. (Draw a card, then discard a card. If a nonland card was discarded, put a +1/+1 counter on this creature.)",
+      "backTranslation": "Whenever a player casts their second spell each turn, connive.",
       "differences": []
     },
     {
@@ -3207,7 +3189,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{T}: Add {C}. If you control at least one permanent named Urza's Mine and at least one permanent named Urza's Tower, add {C}{C} instead.",
+      "backTranslation": "{T}: Add {C}. If you control at least one Urza's Mine and at least one Urza's Tower, add {C}{C} instead.",
       "differences": []
     },
     {
@@ -3251,7 +3233,7 @@
       ],
       "backTranslation": "{T}, Sacrifice this land: Destroy target land. Its controller may search their library for a basic land card and put it onto the battlefield untapped.",
       "differences": [
-        "Text A has the controller of the land search for a basic land, put it onto the battlefield, then shuffle. Text B has the search and put onto the battlefield untapped but omits 'then shuffle'."
+        "Text A says the controller may search for a basic land, put it onto the battlefield, then shuffle; Text B omits the shuffle."
       ]
     },
     {
@@ -3326,7 +3308,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{U}, {T}, Sacrifice this land: Target player draws three cards, then discards three cards. Activate only if there are seven or more cards in your graveyard. This ability is not limited by timing.",
+      "backTranslation": "{U}, {T}, Sacrifice this land: Target player draws three cards, then discards three cards. Activate only if there are seven or more cards in your graveyard.",
       "differences": []
     },
     {
@@ -3368,7 +3350,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this land enters, sacrifice a land. Then sacrifice a land. This trigger is mandatory and has no targets. The data does not say what happens if you control fewer than two other lands.",
+      "backTranslation": "When this land enters, sacrifice a land. Then sacrifice a land.",
       "differences": []
     },
     {
@@ -3399,7 +3381,7 @@
       "lines": [
         "Nontoken creatures you control are Forest lands in addition to their other types."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -3432,10 +3414,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Each creature you control that isn't a token is a Land in addition to its other types and is a Forest in addition to its other subtypes. The data gives no base power or toughness.",
-      "differences": [
-        "Text B says the data gives no base power or toughness, but the whole card sets Ashaya's power and toughness to the number of lands you control."
-      ]
+      "backTranslation": "Each nontoken creature you control is a Land Forest in addition to its other types.",
+      "differences": []
     },
     {
       "name": "Bloodletter of Aclazotz",
@@ -3509,7 +3489,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{G}, {T}: Add {G} for each creature you control. This ability can be activated only if this land has twelve or more charge counters on it.",
+      "backTranslation": "{G}, {T}: Add {G} for each creature you control. Activate only if this land has twelve or more charge counters on it.",
       "differences": []
     },
     {
@@ -3573,7 +3553,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever this creature or another black creature you control enters, each opponent loses 1 life and you gain 1 life. This trigger is mandatory and has no targets.",
+      "backTranslation": "Whenever this creature or another black creature you control enters, each opponent loses 1 life and you gain 1 life.",
       "differences": []
     },
     {
@@ -3652,7 +3632,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Target creature gets -13/-13 until end of turn if a creature died this turn. Otherwise, target creature gets -1/-1 until end of turn.",
+      "backTranslation": "Target creature gets -1/-1 until end of turn. If a creature died this turn, that creature gets -13/-13 until end of turn instead.",
       "differences": []
     },
     {
@@ -3727,7 +3707,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever this creature or another artifact you control enters, put a +1/+1 counter on this creature and this creature can't be blocked this turn.",
+      "backTranslation": "Whenever this creature or another artifact you control enters, put a +1/+1 counter on this creature and it can't be blocked this turn.",
       "differences": []
     },
     {
@@ -3736,7 +3716,7 @@
       "lines": [
         "At the beginning of your upkeep, put two descent counters on this enchantment. Then each player creates X Treasure tokens and this enchantment deals X damage to each player, where X is the number of descent counters on this enchantment."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -3769,10 +3749,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "At the beginning of your upkeep, put two descent counters on this enchantment. Then create a Treasure token for each descent counter on this enchantment. Each opponent creates a Treasure token for each descent counter on this enchantment. Then each player is dealt damage equal to the number of descent counters on this enchantment.\nEach of those Treasure tokens has \"{T}, Sacrifice this token: Add one mana of any color.\"",
-      "differences": [
-        "Text A has the enchantment itself deal X damage to each player. Text B has each player dealt damage equal to the descent counter count, with no source named, so the damage source (this enchantment) is missing."
-      ]
+      "backTranslation": "At the beginning of your upkeep, put two descent counters on this enchantment. Then create a Treasure token for each descent counter on this enchantment. Each opponent creates a Treasure token for each descent counter on this enchantment. Then this enchantment deals damage to each player equal to the number of descent counters on it.\nA Treasure token has \"{T}, Sacrifice this token: Add one mana of any color.\"",
+      "differences": []
     },
     {
       "name": "Loot, Exuberant Explorer",
@@ -3835,7 +3813,7 @@
       "lines": [
         "Whenever equipped creature deals combat damage to a player, exile up to one target creature you own, then search your library for a basic land card. Put both cards onto the battlefield under your control, then shuffle."
       ],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -3868,8 +3846,11 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever equipped creature deals combat damage to a player, do the following. This trigger is mandatory.\nUp to one target creature you own. Exile each chosen creature, then return it to the battlefield under the control of this Equipment's controller.\nSearch your library for a basic land card and put it onto the battlefield. Then shuffle. The search has no stated count beyond one card and no tapped setting.",
-      "differences": []
+      "backTranslation": "Whenever equipped creature deals combat damage to a player, blink up to one target creature you own. Return that creature under the control of this Equipment's controller. Then search a library for a basic land card and put it onto the battlefield. Then shuffle.",
+      "differences": [
+        "Text A searches your library for the basic land; Text B searches a library, which allows searching any player's library.",
+        "Text A puts the land onto the battlefield under your control; Text B does not say who controls the land."
+      ]
     },
     {
       "name": "Archway of Innovation",
@@ -3943,7 +3924,7 @@
       "lines": [
         "~ is the chosen type in addition to its other types."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -3976,11 +3957,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "This creature is also the chosen creature type in addition to its other types.\nNothing in this data chooses that creature type.",
-      "differences": [
-        "Text A's whole card includes 'As this creature enters, choose a creature type.' Text B has no choose-a-type ability and says nothing in the data chooses the type, so the choice is missing.",
-        "Text A's whole card includes 'Each other creature you control of the chosen type enters with an additional +1/+1 counter on it.' Text B does not include this ability."
-      ]
+      "backTranslation": "This creature is the chosen creature type in addition to its other types.",
+      "differences": []
     },
     {
       "name": "Solphim, Mayhem Dominus",
@@ -4032,9 +4010,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{1}{G}: If there are no +1/+1 counters on this creature, put two +1/+1 counters on this creature.",
+      "backTranslation": "{G}: If there are no +1/+1 counters on this creature, put two +1/+1 counters on it.",
       "differences": [
-        "Text A's whole card includes a second ability, 'Whenever one or more +1/+1 counters are put on this creature, return target permanent card from your graveyard to your hand.' Text B does not include it, so that triggered return ability is missing from B."
+        "The activation cost is {1}{G} in Text A but {G} in Text B."
       ]
     },
     {
@@ -4136,7 +4114,7 @@
       "lines": [
         "When this land enters, sacrifice it. When you do, search your library for a basic Mountain, Forest, or Plains card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
       ],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -4169,8 +4147,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this land enters, sacrifice it. When you do, search your library for a basic Mountain, Forest, or Plains card (you may find none), put that card onto the battlefield tapped, then shuffle. Then you gain 1 life.\nThis land has no mana ability.",
-      "differences": []
+      "backTranslation": "When this land enters, sacrifice it. When you do, search your library for a basic Mountain, Forest, or Plains card (you may find none), put it onto the battlefield tapped, then shuffle and you gain 1 life.",
+      "differences": [
+        "Text B adds '(you may find none)', making the search optional; Text A's search is mandatory and the player must find a matching card if one exists."
+      ]
     },
     {
       "name": "Bristly Bill, Spine Sower",
@@ -4233,7 +4213,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever this creature or another creature or planeswalker you control dies, each opponent loses 1 life and you gain 1 life. This trigger is mandatory and has no targets.",
+      "backTranslation": "Whenever this creature dies, or another creature or planeswalker you control dies, each opponent loses 1 life and you gain 1 life.",
       "differences": []
     },
     {
@@ -4319,7 +4299,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this creature enters, exile up to two target artifacts and/or enchantments. The data sets no controller restriction on these targets.",
+      "backTranslation": "When this creature enters, exile up to two target artifacts and/or enchantments.",
       "differences": []
     },
     {
@@ -4365,7 +4345,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "As this spell is cast, choose four targets: target artifact, target creature, target enchantment, and target land. Each target is required, and none of them is restricted by controller. Destroy each of those four targets.",
+      "backTranslation": "As this spell is cast, choose four targets: target artifact, target creature, target enchantment, and target land. Destroy each of those four targets.",
       "differences": []
     },
     {
@@ -4407,7 +4387,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "As long as your life total is 30 or more, this creature gets +5/+5. The data gives no base power or toughness.\nAs long as your life total is 30 or more, this creature has flying.",
+      "backTranslation": "As long as you have 30 or more life, this creature gets +5/+5 and has flying.",
       "differences": []
     },
     {
@@ -4453,7 +4433,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Search your library for an Equipment card, reveal it, and put it into your hand. Then shuffle. This spell has no targets.",
+      "backTranslation": "Search your library for an Equipment card, reveal it, and put it into your hand. Then shuffle.",
       "differences": []
     },
     {
@@ -4462,7 +4442,7 @@
       "lines": [
         "Destroy up to two target artifacts and/or enchantments."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -4488,10 +4468,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Choose up to two target artifacts and/or enchantments. The data sets no controller restriction on these targets. Destroy each chosen permanent.",
-      "differences": [
-        "Text A's spell has the alternative cost 'If it's not your turn, you may exile a green card from your hand rather than pay this spell's mana cost', which Text B omits."
-      ]
+      "backTranslation": "Destroy up to two target artifacts and/or enchantments.",
+      "differences": []
     },
     {
       "name": "Noxious Gearhulk",
@@ -4565,10 +4543,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{2}, {T}, Sacrifice this land: Search your library for a Forest card and put it onto the battlefield tapped. Then search your library for a Plains card and put it onto the battlefield tapped. Then shuffle. Each search finds one card. Activate at any time. This land has no mana ability.",
+      "backTranslation": "{2}, {T}, Sacrifice this land: Search a library for a Forest card and put it onto the battlefield tapped. Search a library for a Plains card and put it onto the battlefield tapped. Then shuffle.",
       "differences": [
-        "Text B states the land has no mana ability, but the whole card gives it {T}: Add {C}.",
-        "Text B's \"This land has no mana ability\" contradicts the whole card."
+        "Text A searches your library for the Forest and Plains cards; Text B searches a library, which allows searching any player's library."
       ]
     },
     {
@@ -4643,7 +4620,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{T}: Regenerate target permanent that has the Insect, Rat, Spider, or Squirrel subtype. The target may be controlled by any player. This ability is not limited by timing.",
+      "backTranslation": "{T}: Regenerate target permanent that is an Insect, Rat, Spider, or Squirrel.",
       "differences": []
     },
     {
@@ -4753,10 +4730,11 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "As an additional cost to cast this spell, sacrifice a land you control.\nSearch your library for two basic land cards and put them onto the battlefield tapped. Then shuffle. The search targets nothing and does not say \"up to\".",
+      "backTranslation": "As an additional cost to cast this spell, sacrifice a land you control.\nSearch a library for two basic land cards and put them onto the battlefield tapped. Then shuffle.",
       "differences": [
-        "Text A sacrifices a land as part of resolution, while Text B makes the sacrifice an additional cost to cast the spell (the sacrifice happens at a different time).",
-        "Text A searches for up to two basic lands (zero or one allowed); Text B searches for exactly two basic lands and says it does not say up to."
+        "Text A makes the land sacrifice part of the spell's resolution effect; Text B makes it an additional cost paid on casting, with the sacrificed land restricted to lands you control.",
+        "Text A searches for up to two basic lands (zero or one is allowed); Text B searches for exactly two.",
+        "Text A searches your library; Text B searches a library, which allows searching any player's library."
       ]
     },
     {
@@ -4809,7 +4787,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this creature enters, you may search your library for an Instant or Sorcery card with mana value 2 or less, reveal it, and put it into your hand. Then shuffle. This trigger has no targets.",
+      "backTranslation": "When this creature enters, you may search your library for an instant or sorcery card with mana value 2 or less, reveal it, and put it into your hand. Then shuffle.",
       "differences": []
     },
     {
@@ -4818,7 +4796,7 @@
       "lines": [
         "~ enters tapped unless you control a basic land."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -4851,10 +4829,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "This land enters the battlefield tapped unless you control at least one basic land. This land has no mana ability.",
-      "differences": [
-        "Text B states the land has no mana ability, but the whole card gives it {T}: Add {W}, and it also has the {3}{W}, {T} counter ability."
-      ]
+      "backTranslation": "This land enters tapped unless you control at least one basic land.",
+      "differences": []
     },
     {
       "name": "Slip Out the Back",
@@ -4892,7 +4868,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Target creature (exactly one; any controller).\nPut a +1/+1 counter on that creature.\nPhase out that creature. The data gives no duration for this.",
+      "backTranslation": "Choose target creature. Put a +1/+1 counter on that creature. Phase out that creature.",
       "differences": []
     },
     {
@@ -4956,9 +4932,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Enchant permanent. (The data does not restrict what it may enchant beyond the Aura type.)\nEnchanted permanent has a mana ability rider: whenever it is tapped for mana, add one additional mana of any one color (white, blue, black, red, or green).",
+      "backTranslation": "Whenever enchanted permanent is tapped for mana, it produces one additional mana of any one color.",
       "differences": [
-        "Text A's Aura enchants a land ('Enchant land'); Text B enchants any permanent ('Enchant permanent'), so under Text B the Aura could be attached to a nonland permanent."
+        "The card's enchant restriction is 'Enchant land', so it can only enchant a land; Text B says 'enchanted permanent', which would allow it to enchant any permanent."
       ]
     },
     {
@@ -5187,9 +5163,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever you declare attackers including one or more creatures that are not Gnomes, put a +1/+1 counter on this creature. Then create a number of 1/1 colorless Gnome artifact creature tokens that are attacking equal to the number of +1/+1 counters on this creature.",
+      "backTranslation": "Whenever you attack with one or more creatures that aren't Gnomes, put a +1/+1 counter on this creature. Then create a 1/1 colorless Gnome artifact creature token that is attacking, for each +1/+1 counter on this creature.",
       "differences": [
-        "Text A creates the Gnome tokens 'tapped and attacking'; Text B creates them only 'attacking', so under Text B they are not tapped."
+        "Text A creates the Gnome tokens tapped and attacking; Text B creates them only attacking, so they enter untapped."
       ]
     },
     {
@@ -5224,7 +5200,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Creatures you control get +1/+1 until end of turn. Creatures you control gain trample and infect until end of turn.",
+      "backTranslation": "Creatures you control get +1/+1 until end of turn.\nCreatures you control gain trample and infect until end of turn.",
       "differences": []
     },
     {
@@ -5277,9 +5253,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{T}: You regain control of each creature you own.",
+      "backTranslation": "{T}: Regain control of each creature you own.",
       "differences": [
-        "Text A has each player gain control of all creatures they own (affects every player's creatures). Text B has only 'you' regain control of each creature you own, so the other players are not affected."
+        "Text A makes each player gain control of all creatures they own; Text B makes only the controller regain control of creatures that player owns, so other players are not affected in B."
       ]
     },
     {
@@ -5288,7 +5264,7 @@
       "lines": [
         "~ enters tapped unless you control a legendary creature."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -5321,10 +5297,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "This land enters tapped unless you control at least one legendary creature.\nThis land has no mana ability.",
-      "differences": [
-        "Text B says the land has no mana ability, but Text A's whole card includes '{T}: Add {G}.' and a Food-creating ability ('{1}{G}, {T}, Tap an untapped creature you control: Create a Food token')."
-      ]
+      "backTranslation": "This land enters tapped unless you control a legendary creature.",
+      "differences": []
     },
     {
       "name": "Millikin",
@@ -5354,7 +5328,7 @@
       "lines": [
         "Whenever you sacrifice a Treasure, ~ gets +1/+0 until end of turn."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -5388,9 +5362,7 @@
         }
       ],
       "backTranslation": "Whenever a Treasure you control is sacrificed, this creature gets +1/+0 until end of turn.",
-      "differences": [
-        "Text A triggers when 'you sacrifice a Treasure' (the controller sacrifices a Treasure). Text B triggers when 'a Treasure you control is sacrificed', which also covers a Treasure you control sacrificed by an effect an opponent controls."
-      ]
+      "differences": []
     },
     {
       "name": "Lumra, Bellow of the Woods",
@@ -5475,7 +5447,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{U}, {T}: Add {U} for each artifact you control. Activate only if this land has twelve or more charge counters on it. This is a mana ability.",
+      "backTranslation": "{U}, {T}: Add {U} for each artifact you control. Activate only if this land has at least twelve charge counters on it.",
       "differences": []
     },
     {
@@ -5528,7 +5500,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Enchanted permanent becomes a blue Creature - Frog with base power and toughness 1/1, and it loses all abilities.",
+      "backTranslation": "Enchanted creature is a blue Frog, its card type is Creature, it loses all abilities, and its base power and toughness are 1/1.",
       "differences": []
     },
     {
@@ -5592,7 +5564,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Sacrifice another creature or artifact you control: Surveil 1. Activate this ability at any time you have priority.",
+      "backTranslation": "Sacrifice another creature or artifact you control: Surveil 1.",
       "differences": []
     },
     {
@@ -5645,7 +5617,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Offspring {1}{R} (You may pay {1}{R} as an additional cost to cast this spell. This is optional.)\nWhen this creature enters, create a number of tokens that are copies of this creature equal to the number of times its offspring cost was paid (0 or 1). Each of those tokens has base power and toughness 1/1. If the offspring cost was not paid, no tokens are created. This trigger has no targets and is mandatory.",
+      "backTranslation": "Offspring {1}{R}\nWhen this creature enters, create a number of tokens that are copies of this creature equal to the number of times the offspring cost was paid. Each of those tokens has base power and toughness 1/1.",
       "differences": []
     },
     {
@@ -5764,10 +5736,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever this creature deals combat damage to a player, it deals that much damage to each creature. That damage is dealt as though the source were controlled by the player that was dealt combat damage.",
+      "backTranslation": "Whenever this creature deals combat damage to a player, this creature deals that much damage to each creature. This damage is dealt from this creature, treated as controlled by the player it dealt combat damage to.",
       "differences": [
-        "Text A deals the damage only to each creature that the damaged player controls. Text B deals it to each creature, including creatures the player does not control.",
-        "Text B adds that the damage is dealt as though the source were controlled by the damaged player, which Text A does not state."
+        "Text A deals the damage only to each creature that the player it hit controls; Text B deals it to each creature, including the source's controller's own creatures.",
+        "Text B says the damage is treated as controlled by the player it dealt combat damage to, which Text A does not state."
       ]
     },
     {
@@ -5820,7 +5792,7 @@
       "lines": [
         "Whenever you sacrifice a Food, create a tapped Treasure token."
       ],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -5853,8 +5825,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever a Food you control is sacrificed, create a tapped token (its type line is not given in this data) that is an artifact Treasure with \"{T}, Sacrifice this artifact: Add one mana of any color.\" This trigger is mandatory and has no targets.",
-      "differences": []
+      "backTranslation": "Whenever a Food you control is sacrificed, create a tapped Treasure artifact token. That token has \"{T}, Sacrifice this artifact: Add one mana of any color.\"",
+      "differences": [
+        "Text A triggers when you sacrifice a Food (you are the sacrificing player); Text B triggers when a Food you control is sacrificed by anyone, so it also fires when an opponent or an effect makes you sacrifice a Food."
+      ]
     },
     {
       "name": "Defense of the Heart",
@@ -5932,9 +5906,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever a Mountain you control enters, if you control five or more Mountains, you may have this land deal 3 damage to any target.",
+      "backTranslation": "Whenever a Mountain you control enters, if you control five or more Mountains, you may have this deal 3 damage to any target.",
       "differences": [
-        "Text A requires five other Mountains (not counting this land, so six total). Text B requires five or more Mountains, which counts this land itself, so the threshold is one lower."
+        "Text A requires at least five OTHER Mountains besides the entering Mountain; Text B requires five or more Mountains, which counts the entering Mountain, so the trigger condition is met one Mountain earlier in B."
       ]
     },
     {
@@ -5987,7 +5961,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this land enters, sacrifice it. When you do, search your library for a basic land card with the Island, Swamp, or Mountain subtype and put it onto the battlefield tapped. The search may fail to find one. Then shuffle, and you gain 1 life. This trigger has no targets and is mandatory.",
+      "backTranslation": "When this land enters, sacrifice this land. When you do, search your library for a basic land card with the supertype Basic and the subtype Island, Swamp, or Mountain. The search may fail to find a card. If a card is found, put it onto the battlefield tapped. Then shuffle, and you gain 1 life.",
       "differences": []
     },
     {
@@ -6022,7 +5996,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Target creature gains \"When this creature dies, return it to the battlefield with a +1/+1 counter on it, tapped.\" until end of turn.",
+      "backTranslation": "Target creature gains \"When this creature dies, return it to the battlefield tapped with a +1/+1 counter on it\" until end of turn.",
       "differences": []
     },
     {
@@ -6031,7 +6005,7 @@
       "lines": [
         "{T}: Create a token that's a copy of target nonlegendary creature you control, except it has haste. Sacrifice it at the beginning of the next end step."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -6064,10 +6038,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{T}: Create a token that's a copy of target creature you control that isn't legendary. The token gains haste. Sacrifice that token at the beginning of the end step.",
-      "differences": [
-        "Text A sacrifices the token at the beginning of the next end step. Text B sacrifices it at the beginning of 'the end step', which is the current end step if one has not begun yet. If the ability is activated during an end step, the timing differs."
-      ]
+      "backTranslation": "{T}: Create a token that is a copy of target creature you control that isn't legendary. The token has haste. Sacrifice the token at the beginning of the end step.",
+      "differences": []
     },
     {
       "name": "Conqueror's Flail",
@@ -6086,7 +6058,7 @@
       "lines": [
         "Look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order. Proliferate."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -6112,10 +6084,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Look at the top three cards of your library. You may put a card from among them into your hand. The data gives the card filter as any card and marks this choice as required. Put the rest on the bottom of your library in any order.\nProliferate.",
-      "differences": [
-        "Text A makes putting one of the three cards into your hand mandatory; Text B says \"You may put a card\" (optional wording), which conflicts with its own note that the choice is required."
-      ]
+      "backTranslation": "Look at the top three cards of your library. Put a card from among them into your hand; this put is required. Put the rest on the bottom of your library in any order. Then proliferate.",
+      "differences": []
     },
     {
       "name": "Martial Coup",
@@ -6222,7 +6192,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{T}, Pay 1 life: Destroy target permanent you own. Activate at any time. The target may be controlled by any player.",
+      "backTranslation": "{T}, Pay 1 life: Destroy target permanent you own.",
       "differences": []
     },
     {
@@ -6288,7 +6258,7 @@
       ],
       "backTranslation": "If this card is in an opening hand, it begins the game on the battlefield.",
       "differences": [
-        "Text A makes the opening-hand start optional (you may begin the game with it on the battlefield); Text B states it begins the game on the battlefield with no choice, so it is mandatory."
+        "Text A lets you choose to begin the game on the battlefield (\"you may\"); Text B makes it mandatory."
       ]
     },
     {
@@ -6464,9 +6434,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Target creature.\nDouble that creature's power. The data gives no duration.",
+      "backTranslation": "Double target creature's power.",
       "differences": [
-        "Text A's effect lasts until end of turn; Text B gives no duration, so the doubling would not be limited to this turn."
+        "Text A doubles the power until end of turn; Text B has no duration, so the power doubling is permanent."
       ]
     }
   ]
