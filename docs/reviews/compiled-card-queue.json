@@ -6,9 +6,7 @@
       "oracleId": "9575d7ce-f26d-4b90-87a3-6329e9799572",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "~ enters tapped unless you control a basic land."
-      ],
+      "handledLines": ["~ enters tapped unless you control a basic land."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/abandoned-air-temple.json",
       "patchSha256": "5dcf254c082b3f693dfd5b0e222c754f900a0aaea2fe6746b1f88287a3c153f0",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -212,9 +210,7 @@
       "oracleId": "0a90d1fb-7a76-4b62-b001-4a539a8e5df1",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Enchanted creature gets +1/+0 and can't be blocked."
-      ],
+      "handledLines": ["Enchanted creature gets +1/+0 and can't be blocked."],
       "patch": "docs/reviews/xmage-pilot-01/patches/aether-tunnel.json",
       "patchSha256": "647d0c0e0df105c6ba5559cd7ccb7f8e9913d4f111bcac833f35442e423ba41f",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -317,9 +313,7 @@
       "oracleId": "e1a2bd31-b800-47cd-8866-1b849a601b09",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "Offspring {1}{R}"
-      ],
+      "handledLines": ["Offspring {1}{R}"],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/agate-instigator.json",
       "patchSha256": "6ed2a6c7afe258454a13e7320edc7892efb455dce21b52e24c6fc76ee6476a91",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -370,9 +364,7 @@
       "oracleId": "37d1d507-25dc-4cd0-b51e-2f1e9b24832c",
       "source": "compiler@haiku-worker",
       "status": "meaning-differs",
-      "handledLines": [
-        "{3}, Sacrifice another creature or artifact: Draw a card."
-      ],
+      "handledLines": ["{3}, Sacrifice another creature or artifact: Draw a card."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/ahriman.json",
       "patchSha256": "64c32fbb8b4100e575d9e7a08f15bf534dc83687b85a48753778c45f415bae71",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -422,9 +414,7 @@
       "oracleId": "37d1d507-25dc-4cd0-b51e-2f1e9b24832c",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "{3}, Sacrifice another creature or artifact: Draw a card."
-      ],
+      "handledLines": ["{3}, Sacrifice another creature or artifact: Draw a card."],
       "patch": "docs/reviews/xmage-pilot-01/patches/ahriman.json",
       "patchSha256": "595bfb462bff69b4ff8197f786d2947055bfe2fefb19a691f730ab8a3191628f",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -836,9 +826,7 @@
       "oracleId": "fe1556cc-32d0-4e51-bb15-f3fce669a5e1",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "This spell costs {1} less to cast if you control a Wizard."
-      ],
+      "handledLines": ["This spell costs {1} less to cast if you control a Wizard."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/arcane-epiphany.json",
       "patchSha256": "69ad928fce62a487f732fc961780a4985cb57c7915e7947f2d6fb7bfcb31b478",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -929,9 +917,7 @@
       "oracleId": "f1ecb3d7-5ea0-45b2-b1b0-d7ae304db2a1",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "Whenever you cast a Faerie or Wizard permanent spell, copy it."
-      ],
+      "handledLines": ["Whenever you cast a Faerie or Wizard permanent spell, copy it."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/archmage-of-echoes.json",
       "patchSha256": "c29a8d1d9ecc533fdd763b0cf9c9c161ef4153073b24d6387617ddcaf917b85c",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -1029,9 +1015,7 @@
       "oracleId": "64de050c-7167-4ebd-8584-f064d8be3302",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Until end of turn, target creature gets +1/+0 and gains indestructible."
-      ],
+      "handledLines": ["Until end of turn, target creature gets +1/+0 and gains indestructible."],
       "patch": "docs/reviews/xmage-pilot-01/patches/armor-of-shadows.json",
       "patchSha256": "618660fa159e70f86dcb12014342726f7c6020e47ba8e127c33bbb2e71e96ae7",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -1067,9 +1051,7 @@
       "oracleId": "e32c0de7-132d-4a39-85fb-da0ed1132878",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "Nonblack creatures get -1/-1."
-      ],
+      "handledLines": ["Nonblack creatures get -1/-1."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/ascendant-evincar.json",
       "patchSha256": "2bfab8371124401d0139f50e3bbe7f3b251062680934b2083499fb95a96de86c",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -1116,9 +1098,7 @@
       "oracleId": "9396546c-d067-4ce3-9c3d-b62cca970b4f",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "{1}{G}: Regenerate target creature."
-      ],
+      "handledLines": ["{1}{G}: Regenerate target creature."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/asceticism.json",
       "patchSha256": "0f59d6833a37f2de5f7796e19ca952025bb17da6f67330040e25851cda3f1e90",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -1309,9 +1289,7 @@
       "oracleId": "22677153-bd87-4ff8-af92-ced4da2aac6c",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "Destroy target artifact, battle, enchantment, or creature with flying."
-      ],
+      "handledLines": ["Destroy target artifact, battle, enchantment, or creature with flying."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/atraxa-s-fall.json",
       "patchSha256": "8e195991993fff225d965dc92a79d68ef7eb06dc3a562e1b0ac9c9f3eae3baf1",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -1347,9 +1325,7 @@
       "oracleId": "22677153-bd87-4ff8-af92-ced4da2aac6c",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Destroy target artifact, battle, enchantment, or creature with flying."
-      ],
+      "handledLines": ["Destroy target artifact, battle, enchantment, or creature with flying."],
       "patch": "docs/reviews/xmage-pilot-01/patches/atraxa-s-fall.json",
       "patchSha256": "b25e7860c02cf6829281ccde29770753c980d4e4e21179ab51fc9bab11bafc94",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -1385,9 +1361,7 @@
       "oracleId": "9f1c5040-ac46-4e8f-a5ff-8205e13a8893",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Target player mills two cards, draws two cards, and loses 2 life."
-      ],
+      "handledLines": ["Target player mills two cards, draws two cards, and loses 2 life."],
       "patch": "docs/reviews/xmage-pilot-01/patches/atrocious-experiment.json",
       "patchSha256": "5ccc33d3beaf28bccfd6df6e43ff5699385fa296c6cedfade34e29e982f62cb7",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -1631,9 +1605,7 @@
       "oracleId": "0ad27d0e-b6c3-4c3f-a389-285d889b6a65",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Kithkin spells and Soldier spells you cast cost {1} less to cast."
-      ],
+      "handledLines": ["Kithkin spells and Soldier spells you cast cost {1} less to cast."],
       "patch": "docs/reviews/xmage-pilot-01/patches/ballyrush-banneret.json",
       "patchSha256": "a56b399655f86ccbbe0923dba024c7d3448500ce9eb345478822184b5f7a5670",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -1733,9 +1705,7 @@
       "oracleId": "e25b516c-bf95-42bc-8b1e-04617a3d28df",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "{1}{B}, Sacrifice another creature or artifact: Draw a card."
-      ],
+      "handledLines": ["{1}{B}, Sacrifice another creature or artifact: Draw a card."],
       "patch": "docs/reviews/xmage-pilot-01/patches/baron-bertram-graywater.json",
       "patchSha256": "609ed69fd0c4724e0e5f6f8eed33f01e7c8b7e0dd5dd407f818ccb098e8580c7",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -1782,9 +1752,7 @@
       "oracleId": "858f53ef-3fec-4aa0-867d-b7f040614b3c",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Commander creatures you control get +2/+2 and have indestructible."
-      ],
+      "handledLines": ["Commander creatures you control get +2/+2 and have indestructible."],
       "patch": "docs/reviews/xmage-pilot-01/patches/bastion-protector.json",
       "patchSha256": "3ae2cbac3e573d3b7b24201e0016acbc268505a5ffbcf6cceea5e71b172fb2b7",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -1936,9 +1904,7 @@
       "oracleId": "c96424e7-63c4-4f07-959f-6ad09f91279a",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Exile all creatures and Spacecraft."
-      ],
+      "handledLines": ["Exile all creatures and Spacecraft."],
       "patch": "docs/reviews/xmage-pilot-01/patches/beyond-the-quiet.json",
       "patchSha256": "370f6d1dc36155833e90e8c810dfb299bd8b5d629db2f47c47f921fb7c387aa2",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -1974,9 +1940,7 @@
       "oracleId": "e1afaef7-9fa3-4662-a95f-adfb0da9fd11",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "{1}{U}, {T}: Creatures your opponents control attack this turn if able."
-      ],
+      "handledLines": ["{1}{U}, {T}: Creatures your opponents control attack this turn if able."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/bident-of-thassa.json",
       "patchSha256": "eca9ca10f07cbd0e0e0f721029363890f8b8804c816f1607ee4d472456ee104e",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -2027,9 +1991,7 @@
       "oracleId": "dca51281-fb21-45b6-beb4-1f13397caee2",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "Equip legendary creature {3}"
-      ],
+      "handledLines": ["Equip legendary creature {3}"],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/blackblade-reforged.json",
       "patchSha256": "7d93456f43fa1d9ddbc3d9ef00d8f23a267b7378da718c560a3c0636a13cf5f7",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -2128,9 +2090,7 @@
       "oracleId": "a5ec7ccd-d1fe-4ca6-b019-d4616c233771",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Commander creatures you control get +2/+2 and have haste."
-      ],
+      "handledLines": ["Commander creatures you control get +2/+2 and have haste."],
       "patch": "docs/reviews/xmage-pilot-01/patches/bloodsworn-steward.json",
       "patchSha256": "36f2d168eb7786769e4ef0d7dca06eab26c2550bbc37540f96a87bd037cfcb5c",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -2230,9 +2190,7 @@
       "oracleId": "940ba435-7abc-40f8-a5af-c1c653b3284e",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Black creature spells you cast cost {1} less to cast."
-      ],
+      "handledLines": ["Black creature spells you cast cost {1} less to cast."],
       "patch": "docs/reviews/xmage-pilot-01/patches/bontu-s-monument.json",
       "patchSha256": "90262ffae766c2ec7f14bd990847841f14aad905b2c5d5402e5ebb6bbcef9480",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -2279,9 +2237,7 @@
       "oracleId": "b84dedfd-4020-444f-ac5a-54c65c0d0378",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Treefolk spells and Shaman spells you cast cost {1} less to cast."
-      ],
+      "handledLines": ["Treefolk spells and Shaman spells you cast cost {1} less to cast."],
       "patch": "docs/reviews/xmage-pilot-01/patches/bosk-banneret.json",
       "patchSha256": "2db48e72a41c50acdc0070455c09b63d9ff7b8571759cd786a4ae77043f30069",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -2328,9 +2284,7 @@
       "oracleId": "d9c29e6e-5949-4599-bf74-b9539e753f76",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Return target creature or Vehicle to its owner's hand."
-      ],
+      "handledLines": ["Return target creature or Vehicle to its owner's hand."],
       "patch": "docs/reviews/xmage-pilot-01/patches/bounce-off.json",
       "patchSha256": "9da2882b89bccea9b7208eee687bcd63a2949849b84191ae0b48e55fddd78c39",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -2415,9 +2369,7 @@
       "oracleId": "db4f67a9-6b47-4abe-9367-718da9e0609e",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "{2}{G}, Exile this card from your graveyard: You gain 5 life."
-      ],
+      "handledLines": ["{2}{G}, Exile this card from your graveyard: You gain 5 life."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/bramble-wurm.json",
       "patchSha256": "ae7da36908736135b0cb067cb3de7052b5389a7953363074e06528c2f93d9347",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -2517,9 +2469,7 @@
       "oracleId": "63b0538e-aa94-4e23-adf1-704cbf5bc3e5",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "For each land you control, create a Treasure token."
-      ],
+      "handledLines": ["For each land you control, create a Treasure token."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/brass-s-bounty.json",
       "patchSha256": "beb8e5d71f6c8bbb4f0b6de30191b83820466cd4756ab8b4960f51f46f50b28c",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -2604,9 +2554,7 @@
       "oracleId": "fade8af0-5fdb-4237-9dd6-48bfd1d62767",
       "source": "compiler@claude-haiku-5-5",
       "status": "meaning-differs",
-      "handledLines": [
-        "Double target creature's power until end of turn."
-      ],
+      "handledLines": ["Double target creature's power until end of turn."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/bulk-up.json",
       "patchSha256": "47d441e65af4d0dd7da794fae5e213268716da3b37bdf559a1544e823e17abf3",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -2799,9 +2747,7 @@
       "oracleId": "235bf0ba-658c-463f-b112-7478ba27bd7b",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "Whenever you sacrifice a Treasure, ~ gets +1/+0 until end of turn."
-      ],
+      "handledLines": ["Whenever you sacrifice a Treasure, ~ gets +1/+0 until end of turn."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/captain-lannery-storm.json",
       "patchSha256": "64762c5e87457214a68f7fbb3874932388dc2da88a3c7516991a3d1f26f89723",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -2954,9 +2900,7 @@
       "oracleId": "c01aafb8-3da5-4eb1-8731-2a223e747d63",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "As long as equipped creature is legendary, it has hexproof."
-      ],
+      "handledLines": ["As long as equipped creature is legendary, it has hexproof."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/champion-s-helm.json",
       "patchSha256": "b3c9f51a9341c5f2fc50a0159dff05aa9fe06cc53d9048fb1b0574365f699da0",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -3007,9 +2951,7 @@
       "oracleId": "a61ef0cc-1da9-49f9-b0dc-01cf9f6205be",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "~ can't block and can't be blocked."
-      ],
+      "handledLines": ["~ can't block and can't be blocked."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/changeling-outcast.json",
       "patchSha256": "fb211b65b5d865ffceb58feedf2fb1cabfa351cd0b3650a8758cea8cc326702a",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -3111,9 +3053,7 @@
       "oracleId": "f705c0eb-9c6c-4315-a860-208ed0c5d93e",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "{T}: Add {C} for each Locus on the battlefield."
-      ],
+      "handledLines": ["{T}: Add {C} for each Locus on the battlefield."],
       "patch": "docs/reviews/card-compiler-trial-01/patches/cloudpost.json",
       "patchSha256": "499e56f794f6aa5a43ae2c28cdfb0f4b95b2918f0fbbd9ad45dacb65cb5d7185",
       "trial": "docs/reviews/card-compiler-trial-01",
@@ -3159,9 +3099,7 @@
       "oracleId": "8ec03b88-8d3a-4a32-8b7c-7da59b0c03d0",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "Equipped creature gets +10/+10 and loses flying."
-      ],
+      "handledLines": ["Equipped creature gets +10/+10 and loses flying."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/colossus-hammer.json",
       "patchSha256": "932d185ce9f50a178278873d85814fb7a2fbd4adf2906f7d94eb008e969560f1",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -3212,9 +3150,7 @@
       "oracleId": "88bb91b5-2ccd-4ce9-8cd4-e54d63c12abf",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "Offspring {2}"
-      ],
+      "handledLines": ["Offspring {2}"],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/coruscation-mage.json",
       "patchSha256": "9a0520618aecf202015f8b92d9e73ec328e677ae4f1fd1e6aa402276da1c8032",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -3409,9 +3345,7 @@
       "oracleId": "355ed7ef-bfa6-4538-99fb-a2d203eb7005",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "Destroy all creatures with no counters on them."
-      ],
+      "handledLines": ["Destroy all creatures with no counters on them."],
       "patch": "docs/reviews/card-compiler-trial-01/patches/damning-verdict.json",
       "patchSha256": "766c04cab1c2e71a66457385b6e1a3f846af3d604b610a918ddf00a05c7a5fbf",
       "trial": "docs/reviews/card-compiler-trial-01",
@@ -3446,9 +3380,7 @@
       "oracleId": "355ed7ef-bfa6-4538-99fb-a2d203eb7005",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Destroy all creatures with no counters on them."
-      ],
+      "handledLines": ["Destroy all creatures with no counters on them."],
       "patch": "docs/reviews/xmage-pilot-01/patches/damning-verdict.json",
       "patchSha256": "e7eff640e1174b337e18873e1c2e66f00ec567020e69a70370d2ee1fd2d836c2",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -3484,9 +3416,7 @@
       "oracleId": "4b6377da-83e7-4519-9582-16a9c16b8faa",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Aura and Equipment spells you cast cost {1} less to cast."
-      ],
+      "handledLines": ["Aura and Equipment spells you cast cost {1} less to cast."],
       "patch": "docs/reviews/xmage-pilot-01/patches/danitha-capashen-paragon.json",
       "patchSha256": "f13f1b1dd55a20d1b96076f31b4c86c7a99029bec85583d49ccfe1a3630502c8",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -3624,9 +3554,7 @@
       "oracleId": "53b121df-3040-4ad0-a25d-587a299b4f8b",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Blue creatures you control can't be blocked."
-      ],
+      "handledLines": ["Blue creatures you control can't be blocked."],
       "patch": "docs/reviews/xmage-pilot-01/patches/deepchannel-mentor.json",
       "patchSha256": "cdbffe21b4065542112ac9ba6f73f94ef1aba6982b46cdfaeeded2bb0ac3a10d",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -3963,9 +3891,7 @@
       "oracleId": "11e02134-7b1a-46a4-a89e-7539dd1efada",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Counter target spell with mana value 4 or greater."
-      ],
+      "handledLines": ["Counter target spell with mana value 4 or greater."],
       "patch": "docs/reviews/xmage-pilot-01/patches/disdainful-stroke.json",
       "patchSha256": "2a785ce7c968ffe88b985ed493686553e6dcfbd1850222764b99a00b67b1c975",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -4235,9 +4161,7 @@
       "oracleId": "4cd4c6da-a84e-4cba-893b-799a7cb5c411",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "For Mirrodin!"
-      ],
+      "handledLines": ["For Mirrodin!"],
       "patch": "docs/reviews/card-compiler-trial-02/patches/dragonwing-glider.json",
       "patchSha256": "3fc3a9d5fe320414ecb620e202c92bd2e6504473f29e3c550215b27ccf1ea884",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -4479,9 +4403,7 @@
       "oracleId": "83161d59-2520-4741-9328-e2a4a8b5d5bc",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "12+ | {G}, {T}: Add {G} for each creature you control."
-      ],
+      "handledLines": ["12+ | {G}, {T}: Add {G} for each creature you control."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/evendo-waking-haven.json",
       "patchSha256": "e54ec8e89c05f3bf36349f9035401da4d351ad12b75d4cb8c5426ffe4e695cc6",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -4532,16 +4454,12 @@
       "oracleId": "0e07f1af-5ff6-4da5-8683-aea4cc390975",
       "source": "compiler@claude-haiku-5-5",
       "status": "meaning-differs",
-      "handledLines": [
-        "{1}{G}: Adapt 2."
-      ],
+      "handledLines": ["{1}{G}: Adapt 2."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/evolution-witness.json",
       "patchSha256": "3f05ad1d814a04183ad1e882fb2a3ff07baf3fd123f14e658aa922e8b3a6f461",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
       "textCheck": "model",
-      "differences": [
-        "The activation cost is {1}{G} in Text A but {G} in Text B."
-      ],
+      "differences": ["The activation cost is {1}{G} in Text A but {G} in Text B."],
       "smokeExercised": true,
       "smoke": [
         {
@@ -4679,9 +4597,7 @@
       "oracleId": "c7ca25f3-7a22-477b-8546-4c2597d5d1ff",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Destroy all nonenchantment creatures."
-      ],
+      "handledLines": ["Destroy all nonenchantment creatures."],
       "patch": "docs/reviews/xmage-pilot-01/patches/extinguish-all-hope.json",
       "patchSha256": "2bb14b2fbaee0bf7ccf8a09ee1e1ea3e999829ef8ca0f0bafe9c4429d47f1076",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -4811,9 +4727,7 @@
       "oracleId": "8c95d823-6bbd-4484-8f38-b1bb20403085",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Return all noncreature, nonland permanents to their owners' hands."
-      ],
+      "handledLines": ["Return all noncreature, nonland permanents to their owners' hands."],
       "patch": "docs/reviews/xmage-pilot-01/patches/filter-out.json",
       "patchSha256": "c7e6b04587c48fa536830c1aa334a864681848ee58eab9d8d830d69dea39cfb8",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -4901,9 +4815,7 @@
       "oracleId": "3cda958a-f777-433d-850e-a6c8f581db4e",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Nonlegendary creatures you control get +1/+1."
-      ],
+      "handledLines": ["Nonlegendary creatures you control get +1/+1."],
       "patch": "docs/reviews/xmage-pilot-01/patches/flowering-of-the-white-tree.json",
       "patchSha256": "3234321a778388d241d28ec6acc70d42e6e3b51ed43354468ddd37812bd87219",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -5006,9 +4918,7 @@
       "oracleId": "5f627e45-deee-4a4f-8128-57b0d8ebc553",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "Destroy up to two target artifacts and/or enchantments."
-      ],
+      "handledLines": ["Destroy up to two target artifacts and/or enchantments."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/force-of-vigor.json",
       "patchSha256": "703d7273e08370b5ff50c6a6821d18fbde0dc8d0503052fa69f26ada4757159e",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -5048,9 +4958,7 @@
       "oracleId": "91ebedb5-cb5f-4c58-ad30-6c6b0a106aa0",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Goblin spells and Rogue spells you cast cost {1} less to cast."
-      ],
+      "handledLines": ["Goblin spells and Rogue spells you cast cost {1} less to cast."],
       "patch": "docs/reviews/xmage-pilot-01/patches/frogtosser-banneret.json",
       "patchSha256": "e2d100393de0814436a444e75a17ae8082b3efe2849b4b5073ad8b8c31e50b4a",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -5205,9 +5113,7 @@
       "oracleId": "f2f09757-1931-47c0-a5f0-39280445489d",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "{T}, Sacrifice a Food: Add one mana of any color."
-      ],
+      "handledLines": ["{T}, Sacrifice a Food: Add one mana of any color."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/gilded-goose.json",
       "patchSha256": "6cbc019d15401c7ccb6035ba13ea7f076ba3da6d3055f3ab509193947b2b7bce",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -5356,9 +5262,7 @@
       "oracleId": "c1177f22-a1cf-4da3-a68d-ff954e878403",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "When this creature dies, you may have it deal 1 damage to any target."
-      ],
+      "handledLines": ["When this creature dies, you may have it deal 1 damage to any target."],
       "patch": "docs/reviews/xmage-pilot-01/patches/goblin-arsonist.json",
       "patchSha256": "76c91ba8d0ad0e6914c4588d660072fb6ee46e6be751e82fb4977a58b1a38397",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -5405,9 +5309,7 @@
       "oracleId": "ad65bb8e-57de-49f3-ba7c-be62cf3fe3df",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "{1}{R}, {T}: Target Goblin creature gets +2/+0 until end of turn."
-      ],
+      "handledLines": ["{1}{R}, {T}: Target Goblin creature gets +2/+0 until end of turn."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/goblin-burrows.json",
       "patchSha256": "507270c5364cbbdeded1c43509f2bd0d18219962f33804c06ac7fcff85b03c79",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -5454,9 +5356,7 @@
       "oracleId": "ad65bb8e-57de-49f3-ba7c-be62cf3fe3df",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "{1}{R}, {T}: Target Goblin creature gets +2/+0 until end of turn."
-      ],
+      "handledLines": ["{1}{R}, {T}: Target Goblin creature gets +2/+0 until end of turn."],
       "patch": "docs/reviews/xmage-pilot-01/patches/goblin-burrows.json",
       "patchSha256": "fa088f05889ad832328e20c1cc42c9fe9ff324a2622b9e9c7c69eda0a57a1b70",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -5849,9 +5749,7 @@
       "oracleId": "9fb80575-9c8e-4745-9a8f-d48cdcbbb868",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Counter target blue instant spell."
-      ],
+      "handledLines": ["Counter target blue instant spell."],
       "patch": "docs/reviews/xmage-pilot-01/patches/guttural-response.json",
       "patchSha256": "34c4038c1a07828c089dcce1824b55abebbbe0c6e531121ccd9a732b5cf2dfb1",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -5940,9 +5838,7 @@
       "oracleId": "6ff4ff67-ad08-447f-a112-1a071c1474a4",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "{3}{W}, Exile this creature: Exile target creature."
-      ],
+      "handledLines": ["{3}{W}, Exile this creature: Exile target creature."],
       "patch": "docs/reviews/xmage-pilot-01/patches/hanged-executioner.json",
       "patchSha256": "736bb693ed818c47b780fca7b98ce745c5eff8eac071f6cf505e41ef6aee1e57",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -5989,9 +5885,7 @@
       "oracleId": "84910453-e5dc-4bff-8554-86a5f4ab2746",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "Nonbasic lands are Islands."
-      ],
+      "handledLines": ["Nonbasic lands are Islands."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/harbinger-of-the-seas.json",
       "patchSha256": "7dc20d5d1107045746f5914be0566ae05cb09e9a706ae765d76e9bb86680ee8b",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -6272,9 +6166,7 @@
       "oracleId": "cb8ec2e4-8223-4172-8f2c-37c918a573fa",
       "source": "compiler@claude-haiku-5-5",
       "status": "meaning-differs",
-      "handledLines": [
-        "{T}: Each player gains control of all creatures they own."
-      ],
+      "handledLines": ["{T}: Each player gains control of all creatures they own."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/homeward-path.json",
       "patchSha256": "5a5ce085723bc0d1b55bc6a2e62ee86cb948b3970518445343a9aa783ec4ec3a",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -6553,9 +6445,7 @@
       "oracleId": "27348fe5-21d4-40f7-9feb-bba2c2321008",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "Add {R} for each card in your hand."
-      ],
+      "handledLines": ["Add {R} for each card in your hand."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/inner-fire.json",
       "patchSha256": "3d050b1b8d694ae0164abe28da9d942eea35b17c0a5b117efc18de74d5aaea31",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -6629,9 +6519,7 @@
       "oracleId": "0390a3dc-386c-402f-a89c-b94867bfb0a2",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Return all nonblue creatures to their owners' hands."
-      ],
+      "handledLines": ["Return all nonblue creatures to their owners' hands."],
       "patch": "docs/reviews/xmage-pilot-01/patches/inundate.json",
       "patchSha256": "28b246c9923ceeb7e0371fa7b19f0e7c29a030dd71ef0312e8e36c5f9390e2e5",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -6757,9 +6645,7 @@
       "oracleId": "7bdfe368-353c-4f8d-851f-05b7ea9f905d",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Destroy all artifacts, creatures, and lands. They can't be regenerated."
-      ],
+      "handledLines": ["Destroy all artifacts, creatures, and lands. They can't be regenerated."],
       "patch": "docs/reviews/xmage-pilot-01/patches/jokulhaups.json",
       "patchSha256": "83aec1ab75e08ca77d6286c9b25b74749dcbd0eb5ca9c287b7966ba53c9ee98c",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -6950,9 +6836,7 @@
       "oracleId": "79638767-fbc7-451a-b29f-d93f2ac6f102",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "{1}{R}, {T}: Create a 0/1 red Kobold creature token named Kobolds of ~."
-      ],
+      "handledLines": ["{1}{R}, {T}: Create a 0/1 red Kobold creature token named Kobolds of ~."],
       "patch": "docs/reviews/xmage-pilot-01/patches/kher-keep.json",
       "patchSha256": "d083af5cd8cc3c5f016106d0a2063f9b597b7387d111390f20ae14647666968d",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -7360,9 +7244,7 @@
       "oracleId": "c3e67b8f-1c91-4a2f-b924-35bbaff4bab9",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "Whenever you discard a card, you may pay {1}. If you do, amass Zombies 2."
-      ],
+      "handledLines": ["Whenever you discard a card, you may pay {1}. If you do, amass Zombies 2."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/lazotep-chancellor.json",
       "patchSha256": "7ef8919562080b31c93bd84d000ec6d5919bfd3a87d3c1ced25cfde14c7b47d2",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -7665,9 +7547,7 @@
       "oracleId": "134d5b82-7940-4b33-a922-7f9d1f403e50",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "When this land enters, sacrifice two lands."
-      ],
+      "handledLines": ["When this land enters, sacrifice two lands."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/lotus-field.json",
       "patchSha256": "4bebc35edd7d66ca288d949a0b6fbecc5d3459d88be5189372f23d1cea019ebd",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -7820,9 +7700,7 @@
       "oracleId": "3ab3996f-aa3f-4041-8634-8e197d51f108",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Destroy all nonwhite creatures."
-      ],
+      "handledLines": ["Destroy all nonwhite creatures."],
       "patch": "docs/reviews/xmage-pilot-01/patches/mass-calcify.json",
       "patchSha256": "24ec564e00f7aa9e4bff0e72c149c7d279996236f6e7dc371631adcd5c42e610",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -7914,9 +7792,7 @@
       "oracleId": "1a0770e6-b093-4439-baff-6889a50ba12e",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "Counter target spell with mana value 1."
-      ],
+      "handledLines": ["Counter target spell with mana value 1."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/mental-misstep.json",
       "patchSha256": "c5c6ad6285f72ff59a8fd3fc01fbb355319460d5f196751521b4ef0c41b304ba",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -7956,9 +7832,7 @@
       "oracleId": "1f91297a-ec2b-4ea8-9198-aa1daac20ff8",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "~ is the chosen type in addition to its other types."
-      ],
+      "handledLines": ["~ is the chosen type in addition to its other types."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/metallic-mimic.json",
       "patchSha256": "3244780f69a5cf25f86e8cbd7812538116dd1ce125dac21890bf30ad58b4e772",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -8299,9 +8173,7 @@
       "oracleId": "0826cf7d-7ccc-459b-a92f-29dc169628f8",
       "source": "compiler@claude-haiku-5-5",
       "status": "meaning-differs",
-      "handledLines": [
-        "Transmute {1}{U}{U}"
-      ],
+      "handledLines": ["Transmute {1}{U}{U}"],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/muddle-the-mixture.json",
       "patchSha256": "4d72f25a34683fb8740f05d4e11b19e372c96b73ca97580ea0293b78a3a519b3",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -8585,9 +8457,7 @@
       "oracleId": "96230edf-568a-47dd-b877-9d92aa58fac8",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "{1}, {T}: Destroy all artifacts, creatures, and enchantments."
-      ],
+      "handledLines": ["{1}, {T}: Destroy all artifacts, creatures, and enchantments."],
       "patch": "docs/reviews/xmage-pilot-01/patches/nevinyrral-s-disk.json",
       "patchSha256": "9987c7987d997078c79ab5d80f9c5d887ff2efa2ac7fe4a86ce53d56816cc60f",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -8634,9 +8504,7 @@
       "oracleId": "6dff1def-5b94-40c8-a942-dea8743ab47c",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "Whenever you tap a Swamp for mana, add an additional {B}."
-      ],
+      "handledLines": ["Whenever you tap a Swamp for mana, add an additional {B}."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/nirkana-revenant.json",
       "patchSha256": "f4310f86a2dff68052231bdbd3433c7ef992f1b897f49809451f00ba5d8ac684",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -8683,9 +8551,7 @@
       "oracleId": "b3b5137d-0225-4dba-9231-d235ab0f137c",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "{G}{U}, {T}: Put a +1/+1 counter on each creature that entered this turn."
-      ],
+      "handledLines": ["{G}{U}, {T}: Put a +1/+1 counter on each creature that entered this turn."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/novijen-heart-of-progress.json",
       "patchSha256": "c02b29ac2db6bd2046e6152e6873cf0ceabcb869b2f896dec6f3de099f435ab8",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -8732,9 +8598,7 @@
       "oracleId": "97cabeda-9fe3-490d-99b4-4c8d87c17157",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "Put target card from a graveyard on top of its owner's library."
-      ],
+      "handledLines": ["Put target card from a graveyard on top of its owner's library."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/noxious-revival.json",
       "patchSha256": "0bd6f28a8aaa245fa46c6ced80496487b57d8346507319b708d2872c8756ded8",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -8774,9 +8638,7 @@
       "oracleId": "6cfb03e5-aca6-4fe2-a3f1-93e1f0cbf9e1",
       "source": "compiler@claude-haiku-5-5",
       "status": "meaning-differs",
-      "handledLines": [
-        "Whenever you sacrifice a Food, create a tapped Treasure token."
-      ],
+      "handledLines": ["Whenever you sacrifice a Food, create a tapped Treasure token."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/nuka-cola-vending-machine.json",
       "patchSha256": "27873bab8372661066e9571603e7965372491e56a344ffe17baefe8b78138f11",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -8830,9 +8692,7 @@
       "oracleId": "2f83ca86-e23d-40f7-8085-6928d8cfef9b",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "Activated abilities of artifacts can't be activated."
-      ],
+      "handledLines": ["Activated abilities of artifacts can't be activated."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/null-rod.json",
       "patchSha256": "2ed56107f7bee6e1e7d2847a0c0a7ccd6b739974922ce827481fc15360c96f4f",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -8928,9 +8788,7 @@
       "oracleId": "47496941-8007-45a0-a981-76c683cbddc1",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Destroy all artifacts, creatures, and lands. They can't be regenerated."
-      ],
+      "handledLines": ["Destroy all artifacts, creatures, and lands. They can't be regenerated."],
       "patch": "docs/reviews/xmage-pilot-01/patches/obliterate.json",
       "patchSha256": "a9d3b5f67e4a8e835e42f095b4ef46f018985abb99a19e12138bfbceb6624938",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -8966,9 +8824,7 @@
       "oracleId": "0370afa0-07d3-4787-8a5b-10272cb3a486",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "White creature spells you cast cost {1} less to cast."
-      ],
+      "handledLines": ["White creature spells you cast cost {1} less to cast."],
       "patch": "docs/reviews/xmage-pilot-01/patches/oketra-s-monument.json",
       "patchSha256": "a681e028d8f279aee96fff3e5285338067ecc5bc424c91424bee978cba5f711f",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -9015,9 +8871,7 @@
       "oracleId": "3ad69bfb-2e51-4fe9-8d2f-7d071a4f1c69",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "{G}, {T}: Target legendary creature gets +1/+1 until end of turn."
-      ],
+      "handledLines": ["{G}, {T}: Target legendary creature gets +1/+1 until end of turn."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/okina-temple-to-the-grandfathers.json",
       "patchSha256": "47a02f66100981ef82c850caf2c56975e600df1bd2b5bf0a13faca87feb68cdf",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -9102,9 +8956,7 @@
       "oracleId": "6736bb96-6718-48bb-9385-789d3349dc20",
       "source": "compiler@haiku-worker",
       "status": "meaning-differs",
-      "handledLines": [
-        "Enchant snow land you control"
-      ],
+      "handledLines": ["Enchant snow land you control"],
       "patch": "docs/reviews/card-compiler-trial-01/patches/on-thin-ice.json",
       "patchSha256": "f8fd626833c3a7a4f70f59611347c809b16f8d8be0dcc9368748287aff0c1464",
       "trial": "docs/reviews/card-compiler-trial-01",
@@ -9198,9 +9050,7 @@
       "oracleId": "e88027a6-24cc-4a8b-86db-734f26149ea8",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "{T}: Put a +1/+1 counter on each green creature that entered this turn."
-      ],
+      "handledLines": ["{T}: Put a +1/+1 counter on each green creature that entered this turn."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/oran-rief-the-vastwood.json",
       "patchSha256": "9c1e71311e677705403f3728112787ca139ae91defb461482b3a557737b67d3f",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -9251,9 +9101,7 @@
       "oracleId": "41623eab-38b5-4058-8de2-e6b8706de7a2",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "{T}: Target Dinosaur gains haste until end of turn."
-      ],
+      "handledLines": ["{T}: Target Dinosaur gains haste until end of turn."],
       "patch": "docs/reviews/xmage-pilot-01/patches/otepec-huntmaster.json",
       "patchSha256": "ea69421538699ace9f6cb05743b630b04d9f1f3a3964a13e063ec4e7b276bce1",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -9625,9 +9473,7 @@
       "oracleId": "7acd7ef5-0e26-436d-962a-1a391f81c2e8",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "{5}, {T}, Exile this artifact: Exile all nonland permanents."
-      ],
+      "handledLines": ["{5}, {T}, Exile this artifact: Exile all nonland permanents."],
       "patch": "docs/reviews/xmage-pilot-01/patches/perilous-vault.json",
       "patchSha256": "67fb868d1b80ff6f66155e965687a7ec319e12a16009d98961c355c47ae15e6f",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -9715,16 +9561,12 @@
       "oracleId": "18ec721f-c1ac-4581-a61d-2f0b09d6bf92",
       "source": "xmage@31ede542",
       "status": "meaning-differs",
-      "handledLines": [
-        "Destroy all creatures you don't control. They can't be regenerated."
-      ],
+      "handledLines": ["Destroy all creatures you don't control. They can't be regenerated."],
       "patch": "docs/reviews/xmage-pilot-01/patches/plague-wind.json",
       "patchSha256": "46c8c44670890840ce00c68927696cefba983b58daca9c8fc6863b10e4111f3d",
       "trial": "docs/reviews/xmage-pilot-01",
       "textCheck": "model",
-      "differences": [
-        "Text B drops the clause \"They can't be regenerated.\""
-      ],
+      "differences": ["Text B drops the clause \"They can't be regenerated.\""],
       "smokeExercised": true,
       "smoke": [
         {
@@ -9854,9 +9696,7 @@
       "oracleId": "3a198a16-17b9-481e-b516-5bc945c7e247",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "{T}: Add {G} for each Elf on the battlefield."
-      ],
+      "handledLines": ["{T}: Add {G} for each Elf on the battlefield."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/priest-of-titania.json",
       "patchSha256": "f36ae1b7bd938bd4682a70ede84fa84237eaa5a945c5d7e666f7d7834e347e80",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -9996,9 +9836,7 @@
       "oracleId": "4fdbbec2-e921-4b63-958d-f9ba1e417197",
       "source": "compiler@claude-haiku-5-5",
       "status": "meaning-differs",
-      "handledLines": [
-        "As long as your devotion to red is less than five, ~ isn't a creature."
-      ],
+      "handledLines": ["As long as your devotion to red is less than five, ~ isn't a creature."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/purphoros-god-of-the-forge.json",
       "patchSha256": "34449cd8a0b7150f2b3cec866de966506a173385289c9f61d091410bf96123b6",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -10143,9 +9981,7 @@
       "oracleId": "c3fdfb94-2d10-4743-864c-a59fdd57d8b7",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "Whenever you cast a spell of the chosen type, copy that spell."
-      ],
+      "handledLines": ["Whenever you cast a spell of the chosen type, copy that spell."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/reflections-of-littjara.json",
       "patchSha256": "0a5a98d1f59f7d7bf83e08a0119bbc73f079fe2849ed53494805c5d1377021f6",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -10196,9 +10032,7 @@
       "oracleId": "8a7d68ae-ac43-46a6-9dc8-d6b07cc0333c",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Whenever you cast a legendary spell, draw a card."
-      ],
+      "handledLines": ["Whenever you cast a legendary spell, draw a card."],
       "patch": "docs/reviews/xmage-pilot-01/patches/reki-the-history-of-kamigawa.json",
       "patchSha256": "4b7184eb390cbfbccb9ba2e953a0fa8e3067db6414e0b30f0c865f3a092dafed",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -10245,9 +10079,7 @@
       "oracleId": "ba58f508-8036-496c-8a2f-c1e410165e93",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Destroy target creature with power or toughness 4 or greater."
-      ],
+      "handledLines": ["Destroy target creature with power or toughness 4 or greater."],
       "patch": "docs/reviews/xmage-pilot-01/patches/repel-calamity.json",
       "patchSha256": "496f405795dafe1724a23dd5290a4f2e52743293d849a59463614a2a17bcb362",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -10381,9 +10213,7 @@
       "oracleId": "51991d28-137e-4690-a674-d852b904bd1a",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Return target green card from your graveyard to your hand."
-      ],
+      "handledLines": ["Return target green card from your graveyard to your hand."],
       "patch": "docs/reviews/xmage-pilot-01/patches/revive.json",
       "patchSha256": "8b1398ae368328005889376c925295aa53f1bc431e4f1e6956ad5a407bd526de",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -10419,9 +10249,7 @@
       "oracleId": "b9a7c722-6b24-4383-ac6e-2a30f7834269",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Green creature spells you cast cost {1} less to cast."
-      ],
+      "handledLines": ["Green creature spells you cast cost {1} less to cast."],
       "patch": "docs/reviews/xmage-pilot-01/patches/rhonas-s-monument.json",
       "patchSha256": "78b6a1ded40a13b45b727cee540081393392d715df9ee65a89587216ef777dc7",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -10562,9 +10390,7 @@
       "oracleId": "8a2e53f9-8100-488f-8504-b59e9bd1cc29",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "Add {R}{R}, then add {R} for each card named ~ in each graveyard."
-      ],
+      "handledLines": ["Add {R}{R}, then add {R} for each card named ~ in each graveyard."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/rite-of-flame.json",
       "patchSha256": "bdac4dd8c4455d6b9a96a81eb9f9895045981481f0f25eb7f0db86e88c488247",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -10948,9 +10774,7 @@
       "oracleId": "00225c40-27ff-410f-a591-5c788c6a2bd6",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Sacrifice three Treasures: Draw a card."
-      ],
+      "handledLines": ["Sacrifice three Treasures: Draw a card."],
       "patch": "docs/reviews/xmage-pilot-01/patches/ruthless-knave.json",
       "patchSha256": "c800882accc07e5cac79cd5c91d7ab8588e892f8d61b6ea25c900348355bf4a2",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -11572,9 +11396,7 @@
       "oracleId": "82506e51-3fe1-446f-83c9-69e67583cefc",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "Put a +1/+1 counter on target creature. It phases out."
-      ],
+      "handledLines": ["Put a +1/+1 counter on target creature. It phases out."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/slip-out-the-back.json",
       "patchSha256": "0729013f016291edff7ec122f7ede67a9f5a2e0e6f93d55e941ca0f28abb6221",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -11614,9 +11436,7 @@
       "oracleId": "47657df2-0e58-46c8-87e2-cc752708a612",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "All Sliver creatures get +1/+1 for each other Sliver on the battlefield."
-      ],
+      "handledLines": ["All Sliver creatures get +1/+1 for each other Sliver on the battlefield."],
       "patch": "docs/reviews/xmage-pilot-01/patches/sliver-legion.json",
       "patchSha256": "ce2a5b95edf45502fe58dadf37a4230573bc28531c7bb521c67ac78cdae12909",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -11907,9 +11727,7 @@
       "oracleId": "d0c2ca8a-c5d4-4684-bacb-46c04f47c276",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Each other creature you control that's a Fungus or Saproling gets +1/+1."
-      ],
+      "handledLines": ["Each other creature you control that's a Fungus or Saproling gets +1/+1."],
       "patch": "docs/reviews/xmage-pilot-01/patches/sporecrown-thallid.json",
       "patchSha256": "2b029d97fa202de873f4a1827418de8e3a767a8f9e3a2d1fe7b8acbdac164282",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -12057,9 +11875,7 @@
       "oracleId": "11c7662f-e688-40a6-98fd-6ae89d231b44",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "{T}, Pay 1 life: Destroy target permanent you own."
-      ],
+      "handledLines": ["{T}, Pay 1 life: Destroy target permanent you own."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/staff-of-compleation.json",
       "patchSha256": "a6496d972200e224c824610f345051dab171b63a08f148df21c418f92377073d",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -12110,9 +11926,7 @@
       "oracleId": "986ae327-f433-4c58-93dc-afc544b9bfcb",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "{T}: Put a +1/+1 counter on each artifact creature you control."
-      ],
+      "handledLines": ["{T}: Put a +1/+1 counter on each artifact creature you control."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/steel-overseer.json",
       "patchSha256": "2c948c04ef658e2a6707ce29c4334d2d0c5c9a53d312843cf36587397f6bf159",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -12347,9 +12161,7 @@
       "oracleId": "a8f5a11f-3291-4ee9-a96d-4fa38af14932",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "White spells and black spells you cast cost {1} less to cast."
-      ],
+      "handledLines": ["White spells and black spells you cast cost {1} less to cast."],
       "patch": "docs/reviews/xmage-pilot-01/patches/stormscape-familiar.json",
       "patchSha256": "91222f489de4a9bdcd19cb95035397167def9c71833ddb223f8ea17575f4fed7",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -12449,9 +12261,7 @@
       "oracleId": "eb56141a-eb43-40e9-8ff1-e0ef5424f6a4",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "Gain control of each noncommander creature with mana value 3 or less."
-      ],
+      "handledLines": ["Gain control of each noncommander creature with mana value 3 or less."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/subjugate-the-hobbits.json",
       "patchSha256": "84d21caecf0953cc72db34f94ee7ae22d2f1953c8446ac8132d3d4ec63d5c62a",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -12487,9 +12297,7 @@
       "oracleId": "615603bb-3899-4419-9444-e4b64c94a438",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Green spells and blue spells you cast cost {1} less to cast."
-      ],
+      "handledLines": ["Green spells and blue spells you cast cost {1} less to cast."],
       "patch": "docs/reviews/xmage-pilot-01/patches/sunscape-familiar.json",
       "patchSha256": "b30eb07831fb9e7119cdc74356b81b2efa368586a49e98cefd8a9f2fe7765a3f",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -12588,9 +12396,7 @@
       "oracleId": "4b508087-99da-4eb1-8b12-29162f2ec85d",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "{T}: Regenerate target Insect, Rat, Spider, or Squirrel."
-      ],
+      "handledLines": ["{T}: Regenerate target Insect, Rat, Spider, or Squirrel."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/swarmyard.json",
       "patchSha256": "a3fb378d1eaeabaa6d2ab89cb6de0a1bf827a3c80aad1900bcaff236c8d563bf",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -12789,9 +12595,7 @@
       "oracleId": "29fede1b-e379-46d4-93e9-a589c896add6",
       "source": "compiler@haiku-worker",
       "status": "meaning-differs",
-      "handledLines": [
-        "Enchanted land has \"{1}{G}, {T}: Create a Tarmogoyf token.\""
-      ],
+      "handledLines": ["Enchanted land has \"{1}{G}, {T}: Create a Tarmogoyf token.\""],
       "patch": "docs/reviews/card-compiler-trial-02/patches/tarmogoyf-nest.json",
       "patchSha256": "ef0b06126e1747d982683b2bae3017e4fb7d80cfa3b0d8a676cbff4e01690b57",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -13093,9 +12897,7 @@
       "oracleId": "93e38650-ce22-4ab9-b79d-cc7b6477c075",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "{2}, {T}: Flip a coin. If you win the flip, create a Treasure token."
-      ],
+      "handledLines": ["{2}, {T}: Flip a coin. If you win the flip, create a Treasure token."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/the-gold-saucer.json",
       "patchSha256": "c8b57a216b14e1a05c3aa36a832bf199873f537680119569bc3c296ae95a5610",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -13142,9 +12944,7 @@
       "oracleId": "9abf9a0e-8e7d-406b-a01d-d4870b30134e",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "~ enters tapped unless you control a legendary creature."
-      ],
+      "handledLines": ["~ enters tapped unless you control a legendary creature."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/the-shire.json",
       "patchSha256": "77b375fd2179563180b3b0fc186c0d2bddc750b46008f71ba4dbdd2d923cb9fe",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -13404,9 +13204,7 @@
       "oracleId": "46eefc72-2d9e-4389-8ae1-26d9ee472b5c",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "Transmute {1}{U}{U}"
-      ],
+      "handledLines": ["Transmute {1}{U}{U}"],
       "patch": "docs/reviews/card-compiler-trial-02/patches/tolaria-west.json",
       "patchSha256": "2c4663093fc28a20788162214505969601088e1e4d9e7d9bcf13a699afd39aa3",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -13728,9 +13526,7 @@
       "oracleId": "321fd970-a259-448d-bd98-e85e386174f9",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "You may tap or untap target artifact, creature, or land."
-      ],
+      "handledLines": ["You may tap or untap target artifact, creature, or land."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/twitch.json",
       "patchSha256": "33b7dc84d58bc45bdba4927e0289744f6458a506ee4f2906ae660f934a2a1b16",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -13860,9 +13656,7 @@
       "oracleId": "12db6263-75c2-442f-a1a5-7af7915f8f9f",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "Sacrifice another creature or artifact: Surveil 1."
-      ],
+      "handledLines": ["Sacrifice another creature or artifact: Surveil 1."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/umbral-collar-zealot.json",
       "patchSha256": "c49bcadeb9c4c4471f9e3c4adbbee200c5ed6e66a542db59540003c88878e43e",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -14114,9 +13908,7 @@
       "oracleId": "978e0d87-3ff2-4a73-916c-ff0dc0ab2797",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Exile all nonland permanents that aren't legendary."
-      ],
+      "handledLines": ["Exile all nonland permanents that aren't legendary."],
       "patch": "docs/reviews/xmage-pilot-01/patches/urza-s-ruinous-blast.json",
       "patchSha256": "49fd76e85ce2afcbd976baf1ce75b450bb74b806874787d9476ab4e8f79a9985",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -14205,9 +13997,7 @@
       "oracleId": "df08ac72-010f-42f8-beb3-6d645c638e1e",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "12+ | {U}, {T}: Add {U} for each artifact you control."
-      ],
+      "handledLines": ["12+ | {U}, {T}: Add {U} for each artifact you control."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/uthros-titanic-godcore.json",
       "patchSha256": "d71fd67e21d4df6e2d0a6f1ebdf7ff0e7cde7cc485c00c57d1129719db535cd0",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -14314,9 +14104,7 @@
       "oracleId": "a332e80a-dc51-4dc6-bc85-e114a1c6fdb8",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "This spell costs {1} less to cast for each creature on the battlefield."
-      ],
+      "handledLines": ["This spell costs {1} less to cast for each creature on the battlefield."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/vanquish-the-horde.json",
       "patchSha256": "8f16086e1ce5b96bde5314674f1e18702ebe823e0d7aa400f23602f7fd66ad59",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -14359,9 +14147,7 @@
       "oracleId": "84244aa6-11be-4940-b102-e029f955fc9a",
       "source": "compiler@haiku-worker",
       "status": "invalid",
-      "handledLines": [
-        "{T}: Add an amount of {G} equal to this creature's power."
-      ],
+      "handledLines": ["{T}: Add an amount of {G} equal to this creature's power."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/viridian-joiner.json",
       "patchSha256": "2956c81d61ab1f8539e3a15dbede1a7b92c858820dccac9901ea78cd9fac1e60",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -14376,9 +14162,7 @@
       "oracleId": "211868ca-662b-4054-bf50-c9e16bb58c49",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "Populate."
-      ],
+      "handledLines": ["Populate."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/wake-the-reflections.json",
       "patchSha256": "552a581f0c94e33dc8ee1529e1683197d96750bae0666e23b1c310c1c911a0e6",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -14463,9 +14247,7 @@
       "oracleId": "f424b5e9-8f02-4491-a7d8-c7e088611c6a",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "Creature spells with flying you cast cost {1} less to cast."
-      ],
+      "handledLines": ["Creature spells with flying you cast cost {1} less to cast."],
       "patch": "docs/reviews/xmage-pilot-01/patches/warden-of-evos-isle.json",
       "patchSha256": "aaa4888e958009f6f05d2cec12cd49704660fad24acb4ae5bf6eaf9f72be3f24",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -14565,9 +14347,7 @@
       "oracleId": "c3b1b7bd-cff8-4275-b6d3-868f4e4b2cc0",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "{T}: You gain 1 life for each Elf on the battlefield."
-      ],
+      "handledLines": ["{T}: You gain 1 life for each Elf on the battlefield."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/wellwisher.json",
       "patchSha256": "53ca70b1223e2b6ee74eccb3442a74ffa967a81fef7d8aa059ebc83eff63ff99",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -14614,9 +14394,7 @@
       "oracleId": "05899372-9784-4bdb-9c28-504c71fed906",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "{2}, {T}: Target commander gains lifelink until end of turn."
-      ],
+      "handledLines": ["{2}, {T}: Target commander gains lifelink until end of turn."],
       "patch": "docs/reviews/card-compiler-trial-02/patches/witch-s-clinic.json",
       "patchSha256": "628e956f61d55aa69c5aebca8ab1d4038254f65612700a54b793fbe7b0556b15",
       "trial": "docs/reviews/card-compiler-trial-02",
@@ -14663,9 +14441,7 @@
       "oracleId": "05899372-9784-4bdb-9c28-504c71fed906",
       "source": "xmage@31ede542",
       "status": "compiled-checked",
-      "handledLines": [
-        "{2}, {T}: Target commander gains lifelink until end of turn."
-      ],
+      "handledLines": ["{2}, {T}: Target commander gains lifelink until end of turn."],
       "patch": "docs/reviews/xmage-pilot-01/patches/witch-s-clinic.json",
       "patchSha256": "691a8de171d1fa0c2e1dd9237bf1810383ceff5eb0245fa69389e65f1a65a345",
       "trial": "docs/reviews/xmage-pilot-01",
@@ -14761,9 +14537,7 @@
       "oracleId": "320ed2ec-ef06-41fb-ac8a-72579f11544c",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "When this Spacecraft enters, surveil 2."
-      ],
+      "handledLines": ["When this Spacecraft enters, surveil 2."],
       "patch": "docs/reviews/card-compiler-trial-01/patches/wurmwall-sweeper.json",
       "patchSha256": "80bb96f7617abc73bbc22f32e8ec29f5589e2c42a31f15090fd1ef9d8482bf9f",
       "trial": "docs/reviews/card-compiler-trial-01",
@@ -14809,9 +14583,7 @@
       "oracleId": "fdba89eb-1cf5-46e6-9d09-1adb9bc40fcd",
       "source": "compiler@claude-haiku-5-5",
       "status": "compiled-checked",
-      "handledLines": [
-        "Sacrifice another creature: ~ gains indestructible until end of turn."
-      ],
+      "handledLines": ["Sacrifice another creature: ~ gains indestructible until end of turn."],
       "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/yahenni-undying-partisan.json",
       "patchSha256": "09fe0e167e07ee6320f15e3e8c56abdcfe66a475b4987c3e3f2e9c7806980831",
       "trial": "docs/reviews/card-compiler-trial-chunk-001",
@@ -14862,9 +14634,7 @@
       "oracleId": "53d6113d-acdb-4754-9641-f7991a96c7b9",
       "source": "compiler@haiku-worker",
       "status": "compiled-checked",
-      "handledLines": [
-        "{G}, {T}: Regenerate target creature."
-      ],
+      "handledLines": ["{G}, {T}: Regenerate target creature."],
       "patch": "docs/reviews/card-compiler-trial-01/patches/yavimaya-hollow.json",
       "patchSha256": "a637eae16db68d9a6a8fab4d67a6a472076d8d9338043183790f192f4a9c48ad",
       "trial": "docs/reviews/card-compiler-trial-01",

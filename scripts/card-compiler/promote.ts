@@ -377,6 +377,7 @@ export function reviewCommand(args: readonly string[]): void {
     throw new Error(`${entry.patch} changed since the queue was built; run \`run.ts queue\` again`);
   entry.review = { verdict, by, ...(note === undefined ? {} : { note }) };
   writeFileSync(QUEUE_PATH, `${JSON.stringify(queue, null, 2)}\n`);
+  runPrettier([QUEUE_PATH]);
   console.log(`${name} (${entry.source}): ${verdict} by ${by}`);
 }
 
