@@ -1,0 +1,1623 @@
+{
+  "about": "Source of truth for the primitive backlog (E8). Each group is one missing IR feature; each card is a compiler refusal. A card listed in k groups counts 1/k toward each. oneOff holds cards whose line needs a bespoke mechanic; ungrouped holds new refusals that still need a group. Edit by hand, then run bun run primitive-backlog.",
+  "xmageScan": "xmageBucket comes from the XMage scan of 2026-11-09 (project files xmage-scan/rows.json): xmage-known-classes means XMage implements the card with shared ability classes only.",
+  "groups": [
+    {
+      "feature": "Temporary or permanent characteristic-setting effects",
+      "description": "Add set-base-P/T, add/lose types and abilities, set color, and become-copy effects with durations (EOT, until next turn, permanent) and X-valued P/T.",
+      "cards": [
+        {
+          "name": "Mirror Entity",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No until-end-of-turn effect sets creatures' base power and toughness to X/X and grants all creature types; the pump effects only add to power and toughness.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Ride the Shoopuf",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema's only become-a-creature effect (becomeCreatureUntilEot) lasts until end of turn, and no permanent type-changing and P/T-setting effect is available for this activated ability.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Lizard, Connors's Curse",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No effect makes a targeted creature permanently lose all abilities and become a green Lizard with base power and toughness 4/4 from a trigger; becomeCreatureUntilEot lasts only until end of turn.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Niveous Wisps",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no effect that makes a target creature gain a color until end of turn; the only color setter is a permanent-level layer 5 static, so 'becomes white until end of turn' cannot be stated exactly.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Sylvan Awakening",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "There is no \"until your next turn\" duration for animating lands into creatures; becomeCreatureUntilEot lasts only until end of turn.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Vraska, the Silencer",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema cannot return a card to the battlefield under your control while making it a Treasure artifact that loses all other card types.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Fleeting Reflection",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "'Until end of turn, it becomes a copy of up to one other target creature' needs an optional second target that is a copy source, and the schema has no copy effect that takes an 'up to one' target slot (becomeCopyOfTarget takes a single ref).",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Starfield of Nyx",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The layer 7b base power and toughness must equal the affected permanent's own mana value, and the schema has no Value that reads the affected object's mana value in a static effect.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Scale Up",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The schema cannot make the target's creature types become exactly Wurm while keeping its other card types: becomeCreatureUntilEot only adds subtypes, and its replaceTypes option would drop the creature's other card types (such as Artifact or Enchantment).",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Trigger events and filters that do not exist yet",
+      "description": "Add trigger events/filters for combat damage to a planeswalker or creature, playing a land, a permanent entering tapped, cycling a card, and a land-entering filter on trigger doubling.",
+      "cards": [
+        {
+          "name": "The Reaver Cleaver",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No trigger fires on combat damage dealt to a planeswalker; the only combat-damage trigger covers damage to a player, so the 'or planeswalker' clause cannot be said.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Toxin Sliver",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No trigger fires when a Sliver deals combat damage to a creature; the only combat-damage trigger covers damage to a player.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "City of Traitors",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No trigger fires when you play a land; the land triggers fire when a land enters the battlefield, which is not the same event.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Amulet of Vigor",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No event filter for a permanent entering tapped exists (entersUntapped covers only the untapped case), so the trigger cannot be limited to tapped entries.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Splendor Mare",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No trigger event exists for cycling a card, and a discard trigger cannot fire from the hand, so \"when you cycle this card\" cannot be stated; the lifelink counter also has no keyword effect.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Ancient Greenwarden",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "triggerAdditionalTime has no event filter and triggerAdditionalOnArtifactOrCreatureEntry covers only artifact or creature entries, so the land-entering restriction cannot be said.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Font of Agonies",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The schema has no trigger for a player paying life, so 'whenever you pay life' cannot be expressed, and the amount paid cannot be carried into the counter placement.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Three Tree Scribe",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The schema's leavesBattlefield trigger can only be narrowed to graveyard or exile destinations (leavesTo), so it cannot express 'leaves the battlefield without dying' (any destination other than the graveyard).",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Dynamic mana-value comparand in selectors",
+      "description": "Let manaValueAtMost/AtLeast/equals take a Value (announced X, count of Shrines, graveyard permanent count, dead target's mana value) instead of a fixed number.",
+      "cards": [
+        {
+          "name": "Blue Sun's Twilight",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The target filter manaValueAtMost takes a fixed number, so 'mana value X or less' cannot use the announced X.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Go-Shintai of Hidden Cruelty",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Target selection needs toughness at most a dynamic count of Shrines, but the selector only has toughnessAtLeast with a fixed n, so 'toughness X or less' cannot be said.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Squirming Emergence",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The target's mana value bound is the dynamic count of permanent cards in your graveyard, but manaValueAtMost takes only a fixed number and no graveyard return effect accepts a dynamic bound.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Gorilla Shaman",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The selector can only compare mana value to a fixed number (manaValueAtMost/AtLeast), so 'mana value X' against the announced X cannot be said exactly.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Rushed Rebirth",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The search filter 'creature card with lesser mana value' compares against the dead target's mana value, and manaValueAtMost takes only a fixed number, not a value taken from another object.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Immortal Servitude",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No selector matches creature cards whose mana value equals X, since manaValueAtMost and manaValueAtLeast take only fixed numbers.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Turn-history conditions",
+      "description": "Add conditions for this-turn history: attacked, descended, any player (incl. you) lost N life, nonland permanent left battlefield / spell warped, Pirates dealt combat damage, creatures died under your control.",
+      "cards": [
+        {
+          "name": "Chart a Course",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No condition checks whether you attacked this turn, so the discard cannot be made conditional on it exactly.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Enterprising Scallywag",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no condition for 'you descended this turn' (a permanent card was put into your graveyard from anywhere this turn), and no proxy condition reads that fact exactly.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Knight of the Ebon Legion",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "opponentsLostLifeThisTurn counts only opponents, so 'if a player lost 4 or more life this turn' including you cannot be expressed.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Tragic Trajectory",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No condition checks whether a nonland permanent left the battlefield this turn or whether a spell was warped this turn.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Admiral Beckett Brass",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The target's controller is restricted to a player dealt combat damage by three or more Pirates this turn, and no damage-history condition counts Pirates.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Gorma, the Gullet",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The creatures-died count (creaturesDiedThisTurn) is not limited to creatures that died under your control, so the 'died under your control this turn' count cannot be said exactly.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Needle Drop",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The schema has no target restriction or selector for a permanent or player that was dealt damage this turn, so 'any target that was dealt damage this turn' cannot be stated exactly.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Per-player scope and chooser on effects",
+      "description": "Add player-scope/chooser fields so each player (or the event player/chosen opponent) performs hand-shuffle, sacrifice choice, return-to-hand, draw, mana and graveyard returns.",
+      "cards": [
+        {
+          "name": "Echo of Eons",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The only hand-and-graveyard shuffle op, shuffleHandGraveyardIntoLibrary, has no player scope, so the schema cannot say that each player (not only the controller) shuffles their hand and graveyard into their library.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Skullwinder",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The opponent chooses and returns a card from their own graveyard, but returnCardFromGraveyardToHand is chosen by the ability's controller, and no effect lets a chosen opponent make that choice.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Cataclysmic Gearhulk",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The choosePermanentTypesThenSacrificeOthers effect has the controller choose for each player, but this card has each player choose for themselves.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Mana Breach",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "returnOneToHand has no chooser field, so the schema cannot say that the event player, not the controller, chooses and returns the land.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Synapse Sliver",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The draw must go to the Sliver's controller, but draw can address only the ability's controller or the damaged event player.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Belbe, Corrupted Observer",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The mana is added to the active player's pool, but addMana has no recipient field and always credits the ability's controller.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Smallpox",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "Each-player sacrifice ops take only a creature or any permanent, so the schema cannot say that each player sacrifices a land of their choice.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Blightwing Bandit",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The card looks at the opponent's library (the active player whose turn it is), but a castsSpell trigger's event player is the caster, and the schema offers no way to name the active opponent as the library owner without an announced target the card does not have.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Tri-Sentinel, Act of Vengeance",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "A perPlayer target slot iterates over every player, and no restriction to opponents is available, so 'for each opponent' with 'up to one target creature that player controls' cannot be stated exactly (it would also allow targeting your own creatures).",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Expedited Inheritance",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The schema cannot say that the damaged creature's controller (not this enchantment's controller) exiles and may play the cards until the end of that player's next turn: the only top-of-library exile playable effect is for the ability's controller and lasts until end of turn.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Conditions on the triggering object or event player",
+      "description": "Add conditions on the trigger object/event player: power equals toughness, 'other than the entering permanent', event player's own turn, defending player poisoned, cast from hand.",
+      "cards": [
+        {
+          "name": "Price of Glory",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The intervening 'if it's not that player's turn' is checked against this enchantment's controller, not the player who tapped the land, and no condition names the tapping player's turn.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Symmetry Matrix",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No condition compares a triggering creature's power to its toughness.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Roiling Canopy",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The intervening-if counts Forests 'other than' the entering Forest (the trigger object), and no condition or selector can exclude the trigger object from a permanent count.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Septic Rats",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no condition that tests whether the defending player is poisoned, so the attack trigger's intervening-if cannot be stated.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Breaching Leviathan",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No condition tests that the creature was cast from your hand, and no effect makes the tapped creatures skip their controllers' next untap steps.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Transpose",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "No Condition can test whether the spell was cast from the hand (only sourceWasCast exists), and a rebound cast from exile would wrongly create the Wizard token if the condition were approximated.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Alternative-cost keyword mechanics",
+      "description": "Model evoke (sacrifice on entry), ninjutsu-style return, mayhem, buyback, encore and paradigm as alternative casts with their rider ops.",
+      "cards": [
+        {
+          "name": "Mulldrifter",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Evoke's sacrifice when it enters has no flag or op tied to an evoked cast, so the alternative cost cannot say the creature is sacrificed on entry.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Lab Rats",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no buyback cost (optionalAdditionalCost covers only kicker, squad, offspring and replicate) and no effect that returns the spell to its owner's hand as it resolves.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Swarm, Being of Bees",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Mayhem (casting from the graveyard for {B} only if discarded this turn) has no alternative-cast condition in the schema; discarded-this-turn exists only for opponents.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Mist Dancer",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Encore needs a token copy for each opponent that must attack that opponent, gain haste, and be sacrificed at the next end step, and no single op or combination states the per-opponent attack together with the copy's controller.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Decorum Dissertation",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Paradigm is modeled only by capstoneParadigm, which requires a minimum mana value exile rule this card does not have.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Germination Practicum",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "Paradigm needs the resolved spell exiled and then copied from exile for free at each first main phase; the only paradigm op (capstoneParadigm) is hardwired to the Improvisation Capstone's mana-value exile step, so it cannot express this card's behavior exactly.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Behold the Multiverse",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The card's own foretell (paying {2} on your turn to exile it face down from hand, then casting it later for {1}{U}) has no IR form; grantForetell only gives foretell to other cards in hand.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Grant landwalk, horsemanship and afflict keywords",
+      "description": "Add landwalk (forestwalk, mountainwalk), horsemanship and afflict to IMPLEMENTED_KEYWORDS so addKeyword/static grants work.",
+      "cards": [
+        {
+          "name": "Cyberman Patrol",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Afflict is not in IMPLEMENTED_KEYWORDS and cannot be granted to artifact creatures through addKeyword.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Elvish Champion",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Forestwalk is a landwalk ability that is not in IMPLEMENTED_KEYWORDS and the schema has no landwalk construct to grant to other Elf creatures.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Dwarven Grunt",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Mountainwalk (an evasion keyword that makes the creature unblockable while the defending player controls a Mountain) is not in IMPLEMENTED_KEYWORDS and the schema has no landwalk construct.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Sun Quan, Lord of Wu",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Horsemanship is not a KeywordAbility and cannot be granted through the keyword layer.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Eladamri, Lord of Leaves",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Forestwalk is a landwalk ability that is not in IMPLEMENTED_KEYWORDS and the schema has no landwalk construct to grant to other Elf creatures.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Reveal/exile/mill-until loops with leftovers handling",
+      "description": "Add a repeat-until-predicate reveal/exile/mill op (until creature/land/instant card or N cards) with rest to bottom/graveyard and optional cast or hand.",
+      "cards": [
+        {
+          "name": "Spinner of Souls",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The only reveal-until primitive is revealUntilAura (Aura-only), so revealing until a creature card with the rest put on the bottom cannot be stated.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Dazzling Sphinx",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema's exile primitives take a fixed count, so they cannot exile cards until an instant or sorcery is exiled and then bottom the rest in random order.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "The Infamous Cruelclaw",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No effect exiles cards from the controller's library until a nonland is exiled and then offers casting that card by discarding a card as its alternative cost.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Mind Funeral",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No effect reveals cards from a library until a stated number of land cards is revealed and then puts all revealed cards into the graveyard.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Helm of Obedience",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no repeat-until loop that mills cards until a creature card or X cards are put into the graveyard, followed by a conditional sacrifice and put onto the battlefield.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Mana spend restrictions by spell/cost predicate",
+      "description": "Extend ManaRestriction with predicates: costs containing X, colored spells without X, nonartifact spells only (abilities/artifact spells allowed).",
+      "cards": [
+        {
+          "name": "Nexos",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The granted mana may be spent only on costs containing {X}, and ManaRestriction has no predicate for costs containing X.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Titans' Nest",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Its graveyard-exile cost is not expressible as the mana ability's cost, and the spend restriction (a colored spell without {X} in its mana cost) has no selector.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "The Great Mound",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The Vibranium's mana cannot be spent to cast a nonartifact spell while still allowing abilities and artifact spells, and the mana restriction schema cannot express that exclusion exactly.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Vibranium Mining Mech",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The Vibranium token's mana may not be spent to cast nonartifact spells, but a ManaRestriction filter also applies to abilities and cannot express that exactly.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Enter-with-counters rider on blink, reanimation and copy",
+      "description": "Let blink/graveyardToBattlefield/copy-as-enters ops place (variable) +1/+1 counters on the returned object.",
+      "cards": [
+        {
+          "name": "Planar Incision",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The +1/+1 counter placed on the permanent as it returns cannot be stated: blinkTarget has no counter option, and no later effect can refer to the new object.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Lilysplash Mentor",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The returned creature must enter with a +1/+1 counter, but the blink op cannot place counters on the new object and a counter effect aimed at the targeted creature would refer to the exiled object.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Recommission",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The extra +1/+1 counter on a creature that enters this way has no form: graveyardToBattlefield cannot place counters, and no later effect can refer to the returned object.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Altered Ego",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The copy enters with X additional +1/+1 counters, but addCounterByType takes a fixed number and no other field gives the copy a variable counter count.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Valkyrie's Call",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "There is no effect that returns the triggering creature with a +1/+1 counter on it and gives it flying and the Angel type indefinitely; the return ops cannot place a counter on a trigger object, and no static effect can bind to that one returned object.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Another player's optional choice on resolution",
+      "description": "Add an effect where another player decides on resolution (opponent may sacrifice, each player may discard, defending player may let you draw) with a fallback branch.",
+      "cards": [
+        {
+          "name": "Rakdos, Patron of Chaos",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No effect lets a target opponent choose to sacrifice two nonland nontoken permanents with 'if they don't, you draw two cards' as the alternative; the sacrifice ops act on the controller or on every player, not on a chosen opponent.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Orzhov Advokist",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema cannot say that only the players who put counters are then barred from attacking you until your next turn; eachPlayerMayPutCountersAndGoad would add an unwanted goad, and no restriction op is conditioned on that choice.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Ruin Grinder",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "eachPlayerDiscardHandThenDraw is mandatory for every player, and no schema form lets each player choose whether to discard their hand and draw seven.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Shakedown Heavy",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The defending player's choice to let the controller draw (and the untap and removal from combat that follow) has no schema form; eventPlayerMayDraw lets the player draw for themselves, not choose whether the controller draws.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Random selection of permanent, player or card",
+      "description": "Add random-choice ops: random one of chosen permanents, random player per permanent with control change, random card from hand to reveal/cast.",
+      "cards": [
+        {
+          "name": "Chaos Defiler",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "'For each opponent, choose a nonland permanent that player controls, then destroy one of them chosen at random' has no schema form.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Scrambleverse",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Each nonland permanent is given to a player chosen at random, and no schema effect makes a per-permanent random choice of player followed by control change and untap.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Last One Standing",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema cannot choose one creature at random and destroy every other creature, because destroyEach has no way to exclude the chosen one.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Wild Evocation",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema cannot reveal a card at random from each player's hand and then cast it without paying its mana cost, or put a land onto the battlefield, as an upkeep trigger for each player.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Announced X where a fixed number is required",
+      "description": "Allow announced X (or a Value) for look-at-top counts, target counts and repeat counts (populate X times).",
+      "cards": [
+        {
+          "name": "Stargaze",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "lookAtTopN takes a fixed numeric count, so \"look at twice X cards\" and \"put X cards into your hand\" cannot be stated with X.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Mass Manipulation",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The number of target creatures and/or planeswalkers equals the announced X, but target slot counts are fixed numbers and cannot reference X.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Candelabra of Tawnos",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The number of target lands is the announced X, and TargetSpec.count is a fixed min and max that cannot depend on X.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Full Flowering",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The populate op has no repeat count, so 'populate X times' with X from the spell cannot be expressed.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Variable-count target slots and chosen-count value",
+      "description": "Support 'any number of target' slots, distributing counters among them, and a Value counting the cards/targets chosen.",
+      "cards": [
+        {
+          "name": "Forever Young",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No effect moves each of a variable number of chosen graveyard creature cards onto the top of the library; graveyardToLibraryTop takes a single target.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Vengeful Regrowth",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no value counting the cards chosen in a variable-count graveyard slot, so 'create that many' Plant Warrior tokens cannot be stated.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Wheel and Deal",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema cannot have each of any number of chosen opponents discard its own entire hand and then draw seven cards.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Invoke Justice",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema can distribute counters only from the source (distributeCountersFromSource), not divide four counters among any number of chosen creatures and Vehicles a target player controls.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Spawnbed Protector",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "\"Up to one target\" graveyard card needs a variable-count target slot, but no effect op consumes such a slot to return a card to hand (graveyardToHand only accepts an ordinary single-target slot, which would force a target and skip the token creation when none exists).",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Conditional spell cost modification",
+      "description": "Extend costReduction/tax with conditions: spell cast from graveyard, target is tapped, spells targeting this creature, spells the drawing player casts.",
+      "cards": [
+        {
+          "name": "Gravebreaker Lamia",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The costReduction static has no way to limit it to spells cast from a graveyard; its filter selects spells by printed characteristics only.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Luminous Rebuke",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The cost reduction depends on the chosen target being tapped, and the schema reads a target's tapped state only through tapState, which would restrict targeting instead of reducing cost.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Jubilant Skybonder",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema cannot grant a cast-tax rule static (spells that target this creature cost {2} more) to flying creatures through a layer-6 effect, and targetLifeTax charges life rather than mana.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Academy Loremaster",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No schema rule makes spells the drawing player casts this turn cost {2} more: costReduction only lowers costs, and opponentNonHandSpellCostIncrease covers only opponents' non-hand spells.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Grand Arbiter Augustin IV",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The only opponent-spell cost increase (opponentNonHandSpellCostIncrease) applies just to spells cast from graveyards or exile, and no static taxes every spell opponents cast, so 'Spells your opponents cast cost {1} more to cast' cannot be stated exactly.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Commander Liara Portyr",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The reduction is X = the number of players being attacked, which no Value expresses, and the reduction applies only to spells cast from exile this turn, which costReduction cannot restrict by zone.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Modern keyword actions (venture, ring tempts, suspect, crime)",
+      "description": "Add venture, the Ring tempts you, suspect state and commit-a-crime trigger.",
+      "cards": [
+        {
+          "name": "Fates' Reversal",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no Venture into the dungeon effect (no venture op exists), so the second sentence cannot be expressed.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Breaking of the Fellowship",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "'The Ring tempts you' has no schema form, and 'another target creature that player controls' cannot tie a second target slot to the first target's controller.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Agrus Kos, Spirit of Justice",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no suspected or suspect state, so 'If it's suspected, exile it. Otherwise, suspect it' cannot be said.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Hardbristle Bandit",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no trigger for committing a crime, so the 'whenever you commit a crime' untap cannot be said.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Sacrificed cost object's power/mana value",
+      "description": "Add a Value reading the power or mana value of the permanent sacrificed as a cost or additional cost.",
+      "cards": [
+        {
+          "name": "Broadside Bombardiers",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The damage is 2 plus the mana value of the permanent sacrificed as a cost, and no value reads the mana value of a sacrificed cost object.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Thud",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No amount value reads the power of the creature sacrificed as an additional cost.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Dina, Essence Brewer",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no value for the power of a creature sacrificed as a cost, so X cannot be bound to it.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Morbid Curiosity",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "No value reads the mana value of the permanent sacrificed as the additional cost, so 'Draw cards equal to the mana value of the sacrificed permanent' cannot be stated exactly.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Grant retrace and umbra armor",
+      "description": "Add static grants of retrace (cast from graveyard by discarding a land) and umbra armor to cards/Auras.",
+      "cards": [
+        {
+          "name": "Umbra Mystic",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no umbra armor keyword or static that grants it to Auras attached to permanents you control.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Wrenn and Six",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema cannot give an emblem a static permission to cast instant and sorcery cards from your graveyard by discarding a land, since emblems carry only triggered or spell abilities.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Deeproot Historian",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no way to grant retrace to Merfolk and Druid cards in your graveyard.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Token creation replacement generalization",
+      "description": "Generalize tokenCreationReplacement to any token type (Food, Treasure, Clue), add-extra-token and choose-between-token-specs variants.",
+      "cards": [
+        {
+          "name": "Jinnie Fay, Jetmir's Second",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "tokenCreationReplacement only adds a fixed 1/1 token, and the schema cannot offer a choice between 2/2 green Cats with haste and 3/1 green Dogs with vigilance.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Quina, Qu Gourmet",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "tokenCreationReplacement covers only creature tokens, but the line applies to tokens of any type (such as Treasures or Clues), so the replacement cannot be stated exactly.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Bilbo, Fellow Conspirator",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No replacement covers only Food token creation: tokenCreationReplacement is limited to creature tokens, and createClueFoodAndTreasure also adds Clues and Treasures.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Incubate",
+      "description": "Add an incubate effect creating an Incubator token with X +1/+1 counters and its {2} transform into a 0/0 artifact creature.",
+      "cards": [
+        {
+          "name": "Essence of Orthodoxy",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no incubate effect: there is no Incubator token with two +1/+1 counters and a {2} transform ability, and TokenSpec cannot describe a double-faced transforming token.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Blight Titan",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The incubate action (an Incubator token with X +1/+1 counters that transforms for {2} into a 0/0 artifact creature) has no schema form.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Bloated Processor",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The incubate action (an Incubator token with X +1/+1 counters that transforms for {2} into a 0/0 artifact creature) has no schema form.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Ability cost forms",
+      "description": "Add AbilityCost forms: exert this permanent, return a land you control to hand, exile a creature card from graveyard.",
+      "cards": [
+        {
+          "name": "Arena of Glory",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The cost 'Exert this land' has no AbilityCost form, so the mana ability's activation cannot be stated exactly.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Meloku the Clouded Mirror",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No activation cost can return a land you control to its owner's hand.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Graf Harvest",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The exile cost needs a creature card from your graveyard, but the only graveyard exile cost (exileOtherCardsFromGraveyard) takes any cards, and exileCardFromHand is limited to the hand.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Great Arashin City",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The cost 'Exile a creature card from your graveyard' has no AbilityCost form: exileOtherCardsFromGraveyard counts cards of any type and is the escape cost, so the creature-card restriction cannot be stated exactly.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Select-by-target-player scope",
+      "description": "Let selectors/ops scope to a targeted player's permanents (tap all, destroy all, return each commander).",
+      "cards": [
+        {
+          "name": "Tempest Caller",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No effect taps every creature controlled by a targeted player; tapEach selects only by the resolving player's or the event player's control, not by an announced player target.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Overwhelming Forces",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "destroyEach takes a selector with no way to name the targeted opponent's creatures, and no value counts the creatures actually destroyed by that effect, so 'destroy all creatures target opponent controls, draw a card for each destroyed' cannot be stated exactly.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Leadership Vacuum",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "returnToCommandZone takes a single target, and the schema has no effect that returns each commander a target player controls to the command zone.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Cross-player hand and graveyard comparison values",
+      "description": "Add Values for hand-size difference vs a chosen opponent, opponents with more cards in hand, and a single opponent's graveyard count.",
+      "cards": [
+        {
+          "name": "Sandstone Oracle",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "There is no Value for the difference between the chosen opponent's hand size and the controller's hand size, and no per-chosen-player hand count with a non-negative clamp.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Wojek Investigator",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no value counting opponents with more cards in hand than you, so one Clue per such opponent cannot be stated.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Anticognition",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The check 'an opponent has eight or more cards in their graveyard' pools all opponents' graveyard cards (countCardsInZone with owner opponents) rather than testing each opponent, so it is not exact in multiplayer.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Wolfcaller's Howl",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "No Value counts opponents by their hand size, so 'the number of your opponents with four or more cards in hand' cannot be expressed exactly.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Put onto battlefield tapped and attacking or attached",
+      "description": "Add ops to put a card onto the battlefield tapped and attacking, or attached to a chosen creature.",
+      "cards": [
+        {
+          "name": "Ninja of the Deep Hours",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No op puts this card from hand onto the battlefield tapped and attacking, so ninjutsu's effect cannot be stated.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Winota, Joiner of Forces",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema cannot put a card onto the battlefield tapped and attacking from a look at the top cards, or grant indestructible to that specific card.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Gryff's Boon",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No op returns this departed Aura from the graveyard attached to a chosen target creature; returnDepartedSourceToBattlefield can only attach to the trigger object.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Exile-and-return with delayed riders",
+      "description": "Add exile with a delayed return including optional immediate return, attached Auras and returning all cards exiled by the source.",
+      "cards": [
+        {
+          "name": "Gilraen, Dúnedain Protector",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No effect lets the controller choose to return an exiled creature immediately, and otherwise return it at the next end step with vigilance and lifelink counters; exileTargetReturnAtNextEndStep returns it unconditionally.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Flickerform",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no effect that exiles the enchanted creature together with all Auras attached to it and later returns the other exiled cards attached to that creature; exileTargetReturnAtNextEndStep covers only one target.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Worldgorger Dragon",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no effect that returns every card exiled with this permanent to the battlefield under their owners' control.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Counterspell riders",
+      "description": "Add counter variants: counter then put on battlefield under your control, counter unless pay X with tap-lands penalty, lose life per creature for countered object's controller.",
+      "cards": [
+        {
+          "name": "Desertion",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema can exile a countered spell but cannot put a countered artifact or creature spell onto the battlefield under your control instead.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Power Sink",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Tapping all lands with mana abilities that the spell's controller controls and losing all unspent mana, as the consequence of not paying X, has no effect form in the schema.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Deny the Witch",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema's controllerOf reference is defined only for a permanent in a target slot, so it cannot say that the countered spell or ability's controller loses life.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Count of objects affected by the previous effect",
+      "description": "Add a Value for 'for each creature destroyed/sacrificed this way' counting results of the preceding effect.",
+      "cards": [
+        {
+          "name": "Voracious Fell Beast",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no value for the number of creatures sacrificed this way, so one Food token per sacrificed creature cannot be stated.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Death Begets Life",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema cannot count the permanents that destroyEach destroys in the same resolution, so it cannot draw one card for each of them.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Surrounded by Orcs",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The schema has no reference to the amassed Army's power (amass returns no object reference), and the targeted mill op takes only a fixed number, so 'mills X cards where X is the Army's power' cannot be said.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Ability and spell copying with source filters",
+      "description": "Allow copying activated and triggered abilities filtered by source (enchantment, other legendary non-commander) and a copied permanent spell rider.",
+      "cards": [
+        {
+          "name": "Weaver of Harmony",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema cannot restrict a stack-object target to activated or triggered abilities whose source is an enchantment.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "The Peregrine Dynamo",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "copyTargetAbility is documented only for triggered abilities, and no stack-object target filter is documented for requiring another legendary, non-commander source.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Static permission to cast spells with flash",
+      "description": "Add static rule letting players cast (matching) spells as though they had flash, optionally only during a given step.",
+      "cards": [
+        {
+          "name": "Quick Sliver",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No static or rule-static grants every player permission to cast matching Sliver spells at flash timing; the schema only has flash as the card's own keyword.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Final-Word Phantom",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no static permission to cast spells as though they had flash during each opponent's end step.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Global alternative cost for spells",
+      "description": "Add a static alternative cost for all/some spells (pay WUBRG, pay {0} once per turn for colorless from hand).",
+      "cards": [
+        {
+          "name": "Darksteel Monolith",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no way to grant a pay-{0} alternative cost to colorless spells cast from hand, limited to once each turn.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Fist of Suns",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no global alternative cost that lets the controller pay {W}{U}{B}{R}{G} rather than the mana cost of each spell they cast (alternativeCasts exists only on individual cards).",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Unless-you-do non-mana payments",
+      "description": "Support 'unless you return a land / tap two creatures' as a choice with sacrifice-or-draw fallback.",
+      "cards": [
+        {
+          "name": "Crosis's Catacombs",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no choice to return a non-Lair land or else sacrifice this land; returnOneToHand is mandatory and unlessPays takes a mana cost.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Rent Is Due",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no optional 'may tap two creatures and/or Treasures' choice (tapping as a trigger cost) that branches to draw a card or sacrifice the enchantment.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Blocker restriction by creature selector",
+      "description": "Add can't-be-blocked-except-by / by-creatures-matching restrictions (Walls only, power 2 or less).",
+      "cards": [
+        {
+          "name": "Prowler's Helm",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Restricting which creatures may block the equipped creature to Walls has no schema form; the only blocker restrictions are a minimum-blocker count and a power comparison.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Greater Sandwurm",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The only blocker-restriction selectors that read power (powerAtMost) are event-only, so a static 'can't be blocked by creatures with power 2 or less' cannot be said.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Selector predicates in targets and statics",
+      "description": "Make powerAtMost and hasKeyword predicates usable in target filters and continuous statics (layer-aware).",
+      "cards": [
+        {
+          "name": "Break Through the Line",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The restriction 'power 2 or less' can only be written as powerAtMost, which the schema marks event-only, so it cannot restrict a target.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Thunderclap Wyvern",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The 'with flying' qualifier is an event-only selector (hasKeyword) that a continuous static cannot read, because flying can itself be granted in layer 6.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Adept Watershaper",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The affected set needs 'tapped creatures', but the tapped selector is event-only and a continuous static effect cannot read tapped-ness.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Division/halving Value",
+      "description": "Add Value division with round-down (half the Zombies, half the non-God creatures).",
+      "cards": [
+        {
+          "name": "Endless Ranks of the Dead",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no division value, so 'half the number of Zombies you control, rounded down' cannot be expressed (Value offers only plus, negate and times).",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Zodiark, Umbral God",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no value for half the non-God creatures a player controls, rounded down, so the sacrifice count cannot be stated.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Counters read from events and other permanents",
+      "description": "Add Values for number/kind of counters placed in the triggering event and counters on another permanent (token P/T).",
+      "cards": [
+        {
+          "name": "Gutter Grime",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The Ooze's power and toughness must track the slime counters on Gutter Grime, and no token value or token static reads another permanent's counters continuously.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Captain Marvel, Apex Avenger",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No value reads the number of counters placed in the triggering event, so 'the same number and kind of counters' cannot be stated.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Count of distinct names/powers",
+      "description": "Add Values counting differently named lands and different powers among creatures.",
+      "cards": [
+        {
+          "name": "Survey Mechan",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No value counts differently named lands, so the {X} activation cost reduction cannot be stated.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Stalwart Pathlighter",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No Value or Condition counts the number of different powers among creatures you control.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Hand-size rule changes",
+      "description": "Add maximum-hand-size reduction and time-limited no-maximum-hand-size.",
+      "cards": [
+        {
+          "name": "Jin-Gitaxias, Core Augur",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no rule static or effect that reduces an opponent's maximum hand size by a number (noMaximumHandSize only removes the limit).",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Enter the Infinite",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The 'no maximum hand size until your next turn' duration cannot be expressed, since noMaximumHandSize is a permanent ruleStatic with no duration.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Win/lose-game effects and static",
+      "description": "Add 'you win the game' effect and can't-lose/can't-win static.",
+      "cards": [
+        {
+          "name": "Triskaidekaphile",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No effect makes its controller win the game.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Platinum Angel",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No static rule makes its controller unable to lose the game and opponents unable to win while it is on the battlefield; the only such effect in the schema is the one-shot angelGrace spell effect, which is not the same.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Devour",
+      "description": "Add devour N: choose creatures to sacrifice on entry and count them for counters.",
+      "cards": [
+        {
+          "name": "Mycoloth",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Devour needs a choice of creatures to sacrifice as it enters, with counters equal to twice that number, and no value counts the creatures sacrificed this way.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Dragon Broodmother",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no way to say devour 2 (the token enters with twice the number of creatures sacrificed as +1/+1 counters, chosen as it enters), and TokenSpec has no counters-on-entry choice.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Damage-would-kill replacement: exile instead",
+      "description": "Add a this-turn replacement exiling creatures damaged by the effect that would die.",
+      "cards": [
+        {
+          "name": "Anger of the Gods",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "damageEach deals the damage but has no way to make creatures damaged this way be exiled instead of dying this turn.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Fiery Annihilation",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema cannot select an Equipment attached to the chosen target creature (the attachedToSource selector is relative to the source, not another target), and it has no 'if that creature would die this turn, exile it instead' replacement.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Damage prevention variants",
+      "description": "Add permanent prevent combat damage dealt by self and colored-source damage shields.",
+      "cards": [
+        {
+          "name": "Fog Bank",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has a static for combat damage dealt to this creature (preventCombatDamageToSelf) but no permanent static that prevents combat damage this creature deals, so the 'dealt by' half cannot be said.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Surge of Salvation",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The damage prevention cannot be limited to black or red sources, since createDamageShield has no color filter.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Emmara Tandris",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The schema has no static prevention effect over an arbitrary set of permanents (such as all creature tokens you control); damage shields and preventCombatDamageToSelf cover only one object, a player, or combat damage to the source itself.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Cast a card from other zones with a rider",
+      "description": "Add cast-from-opponent-graveyard and reveal-top-then-cast-if-equal-mana-value ops.",
+      "cards": [
+        {
+          "name": "Powerbalance",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema cannot say 'reveal the top card and cast it free only if its mana value equals the opponent's spell's', leaving it on top otherwise: lookAtTopNCastOneFree compares mana value as 'or less' and bottoms the rest.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Tinybones, the Pickpocket",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No effect lets its controller cast a nonland permanent card from the damaged player's graveyard; castForLifeFromZones covers only artifacts from the controller's own zones.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Release to the Wind",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The schema has no way to say that the card's owner (not its controller) may cast the exiled card without paying its mana cost for as long as it remains exiled; the exile half alone would be an incomplete card.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Mana production variants",
+      "description": "Add single-shared-color X mana and optional addMana.",
+      "cards": [
+        {
+          "name": "The Eternity Elevator",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema cannot make a counter-scaled amount of mana all of one chosen color, since an amount repetition does not tie its symbols to a single shared color.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Soulbright Flamekin",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The third-resolution 'you may add eight {R}' is an optional mana addition, and addMana has no optional form, so the choice cannot be stated.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Voting generalization",
+      "description": "Add per-vote effects for council's dilemma and a players-finish-voting trigger.",
+      "cards": [
+        {
+          "name": "Expropriate",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "councilVote supports only a more/otherwise split between two choices, so it cannot say 'for each time vote take an extra turn' and 'for each money vote gain control of a permanent owned by that voter' as per-vote effects.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Grudge Keeper",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no trigger for players finishing a vote, and no way to read which opponents voted for a choice the controller did not vote for.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Face-down pile split with opponent choice",
+      "description": "Add two-pile split where an opponent chooses which pile goes to hand.",
+      "cards": [
+        {
+          "name": "Hostile Negotiations",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no face-down exile pile effect in which an opponent chooses one pile for hand and the other goes to the graveyard.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Curator of Destinies",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no way to split the top five cards into two piles for an opponent to choose between.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Shares-a-creature-type selector",
+      "description": "Add a selector for cards sharing a creature type with the source or dying creature.",
+      "cards": [
+        {
+          "name": "Heirloom Blade",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No selector matches a creature that shares a creature type with the dying creature, and the reveal-until effect has no such filter.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Leaf-Crowned Elder",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No selector matches a card that shares a creature type with the source, so the kinship look-at-top filter cannot be expressed.",
+          "xmageBucket": "xmage-custom-classes"
+        }
+      ]
+    },
+    {
+      "feature": "Protection from creature types and players",
+      "description": "Let protection name a creature type (Dogs) or a player set (each of your opponents), not only a color, multicolored or creatures.",
+      "cards": [
+        {
+          "name": "Feline Sovereign",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "Protection quality can only be a color, multicolored, or creatures; the schema cannot express protection from the creature type Dogs.",
+          "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Absolute Virtue",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The schema has no protection quality for a player: protectionFrom only takes colors, 'multicolored' or 'creatures', so 'protection from each of your opponents' cannot be stated.",
+          "xmageBucket": "xmage-known-classes"
+        }
+      ]
+    }
+  ],
+  "oneOff": [
+    {
+      "name": "Breach the Multiverse",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "Choosing one creature or planeswalker card from each player's graveyard to put onto the battlefield under your control has no schema form.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "City on Fire",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The schema can double damage (damageDoubled, damageDoubledToOpponents) but has no way to triple it.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Auton Soldier",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "Myriad (an attack trigger that makes a tapped and attacking token copy for each other opponent, exiled at end of combat) has no schema form, so the line cannot be implemented exactly.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Scurry Oak",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "Evolve compares the entering creature's power or toughness with this creature's, and there is no Value for the entering object's toughness, so the toughness half cannot be expressed.",
+      "xmageBucket": "xmage-known-classes"
+    },
+    {
+      "name": "Spectacular Showdown",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "A double strike counter has no defined effect in the schema (counters are plain names with no keyword grant), and the overload \"each\" mode cannot be attached without replacing the parsed overload alternative cast.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Abyssal Harvester",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The 'put there this turn' restriction on a graveyard card has no schema form, and createTokenCopyOf can add types but not the Nightmare subtype.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Dalkovan Encampment",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The schema cannot bind the two tokens created by the 'whenever you attack this turn' delayed trigger so that exactly those tokens are sacrificed at the next end step.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Detection Tower",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The schema has no primitive that lets you target opponents and their hexproof creatures as though they lacked hexproof until end of turn.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Maelstrom Pulse",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "No selector matches permanents with the same name as the chosen target; sameNameAsSource reads the source's name, not the target's.",
+      "xmageBucket": "xmage-known-classes"
+    },
+    {
+      "name": "Bucknard's Everfull Purse",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "No effect rolls a die, and no effect makes the player to your right gain control of this artifact.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Deadly Brew",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The schema cannot restrict an each-player sacrifice to a creature or planeswalker, and cannot tie the optional return to whether a permanent was sacrificed this way.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Contest of Claws",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The schema has no way to compute the excess damage dealt by a resolution, or to condition and size a discover on it.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Golbez, Crystal Collector",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The second half needs the returned card's power after it has left the graveyard, and no value reads a targeted graveyard card's last-known power after it moves to hand.",
+      "xmageBucket": "xmage-known-classes"
+    },
+    {
+      "name": "Vexing Shusher",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The schema has no effect that makes a target spell uncounterable when an activated ability resolves.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Sword Coast Sailor",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The granted attack trigger's \"attacks a player\" qualifier (not a planeswalker) cannot be stated on an object attacks trigger.",
+      "xmageBucket": "xmage-known-classes"
+    },
+    {
+      "name": "Waltz of Rage",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The schema cannot exclude the targeted creature from 'each other creature' damage, and has no delayed exile-and-play effect for your creatures that die this turn.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Knight of New Alara",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "No selector matches multicolored creatures, and no value counts a creature's colors for a +1/+1 per color bonus.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Town Greeter",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The mill-then-put-a-land step is mandatory when a land is milled and cannot be made optional, and the 2-life gain conditioned on putting a Town card has no condition over the card put into hand.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Congregation at Dawn",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The schema can put searched cards on top of the library but cannot shuffle the library before placing them, so it cannot say shuffle then put the found cards on top in any order.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Wall of Shards",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The schema has no cumulative upkeep whose per-counter cost is an opponent gaining life.",
+      "xmageBucket": "xmage-known-classes"
+    },
+    {
+      "name": "Super Intelligence",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "An upkeep trigger can address only the enchanted player, not the controller of the enchanted creature.",
+      "xmageBucket": "xmage-known-classes"
+    },
+    {
+      "name": "Bill the Pony",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "No effect makes a creature assign combat damage equal to its toughness rather than its power.",
+      "xmageBucket": "xmage-known-classes"
+    },
+    {
+      "name": "Dream Cache",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The schema has no way to put two cards from hand both on top or both on the bottom as a single either/or choice; putFromHandOnLibraryTop only puts cards on top, with no bottom destination and no top-or-bottom choice.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Twisted Sewer-Witch",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "Creating one Wicked Role attached to each Rat you control needs a per-Rat loop, and the attached-token effect takes a single target.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Swooping Pteranodon",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The end-step damage needs the land chosen by the entering trigger as its source, and a delayed ability cannot reference that outer target slot.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "The Dominion Bracelet",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "No effect makes its controller control an opponent during their next turn, and the activation cost reduction by the equipped creature's power cannot be expressed.",
+      "xmageBucket": "xmage-known-classes"
+    },
+    {
+      "name": "Technodrome",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The schema has no restriction that stops this creature from attacking or blocking unless its own power is 6 or greater.",
+      "xmageBucket": "xmage-known-classes"
+    },
+    {
+      "name": "Plunge into Winter",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The 'up to one target creature' tap has no exact form: tapTarget names one target, and the only each-chosen variant in the schema is tapAndGoadEachChosen, which would also goad.",
+      "xmageBucket": "xmage-known-classes"
+    },
+    {
+      "name": "Hazardous Blast",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The schema has no can't-block effect over a selected set of creatures that lasts until end of turn (cantBlockEach only lasts until your next turn), so the 'can't block this turn' half cannot be said.",
+      "xmageBucket": "xmage-known-classes"
+    },
+    {
+      "name": "Molten Birth",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "No op returns the resolving spell itself to its owner's hand; returnSpellToOwnerHand acts on a targeted spell, and the resolving spell has no target slot.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Island Sanctuary",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The schema cannot replace a draw-step draw with an optional skip, nor express 'you can't be attacked except by creatures with flying and/or islandwalk until your next turn' as a single exact restriction.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Mizzix, Replica Rider",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The copy of a permanent spell must gain haste and an end-step sacrifice, and no op grants a copied permanent spell that rider.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Apple of Eden, Isu Relic",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "No effect looks at an opponent's hand and exiles it face down with play permission this turn, nor the draw-on-play follow-up and return at the next end step.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Mister Negative",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "No effect exchanges life totals with an opponent.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Starlight Spectacular",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The schema has no way to choose creatures one at a time and give each a bonus equal to the number chosen before it.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Elsewhere Flask",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The schema has no effect where the player chooses a basic land type on resolution and then each land you control becomes that type until end of turn.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Ambitious Dragonborn",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "X is the greatest power among creatures you control and creature cards in your graveyard; greatestPowerAmong reads battlefield permanents only, and no Value takes the maximum across both zones.",
+      "xmageBucket": "xmage-known-classes"
+    },
+    {
+      "name": "Bitter Triumph",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "reason": "The additional cost is a choice between discarding a card and paying 3 life, but spellAdditionalCosts lists costs that are all paid together, with no either/or option.",
+      "xmageBucket": "xmage-known-classes"
+    },
+    {
+      "name": "Ganax, Astral Hunter",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "reason": "The schema has no Choose a Background mechanic (no Background choice or commander-zone second-commander relation), and the line is not reminder text.",
+      "xmageBucket": "xmage-known-classes"
+    },
+    {
+      "name": "Rat Colony",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "reason": "The line is a deck-construction permission (any number of copies named Rat Colony in one deck), and the IR has no field for deck-building rules; the schema cannot state it.",
+      "xmageBucket": "xmage-known-classes"
+    },
+    {
+      "name": "Game Over",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "reason": "The cost reduction condition needs each player's life compared with half their starting life total, and the schema has no reference to starting life total (a 20 or 40 value would be a guess that varies by format).",
+      "xmageBucket": "xmage-known-classes"
+    },
+    {
+      "name": "Thor, Asgard's Avenger",
+      "trial": "docs/reviews/card-compiler-trial-01",
+      "reason": "The ruleStatics damage replacements only double, halve or prevent damage; the schema has no replacement that adds a fixed amount (plus 1) to another source's damage to opponents and their permanents.",
+      "xmageBucket": "xmage-custom-classes"
+    },
+    {
+      "name": "Feldon of the Third Path",
+      "trial": "docs/reviews/card-compiler-trial-02",
+      "reason": "The schema's createTokenCopyOf only copies a permanent on the battlefield, and no op creates a token copy of a creature card in a graveyard (with haste and a delayed sacrifice).",
+      "xmageBucket": "xmage-custom-classes"
+    }
+  ],
+  "ungrouped": []
+}
