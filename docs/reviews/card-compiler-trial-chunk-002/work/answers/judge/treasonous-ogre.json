@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A triggers when it attacks the player with the most life, including a tie; Text B triggers only when the attacking player has strictly more life than the defending player, so a tie does not trigger Text B"]}
